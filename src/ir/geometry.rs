@@ -62,8 +62,8 @@ pub enum Surface {
     Torus(ToroidalSurface),
     Revolution(SurfaceOfRevolution),
     Extrusion(SurfaceOfLinearExtrusion),
+    Offset(SurfaceOfOffset),
     Nurbs(NurbsSurface),
-    // Future: Offset
 }
 
 /// An infinite plane defined by an axis placement.
@@ -302,6 +302,18 @@ pub struct SurfaceOfLinearExtrusion {
     pub swept_curve: CurveId,
     pub extrusion_direction: DirectionId,
     pub depth: f64,
+}
+
+/// A surface offset from a basis surface along its normal by a signed distance.
+///
+/// Corresponds to STEP `OFFSET_SURFACE`. The `self_intersect` LOGICAL attribute
+/// of the source entity is informational and not stored (handled uniformly
+/// with `B_SPLINE_SURFACE` family — see ROADMAP "LOGICAL 보존" for planned
+/// global recovery).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct SurfaceOfOffset {
+    pub basis: SurfaceId,
+    pub distance: f64,
 }
 
 // ---------------------------------------------------------------------------

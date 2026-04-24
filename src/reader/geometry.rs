@@ -13,8 +13,8 @@ use crate::ir::geometry::{
     Axis1Placement, Axis2Placement2d, Axis2Placement3d, Circle2, Circle3, ConicalSurface, Curve,
     Curve2d, CurveForm, CylindricalSurface, Direction2, Direction3, Ellipse2, Ellipse3, Line2,
     Line3, NurbsCurve, NurbsCurve2d, NurbsSurface, Pcurve, Plane3, Point2, Point3,
-    SphericalSurface, Surface, SurfaceForm, SurfaceOfLinearExtrusion, SurfaceOfRevolution,
-    ToroidalSurface,
+    SphericalSurface, Surface, SurfaceForm, SurfaceOfLinearExtrusion, SurfaceOfOffset,
+    SurfaceOfRevolution, ToroidalSurface,
 };
 use crate::parser::entity::{Attribute, RawEntity, RawEntityPart};
 
@@ -601,6 +601,28 @@ impl ReaderContext {
             depth,
         };
         let id = self.geometry.surfaces.push(Surface::Extrusion(surface));
+        self.surface_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    pub(super) fn convert_offset_surface(
+        &mut self,
+        entity_id: u64,
+        attrs: &[Attribute],
+    ) -> Result<(), ConvertError> {
+        // STEP: OFFSET_SURFACE(name, basis_surface, distance, self_intersect)
+        check_count(attrs, 4, entity_id, "OFFSET_SURFACE")?;
+        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let basis_ref = read_entity_ref(attrs, 1, entity_id, "basis_surface")?;
+        let distance = read_real(attrs, 2, entity_id, "distance")?;
+        // [3] self_intersect — informational LOGICAL, skipped (see ROADMAP).
+
+        let basis = self.resolve_surface(entity_id, basis_ref, "basis_surface")?;
+
+        let id = self
+            .geometry
+            .surfaces
+            .push(Surface::Offset(SurfaceOfOffset { basis, distance }));
         self.surface_map.insert(entity_id, id);
         Ok(())
     }

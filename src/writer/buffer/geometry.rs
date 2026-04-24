@@ -8,7 +8,7 @@ use crate::ir::{
     Direction2, Direction2dId, Direction3, DirectionId, Ellipse2, Ellipse3, Line2, Line3,
     NurbsCurve, NurbsCurve2d, NurbsSurface, Pcurve, Placement1dId, Placement2dId, Placement3dId,
     Plane3, Point2, Point2dId, Point3, PointId, SphericalSurface, StepModel, Surface, SurfaceId,
-    SurfaceOfLinearExtrusion, SurfaceOfRevolution, ToroidalSurface,
+    SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface,
 };
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
@@ -201,6 +201,7 @@ impl WriteBuffer<'_> {
             Surface::Torus(t) => self.emit_torus(t)?,
             Surface::Revolution(r) => self.emit_surface_of_revolution(r)?,
             Surface::Extrusion(e) => self.emit_surface_of_linear_extrusion(e)?,
+            Surface::Offset(o) => self.emit_offset_surface(o)?,
             Surface::Nurbs(nurbs) => self.emit_nurbs_surface(nurbs)?,
         };
         self.surface_ids.insert(id, n);
@@ -532,6 +533,26 @@ impl WriteBuffer<'_> {
                     Attribute::String(String::new()),
                     Attribute::EntityRef(swept),
                     Attribute::EntityRef(vector),
+                ],
+            },
+        });
+        Ok(n)
+    }
+
+    fn emit_offset_surface(&mut self, o: SurfaceOfOffset) -> Result<u64, WriteError> {
+        let basis = self.emit_surface(o.basis)?;
+        let n = self.fresh();
+        self.entities.push(WriterEntity {
+            id: n,
+            body: WriterBody::Simple {
+                name: "OFFSET_SURFACE".into(),
+                attrs: vec![
+                    Attribute::String(String::new()),
+                    Attribute::EntityRef(basis),
+                    Attribute::Real(o.distance),
+                    // self_intersect LOGICAL — .F. hardcoded (informational,
+                    // not stored in IR; see ROADMAP "LOGICAL 보존").
+                    Attribute::Enum("F".into()),
                 ],
             },
         });

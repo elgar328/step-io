@@ -193,11 +193,13 @@ impl ReaderContext {
             }
         }
 
-        // Pass 4-4: surfaces that reference curves (must come after 4-1~3 —
-        // their swept_curve may itself be a SURFACE_CURVE alias).
+        // Pass 4-4: surfaces that reference curves or other surfaces
+        // (must come after 4-1~3 — their swept_curve / basis_surface may
+        // itself be a SURFACE_CURVE alias or a basic surface from 4-1).
         run_pass!(graph, self,
             "SURFACE_OF_REVOLUTION" => convert_surface_of_revolution,
-            "SURFACE_OF_LINEAR_EXTRUSION" => convert_surface_of_linear_extrusion);
+            "SURFACE_OF_LINEAR_EXTRUSION" => convert_surface_of_linear_extrusion,
+            "OFFSET_SURFACE" => convert_offset_surface);
     }
 
     pub(super) fn run_topology_passes(&mut self, graph: &EntityGraph) {

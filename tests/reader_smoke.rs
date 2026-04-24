@@ -1006,6 +1006,119 @@ fn face_surface_ap214_is_spot_check() {
 }
 
 // ------------------------------------------------------------------
+// Offset surface fixtures — exercise Surface::Offset (OFFSET_SURFACE)
+// ------------------------------------------------------------------
+
+const OFFSET_SURFACE_FIXTURES: &[(&str, &str)] = &[(
+    "offset_surface_ap214_is",
+    include_str!("fixtures/offset_surface_ap214_is.step"),
+)];
+
+#[test]
+fn offset_surface_fixtures_convert_without_warnings() {
+    for (name, source) in OFFSET_SURFACE_FIXTURES {
+        let graph = step_io::parse(source)
+            .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
+        let result = ReaderContext::convert(&graph);
+        assert!(
+            result.warnings.is_empty(),
+            "fixture {name}: expected no warnings, got {:#?}",
+            result.warnings,
+        );
+    }
+}
+
+#[test]
+fn offset_surface_fixtures_geometry_pool_counts() {
+    for (name, source) in OFFSET_SURFACE_FIXTURES {
+        let graph = step_io::parse(source)
+            .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
+        let result = ReaderContext::convert(&graph);
+        let geo = &result.model.geometry;
+
+        assert_eq!(geo.points.len(), 246, "fixture {name}: points");
+        assert_eq!(geo.directions.len(), 39, "fixture {name}: directions");
+        assert_eq!(
+            geo.curves.len(),
+            25,
+            "fixture {name}: curves (18 lines + 7 simple nurbs)"
+        );
+        assert_eq!(
+            geo.surfaces.len(),
+            12,
+            "fixture {name}: surfaces (9 planes + 1 simple nurbs + 1 extrusion + 1 offset)"
+        );
+    }
+}
+
+#[test]
+fn offset_surface_fixtures_topology_pool_counts() {
+    for (name, source) in OFFSET_SURFACE_FIXTURES {
+        let graph = step_io::parse(source)
+            .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
+        let result = ReaderContext::convert(&graph);
+        let topo = &result.model.topology;
+
+        assert_eq!(topo.vertices.len(), 16, "fixture {name}: vertices");
+        assert_eq!(topo.edges.len(), 24, "fixture {name}: edges");
+        assert_eq!(topo.wires.len(), 12, "fixture {name}: wires");
+        assert_eq!(topo.faces.len(), 11, "fixture {name}: faces");
+        assert_eq!(topo.shells.len(), 1, "fixture {name}: shells");
+        assert_eq!(topo.solids.len(), 1, "fixture {name}: solids");
+    }
+}
+
+/// Spot-check `OFFSET_SURFACE` round-trip — `Surface::Offset` preserved,
+/// basis resolves to an already-interned surface, and writer emits the
+/// entity name back verbatim.
+#[test]
+fn offset_surface_ap214_is_spot_check() {
+    let source = include_str!("fixtures/offset_surface_ap214_is.step");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    let geo = &result.model.geometry;
+
+    let offset_count = geo
+        .surfaces
+        .iter()
+        .filter(|s| matches!(s, Surface::Offset(_)))
+        .count();
+    assert_eq!(offset_count, 1, "expected 1 Surface::Offset");
+
+    let offset = geo
+        .surfaces
+        .iter()
+        .find_map(|s| match s {
+            Surface::Offset(o) => Some(o),
+            _ => None,
+        })
+        .expect("offset surface missing");
+
+    assert!(
+        (offset.distance.abs() - 5.0).abs() < f64::EPSILON,
+        "expected |distance| == 5.0, got {}",
+        offset.distance,
+    );
+
+    let basis = &geo.surfaces[offset.basis];
+    assert!(
+        matches!(basis, Surface::Nurbs(_)),
+        "expected basis to resolve to a Surface::Nurbs"
+    );
+
+    // Round-trip: emitted text must preserve OFFSET_SURFACE entity name.
+    let written = result
+        .model
+        .write_to_string()
+        .expect("writer produced output");
+    let offset_surface_count = written.matches("OFFSET_SURFACE(").count();
+    assert_eq!(
+        offset_surface_count, 1,
+        "expected 1 OFFSET_SURFACE( occurrence in round-trip output"
+    );
+}
+
+// ------------------------------------------------------------------
 // Unit context — every fixture exports mm/radian/steradian
 // ------------------------------------------------------------------
 
@@ -1022,6 +1135,7 @@ const ALL_FIXTURE_GROUPS: &[&[(&str, &str)]] = &[
     HOLLOW_BOX_FIXTURES,
     ASSEMBLY_FIXTURES,
     FACE_SURFACE_FIXTURES,
+    OFFSET_SURFACE_FIXTURES,
 ];
 
 // ------------------------------------------------------------------
