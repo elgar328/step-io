@@ -1,0 +1,87 @@
+//! Assembly IR — product hierarchy reconstructed from STEP AP203/214/242
+//! `PRODUCT`, `PRODUCT_DEFINITION`, `SHAPE_DEFINITION_REPRESENTATION` and
+//! friends.
+//!
+//! Each `Product` is either a geometry leaf (`Solid` / `SurfaceBody`) or a
+//! group that holds `Instance`s referencing child products. `AssemblyTree`
+//! owns the product arena and the resolved root.
+
+use super::arena::Arena;
+use super::id::{Placement3dId, ProductId, ShellId, SolidId};
+
+/// Assembly graph. Conventionally called a "tree" but shared instances
+/// make it a DAG in general (the same product can be reached through
+/// multiple [`Instance`]s).
+///
+/// Phase A leaves `root` as `None`; Phase B resolves the top-level
+/// product by walking the NAUO graph.
+#[derive(Debug, Clone, Default)]
+pub struct AssemblyTree {
+    pub products: Arena<Product>,
+    /// Phase A: always `None`. Phase B fills this in.
+    pub root: Option<ProductId>,
+}
+
+/// A single STEP `PRODUCT` with its resolved content.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Product {
+    /// The `id` attribute of the STEP `PRODUCT` entity — a user-facing
+    /// identifier such as `"Cube"`. This is *not* the STEP `#N` entity id.
+    pub id: String,
+    /// The `name` attribute of the STEP `PRODUCT` entity.
+    pub name: String,
+    /// The `description` attribute of the STEP `PRODUCT` entity. STEP
+    /// producers commonly leave this blank (`''`); an empty string is
+    /// normalised to `None` so the presence/absence of user-supplied
+    /// description round-trips faithfully.
+    pub description: Option<String>,
+    pub content: ProductContent,
+    /// Coordinate frame referenced by the `ADVANCED_BREP_SHAPE_REPRESENTATION`
+    /// (or group `SHAPE_REPRESENTATION`) `items` list. Commercial CAD output
+    /// uses an identity placement here almost universally; the reader still
+    /// preserves whatever the file held. Kernels that construct an IR from
+    /// scratch call [`crate::ir::model::GeometryPool::identity_placement`] to
+    /// obtain a shared identity id.
+    pub shape_ref_frame: Placement3dId,
+}
+
+/// What a [`Product`] holds.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ProductContent {
+    /// Assembly or wrapper product — references other products as
+    /// [`Instance`]s. Phase A always produces an empty `Vec`; Phase B
+    /// populates it from `NEXT_ASSEMBLY_USAGE_OCCURRENCE` edges.
+    Group(Vec<Instance>),
+    /// Geometry leaf — the product itself is a single solid.
+    Solid(SolidId),
+    /// Surface body leaf — the product is a
+    /// `MANIFOLD_SURFACE_SHAPE_REPRESENTATION`'s `SHELL_BASED_SURFACE_MODEL`
+    /// with one or more shells. Unlike `Solid`, no closed volume is implied;
+    /// shells are typically `OPEN_SHELL`, occasionally `CLOSED_SHELL`.
+    SurfaceBody(Vec<ShellId>),
+}
+
+/// One placement of a child product inside a parent.
+///
+/// Only used from Phase B onward; the type is defined in Phase A so the
+/// public IR shape (`Group(Vec<Instance>)`) is stable across both phases.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Instance {
+    pub child: ProductId,
+    pub transform: Transform3d,
+    /// STEP NAUO `id` attribute (e.g. "1", "23").
+    pub occurrence_id: String,
+    /// STEP NAUO `name` attribute (e.g. "Cube", "Part003").
+    pub occurrence_name: String,
+}
+
+/// A rigid 3D placement expressed as STEP does it: two axis placements
+/// describing how `source` maps onto `target`. Kept as the literal
+/// `ITEM_DEFINED_TRANSFORMATION` payload so the IR can round-trip
+/// without introducing floating-point drift. Kernel adapters compute
+/// the 4×4 matrix themselves when needed.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Transform3d {
+    pub source: Placement3dId,
+    pub target: Placement3dId,
+}

@@ -1,0 +1,162 @@
+/// A typed arena: a `Vec<T>` wrapper that hands out typed Id handles.
+///
+/// Arena items are never removed — the arena grows monotonically. This makes
+/// Ids stable for the lifetime of the arena.
+#[derive(Debug, Clone)]
+pub struct Arena<T> {
+    /// Internal storage. `pub(crate)` so that `define_id!` macro expansions
+    /// in sibling modules can access it.
+    pub(crate) items: Vec<T>,
+}
+
+impl<T> Arena<T> {
+    #[must_use]
+    pub fn new() -> Self {
+        Self { items: Vec::new() }
+    }
+
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.items.len()
+    }
+
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.items.is_empty()
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &T> {
+        self.items.iter()
+    }
+}
+
+impl<T> Default for Arena<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Declare a newtype Id and wire it to `Arena<$item>` via `Index` / `push`.
+///
+/// # Usage
+///
+/// ```ignore
+/// define_id!(PointId, Point3);
+/// ```
+///
+/// Generates:
+/// - `pub struct PointId(pub u32)` with common derives
+/// - `impl Index<PointId> for Arena<Point3>`
+/// - `impl IndexMut<PointId> for Arena<Point3>`
+/// - `Arena<Point3>::push(item) -> PointId`
+macro_rules! define_id {
+    ($id:ident, $item:ty) => {
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+        pub struct $id(pub u32);
+
+        #[allow(clippy::cast_possible_truncation)]
+        impl ::core::ops::Index<$id> for Arena<$item> {
+            type Output = $item;
+            fn index(&self, id: $id) -> &$item {
+                &self.items[id.0 as usize]
+            }
+        }
+
+        #[allow(clippy::cast_possible_truncation)]
+        impl ::core::ops::IndexMut<$id> for Arena<$item> {
+            fn index_mut(&mut self, id: $id) -> &mut $item {
+                &mut self.items[id.0 as usize]
+            }
+        }
+
+        impl Arena<$item> {
+            /// Insert an item and return its typed Id.
+            ///
+            /// # Panics
+            ///
+            /// Panics if the arena contains more than `u32::MAX` items.
+            #[allow(clippy::cast_possible_truncation)]
+            pub fn push(&mut self, item: $item) -> $id {
+                let idx = self.items.len();
+                assert!(u32::try_from(idx).is_ok(), "arena overflow");
+                self.items.push(item);
+                $id(idx as u32)
+            }
+        }
+    };
+}
+pub(crate) use define_id;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Dummy types for testing the macro.
+    #[derive(Debug, Clone, PartialEq)]
+    struct Foo(i32);
+
+    #[derive(Debug, Clone, PartialEq)]
+    struct Bar(i32);
+
+    define_id!(FooId, Foo);
+    define_id!(BarId, Bar);
+
+    #[test]
+    fn push_and_index() {
+        let mut arena = Arena::<Foo>::new();
+        let id0 = arena.push(Foo(10));
+        let id1 = arena.push(Foo(20));
+        assert_eq!(id0, FooId(0));
+        assert_eq!(id1, FooId(1));
+        assert_eq!(arena[id0], Foo(10));
+        assert_eq!(arena[id1], Foo(20));
+    }
+
+    #[test]
+    fn index_mut() {
+        let mut arena = Arena::<Foo>::new();
+        let id = arena.push(Foo(10));
+        arena[id] = Foo(99);
+        assert_eq!(arena[id], Foo(99));
+    }
+
+    #[test]
+    fn len_and_is_empty() {
+        let mut arena = Arena::<Foo>::new();
+        assert!(arena.is_empty());
+        assert_eq!(arena.len(), 0);
+        arena.push(Foo(1));
+        assert!(!arena.is_empty());
+        assert_eq!(arena.len(), 1);
+    }
+
+    #[test]
+    fn iter_yields_items_in_order() {
+        let mut arena = Arena::<Foo>::new();
+        arena.push(Foo(1));
+        arena.push(Foo(2));
+        arena.push(Foo(3));
+        let values: Vec<&Foo> = arena.iter().collect();
+        assert_eq!(values, vec![&Foo(1), &Foo(2), &Foo(3)]);
+    }
+
+    #[test]
+    fn default_is_empty() {
+        let arena = Arena::<Foo>::default();
+        assert!(arena.is_empty());
+    }
+
+    // Type safety: FooId cannot index Arena<Bar> and vice versa.
+    // This is enforced at compile time. The following would not compile:
+    //   let bar_arena = Arena::<Bar>::new();
+    //   let _ = bar_arena[FooId(0)]; // ERROR: Index<FooId> not impl for Arena<Bar>
+    #[test]
+    fn separate_arenas_are_independent() {
+        let mut foos = Arena::<Foo>::new();
+        let mut bars = Arena::<Bar>::new();
+        let foo_id = foos.push(Foo(1));
+        let bar_id = bars.push(Bar(2));
+        assert_eq!(foos[foo_id], Foo(1));
+        assert_eq!(bars[bar_id], Bar(2));
+    }
+}

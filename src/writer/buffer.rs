@@ -1,0 +1,177 @@
+//! IR → `Vec<WriterEntity>` conversion.
+//!
+//! `WriteBuffer` assigns `#N` ids and assembles `WriterEntity` values as it
+//! walks the IR. Each concern lives in its own sub-module:
+//!
+//! - [`geometry`] — points, directions, placements, curves, surfaces
+//! - [`topology`] — vertices, edges, wires, faces, shells, solids
+//! - [`units`] — `SI_UNIT`-based unit context
+//! - [`assembly`] — single-part PRODUCT chain + ABSR + SDR
+
+use std::collections::HashMap;
+
+use super::WriteError;
+use super::entity::WriterEntity;
+use crate::ir::{
+    Curve2dId, CurveId, Direction2dId, DirectionId, EdgeId, FaceId, Placement1dId, Placement2dId,
+    Placement3dId, Point2dId, PointId, ShellId, SolidId, StepModel, SurfaceId, VertexId, WireId,
+};
+
+mod assembly;
+mod geometry;
+mod topology;
+mod units;
+
+pub(in crate::writer) struct WriteBuffer<'m> {
+    pub(in crate::writer) model: &'m StepModel,
+    pub(in crate::writer) next_id: u64,
+    pub(in crate::writer) entities: Vec<WriterEntity>,
+    pub(in crate::writer) point_ids: HashMap<PointId, u64>,
+    pub(in crate::writer) direction_ids: HashMap<DirectionId, u64>,
+    pub(in crate::writer) placement_ids: HashMap<Placement3dId, u64>,
+    pub(in crate::writer) placement_1d_ids: HashMap<Placement1dId, u64>,
+    pub(in crate::writer) placement_2d_ids: HashMap<Placement2dId, u64>,
+    pub(in crate::writer) curve_ids: HashMap<CurveId, u64>,
+    pub(in crate::writer) surface_ids: HashMap<SurfaceId, u64>,
+    pub(in crate::writer) vertex_ids: HashMap<VertexId, u64>,
+    pub(in crate::writer) edge_ids: HashMap<EdgeId, u64>,
+    pub(in crate::writer) wire_ids: HashMap<WireId, u64>,
+    pub(in crate::writer) face_ids: HashMap<FaceId, u64>,
+    pub(in crate::writer) shell_ids: HashMap<ShellId, u64>,
+    pub(in crate::writer) solid_ids: HashMap<SolidId, u64>,
+    pub(in crate::writer) point_2d_ids: HashMap<Point2dId, u64>,
+    pub(in crate::writer) direction_2d_ids: HashMap<Direction2dId, u64>,
+    pub(in crate::writer) curve_2d_ids: HashMap<Curve2dId, u64>,
+    pub(in crate::writer) length_unit_id: Option<u64>,
+    pub(in crate::writer) angle_unit_id: Option<u64>,
+    pub(in crate::writer) solid_angle_unit_id: Option<u64>,
+    pub(in crate::writer) global_unit_context_id: Option<u64>,
+    /// Cached `DIMENSIONAL_EXPONENTS(1,0,0,0,0,0,0)` — length dimension.
+    /// Re-used by any `CONVERSION_BASED_UNIT` with a length flavour.
+    pub(in crate::writer) length_dim_exp_id: Option<u64>,
+    /// Cached `DIMENSIONAL_EXPONENTS(0,0,0,0,0,0,0)` — dimensionless.
+    /// Re-used by the degree `CONVERSION_BASED_UNIT`.
+    pub(in crate::writer) dimensionless_dim_exp_id: Option<u64>,
+}
+
+impl<'m> WriteBuffer<'m> {
+    pub(in crate::writer) fn new(model: &'m StepModel) -> Self {
+        Self {
+            model,
+            next_id: 0,
+            entities: Vec::new(),
+            point_ids: HashMap::new(),
+            direction_ids: HashMap::new(),
+            placement_ids: HashMap::new(),
+            placement_1d_ids: HashMap::new(),
+            placement_2d_ids: HashMap::new(),
+            curve_ids: HashMap::new(),
+            surface_ids: HashMap::new(),
+            vertex_ids: HashMap::new(),
+            edge_ids: HashMap::new(),
+            wire_ids: HashMap::new(),
+            face_ids: HashMap::new(),
+            shell_ids: HashMap::new(),
+            solid_ids: HashMap::new(),
+            point_2d_ids: HashMap::new(),
+            direction_2d_ids: HashMap::new(),
+            curve_2d_ids: HashMap::new(),
+            length_unit_id: None,
+            angle_unit_id: None,
+            solid_angle_unit_id: None,
+            global_unit_context_id: None,
+            length_dim_exp_id: None,
+            dimensionless_dim_exp_id: None,
+        }
+    }
+
+    pub(in crate::writer) fn finish_entities(self) -> Vec<WriterEntity> {
+        self.entities
+    }
+
+    pub(in crate::writer) fn emit_all(&mut self) -> Result<(), WriteError> {
+        // Order: geometry -> topology -> units -> assembly. Mirrors the
+        // OCCT-flavoured fixture layout (topology before units) and keeps
+        // all cross-pool references backward (parent after children).
+        // Arena iteration yields the original Id order, so dedup maps set
+        // in one pass are reused in the next.
+        for i in 0..self.model.geometry.points.len() {
+            #[allow(clippy::cast_possible_truncation)]
+            self.emit_point(PointId(i as u32))?;
+        }
+        for i in 0..self.model.geometry.directions.len() {
+            #[allow(clippy::cast_possible_truncation)]
+            self.emit_direction(DirectionId(i as u32))?;
+        }
+        for i in 0..self.model.geometry.placements.len() {
+            #[allow(clippy::cast_possible_truncation)]
+            self.emit_axis2_placement_3d(Placement3dId(i as u32))?;
+        }
+        for i in 0..self.model.geometry.placements_1d.len() {
+            #[allow(clippy::cast_possible_truncation)]
+            self.emit_axis1_placement(Placement1dId(i as u32))?;
+        }
+        for i in 0..self.model.geometry.curves.len() {
+            #[allow(clippy::cast_possible_truncation)]
+            self.emit_curve(CurveId(i as u32))?;
+        }
+        for i in 0..self.model.geometry.surfaces.len() {
+            #[allow(clippy::cast_possible_truncation)]
+            self.emit_surface(SurfaceId(i as u32))?;
+        }
+        // 2D geometry (PCURVE parametric space) — emitted after 3D surfaces
+        // so `emit_surface_curve_wrapper` can cache-hit the 3D basis surface,
+        // and before topology so `emit_edge` can cache-hit the 2D curves.
+        // Arena is empty for files without PCURVE content → zero iterations.
+        for i in 0..self.model.geometry.points_2d.len() {
+            #[allow(clippy::cast_possible_truncation)]
+            self.emit_point_2d(Point2dId(i as u32))?;
+        }
+        for i in 0..self.model.geometry.directions_2d.len() {
+            #[allow(clippy::cast_possible_truncation)]
+            self.emit_direction_2d(Direction2dId(i as u32))?;
+        }
+        for i in 0..self.model.geometry.placements_2d.len() {
+            #[allow(clippy::cast_possible_truncation)]
+            self.emit_axis2_placement_2d(Placement2dId(i as u32))?;
+        }
+        for i in 0..self.model.geometry.curves_2d.len() {
+            #[allow(clippy::cast_possible_truncation)]
+            self.emit_curve_2d(Curve2dId(i as u32))?;
+        }
+        for i in 0..self.model.topology.vertices.len() {
+            #[allow(clippy::cast_possible_truncation)]
+            self.emit_vertex(VertexId(i as u32))?;
+        }
+        for i in 0..self.model.topology.edges.len() {
+            #[allow(clippy::cast_possible_truncation)]
+            self.emit_edge(EdgeId(i as u32))?;
+        }
+        for i in 0..self.model.topology.wires.len() {
+            #[allow(clippy::cast_possible_truncation)]
+            self.emit_wire(WireId(i as u32))?;
+        }
+        for i in 0..self.model.topology.faces.len() {
+            #[allow(clippy::cast_possible_truncation)]
+            self.emit_face(FaceId(i as u32))?;
+        }
+        for i in 0..self.model.topology.shells.len() {
+            #[allow(clippy::cast_possible_truncation)]
+            self.emit_shell(ShellId(i as u32))?;
+        }
+        for i in 0..self.model.topology.solids.len() {
+            #[allow(clippy::cast_possible_truncation)]
+            self.emit_solid(SolidId(i as u32))?;
+        }
+        if let Some(units) = self.model.units {
+            self.emit_unit_context(units);
+        }
+        self.emit_product_chain_if_eligible()?;
+        Ok(())
+    }
+
+    pub(in crate::writer) fn fresh(&mut self) -> u64 {
+        self.next_id += 1;
+        self.next_id
+    }
+}

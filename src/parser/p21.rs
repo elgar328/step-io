@@ -1,0 +1,818 @@
+use std::collections::BTreeMap;
+
+use super::entity::{Attribute, EntityGraph, ParseError, RawEntity, RawEntityPart};
+use super::lexer::{Lexer, Span, Token, TokenKind};
+use super::schema::StepSchema;
+
+/// Convenience function: parse a complete Part 21 source into an [`EntityGraph`].
+///
+/// # Errors
+///
+/// Returns the first [`ParseError`] encountered.
+pub fn parse(source: &str) -> Result<EntityGraph, ParseError> {
+    Parser::new(source).parse()
+}
+
+/// Recursive-descent parser for ISO 10303-21 (Part 21) files.
+///
+/// Consumes `self` on [`Parser::parse`] because the underlying [`Lexer`] is
+/// a one-pass iterator and cannot be rewound.
+pub struct Parser<'src> {
+    lexer: Lexer<'src>,
+}
+
+impl<'src> Parser<'src> {
+    #[must_use]
+    pub fn new(source: &'src str) -> Self {
+        Self {
+            lexer: Lexer::new(source),
+        }
+    }
+
+    /// Parse the entire Part 21 file and return an [`EntityGraph`].
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`ParseError`] on the first structural or lexical problem.
+    pub fn parse(self) -> Result<EntityGraph, ParseError> {
+        let mut this = self;
+        this.parse_file()
+    }
+
+    // ------------------------------------------------------------------
+    // Top-level grammar
+    // ------------------------------------------------------------------
+
+    fn parse_file(&mut self) -> Result<EntityGraph, ParseError> {
+        // ISO-10303-21;
+        self.expect_token_kind(&TokenKind::IsoStart, "ISO-10303-21")?;
+        self.expect_semicolon()?;
+
+        // HEADER; ... ENDSEC;
+        self.expect_token_kind(&TokenKind::Header, "HEADER")?;
+        self.expect_semicolon()?;
+        let (header, schema) = self.parse_header_section()?;
+        self.expect_token_kind(&TokenKind::EndSec, "ENDSEC")?;
+        self.expect_semicolon()?;
+
+        // DATA; ... ENDSEC;
+        self.expect_token_kind(&TokenKind::Data, "DATA")?;
+        self.expect_semicolon()?;
+        let entities = self.parse_data_section()?;
+        self.expect_token_kind(&TokenKind::EndSec, "ENDSEC")?;
+        self.expect_semicolon()?;
+
+        // END-ISO-10303-21;
+        self.expect_token_kind(&TokenKind::IsoEnd, "END-ISO-10303-21")?;
+        self.expect_semicolon()?;
+
+        // EOF verification — nothing should follow.
+        if let Some(result) = self.lexer.next() {
+            let tok = result?;
+            return Err(ParseError::UnexpectedToken {
+                expected: "end of file",
+                found: tok.kind,
+                span: tok.span,
+            });
+        }
+
+        Ok(EntityGraph {
+            schema,
+            header,
+            entities,
+        })
+    }
+
+    // ------------------------------------------------------------------
+    // HEADER section
+    // ------------------------------------------------------------------
+
+    /// Parse the HEADER section content (between `HEADER;` and `ENDSEC;`).
+    ///
+    /// HEADER entities are "uninstantiated": they have no `#N =` prefix, just
+    /// `KEYWORD(...);`. The section must contain at least `FILE_DESCRIPTION`,
+    /// `FILE_NAME`, and `FILE_SCHEMA` in order.
+    fn parse_header_section(&mut self) -> Result<(Vec<RawEntity>, StepSchema), ParseError> {
+        let mut header = Vec::new();
+        let mut schema_raw = Vec::new();
+
+        // Read header entities until we see ENDSEC.
+        // HEADER entities use an auto-incrementing pseudo-id (not in the file).
+        let mut pseudo_id = 0u64;
+        while !matches!(self.peek_kind()?, TokenKind::EndSec) {
+            let tok = self.next_token()?;
+            let name = match tok.kind {
+                TokenKind::Keyword(name) => name.to_uppercase(),
+                other => {
+                    return Err(ParseError::UnexpectedToken {
+                        expected: "HEADER entity name",
+                        found: other,
+                        span: tok.span,
+                    });
+                }
+            };
+
+            let attributes = self.parse_parameter_list()?;
+
+            // Extract FILE_SCHEMA strings before consuming the semicolon.
+            if name == "FILE_SCHEMA" {
+                schema_raw = Self::extract_file_schema_strings(&attributes, tok.span)?;
+            }
+
+            self.expect_semicolon()?;
+
+            pseudo_id += 1;
+            header.push(RawEntity::Simple {
+                id: pseudo_id,
+                name,
+                attributes,
+                span: tok.span,
+            });
+        }
+
+        // Validate required entities.
+        let names: Vec<&str> = header
+            .iter()
+            .filter_map(|e| match e {
+                RawEntity::Simple { name, .. } => Some(name.as_str()),
+                RawEntity::Complex { .. } => None,
+            })
+            .collect();
+
+        if !names.contains(&"FILE_DESCRIPTION") {
+            return Err(ParseError::MissingHeaderEntity {
+                name: "FILE_DESCRIPTION",
+            });
+        }
+        if !names.contains(&"FILE_NAME") {
+            return Err(ParseError::MissingHeaderEntity { name: "FILE_NAME" });
+        }
+        if !names.contains(&"FILE_SCHEMA") {
+            return Err(ParseError::MissingHeaderEntity {
+                name: "FILE_SCHEMA",
+            });
+        }
+
+        let schema = super::schema::identify_schema(&schema_raw);
+
+        Ok((header, schema))
+    }
+
+    /// Extract all string values from the first (and typically only) list
+    /// attribute of a `FILE_SCHEMA((...))` entity.
+    fn extract_file_schema_strings(
+        attributes: &[Attribute],
+        span: Span,
+    ) -> Result<Vec<String>, ParseError> {
+        // FILE_SCHEMA has exactly one attribute: a list of strings.
+        let list = attributes
+            .first()
+            .ok_or(ParseError::MalformedFileSchema { span })?;
+        match list {
+            Attribute::List(items) => {
+                let mut result = Vec::with_capacity(items.len());
+                for item in items {
+                    match item {
+                        Attribute::String(s) => result.push(s.clone()),
+                        _ => return Err(ParseError::MalformedFileSchema { span }),
+                    }
+                }
+                Ok(result)
+            }
+            _ => Err(ParseError::MalformedFileSchema { span }),
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // DATA section
+    // ------------------------------------------------------------------
+
+    /// Parse the DATA section content (between `DATA;` and `ENDSEC;`).
+    fn parse_data_section(&mut self) -> Result<BTreeMap<u64, RawEntity>, ParseError> {
+        let mut entities = BTreeMap::new();
+
+        while !matches!(self.peek_kind()?, TokenKind::EndSec) {
+            let entity = self.parse_entity_instance()?;
+            let id = entity.id();
+            let span = entity.span();
+            if entities.insert(id, entity).is_some() {
+                return Err(ParseError::DuplicateEntityId { id, span });
+            }
+        }
+
+        Ok(entities)
+    }
+
+    // ------------------------------------------------------------------
+    // Entity instance parsing
+    // ------------------------------------------------------------------
+
+    /// Parse one entity instance: `#N = NAME(...);` or `#N = ( NAME(...) ... );`
+    fn parse_entity_instance(&mut self) -> Result<RawEntity, ParseError> {
+        // #N
+        let id_tok = self.expect(
+            |k| matches!(k, TokenKind::EntityRef(_)),
+            "entity reference #N",
+        )?;
+        let TokenKind::EntityRef(id) = id_tok.kind else {
+            unreachable!()
+        };
+        let span = id_tok.span;
+
+        // =
+        self.expect_equals()?;
+
+        // Peek to distinguish Simple vs Complex.
+        let kind = self.peek_kind()?.clone();
+        match kind {
+            TokenKind::Keyword(name) => {
+                self.next_token()?; // consume keyword
+                self.parse_simple_body(id, &name, span)
+            }
+            TokenKind::LParen => {
+                self.next_token()?; // consume `(`
+                self.parse_complex_body(id, span)
+            }
+            _ => {
+                let tok = self.next_token()?;
+                Err(ParseError::UnexpectedToken {
+                    expected: "entity type name or '('",
+                    found: tok.kind,
+                    span: tok.span,
+                })
+            }
+        }
+    }
+
+    fn parse_simple_body(
+        &mut self,
+        id: u64,
+        name: &str,
+        span: Span,
+    ) -> Result<RawEntity, ParseError> {
+        let attributes = self.parse_parameter_list()?;
+        self.expect_semicolon()?;
+        Ok(RawEntity::Simple {
+            id,
+            name: name.to_uppercase(),
+            attributes,
+            span,
+        })
+    }
+
+    fn parse_complex_body(&mut self, id: u64, span: Span) -> Result<RawEntity, ParseError> {
+        let mut parts = Vec::new();
+
+        // At least one part is required — `( )` is an error.
+        if matches!(self.peek_kind()?, TokenKind::RParen) {
+            let tok = self.next_token()?;
+            return Err(ParseError::UnexpectedToken {
+                expected: "entity type name",
+                found: tok.kind,
+                span: tok.span,
+            });
+        }
+
+        loop {
+            let kind = self.peek_kind()?.clone();
+            match kind {
+                TokenKind::Keyword(name) => {
+                    self.next_token()?; // consume keyword
+                    let attributes = self.parse_parameter_list()?;
+                    parts.push(RawEntityPart {
+                        name: name.to_uppercase(),
+                        attributes,
+                    });
+                }
+                TokenKind::RParen => {
+                    self.next_token()?; // consume `)`
+                    break;
+                }
+                _ => {
+                    let tok = self.next_token()?;
+                    return Err(ParseError::UnexpectedToken {
+                        expected: "entity type name or ')'",
+                        found: tok.kind,
+                        span: tok.span,
+                    });
+                }
+            }
+        }
+
+        self.expect_semicolon()?;
+        Ok(RawEntity::Complex { id, parts, span })
+    }
+
+    // ------------------------------------------------------------------
+    // Attribute parsing
+    // ------------------------------------------------------------------
+
+    /// Parse a comma-separated parameter list between parentheses.
+    /// Expects the opening `(` to have been consumed already? No — this
+    /// method consumes `(`, reads parameters, and consumes `)`.
+    fn parse_parameter_list(&mut self) -> Result<Vec<Attribute>, ParseError> {
+        self.expect_lparen()?;
+        let attrs = self.parse_list_value()?;
+        self.expect_rparen()?;
+        Ok(attrs)
+    }
+
+    /// Parse comma-separated parameters until a `)` is encountered.
+    /// The `)` is **not** consumed — the caller is responsible.
+    fn parse_list_value(&mut self) -> Result<Vec<Attribute>, ParseError> {
+        let mut items = Vec::new();
+        // Empty list `()`.
+        if matches!(self.peek_kind()?, TokenKind::RParen) {
+            return Ok(items);
+        }
+        items.push(self.parse_parameter()?);
+        while matches!(self.peek_kind()?, TokenKind::Comma) {
+            // Consume the comma.
+            self.next_token()?;
+            items.push(self.parse_parameter()?);
+        }
+        Ok(items)
+    }
+
+    /// Parse a single Part 21 parameter value.
+    fn parse_parameter(&mut self) -> Result<Attribute, ParseError> {
+        let kind = self.peek_kind()?.clone();
+        match kind {
+            TokenKind::Integer(v) => {
+                self.next_token()?;
+                Ok(Attribute::Integer(v))
+            }
+            TokenKind::Real(v) => {
+                self.next_token()?;
+                Ok(Attribute::Real(v))
+            }
+            TokenKind::String(ref s) => {
+                let s = s.clone();
+                self.next_token()?;
+                Ok(Attribute::String(s))
+            }
+            TokenKind::Enum(ref s) => {
+                let s = s.clone();
+                self.next_token()?;
+                Ok(Attribute::Enum(s))
+            }
+            TokenKind::Binary(ref s) => {
+                let s = s.clone();
+                self.next_token()?;
+                Ok(Attribute::Binary(s))
+            }
+            TokenKind::EntityRef(id) => {
+                self.next_token()?;
+                Ok(Attribute::EntityRef(id))
+            }
+            TokenKind::Dollar => {
+                self.next_token()?;
+                Ok(Attribute::Unset)
+            }
+            TokenKind::Asterisk => {
+                self.next_token()?;
+                Ok(Attribute::Derived)
+            }
+            TokenKind::LParen => {
+                // Nested list.
+                self.next_token()?; // consume `(`
+                let items = self.parse_list_value()?;
+                self.expect_rparen()?;
+                Ok(Attribute::List(items))
+            }
+            TokenKind::Keyword(ref name) => {
+                // Typed parameter: `NAME(value)`.
+                let type_name = name.to_uppercase();
+                self.next_token()?; // consume keyword
+                self.expect_lparen()?;
+                let value = self.parse_parameter()?;
+                self.expect_rparen()?;
+                Ok(Attribute::Typed {
+                    type_name,
+                    value: Box::new(value),
+                })
+            }
+            _ => {
+                let tok = self.next_token()?;
+                Err(ParseError::InvalidAttributePosition {
+                    span: tok.span,
+                    detail: "unexpected token in attribute position",
+                })
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Token-level helpers
+    // ------------------------------------------------------------------
+
+    /// Consume the next token, returning [`ParseError::UnexpectedEof`] if the
+    /// stream is exhausted.
+    fn next_token(&mut self) -> Result<Token, ParseError> {
+        match self.lexer.next() {
+            Some(result) => Ok(result?),
+            None => Err(ParseError::UnexpectedEof {
+                expected: "any token",
+            }),
+        }
+    }
+
+    /// Peek at the next token's kind without consuming it.
+    fn peek_kind(&mut self) -> Result<&TokenKind, ParseError> {
+        match self.lexer.peek() {
+            Some(Ok(tok)) => Ok(&tok.kind),
+            Some(Err(err)) => Err(ParseError::Lex(err.clone())),
+            None => Err(ParseError::UnexpectedEof {
+                expected: "any token",
+            }),
+        }
+    }
+
+    /// Consume the next token if it matches `pred`; otherwise return an error.
+    fn expect<F>(&mut self, pred: F, expected: &'static str) -> Result<Token, ParseError>
+    where
+        F: Fn(&TokenKind) -> bool,
+    {
+        let tok = self.next_token()?;
+        if pred(&tok.kind) {
+            Ok(tok)
+        } else {
+            Err(ParseError::UnexpectedToken {
+                expected,
+                found: tok.kind,
+                span: tok.span,
+            })
+        }
+    }
+
+    /// Consume the next token and verify it matches a specific [`TokenKind`]
+    /// variant (by discriminant, ignoring inner data).
+    fn expect_token_kind(
+        &mut self,
+        kind: &TokenKind,
+        expected: &'static str,
+    ) -> Result<Token, ParseError> {
+        self.expect(
+            |k| std::mem::discriminant(k) == std::mem::discriminant(kind),
+            expected,
+        )
+    }
+
+    /// Expect and consume a semicolon.
+    fn expect_semicolon(&mut self) -> Result<Span, ParseError> {
+        Ok(self
+            .expect(|k| matches!(k, TokenKind::Semicolon), ";")?
+            .span)
+    }
+
+    /// Expect and consume a left parenthesis.
+    fn expect_lparen(&mut self) -> Result<Span, ParseError> {
+        Ok(self.expect(|k| matches!(k, TokenKind::LParen), "(")?.span)
+    }
+
+    /// Expect and consume a right parenthesis.
+    fn expect_rparen(&mut self) -> Result<Span, ParseError> {
+        Ok(self.expect(|k| matches!(k, TokenKind::RParen), ")")?.span)
+    }
+
+    /// Expect and consume an equals sign.
+    fn expect_equals(&mut self) -> Result<Span, ParseError> {
+        Ok(self.expect(|k| matches!(k, TokenKind::Equals), "=")?.span)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_empty_input_errors() {
+        let err = parse("").unwrap_err();
+        assert!(matches!(err, ParseError::UnexpectedEof { .. }));
+    }
+
+    #[test]
+    fn parser_next_token_returns_eof_on_empty() {
+        let mut parser = Parser::new("");
+        assert!(matches!(
+            parser.next_token(),
+            Err(ParseError::UnexpectedEof { .. })
+        ));
+    }
+
+    #[test]
+    fn parser_peek_kind_returns_eof_on_empty() {
+        let mut parser = Parser::new("");
+        assert!(matches!(
+            parser.peek_kind(),
+            Err(ParseError::UnexpectedEof { .. })
+        ));
+    }
+
+    #[test]
+    fn parser_expect_semicolon_ok() {
+        let mut parser = Parser::new(";");
+        assert!(parser.expect_semicolon().is_ok());
+    }
+
+    #[test]
+    fn parser_expect_semicolon_wrong_token() {
+        let mut parser = Parser::new("(");
+        let err = parser.expect_semicolon().unwrap_err();
+        assert!(matches!(
+            err,
+            ParseError::UnexpectedToken { expected: ";", .. }
+        ));
+    }
+
+    // --- parse_parameter helpers ---
+
+    /// Parse a single parameter by feeding it directly to `parse_parameter`.
+    fn parse_single_attr(param_text: &str) -> Attribute {
+        let mut parser = Parser::new(param_text);
+        parser
+            .parse_parameter()
+            .unwrap_or_else(|e| panic!("parse_parameter failed on {param_text:?}: {e}"))
+    }
+
+    // --- Scalar tests ---
+
+    #[test]
+    fn parse_param_integer() {
+        assert_eq!(parse_single_attr("42"), Attribute::Integer(42));
+    }
+
+    #[test]
+    fn parse_param_real() {
+        assert_eq!(parse_single_attr("1.5"), Attribute::Real(1.5));
+    }
+
+    #[test]
+    fn parse_param_real_exponent() {
+        assert_eq!(parse_single_attr("1.E-07"), Attribute::Real(1e-7));
+    }
+
+    #[test]
+    fn parse_param_string() {
+        assert_eq!(
+            parse_single_attr("'hello'"),
+            Attribute::String("hello".into())
+        );
+    }
+
+    #[test]
+    fn parse_param_enum() {
+        assert_eq!(
+            parse_single_attr(".MILLI."),
+            Attribute::Enum("MILLI".into())
+        );
+    }
+
+    #[test]
+    fn parse_param_binary() {
+        assert_eq!(
+            parse_single_attr("\"3FFA\""),
+            Attribute::Binary("3FFA".into())
+        );
+    }
+
+    #[test]
+    fn parse_param_entity_ref() {
+        assert_eq!(parse_single_attr("#42"), Attribute::EntityRef(42));
+    }
+
+    #[test]
+    fn parse_param_unset() {
+        assert_eq!(parse_single_attr("$"), Attribute::Unset);
+    }
+
+    #[test]
+    fn parse_param_derived() {
+        assert_eq!(parse_single_attr("*"), Attribute::Derived);
+    }
+
+    // --- List tests ---
+
+    #[test]
+    fn parse_param_empty_list() {
+        assert_eq!(parse_single_attr("()"), Attribute::List(vec![]));
+    }
+
+    #[test]
+    fn parse_param_flat_list() {
+        assert_eq!(
+            parse_single_attr("(1,2,3)"),
+            Attribute::List(vec![
+                Attribute::Integer(1),
+                Attribute::Integer(2),
+                Attribute::Integer(3),
+            ])
+        );
+    }
+
+    #[test]
+    fn parse_param_nested_list() {
+        assert_eq!(
+            parse_single_attr("((#1),(#2,#3))"),
+            Attribute::List(vec![
+                Attribute::List(vec![Attribute::EntityRef(1)]),
+                Attribute::List(vec![Attribute::EntityRef(2), Attribute::EntityRef(3)]),
+            ])
+        );
+    }
+
+    #[test]
+    fn parse_param_enum_list() {
+        assert_eq!(
+            parse_single_attr("(.T.,.F.)"),
+            Attribute::List(vec![
+                Attribute::Enum("T".into()),
+                Attribute::Enum("F".into()),
+            ])
+        );
+    }
+
+    // --- Typed literal tests ---
+
+    #[test]
+    fn parse_param_typed_real() {
+        assert_eq!(
+            parse_single_attr("LENGTH_MEASURE(1.E-07)"),
+            Attribute::Typed {
+                type_name: "LENGTH_MEASURE".into(),
+                value: Box::new(Attribute::Real(1e-7)),
+            }
+        );
+    }
+
+    #[test]
+    fn parse_param_typed_positive_length() {
+        assert_eq!(
+            parse_single_attr("POSITIVE_LENGTH_MEASURE(0.1)"),
+            Attribute::Typed {
+                type_name: "POSITIVE_LENGTH_MEASURE".into(),
+                value: Box::new(Attribute::Real(0.1)),
+            }
+        );
+    }
+
+    #[test]
+    fn parse_param_typed_of_list() {
+        assert_eq!(
+            parse_single_attr("BOUNDED_CURVE((#1,#2))"),
+            Attribute::Typed {
+                type_name: "BOUNDED_CURVE".into(),
+                value: Box::new(Attribute::List(vec![
+                    Attribute::EntityRef(1),
+                    Attribute::EntityRef(2),
+                ])),
+            }
+        );
+    }
+
+    #[test]
+    fn parse_param_typed_nested() {
+        // TYPE1(TYPE2(42)) — grammar allows recursive typed parameters.
+        assert_eq!(
+            parse_single_attr("TYPE1(TYPE2(42))"),
+            Attribute::Typed {
+                type_name: "TYPE1".into(),
+                value: Box::new(Attribute::Typed {
+                    type_name: "TYPE2".into(),
+                    value: Box::new(Attribute::Integer(42)),
+                }),
+            }
+        );
+    }
+
+    // --- Entity instance parsing ---
+
+    fn parse_entity(src: &str) -> RawEntity {
+        let mut parser = Parser::new(src);
+        parser
+            .parse_entity_instance()
+            .unwrap_or_else(|e| panic!("parse_entity_instance failed: {e}"))
+    }
+
+    #[test]
+    fn parse_simple_entity() {
+        let e = parse_entity("#1 = LINE('', #2, #3);");
+        match e {
+            RawEntity::Simple {
+                id,
+                name,
+                attributes,
+                ..
+            } => {
+                assert_eq!(id, 1);
+                assert_eq!(name, "LINE");
+                assert_eq!(attributes.len(), 3);
+                assert_eq!(attributes[0], Attribute::String(String::new()));
+                assert_eq!(attributes[1], Attribute::EntityRef(2));
+                assert_eq!(attributes[2], Attribute::EntityRef(3));
+            }
+            RawEntity::Complex { .. } => panic!("expected Simple"),
+        }
+    }
+
+    #[test]
+    fn parse_simple_entity_with_derived_and_unset() {
+        let e = parse_entity("#20 = ORIENTED_EDGE('',*,*,#21,.T.);");
+        match e {
+            RawEntity::Simple { id, attributes, .. } => {
+                assert_eq!(id, 20);
+                assert_eq!(attributes[0], Attribute::String(String::new()));
+                assert_eq!(attributes[1], Attribute::Derived);
+                assert_eq!(attributes[2], Attribute::Derived);
+                assert_eq!(attributes[3], Attribute::EntityRef(21));
+                assert_eq!(attributes[4], Attribute::Enum("T".into()));
+            }
+            RawEntity::Complex { .. } => panic!("expected Simple"),
+        }
+    }
+
+    #[test]
+    fn parse_simple_entity_name_is_uppercased() {
+        let e = parse_entity("#1 = cartesian_point('', (0., 0., 0.));");
+        match e {
+            RawEntity::Simple { name, .. } => {
+                assert_eq!(name, "CARTESIAN_POINT");
+            }
+            RawEntity::Complex { .. } => panic!("expected Simple"),
+        }
+    }
+
+    #[test]
+    fn parse_complex_entity_four_parts() {
+        let src = "#165 = ( GEOMETRIC_REPRESENTATION_CONTEXT(3) \
+                   GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT((#169)) \
+                   GLOBAL_UNIT_ASSIGNED_CONTEXT((#166,#167,#168)) \
+                   REPRESENTATION_CONTEXT('a','b') );";
+        let e = parse_entity(src);
+        match e {
+            RawEntity::Complex { id, parts, .. } => {
+                assert_eq!(id, 165);
+                assert_eq!(parts.len(), 4);
+                assert_eq!(parts[0].name, "GEOMETRIC_REPRESENTATION_CONTEXT");
+                assert_eq!(parts[1].name, "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT");
+                assert_eq!(parts[2].name, "GLOBAL_UNIT_ASSIGNED_CONTEXT");
+                assert_eq!(parts[3].name, "REPRESENTATION_CONTEXT");
+                assert_eq!(parts[0].attributes, vec![Attribute::Integer(3)]);
+                assert_eq!(parts[3].attributes.len(), 2);
+            }
+            RawEntity::Simple { .. } => panic!("expected Complex"),
+        }
+    }
+
+    #[test]
+    fn parse_complex_entity_three_parts_mixed_attrs() {
+        let src = "#166 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );";
+        let e = parse_entity(src);
+        match e {
+            RawEntity::Complex { id, parts, .. } => {
+                assert_eq!(id, 166);
+                assert_eq!(parts.len(), 3);
+                assert_eq!(parts[0].name, "LENGTH_UNIT");
+                assert_eq!(parts[0].attributes, vec![]);
+                assert_eq!(parts[1].name, "NAMED_UNIT");
+                assert_eq!(parts[1].attributes, vec![Attribute::Derived]);
+                assert_eq!(parts[2].name, "SI_UNIT");
+                assert_eq!(parts[2].attributes.len(), 2);
+            }
+            RawEntity::Simple { .. } => panic!("expected Complex"),
+        }
+    }
+
+    #[test]
+    fn parse_complex_entity_name_uppercased() {
+        let src = "#1 = ( length_unit() named_unit(*) );";
+        let e = parse_entity(src);
+        match e {
+            RawEntity::Complex { parts, .. } => {
+                assert_eq!(parts[0].name, "LENGTH_UNIT");
+                assert_eq!(parts[1].name, "NAMED_UNIT");
+            }
+            RawEntity::Simple { .. } => panic!("expected Complex"),
+        }
+    }
+
+    #[test]
+    fn parse_empty_complex_entity_errors() {
+        let mut parser = Parser::new("#1 = ( );");
+        let err = parser.parse_entity_instance().unwrap_err();
+        assert!(matches!(
+            err,
+            ParseError::UnexpectedToken {
+                expected: "entity type name",
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn parse_entity_missing_semicolon_errors() {
+        let mut parser = Parser::new("#1 = LINE('', #2)");
+        let err = parser.parse_entity_instance().unwrap_err();
+        assert!(matches!(err, ParseError::UnexpectedEof { .. }));
+    }
+}

@@ -1,0 +1,348 @@
+//! Topology pool emission: vertices, edges, wires, faces, shells, solids.
+
+use super::WriteBuffer;
+use crate::ir::{
+    Edge, EdgeId, Face, FaceId, Orientation, OrientedEdge, Shell, ShellId, Solid, SolidId,
+    VertexId, Wire, WireId,
+};
+use crate::parser::entity::Attribute;
+use crate::writer::WriteError;
+use crate::writer::entity::{WriterBody, WriterEntity};
+
+impl WriteBuffer<'_> {
+    pub(in crate::writer::buffer) fn emit_vertex(
+        &mut self,
+        id: VertexId,
+    ) -> Result<u64, WriteError> {
+        if let Some(&n) = self.vertex_ids.get(&id) {
+            return Ok(n);
+        }
+        let v = self
+            .model
+            .topology
+            .vertices
+            .iter()
+            .nth(id.0 as usize)
+            .cloned()
+            .ok_or_else(|| WriteError::DanglingId {
+                detail: format!("VertexId({})", id.0),
+            })?;
+        let point = self.emit_point(v.point)?;
+        let n = self.fresh();
+        self.entities.push(WriterEntity {
+            id: n,
+            body: WriterBody::Simple {
+                name: "VERTEX_POINT".into(),
+                attrs: vec![
+                    Attribute::String(String::new()),
+                    Attribute::EntityRef(point),
+                ],
+            },
+        });
+        self.vertex_ids.insert(id, n);
+        Ok(n)
+    }
+
+    pub(in crate::writer::buffer) fn emit_edge(&mut self, id: EdgeId) -> Result<u64, WriteError> {
+        if let Some(&n) = self.edge_ids.get(&id) {
+            return Ok(n);
+        }
+        let e: Edge = self
+            .model
+            .topology
+            .edges
+            .iter()
+            .nth(id.0 as usize)
+            .cloned()
+            .ok_or_else(|| WriteError::DanglingId {
+                detail: format!("EdgeId({})", id.0),
+            })?;
+        let start = self.emit_vertex(e.vertices.0)?;
+        let end = self.emit_vertex(e.vertices.1)?;
+        let curve_3d = self.emit_curve(e.curve)?;
+        // When the edge carries pcurves, wrap the 3D curve in a
+        // SURFACE_CURVE / SEAM_CURVE entity so the EDGE_CURVE's
+        // `edge_geometry` attr points at the wrapper — the same shape the
+        // reader expects (see `convert_surface_or_seam_curve` +
+        // `collect_surface_curve_pcurves`). Otherwise emit EDGE_CURVE against
+        // the 3D curve directly (W-B.1 path).
+        let curve_ref = if e.pcurves.is_empty() {
+            curve_3d
+        } else {
+            self.emit_surface_curve_wrapper(curve_3d, &e.pcurves)?
+        };
+        let n = self.fresh();
+        self.entities.push(WriterEntity {
+            id: n,
+            body: WriterBody::Simple {
+                name: "EDGE_CURVE".into(),
+                attrs: vec![
+                    Attribute::String(String::new()),
+                    Attribute::EntityRef(start),
+                    Attribute::EntityRef(end),
+                    Attribute::EntityRef(curve_ref),
+                    orientation_bool(e.orientation),
+                ],
+            },
+        });
+        self.edge_ids.insert(id, n);
+        Ok(n)
+    }
+
+    pub(in crate::writer::buffer) fn emit_wire(&mut self, id: WireId) -> Result<u64, WriteError> {
+        if let Some(&n) = self.wire_ids.get(&id) {
+            return Ok(n);
+        }
+        let w: Wire = self
+            .model
+            .topology
+            .wires
+            .iter()
+            .nth(id.0 as usize)
+            .cloned()
+            .ok_or_else(|| WriteError::DanglingId {
+                detail: format!("WireId({})", id.0),
+            })?;
+        // EDGE_LOOP (common case) or VERTEX_LOOP (degenerate — a single
+        // vertex, used by some revolutions and sphere poles). Reader stores
+        // either `edges` or `vertex`, never both.
+        let loop_id = if let Some(vid) = w.vertex {
+            self.emit_vertex_loop(vid)?
+        } else {
+            let mut oe_refs = Vec::with_capacity(w.edges.len());
+            for oe in &w.edges {
+                oe_refs.push(self.emit_oriented_edge(*oe)?);
+            }
+            let id = self.fresh();
+            self.entities.push(WriterEntity {
+                id,
+                body: WriterBody::Simple {
+                    name: "EDGE_LOOP".into(),
+                    attrs: vec![
+                        Attribute::String(String::new()),
+                        Attribute::List(oe_refs.into_iter().map(Attribute::EntityRef).collect()),
+                    ],
+                },
+            });
+            id
+        };
+        let wrapper = if w.is_outer {
+            "FACE_OUTER_BOUND"
+        } else {
+            "FACE_BOUND"
+        };
+        let bound_id = self.fresh();
+        self.entities.push(WriterEntity {
+            id: bound_id,
+            body: WriterBody::Simple {
+                name: wrapper.into(),
+                attrs: vec![
+                    Attribute::String(String::new()),
+                    Attribute::EntityRef(loop_id),
+                    orientation_bool(w.orientation),
+                ],
+            },
+        });
+        self.wire_ids.insert(id, bound_id);
+        Ok(bound_id)
+    }
+
+    fn emit_vertex_loop(&mut self, vid: VertexId) -> Result<u64, WriteError> {
+        let vertex_ref = self.emit_vertex(vid)?;
+        let n = self.fresh();
+        self.entities.push(WriterEntity {
+            id: n,
+            body: WriterBody::Simple {
+                name: "VERTEX_LOOP".into(),
+                attrs: vec![
+                    Attribute::String(String::new()),
+                    Attribute::EntityRef(vertex_ref),
+                ],
+            },
+        });
+        Ok(n)
+    }
+
+    fn emit_oriented_edge(&mut self, oe: OrientedEdge) -> Result<u64, WriteError> {
+        let edge_ref = self.emit_edge(oe.edge)?;
+        let n = self.fresh();
+        self.entities.push(WriterEntity {
+            id: n,
+            body: WriterBody::Simple {
+                name: "ORIENTED_EDGE".into(),
+                attrs: vec![
+                    Attribute::String(String::new()),
+                    Attribute::Derived,
+                    Attribute::Derived,
+                    Attribute::EntityRef(edge_ref),
+                    orientation_bool(oe.orientation),
+                ],
+            },
+        });
+        Ok(n)
+    }
+
+    pub(in crate::writer::buffer) fn emit_face(&mut self, id: FaceId) -> Result<u64, WriteError> {
+        if let Some(&n) = self.face_ids.get(&id) {
+            return Ok(n);
+        }
+        let f: Face = self
+            .model
+            .topology
+            .faces
+            .iter()
+            .nth(id.0 as usize)
+            .cloned()
+            .ok_or_else(|| WriteError::DanglingId {
+                detail: format!("FaceId({})", id.0),
+            })?;
+        let surface = self.emit_surface(f.surface)?;
+        let mut bound_refs = Vec::with_capacity(f.bounds.len());
+        for &wid in &f.bounds {
+            bound_refs.push(self.emit_wire(wid)?);
+        }
+        let n = self.fresh();
+        self.entities.push(WriterEntity {
+            id: n,
+            body: WriterBody::Simple {
+                name: "ADVANCED_FACE".into(),
+                attrs: vec![
+                    Attribute::String(String::new()),
+                    Attribute::List(bound_refs.into_iter().map(Attribute::EntityRef).collect()),
+                    Attribute::EntityRef(surface),
+                    orientation_bool(f.orientation),
+                ],
+            },
+        });
+        self.face_ids.insert(id, n);
+        Ok(n)
+    }
+
+    pub(in crate::writer::buffer) fn emit_shell(&mut self, id: ShellId) -> Result<u64, WriteError> {
+        if let Some(&n) = self.shell_ids.get(&id) {
+            return Ok(n);
+        }
+        let s: Shell = self
+            .model
+            .topology
+            .shells
+            .iter()
+            .nth(id.0 as usize)
+            .cloned()
+            .ok_or_else(|| WriteError::DanglingId {
+                detail: format!("ShellId({})", id.0),
+            })?;
+        // `Shell.orientation` is intentionally ignored here — CLOSED_SHELL
+        // carries no orientation attribute in STEP. Inner void shells get
+        // their orientation via an ORIENTED_CLOSED_SHELL wrapper created
+        // in `emit_solid`.
+        let mut face_refs = Vec::with_capacity(s.faces.len());
+        for &fid in &s.faces {
+            face_refs.push(self.emit_face(fid)?);
+        }
+        let name = if s.is_open {
+            "OPEN_SHELL"
+        } else {
+            "CLOSED_SHELL"
+        };
+        let n = self.fresh();
+        self.entities.push(WriterEntity {
+            id: n,
+            body: WriterBody::Simple {
+                name: name.into(),
+                attrs: vec![
+                    Attribute::String(String::new()),
+                    Attribute::List(face_refs.into_iter().map(Attribute::EntityRef).collect()),
+                ],
+            },
+        });
+        self.shell_ids.insert(id, n);
+        Ok(n)
+    }
+
+    fn emit_oriented_closed_shell(
+        &mut self,
+        closed_shell_ref: u64,
+        orientation: Orientation,
+    ) -> u64 {
+        let n = self.fresh();
+        self.entities.push(WriterEntity {
+            id: n,
+            body: WriterBody::Simple {
+                name: "ORIENTED_CLOSED_SHELL".into(),
+                attrs: vec![
+                    Attribute::String(String::new()),
+                    Attribute::Derived,
+                    Attribute::EntityRef(closed_shell_ref),
+                    orientation_bool(orientation),
+                ],
+            },
+        });
+        n
+    }
+
+    pub(in crate::writer::buffer) fn emit_solid(&mut self, id: SolidId) -> Result<u64, WriteError> {
+        if let Some(&n) = self.solid_ids.get(&id) {
+            return Ok(n);
+        }
+        let s: Solid = self
+            .model
+            .topology
+            .solids
+            .iter()
+            .nth(id.0 as usize)
+            .cloned()
+            .ok_or_else(|| WriteError::DanglingId {
+                detail: format!("SolidId({})", id.0),
+            })?;
+        let outer_id = *s.shells.first().ok_or_else(|| WriteError::DanglingId {
+            detail: format!("SolidId({}) has no shells", id.0),
+        })?;
+        let outer_ref = self.emit_shell(outer_id)?;
+        let name = s.name.clone().unwrap_or_default();
+        let n = self.fresh();
+
+        let body = if s.shells.len() == 1 {
+            WriterBody::Simple {
+                name: "MANIFOLD_SOLID_BREP".into(),
+                attrs: vec![Attribute::String(name), Attribute::EntityRef(outer_ref)],
+            }
+        } else {
+            let mut void_refs = Vec::with_capacity(s.shells.len() - 1);
+            for &inner_id in &s.shells[1..] {
+                let inner_shell: Shell = self
+                    .model
+                    .topology
+                    .shells
+                    .iter()
+                    .nth(inner_id.0 as usize)
+                    .cloned()
+                    .ok_or_else(|| WriteError::DanglingId {
+                        detail: format!("ShellId({}) void", inner_id.0),
+                    })?;
+                let inner_cs_ref = self.emit_shell(inner_id)?;
+                let ocs_ref =
+                    self.emit_oriented_closed_shell(inner_cs_ref, inner_shell.orientation);
+                void_refs.push(Attribute::EntityRef(ocs_ref));
+            }
+            WriterBody::Simple {
+                name: "BREP_WITH_VOIDS".into(),
+                attrs: vec![
+                    Attribute::String(name),
+                    Attribute::EntityRef(outer_ref),
+                    Attribute::List(void_refs),
+                ],
+            }
+        };
+        self.entities.push(WriterEntity { id: n, body });
+        self.solid_ids.insert(id, n);
+        Ok(n)
+    }
+}
+
+fn orientation_bool(o: Orientation) -> Attribute {
+    match o {
+        Orientation::Forward => Attribute::Enum("T".into()),
+        Orientation::Reversed => Attribute::Enum("F".into()),
+    }
+}

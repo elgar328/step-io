@@ -1,0 +1,944 @@
+//! Attribute extraction utilities for converting raw `Vec<Attribute>` values
+//! into typed Rust values. Every function is pure (no state) and independently
+//! testable.
+
+use crate::parser::entity::Attribute;
+
+use super::error::{AttributeKindTag, ConvertError};
+
+/// Verify the attribute list has exactly `expected` entries.
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeCount`] on mismatch.
+pub fn check_count(
+    attrs: &[Attribute],
+    expected: usize,
+    entity_id: u64,
+    entity_name: &str,
+) -> Result<(), ConvertError> {
+    if attrs.len() == expected {
+        Ok(())
+    } else {
+        Err(ConvertError::AttributeCount {
+            entity_id,
+            entity_name: entity_name.to_string(),
+            expected,
+            actual: attrs.len(),
+        })
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Internal helper: bounds-checked attribute access
+// ---------------------------------------------------------------------------
+
+fn get_attr<'a>(
+    attrs: &'a [Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<&'a Attribute, ConvertError> {
+    attrs.get(index).ok_or(ConvertError::AttributeIndex {
+        entity_id,
+        field_name,
+        index,
+        len: attrs.len(),
+    })
+}
+
+// ---------------------------------------------------------------------------
+// Scalar extractors
+// ---------------------------------------------------------------------------
+
+/// Extract an `f64` from `attrs[index]`.
+///
+/// Accepts both `Attribute::Real` and `Attribute::Integer` (promoted to f64).
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeIndex`] or [`ConvertError::AttributeType`].
+pub fn read_real(
+    attrs: &[Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<f64, ConvertError> {
+    let attr = get_attr(attrs, index, entity_id, field_name)?;
+    match attr {
+        Attribute::Real(v) => Ok(*v),
+        // Integer promotion — common in real STEP files (0 instead of 0.0).
+        #[allow(clippy::cast_precision_loss)]
+        Attribute::Integer(v) => Ok(*v as f64),
+        other => Err(ConvertError::AttributeType {
+            entity_id,
+            field_name,
+            expected: "Real",
+            actual: AttributeKindTag::from_attribute(other),
+        }),
+    }
+}
+
+/// Extract an `i64` from `attrs[index]`.
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeIndex`] or [`ConvertError::AttributeType`].
+pub fn read_integer(
+    attrs: &[Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<i64, ConvertError> {
+    let attr = get_attr(attrs, index, entity_id, field_name)?;
+    match attr {
+        Attribute::Integer(v) => Ok(*v),
+        other => Err(ConvertError::AttributeType {
+            entity_id,
+            field_name,
+            expected: "Integer",
+            actual: AttributeKindTag::from_attribute(other),
+        }),
+    }
+}
+
+/// Extract a string reference from `attrs[index]`.
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeIndex`] or [`ConvertError::AttributeType`].
+pub fn read_string<'a>(
+    attrs: &'a [Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<&'a str, ConvertError> {
+    let attr = get_attr(attrs, index, entity_id, field_name)?;
+    match attr {
+        Attribute::String(s) => Ok(s.as_str()),
+        other => Err(ConvertError::AttributeType {
+            entity_id,
+            field_name,
+            expected: "String",
+            actual: AttributeKindTag::from_attribute(other),
+        }),
+    }
+}
+
+/// Extract a `&str` from `attrs[index]`, treating `$` (Unset) as `""`.
+///
+/// STEP spec marks some informal string fields (descriptions, labels,
+/// user-facing identifiers) as non-optional, but many CAD producers —
+/// Fusion 360 notably, `STEPcode`, `ST-Developer` — emit `$` for "no value".
+/// This helper accepts both `$` and empty strings, returning `""` so the
+/// caller's existing `is_empty()` / `Option` normalization works unchanged.
+/// Wrong types (`Enum`, `Real`, …) still error.
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeIndex`] or [`ConvertError::AttributeType`].
+pub fn read_string_or_unset<'a>(
+    attrs: &'a [Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<&'a str, ConvertError> {
+    let attr = get_attr(attrs, index, entity_id, field_name)?;
+    match attr {
+        Attribute::String(s) => Ok(s.as_str()),
+        Attribute::Unset => Ok(""),
+        other => Err(ConvertError::AttributeType {
+            entity_id,
+            field_name,
+            expected: "String",
+            actual: AttributeKindTag::from_attribute(other),
+        }),
+    }
+}
+
+/// Extract an entity reference `#N` from `attrs[index]`.
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeIndex`] or [`ConvertError::AttributeType`].
+pub fn read_entity_ref(
+    attrs: &[Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<u64, ConvertError> {
+    let attr = get_attr(attrs, index, entity_id, field_name)?;
+    match attr {
+        Attribute::EntityRef(id) => Ok(*id),
+        other => Err(ConvertError::AttributeType {
+            entity_id,
+            field_name,
+            expected: "EntityRef",
+            actual: AttributeKindTag::from_attribute(other),
+        }),
+    }
+}
+
+/// Extract an optional entity reference from `attrs[index]`.
+///
+/// Returns `Ok(None)` for `Attribute::Unset` (`$`) or `Attribute::Derived`
+/// (`*`). This handles STEP optional attributes such as
+/// `AXIS2_PLACEMENT_3D`'s axis and `ref_direction`.
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeIndex`] or [`ConvertError::AttributeType`].
+pub fn read_optional_entity_ref(
+    attrs: &[Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<Option<u64>, ConvertError> {
+    let attr = get_attr(attrs, index, entity_id, field_name)?;
+    match attr {
+        Attribute::EntityRef(id) => Ok(Some(*id)),
+        Attribute::Unset | Attribute::Derived => Ok(None),
+        other => Err(ConvertError::AttributeType {
+            entity_id,
+            field_name,
+            expected: "EntityRef or $/*",
+            actual: AttributeKindTag::from_attribute(other),
+        }),
+    }
+}
+
+/// Extract an enum value (the inner string) from `attrs[index]`.
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeIndex`] or [`ConvertError::AttributeType`].
+pub fn read_enum<'a>(
+    attrs: &'a [Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<&'a str, ConvertError> {
+    let attr = get_attr(attrs, index, entity_id, field_name)?;
+    match attr {
+        Attribute::Enum(s) => Ok(s.as_str()),
+        other => Err(ConvertError::AttributeType {
+            entity_id,
+            field_name,
+            expected: "Enum",
+            actual: AttributeKindTag::from_attribute(other),
+        }),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// List extractors
+// ---------------------------------------------------------------------------
+
+/// Extract a list of `f64` from `attrs[index]`.
+///
+/// Expects `Attribute::List` containing only `Real` or `Integer` items.
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeType`] if the attribute is not a list or
+/// contains non-numeric items.
+#[allow(clippy::cast_precision_loss)]
+pub fn read_real_list(
+    attrs: &[Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<Vec<f64>, ConvertError> {
+    let attr = get_attr(attrs, index, entity_id, field_name)?;
+    let items = match attr {
+        Attribute::List(items) => items,
+        other => {
+            return Err(ConvertError::AttributeType {
+                entity_id,
+                field_name,
+                expected: "List",
+                actual: AttributeKindTag::from_attribute(other),
+            });
+        }
+    };
+    let mut result = Vec::with_capacity(items.len());
+    for item in items {
+        match item {
+            Attribute::Real(v) => result.push(*v),
+            Attribute::Integer(v) => result.push(*v as f64),
+            other => {
+                return Err(ConvertError::AttributeType {
+                    entity_id,
+                    field_name,
+                    expected: "Real (inside list)",
+                    actual: AttributeKindTag::from_attribute(other),
+                });
+            }
+        }
+    }
+    Ok(result)
+}
+
+/// Extract a list of entity references from `attrs[index]`.
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeType`] if the attribute is not a list or
+/// contains non-`EntityRef` items.
+pub fn read_entity_ref_list(
+    attrs: &[Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<Vec<u64>, ConvertError> {
+    let attr = get_attr(attrs, index, entity_id, field_name)?;
+    let items = match attr {
+        Attribute::List(items) => items,
+        other => {
+            return Err(ConvertError::AttributeType {
+                entity_id,
+                field_name,
+                expected: "List",
+                actual: AttributeKindTag::from_attribute(other),
+            });
+        }
+    };
+    let mut result = Vec::with_capacity(items.len());
+    for item in items {
+        match item {
+            Attribute::EntityRef(id) => result.push(*id),
+            other => {
+                return Err(ConvertError::AttributeType {
+                    entity_id,
+                    field_name,
+                    expected: "EntityRef (inside list)",
+                    actual: AttributeKindTag::from_attribute(other),
+                });
+            }
+        }
+    }
+    Ok(result)
+}
+
+/// Extract a list of strings from `attrs[index]`.
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeType`] if the attribute is not a list or
+/// contains non-`String` items.
+pub fn read_string_list(
+    attrs: &[Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<Vec<String>, ConvertError> {
+    let attr = get_attr(attrs, index, entity_id, field_name)?;
+    let items = match attr {
+        Attribute::List(items) => items,
+        other => {
+            return Err(ConvertError::AttributeType {
+                entity_id,
+                field_name,
+                expected: "List",
+                actual: AttributeKindTag::from_attribute(other),
+            });
+        }
+    };
+    let mut result = Vec::with_capacity(items.len());
+    for item in items {
+        match item {
+            Attribute::String(s) => result.push(s.clone()),
+            other => {
+                return Err(ConvertError::AttributeType {
+                    entity_id,
+                    field_name,
+                    expected: "String (inside list)",
+                    actual: AttributeKindTag::from_attribute(other),
+                });
+            }
+        }
+    }
+    Ok(result)
+}
+
+/// Extract a list of `i64` from `attrs[index]`.
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeType`] if the attribute is not a list or
+/// contains non-integer items.
+pub fn read_integer_list(
+    attrs: &[Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<Vec<i64>, ConvertError> {
+    let attr = get_attr(attrs, index, entity_id, field_name)?;
+    let items = match attr {
+        Attribute::List(items) => items,
+        other => {
+            return Err(ConvertError::AttributeType {
+                entity_id,
+                field_name,
+                expected: "List",
+                actual: AttributeKindTag::from_attribute(other),
+            });
+        }
+    };
+    let mut result = Vec::with_capacity(items.len());
+    for item in items {
+        match item {
+            Attribute::Integer(v) => result.push(*v),
+            other => {
+                return Err(ConvertError::AttributeType {
+                    entity_id,
+                    field_name,
+                    expected: "Integer (inside list)",
+                    actual: AttributeKindTag::from_attribute(other),
+                });
+            }
+        }
+    }
+    Ok(result)
+}
+
+/// Extract a 2D grid of entity references from `attrs[index]`.
+///
+/// Expects `Attribute::List` of `Attribute::List`s of `Attribute::EntityRef`.
+/// All inner lists must have the same length (rectangular grid).
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeType`] if the structure is not a
+/// rectangular grid of entity references.
+pub fn read_entity_ref_grid(
+    attrs: &[Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<Vec<Vec<u64>>, ConvertError> {
+    let attr = get_attr(attrs, index, entity_id, field_name)?;
+    let rows = match attr {
+        Attribute::List(rows) => rows,
+        other => {
+            return Err(ConvertError::AttributeType {
+                entity_id,
+                field_name,
+                expected: "List (2D grid)",
+                actual: AttributeKindTag::from_attribute(other),
+            });
+        }
+    };
+    let mut grid = Vec::with_capacity(rows.len());
+    let mut expected_cols = None;
+    for row in rows {
+        let cols = match row {
+            Attribute::List(cols) => cols,
+            other => {
+                return Err(ConvertError::AttributeType {
+                    entity_id,
+                    field_name,
+                    expected: "List (inner row of 2D grid)",
+                    actual: AttributeKindTag::from_attribute(other),
+                });
+            }
+        };
+        // Verify rectangular grid.
+        if let Some(expected) = expected_cols {
+            if cols.len() != expected {
+                return Err(ConvertError::DimensionMismatch {
+                    entity_id,
+                    field_name,
+                    expected,
+                    actual: cols.len(),
+                });
+            }
+        } else {
+            expected_cols = Some(cols.len());
+        }
+        let mut row_ids = Vec::with_capacity(cols.len());
+        for col in cols {
+            match col {
+                Attribute::EntityRef(id) => row_ids.push(*id),
+                other => {
+                    return Err(ConvertError::AttributeType {
+                        entity_id,
+                        field_name,
+                        expected: "EntityRef (inside 2D grid)",
+                        actual: AttributeKindTag::from_attribute(other),
+                    });
+                }
+            }
+        }
+        grid.push(row_ids);
+    }
+    Ok(grid)
+}
+
+/// Extract a 2D grid of `f64` from `attrs[index]`.
+///
+/// Expects `Attribute::List` of `Attribute::List`s of `Attribute::Real`
+/// (with integer promotion). All inner lists must have the same length.
+///
+/// Used for `RATIONAL_B_SPLINE_SURFACE` weights.
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeType`] or [`ConvertError::DimensionMismatch`].
+#[allow(clippy::cast_precision_loss)]
+pub fn read_real_grid(
+    attrs: &[Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<Vec<Vec<f64>>, ConvertError> {
+    let attr = get_attr(attrs, index, entity_id, field_name)?;
+    let rows = match attr {
+        Attribute::List(rows) => rows,
+        other => {
+            return Err(ConvertError::AttributeType {
+                entity_id,
+                field_name,
+                expected: "List (2D grid)",
+                actual: AttributeKindTag::from_attribute(other),
+            });
+        }
+    };
+    let mut grid = Vec::with_capacity(rows.len());
+    let mut expected_cols = None;
+    for row in rows {
+        let cols = match row {
+            Attribute::List(cols) => cols,
+            other => {
+                return Err(ConvertError::AttributeType {
+                    entity_id,
+                    field_name,
+                    expected: "List (inner row of 2D grid)",
+                    actual: AttributeKindTag::from_attribute(other),
+                });
+            }
+        };
+        if let Some(expected) = expected_cols {
+            if cols.len() != expected {
+                return Err(ConvertError::DimensionMismatch {
+                    entity_id,
+                    field_name,
+                    expected,
+                    actual: cols.len(),
+                });
+            }
+        } else {
+            expected_cols = Some(cols.len());
+        }
+        let mut row_values = Vec::with_capacity(cols.len());
+        for col in cols {
+            match col {
+                Attribute::Real(v) => row_values.push(*v),
+                Attribute::Integer(v) => row_values.push(*v as f64),
+                other => {
+                    return Err(ConvertError::AttributeType {
+                        entity_id,
+                        field_name,
+                        expected: "Real (inside 2D grid)",
+                        actual: AttributeKindTag::from_attribute(other),
+                    });
+                }
+            }
+        }
+        grid.push(row_values);
+    }
+    Ok(grid)
+}
+
+// ---------------------------------------------------------------------------
+// Boolean extractor
+// ---------------------------------------------------------------------------
+
+/// Extract a STEP boolean (`.T.` / `.F.`) from `attrs[index]`.
+///
+/// The parser stores `.T.` as `Attribute::Enum("T")` and `.F.` as
+/// `Attribute::Enum("F")`.
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeType`] if the attribute is not an
+/// `Enum` or not a recognised boolean value.
+pub fn read_bool(
+    attrs: &[Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<bool, ConvertError> {
+    let val = read_enum(attrs, index, entity_id, field_name)?;
+    match val {
+        "T" => Ok(true),
+        "F" => Ok(false),
+        _ => Err(ConvertError::AttributeType {
+            entity_id,
+            field_name,
+            expected: "Enum(.T. or .F.)",
+            actual: AttributeKindTag::Enum,
+        }),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Predicate
+// ---------------------------------------------------------------------------
+
+/// Check whether `attrs[index]` is `Unset` or `Derived`.
+///
+/// Returns `false` if the index is out of bounds.
+#[must_use]
+pub fn is_unset_or_derived(attrs: &[Attribute], index: usize) -> bool {
+    matches!(
+        attrs.get(index),
+        Some(Attribute::Unset | Attribute::Derived)
+    )
+}
+
+// ===========================================================================
+// Tests
+// ===========================================================================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // --- check_count ---
+
+    #[test]
+    fn check_count_ok() {
+        let attrs = vec![Attribute::Integer(1), Attribute::Integer(2)];
+        assert!(check_count(&attrs, 2, 1, "TEST").is_ok());
+    }
+
+    #[test]
+    fn check_count_mismatch() {
+        let attrs = vec![Attribute::Integer(1)];
+        let err = check_count(&attrs, 2, 1, "TEST").unwrap_err();
+        assert!(matches!(
+            err,
+            ConvertError::AttributeCount {
+                expected: 2,
+                actual: 1,
+                ..
+            }
+        ));
+    }
+
+    // --- read_real ---
+
+    #[test]
+    fn read_real_from_real() {
+        let attrs = vec![Attribute::Real(1.5)];
+        let v = read_real(&attrs, 0, 1, "x").unwrap();
+        assert!((v - 1.5).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn read_real_from_integer_promotion() {
+        let attrs = vec![Attribute::Integer(42)];
+        let v = read_real(&attrs, 0, 1, "x").unwrap();
+        assert!((v - 42.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn read_real_wrong_type() {
+        let attrs = vec![Attribute::String("oops".into())];
+        let err = read_real(&attrs, 0, 1, "x").unwrap_err();
+        assert!(matches!(
+            err,
+            ConvertError::AttributeType {
+                expected: "Real",
+                actual: AttributeKindTag::String,
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn read_real_index_out_of_bounds() {
+        let attrs: Vec<Attribute> = vec![];
+        let err = read_real(&attrs, 0, 1, "x").unwrap_err();
+        assert!(matches!(
+            err,
+            ConvertError::AttributeIndex {
+                index: 0,
+                len: 0,
+                ..
+            }
+        ));
+    }
+
+    // --- read_string ---
+
+    #[test]
+    fn read_string_ok() {
+        let attrs = vec![Attribute::String("hello".into())];
+        assert_eq!(read_string(&attrs, 0, 1, "name").unwrap(), "hello");
+    }
+
+    #[test]
+    fn read_string_empty() {
+        let attrs = vec![Attribute::String(String::new())];
+        assert_eq!(read_string(&attrs, 0, 1, "name").unwrap(), "");
+    }
+
+    #[test]
+    fn read_string_wrong_type() {
+        let attrs = vec![Attribute::Integer(1)];
+        let err = read_string(&attrs, 0, 1, "name").unwrap_err();
+        assert!(matches!(err, ConvertError::AttributeType { .. }));
+    }
+
+    // --- read_string_or_unset ---
+
+    #[test]
+    fn read_string_or_unset_string() {
+        let attrs = vec![Attribute::String("hello".into())];
+        assert_eq!(
+            read_string_or_unset(&attrs, 0, 1, "description").unwrap(),
+            "hello",
+        );
+    }
+
+    #[test]
+    fn read_string_or_unset_unset_returns_empty() {
+        let attrs = vec![Attribute::Unset];
+        assert_eq!(
+            read_string_or_unset(&attrs, 0, 1, "description").unwrap(),
+            "",
+        );
+    }
+
+    #[test]
+    fn read_string_or_unset_wrong_type_errors() {
+        let attrs = vec![Attribute::Integer(1)];
+        let err = read_string_or_unset(&attrs, 0, 1, "description").unwrap_err();
+        assert!(matches!(err, ConvertError::AttributeType { .. }));
+    }
+
+    #[test]
+    fn read_string_or_unset_out_of_range_errors() {
+        let attrs: Vec<Attribute> = vec![];
+        let err = read_string_or_unset(&attrs, 0, 1, "description").unwrap_err();
+        assert!(matches!(err, ConvertError::AttributeIndex { .. }));
+    }
+
+    // --- read_entity_ref ---
+
+    #[test]
+    fn read_entity_ref_ok() {
+        let attrs = vec![Attribute::EntityRef(42)];
+        assert_eq!(read_entity_ref(&attrs, 0, 1, "ref").unwrap(), 42);
+    }
+
+    #[test]
+    fn read_entity_ref_wrong_type() {
+        let attrs = vec![Attribute::Real(1.0)];
+        let err = read_entity_ref(&attrs, 0, 1, "ref").unwrap_err();
+        assert!(matches!(
+            err,
+            ConvertError::AttributeType {
+                actual: AttributeKindTag::Real,
+                ..
+            }
+        ));
+    }
+
+    // --- read_optional_entity_ref ---
+
+    #[test]
+    fn read_optional_entity_ref_present() {
+        let attrs = vec![Attribute::EntityRef(10)];
+        assert_eq!(
+            read_optional_entity_ref(&attrs, 0, 1, "axis").unwrap(),
+            Some(10)
+        );
+    }
+
+    #[test]
+    fn read_optional_entity_ref_unset() {
+        let attrs = vec![Attribute::Unset];
+        assert_eq!(
+            read_optional_entity_ref(&attrs, 0, 1, "axis").unwrap(),
+            None
+        );
+    }
+
+    #[test]
+    fn read_optional_entity_ref_derived() {
+        let attrs = vec![Attribute::Derived];
+        assert_eq!(
+            read_optional_entity_ref(&attrs, 0, 1, "axis").unwrap(),
+            None
+        );
+    }
+
+    #[test]
+    fn read_optional_entity_ref_wrong_type() {
+        let attrs = vec![Attribute::Real(1.0)];
+        let err = read_optional_entity_ref(&attrs, 0, 1, "axis").unwrap_err();
+        assert!(matches!(err, ConvertError::AttributeType { .. }));
+    }
+
+    // --- read_enum ---
+
+    #[test]
+    fn read_enum_ok() {
+        let attrs = vec![Attribute::Enum("MILLI".into())];
+        assert_eq!(read_enum(&attrs, 0, 1, "prefix").unwrap(), "MILLI");
+    }
+
+    #[test]
+    fn read_enum_wrong_type() {
+        let attrs = vec![Attribute::Integer(1)];
+        let err = read_enum(&attrs, 0, 1, "prefix").unwrap_err();
+        assert!(matches!(err, ConvertError::AttributeType { .. }));
+    }
+
+    // --- read_real_list ---
+
+    #[test]
+    fn read_real_list_ok() {
+        let attrs = vec![Attribute::List(vec![
+            Attribute::Real(1.0),
+            Attribute::Real(2.0),
+            Attribute::Real(3.0),
+        ])];
+        assert_eq!(
+            read_real_list(&attrs, 0, 1, "coords").unwrap(),
+            vec![1.0, 2.0, 3.0]
+        );
+    }
+
+    #[test]
+    fn read_real_list_with_integer_promotion() {
+        let attrs = vec![Attribute::List(vec![
+            Attribute::Real(1.0),
+            Attribute::Integer(0),
+            Attribute::Real(3.0),
+        ])];
+        assert_eq!(
+            read_real_list(&attrs, 0, 1, "coords").unwrap(),
+            vec![1.0, 0.0, 3.0]
+        );
+    }
+
+    #[test]
+    fn read_real_list_empty() {
+        let attrs = vec![Attribute::List(vec![])];
+        assert_eq!(read_real_list(&attrs, 0, 1, "coords").unwrap(), vec![]);
+    }
+
+    #[test]
+    fn read_real_list_not_a_list() {
+        let attrs = vec![Attribute::Real(1.0)];
+        let err = read_real_list(&attrs, 0, 1, "coords").unwrap_err();
+        assert!(matches!(
+            err,
+            ConvertError::AttributeType {
+                expected: "List",
+                actual: AttributeKindTag::Real,
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn read_real_list_non_numeric_item() {
+        let attrs = vec![Attribute::List(vec![
+            Attribute::Real(1.0),
+            Attribute::String("bad".into()),
+        ])];
+        let err = read_real_list(&attrs, 0, 1, "coords").unwrap_err();
+        assert!(matches!(
+            err,
+            ConvertError::AttributeType {
+                actual: AttributeKindTag::String,
+                ..
+            }
+        ));
+    }
+
+    // --- read_entity_ref_list ---
+
+    #[test]
+    fn read_entity_ref_list_ok() {
+        let attrs = vec![Attribute::List(vec![
+            Attribute::EntityRef(1),
+            Attribute::EntityRef(2),
+        ])];
+        assert_eq!(
+            read_entity_ref_list(&attrs, 0, 1, "refs").unwrap(),
+            vec![1, 2]
+        );
+    }
+
+    #[test]
+    fn read_entity_ref_list_non_ref_item() {
+        let attrs = vec![Attribute::List(vec![
+            Attribute::EntityRef(1),
+            Attribute::Integer(2),
+        ])];
+        let err = read_entity_ref_list(&attrs, 0, 1, "refs").unwrap_err();
+        assert!(matches!(err, ConvertError::AttributeType { .. }));
+    }
+
+    // --- read_real_grid ---
+
+    #[test]
+    fn read_real_grid_ok() {
+        let attrs = vec![Attribute::List(vec![
+            Attribute::List(vec![Attribute::Real(1.0), Attribute::Real(2.0)]),
+            Attribute::List(vec![Attribute::Real(3.0), Attribute::Real(4.0)]),
+        ])];
+        let grid = read_real_grid(&attrs, 0, 1, "weights").unwrap();
+        assert_eq!(grid.len(), 2);
+        assert_eq!(grid[0].len(), 2);
+        assert!((grid[1][1] - 4.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn read_real_grid_non_rectangular() {
+        let attrs = vec![Attribute::List(vec![
+            Attribute::List(vec![Attribute::Real(1.0), Attribute::Real(2.0)]),
+            Attribute::List(vec![Attribute::Real(3.0)]),
+        ])];
+        let err = read_real_grid(&attrs, 0, 1, "weights").unwrap_err();
+        assert!(matches!(err, ConvertError::DimensionMismatch { .. }));
+    }
+
+    #[test]
+    fn read_real_grid_integer_promotion() {
+        let attrs = vec![Attribute::List(vec![Attribute::List(vec![
+            Attribute::Integer(1),
+            Attribute::Real(2.5),
+        ])])];
+        let grid = read_real_grid(&attrs, 0, 1, "weights").unwrap();
+        assert!((grid[0][0] - 1.0).abs() < f64::EPSILON);
+        assert!((grid[0][1] - 2.5).abs() < f64::EPSILON);
+    }
+
+    // --- is_unset_or_derived ---
+
+    #[test]
+    fn is_unset_or_derived_true() {
+        let attrs = vec![Attribute::Unset, Attribute::Derived, Attribute::Real(1.0)];
+        assert!(is_unset_or_derived(&attrs, 0));
+        assert!(is_unset_or_derived(&attrs, 1));
+    }
+
+    #[test]
+    fn is_unset_or_derived_false() {
+        let attrs = vec![Attribute::Real(1.0)];
+        assert!(!is_unset_or_derived(&attrs, 0));
+    }
+
+    #[test]
+    fn is_unset_or_derived_out_of_bounds() {
+        let attrs: Vec<Attribute> = vec![];
+        assert!(!is_unset_or_derived(&attrs, 0));
+    }
+}
