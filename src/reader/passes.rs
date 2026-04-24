@@ -193,13 +193,28 @@ impl ReaderContext {
             }
         }
 
-        // Pass 4-4: surfaces that reference curves or other surfaces
-        // (must come after 4-1~3 — their swept_curve / basis_surface may
-        // itself be a SURFACE_CURVE alias or a basic surface from 4-1).
+        // Pass 4-4A: derived surfaces that wrap a curve (swept curve / axis
+        // of revolution / extrusion vector). Single sweep — no dependency
+        // on other derived surfaces.
         run_pass!(graph, self,
             "SURFACE_OF_REVOLUTION" => convert_surface_of_revolution,
-            "SURFACE_OF_LINEAR_EXTRUSION" => convert_surface_of_linear_extrusion,
-            "OFFSET_SURFACE" => convert_offset_surface);
+            "SURFACE_OF_LINEAR_EXTRUSION" => convert_surface_of_linear_extrusion);
+
+        // Pass 4-4B: OFFSET_SURFACE — wraps another surface as its basis.
+        // When that basis is itself an OFFSET or a 4-4A derived surface that
+        // comes later in entity-id order, a single sweep fails to resolve.
+        // Loop until the surfaces arena stops growing; discard transient
+        // missing-basis warnings after any round that made progress, so only
+        // the final no-progress round's warnings (= genuine errors) remain.
+        loop {
+            let surfaces_before = self.geometry.surfaces.len();
+            let warnings_snapshot = self.warnings.len();
+            run_pass!(graph, self, "OFFSET_SURFACE" => convert_offset_surface);
+            if self.geometry.surfaces.len() == surfaces_before {
+                break;
+            }
+            self.warnings.truncate(warnings_snapshot);
+        }
     }
 
     pub(super) fn run_topology_passes(&mut self, graph: &EntityGraph) {

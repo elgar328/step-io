@@ -610,6 +610,11 @@ impl ReaderContext {
         entity_id: u64,
         attrs: &[Attribute],
     ) -> Result<(), ConvertError> {
+        // Pass 4-4B (multi-round): skip entities already interned by a
+        // previous round so the arena does not accumulate duplicates.
+        if self.surface_map.contains_key(&entity_id) {
+            return Ok(());
+        }
         // STEP: OFFSET_SURFACE(name, basis_surface, distance, self_intersect)
         check_count(attrs, 4, entity_id, "OFFSET_SURFACE")?;
         let _name = read_string(attrs, 0, entity_id, "name")?;
