@@ -911,6 +911,101 @@ fn hollow_box_solid_has_outer_plus_one_void() {
 }
 
 // ------------------------------------------------------------------
+// Face surface fixtures — exercise FaceKind::General (FACE_SURFACE)
+// ------------------------------------------------------------------
+
+const FACE_SURFACE_FIXTURES: &[(&str, &str)] = &[(
+    "face_surface_ap214_is",
+    include_str!("fixtures/face_surface_ap214_is.step"),
+)];
+
+#[test]
+fn face_surface_fixtures_convert_without_warnings() {
+    for (name, source) in FACE_SURFACE_FIXTURES {
+        let graph = step_io::parse(source)
+            .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
+        let result = ReaderContext::convert(&graph);
+        assert!(
+            result.warnings.is_empty(),
+            "fixture {name}: expected no warnings, got {:#?}",
+            result.warnings,
+        );
+    }
+}
+
+#[test]
+fn face_surface_fixtures_geometry_pool_counts() {
+    for (name, source) in FACE_SURFACE_FIXTURES {
+        let graph = step_io::parse(source)
+            .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
+        let result = ReaderContext::convert(&graph);
+        let geo = &result.model.geometry;
+
+        assert_eq!(geo.points.len(), 17, "fixture {name}: points");
+        assert_eq!(geo.directions.len(), 2, "fixture {name}: directions");
+        assert_eq!(
+            geo.curves.len(),
+            4,
+            "fixture {name}: curves (4 simple nurbs edge curves)"
+        );
+        assert_eq!(geo.surfaces.len(), 1, "fixture {name}: surfaces (1 plane)");
+    }
+}
+
+#[test]
+fn face_surface_fixtures_topology_pool_counts() {
+    for (name, source) in FACE_SURFACE_FIXTURES {
+        let graph = step_io::parse(source)
+            .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
+        let result = ReaderContext::convert(&graph);
+        let topo = &result.model.topology;
+
+        assert_eq!(topo.vertices.len(), 4, "fixture {name}: vertices");
+        assert_eq!(topo.edges.len(), 4, "fixture {name}: edges");
+        assert_eq!(topo.wires.len(), 1, "fixture {name}: wires");
+        assert_eq!(topo.faces.len(), 1, "fixture {name}: faces");
+        assert_eq!(topo.shells.len(), 1, "fixture {name}: shells");
+        assert_eq!(topo.solids.len(), 0, "fixture {name}: solids");
+    }
+}
+
+/// Spot-check `FACE_SURFACE` round-trip — verifies `FaceKind::General` is
+/// preserved on read and emitted back as `FACE_SURFACE(`, not downgraded to
+/// `ADVANCED_FACE(`.
+#[test]
+fn face_surface_ap214_is_spot_check() {
+    use step_io::ir::topology::FaceKind;
+
+    let source = include_str!("fixtures/face_surface_ap214_is.step");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    let faces: Vec<_> = result.model.topology.faces.iter().collect();
+
+    assert_eq!(faces.len(), 1, "expected exactly 1 face");
+    assert_eq!(
+        faces[0].kind,
+        FaceKind::General,
+        "face kind should be General (FACE_SURFACE origin)"
+    );
+
+    // Round-trip the IR through the writer and check the emitted text.
+    let written = result
+        .model
+        .write_to_string()
+        .expect("writer produced output");
+    let face_surface_count = written.matches("FACE_SURFACE(").count();
+    let advanced_face_count = written.matches("ADVANCED_FACE(").count();
+    assert_eq!(
+        face_surface_count, 1,
+        "expected 1 FACE_SURFACE( occurrence in round-trip output"
+    );
+    assert_eq!(
+        advanced_face_count, 0,
+        "expected 0 ADVANCED_FACE( occurrences in round-trip output"
+    );
+}
+
+// ------------------------------------------------------------------
 // Unit context — every fixture exports mm/radian/steradian
 // ------------------------------------------------------------------
 
@@ -926,6 +1021,7 @@ const ALL_FIXTURE_GROUPS: &[&[(&str, &str)]] = &[
     ELLIPSE_FIXTURES,
     HOLLOW_BOX_FIXTURES,
     ASSEMBLY_FIXTURES,
+    FACE_SURFACE_FIXTURES,
 ];
 
 // ------------------------------------------------------------------

@@ -14,7 +14,7 @@ use step_io::ir::geometry::{
 };
 use step_io::ir::id::{DirectionId, Placement3dId, PointId, SolidId};
 use step_io::ir::model::{AngleUnit, LengthUnit, SolidAngleUnit, StepModel, UnitContext};
-use step_io::ir::topology::{Face, Orientation, Shell, Solid, Vertex, Wire};
+use step_io::ir::topology::{Face, FaceKind, Orientation, Shell, Solid, Vertex, Wire};
 use step_io::parser::schema::{SchemaClass, StepSchema};
 use step_io::reader::ReaderContext;
 use step_io::{WriteError, parse};
@@ -760,6 +760,7 @@ fn push_minimal_solid(model: &mut StepModel) -> SolidId {
         surface: plane_surface,
         bounds: vec![wire],
         orientation: Orientation::Forward,
+        kind: FaceKind::Advanced,
     });
     let shell = model.topology.shells.push(Shell {
         faces: vec![face],

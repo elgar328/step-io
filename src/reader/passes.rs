@@ -2,6 +2,7 @@
 
 use super::assembly::{pdef_shape_to_nauo_ref, pdef_shape_to_pdef_ref};
 use super::{ReaderContext, has_all_parts};
+use crate::ir::topology::FaceKind;
 use crate::parser::entity::{EntityGraph, RawEntity};
 
 impl ReaderContext {
@@ -244,6 +245,31 @@ impl ReaderContext {
             };
         }
 
+        // Special pass for ADVANCED_FACE / FACE_SURFACE (extra FaceKind param).
+        macro_rules! run_face_pass {
+            ($graph:expr, $ctx:expr) => {
+                for (&id, entity) in &$graph.entities {
+                    if $ctx.pcurve_subtree_ids.contains(&id) {
+                        continue;
+                    }
+                    let (name, attrs) = match entity {
+                        RawEntity::Simple {
+                            name, attributes, ..
+                        } => (name.as_str(), attributes.as_slice()),
+                        RawEntity::Complex { .. } => continue,
+                    };
+                    let result = match name {
+                        "ADVANCED_FACE" => $ctx.convert_face(id, attrs, FaceKind::Advanced),
+                        "FACE_SURFACE" => $ctx.convert_face(id, attrs, FaceKind::General),
+                        _ => continue,
+                    };
+                    if let Err(e) = result {
+                        $ctx.warnings.push(e);
+                    }
+                }
+            };
+        }
+
         // Pass 5-1: vertices
         run_pass!(graph, self, "VERTEX_POINT" => convert_vertex_point);
         // Pass 5-2: edges (depend on vertices + curves)
@@ -259,8 +285,8 @@ impl ReaderContext {
             "VERTEX_LOOP" => convert_vertex_loop);
         // Pass 5-5: face bounds / outer bounds (depend on edge loops)
         run_face_bound_pass!(graph, self);
-        // Pass 5-6: faces (depend on face bounds + surfaces)
-        run_pass!(graph, self, "ADVANCED_FACE" => convert_advanced_face);
+        // Pass 5-6: faces (ADVANCED_FACE + FACE_SURFACE, depend on face bounds + surfaces)
+        run_face_pass!(graph, self);
         // Pass 5-7a: shells (depend on faces)
         run_pass!(graph, self,
             "CLOSED_SHELL" => convert_closed_shell,

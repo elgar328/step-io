@@ -61,12 +61,31 @@ pub struct Wire {
     pub orientation: Orientation,
 }
 
+/// Source STEP entity type for a face.
+///
+/// `ADVANCED_FACE` is a constrained subtype of `FACE_SURFACE` (pcurve
+/// required per edge, exactly one outer bound, etc.), but the data
+/// fields are identical. step-io does not enforce the `ADVANCED_FACE`
+/// WHERE clauses — it preserves whichever entity type the source file
+/// used so the writer can emit it back verbatim.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub enum FaceKind {
+    /// `ADVANCED_FACE` — common output from modern CAD (`FreeCAD`, `CATIA`,
+    /// Fusion 360).
+    #[default]
+    Advanced,
+    /// `FACE_SURFACE` — less constrained supertype, observed in parts of
+    /// the ABC dataset and some legacy AP203 files.
+    General,
+}
+
 /// A face — a bounded portion of a surface.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Face {
     pub surface: SurfaceId,
     pub bounds: Vec<WireId>,
     pub orientation: Orientation,
+    pub kind: FaceKind,
 }
 
 /// A connected set of faces forming a closed or open shell.

@@ -295,6 +295,14 @@ fn tapered_box_ap214_is_round_trips() {
     );
 }
 
+#[test]
+fn face_surface_ap214_is_round_trips() {
+    assert_fixture_round_trip(
+        "face_surface",
+        include_str!("fixtures/face_surface_ap214_is.step"),
+    );
+}
+
 // -------------------------------------------------------------------------
 // box AP coverage — the only shape kept across all 5 AP versions so that the
 // writer's AP-specific header / schema / product-chain paths stay exercised.

@@ -2,8 +2,8 @@
 
 use super::WriteBuffer;
 use crate::ir::{
-    Edge, EdgeId, Face, FaceId, Orientation, OrientedEdge, Shell, ShellId, Solid, SolidId,
-    VertexId, Wire, WireId,
+    Edge, EdgeId, Face, FaceId, FaceKind, Orientation, OrientedEdge, Shell, ShellId, Solid,
+    SolidId, VertexId, Wire, WireId,
 };
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
@@ -201,11 +201,15 @@ impl WriteBuffer<'_> {
         for &wid in &f.bounds {
             bound_refs.push(self.emit_wire(wid)?);
         }
+        let name = match f.kind {
+            FaceKind::Advanced => "ADVANCED_FACE",
+            FaceKind::General => "FACE_SURFACE",
+        };
         let n = self.fresh();
         self.entities.push(WriterEntity {
             id: n,
             body: WriterBody::Simple {
-                name: "ADVANCED_FACE".into(),
+                name: name.into(),
                 attrs: vec![
                     Attribute::String(String::new()),
                     Attribute::List(bound_refs.into_iter().map(Attribute::EntityRef).collect()),

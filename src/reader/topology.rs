@@ -3,7 +3,9 @@
 use super::{ReaderContext, bool_to_orientation};
 use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_entity_ref_list, read_string};
 use crate::ir::error::ConvertError;
-use crate::ir::topology::{Edge, Face, Orientation, OrientedEdge, Shell, Solid, Vertex, Wire};
+use crate::ir::topology::{
+    Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Vertex, Wire,
+};
 use crate::parser::entity::Attribute;
 
 impl ReaderContext {
@@ -186,15 +188,20 @@ impl ReaderContext {
     }
 
     // ------------------------------------------------------------------
-    // Pass 5-6: ADVANCED_FACE (depends on FACE_BOUND + SURFACE)
+    // Pass 5-6: ADVANCED_FACE / FACE_SURFACE (depends on FACE_BOUND + SURFACE)
     // ------------------------------------------------------------------
 
-    pub(super) fn convert_advanced_face(
+    pub(super) fn convert_face(
         &mut self,
         entity_id: u64,
         attrs: &[Attribute],
+        kind: FaceKind,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "ADVANCED_FACE")?;
+        let step_name = match kind {
+            FaceKind::Advanced => "ADVANCED_FACE",
+            FaceKind::General => "FACE_SURFACE",
+        };
+        check_count(attrs, 4, entity_id, step_name)?;
         let _name = read_string(attrs, 0, entity_id, "name")?;
         let bound_refs = read_entity_ref_list(attrs, 1, entity_id, "bounds")?;
         let surface_ref = read_entity_ref(attrs, 2, entity_id, "face_geometry")?;
@@ -212,6 +219,7 @@ impl ReaderContext {
             surface,
             bounds,
             orientation: bool_to_orientation(same_sense),
+            kind,
         };
         let id = self.topology.faces.push(face);
         self.face_map.insert(entity_id, id);

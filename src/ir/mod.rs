@@ -25,4 +25,4 @@ pub use model::{
     AngleUnit, FileHeader, GeometryPool, ImplementationLevel, LengthUnit, NonEmptyStringList,
     SolidAngleUnit, StepModel, TopologyPool, UnitContext,
 };
-pub use topology::{Edge, Face, Orientation, OrientedEdge, Shell, Solid, Vertex, Wire};
+pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Vertex, Wire};
