@@ -1,10 +1,11 @@
 //! Visualization entity converters (Pass 7).
 //!
-//! 9 sub-passes process the `STYLED_ITEM` chain in dependency order:
-//! 7-1 `COLOUR_RGB`, 7-2 `FILL_AREA_STYLE_COLOUR`, 7-3 `FILL_AREA_STYLE`,
-//! 7-4 `SURFACE_STYLE_FILL_AREA`, 7-5 `SURFACE_SIDE_STYLE`,
-//! 7-6 `SURFACE_STYLE_USAGE`, 7-7 `PRESENTATION_STYLE_ASSIGNMENT`,
-//! 7-8 `STYLED_ITEM`, 7-9 `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION`.
+//! Sub-passes process the `STYLED_ITEM` chain in dependency order:
+//! `COLOUR_RGB` → `FILL_AREA_STYLE_COLOUR` → `FILL_AREA_STYLE` →
+//! (`SURFACE_STYLE_FILL_AREA` ‖ `SURFACE_STYLE_TRANSPARENT` →
+//! `SURFACE_STYLE_RENDERING_WITH_PROPERTIES`) → `SURFACE_SIDE_STYLE` →
+//! `SURFACE_STYLE_USAGE` → `PRESENTATION_STYLE_ASSIGNMENT` →
+//! `STYLED_ITEM` → `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION`.
 //!
 //! Each pass populates a temp map (`viz_*_map`) keyed by STEP entity id.
 //! Down-chain converts clone the cached struct so the final IR is a
@@ -17,8 +18,9 @@ use crate::ir::attr::{
 };
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::{
-    ColorRgb, FillAreaStyle, FillAreaStyleColour, Mdgpr, PresentationStyleAssignment, StyledItem,
-    StyledItemTarget, SurfaceSide, SurfaceSideStyle, SurfaceStyleFillArea, SurfaceStyleUsage,
+    ColorRgb, FillAreaStyle, FillAreaStyleColour, Mdgpr, PresentationStyleAssignment,
+    RenderingProperty, ShadingMethod, StyledItem, StyledItemTarget, SurfaceSide, SurfaceSideStyle,
+    SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleRendering, SurfaceStyleUsage,
     VisualizationPool,
 };
 use crate::parser::entity::Attribute;
@@ -94,7 +96,7 @@ impl ReaderContext {
     }
 
     // ------------------------------------------------------------------
-    // Pass 7-4: SURFACE_STYLE_FILL_AREA
+    // Pass 7-4a: SURFACE_STYLE_FILL_AREA
     // ------------------------------------------------------------------
 
     pub(super) fn convert_surface_style_fill_area(
@@ -107,8 +109,81 @@ impl ReaderContext {
         let Some(fill_area) = self.viz_fas_map.get(&fas_ref).cloned() else {
             return Ok(());
         };
-        self.viz_ssfa_map
-            .insert(entity_id, SurfaceStyleFillArea { fill_area });
+        self.viz_sss_entry_map.insert(
+            entity_id,
+            SurfaceSideStyleEntry::FillArea(SurfaceStyleFillArea { fill_area }),
+        );
+        Ok(())
+    }
+
+    // ------------------------------------------------------------------
+    // Pass 7-4b: SURFACE_STYLE_TRANSPARENT — leaf, populates a temp map
+    // consumed by `convert_surface_style_rendering_with_properties`.
+    // ------------------------------------------------------------------
+
+    pub(super) fn convert_surface_style_transparent(
+        &mut self,
+        entity_id: u64,
+        attrs: &[Attribute],
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 1, entity_id, "SURFACE_STYLE_TRANSPARENT")?;
+        let transparency = read_real(attrs, 0, entity_id, "transparency")?;
+        self.viz_transparent_map.insert(entity_id, transparency);
+        Ok(())
+    }
+
+    // ------------------------------------------------------------------
+    // Pass 7-4c: SURFACE_STYLE_RENDERING_WITH_PROPERTIES
+    // ------------------------------------------------------------------
+
+    pub(super) fn convert_surface_style_rendering_with_properties(
+        &mut self,
+        entity_id: u64,
+        attrs: &[Attribute],
+    ) -> Result<(), ConvertError> {
+        check_count(
+            attrs,
+            3,
+            entity_id,
+            "SURFACE_STYLE_RENDERING_WITH_PROPERTIES",
+        )?;
+        // The schema declares `rendering_method` as a non-optional enum, but
+        // Fusion 360 routinely emits `$`. Treat Unset (or any other shape) as
+        // `None` and a real enum value as `Some(...)` so the writer reproduces
+        // whichever form the source file used.
+        let rendering_method = if matches!(attrs.first(), Some(Attribute::Enum(_))) {
+            match read_enum(attrs, 0, entity_id, "rendering_method")? {
+                "CONSTANT_SHADING" => Some(ShadingMethod::Constant),
+                "COLOUR_SHADING" => Some(ShadingMethod::Colour),
+                "DOT_SHADING" => Some(ShadingMethod::Dot),
+                "NORMAL_SHADING" => Some(ShadingMethod::Normal),
+                _ => None,
+            }
+        } else {
+            None
+        };
+        let colour_ref = read_entity_ref(attrs, 1, entity_id, "surface_colour")?;
+        let Some(surface_colour) = self.viz_colour_rgb_map.get(&colour_ref).cloned() else {
+            return Ok(());
+        };
+        let prop_refs = read_entity_ref_list(attrs, 2, entity_id, "properties")?;
+        let mut properties = Vec::with_capacity(prop_refs.len());
+        for r in prop_refs {
+            // Only SURFACE_STYLE_TRANSPARENT is in scope — other property
+            // entities (SURFACE_STYLE_REFLECTANCE_AMBIENT etc.) are silently
+            // dropped (symmetric ignorance preserves round-trip equality).
+            if let Some(&t) = self.viz_transparent_map.get(&r) {
+                properties.push(RenderingProperty::Transparent(t));
+            }
+        }
+        self.viz_sss_entry_map.insert(
+            entity_id,
+            SurfaceSideStyleEntry::Rendering(SurfaceStyleRendering {
+                rendering_method,
+                surface_colour,
+                properties,
+            }),
+        );
         Ok(())
     }
 
@@ -126,8 +201,8 @@ impl ReaderContext {
         let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
         let mut styles = Vec::with_capacity(style_refs.len());
         for r in style_refs {
-            if let Some(ssfa) = self.viz_ssfa_map.get(&r).cloned() {
-                styles.push(ssfa);
+            if let Some(entry) = self.viz_sss_entry_map.get(&r).cloned() {
+                styles.push(entry);
             }
         }
         self.viz_sss_map

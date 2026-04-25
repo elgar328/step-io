@@ -32,7 +32,8 @@ pub use model::{
 };
 pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Vertex, Wire};
 pub use visualization::{
-    ColorRgb, FillAreaStyle, FillAreaStyleColour, Mdgpr, PresentationStyleAssignment, StyledItem,
-    StyledItemTarget, SurfaceSide, SurfaceSideStyle, SurfaceStyleFillArea, SurfaceStyleUsage,
+    ColorRgb, FillAreaStyle, FillAreaStyleColour, Mdgpr, PresentationStyleAssignment,
+    RenderingProperty, ShadingMethod, StyledItem, StyledItemTarget, SurfaceSide, SurfaceSideStyle,
+    SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleRendering, SurfaceStyleUsage,
     VisualizationPool,
 };

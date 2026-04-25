@@ -8,8 +8,9 @@
 
 use super::WriteBuffer;
 use crate::ir::visualization::{
-    ColorRgb, FillAreaStyle, FillAreaStyleColour, Mdgpr, PresentationStyleAssignment, StyledItem,
-    StyledItemTarget, SurfaceSide, SurfaceSideStyle, SurfaceStyleFillArea, SurfaceStyleUsage,
+    ColorRgb, FillAreaStyle, FillAreaStyleColour, Mdgpr, PresentationStyleAssignment,
+    RenderingProperty, ShadingMethod, StyledItem, StyledItemTarget, SurfaceSide, SurfaceSideStyle,
+    SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleRendering, SurfaceStyleUsage,
 };
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
@@ -99,8 +100,12 @@ impl WriteBuffer<'_> {
 
     fn emit_sss(&mut self, sss: &SurfaceSideStyle) -> u64 {
         let mut style_refs = Vec::with_capacity(sss.styles.len());
-        for ssfa in &sss.styles {
-            style_refs.push(Attribute::EntityRef(self.emit_ssfa(ssfa)));
+        for entry in &sss.styles {
+            let entry_id = match entry {
+                SurfaceSideStyleEntry::FillArea(ssfa) => self.emit_ssfa(ssfa),
+                SurfaceSideStyleEntry::Rendering(ssr) => self.emit_ssr(ssr),
+            };
+            style_refs.push(Attribute::EntityRef(entry_id));
         }
         self.push_simple(
             "SURFACE_SIDE_STYLE",
@@ -116,6 +121,39 @@ impl WriteBuffer<'_> {
         self.push_simple(
             "SURFACE_STYLE_FILL_AREA",
             vec![Attribute::EntityRef(fas_id)],
+        )
+    }
+
+    fn emit_ssr(&mut self, ssr: &SurfaceStyleRendering) -> u64 {
+        let colour_id = self.emit_colour_rgb(&ssr.surface_colour);
+        let mut prop_refs = Vec::with_capacity(ssr.properties.len());
+        for prop in &ssr.properties {
+            let prop_id = match prop {
+                RenderingProperty::Transparent(t) => self.emit_surface_style_transparent(*t),
+            };
+            prop_refs.push(Attribute::EntityRef(prop_id));
+        }
+        let method_attr = match ssr.rendering_method {
+            None => Attribute::Unset,
+            Some(ShadingMethod::Constant) => Attribute::Enum("CONSTANT_SHADING".into()),
+            Some(ShadingMethod::Colour) => Attribute::Enum("COLOUR_SHADING".into()),
+            Some(ShadingMethod::Dot) => Attribute::Enum("DOT_SHADING".into()),
+            Some(ShadingMethod::Normal) => Attribute::Enum("NORMAL_SHADING".into()),
+        };
+        self.push_simple(
+            "SURFACE_STYLE_RENDERING_WITH_PROPERTIES",
+            vec![
+                method_attr,
+                Attribute::EntityRef(colour_id),
+                Attribute::List(prop_refs),
+            ],
+        )
+    }
+
+    fn emit_surface_style_transparent(&mut self, transparency: f64) -> u64 {
+        self.push_simple(
+            "SURFACE_STYLE_TRANSPARENT",
+            vec![Attribute::Real(transparency)],
         )
     }
 

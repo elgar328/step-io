@@ -78,13 +78,55 @@ pub enum SurfaceSide {
 #[derive(Debug, Clone, PartialEq)]
 pub struct SurfaceSideStyle {
     pub name: String,
-    pub styles: Vec<SurfaceStyleFillArea>,
+    pub styles: Vec<SurfaceSideStyleEntry>,
+}
+
+/// One element of a `SURFACE_SIDE_STYLE.styles` list. STEP allows several
+/// style entry types here; this scope covers `SURFACE_STYLE_FILL_AREA`
+/// (color fill) and `SURFACE_STYLE_RENDERING_WITH_PROPERTIES`
+/// (color + transparency / other rendering hints).
+#[derive(Debug, Clone, PartialEq)]
+pub enum SurfaceSideStyleEntry {
+    FillArea(SurfaceStyleFillArea),
+    Rendering(SurfaceStyleRendering),
 }
 
 /// `SURFACE_STYLE_FILL_AREA(fill_area)`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SurfaceStyleFillArea {
     pub fill_area: FillAreaStyle,
+}
+
+/// `SURFACE_STYLE_RENDERING_WITH_PROPERTIES(rendering_method, surface_colour,
+/// properties)`. The first attribute is the `shading_surface_method` enum
+/// per the AP214 schema, but Fusion 360 commonly emits `$` (unset) for it —
+/// we accept both, storing `None` for the unset case to round-trip the
+/// distinction. `properties` is a list of additional rendering hints; we
+/// currently model `SURFACE_STYLE_TRANSPARENT` as the only
+/// [`RenderingProperty`] variant.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceStyleRendering {
+    pub rendering_method: Option<ShadingMethod>,
+    pub surface_colour: ColorRgb,
+    pub properties: Vec<RenderingProperty>,
+}
+
+/// `shading_surface_method` enum from `SURFACE_STYLE_RENDERING`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ShadingMethod {
+    Constant,
+    Colour,
+    Dot,
+    Normal,
+}
+
+/// One element of a `SURFACE_STYLE_RENDERING_WITH_PROPERTIES.properties`
+/// list. Other variants (e.g. `SURFACE_STYLE_REFLECTANCE_AMBIENT`) are
+/// out of scope — symmetric ignorance keeps round-trip equality intact.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum RenderingProperty {
+    /// `SURFACE_STYLE_TRANSPARENT(transparency)` — value in `[0.0, 1.0]`.
+    Transparent(f64),
 }
 
 /// `FILL_AREA_STYLE(name, fill_styles)`.

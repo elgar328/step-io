@@ -464,7 +464,14 @@ impl ReaderContext {
         run_pass!(graph, self, "COLOUR_RGB" => convert_colour_rgb);
         run_pass!(graph, self, "FILL_AREA_STYLE_COLOUR" => convert_fill_area_style_colour);
         run_pass!(graph, self, "FILL_AREA_STYLE" => convert_fill_area_style);
+        // SSFA + SSRWP both populate viz_sss_entry_map so a SURFACE_SIDE_STYLE
+        // referencing either entity type resolves uniformly. Transparent must
+        // run before SSRWP so the rendering converter can resolve property refs.
         run_pass!(graph, self, "SURFACE_STYLE_FILL_AREA" => convert_surface_style_fill_area);
+        run_pass!(graph, self,
+            "SURFACE_STYLE_TRANSPARENT" => convert_surface_style_transparent);
+        run_pass!(graph, self,
+            "SURFACE_STYLE_RENDERING_WITH_PROPERTIES" => convert_surface_style_rendering_with_properties);
         run_pass!(graph, self, "SURFACE_SIDE_STYLE" => convert_surface_side_style);
         run_pass!(graph, self, "SURFACE_STYLE_USAGE" => convert_surface_style_usage);
         run_pass!(graph, self,

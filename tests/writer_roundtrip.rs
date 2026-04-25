@@ -542,7 +542,7 @@ fn box_ap203_preserves_product_category_chain() {
 /// triple.
 #[test]
 fn box_ap214_is_preserves_visualization() {
-    use step_io::ir::visualization::StyledItemTarget;
+    use step_io::ir::visualization::{StyledItemTarget, SurfaceSideStyleEntry};
     let model =
         ReaderContext::convert(&parse(include_str!("fixtures/box_ap214_is.step")).expect("parse"))
             .model;
@@ -559,7 +559,11 @@ fn box_ap214_is_preserves_visualization() {
     assert_eq!(si.styles.len(), 1);
     let psa = &si.styles[0];
     assert_eq!(psa.styles.len(), 1, "PSA carries one SurfaceStyleUsage");
-    let color = &psa.styles[0].style.styles[0].fill_area.fill_styles[0].colour;
+    let entry = &psa.styles[0].style.styles[0];
+    let SurfaceSideStyleEntry::FillArea(ssfa) = entry else {
+        panic!("expected FillArea entry, got {entry:?}");
+    };
+    let color = &ssfa.fill_area.fill_styles[0].colour;
     assert!((color.red - 0.678).abs() < 0.01);
     assert!((color.green - 0.710).abs() < 0.01);
     assert!((color.blue - 0.741).abs() < 0.01);

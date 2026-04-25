@@ -20,7 +20,7 @@ use crate::ir::model::{
 use crate::ir::topology::{Orientation, OrientedEdge};
 use crate::ir::visualization::{
     ColorRgb, FillAreaStyle, FillAreaStyleColour, PresentationStyleAssignment, StyledItem,
-    SurfaceSideStyle, SurfaceStyleFillArea, SurfaceStyleUsage, VisualizationPool,
+    SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleUsage, VisualizationPool,
 };
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
 
@@ -207,8 +207,12 @@ pub struct ReaderContext {
     pub(super) viz_fasc_map: HashMap<u64, FillAreaStyleColour>,
     /// `FILL_AREA_STYLE #N → FillAreaStyle` (Pass 7-3).
     pub(super) viz_fas_map: HashMap<u64, FillAreaStyle>,
-    /// `SURFACE_STYLE_FILL_AREA #N → SurfaceStyleFillArea` (Pass 7-4).
-    pub(super) viz_ssfa_map: HashMap<u64, SurfaceStyleFillArea>,
+    /// `SURFACE_STYLE_FILL_AREA #N | SURFACE_STYLE_RENDERING_WITH_PROPERTIES #N
+    /// → SurfaceSideStyleEntry`. Both entity types funnel into the same map
+    /// so `SURFACE_SIDE_STYLE` convert can resolve mixed style lists.
+    pub(super) viz_sss_entry_map: HashMap<u64, SurfaceSideStyleEntry>,
+    /// `SURFACE_STYLE_TRANSPARENT #N → transparency value` (Pass 7-3b).
+    pub(super) viz_transparent_map: HashMap<u64, f64>,
     /// `SURFACE_SIDE_STYLE #N → SurfaceSideStyle` (Pass 7-5).
     pub(super) viz_sss_map: HashMap<u64, SurfaceSideStyle>,
     /// `SURFACE_STYLE_USAGE #N → SurfaceStyleUsage` (Pass 7-6).
