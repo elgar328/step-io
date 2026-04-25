@@ -64,6 +64,7 @@ impl ReaderContext {
             description,
             content: ProductContent::Group(Vec::new()),
             shape_ref_frame,
+            outer_sr_frame: None,
         };
         let pid = self.assembly_products.push(product);
         self.product_arena_map.insert(entity_id, pid);
@@ -240,6 +241,38 @@ impl ReaderContext {
     }
 
     // ------------------------------------------------------------------
+    // Pass 6-4e: plain SHAPE_REPRESENTATION
+    // ------------------------------------------------------------------
+    //
+    // `SHAPE_REPRESENTATION(name, items, context)`. Captures the first
+    // `AXIS2_PLACEMENT_3D` from `items` so the SDR pass can attach it to
+    // `Product.outer_sr_frame` when the Fusion 360 / CATIA indirection chain
+    // (`SDR → plain SR → SRR → ABSR/MSSR`) is taken. Plain SRs that are not
+    // part of an indirection chain (e.g. Group-product SRs) populate the map
+    // harmlessly — entries are looked up only when SDR detects indirection.
+    //
+    // Subtypes (`ADVANCED_BREP_SHAPE_REPRESENTATION`,
+    // `MANIFOLD_SURFACE_SHAPE_REPRESENTATION`) keep their own dispatch entries;
+    // `run_pass!` exact-matches entity names so subtypes never reach this
+    // converter.
+
+    pub(super) fn convert_plain_shape_representation(
+        &mut self,
+        entity_id: u64,
+        attrs: &[Attribute],
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 3, entity_id, "SHAPE_REPRESENTATION")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
+        let items = read_entity_ref_list(attrs, 1, entity_id, "items")?;
+        // attrs[2] = context_of_items — ignored.
+
+        if let Some(&placement_id) = items.iter().find_map(|r| self.placement_map.get(r)) {
+            self.plain_sr_frame_map.insert(entity_id, placement_id);
+        }
+        Ok(())
+    }
+
+    // ------------------------------------------------------------------
     // Pass 6-4d: simple SHAPE_REPRESENTATION_RELATIONSHIP
     // ------------------------------------------------------------------
     //
@@ -369,6 +402,16 @@ impl ReaderContext {
             .get(&shape_rep_ref)
             .copied()
             .unwrap_or(shape_rep_ref);
+
+        // When the indirection chain was taken, attach the plain SR's frame
+        // so the writer can re-emit the wrapper. `plain_sr_frame_map` may be
+        // missing the entry if the plain SR had no axis item — in that case
+        // outer_sr_frame stays None and the writer emits the direct form.
+        if effective_ref != shape_rep_ref {
+            if let Some(&plain_frame) = self.plain_sr_frame_map.get(&shape_rep_ref) {
+                self.assembly_products[pid].outer_sr_frame = Some(plain_frame);
+            }
+        }
 
         let in_absr = self.absr_solid_map.contains_key(&effective_ref);
         let in_mssr = self.mssr_shells_map.contains_key(&effective_ref);

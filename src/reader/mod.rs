@@ -144,6 +144,10 @@ pub struct ReaderContext {
     /// follow the Fusion 360 / CATIA indirection chain
     /// `SDR → plain SR → SRR → ABSR/MSSR`.
     pub(super) srr_equiv_map: HashMap<u64, u64>,
+    /// `plain SHAPE_REPRESENTATION #N → items[0] axis Placement3dId`. Captured
+    /// during Pass 6-4 so SDR conversion can attach the plain SR's reference
+    /// frame to `Product.outer_sr_frame` when the indirection chain is taken.
+    pub(super) plain_sr_frame_map: HashMap<u64, Placement3dId>,
     /// `PRODUCT_DEFINITION_SHAPE #N → PRODUCT_DEFINITION #N` when the
     /// `pdef_shape` points at a product definition (not a `NAUO`).
     /// Populated before Pass 6-5.

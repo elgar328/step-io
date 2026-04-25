@@ -243,8 +243,9 @@ fn hemisphere_tube_ap242_dis_round_trips() {
 }
 
 /// Guards the Fusion 360 / CATIA `SDR → plain SR → SRR → MSSR` indirection:
-/// the reader must resolve the SRR so the product becomes a `SurfaceBody`,
-/// and the writer must in turn emit the MSSR chain.
+/// the reader must resolve the SRR so the product becomes a `SurfaceBody`
+/// and capture the plain SR's frame in `outer_sr_frame`; the writer must in
+/// turn emit the MSSR chain together with the plain SR + SRR wrapper.
 #[test]
 fn hemisphere_tube_emits_surface_body_chain() {
     let src = include_str!("fixtures/hemisphere_tube_ap242_dis.stp");
@@ -257,6 +258,10 @@ fn hemisphere_tube_emits_surface_body_chain() {
         matches!(product.content, ProductContent::SurfaceBody(_)),
         "expected SurfaceBody, got {:?}",
         product.content,
+    );
+    assert!(
+        product.outer_sr_frame.is_some(),
+        "indirect SR pattern not preserved in IR",
     );
 
     let out = model.write_to_string().expect("write");
@@ -271,6 +276,10 @@ fn hemisphere_tube_emits_surface_body_chain() {
     assert!(
         out.contains("OPEN_SHELL"),
         "writer output missing OPEN_SHELL",
+    );
+    assert!(
+        out.contains("SHAPE_REPRESENTATION_RELATIONSHIP"),
+        "writer output missing SRR (indirect SR pattern lost)",
     );
 }
 

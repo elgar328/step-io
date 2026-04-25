@@ -77,9 +77,13 @@ impl WriteBuffer<'_> {
             let sr = match &product.content {
                 ProductContent::Solid(sid) => {
                     let solid_ref = self.emit_solid(*sid)?;
-                    self.emit_absr(product, solid_ref, unit_ctx)?
+                    let absr = self.emit_absr(product, solid_ref, unit_ctx)?;
+                    self.wrap_indirect_sr_if_set(product, absr, unit_ctx)?
                 }
-                ProductContent::SurfaceBody(shells) => self.emit_mssr(product, shells, unit_ctx)?,
+                ProductContent::SurfaceBody(shells) => {
+                    let mssr = self.emit_mssr(product, shells, unit_ctx)?;
+                    self.wrap_indirect_sr_if_set(product, mssr, unit_ctx)?
+                }
                 ProductContent::Group(_) => {
                     self.emit_group_shape_representation(product, unit_ctx)?
                 }
@@ -283,6 +287,46 @@ impl WriteBuffer<'_> {
         self.push_simple(
             "SHAPE_DEFINITION_REPRESENTATION",
             vec![Attribute::EntityRef(pdef_shape), Attribute::EntityRef(sr)],
+        )
+    }
+
+    /// Wrap a geometry-carrying SR (ABSR / MSSR) in the Fusion 360 / CATIA
+    /// indirect form when the source file used it: emit a plain
+    /// `SHAPE_REPRESENTATION` holding only `outer_sr_frame`, link it to the
+    /// geometry SR via `SHAPE_REPRESENTATION_RELATIONSHIP`, and return the
+    /// plain SR id so the SDR points there. With `outer_sr_frame == None`
+    /// (the default) the geometry SR is returned unchanged.
+    fn wrap_indirect_sr_if_set(
+        &mut self,
+        product: &Product,
+        geo_sr: u64,
+        unit_ctx: u64,
+    ) -> Result<u64, WriteError> {
+        let Some(outer_frame) = product.outer_sr_frame else {
+            return Ok(geo_sr);
+        };
+        let outer_axis = self.emit_axis2_placement_3d(outer_frame)?;
+        let plain_sr = self.push_simple(
+            "SHAPE_REPRESENTATION",
+            vec![
+                Attribute::String(String::new()),
+                Attribute::List(vec![Attribute::EntityRef(outer_axis)]),
+                Attribute::EntityRef(unit_ctx),
+            ],
+        );
+        let _ = self.emit_simple_srr(plain_sr, geo_sr);
+        Ok(plain_sr)
+    }
+
+    fn emit_simple_srr(&mut self, rep_1: u64, rep_2: u64) -> u64 {
+        self.push_simple(
+            "SHAPE_REPRESENTATION_RELATIONSHIP",
+            vec![
+                Attribute::String("SRR".into()),
+                Attribute::String("None".into()),
+                Attribute::EntityRef(rep_1),
+                Attribute::EntityRef(rep_2),
+            ],
         )
     }
 

@@ -351,10 +351,15 @@ impl ReaderContext {
         // Pass 6-4: SBSM (surface body shell list) — must precede MSSR.
         run_pass!(graph, self,
             "SHELL_BASED_SURFACE_MODEL" => convert_shell_based_surface_model);
-        // Pass 6-4a: ABSR + MSSR (shape representation → product content).
+        // Pass 6-4a: ABSR + MSSR + plain SR (shape representations).
+        // `run_pass!` exact-matches entity names; ABSR/MSSR subtypes carry
+        // distinct concrete names in STEP files so the plain `SHAPE_REPRESENTATION`
+        // entry below catches only the bare type used by Group products and the
+        // outer wrapper of Fusion 360 / CATIA indirect-SR chains.
         run_pass!(graph, self,
             "ADVANCED_BREP_SHAPE_REPRESENTATION" => convert_advanced_brep_shape_representation,
-            "MANIFOLD_SURFACE_SHAPE_REPRESENTATION" => convert_manifold_surface_shape_representation);
+            "MANIFOLD_SURFACE_SHAPE_REPRESENTATION" => convert_manifold_surface_shape_representation,
+            "SHAPE_REPRESENTATION" => convert_plain_shape_representation);
         // Pass 6-4b: simple SHAPE_REPRESENTATION_RELATIONSHIP (indirection
         // from plain SR to ABSR / MSSR). Must run after Pass 6-4a so the
         // is-target lookup sees the populated absr / mssr maps.

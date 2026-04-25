@@ -43,6 +43,15 @@ pub struct Product {
     /// scratch call [`crate::ir::model::GeometryPool::identity_placement`] to
     /// obtain a shared identity id.
     pub shape_ref_frame: Placement3dId,
+    /// Indirect SR pattern marker — `Some(p)` means the source file used
+    /// `SDR → plain SHAPE_REPRESENTATION → SHAPE_REPRESENTATION_RELATIONSHIP →
+    /// ABSR/MSSR` (Fusion 360, some CATIA outputs). `p` is the plain SR's
+    /// `items[0]` axis placement, kept loyal to the source. Writer re-emits
+    /// the plain SR + SRR wrapper when `Some`. Default `None` produces the
+    /// direct `SDR → ABSR/MSSR` form; kernels building an IR from scratch
+    /// should leave this `None` unless they specifically want the indirect
+    /// output.
+    pub outer_sr_frame: Option<Placement3dId>,
 }
 
 /// What a [`Product`] holds.
