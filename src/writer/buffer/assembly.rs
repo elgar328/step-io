@@ -532,7 +532,11 @@ impl WriteBuffer<'_> {
     // Low-level
     // ----------------------------------------------------------------
 
-    fn push_simple(&mut self, name: &str, attrs: Vec<Attribute>) -> u64 {
+    pub(in crate::writer::buffer) fn push_simple(
+        &mut self,
+        name: &str,
+        attrs: Vec<Attribute>,
+    ) -> u64 {
         let n = self.fresh();
         self.entities.push(WriterEntity {
             id: n,

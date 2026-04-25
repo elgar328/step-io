@@ -6,6 +6,7 @@ use super::geometry::{
 };
 use super::id::Placement3dId;
 use super::topology::{Edge, Face, Shell, Solid, Vertex, Wire};
+use super::visualization::VisualizationPool;
 use crate::parser::schema::StepSchema;
 
 /// A Part 21 `LIST[1:?] OF STRING` — guaranteed to hold at least one element.
@@ -169,6 +170,11 @@ pub struct StepModel {
     /// `Some(_)` is emitted verbatim on round-trip so author / organisation /
     /// timestamp / description aren't overwritten with step-io's defaults.
     pub header: Option<FileHeader>,
+    /// Visualization data — `STYLED_ITEM` chain + `COLOUR_RGB` + style metadata.
+    /// `None` when the source file had no visualization or for kernel-built
+    /// IR. Stored as a tree-inline structure (no shared color references)
+    /// — see [`crate::ir::visualization`] for design notes.
+    pub visualization: Option<VisualizationPool>,
 }
 
 /// Arena-based storage for all topology objects.

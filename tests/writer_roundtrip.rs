@@ -128,6 +128,10 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
     assert_eq!(re.units, original.units, "{name}: units");
     assert_eq!(re.schema, original.schema, "{name}: schema preserved");
     assert_eq!(re.header, original.header, "{name}: header");
+    assert_eq!(
+        re.visualization, original.visualization,
+        "{name}: visualization"
+    );
 
     // Product metadata preserved.
     let o_asm = original
@@ -530,6 +534,35 @@ fn box_ap203_preserves_product_category_chain() {
         product.formation_with_source,
         "AP203 mandates _WITH_SPECIFIED_SOURCE"
     );
+}
+
+/// `box_ap214_is.step` has a single MDGPR with one `STYLED_ITEM` bound to
+/// the `MANIFOLD_SOLID_BREP` plus a single `COLOUR_RGB`. Verifies the
+/// passive tree-inline IR captures the chain correctly down to the RGB
+/// triple.
+#[test]
+fn box_ap214_is_preserves_visualization() {
+    use step_io::ir::visualization::StyledItemTarget;
+    let model =
+        ReaderContext::convert(&parse(include_str!("fixtures/box_ap214_is.step")).expect("parse"))
+            .model;
+    let viz = model.visualization.expect("visualization present");
+    assert_eq!(viz.mdgprs.len(), 1);
+    let mdgpr = &viz.mdgprs[0];
+    assert_eq!(mdgpr.items.len(), 1);
+    let si = &mdgpr.items[0];
+    assert!(
+        matches!(si.item, StyledItemTarget::Solid(_)),
+        "STYLED_ITEM should bind to a Solid, got {:?}",
+        si.item
+    );
+    assert_eq!(si.styles.len(), 1);
+    let psa = &si.styles[0];
+    assert_eq!(psa.styles.len(), 1, "PSA carries one SurfaceStyleUsage");
+    let color = &psa.styles[0].style.styles[0].fill_area.fill_styles[0].colour;
+    assert!((color.red - 0.678).abs() < 0.01);
+    assert!((color.green - 0.710).abs() < 0.01);
+    assert!((color.blue - 0.741).abs() < 0.01);
 }
 
 /// CATIA wire1 fixture has multi-product PC sharing plus

@@ -6,6 +6,7 @@ pub mod geometry;
 pub mod id;
 pub mod model;
 pub mod topology;
+pub mod visualization;
 
 pub use arena::Arena;
 pub use assembly::{
@@ -30,3 +31,8 @@ pub use model::{
     SolidAngleUnit, StepModel, TopologyPool, UnitContext,
 };
 pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Vertex, Wire};
+pub use visualization::{
+    ColorRgb, FillAreaStyle, FillAreaStyleColour, Mdgpr, PresentationStyleAssignment, StyledItem,
+    StyledItemTarget, SurfaceSide, SurfaceSideStyle, SurfaceStyleFillArea, SurfaceStyleUsage,
+    VisualizationPool,
+};

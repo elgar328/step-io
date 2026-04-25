@@ -456,5 +456,21 @@ impl ReaderContext {
         // parent products' Group content.
         run_pass!(graph, self,
             "NEXT_ASSEMBLY_USAGE_OCCURRENCE" => convert_next_assembly_usage_occurrence);
+
+        // Pass 7: visualization (passive tree-inline). Depends on Pass 5 / 6 —
+        // STYLED_ITEM.item resolution needs solid_map / curve_map / point_map
+        // to be populated. Each sub-pass clones from the prior sub-pass's
+        // map so the final IR is a fully inlined tree.
+        run_pass!(graph, self, "COLOUR_RGB" => convert_colour_rgb);
+        run_pass!(graph, self, "FILL_AREA_STYLE_COLOUR" => convert_fill_area_style_colour);
+        run_pass!(graph, self, "FILL_AREA_STYLE" => convert_fill_area_style);
+        run_pass!(graph, self, "SURFACE_STYLE_FILL_AREA" => convert_surface_style_fill_area);
+        run_pass!(graph, self, "SURFACE_SIDE_STYLE" => convert_surface_side_style);
+        run_pass!(graph, self, "SURFACE_STYLE_USAGE" => convert_surface_style_usage);
+        run_pass!(graph, self,
+            "PRESENTATION_STYLE_ASSIGNMENT" => convert_presentation_style_assignment);
+        run_pass!(graph, self, "STYLED_ITEM" => convert_styled_item);
+        run_pass!(graph, self,
+            "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION" => convert_mdgpr);
     }
 }

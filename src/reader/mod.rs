@@ -18,6 +18,10 @@ use crate::ir::model::{
     AngleUnit, GeometryPool, LengthUnit, SolidAngleUnit, StepModel, TopologyPool, UnitContext,
 };
 use crate::ir::topology::{Orientation, OrientedEdge};
+use crate::ir::visualization::{
+    ColorRgb, FillAreaStyle, FillAreaStyleColour, PresentationStyleAssignment, StyledItem,
+    SurfaceSideStyle, SurfaceStyleFillArea, SurfaceStyleUsage, VisualizationPool,
+};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
 
 mod assembly;
@@ -26,6 +30,7 @@ mod header;
 mod passes;
 mod topology;
 mod units;
+mod visualization;
 
 #[cfg(test)]
 mod tests;
@@ -192,6 +197,27 @@ pub struct ReaderContext {
     pub(super) transform_map: HashMap<u64, Transform3d>,
     pub(super) nauo_transform_map: HashMap<u64, Transform3d>,
 
+    /// Lazily-built `VisualizationPool` — Pass 7 's MDGPR convert pushes
+    /// `Mdgpr` records here. `None` if no visualization entities were seen.
+    pub(super) visualization: Option<VisualizationPool>,
+    /// `COLOUR_RGB #N → ColorRgb` (Pass 7-1). Temp map — discarded after
+    /// `convert_fill_area_style_colour` consumes it.
+    pub(super) viz_colour_rgb_map: HashMap<u64, ColorRgb>,
+    /// `FILL_AREA_STYLE_COLOUR #N → FillAreaStyleColour` (Pass 7-2).
+    pub(super) viz_fasc_map: HashMap<u64, FillAreaStyleColour>,
+    /// `FILL_AREA_STYLE #N → FillAreaStyle` (Pass 7-3).
+    pub(super) viz_fas_map: HashMap<u64, FillAreaStyle>,
+    /// `SURFACE_STYLE_FILL_AREA #N → SurfaceStyleFillArea` (Pass 7-4).
+    pub(super) viz_ssfa_map: HashMap<u64, SurfaceStyleFillArea>,
+    /// `SURFACE_SIDE_STYLE #N → SurfaceSideStyle` (Pass 7-5).
+    pub(super) viz_sss_map: HashMap<u64, SurfaceSideStyle>,
+    /// `SURFACE_STYLE_USAGE #N → SurfaceStyleUsage` (Pass 7-6).
+    pub(super) viz_ssu_map: HashMap<u64, SurfaceStyleUsage>,
+    /// `PRESENTATION_STYLE_ASSIGNMENT #N → PresentationStyleAssignment` (Pass 7-7).
+    pub(super) viz_psa_map: HashMap<u64, PresentationStyleAssignment>,
+    /// `STYLED_ITEM #N → StyledItem` (Pass 7-8).
+    pub(super) viz_styled_item_map: HashMap<u64, StyledItem>,
+
     pub(super) warnings: Vec<ConvertError>,
 }
 
@@ -221,6 +247,7 @@ impl ReaderContext {
                 assembly: ctx.assembly,
                 schema: graph.schema.clone(),
                 header,
+                visualization: ctx.visualization,
             },
             warnings: ctx.warnings,
         }

@@ -21,6 +21,7 @@ mod assembly;
 mod geometry;
 mod topology;
 mod units;
+mod visualization;
 
 pub(in crate::writer) struct WriteBuffer<'m> {
     pub(in crate::writer) model: &'m StepModel,
@@ -167,6 +168,7 @@ impl<'m> WriteBuffer<'m> {
             self.emit_unit_context(units);
         }
         self.emit_product_chain_if_eligible()?;
+        self.emit_visualization_if_set()?;
         Ok(())
     }
 
