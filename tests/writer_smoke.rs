@@ -861,7 +861,9 @@ fn simple_assembly_round_trips() {
             assert_eq!(insts[0].occurrence_id, "1");
             assert_eq!(insts[0].occurrence_name, "LeafInst");
         }
-        other @ (ProductContent::Solid(_) | ProductContent::SurfaceBody(_)) => {
+        other @ (ProductContent::Solid(_)
+        | ProductContent::SurfaceBody(_)
+        | ProductContent::Wireframe(_)) => {
             panic!("expected Root Group, got {other:?}")
         }
     }
@@ -930,7 +932,9 @@ fn shared_child_assembly_round_trips() {
             assert_eq!(insts[0].occurrence_id, "1");
             assert_eq!(insts[1].occurrence_id, "2");
         }
-        other @ (ProductContent::Solid(_) | ProductContent::SurfaceBody(_)) => {
+        other @ (ProductContent::Solid(_)
+        | ProductContent::SurfaceBody(_)
+        | ProductContent::Wireframe(_)) => {
             panic!("expected Root Group, got {other:?}")
         }
     }

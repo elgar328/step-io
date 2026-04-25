@@ -8,7 +8,10 @@ pub mod model;
 pub mod topology;
 
 pub use arena::Arena;
-pub use assembly::{AssemblyTree, Instance, Product, ProductContent, Transform3d};
+pub use assembly::{
+    AssemblyTree, Instance, Product, ProductContent, Transform3d, WireframeContent,
+    WireframeReprKind,
+};
 pub use error::{AttributeKindTag, ConvertError};
 pub use geometry::{
     Axis1Placement, Axis2Placement2d, Axis2Placement3d, Circle2, Circle3, CompositeCurve,

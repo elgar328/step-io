@@ -369,9 +369,22 @@ impl ReaderContext {
             "ADVANCED_BREP_SHAPE_REPRESENTATION" => convert_advanced_brep_shape_representation,
             "MANIFOLD_SURFACE_SHAPE_REPRESENTATION" => convert_manifold_surface_shape_representation,
             "SHAPE_REPRESENTATION" => convert_plain_shape_representation);
+        // Pass 6-4f: GEOMETRIC_(CURVE_)SET — must precede GBWSR/GBSSR so the
+        // wireframe converters can look up the curve-set payload.
+        run_pass!(graph, self,
+            "GEOMETRIC_CURVE_SET" => convert_geometric_curve_set,
+            "GEOMETRIC_SET" => convert_geometric_curve_set);
+        // Pass 6-4g: GBWSR / GBSSR — wraps GEOMETRIC_(CURVE_)SETs into a
+        // shape representation. Both forms reach the same IR variant
+        // (`ProductContent::Wireframe`) with a `repr_kind` flag preserving
+        // the source spelling.
+        run_pass!(graph, self,
+            "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION" => convert_gbwsr,
+            "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION" => convert_gbssr);
         // Pass 6-4b: simple SHAPE_REPRESENTATION_RELATIONSHIP (indirection
-        // from plain SR to ABSR / MSSR). Must run after Pass 6-4a so the
-        // is-target lookup sees the populated absr / mssr maps.
+        // from plain SR to ABSR / MSSR / wireframe). Must run after the
+        // shape-representation passes above so the is-target lookup sees
+        // populated maps.
         run_pass!(graph, self,
             "SHAPE_REPRESENTATION_RELATIONSHIP" => convert_shape_representation_relationship);
 

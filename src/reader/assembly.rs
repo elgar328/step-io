@@ -16,7 +16,9 @@
 //! Root resolution lives in `ReaderContext::finalize_assembly`.
 
 use super::ReaderContext;
-use crate::ir::assembly::{Instance, Product, ProductContent, Transform3d};
+use crate::ir::assembly::{
+    Instance, Product, ProductContent, Transform3d, WireframeContent, WireframeReprKind,
+};
 use crate::ir::attr::{
     check_count, read_entity_ref, read_entity_ref_list, read_string, read_string_or_unset,
 };
@@ -241,6 +243,107 @@ impl ReaderContext {
     }
 
     // ------------------------------------------------------------------
+    // Pass 6-4f: GEOMETRIC_CURVE_SET / GEOMETRIC_SET
+    // ------------------------------------------------------------------
+    //
+    // Both names share the same EXPRESS shape; `GEOMETRIC_CURVE_SET` is a
+    // subtype restricting `items` to curves, while `GEOMETRIC_SET` allows
+    // points and (rarely) surfaces too. We split the items into two
+    // buckets — `curves` and `points` — using the populated curve / point
+    // maps. Items that resolve to neither (e.g. a stray surface ref) are
+    // silently skipped.
+
+    pub(super) fn convert_geometric_curve_set(
+        &mut self,
+        entity_id: u64,
+        attrs: &[Attribute],
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 2, entity_id, "GEOMETRIC_CURVE_SET")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
+        let item_refs = read_entity_ref_list(attrs, 1, entity_id, "items")?;
+        let mut curves = Vec::new();
+        let mut points = Vec::new();
+        for r in item_refs {
+            if let Some(&cid) = self.curve_map.get(&r) {
+                curves.push(cid);
+            } else if let Some(&pid) = self.point_map.get(&r) {
+                points.push(pid);
+            }
+        }
+        self.curve_set_map.insert(entity_id, (curves, points));
+        Ok(())
+    }
+
+    // ------------------------------------------------------------------
+    // Pass 6-4g: GEOMETRICALLY_BOUNDED_(WIREFRAME|SURFACE)_SHAPE_REPRESENTATION
+    // ------------------------------------------------------------------
+    //
+    // Both wrappers share the same items shape: an axis placement (often
+    // omitted by CATIA in the SURFACE flavour) plus one or more
+    // GEOMETRIC_(CURVE_)SETs. We collapse the curve sets into a single
+    // `WireframeContent` and remember the axis frame separately so the
+    // SDR pass can populate `Product.shape_ref_frame`. The `repr_kind`
+    // flag preserves which wrapper the source used.
+
+    pub(super) fn convert_gbwsr(
+        &mut self,
+        entity_id: u64,
+        attrs: &[Attribute],
+    ) -> Result<(), ConvertError> {
+        self.convert_wireframe_representation(entity_id, attrs, WireframeReprKind::Wireframe)
+    }
+
+    pub(super) fn convert_gbssr(
+        &mut self,
+        entity_id: u64,
+        attrs: &[Attribute],
+    ) -> Result<(), ConvertError> {
+        self.convert_wireframe_representation(entity_id, attrs, WireframeReprKind::Surface)
+    }
+
+    fn convert_wireframe_representation(
+        &mut self,
+        entity_id: u64,
+        attrs: &[Attribute],
+        repr_kind: WireframeReprKind,
+    ) -> Result<(), ConvertError> {
+        check_count(
+            attrs,
+            3,
+            entity_id,
+            "GEOMETRICALLY_BOUNDED_*_SHAPE_REPRESENTATION",
+        )?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
+        let items = read_entity_ref_list(attrs, 1, entity_id, "items")?;
+        // attrs[2] = context_of_items — ignored.
+
+        if let Some(&placement_id) = items.iter().find_map(|r| self.placement_map.get(r)) {
+            self.wireframe_ref_frame_map.insert(entity_id, placement_id);
+        }
+        let mut curves = Vec::new();
+        let mut points = Vec::new();
+        for r in &items {
+            if let Some((c, p)) = self.curve_set_map.get(r) {
+                curves.extend_from_slice(c);
+                points.extend_from_slice(p);
+            } else if let Some(&cid) = self.curve_map.get(r) {
+                // Some producers attach curves directly without a wrapping
+                // GEOMETRIC_CURVE_SET — accept that form too.
+                curves.push(cid);
+            }
+        }
+        self.wireframe_data_map.insert(
+            entity_id,
+            WireframeContent {
+                curves,
+                points,
+                repr_kind,
+            },
+        );
+        Ok(())
+    }
+
+    // ------------------------------------------------------------------
     // Pass 6-4e: plain SHAPE_REPRESENTATION
     // ------------------------------------------------------------------
     //
@@ -294,10 +397,12 @@ impl ReaderContext {
         let rep_1 = read_entity_ref(attrs, 2, entity_id, "rep_1")?;
         let rep_2 = read_entity_ref(attrs, 3, entity_id, "rep_2")?;
 
-        let r1_target =
-            self.absr_solid_map.contains_key(&rep_1) || self.mssr_shells_map.contains_key(&rep_1);
-        let r2_target =
-            self.absr_solid_map.contains_key(&rep_2) || self.mssr_shells_map.contains_key(&rep_2);
+        let r1_target = self.absr_solid_map.contains_key(&rep_1)
+            || self.mssr_shells_map.contains_key(&rep_1)
+            || self.wireframe_data_map.contains_key(&rep_1);
+        let r2_target = self.absr_solid_map.contains_key(&rep_2)
+            || self.mssr_shells_map.contains_key(&rep_2)
+            || self.wireframe_data_map.contains_key(&rep_2);
         match (r1_target, r2_target) {
             (true, false) => {
                 self.srr_equiv_map.insert(rep_2, rep_1);
@@ -373,7 +478,9 @@ impl ReaderContext {
         // Guard against a second SDR pinning the same product: keep the
         // first classification and warn on the duplicate.
         match &self.assembly_products[pid].content {
-            ProductContent::Solid(_) | ProductContent::SurfaceBody(_) => {
+            ProductContent::Solid(_)
+            | ProductContent::SurfaceBody(_)
+            | ProductContent::Wireframe(_) => {
                 self.warnings.push(ConvertError::UnexpectedEntityForm {
                     entity_id,
                     detail: format!(
@@ -436,10 +543,14 @@ impl ReaderContext {
             } else {
                 self.assembly_products[pid].content = ProductContent::SurfaceBody(shells);
             }
+        } else if let Some(wf) = self.wireframe_data_map.get(&effective_ref).cloned() {
+            self.assembly_products[pid].content = ProductContent::Wireframe(wf);
         }
         if let Some(&ref_frame) = self.absr_ref_frame_map.get(&effective_ref) {
             self.assembly_products[pid].shape_ref_frame = ref_frame;
         } else if let Some(&ref_frame) = self.mssr_ref_frame_map.get(&effective_ref) {
+            self.assembly_products[pid].shape_ref_frame = ref_frame;
+        } else if let Some(&ref_frame) = self.wireframe_ref_frame_map.get(&effective_ref) {
             self.assembly_products[pid].shape_ref_frame = ref_frame;
         }
         Ok(())
@@ -560,7 +671,9 @@ impl ReaderContext {
                     occurrence_name,
                 });
             }
-            ProductContent::Solid(_) | ProductContent::SurfaceBody(_) => {
+            ProductContent::Solid(_)
+            | ProductContent::SurfaceBody(_)
+            | ProductContent::Wireframe(_) => {
                 self.warnings.push(ConvertError::UnexpectedEntityForm {
                     entity_id,
                     detail: String::from(

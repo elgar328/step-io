@@ -7,7 +7,7 @@
 //! owns the product arena and the resolved root.
 
 use super::arena::Arena;
-use super::id::{Placement3dId, ProductId, ShellId, SolidId};
+use super::id::{CurveId, Placement3dId, PointId, ProductId, ShellId, SolidId};
 
 /// Assembly graph. Conventionally called a "tree" but shared instances
 /// make it a DAG in general (the same product can be reached through
@@ -68,6 +68,41 @@ pub enum ProductContent {
     /// with one or more shells. Unlike `Solid`, no closed volume is implied;
     /// shells are typically `OPEN_SHELL`, occasionally `CLOSED_SHELL`.
     SurfaceBody(Vec<ShellId>),
+    /// Wireframe leaf — the product is a `GEOMETRIC_(CURVE_)SET` of curves
+    /// (and optionally loose points) wrapped in a
+    /// `GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION` (or its
+    /// `..._SURFACE_...` cousin). No surface or solid topology is implied.
+    Wireframe(WireframeContent),
+}
+
+/// Payload of a [`ProductContent::Wireframe`].
+///
+/// `curves` are the geometric items (lines, circles, trimmed curves, etc.).
+/// `points` are loose `CARTESIAN_POINT` items that some producers (notably
+/// CATIA) include in `GEOMETRIC_SET` alongside curves; they stay empty for
+/// `GEOMETRIC_CURVE_SET`-style outputs. `repr_kind` records which wrapper
+/// the source file used so writers can reproduce it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct WireframeContent {
+    pub curves: Vec<CurveId>,
+    pub points: Vec<PointId>,
+    pub repr_kind: WireframeReprKind,
+}
+
+/// Loyalty flag — which `GEOMETRICALLY_BOUNDED_*_SHAPE_REPRESENTATION`
+/// wrapper carried this wireframe in the source file. Default is
+/// [`WireframeReprKind::Wireframe`]: kernels building an IR from scratch
+/// get the more common `..._WIREFRAME_...` form on output.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub enum WireframeReprKind {
+    /// `GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION` —
+    /// pure wireframe (no associated surface).
+    #[default]
+    Wireframe,
+    /// `GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION` — wireframe
+    /// expressed as a (degenerate) bounded surface representation; CATIA
+    /// uses this form for supplemental geometry.
+    Surface,
 }
 
 /// One placement of a child product inside a parent.

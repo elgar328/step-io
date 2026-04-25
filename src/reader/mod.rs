@@ -7,7 +7,7 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::ir::arena::Arena;
-use crate::ir::assembly::{AssemblyTree, Product, Transform3d};
+use crate::ir::assembly::{AssemblyTree, Product, Transform3d, WireframeContent};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Pcurve, TransitionCode};
 use crate::ir::id::{
@@ -152,6 +152,17 @@ pub struct ReaderContext {
     /// step id)`. Populated by Pass 4 immediately after `TRIMMED_CURVE` so
     /// `COMPOSITE_CURVE` conversion can resolve segments by entity ref.
     pub(super) composite_segment_map: HashMap<u64, (TransitionCode, bool, u64)>,
+    /// `GEOMETRIC_(CURVE_)SET #N → (curves, loose points)`. Populated in
+    /// Pass 6-4 just before the GBWSR / GBSSR converters consume it.
+    pub(super) curve_set_map: HashMap<u64, (Vec<CurveId>, Vec<PointId>)>,
+    /// `GBWSR / GBSSR #N → wireframe content payload`. Same role as
+    /// `absr_solid_map` / `mssr_shells_map` but for wireframe products.
+    pub(super) wireframe_data_map: HashMap<u64, WireframeContent>,
+    /// `GBWSR / GBSSR #N → axis Placement3dId`. Same role as
+    /// `absr_ref_frame_map` for wireframe products. Optional because the
+    /// wrapper's `items` list may omit an axis (CATIA's GBSSR commonly
+    /// does).
+    pub(super) wireframe_ref_frame_map: HashMap<u64, Placement3dId>,
     /// `PRODUCT_DEFINITION_SHAPE #N → PRODUCT_DEFINITION #N` when the
     /// `pdef_shape` points at a product definition (not a `NAUO`).
     /// Populated before Pass 6-5.

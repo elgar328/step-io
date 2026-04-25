@@ -7,7 +7,7 @@
 
 #![allow(clippy::too_many_lines)]
 
-use step_io::ir::assembly::ProductContent;
+use step_io::ir::assembly::{ProductContent, WireframeReprKind};
 use step_io::parse;
 use step_io::reader::ReaderContext;
 
@@ -158,6 +158,22 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
                     o.len(),
                     r.len(),
                     "{name}: product[{pidx}] surface body shells"
+                );
+            }
+            (ProductContent::Wireframe(o), ProductContent::Wireframe(r)) => {
+                assert_eq!(
+                    o.repr_kind, r.repr_kind,
+                    "{name}: product[{pidx}] wireframe repr_kind"
+                );
+                assert_eq!(
+                    o.curves.len(),
+                    r.curves.len(),
+                    "{name}: product[{pidx}] wireframe curves count"
+                );
+                assert_eq!(
+                    o.points.len(),
+                    r.points.len(),
+                    "{name}: product[{pidx}] wireframe points count"
                 );
             }
             (ProductContent::Group(oi), ProductContent::Group(ri)) => {
@@ -318,6 +334,86 @@ fn offset_surface_ap214_is_round_trips() {
         "offset_surface",
         include_str!("fixtures/offset_surface_ap214_is.step"),
     );
+}
+
+#[test]
+fn wire1_ap214_is_round_trips() {
+    assert_fixture_round_trip("wire1", include_str!("fixtures/wire1_ap214_is.stp"));
+}
+
+#[test]
+fn wire2_ap214_is_round_trips() {
+    assert_fixture_round_trip("wire2", include_str!("fixtures/wire2_ap214_is.step"));
+}
+
+/// CATIA wire1 fixture exercises the `..._SURFACE_...` flavour (GBSSR) plus
+/// `COMPOSITE_CURVE` / `TRIMMED_CURVE` chains. The reader must classify the
+/// product as Wireframe with `repr_kind == Surface`, the writer must round-
+/// trip the GBSSR + `GEOMETRIC_SET` pair, and the indirect SR pattern (SDR ->
+/// plain SR -> SRR -> GBSSR) must be preserved via `outer_sr_frame`.
+#[test]
+fn wire1_emits_geometric_set_and_gbssr() {
+    let src = include_str!("fixtures/wire1_ap214_is.stp");
+    let graph = parse(src).expect("parse fixture");
+    let model = ReaderContext::convert(&graph).model;
+
+    let tree = model.assembly.as_ref().expect("assembly present");
+    let product = tree.products.iter().next().expect("one product");
+    let ProductContent::Wireframe(wf) = &product.content else {
+        panic!("expected Wireframe, got {:?}", product.content);
+    };
+    assert_eq!(wf.repr_kind, WireframeReprKind::Surface);
+    assert!(!wf.curves.is_empty(), "expected wireframe curves");
+    assert!(
+        product.outer_sr_frame.is_some(),
+        "wire1 uses indirect SR pattern; outer_sr_frame must be set"
+    );
+
+    let out = model.write_to_string().expect("write");
+    assert!(out.contains("GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION"));
+    assert!(out.contains("GEOMETRIC_SET"));
+    assert!(out.contains("COMPOSITE_CURVE"));
+    assert!(out.contains("TRIMMED_CURVE"));
+    assert!(
+        out.contains("SHAPE_REPRESENTATION_RELATIONSHIP"),
+        "indirect SR wrapper must round-trip"
+    );
+}
+
+/// `FreeCAD` wire2 fixture exercises the `..._WIREFRAME_...` flavour (GBWSR)
+/// inside a multi-product assembly. Two of the three leaves are wireframe
+/// products; one is a `SurfaceBody`. Verifies the writer emits GBWSR with
+/// `GEOMETRIC_CURVE_SET` and that PARAMETER-master `TRIMMED_CURVE` round-trips.
+#[test]
+fn wire2_emits_gbwsr_in_assembly() {
+    let src = include_str!("fixtures/wire2_ap214_is.step");
+    let graph = parse(src).expect("parse fixture");
+    let model = ReaderContext::convert(&graph).model;
+
+    let tree = model.assembly.as_ref().expect("assembly present");
+    assert_eq!(tree.products.len(), 4, "root + 3 leaves");
+    let mut wireframe_count = 0_usize;
+    let mut surface_body_count = 0_usize;
+    let mut group_count = 0_usize;
+    for p in tree.products.iter() {
+        match &p.content {
+            ProductContent::Wireframe(wf) => {
+                assert_eq!(wf.repr_kind, WireframeReprKind::Wireframe);
+                wireframe_count += 1;
+            }
+            ProductContent::SurfaceBody(_) => surface_body_count += 1,
+            ProductContent::Group(_) => group_count += 1,
+            ProductContent::Solid(_) => {}
+        }
+    }
+    assert_eq!(wireframe_count, 2);
+    assert_eq!(surface_body_count, 1);
+    assert_eq!(group_count, 1);
+
+    let out = model.write_to_string().expect("write");
+    assert!(out.contains("GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION"));
+    assert!(out.contains("GEOMETRIC_CURVE_SET"));
+    assert!(out.contains("TRIMMED_CURVE"));
 }
 
 // -------------------------------------------------------------------------

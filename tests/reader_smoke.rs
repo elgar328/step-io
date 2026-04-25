@@ -1189,7 +1189,9 @@ fn assembly_fixtures_content_variants_split_three_solids_four_groups() {
             tree.products
                 .iter()
                 .fold((0_usize, 0_usize), |(sol, grp), p| match &p.content {
-                    ProductContent::Solid(_) | ProductContent::SurfaceBody(_) => (sol + 1, grp),
+                    ProductContent::Solid(_)
+                    | ProductContent::SurfaceBody(_)
+                    | ProductContent::Wireframe(_) => (sol + 1, grp),
                     ProductContent::Group(_) => (sol, grp + 1),
                 });
         assert_eq!(solid_count, 3, "fixture {name}: leaf solids");
@@ -1354,7 +1356,9 @@ fn assembly_fixtures_root_has_four_instances() {
                     "fixture {name}: root should hold 4 instances"
                 );
             }
-            ProductContent::Solid(_) | ProductContent::SurfaceBody(_) => {
+            ProductContent::Solid(_)
+            | ProductContent::SurfaceBody(_)
+            | ProductContent::Wireframe(_) => {
                 panic!("fixture {name}: root should be a Group")
             }
         }

@@ -15,7 +15,9 @@
 use std::collections::HashMap;
 
 use super::WriteBuffer;
-use crate::ir::{Instance, Product, ProductContent, ProductId, Transform3d};
+use crate::ir::{
+    Instance, Product, ProductContent, ProductId, Transform3d, WireframeContent, WireframeReprKind,
+};
 use crate::parser::entity::Attribute;
 use crate::parser::schema::{SchemaClass, StepSchema};
 use crate::writer::WriteError;
@@ -83,6 +85,10 @@ impl WriteBuffer<'_> {
                 ProductContent::SurfaceBody(shells) => {
                     let mssr = self.emit_mssr(product, shells, unit_ctx)?;
                     self.wrap_indirect_sr_if_set(product, mssr, unit_ctx)?
+                }
+                ProductContent::Wireframe(wf) => {
+                    let gb_sr = self.emit_wireframe_representation(product, wf, unit_ctx)?;
+                    self.wrap_indirect_sr_if_set(product, gb_sr, unit_ctx)?
                 }
                 ProductContent::Group(_) => {
                     self.emit_group_shape_representation(product, unit_ctx)?
@@ -238,6 +244,51 @@ impl WriteBuffer<'_> {
                 Attribute::List(vec![
                     Attribute::EntityRef(axis_ref),
                     Attribute::EntityRef(sbsm_ref),
+                ]),
+                Attribute::EntityRef(unit_ctx),
+            ],
+        ))
+    }
+
+    /// Emit a wireframe `SHAPE_REPRESENTATION` (`GBWSR` / `GBSSR`) plus its
+    /// `GEOMETRIC_(CURVE_)SET` of items. Picks the `..._SURFACE_...` cousin
+    /// when `repr_kind == Surface` (CATIA convention) and uses
+    /// `GEOMETRIC_SET` when loose points coexist with curves; otherwise
+    /// emits the more common `..._WIREFRAME_...` + `GEOMETRIC_CURVE_SET`.
+    fn emit_wireframe_representation(
+        &mut self,
+        product: &Product,
+        wf: &WireframeContent,
+        unit_ctx: u64,
+    ) -> Result<u64, WriteError> {
+        let axis_ref = self.emit_axis2_placement_3d(product.shape_ref_frame)?;
+        let mut item_refs = Vec::with_capacity(wf.curves.len() + wf.points.len());
+        for &cid in &wf.curves {
+            item_refs.push(Attribute::EntityRef(self.emit_curve(cid)?));
+        }
+        for &pid in &wf.points {
+            item_refs.push(Attribute::EntityRef(self.emit_point(pid)?));
+        }
+        let set_name = if wf.points.is_empty() {
+            "GEOMETRIC_CURVE_SET"
+        } else {
+            "GEOMETRIC_SET"
+        };
+        let set_ref = self.push_simple(
+            set_name,
+            vec![Attribute::String(String::new()), Attribute::List(item_refs)],
+        );
+        let repr_name = match wf.repr_kind {
+            WireframeReprKind::Surface => "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
+            WireframeReprKind::Wireframe => "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+        };
+        Ok(self.push_simple(
+            repr_name,
+            vec![
+                Attribute::String(String::new()),
+                Attribute::List(vec![
+                    Attribute::EntityRef(axis_ref),
+                    Attribute::EntityRef(set_ref),
                 ]),
                 Attribute::EntityRef(unit_ctx),
             ],
