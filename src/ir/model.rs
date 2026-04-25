@@ -248,6 +248,16 @@ pub struct UnitContext {
     pub plane_angle: AngleUnit,
     pub solid_angle: SolidAngleUnit,
     pub length_uncertainty: Option<f64>,
+    /// `true` when the source file wrapped the length unit in
+    /// `CONVERSION_BASED_UNIT` even though the unit is SI (e.g. ABC tier
+    /// emits `CBU('METRE', 1.0, base=METRE)` instead of plain SI METRE).
+    /// Writer re-emits the CBU wrapper when set; non-SI units (Inch / Foot)
+    /// always emit CBU regardless of this flag.
+    pub length_cbu_wrapped: bool,
+    /// `true` when the source file wrapped the plane-angle unit (Radian)
+    /// in a self-conversion `CONVERSION_BASED_UNIT`. Degree is non-SI and
+    /// always emits CBU regardless of this flag.
+    pub plane_angle_cbu_wrapped: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

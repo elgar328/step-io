@@ -29,6 +29,8 @@ fn mm_radian_steradian() -> UnitContext {
         plane_angle: AngleUnit::Radian,
         solid_angle: SolidAngleUnit::Steradian,
         length_uncertainty: None,
+        length_cbu_wrapped: false,
+        plane_angle_cbu_wrapped: false,
     }
 }
 

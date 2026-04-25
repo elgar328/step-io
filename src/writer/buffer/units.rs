@@ -11,8 +11,8 @@ impl WriteBuffer<'_> {
         if let Some(n) = self.global_unit_context_id {
             return n;
         }
-        let length = self.emit_length_unit(units.length);
-        let angle = self.emit_angle_unit(units.plane_angle);
+        let length = self.emit_length_unit(&units);
+        let angle = self.emit_angle_unit(&units);
         let solid = self.emit_solid_angle_unit(units.solid_angle);
 
         // ISO 10303-21:2016 §11.2.5.1 — complex entity parts serialize in
@@ -82,16 +82,25 @@ impl WriteBuffer<'_> {
         n
     }
 
-    fn emit_length_unit(&mut self, unit: LengthUnit) -> u64 {
+    fn emit_length_unit(&mut self, units: &UnitContext) -> u64 {
         if let Some(n) = self.length_unit_id {
             return n;
         }
-        match unit {
+        match units.length {
+            LengthUnit::Millimetre if units.length_cbu_wrapped => {
+                self.emit_conversion_based_length("MILLIMETRE", Some("MILLI"), 1.0)
+            }
+            LengthUnit::Centimetre if units.length_cbu_wrapped => {
+                self.emit_conversion_based_length("CENTIMETRE", Some("CENTI"), 1.0)
+            }
+            LengthUnit::Metre if units.length_cbu_wrapped => {
+                self.emit_conversion_based_length("METRE", None, 1.0)
+            }
             LengthUnit::Millimetre => self.emit_plain_si_length(Some("MILLI")),
             LengthUnit::Centimetre => self.emit_plain_si_length(Some("CENTI")),
             LengthUnit::Metre => self.emit_plain_si_length(None),
-            LengthUnit::Inch => self.emit_conversion_based_length("INCH", 25.4),
-            LengthUnit::Foot => self.emit_conversion_based_length("FOOT", 304.8),
+            LengthUnit::Inch => self.emit_conversion_based_length("INCH", Some("MILLI"), 25.4),
+            LengthUnit::Foot => self.emit_conversion_based_length("FOOT", Some("MILLI"), 304.8),
         }
     }
 
@@ -116,10 +125,15 @@ impl WriteBuffer<'_> {
         n
     }
 
-    /// Emit a MILLI-METRE-based SI length unit without populating
-    /// `length_unit_id` — used internally as the base for a
-    /// `CONVERSION_BASED_UNIT` length chain.
-    fn emit_base_si_millimetre(&mut self) -> u64 {
+    /// Emit an SI length unit complex without populating `length_unit_id`
+    /// — used internally as the base for a `CONVERSION_BASED_UNIT` length
+    /// chain. `prefix = None` for plain METRE, `Some("MILLI")` for
+    /// MILLIMETRE, `Some("CENTI")` for CENTIMETRE, etc.
+    fn emit_base_si_length(&mut self, prefix: Option<&'static str>) -> u64 {
+        let prefix_attr = match prefix {
+            Some(p) => Attribute::Enum(p.into()),
+            None => Attribute::Unset,
+        };
         let n = self.fresh();
         self.entities.push(WriterEntity {
             id: n,
@@ -129,10 +143,7 @@ impl WriteBuffer<'_> {
                     ("NAMED_UNIT".into(), vec![Attribute::Derived]),
                     (
                         "SI_UNIT".into(),
-                        vec![
-                            Attribute::Enum("MILLI".into()),
-                            Attribute::Enum("METRE".into()),
-                        ],
+                        vec![prefix_attr, Attribute::Enum("METRE".into())],
                     ),
                 ],
             },
@@ -182,18 +193,26 @@ impl WriteBuffer<'_> {
         n
     }
 
-    /// Emit a `CONVERSION_BASED_UNIT` length chain (base SI MILLI-METRE,
-    /// `DIMENSIONAL_EXPONENTS`, `LENGTH_MEASURE_WITH_UNIT`, outer CBU complex).
-    /// Returns the outer CBU id and caches it as `length_unit_id`.
-    fn emit_conversion_based_length(&mut self, name: &str, mm_per_unit: f64) -> u64 {
-        let base_si = self.emit_base_si_millimetre();
+    /// Emit a `CONVERSION_BASED_UNIT` length chain. Used for both genuine
+    /// non-SI units (Inch / Foot — base MILLI METRE, factor 25.4 / 304.8)
+    /// and SI self-wraps (METRE / MILLIMETRE / CENTIMETRE — base same as
+    /// the unit, factor 1.0). Wraps `LENGTH_MEASURE_WITH_UNIT` referencing
+    /// the SI base and the shared `DIMENSIONAL_EXPONENTS(1,...)`. Returns
+    /// the outer CBU id and caches it as `length_unit_id`.
+    fn emit_conversion_based_length(
+        &mut self,
+        name: &str,
+        base_prefix: Option<&'static str>,
+        factor: f64,
+    ) -> u64 {
+        let base_si = self.emit_base_si_length(base_prefix);
         let dim_exp = self.emit_length_dim_exponents();
         let measure = self.fresh();
         self.entities.push(WriterEntity {
             id: measure,
             body: WriterBody::Simple {
                 name: "LENGTH_MEASURE_WITH_UNIT".into(),
-                attrs: vec![Attribute::Real(mm_per_unit), Attribute::EntityRef(base_si)],
+                attrs: vec![Attribute::Real(factor), Attribute::EntityRef(base_si)],
             },
         });
         let outer = self.fresh();
@@ -217,13 +236,18 @@ impl WriteBuffer<'_> {
         outer
     }
 
-    fn emit_angle_unit(&mut self, unit: AngleUnit) -> u64 {
+    fn emit_angle_unit(&mut self, units: &UnitContext) -> u64 {
         if let Some(n) = self.angle_unit_id {
             return n;
         }
-        match unit {
+        match units.plane_angle {
+            AngleUnit::Radian if units.plane_angle_cbu_wrapped => {
+                self.emit_conversion_based_angle("RADIAN", 1.0)
+            }
             AngleUnit::Radian => self.emit_plain_si_radian(),
-            AngleUnit::Degree => self.emit_conversion_based_degree(),
+            AngleUnit::Degree => {
+                self.emit_conversion_based_angle("DEGREE", std::f64::consts::PI / 180.0)
+            }
         }
     }
 
@@ -266,7 +290,10 @@ impl WriteBuffer<'_> {
         n
     }
 
-    fn emit_conversion_based_degree(&mut self) -> u64 {
+    /// Emit a `CONVERSION_BASED_UNIT` plane-angle chain. Used for genuine
+    /// non-SI angles (Degree — factor π/180) and for SI self-wrap (Radian
+    /// — factor 1.0). Base is always plain SI RADIAN.
+    fn emit_conversion_based_angle(&mut self, name: &str, factor: f64) -> u64 {
         let base_si = self.emit_base_si_radian();
         let dim_exp = self.emit_dimensionless_exponents();
         let measure = self.fresh();
@@ -274,10 +301,7 @@ impl WriteBuffer<'_> {
             id: measure,
             body: WriterBody::Simple {
                 name: "PLANE_ANGLE_MEASURE_WITH_UNIT".into(),
-                attrs: vec![
-                    Attribute::Real(std::f64::consts::PI / 180.0),
-                    Attribute::EntityRef(base_si),
-                ],
+                attrs: vec![Attribute::Real(factor), Attribute::EntityRef(base_si)],
             },
         });
         let outer = self.fresh();
@@ -288,7 +312,7 @@ impl WriteBuffer<'_> {
                     (
                         "CONVERSION_BASED_UNIT".into(),
                         vec![
-                            Attribute::String("DEGREE".into()),
+                            Attribute::String(name.into()),
                             Attribute::EntityRef(measure),
                         ],
                     ),
@@ -343,6 +367,8 @@ mod tests {
             plane_angle: AngleUnit::Radian,
             solid_angle: SolidAngleUnit::Steradian,
             length_uncertainty: None,
+            length_cbu_wrapped: false,
+            plane_angle_cbu_wrapped: false,
         });
         let out = model.write_to_string().expect("write");
         assert!(out.contains("CONVERSION_BASED_UNIT('INCH'"), "{out}");
@@ -358,6 +384,8 @@ mod tests {
             plane_angle: AngleUnit::Radian,
             solid_angle: SolidAngleUnit::Steradian,
             length_uncertainty: None,
+            length_cbu_wrapped: false,
+            plane_angle_cbu_wrapped: false,
         });
         let out = model.write_to_string().expect("write");
         assert!(out.contains("CONVERSION_BASED_UNIT('FOOT'"), "{out}");
@@ -372,6 +400,8 @@ mod tests {
             plane_angle: AngleUnit::Degree,
             solid_angle: SolidAngleUnit::Steradian,
             length_uncertainty: None,
+            length_cbu_wrapped: false,
+            plane_angle_cbu_wrapped: false,
         });
         let out = model.write_to_string().expect("write");
         assert!(out.contains("CONVERSION_BASED_UNIT('DEGREE'"), "{out}");
@@ -389,6 +419,8 @@ mod tests {
             plane_angle: AngleUnit::Radian,
             solid_angle: SolidAngleUnit::Steradian,
             length_uncertainty: None,
+            length_cbu_wrapped: false,
+            plane_angle_cbu_wrapped: false,
         });
         let out = model.write_to_string().expect("write");
         assert!(
@@ -405,6 +437,8 @@ mod tests {
             plane_angle: AngleUnit::Radian,
             solid_angle: SolidAngleUnit::Steradian,
             length_uncertainty: None,
+            length_cbu_wrapped: false,
+            plane_angle_cbu_wrapped: false,
         });
         let out = model.write_to_string().expect("write");
         assert!(!out.contains("CONVERSION_BASED_UNIT"), "{out}");
@@ -418,6 +452,8 @@ mod tests {
             plane_angle: AngleUnit::Radian,
             solid_angle: SolidAngleUnit::Steradian,
             length_uncertainty: None,
+            length_cbu_wrapped: false,
+            plane_angle_cbu_wrapped: false,
         });
         let out = model.write_to_string().expect("write");
         assert!(!out.contains("CONVERSION_BASED_UNIT"), "{out}");
@@ -434,18 +470,24 @@ mod tests {
                 plane_angle: AngleUnit::Radian,
                 solid_angle: SolidAngleUnit::Steradian,
                 length_uncertainty: None,
+                length_cbu_wrapped: false,
+                plane_angle_cbu_wrapped: false,
             },
             UnitContext {
                 length: LengthUnit::Foot,
                 plane_angle: AngleUnit::Radian,
                 solid_angle: SolidAngleUnit::Steradian,
                 length_uncertainty: None,
+                length_cbu_wrapped: false,
+                plane_angle_cbu_wrapped: false,
             },
             UnitContext {
                 length: LengthUnit::Metre,
                 plane_angle: AngleUnit::Degree,
                 solid_angle: SolidAngleUnit::Steradian,
                 length_uncertainty: None,
+                length_cbu_wrapped: false,
+                plane_angle_cbu_wrapped: false,
             },
         ];
         for unit in cases {
@@ -464,5 +506,56 @@ mod tests {
                 "unit not preserved for {unit:?}"
             );
         }
+    }
+
+    /// Verify that an SI length unit wrapped in `CONVERSION_BASED_UNIT`
+    /// (`'METRE'` self-wrap, factor 1.0) round-trips through both reader
+    /// and writer faithfully — flag set on read, CBU re-emitted on write.
+    #[test]
+    fn cbu_wrapped_metre_round_trips() {
+        let unit = UnitContext {
+            length: LengthUnit::Metre,
+            plane_angle: AngleUnit::Radian,
+            solid_angle: SolidAngleUnit::Steradian,
+            length_uncertainty: None,
+            length_cbu_wrapped: true,
+            plane_angle_cbu_wrapped: false,
+        };
+        let model = model_with_units(unit);
+        let text = model.write_to_string().expect("write");
+        assert!(
+            text.contains("CONVERSION_BASED_UNIT('METRE'"),
+            "writer must emit CBU('METRE') when length_cbu_wrapped: {text}"
+        );
+        assert!(text.contains("LENGTH_MEASURE_WITH_UNIT(1."));
+        assert!(text.contains("DIMENSIONAL_EXPONENTS(1."));
+
+        let graph = parse(&text).expect("re-parse");
+        let back = ReaderContext::convert(&graph);
+        assert!(back.warnings.is_empty(), "{:#?}", back.warnings);
+        assert_eq!(back.model.units, Some(unit), "CBU wrap flag preserved");
+    }
+
+    #[test]
+    fn cbu_wrapped_radian_round_trips() {
+        let unit = UnitContext {
+            length: LengthUnit::Millimetre,
+            plane_angle: AngleUnit::Radian,
+            solid_angle: SolidAngleUnit::Steradian,
+            length_uncertainty: None,
+            length_cbu_wrapped: false,
+            plane_angle_cbu_wrapped: true,
+        };
+        let model = model_with_units(unit);
+        let text = model.write_to_string().expect("write");
+        assert!(
+            text.contains("CONVERSION_BASED_UNIT('RADIAN'"),
+            "writer must emit CBU('RADIAN') when plane_angle_cbu_wrapped: {text}"
+        );
+
+        let graph = parse(&text).expect("re-parse");
+        let back = ReaderContext::convert(&graph);
+        assert!(back.warnings.is_empty(), "{:#?}", back.warnings);
+        assert_eq!(back.model.units, Some(unit));
     }
 }

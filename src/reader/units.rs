@@ -94,8 +94,11 @@ impl ReaderContext {
         let upper = name.to_uppercase();
 
         if is_length {
-            if let Some(unit) = match_length_conversion(&upper) {
+            if let Some((unit, form)) = match_length_conversion(&upper) {
                 self.length_unit_map.insert(entity_id, unit);
+                if form == ConversionForm::SiSelf {
+                    self.length_cbu_wrapped = true;
+                }
             } else {
                 self.warnings.push(ConvertError::UnexpectedEntityForm {
                     entity_id,
@@ -103,8 +106,11 @@ impl ReaderContext {
                 });
             }
         } else if is_plane_angle {
-            if let Some(unit) = match_angle_conversion(&upper) {
+            if let Some((unit, form)) = match_angle_conversion(&upper) {
                 self.angle_unit_map.insert(entity_id, unit);
+                if form == ConversionForm::SiSelf {
+                    self.plane_angle_cbu_wrapped = true;
+                }
             } else {
                 self.warnings.push(ConvertError::UnexpectedEntityForm {
                     entity_id,
@@ -185,6 +191,8 @@ impl ReaderContext {
                     plane_angle,
                     solid_angle,
                     length_uncertainty,
+                    length_cbu_wrapped: self.length_cbu_wrapped,
+                    plane_angle_cbu_wrapped: self.plane_angle_cbu_wrapped,
                 });
             }
             _ => {
@@ -262,24 +270,34 @@ fn match_solid_angle_unit(prefix: Option<&str>, name: &str) -> Option<SolidAngle
     }
 }
 
-fn match_length_conversion(upper_name: &str) -> Option<LengthUnit> {
+/// Whether a `CONVERSION_BASED_UNIT` is "natural" (Inch / Foot / Degree —
+/// non-SI units that have no plain-SI form) or "self-wrap" (METRE /
+/// MILLIMETRE / RADIAN — SI units re-expressed as CBU). The writer
+/// preserves self-wraps via the corresponding `UnitContext.*_cbu_wrapped`
+/// flag.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum ConversionForm {
+    SiSelf,
+    NonSi,
+}
+
+fn match_length_conversion(upper_name: &str) -> Option<(LengthUnit, ConversionForm)> {
     match upper_name {
-        "INCH" => Some(LengthUnit::Inch),
-        "FOOT" => Some(LengthUnit::Foot),
-        // Some AP242 exports wrap SI units in a CONVERSION_BASED_UNIT; honour
-        // the CBU name as the authoritative identity. Writer still emits
-        // these as plain SI on round-trip.
-        "MILLIMETRE" => Some(LengthUnit::Millimetre),
-        "CENTIMETRE" => Some(LengthUnit::Centimetre),
-        "METRE" => Some(LengthUnit::Metre),
+        "INCH" => Some((LengthUnit::Inch, ConversionForm::NonSi)),
+        "FOOT" => Some((LengthUnit::Foot, ConversionForm::NonSi)),
+        // Some AP242 / ABC exports wrap SI units in a CONVERSION_BASED_UNIT;
+        // the writer reproduces the wrapper when `length_cbu_wrapped` is set.
+        "MILLIMETRE" => Some((LengthUnit::Millimetre, ConversionForm::SiSelf)),
+        "CENTIMETRE" => Some((LengthUnit::Centimetre, ConversionForm::SiSelf)),
+        "METRE" => Some((LengthUnit::Metre, ConversionForm::SiSelf)),
         _ => None,
     }
 }
 
-fn match_angle_conversion(upper_name: &str) -> Option<AngleUnit> {
+fn match_angle_conversion(upper_name: &str) -> Option<(AngleUnit, ConversionForm)> {
     match upper_name {
-        "DEGREE" => Some(AngleUnit::Degree),
-        "RADIAN" => Some(AngleUnit::Radian),
+        "DEGREE" => Some((AngleUnit::Degree, ConversionForm::NonSi)),
+        "RADIAN" => Some((AngleUnit::Radian, ConversionForm::SiSelf)),
         _ => None,
     }
 }

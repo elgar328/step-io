@@ -57,6 +57,17 @@ pub struct ReaderContext {
     pub(super) topology: TopologyPool,
     pub(super) units: Option<UnitContext>,
 
+    /// `true` if any `CONVERSION_BASED_UNIT` whose `name` matched an SI
+    /// length spelling (`'METRE'` / `'MILLIMETRE'` / `'CENTIMETRE'`) was
+    /// processed. Surfaces into `UnitContext.length_cbu_wrapped` so the
+    /// writer reproduces the wrapper. Reset per `convert()` call via
+    /// `Default`.
+    pub(super) length_cbu_wrapped: bool,
+    /// Same idea as `length_cbu_wrapped` but for plane-angle units —
+    /// `'RADIAN'` self-wrap. Surfaces into
+    /// `UnitContext.plane_angle_cbu_wrapped`.
+    pub(super) plane_angle_cbu_wrapped: bool,
+
     /// Entity ids inside any `DEFINITIONAL_REPRESENTATION` subtree (PCURVE
     /// parametric-space geometry). 3D passes skip them so their 2D
     /// `CARTESIAN_POINT` / `DIRECTION` / `LINE` / … don't collide with 3D
