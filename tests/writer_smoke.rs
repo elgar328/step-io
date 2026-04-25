@@ -828,6 +828,8 @@ fn simple_assembly_round_trips() {
         content: ProductContent::Solid(solid_id),
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
     });
     let root_pid = tree.products.push(Product {
         id: "Root".into(),
@@ -841,6 +843,8 @@ fn simple_assembly_round_trips() {
         }]),
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
     });
     tree.root = Some(root_pid);
     model.assembly = Some(tree);
@@ -893,6 +897,8 @@ fn shared_child_assembly_round_trips() {
         content: ProductContent::Solid(solid_id),
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
     });
     let root_pid = tree.products.push(Product {
         id: "Root".into(),
@@ -914,6 +920,8 @@ fn shared_child_assembly_round_trips() {
         ]),
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
     });
     tree.root = Some(root_pid);
     model.assembly = Some(tree);

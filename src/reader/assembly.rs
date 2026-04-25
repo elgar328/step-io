@@ -17,7 +17,8 @@
 
 use super::ReaderContext;
 use crate::ir::assembly::{
-    Instance, Product, ProductContent, Transform3d, WireframeContent, WireframeReprKind,
+    Instance, Product, ProductCategoryChain, ProductCategoryRoot, ProductContent, Transform3d,
+    WireframeContent, WireframeReprKind,
 };
 use crate::ir::attr::{
     check_count, read_entity_ref, read_entity_ref_list, read_string, read_string_or_unset,
@@ -67,9 +68,100 @@ impl ReaderContext {
             content: ProductContent::Group(Vec::new()),
             shape_ref_frame,
             outer_sr_frame: None,
+            category: None,
+            formation_with_source: false,
         };
         let pid = self.assembly_products.push(product);
         self.product_arena_map.insert(entity_id, pid);
+        Ok(())
+    }
+
+    // ------------------------------------------------------------------
+    // Pass 6-1b: PRODUCT_CATEGORY chain (PC + PRPC + PCR)
+    // ------------------------------------------------------------------
+    //
+    // The chain attaches metadata to each Product. PRPC always points at
+    // products; PC + PCR are the optional supertype side that some files
+    // (FreeCAD assemblies) omit. The pass runs in two sub-passes so PCR
+    // can resolve PC and PRPC entity refs once both are converted.
+
+    pub(super) fn convert_product_category(
+        &mut self,
+        entity_id: u64,
+        attrs: &[Attribute],
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 2, entity_id, "PRODUCT_CATEGORY")?;
+        let name = read_string(attrs, 0, entity_id, "name")?.to_owned();
+        let description = optional_text(attrs, 1, entity_id, "description")?;
+        self.pc_meta_map.insert(entity_id, (name, description));
+        Ok(())
+    }
+
+    pub(super) fn convert_product_related_product_category(
+        &mut self,
+        entity_id: u64,
+        attrs: &[Attribute],
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 3, entity_id, "PRODUCT_RELATED_PRODUCT_CATEGORY")?;
+        let name = read_string(attrs, 0, entity_id, "name")?.to_owned();
+        let description = optional_text(attrs, 1, entity_id, "description")?;
+        let product_refs = read_entity_ref_list(attrs, 2, entity_id, "products")?;
+
+        // Attach the PRPC half (kind / kind_description) to each referenced
+        // product immediately. The PCR pass will fill in `root` if a PCR
+        // entity links this PRPC to a PC.
+        for prod_ref in &product_refs {
+            if let Some(&pid) = self.product_arena_map.get(prod_ref) {
+                self.assembly_products[pid].category = Some(ProductCategoryChain {
+                    kind: name.clone(),
+                    kind_description: description.clone(),
+                    root: None,
+                });
+            }
+        }
+        self.prpc_meta_map
+            .insert(entity_id, (name, description, product_refs));
+        Ok(())
+    }
+
+    pub(super) fn convert_product_category_relationship(
+        &mut self,
+        entity_id: u64,
+        attrs: &[Attribute],
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 4, entity_id, "PRODUCT_CATEGORY_RELATIONSHIP")?;
+        // attrs[0] / attrs[1] = name / description — visual cosmetics, ignored.
+        let pc_ref = read_entity_ref(attrs, 2, entity_id, "category")?;
+        let prpc_ref = read_entity_ref(attrs, 3, entity_id, "sub_category")?;
+
+        let Some((pc_name, pc_description)) = self.pc_meta_map.get(&pc_ref).cloned() else {
+            self.warnings.push(ConvertError::MissingReference {
+                from: entity_id,
+                to: pc_ref,
+                field_name: "category",
+            });
+            return Ok(());
+        };
+        let Some((_, _, products)) = self.prpc_meta_map.get(&prpc_ref).cloned() else {
+            self.warnings.push(ConvertError::MissingReference {
+                from: entity_id,
+                to: prpc_ref,
+                field_name: "sub_category",
+            });
+            return Ok(());
+        };
+
+        for prod_ref in &products {
+            let Some(&pid) = self.product_arena_map.get(prod_ref) else {
+                continue;
+            };
+            if let Some(category) = self.assembly_products[pid].category.as_mut() {
+                category.root = Some(ProductCategoryRoot {
+                    name: pc_name.clone(),
+                    description: pc_description.clone(),
+                });
+            }
+        }
         Ok(())
     }
 
@@ -85,8 +177,27 @@ impl ReaderContext {
         entity_id: u64,
         attrs: &[Attribute],
     ) -> Result<(), ConvertError> {
-        // At least 3 attrs for base type; AP203 subtype has 4. Validate the
-        // minimum and read the product ref at index 2.
+        self.convert_product_definition_formation_inner(entity_id, attrs, false)
+    }
+
+    pub(super) fn convert_product_definition_formation_with_source(
+        &mut self,
+        entity_id: u64,
+        attrs: &[Attribute],
+    ) -> Result<(), ConvertError> {
+        self.convert_product_definition_formation_inner(entity_id, attrs, true)
+    }
+
+    fn convert_product_definition_formation_inner(
+        &mut self,
+        entity_id: u64,
+        attrs: &[Attribute],
+        with_source: bool,
+    ) -> Result<(), ConvertError> {
+        // At least 3 attrs for base type; the `_WITH_SPECIFIED_SOURCE`
+        // subtype has 4 (extra `source` enum like `.NOT_KNOWN.`). The
+        // source enum is informational only — the loyalty flag on Product
+        // captures the choice between subtypes.
         if attrs.len() < 3 {
             return Err(ConvertError::AttributeCount {
                 entity_id,
@@ -99,6 +210,11 @@ impl ReaderContext {
         let _description = read_string_or_unset(attrs, 1, entity_id, "description")?;
         let product_ref = read_entity_ref(attrs, 2, entity_id, "of_product")?;
         self.formation_to_product.insert(entity_id, product_ref);
+        if with_source {
+            if let Some(&pid) = self.product_arena_map.get(&product_ref) {
+                self.assembly_products[pid].formation_with_source = true;
+            }
+        }
         Ok(())
     }
 
@@ -727,5 +843,23 @@ fn pdef_shape_target(
     match graph.get(def_ref)? {
         RawEntity::Simple { name, .. } if name == expected_target_type => Some(def_ref),
         _ => None,
+    }
+}
+
+/// Read an optional text attribute that should be `None` for both `$`
+/// (Unset) and the empty string `''`. Used for `PRODUCT_CATEGORY.description`
+/// and similar metadata fields where many producers emit `''` to mean
+/// "no description" rather than the more strictly correct `$`.
+fn optional_text(
+    attrs: &[Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<Option<String>, ConvertError> {
+    let raw = read_string_or_unset(attrs, index, entity_id, field_name)?;
+    if raw.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(raw.to_owned()))
     }
 }

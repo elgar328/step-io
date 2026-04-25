@@ -151,6 +151,11 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
             op.description, rp.description,
             "{name}: product[{pidx}] description"
         );
+        assert_eq!(op.category, rp.category, "{name}: product[{pidx}] category");
+        assert_eq!(
+            op.formation_with_source, rp.formation_with_source,
+            "{name}: product[{pidx}] formation_with_source"
+        );
         match (&op.content, &rp.content) {
             (ProductContent::Solid(_), ProductContent::Solid(_)) => {}
             (ProductContent::SurfaceBody(o), ProductContent::SurfaceBody(r)) => {
@@ -500,4 +505,52 @@ fn hollow_box_ap214_is_preserves_void_orientation() {
         .unwrap();
     assert_eq!(outer.orientation, Orientation::Forward);
     assert_eq!(inner.orientation, Orientation::Reversed);
+}
+
+/// AP203 fixture pairs `PRPC.name = "detail"` with a supertype
+/// `PC.name = "part"` — verifies the IR keeps both names so the writer
+/// reproduces the chain faithfully. Also confirms the AP203
+/// `_WITH_SPECIFIED_SOURCE` formation subtype is preserved via the
+/// loyalty flag.
+#[test]
+fn box_ap203_preserves_product_category_chain() {
+    let src = include_str!("fixtures/box_ap203.step");
+    let model = ReaderContext::convert(&parse(src).expect("parse")).model;
+    let tree = model.assembly.as_ref().expect("assembly present");
+    let product = tree.products.iter().next().expect("one product");
+    let category = product
+        .category
+        .as_ref()
+        .expect("AP203 fixture must carry a PC chain");
+    assert_eq!(category.kind, "detail");
+    let root = category.root.as_ref().expect("AP203 fixture has PCR + PC");
+    assert_eq!(root.name, "part");
+    assert_eq!(root.description, None);
+    assert!(
+        product.formation_with_source,
+        "AP203 mandates _WITH_SPECIFIED_SOURCE"
+    );
+}
+
+/// CATIA wire1 fixture has multi-product PC sharing plus
+/// `PC.description = "specification"`. Verifies the IR captures the
+/// non-empty PC description and that CATIA's AP214 IS export with
+/// `_WITH_SPECIFIED_SOURCE` flips the loyalty flag.
+#[test]
+fn wire1_preserves_pc_chain_with_specification() {
+    let src = include_str!("fixtures/wire1_ap214_is.stp");
+    let model = ReaderContext::convert(&parse(src).expect("parse")).model;
+    let tree = model.assembly.as_ref().expect("assembly present");
+    let product = tree.products.iter().next().expect("at least one product");
+    let category = product
+        .category
+        .as_ref()
+        .expect("CATIA fixture carries full PC chain");
+    assert_eq!(category.kind, "part");
+    let root = category.root.as_ref().expect("CATIA writes PCR + PC");
+    assert_eq!(root.description.as_deref(), Some("specification"));
+    assert!(
+        product.formation_with_source,
+        "CATIA AP214 IS uses _WITH_SPECIFIED_SOURCE"
+    );
 }

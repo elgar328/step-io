@@ -152,6 +152,13 @@ pub struct ReaderContext {
     /// step id)`. Populated by Pass 4 immediately after `TRIMMED_CURVE` so
     /// `COMPOSITE_CURVE` conversion can resolve segments by entity ref.
     pub(super) composite_segment_map: HashMap<u64, (TransitionCode, bool, u64)>,
+    /// `PRODUCT_CATEGORY #N → (name, description)`. Populated by Pass 6-1b
+    /// sub-a so the PCR pass can resolve the supertype side of the chain.
+    pub(super) pc_meta_map: HashMap<u64, (String, Option<String>)>,
+    /// `PRODUCT_RELATED_PRODUCT_CATEGORY #N → (name, description, products
+    /// list)`. Populated by Pass 6-1b sub-a so the PCR pass can iterate the
+    /// PRPC's product refs and attach the PC root to each.
+    pub(super) prpc_meta_map: HashMap<u64, (String, Option<String>, Vec<u64>)>,
     /// `GEOMETRIC_(CURVE_)SET #N → (curves, loose points)`. Populated in
     /// Pass 6-4 just before the GBWSR / GBSSR converters consume it.
     pub(super) curve_set_map: HashMap<u64, (Vec<CurveId>, Vec<PointId>)>,

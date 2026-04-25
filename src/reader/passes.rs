@@ -352,10 +352,20 @@ impl ReaderContext {
 
         // Pass 6-1: PRODUCT → Arena<Product> + product_arena_map
         run_pass!(graph, self, "PRODUCT" => convert_product);
-        // Pass 6-2: PRODUCT_DEFINITION_FORMATION [+ AP203 WITH_SPECIFIED_SOURCE]
+        // Pass 6-1b: PRODUCT_CATEGORY chain. Sub-pass a populates pc_meta_map
+        // and prpc_meta_map (PRPC also attaches the kind half to each
+        // Product); sub-pass b consumes both maps to fill in the PC root.
+        run_pass!(graph, self,
+            "PRODUCT_CATEGORY" => convert_product_category,
+            "PRODUCT_RELATED_PRODUCT_CATEGORY" => convert_product_related_product_category);
+        run_pass!(graph, self,
+            "PRODUCT_CATEGORY_RELATIONSHIP" => convert_product_category_relationship);
+        // Pass 6-2: PRODUCT_DEFINITION_FORMATION [+ _WITH_SPECIFIED_SOURCE].
+        // Two distinct converters so the subtype can flip the
+        // formation_with_source loyalty flag on the referenced Product.
         run_pass!(graph, self,
             "PRODUCT_DEFINITION_FORMATION" => convert_product_definition_formation,
-            "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE" => convert_product_definition_formation);
+            "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE" => convert_product_definition_formation_with_source);
         // Pass 6-3: PRODUCT_DEFINITION → pdef_to_product
         run_pass!(graph, self, "PRODUCT_DEFINITION" => convert_product_definition);
         // Pass 6-4: SBSM (surface body shell list) — must precede MSSR.

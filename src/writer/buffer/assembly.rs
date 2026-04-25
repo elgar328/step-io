@@ -71,10 +71,11 @@ impl WriteBuffer<'_> {
         for (idx, product) in products.iter().enumerate() {
             let pid = ProductId(idx as u32);
             let prod_entity = self.emit_product(product, &ctx);
-            let formation = self.emit_formation(prod_entity, schema);
+            let formation = self.emit_formation(prod_entity, product);
             let pdef = self.emit_pdef(formation, ctx.pdef_ctx);
             let pdef_shape = self.emit_pdef_shape(pdef);
             product_def.insert(pid, pdef);
+            self.emit_product_category_chain(product, prod_entity);
 
             let sr = match &product.content {
                 ProductContent::Solid(sid) => {
@@ -169,11 +170,14 @@ impl WriteBuffer<'_> {
         )
     }
 
-    fn emit_formation(&mut self, prod_entity: u64, schema: &StepSchema) -> u64 {
-        // AP203 uses PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE with
-        // an extra `source` enum (set to `.NOT_KNOWN.` — IR doesn't track it);
-        // other schemas use the plain form.
-        let name = if schema.class() == Some(SchemaClass::Ap203) {
+    fn emit_formation(&mut self, prod_entity: u64, product: &Product) -> u64 {
+        // The `_WITH_SPECIFIED_SOURCE` subtype is selected by the loyalty
+        // flag alone — AP203 readers always set it to `true` (the schema
+        // mandates the subtype), AP214/242 set it only when the source
+        // file used the subtype (e.g. some CATIA exports). The subtype
+        // carries an extra `source` enum which we hardcode to
+        // `.NOT_KNOWN.` (the only value seen in real fixtures).
+        let name = if product.formation_with_source {
             "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE"
         } else {
             "PRODUCT_DEFINITION_FORMATION"
@@ -183,10 +187,52 @@ impl WriteBuffer<'_> {
             Attribute::String(String::new()),
             Attribute::EntityRef(prod_entity),
         ];
-        if schema.class() == Some(SchemaClass::Ap203) {
+        if product.formation_with_source {
             attrs.push(Attribute::Enum("NOT_KNOWN".into()));
         }
         self.push_simple(name, attrs)
+    }
+
+    /// Emit the `PRODUCT_CATEGORY` chain for a product. No-op when the IR
+    /// has `category = None` (kernel-built IR or AP214 CD minimal). Always
+    /// emits `PRODUCT_RELATED_PRODUCT_CATEGORY`; emits `PRODUCT_CATEGORY` +
+    /// `PRODUCT_CATEGORY_RELATIONSHIP` only when the source file had them
+    /// (`category.root.is_some()`).
+    fn emit_product_category_chain(&mut self, product: &Product, prod_entity: u64) {
+        let Some(category) = &product.category else {
+            return;
+        };
+        let prpc_desc = category
+            .kind_description
+            .as_ref()
+            .map_or(Attribute::Unset, |s| Attribute::String(s.clone()));
+        let prpc = self.push_simple(
+            "PRODUCT_RELATED_PRODUCT_CATEGORY",
+            vec![
+                Attribute::String(category.kind.clone()),
+                prpc_desc,
+                Attribute::List(vec![Attribute::EntityRef(prod_entity)]),
+            ],
+        );
+        if let Some(root) = &category.root {
+            let pc_desc = root
+                .description
+                .as_ref()
+                .map_or(Attribute::Unset, |s| Attribute::String(s.clone()));
+            let pc = self.push_simple(
+                "PRODUCT_CATEGORY",
+                vec![Attribute::String(root.name.clone()), pc_desc],
+            );
+            let _pcr = self.push_simple(
+                "PRODUCT_CATEGORY_RELATIONSHIP",
+                vec![
+                    Attribute::String(" ".into()),
+                    Attribute::String(" ".into()),
+                    Attribute::EntityRef(pc),
+                    Attribute::EntityRef(prpc),
+                ],
+            );
+        }
     }
 
     fn emit_pdef(&mut self, formation: u64, pdef_ctx: u64) -> u64 {

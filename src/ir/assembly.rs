@@ -52,6 +52,51 @@ pub struct Product {
     /// should leave this `None` unless they specifically want the indirect
     /// output.
     pub outer_sr_frame: Option<Placement3dId>,
+    /// `PRODUCT_CATEGORY` chain attached to this product. `Some` when the
+    /// source file emitted at least a `PRODUCT_RELATED_PRODUCT_CATEGORY`
+    /// pointing at this product (the common case in every CAD output).
+    /// `None` for the rare minimal fixtures (e.g. AP214 CD) that omit the
+    /// chain — writers built from scratch can leave this `None` and the
+    /// emitter will skip the chain.
+    pub category: Option<ProductCategoryChain>,
+    /// `true` when the source file used the `_WITH_SPECIFIED_SOURCE`
+    /// subtype of `PRODUCT_DEFINITION_FORMATION`. AP203 always uses this
+    /// form (mandatory by schema); AP214/242 use it occasionally — notably
+    /// CATIA AP214 IS exports. Writer emits the subtype iff this flag is
+    /// `true`. Default `false`.
+    pub formation_with_source: bool,
+}
+
+/// `PRODUCT_CATEGORY` chain attached to a [`Product`] — preserves the source
+/// file's category metadata so round-trips stay loyal across CAD vendors.
+///
+/// The chain is `PRODUCT_RELATED_PRODUCT_CATEGORY` (always), optionally
+/// joined to a `PRODUCT_CATEGORY` supertype via a
+/// `PRODUCT_CATEGORY_RELATIONSHIP`. `FreeCAD` typically emits PRPC alone;
+/// AP203 and CATIA exports include the full triplet.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductCategoryChain {
+    /// `PRPC.name` — usually `"part"`, occasionally `"detail"` (AP203).
+    pub kind: String,
+    /// `PRPC.description` — almost always `None` (`$`).
+    pub kind_description: Option<String>,
+    /// `PCR` + supertype `PC`. `Some` iff the source file emitted both a
+    /// `PRODUCT_CATEGORY_RELATIONSHIP` and a `PRODUCT_CATEGORY` pointing
+    /// at this PRPC.
+    pub root: Option<ProductCategoryRoot>,
+}
+
+/// Supertype `PRODUCT_CATEGORY` of a [`ProductCategoryChain`]. Only present
+/// when the source file emits a `PRODUCT_CATEGORY_RELATIONSHIP` linking
+/// the PRPC to a PC.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductCategoryRoot {
+    /// `PC.name`. May differ from `ProductCategoryChain.kind` (PRPC.name)
+    /// — e.g. AP203 fixtures pair `kind = "detail"` with `name = "part"`.
+    pub name: String,
+    /// `PC.description`. `Some("specification")` is the most common
+    /// non-empty form; FreeCAD-style outputs use `None` (`$`).
+    pub description: Option<String>,
 }
 
 /// What a [`Product`] holds.

@@ -9,8 +9,8 @@ pub mod topology;
 
 pub use arena::Arena;
 pub use assembly::{
-    AssemblyTree, Instance, Product, ProductContent, Transform3d, WireframeContent,
-    WireframeReprKind,
+    AssemblyTree, Instance, Product, ProductCategoryChain, ProductCategoryRoot, ProductContent,
+    Transform3d, WireframeContent, WireframeReprKind,
 };
 pub use error::{AttributeKindTag, ConvertError};
 pub use geometry::{
