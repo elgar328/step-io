@@ -10,11 +10,12 @@ use crate::ir::attr::{
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{
-    Axis1Placement, Axis2Placement2d, Axis2Placement3d, Circle2, Circle3, ConicalSurface, Curve,
-    Curve2d, CurveForm, CylindricalSurface, Direction2, Direction3, Ellipse2, Ellipse3, Line2,
-    Line3, NurbsCurve, NurbsCurve2d, NurbsSurface, Pcurve, Plane3, Point2, Point3,
-    SphericalSurface, Surface, SurfaceForm, SurfaceOfLinearExtrusion, SurfaceOfOffset,
-    SurfaceOfRevolution, ToroidalSurface,
+    Axis1Placement, Axis2Placement2d, Axis2Placement3d, Circle2, Circle3, CompositeCurve,
+    CompositeSegment, ConicalSurface, Curve, Curve2d, CurveForm, CylindricalSurface, Direction2,
+    Direction3, Ellipse2, Ellipse3, Line2, Line3, NurbsCurve, NurbsCurve2d, NurbsSurface, Pcurve,
+    Plane3, Point2, Point3, SphericalSurface, Surface, SurfaceForm, SurfaceOfLinearExtrusion,
+    SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TransitionCode, TrimMaster,
+    TrimmedCurve,
 };
 use crate::parser::entity::{Attribute, RawEntity, RawEntityPart};
 
@@ -490,6 +491,177 @@ impl ReaderContext {
         };
         let id = self.geometry.surfaces.push(Surface::Nurbs(surface));
         self.surface_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    // ------------------------------------------------------------------
+    // Pass 4-1b: TRIMMED_CURVE
+    // ------------------------------------------------------------------
+    //
+    // `TRIMMED_CURVE(name, basis, trim_1, trim_2, sense_agreement, master)`.
+    // Each trim slot is a SET that may carry a CARTESIAN_POINT ref, a
+    // PARAMETER_VALUE typed parameter, or both. We preserve whatever is
+    // present so the writer can reproduce the original form.
+
+    pub(super) fn convert_trimmed_curve(
+        &mut self,
+        entity_id: u64,
+        attrs: &[Attribute],
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 6, entity_id, "TRIMMED_CURVE")?;
+        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let basis_ref = read_entity_ref(attrs, 1, entity_id, "basis_curve")?;
+        let basis = self.resolve_curve(entity_id, basis_ref, "basis_curve")?;
+        let (trim_1_param, trim_1_point) = self.read_trim_select(attrs, 2, entity_id, "trim_1")?;
+        let (trim_2_param, trim_2_point) = self.read_trim_select(attrs, 3, entity_id, "trim_2")?;
+        let sense_agreement = read_bool(attrs, 4, entity_id, "sense_agreement")?;
+        let master = read_enum(attrs, 5, entity_id, "master_representation")?;
+        let master = match master {
+            "CARTESIAN" => TrimMaster::Cartesian,
+            "PARAMETER" => TrimMaster::Parameter,
+            _ => TrimMaster::Unspecified,
+        };
+
+        let trimmed = TrimmedCurve {
+            basis,
+            trim_1_param,
+            trim_1_point,
+            trim_2_param,
+            trim_2_point,
+            sense_agreement,
+            master,
+        };
+        let id = self.geometry.curves.push(Curve::Trimmed(trimmed));
+        self.curve_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    /// Decode a `TRIMMED_CURVE` trim slot — a SET (`Attribute::List`) of
+    /// `CARTESIAN_POINT` refs and `PARAMETER_VALUE(real)` typed parameters.
+    /// Either, both, or neither may appear; missing values come back as
+    /// `None`.
+    fn read_trim_select(
+        &self,
+        attrs: &[Attribute],
+        index: usize,
+        entity_id: u64,
+        field_name: &'static str,
+    ) -> Result<(Option<f64>, Option<crate::ir::id::PointId>), ConvertError> {
+        let Attribute::List(elements) = attrs.get(index).ok_or(ConvertError::AttributeCount {
+            entity_id,
+            entity_name: "TRIMMED_CURVE".into(),
+            expected: index + 1,
+            actual: attrs.len(),
+        })?
+        else {
+            return Err(ConvertError::AttributeType {
+                entity_id,
+                field_name,
+                expected: "List",
+                actual: AttributeKindTag::from_attribute(attrs.get(index).unwrap()),
+            });
+        };
+        let mut param = None;
+        let mut point = None;
+        for el in elements {
+            match el {
+                Attribute::EntityRef(r) => {
+                    if let Some(&pid) = self.point_map.get(r) {
+                        point = Some(pid);
+                    }
+                }
+                Attribute::Typed { type_name, value } if type_name == "PARAMETER_VALUE" => {
+                    if let Attribute::Real(v) = **value {
+                        param = Some(v);
+                    }
+                }
+                _ => {}
+            }
+        }
+        Ok((param, point))
+    }
+
+    // ------------------------------------------------------------------
+    // Pass 4-1c: COMPOSITE_CURVE_SEGMENT
+    // ------------------------------------------------------------------
+    //
+    // `COMPOSITE_CURVE_SEGMENT(transition, same_sense, parent_curve)`. We
+    // record the segment's metadata keyed by entity id; the actual
+    // `CompositeSegment` struct is built when the owning COMPOSITE_CURVE
+    // resolves, so the parent_curve ref is stored as a step id and only
+    // converted to `CurveId` at that later moment.
+
+    pub(super) fn convert_composite_curve_segment(
+        &mut self,
+        entity_id: u64,
+        attrs: &[Attribute],
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 3, entity_id, "COMPOSITE_CURVE_SEGMENT")?;
+        let transition_str = read_enum(attrs, 0, entity_id, "transition")?;
+        let same_sense = read_bool(attrs, 1, entity_id, "same_sense")?;
+        let parent_step_id = read_entity_ref(attrs, 2, entity_id, "parent_curve")?;
+
+        let transition = match transition_str {
+            "CONTINUOUS" => TransitionCode::Continuous,
+            "DISCONTINUOUS" => TransitionCode::Discontinuous,
+            "CONT_SAME_GRADIENT" => TransitionCode::ContSameGradient,
+            "CONT_SAME_GRADIENT_SAME_CURVATURE" => TransitionCode::ContSameGradientSameCurvature,
+            _ => TransitionCode::Unspecified,
+        };
+        self.composite_segment_map
+            .insert(entity_id, (transition, same_sense, parent_step_id));
+        Ok(())
+    }
+
+    // ------------------------------------------------------------------
+    // Pass 4-1d: COMPOSITE_CURVE
+    // ------------------------------------------------------------------
+    //
+    // `COMPOSITE_CURVE(name, segments, self_intersect)`. Resolves each
+    // segment ref via `composite_segment_map` and converts the parent_curve
+    // step id to `CurveId` via `resolve_curve` (which is fully populated by
+    // this pass since TRIMMED_CURVE / SEGMENT have run already).
+
+    pub(super) fn convert_composite_curve(
+        &mut self,
+        entity_id: u64,
+        attrs: &[Attribute],
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 3, entity_id, "COMPOSITE_CURVE")?;
+        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let segment_refs = read_entity_ref_list(attrs, 1, entity_id, "segments")?;
+        let self_intersect_str = read_enum(attrs, 2, entity_id, "self_intersect")?;
+        let self_intersect = match self_intersect_str {
+            "T" => Some(true),
+            "F" => Some(false),
+            _ => None,
+        };
+
+        let mut segments = Vec::with_capacity(segment_refs.len());
+        for seg_ref in segment_refs {
+            let Some(&(transition, same_sense, parent_step_id)) =
+                self.composite_segment_map.get(&seg_ref)
+            else {
+                return Err(ConvertError::MissingReference {
+                    from: entity_id,
+                    to: seg_ref,
+                    field_name: "segments",
+                });
+            };
+            let parent_curve = self.resolve_curve(entity_id, parent_step_id, "parent_curve")?;
+            segments.push(CompositeSegment {
+                transition,
+                same_sense,
+                parent_curve,
+            });
+        }
+
+        let composite = CompositeCurve {
+            segments,
+            self_intersect,
+        };
+        let id = self.geometry.curves.push(Curve::Composite(composite));
+        self.curve_map.insert(entity_id, id);
         Ok(())
     }
 

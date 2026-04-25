@@ -9,7 +9,7 @@ use std::collections::{HashMap, HashSet};
 use crate::ir::arena::Arena;
 use crate::ir::assembly::{AssemblyTree, Product, Transform3d};
 use crate::ir::error::ConvertError;
-use crate::ir::geometry::Pcurve;
+use crate::ir::geometry::{Pcurve, TransitionCode};
 use crate::ir::id::{
     Curve2dId, CurveId, Direction2dId, DirectionId, EdgeId, FaceId, Placement1dId, Placement2dId,
     Placement3dId, Point2dId, PointId, ProductId, ShellId, SolidId, SurfaceId, VertexId, WireId,
@@ -148,6 +148,10 @@ pub struct ReaderContext {
     /// during Pass 6-4 so SDR conversion can attach the plain SR's reference
     /// frame to `Product.outer_sr_frame` when the indirection chain is taken.
     pub(super) plain_sr_frame_map: HashMap<u64, Placement3dId>,
+    /// `COMPOSITE_CURVE_SEGMENT #N → (transition, same_sense, parent_curve
+    /// step id)`. Populated by Pass 4 immediately after `TRIMMED_CURVE` so
+    /// `COMPOSITE_CURVE` conversion can resolve segments by entity ref.
+    pub(super) composite_segment_map: HashMap<u64, (TransitionCode, bool, u64)>,
     /// `PRODUCT_DEFINITION_SHAPE #N → PRODUCT_DEFINITION #N` when the
     /// `pdef_shape` points at a product definition (not a `NAUO`).
     /// Populated before Pass 6-5.

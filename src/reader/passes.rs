@@ -94,6 +94,15 @@ impl ReaderContext {
         // Pass 4-1: simple leaf curves and surfaces
         run_pass!(graph, self, "LINE" => convert_line, "PLANE" => convert_plane, "CYLINDRICAL_SURFACE" => convert_cylindrical_surface, "SPHERICAL_SURFACE" => convert_spherical_surface, "CONICAL_SURFACE" => convert_conical_surface, "TOROIDAL_SURFACE" => convert_toroidal_surface, "CIRCLE" => convert_circle, "ELLIPSE" => convert_ellipse, "B_SPLINE_CURVE_WITH_KNOTS" => convert_bspline_curve_with_knots, "B_SPLINE_SURFACE_WITH_KNOTS" => convert_bspline_surface_with_knots);
 
+        // Pass 4-1b: TRIMMED_CURVE — depends on Pass 4-1 basis curves (LINE,
+        // CIRCLE, B_SPLINE_CURVE_WITH_KNOTS).
+        run_pass!(graph, self, "TRIMMED_CURVE" => convert_trimmed_curve);
+        // Pass 4-1c: COMPOSITE_CURVE_SEGMENT — depends on parent curves
+        // (typically TRIMMED_CURVE, occasionally LINE / CIRCLE).
+        run_pass!(graph, self, "COMPOSITE_CURVE_SEGMENT" => convert_composite_curve_segment);
+        // Pass 4-1d: COMPOSITE_CURVE — depends on segments populated above.
+        run_pass!(graph, self, "COMPOSITE_CURVE" => convert_composite_curve);
+
         // Pass 4-2: complex rational B-spline curves and surfaces (depend on points)
         for (&id, entity) in &graph.entities {
             if self.pcurve_subtree_ids.contains(&id) {

@@ -11,11 +11,12 @@ pub use arena::Arena;
 pub use assembly::{AssemblyTree, Instance, Product, ProductContent, Transform3d};
 pub use error::{AttributeKindTag, ConvertError};
 pub use geometry::{
-    Axis1Placement, Axis2Placement2d, Axis2Placement3d, Circle2, Circle3, ConicalSurface, Curve,
-    Curve2d, CurveForm, CylindricalSurface, Direction2, Direction3, Ellipse2, Ellipse3, Line2,
-    Line3, NurbsCurve, NurbsCurve2d, NurbsSurface, Pcurve, Plane3, Point2, Point3,
-    SphericalSurface, Surface, SurfaceForm, SurfaceOfLinearExtrusion, SurfaceOfOffset,
-    SurfaceOfRevolution, ToroidalSurface,
+    Axis1Placement, Axis2Placement2d, Axis2Placement3d, Circle2, Circle3, CompositeCurve,
+    CompositeSegment, ConicalSurface, Curve, Curve2d, CurveForm, CylindricalSurface, Direction2,
+    Direction3, Ellipse2, Ellipse3, Line2, Line3, NurbsCurve, NurbsCurve2d, NurbsSurface, Pcurve,
+    Plane3, Point2, Point3, SphericalSurface, Surface, SurfaceForm, SurfaceOfLinearExtrusion,
+    SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TransitionCode, TrimMaster,
+    TrimmedCurve,
 };
 pub use id::{
     Curve2dId, CurveId, Direction2dId, DirectionId, EdgeId, FaceId, Placement1dId, Placement2dId,

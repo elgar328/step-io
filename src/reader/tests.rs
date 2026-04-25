@@ -379,7 +379,11 @@ fn convert_rational_bspline_curve_complex() {
             assert_eq!(ws.len(), 3);
             assert!((ws[1] - 0.707).abs() < 0.001);
         }
-        Curve::Line(_) | Curve::Circle(_) | Curve::Ellipse(_) => panic!("expected Nurbs"),
+        Curve::Line(_)
+        | Curve::Circle(_)
+        | Curve::Ellipse(_)
+        | Curve::Trimmed(_)
+        | Curve::Composite(_) => panic!("expected Nurbs"),
     }
 }
 

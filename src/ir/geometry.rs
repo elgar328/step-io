@@ -111,7 +111,9 @@ pub enum Curve {
     Circle(Circle3),
     Ellipse(Ellipse3),
     Nurbs(NurbsCurve),
-    // Future: Trimmed, Offset
+    Trimmed(TrimmedCurve),
+    Composite(CompositeCurve),
+    // Future: Offset
 }
 
 /// A circle defined by an axis placement and a radius.
@@ -246,6 +248,67 @@ impl SurfaceForm {
             Self::Unspecified => "UNSPECIFIED",
         }
     }
+}
+
+/// A trimmed curve — a portion of a basis curve bounded by two trim points.
+///
+/// STEP `TRIMMED_CURVE(basis, trim_1, trim_2, sense_agreement, master_repr)`.
+/// Each trim slot is a SET that may carry a `CARTESIAN_POINT` reference, a
+/// `PARAMETER_VALUE`, or both (redundant form). `master` indicates which is
+/// authoritative when both are present.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct TrimmedCurve {
+    pub basis: CurveId,
+    pub trim_1_param: Option<f64>,
+    pub trim_1_point: Option<PointId>,
+    pub trim_2_param: Option<f64>,
+    pub trim_2_point: Option<PointId>,
+    pub sense_agreement: bool,
+    pub master: TrimMaster,
+}
+
+/// `master_representation` of a `TRIMMED_CURVE` — which trim form is
+/// authoritative when both `cartesian` and `parameter` are present.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub enum TrimMaster {
+    Cartesian,
+    Parameter,
+    #[default]
+    Unspecified,
+}
+
+/// A composite curve — sequence of segments joined end-to-end.
+///
+/// STEP `COMPOSITE_CURVE(segments, self_intersect)`. Each segment carries its
+/// own transition continuity and orientation flag with a reference to a
+/// parent curve (line, arc, trimmed curve, etc.).
+#[derive(Debug, Clone, PartialEq)]
+pub struct CompositeCurve {
+    pub segments: Vec<CompositeSegment>,
+    /// `.T.` / `.F.` / `.U.` (None) from `self_intersect : LOGICAL`.
+    pub self_intersect: Option<bool>,
+}
+
+/// One segment of a `CompositeCurve`. Mirrors STEP `COMPOSITE_CURVE_SEGMENT`
+/// but inlined inside the parent — segments are not arena entries on their
+/// own.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct CompositeSegment {
+    pub transition: TransitionCode,
+    pub same_sense: bool,
+    pub parent_curve: CurveId,
+}
+
+/// `transition_code` of a `COMPOSITE_CURVE_SEGMENT` — geometric continuity
+/// between consecutive segments.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub enum TransitionCode {
+    #[default]
+    Continuous,
+    Discontinuous,
+    ContSameGradient,
+    ContSameGradientSameCurvature,
+    Unspecified,
 }
 
 /// A NURBS (Non-Uniform Rational B-Spline) curve.
