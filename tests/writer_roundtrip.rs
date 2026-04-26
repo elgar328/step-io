@@ -132,6 +132,7 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
         re.visualization, original.visualization,
         "{name}: visualization"
     );
+    assert_eq!(re.properties, original.properties, "{name}: properties");
 
     // Product metadata preserved.
     let o_asm = original
@@ -662,5 +663,42 @@ fn wire1_preserves_pc_chain_with_specification() {
     assert!(
         product.formation_with_source,
         "CATIA AP214 IS uses _WITH_SPECIFIED_SOURCE"
+    );
+}
+
+/// NIST AP242 fixture (temporarily borrowed from
+/// `step-io-reference-check/fixtures/nist/ap242/nist_stc_06_asme1_ap242-e3.stp`
+/// — the user plans to replace it with a hand-curated minimal fixture
+/// later, hence the `external_temp_` prefix). Carries hundreds of
+/// `PROPERTY_DEFINITION` user-defined attributes (Pattern A — target =
+/// `PRODUCT_DEFINITION`) plus a handful of geometric validation properties
+/// (Pattern B — target = `SHAPE_ASPECT`, dropped at read).
+///
+/// This fixture's `GLOBAL_UNIT_ASSIGNED_CONTEXT` carries only two unit
+/// refs (length + `plane_angle`, no `solid_angle`) so step-io's strict unit
+/// context builder rejects it — `model.units` ends up empty and the
+/// product chain is silently skipped on emit. As a result this test
+/// exercises only the reader: it confirms user-defined attributes flow
+/// from the source file into `model.properties`. Round-trip preservation
+/// is measured by `step-io-reference-check` against fixtures whose unit
+/// contexts are complete; once a hand-curated minimal fixture lands here
+/// this test can be tightened to deep-equality round-trip.
+#[test]
+fn external_temp_nist_property_def_reader_only() {
+    let src = include_str!("fixtures/external_temp_nist_property_def.stp");
+    let model = ReaderContext::convert(&parse(src).expect("parse")).model;
+    let pool = model
+        .properties
+        .as_ref()
+        .expect("user-defined attribute chain present");
+    assert!(
+        !pool.properties.is_empty(),
+        "at least one user-defined attribute parsed"
+    );
+    // Spot-check: NIST stc_06 has 'p1' .. 'pN'. The reader must surface
+    // these by name, not collapse them into anonymous entries.
+    assert!(
+        pool.properties.iter().any(|p| p.name == "p1"),
+        "expected a property named 'p1' in the fixture"
     );
 }

@@ -14,11 +14,13 @@ use super::WriteError;
 use super::entity::WriterEntity;
 use crate::ir::{
     Curve2dId, CurveId, Direction2dId, DirectionId, EdgeId, FaceId, Placement1dId, Placement2dId,
-    Placement3dId, Point2dId, PointId, ShellId, SolidId, StepModel, SurfaceId, VertexId, WireId,
+    Placement3dId, Point2dId, PointId, ProductId, ShellId, SolidId, StepModel, SurfaceId, VertexId,
+    WireId,
 };
 
 mod assembly;
 mod geometry;
+mod property;
 mod topology;
 mod units;
 mod visualization;
@@ -57,6 +59,12 @@ pub(in crate::writer) struct WriteBuffer<'m> {
     /// so every representation emitter can resolve its `Option<UnitContextId>`
     /// to a cached id.
     pub(in crate::writer) unit_context_ids: Vec<u64>,
+    /// `ProductId → PRODUCT_DEFINITION step id`. Populated by
+    /// `emit_assembly_chain`; consumed by the property emitter so a
+    /// `Property.target` can be resolved to a STEP ref. Empty when the
+    /// model has no assembly (kernel-built IR with properties only — the
+    /// property emitter silently skips in that case).
+    pub(in crate::writer) product_def_ids: std::collections::HashMap<ProductId, u64>,
     /// Cached `DIMENSIONAL_EXPONENTS(1,0,0,0,0,0,0)` — length dimension.
     /// Re-used by any `CONVERSION_BASED_UNIT` with a length flavour.
     pub(in crate::writer) length_dim_exp_id: Option<u64>,
@@ -91,6 +99,7 @@ impl<'m> WriteBuffer<'m> {
             angle_unit_ids: HashMap::new(),
             solid_angle_unit_ids: HashMap::new(),
             unit_context_ids: Vec::new(),
+            product_def_ids: std::collections::HashMap::new(),
             length_dim_exp_id: None,
             dimensionless_dim_exp_id: None,
         }
@@ -189,6 +198,7 @@ impl<'m> WriteBuffer<'m> {
         }
         self.emit_product_chain_if_eligible()?;
         self.emit_visualization_if_set()?;
+        self.emit_properties_if_set();
         Ok(())
     }
 

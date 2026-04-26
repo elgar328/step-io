@@ -330,6 +330,7 @@ impl ReaderContext {
 
     /// Pass 6: assembly/product graph (Phase A — PRODUCT chain + shape
     /// classification; Phase B adds instances, transforms, tree root).
+    #[allow(clippy::too_many_lines)]
     pub(super) fn run_assembly_passes(&mut self, graph: &EntityGraph) {
         macro_rules! run_pass {
             ($graph:expr, $ctx:expr, $( $name:literal => $method:ident ),+ $(,)?) => {
@@ -479,5 +480,35 @@ impl ReaderContext {
         run_pass!(graph, self, "STYLED_ITEM" => convert_styled_item);
         run_pass!(graph, self,
             "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION" => convert_mdgpr);
+
+        // Pass 8: properties — user-defined attribute chain
+        // (PROPERTY_DEFINITION + REPRESENTATION + PROPERTY_DEFINITION_REPRESENTATION).
+        // Depends on Pass 0 (unit ctx) and Pass 6 (`pdef_to_product` for
+        // resolving the PD's target).
+        run_pass!(graph, self,
+            "MEASURE_REPRESENTATION_ITEM" => convert_measure_representation_item);
+        run_pass!(graph, self,
+            "PROPERTY_DEFINITION" => convert_property_definition);
+
+        // PDR convert needs `&graph` to read the bound REPRESENTATION
+        // entity directly — REPRESENTATION is a generic entity name shared
+        // with MDGPR / SR, so a per-pass map would conflate them.
+        for (&id, entity) in &graph.entities {
+            if self.pcurve_subtree_ids.contains(&id) {
+                continue;
+            }
+            let (name, attrs) = match entity {
+                RawEntity::Simple {
+                    name, attributes, ..
+                } => (name.as_str(), attributes.as_slice()),
+                RawEntity::Complex { .. } => continue,
+            };
+            if name != "PROPERTY_DEFINITION_REPRESENTATION" {
+                continue;
+            }
+            if let Err(e) = self.convert_property_definition_representation(id, attrs, graph) {
+                self.warnings.push(e);
+            }
+        }
     }
 }

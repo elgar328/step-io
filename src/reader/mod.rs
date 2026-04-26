@@ -29,6 +29,7 @@ mod assembly;
 mod geometry;
 mod header;
 mod passes;
+mod property;
 mod topology;
 mod units;
 mod visualization;
@@ -241,6 +242,18 @@ pub struct ReaderContext {
     /// `STYLED_ITEM #N → StyledItem` (Pass 7-8).
     pub(super) viz_styled_item_map: HashMap<u64, StyledItem>,
 
+    /// Lazily-built property pool — populated by Pass 8's PDR converter.
+    /// `None` if the source had no `PROPERTY_DEFINITION_REPRESENTATION`.
+    pub(super) properties: Option<crate::ir::property::PropertyPool>,
+    /// `MEASURE_REPRESENTATION_ITEM #N → PropertyMeasure` (Pass 8-1).
+    /// Items with unsupported `MeasureKind` (e.g. `AREA_MEASURE`) are
+    /// silently skipped — no map entry. Temp; discarded after Pass 8.
+    pub(super) measure_item_map: HashMap<u64, crate::ir::property::PropertyMeasure>,
+    /// `PROPERTY_DEFINITION #N → (name, description, target ProductId)`
+    /// (Pass 8-3). PDs whose target ref does not resolve to a Product
+    /// (e.g. `SHAPE_ASPECT`) are silently dropped — no map entry.
+    pub(super) property_def_map: HashMap<u64, (String, Option<String>, ProductId)>,
+
     pub(super) warnings: Vec<ConvertError>,
 }
 
@@ -271,6 +284,7 @@ impl ReaderContext {
                 schema: graph.schema.clone(),
                 header,
                 visualization: ctx.visualization,
+                properties: ctx.properties,
             },
             warnings: ctx.warnings,
         }

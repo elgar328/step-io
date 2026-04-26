@@ -178,6 +178,12 @@ pub struct StepModel {
     /// IR. Stored as a tree-inline structure (no shared color references)
     /// — see [`crate::ir::visualization`] for design notes.
     pub visualization: Option<VisualizationPool>,
+    /// User-defined attribute chain
+    /// (`PROPERTY_DEFINITION` + `PROPERTY_DEFINITION_REPRESENTATION`).
+    /// `None` when the source file had none. Stored as a passive tree-inline
+    /// IR — see [`crate::ir::property`] for design notes. Geometric
+    /// validation properties (target = `SHAPE_ASPECT`) are dropped at read.
+    pub properties: Option<crate::ir::property::PropertyPool>,
 }
 
 /// Arena-based storage for all topology objects.

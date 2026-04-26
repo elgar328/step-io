@@ -81,8 +81,9 @@ impl WriteBuffer<'_> {
 
         // Emit PRODUCT chain + shape representation + SDR for every product;
         // collect each product's PDEF and SR entity ids for later instance
-        // wiring.
-        let mut product_def: HashMap<ProductId, u64> = HashMap::new();
+        // wiring. PDEF ids land in `self.product_def_ids` so the property
+        // emitter (which runs after this pass) can resolve a
+        // `Property.target` ProductId to a STEP ref.
         let mut product_sr: HashMap<ProductId, u64> = HashMap::new();
 
         #[allow(clippy::cast_possible_truncation)]
@@ -92,7 +93,7 @@ impl WriteBuffer<'_> {
             let formation = self.emit_formation(prod_entity, product);
             let pdef = self.emit_pdef(formation, ctx.pdef_ctx);
             let pdef_shape = self.emit_pdef_shape(pdef);
-            product_def.insert(pid, pdef);
+            self.product_def_ids.insert(pid, pdef);
             self.emit_product_category_chain(product, prod_entity);
 
             let unit_ctx = self.resolve_product_ctx(product);
@@ -125,8 +126,11 @@ impl WriteBuffer<'_> {
                 continue;
             };
             let parent_pid = ProductId(parent_idx as u32);
-            let parent_pdef = product_def[&parent_pid];
+            let parent_pdef = self.product_def_ids[&parent_pid];
             let parent_sr = product_sr[&parent_pid];
+            // Clone product_def_ids for emit_instance_bundle so it can
+            // borrow `&self` via emit_* methods without overlapping borrows.
+            let product_def = self.product_def_ids.clone();
             for inst in instances {
                 self.emit_instance_bundle(inst, parent_pdef, parent_sr, &product_def, &product_sr)?;
             }
