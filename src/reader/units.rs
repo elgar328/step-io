@@ -7,7 +7,7 @@
 //! plus CBU-wrapped metric variants such as `'MILLIMETRE'` that appear in
 //! some AP242 outputs).
 
-use super::{ReaderContext, has_all_parts, require_part_attrs};
+use super::{ReaderContext, find_part_attrs, has_all_parts, require_part_attrs};
 use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_enum, read_string};
 use crate::ir::error::ConvertError;
 use crate::ir::model::{AngleUnit, LengthUnit, SolidAngleUnit, UnitContext};
@@ -39,6 +39,17 @@ impl ReaderContext {
 
         if !has_part(parts, "SI_UNIT") {
             return Ok(());
+        }
+
+        // Detect ABC-tier explicit DE pattern. CBU outer complexes always
+        // carry an explicit DE per spec, so we limit detection to plain SI
+        // complexes — fillet_box has CBU outer explicit + plain SI Derived,
+        // ABC has both explicit. Sticky cumulative: any plain SI complex
+        // with EntityRef in NAMED_UNIT.dimensions locks the flag.
+        if let Some(named_attrs) = find_part_attrs(parts, "NAMED_UNIT")
+            && let Some(Attribute::EntityRef(_)) = named_attrs.first()
+        {
+            self.dim_exp_explicit = true;
         }
 
         let si_attrs = require_part_attrs(parts, "SI_UNIT", entity_id)?;
@@ -187,6 +198,7 @@ impl ReaderContext {
                     length_uncertainty,
                     length_cbu_wrapped: self.length_cbu_wrapped,
                     plane_angle_cbu_wrapped: self.plane_angle_cbu_wrapped,
+                    dim_exp_explicit: self.dim_exp_explicit,
                 });
                 self.context_id_map.insert(entity_id, ctx_id);
             }

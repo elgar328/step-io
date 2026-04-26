@@ -15,7 +15,7 @@ impl WriteBuffer<'_> {
         // for Fusion 360, where two contexts share #1034..#1036).
         let length = self.emit_length_unit(&units);
         let angle = self.emit_angle_unit(&units);
-        let solid = self.emit_solid_angle_unit(units.solid_angle);
+        let solid = self.emit_solid_angle_unit(units.solid_angle, units.dim_exp_explicit);
 
         // ISO 10303-21:2016 §11.2.5.1 — complex entity parts serialize in
         // alphabetical order. Final order with uncertainty present:
@@ -88,32 +88,48 @@ impl WriteBuffer<'_> {
         if let Some(&n) = self.length_unit_ids.get(&key) {
             return n;
         }
+        let dim_exp = units.dim_exp_explicit;
         let n = match units.length {
             LengthUnit::Millimetre if units.length_cbu_wrapped => {
-                self.emit_conversion_based_length("MILLIMETRE", Some("MILLI"), 1.0)
+                self.emit_conversion_based_length("MILLIMETRE", Some("MILLI"), 1.0, dim_exp)
             }
             LengthUnit::Centimetre if units.length_cbu_wrapped => {
-                self.emit_conversion_based_length("CENTIMETRE", Some("CENTI"), 1.0)
+                self.emit_conversion_based_length("CENTIMETRE", Some("CENTI"), 1.0, dim_exp)
             }
             LengthUnit::Metre if units.length_cbu_wrapped => {
-                self.emit_conversion_based_length("METRE", None, 1.0)
+                self.emit_conversion_based_length("METRE", None, 1.0, dim_exp)
             }
-            LengthUnit::Millimetre => self.emit_plain_si_length(Some("MILLI")),
-            LengthUnit::Centimetre => self.emit_plain_si_length(Some("CENTI")),
-            LengthUnit::Metre => self.emit_plain_si_length(None),
-            LengthUnit::Inch => self.emit_conversion_based_length("INCH", Some("MILLI"), 25.4),
-            LengthUnit::Foot => self.emit_conversion_based_length("FOOT", Some("MILLI"), 304.8),
+            LengthUnit::Millimetre => self.emit_plain_si_length(Some("MILLI"), dim_exp),
+            LengthUnit::Centimetre => self.emit_plain_si_length(Some("CENTI"), dim_exp),
+            LengthUnit::Metre => self.emit_plain_si_length(None, dim_exp),
+            LengthUnit::Inch => {
+                self.emit_conversion_based_length("INCH", Some("MILLI"), 25.4, dim_exp)
+            }
+            LengthUnit::Foot => {
+                self.emit_conversion_based_length("FOOT", Some("MILLI"), 304.8, dim_exp)
+            }
         };
         self.length_unit_ids.insert(key, n);
         n
     }
 
     /// Emit a plain SI-based length unit. Caching is handled by the caller
-    /// (`emit_length_unit`) keyed on the IR fields.
-    fn emit_plain_si_length(&mut self, prefix: Option<&'static str>) -> u64 {
+    /// (`emit_length_unit`) keyed on the IR fields. `dim_exp_explicit=true`
+    /// puts a shared length DE entity ref in `NAMED_UNIT.dimensions` (ABC
+    /// pattern); `false` emits `*` Derived.
+    fn emit_plain_si_length(
+        &mut self,
+        prefix: Option<&'static str>,
+        dim_exp_explicit: bool,
+    ) -> u64 {
         let si_attrs = match prefix {
             Some(p) => vec![Attribute::Enum(p.into()), Attribute::Enum("METRE".into())],
             None => vec![Attribute::Unset, Attribute::Enum("METRE".into())],
+        };
+        let dim_exp_attr = if dim_exp_explicit {
+            Attribute::EntityRef(self.emit_length_dim_exponents())
+        } else {
+            Attribute::Derived
         };
         let n = self.fresh();
         self.entities.push(WriterEntity {
@@ -121,7 +137,7 @@ impl WriteBuffer<'_> {
             body: WriterBody::Complex {
                 parts: vec![
                     ("LENGTH_UNIT".into(), vec![]),
-                    ("NAMED_UNIT".into(), vec![Attribute::Derived]),
+                    ("NAMED_UNIT".into(), vec![dim_exp_attr]),
                     ("SI_UNIT".into(), si_attrs),
                 ],
             },
@@ -129,14 +145,20 @@ impl WriteBuffer<'_> {
         n
     }
 
-    /// Emit an SI length unit complex without populating `length_unit_id`
-    /// — used internally as the base for a `CONVERSION_BASED_UNIT` length
-    /// chain. `prefix = None` for plain METRE, `Some("MILLI")` for
-    /// MILLIMETRE, `Some("CENTI")` for CENTIMETRE, etc.
-    fn emit_base_si_length(&mut self, prefix: Option<&'static str>) -> u64 {
+    /// Emit an SI length unit complex used internally as the base for a
+    /// `CONVERSION_BASED_UNIT` length chain. `prefix = None` for plain METRE,
+    /// `Some("MILLI")` for MILLIMETRE, `Some("CENTI")` for CENTIMETRE, etc.
+    /// `dim_exp_explicit` mirrors the plain SI path — ABC's CBU base SI
+    /// (`#329`) carries the same DE ref as the rest of the file.
+    fn emit_base_si_length(&mut self, prefix: Option<&'static str>, dim_exp_explicit: bool) -> u64 {
         let prefix_attr = match prefix {
             Some(p) => Attribute::Enum(p.into()),
             None => Attribute::Unset,
+        };
+        let dim_exp_attr = if dim_exp_explicit {
+            Attribute::EntityRef(self.emit_length_dim_exponents())
+        } else {
+            Attribute::Derived
         };
         let n = self.fresh();
         self.entities.push(WriterEntity {
@@ -144,7 +166,7 @@ impl WriteBuffer<'_> {
             body: WriterBody::Complex {
                 parts: vec![
                     ("LENGTH_UNIT".into(), vec![]),
-                    ("NAMED_UNIT".into(), vec![Attribute::Derived]),
+                    ("NAMED_UNIT".into(), vec![dim_exp_attr]),
                     (
                         "SI_UNIT".into(),
                         vec![prefix_attr, Attribute::Enum("METRE".into())],
@@ -208,8 +230,9 @@ impl WriteBuffer<'_> {
         name: &str,
         base_prefix: Option<&'static str>,
         factor: f64,
+        dim_exp_explicit: bool,
     ) -> u64 {
-        let base_si = self.emit_base_si_length(base_prefix);
+        let base_si = self.emit_base_si_length(base_prefix, dim_exp_explicit);
         let dim_exp = self.emit_length_dim_exponents();
         let measure = self.fresh();
         self.entities.push(WriterEntity {
@@ -244,20 +267,26 @@ impl WriteBuffer<'_> {
         if let Some(&n) = self.angle_unit_ids.get(&key) {
             return n;
         }
+        let dim_exp = units.dim_exp_explicit;
         let n = match units.plane_angle {
             AngleUnit::Radian if units.plane_angle_cbu_wrapped => {
-                self.emit_conversion_based_angle("RADIAN", 1.0)
+                self.emit_conversion_based_angle("RADIAN", 1.0, dim_exp)
             }
-            AngleUnit::Radian => self.emit_plain_si_radian(),
+            AngleUnit::Radian => self.emit_plain_si_radian(dim_exp),
             AngleUnit::Degree => {
-                self.emit_conversion_based_angle("DEGREE", std::f64::consts::PI / 180.0)
+                self.emit_conversion_based_angle("DEGREE", std::f64::consts::PI / 180.0, dim_exp)
             }
         };
         self.angle_unit_ids.insert(key, n);
         n
     }
 
-    fn emit_plain_si_radian(&mut self) -> u64 {
+    fn emit_plain_si_radian(&mut self, dim_exp_explicit: bool) -> u64 {
+        let dim_exp_attr = if dim_exp_explicit {
+            Attribute::EntityRef(self.emit_dimensionless_exponents())
+        } else {
+            Attribute::Derived
+        };
         let n = self.fresh();
         self.entities.push(WriterEntity {
             id: n,
@@ -267,7 +296,7 @@ impl WriteBuffer<'_> {
                         "SI_UNIT".into(),
                         vec![Attribute::Unset, Attribute::Enum("RADIAN".into())],
                     ),
-                    ("NAMED_UNIT".into(), vec![Attribute::Derived]),
+                    ("NAMED_UNIT".into(), vec![dim_exp_attr]),
                     ("PLANE_ANGLE_UNIT".into(), vec![]),
                 ],
             },
@@ -275,15 +304,21 @@ impl WriteBuffer<'_> {
         n
     }
 
-    /// Emit a bare SI radian entity (not cached in `angle_unit_id`) — used
-    /// as the base inside a Degree `CONVERSION_BASED_UNIT` chain.
-    fn emit_base_si_radian(&mut self) -> u64 {
+    /// Emit a bare SI radian entity used as the base inside a Degree
+    /// `CONVERSION_BASED_UNIT` chain. Mirrors `emit_plain_si_radian`'s
+    /// `dim_exp_explicit` branching for ABC-tier loyalty.
+    fn emit_base_si_radian(&mut self, dim_exp_explicit: bool) -> u64 {
+        let dim_exp_attr = if dim_exp_explicit {
+            Attribute::EntityRef(self.emit_dimensionless_exponents())
+        } else {
+            Attribute::Derived
+        };
         let n = self.fresh();
         self.entities.push(WriterEntity {
             id: n,
             body: WriterBody::Complex {
                 parts: vec![
-                    ("NAMED_UNIT".into(), vec![Attribute::Derived]),
+                    ("NAMED_UNIT".into(), vec![dim_exp_attr]),
                     ("PLANE_ANGLE_UNIT".into(), vec![]),
                     (
                         "SI_UNIT".into(),
@@ -298,8 +333,13 @@ impl WriteBuffer<'_> {
     /// Emit a `CONVERSION_BASED_UNIT` plane-angle chain. Used for genuine
     /// non-SI angles (Degree — factor π/180) and for SI self-wrap (Radian
     /// — factor 1.0). Base is always plain SI RADIAN.
-    fn emit_conversion_based_angle(&mut self, name: &str, factor: f64) -> u64 {
-        let base_si = self.emit_base_si_radian();
+    fn emit_conversion_based_angle(
+        &mut self,
+        name: &str,
+        factor: f64,
+        dim_exp_explicit: bool,
+    ) -> u64 {
+        let base_si = self.emit_base_si_radian(dim_exp_explicit);
         let dim_exp = self.emit_dimensionless_exponents();
         let measure = self.fresh();
         self.entities.push(WriterEntity {
@@ -329,16 +369,21 @@ impl WriteBuffer<'_> {
         outer
     }
 
-    fn emit_solid_angle_unit(&mut self, unit: SolidAngleUnit) -> u64 {
+    fn emit_solid_angle_unit(&mut self, unit: SolidAngleUnit, dim_exp_explicit: bool) -> u64 {
         if let Some(&n) = self.solid_angle_unit_ids.get(&unit) {
             return n;
         }
+        let dim_exp_attr = if dim_exp_explicit {
+            Attribute::EntityRef(self.emit_dimensionless_exponents())
+        } else {
+            Attribute::Derived
+        };
         let parts = vec![
             (
                 "SI_UNIT".into(),
                 vec![Attribute::Unset, Attribute::Enum("STERADIAN".into())],
             ),
-            ("NAMED_UNIT".into(), vec![Attribute::Derived]),
+            ("NAMED_UNIT".into(), vec![dim_exp_attr]),
             ("SOLID_ANGLE_UNIT".into(), vec![]),
         ];
         let n = self.fresh();
@@ -376,6 +421,7 @@ mod tests {
             length_uncertainty: None,
             length_cbu_wrapped: false,
             plane_angle_cbu_wrapped: false,
+            dim_exp_explicit: false,
         });
         let out = model.write_to_string().expect("write");
         assert!(out.contains("CONVERSION_BASED_UNIT('INCH'"), "{out}");
@@ -393,6 +439,7 @@ mod tests {
             length_uncertainty: None,
             length_cbu_wrapped: false,
             plane_angle_cbu_wrapped: false,
+            dim_exp_explicit: false,
         });
         let out = model.write_to_string().expect("write");
         assert!(out.contains("CONVERSION_BASED_UNIT('FOOT'"), "{out}");
@@ -409,6 +456,7 @@ mod tests {
             length_uncertainty: None,
             length_cbu_wrapped: false,
             plane_angle_cbu_wrapped: false,
+            dim_exp_explicit: false,
         });
         let out = model.write_to_string().expect("write");
         assert!(out.contains("CONVERSION_BASED_UNIT('DEGREE'"), "{out}");
@@ -428,6 +476,7 @@ mod tests {
             length_uncertainty: None,
             length_cbu_wrapped: false,
             plane_angle_cbu_wrapped: false,
+            dim_exp_explicit: false,
         });
         let out = model.write_to_string().expect("write");
         assert!(
@@ -446,6 +495,7 @@ mod tests {
             length_uncertainty: None,
             length_cbu_wrapped: false,
             plane_angle_cbu_wrapped: false,
+            dim_exp_explicit: false,
         });
         let out = model.write_to_string().expect("write");
         assert!(!out.contains("CONVERSION_BASED_UNIT"), "{out}");
@@ -461,6 +511,7 @@ mod tests {
             length_uncertainty: None,
             length_cbu_wrapped: false,
             plane_angle_cbu_wrapped: false,
+            dim_exp_explicit: false,
         });
         let out = model.write_to_string().expect("write");
         assert!(!out.contains("CONVERSION_BASED_UNIT"), "{out}");
@@ -479,6 +530,7 @@ mod tests {
                 length_uncertainty: None,
                 length_cbu_wrapped: false,
                 plane_angle_cbu_wrapped: false,
+                dim_exp_explicit: false,
             },
             UnitContext {
                 length: LengthUnit::Foot,
@@ -487,6 +539,7 @@ mod tests {
                 length_uncertainty: None,
                 length_cbu_wrapped: false,
                 plane_angle_cbu_wrapped: false,
+                dim_exp_explicit: false,
             },
             UnitContext {
                 length: LengthUnit::Metre,
@@ -495,6 +548,7 @@ mod tests {
                 length_uncertainty: None,
                 length_cbu_wrapped: false,
                 plane_angle_cbu_wrapped: false,
+                dim_exp_explicit: false,
             },
         ];
         for unit in cases {
@@ -527,6 +581,7 @@ mod tests {
             length_uncertainty: None,
             length_cbu_wrapped: true,
             plane_angle_cbu_wrapped: false,
+            dim_exp_explicit: false,
         };
         let model = model_with_units(unit);
         let text = model.write_to_string().expect("write");
@@ -556,6 +611,7 @@ mod tests {
             length_uncertainty: None,
             length_cbu_wrapped: false,
             plane_angle_cbu_wrapped: true,
+            dim_exp_explicit: false,
         };
         let model = model_with_units(unit);
         let text = model.write_to_string().expect("write");

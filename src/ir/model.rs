@@ -267,6 +267,15 @@ pub struct UnitContext {
     /// in a self-conversion `CONVERSION_BASED_UNIT`. Degree is non-SI and
     /// always emits CBU regardless of this flag.
     pub plane_angle_cbu_wrapped: bool,
+    /// `true` when the source file emits explicit `DIMENSIONAL_EXPONENTS`
+    /// references in plain SI unit complexes' `NAMED_UNIT.dimensions` slot
+    /// (ABC-tier convention — every plain SI shares one length DE and one
+    /// dimensionless DE entity). `false` when the source uses `*` (Derived) —
+    /// the OCCT / `Fusion 360` / `FreeCAD` convention. Writer threads this
+    /// flag through every plain-SI and CBU base-SI emit path. CBU outer
+    /// complexes always carry an explicit DE regardless of this flag
+    /// (existing emit behaviour, matches every observed fixture).
+    pub dim_exp_explicit: bool,
 }
 
 impl Default for UnitContext {
@@ -282,6 +291,7 @@ impl Default for UnitContext {
             length_uncertainty: None,
             length_cbu_wrapped: false,
             plane_angle_cbu_wrapped: false,
+            dim_exp_explicit: false,
         }
     }
 }

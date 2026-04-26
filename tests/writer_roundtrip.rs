@@ -569,6 +569,34 @@ fn box_ap214_is_preserves_visualization() {
     assert!((color.blue - 0.741).abs() < 0.01);
 }
 
+/// ABC-tier fixture (temporarily borrowed from
+/// `step-io-reference-check/fixtures/abc/00009954_*.step` — the user plans
+/// to replace it with a hand-curated minimal fixture later, hence the
+/// `external_temp_` prefix). ABC files emit explicit `DIMENSIONAL_EXPONENTS`
+/// references in plain SI unit complexes' `NAMED_UNIT.dimensions` slot,
+/// while OCCT/Fusion/FreeCAD use `*` (Derived). This test asserts that the
+/// reader detects the pattern and the round-trip preserves the flag —
+/// implying the writer emitted the DE refs and the re-parse rebuilt the
+/// same flag. String-matching the output text would be fragile to
+/// formatting changes.
+#[test]
+fn external_temp_abc_explicit_de_round_trip() {
+    let src = include_str!("fixtures/external_temp_abc_explicit_de.step");
+    let model = ReaderContext::convert(&parse(src).expect("parse")).model;
+    let units = model.units.iter().next().expect("ctx present");
+    assert!(
+        units.dim_exp_explicit,
+        "ABC fixture must mark dim_exp_explicit=true on read"
+    );
+    let text = model.write_to_string().expect("write");
+    let back = ReaderContext::convert(&parse(&text).expect("re-parse")).model;
+    let back_units = back.units.iter().next().expect("ctx survives round-trip");
+    assert!(
+        back_units.dim_exp_explicit,
+        "dim_exp_explicit flag round-trips"
+    );
+}
+
 /// Multi-context Fusion 360 fixture (temporarily borrowed from
 /// `step-io-reference-check/fixtures/fusion360/32879_49552f2f_3.stp` — the
 /// user plans to replace it with a hand-curated minimal fixture later,

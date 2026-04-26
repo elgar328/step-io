@@ -85,6 +85,12 @@ pub struct ReaderContext {
     /// `'RADIAN'` self-wrap. Surfaces into
     /// `UnitContext.plane_angle_cbu_wrapped`.
     pub(super) plane_angle_cbu_wrapped: bool,
+    /// `true` once any plain SI unit complex (no `CONVERSION_BASED_UNIT`
+    /// part) was observed with an explicit `DIMENSIONAL_EXPONENTS` entity
+    /// ref in its `NAMED_UNIT.dimensions` slot — the ABC-tier convention.
+    /// Sticky cumulative: a single explicit observation locks the flag,
+    /// every subsequently built `UnitContext` carries the same value.
+    pub(super) dim_exp_explicit: bool,
 
     /// Entity ids inside any `DEFINITIONAL_REPRESENTATION` subtree (PCURVE
     /// parametric-space geometry). 3D passes skip them so their 2D

@@ -603,6 +603,7 @@ fn unit_millimetre_radian_steradian() {
             length_uncertainty: None,
             length_cbu_wrapped: false,
             plane_angle_cbu_wrapped: false,
+            dim_exp_explicit: false,
         }),
     );
 }

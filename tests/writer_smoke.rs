@@ -31,6 +31,7 @@ fn mm_radian_steradian() -> UnitContext {
         length_uncertainty: None,
         length_cbu_wrapped: false,
         plane_angle_cbu_wrapped: false,
+        dim_exp_explicit: false,
     }
 }
 
