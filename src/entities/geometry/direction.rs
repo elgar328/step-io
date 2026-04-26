@@ -17,6 +17,7 @@ use crate::writer::buffer::WriteBuffer;
 use crate::writer::buffer::geometry::direction_at;
 use crate::writer::entity::{WriterBody, WriterEntity};
 
+#[allow(dead_code)] // Constructed by the Plan 2 registry; only static methods are called now.
 pub(crate) struct DirectionHandler;
 
 impl EntityHandler for DirectionHandler {

@@ -79,20 +79,10 @@ impl WriteBuffer<'_> {
     }
 
     fn emit_vector(&mut self, direction: DirectionId, magnitude: f64) -> Result<u64, WriteError> {
-        let dir_n = self.emit_direction(direction)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "VECTOR".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(dir_n),
-                    Attribute::Real(magnitude),
-                ],
-            },
-        });
-        Ok(n)
+        // Step 1 pilot: dispatch through the EntityHandler trait. Body lives in
+        // `src/entities/geometry/vector.rs`. Plan 2 will replace this wrapper.
+        use crate::entities::EntityHandler;
+        crate::entities::geometry::vector::VectorHandler::write(self, (direction, magnitude))
     }
 
     pub(crate) fn emit_curve(&mut self, id: CurveId) -> Result<u64, WriteError> {

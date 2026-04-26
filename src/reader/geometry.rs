@@ -66,20 +66,15 @@ impl ReaderContext {
     // Pass 2: VECTOR (depends on DIRECTION)
     // ------------------------------------------------------------------
 
-    pub(super) fn convert_vector(
+    pub(crate) fn convert_vector(
         &mut self,
         entity_id: u64,
         attrs: &[Attribute],
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "VECTOR")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
-        let dir_ref = read_entity_ref(attrs, 1, entity_id, "orientation")?;
-        let magnitude = read_real(attrs, 2, entity_id, "magnitude")?;
-
-        let dir_id = self.resolve_direction(entity_id, dir_ref, "orientation")?;
-
-        self.vector_map.insert(entity_id, (dir_id, magnitude));
-        Ok(())
+        // Step 1 pilot: dispatch through the EntityHandler trait. Body lives in
+        // `src/entities/geometry/vector.rs`. Plan 2 will replace this wrapper.
+        use crate::entities::EntityHandler;
+        crate::entities::geometry::vector::VectorHandler::read(self, entity_id, attrs)
     }
 
     // ------------------------------------------------------------------
