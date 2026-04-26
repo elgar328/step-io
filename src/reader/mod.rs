@@ -61,205 +61,205 @@ pub struct ConvertResult {
 // `SolidAngleUnit` variants.
 #[allow(clippy::zero_sized_map_values)]
 pub struct ReaderContext {
-    pub(super) geometry: GeometryPool,
-    pub(super) topology: TopologyPool,
+    pub(crate) geometry: GeometryPool,
+    pub(crate) topology: TopologyPool,
     /// Unit / uncertainty contexts accumulated during Pass 0-2 — one entry
     /// per `REPRESENTATION_CONTEXT` complex entity in the source file.
-    pub(super) units: Arena<UnitContext>,
+    pub(crate) units: Arena<UnitContext>,
     /// `REPRESENTATION_CONTEXT #N → UnitContextId` populated by Pass 0-2.
     /// Used by representation converters (ABSR, MSSR, plain SR, GBWSR, GBSSR,
     /// MDGPR) to translate their `context_of_items` ref into an `UnitContextId`.
-    pub(super) context_id_map: HashMap<u64, UnitContextId>,
+    pub(crate) context_id_map: HashMap<u64, UnitContextId>,
     /// `representation #N → UnitContextId` for the 5 product-bearing
     /// representation entities (ABSR / MSSR / plain SR / GBWSR / GBSSR).
     /// Single map suffices because STEP entity ids are globally unique within
     /// a file. The SDR pass reads this map to attach `Product.geometry_context`.
     /// MDGPR resolves directly into `Mdgpr.context` and does not use this map.
-    pub(super) repr_context_map: HashMap<u64, UnitContextId>,
+    pub(crate) repr_context_map: HashMap<u64, UnitContextId>,
 
     /// `true` if any `CONVERSION_BASED_UNIT` whose `name` matched an SI
     /// length spelling (`'METRE'` / `'MILLIMETRE'` / `'CENTIMETRE'`) was
     /// processed. Surfaces into `UnitContext.length_cbu_wrapped` so the
     /// writer reproduces the wrapper. Reset per `convert()` call via
     /// `Default`.
-    pub(super) length_cbu_wrapped: bool,
+    pub(crate) length_cbu_wrapped: bool,
     /// Same idea as `length_cbu_wrapped` but for plane-angle units —
     /// `'RADIAN'` self-wrap. Surfaces into
     /// `UnitContext.plane_angle_cbu_wrapped`.
-    pub(super) plane_angle_cbu_wrapped: bool,
+    pub(crate) plane_angle_cbu_wrapped: bool,
     /// `true` once any plain SI unit complex (no `CONVERSION_BASED_UNIT`
     /// part) was observed with an explicit `DIMENSIONAL_EXPONENTS` entity
     /// ref in its `NAMED_UNIT.dimensions` slot — the ABC-tier convention.
     /// Sticky cumulative: a single explicit observation locks the flag,
     /// every subsequently built `UnitContext` carries the same value.
-    pub(super) dim_exp_explicit: bool,
+    pub(crate) dim_exp_explicit: bool,
 
     /// Entity ids inside any `DEFINITIONAL_REPRESENTATION` subtree (PCURVE
     /// parametric-space geometry). 3D passes skip them so their 2D
     /// `CARTESIAN_POINT` / `DIRECTION` / `LINE` / … don't collide with 3D
     /// conversion. Pass 4a then walks the same set to populate the 2D
     /// arenas (`points_2d`, `directions_2d`, `curves_2d`).
-    pub(super) pcurve_subtree_ids: HashSet<u64>,
+    pub(crate) pcurve_subtree_ids: HashSet<u64>,
 
     // Unit entity maps: STEP #N → resolved unit variant.
-    pub(super) length_unit_map: HashMap<u64, LengthUnit>,
-    pub(super) angle_unit_map: HashMap<u64, AngleUnit>,
-    pub(super) solid_angle_unit_map: HashMap<u64, SolidAngleUnit>,
+    pub(crate) length_unit_map: HashMap<u64, LengthUnit>,
+    pub(crate) angle_unit_map: HashMap<u64, AngleUnit>,
+    pub(crate) solid_angle_unit_map: HashMap<u64, SolidAngleUnit>,
     /// `UNCERTAINTY_MEASURE_WITH_UNIT #N → value` for uncertainty entities
     /// whose `unit_component` resolved to a length unit. Populated between
     /// Pass 0-1 (unit leaves) and Pass 0-2 (context assembly).
-    pub(super) length_uncertainty_map: HashMap<u64, f64>,
+    pub(crate) length_uncertainty_map: HashMap<u64, f64>,
 
     // Geometry maps: STEP #N → typed Id.
-    pub(super) point_map: HashMap<u64, PointId>,
-    pub(super) direction_map: HashMap<u64, DirectionId>,
-    pub(super) surface_map: HashMap<u64, SurfaceId>,
-    pub(super) curve_map: HashMap<u64, CurveId>,
+    pub(crate) point_map: HashMap<u64, PointId>,
+    pub(crate) direction_map: HashMap<u64, DirectionId>,
+    pub(crate) surface_map: HashMap<u64, SurfaceId>,
+    pub(crate) curve_map: HashMap<u64, CurveId>,
 
     // Geometry intermediate maps.
-    pub(super) placement_map: HashMap<u64, Placement3dId>,
-    pub(super) vector_map: HashMap<u64, (DirectionId, f64)>,
-    pub(super) axis1_map: HashMap<u64, Placement1dId>,
+    pub(crate) placement_map: HashMap<u64, Placement3dId>,
+    pub(crate) vector_map: HashMap<u64, (DirectionId, f64)>,
+    pub(crate) axis1_map: HashMap<u64, Placement1dId>,
 
     // 2D geometry (PCURVE parametric space) maps.
-    pub(super) point_2d_map: HashMap<u64, Point2dId>,
-    pub(super) direction_2d_map: HashMap<u64, Direction2dId>,
-    pub(super) curve_2d_map: HashMap<u64, Curve2dId>,
-    pub(super) vector_2d_map: HashMap<u64, (Direction2dId, f64)>,
-    pub(super) placement_2d_map: HashMap<u64, Placement2dId>,
+    pub(crate) point_2d_map: HashMap<u64, Point2dId>,
+    pub(crate) direction_2d_map: HashMap<u64, Direction2dId>,
+    pub(crate) curve_2d_map: HashMap<u64, Curve2dId>,
+    pub(crate) vector_2d_map: HashMap<u64, (Direction2dId, f64)>,
+    pub(crate) placement_2d_map: HashMap<u64, Placement2dId>,
     /// `SURFACE_CURVE / SEAM_CURVE #N → Vec<Pcurve>`. Populated during
     /// Pass 4-3 and consumed by `convert_edge_curve` to attach pcurves to
     /// each edge.
-    pub(super) surface_curve_pcurves_map: HashMap<u64, Vec<Pcurve>>,
+    pub(crate) surface_curve_pcurves_map: HashMap<u64, Vec<Pcurve>>,
 
     // Topology maps: STEP #N → typed Id.
-    pub(super) vertex_map: HashMap<u64, VertexId>,
-    pub(super) edge_map: HashMap<u64, EdgeId>,
-    pub(super) face_bound_map: HashMap<u64, WireId>,
-    pub(super) face_map: HashMap<u64, FaceId>,
-    pub(super) shell_map: HashMap<u64, ShellId>,
-    pub(super) solid_map: HashMap<u64, SolidId>,
+    pub(crate) vertex_map: HashMap<u64, VertexId>,
+    pub(crate) edge_map: HashMap<u64, EdgeId>,
+    pub(crate) face_bound_map: HashMap<u64, WireId>,
+    pub(crate) face_map: HashMap<u64, FaceId>,
+    pub(crate) shell_map: HashMap<u64, ShellId>,
+    pub(crate) solid_map: HashMap<u64, SolidId>,
 
     // Topology intermediate maps.
-    pub(super) oriented_edge_map: HashMap<u64, OrientedEdge>,
-    pub(super) edge_loop_map: HashMap<u64, Vec<OrientedEdge>>,
+    pub(crate) oriented_edge_map: HashMap<u64, OrientedEdge>,
+    pub(crate) edge_loop_map: HashMap<u64, Vec<OrientedEdge>>,
     /// `VERTEX_LOOP #N → VertexId`. `FACE_BOUND` consults this when the
     /// loop ref is not in `edge_loop_map`.
-    pub(super) vertex_loop_map: HashMap<u64, VertexId>,
+    pub(crate) vertex_loop_map: HashMap<u64, VertexId>,
     /// `ORIENTED_CLOSED_SHELL #N → (underlying CLOSED_SHELL's ShellId,
     /// wrapper orientation)`. Populated by Pass 5-7b, consumed by
     /// `convert_brep_with_voids` in Pass 5-8.
-    pub(super) oriented_closed_shell_map: HashMap<u64, (ShellId, Orientation)>,
+    pub(crate) oriented_closed_shell_map: HashMap<u64, (ShellId, Orientation)>,
 
     // Assembly (Phase A): product arena + lookup maps populated by Pass 6.
     // `assembly` is filled in `convert()` after Pass 6 if any PRODUCT was seen.
-    pub(super) assembly: Option<AssemblyTree>,
-    pub(super) assembly_products: Arena<Product>,
-    pub(super) product_arena_map: HashMap<u64, ProductId>,
-    pub(super) formation_to_product: HashMap<u64, u64>,
-    pub(super) pdef_to_product: HashMap<u64, u64>,
-    pub(super) absr_solid_map: HashMap<u64, SolidId>,
+    pub(crate) assembly: Option<AssemblyTree>,
+    pub(crate) assembly_products: Arena<Product>,
+    pub(crate) product_arena_map: HashMap<u64, ProductId>,
+    pub(crate) formation_to_product: HashMap<u64, u64>,
+    pub(crate) pdef_to_product: HashMap<u64, u64>,
+    pub(crate) absr_solid_map: HashMap<u64, SolidId>,
     /// `ADVANCED_BREP_SHAPE_REPRESENTATION #N → Placement3dId` for the first
     /// `AXIS2_PLACEMENT_3D` item in the ABSR's `items` list (its coordinate
     /// reference frame). Consumed by SDR conversion to populate
     /// `Product.shape_ref_frame`.
-    pub(super) absr_ref_frame_map: HashMap<u64, Placement3dId>,
+    pub(crate) absr_ref_frame_map: HashMap<u64, Placement3dId>,
     /// `SHELL_BASED_SURFACE_MODEL #N → resolved shell ids`. Populated in
     /// Pass 5-8b and consumed by MSSR conversion to flatten shells.
-    pub(super) sbsm_shells_map: HashMap<u64, Vec<ShellId>>,
+    pub(crate) sbsm_shells_map: HashMap<u64, Vec<ShellId>>,
     /// `MANIFOLD_SURFACE_SHAPE_REPRESENTATION #N → flattened shell ids`
     /// pulled from the MSSR's referenced SBSM. Consumed by SDR conversion
     /// to populate `Product.content = SurfaceBody(..)`.
-    pub(super) mssr_shells_map: HashMap<u64, Vec<ShellId>>,
+    pub(crate) mssr_shells_map: HashMap<u64, Vec<ShellId>>,
     /// `MANIFOLD_SURFACE_SHAPE_REPRESENTATION #N → Placement3dId` — same
     /// role as `absr_ref_frame_map` but for the MSSR path. Optional because
     /// some writers omit the AXIS2 item.
-    pub(super) mssr_ref_frame_map: HashMap<u64, Placement3dId>,
+    pub(crate) mssr_ref_frame_map: HashMap<u64, Placement3dId>,
     /// `plain SHAPE_REPRESENTATION #N → target ABSR/MSSR #N` — built from
     /// simple `SHAPE_REPRESENTATION_RELATIONSHIP` entities where exactly one
     /// side resolves to a known ABSR/MSSR. Consumed by SDR conversion to
     /// follow the Fusion 360 / CATIA indirection chain
     /// `SDR → plain SR → SRR → ABSR/MSSR`.
-    pub(super) srr_equiv_map: HashMap<u64, u64>,
+    pub(crate) srr_equiv_map: HashMap<u64, u64>,
     /// `plain SHAPE_REPRESENTATION #N → items[0] axis Placement3dId`. Captured
     /// during Pass 6-4 so SDR conversion can attach the plain SR's reference
     /// frame to `Product.outer_sr_frame` when the indirection chain is taken.
-    pub(super) plain_sr_frame_map: HashMap<u64, Placement3dId>,
+    pub(crate) plain_sr_frame_map: HashMap<u64, Placement3dId>,
     /// `COMPOSITE_CURVE_SEGMENT #N → (transition, same_sense, parent_curve
     /// step id)`. Populated by Pass 4 immediately after `TRIMMED_CURVE` so
     /// `COMPOSITE_CURVE` conversion can resolve segments by entity ref.
-    pub(super) composite_segment_map: HashMap<u64, (TransitionCode, bool, u64)>,
+    pub(crate) composite_segment_map: HashMap<u64, (TransitionCode, bool, u64)>,
     /// `PRODUCT_CATEGORY #N → (name, description)`. Populated by Pass 6-1b
     /// sub-a so the PCR pass can resolve the supertype side of the chain.
-    pub(super) pc_meta_map: HashMap<u64, (String, Option<String>)>,
+    pub(crate) pc_meta_map: HashMap<u64, (String, Option<String>)>,
     /// `PRODUCT_RELATED_PRODUCT_CATEGORY #N → (name, description, products
     /// list)`. Populated by Pass 6-1b sub-a so the PCR pass can iterate the
     /// PRPC's product refs and attach the PC root to each.
-    pub(super) prpc_meta_map: HashMap<u64, (String, Option<String>, Vec<u64>)>,
+    pub(crate) prpc_meta_map: HashMap<u64, (String, Option<String>, Vec<u64>)>,
     /// `GEOMETRIC_(CURVE_)SET #N → (curves, loose points)`. Populated in
     /// Pass 6-4 just before the GBWSR / GBSSR converters consume it.
-    pub(super) curve_set_map: HashMap<u64, (Vec<CurveId>, Vec<PointId>)>,
+    pub(crate) curve_set_map: HashMap<u64, (Vec<CurveId>, Vec<PointId>)>,
     /// `GBWSR / GBSSR #N → wireframe content payload`. Same role as
     /// `absr_solid_map` / `mssr_shells_map` but for wireframe products.
-    pub(super) wireframe_data_map: HashMap<u64, WireframeContent>,
+    pub(crate) wireframe_data_map: HashMap<u64, WireframeContent>,
     /// `GBWSR / GBSSR #N → axis Placement3dId`. Same role as
     /// `absr_ref_frame_map` for wireframe products. Optional because the
     /// wrapper's `items` list may omit an axis (CATIA's GBSSR commonly
     /// does).
-    pub(super) wireframe_ref_frame_map: HashMap<u64, Placement3dId>,
+    pub(crate) wireframe_ref_frame_map: HashMap<u64, Placement3dId>,
     /// `PRODUCT_DEFINITION_SHAPE #N → PRODUCT_DEFINITION #N` when the
     /// `pdef_shape` points at a product definition (not a `NAUO`).
     /// Populated before Pass 6-5.
-    pub(super) pdef_shape_to_pdef: HashMap<u64, u64>,
+    pub(crate) pdef_shape_to_pdef: HashMap<u64, u64>,
     /// `PRODUCT_DEFINITION_SHAPE #N → NEXT_ASSEMBLY_USAGE_OCCURRENCE #N` when
     /// the `pdef_shape` points at a `NAUO` (instance-tagged). Populated
     /// alongside `pdef_shape_to_pdef` and consumed by Pass 6-7.
-    pub(super) pdef_shape_to_nauo: HashMap<u64, u64>,
-    pub(super) transform_map: HashMap<u64, Transform3d>,
-    pub(super) nauo_transform_map: HashMap<u64, Transform3d>,
+    pub(crate) pdef_shape_to_nauo: HashMap<u64, u64>,
+    pub(crate) transform_map: HashMap<u64, Transform3d>,
+    pub(crate) nauo_transform_map: HashMap<u64, Transform3d>,
 
     /// Lazily-built `VisualizationPool` — Pass 7 's MDGPR convert pushes
     /// `Mdgpr` records here. `None` if no visualization entities were seen.
-    pub(super) visualization: Option<VisualizationPool>,
+    pub(crate) visualization: Option<VisualizationPool>,
     /// `COLOUR_RGB #N → ColorRgb` (Pass 7-1). Temp map — discarded after
     /// `convert_fill_area_style_colour` consumes it.
-    pub(super) viz_colour_rgb_map: HashMap<u64, ColorRgb>,
+    pub(crate) viz_colour_rgb_map: HashMap<u64, ColorRgb>,
     /// `FILL_AREA_STYLE_COLOUR #N → FillAreaStyleColour` (Pass 7-2).
-    pub(super) viz_fasc_map: HashMap<u64, FillAreaStyleColour>,
+    pub(crate) viz_fasc_map: HashMap<u64, FillAreaStyleColour>,
     /// `FILL_AREA_STYLE #N → FillAreaStyle` (Pass 7-3).
-    pub(super) viz_fas_map: HashMap<u64, FillAreaStyle>,
+    pub(crate) viz_fas_map: HashMap<u64, FillAreaStyle>,
     /// `SURFACE_STYLE_FILL_AREA #N | SURFACE_STYLE_RENDERING_WITH_PROPERTIES #N
     /// → SurfaceSideStyleEntry`. Both entity types funnel into the same map
     /// so `SURFACE_SIDE_STYLE` convert can resolve mixed style lists.
-    pub(super) viz_sss_entry_map: HashMap<u64, SurfaceSideStyleEntry>,
+    pub(crate) viz_sss_entry_map: HashMap<u64, SurfaceSideStyleEntry>,
     /// `SURFACE_STYLE_TRANSPARENT #N → transparency value` (Pass 7-3b).
-    pub(super) viz_transparent_map: HashMap<u64, f64>,
+    pub(crate) viz_transparent_map: HashMap<u64, f64>,
     /// `SURFACE_SIDE_STYLE #N → SurfaceSideStyle` (Pass 7-5).
-    pub(super) viz_sss_map: HashMap<u64, SurfaceSideStyle>,
+    pub(crate) viz_sss_map: HashMap<u64, SurfaceSideStyle>,
     /// `SURFACE_STYLE_USAGE #N → SurfaceStyleUsage` (Pass 7-6).
-    pub(super) viz_ssu_map: HashMap<u64, SurfaceStyleUsage>,
+    pub(crate) viz_ssu_map: HashMap<u64, SurfaceStyleUsage>,
     /// `PRESENTATION_STYLE_ASSIGNMENT #N → PresentationStyleAssignment` (Pass 7-7).
-    pub(super) viz_psa_map: HashMap<u64, PresentationStyleAssignment>,
+    pub(crate) viz_psa_map: HashMap<u64, PresentationStyleAssignment>,
     /// `STYLED_ITEM #N → StyledItem` (Pass 7-8).
-    pub(super) viz_styled_item_map: HashMap<u64, StyledItem>,
+    pub(crate) viz_styled_item_map: HashMap<u64, StyledItem>,
 
     /// Lazily-built property pool — populated by Pass 8's PDR converter.
     /// `None` if the source had no `PROPERTY_DEFINITION_REPRESENTATION`.
-    pub(super) properties: Option<crate::ir::property::PropertyPool>,
+    pub(crate) properties: Option<crate::ir::property::PropertyPool>,
     /// `MEASURE_REPRESENTATION_ITEM #N → PropertyMeasure` (Pass 8-1).
     /// Items with unsupported `MeasureKind` (e.g. `AREA_MEASURE`) are
     /// silently skipped — no map entry. Temp; discarded after Pass 8.
-    pub(super) measure_item_map: HashMap<u64, crate::ir::property::PropertyMeasure>,
+    pub(crate) measure_item_map: HashMap<u64, crate::ir::property::PropertyMeasure>,
     /// `PROPERTY_DEFINITION #N → (name, description, target ProductId)`
     /// (Pass 8-3). PDs whose target ref does not resolve to a Product
     /// (e.g. `SHAPE_ASPECT`) are silently dropped — no map entry.
-    pub(super) property_def_map: HashMap<u64, (String, Option<String>, ProductId)>,
+    pub(crate) property_def_map: HashMap<u64, (String, Option<String>, ProductId)>,
 
     /// Lazily-built PMI pool — Pass 8 's `SHAPE_ASPECT` convert pushes
     /// `ShapeAspect` records here. `None` if no PMI entities were seen.
-    pub(super) pmi: Option<crate::ir::pmi::PmiPool>,
+    pub(crate) pmi: Option<crate::ir::pmi::PmiPool>,
 
-    pub(super) warnings: Vec<ConvertError>,
+    pub(crate) warnings: Vec<ConvertError>,
 }
 
 impl ReaderContext {
@@ -357,7 +357,7 @@ impl ReaderContext {
     // Each converter can collapse four lines of boilerplate into one call.
     // ---------------------------------------------------------------------
 
-    pub(super) fn resolve_point(
+    pub(crate) fn resolve_point(
         &self,
         from: u64,
         to: u64,
@@ -373,7 +373,7 @@ impl ReaderContext {
             })
     }
 
-    pub(super) fn resolve_direction(
+    pub(crate) fn resolve_direction(
         &self,
         from: u64,
         to: u64,
@@ -389,7 +389,7 @@ impl ReaderContext {
             })
     }
 
-    pub(super) fn resolve_curve(
+    pub(crate) fn resolve_curve(
         &self,
         from: u64,
         to: u64,
@@ -405,7 +405,7 @@ impl ReaderContext {
             })
     }
 
-    pub(super) fn resolve_surface(
+    pub(crate) fn resolve_surface(
         &self,
         from: u64,
         to: u64,
@@ -421,7 +421,7 @@ impl ReaderContext {
             })
     }
 
-    pub(super) fn resolve_vertex(
+    pub(crate) fn resolve_vertex(
         &self,
         from: u64,
         to: u64,
@@ -437,7 +437,7 @@ impl ReaderContext {
             })
     }
 
-    pub(super) fn resolve_edge(
+    pub(crate) fn resolve_edge(
         &self,
         from: u64,
         to: u64,
@@ -453,7 +453,7 @@ impl ReaderContext {
             })
     }
 
-    pub(super) fn resolve_face_bound(
+    pub(crate) fn resolve_face_bound(
         &self,
         from: u64,
         to: u64,
@@ -469,7 +469,7 @@ impl ReaderContext {
             })
     }
 
-    pub(super) fn resolve_face(
+    pub(crate) fn resolve_face(
         &self,
         from: u64,
         to: u64,
@@ -485,7 +485,7 @@ impl ReaderContext {
             })
     }
 
-    pub(super) fn resolve_shell(
+    pub(crate) fn resolve_shell(
         &self,
         from: u64,
         to: u64,
@@ -503,7 +503,7 @@ impl ReaderContext {
 
     /// Two-step lookup `PRODUCT_DEFINITION #N → PRODUCT #N → ProductId`
     /// shared by Pass 6-8 (NAUO tree wiring).
-    pub(super) fn resolve_product_by_pdef(
+    pub(crate) fn resolve_product_by_pdef(
         &self,
         from: u64,
         pdef_ref: u64,
@@ -527,7 +527,7 @@ impl ReaderContext {
         )
     }
 
-    pub(super) fn resolve_placement(
+    pub(crate) fn resolve_placement(
         &self,
         from: u64,
         to: u64,
@@ -543,7 +543,7 @@ impl ReaderContext {
             })
     }
 
-    pub(super) fn resolve_vector(
+    pub(crate) fn resolve_vector(
         &self,
         from: u64,
         to: u64,
@@ -559,7 +559,7 @@ impl ReaderContext {
             })
     }
 
-    pub(super) fn resolve_axis1(
+    pub(crate) fn resolve_axis1(
         &self,
         from: u64,
         to: u64,
@@ -575,7 +575,7 @@ impl ReaderContext {
             })
     }
 
-    pub(super) fn resolve_oriented_edge(
+    pub(crate) fn resolve_oriented_edge(
         &self,
         from: u64,
         to: u64,
@@ -591,7 +591,7 @@ impl ReaderContext {
             })
     }
 
-    pub(super) fn resolve_edge_loop(
+    pub(crate) fn resolve_edge_loop(
         &self,
         from: u64,
         to: u64,
@@ -612,7 +612,7 @@ impl ReaderContext {
 // Free helpers (used by multiple submodules)
 // ---------------------------------------------------------------------------
 
-pub(super) fn bool_to_orientation(same_sense: bool) -> Orientation {
+pub(crate) fn bool_to_orientation(same_sense: bool) -> Orientation {
     if same_sense {
         Orientation::Forward
     } else {
@@ -621,7 +621,7 @@ pub(super) fn bool_to_orientation(same_sense: bool) -> Orientation {
 }
 
 /// Find a part by name in a complex entity's part list.
-pub(super) fn find_part_attrs<'a>(
+pub(crate) fn find_part_attrs<'a>(
     parts: &'a [RawEntityPart],
     name: &str,
 ) -> Option<&'a [Attribute]> {
@@ -632,7 +632,7 @@ pub(super) fn find_part_attrs<'a>(
 }
 
 /// Find a required part by name. Returns an error if missing.
-pub(super) fn require_part_attrs<'a>(
+pub(crate) fn require_part_attrs<'a>(
     parts: &'a [RawEntityPart],
     name: &'static str,
     entity_id: u64,
@@ -644,7 +644,7 @@ pub(super) fn require_part_attrs<'a>(
 }
 
 /// Check whether a complex entity contains all required parts.
-pub(super) fn has_all_parts(parts: &[RawEntityPart], required: &[&str]) -> bool {
+pub(crate) fn has_all_parts(parts: &[RawEntityPart], required: &[&str]) -> bool {
     required
         .iter()
         .all(|name| parts.iter().any(|p| p.name == *name))
@@ -661,7 +661,7 @@ pub(super) fn has_all_parts(parts: &[RawEntityPart], required: &[&str]) -> bool 
 /// as a root — other `REPRESENTATION` subtypes (e.g. `SHAPE_REPRESENTATION`,
 /// `ADVANCED_BREP_SHAPE_REPRESENTATION`) reference 3D top-level entities
 /// and must remain visible.
-pub(super) fn collect_pcurve_subtree_ids(graph: &EntityGraph) -> HashSet<u64> {
+pub(crate) fn collect_pcurve_subtree_ids(graph: &EntityGraph) -> HashSet<u64> {
     let mut ids = HashSet::new();
     for (&id, entity) in &graph.entities {
         if let RawEntity::Simple { name, .. } = entity

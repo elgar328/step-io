@@ -19,67 +19,67 @@ use crate::ir::{
 };
 
 mod assembly;
-mod geometry;
+pub(crate) mod geometry;
 mod pmi;
 mod property;
 mod topology;
 mod units;
 mod visualization;
 
-pub(in crate::writer) struct WriteBuffer<'m> {
-    pub(in crate::writer) model: &'m StepModel,
-    pub(in crate::writer) next_id: u64,
-    pub(in crate::writer) entities: Vec<WriterEntity>,
-    pub(in crate::writer) point_ids: HashMap<PointId, u64>,
-    pub(in crate::writer) direction_ids: HashMap<DirectionId, u64>,
-    pub(in crate::writer) placement_ids: HashMap<Placement3dId, u64>,
-    pub(in crate::writer) placement_1d_ids: HashMap<Placement1dId, u64>,
-    pub(in crate::writer) placement_2d_ids: HashMap<Placement2dId, u64>,
-    pub(in crate::writer) curve_ids: HashMap<CurveId, u64>,
-    pub(in crate::writer) surface_ids: HashMap<SurfaceId, u64>,
-    pub(in crate::writer) vertex_ids: HashMap<VertexId, u64>,
-    pub(in crate::writer) edge_ids: HashMap<EdgeId, u64>,
-    pub(in crate::writer) wire_ids: HashMap<WireId, u64>,
-    pub(in crate::writer) face_ids: HashMap<FaceId, u64>,
-    pub(in crate::writer) shell_ids: HashMap<ShellId, u64>,
-    pub(in crate::writer) solid_ids: HashMap<SolidId, u64>,
-    pub(in crate::writer) point_2d_ids: HashMap<Point2dId, u64>,
-    pub(in crate::writer) direction_2d_ids: HashMap<Direction2dId, u64>,
-    pub(in crate::writer) curve_2d_ids: HashMap<Curve2dId, u64>,
+pub(crate) struct WriteBuffer<'m> {
+    pub(crate) model: &'m StepModel,
+    pub(crate) next_id: u64,
+    pub(crate) entities: Vec<WriterEntity>,
+    pub(crate) point_ids: HashMap<PointId, u64>,
+    pub(crate) direction_ids: HashMap<DirectionId, u64>,
+    pub(crate) placement_ids: HashMap<Placement3dId, u64>,
+    pub(crate) placement_1d_ids: HashMap<Placement1dId, u64>,
+    pub(crate) placement_2d_ids: HashMap<Placement2dId, u64>,
+    pub(crate) curve_ids: HashMap<CurveId, u64>,
+    pub(crate) surface_ids: HashMap<SurfaceId, u64>,
+    pub(crate) vertex_ids: HashMap<VertexId, u64>,
+    pub(crate) edge_ids: HashMap<EdgeId, u64>,
+    pub(crate) wire_ids: HashMap<WireId, u64>,
+    pub(crate) face_ids: HashMap<FaceId, u64>,
+    pub(crate) shell_ids: HashMap<ShellId, u64>,
+    pub(crate) solid_ids: HashMap<SolidId, u64>,
+    pub(crate) point_2d_ids: HashMap<Point2dId, u64>,
+    pub(crate) direction_2d_ids: HashMap<Direction2dId, u64>,
+    pub(crate) curve_2d_ids: HashMap<Curve2dId, u64>,
     /// Cache of `LENGTH_UNIT` complex entities, keyed by the
     /// defining IR fields `(length, length_cbu_wrapped)`. Sharing across
     /// contexts that pick the same length unit; distinct keys (e.g. an inch
     /// ctx + a mm ctx in the same file) emit separate leaf entities.
-    pub(in crate::writer) length_unit_ids: HashMap<(crate::ir::LengthUnit, bool), u64>,
+    pub(crate) length_unit_ids: HashMap<(crate::ir::LengthUnit, bool), u64>,
     /// Same idea for plane-angle units.
-    pub(in crate::writer) angle_unit_ids: HashMap<(crate::ir::AngleUnit, bool), u64>,
+    pub(crate) angle_unit_ids: HashMap<(crate::ir::AngleUnit, bool), u64>,
     /// Same idea for solid-angle units.
-    pub(in crate::writer) solid_angle_unit_ids: HashMap<crate::ir::SolidAngleUnit, u64>,
+    pub(crate) solid_angle_unit_ids: HashMap<crate::ir::SolidAngleUnit, u64>,
     /// STEP entity ids of every emitted `REPRESENTATION_CONTEXT` complex
     /// entity, indexed by `UnitContextId.0`. Populated up-front in `emit_all`
     /// so every representation emitter can resolve its `Option<UnitContextId>`
     /// to a cached id.
-    pub(in crate::writer) unit_context_ids: Vec<u64>,
+    pub(crate) unit_context_ids: Vec<u64>,
     /// `ProductId → PRODUCT_DEFINITION step id`. Populated by
     /// `emit_assembly_chain`; consumed by the property emitter so a
     /// `Property.target` can be resolved to a STEP ref. Empty when the
     /// model has no assembly (kernel-built IR with properties only — the
     /// property emitter silently skips in that case).
-    pub(in crate::writer) product_def_ids: std::collections::HashMap<ProductId, u64>,
+    pub(crate) product_def_ids: std::collections::HashMap<ProductId, u64>,
     /// `ProductId → PRODUCT_DEFINITION_SHAPE step id`. Same role as
     /// `product_def_ids` but for the PDS sibling — consumed by the PMI
     /// emitter to resolve `ShapeAspect.target` (SAs reference PDS, not PD).
-    pub(in crate::writer) product_def_shape_ids: std::collections::HashMap<ProductId, u64>,
+    pub(crate) product_def_shape_ids: std::collections::HashMap<ProductId, u64>,
     /// Cached `DIMENSIONAL_EXPONENTS(1,0,0,0,0,0,0)` — length dimension.
     /// Re-used by any `CONVERSION_BASED_UNIT` with a length flavour.
-    pub(in crate::writer) length_dim_exp_id: Option<u64>,
+    pub(crate) length_dim_exp_id: Option<u64>,
     /// Cached `DIMENSIONAL_EXPONENTS(0,0,0,0,0,0,0)` — dimensionless.
     /// Re-used by the degree `CONVERSION_BASED_UNIT`.
-    pub(in crate::writer) dimensionless_dim_exp_id: Option<u64>,
+    pub(crate) dimensionless_dim_exp_id: Option<u64>,
 }
 
 impl<'m> WriteBuffer<'m> {
-    pub(in crate::writer) fn new(model: &'m StepModel) -> Self {
+    pub(crate) fn new(model: &'m StepModel) -> Self {
         Self {
             model,
             next_id: 0,
@@ -111,11 +111,11 @@ impl<'m> WriteBuffer<'m> {
         }
     }
 
-    pub(in crate::writer) fn finish_entities(self) -> Vec<WriterEntity> {
+    pub(crate) fn finish_entities(self) -> Vec<WriterEntity> {
         self.entities
     }
 
-    pub(in crate::writer) fn emit_all(&mut self) -> Result<(), WriteError> {
+    pub(crate) fn emit_all(&mut self) -> Result<(), WriteError> {
         // Order: geometry -> topology -> units -> assembly. Mirrors the
         // OCCT-flavoured fixture layout (topology before units) and keeps
         // all cross-pool references backward (parent after children).
@@ -209,7 +209,7 @@ impl<'m> WriteBuffer<'m> {
         Ok(())
     }
 
-    pub(in crate::writer) fn fresh(&mut self) -> u64 {
+    pub(crate) fn fresh(&mut self) -> u64 {
         self.next_id += 1;
         self.next_id
     }

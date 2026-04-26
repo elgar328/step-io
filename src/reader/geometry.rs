@@ -12,8 +12,8 @@ use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{
     Axis1Placement, Axis2Placement2d, Axis2Placement3d, Circle2, Circle3, CompositeCurve,
     CompositeSegment, ConicalSurface, Curve, Curve2d, CurveForm, CylindricalSurface, Direction2,
-    Direction3, Ellipse2, Ellipse3, Line2, Line3, NurbsCurve, NurbsCurve2d, NurbsSurface, Pcurve,
-    Plane3, Point2, Point3, SphericalSurface, Surface, SurfaceForm, SurfaceOfLinearExtrusion,
+    Ellipse2, Ellipse3, Line2, Line3, NurbsCurve, NurbsCurve2d, NurbsSurface, Pcurve, Plane3,
+    Point2, Point3, SphericalSurface, Surface, SurfaceForm, SurfaceOfLinearExtrusion,
     SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TransitionCode, TrimMaster,
     TrimmedCurve,
 };
@@ -50,30 +50,16 @@ impl ReaderContext {
         Ok(())
     }
 
-    pub(super) fn convert_direction(
+    pub(crate) fn convert_direction(
         &mut self,
         entity_id: u64,
         attrs: &[Attribute],
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "DIRECTION")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
-        let ratios = read_real_list(attrs, 1, entity_id, "direction_ratios")?;
-        if ratios.len() != 3 {
-            return Err(ConvertError::DimensionMismatch {
-                entity_id,
-                field_name: "direction_ratios",
-                expected: 3,
-                actual: ratios.len(),
-            });
-        }
-        let dir = Direction3 {
-            x: ratios[0],
-            y: ratios[1],
-            z: ratios[2],
-        };
-        let id = self.geometry.directions.push(dir);
-        self.direction_map.insert(entity_id, id);
-        Ok(())
+        // Step 1 pilot: dispatch through the EntityHandler trait. The legacy
+        // body lives in `src/entities/geometry/direction.rs`. Plan 2 will
+        // replace this wrapper once the registry takes over `run_pass!`.
+        use crate::entities::EntityHandler;
+        crate::entities::geometry::direction::DirectionHandler::read(self, entity_id, attrs)
     }
 
     // ------------------------------------------------------------------

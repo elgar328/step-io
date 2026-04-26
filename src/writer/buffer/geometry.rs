@@ -16,7 +16,7 @@ use crate::writer::WriteError;
 use crate::writer::entity::{WriterBody, WriterEntity};
 
 impl WriteBuffer<'_> {
-    pub(in crate::writer::buffer) fn emit_point(&mut self, id: PointId) -> Result<u64, WriteError> {
+    pub(crate) fn emit_point(&mut self, id: PointId) -> Result<u64, WriteError> {
         if let Some(&n) = self.point_ids.get(&id) {
             return Ok(n);
         }
@@ -40,37 +40,14 @@ impl WriteBuffer<'_> {
         Ok(n)
     }
 
-    pub(in crate::writer::buffer) fn emit_direction(
-        &mut self,
-        id: DirectionId,
-    ) -> Result<u64, WriteError> {
-        if let Some(&n) = self.direction_ids.get(&id) {
-            return Ok(n);
-        }
-        let d = direction_at(self.model, id)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "DIRECTION".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::List(vec![
-                        Attribute::Real(d.x),
-                        Attribute::Real(d.y),
-                        Attribute::Real(d.z),
-                    ]),
-                ],
-            },
-        });
-        self.direction_ids.insert(id, n);
-        Ok(n)
+    pub(crate) fn emit_direction(&mut self, id: DirectionId) -> Result<u64, WriteError> {
+        // Step 1 pilot: dispatch through the EntityHandler trait. Body lives in
+        // `src/entities/geometry/direction.rs`. Plan 2 removes this wrapper.
+        use crate::entities::EntityHandler;
+        crate::entities::geometry::direction::DirectionHandler::write(self, id)
     }
 
-    pub(in crate::writer::buffer) fn emit_axis2_placement_3d(
-        &mut self,
-        id: Placement3dId,
-    ) -> Result<u64, WriteError> {
+    pub(crate) fn emit_axis2_placement_3d(&mut self, id: Placement3dId) -> Result<u64, WriteError> {
         if let Some(&n) = self.placement_ids.get(&id) {
             return Ok(n);
         }
@@ -118,7 +95,7 @@ impl WriteBuffer<'_> {
         Ok(n)
     }
 
-    pub(in crate::writer::buffer) fn emit_curve(&mut self, id: CurveId) -> Result<u64, WriteError> {
+    pub(crate) fn emit_curve(&mut self, id: CurveId) -> Result<u64, WriteError> {
         if let Some(&n) = self.curve_ids.get(&id) {
             return Ok(n);
         }
@@ -290,10 +267,7 @@ impl WriteBuffer<'_> {
         Ok(n)
     }
 
-    pub(in crate::writer::buffer) fn emit_surface(
-        &mut self,
-        id: SurfaceId,
-    ) -> Result<u64, WriteError> {
+    pub(crate) fn emit_surface(&mut self, id: SurfaceId) -> Result<u64, WriteError> {
         if let Some(&n) = self.surface_ids.get(&id) {
             return Ok(n);
         }
@@ -664,10 +638,7 @@ impl WriteBuffer<'_> {
         Ok(n)
     }
 
-    pub(in crate::writer::buffer) fn emit_axis1_placement(
-        &mut self,
-        id: Placement1dId,
-    ) -> Result<u64, WriteError> {
+    pub(crate) fn emit_axis1_placement(&mut self, id: Placement1dId) -> Result<u64, WriteError> {
         if let Some(&n) = self.placement_1d_ids.get(&id) {
             return Ok(n);
         }
@@ -703,7 +674,7 @@ fn point_at(model: &StepModel, id: PointId) -> Result<Point3, WriteError> {
         })
 }
 
-fn direction_at(model: &StepModel, id: DirectionId) -> Result<Direction3, WriteError> {
+pub(crate) fn direction_at(model: &StepModel, id: DirectionId) -> Result<Direction3, WriteError> {
     model
         .geometry
         .directions
@@ -742,10 +713,7 @@ fn surface_at(model: &StepModel, id: SurfaceId) -> Result<&Surface, WriteError> 
 // ---------------------------------------------------------------------------
 
 impl WriteBuffer<'_> {
-    pub(in crate::writer::buffer) fn emit_point_2d(
-        &mut self,
-        id: Point2dId,
-    ) -> Result<u64, WriteError> {
+    pub(crate) fn emit_point_2d(&mut self, id: Point2dId) -> Result<u64, WriteError> {
         if let Some(&n) = self.point_2d_ids.get(&id) {
             return Ok(n);
         }
@@ -765,10 +733,7 @@ impl WriteBuffer<'_> {
         Ok(n)
     }
 
-    pub(in crate::writer::buffer) fn emit_direction_2d(
-        &mut self,
-        id: Direction2dId,
-    ) -> Result<u64, WriteError> {
+    pub(crate) fn emit_direction_2d(&mut self, id: Direction2dId) -> Result<u64, WriteError> {
         if let Some(&n) = self.direction_2d_ids.get(&id) {
             return Ok(n);
         }
@@ -809,10 +774,7 @@ impl WriteBuffer<'_> {
         Ok(n)
     }
 
-    pub(in crate::writer::buffer) fn emit_axis2_placement_2d(
-        &mut self,
-        id: Placement2dId,
-    ) -> Result<u64, WriteError> {
+    pub(crate) fn emit_axis2_placement_2d(&mut self, id: Placement2dId) -> Result<u64, WriteError> {
         if let Some(&n) = self.placement_2d_ids.get(&id) {
             return Ok(n);
         }
@@ -838,10 +800,7 @@ impl WriteBuffer<'_> {
         Ok(n)
     }
 
-    pub(in crate::writer::buffer) fn emit_curve_2d(
-        &mut self,
-        id: Curve2dId,
-    ) -> Result<u64, WriteError> {
+    pub(crate) fn emit_curve_2d(&mut self, id: Curve2dId) -> Result<u64, WriteError> {
         if let Some(&n) = self.curve_2d_ids.get(&id) {
             return Ok(n);
         }
@@ -1032,7 +991,7 @@ impl WriteBuffer<'_> {
     /// pcurves share the same basis surface → SEAM_CURVE, otherwise
     /// SURFACE_CURVE. `master_representation` is always `.PCURVE_S1.` (OCCT
     /// convention — the reader doesn't consult this value).
-    pub(in crate::writer::buffer) fn emit_surface_curve_wrapper(
+    pub(crate) fn emit_surface_curve_wrapper(
         &mut self,
         curve_3d_ref: u64,
         pcurves: &[Pcurve],

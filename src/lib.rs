@@ -1,3 +1,4 @@
+pub mod entities;
 pub mod ir;
 pub mod parser;
 pub mod reader;

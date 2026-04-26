@@ -10,8 +10,8 @@
 //! The public entry points are the three `write_*` methods on
 //! [`StepModel`](crate::ir::StepModel).
 
-mod buffer;
-mod entity;
+pub(crate) mod buffer;
+pub(crate) mod entity;
 mod header;
 mod lexical;
 mod serialize;

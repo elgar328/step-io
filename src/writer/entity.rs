@@ -2,7 +2,7 @@ use crate::parser::entity::Attribute;
 
 /// A DATA-section entity awaiting serialization. Always carries an `#N` id.
 #[derive(Debug, Clone, PartialEq)]
-pub(in crate::writer) struct WriterEntity {
+pub(crate) struct WriterEntity {
     pub id: u64,
     pub body: WriterBody,
 }
@@ -10,7 +10,7 @@ pub(in crate::writer) struct WriterEntity {
 /// Body of a [`WriterEntity`] — either a simple entity or a complex entity
 /// composed of multiple sub-parts.
 #[derive(Debug, Clone, PartialEq)]
-pub(in crate::writer) enum WriterBody {
+pub(crate) enum WriterBody {
     /// Emits as `#N = NAME(attrs);`.
     Simple { name: String, attrs: Vec<Attribute> },
     /// Emits as `#N = ( NAME1(attrs1) NAME2(attrs2) ... );`.
@@ -23,7 +23,7 @@ pub(in crate::writer) enum WriterBody {
 /// A HEADER-section entity. Unlike [`WriterEntity`], HEADER entities have no
 /// `#N` identifier and emit as `NAME(attrs);`.
 #[derive(Debug, Clone, PartialEq)]
-pub(in crate::writer) struct HeaderEntity {
+pub(crate) struct HeaderEntity {
     pub name: String,
     pub attrs: Vec<Attribute>,
 }
