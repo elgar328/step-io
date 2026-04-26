@@ -164,8 +164,11 @@ impl<'m> WriteBuffer<'m> {
             #[allow(clippy::cast_possible_truncation)]
             self.emit_solid(SolidId(i as u32))?;
         }
-        if let Some(units) = self.model.units {
-            self.emit_unit_context(units);
+        // Commit 1: emit only the first context (single-context behaviour
+        // preserved). Commit 3 will iterate every arena entry and cache the
+        // resulting STEP ids in `unit_context_ids`.
+        if let Some(units) = self.model.units.iter().next() {
+            self.emit_unit_context(*units);
         }
         self.emit_product_chain_if_eligible()?;
         self.emit_visualization_if_set()?;

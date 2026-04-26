@@ -24,7 +24,8 @@ pub use geometry::{
 };
 pub use id::{
     Curve2dId, CurveId, Direction2dId, DirectionId, EdgeId, FaceId, Placement1dId, Placement2dId,
-    Placement3dId, Point2dId, PointId, ProductId, ShellId, SolidId, SurfaceId, VertexId, WireId,
+    Placement3dId, Point2dId, PointId, ProductId, ShellId, SolidId, SurfaceId, UnitContextId,
+    VertexId, WireId,
 };
 pub use model::{
     AngleUnit, FileHeader, GeometryPool, ImplementationLevel, LengthUnit, NonEmptyStringList,

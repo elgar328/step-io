@@ -70,6 +70,7 @@ impl ReaderContext {
             outer_sr_frame: None,
             category: None,
             formation_with_source: false,
+            geometry_context: None,
         };
         let pid = self.assembly_products.push(product);
         self.product_arena_map.insert(entity_id, pid);

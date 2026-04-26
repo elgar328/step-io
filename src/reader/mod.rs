@@ -60,7 +60,11 @@ pub struct ConvertResult {
 pub struct ReaderContext {
     pub(super) geometry: GeometryPool,
     pub(super) topology: TopologyPool,
-    pub(super) units: Option<UnitContext>,
+    /// Unit / uncertainty contexts accumulated during Pass 0-2. Commit 1
+    /// only collects the first context (Pass 0-2 still has the early-return
+    /// guard); Commit 2 will remove that guard and populate one entry per
+    /// `REPRESENTATION_CONTEXT` complex entity.
+    pub(super) units: Arena<UnitContext>,
 
     /// `true` if any `CONVERSION_BASED_UNIT` whose `name` matched an SI
     /// length spelling (`'METRE'` / `'MILLIMETRE'` / `'CENTIMETRE'`) was

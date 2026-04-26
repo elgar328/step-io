@@ -2,7 +2,7 @@
 ///
 /// Arena items are never removed — the arena grows monotonically. This makes
 /// Ids stable for the lifetime of the arena.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Arena<T> {
     /// Internal storage. `pub(crate)` so that `define_id!` macro expansions
     /// in sibling modules can access it.

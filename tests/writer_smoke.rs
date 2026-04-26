@@ -238,10 +238,10 @@ fn unset_axis_directions_round_trip_as_none() {
 #[test]
 fn unit_context_mm_radian_steradian_round_trips() {
     let mut model = empty_model();
-    model.units = Some(mm_radian_steradian());
+    model.units.push(mm_radian_steradian());
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.units, Some(mm_radian_steradian()));
+    assert_eq!(re.units.iter().next().copied(), Some(mm_radian_steradian()));
 }
 
 #[test]
@@ -249,13 +249,13 @@ fn unit_context_absent_stays_none() {
     let model = empty_model();
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
-    assert!(re.units.is_none());
+    assert!(re.units.is_empty());
 }
 
 #[test]
 fn write_to_and_write_to_string_produce_identical_bytes() {
     let mut model = empty_model();
-    model.units = Some(mm_radian_steradian());
+    model.units.push(mm_radian_steradian());
     let via_string = model.write_to_string().expect("string");
     let mut via_writer = Vec::new();
     model.write_to(&mut via_writer).expect("writer");
@@ -817,7 +817,7 @@ fn identity_transform(model: &mut StepModel) -> Transform3d {
 fn simple_assembly_round_trips() {
     // Root Group holding one Instance that points at a Solid leaf product.
     let mut model = empty_model();
-    model.units = Some(mm_radian_steradian());
+    model.units.push(mm_radian_steradian());
     let solid_id = push_minimal_solid(&mut model);
     let transform = identity_transform(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -832,6 +832,7 @@ fn simple_assembly_round_trips() {
         outer_sr_frame: None,
         category: None,
         formation_with_source: false,
+        geometry_context: None,
     });
     let root_pid = tree.products.push(Product {
         id: "Root".into(),
@@ -847,6 +848,7 @@ fn simple_assembly_round_trips() {
         outer_sr_frame: None,
         category: None,
         formation_with_source: false,
+        geometry_context: None,
     });
     tree.root = Some(root_pid);
     model.assembly = Some(tree);
@@ -886,7 +888,7 @@ fn shared_child_assembly_round_trips() {
     // Same Leaf referenced twice from the Root Group with different
     // occurrence ids — the classic shared-instance case.
     let mut model = empty_model();
-    model.units = Some(mm_radian_steradian());
+    model.units.push(mm_radian_steradian());
     let solid_id = push_minimal_solid(&mut model);
     let transform = identity_transform(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -901,6 +903,7 @@ fn shared_child_assembly_round_trips() {
         outer_sr_frame: None,
         category: None,
         formation_with_source: false,
+        geometry_context: None,
     });
     let root_pid = tree.products.push(Product {
         id: "Root".into(),
@@ -924,6 +927,7 @@ fn shared_child_assembly_round_trips() {
         outer_sr_frame: None,
         category: None,
         formation_with_source: false,
+        geometry_context: None,
     });
     tree.root = Some(root_pid);
     model.assembly = Some(tree);

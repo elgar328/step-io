@@ -1290,9 +1290,15 @@ fn every_fixture_has_expected_units() {
             let graph = step_io::parse(source)
                 .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
             let result = ReaderContext::convert(&graph);
-            let units = result.model.units.unwrap_or_else(|| {
-                panic!("fixture {name}: units missing");
-            });
+            let units = result
+                .model
+                .units
+                .iter()
+                .next()
+                .copied()
+                .unwrap_or_else(|| {
+                    panic!("fixture {name}: units missing");
+                });
             let expected_length = if *name == "fillet_box_ap214_is" {
                 LengthUnit::Inch
             } else {

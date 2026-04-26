@@ -160,9 +160,11 @@ impl ReaderContext {
         entity_id: u64,
         parts: &[RawEntityPart],
     ) -> Result<(), ConvertError> {
-        // Assembly-level files may expose several contexts; for now we honour
-        // the first one we see and ignore the rest (TODO: revisit in phase 6).
-        if self.units.is_some() {
+        // Commit 1: keep single-context behaviour by guarding with
+        // `is_empty()` — only the first complex context becomes an arena
+        // entry. Commit 2 will remove this guard so every distinct
+        // `REPRESENTATION_CONTEXT` becomes its own arena entry.
+        if !self.units.is_empty() {
             return Ok(());
         }
 
@@ -186,7 +188,7 @@ impl ReaderContext {
         match (length, plane_angle, solid_angle) {
             (Some(length), Some(plane_angle), Some(solid_angle)) => {
                 let length_uncertainty = self.extract_length_uncertainty(parts);
-                self.units = Some(UnitContext {
+                self.units.push(UnitContext {
                     length,
                     plane_angle,
                     solid_angle,

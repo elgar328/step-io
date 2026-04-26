@@ -595,7 +595,7 @@ fn unit_millimetre_radian_steradian() {
     let result = convert_source(&minimal_step(&unit_data(".MILLI.")));
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
     assert_eq!(
-        result.model.units,
+        result.model.units.iter().next().copied(),
         Some(UnitContext {
             length: LengthUnit::Millimetre,
             plane_angle: AngleUnit::Radian,
@@ -612,7 +612,7 @@ fn unit_centimetre_mapping() {
     let result = convert_source(&minimal_step(&unit_data(".CENTI.")));
     assert!(result.warnings.is_empty());
     assert_eq!(
-        result.model.units.map(|u| u.length),
+        result.model.units.iter().next().map(|u| u.length),
         Some(LengthUnit::Centimetre),
     );
 }
@@ -622,7 +622,7 @@ fn unit_plain_metre_mapping() {
     let result = convert_source(&minimal_step(&unit_data("$")));
     assert!(result.warnings.is_empty());
     assert_eq!(
-        result.model.units.map(|u| u.length),
+        result.model.units.iter().next().map(|u| u.length),
         Some(LengthUnit::Metre),
     );
 }
@@ -638,7 +638,7 @@ fn unit_unsupported_prefix_produces_warning_and_none() {
         ConvertError::UnexpectedEntityForm { detail, .. }
             if detail.contains("unsupported SI length unit")
     ));
-    assert_eq!(result.model.units, None);
+    assert!(result.model.units.is_empty());
 }
 
 // ---------------------------------------------------------------------------
@@ -670,7 +670,10 @@ fn reads_inch_milli_untyped_convention() {
          #4 = ( CONVERSION_BASED_UNIT('INCH',#3) LENGTH_UNIT() NAMED_UNIT(#2) );";
     let result = convert_source(&cbu_unit_step(block, 4));
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
-    assert_eq!(result.model.units.map(|u| u.length), Some(LengthUnit::Inch),);
+    assert_eq!(
+        result.model.units.iter().next().map(|u| u.length),
+        Some(LengthUnit::Inch),
+    );
 }
 
 #[test]
@@ -683,7 +686,10 @@ fn reads_inch_centi_typed_convention() {
          #4 = ( CONVERSION_BASED_UNIT('INCH',#3) LENGTH_UNIT() NAMED_UNIT(#2) );";
     let result = convert_source(&cbu_unit_step(block, 4));
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
-    assert_eq!(result.model.units.map(|u| u.length), Some(LengthUnit::Inch),);
+    assert_eq!(
+        result.model.units.iter().next().map(|u| u.length),
+        Some(LengthUnit::Inch),
+    );
 }
 
 #[test]
@@ -696,7 +702,10 @@ fn reads_inch_lowercase_name() {
          #4 = ( CONVERSION_BASED_UNIT('inch',#3) LENGTH_UNIT() NAMED_UNIT(#2) );";
     let result = convert_source(&cbu_unit_step(block, 4));
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
-    assert_eq!(result.model.units.map(|u| u.length), Some(LengthUnit::Inch),);
+    assert_eq!(
+        result.model.units.iter().next().map(|u| u.length),
+        Some(LengthUnit::Inch),
+    );
 }
 
 #[test]
@@ -708,7 +717,10 @@ fn reads_foot_standard() {
          #4 = ( CONVERSION_BASED_UNIT('FOOT',#3) LENGTH_UNIT() NAMED_UNIT(#2) );";
     let result = convert_source(&cbu_unit_step(block, 4));
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
-    assert_eq!(result.model.units.map(|u| u.length), Some(LengthUnit::Foot),);
+    assert_eq!(
+        result.model.units.iter().next().map(|u| u.length),
+        Some(LengthUnit::Foot),
+    );
 }
 
 #[test]
@@ -728,7 +740,7 @@ fn reads_degree_uppercase() {
     let result = convert_source(&step);
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
     assert_eq!(
-        result.model.units.map(|u| u.plane_angle),
+        result.model.units.iter().next().map(|u| u.plane_angle),
         Some(AngleUnit::Degree),
     );
 }
@@ -749,7 +761,7 @@ fn reads_degree_lowercase() {
     let result = convert_source(&step);
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
     assert_eq!(
-        result.model.units.map(|u| u.plane_angle),
+        result.model.units.iter().next().map(|u| u.plane_angle),
         Some(AngleUnit::Degree),
     );
 }
@@ -766,7 +778,7 @@ fn reads_millimetre_cbu_wrap() {
     let result = convert_source(&cbu_unit_step(block, 4));
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
     assert_eq!(
-        result.model.units.map(|u| u.length),
+        result.model.units.iter().next().map(|u| u.length),
         Some(LengthUnit::Millimetre),
     );
 }
@@ -791,7 +803,7 @@ fn reads_unrecognized_cbu_name_warns() {
         "{:#?}",
         result.warnings,
     );
-    assert_eq!(result.model.units, None);
+    assert!(result.model.units.is_empty());
 }
 
 #[test]
@@ -801,7 +813,7 @@ fn unit_no_global_context_is_silent() {
     // emit no warnings (silent skip).
     let result = convert_source(&minimal_step("#1 = CARTESIAN_POINT('',(0.,0.,0.));"));
     assert!(result.warnings.is_empty());
-    assert_eq!(result.model.units, None);
+    assert!(result.model.units.is_empty());
 }
 
 // ---------------------------------------------------------------------------

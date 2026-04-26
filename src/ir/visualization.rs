@@ -9,7 +9,7 @@
 //! a fully structured visualization layer (per-Face Color references,
 //! PMI-style annotations), the tree-inline IR will be replaced wholesale.
 
-use super::id::{CurveId, FaceId, PointId, SolidId};
+use super::id::{CurveId, FaceId, PointId, SolidId, UnitContextId};
 
 /// Top-level container for visualization data extracted from
 /// `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION` (MDGPR)
@@ -22,11 +22,16 @@ pub struct VisualizationPool {
 }
 
 /// `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION(name, items, context)`.
-/// `context` is implied: writer reuses the global unit context.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Mdgpr {
     pub name: String,
     pub items: Vec<StyledItem>,
+    /// Unit / uncertainty context referenced by this MDGPR. `Some(id)` indexes
+    /// into [`crate::ir::model::StepModel::units`]. Fusion 360 typically uses
+    /// a separate context here (different uncertainty than the geometry rep).
+    /// `None` → writer emits `Attribute::Unset` for `context_of_items`
+    /// (allowed by the spec for kernel-built IR with no context info).
+    pub context: Option<UnitContextId>,
 }
 
 /// `STYLED_ITEM(name, styles, item)` — binds presentation styles to a

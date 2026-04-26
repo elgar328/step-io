@@ -4,6 +4,7 @@ use super::geometry::{
     Axis1Placement, Axis2Placement2d, Axis2Placement3d, Curve, Curve2d, Direction2, Direction3,
     Point2, Point3, Surface,
 };
+use super::model::UnitContext;
 use super::topology::{Edge, Face, Shell, Solid, Vertex, Wire};
 
 // Geometry Ids (3D)
@@ -30,3 +31,7 @@ define_id!(SolidId, Solid);
 
 // Assembly Ids
 define_id!(ProductId, Product);
+
+// Unit context Ids — multi-context support (one entry per
+// REPRESENTATION_CONTEXT in the source file).
+define_id!(UnitContextId, UnitContext);

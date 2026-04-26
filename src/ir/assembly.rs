@@ -7,7 +7,7 @@
 //! owns the product arena and the resolved root.
 
 use super::arena::Arena;
-use super::id::{CurveId, Placement3dId, PointId, ProductId, ShellId, SolidId};
+use super::id::{CurveId, Placement3dId, PointId, ProductId, ShellId, SolidId, UnitContextId};
 
 /// Assembly graph. Conventionally called a "tree" but shared instances
 /// make it a DAG in general (the same product can be reached through
@@ -65,6 +65,12 @@ pub struct Product {
     /// CATIA AP214 IS exports. Writer emits the subtype iff this flag is
     /// `true`. Default `false`.
     pub formation_with_source: bool,
+    /// Unit / uncertainty context referenced by this product's shape
+    /// representation (`ABSR`, `MSSR`, plain `SHAPE_REPRESENTATION`, `GBWSR`,
+    /// `GBSSR`). `Some(id)` indexes into [`crate::ir::model::StepModel::units`].
+    /// `None` for kernel-built IR; the writer falls back to the first arena
+    /// entry (synthesizing a default if needed).
+    pub geometry_context: Option<UnitContextId>,
 }
 
 /// `PRODUCT_CATEGORY` chain attached to a [`Product`] — preserves the source

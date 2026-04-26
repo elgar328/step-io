@@ -149,10 +149,13 @@ pub struct FileHeader {
 pub struct StepModel {
     pub geometry: GeometryPool,
     pub topology: TopologyPool,
-    /// Units declared in the STEP file's `GLOBAL_UNIT_ASSIGNED_CONTEXT`.
-    /// `None` when the file has no such context or uses unsupported units
-    /// (e.g. `CONVERSION_BASED_UNIT` for inches).
-    pub units: Option<UnitContext>,
+    /// Unit / uncertainty contexts declared in the STEP file's
+    /// `GLOBAL_UNIT_ASSIGNED_CONTEXT` complex entities. One arena entry per
+    /// distinct `REPRESENTATION_CONTEXT` in the source — Fusion 360 typically
+    /// emits two (geometry vs. visualization, distinct uncertainties);
+    /// single-product files have one. Empty arena means no unit context (or
+    /// kernel-built IR with units unset).
+    pub units: Arena<UnitContext>,
     /// Assembly tree. `None` when the STEP file contains no `PRODUCT`
     /// entities (single-part files). Phase A populates `products` but
     /// leaves `AssemblyTree.root` as `None`; Phase B resolves the root
@@ -264,6 +267,23 @@ pub struct UnitContext {
     /// in a self-conversion `CONVERSION_BASED_UNIT`. Degree is non-SI and
     /// always emits CBU regardless of this flag.
     pub plane_angle_cbu_wrapped: bool,
+}
+
+impl Default for UnitContext {
+    /// Default unit context — millimetre / radian / steradian, no uncertainty,
+    /// no CBU wrapping. Used by the writer to synthesize a context when a
+    /// kernel-built IR has products/visualization but no explicit `units`
+    /// entry, so the emitted STEP file is still well-formed.
+    fn default() -> Self {
+        Self {
+            length: LengthUnit::Millimetre,
+            plane_angle: AngleUnit::Radian,
+            solid_angle: SolidAngleUnit::Steradian,
+            length_uncertainty: None,
+            length_cbu_wrapped: false,
+            plane_angle_cbu_wrapped: false,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

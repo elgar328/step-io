@@ -349,13 +349,16 @@ impl WriteBuffer<'_> {
 
 #[cfg(test)]
 mod tests {
+    use crate::ir::arena::Arena;
     use crate::ir::{AngleUnit, LengthUnit, SolidAngleUnit, StepModel, UnitContext};
     use crate::parse;
     use crate::reader::ReaderContext;
 
     fn model_with_units(units: UnitContext) -> StepModel {
+        let mut arena: Arena<UnitContext> = Arena::default();
+        arena.push(units);
         StepModel {
-            units: Some(units),
+            units: arena,
             ..StepModel::default()
         }
     }
@@ -501,7 +504,7 @@ mod tests {
                 back.warnings
             );
             assert_eq!(
-                back.model.units,
+                back.model.units.iter().next().copied(),
                 Some(unit),
                 "unit not preserved for {unit:?}"
             );
@@ -533,7 +536,11 @@ mod tests {
         let graph = parse(&text).expect("re-parse");
         let back = ReaderContext::convert(&graph);
         assert!(back.warnings.is_empty(), "{:#?}", back.warnings);
-        assert_eq!(back.model.units, Some(unit), "CBU wrap flag preserved");
+        assert_eq!(
+            back.model.units.iter().next().copied(),
+            Some(unit),
+            "CBU wrap flag preserved"
+        );
     }
 
     #[test]
@@ -556,6 +563,6 @@ mod tests {
         let graph = parse(&text).expect("re-parse");
         let back = ReaderContext::convert(&graph);
         assert!(back.warnings.is_empty(), "{:#?}", back.warnings);
-        assert_eq!(back.model.units, Some(unit));
+        assert_eq!(back.model.units.iter().next().copied(), Some(unit));
     }
 }
