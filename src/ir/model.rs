@@ -286,7 +286,7 @@ impl Default for UnitContext {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum LengthUnit {
     Millimetre,
     Metre,
@@ -295,13 +295,13 @@ pub enum LengthUnit {
     Foot,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AngleUnit {
     Radian,
     Degree,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SolidAngleUnit {
     Steradian,
 }

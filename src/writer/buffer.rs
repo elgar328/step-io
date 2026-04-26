@@ -43,10 +43,20 @@ pub(in crate::writer) struct WriteBuffer<'m> {
     pub(in crate::writer) point_2d_ids: HashMap<Point2dId, u64>,
     pub(in crate::writer) direction_2d_ids: HashMap<Direction2dId, u64>,
     pub(in crate::writer) curve_2d_ids: HashMap<Curve2dId, u64>,
-    pub(in crate::writer) length_unit_id: Option<u64>,
-    pub(in crate::writer) angle_unit_id: Option<u64>,
-    pub(in crate::writer) solid_angle_unit_id: Option<u64>,
-    pub(in crate::writer) global_unit_context_id: Option<u64>,
+    /// Cache of `LENGTH_UNIT` complex entities, keyed by the
+    /// defining IR fields `(length, length_cbu_wrapped)`. Sharing across
+    /// contexts that pick the same length unit; distinct keys (e.g. an inch
+    /// ctx + a mm ctx in the same file) emit separate leaf entities.
+    pub(in crate::writer) length_unit_ids: HashMap<(crate::ir::LengthUnit, bool), u64>,
+    /// Same idea for plane-angle units.
+    pub(in crate::writer) angle_unit_ids: HashMap<(crate::ir::AngleUnit, bool), u64>,
+    /// Same idea for solid-angle units.
+    pub(in crate::writer) solid_angle_unit_ids: HashMap<crate::ir::SolidAngleUnit, u64>,
+    /// STEP entity ids of every emitted `REPRESENTATION_CONTEXT` complex
+    /// entity, indexed by `UnitContextId.0`. Populated up-front in `emit_all`
+    /// so every representation emitter can resolve its `Option<UnitContextId>`
+    /// to a cached id.
+    pub(in crate::writer) unit_context_ids: Vec<u64>,
     /// Cached `DIMENSIONAL_EXPONENTS(1,0,0,0,0,0,0)` — length dimension.
     /// Re-used by any `CONVERSION_BASED_UNIT` with a length flavour.
     pub(in crate::writer) length_dim_exp_id: Option<u64>,
@@ -77,10 +87,10 @@ impl<'m> WriteBuffer<'m> {
             point_2d_ids: HashMap::new(),
             direction_2d_ids: HashMap::new(),
             curve_2d_ids: HashMap::new(),
-            length_unit_id: None,
-            angle_unit_id: None,
-            solid_angle_unit_id: None,
-            global_unit_context_id: None,
+            length_unit_ids: HashMap::new(),
+            angle_unit_ids: HashMap::new(),
+            solid_angle_unit_ids: HashMap::new(),
+            unit_context_ids: Vec::new(),
             length_dim_exp_id: None,
             dimensionless_dim_exp_id: None,
         }
@@ -164,11 +174,18 @@ impl<'m> WriteBuffer<'m> {
             #[allow(clippy::cast_possible_truncation)]
             self.emit_solid(SolidId(i as u32))?;
         }
-        // Commit 1: emit only the first context (single-context behaviour
-        // preserved). Commit 3 will iterate every arena entry and cache the
-        // resulting STEP ids in `unit_context_ids`.
-        if let Some(units) = self.model.units.iter().next() {
-            self.emit_unit_context(*units);
+        // Emit one REPRESENTATION_CONTEXT per IR `UnitContext`. The cached
+        // STEP ids land in `unit_context_ids` so each downstream emitter can
+        // resolve `Option<UnitContextId>` with a single index lookup.
+        //
+        // Leaf-unit caches in `WriteBuffer` are keyed by their defining IR
+        // fields (e.g. `(LengthUnit, length_cbu_wrapped)`) so two contexts
+        // with identical units share the same `LENGTH_UNIT` entity, while
+        // contexts with different units emit separate leaves.
+        self.unit_context_ids = Vec::with_capacity(self.model.units.len());
+        for ctx in self.model.units.iter() {
+            let id = self.emit_unit_context(*ctx);
+            self.unit_context_ids.push(id);
         }
         self.emit_product_chain_if_eligible()?;
         self.emit_visualization_if_set()?;

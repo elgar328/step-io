@@ -321,9 +321,8 @@ impl ReaderContext {
         )?;
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let item_refs = read_entity_ref_list(attrs, 1, entity_id, "items")?;
-        // attrs[2] = context_of_items — Commit 2 will resolve this to a
-        // `UnitContextId` via `context_id_map`. For Commit 1 we leave
-        // `context` as `None`; the writer falls back to the first arena entry.
+        let ctx_ref = read_entity_ref(attrs, 2, entity_id, "context_of_items")?;
+        let context = self.context_id_map.get(&ctx_ref).copied();
 
         let mut items = Vec::with_capacity(item_refs.len());
         for r in item_refs {
@@ -338,7 +337,7 @@ impl ReaderContext {
             .push(Mdgpr {
                 name,
                 items,
-                context: None,
+                context,
             });
         Ok(())
     }

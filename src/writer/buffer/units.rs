@@ -8,9 +8,11 @@ use crate::writer::entity::{WriterBody, WriterEntity};
 
 impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_unit_context(&mut self, units: UnitContext) -> u64 {
-        if let Some(n) = self.global_unit_context_id {
-            return n;
-        }
+        // No top-level cache — `emit_all` calls this once per `UnitContext`
+        // arena entry and stores each result in `unit_context_ids`. The
+        // length/angle/solid_angle leaf caches still dedup the underlying
+        // unit references across contexts that share leaves (the common case
+        // for Fusion 360, where two contexts share #1034..#1036).
         let length = self.emit_length_unit(&units);
         let angle = self.emit_angle_unit(&units);
         let solid = self.emit_solid_angle_unit(units.solid_angle);
@@ -58,7 +60,6 @@ impl WriteBuffer<'_> {
             id: ctx,
             body: WriterBody::Complex { parts },
         });
-        self.global_unit_context_id = Some(ctx);
         ctx
     }
 
@@ -83,10 +84,11 @@ impl WriteBuffer<'_> {
     }
 
     fn emit_length_unit(&mut self, units: &UnitContext) -> u64 {
-        if let Some(n) = self.length_unit_id {
+        let key = (units.length, units.length_cbu_wrapped);
+        if let Some(&n) = self.length_unit_ids.get(&key) {
             return n;
         }
-        match units.length {
+        let n = match units.length {
             LengthUnit::Millimetre if units.length_cbu_wrapped => {
                 self.emit_conversion_based_length("MILLIMETRE", Some("MILLI"), 1.0)
             }
@@ -101,10 +103,13 @@ impl WriteBuffer<'_> {
             LengthUnit::Metre => self.emit_plain_si_length(None),
             LengthUnit::Inch => self.emit_conversion_based_length("INCH", Some("MILLI"), 25.4),
             LengthUnit::Foot => self.emit_conversion_based_length("FOOT", Some("MILLI"), 304.8),
-        }
+        };
+        self.length_unit_ids.insert(key, n);
+        n
     }
 
-    /// Emit a plain SI-based length unit and cache the id as `length_unit_id`.
+    /// Emit a plain SI-based length unit. Caching is handled by the caller
+    /// (`emit_length_unit`) keyed on the IR fields.
     fn emit_plain_si_length(&mut self, prefix: Option<&'static str>) -> u64 {
         let si_attrs = match prefix {
             Some(p) => vec![Attribute::Enum(p.into()), Attribute::Enum("METRE".into())],
@@ -121,7 +126,6 @@ impl WriteBuffer<'_> {
                 ],
             },
         });
-        self.length_unit_id = Some(n);
         n
     }
 
@@ -232,15 +236,15 @@ impl WriteBuffer<'_> {
                 ],
             },
         });
-        self.length_unit_id = Some(outer);
         outer
     }
 
     fn emit_angle_unit(&mut self, units: &UnitContext) -> u64 {
-        if let Some(n) = self.angle_unit_id {
+        let key = (units.plane_angle, units.plane_angle_cbu_wrapped);
+        if let Some(&n) = self.angle_unit_ids.get(&key) {
             return n;
         }
-        match units.plane_angle {
+        let n = match units.plane_angle {
             AngleUnit::Radian if units.plane_angle_cbu_wrapped => {
                 self.emit_conversion_based_angle("RADIAN", 1.0)
             }
@@ -248,7 +252,9 @@ impl WriteBuffer<'_> {
             AngleUnit::Degree => {
                 self.emit_conversion_based_angle("DEGREE", std::f64::consts::PI / 180.0)
             }
-        }
+        };
+        self.angle_unit_ids.insert(key, n);
+        n
     }
 
     fn emit_plain_si_radian(&mut self) -> u64 {
@@ -266,7 +272,6 @@ impl WriteBuffer<'_> {
                 ],
             },
         });
-        self.angle_unit_id = Some(n);
         n
     }
 
@@ -321,12 +326,11 @@ impl WriteBuffer<'_> {
                 ],
             },
         });
-        self.angle_unit_id = Some(outer);
         outer
     }
 
-    fn emit_solid_angle_unit(&mut self, _unit: SolidAngleUnit) -> u64 {
-        if let Some(n) = self.solid_angle_unit_id {
+    fn emit_solid_angle_unit(&mut self, unit: SolidAngleUnit) -> u64 {
+        if let Some(&n) = self.solid_angle_unit_ids.get(&unit) {
             return n;
         }
         let parts = vec![
@@ -342,7 +346,7 @@ impl WriteBuffer<'_> {
             id: n,
             body: WriterBody::Complex { parts },
         });
-        self.solid_angle_unit_id = Some(n);
+        self.solid_angle_unit_ids.insert(unit, n);
         n
     }
 }

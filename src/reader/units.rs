@@ -160,14 +160,6 @@ impl ReaderContext {
         entity_id: u64,
         parts: &[RawEntityPart],
     ) -> Result<(), ConvertError> {
-        // Commit 1: keep single-context behaviour by guarding with
-        // `is_empty()` — only the first complex context becomes an arena
-        // entry. Commit 2 will remove this guard so every distinct
-        // `REPRESENTATION_CONTEXT` becomes its own arena entry.
-        if !self.units.is_empty() {
-            return Ok(());
-        }
-
         let guac_attrs = require_part_attrs(parts, "GLOBAL_UNIT_ASSIGNED_CONTEXT", entity_id)?;
         check_count(guac_attrs, 1, entity_id, "GLOBAL_UNIT_ASSIGNED_CONTEXT")?;
         let unit_refs = read_entity_ref_list(guac_attrs, 0, entity_id, "units")?;
@@ -188,7 +180,7 @@ impl ReaderContext {
         match (length, plane_angle, solid_angle) {
             (Some(length), Some(plane_angle), Some(solid_angle)) => {
                 let length_uncertainty = self.extract_length_uncertainty(parts);
-                self.units.push(UnitContext {
+                let ctx_id = self.units.push(UnitContext {
                     length,
                     plane_angle,
                     solid_angle,
@@ -196,6 +188,7 @@ impl ReaderContext {
                     length_cbu_wrapped: self.length_cbu_wrapped,
                     plane_angle_cbu_wrapped: self.plane_angle_cbu_wrapped,
                 });
+                self.context_id_map.insert(entity_id, ctx_id);
             }
             _ => {
                 self.warnings.push(ConvertError::UnexpectedEntityForm {

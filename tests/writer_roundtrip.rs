@@ -569,6 +569,51 @@ fn box_ap214_is_preserves_visualization() {
     assert!((color.blue - 0.741).abs() < 0.01);
 }
 
+/// Multi-context Fusion 360 fixture (temporarily borrowed from
+/// `step-io-reference-check/fixtures/fusion360/32879_49552f2f_3.stp` — the
+/// user plans to replace it with a hand-curated minimal fixture later,
+/// hence the `external_temp_` filename prefix). The fixture carries two
+/// distinct `REPRESENTATION_CONTEXT` entities (one referenced by ABSR, one
+/// by MDGPR) that happen to share unit values — this test asserts the
+/// arena preserves both as separate entries and the round-trip survives.
+#[test]
+fn external_temp_fusion360_two_context_round_trip() {
+    let src = include_str!("fixtures/external_temp_fusion360_two_context.stp");
+    let model = ReaderContext::convert(&parse(src).expect("parse")).model;
+    assert_eq!(
+        model.units.len(),
+        2,
+        "fusion fixture must yield two distinct unit contexts"
+    );
+    let text = model.write_to_string().expect("write");
+    let back = ReaderContext::convert(&parse(&text).expect("re-parse")).model;
+    assert_eq!(
+        back.units.len(),
+        2,
+        "writer must emit both unit contexts, re-read should see two"
+    );
+    // The MDGPR's `context` field should differ from the products' shape
+    // contexts — Fusion 360's geometry vs. visualization split.
+    let viz = back.visualization.as_ref().expect("MDGPR present");
+    let mdgpr = viz.mdgprs.first().expect("at least one MDGPR");
+    let mdgpr_ctx = mdgpr
+        .context
+        .expect("MDGPR carries a context after Commit 2");
+    let assembly = back.assembly.as_ref().expect("assembly present");
+    let product = assembly
+        .products
+        .iter()
+        .next()
+        .expect("at least one product");
+    let product_ctx = product
+        .geometry_context
+        .expect("Product carries a geometry context after Commit 2");
+    assert_ne!(
+        mdgpr_ctx, product_ctx,
+        "geometry and visualization should reference distinct contexts"
+    );
+}
+
 /// CATIA wire1 fixture has multi-product PC sharing plus
 /// `PC.description = "specification"`. Verifies the IR captures the
 /// non-empty PC description and that CATIA's AP214 IS export with

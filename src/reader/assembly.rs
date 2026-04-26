@@ -264,7 +264,10 @@ impl ReaderContext {
         check_count(attrs, 3, entity_id, "ADVANCED_BREP_SHAPE_REPRESENTATION")?;
         let _name = read_string(attrs, 0, entity_id, "name")?;
         let items = read_entity_ref_list(attrs, 1, entity_id, "items")?;
-        // attrs[2] = context_of_items — ignored.
+        let ctx_ref = read_entity_ref(attrs, 2, entity_id, "context_of_items")?;
+        if let Some(&ctx_id) = self.context_id_map.get(&ctx_ref) {
+            self.repr_context_map.insert(entity_id, ctx_id);
+        }
 
         let solid_refs: Vec<u64> = items
             .iter()
@@ -344,7 +347,10 @@ impl ReaderContext {
         check_count(attrs, 3, entity_id, "MANIFOLD_SURFACE_SHAPE_REPRESENTATION")?;
         let _name = read_string(attrs, 0, entity_id, "name")?;
         let items = read_entity_ref_list(attrs, 1, entity_id, "items")?;
-        // attrs[2] = context_of_items — ignored.
+        let ctx_ref = read_entity_ref(attrs, 2, entity_id, "context_of_items")?;
+        if let Some(&ctx_id) = self.context_id_map.get(&ctx_ref) {
+            self.repr_context_map.insert(entity_id, ctx_id);
+        }
 
         if let Some(&placement_id) = items.iter().find_map(|r| self.placement_map.get(r)) {
             self.mssr_ref_frame_map.insert(entity_id, placement_id);
@@ -432,7 +438,10 @@ impl ReaderContext {
         )?;
         let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let items = read_entity_ref_list(attrs, 1, entity_id, "items")?;
-        // attrs[2] = context_of_items — ignored.
+        let ctx_ref = read_entity_ref(attrs, 2, entity_id, "context_of_items")?;
+        if let Some(&ctx_id) = self.context_id_map.get(&ctx_ref) {
+            self.repr_context_map.insert(entity_id, ctx_id);
+        }
 
         if let Some(&placement_id) = items.iter().find_map(|r| self.placement_map.get(r)) {
             self.wireframe_ref_frame_map.insert(entity_id, placement_id);
@@ -484,7 +493,10 @@ impl ReaderContext {
         check_count(attrs, 3, entity_id, "SHAPE_REPRESENTATION")?;
         let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let items = read_entity_ref_list(attrs, 1, entity_id, "items")?;
-        // attrs[2] = context_of_items — ignored.
+        let ctx_ref = read_entity_ref(attrs, 2, entity_id, "context_of_items")?;
+        if let Some(&ctx_id) = self.context_id_map.get(&ctx_ref) {
+            self.repr_context_map.insert(entity_id, ctx_id);
+        }
 
         if let Some(&placement_id) = items.iter().find_map(|r| self.placement_map.get(r)) {
             self.plain_sr_frame_map.insert(entity_id, placement_id);
@@ -669,6 +681,13 @@ impl ReaderContext {
             self.assembly_products[pid].shape_ref_frame = ref_frame;
         } else if let Some(&ref_frame) = self.wireframe_ref_frame_map.get(&effective_ref) {
             self.assembly_products[pid].shape_ref_frame = ref_frame;
+        }
+        // Attach the unit / uncertainty context referenced by this product's
+        // inner shape representation. Look up by the resolved ABSR/MSSR/etc.
+        // entity, not the outer plain SR — the inner ctx is the geometry-side
+        // one that downstream tooling cares about.
+        if let Some(&ctx_id) = self.repr_context_map.get(&effective_ref) {
+            self.assembly_products[pid].geometry_context = Some(ctx_id);
         }
         Ok(())
     }

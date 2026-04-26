@@ -12,7 +12,8 @@ use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Pcurve, TransitionCode};
 use crate::ir::id::{
     Curve2dId, CurveId, Direction2dId, DirectionId, EdgeId, FaceId, Placement1dId, Placement2dId,
-    Placement3dId, Point2dId, PointId, ProductId, ShellId, SolidId, SurfaceId, VertexId, WireId,
+    Placement3dId, Point2dId, PointId, ProductId, ShellId, SolidId, SurfaceId, UnitContextId,
+    VertexId, WireId,
 };
 use crate::ir::model::{
     AngleUnit, GeometryPool, LengthUnit, SolidAngleUnit, StepModel, TopologyPool, UnitContext,
@@ -60,11 +61,19 @@ pub struct ConvertResult {
 pub struct ReaderContext {
     pub(super) geometry: GeometryPool,
     pub(super) topology: TopologyPool,
-    /// Unit / uncertainty contexts accumulated during Pass 0-2. Commit 1
-    /// only collects the first context (Pass 0-2 still has the early-return
-    /// guard); Commit 2 will remove that guard and populate one entry per
-    /// `REPRESENTATION_CONTEXT` complex entity.
+    /// Unit / uncertainty contexts accumulated during Pass 0-2 — one entry
+    /// per `REPRESENTATION_CONTEXT` complex entity in the source file.
     pub(super) units: Arena<UnitContext>,
+    /// `REPRESENTATION_CONTEXT #N → UnitContextId` populated by Pass 0-2.
+    /// Used by representation converters (ABSR, MSSR, plain SR, GBWSR, GBSSR,
+    /// MDGPR) to translate their `context_of_items` ref into an `UnitContextId`.
+    pub(super) context_id_map: HashMap<u64, UnitContextId>,
+    /// `representation #N → UnitContextId` for the 5 product-bearing
+    /// representation entities (ABSR / MSSR / plain SR / GBWSR / GBSSR).
+    /// Single map suffices because STEP entity ids are globally unique within
+    /// a file. The SDR pass reads this map to attach `Product.geometry_context`.
+    /// MDGPR resolves directly into `Mdgpr.context` and does not use this map.
+    pub(super) repr_context_map: HashMap<u64, UnitContextId>,
 
     /// `true` if any `CONVERSION_BASED_UNIT` whose `name` matched an SI
     /// length spelling (`'METRE'` / `'MILLIMETRE'` / `'CENTIMETRE'`) was

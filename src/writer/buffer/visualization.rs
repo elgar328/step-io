@@ -23,21 +23,24 @@ impl WriteBuffer<'_> {
         let Some(viz) = self.model.visualization.clone() else {
             return Ok(());
         };
-        let unit_ctx = self.global_unit_context_id;
         for mdgpr in &viz.mdgprs {
-            self.emit_mdgpr(mdgpr, unit_ctx)?;
+            self.emit_mdgpr(mdgpr)?;
         }
         Ok(())
     }
 
-    fn emit_mdgpr(&mut self, mdgpr: &Mdgpr, unit_ctx: Option<u64>) -> Result<u64, WriteError> {
+    fn emit_mdgpr(&mut self, mdgpr: &Mdgpr) -> Result<u64, WriteError> {
         let mut item_refs = Vec::with_capacity(mdgpr.items.len());
         for si in &mdgpr.items {
             let id = self.emit_styled_item(si)?;
             item_refs.push(Attribute::EntityRef(id));
         }
-        let context = match unit_ctx {
-            Some(ctx) => Attribute::EntityRef(ctx),
+        // MDGPR's `context_of_items` is required by the spec but the IR
+        // accepts `None` for kernel-built fragments. Some(id) → resolve via
+        // cached `unit_context_ids`; None → emit `Unset` (current behaviour
+        // preserved for synthetic IR with no context info).
+        let context = match mdgpr.context {
+            Some(id) => Attribute::EntityRef(self.unit_context_ids[id.0 as usize]),
             None => Attribute::Unset,
         };
         Ok(self.push_simple(

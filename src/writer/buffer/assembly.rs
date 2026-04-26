@@ -36,9 +36,14 @@ impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_product_chain_if_eligible(
         &mut self,
     ) -> Result<(), WriteError> {
-        let Some(unit_ctx) = self.global_unit_context_id else {
+        // No emitted contexts → silent skip. Kernel-built IR with no units
+        // and no `Product.geometry_context` falls in here; the alternative
+        // (synthesising a default context) breaks round-trip equality
+        // because the synthesised entries reappear on re-read while the
+        // original IR has none.
+        if self.unit_context_ids.is_empty() {
             return Ok(());
-        };
+        }
         let Some(assembly) = self.model.assembly.as_ref() else {
             return Ok(());
         };
@@ -49,14 +54,27 @@ impl WriteBuffer<'_> {
         // methods without keeping a borrow on the model.
         let schema = self.model.schema.clone();
         let products: Vec<Product> = assembly.products.iter().cloned().collect();
-        self.emit_assembly_chain(&products, unit_ctx, &schema)?;
+        self.emit_assembly_chain(&products, &schema)?;
         Ok(())
+    }
+
+    /// Resolve a product's `geometry_context` to a STEP entity id, falling
+    /// back to the first emitted context when the IR has no explicit ref.
+    /// Caller is responsible for skipping product emission entirely when
+    /// `unit_context_ids` is empty (see `emit_product_chain_if_eligible`).
+    fn resolve_product_ctx(&self, product: &Product) -> u64 {
+        if let Some(id) = product.geometry_context {
+            return self.unit_context_ids[id.0 as usize];
+        }
+        *self
+            .unit_context_ids
+            .first()
+            .expect("emit_product_chain_if_eligible bails out when no contexts exist")
     }
 
     fn emit_assembly_chain(
         &mut self,
         products: &[Product],
-        unit_ctx: u64,
         schema: &StepSchema,
     ) -> Result<(), WriteError> {
         let ctx = self.emit_application_context(schema);
@@ -77,6 +95,7 @@ impl WriteBuffer<'_> {
             product_def.insert(pid, pdef);
             self.emit_product_category_chain(product, prod_entity);
 
+            let unit_ctx = self.resolve_product_ctx(product);
             let sr = match &product.content {
                 ProductContent::Solid(sid) => {
                     let solid_ref = self.emit_solid(*sid)?;
