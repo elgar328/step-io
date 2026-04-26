@@ -481,6 +481,12 @@ impl ReaderContext {
         run_pass!(graph, self,
             "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION" => convert_mdgpr);
 
+        // Pass 8: PMI scaffolding — SHAPE_ASPECT entries that anchor
+        // future Tolerance / Datum / GD&T work. Runs before the property
+        // converters so that a future Pattern B PD pass can look up
+        // SHAPE_ASPECT ids when resolving its target ref.
+        run_pass!(graph, self, "SHAPE_ASPECT" => convert_shape_aspect);
+
         // Pass 8: properties — user-defined attribute chain
         // (PROPERTY_DEFINITION + REPRESENTATION + PROPERTY_DEFINITION_REPRESENTATION).
         // Depends on Pass 0 (unit ctx) and Pass 6 (`pdef_to_product` for

@@ -5,6 +5,7 @@ use super::geometry::{
     Point2, Point3, Surface,
 };
 use super::model::UnitContext;
+use super::pmi::ShapeAspect;
 use super::topology::{Edge, Face, Shell, Solid, Vertex, Wire};
 
 // Geometry Ids (3D)
@@ -35,3 +36,6 @@ define_id!(ProductId, Product);
 // Unit context Ids — multi-context support (one entry per
 // REPRESENTATION_CONTEXT in the source file).
 define_id!(UnitContextId, UnitContext);
+
+// PMI Ids — anchor for future Tolerance / Datum / GD&T work.
+define_id!(ShapeAspectId, ShapeAspect);

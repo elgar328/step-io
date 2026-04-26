@@ -184,6 +184,12 @@ pub struct StepModel {
     /// IR — see [`crate::ir::property`] for design notes. Geometric
     /// validation properties (target = `SHAPE_ASPECT`) are dropped at read.
     pub properties: Option<crate::ir::property::PropertyPool>,
+    /// PMI scaffolding — currently only `SHAPE_ASPECT` entries. `None` for
+    /// fixtures without PMI (most non-NIST / non-stepcode files). Future
+    /// PMI work (Tolerance / Datum / GD&T per ROADMAP Phase 2) extends
+    /// this pool with additional arenas — see [`crate::ir::pmi`] for the
+    /// scaffolding rationale.
+    pub pmi: Option<crate::ir::pmi::PmiPool>,
 }
 
 /// Arena-based storage for all topology objects.

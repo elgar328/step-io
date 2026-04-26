@@ -29,6 +29,7 @@ mod assembly;
 mod geometry;
 mod header;
 mod passes;
+mod pmi;
 mod property;
 mod topology;
 mod units;
@@ -254,6 +255,10 @@ pub struct ReaderContext {
     /// (e.g. `SHAPE_ASPECT`) are silently dropped — no map entry.
     pub(super) property_def_map: HashMap<u64, (String, Option<String>, ProductId)>,
 
+    /// Lazily-built PMI pool — Pass 8 's `SHAPE_ASPECT` convert pushes
+    /// `ShapeAspect` records here. `None` if no PMI entities were seen.
+    pub(super) pmi: Option<crate::ir::pmi::PmiPool>,
+
     pub(super) warnings: Vec<ConvertError>,
 }
 
@@ -285,6 +290,7 @@ impl ReaderContext {
                 header,
                 visualization: ctx.visualization,
                 properties: ctx.properties,
+                pmi: ctx.pmi,
             },
             warnings: ctx.warnings,
         }

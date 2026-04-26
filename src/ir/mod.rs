@@ -5,6 +5,7 @@ pub mod error;
 pub mod geometry;
 pub mod id;
 pub mod model;
+pub mod pmi;
 pub mod property;
 pub mod topology;
 pub mod visualization;
@@ -25,13 +26,14 @@ pub use geometry::{
 };
 pub use id::{
     Curve2dId, CurveId, Direction2dId, DirectionId, EdgeId, FaceId, Placement1dId, Placement2dId,
-    Placement3dId, Point2dId, PointId, ProductId, ShellId, SolidId, SurfaceId, UnitContextId,
-    VertexId, WireId,
+    Placement3dId, Point2dId, PointId, ProductId, ShapeAspectId, ShellId, SolidId, SurfaceId,
+    UnitContextId, VertexId, WireId,
 };
 pub use model::{
     AngleUnit, FileHeader, GeometryPool, ImplementationLevel, LengthUnit, NonEmptyStringList,
     SolidAngleUnit, StepModel, TopologyPool, UnitContext,
 };
+pub use pmi::{PmiPool, ShapeAspect};
 pub use property::{MeasureKind, Property, PropertyMeasure, PropertyPool};
 pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Vertex, Wire};
 pub use visualization::{

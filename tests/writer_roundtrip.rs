@@ -133,6 +133,7 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
         "{name}: visualization"
     );
     assert_eq!(re.properties, original.properties, "{name}: properties");
+    assert_eq!(re.pmi, original.pmi, "{name}: pmi");
 
     // Product metadata preserved.
     let o_asm = original
@@ -663,6 +664,23 @@ fn wire1_preserves_pc_chain_with_specification() {
     assert!(
         product.formation_with_source,
         "CATIA AP214 IS uses _WITH_SPECIFIED_SOURCE"
+    );
+}
+
+/// PMI scaffolding reader check — same NIST fixture as the property test
+/// reader-only check below. Verifies the reader populates `model.pmi` with
+/// at least one `ShapeAspect`. Round-trip is not asserted because the
+/// fixture's 2-unit GUAC keeps the assembly pass from emitting a product
+/// chain (`product_def_shape_ids` cache empty → `SHAPE_ASPECT` emit silent
+/// skip — see plan R1).
+#[test]
+fn external_temp_nist_shape_aspect_reader_only() {
+    let src = include_str!("fixtures/external_temp_nist_property_def.stp");
+    let model = ReaderContext::convert(&parse(src).expect("parse")).model;
+    let pmi = model.pmi.as_ref().expect("PMI scaffolding present");
+    assert!(
+        !pmi.shape_aspects.is_empty(),
+        "at least one SHAPE_ASPECT parsed"
     );
 }
 

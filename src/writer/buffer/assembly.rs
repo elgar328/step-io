@@ -94,6 +94,7 @@ impl WriteBuffer<'_> {
             let pdef = self.emit_pdef(formation, ctx.pdef_ctx);
             let pdef_shape = self.emit_pdef_shape(pdef);
             self.product_def_ids.insert(pid, pdef);
+            self.product_def_shape_ids.insert(pid, pdef_shape);
             self.emit_product_category_chain(product, prod_entity);
 
             let unit_ctx = self.resolve_product_ctx(product);

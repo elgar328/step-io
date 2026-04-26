@@ -20,6 +20,7 @@ use crate::ir::{
 
 mod assembly;
 mod geometry;
+mod pmi;
 mod property;
 mod topology;
 mod units;
@@ -65,6 +66,10 @@ pub(in crate::writer) struct WriteBuffer<'m> {
     /// model has no assembly (kernel-built IR with properties only — the
     /// property emitter silently skips in that case).
     pub(in crate::writer) product_def_ids: std::collections::HashMap<ProductId, u64>,
+    /// `ProductId → PRODUCT_DEFINITION_SHAPE step id`. Same role as
+    /// `product_def_ids` but for the PDS sibling — consumed by the PMI
+    /// emitter to resolve `ShapeAspect.target` (SAs reference PDS, not PD).
+    pub(in crate::writer) product_def_shape_ids: std::collections::HashMap<ProductId, u64>,
     /// Cached `DIMENSIONAL_EXPONENTS(1,0,0,0,0,0,0)` — length dimension.
     /// Re-used by any `CONVERSION_BASED_UNIT` with a length flavour.
     pub(in crate::writer) length_dim_exp_id: Option<u64>,
@@ -100,6 +105,7 @@ impl<'m> WriteBuffer<'m> {
             solid_angle_unit_ids: HashMap::new(),
             unit_context_ids: Vec::new(),
             product_def_ids: std::collections::HashMap::new(),
+            product_def_shape_ids: std::collections::HashMap::new(),
             length_dim_exp_id: None,
             dimensionless_dim_exp_id: None,
         }
@@ -197,6 +203,7 @@ impl<'m> WriteBuffer<'m> {
             self.unit_context_ids.push(id);
         }
         self.emit_product_chain_if_eligible()?;
+        self.emit_pmi_if_set();
         self.emit_visualization_if_set()?;
         self.emit_properties_if_set();
         Ok(())
