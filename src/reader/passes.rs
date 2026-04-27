@@ -3,7 +3,6 @@
 use super::assembly::{pdef_shape_to_nauo_ref, pdef_shape_to_pdef_ref};
 use super::{ReaderContext, has_all_parts};
 use crate::entities::{ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind};
-use crate::ir::topology::FaceKind;
 use crate::parser::entity::{EntityGraph, RawEntity};
 
 impl ReaderContext {
@@ -243,56 +242,6 @@ impl ReaderContext {
             };
         }
 
-        // Special pass for FACE_BOUND/FACE_OUTER_BOUND (extra bool param).
-        macro_rules! run_face_bound_pass {
-            ($graph:expr, $ctx:expr) => {
-                for (&id, entity) in &$graph.entities {
-                    if $ctx.pcurve_subtree_ids.contains(&id) {
-                        continue;
-                    }
-                    let (name, attrs) = match entity {
-                        RawEntity::Simple {
-                            name, attributes, ..
-                        } => (name.as_str(), attributes.as_slice()),
-                        RawEntity::Complex { .. } => continue,
-                    };
-                    let result = match name {
-                        "FACE_BOUND" => $ctx.convert_face_bound(id, attrs, false),
-                        "FACE_OUTER_BOUND" => $ctx.convert_face_bound(id, attrs, true),
-                        _ => continue,
-                    };
-                    if let Err(e) = result {
-                        $ctx.warnings.push(e);
-                    }
-                }
-            };
-        }
-
-        // Special pass for ADVANCED_FACE / FACE_SURFACE (extra FaceKind param).
-        macro_rules! run_face_pass {
-            ($graph:expr, $ctx:expr) => {
-                for (&id, entity) in &$graph.entities {
-                    if $ctx.pcurve_subtree_ids.contains(&id) {
-                        continue;
-                    }
-                    let (name, attrs) = match entity {
-                        RawEntity::Simple {
-                            name, attributes, ..
-                        } => (name.as_str(), attributes.as_slice()),
-                        RawEntity::Complex { .. } => continue,
-                    };
-                    let result = match name {
-                        "ADVANCED_FACE" => $ctx.convert_face(id, attrs, FaceKind::Advanced),
-                        "FACE_SURFACE" => $ctx.convert_face(id, attrs, FaceKind::General),
-                        _ => continue,
-                    };
-                    if let Err(e) = result {
-                        $ctx.warnings.push(e);
-                    }
-                }
-            };
-        }
-
         // Pass 5-1: vertices
         self.dispatch_registry(graph, PassLevel::Pass5Vertex);
         // Pass 5-2: edges (depend on vertices + curves)
@@ -304,9 +253,9 @@ impl ReaderContext {
         // they don't depend on each other.
         self.dispatch_registry(graph, PassLevel::Pass5EdgeLoop);
         // Pass 5-5: face bounds / outer bounds (depend on edge loops)
-        run_face_bound_pass!(graph, self);
+        self.dispatch_registry(graph, PassLevel::Pass5FaceBound);
         // Pass 5-6: faces (ADVANCED_FACE + FACE_SURFACE, depend on face bounds + surfaces)
-        run_face_pass!(graph, self);
+        self.dispatch_registry(graph, PassLevel::Pass5Face);
         // Pass 5-7a: shells (depend on faces)
         run_pass!(graph, self,
             "CLOSED_SHELL" => convert_closed_shell,

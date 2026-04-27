@@ -2,8 +2,7 @@
 
 use super::WriteBuffer;
 use crate::ir::{
-    EdgeId, Face, FaceId, FaceKind, Orientation, Shell, ShellId, Solid, SolidId, VertexId, Wire,
-    WireId,
+    EdgeId, FaceId, Orientation, Shell, ShellId, Solid, SolidId, VertexId, Wire, WireId,
 };
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
@@ -47,67 +46,28 @@ impl WriteBuffer<'_> {
         } else {
             crate::entities::topology::edge_loop::EdgeLoopHandler::write(self, w.edges)?
         };
-        // FACE_BOUND / FACE_OUTER_BOUND wrapper still inlined here; moves
-        // to dedicated handlers in Plan 4 stage C4.
-        let wrapper = if w.is_outer {
-            "FACE_OUTER_BOUND"
+        // FACE_BOUND / FACE_OUTER_BOUND wrapper now lives in dedicated
+        // handlers; pick the matching one by `Wire::is_outer`.
+        let bound_id = if w.is_outer {
+            crate::entities::topology::face_outer_bound::FaceOuterBoundHandler::write(
+                self,
+                (loop_id, w.orientation),
+            )?
         } else {
-            "FACE_BOUND"
+            crate::entities::topology::face_bound::FaceBoundHandler::write(
+                self,
+                (loop_id, w.orientation),
+            )?
         };
-        let bound_id = self.fresh();
-        self.entities.push(WriterEntity {
-            id: bound_id,
-            body: WriterBody::Simple {
-                name: wrapper.into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(loop_id),
-                    orientation_bool(w.orientation),
-                ],
-            },
-        });
         self.wire_ids.insert(id, bound_id);
         Ok(bound_id)
     }
 
     pub(crate) fn emit_face(&mut self, id: FaceId) -> Result<u64, WriteError> {
-        if let Some(&n) = self.face_ids.get(&id) {
-            return Ok(n);
-        }
-        let f: Face = self
-            .model
-            .topology
-            .faces
-            .iter()
-            .nth(id.0 as usize)
-            .cloned()
-            .ok_or_else(|| WriteError::DanglingId {
-                detail: format!("FaceId({})", id.0),
-            })?;
-        let surface = self.emit_surface(f.surface)?;
-        let mut bound_refs = Vec::with_capacity(f.bounds.len());
-        for &wid in &f.bounds {
-            bound_refs.push(self.emit_wire(wid)?);
-        }
-        let name = match f.kind {
-            FaceKind::Advanced => "ADVANCED_FACE",
-            FaceKind::General => "FACE_SURFACE",
-        };
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: name.into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::List(bound_refs.into_iter().map(Attribute::EntityRef).collect()),
-                    Attribute::EntityRef(surface),
-                    orientation_bool(f.orientation),
-                ],
-            },
-        });
-        self.face_ids.insert(id, n);
-        Ok(n)
+        // Plan 4 stage C4: delegated to the AdvancedFace/FaceSurface
+        // handlers (write body keys off the IR-stored FaceKind).
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::topology::advanced_face::AdvancedFaceHandler::write(self, id)
     }
 
     pub(crate) fn emit_shell(&mut self, id: ShellId) -> Result<u64, WriteError> {
