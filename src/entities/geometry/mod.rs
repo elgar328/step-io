@@ -22,6 +22,8 @@ pub mod rational_bspline_surface;
 pub mod seam_curve;
 pub mod spherical_surface;
 pub mod surface_curve;
+pub mod surface_of_linear_extrusion;
+pub mod surface_of_revolution;
 pub mod toroidal_surface;
 pub mod trimmed_curve;
 pub mod vector;

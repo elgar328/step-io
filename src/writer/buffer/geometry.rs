@@ -36,13 +36,6 @@ impl WriteBuffer<'_> {
         crate::entities::geometry::axis2_placement_3d::Axis2Placement3dHandler::write(self, id)
     }
 
-    fn emit_vector(&mut self, direction: DirectionId, magnitude: f64) -> Result<u64, WriteError> {
-        // Step 1 pilot: dispatch through the EntityHandler trait. Body lives in
-        // `src/entities/geometry/vector.rs`. Plan 2 will replace this wrapper.
-        use crate::entities::SimpleEntityHandler;
-        crate::entities::geometry::vector::VectorHandler::write(self, (direction, magnitude))
-    }
-
     pub(crate) fn emit_curve(&mut self, id: CurveId) -> Result<u64, WriteError> {
         if let Some(&n) = self.curve_ids.get(&id) {
             return Ok(n);
@@ -164,42 +157,17 @@ impl WriteBuffer<'_> {
     }
 
     fn emit_surface_of_revolution(&mut self, r: SurfaceOfRevolution) -> Result<u64, WriteError> {
-        let swept = self.emit_curve(r.swept_curve)?;
-        let axis = self.emit_axis1_placement(r.axis_placement)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "SURFACE_OF_REVOLUTION".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(swept),
-                    Attribute::EntityRef(axis),
-                ],
-            },
-        });
-        Ok(n)
+        // Plan 5 stage C6: dispatch through EntityHandler trait.
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::surface_of_revolution::SurfaceOfRevolutionHandler::write(self, r)
     }
 
     fn emit_surface_of_linear_extrusion(
         &mut self,
         e: SurfaceOfLinearExtrusion,
     ) -> Result<u64, WriteError> {
-        let swept = self.emit_curve(e.swept_curve)?;
-        let vector = self.emit_vector(e.extrusion_direction, e.depth)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "SURFACE_OF_LINEAR_EXTRUSION".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(swept),
-                    Attribute::EntityRef(vector),
-                ],
-            },
-        });
-        Ok(n)
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::surface_of_linear_extrusion::SurfaceOfLinearExtrusionHandler::write(self, e)
     }
 
     fn emit_offset_surface(&mut self, o: SurfaceOfOffset) -> Result<u64, WriteError> {

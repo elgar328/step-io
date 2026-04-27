@@ -173,9 +173,7 @@ impl ReaderContext {
         // Pass 4-4A: derived surfaces that wrap a curve (swept curve / axis
         // of revolution / extrusion vector). Single sweep — no dependency
         // on other derived surfaces.
-        run_pass!(graph, self,
-            "SURFACE_OF_REVOLUTION" => convert_surface_of_revolution,
-            "SURFACE_OF_LINEAR_EXTRUSION" => convert_surface_of_linear_extrusion);
+        self.dispatch_registry(graph, PassLevel::Pass4_4Swept);
 
         // Pass 4-4B: OFFSET_SURFACE — wraps another surface as its basis.
         // When that basis is itself an OFFSET or a 4-4A derived surface that

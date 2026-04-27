@@ -10,7 +10,7 @@ use crate::ir::attr::{
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{
     Axis2Placement2d, Circle2, Curve2d, CurveForm, Direction2, Ellipse2, Line2, NurbsCurve2d,
-    Pcurve, Point2, Surface, SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution,
+    Pcurve, Point2, Surface, SurfaceOfOffset,
 };
 use crate::parser::entity::{Attribute, RawEntity};
 
@@ -39,52 +39,6 @@ impl ReaderContext {
     // ------------------------------------------------------------------
     // Pass 4-3: Surfaces that reference curves
     // ------------------------------------------------------------------
-
-    pub(super) fn convert_surface_of_revolution(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "SURFACE_OF_REVOLUTION")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
-        let curve_ref = read_entity_ref(attrs, 1, entity_id, "swept_curve")?;
-        let axis_ref = read_entity_ref(attrs, 2, entity_id, "axis_position")?;
-
-        let swept_curve = self.resolve_curve(entity_id, curve_ref, "swept_curve")?;
-        let axis_placement = self.resolve_axis1(entity_id, axis_ref, "axis_position")?;
-
-        let surface = SurfaceOfRevolution {
-            swept_curve,
-            axis_placement,
-        };
-        let id = self.geometry.surfaces.push(Surface::Revolution(surface));
-        self.surface_map.insert(entity_id, id);
-        Ok(())
-    }
-
-    pub(super) fn convert_surface_of_linear_extrusion(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "SURFACE_OF_LINEAR_EXTRUSION")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
-        let curve_ref = read_entity_ref(attrs, 1, entity_id, "swept_curve")?;
-        let vector_ref = read_entity_ref(attrs, 2, entity_id, "extrusion_axis")?;
-
-        let swept_curve = self.resolve_curve(entity_id, curve_ref, "swept_curve")?;
-        let (extrusion_direction, depth) =
-            self.resolve_vector(entity_id, vector_ref, "extrusion_axis")?;
-
-        let surface = SurfaceOfLinearExtrusion {
-            swept_curve,
-            extrusion_direction,
-            depth,
-        };
-        let id = self.geometry.surfaces.push(Surface::Extrusion(surface));
-        self.surface_map.insert(entity_id, id);
-        Ok(())
-    }
 
     pub(super) fn convert_offset_surface(
         &mut self,
