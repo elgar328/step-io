@@ -29,7 +29,6 @@ mod assembly;
 mod geometry;
 mod header;
 mod passes;
-mod pmi;
 mod property;
 
 #[cfg(test)]

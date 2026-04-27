@@ -155,24 +155,12 @@ impl ReaderContext {
     /// classification; Phase B adds instances, transforms, tree root).
     #[allow(clippy::too_many_lines)]
     pub(super) fn run_assembly_passes(&mut self, graph: &EntityGraph) {
-        macro_rules! run_pass {
-            ($graph:expr, $ctx:expr, $( $name:literal => $method:ident ),+ $(,)?) => {
-                for (&id, entity) in &$graph.entities {
-                    if $ctx.pcurve_subtree_ids.contains(&id) { continue; }
-                    let (name, attrs) = match entity {
-                        RawEntity::Simple { name, attributes, .. } => (name.as_str(), attributes.as_slice()),
-                        RawEntity::Complex { .. } => continue,
-                    };
-                    let result = match name {
-                        $( $name => $ctx.$method(id, attrs), )+
-                        _ => continue,
-                    };
-                    if let Err(e) = result {
-                        $ctx.warnings.push(e);
-                    }
-                }
-            };
-        }
+        // Plan 7 stage C5 retired the bespoke `run_pass!` macro that used
+        // to live here — every Pass 6 / 7 / 8 sub-pass now dispatches
+        // through `dispatch_registry`. The remaining hand-rolled loops
+        // (CDSR, PDS classify, PDR) keep their bodies inline because their
+        // read bodies need `&EntityGraph` access not carried by the
+        // handler trait — see DOMAIN_TBD markers for the IR Roadmap follow-up.
 
         // Pass 6-1: PRODUCT → Arena<Product> + product_arena_map
         self.dispatch_registry(graph, PassLevel::Pass6Product);
@@ -292,16 +280,14 @@ impl ReaderContext {
         // future Tolerance / Datum / GD&T work. Runs before the property
         // converters so that a future Pattern B PD pass can look up
         // SHAPE_ASPECT ids when resolving its target ref.
-        run_pass!(graph, self, "SHAPE_ASPECT" => convert_shape_aspect);
+        self.dispatch_registry(graph, PassLevel::Pass8ShapeAspect);
 
         // Pass 8: properties — user-defined attribute chain
         // (PROPERTY_DEFINITION + REPRESENTATION + PROPERTY_DEFINITION_REPRESENTATION).
         // Depends on Pass 0 (unit ctx) and Pass 6 (`pdef_to_product` for
         // resolving the PD's target).
-        run_pass!(graph, self,
-            "MEASURE_REPRESENTATION_ITEM" => convert_measure_representation_item);
-        run_pass!(graph, self,
-            "PROPERTY_DEFINITION" => convert_property_definition);
+        self.dispatch_registry(graph, PassLevel::Pass8Measure);
+        self.dispatch_registry(graph, PassLevel::Pass8PropertyDef);
 
         // PDR convert needs `&graph` to read the bound REPRESENTATION
         // entity directly — REPRESENTATION is a generic entity name shared
