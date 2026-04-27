@@ -1,13 +1,10 @@
-//! Per-entity self-contained handlers (Step 1 pilot).
+//! Per-entity self-contained handlers + compile-time dispatch registry.
 //!
 //! Each entity lives in `src/entities/<group>/<name>.rs` and impls
-//! [`EntityHandler`]. The trait carries reader + writer logic + minimal
-//! metadata needed by future dispatch / registry machinery.
-//!
-//! Step 1 of `INFRA_PLAN.md` introduces this scaffolding with two pilot
-//! entities (DIRECTION + VECTOR) to validate the trait shape against a
-//! simple no-dependency case and a single-dependency intermediate-map
-//! case before Plan 2 wires up a compile-time registry.
+//! [`EntityHandler`]. Plan 2 wires reader-side dispatch through the
+//! [`ENTITY_HANDLERS`] distributed slice; writer dispatch still goes
+//! through hand-rolled emit methods until Plan 3 decides how to
+//! type-erase the per-entity `WriteInput`.
 
 use crate::ir::error::ConvertError;
 use crate::parser::entity::Attribute;
@@ -17,23 +14,33 @@ use crate::writer::buffer::WriteBuffer;
 
 pub mod geometry;
 
+/// Reader pass ordering. Lower variants run first.
+///
+/// Plan 2 only wires Pass1 / Pass2 (DIRECTION / VECTOR). Later passes
+/// land here as the migration walks the existing `run_pass!` blocks in
+/// `src/reader/passes.rs`.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) enum PassLevel {
+    /// `CARTESIAN_POINT`, `DIRECTION` — no entity-ref dependencies.
+    Pass1,
+    /// `VECTOR` — depends on Pass1 entities.
+    Pass2,
+}
+
 /// Reader / writer logic + metadata for a single STEP entity.
 ///
-/// During Step 1 the trait is consumed manually inside
-/// `src/reader/passes.rs` (the `run_pass!` macro) and
-/// `src/writer/buffer/*.rs`. Plan 2 introduces a compile-time registry
-/// that uses [`Self::NAME`] / [`Self::PASS_LEVEL`] for automatic dispatch.
+/// During Plan 2 the trait is consumed in two paths:
+/// 1. Reader: handlers contribute an [`EntityHandlerEntry`] to
+///    [`ENTITY_HANDLERS`]; `src/reader/passes.rs` iterates the slice
+///    per pass level.
+/// 2. Writer: emit methods call `<Handler>::write` directly; the
+///    registry does not yet cover the writer side.
 pub(crate) trait EntityHandler {
     /// Uppercase STEP entity name (e.g. `"DIRECTION"`).
-    /// Used by the Plan 2 registry; unused in Step 1 (allow until then).
-    #[allow(dead_code)]
     const NAME: &'static str;
 
-    /// Reader pass level. `1` = no dependency, `2` = depends on level-1
-    /// entities, etc. Multi-round semantics may force this to evolve in
-    /// Plan 2 (see `INFRA_PLAN.md` Step 1 evaluation note).
-    #[allow(dead_code)]
-    const PASS_LEVEL: u8;
+    /// Reader pass level. See [`PassLevel`].
+    const PASS_LEVEL: PassLevel;
 
     /// Writer input. Differs per entity (e.g. `DirectionId` for a
     /// directly-stored arena entry, `(DirectionId, f64)` for a vector
@@ -53,3 +60,23 @@ pub(crate) trait EntityHandler {
     /// STEP entity id. Mirrors the legacy `emit_*` method body.
     fn write(buf: &mut WriteBuffer, input: Self::WriteInput) -> Result<u64, WriteError>;
 }
+
+/// Reader-side registry entry. Each handler module submits one of
+/// these via `#[linkme::distributed_slice(ENTITY_HANDLERS)]`.
+///
+/// Writer is intentionally absent — the per-entity `WriteInput`
+/// associated type defies const fn-pointer storage. Plan 3 decides
+/// the type-erasure approach (macro / generic / enum tag).
+#[allow(dead_code)] // Fields are read by dispatch_registry once Plan 2 commit 2 lands.
+pub(crate) struct EntityHandlerEntry {
+    pub name: &'static str,
+    pub pass_level: PassLevel,
+    pub read: fn(&mut ReaderContext, u64, &[Attribute]) -> Result<(), ConvertError>,
+}
+
+/// Compile-time registry of entity handlers contributing to reader
+/// dispatch. Populated at link time by the `#[distributed_slice]`
+/// attribute on each handler module's `static` entry.
+#[allow(unsafe_code)] // linkme uses link_section internally
+#[linkme::distributed_slice]
+pub(crate) static ENTITY_HANDLERS: [EntityHandlerEntry] = [..];

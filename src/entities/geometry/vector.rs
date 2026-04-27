@@ -9,8 +9,8 @@
 //!     keeps `(DirectionId, f64)` in `vector_map` keyed by entity id, and
 //!     the writer reconstructs the entity inline at each call site.
 
-use crate::entities::EntityHandler;
 use crate::entities::geometry::direction::DirectionHandler;
+use crate::entities::{ENTITY_HANDLERS, EntityHandler, EntityHandlerEntry, PassLevel};
 use crate::ir::DirectionId;
 use crate::ir::attr::{check_count, read_entity_ref, read_real, read_string};
 use crate::ir::error::ConvertError;
@@ -20,12 +20,11 @@ use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
 
-#[allow(dead_code)] // Constructed by the Plan 2 registry; only static methods are called now.
 pub(crate) struct VectorHandler;
 
 impl EntityHandler for VectorHandler {
     const NAME: &'static str = "VECTOR";
-    const PASS_LEVEL: u8 = 2;
+    const PASS_LEVEL: PassLevel = PassLevel::Pass2;
     type WriteInput = (DirectionId, f64);
 
     fn read(
@@ -64,3 +63,11 @@ impl EntityHandler for VectorHandler {
         Ok(n)
     }
 }
+
+#[allow(unsafe_code)] // linkme uses link_section internally
+#[linkme::distributed_slice(ENTITY_HANDLERS)]
+static VECTOR_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
+    name: VectorHandler::NAME,
+    pass_level: VectorHandler::PASS_LEVEL,
+    read: VectorHandler::read,
+};

@@ -5,7 +5,7 @@
 //! The legacy methods stay in place under `#[allow(dead_code)]` until Plan 2
 //! introduces a registry that fully supersedes the `run_pass!` macro.
 
-use crate::entities::EntityHandler;
+use crate::entities::{ENTITY_HANDLERS, EntityHandler, EntityHandlerEntry, PassLevel};
 use crate::ir::DirectionId;
 use crate::ir::attr::{check_count, read_real_list, read_string};
 use crate::ir::error::ConvertError;
@@ -17,12 +17,11 @@ use crate::writer::buffer::WriteBuffer;
 use crate::writer::buffer::geometry::direction_at;
 use crate::writer::entity::{WriterBody, WriterEntity};
 
-#[allow(dead_code)] // Constructed by the Plan 2 registry; only static methods are called now.
 pub(crate) struct DirectionHandler;
 
 impl EntityHandler for DirectionHandler {
     const NAME: &'static str = "DIRECTION";
-    const PASS_LEVEL: u8 = 1;
+    const PASS_LEVEL: PassLevel = PassLevel::Pass1;
     type WriteInput = DirectionId;
 
     fn read(
@@ -75,3 +74,11 @@ impl EntityHandler for DirectionHandler {
         Ok(n)
     }
 }
+
+#[allow(unsafe_code)] // linkme uses link_section internally
+#[linkme::distributed_slice(ENTITY_HANDLERS)]
+static DIRECTION_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
+    name: DirectionHandler::NAME,
+    pass_level: DirectionHandler::PASS_LEVEL,
+    read: DirectionHandler::read,
+};
