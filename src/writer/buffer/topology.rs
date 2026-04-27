@@ -2,8 +2,8 @@
 
 use super::WriteBuffer;
 use crate::ir::{
-    Edge, EdgeId, Face, FaceId, FaceKind, Orientation, OrientedEdge, Shell, ShellId, Solid,
-    SolidId, VertexId, Wire, WireId,
+    EdgeId, Face, FaceId, FaceKind, Orientation, OrientedEdge, Shell, ShellId, Solid, SolidId,
+    VertexId, Wire, WireId,
 };
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
@@ -11,79 +11,17 @@ use crate::writer::entity::{WriterBody, WriterEntity};
 
 impl WriteBuffer<'_> {
     pub(crate) fn emit_vertex(&mut self, id: VertexId) -> Result<u64, WriteError> {
-        if let Some(&n) = self.vertex_ids.get(&id) {
-            return Ok(n);
-        }
-        let v = self
-            .model
-            .topology
-            .vertices
-            .iter()
-            .nth(id.0 as usize)
-            .cloned()
-            .ok_or_else(|| WriteError::DanglingId {
-                detail: format!("VertexId({})", id.0),
-            })?;
-        let point = self.emit_point(v.point)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "VERTEX_POINT".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(point),
-                ],
-            },
-        });
-        self.vertex_ids.insert(id, n);
-        Ok(n)
+        // Plan 4 stage C2: dispatch through the EntityHandler trait. Body
+        // lives in `src/entities/topology/vertex_point.rs`.
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::topology::vertex_point::VertexPointHandler::write(self, id)
     }
 
     pub(crate) fn emit_edge(&mut self, id: EdgeId) -> Result<u64, WriteError> {
-        if let Some(&n) = self.edge_ids.get(&id) {
-            return Ok(n);
-        }
-        let e: Edge = self
-            .model
-            .topology
-            .edges
-            .iter()
-            .nth(id.0 as usize)
-            .cloned()
-            .ok_or_else(|| WriteError::DanglingId {
-                detail: format!("EdgeId({})", id.0),
-            })?;
-        let start = self.emit_vertex(e.vertices.0)?;
-        let end = self.emit_vertex(e.vertices.1)?;
-        let curve_3d = self.emit_curve(e.curve)?;
-        // When the edge carries pcurves, wrap the 3D curve in a
-        // SURFACE_CURVE / SEAM_CURVE entity so the EDGE_CURVE's
-        // `edge_geometry` attr points at the wrapper — the same shape the
-        // reader expects (see `convert_surface_or_seam_curve` +
-        // `collect_surface_curve_pcurves`). Otherwise emit EDGE_CURVE against
-        // the 3D curve directly (W-B.1 path).
-        let curve_ref = if e.pcurves.is_empty() {
-            curve_3d
-        } else {
-            self.emit_surface_curve_wrapper(curve_3d, &e.pcurves)?
-        };
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "EDGE_CURVE".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(start),
-                    Attribute::EntityRef(end),
-                    Attribute::EntityRef(curve_ref),
-                    orientation_bool(e.orientation),
-                ],
-            },
-        });
-        self.edge_ids.insert(id, n);
-        Ok(n)
+        // Plan 4 stage C2: dispatch through the EntityHandler trait. Body
+        // lives in `src/entities/topology/edge_curve.rs`.
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::topology::edge_curve::EdgeCurveHandler::write(self, id)
     }
 
     pub(crate) fn emit_wire(&mut self, id: WireId) -> Result<u64, WriteError> {
@@ -341,7 +279,7 @@ impl WriteBuffer<'_> {
     }
 }
 
-fn orientation_bool(o: Orientation) -> Attribute {
+pub(crate) fn orientation_bool(o: Orientation) -> Attribute {
     match o {
         Orientation::Forward => Attribute::Enum("T".into()),
         Orientation::Reversed => Attribute::Enum("F".into()),

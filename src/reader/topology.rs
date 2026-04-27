@@ -3,73 +3,10 @@
 use super::{ReaderContext, bool_to_orientation};
 use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_entity_ref_list, read_string};
 use crate::ir::error::ConvertError;
-use crate::ir::topology::{
-    Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Vertex, Wire,
-};
+use crate::ir::topology::{Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Wire};
 use crate::parser::entity::Attribute;
 
 impl ReaderContext {
-    // ------------------------------------------------------------------
-    // Pass 5-1: VERTEX_POINT
-    // ------------------------------------------------------------------
-
-    pub(super) fn convert_vertex_point(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "VERTEX_POINT")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
-        let pt_ref = read_entity_ref(attrs, 1, entity_id, "vertex_geometry")?;
-
-        let point = self.resolve_point(entity_id, pt_ref, "vertex_geometry")?;
-
-        let vertex = Vertex { point };
-        let id = self.topology.vertices.push(vertex);
-        self.vertex_map.insert(entity_id, id);
-        Ok(())
-    }
-
-    // ------------------------------------------------------------------
-    // Pass 5-2: EDGE_CURVE (depends on VERTEX_POINT + CURVE)
-    // ------------------------------------------------------------------
-
-    pub(super) fn convert_edge_curve(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 5, entity_id, "EDGE_CURVE")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
-        let start_ref = read_entity_ref(attrs, 1, entity_id, "edge_start")?;
-        let end_ref = read_entity_ref(attrs, 2, entity_id, "edge_end")?;
-        let curve_ref = read_entity_ref(attrs, 3, entity_id, "edge_geometry")?;
-        let same_sense = read_bool(attrs, 4, entity_id, "same_sense")?;
-
-        let start = self.resolve_vertex(entity_id, start_ref, "edge_start")?;
-        let end = self.resolve_vertex(entity_id, end_ref, "edge_end")?;
-        let curve = self.resolve_curve(entity_id, curve_ref, "edge_geometry")?;
-        // If the edge_geometry ref pointed at a SURFACE_CURVE / SEAM_CURVE,
-        // pcurves were collected in Pass 4-3b and indexed by that wrapper's
-        // entity id. For direct 3D-curve refs the map returns None → empty Vec.
-        let pcurves = self
-            .surface_curve_pcurves_map
-            .get(&curve_ref)
-            .cloned()
-            .unwrap_or_default();
-
-        let edge = Edge {
-            curve,
-            vertices: (start, end),
-            trim: (0.0, 0.0),
-            orientation: bool_to_orientation(same_sense),
-            pcurves,
-        };
-        let id = self.topology.edges.push(edge);
-        self.edge_map.insert(entity_id, id);
-        Ok(())
-    }
-
     // ------------------------------------------------------------------
     // Pass 5-3: ORIENTED_EDGE (depends on EDGE_CURVE) — intermediate
     // ------------------------------------------------------------------

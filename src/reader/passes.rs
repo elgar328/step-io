@@ -294,9 +294,9 @@ impl ReaderContext {
         }
 
         // Pass 5-1: vertices
-        run_pass!(graph, self, "VERTEX_POINT" => convert_vertex_point);
+        self.dispatch_registry(graph, PassLevel::Pass5Vertex);
         // Pass 5-2: edges (depend on vertices + curves)
-        run_pass!(graph, self, "EDGE_CURVE" => convert_edge_curve);
+        self.dispatch_registry(graph, PassLevel::Pass5Edge);
         // Pass 5-3: oriented edges (intermediate, depend on edges)
         run_pass!(graph, self, "ORIENTED_EDGE" => convert_oriented_edge);
         // Pass 5-4: edge loops (intermediate, depend on oriented edges).

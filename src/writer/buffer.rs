@@ -22,7 +22,7 @@ mod assembly;
 pub(crate) mod geometry;
 mod pmi;
 mod property;
-mod topology;
+pub(crate) mod topology;
 mod units;
 mod visualization;
 
