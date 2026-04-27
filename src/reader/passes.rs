@@ -282,13 +282,11 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass7SurfaceFill);
         self.dispatch_registry(graph, PassLevel::Pass7Transparent);
         self.dispatch_registry(graph, PassLevel::Pass7Rendering);
-        run_pass!(graph, self, "SURFACE_SIDE_STYLE" => convert_surface_side_style);
-        run_pass!(graph, self, "SURFACE_STYLE_USAGE" => convert_surface_style_usage);
-        run_pass!(graph, self,
-            "PRESENTATION_STYLE_ASSIGNMENT" => convert_presentation_style_assignment);
-        run_pass!(graph, self, "STYLED_ITEM" => convert_styled_item);
-        run_pass!(graph, self,
-            "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION" => convert_mdgpr);
+        self.dispatch_registry(graph, PassLevel::Pass7SurfaceSide);
+        self.dispatch_registry(graph, PassLevel::Pass7Usage);
+        self.dispatch_registry(graph, PassLevel::Pass7Assignment);
+        self.dispatch_registry(graph, PassLevel::Pass7StyledItem);
+        self.dispatch_registry(graph, PassLevel::Pass7Mdgpr);
 
         // Pass 8: PMI scaffolding — SHAPE_ASPECT entries that anchor
         // future Tolerance / Datum / GD&T work. Runs before the property

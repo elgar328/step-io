@@ -31,7 +31,6 @@ mod header;
 mod passes;
 mod pmi;
 mod property;
-mod visualization;
 
 #[cfg(test)]
 mod tests;
