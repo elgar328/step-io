@@ -1,12 +1,9 @@
 //! Topology pool emission: vertices, edges, wires, faces, shells, solids.
 
 use super::WriteBuffer;
-use crate::ir::{
-    EdgeId, FaceId, Orientation, Shell, ShellId, Solid, SolidId, VertexId, Wire, WireId,
-};
+use crate::ir::{EdgeId, FaceId, Orientation, ShellId, SolidId, VertexId, Wire, WireId};
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
-use crate::writer::entity::{WriterBody, WriterEntity};
 
 impl WriteBuffer<'_> {
     pub(crate) fn emit_vertex(&mut self, id: VertexId) -> Result<u64, WriteError> {
@@ -92,61 +89,27 @@ impl WriteBuffer<'_> {
     }
 
     pub(crate) fn emit_solid(&mut self, id: SolidId) -> Result<u64, WriteError> {
-        if let Some(&n) = self.solid_ids.get(&id) {
-            return Ok(n);
-        }
-        let s: Solid = self
+        // Plan 4 stage C6: solids dispatch by `Solid::shells.len()`. Single
+        // shell → MANIFOLD_SOLID_BREP, multi-shell → BREP_WITH_VOIDS.
+        use crate::entities::SimpleEntityHandler;
+        let shells_len = self
             .model
             .topology
             .solids
             .iter()
             .nth(id.0 as usize)
-            .cloned()
             .ok_or_else(|| WriteError::DanglingId {
                 detail: format!("SolidId({})", id.0),
-            })?;
-        let outer_id = *s.shells.first().ok_or_else(|| WriteError::DanglingId {
-            detail: format!("SolidId({}) has no shells", id.0),
-        })?;
-        let outer_ref = self.emit_shell(outer_id)?;
-        let name = s.name.clone().unwrap_or_default();
-        let n = self.fresh();
-
-        let body = if s.shells.len() == 1 {
-            WriterBody::Simple {
-                name: "MANIFOLD_SOLID_BREP".into(),
-                attrs: vec![Attribute::String(name), Attribute::EntityRef(outer_ref)],
-            }
+            })?
+            .shells
+            .len();
+        if shells_len == 1 {
+            crate::entities::topology::manifold_solid_brep::ManifoldSolidBrepHandler::write(
+                self, id,
+            )
         } else {
-            let mut void_refs = Vec::with_capacity(s.shells.len() - 1);
-            for &inner_id in &s.shells[1..] {
-                let inner_shell: Shell = self
-                    .model
-                    .topology
-                    .shells
-                    .iter()
-                    .nth(inner_id.0 as usize)
-                    .cloned()
-                    .ok_or_else(|| WriteError::DanglingId {
-                        detail: format!("ShellId({}) void", inner_id.0),
-                    })?;
-                let inner_cs_ref = self.emit_shell(inner_id)?;
-                let ocs_ref =
-                    self.emit_oriented_closed_shell(inner_cs_ref, inner_shell.orientation)?;
-                void_refs.push(Attribute::EntityRef(ocs_ref));
-            }
-            WriterBody::Simple {
-                name: "BREP_WITH_VOIDS".into(),
-                attrs: vec![
-                    Attribute::String(name),
-                    Attribute::EntityRef(outer_ref),
-                    Attribute::List(void_refs),
-                ],
-            }
-        };
-        self.entities.push(WriterEntity { id: n, body });
-        self.solid_ids.insert(id, n);
-        Ok(n)
+            crate::entities::topology::brep_with_voids::BrepWithVoidsHandler::write(self, id)
+        }
     }
 }
 

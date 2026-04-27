@@ -31,7 +31,6 @@ mod header;
 mod passes;
 mod pmi;
 mod property;
-mod topology;
 mod units;
 mod visualization;
 

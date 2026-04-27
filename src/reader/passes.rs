@@ -223,25 +223,8 @@ impl ReaderContext {
     }
 
     pub(super) fn run_topology_passes(&mut self, graph: &EntityGraph) {
-        macro_rules! run_pass {
-            ($graph:expr, $ctx:expr, $( $name:literal => $method:ident ),+ $(,)?) => {
-                for (&id, entity) in &$graph.entities {
-                    if $ctx.pcurve_subtree_ids.contains(&id) { continue; }
-                    let (name, attrs) = match entity {
-                        RawEntity::Simple { name, attributes, .. } => (name.as_str(), attributes.as_slice()),
-                        RawEntity::Complex { .. } => continue,
-                    };
-                    let result = match name {
-                        $( $name => $ctx.$method(id, attrs), )+
-                        _ => continue,
-                    };
-                    if let Err(e) = result {
-                        $ctx.warnings.push(e);
-                    }
-                }
-            };
-        }
-
+        // Plan 4 wired every Pass 5-N step through `dispatch_registry`,
+        // so the bespoke `run_pass!` macro that used to live here is gone.
         // Pass 5-1: vertices
         self.dispatch_registry(graph, PassLevel::Pass5Vertex);
         // Pass 5-2: edges (depend on vertices + curves)
@@ -263,9 +246,7 @@ impl ReaderContext {
         // may precede their referenced CLOSED_SHELL in #N order).
         self.dispatch_registry(graph, PassLevel::Pass5OrientedShell);
         // Pass 5-8: solids (depend on shells + oriented shells)
-        run_pass!(graph, self,
-            "MANIFOLD_SOLID_BREP" => convert_manifold_solid_brep,
-            "BREP_WITH_VOIDS" => convert_brep_with_voids);
+        self.dispatch_registry(graph, PassLevel::Pass5Solid);
     }
 
     /// Pass 6: assembly/product graph (Phase A — PRODUCT chain + shape
