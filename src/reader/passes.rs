@@ -22,27 +22,7 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass0Context);
     }
 
-    #[allow(clippy::too_many_lines)]
     pub(super) fn run_geometry_passes(&mut self, graph: &EntityGraph) {
-        macro_rules! run_pass {
-            ($graph:expr, $ctx:expr, $( $name:literal => $method:ident ),+ $(,)?) => {
-                for (&id, entity) in &$graph.entities {
-                    if $ctx.pcurve_subtree_ids.contains(&id) { continue; }
-                    let (name, attrs) = match entity {
-                        RawEntity::Simple { name, attributes, .. } => (name.as_str(), attributes.as_slice()),
-                        RawEntity::Complex { .. } => continue,
-                    };
-                    let result = match name {
-                        $( $name => $ctx.$method(id, attrs), )+
-                        _ => continue,
-                    };
-                    if let Err(e) = result {
-                        $ctx.warnings.push(e);
-                    }
-                }
-            };
-        }
-
         // Pass 1: points and directions (CARTESIAN_POINT + DIRECTION).
         self.dispatch_registry(graph, PassLevel::Pass1);
         // Pass 2: vectors (depend on directions).
@@ -110,18 +90,14 @@ impl ReaderContext {
         // Pass 4-4B: OFFSET_SURFACE — wraps another surface as its basis.
         // When that basis is itself an OFFSET or a 4-4A derived surface that
         // comes later in entity-id order, a single sweep fails to resolve.
-        // Loop until the surfaces arena stops growing; discard transient
-        // missing-basis warnings after any round that made progress, so only
-        // the final no-progress round's warnings (= genuine errors) remain.
-        loop {
-            let surfaces_before = self.geometry.surfaces.len();
-            let warnings_snapshot = self.warnings.len();
-            run_pass!(graph, self, "OFFSET_SURFACE" => convert_offset_surface);
-            if self.geometry.surfaces.len() == surfaces_before {
-                break;
-            }
-            self.warnings.truncate(warnings_snapshot);
-        }
+        // `dispatch_registry_until_fixpoint` repeats `dispatch_registry`
+        // for `Pass4_4Offset` until the surfaces arena stops growing,
+        // discarding transient missing-basis warnings between rounds so
+        // only the final no-progress round's warnings (= genuine errors)
+        // remain.
+        self.dispatch_registry_until_fixpoint(graph, PassLevel::Pass4_4Offset, |ctx| {
+            ctx.geometry.surfaces.len()
+        });
     }
 
     pub(super) fn run_topology_passes(&mut self, graph: &EntityGraph) {

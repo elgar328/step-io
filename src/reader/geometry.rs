@@ -1,66 +1,20 @@
-//! Geometry entity converters (Pass 4-1, 4-2, 4-3).
+//! Geometry helpers that did not migrate into `entities/` modules.
+//!
+//! After Plan 7 the file holds a single helper: `resolve_pcurve`. It
+//! walks `PCURVE → DEFINITIONAL_REPRESENTATION → 2D curve` and is called
+//! from `entities/geometry/surface_curve.rs` while it post-processes the
+//! pcurves attached to a `SURFACE_CURVE` / `SEAM_CURVE`. Hosting it on
+//! `ReaderContext` (rather than inside the surface_curve handler) keeps
+//! the helper available to any future entity that needs the same
+//! traversal — e.g. a Plan 7+ IR Roadmap rewrite of pcurve handling.
 
 #![allow(clippy::unnecessary_lazy_evaluations, clippy::doc_markdown)]
 
 use super::ReaderContext;
-use crate::ir::attr::{check_count, read_entity_ref, read_real, read_string};
-use crate::ir::error::ConvertError;
-use crate::ir::geometry::{Pcurve, Surface, SurfaceOfOffset};
+use crate::ir::geometry::Pcurve;
 use crate::parser::entity::{Attribute, RawEntity};
 
 impl ReaderContext {
-    // ------------------------------------------------------------------
-    // Pass 1: Points and directions
-    // ------------------------------------------------------------------
-
-    // ------------------------------------------------------------------
-    // Pass 4-1: Simple leaf curves and surfaces
-    // ------------------------------------------------------------------
-
-    // ------------------------------------------------------------------
-    // Pass 4-3: SURFACE_CURVE / SEAM_CURVE — transparent alias to curve_3d.
-    //
-    // STEP wraps edges on surfaces in `SURFACE_CURVE` (or its `SEAM_CURVE`
-    // subtype) when the file carries pcurve data. The 3D curve is preserved
-    // in the `curve_3d` slot; the associated pcurves are later resolved by
-    // `collect_surface_curve_pcurves` (driven from `passes.rs`), using the
-    // 2D arenas populated from `collect_pcurve_subtree_ids` via Pass 4a.
-    //
-    // We alias the surface/seam-curve id to the same `CurveId` as its
-    // `curve_3d` so downstream code (e.g. `EDGE_CURVE`) keeps working.
-    // ------------------------------------------------------------------
-
-    // ------------------------------------------------------------------
-    // Pass 4-3: Surfaces that reference curves
-    // ------------------------------------------------------------------
-
-    pub(super) fn convert_offset_surface(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        // Pass 4-4B (multi-round): skip entities already interned by a
-        // previous round so the arena does not accumulate duplicates.
-        if self.surface_map.contains_key(&entity_id) {
-            return Ok(());
-        }
-        // STEP: OFFSET_SURFACE(name, basis_surface, distance, self_intersect)
-        check_count(attrs, 4, entity_id, "OFFSET_SURFACE")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
-        let basis_ref = read_entity_ref(attrs, 1, entity_id, "basis_surface")?;
-        let distance = read_real(attrs, 2, entity_id, "distance")?;
-        // [3] self_intersect — informational LOGICAL, skipped (see ROADMAP).
-
-        let basis = self.resolve_surface(entity_id, basis_ref, "basis_surface")?;
-
-        let id = self
-            .geometry
-            .surfaces
-            .push(Surface::Offset(SurfaceOfOffset { basis, distance }));
-        self.surface_map.insert(entity_id, id);
-        Ok(())
-    }
-
     // ==================================================================
     // PCURVE resolution helper (used by Pass 4-3 extension)
     // ==================================================================

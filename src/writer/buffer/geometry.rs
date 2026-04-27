@@ -170,23 +170,8 @@ impl WriteBuffer<'_> {
     }
 
     fn emit_offset_surface(&mut self, o: SurfaceOfOffset) -> Result<u64, WriteError> {
-        let basis = self.emit_surface(o.basis)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "OFFSET_SURFACE".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(basis),
-                    Attribute::Real(o.distance),
-                    // self_intersect LOGICAL — .F. hardcoded (informational,
-                    // not stored in IR; see ROADMAP "LOGICAL 보존").
-                    Attribute::Enum("F".into()),
-                ],
-            },
-        });
-        Ok(n)
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::offset_surface::OffsetSurfaceHandler::write(self, o)
     }
 
     pub(crate) fn emit_axis1_placement(&mut self, id: Placement1dId) -> Result<u64, WriteError> {
