@@ -213,6 +213,10 @@ impl ReaderContext {
         // Pre-Pass 6-5: classify PRODUCT_DEFINITION_SHAPE entities by whether
         // their `definition` target is a PRODUCT_DEFINITION (product-owned)
         // versus a NAUO (instance-owned — Phase B).
+        //
+        // DOMAIN_TBD: PRODUCT_DEFINITION_SHAPE classification 은 convert_*
+        // 부재 (graph traversal 만 함) 라 handler trait 부적절. Plan 7+ 에서
+        // post-pass helper 추상화 검토 가능.
         for (&id, entity) in &graph.entities {
             if self.pcurve_subtree_ids.contains(&id) {
                 continue;
@@ -263,8 +267,7 @@ impl ReaderContext {
 
         // Pass 6-8: NEXT_ASSEMBLY_USAGE_OCCURRENCE — push Instances into
         // parent products' Group content.
-        run_pass!(graph, self,
-            "NEXT_ASSEMBLY_USAGE_OCCURRENCE" => convert_next_assembly_usage_occurrence);
+        self.dispatch_registry(graph, PassLevel::Pass6Nauo);
 
         // Pass 7: visualization (passive tree-inline). Depends on Pass 5 / 6 —
         // STYLED_ITEM.item resolution needs solid_map / curve_map / point_map

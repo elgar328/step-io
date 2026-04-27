@@ -1,23 +1,23 @@
-//! Assembly entity converters (Pass 6).
+//! Assembly entity helpers that did not migrate into `entities/` modules.
 //!
-//! Pass 6-1 ~ 6-5 (Phase A) walk `PRODUCT`, `PRODUCT_DEFINITION`,
-//! `PRODUCT_DEFINITION_FORMATION` (incl. AP203's `_WITH_SPECIFIED_SOURCE`
-//! variant), `ADVANCED_BREP_SHAPE_REPRESENTATION` and
-//! `SHAPE_DEFINITION_REPRESENTATION` to populate `Arena<Product>` and
-//! classify each product as a solid leaf or an empty group.
+//! After Plan 6 the file holds two hand-rolled pieces only:
 //!
-//! Pass 6-6 ~ 6-8 (Phase B) wire up the tree:
-//! - 6-6: `ITEM_DEFINED_TRANSFORMATION` → `Transform3d` map.
-//! - 6-7: `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` + complex `RRWT` →
-//!   per-NAUO transform map.
-//! - 6-8: `NEXT_ASSEMBLY_USAGE_OCCURRENCE` → `Instance` pushed into the
-//!   parent product's `Group`.
+//! - `convert_context_dependent_shape_representation` — Pass 6-7 needs
+//!   `&EntityGraph` to resolve the RR-complex sub-entity, which the
+//!   `EntityHandlerEntry::Simple` / `Complex` reader signatures do not
+//!   carry. See the `DOMAIN_TBD` marker on the function for the
+//!   Plan 7+ IR Roadmap follow-up.
+//! - `pdef_shape_to_pdef_ref` / `pdef_shape_to_nauo_ref` —
+//!   `PRODUCT_DEFINITION_SHAPE` is classified via a graph traversal
+//!   from `passes.rs` (no `convert_*` body, so the handler trait is
+//!   inappropriate). The classifier itself is the marker site in
+//!   `passes.rs`.
 //!
-//! Root resolution lives in `ReaderContext::finalize_assembly`.
+//! Everything else moved into `entities/assembly_product/` (PRODUCT
+//! chain) and `entities/shape_rep/` (shape representations + IDT).
 
 use super::ReaderContext;
-use crate::ir::assembly::{Instance, ProductContent};
-use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
+use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
 
@@ -30,6 +30,9 @@ impl ReaderContext {
     // complex entity bundling three parts — only the one that carries a
     // transformation ref (RRWT) is of interest here.
 
+    // DOMAIN_TBD: catalog shape_rep O but the read body needs &EntityGraph
+    // (RR-complex sub-entity resolution). Handler trait API 보존을 위해
+    // hand-rolled 유지. Plan 7+ IR Roadmap 시 graph 접근 일반화 검토.
     pub(super) fn convert_context_dependent_shape_representation(
         &mut self,
         entity_id: u64,
@@ -78,56 +81,6 @@ impl ReaderContext {
             });
         };
         self.nauo_transform_map.insert(nauo_ref, transform);
-        Ok(())
-    }
-
-    // ------------------------------------------------------------------
-    // Pass 6-8: NEXT_ASSEMBLY_USAGE_OCCURRENCE → Instance push
-    // ------------------------------------------------------------------
-
-    pub(super) fn convert_next_assembly_usage_occurrence(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 6, entity_id, "NEXT_ASSEMBLY_USAGE_OCCURRENCE")?;
-        let occurrence_id = read_string_or_unset(attrs, 0, entity_id, "id")?.to_owned();
-        let occurrence_name = read_string_or_unset(attrs, 1, entity_id, "name")?.to_owned();
-        // attrs[2] = description, attrs[5] = reference_designator — ignored.
-        let relating_pdef = read_entity_ref(attrs, 3, entity_id, "relating_pdef")?;
-        let related_pdef = read_entity_ref(attrs, 4, entity_id, "related_pdef")?;
-
-        let parent_pid = self.resolve_product_by_pdef(entity_id, relating_pdef, "relating_pdef")?;
-        let child_pid = self.resolve_product_by_pdef(entity_id, related_pdef, "related_pdef")?;
-
-        let Some(&transform) = self.nauo_transform_map.get(&entity_id) else {
-            self.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: String::from("NEXT_ASSEMBLY_USAGE_OCCURRENCE with no transform found"),
-            });
-            return Ok(());
-        };
-
-        match &mut self.assembly_products[parent_pid].content {
-            ProductContent::Group(instances) => {
-                instances.push(Instance {
-                    child: child_pid,
-                    transform,
-                    occurrence_id,
-                    occurrence_name,
-                });
-            }
-            ProductContent::Solid(_)
-            | ProductContent::SurfaceBody(_)
-            | ProductContent::Wireframe(_) => {
-                self.warnings.push(ConvertError::UnexpectedEntityForm {
-                    entity_id,
-                    detail: String::from(
-                        "NEXT_ASSEMBLY_USAGE_OCCURRENCE parent is a geometry leaf, not a Group",
-                    ),
-                });
-            }
-        }
         Ok(())
     }
 }

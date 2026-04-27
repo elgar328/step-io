@@ -462,17 +462,19 @@ impl WriteBuffer<'_> {
     }
 
     pub(crate) fn emit_nauo(&mut self, inst: &Instance, parent_pdef: u64, child_pdef: u64) -> u64 {
-        self.push_simple(
-            "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
-            vec![
-                Attribute::String(inst.occurrence_id.clone()),
-                Attribute::String(inst.occurrence_name.clone()),
-                Attribute::String(String::new()),
-                Attribute::EntityRef(parent_pdef),
-                Attribute::EntityRef(child_pdef),
-                Attribute::Unset,
-            ],
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::assembly_product::next_assembly_usage_occurrence::{
+            NextAssemblyUsageOccurrenceHandler, NextAssemblyUsageOccurrenceWriteInput,
+        };
+        NextAssemblyUsageOccurrenceHandler::write(
+            self,
+            NextAssemblyUsageOccurrenceWriteInput {
+                inst: inst.clone(),
+                parent_pdef,
+                child_pdef,
+            },
         )
+        .expect("NAUO write only pushes one simple entity")
     }
 
     /// NAUO-owned `PRODUCT_DEFINITION_SHAPE` — its `definition` points at the
