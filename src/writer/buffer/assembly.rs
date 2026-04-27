@@ -27,9 +27,9 @@ use crate::writer::entity::{WriterBody, WriterEntity};
 /// APPLICATION_CONTEXT id itself is only needed inside
 /// `emit_application_context` (to wire PRODUCT_CONTEXT / PDEF_CONTEXT), so
 /// it isn't carried forward here.
-struct AssemblyContextIds {
-    product_ctx: u64,
-    pdef_ctx: u64,
+pub(crate) struct AssemblyContextIds {
+    pub(crate) product_ctx: u64,
+    pub(crate) pdef_ctx: u64,
 }
 
 impl WriteBuffer<'_> {
@@ -182,7 +182,7 @@ impl WriteBuffer<'_> {
     // Per-product emitters
     // ----------------------------------------------------------------
 
-    fn emit_product(&mut self, product: &Product, ctx: &AssemblyContextIds) -> u64 {
+    pub(crate) fn emit_product(&mut self, product: &Product, ctx: &AssemblyContextIds) -> u64 {
         self.push_simple(
             "PRODUCT",
             vec![
@@ -194,7 +194,7 @@ impl WriteBuffer<'_> {
         )
     }
 
-    fn emit_formation(&mut self, prod_entity: u64, product: &Product) -> u64 {
+    pub(crate) fn emit_formation(&mut self, prod_entity: u64, product: &Product) -> u64 {
         // The `_WITH_SPECIFIED_SOURCE` subtype is selected by the loyalty
         // flag alone — AP203 readers always set it to `true` (the schema
         // mandates the subtype), AP214/242 set it only when the source
@@ -259,7 +259,7 @@ impl WriteBuffer<'_> {
         }
     }
 
-    fn emit_pdef(&mut self, formation: u64, pdef_ctx: u64) -> u64 {
+    pub(crate) fn emit_pdef(&mut self, formation: u64, pdef_ctx: u64) -> u64 {
         self.push_simple(
             "PRODUCT_DEFINITION",
             vec![
@@ -282,7 +282,7 @@ impl WriteBuffer<'_> {
         )
     }
 
-    fn emit_shell_based_surface_model(
+    pub(crate) fn emit_shell_based_surface_model(
         &mut self,
         shells: &[crate::ir::ShellId],
     ) -> Result<u64, WriteError> {
@@ -299,7 +299,7 @@ impl WriteBuffer<'_> {
         ))
     }
 
-    fn emit_mssr(
+    pub(crate) fn emit_mssr(
         &mut self,
         product: &Product,
         shells: &[crate::ir::ShellId],
@@ -325,7 +325,7 @@ impl WriteBuffer<'_> {
     /// when `repr_kind == Surface` (CATIA convention) and uses
     /// `GEOMETRIC_SET` when loose points coexist with curves; otherwise
     /// emits the more common `..._WIREFRAME_...` + `GEOMETRIC_CURVE_SET`.
-    fn emit_wireframe_representation(
+    pub(crate) fn emit_wireframe_representation(
         &mut self,
         product: &Product,
         wf: &WireframeContent,
@@ -365,7 +365,7 @@ impl WriteBuffer<'_> {
         ))
     }
 
-    fn emit_absr(
+    pub(crate) fn emit_absr(
         &mut self,
         product: &Product,
         solid_ref: u64,
@@ -388,7 +388,7 @@ impl WriteBuffer<'_> {
     /// Emit a `SHAPE_REPRESENTATION` for a Group product — no geometry,
     /// just the product's coordinate reference frame so the entity is
     /// well-formed.
-    fn emit_group_shape_representation(
+    pub(crate) fn emit_group_shape_representation(
         &mut self,
         product: &Product,
         unit_ctx: u64,
@@ -404,7 +404,7 @@ impl WriteBuffer<'_> {
         ))
     }
 
-    fn emit_sdr(&mut self, pdef_shape: u64, sr: u64) -> u64 {
+    pub(crate) fn emit_sdr(&mut self, pdef_shape: u64, sr: u64) -> u64 {
         self.push_simple(
             "SHAPE_DEFINITION_REPRESENTATION",
             vec![Attribute::EntityRef(pdef_shape), Attribute::EntityRef(sr)],
@@ -439,7 +439,7 @@ impl WriteBuffer<'_> {
         Ok(plain_sr)
     }
 
-    fn emit_simple_srr(&mut self, rep_1: u64, rep_2: u64) -> u64 {
+    pub(crate) fn emit_simple_srr(&mut self, rep_1: u64, rep_2: u64) -> u64 {
         self.push_simple(
             "SHAPE_REPRESENTATION_RELATIONSHIP",
             vec![
@@ -473,7 +473,7 @@ impl WriteBuffer<'_> {
         Ok(())
     }
 
-    fn emit_item_defined_transformation(
+    pub(crate) fn emit_item_defined_transformation(
         &mut self,
         transform: Transform3d,
     ) -> Result<u64, WriteError> {
@@ -490,7 +490,7 @@ impl WriteBuffer<'_> {
         ))
     }
 
-    fn emit_nauo(&mut self, inst: &Instance, parent_pdef: u64, child_pdef: u64) -> u64 {
+    pub(crate) fn emit_nauo(&mut self, inst: &Instance, parent_pdef: u64, child_pdef: u64) -> u64 {
         self.push_simple(
             "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
             vec![

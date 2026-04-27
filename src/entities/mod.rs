@@ -12,7 +12,9 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
+pub mod assembly_product;
 pub mod geometry;
+pub mod shape_rep;
 pub mod topology;
 pub mod units;
 
@@ -123,6 +125,63 @@ pub(crate) enum PassLevel {
     /// shells / oriented shells.
     #[allow(dead_code)] // wired in Plan 4 stage C6
     Pass5Solid,
+
+    // ----- Plan 6 (Pass 6: assembly + shape rep) -----
+    /// `PRODUCT` (Pass 6-1) — top of the product chain.
+    #[allow(dead_code)] // wired in Plan 6 stage C2
+    Pass6Product,
+    /// `PRODUCT_CATEGORY` + `PRODUCT_RELATED_PRODUCT_CATEGORY`
+    /// (Pass 6-1b sub-pass a). Mutually independent; both populate
+    /// per-product metadata used by `ProductCategoryRelationship`.
+    #[allow(dead_code)] // wired in Plan 6 stage C2
+    Pass6ProductCategory,
+    /// `PRODUCT_CATEGORY_RELATIONSHIP` (Pass 6-1b sub-pass b) — depends on
+    /// `Pass6ProductCategory` outputs.
+    #[allow(dead_code)] // wired in Plan 6 stage C2
+    Pass6ProductCategoryRel,
+    /// `PRODUCT_DEFINITION_FORMATION` +
+    /// `PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE` (Pass 6-2).
+    /// Independent of each other; both attach to a `Product`.
+    #[allow(dead_code)] // wired in Plan 6 stage C3
+    Pass6PdefFormation,
+    /// `PRODUCT_DEFINITION` (Pass 6-3) — depends on `Pass6PdefFormation`.
+    #[allow(dead_code)] // wired in Plan 6 stage C3
+    Pass6Pdef,
+    /// `SHELL_BASED_SURFACE_MODEL` (Pass 6-4) — must precede MSSR so the
+    /// shell-list is available when the surface representation lands.
+    #[allow(dead_code)] // wired in Plan 6 stage C4
+    Pass6Sbsm,
+    /// `ADVANCED_BREP_SHAPE_REPRESENTATION` +
+    /// `MANIFOLD_SURFACE_SHAPE_REPRESENTATION` + plain `SHAPE_REPRESENTATION`
+    /// (Pass 6-4a). Three concrete entity names sharing one pass.
+    #[allow(dead_code)] // wired in Plan 6 stage C4
+    Pass6ShapeRep,
+    /// `GEOMETRIC_CURVE_SET` + `GEOMETRIC_SET` (Pass 6-4f). Must precede
+    /// GBWSR/GBSSR so the wireframe converters can resolve the curve-set
+    /// payload.
+    #[allow(dead_code)] // wired in Plan 6 stage C5
+    Pass6CurveSet,
+    /// `GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION` +
+    /// `GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION` (Pass 6-4g).
+    /// Both wrappers share the same inner shape (`convert_wireframe_*`).
+    #[allow(dead_code)] // wired in Plan 6 stage C5
+    Pass6Gbsr,
+    /// `SHAPE_REPRESENTATION_RELATIONSHIP` (Pass 6-4b) — must run after the
+    /// shape-representation passes so the is-target lookup sees populated
+    /// maps.
+    #[allow(dead_code)] // wired in Plan 6 stage C6
+    Pass6SrRel,
+    /// `SHAPE_DEFINITION_REPRESENTATION` (Pass 6-5) — classifies each
+    /// product as Solid or Group.
+    #[allow(dead_code)] // wired in Plan 6 stage C6
+    Pass6Sdr,
+    /// `ITEM_DEFINED_TRANSFORMATION` (Pass 6-6) — builds `transform_map`.
+    #[allow(dead_code)] // wired in Plan 6 stage C6
+    Pass6Idt,
+    /// `NEXT_ASSEMBLY_USAGE_OCCURRENCE` (Pass 6-8) — pushes Instances into
+    /// parent products' Group content.
+    #[allow(dead_code)] // wired in Plan 6 stage C7
+    Pass6Nauo,
 }
 
 /// Handler for a [`RawEntity::Simple`] STEP entity. Reader receives a flat

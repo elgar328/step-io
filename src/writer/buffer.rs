@@ -18,7 +18,7 @@ use crate::ir::{
     WireId,
 };
 
-mod assembly;
+pub(crate) mod assembly;
 pub(crate) mod geometry;
 mod pmi;
 mod property;
