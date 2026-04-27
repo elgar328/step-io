@@ -19,131 +19,11 @@ use super::ReaderContext;
 use crate::ir::assembly::{
     Instance, ProductContent, Transform3d, WireframeContent, WireframeReprKind,
 };
-use crate::ir::attr::{
-    check_count, read_entity_ref, read_entity_ref_list, read_string, read_string_or_unset,
-};
+use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
 
 impl ReaderContext {
-    // ------------------------------------------------------------------
-    // Pass 6-4: ADVANCED_BREP_SHAPE_REPRESENTATION
-    // ------------------------------------------------------------------
-    //
-    // `ABSR('', items, context)` — `items` is a list of `REPRESENTATION_ITEM`
-    // refs (axis placements, solids, …). We pick the first ref that is a
-    // MANIFOLD_SOLID_BREP (i.e. present in `solid_map`) and bind it to the
-    // ABSR id.
-
-    pub(super) fn convert_advanced_brep_shape_representation(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "ADVANCED_BREP_SHAPE_REPRESENTATION")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
-        let items = read_entity_ref_list(attrs, 1, entity_id, "items")?;
-        let ctx_ref = read_entity_ref(attrs, 2, entity_id, "context_of_items")?;
-        if let Some(&ctx_id) = self.context_id_map.get(&ctx_ref) {
-            self.repr_context_map.insert(entity_id, ctx_id);
-        }
-
-        let solid_refs: Vec<u64> = items
-            .iter()
-            .filter(|r| self.solid_map.contains_key(r))
-            .copied()
-            .collect();
-        // Pick the first AXIS2_PLACEMENT_3D in the items list as the coordinate
-        // reference frame. In practice commercial CAD output places it first.
-        if let Some(&placement_id) = items.iter().find_map(|r| self.placement_map.get(r)) {
-            self.absr_ref_frame_map.insert(entity_id, placement_id);
-        }
-        match solid_refs.as_slice() {
-            [] => {
-                self.warnings.push(ConvertError::UnexpectedEntityForm {
-                    entity_id,
-                    detail: String::from(
-                        "ADVANCED_BREP_SHAPE_REPRESENTATION without a MANIFOLD_SOLID_BREP item",
-                    ),
-                });
-                Ok(())
-            }
-            [solid_ref, ..] => {
-                if solid_refs.len() > 1 {
-                    self.warnings.push(ConvertError::UnexpectedEntityForm {
-                        entity_id,
-                        detail: format!(
-                            "ADVANCED_BREP_SHAPE_REPRESENTATION has {} MANIFOLD_SOLID_BREP items, using the first",
-                            solid_refs.len()
-                        ),
-                    });
-                }
-                let solid_id = self.solid_map[solid_ref];
-                self.absr_solid_map.insert(entity_id, solid_id);
-                Ok(())
-            }
-        }
-    }
-
-    // ------------------------------------------------------------------
-    // Pass 6-4b: SHELL_BASED_SURFACE_MODEL
-    // ------------------------------------------------------------------
-    //
-    // `SBSM('', sbsm_boundary)` — `sbsm_boundary` is a list of `OPEN_SHELL`
-    // / `CLOSED_SHELL` refs. We resolve each to a `ShellId` and store the
-    // list for later MSSR flattening.
-
-    pub(super) fn convert_shell_based_surface_model(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "SHELL_BASED_SURFACE_MODEL")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
-        let shell_refs = read_entity_ref_list(attrs, 1, entity_id, "sbsm_boundary")?;
-        let shells: Vec<crate::ir::id::ShellId> = shell_refs
-            .iter()
-            .filter_map(|r| self.shell_map.get(r).copied())
-            .collect();
-        self.sbsm_shells_map.insert(entity_id, shells);
-        Ok(())
-    }
-
-    // ------------------------------------------------------------------
-    // Pass 6-4c: MANIFOLD_SURFACE_SHAPE_REPRESENTATION
-    // ------------------------------------------------------------------
-    //
-    // `MSSR('', items, context)` — analogous to ABSR but with a
-    // `SHELL_BASED_SURFACE_MODEL` in place of a `MANIFOLD_SOLID_BREP`.
-    // An optional `AXIS2_PLACEMENT_3D` may appear in `items` as the
-    // coordinate reference frame.
-
-    pub(super) fn convert_manifold_surface_shape_representation(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "MANIFOLD_SURFACE_SHAPE_REPRESENTATION")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
-        let items = read_entity_ref_list(attrs, 1, entity_id, "items")?;
-        let ctx_ref = read_entity_ref(attrs, 2, entity_id, "context_of_items")?;
-        if let Some(&ctx_id) = self.context_id_map.get(&ctx_ref) {
-            self.repr_context_map.insert(entity_id, ctx_id);
-        }
-
-        if let Some(&placement_id) = items.iter().find_map(|r| self.placement_map.get(r)) {
-            self.mssr_ref_frame_map.insert(entity_id, placement_id);
-        }
-
-        let flattened: Vec<crate::ir::id::ShellId> = items
-            .iter()
-            .filter_map(|r| self.sbsm_shells_map.get(r))
-            .flat_map(|shells| shells.iter().copied())
-            .collect();
-        self.mssr_shells_map.insert(entity_id, flattened);
-        Ok(())
-    }
-
     // ------------------------------------------------------------------
     // Pass 6-4f: GEOMETRIC_CURVE_SET / GEOMETRIC_SET
     // ------------------------------------------------------------------
@@ -245,41 +125,6 @@ impl ReaderContext {
                 repr_kind,
             },
         );
-        Ok(())
-    }
-
-    // ------------------------------------------------------------------
-    // Pass 6-4e: plain SHAPE_REPRESENTATION
-    // ------------------------------------------------------------------
-    //
-    // `SHAPE_REPRESENTATION(name, items, context)`. Captures the first
-    // `AXIS2_PLACEMENT_3D` from `items` so the SDR pass can attach it to
-    // `Product.outer_sr_frame` when the Fusion 360 / CATIA indirection chain
-    // (`SDR → plain SR → SRR → ABSR/MSSR`) is taken. Plain SRs that are not
-    // part of an indirection chain (e.g. Group-product SRs) populate the map
-    // harmlessly — entries are looked up only when SDR detects indirection.
-    //
-    // Subtypes (`ADVANCED_BREP_SHAPE_REPRESENTATION`,
-    // `MANIFOLD_SURFACE_SHAPE_REPRESENTATION`) keep their own dispatch entries;
-    // `run_pass!` exact-matches entity names so subtypes never reach this
-    // converter.
-
-    pub(super) fn convert_plain_shape_representation(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "SHAPE_REPRESENTATION")?;
-        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
-        let items = read_entity_ref_list(attrs, 1, entity_id, "items")?;
-        let ctx_ref = read_entity_ref(attrs, 2, entity_id, "context_of_items")?;
-        if let Some(&ctx_id) = self.context_id_map.get(&ctx_ref) {
-            self.repr_context_map.insert(entity_id, ctx_id);
-        }
-
-        if let Some(&placement_id) = items.iter().find_map(|r| self.placement_map.get(r)) {
-            self.plain_sr_frame_map.insert(entity_id, placement_id);
-        }
         Ok(())
     }
 

@@ -286,42 +286,24 @@ impl WriteBuffer<'_> {
         )
     }
 
-    pub(crate) fn emit_shell_based_surface_model(
-        &mut self,
-        shells: &[crate::ir::ShellId],
-    ) -> Result<u64, WriteError> {
-        let mut shell_refs = Vec::with_capacity(shells.len());
-        for &s in shells {
-            shell_refs.push(Attribute::EntityRef(self.emit_shell(s)?));
-        }
-        Ok(self.push_simple(
-            "SHELL_BASED_SURFACE_MODEL",
-            vec![
-                Attribute::String(String::new()),
-                Attribute::List(shell_refs),
-            ],
-        ))
-    }
-
     pub(crate) fn emit_mssr(
         &mut self,
         product: &Product,
         shells: &[crate::ir::ShellId],
         unit_ctx: u64,
     ) -> Result<u64, WriteError> {
-        let axis_ref = self.emit_axis2_placement_3d(product.shape_ref_frame)?;
-        let sbsm_ref = self.emit_shell_based_surface_model(shells)?;
-        Ok(self.push_simple(
-            "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
-            vec![
-                Attribute::String(String::new()),
-                Attribute::List(vec![
-                    Attribute::EntityRef(axis_ref),
-                    Attribute::EntityRef(sbsm_ref),
-                ]),
-                Attribute::EntityRef(unit_ctx),
-            ],
-        ))
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::shape_rep::manifold_surface_shape_representation::{
+            ManifoldSurfaceShapeRepresentationHandler, ManifoldSurfaceShapeRepresentationWriteInput,
+        };
+        ManifoldSurfaceShapeRepresentationHandler::write(
+            self,
+            ManifoldSurfaceShapeRepresentationWriteInput {
+                product: product.clone(),
+                shells: shells.to_vec(),
+                unit_ctx,
+            },
+        )
     }
 
     /// Emit a wireframe `SHAPE_REPRESENTATION` (`GBWSR` / `GBSSR`) plus its
@@ -375,18 +357,18 @@ impl WriteBuffer<'_> {
         solid_ref: u64,
         unit_ctx: u64,
     ) -> Result<u64, WriteError> {
-        let axis_ref = self.emit_axis2_placement_3d(product.shape_ref_frame)?;
-        Ok(self.push_simple(
-            "ADVANCED_BREP_SHAPE_REPRESENTATION",
-            vec![
-                Attribute::String(String::new()),
-                Attribute::List(vec![
-                    Attribute::EntityRef(axis_ref),
-                    Attribute::EntityRef(solid_ref),
-                ]),
-                Attribute::EntityRef(unit_ctx),
-            ],
-        ))
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::shape_rep::advanced_brep_shape_representation::{
+            AdvancedBrepShapeRepresentationHandler, AdvancedBrepShapeRepresentationWriteInput,
+        };
+        AdvancedBrepShapeRepresentationHandler::write(
+            self,
+            AdvancedBrepShapeRepresentationWriteInput {
+                product: product.clone(),
+                solid_ref,
+                unit_ctx,
+            },
+        )
     }
 
     /// Emit a `SHAPE_REPRESENTATION` for a Group product — no geometry,
@@ -397,15 +379,17 @@ impl WriteBuffer<'_> {
         product: &Product,
         unit_ctx: u64,
     ) -> Result<u64, WriteError> {
-        let axis_ref = self.emit_axis2_placement_3d(product.shape_ref_frame)?;
-        Ok(self.push_simple(
-            "SHAPE_REPRESENTATION",
-            vec![
-                Attribute::String(String::new()),
-                Attribute::List(vec![Attribute::EntityRef(axis_ref)]),
-                Attribute::EntityRef(unit_ctx),
-            ],
-        ))
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::shape_rep::shape_representation::{
+            ShapeRepresentationHandler, ShapeRepresentationWriteInput,
+        };
+        ShapeRepresentationHandler::write(
+            self,
+            ShapeRepresentationWriteInput {
+                product: product.clone(),
+                unit_ctx,
+            },
+        )
     }
 
     pub(crate) fn emit_sdr(&mut self, pdef_shape: u64, sr: u64) -> u64 {
