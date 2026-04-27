@@ -2,8 +2,8 @@
 
 use super::WriteBuffer;
 use crate::ir::{
-    EdgeId, Face, FaceId, FaceKind, Orientation, OrientedEdge, Shell, ShellId, Solid, SolidId,
-    VertexId, Wire, WireId,
+    EdgeId, Face, FaceId, FaceKind, Orientation, Shell, ShellId, Solid, SolidId, VertexId, Wire,
+    WireId,
 };
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
@@ -25,6 +25,7 @@ impl WriteBuffer<'_> {
     }
 
     pub(crate) fn emit_wire(&mut self, id: WireId) -> Result<u64, WriteError> {
+        use crate::entities::SimpleEntityHandler;
         if let Some(&n) = self.wire_ids.get(&id) {
             return Ok(n);
         }
@@ -42,25 +43,12 @@ impl WriteBuffer<'_> {
         // vertex, used by some revolutions and sphere poles). Reader stores
         // either `edges` or `vertex`, never both.
         let loop_id = if let Some(vid) = w.vertex {
-            self.emit_vertex_loop(vid)?
+            crate::entities::topology::vertex_loop::VertexLoopHandler::write(self, vid)?
         } else {
-            let mut oe_refs = Vec::with_capacity(w.edges.len());
-            for oe in &w.edges {
-                oe_refs.push(self.emit_oriented_edge(*oe)?);
-            }
-            let id = self.fresh();
-            self.entities.push(WriterEntity {
-                id,
-                body: WriterBody::Simple {
-                    name: "EDGE_LOOP".into(),
-                    attrs: vec![
-                        Attribute::String(String::new()),
-                        Attribute::List(oe_refs.into_iter().map(Attribute::EntityRef).collect()),
-                    ],
-                },
-            });
-            id
+            crate::entities::topology::edge_loop::EdgeLoopHandler::write(self, w.edges)?
         };
+        // FACE_BOUND / FACE_OUTER_BOUND wrapper still inlined here; moves
+        // to dedicated handlers in Plan 4 stage C4.
         let wrapper = if w.is_outer {
             "FACE_OUTER_BOUND"
         } else {
@@ -80,41 +68,6 @@ impl WriteBuffer<'_> {
         });
         self.wire_ids.insert(id, bound_id);
         Ok(bound_id)
-    }
-
-    pub(crate) fn emit_vertex_loop(&mut self, vid: VertexId) -> Result<u64, WriteError> {
-        let vertex_ref = self.emit_vertex(vid)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "VERTEX_LOOP".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(vertex_ref),
-                ],
-            },
-        });
-        Ok(n)
-    }
-
-    pub(crate) fn emit_oriented_edge(&mut self, oe: OrientedEdge) -> Result<u64, WriteError> {
-        let edge_ref = self.emit_edge(oe.edge)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "ORIENTED_EDGE".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::Derived,
-                    Attribute::Derived,
-                    Attribute::EntityRef(edge_ref),
-                    orientation_bool(oe.orientation),
-                ],
-            },
-        });
-        Ok(n)
     }
 
     pub(crate) fn emit_face(&mut self, id: FaceId) -> Result<u64, WriteError> {

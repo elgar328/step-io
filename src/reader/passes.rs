@@ -298,14 +298,11 @@ impl ReaderContext {
         // Pass 5-2: edges (depend on vertices + curves)
         self.dispatch_registry(graph, PassLevel::Pass5Edge);
         // Pass 5-3: oriented edges (intermediate, depend on edges)
-        run_pass!(graph, self, "ORIENTED_EDGE" => convert_oriented_edge);
-        // Pass 5-4: edge loops (intermediate, depend on oriented edges).
-        //   Also handles VERTEX_LOOP (degenerate single-vertex boundary
-        //   used by spheres). VERTEX_LOOP is stored as an empty edge list
-        //   so FACE_BOUND resolves uniformly.
-        run_pass!(graph, self,
-            "EDGE_LOOP" => convert_edge_loop,
-            "VERTEX_LOOP" => convert_vertex_loop);
+        self.dispatch_registry(graph, PassLevel::Pass5OrientedEdge);
+        // Pass 5-4: edge loops + vertex loops (intermediate, depend on
+        // oriented edges / vertices). Both go in the same PassLevel since
+        // they don't depend on each other.
+        self.dispatch_registry(graph, PassLevel::Pass5EdgeLoop);
         // Pass 5-5: face bounds / outer bounds (depend on edge loops)
         run_face_bound_pass!(graph, self);
         // Pass 5-6: faces (ADVANCED_FACE + FACE_SURFACE, depend on face bounds + surfaces)

@@ -3,77 +3,10 @@
 use super::{ReaderContext, bool_to_orientation};
 use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_entity_ref_list, read_string};
 use crate::ir::error::ConvertError;
-use crate::ir::topology::{Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Wire};
+use crate::ir::topology::{Face, FaceKind, Orientation, Shell, Solid, Wire};
 use crate::parser::entity::Attribute;
 
 impl ReaderContext {
-    // ------------------------------------------------------------------
-    // Pass 5-3: ORIENTED_EDGE (depends on EDGE_CURVE) — intermediate
-    // ------------------------------------------------------------------
-
-    pub(super) fn convert_oriented_edge(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 5, entity_id, "ORIENTED_EDGE")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
-        // attrs[1] and [2] are derived (*) — skip them.
-        let edge_ref = read_entity_ref(attrs, 3, entity_id, "edge_element")?;
-        let orientation = read_bool(attrs, 4, entity_id, "orientation")?;
-
-        let edge = self.resolve_edge(entity_id, edge_ref, "edge_element")?;
-
-        let oe = OrientedEdge {
-            edge,
-            orientation: bool_to_orientation(orientation),
-        };
-        self.oriented_edge_map.insert(entity_id, oe);
-        Ok(())
-    }
-
-    // ------------------------------------------------------------------
-    // Pass 5-4: EDGE_LOOP (depends on ORIENTED_EDGE) — intermediate
-    // ------------------------------------------------------------------
-
-    pub(super) fn convert_edge_loop(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "EDGE_LOOP")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
-        let edge_refs = read_entity_ref_list(attrs, 1, entity_id, "edge_list")?;
-
-        let mut edges = Vec::with_capacity(edge_refs.len());
-        for &r in &edge_refs {
-            let oe = self.resolve_oriented_edge(entity_id, r, "edge_list")?;
-            edges.push(oe);
-        }
-        self.edge_loop_map.insert(entity_id, edges);
-        Ok(())
-    }
-
-    // ------------------------------------------------------------------
-    // Pass 5-4b: VERTEX_LOOP — degenerate face boundary consisting of a
-    // single vertex (spheres, some revolutions). Stored in a dedicated
-    // `vertex_loop_map`; FACE_BOUND picks either this or the regular
-    // `edge_loop_map` depending on which the loop ref appears in.
-    // ------------------------------------------------------------------
-
-    pub(super) fn convert_vertex_loop(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "VERTEX_LOOP")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
-        let vertex_ref = read_entity_ref(attrs, 1, entity_id, "loop_vertex")?;
-        let vertex = self.resolve_vertex(entity_id, vertex_ref, "loop_vertex")?;
-        self.vertex_loop_map.insert(entity_id, vertex);
-        Ok(())
-    }
-
     // ------------------------------------------------------------------
     // Pass 5-5: FACE_BOUND / FACE_OUTER_BOUND (depends on EDGE_LOOP)
     // ------------------------------------------------------------------
