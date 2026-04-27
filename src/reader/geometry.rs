@@ -9,8 +9,8 @@ use crate::ir::attr::{
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{
-    Axis2Placement2d, Circle2, Curve2d, CurveForm, Direction2, Ellipse2, Line2, NurbsCurve2d,
-    Pcurve, Point2, Surface, SurfaceOfOffset,
+    Axis2Placement2d, Circle2, Curve2d, CurveForm, Ellipse2, Line2, NurbsCurve2d, Pcurve, Surface,
+    SurfaceOfOffset,
 };
 use crate::parser::entity::{Attribute, RawEntity};
 
@@ -76,54 +76,6 @@ impl ReaderContext {
     // on entities inside `pcurve_subtree_ids`, so a single entity name
     // like `CARTESIAN_POINT` can route to either the 3D or 2D converter
     // depending on whether the entity belongs to a PCURVE subtree.
-
-    pub(super) fn convert_cartesian_point_2d(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "CARTESIAN_POINT")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
-        let coords = read_real_list(attrs, 1, entity_id, "coordinates")?;
-        if coords.len() != 2 {
-            return Err(ConvertError::DimensionMismatch {
-                entity_id,
-                field_name: "coordinates",
-                expected: 2,
-                actual: coords.len(),
-            });
-        }
-        let id = self.geometry.points_2d.push(Point2 {
-            x: coords[0],
-            y: coords[1],
-        });
-        self.point_2d_map.insert(entity_id, id);
-        Ok(())
-    }
-
-    pub(super) fn convert_direction_2d(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "DIRECTION")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
-        let coords = read_real_list(attrs, 1, entity_id, "direction_ratios")?;
-        if coords.len() != 2 {
-            return Err(ConvertError::DimensionMismatch {
-                entity_id,
-                field_name: "direction_ratios",
-                expected: 2,
-                actual: coords.len(),
-            });
-        }
-        let id = self.geometry.directions_2d.push(Direction2 {
-            x: coords[0],
-            y: coords[1],
-        });
-        self.direction_2d_map.insert(entity_id, id);
-        Ok(())
-    }
 
     pub(super) fn convert_vector_2d(
         &mut self,

@@ -5,11 +5,10 @@
 use super::WriteBuffer;
 use crate::ir::{
     Circle2, Circle3, CompositeCurve, ConicalSurface, Curve, Curve2d, Curve2dId, CurveId,
-    CylindricalSurface, Direction2, Direction2dId, Direction3, DirectionId, Ellipse2, Ellipse3,
-    Line2, Line3, NurbsCurve, NurbsCurve2d, NurbsSurface, Pcurve, Placement1dId, Placement2dId,
-    Placement3dId, Plane3, Point2, Point2dId, PointId, SphericalSurface, StepModel, Surface,
-    SurfaceId, SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface,
-    TrimmedCurve,
+    CylindricalSurface, Direction2dId, Direction3, DirectionId, Ellipse2, Ellipse3, Line2, Line3,
+    NurbsCurve, NurbsCurve2d, NurbsSurface, Pcurve, Placement1dId, Placement2dId, Placement3dId,
+    Plane3, Point2dId, PointId, SphericalSurface, StepModel, Surface, SurfaceId,
+    SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TrimmedCurve,
 };
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
@@ -237,43 +236,15 @@ fn surface_at(model: &StepModel, id: SurfaceId) -> Result<&Surface, WriteError> 
 
 impl WriteBuffer<'_> {
     pub(crate) fn emit_point_2d(&mut self, id: Point2dId) -> Result<u64, WriteError> {
-        if let Some(&n) = self.point_2d_ids.get(&id) {
-            return Ok(n);
-        }
-        let p = point_2d_at(self.model, id)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "CARTESIAN_POINT".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::List(vec![Attribute::Real(p.x), Attribute::Real(p.y)]),
-                ],
-            },
-        });
-        self.point_2d_ids.insert(id, n);
-        Ok(n)
+        // Plan 5.5 stage C2: dispatch through EntityHandler trait.
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::cartesian_point_2d::CartesianPoint2dHandler::write(self, id)
     }
 
     pub(crate) fn emit_direction_2d(&mut self, id: Direction2dId) -> Result<u64, WriteError> {
-        if let Some(&n) = self.direction_2d_ids.get(&id) {
-            return Ok(n);
-        }
-        let d = direction_2d_at(self.model, id)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "DIRECTION".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::List(vec![Attribute::Real(d.x), Attribute::Real(d.y)]),
-                ],
-            },
-        });
-        self.direction_2d_ids.insert(id, n);
-        Ok(n)
+        // Plan 5.5 stage C2: dispatch through EntityHandler trait.
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::direction_2d::Direction2dHandler::write(self, id)
     }
 
     fn emit_vector_2d(
@@ -538,30 +509,6 @@ impl WriteBuffer<'_> {
             )
         }
     }
-}
-
-fn point_2d_at(model: &StepModel, id: Point2dId) -> Result<Point2, WriteError> {
-    model
-        .geometry
-        .points_2d
-        .iter()
-        .nth(id.0 as usize)
-        .copied()
-        .ok_or_else(|| WriteError::DanglingId {
-            detail: format!("Point2dId({})", id.0),
-        })
-}
-
-fn direction_2d_at(model: &StepModel, id: Direction2dId) -> Result<Direction2, WriteError> {
-    model
-        .geometry
-        .directions_2d
-        .iter()
-        .nth(id.0 as usize)
-        .copied()
-        .ok_or_else(|| WriteError::DanglingId {
-            detail: format!("Direction2dId({})", id.0),
-        })
 }
 
 fn curve_2d_at(model: &StepModel, id: Curve2dId) -> Result<&Curve2d, WriteError> {

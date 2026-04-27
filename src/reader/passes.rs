@@ -122,9 +122,7 @@ impl ReaderContext {
             };
         }
         // 4a-1: 2D points / directions
-        run_2d_pass!(graph, self,
-            "CARTESIAN_POINT" => convert_cartesian_point_2d,
-            "DIRECTION" => convert_direction_2d);
+        self.dispatch_registry_2d(graph, PassLevel::Pass4aPoint);
         // 4a-2: 2D vectors + axis2_placement_2d
         run_2d_pass!(graph, self,
             "VECTOR" => convert_vector_2d,
@@ -463,7 +461,6 @@ impl ReaderContext {
     /// geometry). Plan 5.5 introduced this twin entry point so that
     /// shared entity names (`CARTESIAN_POINT`, `DIRECTION`, `LINE`, …)
     /// can have separate 3D / 2D handlers without confusion.
-    #[allow(dead_code)] // wired in Plan 5.5 stage C2
     fn dispatch_registry_2d(&mut self, graph: &EntityGraph, pass_level: PassLevel) {
         for entry in ENTITY_HANDLERS {
             if entry.pass_level != pass_level {
@@ -479,7 +476,6 @@ impl ReaderContext {
     /// duplication is a deliberate trade-off documented in the Plan 5.5
     /// design (see `internal/IR_DESIGN.md` for the planned future
     /// generalisation into a single `EntityContext`-driven dispatch).
-    #[allow(dead_code)] // wired in Plan 5.5 stage C2
     fn dispatch_entry_2d(&mut self, graph: &EntityGraph, entry: &EntityHandlerEntry) {
         for (&id, ent) in &graph.entities {
             if !self.pcurve_subtree_ids.contains(&id) {
