@@ -1,0 +1,2 @@
+//! `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION` handler —
+//! Pass 7-11. Body wired in Plan 7 stage C4.

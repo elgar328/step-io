@@ -14,9 +14,12 @@ use crate::writer::buffer::WriteBuffer;
 
 pub mod assembly_product;
 pub mod geometry;
+pub mod pmi;
+pub mod property;
 pub mod shape_rep;
 pub mod topology;
 pub mod units;
+pub mod visualization;
 
 /// Reader pass ordering. Lower variants run first.
 ///
@@ -182,6 +185,64 @@ pub(crate) enum PassLevel {
     /// parent products' Group content.
     #[allow(dead_code)] // wired in Plan 6 stage C7
     Pass6Nauo,
+
+    // ----- Plan 7 (Pass 4-4B + Pass 7 visualization + Pass 8 property/PMI) -----
+    /// `OFFSET_SURFACE` (Pass 4-4B) — fixpoint dispatch. Dispatched via
+    /// [`Self::dispatch_registry_until_fixpoint`] because a chain of
+    /// `OFFSET_SURFACE` on top of `OFFSET_SURFACE` may resolve in any order.
+    #[allow(dead_code)] // wired in Plan 7 stage C6
+    Pass4_4Offset,
+    /// `COLOUR_RGB` (Pass 7-1) — leaf, no entity-ref dependencies.
+    #[allow(dead_code)] // wired in Plan 7 stage C2
+    Pass7Colour,
+    /// `FILL_AREA_STYLE_COLOUR` (Pass 7-2) — depends on `Pass7Colour`.
+    #[allow(dead_code)] // wired in Plan 7 stage C2
+    Pass7FillColour,
+    /// `FILL_AREA_STYLE` (Pass 7-3) — depends on `Pass7FillColour`.
+    #[allow(dead_code)] // wired in Plan 7 stage C2
+    Pass7FillArea,
+    /// `SURFACE_STYLE_FILL_AREA` (Pass 7-4) — depends on `Pass7FillArea`.
+    #[allow(dead_code)] // wired in Plan 7 stage C2
+    Pass7SurfaceFill,
+    /// `SURFACE_STYLE_TRANSPARENT` (Pass 7-5) — leaf, populates the
+    /// transparent map for `Pass7Rendering`.
+    #[allow(dead_code)] // wired in Plan 7 stage C3
+    Pass7Transparent,
+    /// `SURFACE_STYLE_RENDERING_WITH_PROPERTIES` (Pass 7-6) — depends on
+    /// `Pass7Colour` + `Pass7Transparent`.
+    #[allow(dead_code)] // wired in Plan 7 stage C3
+    Pass7Rendering,
+    /// `SURFACE_SIDE_STYLE` (Pass 7-7) — depends on `Pass7SurfaceFill` +
+    /// `Pass7Rendering`.
+    #[allow(dead_code)] // wired in Plan 7 stage C4
+    Pass7SurfaceSide,
+    /// `SURFACE_STYLE_USAGE` (Pass 7-8) — depends on `Pass7SurfaceSide`.
+    #[allow(dead_code)] // wired in Plan 7 stage C4
+    Pass7Usage,
+    /// `PRESENTATION_STYLE_ASSIGNMENT` (Pass 7-9) — depends on `Pass7Usage`.
+    #[allow(dead_code)] // wired in Plan 7 stage C4
+    Pass7Assignment,
+    /// `STYLED_ITEM` (Pass 7-10) — depends on `Pass7Assignment` plus
+    /// multi-pool item lookup (solid / face / curve / point maps).
+    #[allow(dead_code)] // wired in Plan 7 stage C4
+    Pass7StyledItem,
+    /// `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION` (Pass 7-11)
+    /// — depends on `Pass7StyledItem` outputs.
+    #[allow(dead_code)] // wired in Plan 7 stage C4
+    Pass7Mdgpr,
+    /// `SHAPE_ASPECT` (Pass 8-pre) — PMI scaffolding. Runs before the
+    /// property converters so a future Pattern B PD pass can resolve its
+    /// target ref through the `SHAPE_ASPECT` id map.
+    #[allow(dead_code)] // wired in Plan 7 stage C5
+    Pass8ShapeAspect,
+    /// `MEASURE_REPRESENTATION_ITEM` (Pass 8-1) — depends on Pass 0
+    /// (unit ctx).
+    #[allow(dead_code)] // wired in Plan 7 stage C5
+    Pass8Measure,
+    /// `PROPERTY_DEFINITION` (Pass 8-2) — depends on Pass 6 (`pdef_to_product`)
+    /// for resolving the PD's target.
+    #[allow(dead_code)] // wired in Plan 7 stage C5
+    Pass8PropertyDef,
 }
 
 /// Handler for a [`RawEntity::Simple`] STEP entity. Reader receives a flat

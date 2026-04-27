@@ -330,14 +330,42 @@ impl ReaderContext {
     }
 
     /// Walk the [`ENTITY_HANDLERS`] registry and dispatch every handler whose
-    /// `pass_level` matches. Single-round only; multi-round entities (currently
-    /// just `OFFSET_SURFACE`) keep their bespoke `run_pass!` + loop.
+    /// `pass_level` matches. Single-round only; for entities whose dispatch
+    /// must repeat until a fixpoint (e.g. `OFFSET_SURFACE` chains), see
+    /// [`Self::dispatch_registry_until_fixpoint`].
     fn dispatch_registry(&mut self, graph: &EntityGraph, pass_level: PassLevel) {
         for entry in ENTITY_HANDLERS {
             if entry.pass_level != pass_level {
                 continue;
             }
             self.dispatch_entry(graph, entry);
+        }
+    }
+
+    /// Repeat [`Self::dispatch_registry`] for `pass_level` until `measure`
+    /// stops changing. The first round populates handlers whose dependencies
+    /// were already in place; subsequent rounds pick up entities whose basis
+    /// was emitted by an earlier round of the same pass. Mirrors the
+    /// pre-Plan-7 `OFFSET_SURFACE` loop semantics: warnings produced before
+    /// the final no-progress round are discarded so only genuine errors
+    /// (basis still missing at fixpoint) reach `self.warnings`.
+    #[allow(dead_code)] // wired in Plan 7 stage C6 (OFFSET_SURFACE migration)
+    fn dispatch_registry_until_fixpoint<F>(
+        &mut self,
+        graph: &EntityGraph,
+        pass_level: PassLevel,
+        measure: F,
+    ) where
+        F: Fn(&Self) -> usize,
+    {
+        loop {
+            let before = measure(self);
+            let warnings_snapshot = self.warnings.len();
+            self.dispatch_registry(graph, pass_level);
+            if measure(self) == before {
+                break;
+            }
+            self.warnings.truncate(warnings_snapshot);
         }
     }
 

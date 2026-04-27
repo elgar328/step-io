@@ -29,7 +29,7 @@ impl WriteBuffer<'_> {
         Ok(())
     }
 
-    fn emit_mdgpr(&mut self, mdgpr: &Mdgpr) -> Result<u64, WriteError> {
+    pub(crate) fn emit_mdgpr(&mut self, mdgpr: &Mdgpr) -> Result<u64, WriteError> {
         let mut item_refs = Vec::with_capacity(mdgpr.items.len());
         for si in &mdgpr.items {
             let id = self.emit_styled_item(si)?;
@@ -53,7 +53,7 @@ impl WriteBuffer<'_> {
         ))
     }
 
-    fn emit_styled_item(&mut self, si: &StyledItem) -> Result<u64, WriteError> {
+    pub(crate) fn emit_styled_item(&mut self, si: &StyledItem) -> Result<u64, WriteError> {
         let item_id = match si.item {
             StyledItemTarget::Solid(sid) => self.emit_solid(sid)?,
             StyledItemTarget::Face(fid) => self.emit_face(fid)?,
@@ -74,7 +74,7 @@ impl WriteBuffer<'_> {
         ))
     }
 
-    fn emit_psa(&mut self, psa: &PresentationStyleAssignment) -> u64 {
+    pub(crate) fn emit_psa(&mut self, psa: &PresentationStyleAssignment) -> u64 {
         let mut style_refs = Vec::with_capacity(psa.styles.len());
         for ssu in &psa.styles {
             style_refs.push(Attribute::EntityRef(self.emit_ssu(ssu)));
@@ -85,7 +85,7 @@ impl WriteBuffer<'_> {
         )
     }
 
-    fn emit_ssu(&mut self, ssu: &SurfaceStyleUsage) -> u64 {
+    pub(crate) fn emit_ssu(&mut self, ssu: &SurfaceStyleUsage) -> u64 {
         let style_ref = self.emit_sss(&ssu.style);
         let side = match ssu.side {
             SurfaceSide::Front => "POSITIVE",
@@ -101,7 +101,7 @@ impl WriteBuffer<'_> {
         )
     }
 
-    fn emit_sss(&mut self, sss: &SurfaceSideStyle) -> u64 {
+    pub(crate) fn emit_sss(&mut self, sss: &SurfaceSideStyle) -> u64 {
         let mut style_refs = Vec::with_capacity(sss.styles.len());
         for entry in &sss.styles {
             let entry_id = match entry {
@@ -119,7 +119,7 @@ impl WriteBuffer<'_> {
         )
     }
 
-    fn emit_ssfa(&mut self, ssfa: &SurfaceStyleFillArea) -> u64 {
+    pub(crate) fn emit_ssfa(&mut self, ssfa: &SurfaceStyleFillArea) -> u64 {
         let fas_id = self.emit_fas(&ssfa.fill_area);
         self.push_simple(
             "SURFACE_STYLE_FILL_AREA",
@@ -127,7 +127,7 @@ impl WriteBuffer<'_> {
         )
     }
 
-    fn emit_ssr(&mut self, ssr: &SurfaceStyleRendering) -> u64 {
+    pub(crate) fn emit_ssr(&mut self, ssr: &SurfaceStyleRendering) -> u64 {
         let colour_id = self.emit_colour_rgb(&ssr.surface_colour);
         let mut prop_refs = Vec::with_capacity(ssr.properties.len());
         for prop in &ssr.properties {
@@ -153,14 +153,14 @@ impl WriteBuffer<'_> {
         )
     }
 
-    fn emit_surface_style_transparent(&mut self, transparency: f64) -> u64 {
+    pub(crate) fn emit_surface_style_transparent(&mut self, transparency: f64) -> u64 {
         self.push_simple(
             "SURFACE_STYLE_TRANSPARENT",
             vec![Attribute::Real(transparency)],
         )
     }
 
-    fn emit_fas(&mut self, fas: &FillAreaStyle) -> u64 {
+    pub(crate) fn emit_fas(&mut self, fas: &FillAreaStyle) -> u64 {
         let mut style_refs = Vec::with_capacity(fas.fill_styles.len());
         for fasc in &fas.fill_styles {
             style_refs.push(Attribute::EntityRef(self.emit_fasc(fasc)));
@@ -174,7 +174,7 @@ impl WriteBuffer<'_> {
         )
     }
 
-    fn emit_fasc(&mut self, fasc: &FillAreaStyleColour) -> u64 {
+    pub(crate) fn emit_fasc(&mut self, fasc: &FillAreaStyleColour) -> u64 {
         let colour_id = self.emit_colour_rgb(&fasc.colour);
         self.push_simple(
             "FILL_AREA_STYLE_COLOUR",
@@ -185,7 +185,7 @@ impl WriteBuffer<'_> {
         )
     }
 
-    fn emit_colour_rgb(&mut self, c: &ColorRgb) -> u64 {
+    pub(crate) fn emit_colour_rgb(&mut self, c: &ColorRgb) -> u64 {
         let n = self.fresh();
         self.entities.push(WriterEntity {
             id: n,

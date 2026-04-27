@@ -17,7 +17,7 @@ impl WriteBuffer<'_> {
         }
     }
 
-    fn emit_shape_aspect(&mut self, sa: &ShapeAspect) {
+    pub(crate) fn emit_shape_aspect(&mut self, sa: &ShapeAspect) {
         // Defensive: silent skip when product chain wasn't emitted (e.g.
         // kernel-built IR with PMI only, or model.units empty so the
         // assembly pass bailed out). Reader symmetry — reader silent

@@ -72,7 +72,11 @@ impl WriteBuffer<'_> {
         );
     }
 
-    fn emit_property_measure(&mut self, m: &PropertyMeasure, ctx: Option<UnitContextId>) -> u64 {
+    pub(crate) fn emit_property_measure(
+        &mut self,
+        m: &PropertyMeasure,
+        ctx: Option<UnitContextId>,
+    ) -> u64 {
         let typed_name = match m.kind {
             MeasureKind::Length => "LENGTH_MEASURE",
             MeasureKind::PlaneAngle => "PLANE_ANGLE_MEASURE",

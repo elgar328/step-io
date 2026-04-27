@@ -20,11 +20,11 @@ use crate::ir::{
 
 pub(crate) mod assembly;
 pub(crate) mod geometry;
-mod pmi;
-mod property;
+pub(crate) mod pmi;
+pub(crate) mod property;
 pub(crate) mod topology;
 pub(crate) mod units;
-mod visualization;
+pub(crate) mod visualization;
 
 pub(crate) struct WriteBuffer<'m> {
     pub(crate) model: &'m StepModel,
