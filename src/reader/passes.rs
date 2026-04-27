@@ -19,24 +19,7 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass0Uncertainty);
 
         // Pass 0-2: GLOBAL_UNIT_ASSIGNED_CONTEXT.
-        for (&id, entity) in &graph.entities {
-            if self.pcurve_subtree_ids.contains(&id) {
-                continue;
-            }
-            let parts = match entity {
-                RawEntity::Complex { parts, .. } => parts,
-                RawEntity::Simple { .. } => continue,
-            };
-            if !parts
-                .iter()
-                .any(|p| p.name == "GLOBAL_UNIT_ASSIGNED_CONTEXT")
-            {
-                continue;
-            }
-            if let Err(e) = self.convert_global_unit_assigned_context(id, parts) {
-                self.warnings.push(e);
-            }
-        }
+        self.dispatch_registry(graph, PassLevel::Pass0Context);
     }
 
     #[allow(clippy::too_many_lines)]

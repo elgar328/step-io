@@ -1,92 +1,24 @@
-//! Unit context emission: orchestrates the entity-handler chain that
-//! produces the enclosing `GLOBAL_UNIT_ASSIGNED_CONTEXT` complex entity
-//! and its length / plane-angle / solid-angle leaves. The leaf bodies
-//! live under `src/entities/units/`; this file is a thin wrapper that
-//! `emit_all` calls once per `UnitContext` arena entry.
+//! Unit context emission. Plan 5.6 C4 lifted the entire emit chain
+//! into `entities/units/global_unit_assigned_context.rs` (the
+//! orchestrator) plus the three leaf handlers and the
+//! `UncertaintyMeasureWithUnit` handler. This file remains as a 1-line
+//! dispatcher so `emit_all` keeps a stable entry point — analogous to
+//! the `emit_face` / `emit_curve` wrappers in geometry / topology.
 
 use super::WriteBuffer;
 use crate::ir::UnitContext;
-use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
-use crate::writer::entity::{WriterBody, WriterEntity};
 
 impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_unit_context(
         &mut self,
         units: UnitContext,
     ) -> Result<u64, WriteError> {
-        // No top-level cache — `emit_all` calls this once per `UnitContext`
-        // arena entry and stores each result in `unit_context_ids`. The
-        // length/angle/solid_angle leaf caches still dedup the underlying
-        // unit references across contexts that share leaves (the common case
-        // for Fusion 360, where two contexts share #1034..#1036).
+        // Plan 5.6 stage C4: dispatch through EntityHandler trait. Body
+        // lives in
+        // `src/entities/units/global_unit_assigned_context.rs`.
         use crate::entities::ComplexEntityHandler;
-        let length = crate::entities::units::length_unit::LengthUnitHandler::write(
-            self,
-            (
-                units.length,
-                units.length_cbu_wrapped,
-                units.dim_exp_explicit,
-            ),
-        )?;
-        let angle = crate::entities::units::plane_angle_unit::PlaneAngleUnitHandler::write(
-            self,
-            (
-                units.plane_angle,
-                units.plane_angle_cbu_wrapped,
-                units.dim_exp_explicit,
-            ),
-        )?;
-        let solid = crate::entities::units::solid_angle_unit::SolidAngleUnitHandler::write(
-            self,
-            (units.solid_angle, units.dim_exp_explicit),
-        )?;
-
-        // ISO 10303-21:2016 §11.2.5.1 — complex entity parts serialize in
-        // alphabetical order. Final order with uncertainty present:
-        //   GEOMETRIC_REPRESENTATION_CONTEXT
-        //   GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT   (UNCERTAINTY < UNIT)
-        //   GLOBAL_UNIT_ASSIGNED_CONTEXT
-        //   REPRESENTATION_CONTEXT
-        let mut parts = vec![
-            (
-                "GEOMETRIC_REPRESENTATION_CONTEXT".into(),
-                vec![Attribute::Integer(3)],
-            ),
-            (
-                "GLOBAL_UNIT_ASSIGNED_CONTEXT".into(),
-                vec![Attribute::List(vec![
-                    Attribute::EntityRef(length),
-                    Attribute::EntityRef(angle),
-                    Attribute::EntityRef(solid),
-                ])],
-            ),
-            (
-                "REPRESENTATION_CONTEXT".into(),
-                vec![
-                    Attribute::String(String::new()),
-                    Attribute::String(String::new()),
-                ],
-            ),
-        ];
-        if let Some(value) = units.length_uncertainty {
-            use crate::entities::SimpleEntityHandler;
-            let unc = crate::entities::units::uncertainty_measure_with_unit::UncertaintyMeasureWithUnitHandler::write(self, (value, length))?;
-            parts.insert(
-                1,
-                (
-                    "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT".into(),
-                    vec![Attribute::List(vec![Attribute::EntityRef(unc)])],
-                ),
-            );
-        }
-
-        let ctx = self.fresh();
-        self.entities.push(WriterEntity {
-            id: ctx,
-            body: WriterBody::Complex { parts },
-        });
-        Ok(ctx)
+        crate::entities::units::global_unit_assigned_context::GlobalUnitAssignedContextHandler::write(self, units)
     }
 }
 
