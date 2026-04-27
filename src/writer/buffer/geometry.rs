@@ -4,12 +4,12 @@
 
 use super::WriteBuffer;
 use crate::ir::{
-    Circle2, Circle3, CompositeCurve, CompositeSegment, ConicalSurface, Curve, Curve2d, Curve2dId,
-    CurveId, CylindricalSurface, Direction2, Direction2dId, Direction3, DirectionId, Ellipse2,
-    Ellipse3, Line2, Line3, NurbsCurve, NurbsCurve2d, NurbsSurface, Pcurve, Placement1dId,
-    Placement2dId, Placement3dId, Plane3, Point2, Point2dId, PointId, SphericalSurface, StepModel,
-    Surface, SurfaceId, SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution,
-    ToroidalSurface, TransitionCode, TrimMaster, TrimmedCurve,
+    Circle2, Circle3, CompositeCurve, ConicalSurface, Curve, Curve2d, Curve2dId, CurveId,
+    CylindricalSurface, Direction2, Direction2dId, Direction3, DirectionId, Ellipse2, Ellipse3,
+    Line2, Line3, NurbsCurve, NurbsCurve2d, NurbsSurface, Pcurve, Placement1dId, Placement2dId,
+    Placement3dId, Plane3, Point2, Point2dId, PointId, SphericalSurface, StepModel, Surface,
+    SurfaceId, SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface,
+    TrimmedCurve,
 };
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
@@ -61,105 +61,19 @@ impl WriteBuffer<'_> {
     }
 
     fn emit_trimmed_curve(&mut self, trimmed: TrimmedCurve) -> Result<u64, WriteError> {
-        let basis = self.emit_curve(trimmed.basis)?;
-        let trim_1 = self.build_trim_select(trimmed.trim_1_point, trimmed.trim_1_param)?;
-        let trim_2 = self.build_trim_select(trimmed.trim_2_point, trimmed.trim_2_param)?;
-        let master = match trimmed.master {
-            TrimMaster::Cartesian => "CARTESIAN",
-            TrimMaster::Parameter => "PARAMETER",
-            TrimMaster::Unspecified => "UNSPECIFIED",
-        };
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "TRIMMED_CURVE".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(basis),
-                    Attribute::List(trim_1),
-                    Attribute::List(trim_2),
-                    Attribute::Enum(if trimmed.sense_agreement { "T" } else { "F" }.into()),
-                    Attribute::Enum(master.into()),
-                ],
-            },
-        });
-        Ok(n)
-    }
-
-    /// Build the SET-of-trim_select attribute list for a `TRIMMED_CURVE` slot.
-    /// Either, both, or neither of the cartesian point and parameter value may
-    /// be present; the writer emits whatever the IR carries, faithfully.
-    fn build_trim_select(
-        &mut self,
-        point: Option<PointId>,
-        param: Option<f64>,
-    ) -> Result<Vec<Attribute>, WriteError> {
-        let mut elements = Vec::new();
-        if let Some(p) = point {
-            elements.push(Attribute::EntityRef(self.emit_point(p)?));
-        }
-        if let Some(v) = param {
-            elements.push(Attribute::Typed {
-                type_name: "PARAMETER_VALUE".into(),
-                value: Box::new(Attribute::Real(v)),
-            });
-        }
-        Ok(elements)
+        // Plan 5 stage C5: dispatch through EntityHandler trait.
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::trimmed_curve::TrimmedCurveHandler::write(self, trimmed)
     }
 
     fn emit_composite_curve(&mut self, composite: &CompositeCurve) -> Result<u64, WriteError> {
-        let mut segment_refs = Vec::with_capacity(composite.segments.len());
-        for seg in &composite.segments {
-            segment_refs.push(Attribute::EntityRef(
-                self.emit_composite_curve_segment(*seg)?,
-            ));
-        }
-        let self_intersect = match composite.self_intersect {
-            Some(true) => "T",
-            Some(false) => "F",
-            None => "U",
-        };
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "COMPOSITE_CURVE".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::List(segment_refs),
-                    Attribute::Enum(self_intersect.into()),
-                ],
-            },
-        });
-        Ok(n)
-    }
-
-    fn emit_composite_curve_segment(
-        &mut self,
-        segment: CompositeSegment,
-    ) -> Result<u64, WriteError> {
-        let parent = self.emit_curve(segment.parent_curve)?;
-        let transition = match segment.transition {
-            TransitionCode::Continuous => "CONTINUOUS",
-            TransitionCode::Discontinuous => "DISCONTINUOUS",
-            TransitionCode::ContSameGradient => "CONT_SAME_GRADIENT",
-            TransitionCode::ContSameGradientSameCurvature => "CONT_SAME_GRADIENT_SAME_CURVATURE",
-            TransitionCode::Unspecified => "UNSPECIFIED",
-        };
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "COMPOSITE_CURVE_SEGMENT".into(),
-                attrs: vec![
-                    Attribute::Enum(transition.into()),
-                    Attribute::Enum(if segment.same_sense { "T" } else { "F" }.into()),
-                    Attribute::EntityRef(parent),
-                ],
-            },
-        });
-        Ok(n)
+        // Plan 5 stage C5: dispatch through EntityHandler trait. Cloning
+        // the IR struct is cheap (segments are a small Vec of Copy values).
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::composite_curve::CompositeCurveHandler::write(
+            self,
+            composite.clone(),
+        )
     }
 
     fn emit_circle(&mut self, circle: Circle3) -> Result<u64, WriteError> {

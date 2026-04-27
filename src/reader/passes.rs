@@ -141,15 +141,12 @@ impl ReaderContext {
         // 4-1 and 4-2 (curve_3d usually resolves to a simple or rational curve).
         self.dispatch_registry(graph, PassLevel::Pass4_3SurfaceCurve);
 
-        // Pass 4-3c: TRIMMED_CURVE / COMPOSITE_CURVE_SEGMENT / COMPOSITE_CURVE.
-        // Must come after Pass 4-1 (simple curves), Pass 4-2 (rational B-spline
-        // complex curves) and Pass 4-3 (SURFACE_CURVE / SEAM_CURVE) — any of
-        // these may appear as the basis or parent curve. ABC fixtures heavily
-        // use TRIMMED_CURVE wrapping rational B-splines, which is why this
-        // pass runs late.
-        run_pass!(graph, self, "TRIMMED_CURVE" => convert_trimmed_curve);
-        run_pass!(graph, self, "COMPOSITE_CURVE_SEGMENT" => convert_composite_curve_segment);
-        run_pass!(graph, self, "COMPOSITE_CURVE" => convert_composite_curve);
+        // Pass 4-3c: TRIMMED_CURVE / COMPOSITE_CURVE_SEGMENT (independent)
+        // → COMPOSITE_CURVE. Must come after Pass 4-1, 4-2, 4-3 — any of
+        // those simple/rational/surface-curve forms may appear as the basis
+        // or parent curve.
+        self.dispatch_registry(graph, PassLevel::Pass4_3cTrimSeg);
+        self.dispatch_registry(graph, PassLevel::Pass4_3cComp);
 
         // Pass 4-3b: resolve pcurves on each SURFACE_CURVE / SEAM_CURVE.
         // Requires access to `EntityGraph` (to traverse the PCURVE →
