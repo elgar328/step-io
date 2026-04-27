@@ -361,6 +361,15 @@ impl WriteBuffer<'_> {
     }
 
     fn emit_nurbs_curve(&mut self, nurbs: NurbsCurve) -> Result<u64, WriteError> {
+        if nurbs.weights.is_some() {
+            // Plan 3 stage 3: complex RATIONAL_B_SPLINE_CURVE flows through
+            // the EntityHandler registry. Body lives in
+            // `src/entities/geometry/rational_bspline_curve.rs`.
+            use crate::entities::ComplexEntityHandler;
+            return crate::entities::geometry::rational_bspline_curve::RationalBsplineCurveHandler::write(self, nurbs);
+        }
+
+        // Non-rational simple B_SPLINE_CURVE_WITH_KNOTS — 9 attrs.
         let mut cp_refs = Vec::with_capacity(nurbs.control_points.len());
         for &pid in &nurbs.control_points {
             cp_refs.push(self.emit_point(pid)?);
@@ -381,66 +390,23 @@ impl WriteBuffer<'_> {
         let closed_attr = Attribute::Enum(if nurbs.closed { "T".into() } else { "F".into() });
         let form = nurbs.form;
         let n = self.fresh();
-        match nurbs.weights {
-            None => {
-                // Simple B_SPLINE_CURVE_WITH_KNOTS — 9 attrs.
-                self.entities.push(WriterEntity {
-                    id: n,
-                    body: WriterBody::Simple {
-                        name: "B_SPLINE_CURVE_WITH_KNOTS".into(),
-                        attrs: vec![
-                            Attribute::String(String::new()),
-                            degree_attr,
-                            cps_attr,
-                            Attribute::Enum(form.as_step_enum().into()),
-                            closed_attr,
-                            Attribute::Enum("F".into()),
-                            mults_attr,
-                            knots_attr,
-                            Attribute::Enum("UNSPECIFIED".into()),
-                        ],
-                    },
-                });
-            }
-            Some(weights) => {
-                // Complex RATIONAL_B_SPLINE_CURVE — 7 parts, OCCT convention.
-                let weights_attr =
-                    Attribute::List(weights.into_iter().map(Attribute::Real).collect());
-                self.entities.push(WriterEntity {
-                    id: n,
-                    body: WriterBody::Complex {
-                        parts: vec![
-                            ("BOUNDED_CURVE".into(), vec![]),
-                            (
-                                "B_SPLINE_CURVE".into(),
-                                vec![
-                                    degree_attr,
-                                    cps_attr,
-                                    Attribute::Enum(form.as_step_enum().into()),
-                                    closed_attr,
-                                    Attribute::Enum("F".into()),
-                                ],
-                            ),
-                            (
-                                "B_SPLINE_CURVE_WITH_KNOTS".into(),
-                                vec![
-                                    mults_attr,
-                                    knots_attr,
-                                    Attribute::Enum("UNSPECIFIED".into()),
-                                ],
-                            ),
-                            ("CURVE".into(), vec![]),
-                            ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),
-                            ("RATIONAL_B_SPLINE_CURVE".into(), vec![weights_attr]),
-                            (
-                                "REPRESENTATION_ITEM".into(),
-                                vec![Attribute::String(String::new())],
-                            ),
-                        ],
-                    },
-                });
-            }
-        }
+        self.entities.push(WriterEntity {
+            id: n,
+            body: WriterBody::Simple {
+                name: "B_SPLINE_CURVE_WITH_KNOTS".into(),
+                attrs: vec![
+                    Attribute::String(String::new()),
+                    degree_attr,
+                    cps_attr,
+                    Attribute::Enum(form.as_step_enum().into()),
+                    closed_attr,
+                    Attribute::Enum("F".into()),
+                    mults_attr,
+                    knots_attr,
+                    Attribute::Enum("UNSPECIFIED".into()),
+                ],
+            },
+        });
         Ok(n)
     }
 

@@ -652,62 +652,19 @@ impl ReaderContext {
     // Pass 4-2: Complex rational B-spline curves
     // ------------------------------------------------------------------
 
+    /// Plan 3 stage 3: dispatch moved to
+    /// `entities::geometry::rational_bspline_curve::RationalBsplineCurveHandler`.
+    /// Stage 4 removes this wrapper outright.
+    #[allow(dead_code)] // wrapper deleted in Plan 3 stage 4
     pub(super) fn convert_rational_bspline_curve(
         &mut self,
         entity_id: u64,
         parts: &[RawEntityPart],
     ) -> Result<(), ConvertError> {
-        let repr_attrs = require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
-        let _name = read_string(repr_attrs, 0, entity_id, "name")?;
-
-        let bsc_attrs = require_part_attrs(parts, "B_SPLINE_CURVE", entity_id)?;
-        let degree_i = read_integer(bsc_attrs, 0, entity_id, "degree")?;
-        let cp_refs = read_entity_ref_list(bsc_attrs, 1, entity_id, "control_points_list")?;
-        let form = CurveForm::from_step_enum(read_enum(bsc_attrs, 2, entity_id, "curve_form")?);
-        let closed = read_bool(bsc_attrs, 3, entity_id, "closed_curve")?;
-
-        let bswk_attrs = require_part_attrs(parts, "B_SPLINE_CURVE_WITH_KNOTS", entity_id)?;
-        let knot_multiplicities =
-            read_integer_list(bswk_attrs, 0, entity_id, "knot_multiplicities")?;
-        let knots = read_real_list(bswk_attrs, 1, entity_id, "knots")?;
-
-        let rat_attrs = require_part_attrs(parts, "RATIONAL_B_SPLINE_CURVE", entity_id)?;
-        let weights = read_real_list(rat_attrs, 0, entity_id, "weights_data")?;
-
-        if weights.len() != cp_refs.len() {
-            return Err(ConvertError::DimensionMismatch {
-                entity_id,
-                field_name: "weights_data",
-                expected: cp_refs.len(),
-                actual: weights.len(),
-            });
-        }
-
-        let degree = u32::try_from(degree_i).map_err(|_| ConvertError::AttributeType {
-            entity_id,
-            field_name: "degree",
-            expected: "non-negative Integer",
-            actual: AttributeKindTag::Integer,
-        })?;
-
-        let mut control_points = Vec::with_capacity(cp_refs.len());
-        for &r in &cp_refs {
-            let pt = self.resolve_point(entity_id, r, "control_points_list")?;
-            control_points.push(pt);
-        }
-
-        let curve = NurbsCurve {
-            degree,
-            control_points,
-            weights: Some(weights),
-            knot_multiplicities,
-            knots,
-            closed,
-            form,
-        };
-        let id = self.geometry.curves.push(Curve::Nurbs(curve));
-        self.curve_map.insert(entity_id, id);
-        Ok(())
+        use crate::entities::ComplexEntityHandler;
+        crate::entities::geometry::rational_bspline_curve::RationalBsplineCurveHandler::read_complex(
+            self, entity_id, parts,
+        )
     }
 
     // ------------------------------------------------------------------

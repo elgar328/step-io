@@ -4,4 +4,5 @@
 //! Plan 5 (`INFRA_PLAN.md`).
 
 pub mod direction;
+pub mod rational_bspline_curve;
 pub mod vector;

@@ -27,7 +27,6 @@ pub(crate) enum PassLevel {
     Pass2,
     /// `RATIONAL_B_SPLINE_CURVE` / `RATIONAL_B_SPLINE_SURFACE` — Pass 4-2,
     /// complex entities depending on Pass 4-1 leaf curves/surfaces.
-    #[allow(dead_code)] // wired in Plan 3 stage 3 (RATIONAL_B_SPLINE_CURVE migration)
     Pass4Rational,
 }
 
@@ -61,7 +60,6 @@ pub(crate) trait SimpleEntityHandler {
 /// Handler for a [`RawEntity::Complex`] STEP entity. The reader receives a
 /// list of [`RawEntityPart`] and dispatch keys on [`Self::REQUIRED_PARTS`]
 /// (every listed part name must be present).
-#[allow(dead_code)] // first impl lands in Plan 3 stage 3 (RATIONAL_B_SPLINE_CURVE)
 pub(crate) trait ComplexEntityHandler {
     /// Metadata-only label (e.g. `"RATIONAL_B_SPLINE_CURVE"`). Dispatch
     /// keys on [`Self::REQUIRED_PARTS`], not on this name.

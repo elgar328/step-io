@@ -98,7 +98,11 @@ impl ReaderContext {
         // Pass 4-1: simple leaf curves and surfaces
         run_pass!(graph, self, "LINE" => convert_line, "PLANE" => convert_plane, "CYLINDRICAL_SURFACE" => convert_cylindrical_surface, "SPHERICAL_SURFACE" => convert_spherical_surface, "CONICAL_SURFACE" => convert_conical_surface, "TOROIDAL_SURFACE" => convert_toroidal_surface, "CIRCLE" => convert_circle, "ELLIPSE" => convert_ellipse, "B_SPLINE_CURVE_WITH_KNOTS" => convert_bspline_curve_with_knots, "B_SPLINE_SURFACE_WITH_KNOTS" => convert_bspline_surface_with_knots);
 
-        // Pass 4-2: complex rational B-spline curves and surfaces (depend on points)
+        // Pass 4-2 curves: RATIONAL_B_SPLINE_CURVE flows through the registry
+        // (`ComplexEntityHandler` impl in `entities::geometry::rational_bspline_curve`).
+        self.dispatch_registry(graph, PassLevel::Pass4Rational);
+        // Pass 4-2 surfaces: still hand-rolled until Plan 5 migrates the
+        // surface handler.
         for (&id, entity) in &graph.entities {
             if self.pcurve_subtree_ids.contains(&id) {
                 continue;
@@ -107,16 +111,7 @@ impl ReaderContext {
                 RawEntity::Complex { parts, .. } => parts,
                 RawEntity::Simple { .. } => continue,
             };
-            let result = if has_all_parts(
-                parts,
-                &[
-                    "B_SPLINE_CURVE",
-                    "B_SPLINE_CURVE_WITH_KNOTS",
-                    "RATIONAL_B_SPLINE_CURVE",
-                ],
-            ) {
-                self.convert_rational_bspline_curve(id, parts)
-            } else if has_all_parts(
+            if has_all_parts(
                 parts,
                 &[
                     "B_SPLINE_SURFACE",
@@ -124,12 +119,9 @@ impl ReaderContext {
                     "RATIONAL_B_SPLINE_SURFACE",
                 ],
             ) {
-                self.convert_rational_bspline_surface(id, parts)
-            } else {
-                continue;
-            };
-            if let Err(e) = result {
-                self.warnings.push(e);
+                if let Err(e) = self.convert_rational_bspline_surface(id, parts) {
+                    self.warnings.push(e);
+                }
             }
         }
 
