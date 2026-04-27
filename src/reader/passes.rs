@@ -268,6 +268,11 @@ impl ReaderContext {
         // PDR convert needs `&graph` to read the bound REPRESENTATION
         // entity directly — REPRESENTATION is a generic entity name shared
         // with MDGPR / SR, so a per-pass map would conflate them.
+        //
+        // DOMAIN_TBD: catalog property O but the read body needs `&EntityGraph`
+        // (REPRESENTATION generic name conflict with MDGPR / SR). Handler
+        // trait API 보존을 위해 hand-rolled 유지. CDSR 와 동일 구조 →
+        // Plan 7 후 IR Roadmap 시 graph 접근 일반화 시 함께 검토.
         for (&id, entity) in &graph.entities {
             if self.pcurve_subtree_ids.contains(&id) {
                 continue;
