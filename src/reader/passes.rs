@@ -257,13 +257,11 @@ impl ReaderContext {
         // Pass 5-6: faces (ADVANCED_FACE + FACE_SURFACE, depend on face bounds + surfaces)
         self.dispatch_registry(graph, PassLevel::Pass5Face);
         // Pass 5-7a: shells (depend on faces)
-        run_pass!(graph, self,
-            "CLOSED_SHELL" => convert_closed_shell,
-            "OPEN_SHELL" => convert_open_shell);
-        // Pass 5-7b: oriented shells (depend on CLOSED_SHELL already
-        // in the arena; kept separate because ORIENTED_CLOSED_SHELL
-        // entities may precede their referenced CLOSED_SHELL in #N order).
-        run_pass!(graph, self, "ORIENTED_CLOSED_SHELL" => convert_oriented_closed_shell);
+        self.dispatch_registry(graph, PassLevel::Pass5Shell);
+        // Pass 5-7b: oriented shells (depend on CLOSED_SHELL already in
+        // the arena; kept separate because ORIENTED_CLOSED_SHELL entities
+        // may precede their referenced CLOSED_SHELL in #N order).
+        self.dispatch_registry(graph, PassLevel::Pass5OrientedShell);
         // Pass 5-8: solids (depend on shells + oriented shells)
         run_pass!(graph, self,
             "MANIFOLD_SOLID_BREP" => convert_manifold_solid_brep,

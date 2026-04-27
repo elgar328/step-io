@@ -71,66 +71,24 @@ impl WriteBuffer<'_> {
     }
 
     pub(crate) fn emit_shell(&mut self, id: ShellId) -> Result<u64, WriteError> {
-        if let Some(&n) = self.shell_ids.get(&id) {
-            return Ok(n);
-        }
-        let s: Shell = self
-            .model
-            .topology
-            .shells
-            .iter()
-            .nth(id.0 as usize)
-            .cloned()
-            .ok_or_else(|| WriteError::DanglingId {
-                detail: format!("ShellId({})", id.0),
-            })?;
-        // `Shell.orientation` is intentionally ignored here — CLOSED_SHELL
-        // carries no orientation attribute in STEP. Inner void shells get
-        // their orientation via an ORIENTED_CLOSED_SHELL wrapper created
-        // in `emit_solid`.
-        let mut face_refs = Vec::with_capacity(s.faces.len());
-        for &fid in &s.faces {
-            face_refs.push(self.emit_face(fid)?);
-        }
-        let name = if s.is_open {
-            "OPEN_SHELL"
-        } else {
-            "CLOSED_SHELL"
-        };
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: name.into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::List(face_refs.into_iter().map(Attribute::EntityRef).collect()),
-                ],
-            },
-        });
-        self.shell_ids.insert(id, n);
-        Ok(n)
+        // Plan 4 stage C5: write body keys off the IR-stored `is_open` to
+        // pick CLOSED_SHELL or OPEN_SHELL. Helper lives in
+        // `entities/topology/closed_shell.rs`.
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::topology::closed_shell::ClosedShellHandler::write(self, id)
     }
 
     pub(crate) fn emit_oriented_closed_shell(
         &mut self,
         closed_shell_ref: u64,
         orientation: Orientation,
-    ) -> u64 {
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "ORIENTED_CLOSED_SHELL".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::Derived,
-                    Attribute::EntityRef(closed_shell_ref),
-                    orientation_bool(orientation),
-                ],
-            },
-        });
-        n
+    ) -> Result<u64, WriteError> {
+        // Plan 4 stage C5: dispatch through EntityHandler trait.
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::topology::oriented_closed_shell::OrientedClosedShellHandler::write(
+            self,
+            (closed_shell_ref, orientation),
+        )
     }
 
     pub(crate) fn emit_solid(&mut self, id: SolidId) -> Result<u64, WriteError> {
@@ -174,7 +132,7 @@ impl WriteBuffer<'_> {
                     })?;
                 let inner_cs_ref = self.emit_shell(inner_id)?;
                 let ocs_ref =
-                    self.emit_oriented_closed_shell(inner_cs_ref, inner_shell.orientation);
+                    self.emit_oriented_closed_shell(inner_cs_ref, inner_shell.orientation)?;
                 void_refs.push(Attribute::EntityRef(ocs_ref));
             }
             WriterBody::Simple {

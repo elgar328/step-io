@@ -1,84 +1,12 @@
 //! Topology entity converters (Pass 5-1 through 5-8).
 
-use super::{ReaderContext, bool_to_orientation};
-use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_entity_ref_list, read_string};
+use super::ReaderContext;
+use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string};
 use crate::ir::error::ConvertError;
-use crate::ir::topology::{Orientation, Shell, Solid};
+use crate::ir::topology::{Orientation, Solid};
 use crate::parser::entity::Attribute;
 
 impl ReaderContext {
-    // ------------------------------------------------------------------
-    // Pass 5-7: CLOSED_SHELL (depends on ADVANCED_FACE)
-    // ------------------------------------------------------------------
-
-    pub(super) fn convert_closed_shell(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        self.convert_shell_inner(entity_id, attrs, "CLOSED_SHELL", false)
-    }
-
-    pub(super) fn convert_open_shell(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        self.convert_shell_inner(entity_id, attrs, "OPEN_SHELL", true)
-    }
-
-    fn convert_shell_inner(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-        entity_name: &str,
-        is_open: bool,
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, entity_name)?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
-        let face_refs = read_entity_ref_list(attrs, 1, entity_id, "cfs_faces")?;
-
-        let mut faces = Vec::with_capacity(face_refs.len());
-        for &r in &face_refs {
-            let face_id = self.resolve_face(entity_id, r, "cfs_faces")?;
-            faces.push(face_id);
-        }
-
-        let shell = Shell {
-            faces,
-            orientation: Orientation::Forward,
-            is_open,
-        };
-        let id = self.topology.shells.push(shell);
-        self.shell_map.insert(entity_id, id);
-        Ok(())
-    }
-
-    // ------------------------------------------------------------------
-    // Pass 5-7b: ORIENTED_CLOSED_SHELL (depends on CLOSED_SHELL)
-    //
-    // Records the wrapper in `oriented_closed_shell_map` so
-    // `convert_brep_with_voids` can later apply the wrapper's orientation
-    // to the referenced shell. Does not push into the Shell arena.
-    // ------------------------------------------------------------------
-
-    pub(super) fn convert_oriented_closed_shell(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "ORIENTED_CLOSED_SHELL")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
-        // attrs[1] is the derived `*` field — skip.
-        let shell_ref = read_entity_ref(attrs, 2, entity_id, "closed_shell_element")?;
-        let orientation = read_bool(attrs, 3, entity_id, "orientation")?;
-
-        let shell_id = self.resolve_shell(entity_id, shell_ref, "closed_shell_element")?;
-        self.oriented_closed_shell_map
-            .insert(entity_id, (shell_id, bool_to_orientation(orientation)));
-        Ok(())
-    }
-
     // ------------------------------------------------------------------
     // Pass 5-8: MANIFOLD_SOLID_BREP (depends on CLOSED_SHELL)
     // ------------------------------------------------------------------
