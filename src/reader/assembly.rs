@@ -17,155 +17,15 @@
 
 use super::ReaderContext;
 use crate::ir::assembly::{
-    Instance, Product, ProductCategoryChain, ProductCategoryRoot, ProductContent, Transform3d,
-    WireframeContent, WireframeReprKind,
+    Instance, ProductContent, Transform3d, WireframeContent, WireframeReprKind,
 };
 use crate::ir::attr::{
     check_count, read_entity_ref, read_entity_ref_list, read_string, read_string_or_unset,
 };
 use crate::ir::error::ConvertError;
-use crate::ir::id::Placement3dId;
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
 
 impl ReaderContext {
-    // ------------------------------------------------------------------
-    // Pass 6-1: PRODUCT
-    // ------------------------------------------------------------------
-
-    pub(super) fn convert_product(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "PRODUCT")?;
-        let id = read_string_or_unset(attrs, 0, entity_id, "id")?;
-        let name = read_string_or_unset(attrs, 1, entity_id, "name")?;
-        let description_raw = read_string_or_unset(attrs, 2, entity_id, "description")?;
-        // attrs[3] = frame_of_reference (list of PRODUCT_CONTEXT) — ignored.
-
-        let description = if description_raw.is_empty() {
-            None
-        } else {
-            Some(description_raw.to_owned())
-        };
-
-        // Every Product needs a non-optional reference frame. SDR conversion
-        // overwrites this with the shape representation's actual refFrame when
-        // available. As a placeholder, reuse the first AXIS2 already pushed
-        // during the geometry passes so the arena count stays faithful to the
-        // source file. Only fall back to pushing a fresh identity when no
-        // AXIS2 exists (degenerate fixture).
-        #[allow(clippy::cast_possible_truncation)]
-        let shape_ref_frame = if self.geometry.placements.is_empty() {
-            self.geometry.identity_placement()
-        } else {
-            Placement3dId(0)
-        };
-        let product = Product {
-            id: id.to_owned(),
-            name: name.to_owned(),
-            description,
-            content: ProductContent::Group(Vec::new()),
-            shape_ref_frame,
-            outer_sr_frame: None,
-            category: None,
-            formation_with_source: false,
-            geometry_context: None,
-        };
-        let pid = self.assembly_products.push(product);
-        self.product_arena_map.insert(entity_id, pid);
-        Ok(())
-    }
-
-    // ------------------------------------------------------------------
-    // Pass 6-1b: PRODUCT_CATEGORY chain (PC + PRPC + PCR)
-    // ------------------------------------------------------------------
-    //
-    // The chain attaches metadata to each Product. PRPC always points at
-    // products; PC + PCR are the optional supertype side that some files
-    // (FreeCAD assemblies) omit. The pass runs in two sub-passes so PCR
-    // can resolve PC and PRPC entity refs once both are converted.
-
-    pub(super) fn convert_product_category(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "PRODUCT_CATEGORY")?;
-        let name = read_string(attrs, 0, entity_id, "name")?.to_owned();
-        let description = optional_text(attrs, 1, entity_id, "description")?;
-        self.pc_meta_map.insert(entity_id, (name, description));
-        Ok(())
-    }
-
-    pub(super) fn convert_product_related_product_category(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "PRODUCT_RELATED_PRODUCT_CATEGORY")?;
-        let name = read_string(attrs, 0, entity_id, "name")?.to_owned();
-        let description = optional_text(attrs, 1, entity_id, "description")?;
-        let product_refs = read_entity_ref_list(attrs, 2, entity_id, "products")?;
-
-        // Attach the PRPC half (kind / kind_description) to each referenced
-        // product immediately. The PCR pass will fill in `root` if a PCR
-        // entity links this PRPC to a PC.
-        for prod_ref in &product_refs {
-            if let Some(&pid) = self.product_arena_map.get(prod_ref) {
-                self.assembly_products[pid].category = Some(ProductCategoryChain {
-                    kind: name.clone(),
-                    kind_description: description.clone(),
-                    root: None,
-                });
-            }
-        }
-        self.prpc_meta_map
-            .insert(entity_id, (name, description, product_refs));
-        Ok(())
-    }
-
-    pub(super) fn convert_product_category_relationship(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "PRODUCT_CATEGORY_RELATIONSHIP")?;
-        // attrs[0] / attrs[1] = name / description — visual cosmetics, ignored.
-        let pc_ref = read_entity_ref(attrs, 2, entity_id, "category")?;
-        let prpc_ref = read_entity_ref(attrs, 3, entity_id, "sub_category")?;
-
-        let Some((pc_name, pc_description)) = self.pc_meta_map.get(&pc_ref).cloned() else {
-            self.warnings.push(ConvertError::MissingReference {
-                from: entity_id,
-                to: pc_ref,
-                field_name: "category",
-            });
-            return Ok(());
-        };
-        let Some((_, _, products)) = self.prpc_meta_map.get(&prpc_ref).cloned() else {
-            self.warnings.push(ConvertError::MissingReference {
-                from: entity_id,
-                to: prpc_ref,
-                field_name: "sub_category",
-            });
-            return Ok(());
-        };
-
-        for prod_ref in &products {
-            let Some(&pid) = self.product_arena_map.get(prod_ref) else {
-                continue;
-            };
-            if let Some(category) = self.assembly_products[pid].category.as_mut() {
-                category.root = Some(ProductCategoryRoot {
-                    name: pc_name.clone(),
-                    description: pc_description.clone(),
-                });
-            }
-        }
-        Ok(())
-    }
-
     // ------------------------------------------------------------------
     // Pass 6-2: PRODUCT_DEFINITION_FORMATION [+ _WITH_SPECIFIED_SOURCE]
     // ------------------------------------------------------------------
@@ -863,23 +723,5 @@ fn pdef_shape_target(
     match graph.get(def_ref)? {
         RawEntity::Simple { name, .. } if name == expected_target_type => Some(def_ref),
         _ => None,
-    }
-}
-
-/// Read an optional text attribute that should be `None` for both `$`
-/// (Unset) and the empty string `''`. Used for `PRODUCT_CATEGORY.description`
-/// and similar metadata fields where many producers emit `''` to mean
-/// "no description" rather than the more strictly correct `$`.
-fn optional_text(
-    attrs: &[Attribute],
-    index: usize,
-    entity_id: u64,
-    field_name: &'static str,
-) -> Result<Option<String>, ConvertError> {
-    let raw = read_string_or_unset(attrs, index, entity_id, field_name)?;
-    if raw.is_empty() {
-        Ok(None)
-    } else {
-        Ok(Some(raw.to_owned()))
     }
 }

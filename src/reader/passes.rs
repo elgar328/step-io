@@ -175,15 +175,12 @@ impl ReaderContext {
         }
 
         // Pass 6-1: PRODUCT → Arena<Product> + product_arena_map
-        run_pass!(graph, self, "PRODUCT" => convert_product);
+        self.dispatch_registry(graph, PassLevel::Pass6Product);
         // Pass 6-1b: PRODUCT_CATEGORY chain. Sub-pass a populates pc_meta_map
         // and prpc_meta_map (PRPC also attaches the kind half to each
         // Product); sub-pass b consumes both maps to fill in the PC root.
-        run_pass!(graph, self,
-            "PRODUCT_CATEGORY" => convert_product_category,
-            "PRODUCT_RELATED_PRODUCT_CATEGORY" => convert_product_related_product_category);
-        run_pass!(graph, self,
-            "PRODUCT_CATEGORY_RELATIONSHIP" => convert_product_category_relationship);
+        self.dispatch_registry(graph, PassLevel::Pass6ProductCategory);
+        self.dispatch_registry(graph, PassLevel::Pass6ProductCategoryRel);
         // Pass 6-2: PRODUCT_DEFINITION_FORMATION [+ _WITH_SPECIFIED_SOURCE].
         // Two distinct converters so the subtype can flip the
         // formation_with_source loyalty flag on the referenced Product.

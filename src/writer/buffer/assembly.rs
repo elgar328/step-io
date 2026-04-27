@@ -27,6 +27,7 @@ use crate::writer::entity::{WriterBody, WriterEntity};
 /// APPLICATION_CONTEXT id itself is only needed inside
 /// `emit_application_context` (to wire PRODUCT_CONTEXT / PDEF_CONTEXT), so
 /// it isn't carried forward here.
+#[derive(Clone, Copy)]
 pub(crate) struct AssemblyContextIds {
     pub(crate) product_ctx: u64,
     pub(crate) pdef_ctx: u64,
@@ -183,15 +184,12 @@ impl WriteBuffer<'_> {
     // ----------------------------------------------------------------
 
     pub(crate) fn emit_product(&mut self, product: &Product, ctx: &AssemblyContextIds) -> u64 {
-        self.push_simple(
-            "PRODUCT",
-            vec![
-                Attribute::String(product.id.clone()),
-                Attribute::String(product.name.clone()),
-                Attribute::String(product.description.clone().unwrap_or_default()),
-                Attribute::List(vec![Attribute::EntityRef(ctx.product_ctx)]),
-            ],
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::assembly_product::product::ProductHandler::write(
+            self,
+            (product.clone(), *ctx),
         )
+        .expect("PRODUCT write only pushes one simple entity")
     }
 
     pub(crate) fn emit_formation(&mut self, prod_entity: u64, product: &Product) -> u64 {
@@ -223,39 +221,46 @@ impl WriteBuffer<'_> {
     /// `PRODUCT_CATEGORY_RELATIONSHIP` only when the source file had them
     /// (`category.root.is_some()`).
     fn emit_product_category_chain(&mut self, product: &Product, prod_entity: u64) {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::assembly_product::product_category::{
+            ProductCategoryHandler, ProductCategoryWriteInput,
+        };
+        use crate::entities::assembly_product::product_category_relationship::{
+            ProductCategoryRelationshipHandler, ProductCategoryRelationshipWriteInput,
+        };
+        use crate::entities::assembly_product::product_related_product_category::{
+            ProductRelatedProductCategoryHandler, ProductRelatedProductCategoryWriteInput,
+        };
+
         let Some(category) = &product.category else {
             return;
         };
-        let prpc_desc = category
-            .kind_description
-            .as_ref()
-            .map_or(Attribute::Unset, |s| Attribute::String(s.clone()));
-        let prpc = self.push_simple(
-            "PRODUCT_RELATED_PRODUCT_CATEGORY",
-            vec![
-                Attribute::String(category.kind.clone()),
-                prpc_desc,
-                Attribute::List(vec![Attribute::EntityRef(prod_entity)]),
-            ],
-        );
+        let prpc = ProductRelatedProductCategoryHandler::write(
+            self,
+            ProductRelatedProductCategoryWriteInput {
+                kind: category.kind.clone(),
+                kind_description: category.kind_description.clone(),
+                product_refs: vec![prod_entity],
+            },
+        )
+        .expect("PRPC write only pushes one simple entity");
         if let Some(root) = &category.root {
-            let pc_desc = root
-                .description
-                .as_ref()
-                .map_or(Attribute::Unset, |s| Attribute::String(s.clone()));
-            let pc = self.push_simple(
-                "PRODUCT_CATEGORY",
-                vec![Attribute::String(root.name.clone()), pc_desc],
-            );
-            let _pcr = self.push_simple(
-                "PRODUCT_CATEGORY_RELATIONSHIP",
-                vec![
-                    Attribute::String(" ".into()),
-                    Attribute::String(" ".into()),
-                    Attribute::EntityRef(pc),
-                    Attribute::EntityRef(prpc),
-                ],
-            );
+            let pc = ProductCategoryHandler::write(
+                self,
+                ProductCategoryWriteInput {
+                    name: root.name.clone(),
+                    description: root.description.clone(),
+                },
+            )
+            .expect("PRODUCT_CATEGORY write only pushes one simple entity");
+            let _pcr = ProductCategoryRelationshipHandler::write(
+                self,
+                ProductCategoryRelationshipWriteInput {
+                    pc_ref: pc,
+                    prpc_ref: prpc,
+                },
+            )
+            .expect("PCR write only pushes one simple entity");
         }
     }
 
@@ -556,11 +561,7 @@ impl WriteBuffer<'_> {
     // Low-level
     // ----------------------------------------------------------------
 
-    pub(in crate::writer::buffer) fn push_simple(
-        &mut self,
-        name: &str,
-        attrs: Vec<Attribute>,
-    ) -> u64 {
+    pub(crate) fn push_simple(&mut self, name: &str, attrs: Vec<Attribute>) -> u64 {
         let n = self.fresh();
         self.entities.push(WriterEntity {
             id: n,
