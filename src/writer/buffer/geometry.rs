@@ -247,16 +247,6 @@ impl WriteBuffer<'_> {
         crate::entities::geometry::direction_2d::Direction2dHandler::write(self, id)
     }
 
-    fn emit_vector_2d(
-        &mut self,
-        direction: Direction2dId,
-        magnitude: f64,
-    ) -> Result<u64, WriteError> {
-        // Plan 5.5 stage C3: dispatch through EntityHandler trait.
-        use crate::entities::SimpleEntityHandler;
-        crate::entities::geometry::vector_2d::Vector2dHandler::write(self, (direction, magnitude))
-    }
-
     pub(crate) fn emit_axis2_placement_2d(&mut self, id: Placement2dId) -> Result<u64, WriteError> {
         // Plan 5.5 stage C3: dispatch through EntityHandler trait.
         use crate::entities::SimpleEntityHandler;
@@ -279,106 +269,27 @@ impl WriteBuffer<'_> {
     }
 
     fn emit_line_2d(&mut self, line: Line2) -> Result<u64, WriteError> {
-        let pnt = self.emit_point_2d(line.point)?;
-        let vec = self.emit_vector_2d(line.direction, line.magnitude)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "LINE".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(pnt),
-                    Attribute::EntityRef(vec),
-                ],
-            },
-        });
-        Ok(n)
+        // Plan 5.5 stage C4: dispatch through EntityHandler trait.
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::line_2d::Line2dHandler::write(self, line)
     }
 
     fn emit_circle_2d(&mut self, c: Circle2) -> Result<u64, WriteError> {
-        let pos = self.emit_axis2_placement_2d(c.position)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "CIRCLE".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(pos),
-                    Attribute::Real(c.radius),
-                ],
-            },
-        });
-        Ok(n)
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::circle_2d::Circle2dHandler::write(self, c)
     }
 
     fn emit_ellipse_2d(&mut self, e: Ellipse2) -> Result<u64, WriteError> {
-        let pos = self.emit_axis2_placement_2d(e.position)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "ELLIPSE".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(pos),
-                    Attribute::Real(e.semi_axis_1),
-                    Attribute::Real(e.semi_axis_2),
-                ],
-            },
-        });
-        Ok(n)
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::ellipse_2d::Ellipse2dHandler::write(self, e)
     }
 
     fn emit_nurbs_curve_2d(&mut self, nurbs: &NurbsCurve2d) -> Result<u64, WriteError> {
-        // 2D rational NURBS (complex RATIONAL_B_SPLINE_CURVE with 2D weights)
-        // is absent from the current fixture set, so it's left unimplemented.
-        // Should a fixture with `weights: Some(_)` appear, extend here with a
-        // complex-entity emit analogous to the 3D rational path.
-        if nurbs.weights.is_some() {
-            return Err(WriteError::UnsupportedIrVariant {
-                detail: "rational 2D NURBS curve (no fixture yet)".into(),
-            });
-        }
-        let mut cp_refs = Vec::with_capacity(nurbs.control_points.len());
-        for &pid in &nurbs.control_points {
-            cp_refs.push(self.emit_point_2d(pid)?);
-        }
-        #[allow(clippy::cast_possible_wrap)]
-        let degree_attr = Attribute::Integer(i64::from(nurbs.degree));
-        let cps_attr = Attribute::List(cp_refs.into_iter().map(Attribute::EntityRef).collect());
-        let mults_attr = Attribute::List(
-            nurbs
-                .knot_multiplicities
-                .iter()
-                .copied()
-                .map(Attribute::Integer)
-                .collect(),
-        );
-        let knots_attr =
-            Attribute::List(nurbs.knots.iter().copied().map(Attribute::Real).collect());
-        let closed_attr = Attribute::Enum(if nurbs.closed { "T".into() } else { "F".into() });
-        let form = nurbs.form;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "B_SPLINE_CURVE_WITH_KNOTS".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    degree_attr,
-                    cps_attr,
-                    Attribute::Enum(form.as_step_enum().into()),
-                    closed_attr,
-                    Attribute::Enum("F".into()),
-                    mults_attr,
-                    knots_attr,
-                    Attribute::Enum("UNSPECIFIED".into()),
-                ],
-            },
-        });
-        Ok(n)
+        // Plan 5.5 stage C4: dispatch through EntityHandler trait. The
+        // handler clones the IR struct (cheap — control_points is a small
+        // Vec of Copy ids).
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::b_spline_curve_2d_with_knots::BSplineCurve2dWithKnotsHandler::write(self, nurbs.clone())
     }
 
     // -----------------------------------------------------------------

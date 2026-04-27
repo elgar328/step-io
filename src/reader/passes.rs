@@ -99,38 +99,16 @@ impl ReaderContext {
         // `entities::geometry::{rational_bspline_curve, rational_bspline_surface}`.
         self.dispatch_registry(graph, PassLevel::Pass4Rational);
 
-        // Pass 4a: PCURVE parametric-space 2D geometry. Iterates the
-        // `pcurve_subtree_ids` (populated by `collect_pcurve_pcurve_subtree_ids`) and routes
-        // each 2D entity to the 2D converter family. Runs before Pass 4-3
-        // so the PCURVE resolver can look up 2D curves it references.
-        macro_rules! run_2d_pass {
-            ($graph:expr, $ctx:expr, $( $name:literal => $method:ident ),+ $(,)?) => {
-                for (&id, entity) in &$graph.entities {
-                    if !$ctx.pcurve_subtree_ids.contains(&id) { continue; }
-                    let (name, attrs) = match entity {
-                        RawEntity::Simple { name, attributes, .. } => (name.as_str(), attributes.as_slice()),
-                        RawEntity::Complex { .. } => continue,
-                    };
-                    let result = match name {
-                        $( $name => $ctx.$method(id, attrs), )+
-                        _ => continue,
-                    };
-                    if let Err(e) = result {
-                        $ctx.warnings.push(e);
-                    }
-                }
-            };
-        }
-        // 4a-1: 2D points / directions
+        // Pass 4a: PCURVE parametric-space 2D geometry. Runs before
+        // Pass 4-3 so the PCURVE resolver can look up 2D curves it
+        // references. Plan 5.5 wires every Pass 4a sub-pass through
+        // `dispatch_registry_2d` (handlers in `entities/geometry/*_2d.rs`).
+        // 4a-1: 2D points / directions.
         self.dispatch_registry_2d(graph, PassLevel::Pass4aPoint);
-        // 4a-2: 2D vectors + axis2_placement_2d
+        // 4a-2: 2D vectors + axis2_placement_2d.
         self.dispatch_registry_2d(graph, PassLevel::Pass4aVector);
-        // 4a-3: 2D curves
-        run_2d_pass!(graph, self,
-            "LINE" => convert_line_2d,
-            "CIRCLE" => convert_circle_2d,
-            "ELLIPSE" => convert_ellipse_2d,
-            "B_SPLINE_CURVE_WITH_KNOTS" => convert_bspline_curve_2d_with_knots);
+        // 4a-3: 2D curves.
+        self.dispatch_registry_2d(graph, PassLevel::Pass4aCurve);
 
         // Pass 4-3: SURFACE_CURVE / SEAM_CURVE — alias to curve_3d so edges
         // that reference these see the underlying 3D curve. Must come after
