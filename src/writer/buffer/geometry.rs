@@ -237,107 +237,16 @@ impl WriteBuffer<'_> {
         }
     }
 
-    #[allow(clippy::too_many_lines)]
     fn emit_nurbs_surface(&mut self, nurbs: NurbsSurface) -> Result<u64, WriteError> {
-        // Non-rational form → simple B_SPLINE_SURFACE_WITH_KNOTS (Plan 5 C2).
-        if nurbs.weights.is_none() {
+        if nurbs.weights.is_some() {
+            // Rational form → complex RATIONAL_B_SPLINE_SURFACE (Plan 5 C3).
+            use crate::entities::ComplexEntityHandler;
+            crate::entities::geometry::rational_bspline_surface::RationalBsplineSurfaceHandler::write(self, nurbs)
+        } else {
+            // Non-rational form → simple B_SPLINE_SURFACE_WITH_KNOTS (Plan 5 C2).
             use crate::entities::SimpleEntityHandler;
-            return crate::entities::geometry::b_spline_surface_with_knots::BSplineSurfaceWithKnotsHandler::write(self, nurbs);
+            crate::entities::geometry::b_spline_surface_with_knots::BSplineSurfaceWithKnotsHandler::write(self, nurbs)
         }
-
-        // Rational form — complex RATIONAL_B_SPLINE_SURFACE. Inline until
-        // Plan 5 C3 lifts this body into a ComplexEntityHandler.
-        let mut cp_rows: Vec<Attribute> = Vec::with_capacity(nurbs.control_points.len());
-        for row in &nurbs.control_points {
-            let mut refs = Vec::with_capacity(row.len());
-            for &pid in row {
-                refs.push(Attribute::EntityRef(self.emit_point(pid)?));
-            }
-            cp_rows.push(Attribute::List(refs));
-        }
-        let cps_attr = Attribute::List(cp_rows);
-        #[allow(clippy::cast_possible_wrap)]
-        let u_deg = Attribute::Integer(i64::from(nurbs.u_degree));
-        #[allow(clippy::cast_possible_wrap)]
-        let v_deg = Attribute::Integer(i64::from(nurbs.v_degree));
-        let u_closed = Attribute::Enum(if nurbs.u_closed {
-            "T".into()
-        } else {
-            "F".into()
-        });
-        let v_closed = Attribute::Enum(if nurbs.v_closed {
-            "T".into()
-        } else {
-            "F".into()
-        });
-        let u_mults_attr = Attribute::List(
-            nurbs
-                .u_knot_multiplicities
-                .iter()
-                .copied()
-                .map(Attribute::Integer)
-                .collect(),
-        );
-        let v_mults_attr = Attribute::List(
-            nurbs
-                .v_knot_multiplicities
-                .iter()
-                .copied()
-                .map(Attribute::Integer)
-                .collect(),
-        );
-        let u_knots_attr =
-            Attribute::List(nurbs.u_knots.iter().copied().map(Attribute::Real).collect());
-        let v_knots_attr =
-            Attribute::List(nurbs.v_knots.iter().copied().map(Attribute::Real).collect());
-        let form = nurbs.form;
-        let weights = nurbs.weights.expect("rational branch");
-        let mut w_rows: Vec<Attribute> = Vec::with_capacity(weights.len());
-        for row in weights {
-            w_rows.push(Attribute::List(
-                row.into_iter().map(Attribute::Real).collect(),
-            ));
-        }
-        let weights_attr = Attribute::List(w_rows);
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Complex {
-                parts: vec![
-                    ("BOUNDED_SURFACE".into(), vec![]),
-                    (
-                        "B_SPLINE_SURFACE".into(),
-                        vec![
-                            u_deg,
-                            v_deg,
-                            cps_attr,
-                            Attribute::Enum(form.as_step_enum().into()),
-                            u_closed,
-                            v_closed,
-                            Attribute::Enum("F".into()),
-                        ],
-                    ),
-                    (
-                        "B_SPLINE_SURFACE_WITH_KNOTS".into(),
-                        vec![
-                            u_mults_attr,
-                            v_mults_attr,
-                            u_knots_attr,
-                            v_knots_attr,
-                            Attribute::Enum("UNSPECIFIED".into()),
-                        ],
-                    ),
-                    ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),
-                    ("RATIONAL_B_SPLINE_SURFACE".into(), vec![weights_attr]),
-                    (
-                        "REPRESENTATION_ITEM".into(),
-                        vec![Attribute::String(String::new())],
-                    ),
-                    ("SURFACE".into(), vec![]),
-                ],
-            },
-        });
-        Ok(n)
     }
 
     fn emit_surface_of_revolution(&mut self, r: SurfaceOfRevolution) -> Result<u64, WriteError> {

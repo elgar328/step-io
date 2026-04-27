@@ -94,32 +94,10 @@ impl ReaderContext {
         // Pass 4-1: simple leaf curves and surfaces (mutually independent).
         self.dispatch_registry(graph, PassLevel::Pass4Leaf);
 
-        // Pass 4-2 curves: RATIONAL_B_SPLINE_CURVE flows through the registry
-        // (`ComplexEntityHandler` impl in `entities::geometry::rational_bspline_curve`).
+        // Pass 4-2: complex rational B-spline curves and surfaces. Both
+        // ComplexEntityHandler impls live under
+        // `entities::geometry::{rational_bspline_curve, rational_bspline_surface}`.
         self.dispatch_registry(graph, PassLevel::Pass4Rational);
-        // Pass 4-2 surfaces: still hand-rolled until Plan 5 migrates the
-        // surface handler.
-        for (&id, entity) in &graph.entities {
-            if self.pcurve_subtree_ids.contains(&id) {
-                continue;
-            }
-            let parts = match entity {
-                RawEntity::Complex { parts, .. } => parts,
-                RawEntity::Simple { .. } => continue,
-            };
-            if has_all_parts(
-                parts,
-                &[
-                    "B_SPLINE_SURFACE",
-                    "B_SPLINE_SURFACE_WITH_KNOTS",
-                    "RATIONAL_B_SPLINE_SURFACE",
-                ],
-            ) {
-                if let Err(e) = self.convert_rational_bspline_surface(id, parts) {
-                    self.warnings.push(e);
-                }
-            }
-        }
 
         // Pass 4a: PCURVE parametric-space 2D geometry. Iterates the
         // `pcurve_subtree_ids` (populated by `collect_pcurve_pcurve_subtree_ids`) and routes

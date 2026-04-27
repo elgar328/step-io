@@ -2,20 +2,18 @@
 
 #![allow(clippy::unnecessary_lazy_evaluations, clippy::doc_markdown)]
 
-use super::{ReaderContext, require_part_attrs};
+use super::ReaderContext;
 use crate::ir::attr::{
-    check_count, read_bool, read_entity_ref, read_entity_ref_grid, read_entity_ref_list, read_enum,
-    read_integer, read_integer_list, read_optional_entity_ref, read_real, read_real_grid,
-    read_real_list, read_string,
+    check_count, read_bool, read_entity_ref, read_entity_ref_list, read_enum, read_integer,
+    read_integer_list, read_optional_entity_ref, read_real, read_real_list, read_string,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{
     Axis2Placement2d, Circle2, CompositeCurve, CompositeSegment, Curve, Curve2d, CurveForm,
-    Direction2, Ellipse2, Line2, NurbsCurve2d, NurbsSurface, Pcurve, Point2, Surface, SurfaceForm,
-    SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, TransitionCode, TrimMaster,
-    TrimmedCurve,
+    Direction2, Ellipse2, Line2, NurbsCurve2d, Pcurve, Point2, Surface, SurfaceOfLinearExtrusion,
+    SurfaceOfOffset, SurfaceOfRevolution, TransitionCode, TrimMaster, TrimmedCurve,
 };
-use crate::parser::entity::{Attribute, RawEntity, RawEntityPart};
+use crate::parser::entity::{Attribute, RawEntity};
 
 impl ReaderContext {
     // ------------------------------------------------------------------
@@ -344,99 +342,6 @@ impl ReaderContext {
             .geometry
             .surfaces
             .push(Surface::Offset(SurfaceOfOffset { basis, distance }));
-        self.surface_map.insert(entity_id, id);
-        Ok(())
-    }
-
-    // ------------------------------------------------------------------
-    // Pass 4-2: Complex rational B-spline surface
-    // ------------------------------------------------------------------
-
-    #[allow(clippy::too_many_lines)]
-    pub(super) fn convert_rational_bspline_surface(
-        &mut self,
-        entity_id: u64,
-        parts: &[RawEntityPart],
-    ) -> Result<(), ConvertError> {
-        let repr_attrs = require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
-        let _name = read_string(repr_attrs, 0, entity_id, "name")?;
-
-        let bss_attrs = require_part_attrs(parts, "B_SPLINE_SURFACE", entity_id)?;
-        let u_degree_i = read_integer(bss_attrs, 0, entity_id, "u_degree")?;
-        let v_degree_i = read_integer(bss_attrs, 1, entity_id, "v_degree")?;
-        let cp_grid = read_entity_ref_grid(bss_attrs, 2, entity_id, "control_points_list")?;
-        let form = SurfaceForm::from_step_enum(read_enum(bss_attrs, 3, entity_id, "surface_form")?);
-        let u_closed = read_bool(bss_attrs, 4, entity_id, "u_closed")?;
-        let v_closed = read_bool(bss_attrs, 5, entity_id, "v_closed")?;
-
-        let bswk_attrs = require_part_attrs(parts, "B_SPLINE_SURFACE_WITH_KNOTS", entity_id)?;
-        let u_knot_multiplicities =
-            read_integer_list(bswk_attrs, 0, entity_id, "u_multiplicities")?;
-        let v_knot_multiplicities =
-            read_integer_list(bswk_attrs, 1, entity_id, "v_multiplicities")?;
-        let u_knots = read_real_list(bswk_attrs, 2, entity_id, "u_knots")?;
-        let v_knots = read_real_list(bswk_attrs, 3, entity_id, "v_knots")?;
-
-        let rat_attrs = require_part_attrs(parts, "RATIONAL_B_SPLINE_SURFACE", entity_id)?;
-        let weights = read_real_grid(rat_attrs, 0, entity_id, "weights_data")?;
-
-        // Validate weights 2D grid matches control points 2D grid.
-        if weights.len() != cp_grid.len() {
-            return Err(ConvertError::DimensionMismatch {
-                entity_id,
-                field_name: "weights_data",
-                expected: cp_grid.len(),
-                actual: weights.len(),
-            });
-        }
-        for (w_row, cp_row) in weights.iter().zip(cp_grid.iter()) {
-            if w_row.len() != cp_row.len() {
-                return Err(ConvertError::DimensionMismatch {
-                    entity_id,
-                    field_name: "weights_data",
-                    expected: cp_row.len(),
-                    actual: w_row.len(),
-                });
-            }
-        }
-
-        let u_degree = u32::try_from(u_degree_i).map_err(|_| ConvertError::AttributeType {
-            entity_id,
-            field_name: "u_degree",
-            expected: "non-negative Integer",
-            actual: AttributeKindTag::Integer,
-        })?;
-        let v_degree = u32::try_from(v_degree_i).map_err(|_| ConvertError::AttributeType {
-            entity_id,
-            field_name: "v_degree",
-            expected: "non-negative Integer",
-            actual: AttributeKindTag::Integer,
-        })?;
-
-        let mut control_points = Vec::with_capacity(cp_grid.len());
-        for row in &cp_grid {
-            let mut pt_row = Vec::with_capacity(row.len());
-            for &r in row {
-                let pt = self.resolve_point(entity_id, r, "control_points_list")?;
-                pt_row.push(pt);
-            }
-            control_points.push(pt_row);
-        }
-
-        let surface = NurbsSurface {
-            u_degree,
-            v_degree,
-            control_points,
-            weights: Some(weights),
-            u_knot_multiplicities,
-            v_knot_multiplicities,
-            u_knots,
-            v_knots,
-            u_closed,
-            v_closed,
-            form,
-        };
-        let id = self.geometry.surfaces.push(Surface::Nurbs(surface));
         self.surface_map.insert(entity_id, id);
         Ok(())
     }
