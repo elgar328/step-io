@@ -23,7 +23,7 @@ pub(crate) mod geometry;
 mod pmi;
 mod property;
 pub(crate) mod topology;
-mod units;
+pub(crate) mod units;
 mod visualization;
 
 pub(crate) struct WriteBuffer<'m> {

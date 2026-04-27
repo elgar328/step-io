@@ -14,6 +14,7 @@ use crate::writer::buffer::WriteBuffer;
 
 pub mod geometry;
 pub mod topology;
+pub mod units;
 
 /// Reader pass ordering. Lower variants run first.
 ///
@@ -74,6 +75,20 @@ pub(crate) enum PassLevel {
     /// `B_SPLINE_CURVE_WITH_KNOTS` inside a pcurve subtree.
     #[allow(dead_code)] // wired in Plan 5.5 stage C4
     Pass4aCurve,
+
+    // ----- Plan 5.6 (units, Pass 0 — runs before geometry passes) -----
+    /// 3 unit leaf complex entities (`LENGTH_UNIT` / `PLANE_ANGLE_UNIT`
+    /// / `SOLID_ANGLE_UNIT` bearings). Mutually independent.
+    #[allow(dead_code)] // wired in Plan 5.6 stage C2
+    Pass0Leaf,
+    /// `UNCERTAINTY_MEASURE_WITH_UNIT` (simple). Depends on `Pass0Leaf`
+    /// outputs (`length_unit_map`).
+    #[allow(dead_code)] // wired in Plan 5.6 stage C3
+    Pass0Uncertainty,
+    /// `GLOBAL_UNIT_ASSIGNED_CONTEXT` (complex orchestrator). Depends on
+    /// `Pass0Leaf` + `Pass0Uncertainty` outputs.
+    #[allow(dead_code)] // wired in Plan 5.6 stage C4
+    Pass0Context,
 
     // ----- Plan 4 (topology) -----
     /// `VERTEX_POINT` (Pass 5-1) — depends on `CARTESIAN_POINT`.
