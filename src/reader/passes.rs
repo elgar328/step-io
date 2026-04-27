@@ -280,10 +280,8 @@ impl ReaderContext {
         // referencing either entity type resolves uniformly. Transparent must
         // run before SSRWP so the rendering converter can resolve property refs.
         self.dispatch_registry(graph, PassLevel::Pass7SurfaceFill);
-        run_pass!(graph, self,
-            "SURFACE_STYLE_TRANSPARENT" => convert_surface_style_transparent);
-        run_pass!(graph, self,
-            "SURFACE_STYLE_RENDERING_WITH_PROPERTIES" => convert_surface_style_rendering_with_properties);
+        self.dispatch_registry(graph, PassLevel::Pass7Transparent);
+        self.dispatch_registry(graph, PassLevel::Pass7Rendering);
         run_pass!(graph, self, "SURFACE_SIDE_STYLE" => convert_surface_side_style);
         run_pass!(graph, self, "SURFACE_STYLE_USAGE" => convert_surface_style_usage);
         run_pass!(graph, self,

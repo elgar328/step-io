@@ -8,9 +8,9 @@
 
 use super::WriteBuffer;
 use crate::ir::visualization::{
-    ColorRgb, Mdgpr, PresentationStyleAssignment, RenderingProperty, ShadingMethod, StyledItem,
-    StyledItemTarget, SurfaceSide, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea,
-    SurfaceStyleRendering, SurfaceStyleUsage,
+    Mdgpr, PresentationStyleAssignment, StyledItem, StyledItemTarget, SurfaceSide,
+    SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleRendering,
+    SurfaceStyleUsage,
 };
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
@@ -135,41 +135,11 @@ impl WriteBuffer<'_> {
 
 impl WriteBuffer<'_> {
     pub(crate) fn emit_ssr(&mut self, ssr: &SurfaceStyleRendering) -> u64 {
-        let colour_id = self.emit_colour_rgb(&ssr.surface_colour);
-        let mut prop_refs = Vec::with_capacity(ssr.properties.len());
-        for prop in &ssr.properties {
-            let prop_id = match prop {
-                RenderingProperty::Transparent(t) => self.emit_surface_style_transparent(*t),
-            };
-            prop_refs.push(Attribute::EntityRef(prop_id));
-        }
-        let method_attr = match ssr.rendering_method {
-            None => Attribute::Unset,
-            Some(ShadingMethod::Constant) => Attribute::Enum("CONSTANT_SHADING".into()),
-            Some(ShadingMethod::Colour) => Attribute::Enum("COLOUR_SHADING".into()),
-            Some(ShadingMethod::Dot) => Attribute::Enum("DOT_SHADING".into()),
-            Some(ShadingMethod::Normal) => Attribute::Enum("NORMAL_SHADING".into()),
-        };
-        self.push_simple(
-            "SURFACE_STYLE_RENDERING_WITH_PROPERTIES",
-            vec![
-                method_attr,
-                Attribute::EntityRef(colour_id),
-                Attribute::List(prop_refs),
-            ],
-        )
-    }
-
-    pub(crate) fn emit_surface_style_transparent(&mut self, transparency: f64) -> u64 {
-        self.push_simple(
-            "SURFACE_STYLE_TRANSPARENT",
-            vec![Attribute::Real(transparency)],
-        )
-    }
-
-    pub(crate) fn emit_colour_rgb(&mut self, c: &ColorRgb) -> u64 {
         use crate::entities::SimpleEntityHandler;
-        crate::entities::visualization::colour_rgb::ColourRgbHandler::write(self, c.clone())
-            .expect("COLOUR_RGB write only pushes simple entities")
+        crate::entities::visualization::surface_style_rendering_with_properties::SurfaceStyleRenderingHandler::write(
+            self,
+            ssr.clone(),
+        )
+        .expect("SSR write only pushes simple entities")
     }
 }
