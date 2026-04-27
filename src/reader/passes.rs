@@ -198,16 +198,12 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass6ShapeRep);
         // Pass 6-4f: GEOMETRIC_(CURVE_)SET — must precede GBWSR/GBSSR so the
         // wireframe converters can look up the curve-set payload.
-        run_pass!(graph, self,
-            "GEOMETRIC_CURVE_SET" => convert_geometric_curve_set,
-            "GEOMETRIC_SET" => convert_geometric_curve_set);
+        self.dispatch_registry(graph, PassLevel::Pass6CurveSet);
         // Pass 6-4g: GBWSR / GBSSR — wraps GEOMETRIC_(CURVE_)SETs into a
         // shape representation. Both forms reach the same IR variant
         // (`ProductContent::Wireframe`) with a `repr_kind` flag preserving
         // the source spelling.
-        run_pass!(graph, self,
-            "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION" => convert_gbwsr,
-            "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION" => convert_gbssr);
+        self.dispatch_registry(graph, PassLevel::Pass6Gbsr);
         // Pass 6-4b: simple SHAPE_REPRESENTATION_RELATIONSHIP (indirection
         // from plain SR to ABSR / MSSR / wireframe). Must run after the
         // shape-representation passes above so the is-target lookup sees

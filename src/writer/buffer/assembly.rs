@@ -317,38 +317,19 @@ impl WriteBuffer<'_> {
         wf: &WireframeContent,
         unit_ctx: u64,
     ) -> Result<u64, WriteError> {
-        let axis_ref = self.emit_axis2_placement_3d(product.shape_ref_frame)?;
-        let mut item_refs = Vec::with_capacity(wf.curves.len() + wf.points.len());
-        for &cid in &wf.curves {
-            item_refs.push(Attribute::EntityRef(self.emit_curve(cid)?));
-        }
-        for &pid in &wf.points {
-            item_refs.push(Attribute::EntityRef(self.emit_point(pid)?));
-        }
-        let set_name = if wf.points.is_empty() {
-            "GEOMETRIC_CURVE_SET"
-        } else {
-            "GEOMETRIC_SET"
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::shape_rep::gbssr::GbssrHandler;
+        use crate::entities::shape_rep::gbwsr::{GbwsrHandler, WireframeRepresentationWriteInput};
+
+        let input = WireframeRepresentationWriteInput {
+            product: product.clone(),
+            wireframe: wf.clone(),
+            unit_ctx,
         };
-        let set_ref = self.push_simple(
-            set_name,
-            vec![Attribute::String(String::new()), Attribute::List(item_refs)],
-        );
-        let repr_name = match wf.repr_kind {
-            WireframeReprKind::Surface => "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
-            WireframeReprKind::Wireframe => "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
-        };
-        Ok(self.push_simple(
-            repr_name,
-            vec![
-                Attribute::String(String::new()),
-                Attribute::List(vec![
-                    Attribute::EntityRef(axis_ref),
-                    Attribute::EntityRef(set_ref),
-                ]),
-                Attribute::EntityRef(unit_ctx),
-            ],
-        ))
+        match wf.repr_kind {
+            WireframeReprKind::Surface => GbssrHandler::write(self, input),
+            WireframeReprKind::Wireframe => GbwsrHandler::write(self, input),
+        }
     }
 
     pub(crate) fn emit_absr(
