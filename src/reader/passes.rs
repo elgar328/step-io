@@ -139,9 +139,7 @@ impl ReaderContext {
         // Pass 4-3: SURFACE_CURVE / SEAM_CURVE — alias to curve_3d so edges
         // that reference these see the underlying 3D curve. Must come after
         // 4-1 and 4-2 (curve_3d usually resolves to a simple or rational curve).
-        run_pass!(graph, self,
-            "SURFACE_CURVE" => convert_surface_curve,
-            "SEAM_CURVE" => convert_seam_curve);
+        self.dispatch_registry(graph, PassLevel::Pass4_3SurfaceCurve);
 
         // Pass 4-3c: TRIMMED_CURVE / COMPOSITE_CURVE_SEGMENT / COMPOSITE_CURVE.
         // Must come after Pass 4-1 (simple curves), Pass 4-2 (rational B-spline
@@ -169,7 +167,9 @@ impl ReaderContext {
                 RawEntity::Complex { .. } => continue,
             };
             if name == "SURFACE_CURVE" || name == "SEAM_CURVE" {
-                self.collect_surface_curve_pcurves(id, attrs, graph);
+                crate::entities::geometry::surface_curve::collect_surface_curve_pcurves(
+                    self, id, attrs, graph,
+                );
             }
         }
 

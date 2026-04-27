@@ -608,7 +608,7 @@ impl WriteBuffer<'_> {
         n
     }
 
-    fn emit_pcurve(&mut self, pc: Pcurve) -> Result<u64, WriteError> {
+    pub(crate) fn emit_pcurve(&mut self, pc: Pcurve) -> Result<u64, WriteError> {
         let surface_ref = self.emit_surface(pc.basis_surface)?;
         let curve_2d_ref = self.emit_curve_2d(pc.curve_2d)?;
         let def_repr = self.emit_definitional_representation(curve_2d_ref);
@@ -637,33 +637,24 @@ impl WriteBuffer<'_> {
         curve_3d_ref: u64,
         pcurves: &[Pcurve],
     ) -> Result<u64, WriteError> {
-        let mut pcurve_refs = Vec::with_capacity(pcurves.len());
-        for pc in pcurves {
-            pcurve_refs.push(self.emit_pcurve(*pc)?);
-        }
+        // Plan 5 stage C4: dispatch through EntityHandler trait.
+        use crate::entities::SimpleEntityHandler;
         let is_seam = pcurves.len() >= 2
             && pcurves
                 .iter()
                 .all(|p| p.basis_surface == pcurves[0].basis_surface);
-        let name = if is_seam {
-            "SEAM_CURVE"
+        let pcurves_owned = pcurves.to_vec();
+        if is_seam {
+            crate::entities::geometry::seam_curve::SeamCurveHandler::write(
+                self,
+                (curve_3d_ref, pcurves_owned),
+            )
         } else {
-            "SURFACE_CURVE"
-        };
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: name.into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(curve_3d_ref),
-                    Attribute::List(pcurve_refs.into_iter().map(Attribute::EntityRef).collect()),
-                    Attribute::Enum("PCURVE_S1".into()),
-                ],
-            },
-        });
-        Ok(n)
+            crate::entities::geometry::surface_curve::SurfaceCurveHandler::write(
+                self,
+                (curve_3d_ref, pcurves_owned),
+            )
+        }
     }
 }
 

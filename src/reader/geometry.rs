@@ -37,67 +37,6 @@ impl ReaderContext {
     // `curve_3d` so downstream code (e.g. `EDGE_CURVE`) keeps working.
     // ------------------------------------------------------------------
 
-    pub(super) fn convert_surface_curve(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        self.convert_surface_or_seam_curve(entity_id, attrs, "SURFACE_CURVE")
-    }
-
-    pub(super) fn convert_seam_curve(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        self.convert_surface_or_seam_curve(entity_id, attrs, "SEAM_CURVE")
-    }
-
-    fn convert_surface_or_seam_curve(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-        tag: &'static str,
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, tag)?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
-        let curve_3d_ref = read_entity_ref(attrs, 1, entity_id, "curve_3d")?;
-        // attrs[2] = associated_geometry (pcurves) — resolved in a separate
-        // post-pass that has the EntityGraph in scope (see
-        // `collect_surface_curve_pcurves` in `passes.rs`).
-        // attrs[3] = master_representation enum — intentionally ignored; the
-        // OCCT convention of `.PCURVE_S1.` is reproduced by the writer.
-
-        let curve_3d = self.resolve_curve(entity_id, curve_3d_ref, "curve_3d")?;
-        self.curve_map.insert(entity_id, curve_3d);
-        Ok(())
-    }
-
-    /// Read a SURFACE_CURVE / SEAM_CURVE entity's `associated_geometry` list
-    /// and convert each PCURVE reference into a [`Pcurve`]. Called by the
-    /// post-pass in `passes.rs` after 2D geometry (Pass 4a) and Pass 4-3
-    /// have populated the surface / curve_2d maps.
-    pub(super) fn collect_surface_curve_pcurves(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-        graph: &crate::parser::entity::EntityGraph,
-    ) {
-        let Ok(pcurve_refs) = read_entity_ref_list(attrs, 2, entity_id, "associated_geometry")
-        else {
-            return;
-        };
-        let mut pcurves = Vec::with_capacity(pcurve_refs.len());
-        for &pcurve_ref in &pcurve_refs {
-            if let Some(pc) = self.resolve_pcurve(pcurve_ref, graph) {
-                pcurves.push(pc);
-            }
-        }
-        if !pcurves.is_empty() {
-            self.surface_curve_pcurves_map.insert(entity_id, pcurves);
-        }
-    }
-
     // ------------------------------------------------------------------
     // Pass 4-1b: TRIMMED_CURVE
     // ------------------------------------------------------------------
@@ -613,7 +552,7 @@ impl ReaderContext {
     // the referenced entity doesn't resolve — the caller treats `None`
     // as "skip this pcurve" and emits no warning (the underlying missing
     // reference would already surface in 3D pass errors).
-    pub(super) fn resolve_pcurve(
+    pub(crate) fn resolve_pcurve(
         &self,
         pcurve_ref: u64,
         graph: &crate::parser::entity::EntityGraph,

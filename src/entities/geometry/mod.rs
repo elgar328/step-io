@@ -17,6 +17,8 @@ pub mod line;
 pub mod plane;
 pub mod rational_bspline_curve;
 pub mod rational_bspline_surface;
+pub mod seam_curve;
 pub mod spherical_surface;
+pub mod surface_curve;
 pub mod toroidal_surface;
 pub mod vector;
