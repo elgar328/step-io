@@ -124,9 +124,7 @@ impl ReaderContext {
         // 4a-1: 2D points / directions
         self.dispatch_registry_2d(graph, PassLevel::Pass4aPoint);
         // 4a-2: 2D vectors + axis2_placement_2d
-        run_2d_pass!(graph, self,
-            "VECTOR" => convert_vector_2d,
-            "AXIS2_PLACEMENT_2D" => convert_axis2_placement_2d);
+        self.dispatch_registry_2d(graph, PassLevel::Pass4aVector);
         // 4a-3: 2D curves
         run_2d_pass!(graph, self,
             "LINE" => convert_line_2d,

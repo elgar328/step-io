@@ -5,12 +5,11 @@
 use super::ReaderContext;
 use crate::ir::attr::{
     check_count, read_bool, read_entity_ref, read_entity_ref_list, read_enum, read_integer,
-    read_integer_list, read_optional_entity_ref, read_real, read_real_list, read_string,
+    read_integer_list, read_real, read_real_list, read_string,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{
-    Axis2Placement2d, Circle2, Curve2d, CurveForm, Ellipse2, Line2, NurbsCurve2d, Pcurve, Surface,
-    SurfaceOfOffset,
+    Circle2, Curve2d, CurveForm, Ellipse2, Line2, NurbsCurve2d, Pcurve, Surface, SurfaceOfOffset,
 };
 use crate::parser::entity::{Attribute, RawEntity};
 
@@ -76,66 +75,6 @@ impl ReaderContext {
     // on entities inside `pcurve_subtree_ids`, so a single entity name
     // like `CARTESIAN_POINT` can route to either the 3D or 2D converter
     // depending on whether the entity belongs to a PCURVE subtree.
-
-    pub(super) fn convert_vector_2d(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "VECTOR")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
-        let dir_ref = read_entity_ref(attrs, 1, entity_id, "orientation")?;
-        let magnitude = read_real(attrs, 2, entity_id, "magnitude")?;
-        let dir =
-            *self
-                .direction_2d_map
-                .get(&dir_ref)
-                .ok_or_else(|| ConvertError::MissingReference {
-                    from: entity_id,
-                    to: dir_ref,
-                    field_name: "orientation",
-                })?;
-        self.vector_2d_map.insert(entity_id, (dir, magnitude));
-        Ok(())
-    }
-
-    pub(super) fn convert_axis2_placement_2d(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "AXIS2_PLACEMENT_2D")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
-        let loc_ref = read_entity_ref(attrs, 1, entity_id, "location")?;
-        let ref_dir_ref = read_optional_entity_ref(attrs, 2, entity_id, "ref_direction")?;
-
-        let location =
-            *self
-                .point_2d_map
-                .get(&loc_ref)
-                .ok_or_else(|| ConvertError::MissingReference {
-                    from: entity_id,
-                    to: loc_ref,
-                    field_name: "location",
-                })?;
-        let ref_direction = match ref_dir_ref {
-            Some(r) => Some(*self.direction_2d_map.get(&r).ok_or_else(|| {
-                ConvertError::MissingReference {
-                    from: entity_id,
-                    to: r,
-                    field_name: "ref_direction",
-                }
-            })?),
-            None => None,
-        };
-        let placement = Axis2Placement2d {
-            location,
-            ref_direction,
-        };
-        let id = self.geometry.placements_2d.push(placement);
-        self.placement_2d_map.insert(entity_id, id);
-        Ok(())
-    }
 
     pub(super) fn convert_line_2d(
         &mut self,

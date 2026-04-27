@@ -252,46 +252,15 @@ impl WriteBuffer<'_> {
         direction: Direction2dId,
         magnitude: f64,
     ) -> Result<u64, WriteError> {
-        let dir_n = self.emit_direction_2d(direction)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "VECTOR".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(dir_n),
-                    Attribute::Real(magnitude),
-                ],
-            },
-        });
-        Ok(n)
+        // Plan 5.5 stage C3: dispatch through EntityHandler trait.
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::vector_2d::Vector2dHandler::write(self, (direction, magnitude))
     }
 
     pub(crate) fn emit_axis2_placement_2d(&mut self, id: Placement2dId) -> Result<u64, WriteError> {
-        if let Some(&n) = self.placement_2d_ids.get(&id) {
-            return Ok(n);
-        }
-        let placement = self.model.geometry.placements_2d[id];
-        let loc = self.emit_point_2d(placement.location)?;
-        let ref_attr = match placement.ref_direction {
-            Some(dir) => Attribute::EntityRef(self.emit_direction_2d(dir)?),
-            None => Attribute::Unset,
-        };
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "AXIS2_PLACEMENT_2D".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(loc),
-                    ref_attr,
-                ],
-            },
-        });
-        self.placement_2d_ids.insert(id, n);
-        Ok(n)
+        // Plan 5.5 stage C3: dispatch through EntityHandler trait.
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::axis2_placement_2d::Axis2Placement2dHandler::write(self, id)
     }
 
     pub(crate) fn emit_curve_2d(&mut self, id: Curve2dId) -> Result<u64, WriteError> {

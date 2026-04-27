@@ -4,6 +4,7 @@
 //! Plan 5 (`INFRA_PLAN.md`).
 
 pub mod axis1_placement;
+pub mod axis2_placement_2d;
 pub mod axis2_placement_3d;
 pub mod b_spline_curve_with_knots;
 pub mod b_spline_surface_with_knots;
@@ -29,3 +30,4 @@ pub mod surface_of_revolution;
 pub mod toroidal_surface;
 pub mod trimmed_curve;
 pub mod vector;
+pub mod vector_2d;
