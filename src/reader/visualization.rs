@@ -18,104 +18,13 @@ use crate::ir::attr::{
 };
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::{
-    ColorRgb, FillAreaStyle, FillAreaStyleColour, Mdgpr, PresentationStyleAssignment,
-    RenderingProperty, ShadingMethod, StyledItem, StyledItemTarget, SurfaceSide, SurfaceSideStyle,
-    SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleRendering, SurfaceStyleUsage,
-    VisualizationPool,
+    Mdgpr, PresentationStyleAssignment, RenderingProperty, ShadingMethod, StyledItem,
+    StyledItemTarget, SurfaceSide, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleRendering,
+    SurfaceStyleUsage, VisualizationPool,
 };
 use crate::parser::entity::Attribute;
 
 impl ReaderContext {
-    // ------------------------------------------------------------------
-    // Pass 7-1: COLOUR_RGB
-    // ------------------------------------------------------------------
-
-    pub(super) fn convert_colour_rgb(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "COLOUR_RGB")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let red = read_real(attrs, 1, entity_id, "red")?;
-        let green = read_real(attrs, 2, entity_id, "green")?;
-        let blue = read_real(attrs, 3, entity_id, "blue")?;
-        self.viz_colour_rgb_map.insert(
-            entity_id,
-            ColorRgb {
-                name,
-                red,
-                green,
-                blue,
-            },
-        );
-        Ok(())
-    }
-
-    // ------------------------------------------------------------------
-    // Pass 7-2: FILL_AREA_STYLE_COLOUR
-    // ------------------------------------------------------------------
-
-    pub(super) fn convert_fill_area_style_colour(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "FILL_AREA_STYLE_COLOUR")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let colour_ref = read_entity_ref(attrs, 1, entity_id, "fill_colour")?;
-        let Some(colour) = self.viz_colour_rgb_map.get(&colour_ref).cloned() else {
-            return Ok(()); // symmetric ignorance — unknown ref skipped
-        };
-        self.viz_fasc_map
-            .insert(entity_id, FillAreaStyleColour { name, colour });
-        Ok(())
-    }
-
-    // ------------------------------------------------------------------
-    // Pass 7-3: FILL_AREA_STYLE
-    // ------------------------------------------------------------------
-
-    pub(super) fn convert_fill_area_style(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "FILL_AREA_STYLE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "fill_styles")?;
-        let mut fill_styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(fasc) = self.viz_fasc_map.get(&r).cloned() {
-                fill_styles.push(fasc);
-            }
-        }
-        self.viz_fas_map
-            .insert(entity_id, FillAreaStyle { name, fill_styles });
-        Ok(())
-    }
-
-    // ------------------------------------------------------------------
-    // Pass 7-4a: SURFACE_STYLE_FILL_AREA
-    // ------------------------------------------------------------------
-
-    pub(super) fn convert_surface_style_fill_area(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 1, entity_id, "SURFACE_STYLE_FILL_AREA")?;
-        let fas_ref = read_entity_ref(attrs, 0, entity_id, "fill_area")?;
-        let Some(fill_area) = self.viz_fas_map.get(&fas_ref).cloned() else {
-            return Ok(());
-        };
-        self.viz_sss_entry_map.insert(
-            entity_id,
-            SurfaceSideStyleEntry::FillArea(SurfaceStyleFillArea { fill_area }),
-        );
-        Ok(())
-    }
-
     // ------------------------------------------------------------------
     // Pass 7-4b: SURFACE_STYLE_TRANSPARENT — leaf, populates a temp map
     // consumed by `convert_surface_style_rendering_with_properties`.

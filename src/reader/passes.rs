@@ -273,13 +273,13 @@ impl ReaderContext {
         // STYLED_ITEM.item resolution needs solid_map / curve_map / point_map
         // to be populated. Each sub-pass clones from the prior sub-pass's
         // map so the final IR is a fully inlined tree.
-        run_pass!(graph, self, "COLOUR_RGB" => convert_colour_rgb);
-        run_pass!(graph, self, "FILL_AREA_STYLE_COLOUR" => convert_fill_area_style_colour);
-        run_pass!(graph, self, "FILL_AREA_STYLE" => convert_fill_area_style);
+        self.dispatch_registry(graph, PassLevel::Pass7Colour);
+        self.dispatch_registry(graph, PassLevel::Pass7FillColour);
+        self.dispatch_registry(graph, PassLevel::Pass7FillArea);
         // SSFA + SSRWP both populate viz_sss_entry_map so a SURFACE_SIDE_STYLE
         // referencing either entity type resolves uniformly. Transparent must
         // run before SSRWP so the rendering converter can resolve property refs.
-        run_pass!(graph, self, "SURFACE_STYLE_FILL_AREA" => convert_surface_style_fill_area);
+        self.dispatch_registry(graph, PassLevel::Pass7SurfaceFill);
         run_pass!(graph, self,
             "SURFACE_STYLE_TRANSPARENT" => convert_surface_style_transparent);
         run_pass!(graph, self,

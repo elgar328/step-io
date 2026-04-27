@@ -8,13 +8,12 @@
 
 use super::WriteBuffer;
 use crate::ir::visualization::{
-    ColorRgb, FillAreaStyle, FillAreaStyleColour, Mdgpr, PresentationStyleAssignment,
-    RenderingProperty, ShadingMethod, StyledItem, StyledItemTarget, SurfaceSide, SurfaceSideStyle,
-    SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleRendering, SurfaceStyleUsage,
+    ColorRgb, Mdgpr, PresentationStyleAssignment, RenderingProperty, ShadingMethod, StyledItem,
+    StyledItemTarget, SurfaceSide, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea,
+    SurfaceStyleRendering, SurfaceStyleUsage,
 };
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
-use crate::writer::entity::{WriterBody, WriterEntity};
 
 impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_visualization_if_set(
@@ -120,13 +119,21 @@ impl WriteBuffer<'_> {
     }
 
     pub(crate) fn emit_ssfa(&mut self, ssfa: &SurfaceStyleFillArea) -> u64 {
-        let fas_id = self.emit_fas(&ssfa.fill_area);
-        self.push_simple(
-            "SURFACE_STYLE_FILL_AREA",
-            vec![Attribute::EntityRef(fas_id)],
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::visualization::surface_style_fill_area::SurfaceStyleFillAreaHandler::write(
+            self,
+            ssfa.clone(),
         )
+        .expect("SSFA write only pushes simple entities")
     }
+}
 
+// The `emit_fas` / `emit_fasc` helpers that used to live here have moved
+// into `entities/visualization/{fill_area_style,fill_area_style_colour}.rs`
+// — Plan 7 stage C2 deleted the buffer-level wrappers since `emit_ssfa`
+// dispatches into the entity handler chain directly.
+
+impl WriteBuffer<'_> {
     pub(crate) fn emit_ssr(&mut self, ssr: &SurfaceStyleRendering) -> u64 {
         let colour_id = self.emit_colour_rgb(&ssr.surface_colour);
         let mut prop_refs = Vec::with_capacity(ssr.properties.len());
@@ -160,45 +167,9 @@ impl WriteBuffer<'_> {
         )
     }
 
-    pub(crate) fn emit_fas(&mut self, fas: &FillAreaStyle) -> u64 {
-        let mut style_refs = Vec::with_capacity(fas.fill_styles.len());
-        for fasc in &fas.fill_styles {
-            style_refs.push(Attribute::EntityRef(self.emit_fasc(fasc)));
-        }
-        self.push_simple(
-            "FILL_AREA_STYLE",
-            vec![
-                Attribute::String(fas.name.clone()),
-                Attribute::List(style_refs),
-            ],
-        )
-    }
-
-    pub(crate) fn emit_fasc(&mut self, fasc: &FillAreaStyleColour) -> u64 {
-        let colour_id = self.emit_colour_rgb(&fasc.colour);
-        self.push_simple(
-            "FILL_AREA_STYLE_COLOUR",
-            vec![
-                Attribute::String(fasc.name.clone()),
-                Attribute::EntityRef(colour_id),
-            ],
-        )
-    }
-
     pub(crate) fn emit_colour_rgb(&mut self, c: &ColorRgb) -> u64 {
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "COLOUR_RGB".into(),
-                attrs: vec![
-                    Attribute::String(c.name.clone()),
-                    Attribute::Real(c.red),
-                    Attribute::Real(c.green),
-                    Attribute::Real(c.blue),
-                ],
-            },
-        });
-        n
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::visualization::colour_rgb::ColourRgbHandler::write(self, c.clone())
+            .expect("COLOUR_RGB write only pushes simple entities")
     }
 }
