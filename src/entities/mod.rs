@@ -59,6 +59,22 @@ pub(crate) enum PassLevel {
     #[allow(dead_code)] // wired in Plan 5 stage C6
     Pass4_4Swept,
 
+    // ----- Plan 5.5 (PCURVE definitional 2D geometry) -----
+    /// 2D `CARTESIAN_POINT` + `DIRECTION` inside a PCURVE
+    /// `DEFINITIONAL_REPRESENTATION`. Same entity names as the 3D
+    /// counterparts, but the registry's `dispatch_*_2d` path filters on
+    /// `pcurve_subtree_ids` membership so they never collide.
+    #[allow(dead_code)] // wired in Plan 5.5 stage C2
+    Pass4aPoint,
+    /// 2D `VECTOR` + `AXIS2_PLACEMENT_2D` (Pass 4a-2). Independent of
+    /// each other; both depend only on `Pass4aPoint` outputs.
+    #[allow(dead_code)] // wired in Plan 5.5 stage C3
+    Pass4aVector,
+    /// 2D curves (Pass 4a-3) — `LINE` / `CIRCLE` / `ELLIPSE` /
+    /// `B_SPLINE_CURVE_WITH_KNOTS` inside a pcurve subtree.
+    #[allow(dead_code)] // wired in Plan 5.5 stage C4
+    Pass4aCurve,
+
     // ----- Plan 4 (topology) -----
     /// `VERTEX_POINT` (Pass 5-1) — depends on `CARTESIAN_POINT`.
     #[allow(dead_code)] // wired in Plan 4 stage C2

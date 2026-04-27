@@ -457,4 +457,58 @@ impl ReaderContext {
             }
         }
     }
+
+    /// Like [`dispatch_registry`], but for handlers whose entities live
+    /// inside a `PCURVE` `DEFINITIONAL_REPRESENTATION` subtree (2D
+    /// geometry). Plan 5.5 introduced this twin entry point so that
+    /// shared entity names (`CARTESIAN_POINT`, `DIRECTION`, `LINE`, …)
+    /// can have separate 3D / 2D handlers without confusion.
+    #[allow(dead_code)] // wired in Plan 5.5 stage C2
+    fn dispatch_registry_2d(&mut self, graph: &EntityGraph, pass_level: PassLevel) {
+        for entry in ENTITY_HANDLERS {
+            if entry.pass_level != pass_level {
+                continue;
+            }
+            self.dispatch_entry_2d(graph, entry);
+        }
+    }
+
+    /// Apply one registry entry to every entity *inside* a pcurve
+    /// subtree — the mirror image of [`dispatch_entry`] (which skips
+    /// pcurve subtree members). The body is otherwise identical; the
+    /// duplication is a deliberate trade-off documented in the Plan 5.5
+    /// design (see `internal/IR_DESIGN.md` for the planned future
+    /// generalisation into a single `EntityContext`-driven dispatch).
+    #[allow(dead_code)] // wired in Plan 5.5 stage C2
+    fn dispatch_entry_2d(&mut self, graph: &EntityGraph, entry: &EntityHandlerEntry) {
+        for (&id, ent) in &graph.entities {
+            if !self.pcurve_subtree_ids.contains(&id) {
+                continue;
+            }
+            match (&entry.kind, ent) {
+                (
+                    ReadKind::Simple { read },
+                    RawEntity::Simple {
+                        name, attributes, ..
+                    },
+                ) if name == entry.name => {
+                    if let Err(e) = read(self, id, attributes) {
+                        self.warnings.push(e);
+                    }
+                }
+                (
+                    ReadKind::Complex {
+                        required_parts,
+                        read,
+                    },
+                    RawEntity::Complex { parts, .. },
+                ) if has_all_parts(parts, required_parts) => {
+                    if let Err(e) = read(self, id, parts) {
+                        self.warnings.push(e);
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
 }
