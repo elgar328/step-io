@@ -199,7 +199,7 @@ impl<'m> WriteBuffer<'m> {
         // contexts with different units emit separate leaves.
         self.unit_context_ids = Vec::with_capacity(self.model.units.len());
         for ctx in self.model.units.iter() {
-            let id = self.emit_unit_context(*ctx);
+            let id = self.emit_unit_context(*ctx)?;
             self.unit_context_ids.push(id);
         }
         self.emit_product_chain_if_eligible()?;

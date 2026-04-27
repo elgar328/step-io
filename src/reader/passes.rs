@@ -9,19 +9,10 @@ impl ReaderContext {
     /// Pass 0: unit context. Runs before all geometry passes so that
     /// `model.units` is known by the time downstream code inspects it.
     pub(super) fn run_unit_pass(&mut self, graph: &EntityGraph) {
-        // Pass 0-1: SI_UNIT-bearing leaves (LENGTH/PLANE_ANGLE/SOLID_ANGLE).
-        for (&id, entity) in &graph.entities {
-            if self.pcurve_subtree_ids.contains(&id) {
-                continue;
-            }
-            let parts = match entity {
-                RawEntity::Complex { parts, .. } => parts,
-                RawEntity::Simple { .. } => continue,
-            };
-            if let Err(e) = self.convert_unit_leaf(id, parts) {
-                self.warnings.push(e);
-            }
-        }
+        // Pass 0-1: SI_UNIT- / CONVERSION_BASED_UNIT-bearing leaves
+        // (LENGTH / PLANE_ANGLE / SOLID_ANGLE flavour). Each leaf is its
+        // own ComplexEntityHandler keyed on the kind-specific part.
+        self.dispatch_registry(graph, PassLevel::Pass0Leaf);
 
         // Pass 0-1b: UNCERTAINTY_MEASURE_WITH_UNIT (simple entities,
         // depend on Pass 0-1 to know which unit refs are length).
