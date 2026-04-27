@@ -2,6 +2,7 @@
 
 use super::assembly::{pdef_shape_to_nauo_ref, pdef_shape_to_pdef_ref};
 use super::{ReaderContext, has_all_parts};
+use crate::entities::{ENTITY_HANDLERS, EntityHandlerEntry, PassLevel};
 use crate::ir::topology::FaceKind;
 use crate::parser::entity::{EntityGraph, RawEntity};
 
@@ -85,10 +86,13 @@ impl ReaderContext {
             };
         }
 
-        // Pass 1: points and directions
-        run_pass!(graph, self, "CARTESIAN_POINT" => convert_cartesian_point, "DIRECTION" => convert_direction);
-        // Pass 2: vectors (depend on directions)
-        run_pass!(graph, self, "VECTOR" => convert_vector);
+        // Pass 1: points and directions.
+        //   DIRECTION 은 EntityHandler registry path 로, CARTESIAN_POINT 는
+        //   기존 run_pass! path. Plan 3 에서 CARTESIAN_POINT 도 registry 로 이동.
+        self.dispatch_registry(graph, PassLevel::Pass1);
+        run_pass!(graph, self, "CARTESIAN_POINT" => convert_cartesian_point);
+        // Pass 2: vectors (depend on directions). VECTOR via registry.
+        self.dispatch_registry(graph, PassLevel::Pass2);
         // Pass 3: axis placements (depend on points + directions)
         run_pass!(graph, self, "AXIS2_PLACEMENT_3D" => convert_axis2_placement_3d, "AXIS1_PLACEMENT" => convert_axis1_placement);
         // Pass 4-1: simple leaf curves and surfaces
@@ -513,6 +517,41 @@ impl ReaderContext {
                 continue;
             }
             if let Err(e) = self.convert_property_definition_representation(id, attrs, graph) {
+                self.warnings.push(e);
+            }
+        }
+    }
+
+    /// Walk the [`ENTITY_HANDLERS`] registry and dispatch every handler whose
+    /// `pass_level` matches. Single-round only; multi-round entities (currently
+    /// just `OFFSET_SURFACE`) keep their bespoke `run_pass!` + loop.
+    fn dispatch_registry(&mut self, graph: &EntityGraph, pass_level: PassLevel) {
+        for entry in ENTITY_HANDLERS {
+            if entry.pass_level != pass_level {
+                continue;
+            }
+            self.dispatch_entry(graph, entry);
+        }
+    }
+
+    /// Apply one registry entry's `read` fn to every matching entity in
+    /// the graph. Mirrors the body of the `run_pass!` macro one-to-one
+    /// (pcurve subtree skip, complex skip, error → warnings).
+    fn dispatch_entry(&mut self, graph: &EntityGraph, entry: &EntityHandlerEntry) {
+        for (&id, ent) in &graph.entities {
+            if self.pcurve_subtree_ids.contains(&id) {
+                continue;
+            }
+            let (name, attrs) = match ent {
+                RawEntity::Simple {
+                    name, attributes, ..
+                } => (name.as_str(), attributes.as_slice()),
+                RawEntity::Complex { .. } => continue,
+            };
+            if name != entry.name {
+                continue;
+            }
+            if let Err(e) = (entry.read)(self, id, attrs) {
                 self.warnings.push(e);
             }
         }

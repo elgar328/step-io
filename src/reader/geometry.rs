@@ -50,14 +50,15 @@ impl ReaderContext {
         Ok(())
     }
 
+    // Plan 2 wired DIRECTION dispatch through the linkme registry, so this
+    // wrapper is no longer reachable. Plan 3 removes it (and convert_vector
+    // below) once all run_pass! call sites are gone.
+    #[allow(dead_code)]
     pub(crate) fn convert_direction(
         &mut self,
         entity_id: u64,
         attrs: &[Attribute],
     ) -> Result<(), ConvertError> {
-        // Step 1 pilot: dispatch through the EntityHandler trait. The legacy
-        // body lives in `src/entities/geometry/direction.rs`. Plan 2 will
-        // replace this wrapper once the registry takes over `run_pass!`.
         use crate::entities::EntityHandler;
         crate::entities::geometry::direction::DirectionHandler::read(self, entity_id, attrs)
     }
@@ -66,13 +67,14 @@ impl ReaderContext {
     // Pass 2: VECTOR (depends on DIRECTION)
     // ------------------------------------------------------------------
 
+    // Same as convert_direction above — superseded by the registry, kept
+    // around to keep the diff small. Removed in Plan 3.
+    #[allow(dead_code)]
     pub(crate) fn convert_vector(
         &mut self,
         entity_id: u64,
         attrs: &[Attribute],
     ) -> Result<(), ConvertError> {
-        // Step 1 pilot: dispatch through the EntityHandler trait. Body lives in
-        // `src/entities/geometry/vector.rs`. Plan 2 will replace this wrapper.
         use crate::entities::EntityHandler;
         crate::entities::geometry::vector::VectorHandler::read(self, entity_id, attrs)
     }
