@@ -197,22 +197,18 @@ impl WriteBuffer<'_> {
         // flag alone — AP203 readers always set it to `true` (the schema
         // mandates the subtype), AP214/242 set it only when the source
         // file used the subtype (e.g. some CATIA exports). The subtype
-        // carries an extra `source` enum which we hardcode to
+        // carries an extra `source` enum which the handler hardcodes to
         // `.NOT_KNOWN.` (the only value seen in real fixtures).
-        let name = if product.formation_with_source {
-            "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE"
-        } else {
-            "PRODUCT_DEFINITION_FORMATION"
-        };
-        let mut attrs = vec![
-            Attribute::String(String::new()),
-            Attribute::String(String::new()),
-            Attribute::EntityRef(prod_entity),
-        ];
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::assembly_product::product_definition_formation::ProductDefinitionFormationHandler;
+        use crate::entities::assembly_product::product_definition_formation_with_source::ProductDefinitionFormationWithSourceHandler;
         if product.formation_with_source {
-            attrs.push(Attribute::Enum("NOT_KNOWN".into()));
+            ProductDefinitionFormationWithSourceHandler::write(self, prod_entity)
+                .expect("PDF_WITH_SOURCE write only pushes one simple entity")
+        } else {
+            ProductDefinitionFormationHandler::write(self, prod_entity)
+                .expect("PDF write only pushes one simple entity")
         }
-        self.push_simple(name, attrs)
     }
 
     /// Emit the `PRODUCT_CATEGORY` chain for a product. No-op when the IR
@@ -265,15 +261,18 @@ impl WriteBuffer<'_> {
     }
 
     pub(crate) fn emit_pdef(&mut self, formation: u64, pdef_ctx: u64) -> u64 {
-        self.push_simple(
-            "PRODUCT_DEFINITION",
-            vec![
-                Attribute::String("design".into()),
-                Attribute::String(String::new()),
-                Attribute::EntityRef(formation),
-                Attribute::EntityRef(pdef_ctx),
-            ],
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::assembly_product::product_definition::{
+            ProductDefinitionHandler, ProductDefinitionWriteInput,
+        };
+        ProductDefinitionHandler::write(
+            self,
+            ProductDefinitionWriteInput {
+                formation,
+                pdef_ctx,
+            },
         )
+        .expect("PRODUCT_DEFINITION write only pushes one simple entity")
     }
 
     fn emit_pdef_shape(&mut self, pdef: u64) -> u64 {

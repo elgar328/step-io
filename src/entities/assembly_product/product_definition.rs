@@ -1,1 +1,81 @@
-//! `PRODUCT_DEFINITION` handler — Pass 6-3. Body wired in Plan 6 stage C3.
+//! `PRODUCT_DEFINITION` handler — Pass 6-3.
+//!
+//! Reader follows the formation ref out of `formation_to_product` to learn
+//! which product the PDEF describes, and stores the result in
+//! `pdef_to_product`. Writer emits the bare PDEF line linking a formation
+//! and the per-file `PRODUCT_DEFINITION_CONTEXT`.
+
+use crate::entities::{
+    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
+};
+use crate::ir::attr::{check_count, read_entity_ref, read_string, read_string_or_unset};
+use crate::ir::error::ConvertError;
+use crate::parser::entity::Attribute;
+use crate::reader::ReaderContext;
+use crate::writer::WriteError;
+use crate::writer::buffer::WriteBuffer;
+
+pub(crate) struct ProductDefinitionWriteInput {
+    pub(crate) formation: u64,
+    pub(crate) pdef_ctx: u64,
+}
+
+pub(crate) struct ProductDefinitionHandler;
+
+impl SimpleEntityHandler for ProductDefinitionHandler {
+    const NAME: &'static str = "PRODUCT_DEFINITION";
+    const PASS_LEVEL: PassLevel = PassLevel::Pass6Pdef;
+    type WriteInput = ProductDefinitionWriteInput;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 4, entity_id, "PRODUCT_DEFINITION")?;
+        // PRODUCT_DEFINITION.id is a fixed-value enum-like string ("design" /
+        // "implementation"); keep strict. description is informal — accept `$`.
+        let _id = read_string(attrs, 0, entity_id, "id")?;
+        let _description = read_string_or_unset(attrs, 1, entity_id, "description")?;
+        let formation_ref = read_entity_ref(attrs, 2, entity_id, "formation")?;
+        // attrs[3] = frame_of_reference (PRODUCT_DEFINITION_CONTEXT) — ignored.
+
+        let Some(&product_ref) = ctx.formation_to_product.get(&formation_ref) else {
+            return Err(ConvertError::MissingReference {
+                from: entity_id,
+                to: formation_ref,
+                field_name: "formation",
+            });
+        };
+        ctx.pdef_to_product.insert(entity_id, product_ref);
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        ProductDefinitionWriteInput {
+            formation,
+            pdef_ctx,
+        }: ProductDefinitionWriteInput,
+    ) -> Result<u64, WriteError> {
+        Ok(buf.push_simple(
+            "PRODUCT_DEFINITION",
+            vec![
+                Attribute::String("design".into()),
+                Attribute::String(String::new()),
+                Attribute::EntityRef(formation),
+                Attribute::EntityRef(pdef_ctx),
+            ],
+        ))
+    }
+}
+
+#[allow(unsafe_code)] // linkme uses link_section internally
+#[linkme::distributed_slice(ENTITY_HANDLERS)]
+static PDEF_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
+    name: ProductDefinitionHandler::NAME,
+    pass_level: ProductDefinitionHandler::PASS_LEVEL,
+    kind: ReadKind::Simple {
+        read: ProductDefinitionHandler::read,
+    },
+};

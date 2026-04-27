@@ -182,13 +182,11 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass6ProductCategory);
         self.dispatch_registry(graph, PassLevel::Pass6ProductCategoryRel);
         // Pass 6-2: PRODUCT_DEFINITION_FORMATION [+ _WITH_SPECIFIED_SOURCE].
-        // Two distinct converters so the subtype can flip the
+        // Two distinct handlers so the subtype can flip the
         // formation_with_source loyalty flag on the referenced Product.
-        run_pass!(graph, self,
-            "PRODUCT_DEFINITION_FORMATION" => convert_product_definition_formation,
-            "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE" => convert_product_definition_formation_with_source);
+        self.dispatch_registry(graph, PassLevel::Pass6PdefFormation);
         // Pass 6-3: PRODUCT_DEFINITION → pdef_to_product
-        run_pass!(graph, self, "PRODUCT_DEFINITION" => convert_product_definition);
+        self.dispatch_registry(graph, PassLevel::Pass6Pdef);
         // Pass 6-4: SBSM (surface body shell list) — must precede MSSR.
         run_pass!(graph, self,
             "SHELL_BASED_SURFACE_MODEL" => convert_shell_based_surface_model);
