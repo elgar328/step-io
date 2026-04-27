@@ -50,35 +50,6 @@ impl ReaderContext {
         Ok(())
     }
 
-    // Plan 2 wired DIRECTION dispatch through the linkme registry, so this
-    // wrapper is no longer reachable. Plan 3 removes it (and convert_vector
-    // below) once all run_pass! call sites are gone.
-    #[allow(dead_code)]
-    pub(crate) fn convert_direction(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        use crate::entities::SimpleEntityHandler;
-        crate::entities::geometry::direction::DirectionHandler::read(self, entity_id, attrs)
-    }
-
-    // ------------------------------------------------------------------
-    // Pass 2: VECTOR (depends on DIRECTION)
-    // ------------------------------------------------------------------
-
-    // Same as convert_direction above — superseded by the registry, kept
-    // around to keep the diff small. Removed in Plan 3.
-    #[allow(dead_code)]
-    pub(crate) fn convert_vector(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        use crate::entities::SimpleEntityHandler;
-        crate::entities::geometry::vector::VectorHandler::read(self, entity_id, attrs)
-    }
-
     // ------------------------------------------------------------------
     // Pass 3: Axis placements (depend on POINT + DIRECTION)
     // ------------------------------------------------------------------
@@ -646,25 +617,6 @@ impl ReaderContext {
         let id = self.geometry.curves.push(Curve::Composite(composite));
         self.curve_map.insert(entity_id, id);
         Ok(())
-    }
-
-    // ------------------------------------------------------------------
-    // Pass 4-2: Complex rational B-spline curves
-    // ------------------------------------------------------------------
-
-    /// Plan 3 stage 3: dispatch moved to
-    /// `entities::geometry::rational_bspline_curve::RationalBsplineCurveHandler`.
-    /// Stage 4 removes this wrapper outright.
-    #[allow(dead_code)] // wrapper deleted in Plan 3 stage 4
-    pub(super) fn convert_rational_bspline_curve(
-        &mut self,
-        entity_id: u64,
-        parts: &[RawEntityPart],
-    ) -> Result<(), ConvertError> {
-        use crate::entities::ComplexEntityHandler;
-        crate::entities::geometry::rational_bspline_curve::RationalBsplineCurveHandler::read_complex(
-            self, entity_id, parts,
-        )
     }
 
     // ------------------------------------------------------------------
