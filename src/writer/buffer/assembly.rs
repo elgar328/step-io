@@ -374,10 +374,18 @@ impl WriteBuffer<'_> {
     }
 
     pub(crate) fn emit_sdr(&mut self, pdef_shape: u64, sr: u64) -> u64 {
-        self.push_simple(
-            "SHAPE_DEFINITION_REPRESENTATION",
-            vec![Attribute::EntityRef(pdef_shape), Attribute::EntityRef(sr)],
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::shape_rep::shape_definition_representation::{
+            ShapeDefinitionRepresentationHandler, ShapeDefinitionRepresentationWriteInput,
+        };
+        ShapeDefinitionRepresentationHandler::write(
+            self,
+            ShapeDefinitionRepresentationWriteInput {
+                pdef_shape,
+                shape_rep: sr,
+            },
         )
+        .expect("SDR write only pushes one simple entity")
     }
 
     /// Wrap a geometry-carrying SR (ABSR / MSSR) in the Fusion 360 / CATIA
@@ -409,15 +417,15 @@ impl WriteBuffer<'_> {
     }
 
     pub(crate) fn emit_simple_srr(&mut self, rep_1: u64, rep_2: u64) -> u64 {
-        self.push_simple(
-            "SHAPE_REPRESENTATION_RELATIONSHIP",
-            vec![
-                Attribute::String("SRR".into()),
-                Attribute::String("None".into()),
-                Attribute::EntityRef(rep_1),
-                Attribute::EntityRef(rep_2),
-            ],
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::shape_rep::shape_representation_relationship::{
+            ShapeRepresentationRelationshipHandler, ShapeRepresentationRelationshipWriteInput,
+        };
+        ShapeRepresentationRelationshipHandler::write(
+            self,
+            ShapeRepresentationRelationshipWriteInput { rep_1, rep_2 },
         )
+        .expect("SRR write only pushes one simple entity")
     }
 
     // ----------------------------------------------------------------
@@ -446,17 +454,11 @@ impl WriteBuffer<'_> {
         &mut self,
         transform: Transform3d,
     ) -> Result<u64, WriteError> {
-        let source = self.emit_axis2_placement_3d(transform.source)?;
-        let target = self.emit_axis2_placement_3d(transform.target)?;
-        Ok(self.push_simple(
-            "ITEM_DEFINED_TRANSFORMATION",
-            vec![
-                Attribute::String(String::new()),
-                Attribute::String(String::new()),
-                Attribute::EntityRef(source),
-                Attribute::EntityRef(target),
-            ],
-        ))
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::shape_rep::item_defined_transformation::ItemDefinedTransformationHandler::write(
+            self,
+            transform,
+        )
     }
 
     pub(crate) fn emit_nauo(&mut self, inst: &Instance, parent_pdef: u64, child_pdef: u64) -> u64 {

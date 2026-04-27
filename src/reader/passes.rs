@@ -208,8 +208,7 @@ impl ReaderContext {
         // from plain SR to ABSR / MSSR / wireframe). Must run after the
         // shape-representation passes above so the is-target lookup sees
         // populated maps.
-        run_pass!(graph, self,
-            "SHAPE_REPRESENTATION_RELATIONSHIP" => convert_shape_representation_relationship);
+        self.dispatch_registry(graph, PassLevel::Pass6SrRel);
 
         // Pre-Pass 6-5: classify PRODUCT_DEFINITION_SHAPE entities by whether
         // their `definition` target is a PRODUCT_DEFINITION (product-owned)
@@ -236,12 +235,10 @@ impl ReaderContext {
 
         // Pass 6-5: SHAPE_DEFINITION_REPRESENTATION — classify each product
         // as Solid(SolidId) or leave as Group(empty).
-        run_pass!(graph, self,
-            "SHAPE_DEFINITION_REPRESENTATION" => convert_shape_definition_representation);
+        self.dispatch_registry(graph, PassLevel::Pass6Sdr);
 
         // Pass 6-6: ITEM_DEFINED_TRANSFORMATION — build transform_map.
-        run_pass!(graph, self,
-            "ITEM_DEFINED_TRANSFORMATION" => convert_item_defined_transformation);
+        self.dispatch_registry(graph, PassLevel::Pass6Idt);
 
         // Pass 6-7: CONTEXT_DEPENDENT_SHAPE_REPRESENTATION — bind each
         // NAUO to a Transform3d. Custom loop because the converter needs
