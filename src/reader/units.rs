@@ -8,40 +8,12 @@
 //! some AP242 outputs).
 
 use super::{ReaderContext, require_part_attrs};
-use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list};
+use crate::ir::attr::{check_count, read_entity_ref_list};
 use crate::ir::error::ConvertError;
 use crate::ir::model::UnitContext;
-use crate::parser::entity::{Attribute, RawEntityPart};
+use crate::parser::entity::RawEntityPart;
 
 impl ReaderContext {
-    // ------------------------------------------------------------------
-    // Pass 0-1b: `UNCERTAINTY_MEASURE_WITH_UNIT`
-    // ------------------------------------------------------------------
-
-    /// Record the numeric value of every `UNCERTAINTY_MEASURE_WITH_UNIT`
-    /// whose unit component resolved to a length unit. Angle / tolerance
-    /// uncertainties are ignored for now (not observed in practice).
-    pub(super) fn convert_uncertainty_measure_with_unit(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "UNCERTAINTY_MEASURE_WITH_UNIT")?;
-        let value = match attrs.first() {
-            Some(Attribute::Typed { value, .. }) => match value.as_ref() {
-                Attribute::Real(v) => *v,
-                _ => return Ok(()),
-            },
-            _ => return Ok(()),
-        };
-        let unit_ref = read_entity_ref(attrs, 1, entity_id, "unit_component")?;
-        // attrs[2] = name (보통 'distance_accuracy_value'), attrs[3] = description — 무시.
-        if self.length_unit_map.contains_key(&unit_ref) {
-            self.length_uncertainty_map.insert(entity_id, value);
-        }
-        Ok(())
-    }
-
     // ------------------------------------------------------------------
     // Pass 0-2: `GLOBAL_UNIT_ASSIGNED_CONTEXT`
     // ------------------------------------------------------------------

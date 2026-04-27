@@ -14,25 +14,9 @@ impl ReaderContext {
         // own ComplexEntityHandler keyed on the kind-specific part.
         self.dispatch_registry(graph, PassLevel::Pass0Leaf);
 
-        // Pass 0-1b: UNCERTAINTY_MEASURE_WITH_UNIT (simple entities,
-        // depend on Pass 0-1 to know which unit refs are length).
-        for (&id, entity) in &graph.entities {
-            if self.pcurve_subtree_ids.contains(&id) {
-                continue;
-            }
-            let (name, attrs) = match entity {
-                RawEntity::Simple {
-                    name, attributes, ..
-                } => (name.as_str(), attributes.as_slice()),
-                RawEntity::Complex { .. } => continue,
-            };
-            if name != "UNCERTAINTY_MEASURE_WITH_UNIT" {
-                continue;
-            }
-            if let Err(e) = self.convert_uncertainty_measure_with_unit(id, attrs) {
-                self.warnings.push(e);
-            }
-        }
+        // Pass 0-1b: UNCERTAINTY_MEASURE_WITH_UNIT (simple entity that
+        // depends on Pass 0-1's length_unit_map).
+        self.dispatch_registry(graph, PassLevel::Pass0Uncertainty);
 
         // Pass 0-2: GLOBAL_UNIT_ASSIGNED_CONTEXT.
         for (&id, entity) in &graph.entities {

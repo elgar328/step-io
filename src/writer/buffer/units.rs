@@ -70,7 +70,8 @@ impl WriteBuffer<'_> {
             ),
         ];
         if let Some(value) = units.length_uncertainty {
-            let unc = self.emit_uncertainty_measure(value, length);
+            use crate::entities::SimpleEntityHandler;
+            let unc = crate::entities::units::uncertainty_measure_with_unit::UncertaintyMeasureWithUnitHandler::write(self, (value, length))?;
             parts.insert(
                 1,
                 (
@@ -86,26 +87,6 @@ impl WriteBuffer<'_> {
             body: WriterBody::Complex { parts },
         });
         Ok(ctx)
-    }
-
-    fn emit_uncertainty_measure(&mut self, value: f64, length_unit: u64) -> u64 {
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "UNCERTAINTY_MEASURE_WITH_UNIT".into(),
-                attrs: vec![
-                    Attribute::Typed {
-                        type_name: "LENGTH_MEASURE".into(),
-                        value: Box::new(Attribute::Real(value)),
-                    },
-                    Attribute::EntityRef(length_unit),
-                    Attribute::String("distance_accuracy_value".into()),
-                    Attribute::String("confusion accuracy".into()),
-                ],
-            },
-        });
-        n
     }
 }
 
