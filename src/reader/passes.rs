@@ -2,7 +2,7 @@
 
 use super::assembly::{pdef_shape_to_nauo_ref, pdef_shape_to_pdef_ref};
 use super::{ReaderContext, has_all_parts};
-use crate::entities::{ENTITY_HANDLERS, EntityHandlerEntry, PassLevel};
+use crate::entities::{ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind};
 use crate::ir::topology::FaceKind;
 use crate::parser::entity::{EntityGraph, RawEntity};
 
@@ -534,25 +534,39 @@ impl ReaderContext {
         }
     }
 
-    /// Apply one registry entry's `read` fn to every matching entity in
-    /// the graph. Mirrors the body of the `run_pass!` macro one-to-one
-    /// (pcurve subtree skip, complex skip, error → warnings).
+    /// Apply one registry entry to every matching entity in the graph.
+    /// `ReadKind::Simple` matches `RawEntity::Simple` by name; `Complex`
+    /// matches `RawEntity::Complex` whose parts contain every required
+    /// part name. Mirrors the `run_pass!` macro body for the simple path
+    /// and the hand-rolled Pass 4-2 loop for the complex path.
     fn dispatch_entry(&mut self, graph: &EntityGraph, entry: &EntityHandlerEntry) {
         for (&id, ent) in &graph.entities {
             if self.pcurve_subtree_ids.contains(&id) {
                 continue;
             }
-            let (name, attrs) = match ent {
-                RawEntity::Simple {
-                    name, attributes, ..
-                } => (name.as_str(), attributes.as_slice()),
-                RawEntity::Complex { .. } => continue,
-            };
-            if name != entry.name {
-                continue;
-            }
-            if let Err(e) = (entry.read)(self, id, attrs) {
-                self.warnings.push(e);
+            match (&entry.kind, ent) {
+                (
+                    ReadKind::Simple { read },
+                    RawEntity::Simple {
+                        name, attributes, ..
+                    },
+                ) if name == entry.name => {
+                    if let Err(e) = read(self, id, attributes) {
+                        self.warnings.push(e);
+                    }
+                }
+                (
+                    ReadKind::Complex {
+                        required_parts,
+                        read,
+                    },
+                    RawEntity::Complex { parts, .. },
+                ) if has_all_parts(parts, required_parts) => {
+                    if let Err(e) = read(self, id, parts) {
+                        self.warnings.push(e);
+                    }
+                }
+                _ => {}
             }
         }
     }

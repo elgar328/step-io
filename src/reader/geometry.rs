@@ -59,7 +59,7 @@ impl ReaderContext {
         entity_id: u64,
         attrs: &[Attribute],
     ) -> Result<(), ConvertError> {
-        use crate::entities::EntityHandler;
+        use crate::entities::SimpleEntityHandler;
         crate::entities::geometry::direction::DirectionHandler::read(self, entity_id, attrs)
     }
 
@@ -75,7 +75,7 @@ impl ReaderContext {
         entity_id: u64,
         attrs: &[Attribute],
     ) -> Result<(), ConvertError> {
-        use crate::entities::EntityHandler;
+        use crate::entities::SimpleEntityHandler;
         crate::entities::geometry::vector::VectorHandler::read(self, entity_id, attrs)
     }
 

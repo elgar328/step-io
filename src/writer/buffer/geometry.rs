@@ -43,7 +43,7 @@ impl WriteBuffer<'_> {
     pub(crate) fn emit_direction(&mut self, id: DirectionId) -> Result<u64, WriteError> {
         // Step 1 pilot: dispatch through the EntityHandler trait. Body lives in
         // `src/entities/geometry/direction.rs`. Plan 2 removes this wrapper.
-        use crate::entities::EntityHandler;
+        use crate::entities::SimpleEntityHandler;
         crate::entities::geometry::direction::DirectionHandler::write(self, id)
     }
 
@@ -81,7 +81,7 @@ impl WriteBuffer<'_> {
     fn emit_vector(&mut self, direction: DirectionId, magnitude: f64) -> Result<u64, WriteError> {
         // Step 1 pilot: dispatch through the EntityHandler trait. Body lives in
         // `src/entities/geometry/vector.rs`. Plan 2 will replace this wrapper.
-        use crate::entities::EntityHandler;
+        use crate::entities::SimpleEntityHandler;
         crate::entities::geometry::vector::VectorHandler::write(self, (direction, magnitude))
     }
 

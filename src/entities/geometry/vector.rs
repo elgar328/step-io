@@ -10,7 +10,9 @@
 //!     the writer reconstructs the entity inline at each call site.
 
 use crate::entities::geometry::direction::DirectionHandler;
-use crate::entities::{ENTITY_HANDLERS, EntityHandler, EntityHandlerEntry, PassLevel};
+use crate::entities::{
+    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
+};
 use crate::ir::DirectionId;
 use crate::ir::attr::{check_count, read_entity_ref, read_real, read_string};
 use crate::ir::error::ConvertError;
@@ -22,7 +24,7 @@ use crate::writer::entity::{WriterBody, WriterEntity};
 
 pub(crate) struct VectorHandler;
 
-impl EntityHandler for VectorHandler {
+impl SimpleEntityHandler for VectorHandler {
     const NAME: &'static str = "VECTOR";
     const PASS_LEVEL: PassLevel = PassLevel::Pass2;
     type WriteInput = (DirectionId, f64);
@@ -69,5 +71,7 @@ impl EntityHandler for VectorHandler {
 static VECTOR_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
     name: VectorHandler::NAME,
     pass_level: VectorHandler::PASS_LEVEL,
-    read: VectorHandler::read,
+    kind: ReadKind::Simple {
+        read: VectorHandler::read,
+    },
 };

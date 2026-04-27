@@ -1,11 +1,12 @@
-//! DIRECTION handler — Step 1 pilot.
+//! DIRECTION handler.
 //!
 //! Mirrors the legacy `ReaderContext::convert_direction` (`reader/geometry.rs`)
 //! and `WriteBuffer::emit_direction` (`writer/buffer/geometry.rs`) one-to-one.
-//! The legacy methods stay in place under `#[allow(dead_code)]` until Plan 2
-//! introduces a registry that fully supersedes the `run_pass!` macro.
+//! `SimpleEntityHandler` impl + `ReadKind::Simple` registry submission.
 
-use crate::entities::{ENTITY_HANDLERS, EntityHandler, EntityHandlerEntry, PassLevel};
+use crate::entities::{
+    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
+};
 use crate::ir::DirectionId;
 use crate::ir::attr::{check_count, read_real_list, read_string};
 use crate::ir::error::ConvertError;
@@ -19,7 +20,7 @@ use crate::writer::entity::{WriterBody, WriterEntity};
 
 pub(crate) struct DirectionHandler;
 
-impl EntityHandler for DirectionHandler {
+impl SimpleEntityHandler for DirectionHandler {
     const NAME: &'static str = "DIRECTION";
     const PASS_LEVEL: PassLevel = PassLevel::Pass1;
     type WriteInput = DirectionId;
@@ -80,5 +81,7 @@ impl EntityHandler for DirectionHandler {
 static DIRECTION_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
     name: DirectionHandler::NAME,
     pass_level: DirectionHandler::PASS_LEVEL,
-    read: DirectionHandler::read,
+    kind: ReadKind::Simple {
+        read: DirectionHandler::read,
+    },
 };
