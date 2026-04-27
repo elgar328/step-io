@@ -163,56 +163,19 @@ impl WriteBuffer<'_> {
     }
 
     fn emit_circle(&mut self, circle: Circle3) -> Result<u64, WriteError> {
-        let pos = self.emit_axis2_placement_3d(circle.position)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "CIRCLE".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(pos),
-                    Attribute::Real(circle.radius),
-                ],
-            },
-        });
-        Ok(n)
+        // Plan 5 stage C2: dispatch through EntityHandler trait.
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::circle::CircleHandler::write(self, circle)
     }
 
     fn emit_ellipse(&mut self, ellipse: Ellipse3) -> Result<u64, WriteError> {
-        let pos = self.emit_axis2_placement_3d(ellipse.position)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "ELLIPSE".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(pos),
-                    Attribute::Real(ellipse.semi_axis_1),
-                    Attribute::Real(ellipse.semi_axis_2),
-                ],
-            },
-        });
-        Ok(n)
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::ellipse::EllipseHandler::write(self, ellipse)
     }
 
     fn emit_line(&mut self, line: Line3) -> Result<u64, WriteError> {
-        let pnt = self.emit_point(line.point)?;
-        let vec = self.emit_vector(line.direction, line.magnitude)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "LINE".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(pnt),
-                    Attribute::EntityRef(vec),
-                ],
-            },
-        });
-        Ok(n)
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::line::LineHandler::write(self, line)
     }
 
     pub(crate) fn emit_surface(&mut self, id: SurfaceId) -> Result<u64, WriteError> {
@@ -236,141 +199,54 @@ impl WriteBuffer<'_> {
     }
 
     fn emit_plane(&mut self, p: Plane3) -> Result<u64, WriteError> {
-        let pos = self.emit_axis2_placement_3d(p.position)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "PLANE".into(),
-                attrs: vec![Attribute::String(String::new()), Attribute::EntityRef(pos)],
-            },
-        });
-        Ok(n)
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::plane::PlaneHandler::write(self, p)
     }
 
     fn emit_cylinder(&mut self, c: CylindricalSurface) -> Result<u64, WriteError> {
-        let pos = self.emit_axis2_placement_3d(c.position)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "CYLINDRICAL_SURFACE".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(pos),
-                    Attribute::Real(c.radius),
-                ],
-            },
-        });
-        Ok(n)
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::cylindrical_surface::CylindricalSurfaceHandler::write(self, c)
     }
 
     fn emit_sphere(&mut self, s: SphericalSurface) -> Result<u64, WriteError> {
-        let pos = self.emit_axis2_placement_3d(s.position)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "SPHERICAL_SURFACE".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(pos),
-                    Attribute::Real(s.radius),
-                ],
-            },
-        });
-        Ok(n)
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::spherical_surface::SphericalSurfaceHandler::write(self, s)
     }
 
     fn emit_cone(&mut self, c: ConicalSurface) -> Result<u64, WriteError> {
-        let pos = self.emit_axis2_placement_3d(c.position)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "CONICAL_SURFACE".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(pos),
-                    Attribute::Real(c.radius),
-                    Attribute::Real(c.semi_angle),
-                ],
-            },
-        });
-        Ok(n)
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::conical_surface::ConicalSurfaceHandler::write(self, c)
     }
 
     fn emit_torus(&mut self, t: ToroidalSurface) -> Result<u64, WriteError> {
-        let pos = self.emit_axis2_placement_3d(t.position)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "TOROIDAL_SURFACE".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(pos),
-                    Attribute::Real(t.major_radius),
-                    Attribute::Real(t.minor_radius),
-                ],
-            },
-        });
-        Ok(n)
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::toroidal_surface::ToroidalSurfaceHandler::write(self, t)
     }
 
     fn emit_nurbs_curve(&mut self, nurbs: NurbsCurve) -> Result<u64, WriteError> {
         if nurbs.weights.is_some() {
-            // Plan 3 stage 3: complex RATIONAL_B_SPLINE_CURVE flows through
-            // the EntityHandler registry. Body lives in
-            // `src/entities/geometry/rational_bspline_curve.rs`.
+            // Rational form → complex RATIONAL_B_SPLINE_CURVE (Plan 3).
             use crate::entities::ComplexEntityHandler;
-            return crate::entities::geometry::rational_bspline_curve::RationalBsplineCurveHandler::write(self, nurbs);
+            crate::entities::geometry::rational_bspline_curve::RationalBsplineCurveHandler::write(
+                self, nurbs,
+            )
+        } else {
+            // Non-rational form → simple B_SPLINE_CURVE_WITH_KNOTS (Plan 5).
+            use crate::entities::SimpleEntityHandler;
+            crate::entities::geometry::b_spline_curve_with_knots::BSplineCurveWithKnotsHandler::write(self, nurbs)
         }
-
-        // Non-rational simple B_SPLINE_CURVE_WITH_KNOTS — 9 attrs.
-        let mut cp_refs = Vec::with_capacity(nurbs.control_points.len());
-        for &pid in &nurbs.control_points {
-            cp_refs.push(self.emit_point(pid)?);
-        }
-        #[allow(clippy::cast_possible_wrap)]
-        let degree_attr = Attribute::Integer(i64::from(nurbs.degree));
-        let cps_attr = Attribute::List(cp_refs.into_iter().map(Attribute::EntityRef).collect());
-        let mults_attr = Attribute::List(
-            nurbs
-                .knot_multiplicities
-                .iter()
-                .copied()
-                .map(Attribute::Integer)
-                .collect(),
-        );
-        let knots_attr =
-            Attribute::List(nurbs.knots.iter().copied().map(Attribute::Real).collect());
-        let closed_attr = Attribute::Enum(if nurbs.closed { "T".into() } else { "F".into() });
-        let form = nurbs.form;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "B_SPLINE_CURVE_WITH_KNOTS".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    degree_attr,
-                    cps_attr,
-                    Attribute::Enum(form.as_step_enum().into()),
-                    closed_attr,
-                    Attribute::Enum("F".into()),
-                    mults_attr,
-                    knots_attr,
-                    Attribute::Enum("UNSPECIFIED".into()),
-                ],
-            },
-        });
-        Ok(n)
     }
 
     #[allow(clippy::too_many_lines)]
     fn emit_nurbs_surface(&mut self, nurbs: NurbsSurface) -> Result<u64, WriteError> {
-        // Build a 2D entity-ref grid for control points.
+        // Non-rational form → simple B_SPLINE_SURFACE_WITH_KNOTS (Plan 5 C2).
+        if nurbs.weights.is_none() {
+            use crate::entities::SimpleEntityHandler;
+            return crate::entities::geometry::b_spline_surface_with_knots::BSplineSurfaceWithKnotsHandler::write(self, nurbs);
+        }
+
+        // Rational form — complex RATIONAL_B_SPLINE_SURFACE. Inline until
+        // Plan 5 C3 lifts this body into a ComplexEntityHandler.
         let mut cp_rows: Vec<Attribute> = Vec::with_capacity(nurbs.control_points.len());
         for row in &nurbs.control_points {
             let mut refs = Vec::with_capacity(row.len());
@@ -415,17 +291,23 @@ impl WriteBuffer<'_> {
         let v_knots_attr =
             Attribute::List(nurbs.v_knots.iter().copied().map(Attribute::Real).collect());
         let form = nurbs.form;
-
+        let weights = nurbs.weights.expect("rational branch");
+        let mut w_rows: Vec<Attribute> = Vec::with_capacity(weights.len());
+        for row in weights {
+            w_rows.push(Attribute::List(
+                row.into_iter().map(Attribute::Real).collect(),
+            ));
+        }
+        let weights_attr = Attribute::List(w_rows);
         let n = self.fresh();
-        match nurbs.weights {
-            None => {
-                // Simple B_SPLINE_SURFACE_WITH_KNOTS — 13 attrs.
-                self.entities.push(WriterEntity {
-                    id: n,
-                    body: WriterBody::Simple {
-                        name: "B_SPLINE_SURFACE_WITH_KNOTS".into(),
-                        attrs: vec![
-                            Attribute::String(String::new()),
+        self.entities.push(WriterEntity {
+            id: n,
+            body: WriterBody::Complex {
+                parts: vec![
+                    ("BOUNDED_SURFACE".into(), vec![]),
+                    (
+                        "B_SPLINE_SURFACE".into(),
+                        vec![
                             u_deg,
                             v_deg,
                             cps_attr,
@@ -433,63 +315,28 @@ impl WriteBuffer<'_> {
                             u_closed,
                             v_closed,
                             Attribute::Enum("F".into()),
+                        ],
+                    ),
+                    (
+                        "B_SPLINE_SURFACE_WITH_KNOTS".into(),
+                        vec![
                             u_mults_attr,
                             v_mults_attr,
                             u_knots_attr,
                             v_knots_attr,
                             Attribute::Enum("UNSPECIFIED".into()),
                         ],
-                    },
-                });
-            }
-            Some(weights) => {
-                // Complex RATIONAL_B_SPLINE_SURFACE — 7 parts, OCCT convention.
-                let mut w_rows: Vec<Attribute> = Vec::with_capacity(weights.len());
-                for row in weights {
-                    w_rows.push(Attribute::List(
-                        row.into_iter().map(Attribute::Real).collect(),
-                    ));
-                }
-                let weights_attr = Attribute::List(w_rows);
-                self.entities.push(WriterEntity {
-                    id: n,
-                    body: WriterBody::Complex {
-                        parts: vec![
-                            ("BOUNDED_SURFACE".into(), vec![]),
-                            (
-                                "B_SPLINE_SURFACE".into(),
-                                vec![
-                                    u_deg,
-                                    v_deg,
-                                    cps_attr,
-                                    Attribute::Enum(form.as_step_enum().into()),
-                                    u_closed,
-                                    v_closed,
-                                    Attribute::Enum("F".into()),
-                                ],
-                            ),
-                            (
-                                "B_SPLINE_SURFACE_WITH_KNOTS".into(),
-                                vec![
-                                    u_mults_attr,
-                                    v_mults_attr,
-                                    u_knots_attr,
-                                    v_knots_attr,
-                                    Attribute::Enum("UNSPECIFIED".into()),
-                                ],
-                            ),
-                            ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),
-                            ("RATIONAL_B_SPLINE_SURFACE".into(), vec![weights_attr]),
-                            (
-                                "REPRESENTATION_ITEM".into(),
-                                vec![Attribute::String(String::new())],
-                            ),
-                            ("SURFACE".into(), vec![]),
-                        ],
-                    },
-                });
-            }
-        }
+                    ),
+                    ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),
+                    ("RATIONAL_B_SPLINE_SURFACE".into(), vec![weights_attr]),
+                    (
+                        "REPRESENTATION_ITEM".into(),
+                        vec![Attribute::String(String::new())],
+                    ),
+                    ("SURFACE".into(), vec![]),
+                ],
+            },
+        });
         Ok(n)
     }
 

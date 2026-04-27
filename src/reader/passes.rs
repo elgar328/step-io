@@ -91,8 +91,8 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass2);
         // Pass 3: axis placements (depend on points + directions).
         self.dispatch_registry(graph, PassLevel::Pass3);
-        // Pass 4-1: simple leaf curves and surfaces
-        run_pass!(graph, self, "LINE" => convert_line, "PLANE" => convert_plane, "CYLINDRICAL_SURFACE" => convert_cylindrical_surface, "SPHERICAL_SURFACE" => convert_spherical_surface, "CONICAL_SURFACE" => convert_conical_surface, "TOROIDAL_SURFACE" => convert_toroidal_surface, "CIRCLE" => convert_circle, "ELLIPSE" => convert_ellipse, "B_SPLINE_CURVE_WITH_KNOTS" => convert_bspline_curve_with_knots, "B_SPLINE_SURFACE_WITH_KNOTS" => convert_bspline_surface_with_knots);
+        // Pass 4-1: simple leaf curves and surfaces (mutually independent).
+        self.dispatch_registry(graph, PassLevel::Pass4Leaf);
 
         // Pass 4-2 curves: RATIONAL_B_SPLINE_CURVE flows through the registry
         // (`ComplexEntityHandler` impl in `entities::geometry::rational_bspline_curve`).

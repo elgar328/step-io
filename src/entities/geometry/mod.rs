@@ -5,7 +5,17 @@
 
 pub mod axis1_placement;
 pub mod axis2_placement_3d;
+pub mod b_spline_curve_with_knots;
+pub mod b_spline_surface_with_knots;
 pub mod cartesian_point;
+pub mod circle;
+pub mod conical_surface;
+pub mod cylindrical_surface;
 pub mod direction;
+pub mod ellipse;
+pub mod line;
+pub mod plane;
 pub mod rational_bspline_curve;
+pub mod spherical_surface;
+pub mod toroidal_surface;
 pub mod vector;
