@@ -10,10 +10,7 @@ use crate::writer::WriteError;
 use crate::writer::entity::{WriterBody, WriterEntity};
 
 impl WriteBuffer<'_> {
-    pub(in crate::writer::buffer) fn emit_vertex(
-        &mut self,
-        id: VertexId,
-    ) -> Result<u64, WriteError> {
+    pub(crate) fn emit_vertex(&mut self, id: VertexId) -> Result<u64, WriteError> {
         if let Some(&n) = self.vertex_ids.get(&id) {
             return Ok(n);
         }
@@ -43,7 +40,7 @@ impl WriteBuffer<'_> {
         Ok(n)
     }
 
-    pub(in crate::writer::buffer) fn emit_edge(&mut self, id: EdgeId) -> Result<u64, WriteError> {
+    pub(crate) fn emit_edge(&mut self, id: EdgeId) -> Result<u64, WriteError> {
         if let Some(&n) = self.edge_ids.get(&id) {
             return Ok(n);
         }
@@ -89,7 +86,7 @@ impl WriteBuffer<'_> {
         Ok(n)
     }
 
-    pub(in crate::writer::buffer) fn emit_wire(&mut self, id: WireId) -> Result<u64, WriteError> {
+    pub(crate) fn emit_wire(&mut self, id: WireId) -> Result<u64, WriteError> {
         if let Some(&n) = self.wire_ids.get(&id) {
             return Ok(n);
         }
@@ -147,7 +144,7 @@ impl WriteBuffer<'_> {
         Ok(bound_id)
     }
 
-    fn emit_vertex_loop(&mut self, vid: VertexId) -> Result<u64, WriteError> {
+    pub(crate) fn emit_vertex_loop(&mut self, vid: VertexId) -> Result<u64, WriteError> {
         let vertex_ref = self.emit_vertex(vid)?;
         let n = self.fresh();
         self.entities.push(WriterEntity {
@@ -163,7 +160,7 @@ impl WriteBuffer<'_> {
         Ok(n)
     }
 
-    fn emit_oriented_edge(&mut self, oe: OrientedEdge) -> Result<u64, WriteError> {
+    pub(crate) fn emit_oriented_edge(&mut self, oe: OrientedEdge) -> Result<u64, WriteError> {
         let edge_ref = self.emit_edge(oe.edge)?;
         let n = self.fresh();
         self.entities.push(WriterEntity {
@@ -182,7 +179,7 @@ impl WriteBuffer<'_> {
         Ok(n)
     }
 
-    pub(in crate::writer::buffer) fn emit_face(&mut self, id: FaceId) -> Result<u64, WriteError> {
+    pub(crate) fn emit_face(&mut self, id: FaceId) -> Result<u64, WriteError> {
         if let Some(&n) = self.face_ids.get(&id) {
             return Ok(n);
         }
@@ -222,7 +219,7 @@ impl WriteBuffer<'_> {
         Ok(n)
     }
 
-    pub(in crate::writer::buffer) fn emit_shell(&mut self, id: ShellId) -> Result<u64, WriteError> {
+    pub(crate) fn emit_shell(&mut self, id: ShellId) -> Result<u64, WriteError> {
         if let Some(&n) = self.shell_ids.get(&id) {
             return Ok(n);
         }
@@ -264,7 +261,7 @@ impl WriteBuffer<'_> {
         Ok(n)
     }
 
-    fn emit_oriented_closed_shell(
+    pub(crate) fn emit_oriented_closed_shell(
         &mut self,
         closed_shell_ref: u64,
         orientation: Orientation,
@@ -285,7 +282,7 @@ impl WriteBuffer<'_> {
         n
     }
 
-    pub(in crate::writer::buffer) fn emit_solid(&mut self, id: SolidId) -> Result<u64, WriteError> {
+    pub(crate) fn emit_solid(&mut self, id: SolidId) -> Result<u64, WriteError> {
         if let Some(&n) = self.solid_ids.get(&id) {
             return Ok(n);
         }

@@ -13,12 +13,14 @@ use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
 pub mod geometry;
+pub mod topology;
 
 /// Reader pass ordering. Lower variants run first.
 ///
 /// Plan 3 wires Pass1 (DIRECTION) / Pass2 (VECTOR) / `Pass4Rational`
-/// (`RATIONAL_B_SPLINE_CURVE`). Other passes land here as Plan 4~7 walks
-/// the remaining `run_pass!` blocks in `src/reader/passes.rs`.
+/// (`RATIONAL_B_SPLINE_CURVE`). Plan 4 adds the topology Pass5 family.
+/// Other passes land here as Plan 5~7 walks the remaining `run_pass!`
+/// blocks in `src/reader/passes.rs`.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(crate) enum PassLevel {
     /// `CARTESIAN_POINT`, `DIRECTION` — no entity-ref dependencies.
@@ -28,6 +30,40 @@ pub(crate) enum PassLevel {
     /// `RATIONAL_B_SPLINE_CURVE` / `RATIONAL_B_SPLINE_SURFACE` — Pass 4-2,
     /// complex entities depending on Pass 4-1 leaf curves/surfaces.
     Pass4Rational,
+
+    // ----- Plan 4 (topology) -----
+    /// `VERTEX_POINT` (Pass 5-1) — depends on `CARTESIAN_POINT`.
+    #[allow(dead_code)] // wired in Plan 4 stage C2
+    Pass5Vertex,
+    /// `EDGE_CURVE` (Pass 5-2) — depends on vertices and curves.
+    #[allow(dead_code)] // wired in Plan 4 stage C2
+    Pass5Edge,
+    /// `ORIENTED_EDGE` (Pass 5-3, intermediate map) — depends on edges.
+    #[allow(dead_code)] // wired in Plan 4 stage C3
+    Pass5OrientedEdge,
+    /// `EDGE_LOOP`, `VERTEX_LOOP` (Pass 5-4, intermediate map) — depend on
+    /// oriented edges / vertices.
+    #[allow(dead_code)] // wired in Plan 4 stage C3
+    Pass5EdgeLoop,
+    /// `FACE_BOUND`, `FACE_OUTER_BOUND` (Pass 5-5, intermediate map) —
+    /// depend on edge/vertex loops.
+    #[allow(dead_code)] // wired in Plan 4 stage C4
+    Pass5FaceBound,
+    /// `ADVANCED_FACE`, `FACE_SURFACE` (Pass 5-6) — depend on face bounds
+    /// and surfaces.
+    #[allow(dead_code)] // wired in Plan 4 stage C4
+    Pass5Face,
+    /// `CLOSED_SHELL`, `OPEN_SHELL` (Pass 5-7a) — depend on faces.
+    #[allow(dead_code)] // wired in Plan 4 stage C5
+    Pass5Shell,
+    /// `ORIENTED_CLOSED_SHELL` (Pass 5-7b, intermediate map) — depends on
+    /// `CLOSED_SHELL` already in arena.
+    #[allow(dead_code)] // wired in Plan 4 stage C5
+    Pass5OrientedShell,
+    /// `MANIFOLD_SOLID_BREP`, `BREP_WITH_VOIDS` (Pass 5-8) — depend on
+    /// shells / oriented shells.
+    #[allow(dead_code)] // wired in Plan 4 stage C6
+    Pass5Solid,
 }
 
 /// Handler for a [`RawEntity::Simple`] STEP entity. Reader receives a flat
