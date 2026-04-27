@@ -31,6 +31,34 @@ pub(crate) enum PassLevel {
     /// complex entities depending on Pass 4-1 leaf curves/surfaces.
     Pass4Rational,
 
+    // ----- Plan 5 (geometry_3d 3D) -----
+    /// `AXIS2_PLACEMENT_3D` / `AXIS1_PLACEMENT` (Pass 3) — depend on
+    /// points and directions.
+    #[allow(dead_code)] // wired in Plan 5 stage C1
+    Pass3,
+    /// Pass 4-1 leaf curves and surfaces — `LINE`, `CIRCLE`, `ELLIPSE`,
+    /// `B_SPLINE_CURVE_WITH_KNOTS`, `PLANE`, `CYLINDRICAL_SURFACE`,
+    /// `SPHERICAL_SURFACE`, `CONICAL_SURFACE`, `TOROIDAL_SURFACE`,
+    /// `B_SPLINE_SURFACE_WITH_KNOTS`. All mutually independent.
+    #[allow(dead_code)] // wired in Plan 5 stage C2
+    Pass4Leaf,
+    /// `SURFACE_CURVE` / `SEAM_CURVE` (Pass 4-3) — alias to a 3D curve
+    /// with associated pcurves resolved in a post-pass.
+    #[allow(dead_code)] // wired in Plan 5 stage C4
+    Pass4_3SurfaceCurve,
+    /// `TRIMMED_CURVE` + `COMPOSITE_CURVE_SEGMENT` (Pass 4-3c) — both
+    /// depend on a basis curve but not on each other.
+    #[allow(dead_code)] // wired in Plan 5 stage C5
+    Pass4_3cTrimSeg,
+    /// `COMPOSITE_CURVE` (Pass 4-3c) — depends on
+    /// `COMPOSITE_CURVE_SEGMENT`.
+    #[allow(dead_code)] // wired in Plan 5 stage C5
+    Pass4_3cComp,
+    /// `SURFACE_OF_REVOLUTION` / `SURFACE_OF_LINEAR_EXTRUSION`
+    /// (Pass 4-4A) — derived surfaces wrapping a swept curve.
+    #[allow(dead_code)] // wired in Plan 5 stage C6
+    Pass4_4Swept,
+
     // ----- Plan 4 (topology) -----
     /// `VERTEX_POINT` (Pass 5-1) — depends on `CARTESIAN_POINT`.
     #[allow(dead_code)] // wired in Plan 4 stage C2

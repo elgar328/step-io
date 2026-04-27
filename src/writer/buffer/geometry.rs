@@ -7,8 +7,8 @@ use crate::ir::{
     Circle2, Circle3, CompositeCurve, CompositeSegment, ConicalSurface, Curve, Curve2d, Curve2dId,
     CurveId, CylindricalSurface, Direction2, Direction2dId, Direction3, DirectionId, Ellipse2,
     Ellipse3, Line2, Line3, NurbsCurve, NurbsCurve2d, NurbsSurface, Pcurve, Placement1dId,
-    Placement2dId, Placement3dId, Plane3, Point2, Point2dId, Point3, PointId, SphericalSurface,
-    StepModel, Surface, SurfaceId, SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution,
+    Placement2dId, Placement3dId, Plane3, Point2, Point2dId, PointId, SphericalSurface, StepModel,
+    Surface, SurfaceId, SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution,
     ToroidalSurface, TransitionCode, TrimMaster, TrimmedCurve,
 };
 use crate::parser::entity::Attribute;
@@ -17,27 +17,10 @@ use crate::writer::entity::{WriterBody, WriterEntity};
 
 impl WriteBuffer<'_> {
     pub(crate) fn emit_point(&mut self, id: PointId) -> Result<u64, WriteError> {
-        if let Some(&n) = self.point_ids.get(&id) {
-            return Ok(n);
-        }
-        let p = point_at(self.model, id)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "CARTESIAN_POINT".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::List(vec![
-                        Attribute::Real(p.x),
-                        Attribute::Real(p.y),
-                        Attribute::Real(p.z),
-                    ]),
-                ],
-            },
-        });
-        self.point_ids.insert(id, n);
-        Ok(n)
+        // Plan 5 stage C1: dispatch through the EntityHandler trait. Body
+        // lives in `src/entities/geometry/cartesian_point.rs`.
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::cartesian_point::CartesianPointHandler::write(self, id)
     }
 
     pub(crate) fn emit_direction(&mut self, id: DirectionId) -> Result<u64, WriteError> {
@@ -48,34 +31,9 @@ impl WriteBuffer<'_> {
     }
 
     pub(crate) fn emit_axis2_placement_3d(&mut self, id: Placement3dId) -> Result<u64, WriteError> {
-        if let Some(&n) = self.placement_ids.get(&id) {
-            return Ok(n);
-        }
-        let placement = self.model.geometry.placements[id];
-        let loc = self.emit_point(placement.location)?;
-        let axis_attr = match placement.axis {
-            Some(dir) => Attribute::EntityRef(self.emit_direction(dir)?),
-            None => Attribute::Unset,
-        };
-        let ref_attr = match placement.ref_direction {
-            Some(dir) => Attribute::EntityRef(self.emit_direction(dir)?),
-            None => Attribute::Unset,
-        };
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "AXIS2_PLACEMENT_3D".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(loc),
-                    axis_attr,
-                    ref_attr,
-                ],
-            },
-        });
-        self.placement_ids.insert(id, n);
-        Ok(n)
+        // Plan 5 stage C1: dispatch through the EntityHandler trait.
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::axis2_placement_3d::Axis2Placement3dHandler::write(self, id)
     }
 
     fn emit_vector(&mut self, direction: DirectionId, magnitude: f64) -> Result<u64, WriteError> {
@@ -595,39 +553,10 @@ impl WriteBuffer<'_> {
     }
 
     pub(crate) fn emit_axis1_placement(&mut self, id: Placement1dId) -> Result<u64, WriteError> {
-        if let Some(&n) = self.placement_1d_ids.get(&id) {
-            return Ok(n);
-        }
-        let placement = self.model.geometry.placements_1d[id];
-        let loc = self.emit_point(placement.location)?;
-        let dir = self.emit_direction(placement.axis)?;
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "AXIS1_PLACEMENT".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(loc),
-                    Attribute::EntityRef(dir),
-                ],
-            },
-        });
-        self.placement_1d_ids.insert(id, n);
-        Ok(n)
+        // Plan 5 stage C1: dispatch through the EntityHandler trait.
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::axis1_placement::Axis1PlacementHandler::write(self, id)
     }
-}
-
-fn point_at(model: &StepModel, id: PointId) -> Result<Point3, WriteError> {
-    model
-        .geometry
-        .points
-        .iter()
-        .nth(id.0 as usize)
-        .copied()
-        .ok_or_else(|| WriteError::DanglingId {
-            detail: format!("PointId({})", id.0),
-        })
 }
 
 pub(crate) fn direction_at(model: &StepModel, id: DirectionId) -> Result<Direction3, WriteError> {

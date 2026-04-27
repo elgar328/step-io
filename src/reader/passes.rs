@@ -85,15 +85,12 @@ impl ReaderContext {
             };
         }
 
-        // Pass 1: points and directions.
-        //   DIRECTION 은 EntityHandler registry path 로, CARTESIAN_POINT 는
-        //   기존 run_pass! path. Plan 3 에서 CARTESIAN_POINT 도 registry 로 이동.
+        // Pass 1: points and directions (CARTESIAN_POINT + DIRECTION).
         self.dispatch_registry(graph, PassLevel::Pass1);
-        run_pass!(graph, self, "CARTESIAN_POINT" => convert_cartesian_point);
-        // Pass 2: vectors (depend on directions). VECTOR via registry.
+        // Pass 2: vectors (depend on directions).
         self.dispatch_registry(graph, PassLevel::Pass2);
-        // Pass 3: axis placements (depend on points + directions)
-        run_pass!(graph, self, "AXIS2_PLACEMENT_3D" => convert_axis2_placement_3d, "AXIS1_PLACEMENT" => convert_axis1_placement);
+        // Pass 3: axis placements (depend on points + directions).
+        self.dispatch_registry(graph, PassLevel::Pass3);
         // Pass 4-1: simple leaf curves and surfaces
         run_pass!(graph, self, "LINE" => convert_line, "PLANE" => convert_plane, "CYLINDRICAL_SURFACE" => convert_cylindrical_surface, "SPHERICAL_SURFACE" => convert_spherical_surface, "CONICAL_SURFACE" => convert_conical_surface, "TOROIDAL_SURFACE" => convert_toroidal_surface, "CIRCLE" => convert_circle, "ELLIPSE" => convert_ellipse, "B_SPLINE_CURVE_WITH_KNOTS" => convert_bspline_curve_with_knots, "B_SPLINE_SURFACE_WITH_KNOTS" => convert_bspline_surface_with_knots);
 

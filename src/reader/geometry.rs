@@ -10,12 +10,11 @@ use crate::ir::attr::{
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{
-    Axis1Placement, Axis2Placement2d, Axis2Placement3d, Circle2, Circle3, CompositeCurve,
-    CompositeSegment, ConicalSurface, Curve, Curve2d, CurveForm, CylindricalSurface, Direction2,
-    Ellipse2, Ellipse3, Line2, Line3, NurbsCurve, NurbsCurve2d, NurbsSurface, Pcurve, Plane3,
-    Point2, Point3, SphericalSurface, Surface, SurfaceForm, SurfaceOfLinearExtrusion,
-    SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TransitionCode, TrimMaster,
-    TrimmedCurve,
+    Axis2Placement2d, Circle2, Circle3, CompositeCurve, CompositeSegment, ConicalSurface, Curve,
+    Curve2d, CurveForm, CylindricalSurface, Direction2, Ellipse2, Ellipse3, Line2, Line3,
+    NurbsCurve, NurbsCurve2d, NurbsSurface, Pcurve, Plane3, Point2, SphericalSurface, Surface,
+    SurfaceForm, SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface,
+    TransitionCode, TrimMaster, TrimmedCurve,
 };
 use crate::parser::entity::{Attribute, RawEntity, RawEntityPart};
 
@@ -23,84 +22,6 @@ impl ReaderContext {
     // ------------------------------------------------------------------
     // Pass 1: Points and directions
     // ------------------------------------------------------------------
-
-    pub(super) fn convert_cartesian_point(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "CARTESIAN_POINT")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
-        let coords = read_real_list(attrs, 1, entity_id, "coordinates")?;
-        if coords.len() != 3 {
-            return Err(ConvertError::DimensionMismatch {
-                entity_id,
-                field_name: "coordinates",
-                expected: 3,
-                actual: coords.len(),
-            });
-        }
-        let point = Point3 {
-            x: coords[0],
-            y: coords[1],
-            z: coords[2],
-        };
-        let id = self.geometry.points.push(point);
-        self.point_map.insert(entity_id, id);
-        Ok(())
-    }
-
-    // ------------------------------------------------------------------
-    // Pass 3: Axis placements (depend on POINT + DIRECTION)
-    // ------------------------------------------------------------------
-
-    pub(super) fn convert_axis2_placement_3d(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "AXIS2_PLACEMENT_3D")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
-        let loc_ref = read_entity_ref(attrs, 1, entity_id, "location")?;
-        let axis_ref = read_optional_entity_ref(attrs, 2, entity_id, "axis")?;
-        let ref_dir_ref = read_optional_entity_ref(attrs, 3, entity_id, "ref_direction")?;
-
-        let location = self.resolve_point(entity_id, loc_ref, "location")?;
-        let axis = axis_ref
-            .map(|r| self.resolve_direction(entity_id, r, "axis"))
-            .transpose()?;
-        let ref_direction = ref_dir_ref
-            .map(|r| self.resolve_direction(entity_id, r, "ref_direction"))
-            .transpose()?;
-
-        let placement = Axis2Placement3d {
-            location,
-            axis,
-            ref_direction,
-        };
-        let id = self.geometry.placements.push(placement);
-        self.placement_map.insert(entity_id, id);
-        Ok(())
-    }
-
-    pub(super) fn convert_axis1_placement(
-        &mut self,
-        entity_id: u64,
-        attrs: &[Attribute],
-    ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "AXIS1_PLACEMENT")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
-        let loc_ref = read_entity_ref(attrs, 1, entity_id, "location")?;
-        let axis_ref = read_entity_ref(attrs, 2, entity_id, "axis")?;
-
-        let location = self.resolve_point(entity_id, loc_ref, "location")?;
-        let axis = self.resolve_direction(entity_id, axis_ref, "axis")?;
-
-        let placement = Axis1Placement { location, axis };
-        let id = self.geometry.placements_1d.push(placement);
-        self.axis1_map.insert(entity_id, id);
-        Ok(())
-    }
 
     // ------------------------------------------------------------------
     // Pass 4-1: Simple leaf curves and surfaces
