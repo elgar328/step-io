@@ -3,9 +3,6 @@
 //! surfaces) alongside curves. Imports the shared body from the curve-set
 //! module and registers the alternate entity name.
 
-// DOMAIN_TBD: catalog group is geometry_3d but dispatch boundary is shape_rep
-// (Pass 6-4f). Plan 7+ IR Roadmap 시 재배치 검토.
-
 use crate::entities::{
     ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
 };

@@ -6,9 +6,6 @@
 //! the standard SBSM line; shell entities themselves are emitted by
 //! `emit_shell` upstream.
 
-// DOMAIN_TBD: catalog group is geometry_3d but dispatch boundary is shape_rep
-// (Pass 6-4). Plan 7+ IR Roadmap 시 재배치 검토.
-
 use crate::entities::{
     ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
 };

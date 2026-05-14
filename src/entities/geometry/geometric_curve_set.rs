@@ -7,9 +7,6 @@
 //! and `points` buckets; writer emits a single line under the requested
 //! entity name with the IR's curve / point ids inlined as entity refs.
 
-// DOMAIN_TBD: catalog group is geometry_3d but dispatch boundary is shape_rep
-// (Pass 6-4f). Plan 7+ IR Roadmap 시 재배치 검토.
-
 use crate::entities::{
     ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
 };

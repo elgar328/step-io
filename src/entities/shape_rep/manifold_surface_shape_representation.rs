@@ -18,7 +18,7 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
-use super::shell_based_surface_model::ShellBasedSurfaceModelHandler;
+use crate::entities::geometry::shell_based_surface_model::ShellBasedSurfaceModelHandler;
 
 pub(crate) struct ManifoldSurfaceShapeRepresentationWriteInput {
     pub(crate) product: Product,

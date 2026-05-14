@@ -19,8 +19,10 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
-use super::geometric_curve_set::{CurveSetWriteInput, GeometricCurveSetHandler};
-use super::geometric_set::GeometricSetHandler;
+use crate::entities::geometry::geometric_curve_set::{
+    CurveSetWriteInput, GeometricCurveSetHandler,
+};
+use crate::entities::geometry::geometric_set::GeometricSetHandler;
 
 pub(crate) struct WireframeRepresentationWriteInput {
     pub(crate) product: Product,
