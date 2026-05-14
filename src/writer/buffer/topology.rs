@@ -8,9 +8,9 @@ use crate::writer::WriteError;
 impl WriteBuffer<'_> {
     pub(crate) fn emit_vertex(&mut self, id: VertexId) -> Result<u64, WriteError> {
         // Plan 4 stage C2: dispatch through the EntityHandler trait. Body
-        // lives in `src/entities/topology/vertex_point.rs`.
+        // lives in `src/entities/geometry/vertex_point.rs`.
         use crate::entities::SimpleEntityHandler;
-        crate::entities::topology::vertex_point::VertexPointHandler::write(self, id)
+        crate::entities::geometry::vertex_point::VertexPointHandler::write(self, id)
     }
 
     pub(crate) fn emit_edge(&mut self, id: EdgeId) -> Result<u64, WriteError> {

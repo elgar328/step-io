@@ -1,7 +1,6 @@
-//! Geometry-group entity handlers (subset of the catalog `geometry_3d` group).
-//!
-//! Step 1 pilot: DIRECTION + VECTOR. Migration of the rest happens in
-//! Plan 5 (`INFRA_PLAN.md`).
+//! Geometry-group entity handlers (catalog `geometry_3d` group + the
+//! cross-domain `VERTEX_POINT` whose ir.toml arena is
+//! `geometric_representation_item`).
 
 pub mod axis1_placement;
 pub mod axis2_placement_2d;
@@ -39,3 +38,4 @@ pub mod toroidal_surface;
 pub mod trimmed_curve;
 pub mod vector;
 pub mod vector_2d;
+pub mod vertex_point;

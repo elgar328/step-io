@@ -9,7 +9,7 @@
 // later IR refactor (Plan 7+) may unify the two into a single `Loop`
 // arena variant so the lookup is symmetric.
 
-use crate::entities::topology::vertex_point::VertexPointHandler;
+use crate::entities::geometry::vertex_point::VertexPointHandler;
 use crate::entities::{
     ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
 };

@@ -1,4 +1,4 @@
-//! Topology-group entity handlers (catalog `topology` group, 14 entities).
+//! Topology-group entity handlers (catalog `topology` group).
 //!
 //! Plan 4 migrates the Pass 5-1 ~ 5-8 family from `src/reader/topology.rs`
 //! and `src/writer/buffer/topology.rs` into per-entity handler modules.
@@ -7,9 +7,11 @@
 //! `#[linkme::distributed_slice(ENTITY_HANDLERS)]`.
 //!
 //! The Pass 5-N ordering is preserved through dedicated `PassLevel`
-//! variants (`Pass5Vertex`, `Pass5Edge`, `Pass5OrientedEdge`,
-//! `Pass5EdgeLoop`, `Pass5FaceBound`, `Pass5Face`, `Pass5Shell`,
-//! `Pass5OrientedShell`, `Pass5Solid`).
+//! variants (`Pass5Edge`, `Pass5OrientedEdge`, `Pass5EdgeLoop`,
+//! `Pass5FaceBound`, `Pass5Face`, `Pass5Shell`, `Pass5OrientedShell`,
+//! `Pass5Solid`). `Pass5Vertex` lives here in ordering but the
+//! `VERTEX_POINT` handler sits in `entities/geometry/` per the ir.toml
+//! blueprint (`vertex_point` is also a `geometric_representation_item`).
 
 pub mod advanced_face;
 pub mod brep_with_voids;
@@ -24,4 +26,3 @@ pub mod open_shell;
 pub mod oriented_closed_shell;
 pub mod oriented_edge;
 pub mod vertex_loop;
-pub mod vertex_point;
