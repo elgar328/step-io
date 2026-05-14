@@ -10,7 +10,7 @@ use crate::entities::{
 };
 use crate::ir::attr::{check_count, read_entity_ref_list};
 use crate::ir::error::ConvertError;
-use crate::ir::model::UnitContext;
+use crate::ir::shape_rep::UnitContext;
 use crate::parser::entity::{Attribute, RawEntityPart};
 use crate::reader::{ReaderContext, require_part_attrs};
 use crate::writer::WriteError;

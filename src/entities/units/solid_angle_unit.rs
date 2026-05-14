@@ -13,7 +13,7 @@ use crate::entities::{
 };
 use crate::ir::attr::{check_count, read_enum};
 use crate::ir::error::ConvertError;
-use crate::ir::model::SolidAngleUnit;
+use crate::ir::shape_rep::SolidAngleUnit;
 use crate::parser::entity::{Attribute, RawEntityPart};
 use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
 use crate::writer::WriteError;

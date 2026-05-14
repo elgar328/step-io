@@ -15,9 +15,8 @@ use crate::ir::id::{
     Placement3dId, Point2dId, PointId, ProductId, ShellId, SolidId, SurfaceId, UnitContextId,
     VertexId, WireId,
 };
-use crate::ir::model::{
-    AngleUnit, GeometryPool, LengthUnit, SolidAngleUnit, StepModel, TopologyPool, UnitContext,
-};
+use crate::ir::model::{GeometryPool, StepModel, TopologyPool};
+use crate::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit, UnitContext};
 use crate::ir::topology::{Orientation, OrientedEdge};
 use crate::ir::visualization::{
     ColorRgb, FillAreaStyle, FillAreaStyleColour, PresentationStyleAssignment, StyledItem,

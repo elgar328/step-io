@@ -7,6 +7,7 @@ pub mod id;
 pub mod model;
 pub mod pmi;
 pub mod property;
+pub mod shape_rep;
 pub mod topology;
 pub mod visualization;
 
@@ -30,11 +31,11 @@ pub use id::{
     UnitContextId, VertexId, WireId,
 };
 pub use model::{
-    AngleUnit, FileHeader, GeometryPool, ImplementationLevel, LengthUnit, NonEmptyStringList,
-    SolidAngleUnit, StepModel, TopologyPool, UnitContext,
+    FileHeader, GeometryPool, ImplementationLevel, NonEmptyStringList, StepModel, TopologyPool,
 };
 pub use pmi::{PmiPool, ShapeAspect};
 pub use property::{MeasureKind, Property, PropertyMeasure, PropertyPool};
+pub use shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit, UnitContext};
 pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Wire};
 pub use visualization::{
     ColorRgb, FillAreaStyle, FillAreaStyleColour, Mdgpr, PresentationStyleAssignment,

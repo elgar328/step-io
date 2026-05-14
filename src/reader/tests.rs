@@ -2,7 +2,7 @@ use super::*;
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Curve, Surface};
 use crate::ir::id::PointId;
-use crate::ir::model::{AngleUnit, LengthUnit, SolidAngleUnit, UnitContext};
+use crate::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit, UnitContext};
 use crate::ir::topology::Orientation;
 
 // ---------------------------------------------------------------------------

@@ -14,7 +14,8 @@ use step_io::ir::geometry::{
     ToroidalSurface,
 };
 use step_io::ir::id::{DirectionId, Placement3dId, PointId, SolidId};
-use step_io::ir::model::{AngleUnit, LengthUnit, SolidAngleUnit, StepModel, UnitContext};
+use step_io::ir::model::StepModel;
+use step_io::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit, UnitContext};
 use step_io::ir::topology::{Face, FaceKind, Orientation, Shell, Solid, Wire};
 use step_io::parser::schema::{SchemaClass, StepSchema};
 use step_io::reader::ReaderContext;

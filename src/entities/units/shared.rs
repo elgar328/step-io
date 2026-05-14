@@ -12,7 +12,7 @@
 
 use crate::ir::attr::{check_count, read_enum, read_string};
 use crate::ir::error::ConvertError;
-use crate::ir::model::{AngleUnit, LengthUnit, SolidAngleUnit};
+use crate::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit};
 use crate::parser::entity::{Attribute, RawEntityPart};
 use crate::reader::{ReaderContext, has_all_parts, require_part_attrs};
 use crate::writer::buffer::WriteBuffer;

@@ -2,7 +2,7 @@
 
 use step_io::ir::geometry::{Curve, Surface};
 use step_io::ir::id::PointId;
-use step_io::ir::model::{AngleUnit, LengthUnit, SolidAngleUnit};
+use step_io::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit};
 use step_io::reader::ReaderContext;
 
 // ------------------------------------------------------------------
