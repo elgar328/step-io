@@ -16,9 +16,9 @@ impl WriteBuffer<'_> {
     ) -> Result<u64, WriteError> {
         // Plan 5.6 stage C4: dispatch through EntityHandler trait. Body
         // lives in
-        // `src/entities/units/global_unit_assigned_context.rs`.
+        // `src/entities/shape_rep/global_unit_assigned_context.rs`.
         use crate::entities::ComplexEntityHandler;
-        crate::entities::units::global_unit_assigned_context::GlobalUnitAssignedContextHandler::write(self, units)
+        crate::entities::shape_rep::global_unit_assigned_context::GlobalUnitAssignedContextHandler::write(self, units)
     }
 }
 

@@ -1,7 +1,5 @@
 //! `GLOBAL_UNIT_ASSIGNED_CONTEXT` handler — Pass 0-2 orchestrator.
 
-// DOMAIN_TBD: catalog group is shape_rep but dispatch context is unit (Pass 0-2). Plan 7+ IR Roadmap 시 재배치 검토.
-
 use crate::entities::units::length_unit::LengthUnitHandler;
 use crate::entities::units::plane_angle_unit::PlaneAngleUnitHandler;
 use crate::entities::units::solid_angle_unit::SolidAngleUnitHandler;
