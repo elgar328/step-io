@@ -12,7 +12,7 @@ impl WriteBuffer<'_> {
         &mut self,
     ) -> Result<(), WriteError> {
         use crate::entities::SimpleEntityHandler;
-        use crate::entities::visualization::mdgpr::MdgprHandler;
+        use crate::entities::shape_rep::mdgpr::MdgprHandler;
         let Some(viz) = self.model.visualization.clone() else {
             return Ok(());
         };

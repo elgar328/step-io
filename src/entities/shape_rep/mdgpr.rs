@@ -13,7 +13,7 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
-use super::styled_item::StyledItemHandler;
+use crate::entities::visualization::styled_item::StyledItemHandler;
 
 pub(crate) struct MdgprHandler;
 
