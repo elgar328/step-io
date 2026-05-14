@@ -7,7 +7,8 @@ use crate::entities::{
 };
 use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::{Mdgpr, VisualizationPool};
+use crate::ir::shape_rep::Mdgpr;
+use crate::ir::visualization::VisualizationPool;
 use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;

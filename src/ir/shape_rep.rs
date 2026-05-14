@@ -6,7 +6,8 @@
 //! `crate::entities::shape_rep`; this module holds the corresponding data
 //! struct definitions.
 
-use super::id::ProductId;
+use super::id::{ProductId, UnitContextId};
+use super::visualization::StyledItem;
 
 /// Units declared in the STEP file's HEADER section.
 ///
@@ -80,6 +81,24 @@ pub enum AngleUnit {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SolidAngleUnit {
     Steradian,
+}
+
+/// `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION(name, items, context)`.
+///
+/// Top-level visualization wrapper. Lives in `shape_rep` per the ir.toml
+/// blueprint (its arena is `representation`), even though the items it
+/// wraps belong to the visualization domain — the container
+/// [`crate::ir::VisualizationPool`] still owns the `Vec<Mdgpr>`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Mdgpr {
+    pub name: String,
+    pub items: Vec<StyledItem>,
+    /// Unit / uncertainty context referenced by this MDGPR. `Some(id)` indexes
+    /// into [`crate::ir::model::StepModel::units`]. Fusion 360 typically uses
+    /// a separate context here (different uncertainty than the geometry rep).
+    /// `None` → writer emits `Attribute::Unset` for `context_of_items`
+    /// (allowed by the spec for kernel-built IR with no context info).
+    pub context: Option<UnitContextId>,
 }
 
 /// `SHAPE_ASPECT(name, description, of_shape, product_definitional)`.

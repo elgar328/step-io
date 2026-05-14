@@ -9,29 +9,21 @@
 //! a fully structured visualization layer (per-Face Color references,
 //! PMI-style annotations), the tree-inline IR will be replaced wholesale.
 
-use super::id::{CurveId, FaceId, PointId, SolidId, UnitContextId};
+use super::id::{CurveId, FaceId, PointId, SolidId};
+use super::shape_rep::Mdgpr;
 
 /// Top-level container for visualization data extracted from
 /// `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION` (MDGPR)
 /// entities. Empty when the source file had no visualization chain or
 /// when a kernel adapter built the IR without one.
+///
+/// `Mdgpr` itself lives in [`crate::ir::shape_rep`] per the ir.toml
+/// blueprint (its arena is `representation`), but its container stays
+/// here alongside the styled-item chain that the MDGPR wraps.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct VisualizationPool {
     /// Top-level MDGPR roots — emit order preserved.
     pub mdgprs: Vec<Mdgpr>,
-}
-
-/// `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION(name, items, context)`.
-#[derive(Debug, Clone, PartialEq)]
-pub struct Mdgpr {
-    pub name: String,
-    pub items: Vec<StyledItem>,
-    /// Unit / uncertainty context referenced by this MDGPR. `Some(id)` indexes
-    /// into [`crate::ir::model::StepModel::units`]. Fusion 360 typically uses
-    /// a separate context here (different uncertainty than the geometry rep).
-    /// `None` → writer emits `Attribute::Unset` for `context_of_items`
-    /// (allowed by the spec for kernel-built IR with no context info).
-    pub context: Option<UnitContextId>,
 }
 
 /// `STYLED_ITEM(name, styles, item)` — binds presentation styles to a
