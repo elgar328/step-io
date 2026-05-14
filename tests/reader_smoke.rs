@@ -186,7 +186,11 @@ fn box_fixtures_topology_pool_counts() {
         let result = ReaderContext::convert(&graph);
         let topo = &result.model.topology;
 
-        assert_eq!(topo.vertices.len(), 8, "fixture {name}: vertices");
+        assert_eq!(
+            result.model.geometry.vertices.len(),
+            8,
+            "fixture {name}: vertices"
+        );
         assert_eq!(topo.edges.len(), 12, "fixture {name}: edges");
         assert_eq!(topo.wires.len(), 6, "fixture {name}: wires");
         assert_eq!(topo.faces.len(), 6, "fixture {name}: faces");
@@ -203,7 +207,11 @@ fn cylinder_fixtures_topology_pool_counts() {
         let result = ReaderContext::convert(&graph);
         let topo = &result.model.topology;
 
-        assert_eq!(topo.vertices.len(), 2, "fixture {name}: vertices");
+        assert_eq!(
+            result.model.geometry.vertices.len(),
+            2,
+            "fixture {name}: vertices"
+        );
         assert_eq!(topo.edges.len(), 3, "fixture {name}: edges");
         assert_eq!(topo.wires.len(), 3, "fixture {name}: wires");
         assert_eq!(topo.faces.len(), 3, "fixture {name}: faces");
@@ -282,7 +290,11 @@ fn fillet_box_fixtures_topology_pool_counts() {
         let result = ReaderContext::convert(&graph);
         let topo = &result.model.topology;
 
-        assert_eq!(topo.vertices.len(), 24, "fixture {name}: vertices");
+        assert_eq!(
+            result.model.geometry.vertices.len(),
+            24,
+            "fixture {name}: vertices"
+        );
         assert_eq!(topo.edges.len(), 48, "fixture {name}: edges");
         assert_eq!(topo.wires.len(), 26, "fixture {name}: wires");
         assert_eq!(topo.faces.len(), 26, "fixture {name}: faces");
@@ -344,7 +356,11 @@ fn cone_fixtures_pool_counts() {
         assert_eq!(geo.directions.len(), 9, "fixture {name}: directions");
         assert_eq!(geo.curves.len(), 2, "fixture {name}: curves");
         assert_eq!(geo.surfaces.len(), 2, "fixture {name}: surfaces");
-        assert_eq!(topo.vertices.len(), 2, "fixture {name}: vertices");
+        assert_eq!(
+            result.model.geometry.vertices.len(),
+            2,
+            "fixture {name}: vertices"
+        );
         assert_eq!(topo.edges.len(), 2, "fixture {name}: edges");
         assert_eq!(topo.faces.len(), 2, "fixture {name}: faces");
         assert_eq!(topo.solids.len(), 1, "fixture {name}: solids");
@@ -405,7 +421,11 @@ fn torus_fixtures_pool_counts() {
         assert_eq!(geo.directions.len(), 8, "fixture {name}: directions");
         assert_eq!(geo.curves.len(), 2, "fixture {name}: curves");
         assert_eq!(geo.surfaces.len(), 1, "fixture {name}: surfaces");
-        assert_eq!(topo.vertices.len(), 1, "fixture {name}: vertices");
+        assert_eq!(
+            result.model.geometry.vertices.len(),
+            1,
+            "fixture {name}: vertices"
+        );
         assert_eq!(topo.edges.len(), 2, "fixture {name}: edges");
         assert_eq!(topo.faces.len(), 1, "fixture {name}: faces");
         assert_eq!(topo.solids.len(), 1, "fixture {name}: solids");
@@ -463,7 +483,11 @@ fn revolution_fixtures_pool_counts() {
         assert_eq!(geo.directions.len(), 11, "fixture {name}: directions");
         assert_eq!(geo.curves.len(), 4, "fixture {name}: curves");
         assert_eq!(geo.surfaces.len(), 3, "fixture {name}: surfaces");
-        assert_eq!(topo.vertices.len(), 2, "fixture {name}: vertices");
+        assert_eq!(
+            result.model.geometry.vertices.len(),
+            2,
+            "fixture {name}: vertices"
+        );
         assert_eq!(topo.edges.len(), 3, "fixture {name}: edges");
         assert_eq!(topo.faces.len(), 3, "fixture {name}: faces");
         assert_eq!(topo.solids.len(), 1, "fixture {name}: solids");
@@ -557,7 +581,11 @@ fn loft_fixtures_topology_pool_counts() {
         let result = ReaderContext::convert(&graph);
         let topo = &result.model.topology;
 
-        assert_eq!(topo.vertices.len(), 10, "fixture {name}: vertices");
+        assert_eq!(
+            result.model.geometry.vertices.len(),
+            10,
+            "fixture {name}: vertices"
+        );
         assert_eq!(topo.edges.len(), 15, "fixture {name}: edges");
         assert_eq!(topo.wires.len(), 7, "fixture {name}: wires");
         assert_eq!(topo.faces.len(), 7, "fixture {name}: faces");
@@ -620,7 +648,11 @@ fn tapered_box_fixtures_topology_pool_counts() {
         let result = ReaderContext::convert(&graph);
         let topo = &result.model.topology;
 
-        assert_eq!(topo.vertices.len(), 8, "fixture {name}: vertices");
+        assert_eq!(
+            result.model.geometry.vertices.len(),
+            8,
+            "fixture {name}: vertices"
+        );
         assert_eq!(topo.edges.len(), 12, "fixture {name}: edges");
         assert_eq!(topo.wires.len(), 6, "fixture {name}: wires");
         assert_eq!(topo.faces.len(), 6, "fixture {name}: faces");
@@ -780,7 +812,11 @@ fn ellipse_fixtures_topology_pool_counts() {
         let result = ReaderContext::convert(&graph);
         let topo = &result.model.topology;
 
-        assert_eq!(topo.vertices.len(), 2, "fixture {name}: vertices");
+        assert_eq!(
+            result.model.geometry.vertices.len(),
+            2,
+            "fixture {name}: vertices"
+        );
         assert_eq!(topo.edges.len(), 3, "fixture {name}: edges");
         assert_eq!(topo.wires.len(), 3, "fixture {name}: wires");
         assert_eq!(topo.faces.len(), 3, "fixture {name}: faces");
@@ -960,7 +996,11 @@ fn face_surface_fixtures_topology_pool_counts() {
         let result = ReaderContext::convert(&graph);
         let topo = &result.model.topology;
 
-        assert_eq!(topo.vertices.len(), 4, "fixture {name}: vertices");
+        assert_eq!(
+            result.model.geometry.vertices.len(),
+            4,
+            "fixture {name}: vertices"
+        );
         assert_eq!(topo.edges.len(), 4, "fixture {name}: edges");
         assert_eq!(topo.wires.len(), 1, "fixture {name}: wires");
         assert_eq!(topo.faces.len(), 1, "fixture {name}: faces");
@@ -1059,7 +1099,11 @@ fn offset_surface_fixtures_topology_pool_counts() {
         let result = ReaderContext::convert(&graph);
         let topo = &result.model.topology;
 
-        assert_eq!(topo.vertices.len(), 16, "fixture {name}: vertices");
+        assert_eq!(
+            result.model.geometry.vertices.len(),
+            16,
+            "fixture {name}: vertices"
+        );
         assert_eq!(topo.edges.len(), 24, "fixture {name}: edges");
         assert_eq!(topo.wires.len(), 12, "fixture {name}: wires");
         assert_eq!(topo.faces.len(), 11, "fixture {name}: faces");

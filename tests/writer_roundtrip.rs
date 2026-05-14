@@ -56,8 +56,8 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
         "{name}: edges count"
     );
     assert_eq!(
-        re.topology.vertices.len(),
-        original.topology.vertices.len(),
+        re.geometry.vertices.len(),
+        original.geometry.vertices.len(),
         "{name}: vertices count"
     );
 

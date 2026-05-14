@@ -2,11 +2,11 @@ use super::arena::{Arena, define_id};
 use super::assembly::Product;
 use super::geometry::{
     Axis1Placement, Axis2Placement2d, Axis2Placement3d, Curve, Curve2d, Direction2, Direction3,
-    Point2, Point3, Surface,
+    Point2, Point3, Surface, Vertex,
 };
 use super::model::UnitContext;
 use super::pmi::ShapeAspect;
-use super::topology::{Edge, Face, Shell, Solid, Vertex, Wire};
+use super::topology::{Edge, Face, Shell, Solid, Wire};
 
 // Geometry Ids (3D)
 define_id!(PointId, Point3);

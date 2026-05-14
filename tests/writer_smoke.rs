@@ -6,6 +6,7 @@
 
 use step_io::ir::arena::Arena;
 use step_io::ir::assembly::{AssemblyTree, Instance, Product, ProductContent, Transform3d};
+use step_io::ir::geometry::Vertex;
 use step_io::ir::geometry::{
     Axis1Placement, Axis2Placement3d, Circle3, ConicalSurface, Curve, CurveForm,
     CylindricalSurface, Direction3, Ellipse3, Line3, NurbsCurve, NurbsSurface, Plane3, Point3,
@@ -14,7 +15,7 @@ use step_io::ir::geometry::{
 };
 use step_io::ir::id::{DirectionId, Placement3dId, PointId, SolidId};
 use step_io::ir::model::{AngleUnit, LengthUnit, SolidAngleUnit, StepModel, UnitContext};
-use step_io::ir::topology::{Face, FaceKind, Orientation, Shell, Solid, Vertex, Wire};
+use step_io::ir::topology::{Face, FaceKind, Orientation, Shell, Solid, Wire};
 use step_io::parser::schema::{SchemaClass, StepSchema};
 use step_io::reader::ReaderContext;
 use step_io::{WriteError, parse};
@@ -752,7 +753,7 @@ fn push_minimal_solid(model: &mut StepModel) -> SolidId {
         .geometry
         .surfaces
         .push(Surface::Plane(Plane3 { position }));
-    let vertex = model.topology.vertices.push(Vertex { point: pt });
+    let vertex = model.geometry.vertices.push(Vertex { point: pt });
     let wire = model.topology.wires.push(Wire {
         edges: Vec::new(),
         vertex: Some(vertex),

@@ -22,7 +22,7 @@ pub use geometry::{
     Direction3, Ellipse2, Ellipse3, Line2, Line3, NurbsCurve, NurbsCurve2d, NurbsSurface, Pcurve,
     Plane3, Point2, Point3, SphericalSurface, Surface, SurfaceForm, SurfaceOfLinearExtrusion,
     SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TransitionCode, TrimMaster,
-    TrimmedCurve,
+    TrimmedCurve, Vertex,
 };
 pub use id::{
     Curve2dId, CurveId, Direction2dId, DirectionId, EdgeId, FaceId, Placement1dId, Placement2dId,
@@ -35,7 +35,7 @@ pub use model::{
 };
 pub use pmi::{PmiPool, ShapeAspect};
 pub use property::{MeasureKind, Property, PropertyMeasure, PropertyPool};
-pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Vertex, Wire};
+pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Wire};
 pub use visualization::{
     ColorRgb, FillAreaStyle, FillAreaStyleColour, Mdgpr, PresentationStyleAssignment,
     RenderingProperty, ShadingMethod, StyledItem, StyledItemTarget, SurfaceSide, SurfaceSideStyle,

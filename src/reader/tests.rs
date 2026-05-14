@@ -141,7 +141,7 @@ fn convert_empty_graph_produces_empty_model() {
     assert!(result.model.geometry.directions.is_empty());
     assert!(result.model.geometry.surfaces.is_empty());
     assert!(result.model.geometry.curves.is_empty());
-    assert!(result.model.topology.vertices.is_empty());
+    assert!(result.model.geometry.vertices.is_empty());
     assert!(result.model.topology.edges.is_empty());
     assert!(result.model.topology.wires.is_empty());
     assert!(result.model.topology.faces.is_empty());
@@ -421,8 +421,8 @@ fn convert_vertex_point() {
          #2 = VERTEX_POINT('',#1);",
     ));
     assert!(result.warnings.is_empty());
-    assert_eq!(result.model.topology.vertices.len(), 1);
-    let v = &result.model.topology.vertices[crate::VertexId(0)];
+    assert_eq!(result.model.geometry.vertices.len(), 1);
+    let v = &result.model.geometry.vertices[crate::VertexId(0)];
     assert_eq!(v.point, PointId(0));
 }
 
@@ -504,7 +504,7 @@ fn full_topology_step() -> String {
 fn convert_full_topology_chain() {
     let result = convert_source(&full_topology_step());
     assert!(result.warnings.is_empty());
-    assert_eq!(result.model.topology.vertices.len(), 1);
+    assert_eq!(result.model.geometry.vertices.len(), 1);
     assert_eq!(result.model.topology.edges.len(), 1);
     assert_eq!(result.model.topology.wires.len(), 1);
     assert_eq!(result.model.topology.faces.len(), 1);

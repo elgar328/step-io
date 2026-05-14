@@ -165,7 +165,7 @@ impl<'m> WriteBuffer<'m> {
             #[allow(clippy::cast_possible_truncation)]
             self.emit_curve_2d(Curve2dId(i as u32))?;
         }
-        for i in 0..self.model.topology.vertices.len() {
+        for i in 0..self.model.geometry.vertices.len() {
             #[allow(clippy::cast_possible_truncation)]
             self.emit_vertex(VertexId(i as u32))?;
         }

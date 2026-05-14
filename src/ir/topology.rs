@@ -1,5 +1,5 @@
 use super::geometry::Pcurve;
-use super::id::{CurveId, EdgeId, FaceId, PointId, ShellId, SurfaceId, VertexId, WireId};
+use super::id::{CurveId, EdgeId, FaceId, ShellId, SurfaceId, VertexId, WireId};
 
 /// Direction agreement flag used throughout B-Rep topology.
 ///
@@ -9,12 +9,6 @@ use super::id::{CurveId, EdgeId, FaceId, PointId, ShellId, SurfaceId, VertexId, 
 pub enum Orientation {
     Forward,
     Reversed,
-}
-
-/// A topological vertex — a point in space.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Vertex {
-    pub point: PointId,
 }
 
 /// A topological edge — a bounded piece of a curve between two vertices.

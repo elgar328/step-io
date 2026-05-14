@@ -11,7 +11,7 @@ use crate::entities::{
 use crate::ir::VertexId;
 use crate::ir::attr::{check_count, read_entity_ref, read_string};
 use crate::ir::error::ConvertError;
-use crate::ir::topology::Vertex;
+use crate::ir::geometry::Vertex;
 use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -37,7 +37,7 @@ impl SimpleEntityHandler for VertexPointHandler {
         let point = ctx.resolve_point(entity_id, pt_ref, "vertex_geometry")?;
 
         let vertex = Vertex { point };
-        let id = ctx.topology.vertices.push(vertex);
+        let id = ctx.geometry.vertices.push(vertex);
         ctx.vertex_map.insert(entity_id, id);
         Ok(())
     }
@@ -48,7 +48,7 @@ impl SimpleEntityHandler for VertexPointHandler {
         }
         let v = buf
             .model
-            .topology
+            .geometry
             .vertices
             .iter()
             .nth(id.0 as usize)

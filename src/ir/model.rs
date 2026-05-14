@@ -2,10 +2,10 @@ use super::arena::Arena;
 use super::assembly::AssemblyTree;
 use super::geometry::{
     Axis1Placement, Axis2Placement2d, Axis2Placement3d, Curve, Curve2d, Direction2, Direction3,
-    Point2, Point3, Surface,
+    Point2, Point3, Surface, Vertex,
 };
 use super::id::Placement3dId;
-use super::topology::{Edge, Face, Shell, Solid, Vertex, Wire};
+use super::topology::{Edge, Face, Shell, Solid, Wire};
 use super::visualization::VisualizationPool;
 use crate::parser::schema::StepSchema;
 
@@ -193,6 +193,9 @@ pub struct StepModel {
 }
 
 /// Arena-based storage for all topology objects.
+///
+/// `vertices` arena moved to [`GeometryPool`] per the ir.toml blueprint —
+/// `vertex_point` resolves to the `geometric_representation_item` arena.
 #[derive(Debug, Clone, Default)]
 pub struct TopologyPool {
     pub solids: Arena<Solid>,
@@ -200,7 +203,6 @@ pub struct TopologyPool {
     pub faces: Arena<Face>,
     pub wires: Arena<Wire>,
     pub edges: Arena<Edge>,
-    pub vertices: Arena<Vertex>,
 }
 
 /// Arena-based storage for all geometry objects.
@@ -213,6 +215,7 @@ pub struct GeometryPool {
     pub surfaces: Arena<Surface>,
     pub curves: Arena<Curve>,
     pub points: Arena<Point3>,
+    pub vertices: Arena<Vertex>,
     pub directions: Arena<Direction3>,
     pub placements: Arena<Axis2Placement3d>,
     pub placements_1d: Arena<Axis1Placement>,

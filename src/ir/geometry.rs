@@ -11,6 +11,18 @@ pub struct Point3 {
     pub z: f64,
 }
 
+/// A topological vertex — a point in space.
+///
+/// `vertex_point` in STEP carries multiple SUBTYPE OF (`vertex`,
+/// `geometric_representation_item`); ir.toml resolves its arena to
+/// `geometric_representation_item`, so the struct lives in the geometry
+/// module even though references flow from topology (edge, wire) and
+/// the arena is part of [`GeometryPool`](crate::ir::GeometryPool).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Vertex {
+    pub point: PointId,
+}
+
 /// A unit direction vector in 3D. Components are direction ratios
 /// (not necessarily normalized — normalization is the kernel's responsibility).
 #[derive(Debug, Clone, Copy, PartialEq)]
