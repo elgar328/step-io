@@ -10,7 +10,7 @@ use crate::entities::{
 };
 use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::pmi::{PmiPool, ShapeAspect};
+use crate::ir::shape_rep::ShapeAspect;
 use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -53,8 +53,7 @@ impl SimpleEntityHandler for ShapeAspectHandler {
             return Ok(());
         };
 
-        let pmi = ctx.pmi.get_or_insert_with(PmiPool::default);
-        pmi.shape_aspects.push(ShapeAspect {
+        ctx.shape_aspects.push(ShapeAspect {
             name,
             description,
             target: product_id,

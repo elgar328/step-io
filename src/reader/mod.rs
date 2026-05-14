@@ -250,9 +250,9 @@ pub struct ReaderContext {
     /// (e.g. `SHAPE_ASPECT`) are silently dropped — no map entry.
     pub(crate) property_def_map: HashMap<u64, (String, Option<String>, ProductId)>,
 
-    /// Lazily-built PMI pool — Pass 8 's `SHAPE_ASPECT` convert pushes
-    /// `ShapeAspect` records here. `None` if no PMI entities were seen.
-    pub(crate) pmi: Option<crate::ir::pmi::PmiPool>,
+    /// `SHAPE_ASPECT` arena — Pass 8 's `SHAPE_ASPECT` convert pushes
+    /// here. Empty when no PMI entities were seen.
+    pub(crate) shape_aspects: crate::ir::Arena<crate::ir::ShapeAspect>,
 
     pub(crate) warnings: Vec<ConvertError>,
 }
@@ -285,7 +285,7 @@ impl ReaderContext {
                 header,
                 visualization: ctx.visualization,
                 properties: ctx.properties,
-                pmi: ctx.pmi,
+                shape_aspects: ctx.shape_aspects,
             },
             warnings: ctx.warnings,
         }

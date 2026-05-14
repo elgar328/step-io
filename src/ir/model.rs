@@ -5,7 +5,7 @@ use super::geometry::{
     Point2, Point3, Surface, Vertex,
 };
 use super::id::Placement3dId;
-use super::shape_rep::UnitContext;
+use super::shape_rep::{ShapeAspect, UnitContext};
 use super::topology::{Edge, Face, Shell, Solid, Wire};
 use super::visualization::VisualizationPool;
 use crate::parser::schema::StepSchema;
@@ -185,12 +185,12 @@ pub struct StepModel {
     /// IR — see [`crate::ir::property`] for design notes. Geometric
     /// validation properties (target = `SHAPE_ASPECT`) are dropped at read.
     pub properties: Option<crate::ir::property::PropertyPool>,
-    /// PMI scaffolding — currently only `SHAPE_ASPECT` entries. `None` for
-    /// fixtures without PMI (most non-NIST / non-stepcode files). Future
-    /// PMI work (Tolerance / Datum / GD&T per ROADMAP Phase 2) extends
-    /// this pool with additional arenas — see [`crate::ir::pmi`] for the
-    /// scaffolding rationale.
-    pub pmi: Option<crate::ir::pmi::PmiPool>,
+    /// `SHAPE_ASPECT` entries — empty for fixtures without PMI (most
+    /// non-NIST / non-stepcode files). Future PMI work (Tolerance /
+    /// Datum / GD&T per ROADMAP Phase 2) lands as additional arenas
+    /// alongside this one — all under the `shape_rep` pool per the
+    /// ir.toml blueprint.
+    pub shape_aspects: Arena<ShapeAspect>,
 }
 
 /// Arena-based storage for all topology objects.

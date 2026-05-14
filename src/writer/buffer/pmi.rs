@@ -4,15 +4,15 @@
 //! id (populated by the assembly emitter).
 
 use super::WriteBuffer;
-use crate::ir::pmi::ShapeAspect;
+use crate::ir::shape_rep::ShapeAspect;
 use crate::parser::entity::Attribute;
 
 impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_pmi_if_set(&mut self) {
-        let Some(pool) = self.model.pmi.clone() else {
-            return;
-        };
-        for sa in pool.shape_aspects.iter() {
+        // Snapshot to release the &model borrow before per-SA emission
+        // (emit_shape_aspect mutates self via push_simple).
+        let entries: Vec<ShapeAspect> = self.model.shape_aspects.iter().cloned().collect();
+        for sa in &entries {
             self.emit_shape_aspect(sa);
         }
     }

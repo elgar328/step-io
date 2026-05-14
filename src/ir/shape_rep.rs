@@ -6,6 +6,8 @@
 //! `crate::entities::shape_rep`; this module holds the corresponding data
 //! struct definitions.
 
+use super::id::ProductId;
+
 /// Units declared in the STEP file's HEADER section.
 ///
 /// The IR preserves original units — numeric values are **not** normalized.
@@ -78,4 +80,29 @@ pub enum AngleUnit {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SolidAngleUnit {
     Steradian,
+}
+
+/// `SHAPE_ASPECT(name, description, of_shape, product_definitional)`.
+///
+/// `of_shape` is a `PRODUCT_DEFINITION_SHAPE` reference resolved to a
+/// `ProductId` at read time via the existing `pdef_shape_to_pdef` and
+/// `pdef_to_product` maps. SAs whose `of_shape` does not resolve are
+/// silently dropped on read (symmetric ignorance preserves round-trip
+/// equality for fixtures with non-standard targets).
+///
+/// Future PMI work (Tolerance / Datum / GD&T per ROADMAP Phase 2) adds
+/// further structs alongside this one — all share the `shape_rep` pool
+/// per the ir.toml blueprint.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ShapeAspect {
+    /// `SHAPE_ASPECT.name` — typically `''`.
+    pub name: String,
+    /// `SHAPE_ASPECT.description` — typically `''`.
+    pub description: String,
+    /// `SHAPE_ASPECT.of_shape` resolved through
+    /// `PRODUCT_DEFINITION_SHAPE → PRODUCT_DEFINITION → ProductId`.
+    pub target: ProductId,
+    /// `SHAPE_ASPECT.product_definitional` — boolean enum (`.T.` / `.F.`),
+    /// mostly `.F.` in observed NIST fixtures.
+    pub product_definitional: bool,
 }
