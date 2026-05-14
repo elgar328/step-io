@@ -1,4 +1,5 @@
-//! Shape representation entity handlers (Pass 6-4 ~ 6-6, plus MDGPR at Pass 7-11).
+//! Shape representation entity handlers (Pass 6-4 ~ 6-6, plus MDGPR at
+//! Pass 7-11 and `SHAPE_ASPECT` at Pass 8-pre).
 //!
 //! Plan 6 migrates the bespoke `run_pass!` blocks in `run_assembly_passes`
 //! (`src/reader/passes.rs` line 195~256) into per-entity handlers. The
@@ -20,5 +21,6 @@ pub mod gbwsr;
 pub mod item_defined_transformation;
 pub mod manifold_surface_shape_representation;
 pub mod mdgpr;
+pub mod shape_aspect;
 pub mod shape_representation;
 pub mod shape_representation_relationship;

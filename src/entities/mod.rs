@@ -14,7 +14,6 @@ use crate::writer::buffer::WriteBuffer;
 
 pub mod assembly_product;
 pub mod geometry;
-pub mod pmi;
 pub mod property;
 pub mod shape_rep;
 pub mod topology;
