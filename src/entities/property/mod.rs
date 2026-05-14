@@ -10,3 +10,4 @@
 
 pub mod measure_representation_item;
 pub mod property_definition;
+pub mod shape_definition_representation;

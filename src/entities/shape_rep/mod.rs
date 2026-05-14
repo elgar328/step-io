@@ -15,6 +15,5 @@ pub mod gbssr;
 pub mod gbwsr;
 pub mod item_defined_transformation;
 pub mod manifold_surface_shape_representation;
-pub mod shape_definition_representation;
 pub mod shape_representation;
 pub mod shape_representation_relationship;

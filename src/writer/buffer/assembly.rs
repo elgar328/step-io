@@ -375,7 +375,7 @@ impl WriteBuffer<'_> {
 
     pub(crate) fn emit_sdr(&mut self, pdef_shape: u64, sr: u64) -> u64 {
         use crate::entities::SimpleEntityHandler;
-        use crate::entities::shape_rep::shape_definition_representation::{
+        use crate::entities::property::shape_definition_representation::{
             ShapeDefinitionRepresentationHandler, ShapeDefinitionRepresentationWriteInput,
         };
         ShapeDefinitionRepresentationHandler::write(
