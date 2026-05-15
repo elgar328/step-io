@@ -5,5 +5,5 @@ pub mod schema;
 
 pub use entity::{Attribute, EntityGraph, ParseError, RawEntity, RawEntityPart};
 pub use lexer::{LexError, LexErrorKind, Lexer, Span, Token, TokenKind, tokenize};
-pub use p21::{Parser, parse};
+pub use p21::{Parser, parse, parse_bytes};
 pub use schema::{SchemaClass, StepSchema};

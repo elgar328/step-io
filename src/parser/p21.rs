@@ -13,6 +13,26 @@ pub fn parse(source: &str) -> Result<EntityGraph, ParseError> {
     Parser::new(source).parse()
 }
 
+/// Parse a Part 21 source given as raw bytes. Tries UTF-8 first; on
+/// failure falls back to ISO 8859-1 (Latin-1), which ISO 10303-21 §3.2
+/// defines as the file format's default encoding. Real-world STEP files
+/// frequently embed raw non-ASCII bytes (Cyrillic, Latin-1) directly
+/// instead of using the spec's `\X\` / `\X2\` / `\X4\` escapes — those
+/// bytes decode losslessly under the fallback (every byte 0x00..0xFF
+/// maps 1:1 to U+0000..U+00FF).
+///
+/// # Errors
+///
+/// Returns the first [`ParseError`] encountered by the underlying parser.
+pub fn parse_bytes(bytes: &[u8]) -> Result<EntityGraph, ParseError> {
+    if let Ok(s) = std::str::from_utf8(bytes) {
+        parse(s)
+    } else {
+        let s: String = bytes.iter().map(|&b| b as char).collect();
+        parse(&s)
+    }
+}
+
 /// Recursive-descent parser for ISO 10303-21 (Part 21) files.
 ///
 /// Consumes `self` on [`Parser::parse`] because the underlying [`Lexer`] is
@@ -814,5 +834,76 @@ mod tests {
         let mut parser = Parser::new("#1 = LINE('', #2)");
         let err = parser.parse_entity_instance().unwrap_err();
         assert!(matches!(err, ParseError::UnexpectedEof { .. }));
+    }
+
+    // --- parse_bytes: non-UTF-8 input ---
+
+    fn minimal_step_with_string_attr(s_bytes: &[u8]) -> Vec<u8> {
+        let prefix = b"ISO-10303-21;\n\
+                      HEADER;\n\
+                      FILE_DESCRIPTION((' ',";
+        let mid = b"),'2;1');\n\
+                    FILE_NAME('n','t',(' '),(' '),'p','o','a');\n\
+                    FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\n\
+                    ENDSEC;\n\
+                    DATA;\n\
+                    ENDSEC;\n\
+                    END-ISO-10303-21;\n";
+        let mut buf = Vec::with_capacity(prefix.len() + s_bytes.len() + mid.len() + 2);
+        buf.extend_from_slice(prefix);
+        buf.push(b'\'');
+        buf.extend_from_slice(s_bytes);
+        buf.push(b'\'');
+        buf.extend_from_slice(mid);
+        buf
+    }
+
+    #[test]
+    fn parse_bytes_accepts_latin1_byte_via_fallback() {
+        // 0xC0 alone is not valid UTF-8 (it is a leading byte for a 2-byte
+        // sequence). Latin-1 maps it to U+00C0 ('À').
+        let buf = minimal_step_with_string_attr(&[0xC0]);
+        assert!(
+            std::str::from_utf8(&buf).is_err(),
+            "fixture must be invalid UTF-8 to exercise the fallback"
+        );
+        let graph = parse_bytes(&buf).expect("parse_bytes must accept Latin-1 fallback");
+        // FILE_DESCRIPTION is the first header entity; its first attribute
+        // is a list of strings. The second string of that list carries our
+        // injected byte.
+        let RawEntity::Simple {
+            name, attributes, ..
+        } = &graph.header[0]
+        else {
+            panic!("expected Simple HEADER entity");
+        };
+        assert_eq!(name, "FILE_DESCRIPTION");
+        let Attribute::List(items) = &attributes[0] else {
+            panic!("FILE_DESCRIPTION attr[0] must be a list");
+        };
+        let Attribute::String(s) = &items[1] else {
+            panic!("expected String attribute");
+        };
+        assert_eq!(s.chars().count(), 1);
+        assert_eq!(s.chars().next().unwrap(), '\u{00C0}');
+    }
+
+    #[test]
+    fn parse_bytes_passes_through_valid_utf8() {
+        // Valid UTF-8 'À' (0xC3 0x80) — the UTF-8 path is taken and the
+        // character decodes identically.
+        let buf = minimal_step_with_string_attr("À".as_bytes());
+        assert!(std::str::from_utf8(&buf).is_ok());
+        let graph = parse_bytes(&buf).expect("valid UTF-8 must parse");
+        let RawEntity::Simple { attributes, .. } = &graph.header[0] else {
+            panic!();
+        };
+        let Attribute::List(items) = &attributes[0] else {
+            panic!();
+        };
+        let Attribute::String(s) = &items[1] else {
+            panic!();
+        };
+        assert_eq!(s, "\u{00C0}");
     }
 }

@@ -17,6 +17,6 @@ pub use ir::{
 };
 pub use parser::{
     Attribute, EntityGraph, LexError, LexErrorKind, Lexer, ParseError, Parser, RawEntity,
-    RawEntityPart, SchemaClass, Span, StepSchema, Token, TokenKind, parse, tokenize,
+    RawEntityPart, SchemaClass, Span, StepSchema, Token, TokenKind, parse, parse_bytes, tokenize,
 };
 pub use writer::WriteError;
