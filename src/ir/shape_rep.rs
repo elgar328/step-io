@@ -15,15 +15,18 @@ use super::visualization::StyledItem;
 /// Kernel adapters inspect `UnitContext` and convert if needed.
 ///
 /// `length_uncertainty` is `Some` when the source file carried a
-/// `distance_accuracy_value` via `GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT`,
-/// `None` otherwise. The value is in the source's length unit (mm / inch
-/// / ...) — no normalization.
-#[derive(Debug, Clone, Copy, PartialEq)]
+/// `UNCERTAINTY_MEASURE_WITH_UNIT` referenced through
+/// `GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT`. The numeric value is in the
+/// source's length unit (mm / inch / ...) — no normalization. The
+/// `name` / `description` strings are preserved verbatim so round-trip
+/// reproduces the original metadata (writers no longer hardcode
+/// `'distance_accuracy_value'` / `'confusion accuracy'`).
+#[derive(Debug, Clone, PartialEq)]
 pub struct UnitContext {
     pub length: LengthUnit,
     pub plane_angle: AngleUnit,
     pub solid_angle: SolidAngleUnit,
-    pub length_uncertainty: Option<f64>,
+    pub length_uncertainty: Option<LengthUncertainty>,
     /// `true` when the source file wrapped the length unit in
     /// `CONVERSION_BASED_UNIT` even though the unit is SI (e.g. ABC tier
     /// emits `CBU('METRE', 1.0, base=METRE)` instead of plain SI METRE).
@@ -61,6 +64,21 @@ impl Default for UnitContext {
             dim_exp_explicit: false,
         }
     }
+}
+
+/// `UNCERTAINTY_MEASURE_WITH_UNIT(value, unit_ref, name, description)`.
+///
+/// Carries the numeric uncertainty plus the metadata strings observed
+/// in the source file. The two strings vary across CAD vendors — Fusion
+/// 360 / `FreeCAD` emit `'distance_accuracy_value'` / `'confusion accuracy'`,
+/// OCCT samples emit `'CONFUSED CURVE UNCERTAINTY'`, ABC-tier fixtures
+/// emit empty strings. The reader preserves them verbatim and the
+/// writer re-emits them as-is.
+#[derive(Debug, Clone, PartialEq)]
+pub struct LengthUncertainty {
+    pub value: f64,
+    pub name: String,
+    pub description: String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

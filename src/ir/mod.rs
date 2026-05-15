@@ -33,7 +33,9 @@ pub use model::{
     FileHeader, GeometryPool, ImplementationLevel, NonEmptyStringList, StepModel, TopologyPool,
 };
 pub use property::{MeasureKind, Property, PropertyMeasure, PropertyPool};
-pub use shape_rep::{AngleUnit, LengthUnit, Mdgpr, ShapeAspect, SolidAngleUnit, UnitContext};
+pub use shape_rep::{
+    AngleUnit, LengthUncertainty, LengthUnit, Mdgpr, ShapeAspect, SolidAngleUnit, UnitContext,
+};
 pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Wire};
 pub use visualization::{
     ColorRgb, FillAreaStyle, FillAreaStyleColour, PresentationStyleAssignment, RenderingProperty,

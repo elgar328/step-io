@@ -5,8 +5,9 @@
 use crate::entities::{
     ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
 };
-use crate::ir::attr::{check_count, read_entity_ref};
+use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
+use crate::ir::shape_rep::LengthUncertainty;
 use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -18,9 +19,11 @@ pub(crate) struct UncertaintyMeasureWithUnitHandler;
 impl SimpleEntityHandler for UncertaintyMeasureWithUnitHandler {
     const NAME: &'static str = "UNCERTAINTY_MEASURE_WITH_UNIT";
     const PASS_LEVEL: PassLevel = PassLevel::Pass0Uncertainty;
-    /// `(value, length_unit_step_id)` — caller (`emit_unit_context`)
-    /// already emitted the length unit and supplies its STEP id.
-    type WriteInput = (f64, u64);
+    /// `(LengthUncertainty, length_unit_step_id)` — caller
+    /// (`emit_unit_context`) already emitted the length unit and supplies
+    /// its STEP id; the `LengthUncertainty` carries the numeric value plus
+    /// the original `name` / `description` strings to be re-emitted verbatim.
+    type WriteInput = (LengthUncertainty, u64);
 
     fn read(
         ctx: &mut ReaderContext,
@@ -36,14 +39,25 @@ impl SimpleEntityHandler for UncertaintyMeasureWithUnitHandler {
             _ => return Ok(()),
         };
         let unit_ref = read_entity_ref(attrs, 1, entity_id, "unit_component")?;
-        // attrs[2] = name (보통 'distance_accuracy_value'), attrs[3] = description — 무시.
+        let name = read_string_or_unset(attrs, 2, entity_id, "name")?.to_owned();
+        let description = read_string_or_unset(attrs, 3, entity_id, "description")?.to_owned();
         if ctx.length_unit_map.contains_key(&unit_ref) {
-            ctx.length_uncertainty_map.insert(entity_id, value);
+            ctx.length_uncertainty_map.insert(
+                entity_id,
+                LengthUncertainty {
+                    value,
+                    name,
+                    description,
+                },
+            );
         }
         Ok(())
     }
 
-    fn write(buf: &mut WriteBuffer, (value, length_unit): (f64, u64)) -> Result<u64, WriteError> {
+    fn write(
+        buf: &mut WriteBuffer,
+        (unc, length_unit): (LengthUncertainty, u64),
+    ) -> Result<u64, WriteError> {
         let n = buf.fresh();
         buf.entities.push(WriterEntity {
             id: n,
@@ -52,11 +66,11 @@ impl SimpleEntityHandler for UncertaintyMeasureWithUnitHandler {
                 attrs: vec![
                     Attribute::Typed {
                         type_name: "LENGTH_MEASURE".into(),
-                        value: Box::new(Attribute::Real(value)),
+                        value: Box::new(Attribute::Real(unc.value)),
                     },
                     Attribute::EntityRef(length_unit),
-                    Attribute::String("distance_accuracy_value".into()),
-                    Attribute::String("confusion accuracy".into()),
+                    Attribute::String(unc.name),
+                    Attribute::String(unc.description),
                 ],
             },
         });

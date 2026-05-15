@@ -178,7 +178,7 @@ mod tests {
             },
         ];
         for unit in cases {
-            let model = model_with_units(unit);
+            let model = model_with_units(unit.clone());
             let text = model.write_to_string().expect("write");
             let graph = parse(&text).expect("re-parse");
             let back = ReaderContext::convert(&graph);
@@ -188,8 +188,8 @@ mod tests {
                 back.warnings
             );
             assert_eq!(
-                back.model.units.iter().next().copied(),
-                Some(unit),
+                back.model.units.iter().next().cloned(),
+                Some(unit.clone()),
                 "unit not preserved for {unit:?}"
             );
         }
@@ -209,7 +209,7 @@ mod tests {
             plane_angle_cbu_wrapped: false,
             dim_exp_explicit: false,
         };
-        let model = model_with_units(unit);
+        let model = model_with_units(unit.clone());
         let text = model.write_to_string().expect("write");
         assert!(
             text.contains("CONVERSION_BASED_UNIT('METRE'"),
@@ -222,7 +222,7 @@ mod tests {
         let back = ReaderContext::convert(&graph);
         assert!(back.warnings.is_empty(), "{:#?}", back.warnings);
         assert_eq!(
-            back.model.units.iter().next().copied(),
+            back.model.units.iter().next().cloned(),
             Some(unit),
             "CBU wrap flag preserved"
         );
@@ -239,7 +239,7 @@ mod tests {
             plane_angle_cbu_wrapped: true,
             dim_exp_explicit: false,
         };
-        let model = model_with_units(unit);
+        let model = model_with_units(unit.clone());
         let text = model.write_to_string().expect("write");
         assert!(
             text.contains("CONVERSION_BASED_UNIT('RADIAN'"),
@@ -249,6 +249,6 @@ mod tests {
         let graph = parse(&text).expect("re-parse");
         let back = ReaderContext::convert(&graph);
         assert!(back.warnings.is_empty(), "{:#?}", back.warnings);
-        assert_eq!(back.model.units.iter().next().copied(), Some(unit));
+        assert_eq!(back.model.units.iter().next().cloned(), Some(unit));
     }
 }

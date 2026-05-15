@@ -595,7 +595,7 @@ fn unit_millimetre_radian_steradian() {
     let result = convert_source(&minimal_step(&unit_data(".MILLI.")));
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
     assert_eq!(
-        result.model.units.iter().next().copied(),
+        result.model.units.iter().next().cloned(),
         Some(UnitContext {
             length: LengthUnit::Millimetre,
             plane_angle: AngleUnit::Radian,

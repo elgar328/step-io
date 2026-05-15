@@ -16,7 +16,7 @@ use crate::ir::id::{
     VertexId, WireId,
 };
 use crate::ir::model::{GeometryPool, StepModel, TopologyPool};
-use crate::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit, UnitContext};
+use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit, SolidAngleUnit, UnitContext};
 use crate::ir::topology::{Orientation, OrientedEdge};
 use crate::ir::visualization::{
     ColorRgb, FillAreaStyle, FillAreaStyleColour, PresentationStyleAssignment, StyledItem,
@@ -100,10 +100,10 @@ pub struct ReaderContext {
     pub(crate) length_unit_map: HashMap<u64, LengthUnit>,
     pub(crate) angle_unit_map: HashMap<u64, AngleUnit>,
     pub(crate) solid_angle_unit_map: HashMap<u64, SolidAngleUnit>,
-    /// `UNCERTAINTY_MEASURE_WITH_UNIT #N → value` for uncertainty entities
-    /// whose `unit_component` resolved to a length unit. Populated between
-    /// Pass 0-1 (unit leaves) and Pass 0-2 (context assembly).
-    pub(crate) length_uncertainty_map: HashMap<u64, f64>,
+    /// `UNCERTAINTY_MEASURE_WITH_UNIT #N → value+metadata` for uncertainty
+    /// entities whose `unit_component` resolved to a length unit. Populated
+    /// between Pass 0-1 (unit leaves) and Pass 0-2 (context assembly).
+    pub(crate) length_uncertainty_map: HashMap<u64, LengthUncertainty>,
 
     // Geometry maps: STEP #N → typed Id.
     pub(crate) point_map: HashMap<u64, PointId>,

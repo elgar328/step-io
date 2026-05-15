@@ -244,7 +244,7 @@ fn unit_context_mm_radian_steradian_round_trips() {
     model.units.push(mm_radian_steradian());
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.units.iter().next().copied(), Some(mm_radian_steradian()));
+    assert_eq!(re.units.iter().next().cloned(), Some(mm_radian_steradian()));
 }
 
 #[test]

@@ -1339,7 +1339,7 @@ fn every_fixture_has_expected_units() {
                 .units
                 .iter()
                 .next()
-                .copied()
+                .cloned()
                 .unwrap_or_else(|| {
                     panic!("fixture {name}: units missing");
                 });

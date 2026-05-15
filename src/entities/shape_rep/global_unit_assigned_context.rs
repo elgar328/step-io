@@ -10,7 +10,7 @@ use crate::entities::{
 };
 use crate::ir::attr::{check_count, read_entity_ref_list};
 use crate::ir::error::ConvertError;
-use crate::ir::shape_rep::UnitContext;
+use crate::ir::shape_rep::{LengthUncertainty, UnitContext};
 use crate::parser::entity::{Attribute, RawEntityPart};
 use crate::reader::{ReaderContext, require_part_attrs};
 use crate::writer::WriteError;
@@ -127,13 +127,13 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
                 ],
             ),
         ];
-        if let Some(value) = units.length_uncertainty {
-            let unc = UncertaintyMeasureWithUnitHandler::write(buf, (value, length))?;
+        if let Some(uncertainty) = units.length_uncertainty.clone() {
+            let unc_id = UncertaintyMeasureWithUnitHandler::write(buf, (uncertainty, length))?;
             parts.insert(
                 1,
                 (
                     "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT".into(),
-                    vec![Attribute::List(vec![Attribute::EntityRef(unc)])],
+                    vec![Attribute::List(vec![Attribute::EntityRef(unc_id)])],
                 ),
             );
         }
@@ -151,13 +151,16 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
 /// `GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT` part of the same complex
 /// entity, if any. Returns `None` when the part is absent or holds no
 /// length uncertainty.
-fn extract_length_uncertainty(ctx: &ReaderContext, parts: &[RawEntityPart]) -> Option<f64> {
+fn extract_length_uncertainty(
+    ctx: &ReaderContext,
+    parts: &[RawEntityPart],
+) -> Option<LengthUncertainty> {
     let guac = parts
         .iter()
         .find(|p| p.name == "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT")?;
     let refs = read_entity_ref_list(&guac.attributes, 0, 0, "uncertainty").ok()?;
     refs.iter()
-        .find_map(|r| ctx.length_uncertainty_map.get(r).copied())
+        .find_map(|r| ctx.length_uncertainty_map.get(r).cloned())
 }
 
 #[allow(unsafe_code)] // linkme uses link_section internally
