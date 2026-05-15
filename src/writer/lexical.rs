@@ -160,6 +160,23 @@ mod tests {
     }
 
     #[test]
+    fn lexer_format_string_round_trip_with_escaped_quote() {
+        // The lexer decodes `''` to `'`, and `format_string` re-escapes
+        // `'` to `''`. The pair must round-trip a Part 21 string literal
+        // back to its source form for strings whose only special character
+        // is the single quote.
+        use crate::parser::lexer::{TokenKind, tokenize};
+
+        let source = "'Philip''s Head Screw'";
+        let tokens = tokenize(source).expect("lex");
+        let Some(TokenKind::String(decoded)) = tokens.first().map(|t| &t.kind) else {
+            panic!("expected leading String token");
+        };
+        assert_eq!(decoded, "Philip's Head Screw");
+        assert_eq!(format_string(decoded), source);
+    }
+
+    #[test]
     fn enum_wraps_in_dots() {
         assert_eq!(format_enum("T"), ".T.");
         assert_eq!(format_enum("MILLI"), ".MILLI.");

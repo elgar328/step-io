@@ -9,8 +9,9 @@ use crate::parser::lexer::{LexError, Span};
 pub enum Attribute {
     Integer(i64),
     Real(f64),
-    /// Raw string with outer quotes stripped. Escape sequences (`''`, `\X\HH`,
-    /// `\X2\...\X0\`) are **not** decoded — decoding is deferred to the IR stage.
+    /// String with outer quotes stripped. The `''` escape is decoded to a
+    /// single `'` by the lexer. Wide-char escapes (`\X\HH`, `\X2\...\X0\`)
+    /// are **not** decoded — that step is deferred to a later stage.
     String(String),
     /// Enumeration value without the surrounding dots (e.g. `.T.` → `"T"`).
     Enum(String),
