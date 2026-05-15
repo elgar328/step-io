@@ -470,6 +470,7 @@ fn nurbs_surface_non_rational_round_trips() {
         u_closed: false,
         v_closed: false,
         form: SurfaceForm::Unspecified,
+        self_intersect: None,
     }));
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
@@ -501,6 +502,7 @@ fn nurbs_surface_rational_round_trips() {
         u_closed: false,
         v_closed: false,
         form: SurfaceForm::Unspecified,
+        self_intersect: None,
     }));
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
@@ -547,6 +549,7 @@ fn nurbs_curve_non_rational_round_trips() {
         knots: vec![0.0, 1.0],
         closed: false,
         form: CurveForm::Unspecified,
+        self_intersect: None,
     }));
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
@@ -575,6 +578,7 @@ fn nurbs_curve_rational_round_trips() {
         knots: vec![0.0, 1.0],
         closed: false,
         form: CurveForm::Unspecified,
+        self_intersect: None,
     }));
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
@@ -600,6 +604,7 @@ fn nurbs_curve_form_hint_round_trips() {
         knots: vec![0.0, 1.0],
         closed: false,
         form: CurveForm::CircularArc,
+        self_intersect: None,
     }));
     let text = model.write_to_string().expect("write");
     assert!(text.contains(".CIRCULAR_ARC."), "writer emits STEP enum");
@@ -626,6 +631,7 @@ fn nurbs_surface_form_hint_round_trips() {
         u_closed: false,
         v_closed: false,
         form: SurfaceForm::CylindricalSurf,
+        self_intersect: None,
     }));
     let text = model.write_to_string().expect("write");
     assert!(

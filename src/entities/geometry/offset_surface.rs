@@ -13,7 +13,9 @@
 use crate::entities::{
     ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
 };
-use crate::ir::attr::{check_count, read_entity_ref, read_real, read_string};
+use crate::ir::attr::{
+    check_count, logical_to_step, read_entity_ref, read_logical, read_real, read_string,
+};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Surface, SurfaceOfOffset};
 use crate::parser::entity::Attribute;
@@ -43,14 +45,15 @@ impl SimpleEntityHandler for OffsetSurfaceHandler {
         let _name = read_string(attrs, 0, entity_id, "name")?;
         let basis_ref = read_entity_ref(attrs, 1, entity_id, "basis_surface")?;
         let distance = read_real(attrs, 2, entity_id, "distance")?;
-        // [3] self_intersect — informational LOGICAL, skipped (see ROADMAP).
+        let self_intersect = read_logical(attrs, 3, entity_id, "self_intersect")?;
 
         let basis = ctx.resolve_surface(entity_id, basis_ref, "basis_surface")?;
 
-        let id = ctx
-            .geometry
-            .surfaces
-            .push(Surface::Offset(SurfaceOfOffset { basis, distance }));
+        let id = ctx.geometry.surfaces.push(Surface::Offset(SurfaceOfOffset {
+            basis,
+            distance,
+            self_intersect,
+        }));
         ctx.surface_map.insert(entity_id, id);
         Ok(())
     }
@@ -66,9 +69,7 @@ impl SimpleEntityHandler for OffsetSurfaceHandler {
                     Attribute::String(String::new()),
                     Attribute::EntityRef(basis),
                     Attribute::Real(o.distance),
-                    // self_intersect LOGICAL — .F. hardcoded (informational,
-                    // not stored in IR; see ROADMAP "LOGICAL 보존").
-                    Attribute::Enum("F".into()),
+                    Attribute::Enum(logical_to_step(o.self_intersect).into()),
                 ],
             },
         });

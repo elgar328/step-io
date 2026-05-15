@@ -6,8 +6,8 @@ use crate::entities::{
     ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
 };
 use crate::ir::attr::{
-    check_count, read_bool, read_entity_ref_list, read_enum, read_integer, read_integer_list,
-    read_real_list, read_string,
+    check_count, logical_to_step, read_bool, read_entity_ref_list, read_enum, read_integer,
+    read_integer_list, read_logical, read_real_list, read_string,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{Curve, CurveForm, NurbsCurve};
@@ -35,7 +35,7 @@ impl SimpleEntityHandler for BSplineCurveWithKnotsHandler {
         let cp_refs = read_entity_ref_list(attrs, 2, entity_id, "control_points_list")?;
         let form = CurveForm::from_step_enum(read_enum(attrs, 3, entity_id, "curve_form")?);
         let closed = read_bool(attrs, 4, entity_id, "closed_curve")?;
-        // [5] self_intersect — informational, skipped
+        let self_intersect = read_logical(attrs, 5, entity_id, "self_intersect")?;
         let knot_multiplicities = read_integer_list(attrs, 6, entity_id, "knot_multiplicities")?;
         let knots = read_real_list(attrs, 7, entity_id, "knots")?;
         // [8] knot_spec — informational, skipped
@@ -61,6 +61,7 @@ impl SimpleEntityHandler for BSplineCurveWithKnotsHandler {
             knots,
             closed,
             form,
+            self_intersect,
         };
         let id = ctx.geometry.curves.push(Curve::Nurbs(curve));
         ctx.curve_map.insert(entity_id, id);
@@ -102,7 +103,7 @@ impl SimpleEntityHandler for BSplineCurveWithKnotsHandler {
                     cps_attr,
                     Attribute::Enum(form.as_step_enum().into()),
                     closed_attr,
-                    Attribute::Enum("F".into()),
+                    Attribute::Enum(logical_to_step(nurbs.self_intersect).into()),
                     mults_attr,
                     knots_attr,
                     Attribute::Enum("UNSPECIFIED".into()),

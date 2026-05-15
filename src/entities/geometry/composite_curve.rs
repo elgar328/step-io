@@ -9,7 +9,9 @@ use crate::entities::geometry::composite_curve_segment::CompositeCurveSegmentHan
 use crate::entities::{
     ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
 };
-use crate::ir::attr::{check_count, read_entity_ref_list, read_enum, read_string};
+use crate::ir::attr::{
+    check_count, logical_to_step, read_entity_ref_list, read_logical, read_string,
+};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{CompositeCurve, CompositeSegment, Curve};
 use crate::parser::entity::Attribute;
@@ -33,12 +35,7 @@ impl SimpleEntityHandler for CompositeCurveHandler {
         check_count(attrs, 3, entity_id, "COMPOSITE_CURVE")?;
         let _name = read_string(attrs, 0, entity_id, "name")?;
         let segment_refs = read_entity_ref_list(attrs, 1, entity_id, "segments")?;
-        let self_intersect_str = read_enum(attrs, 2, entity_id, "self_intersect")?;
-        let self_intersect = match self_intersect_str {
-            "T" => Some(true),
-            "F" => Some(false),
-            _ => None,
-        };
+        let self_intersect = read_logical(attrs, 2, entity_id, "self_intersect")?;
 
         let mut segments = Vec::with_capacity(segment_refs.len());
         for seg_ref in segment_refs {
@@ -75,11 +72,6 @@ impl SimpleEntityHandler for CompositeCurveHandler {
                 buf, *seg,
             )?));
         }
-        let self_intersect = match composite.self_intersect {
-            Some(true) => "T",
-            Some(false) => "F",
-            None => "U",
-        };
         let n = buf.fresh();
         buf.entities.push(WriterEntity {
             id: n,
@@ -88,7 +80,7 @@ impl SimpleEntityHandler for CompositeCurveHandler {
                 attrs: vec![
                     Attribute::String(String::new()),
                     Attribute::List(segment_refs),
-                    Attribute::Enum(self_intersect.into()),
+                    Attribute::Enum(logical_to_step(composite.self_intersect).into()),
                 ],
             },
         });

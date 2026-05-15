@@ -6,8 +6,8 @@ use crate::entities::{
     ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
 };
 use crate::ir::attr::{
-    check_count, read_bool, read_entity_ref_grid, read_enum, read_integer, read_integer_list,
-    read_real_list, read_string,
+    check_count, logical_to_step, read_bool, read_entity_ref_grid, read_enum, read_integer,
+    read_integer_list, read_logical, read_real_list, read_string,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{NurbsSurface, Surface, SurfaceForm};
@@ -36,9 +36,9 @@ impl SimpleEntityHandler for BSplineSurfaceWithKnotsHandler {
         let v_degree_i = read_integer(attrs, 2, entity_id, "v_degree")?;
         let cp_grid = read_entity_ref_grid(attrs, 3, entity_id, "control_points_list")?;
         let form = SurfaceForm::from_step_enum(read_enum(attrs, 4, entity_id, "surface_form")?);
-        // [7] self_intersect — informational, skipped
         let u_closed = read_bool(attrs, 5, entity_id, "u_closed")?;
         let v_closed = read_bool(attrs, 6, entity_id, "v_closed")?;
+        let self_intersect = read_logical(attrs, 7, entity_id, "self_intersect")?;
         let u_knot_multiplicities = read_integer_list(attrs, 8, entity_id, "u_multiplicities")?;
         let v_knot_multiplicities = read_integer_list(attrs, 9, entity_id, "v_multiplicities")?;
         let u_knots = read_real_list(attrs, 10, entity_id, "u_knots")?;
@@ -80,6 +80,7 @@ impl SimpleEntityHandler for BSplineSurfaceWithKnotsHandler {
             u_closed,
             v_closed,
             form,
+            self_intersect,
         };
         let id = ctx.geometry.surfaces.push(Surface::Nurbs(surface));
         ctx.surface_map.insert(entity_id, id);
@@ -150,7 +151,7 @@ impl SimpleEntityHandler for BSplineSurfaceWithKnotsHandler {
                     Attribute::Enum(form.as_step_enum().into()),
                     u_closed,
                     v_closed,
-                    Attribute::Enum("F".into()),
+                    Attribute::Enum(logical_to_step(nurbs.self_intersect).into()),
                     u_mults_attr,
                     v_mults_attr,
                     u_knots_attr,

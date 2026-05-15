@@ -582,6 +582,43 @@ pub fn read_bool(
     }
 }
 
+/// Read a STEP `LOGICAL` attribute as `Option<bool>`.
+///
+/// `.T.` → `Some(true)`, `.F.` → `Some(false)`, `.U.` / `.UNKNOWN.` → `None`.
+/// Use for entity fields whose EXPRESS type is `LOGICAL` (as opposed to
+/// `BOOLEAN`); reach for [`read_bool`] when the source only allows
+/// `.T.` / `.F.`.
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeType`] if the attribute is not an
+/// `Enum`.
+pub fn read_logical(
+    attrs: &[Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<Option<bool>, ConvertError> {
+    let val = read_enum(attrs, index, entity_id, field_name)?;
+    Ok(match val {
+        "T" => Some(true),
+        "F" => Some(false),
+        _ => None,
+    })
+}
+
+/// Render `Option<bool>` as a STEP `LOGICAL` enum string for writer
+/// `Attribute::Enum`: `Some(true)` → `"T"`, `Some(false)` → `"F"`,
+/// `None` → `"U"`.
+#[must_use]
+pub fn logical_to_step(value: Option<bool>) -> &'static str {
+    match value {
+        Some(true) => "T",
+        Some(false) => "F",
+        None => "U",
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Predicate
 // ---------------------------------------------------------------------------

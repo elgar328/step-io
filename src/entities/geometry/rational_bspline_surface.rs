@@ -12,8 +12,8 @@ use crate::entities::{
     SimpleEntityHandler,
 };
 use crate::ir::attr::{
-    read_bool, read_entity_ref_grid, read_enum, read_integer, read_integer_list, read_real_grid,
-    read_real_list, read_string,
+    logical_to_step, read_bool, read_entity_ref_grid, read_enum, read_integer, read_integer_list,
+    read_logical, read_real_grid, read_real_list, read_string,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{NurbsSurface, Surface, SurfaceForm};
@@ -52,6 +52,7 @@ impl ComplexEntityHandler for RationalBsplineSurfaceHandler {
         let form = SurfaceForm::from_step_enum(read_enum(bss_attrs, 3, entity_id, "surface_form")?);
         let u_closed = read_bool(bss_attrs, 4, entity_id, "u_closed")?;
         let v_closed = read_bool(bss_attrs, 5, entity_id, "v_closed")?;
+        let self_intersect = read_logical(bss_attrs, 6, entity_id, "self_intersect")?;
 
         let bswk_attrs = require_part_attrs(parts, "B_SPLINE_SURFACE_WITH_KNOTS", entity_id)?;
         let u_knot_multiplicities =
@@ -119,6 +120,7 @@ impl ComplexEntityHandler for RationalBsplineSurfaceHandler {
             u_closed,
             v_closed,
             form,
+            self_intersect,
         };
         let id = ctx.geometry.surfaces.push(Surface::Nurbs(surface));
         ctx.surface_map.insert(entity_id, id);
@@ -201,7 +203,7 @@ impl ComplexEntityHandler for RationalBsplineSurfaceHandler {
                             Attribute::Enum(form.as_step_enum().into()),
                             u_closed,
                             v_closed,
-                            Attribute::Enum("F".into()),
+                            Attribute::Enum(logical_to_step(nurbs.self_intersect).into()),
                         ],
                     ),
                     (

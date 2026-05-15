@@ -339,6 +339,8 @@ pub struct NurbsCurve {
     pub knots: Vec<f64>,
     pub closed: bool,
     pub form: CurveForm,
+    /// `.T.` / `.F.` / `.U.` (None) from `self_intersect : LOGICAL`.
+    pub self_intersect: Option<bool>,
 }
 
 /// A NURBS (Non-Uniform Rational B-Spline) surface.
@@ -360,6 +362,8 @@ pub struct NurbsSurface {
     pub u_closed: bool,
     pub v_closed: bool,
     pub form: SurfaceForm,
+    /// `.T.` / `.F.` / `.U.` (None) from `self_intersect : LOGICAL`.
+    pub self_intersect: Option<bool>,
 }
 
 /// A surface of revolution defined by rotating a curve around an axis.
@@ -381,14 +385,13 @@ pub struct SurfaceOfLinearExtrusion {
 
 /// A surface offset from a basis surface along its normal by a signed distance.
 ///
-/// Corresponds to STEP `OFFSET_SURFACE`. The `self_intersect` LOGICAL attribute
-/// of the source entity is informational and not stored (handled uniformly
-/// with `B_SPLINE_SURFACE` family — see ROADMAP "LOGICAL 보존" for planned
-/// global recovery).
+/// Corresponds to STEP `OFFSET_SURFACE`.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct SurfaceOfOffset {
     pub basis: SurfaceId,
     pub distance: f64,
+    /// `.T.` / `.F.` / `.U.` (None) from `self_intersect : LOGICAL`.
+    pub self_intersect: Option<bool>,
 }
 
 // ---------------------------------------------------------------------------
