@@ -85,16 +85,26 @@ impl ReaderContext {
     }
 }
 
+/// Accepted entity-type names for the `definition` slot of a
+/// `PRODUCT_DEFINITION_SHAPE` when classified as product-bearing.
+/// `PRODUCT_DEFINITION` is the base type; `PRODUCT_DEFINITION_WITH_
+/// ASSOCIATED_DOCUMENTS` is its AP203 / AP242 subtype that step-io's
+/// reader treats identically (the extra `documentation_ids` attribute
+/// is dropped at read).
+const PDEF_TARGET_NAMES: &[&str] = &[
+    "PRODUCT_DEFINITION",
+    "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
+];
+
 /// If `pdef_shape_ref` refers to a `PRODUCT_DEFINITION_SHAPE` whose
-/// `definition` attribute targets a `PRODUCT_DEFINITION`, return that
-/// target's STEP id. Otherwise return `None` (`NAUO`-tagged, missing, or
-/// malformed `PDEF_SHAPE`). Called from `passes.rs` during the pre-pass
-/// that populates `pdef_shape_to_pdef`.
+/// `definition` attribute targets a `PRODUCT_DEFINITION` (or any of its
+/// supported subtypes), return that target's STEP id. Otherwise return
+/// `None` (`NAUO`-tagged, missing, or malformed `PDEF_SHAPE`).
 pub(super) fn pdef_shape_to_pdef_ref(
     graph: &crate::parser::entity::EntityGraph,
     pdef_shape_ref: u64,
 ) -> Option<u64> {
-    pdef_shape_target(graph, pdef_shape_ref, "PRODUCT_DEFINITION")
+    pdef_shape_target_in(graph, pdef_shape_ref, PDEF_TARGET_NAMES)
 }
 
 /// Like [`pdef_shape_to_pdef_ref`] but for `NAUO`-tagged
@@ -103,13 +113,13 @@ pub(super) fn pdef_shape_to_nauo_ref(
     graph: &crate::parser::entity::EntityGraph,
     pdef_shape_ref: u64,
 ) -> Option<u64> {
-    pdef_shape_target(graph, pdef_shape_ref, "NEXT_ASSEMBLY_USAGE_OCCURRENCE")
+    pdef_shape_target_in(graph, pdef_shape_ref, &["NEXT_ASSEMBLY_USAGE_OCCURRENCE"])
 }
 
-fn pdef_shape_target(
+fn pdef_shape_target_in(
     graph: &crate::parser::entity::EntityGraph,
     pdef_shape_ref: u64,
-    expected_target_type: &str,
+    accepts: &[&str],
 ) -> Option<u64> {
     let entity = graph.get(pdef_shape_ref)?;
     let attrs = match entity {
@@ -124,7 +134,7 @@ fn pdef_shape_target(
         _ => return None,
     };
     match graph.get(def_ref)? {
-        RawEntity::Simple { name, .. } if name == expected_target_type => Some(def_ref),
+        RawEntity::Simple { name, .. } if accepts.iter().any(|t| *t == name) => Some(def_ref),
         _ => None,
     }
 }

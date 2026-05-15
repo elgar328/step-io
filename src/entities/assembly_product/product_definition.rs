@@ -3,17 +3,55 @@
 //! Reader follows the formation ref out of `formation_to_product` to learn
 //! which product the PDEF describes, and stores the result in
 //! `pdef_to_product`. Writer emits the bare PDEF line linking a formation
-//! and the per-file `PRODUCT_DEFINITION_CONTEXT`.
+//! and the per-file `PRODUCT_DEFINITION_CONTEXT`. The
+//! `_WITH_ASSOCIATED_DOCUMENTS` subtype reuses the same reader body via
+//! [`read_product_definition_body`].
 
 use crate::entities::{
     ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
 };
-use crate::ir::attr::{check_count, read_entity_ref, read_string, read_string_or_unset};
+use crate::ir::attr::{read_entity_ref, read_string, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
+
+/// Shared reader body for `PRODUCT_DEFINITION` and its
+/// `_WITH_ASSOCIATED_DOCUMENTS` subtype. Both share the first four attrs;
+/// the subtype's extra `documentation_ids` (attr[4]) is ignored at read.
+/// Caller's only responsibility is dispatching the right entity name —
+/// the body validates attribute count as a *minimum* (`>= 4`).
+pub(crate) fn read_product_definition_body(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    attrs: &[Attribute],
+) -> Result<(), ConvertError> {
+    if attrs.len() < 4 {
+        return Err(ConvertError::AttributeCount {
+            entity_id,
+            entity_name: "PRODUCT_DEFINITION".into(),
+            expected: 4,
+            actual: attrs.len(),
+        });
+    }
+    // PRODUCT_DEFINITION.id is a fixed-value enum-like string ("design" /
+    // "implementation"); keep strict. description is informal — accept `$`.
+    let _id = read_string(attrs, 0, entity_id, "id")?;
+    let _description = read_string_or_unset(attrs, 1, entity_id, "description")?;
+    let formation_ref = read_entity_ref(attrs, 2, entity_id, "formation")?;
+    // attrs[3] = frame_of_reference (PRODUCT_DEFINITION_CONTEXT) — ignored.
+
+    let Some(&product_ref) = ctx.formation_to_product.get(&formation_ref) else {
+        return Err(ConvertError::MissingReference {
+            from: entity_id,
+            to: formation_ref,
+            field_name: "formation",
+        });
+    };
+    ctx.pdef_to_product.insert(entity_id, product_ref);
+    Ok(())
+}
 
 pub(crate) struct ProductDefinitionWriteInput {
     pub(crate) formation: u64,
@@ -32,23 +70,7 @@ impl SimpleEntityHandler for ProductDefinitionHandler {
         entity_id: u64,
         attrs: &[Attribute],
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "PRODUCT_DEFINITION")?;
-        // PRODUCT_DEFINITION.id is a fixed-value enum-like string ("design" /
-        // "implementation"); keep strict. description is informal — accept `$`.
-        let _id = read_string(attrs, 0, entity_id, "id")?;
-        let _description = read_string_or_unset(attrs, 1, entity_id, "description")?;
-        let formation_ref = read_entity_ref(attrs, 2, entity_id, "formation")?;
-        // attrs[3] = frame_of_reference (PRODUCT_DEFINITION_CONTEXT) — ignored.
-
-        let Some(&product_ref) = ctx.formation_to_product.get(&formation_ref) else {
-            return Err(ConvertError::MissingReference {
-                from: entity_id,
-                to: formation_ref,
-                field_name: "formation",
-            });
-        };
-        ctx.pdef_to_product.insert(entity_id, product_ref);
-        Ok(())
+        read_product_definition_body(ctx, entity_id, attrs)
     }
 
     fn write(

@@ -980,3 +980,59 @@ fn surface_curve_aliases_to_inner_curve_3d() {
         _ => panic!("edge.curve should resolve to the aliased LINE"),
     }
 }
+
+// ---------------------------------------------------------------------------
+// PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS (AP203 / AP242 subtype)
+// ---------------------------------------------------------------------------
+
+#[test]
+fn pdef_with_associated_documents_is_recognised_as_product_definition() {
+    // ashtray (grabcad) and similar AP203 fixtures emit
+    //   PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS(id, desc, formation, ctx, documentation_ids)
+    // in the PRODUCT chain instead of plain PRODUCT_DEFINITION. The reader
+    // must accept the subtype: the entity dispatch builds pdef_to_product,
+    // and the PDS classification (pdef_shape_to_pdef map) treats the subtype
+    // as a valid PDEF target. Without this, the SDR handler skips silently
+    // and the product ends up with `geometry_context = None` plus empty
+    // content - exactly the ashtray failure mode.
+    let source = minimal_step(
+        "#1 = APPLICATION_CONTEXT('test');\n\
+         #2 = PRODUCT_CONTEXT('',#1,'mechanical');\n\
+         #3 = PRODUCT_DEFINITION_CONTEXT('part definition',#1,'design');\n\
+         #4 = PRODUCT('P','P','',(#2));\n\
+         #5 = PRODUCT_DEFINITION_FORMATION('1','',#4);\n\
+         #6 = DOCUMENT('','','','');\n\
+         #7 = PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS('design','',#5,#3,(#6));\n\
+         #8 = PRODUCT_DEFINITION_SHAPE('','',#7);\n\
+         #10 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+         #11 = ( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n\
+         #12 = ( NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT() );\n\
+         #13 = ( GEOMETRIC_REPRESENTATION_CONTEXT(3)\n\
+         \t\tGLOBAL_UNIT_ASSIGNED_CONTEXT((#10,#11,#12))\n\
+         \t\tREPRESENTATION_CONTEXT('','') );\n\
+         #14 = SHAPE_REPRESENTATION('',(),#13);\n\
+         #15 = SHAPE_DEFINITION_REPRESENTATION(#8,#14);",
+    );
+    let result = convert_source(&source);
+    // No warnings about missing PDEF or unresolved SDR - PDWAD must be
+    // accepted just like PRODUCT_DEFINITION.
+    assert!(
+        result
+            .warnings
+            .iter()
+            .all(|w| !matches!(w, ConvertError::MissingReference { .. })),
+        "no MissingReference warnings expected: {:#?}",
+        result.warnings,
+    );
+    let assembly = result.model.assembly.as_ref().expect("assembly present");
+    assert_eq!(assembly.products.len(), 1);
+    let product = assembly
+        .products
+        .iter()
+        .next()
+        .expect("at least one product");
+    assert!(
+        product.geometry_context.is_some(),
+        "PDWAD product must get geometry_context bound via the SDR chain"
+    );
+}

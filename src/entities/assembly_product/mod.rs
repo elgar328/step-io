@@ -13,5 +13,6 @@ pub mod product_category_relationship;
 pub mod product_definition;
 pub mod product_definition_formation;
 pub mod product_definition_formation_with_source;
+pub mod product_definition_with_associated_documents;
 pub mod product_related_product_category;
 pub(crate) mod shared;
