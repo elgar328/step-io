@@ -112,8 +112,11 @@ pub enum ProductContent {
     /// [`Instance`]s. Phase A always produces an empty `Vec`; Phase B
     /// populates it from `NEXT_ASSEMBLY_USAGE_OCCURRENCE` edges.
     Group(Vec<Instance>),
-    /// Geometry leaf — the product itself is a single solid.
-    Solid(SolidId),
+    /// Geometry leaf — one or more `MANIFOLD_SOLID_BREP` items wrapped in
+    /// a single `ADVANCED_BREP_SHAPE_REPRESENTATION`. Almost always a
+    /// single solid; multi-body STEP files (rare) carry more than one.
+    /// Invariant: non-empty.
+    Solid(Vec<SolidId>),
     /// Surface body leaf — the product is a
     /// `MANIFOLD_SURFACE_SHAPE_REPRESENTATION`'s `SHELL_BASED_SURFACE_MODEL`
     /// with one or more shells. Unlike `Solid`, no closed volume is implied;

@@ -1,10 +1,10 @@
 //! `ADVANCED_BREP_SHAPE_REPRESENTATION` handler — Pass 6-4a.
 //!
-//! Reader picks the first `MANIFOLD_SOLID_BREP` from the items list and
-//! binds it to the ABSR id; the first `AXIS2_PLACEMENT_3D` becomes the coordinate
-//! reference frame. Writer emits the ABSR line referring to the per-product
-//! axis placement, the solid ref the chain orchestrator pre-emitted, and
-//! the bound unit context.
+//! Reader collects every `MANIFOLD_SOLID_BREP` item (multi-body STEP files
+//! carry more than one) and binds the list to the ABSR id; the first
+//! `AXIS2_PLACEMENT_3D` becomes the coordinate reference frame. Writer
+//! emits the ABSR line with the per-product axis placement followed by all
+//! solid refs the chain orchestrator pre-emitted, and the bound unit context.
 
 use crate::entities::{
     ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
@@ -19,7 +19,7 @@ use crate::writer::buffer::WriteBuffer;
 
 pub(crate) struct AdvancedBrepShapeRepresentationWriteInput {
     pub(crate) product: Product,
-    pub(crate) solid_ref: u64,
+    pub(crate) solid_refs: Vec<u64>,
     pub(crate) unit_ctx: u64,
 }
 
@@ -43,60 +43,45 @@ impl SimpleEntityHandler for AdvancedBrepShapeRepresentationHandler {
             ctx.repr_context_map.insert(entity_id, ctx_id);
         }
 
-        let solid_refs: Vec<u64> = items
+        let solid_ids: Vec<_> = items
             .iter()
-            .filter(|r| ctx.solid_map.contains_key(r))
-            .copied()
+            .filter_map(|r| ctx.solid_map.get(r).copied())
             .collect();
         // Pick the first AXIS2_PLACEMENT_3D in the items list as the coordinate
         // reference frame. In practice commercial CAD output places it first.
         if let Some(&placement_id) = items.iter().find_map(|r| ctx.placement_map.get(r)) {
             ctx.absr_ref_frame_map.insert(entity_id, placement_id);
         }
-        match solid_refs.as_slice() {
-            [] => {
-                ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                    entity_id,
-                    detail: String::from(
-                        "ADVANCED_BREP_SHAPE_REPRESENTATION without a MANIFOLD_SOLID_BREP item",
-                    ),
-                });
-                Ok(())
-            }
-            [solid_ref, ..] => {
-                if solid_refs.len() > 1 {
-                    ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                        entity_id,
-                        detail: format!(
-                            "ADVANCED_BREP_SHAPE_REPRESENTATION has {} MANIFOLD_SOLID_BREP items, using the first",
-                            solid_refs.len()
-                        ),
-                    });
-                }
-                let solid_id = ctx.solid_map[solid_ref];
-                ctx.absr_solid_map.insert(entity_id, solid_id);
-                Ok(())
-            }
+        if solid_ids.is_empty() {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: String::from(
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION without a MANIFOLD_SOLID_BREP item",
+                ),
+            });
+        } else {
+            ctx.absr_solid_map.insert(entity_id, solid_ids);
         }
+        Ok(())
     }
 
     fn write(
         buf: &mut WriteBuffer,
         AdvancedBrepShapeRepresentationWriteInput {
             product,
-            solid_ref,
+            solid_refs,
             unit_ctx,
         }: AdvancedBrepShapeRepresentationWriteInput,
     ) -> Result<u64, WriteError> {
         let axis_ref = buf.emit_axis2_placement_3d(product.shape_ref_frame)?;
+        let mut items = Vec::with_capacity(1 + solid_refs.len());
+        items.push(Attribute::EntityRef(axis_ref));
+        items.extend(solid_refs.into_iter().map(Attribute::EntityRef));
         Ok(buf.push_simple(
             "ADVANCED_BREP_SHAPE_REPRESENTATION",
             vec![
                 Attribute::String(String::new()),
-                Attribute::List(vec![
-                    Attribute::EntityRef(axis_ref),
-                    Attribute::EntityRef(solid_ref),
-                ]),
+                Attribute::List(items),
                 Attribute::EntityRef(unit_ctx),
             ],
         ))

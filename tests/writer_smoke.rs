@@ -838,7 +838,7 @@ fn simple_assembly_round_trips() {
         id: "Leaf".into(),
         name: "Leaf".into(),
         description: None,
-        content: ProductContent::Solid(solid_id),
+        content: ProductContent::Solid(vec![solid_id]),
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -909,7 +909,7 @@ fn shared_child_assembly_round_trips() {
         id: "Leaf".into(),
         name: "Leaf".into(),
         description: None,
-        content: ProductContent::Solid(solid_id),
+        content: ProductContent::Solid(vec![solid_id]),
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -982,6 +982,54 @@ fn default_schema_is_ap214_is() {
     // Round-trip through the reader recognises the class.
     let re = reconvert(&text);
     assert_eq!(re.schema.class(), Some(SchemaClass::Ap214Is));
+}
+
+#[test]
+fn multi_body_solid_round_trips() {
+    // ABSR.items may carry more than one MANIFOLD_SOLID_BREP (multi-body
+    // STEP). The reader collects all of them into ProductContent::Solid;
+    // the writer emits one MSB ref per SolidId in the items list.
+    let mut model = empty_model();
+    model.units.push(mm_radian_steradian());
+    let s1 = push_minimal_solid(&mut model);
+    let s2 = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let pid = tree.products.push(Product {
+        id: "MultiBody".into(),
+        name: "MultiBody".into(),
+        description: None,
+        content: ProductContent::Solid(vec![s1, s2]),
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: None,
+    });
+    tree.root = Some(pid);
+    model.assembly = Some(tree);
+
+    let text = model.write_to_string().expect("write");
+    assert_eq!(
+        text.matches("MANIFOLD_SOLID_BREP").count(),
+        2,
+        "expected two MSB lines in output, got:\n{text}"
+    );
+
+    let re = reconvert(&text);
+    let r_asm = re.assembly.as_ref().expect("round-tripped has assembly");
+    let prod = r_asm
+        .products
+        .iter()
+        .find(|p| p.id == "MultiBody")
+        .expect("MultiBody product survived");
+    match &prod.content {
+        ProductContent::Solid(sids) => {
+            assert_eq!(sids.len(), 2, "two solids should round-trip");
+        }
+        other => panic!("expected Solid with 2 ids, got {other:?}"),
+    }
 }
 
 #[test]

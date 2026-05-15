@@ -1242,12 +1242,14 @@ fn assembly_fixtures_content_variants_split_three_solids_four_groups() {
         assert_eq!(group_count, 4, "fixture {name}: groups");
         // Every Solid's SolidId must live in the topology pool.
         for product in tree.products.iter() {
-            if let ProductContent::Solid(sid) = &product.content {
+            if let ProductContent::Solid(sids) = &product.content {
                 let total = u32::try_from(result.model.topology.solids.len()).unwrap();
-                assert!(
-                    sid.0 < total,
-                    "fixture {name}: product solid id out of range"
-                );
+                for sid in sids {
+                    assert!(
+                        sid.0 < total,
+                        "fixture {name}: product solid id out of range"
+                    );
+                }
             }
         }
         // Expected names all present.

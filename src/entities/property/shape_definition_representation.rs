@@ -113,8 +113,8 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
                 ),
             });
         }
-        if let Some(&solid_id) = ctx.absr_solid_map.get(&effective_ref) {
-            ctx.assembly_products[pid].content = ProductContent::Solid(solid_id);
+        if let Some(solid_ids) = ctx.absr_solid_map.get(&effective_ref).cloned() {
+            ctx.assembly_products[pid].content = ProductContent::Solid(solid_ids);
         } else if let Some(shells) = ctx.mssr_shells_map.get(&effective_ref).cloned() {
             if shells.is_empty() {
                 ctx.warnings.push(ConvertError::UnexpectedEntityForm {

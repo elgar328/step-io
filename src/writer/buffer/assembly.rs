@@ -100,9 +100,12 @@ impl WriteBuffer<'_> {
 
             let unit_ctx = self.resolve_product_ctx(product);
             let sr = match &product.content {
-                ProductContent::Solid(sid) => {
-                    let solid_ref = self.emit_solid(*sid)?;
-                    let absr = self.emit_absr(product, solid_ref, unit_ctx)?;
+                ProductContent::Solid(sids) => {
+                    let solid_refs: Vec<u64> = sids
+                        .iter()
+                        .map(|sid| self.emit_solid(*sid))
+                        .collect::<Result<_, _>>()?;
+                    let absr = self.emit_absr(product, solid_refs, unit_ctx)?;
                     self.wrap_indirect_sr_if_set(product, absr, unit_ctx)?
                 }
                 ProductContent::SurfaceBody(shells) => {
@@ -335,7 +338,7 @@ impl WriteBuffer<'_> {
     pub(crate) fn emit_absr(
         &mut self,
         product: &Product,
-        solid_ref: u64,
+        solid_refs: Vec<u64>,
         unit_ctx: u64,
     ) -> Result<u64, WriteError> {
         use crate::entities::SimpleEntityHandler;
@@ -346,7 +349,7 @@ impl WriteBuffer<'_> {
             self,
             AdvancedBrepShapeRepresentationWriteInput {
                 product: product.clone(),
-                solid_ref,
+                solid_refs,
                 unit_ctx,
             },
         )

@@ -158,7 +158,7 @@ pub struct ReaderContext {
     pub(crate) product_arena_map: HashMap<u64, ProductId>,
     pub(crate) formation_to_product: HashMap<u64, u64>,
     pub(crate) pdef_to_product: HashMap<u64, u64>,
-    pub(crate) absr_solid_map: HashMap<u64, SolidId>,
+    pub(crate) absr_solid_map: HashMap<u64, Vec<SolidId>>,
     /// `ADVANCED_BREP_SHAPE_REPRESENTATION #N → Placement3dId` for the first
     /// `AXIS2_PLACEMENT_3D` item in the ABSR's `items` list (its coordinate
     /// reference frame). Consumed by SDR conversion to populate
