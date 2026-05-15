@@ -27,6 +27,13 @@ pub struct UnitContext {
     pub plane_angle: AngleUnit,
     pub solid_angle: SolidAngleUnit,
     pub length_uncertainty: Option<LengthUncertainty>,
+    /// Optional plane-angle uncertainty (e.g. `'angle_accuracy'` in some
+    /// CAD exports). `None` when the source carried no angle-typed
+    /// `UNCERTAINTY_MEASURE_WITH_UNIT`. Value is in the source's plane
+    /// angle unit (radian / degree).
+    pub plane_angle_uncertainty: Option<LengthUncertainty>,
+    /// Optional solid-angle uncertainty. `None` for the typical case.
+    pub solid_angle_uncertainty: Option<LengthUncertainty>,
     /// `true` when the source file wrapped the length unit in
     /// `CONVERSION_BASED_UNIT` even though the unit is SI (e.g. ABC tier
     /// emits `CBU('METRE', 1.0, base=METRE)` instead of plain SI METRE).
@@ -59,6 +66,8 @@ impl Default for UnitContext {
             plane_angle: AngleUnit::Radian,
             solid_angle: SolidAngleUnit::Steradian,
             length_uncertainty: None,
+            plane_angle_uncertainty: None,
+            solid_angle_uncertainty: None,
             length_cbu_wrapped: false,
             plane_angle_cbu_wrapped: false,
             dim_exp_explicit: false,

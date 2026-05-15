@@ -49,12 +49,15 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
 
         match (length, plane_angle, solid_angle) {
             (Some(length), Some(plane_angle), Some(solid_angle)) => {
-                let length_uncertainty = extract_length_uncertainty(ctx, parts);
+                let (length_uncertainty, plane_angle_uncertainty, solid_angle_uncertainty) =
+                    extract_uncertainties(ctx, parts);
                 let ctx_id = ctx.units.push(UnitContext {
                     length,
                     plane_angle,
                     solid_angle,
                     length_uncertainty,
+                    plane_angle_uncertainty,
+                    solid_angle_uncertainty,
                     length_cbu_wrapped: ctx.length_cbu_wrapped,
                     plane_angle_cbu_wrapped: ctx.plane_angle_cbu_wrapped,
                     dim_exp_explicit: ctx.dim_exp_explicit,
@@ -127,13 +130,34 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
                 ],
             ),
         ];
+        let mut unc_refs: Vec<Attribute> = Vec::new();
         if let Some(uncertainty) = units.length_uncertainty.clone() {
-            let unc_id = UncertaintyMeasureWithUnitHandler::write(buf, (uncertainty, length))?;
+            let id = UncertaintyMeasureWithUnitHandler::write(
+                buf,
+                (uncertainty, length, "LENGTH_MEASURE"),
+            )?;
+            unc_refs.push(Attribute::EntityRef(id));
+        }
+        if let Some(uncertainty) = units.plane_angle_uncertainty.clone() {
+            let id = UncertaintyMeasureWithUnitHandler::write(
+                buf,
+                (uncertainty, angle, "PLANE_ANGLE_MEASURE"),
+            )?;
+            unc_refs.push(Attribute::EntityRef(id));
+        }
+        if let Some(uncertainty) = units.solid_angle_uncertainty.clone() {
+            let id = UncertaintyMeasureWithUnitHandler::write(
+                buf,
+                (uncertainty, solid, "SOLID_ANGLE_MEASURE"),
+            )?;
+            unc_refs.push(Attribute::EntityRef(id));
+        }
+        if !unc_refs.is_empty() {
             parts.insert(
                 1,
                 (
                     "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT".into(),
-                    vec![Attribute::List(vec![Attribute::EntityRef(unc_id)])],
+                    vec![Attribute::List(unc_refs)],
                 ),
             );
         }
@@ -147,20 +171,51 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
     }
 }
 
-/// Pick the first length-flavour uncertainty value referenced by the
-/// `GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT` part of the same complex
-/// entity, if any. Returns `None` when the part is absent or holds no
-/// length uncertainty.
-fn extract_length_uncertainty(
-    ctx: &ReaderContext,
-    parts: &[RawEntityPart],
-) -> Option<LengthUncertainty> {
-    let guac = parts
+/// Collect the length / plane-angle / solid-angle uncertainty entries
+/// referenced by the `GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT` part of the
+/// same complex entity. Each component is `Some` if any referenced
+/// `UNCERTAINTY_MEASURE_WITH_UNIT` resolved to a unit of that kind on
+/// read; `None` otherwise. Order of refs within the source does not
+/// matter — first match per category wins.
+type UncertaintyTriple = (
+    Option<LengthUncertainty>,
+    Option<LengthUncertainty>,
+    Option<LengthUncertainty>,
+);
+
+fn extract_uncertainties(ctx: &ReaderContext, parts: &[RawEntityPart]) -> UncertaintyTriple {
+    let Some(guac) = parts
         .iter()
-        .find(|p| p.name == "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT")?;
-    let refs = read_entity_ref_list(&guac.attributes, 0, 0, "uncertainty").ok()?;
-    refs.iter()
-        .find_map(|r| ctx.length_uncertainty_map.get(r).cloned())
+        .find(|p| p.name == "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT")
+    else {
+        return (None, None, None);
+    };
+    let Ok(refs) = read_entity_ref_list(&guac.attributes, 0, 0, "uncertainty") else {
+        return (None, None, None);
+    };
+    let mut length = None;
+    let mut plane_angle = None;
+    let mut solid_angle = None;
+    for r in &refs {
+        if length.is_none() {
+            if let Some(u) = ctx.length_uncertainty_map.get(r) {
+                length = Some(u.clone());
+                continue;
+            }
+        }
+        if plane_angle.is_none() {
+            if let Some(u) = ctx.plane_angle_uncertainty_map.get(r) {
+                plane_angle = Some(u.clone());
+                continue;
+            }
+        }
+        if solid_angle.is_none() {
+            if let Some(u) = ctx.solid_angle_uncertainty_map.get(r) {
+                solid_angle = Some(u.clone());
+            }
+        }
+    }
+    (length, plane_angle, solid_angle)
 }
 
 #[allow(unsafe_code)] // linkme uses link_section internally

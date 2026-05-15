@@ -104,6 +104,11 @@ pub struct ReaderContext {
     /// entities whose `unit_component` resolved to a length unit. Populated
     /// between Pass 0-1 (unit leaves) and Pass 0-2 (context assembly).
     pub(crate) length_uncertainty_map: HashMap<u64, LengthUncertainty>,
+    /// Same shape as `length_uncertainty_map` but keyed on UMUs whose
+    /// `unit_component` is a plane-angle unit.
+    pub(crate) plane_angle_uncertainty_map: HashMap<u64, LengthUncertainty>,
+    /// Same shape but for solid-angle uncertainty UMUs.
+    pub(crate) solid_angle_uncertainty_map: HashMap<u64, LengthUncertainty>,
 
     // Geometry maps: STEP #N → typed Id.
     pub(crate) point_map: HashMap<u64, PointId>,

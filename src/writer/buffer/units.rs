@@ -45,6 +45,8 @@ mod tests {
             plane_angle: AngleUnit::Radian,
             solid_angle: SolidAngleUnit::Steradian,
             length_uncertainty: None,
+            plane_angle_uncertainty: None,
+            solid_angle_uncertainty: None,
             length_cbu_wrapped: false,
             plane_angle_cbu_wrapped: false,
             dim_exp_explicit: false,
@@ -63,6 +65,8 @@ mod tests {
             plane_angle: AngleUnit::Radian,
             solid_angle: SolidAngleUnit::Steradian,
             length_uncertainty: None,
+            plane_angle_uncertainty: None,
+            solid_angle_uncertainty: None,
             length_cbu_wrapped: false,
             plane_angle_cbu_wrapped: false,
             dim_exp_explicit: false,
@@ -80,6 +84,8 @@ mod tests {
             plane_angle: AngleUnit::Degree,
             solid_angle: SolidAngleUnit::Steradian,
             length_uncertainty: None,
+            plane_angle_uncertainty: None,
+            solid_angle_uncertainty: None,
             length_cbu_wrapped: false,
             plane_angle_cbu_wrapped: false,
             dim_exp_explicit: false,
@@ -100,6 +106,8 @@ mod tests {
             plane_angle: AngleUnit::Radian,
             solid_angle: SolidAngleUnit::Steradian,
             length_uncertainty: None,
+            plane_angle_uncertainty: None,
+            solid_angle_uncertainty: None,
             length_cbu_wrapped: false,
             plane_angle_cbu_wrapped: false,
             dim_exp_explicit: false,
@@ -119,6 +127,8 @@ mod tests {
             plane_angle: AngleUnit::Radian,
             solid_angle: SolidAngleUnit::Steradian,
             length_uncertainty: None,
+            plane_angle_uncertainty: None,
+            solid_angle_uncertainty: None,
             length_cbu_wrapped: false,
             plane_angle_cbu_wrapped: false,
             dim_exp_explicit: false,
@@ -135,6 +145,8 @@ mod tests {
             plane_angle: AngleUnit::Radian,
             solid_angle: SolidAngleUnit::Steradian,
             length_uncertainty: None,
+            plane_angle_uncertainty: None,
+            solid_angle_uncertainty: None,
             length_cbu_wrapped: false,
             plane_angle_cbu_wrapped: false,
             dim_exp_explicit: false,
@@ -154,6 +166,8 @@ mod tests {
                 plane_angle: AngleUnit::Radian,
                 solid_angle: SolidAngleUnit::Steradian,
                 length_uncertainty: None,
+                plane_angle_uncertainty: None,
+                solid_angle_uncertainty: None,
                 length_cbu_wrapped: false,
                 plane_angle_cbu_wrapped: false,
                 dim_exp_explicit: false,
@@ -163,6 +177,8 @@ mod tests {
                 plane_angle: AngleUnit::Radian,
                 solid_angle: SolidAngleUnit::Steradian,
                 length_uncertainty: None,
+                plane_angle_uncertainty: None,
+                solid_angle_uncertainty: None,
                 length_cbu_wrapped: false,
                 plane_angle_cbu_wrapped: false,
                 dim_exp_explicit: false,
@@ -172,6 +188,8 @@ mod tests {
                 plane_angle: AngleUnit::Degree,
                 solid_angle: SolidAngleUnit::Steradian,
                 length_uncertainty: None,
+                plane_angle_uncertainty: None,
+                solid_angle_uncertainty: None,
                 length_cbu_wrapped: false,
                 plane_angle_cbu_wrapped: false,
                 dim_exp_explicit: false,
@@ -205,6 +223,8 @@ mod tests {
             plane_angle: AngleUnit::Radian,
             solid_angle: SolidAngleUnit::Steradian,
             length_uncertainty: None,
+            plane_angle_uncertainty: None,
+            solid_angle_uncertainty: None,
             length_cbu_wrapped: true,
             plane_angle_cbu_wrapped: false,
             dim_exp_explicit: false,
@@ -235,6 +255,8 @@ mod tests {
             plane_angle: AngleUnit::Radian,
             solid_angle: SolidAngleUnit::Steradian,
             length_uncertainty: None,
+            plane_angle_uncertainty: None,
+            solid_angle_uncertainty: None,
             length_cbu_wrapped: false,
             plane_angle_cbu_wrapped: true,
             dim_exp_explicit: false,
@@ -245,6 +267,50 @@ mod tests {
             text.contains("CONVERSION_BASED_UNIT('RADIAN'"),
             "writer must emit CBU('RADIAN') when plane_angle_cbu_wrapped: {text}"
         );
+
+        let graph = parse(&text).expect("re-parse");
+        let back = ReaderContext::convert(&graph);
+        assert!(back.warnings.is_empty(), "{:#?}", back.warnings);
+        assert_eq!(back.model.units.iter().next().cloned(), Some(unit));
+    }
+
+    /// Synthetic round-trip for plane-angle / solid-angle uncertainty.
+    /// No production fixture exercises these (every observed fixture stores
+    /// only a length uncertainty), so this test pins the read/write paths
+    /// against a hand-built `UnitContext`.
+    #[test]
+    fn angle_and_solid_angle_uncertainty_round_trip() {
+        use crate::ir::shape_rep::LengthUncertainty;
+        let unit = UnitContext {
+            length: LengthUnit::Millimetre,
+            plane_angle: AngleUnit::Radian,
+            solid_angle: SolidAngleUnit::Steradian,
+            length_uncertainty: Some(LengthUncertainty {
+                value: 1e-7,
+                name: "distance_accuracy_value".into(),
+                description: "confusion accuracy".into(),
+            }),
+            plane_angle_uncertainty: Some(LengthUncertainty {
+                value: 1e-5,
+                name: "angle_accuracy".into(),
+                description: "angle uncertainty".into(),
+            }),
+            solid_angle_uncertainty: Some(LengthUncertainty {
+                value: 1e-3,
+                name: "solid_angle_accuracy".into(),
+                description: "solid angle uncertainty".into(),
+            }),
+            length_cbu_wrapped: false,
+            plane_angle_cbu_wrapped: false,
+            dim_exp_explicit: false,
+        };
+        let model = model_with_units(unit.clone());
+        let text = model.write_to_string().expect("write");
+        assert!(text.contains("LENGTH_MEASURE("), "{text}");
+        assert!(text.contains("PLANE_ANGLE_MEASURE("), "{text}");
+        assert!(text.contains("SOLID_ANGLE_MEASURE("), "{text}");
+        assert!(text.contains("'angle_accuracy'"), "{text}");
+        assert!(text.contains("'solid_angle_accuracy'"), "{text}");
 
         let graph = parse(&text).expect("re-parse");
         let back = ReaderContext::convert(&graph);

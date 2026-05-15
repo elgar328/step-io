@@ -19,11 +19,13 @@ pub(crate) struct UncertaintyMeasureWithUnitHandler;
 impl SimpleEntityHandler for UncertaintyMeasureWithUnitHandler {
     const NAME: &'static str = "UNCERTAINTY_MEASURE_WITH_UNIT";
     const PASS_LEVEL: PassLevel = PassLevel::Pass0Uncertainty;
-    /// `(LengthUncertainty, length_unit_step_id)` — caller
-    /// (`emit_unit_context`) already emitted the length unit and supplies
-    /// its STEP id; the `LengthUncertainty` carries the numeric value plus
-    /// the original `name` / `description` strings to be re-emitted verbatim.
-    type WriteInput = (LengthUncertainty, u64);
+    /// `(LengthUncertainty, unit_step_id, measure_type_name)` — caller
+    /// (`emit_unit_context`) already emitted the relevant unit (length,
+    /// plane-angle, or solid-angle) and supplies its STEP id; the
+    /// `LengthUncertainty` carries the numeric value plus original
+    /// `name` / `description` strings; the measure type name is one of
+    /// `"LENGTH_MEASURE"`, `"PLANE_ANGLE_MEASURE"`, `"SOLID_ANGLE_MEASURE"`.
+    type WriteInput = (LengthUncertainty, u64, &'static str);
 
     fn read(
         ctx: &mut ReaderContext,
@@ -41,22 +43,26 @@ impl SimpleEntityHandler for UncertaintyMeasureWithUnitHandler {
         let unit_ref = read_entity_ref(attrs, 1, entity_id, "unit_component")?;
         let name = read_string_or_unset(attrs, 2, entity_id, "name")?.to_owned();
         let description = read_string_or_unset(attrs, 3, entity_id, "description")?.to_owned();
+        let uncertainty = LengthUncertainty {
+            value,
+            name,
+            description,
+        };
         if ctx.length_unit_map.contains_key(&unit_ref) {
-            ctx.length_uncertainty_map.insert(
-                entity_id,
-                LengthUncertainty {
-                    value,
-                    name,
-                    description,
-                },
-            );
+            ctx.length_uncertainty_map.insert(entity_id, uncertainty);
+        } else if ctx.angle_unit_map.contains_key(&unit_ref) {
+            ctx.plane_angle_uncertainty_map
+                .insert(entity_id, uncertainty);
+        } else if ctx.solid_angle_unit_map.contains_key(&unit_ref) {
+            ctx.solid_angle_uncertainty_map
+                .insert(entity_id, uncertainty);
         }
         Ok(())
     }
 
     fn write(
         buf: &mut WriteBuffer,
-        (unc, length_unit): (LengthUncertainty, u64),
+        (unc, unit_ref, measure_type): (LengthUncertainty, u64, &'static str),
     ) -> Result<u64, WriteError> {
         let n = buf.fresh();
         buf.entities.push(WriterEntity {
@@ -65,10 +71,10 @@ impl SimpleEntityHandler for UncertaintyMeasureWithUnitHandler {
                 name: "UNCERTAINTY_MEASURE_WITH_UNIT".into(),
                 attrs: vec![
                     Attribute::Typed {
-                        type_name: "LENGTH_MEASURE".into(),
+                        type_name: measure_type.into(),
                         value: Box::new(Attribute::Real(unc.value)),
                     },
-                    Attribute::EntityRef(length_unit),
+                    Attribute::EntityRef(unit_ref),
                     Attribute::String(unc.name),
                     Attribute::String(unc.description),
                 ],
