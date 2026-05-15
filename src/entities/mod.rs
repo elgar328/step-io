@@ -65,10 +65,12 @@ pub(crate) enum PassLevel {
     Pass4_4Swept,
 
     // ----- Plan 5.5 (PCURVE definitional 2D geometry) -----
-    /// 2D `CARTESIAN_POINT` + `DIRECTION` inside a PCURVE
-    /// `DEFINITIONAL_REPRESENTATION`. Same entity names as the 3D
-    /// counterparts, but the registry's `dispatch_*_2d` path filters on
-    /// `pcurve_subtree_ids` membership so they never collide.
+    /// 2D `DIRECTION` inside a PCURVE `DEFINITIONAL_REPRESENTATION`.
+    /// Shares the entity name with its 3D counterpart, but the registry's
+    /// `dispatch_*_2d` path filters on `pcurve_subtree_ids` membership so
+    /// they never collide. (2D `CARTESIAN_POINT` previously sat here too;
+    /// it now runs in `Pass1` alongside the 3D handler and selects its
+    /// arena by coordinate count, so orphan 2D points survive round-trip.)
     #[allow(dead_code)] // wired in Plan 5.5 stage C2
     Pass4aPoint,
     /// 2D `VECTOR` + `AXIS2_PLACEMENT_2D` (Pass 4a-2). Independent of

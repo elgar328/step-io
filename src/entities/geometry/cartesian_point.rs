@@ -34,12 +34,10 @@ impl SimpleEntityHandler for CartesianPointHandler {
         let _name = read_string(attrs, 0, entity_id, "name")?;
         let coords = read_real_list(attrs, 1, entity_id, "coordinates")?;
         if coords.len() != 3 {
-            return Err(ConvertError::DimensionMismatch {
-                entity_id,
-                field_name: "coordinates",
-                expected: 3,
-                actual: coords.len(),
-            });
+            // Wrong dimension for the 3D arena. The 2D sister handler
+            // claims 2-coordinate points; anything else is silently
+            // dropped here.
+            return Ok(());
         }
         let point = Point3 {
             x: coords[0],

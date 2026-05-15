@@ -1,9 +1,11 @@
-//! `CARTESIAN_POINT` handler — Pass 4a-1 (2D, pcurve subtree).
+//! `CARTESIAN_POINT` handler — Pass 1 (2D variant).
 //!
 //! Sister handler of [`crate::entities::geometry::cartesian_point::CartesianPointHandler`].
-//! Same STEP entity name, different dispatch path: this one only
-//! activates inside a `PCURVE` `DEFINITIONAL_REPRESENTATION` subtree
-//! (handled by `ReaderContext::dispatch_registry_2d`).
+//! Same STEP entity name; both run in Pass 1 alongside each other and
+//! select which arena receives the entity by coordinate count. A
+//! 2-coordinate point goes to `geometry.points_2d`; a 3-coordinate point
+//! goes to `geometry.points`. Wrong-dimension or malformed inputs land
+//! in no arena (silent skip).
 
 use crate::entities::{
     ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
@@ -22,7 +24,7 @@ pub(crate) struct CartesianPoint2dHandler;
 
 impl SimpleEntityHandler for CartesianPoint2dHandler {
     const NAME: &'static str = "CARTESIAN_POINT";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass4aPoint;
+    const PASS_LEVEL: PassLevel = PassLevel::Pass1;
     type WriteInput = Point2dId;
 
     fn read(
@@ -34,12 +36,10 @@ impl SimpleEntityHandler for CartesianPoint2dHandler {
         let _name = read_string(attrs, 0, entity_id, "name")?;
         let coords = read_real_list(attrs, 1, entity_id, "coordinates")?;
         if coords.len() != 2 {
-            return Err(ConvertError::DimensionMismatch {
-                entity_id,
-                field_name: "coordinates",
-                expected: 2,
-                actual: coords.len(),
-            });
+            // Wrong dimension for the 2D arena. The 3D sister handler
+            // claims 3-coordinate points; anything else is silently
+            // dropped here.
+            return Ok(());
         }
         let id = ctx.geometry.points_2d.push(Point2 {
             x: coords[0],

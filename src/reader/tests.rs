@@ -1,7 +1,7 @@
 use super::*;
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Curve, Surface};
-use crate::ir::id::PointId;
+use crate::ir::id::{Point2dId, PointId};
 use crate::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit, UnitContext};
 use crate::ir::topology::Orientation;
 
@@ -163,18 +163,18 @@ fn convert_single_cartesian_point() {
 }
 
 #[test]
-fn convert_2d_point_produces_dimension_mismatch_warning() {
+fn convert_top_level_2d_point_lands_in_points_2d_arena() {
+    // A 2-coord CARTESIAN_POINT at the top level (no enclosing
+    // DEFINITIONAL_REPRESENTATION) is classified by coordinate count:
+    // the 3D handler skips silently, the 2D handler pushes to
+    // `points_2d`. Round-trip preservation depends on this.
     let result = convert_source(&minimal_step("#1 = CARTESIAN_POINT('',(10.,20.));"));
-    assert_eq!(result.warnings.len(), 1);
-    assert!(matches!(
-        &result.warnings[0],
-        ConvertError::DimensionMismatch {
-            expected: 3,
-            actual: 2,
-            ..
-        }
-    ));
+    assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
     assert!(result.model.geometry.points.is_empty());
+    assert_eq!(result.model.geometry.points_2d.len(), 1);
+    let pt = &result.model.geometry.points_2d[Point2dId(0)];
+    assert!((pt.x - 10.0).abs() < f64::EPSILON);
+    assert!((pt.y - 20.0).abs() < f64::EPSILON);
 }
 
 // --- DIRECTION ---

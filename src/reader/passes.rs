@@ -338,8 +338,14 @@ impl ReaderContext {
     /// part name. Mirrors the `run_pass!` macro body for the simple path
     /// and the hand-rolled Pass 4-2 loop for the complex path.
     fn dispatch_entry(&mut self, graph: &EntityGraph, entry: &EntityHandlerEntry) {
+        // CARTESIAN_POINT is classified by coordinate count (its 2D/3D
+        // sister handlers silently skip the wrong dimension), so it does
+        // not honour the pcurve-subtree partition: a 2-coord point can
+        // legitimately appear at the top level (orphan in IR) and must
+        // still reach the 2D arena for round-trip preservation.
+        let respect_pcurve_partition = entry.name != "CARTESIAN_POINT";
         for (&id, ent) in &graph.entities {
-            if self.pcurve_subtree_ids.contains(&id) {
+            if respect_pcurve_partition && self.pcurve_subtree_ids.contains(&id) {
                 continue;
             }
             match (&entry.kind, ent) {
