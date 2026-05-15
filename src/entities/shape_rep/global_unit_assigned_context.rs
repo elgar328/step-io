@@ -10,7 +10,7 @@ use crate::entities::{
 };
 use crate::ir::attr::{check_count, read_entity_ref_list};
 use crate::ir::error::ConvertError;
-use crate::ir::shape_rep::{LengthUncertainty, UnitContext};
+use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit, SolidAngleUnit, UnitContext};
 use crate::parser::entity::{Attribute, RawEntityPart};
 use crate::reader::{ReaderContext, require_part_attrs};
 use crate::writer::WriteError;
@@ -47,35 +47,45 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
             }
         }
 
-        match (length, plane_angle, solid_angle) {
-            (Some(length), Some(plane_angle), Some(solid_angle)) => {
-                let (length_uncertainty, plane_angle_uncertainty, solid_angle_uncertainty) =
-                    extract_uncertainties(ctx, parts);
-                let ctx_id = ctx.units.push(UnitContext {
-                    length,
-                    plane_angle,
-                    solid_angle,
-                    length_uncertainty,
-                    plane_angle_uncertainty,
-                    solid_angle_uncertainty,
-                    length_cbu_wrapped: ctx.length_cbu_wrapped,
-                    plane_angle_cbu_wrapped: ctx.plane_angle_cbu_wrapped,
-                    dim_exp_explicit: ctx.dim_exp_explicit,
-                });
-                ctx.context_id_map.insert(entity_id, ctx_id);
-            }
-            _ => {
+        // Fallback for incomplete unit contexts (unrecognized CBU names,
+        // anonymised fixtures, vendor quirks): fill missing components with
+        // SI defaults (Millimetre / Radian / Steradian) and emit a warning.
+        // Without this fallback, an unrecognised plane-angle CBU name would
+        // leave `model.units` empty and the writer's PRODUCT chain emit path
+        // would short-circuit, silently losing the entire assembly.
+        let (length, plane_angle, solid_angle) = match (length, plane_angle, solid_angle) {
+            (Some(l), Some(p), Some(s)) => (l, p, s),
+            (l, p, s) => {
                 ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                     entity_id,
                     detail: format!(
-                        "incomplete unit context: length={}, plane_angle={}, solid_angle={}",
-                        length.is_some(),
-                        plane_angle.is_some(),
-                        solid_angle.is_some(),
+                        "incomplete unit context (defaulting missing to SI): length={}, plane_angle={}, solid_angle={}",
+                        l.is_some(),
+                        p.is_some(),
+                        s.is_some(),
                     ),
                 });
+                (
+                    l.unwrap_or(LengthUnit::Millimetre),
+                    p.unwrap_or(AngleUnit::Radian),
+                    s.unwrap_or(SolidAngleUnit::Steradian),
+                )
             }
-        }
+        };
+        let (length_uncertainty, plane_angle_uncertainty, solid_angle_uncertainty) =
+            extract_uncertainties(ctx, parts);
+        let ctx_id = ctx.units.push(UnitContext {
+            length,
+            plane_angle,
+            solid_angle,
+            length_uncertainty,
+            plane_angle_uncertainty,
+            solid_angle_uncertainty,
+            length_cbu_wrapped: ctx.length_cbu_wrapped,
+            plane_angle_cbu_wrapped: ctx.plane_angle_cbu_wrapped,
+            dim_exp_explicit: ctx.dim_exp_explicit,
+        });
+        ctx.context_id_map.insert(entity_id, ctx_id);
         Ok(())
     }
 

@@ -631,17 +631,30 @@ fn unit_plain_metre_mapping() {
 }
 
 #[test]
-fn unit_unsupported_prefix_produces_warning_and_none() {
+fn unit_unsupported_prefix_produces_warning_and_default_length() {
     let result = convert_source(&minimal_step(&unit_data(".KILO.")));
     // Two warnings expected: (1) the leaf flagged .KILO. as unsupported,
-    // (2) the global context couldn't fill the length slot.
+    // (2) the global context filled the missing length slot with the SI default.
     assert_eq!(result.warnings.len(), 2, "{:#?}", result.warnings);
     assert!(matches!(
         &result.warnings[0],
         ConvertError::UnexpectedEntityForm { detail, .. }
             if detail.contains("unsupported SI length unit")
     ));
-    assert!(result.model.units.is_empty());
+    assert!(matches!(
+        &result.warnings[1],
+        ConvertError::UnexpectedEntityForm { detail, .. }
+            if detail.contains("incomplete unit context")
+    ));
+    // GUAC fallback pushed a unit context with SI defaults so downstream
+    // PRODUCT chain emit isn't silently lost.
+    let unit = result
+        .model
+        .units
+        .iter()
+        .next()
+        .expect("fallback context pushed");
+    assert_eq!(unit.length, LengthUnit::Millimetre);
 }
 
 // ---------------------------------------------------------------------------
@@ -787,10 +800,33 @@ fn reads_millimetre_cbu_wrap() {
 }
 
 #[test]
+fn reads_degrees_plural_cbu_name() {
+    // Some exporters (Rhino + ST-Developer observed in the wild) emit
+    // `CONVERSION_BASED_UNIT('DEGREES', ...)` — plural form. Reader should
+    // accept it as AngleUnit::Degree just like the singular `'DEGREE'`.
+    let source = minimal_step(
+        "#1 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+         #2 = DIMENSIONAL_EXPONENTS(0.,0.,0.,0.,0.,0.,0.);\n\
+         #3 = PLANE_ANGLE_MEASURE_WITH_UNIT(PLANE_ANGLE_MEASURE(0.01745329252),#4);\n\
+         #4 = ( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n\
+         #5 = ( CONVERSION_BASED_UNIT('DEGREES',#3) NAMED_UNIT(#2) PLANE_ANGLE_UNIT() );\n\
+         #6 = ( NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT() );\n\
+         #7 = ( GEOMETRIC_REPRESENTATION_CONTEXT(3)\n\
+         \t\tGLOBAL_UNIT_ASSIGNED_CONTEXT((#1,#5,#6))\n\
+         \t\tREPRESENTATION_CONTEXT('','') );",
+    );
+    let result = convert_source(&source);
+    assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
+    let unit = result.model.units.iter().next().expect("unit context");
+    assert_eq!(unit.plane_angle, AngleUnit::Degree);
+}
+
+#[test]
 fn reads_unrecognized_cbu_name_warns() {
-    // An unknown name on a LENGTH_UNIT-flavoured CBU: reader should produce
-    // an UnexpectedEntityForm warning (not a silent skip), and leave units=None
-    // because the GUAC ref can't be resolved.
+    // An unknown name on a LENGTH_UNIT-flavoured CBU: reader emits an
+    // UnexpectedEntityForm warning AND a second warning when the GUAC falls
+    // back to SI defaults to keep the unit context alive (so the PRODUCT
+    // chain doesn't silently disappear downstream).
     let block = "\
          #1 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
          #2 = DIMENSIONAL_EXPONENTS(1.,0.,0.,0.,0.,0.,0.);\n\
@@ -806,7 +842,72 @@ fn reads_unrecognized_cbu_name_warns() {
         "{:#?}",
         result.warnings,
     );
-    assert!(result.model.units.is_empty());
+    assert!(
+        result.warnings.iter().any(
+            |w| matches!(w, ConvertError::UnexpectedEntityForm { detail, .. }
+                if detail.contains("incomplete unit context"))
+        ),
+        "{:#?}",
+        result.warnings,
+    );
+    let unit = result
+        .model
+        .units
+        .iter()
+        .next()
+        .expect("fallback context pushed");
+    assert_eq!(unit.length, LengthUnit::Millimetre);
+}
+
+#[test]
+fn garbage_angle_cbu_falls_back_to_radian_with_warning() {
+    // Anonymised fixtures occasionally carry a CONVERSION_BASED_UNIT with a
+    // nonsense angle name (the `interior-vehicle-hvac` grabcad fixtures
+    // replaced every string with the placeholder 'MIAU' before upload). The
+    // reader can't recognise the name, but the GUAC fallback fills the
+    // missing plane-angle slot with the SI default (Radian) and pushes the
+    // unit context anyway — without this, downstream writer paths that
+    // depend on a non-empty `units` arena (most notably the PRODUCT chain
+    // emit) would silently drop the assembly on round-trip.
+    let source = minimal_step(
+        "#1 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+         #2 = DIMENSIONAL_EXPONENTS(0.,0.,0.,0.,0.,0.,0.);\n\
+         #3 = PLANE_ANGLE_MEASURE_WITH_UNIT(PLANE_ANGLE_MEASURE(0.01745329252),#4);\n\
+         #4 = ( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n\
+         #5 = ( CONVERSION_BASED_UNIT('NONSENSE',#3) NAMED_UNIT(#2) PLANE_ANGLE_UNIT() );\n\
+         #6 = ( NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT() );\n\
+         #7 = ( GEOMETRIC_REPRESENTATION_CONTEXT(3)\n\
+         \t\tGLOBAL_UNIT_ASSIGNED_CONTEXT((#1,#5,#6))\n\
+         \t\tREPRESENTATION_CONTEXT('','') );",
+    );
+    let result = convert_source(&source);
+    // Two warnings: leaf rejected the name; GUAC reported the fallback.
+    assert!(
+        result.warnings.iter().any(
+            |w| matches!(w, ConvertError::UnexpectedEntityForm { detail, .. }
+            if detail.contains("CONVERSION_BASED_UNIT") && detail.contains("NONSENSE"))
+        ),
+        "{:#?}",
+        result.warnings,
+    );
+    assert!(
+        result.warnings.iter().any(
+            |w| matches!(w, ConvertError::UnexpectedEntityForm { detail, .. }
+            if detail.contains("incomplete unit context"))
+        ),
+        "{:#?}",
+        result.warnings,
+    );
+    // Crucial property: unit context survived (downstream writer would now
+    // emit the PRODUCT chain instead of silently bailing out).
+    let unit = result
+        .model
+        .units
+        .iter()
+        .next()
+        .expect("fallback context pushed");
+    assert_eq!(unit.plane_angle, AngleUnit::Radian);
+    assert_eq!(unit.length, LengthUnit::Millimetre);
 }
 
 #[test]

@@ -90,8 +90,8 @@ pub(super) fn match_length_conversion(upper_name: &str) -> Option<(LengthUnit, C
 
 pub(super) fn match_angle_conversion(upper_name: &str) -> Option<(AngleUnit, ConversionForm)> {
     match upper_name {
-        "DEGREE" => Some((AngleUnit::Degree, ConversionForm::NonSi)),
-        "RADIAN" => Some((AngleUnit::Radian, ConversionForm::SiSelf)),
+        "DEGREE" | "DEGREES" => Some((AngleUnit::Degree, ConversionForm::NonSi)),
+        "RADIAN" | "RADIANS" => Some((AngleUnit::Radian, ConversionForm::SiSelf)),
         _ => None,
     }
 }
