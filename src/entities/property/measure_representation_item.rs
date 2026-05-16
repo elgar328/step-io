@@ -5,9 +5,7 @@
 //! Writer emits the bare MRI line with a typed measure (LENGTH / PLANE /
 //! SOLID) and the unit ref resolved through the PD's bound context.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::id::UnitContextId;
@@ -16,12 +14,12 @@ use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
+use step_io_macros::step_entity;
 
 pub(crate) struct MeasureRepresentationItemHandler;
 
+#[step_entity(name = "MEASURE_REPRESENTATION_ITEM", pass = Pass8Measure)]
 impl SimpleEntityHandler for MeasureRepresentationItemHandler {
-    const NAME: &'static str = "MEASURE_REPRESENTATION_ITEM";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass8Measure;
     /// `(measure, ctx)` — the writer uses both the measure value/kind and
     /// the parent property's unit context to resolve the unit ref.
     type WriteInput = (PropertyMeasure, Option<UnitContextId>);
@@ -77,13 +75,3 @@ fn match_measure_kind(type_name: &str) -> Option<MeasureKind> {
         _ => None,
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static MRI_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: MeasureRepresentationItemHandler::NAME,
-    pass_level: MeasureRepresentationItemHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: MeasureRepresentationItemHandler::read,
-    },
-};

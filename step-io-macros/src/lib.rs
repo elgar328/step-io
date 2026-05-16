@@ -156,13 +156,7 @@ pub fn step_entity_complex(attr: TokenStream, item: TokenStream) -> TokenStream 
     };
     let entry_ident = format_ident!("__STEP_ENTRY_{}", handler_ident);
     let required_parts_expr: &ExprArray = &args.required;
-    // ComplexEntityHandler also requires `const REQUIRED_PARTS`.
-    let mut impl_with_consts = inject_consts(impl_block, &args.name, &args.pass);
-    let required_const: syn::ImplItem = syn::parse_quote! {
-        const REQUIRED_PARTS: &'static [&'static str] = &#required_parts_expr;
-    };
-    impl_with_consts.items.insert(2, required_const);
-
+    let impl_with_consts = inject_consts(impl_block, &args.name, &args.pass);
     let required_lit: Expr = syn::parse_quote! { &#required_parts_expr };
 
     quote! {

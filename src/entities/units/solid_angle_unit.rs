@@ -5,11 +5,9 @@
 //! solid angle is unobserved in fixtures, so the handler covers only
 //! the SI path; `WriteInput` carries no `cbu_wrapped` flag.
 
+use crate::entities::ComplexEntityHandler;
 use crate::entities::units::shared::{
     emit_dimensionless_exponents, has_part, match_solid_angle_unit, read_optional_enum,
-};
-use crate::entities::{
-    ComplexEntityHandler, ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind,
 };
 use crate::ir::attr::{check_count, read_enum};
 use crate::ir::error::ConvertError;
@@ -19,13 +17,12 @@ use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity_complex;
 
 pub(crate) struct SolidAngleUnitHandler;
 
+#[step_entity_complex(name = "SOLID_ANGLE_UNIT", pass = Pass0Leaf, required = ["SOLID_ANGLE_UNIT"])]
 impl ComplexEntityHandler for SolidAngleUnitHandler {
-    const NAME: &'static str = "SOLID_ANGLE_UNIT";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass0Leaf;
-    const REQUIRED_PARTS: &'static [&'static str] = &["SOLID_ANGLE_UNIT"];
     /// `(unit, dim_exp_explicit)`. No `cbu_wrapped` flag — solid-angle
     /// CBU forms are unobserved.
     type WriteInput = (SolidAngleUnit, bool);
@@ -100,14 +97,3 @@ impl ComplexEntityHandler for SolidAngleUnitHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static SOLID_ANGLE_UNIT_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: SolidAngleUnitHandler::NAME,
-    pass_level: SolidAngleUnitHandler::PASS_LEVEL,
-    kind: ReadKind::Complex {
-        required_parts: SolidAngleUnitHandler::REQUIRED_PARTS,
-        read: SolidAngleUnitHandler::read_complex,
-    },
-};

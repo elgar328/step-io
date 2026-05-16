@@ -5,12 +5,10 @@
 //! calls). Catalog group: `units` (O, part-only — `REQUIRED_PARTS`
 //! dispatch keys on the `LENGTH_UNIT` part).
 
+use crate::entities::ComplexEntityHandler;
 use crate::entities::units::shared::{
     emit_length_dim_exponents, has_part, match_length_unit, read_conversion_based_unit_body,
     read_optional_enum,
-};
-use crate::entities::{
-    ComplexEntityHandler, ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind,
 };
 use crate::ir::attr::{check_count, read_enum};
 use crate::ir::error::ConvertError;
@@ -20,13 +18,12 @@ use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity_complex;
 
 pub(crate) struct LengthUnitHandler;
 
+#[step_entity_complex(name = "LENGTH_UNIT", pass = Pass0Leaf, required = ["LENGTH_UNIT"])]
 impl ComplexEntityHandler for LengthUnitHandler {
-    const NAME: &'static str = "LENGTH_UNIT";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass0Leaf;
-    const REQUIRED_PARTS: &'static [&'static str] = &["LENGTH_UNIT"];
     /// `(unit, length_cbu_wrapped, dim_exp_explicit)` — flat tuple
     /// matches the `(DirectionId, f64)` style used elsewhere.
     type WriteInput = (LengthUnit, bool, bool);
@@ -225,14 +222,3 @@ fn emit_conversion_based_length(
     });
     outer
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static LENGTH_UNIT_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: LengthUnitHandler::NAME,
-    pass_level: LengthUnitHandler::PASS_LEVEL,
-    kind: ReadKind::Complex {
-        required_parts: LengthUnitHandler::REQUIRED_PARTS,
-        read: LengthUnitHandler::read_complex,
-    },
-};

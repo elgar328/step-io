@@ -4,12 +4,10 @@
 //! Catalog group: `units` (O, part-only — `REQUIRED_PARTS` dispatch keys
 //! on `PLANE_ANGLE_UNIT`).
 
+use crate::entities::ComplexEntityHandler;
 use crate::entities::units::shared::{
     emit_dimensionless_exponents, has_part, match_angle_unit, read_conversion_based_unit_body,
     read_optional_enum,
-};
-use crate::entities::{
-    ComplexEntityHandler, ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind,
 };
 use crate::ir::attr::{check_count, read_enum};
 use crate::ir::error::ConvertError;
@@ -19,13 +17,12 @@ use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity_complex;
 
 pub(crate) struct PlaneAngleUnitHandler;
 
+#[step_entity_complex(name = "PLANE_ANGLE_UNIT", pass = Pass0Leaf, required = ["PLANE_ANGLE_UNIT"])]
 impl ComplexEntityHandler for PlaneAngleUnitHandler {
-    const NAME: &'static str = "PLANE_ANGLE_UNIT";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass0Leaf;
-    const REQUIRED_PARTS: &'static [&'static str] = &["PLANE_ANGLE_UNIT"];
     /// `(unit, plane_angle_cbu_wrapped, dim_exp_explicit)`.
     type WriteInput = (AngleUnit, bool, bool);
 
@@ -177,14 +174,3 @@ fn emit_conversion_based_angle(
     });
     outer
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static PLANE_ANGLE_UNIT_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: PlaneAngleUnitHandler::NAME,
-    pass_level: PlaneAngleUnitHandler::PASS_LEVEL,
-    kind: ReadKind::Complex {
-        required_parts: PlaneAngleUnitHandler::REQUIRED_PARTS,
-        read: PlaneAngleUnitHandler::read_complex,
-    },
-};

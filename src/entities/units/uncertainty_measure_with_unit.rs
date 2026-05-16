@@ -2,9 +2,7 @@
 
 // DOMAIN_TBD: catalog ENTITY_GROUPS.md marks this as X but the reader handles length-flavour uncertainty. Catalog 갱신은 별도 작업.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::LengthUncertainty;
@@ -13,12 +11,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct UncertaintyMeasureWithUnitHandler;
 
+#[step_entity(name = "UNCERTAINTY_MEASURE_WITH_UNIT", pass = Pass0Uncertainty)]
 impl SimpleEntityHandler for UncertaintyMeasureWithUnitHandler {
-    const NAME: &'static str = "UNCERTAINTY_MEASURE_WITH_UNIT";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass0Uncertainty;
     /// `(LengthUncertainty, unit_step_id, measure_type_name)` — caller
     /// (`emit_unit_context`) already emitted the relevant unit (length,
     /// plane-angle, or solid-angle) and supplies its STEP id; the
@@ -84,13 +82,3 @@ impl SimpleEntityHandler for UncertaintyMeasureWithUnitHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static UNCERTAINTY_MEASURE_WITH_UNIT_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: UncertaintyMeasureWithUnitHandler::NAME,
-    pass_level: UncertaintyMeasureWithUnitHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: UncertaintyMeasureWithUnitHandler::read,
-    },
-};

@@ -6,15 +6,14 @@
 //! emits the bare PD line; the surrounding `REPRESENTATION` + PDR are
 //! handled in `buffer/property.rs::emit_property` (the orchestrator).
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
+use step_io_macros::step_entity;
 
 pub(crate) struct PropertyDefinitionWriteInput {
     pub(crate) name: String,
@@ -24,9 +23,8 @@ pub(crate) struct PropertyDefinitionWriteInput {
 
 pub(crate) struct PropertyDefinitionHandler;
 
+#[step_entity(name = "PROPERTY_DEFINITION", pass = Pass8PropertyDef)]
 impl SimpleEntityHandler for PropertyDefinitionHandler {
-    const NAME: &'static str = "PROPERTY_DEFINITION";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass8PropertyDef;
     type WriteInput = PropertyDefinitionWriteInput;
 
     fn read(
@@ -80,13 +78,3 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static PD_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: PropertyDefinitionHandler::NAME,
-    pass_level: PropertyDefinitionHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: PropertyDefinitionHandler::read,
-    },
-};

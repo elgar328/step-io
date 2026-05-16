@@ -5,9 +5,7 @@
 //! per-pass map would conflate them. Writer emits the two-attr form
 //! binding a `PROPERTY_DEFINITION` to a `REPRESENTATION`.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::property::{Property, PropertyMeasure, PropertyPool};
@@ -15,6 +13,7 @@ use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
+use step_io_macros::step_entity;
 
 pub(crate) struct PropertyDefinitionRepresentationWriteInput {
     pub(crate) pd: u64,
@@ -23,9 +22,8 @@ pub(crate) struct PropertyDefinitionRepresentationWriteInput {
 
 pub(crate) struct PropertyDefinitionRepresentationHandler;
 
+#[step_entity(name = "PROPERTY_DEFINITION_REPRESENTATION", pass = Pass8Pdr)]
 impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
-    const NAME: &'static str = "PROPERTY_DEFINITION_REPRESENTATION";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass8Pdr;
     type WriteInput = PropertyDefinitionRepresentationWriteInput;
 
     fn read(
@@ -89,13 +87,3 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static PDR_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: PropertyDefinitionRepresentationHandler::NAME,
-    pass_level: PropertyDefinitionRepresentationHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: PropertyDefinitionRepresentationHandler::read,
-    },
-};

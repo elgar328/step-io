@@ -306,10 +306,6 @@ pub(crate) trait ComplexEntityHandler {
     /// Reader pass level. See [`PassLevel`].
     const PASS_LEVEL: PassLevel;
 
-    /// Names that every matching `RawEntity::Complex` must contain among
-    /// its parts. Order is irrelevant; a superset is fine.
-    const REQUIRED_PARTS: &'static [&'static str];
-
     /// Writer input. Same role as the simple-handler associated type.
     type WriteInput;
 
