@@ -8,9 +8,7 @@
 //! `B_SPLINE_CURVE_WITH_KNOTS` form inline; only the rational complex
 //! emission moves here.
 
-use crate::entities::{
-    ComplexEntityHandler, ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind,
-};
+use crate::entities::ComplexEntityHandler;
 use crate::ir::attr::{
     logical_to_step, read_bool, read_entity_ref_list, read_enum, read_integer, read_integer_list,
     read_logical, read_real_list, read_string,
@@ -23,17 +21,16 @@ use crate::reader::require_part_attrs;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity_complex;
 
 pub(crate) struct RationalBsplineCurveHandler;
 
+#[step_entity_complex(
+    name = "RATIONAL_B_SPLINE_CURVE",
+    pass = Pass4Rational,
+    required = ["B_SPLINE_CURVE", "B_SPLINE_CURVE_WITH_KNOTS", "RATIONAL_B_SPLINE_CURVE"]
+)]
 impl ComplexEntityHandler for RationalBsplineCurveHandler {
-    const NAME: &'static str = "RATIONAL_B_SPLINE_CURVE";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass4Rational;
-    const REQUIRED_PARTS: &'static [&'static str] = &[
-        "B_SPLINE_CURVE",
-        "B_SPLINE_CURVE_WITH_KNOTS",
-        "RATIONAL_B_SPLINE_CURVE",
-    ];
     type WriteInput = NurbsCurve;
 
     fn read_complex(
@@ -162,14 +159,3 @@ impl ComplexEntityHandler for RationalBsplineCurveHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static RATIONAL_BSPLINE_CURVE_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: RationalBsplineCurveHandler::NAME,
-    pass_level: RationalBsplineCurveHandler::PASS_LEVEL,
-    kind: ReadKind::Complex {
-        required_parts: RationalBsplineCurveHandler::REQUIRED_PARTS,
-        read: RationalBsplineCurveHandler::read_complex,
-    },
-};
