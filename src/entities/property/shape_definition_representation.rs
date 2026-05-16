@@ -135,6 +135,12 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
             ctx.assembly_products[pid].shape_ref_frame = ref_frame;
         } else if let Some(&ref_frame) = ctx.wireframe_ref_frame_map.get(&effective_ref) {
             ctx.assembly_products[pid].shape_ref_frame = ref_frame;
+        } else if let Some(&ref_frame) = ctx.plain_sr_frame_map.get(&effective_ref) {
+            // Plain SHAPE_REPRESENTATION with no underlying ABSR/MSSR/wireframe
+            // (e.g. empty-Group products emitted by the writer). Without this
+            // fallback their shape_ref_frame stays at the PRODUCT-pass
+            // placeholder (Placement3dId(0)).
+            ctx.assembly_products[pid].shape_ref_frame = ref_frame;
         }
         // Attach the unit / uncertainty context referenced by this product's
         // inner shape representation. Look up by the resolved ABSR/MSSR/etc.

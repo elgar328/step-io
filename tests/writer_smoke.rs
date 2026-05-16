@@ -1091,6 +1091,89 @@ fn metadata_only_product_round_trips_with_none_geometry_context() {
 }
 
 #[test]
+fn empty_group_product_preserves_non_identity_shape_ref_frame() {
+    // Empty-Group child product (NIST-style raw-material / placeholder
+    // sub-assembly) carries its own placement via `shape_ref_frame`. The
+    // writer emits a plain SHAPE_REPRESENTATION with that axis; on re-read
+    // the SDR pass must pull the placement out of `plain_sr_frame_map`,
+    // not leave it at the PRODUCT-pass placeholder Placement3dId(0).
+    let mut model = empty_model();
+    model.units.push(mm_radian_steradian());
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+    let offset_loc = model.geometry.points.push(Point3 {
+        x: 4.0,
+        y: -2.0,
+        z: 7.5,
+    });
+    let offset_axis = model.geometry.directions.push(Direction3 {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+    });
+    let offset_ref = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let offset_frame = push_placement(&mut model, offset_loc, Some(offset_axis), Some(offset_ref));
+
+    let mut tree = AssemblyTree::default();
+    tree.products.push(Product {
+        id: "Main".into(),
+        name: "Main".into(),
+        description: None,
+        content: ProductContent::Solid(vec![solid_id]),
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+    });
+    tree.products.push(Product {
+        id: "Placeholder".into(),
+        name: "Placeholder".into(),
+        description: None,
+        content: ProductContent::Group(vec![]),
+        shape_ref_frame: offset_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+    });
+    model.assembly = Some(tree);
+
+    let text = model.write_to_string().expect("write");
+    let graph = parse(&text).expect("writer output parses");
+    let re = ReaderContext::convert(&graph).model;
+    let r_asm = re.assembly.as_ref().expect("round-tripped has assembly");
+    let ph = r_asm
+        .products
+        .iter()
+        .find(|p| p.id == "Placeholder")
+        .expect("placeholder product survived");
+    let frame = re
+        .geometry
+        .placements
+        .iter()
+        .nth(ph.shape_ref_frame.0 as usize)
+        .expect("frame id resolves");
+    let loc = re
+        .geometry
+        .points
+        .iter()
+        .nth(frame.location.0 as usize)
+        .expect("location point resolves");
+    assert!(
+        (loc.x - 4.0).abs() < 1e-9 && (loc.y + 2.0).abs() < 1e-9 && (loc.z - 7.5).abs() < 1e-9,
+        "expected offset (4, -2, 7.5), got ({}, {}, {})",
+        loc.x,
+        loc.y,
+        loc.z
+    );
+}
+
+#[test]
 fn explicit_ap203_schema_round_trips() {
     let mut model = empty_model();
     model.schema = StepSchema::canonical(SchemaClass::Ap203);
