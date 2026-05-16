@@ -311,8 +311,8 @@ impl ReaderContext {
         // remaining products are root candidates.
         let mut is_child: HashSet<ProductId> = HashSet::new();
         for product in self.assembly_products.iter() {
-            if let crate::ir::assembly::ProductContent::Group(instances) = &product.content {
-                for inst in instances {
+            if let crate::ir::assembly::ProductContent::Group(group) = &product.content {
+                for inst in &group.instances {
                     is_child.insert(inst.child);
                 }
             }

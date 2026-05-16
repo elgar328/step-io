@@ -7,7 +7,7 @@
 //! and the inner shape representation.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::assembly::ProductContent;
+use crate::ir::assembly::{ProductContent, SolidContent, SurfaceBodyContent};
 use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -71,7 +71,7 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
                 });
                 return Ok(());
             }
-            ProductContent::Group(instances) if !instances.is_empty() => {
+            ProductContent::Group(group) if !group.instances.is_empty() => {
                 ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                     entity_id,
                     detail: format!(
@@ -113,7 +113,8 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
             });
         }
         if let Some(solid_ids) = ctx.absr_solid_map.get(&effective_ref).cloned() {
-            ctx.assembly_products[pid].content = ProductContent::Solid(solid_ids);
+            ctx.assembly_products[pid].content =
+                ProductContent::Solid(SolidContent { ids: solid_ids });
         } else if let Some(shells) = ctx.mssr_shells_map.get(&effective_ref).cloned() {
             if shells.is_empty() {
                 ctx.warnings.push(ConvertError::UnexpectedEntityForm {
@@ -123,7 +124,8 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
                     ),
                 });
             } else {
-                ctx.assembly_products[pid].content = ProductContent::SurfaceBody(shells);
+                ctx.assembly_products[pid].content =
+                    ProductContent::SurfaceBody(SurfaceBodyContent { ids: shells });
             }
         } else if let Some(wf) = ctx.wireframe_data_map.get(&effective_ref).cloned() {
             ctx.assembly_products[pid].content = ProductContent::Wireframe(wf);

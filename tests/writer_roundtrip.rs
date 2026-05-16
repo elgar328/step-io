@@ -170,8 +170,8 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
             (ProductContent::Solid(_), ProductContent::Solid(_)) => {}
             (ProductContent::SurfaceBody(o), ProductContent::SurfaceBody(r)) => {
                 assert_eq!(
-                    o.len(),
-                    r.len(),
+                    o.ids.len(),
+                    r.ids.len(),
                     "{name}: product[{pidx}] surface body shells"
                 );
             }
@@ -192,8 +192,12 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
                 );
             }
             (ProductContent::Group(oi), ProductContent::Group(ri)) => {
-                assert_eq!(oi.len(), ri.len(), "{name}: product[{pidx}] instance count");
-                for (iidx, (o, r)) in oi.iter().zip(ri.iter()).enumerate() {
+                assert_eq!(
+                    oi.instances.len(),
+                    ri.instances.len(),
+                    "{name}: product[{pidx}] instance count"
+                );
+                for (iidx, (o, r)) in oi.instances.iter().zip(ri.instances.iter()).enumerate() {
                     assert_eq!(
                         o.child, r.child,
                         "{name}: product[{pidx}].instance[{iidx}].child"

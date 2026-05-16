@@ -105,23 +105,38 @@ pub struct ProductCategoryRoot {
     pub description: Option<String>,
 }
 
+/// Payload of a [`ProductContent::Group`] — instances referenced by an
+/// assembly or wrapper product. Phase A always leaves `instances` empty;
+/// Phase B populates it from `NEXT_ASSEMBLY_USAGE_OCCURRENCE` edges.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct GroupContent {
+    pub instances: Vec<Instance>,
+}
+
+/// Payload of a [`ProductContent::Solid`] — one or more `MANIFOLD_SOLID_BREP`
+/// items wrapped in a single `ADVANCED_BREP_SHAPE_REPRESENTATION`. Almost
+/// always a single solid; multi-body STEP files (rare) carry more than one.
+/// Invariant: non-empty.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SolidContent {
+    pub ids: Vec<SolidId>,
+}
+
+/// Payload of a [`ProductContent::SurfaceBody`] — the product is a
+/// `MANIFOLD_SURFACE_SHAPE_REPRESENTATION`'s `SHELL_BASED_SURFACE_MODEL`
+/// with one or more shells. Unlike [`SolidContent`], no closed volume is
+/// implied; shells are typically `OPEN_SHELL`, occasionally `CLOSED_SHELL`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceBodyContent {
+    pub ids: Vec<ShellId>,
+}
+
 /// What a [`Product`] holds.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProductContent {
-    /// Assembly or wrapper product — references other products as
-    /// [`Instance`]s. Phase A always produces an empty `Vec`; Phase B
-    /// populates it from `NEXT_ASSEMBLY_USAGE_OCCURRENCE` edges.
-    Group(Vec<Instance>),
-    /// Geometry leaf — one or more `MANIFOLD_SOLID_BREP` items wrapped in
-    /// a single `ADVANCED_BREP_SHAPE_REPRESENTATION`. Almost always a
-    /// single solid; multi-body STEP files (rare) carry more than one.
-    /// Invariant: non-empty.
-    Solid(Vec<SolidId>),
-    /// Surface body leaf — the product is a
-    /// `MANIFOLD_SURFACE_SHAPE_REPRESENTATION`'s `SHELL_BASED_SURFACE_MODEL`
-    /// with one or more shells. Unlike `Solid`, no closed volume is implied;
-    /// shells are typically `OPEN_SHELL`, occasionally `CLOSED_SHELL`.
-    SurfaceBody(Vec<ShellId>),
+    Group(GroupContent),
+    Solid(SolidContent),
+    SurfaceBody(SurfaceBodyContent),
     /// Wireframe leaf — the product is a `GEOMETRIC_(CURVE_)SET` of curves
     /// (and optionally loose points) wrapped in a
     /// `GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION` (or its

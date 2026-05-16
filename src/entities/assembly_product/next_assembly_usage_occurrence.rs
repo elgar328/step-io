@@ -55,8 +55,8 @@ impl SimpleEntityHandler for NextAssemblyUsageOccurrenceHandler {
         };
 
         match &mut ctx.assembly_products[parent_pid].content {
-            ProductContent::Group(instances) => {
-                instances.push(Instance {
+            ProductContent::Group(group) => {
+                group.instances.push(Instance {
                     child: child_pid,
                     transform,
                     occurrence_id,

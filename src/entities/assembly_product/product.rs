@@ -7,7 +7,7 @@
 //! which dispatches through this handler.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::assembly::{Product, ProductContent};
+use crate::ir::assembly::{GroupContent, Product, ProductContent};
 use crate::ir::attr::{check_count, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::id::Placement3dId;
@@ -60,7 +60,7 @@ impl SimpleEntityHandler for ProductHandler {
             id: id.to_owned(),
             name: name.to_owned(),
             description,
-            content: ProductContent::Group(Vec::new()),
+            content: ProductContent::Group(GroupContent::default()),
             shape_ref_frame,
             outer_sr_frame: None,
             category: None,

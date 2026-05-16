@@ -112,16 +112,17 @@ impl WriteBuffer<'_> {
                 continue;
             };
             let sr = match &product.content {
-                ProductContent::Solid(sids) => {
-                    let solid_refs: Vec<u64> = sids
+                ProductContent::Solid(solid) => {
+                    let solid_refs: Vec<u64> = solid
+                        .ids
                         .iter()
                         .map(|sid| self.emit_solid(*sid))
                         .collect::<Result<_, _>>()?;
                     let absr = self.emit_absr(product, solid_refs, unit_ctx)?;
                     self.wrap_indirect_sr_if_set(product, absr, unit_ctx)?
                 }
-                ProductContent::SurfaceBody(shells) => {
-                    let mssr = self.emit_mssr(product, shells, unit_ctx)?;
+                ProductContent::SurfaceBody(sbody) => {
+                    let mssr = self.emit_mssr(product, &sbody.ids, unit_ctx)?;
                     self.wrap_indirect_sr_if_set(product, mssr, unit_ctx)?
                 }
                 ProductContent::Wireframe(wf) => {
@@ -139,7 +140,7 @@ impl WriteBuffer<'_> {
         // Emit per-instance bundles for every Group product.
         #[allow(clippy::cast_possible_truncation)]
         for (parent_idx, parent) in products.iter().enumerate() {
-            let ProductContent::Group(instances) = &parent.content else {
+            let ProductContent::Group(group) = &parent.content else {
                 continue;
             };
             let parent_pid = ProductId(parent_idx as u32);
@@ -153,7 +154,7 @@ impl WriteBuffer<'_> {
             // Clone product_def_ids for emit_instance_bundle so it can
             // borrow `&self` via emit_* methods without overlapping borrows.
             let product_def = self.product_def_ids.clone();
-            for inst in instances {
+            for inst in &group.instances {
                 if !product_sr.contains_key(&inst.child) {
                     // Child product has no SR (geometry_context: None
                     // — metadata-only). A CDSR/RRWT bundle can't point

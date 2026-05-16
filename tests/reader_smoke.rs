@@ -1241,9 +1241,9 @@ fn assembly_fixtures_content_variants_split_three_solids_four_groups() {
         assert_eq!(group_count, 4, "fixture {name}: groups");
         // Every Solid's SolidId must live in the topology pool.
         for product in tree.products.iter() {
-            if let ProductContent::Solid(sids) = &product.content {
+            if let ProductContent::Solid(solid) = &product.content {
                 let total = u32::try_from(result.model.topology.solids.len()).unwrap();
-                for sid in sids {
+                for sid in &solid.ids {
                     assert!(
                         sid.0 < total,
                         "fixture {name}: product solid id out of range"
@@ -1400,9 +1400,9 @@ fn assembly_fixtures_root_has_four_instances() {
         let tree = result.model.assembly.as_ref().unwrap();
         let root = tree.root.unwrap();
         match &tree.products[root].content {
-            ProductContent::Group(instances) => {
+            ProductContent::Group(group) => {
                 assert_eq!(
-                    instances.len(),
+                    group.instances.len(),
                     4,
                     "fixture {name}: root should hold 4 instances"
                 );
@@ -1426,17 +1426,19 @@ fn assembly_fixtures_cube_wrapper_is_shared() {
         let tree = result.model.assembly.as_ref().unwrap();
         // The Cube wrapper is a Group with a single inner Cube leaf.
         let Some((idx, _)) = tree.products.iter().enumerate().find(|(_, p)| {
-            p.name == "Part" && matches!(&p.content, ProductContent::Group(v) if v.len() == 1)
+            p.name == "Part"
+                && matches!(&p.content, ProductContent::Group(v) if v.instances.len() == 1)
         }) else {
             panic!("fixture {name}: Cube wrapper 'Part' not found");
         };
         let cube_wrapper = step_io::ProductId(u32::try_from(idx).unwrap());
 
         let root = tree.root.unwrap();
-        let ProductContent::Group(root_instances) = &tree.products[root].content else {
+        let ProductContent::Group(root_group) = &tree.products[root].content else {
             panic!("fixture {name}: root not Group");
         };
-        let shared_count = root_instances
+        let shared_count = root_group
+            .instances
             .iter()
             .filter(|inst| inst.child == cube_wrapper)
             .count();
@@ -1446,7 +1448,8 @@ fn assembly_fixtures_cube_wrapper_is_shared() {
         );
 
         // The two shared instances must have different transforms.
-        let mut targets = root_instances
+        let mut targets = root_group
+            .instances
             .iter()
             .filter(|inst| inst.child == cube_wrapper)
             .map(|inst| inst.transform.target);
@@ -1472,7 +1475,7 @@ fn assembly_fixtures_wrapper_holds_single_inner() {
         let wrapper_count = tree
             .products
             .iter()
-            .filter(|p| matches!(&p.content, ProductContent::Group(v) if v.len() == 1))
+            .filter(|p| matches!(&p.content, ProductContent::Group(v) if v.instances.len() == 1))
             .count();
         assert_eq!(
             wrapper_count, 3,
@@ -1494,8 +1497,8 @@ fn assembly_fixtures_transform_target_is_non_origin() {
         // coordinates to exercise the transform path.
         let mut found_non_origin = false;
         for product in tree.products.iter() {
-            if let ProductContent::Group(instances) = &product.content {
-                for inst in instances {
+            if let ProductContent::Group(group) = &product.content {
+                for inst in &group.instances {
                     let target = result.model.geometry.placements[inst.transform.target];
                     let pt = &result.model.geometry.points[target.location];
                     if pt.x.abs() + pt.y.abs() + pt.z.abs() > f64::EPSILON {
