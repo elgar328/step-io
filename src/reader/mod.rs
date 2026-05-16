@@ -317,16 +317,9 @@ impl ReaderContext {
                 }
             }
         }
-        // Arena<T>::iter() only hands out `&T`, so reconstruct ProductId
-        // from the enumeration index. `push` assigns sequential ids from 0.
-        // Product counts are dominated by STEP entity ids (u64) which fit
-        // comfortably in u32 for any realistic file.
-        #[allow(clippy::cast_possible_truncation)]
         let roots: Vec<ProductId> = self
             .assembly_products
-            .iter()
-            .enumerate()
-            .map(|(i, _)| ProductId(i as u32))
+            .iter_ids()
             .filter(|pid| !is_child.contains(pid))
             .collect();
         let root = match roots.as_slice() {

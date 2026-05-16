@@ -15,6 +15,7 @@
 use std::collections::HashMap;
 
 use super::WriteBuffer;
+use crate::ir::arena::Arena;
 use crate::ir::{
     Instance, Product, ProductContent, ProductId, Transform3d, WireframeContent, WireframeReprKind,
 };
@@ -54,7 +55,7 @@ impl WriteBuffer<'_> {
         // Clone out of `self.model` so the pass is free to call `&mut self`
         // methods without keeping a borrow on the model.
         let schema = self.model.schema.clone();
-        let products: Vec<Product> = assembly.products.iter().cloned().collect();
+        let products = assembly.products.clone();
         self.emit_assembly_chain(&products, &schema)?;
         Ok(())
     }
@@ -71,7 +72,7 @@ impl WriteBuffer<'_> {
 
     fn emit_assembly_chain(
         &mut self,
-        products: &[Product],
+        products: &Arena<Product>,
         schema: &StepSchema,
     ) -> Result<(), WriteError> {
         let ctx = self.emit_application_context(schema);
@@ -83,9 +84,7 @@ impl WriteBuffer<'_> {
         // `Property.target` ProductId to a STEP ref.
         let mut product_sr: HashMap<ProductId, u64> = HashMap::new();
 
-        #[allow(clippy::cast_possible_truncation)]
-        for (idx, product) in products.iter().enumerate() {
-            let pid = ProductId(idx as u32);
+        for (pid, product) in products.iter_with_ids() {
             let prod_entity = self.emit_product(product, &ctx);
             let formation = self.emit_formation(prod_entity, product);
             let pdef = self.emit_pdef(formation, ctx.pdef_ctx);
@@ -138,12 +137,10 @@ impl WriteBuffer<'_> {
         }
 
         // Emit per-instance bundles for every Group product.
-        #[allow(clippy::cast_possible_truncation)]
-        for (parent_idx, parent) in products.iter().enumerate() {
+        for (parent_pid, parent) in products.iter_with_ids() {
             let ProductContent::Group(group) = &parent.content else {
                 continue;
             };
-            let parent_pid = ProductId(parent_idx as u32);
             let parent_pdef = self.product_def_ids[&parent_pid];
             // No SR for this parent → no shape to anchor instances on.
             // Reached when the parent is a metadata-only Group([]) whose

@@ -31,7 +31,6 @@ pub(super) fn build_curve_common(
     for &pid in &nurbs.control_points {
         cp_refs.push(buf.emit_point(pid)?);
     }
-    #[allow(clippy::cast_possible_wrap)]
     let degree = Attribute::Integer(i64::from(nurbs.degree));
     Ok(CurveCommonAttrs {
         degree,
@@ -79,9 +78,7 @@ pub(super) fn build_surface_common(
         }
         cp_rows.push(Attribute::List(refs));
     }
-    #[allow(clippy::cast_possible_wrap)]
     let u_degree = Attribute::Integer(i64::from(nurbs.u_degree));
-    #[allow(clippy::cast_possible_wrap)]
     let v_degree = Attribute::Integer(i64::from(nurbs.v_degree));
     Ok(SurfaceCommonAttrs {
         u_degree,

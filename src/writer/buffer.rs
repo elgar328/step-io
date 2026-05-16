@@ -121,73 +121,57 @@ impl<'m> WriteBuffer<'m> {
         // all cross-pool references backward (parent after children).
         // Arena iteration yields the original Id order, so dedup maps set
         // in one pass are reused in the next.
-        for i in 0..self.model.geometry.points.len() {
-            #[allow(clippy::cast_possible_truncation)]
-            self.emit_point(PointId(i as u32))?;
+        for id in self.model.geometry.points.iter_ids() {
+            self.emit_point(id)?;
         }
-        for i in 0..self.model.geometry.directions.len() {
-            #[allow(clippy::cast_possible_truncation)]
-            self.emit_direction(DirectionId(i as u32))?;
+        for id in self.model.geometry.directions.iter_ids() {
+            self.emit_direction(id)?;
         }
-        for i in 0..self.model.geometry.placements.len() {
-            #[allow(clippy::cast_possible_truncation)]
-            self.emit_axis2_placement_3d(Placement3dId(i as u32))?;
+        for id in self.model.geometry.placements.iter_ids() {
+            self.emit_axis2_placement_3d(id)?;
         }
-        for i in 0..self.model.geometry.placements_1d.len() {
-            #[allow(clippy::cast_possible_truncation)]
-            self.emit_axis1_placement(Placement1dId(i as u32))?;
+        for id in self.model.geometry.placements_1d.iter_ids() {
+            self.emit_axis1_placement(id)?;
         }
-        for i in 0..self.model.geometry.curves.len() {
-            #[allow(clippy::cast_possible_truncation)]
-            self.emit_curve(CurveId(i as u32))?;
+        for id in self.model.geometry.curves.iter_ids() {
+            self.emit_curve(id)?;
         }
-        for i in 0..self.model.geometry.surfaces.len() {
-            #[allow(clippy::cast_possible_truncation)]
-            self.emit_surface(SurfaceId(i as u32))?;
+        for id in self.model.geometry.surfaces.iter_ids() {
+            self.emit_surface(id)?;
         }
         // 2D geometry (PCURVE parametric space) — emitted after 3D surfaces
         // so `emit_surface_curve_wrapper` can cache-hit the 3D basis surface,
         // and before topology so `emit_edge` can cache-hit the 2D curves.
         // Arena is empty for files without PCURVE content → zero iterations.
-        for i in 0..self.model.geometry.points_2d.len() {
-            #[allow(clippy::cast_possible_truncation)]
-            self.emit_point_2d(Point2dId(i as u32))?;
+        for id in self.model.geometry.points_2d.iter_ids() {
+            self.emit_point_2d(id)?;
         }
-        for i in 0..self.model.geometry.directions_2d.len() {
-            #[allow(clippy::cast_possible_truncation)]
-            self.emit_direction_2d(Direction2dId(i as u32))?;
+        for id in self.model.geometry.directions_2d.iter_ids() {
+            self.emit_direction_2d(id)?;
         }
-        for i in 0..self.model.geometry.placements_2d.len() {
-            #[allow(clippy::cast_possible_truncation)]
-            self.emit_axis2_placement_2d(Placement2dId(i as u32))?;
+        for id in self.model.geometry.placements_2d.iter_ids() {
+            self.emit_axis2_placement_2d(id)?;
         }
-        for i in 0..self.model.geometry.curves_2d.len() {
-            #[allow(clippy::cast_possible_truncation)]
-            self.emit_curve_2d(Curve2dId(i as u32))?;
+        for id in self.model.geometry.curves_2d.iter_ids() {
+            self.emit_curve_2d(id)?;
         }
-        for i in 0..self.model.geometry.vertices.len() {
-            #[allow(clippy::cast_possible_truncation)]
-            self.emit_vertex(VertexId(i as u32))?;
+        for id in self.model.geometry.vertices.iter_ids() {
+            self.emit_vertex(id)?;
         }
-        for i in 0..self.model.topology.edges.len() {
-            #[allow(clippy::cast_possible_truncation)]
-            self.emit_edge(EdgeId(i as u32))?;
+        for id in self.model.topology.edges.iter_ids() {
+            self.emit_edge(id)?;
         }
-        for i in 0..self.model.topology.wires.len() {
-            #[allow(clippy::cast_possible_truncation)]
-            self.emit_wire(WireId(i as u32))?;
+        for id in self.model.topology.wires.iter_ids() {
+            self.emit_wire(id)?;
         }
-        for i in 0..self.model.topology.faces.len() {
-            #[allow(clippy::cast_possible_truncation)]
-            self.emit_face(FaceId(i as u32))?;
+        for id in self.model.topology.faces.iter_ids() {
+            self.emit_face(id)?;
         }
-        for i in 0..self.model.topology.shells.len() {
-            #[allow(clippy::cast_possible_truncation)]
-            self.emit_shell(ShellId(i as u32))?;
+        for id in self.model.topology.shells.iter_ids() {
+            self.emit_shell(id)?;
         }
-        for i in 0..self.model.topology.solids.len() {
-            #[allow(clippy::cast_possible_truncation)]
-            self.emit_solid(SolidId(i as u32))?;
+        for id in self.model.topology.solids.iter_ids() {
+            self.emit_solid(id)?;
         }
         // Emit one REPRESENTATION_CONTEXT per IR `UnitContext`. The cached
         // STEP ids land in `unit_context_ids` so each downstream emitter can

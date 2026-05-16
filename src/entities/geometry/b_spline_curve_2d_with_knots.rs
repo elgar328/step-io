@@ -97,7 +97,6 @@ impl SimpleEntityHandler for BSplineCurve2dWithKnotsHandler {
         for &pid in &nurbs.control_points {
             cp_refs.push(CartesianPoint2dHandler::write(buf, pid)?);
         }
-        #[allow(clippy::cast_possible_wrap)]
         let degree_attr = Attribute::Integer(i64::from(nurbs.degree));
         let cps_attr = Attribute::List(cp_refs.into_iter().map(Attribute::EntityRef).collect());
         let mults_attr = Attribute::List(

@@ -50,7 +50,6 @@ impl SimpleEntityHandler for ProductHandler {
         // during the geometry passes so the arena count stays faithful to the
         // source file. Only fall back to pushing a fresh identity when no
         // AXIS2 exists (degenerate fixture).
-        #[allow(clippy::cast_possible_truncation)]
         let shape_ref_frame = if ctx.geometry.placements.is_empty() {
             ctx.geometry.identity_placement()
         } else {

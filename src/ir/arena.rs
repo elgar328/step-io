@@ -82,6 +82,22 @@ macro_rules! define_id {
                 self.items.push(item);
                 $id(idx as u32)
             }
+
+            /// Iterate every Id in insertion order.
+            #[allow(clippy::cast_possible_truncation)]
+            pub fn iter_ids(&self) -> impl Iterator<Item = $id> + '_ {
+                (0..self.items.len()).map(|i| $id(i as u32))
+            }
+
+            /// Iterate `(Id, &item)` pairs. Replaces the
+            /// `iter().enumerate().map(|(i, _)| Id(i as u32))` idiom.
+            #[allow(clippy::cast_possible_truncation)]
+            pub fn iter_with_ids(&self) -> impl Iterator<Item = ($id, &$item)> + '_ {
+                self.items
+                    .iter()
+                    .enumerate()
+                    .map(|(i, item)| ($id(i as u32), item))
+            }
         }
     };
 }
