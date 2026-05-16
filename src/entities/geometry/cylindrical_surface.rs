@@ -1,9 +1,7 @@
 //! `CYLINDRICAL_SURFACE` handler — Pass 4-1 leaf surface.
 
+use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::axis2_placement_3d::Axis2Placement3dHandler;
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
 use crate::ir::attr::{check_count, read_entity_ref, read_real, read_string};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{CylindricalSurface, Surface};
@@ -12,12 +10,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct CylindricalSurfaceHandler;
 
+#[step_entity(name = "CYLINDRICAL_SURFACE", pass = Pass4Leaf)]
 impl SimpleEntityHandler for CylindricalSurfaceHandler {
-    const NAME: &'static str = "CYLINDRICAL_SURFACE";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass4Leaf;
     type WriteInput = CylindricalSurface;
 
     fn read(
@@ -56,13 +54,3 @@ impl SimpleEntityHandler for CylindricalSurfaceHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static CYLINDRICAL_SURFACE_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: CylindricalSurfaceHandler::NAME,
-    pass_level: CylindricalSurfaceHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: CylindricalSurfaceHandler::read,
-    },
-};

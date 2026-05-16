@@ -6,9 +6,7 @@
 //! the standard SBSM line; shell entities themselves are emitted by
 //! `emit_shell` upstream.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref_list, read_string};
 use crate::ir::error::ConvertError;
 use crate::ir::id::ShellId;
@@ -16,12 +14,12 @@ use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
+use step_io_macros::step_entity;
 
 pub(crate) struct ShellBasedSurfaceModelHandler;
 
+#[step_entity(name = "SHELL_BASED_SURFACE_MODEL", pass = Pass6Sbsm)]
 impl SimpleEntityHandler for ShellBasedSurfaceModelHandler {
-    const NAME: &'static str = "SHELL_BASED_SURFACE_MODEL";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass6Sbsm;
     type WriteInput = Vec<ShellId>;
 
     fn read(
@@ -55,13 +53,3 @@ impl SimpleEntityHandler for ShellBasedSurfaceModelHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static SBSM_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: ShellBasedSurfaceModelHandler::NAME,
-    pass_level: ShellBasedSurfaceModelHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: ShellBasedSurfaceModelHandler::read,
-    },
-};

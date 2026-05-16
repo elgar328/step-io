@@ -1,10 +1,8 @@
 //! `B_SPLINE_SURFACE_WITH_KNOTS` handler — Pass 4-1 leaf NURBS surface
 //! (non-rational; rational form lives in `rational_bspline_surface.rs`).
 
+use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::cartesian_point::CartesianPointHandler;
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
 use crate::ir::attr::{
     check_count, logical_to_step, read_bool, read_entity_ref_grid, read_enum, read_integer,
     read_integer_list, read_logical, read_real_list, read_string,
@@ -16,12 +14,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct BSplineSurfaceWithKnotsHandler;
 
+#[step_entity(name = "B_SPLINE_SURFACE_WITH_KNOTS", pass = Pass4Leaf)]
 impl SimpleEntityHandler for BSplineSurfaceWithKnotsHandler {
-    const NAME: &'static str = "B_SPLINE_SURFACE_WITH_KNOTS";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass4Leaf;
     type WriteInput = NurbsSurface;
 
     #[allow(clippy::too_many_lines)]
@@ -164,13 +162,3 @@ impl SimpleEntityHandler for BSplineSurfaceWithKnotsHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static B_SPLINE_SURFACE_WITH_KNOTS_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: BSplineSurfaceWithKnotsHandler::NAME,
-    pass_level: BSplineSurfaceWithKnotsHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: BSplineSurfaceWithKnotsHandler::read,
-    },
-};

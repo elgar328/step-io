@@ -5,10 +5,8 @@
 //! `(Direction2dId, magnitude)` pair in `vector_2d_map` keyed by entity
 //! id rather than allocating an arena entry.
 
+use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::direction_2d::Direction2dHandler;
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
 use crate::ir::Direction2dId;
 use crate::ir::attr::{check_count, read_entity_ref, read_real, read_string};
 use crate::ir::error::ConvertError;
@@ -17,12 +15,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct Vector2dHandler;
 
+#[step_entity(name = "VECTOR", pass = Pass4aVector)]
 impl SimpleEntityHandler for Vector2dHandler {
-    const NAME: &'static str = "VECTOR";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass4aVector;
     type WriteInput = (Direction2dId, f64);
 
     fn read(
@@ -65,13 +63,3 @@ impl SimpleEntityHandler for Vector2dHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static VECTOR_2D_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: Vector2dHandler::NAME,
-    pass_level: Vector2dHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: Vector2dHandler::read,
-    },
-};

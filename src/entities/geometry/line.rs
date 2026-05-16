@@ -2,11 +2,9 @@
 //!
 //! Mirrors `ReaderContext::convert_line` and `WriteBuffer::emit_line`.
 
+use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::cartesian_point::CartesianPointHandler;
 use crate::entities::geometry::vector::VectorHandler;
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
 use crate::ir::attr::{check_count, read_entity_ref, read_string};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Curve, Line3};
@@ -15,12 +13,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct LineHandler;
 
+#[step_entity(name = "LINE", pass = Pass4Leaf)]
 impl SimpleEntityHandler for LineHandler {
-    const NAME: &'static str = "LINE";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass4Leaf;
     type WriteInput = Line3;
 
     fn read(
@@ -70,13 +68,3 @@ impl SimpleEntityHandler for LineHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static LINE_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: LineHandler::NAME,
-    pass_level: LineHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: LineHandler::read,
-    },
-};

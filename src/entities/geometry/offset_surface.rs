@@ -10,9 +10,7 @@
 
 #![allow(clippy::doc_markdown)]
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{
     check_count, logical_to_step, read_entity_ref, read_logical, read_real, read_string,
 };
@@ -23,12 +21,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct OffsetSurfaceHandler;
 
+#[step_entity(name = "OFFSET_SURFACE", pass = Pass4_4Offset)]
 impl SimpleEntityHandler for OffsetSurfaceHandler {
-    const NAME: &'static str = "OFFSET_SURFACE";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass4_4Offset;
     type WriteInput = SurfaceOfOffset;
 
     fn read(
@@ -77,13 +75,3 @@ impl SimpleEntityHandler for OffsetSurfaceHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static OFFSET_SURFACE_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: OffsetSurfaceHandler::NAME,
-    pass_level: OffsetSurfaceHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: OffsetSurfaceHandler::read,
-    },
-};

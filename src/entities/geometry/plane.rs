@@ -1,9 +1,7 @@
 //! `PLANE` handler — Pass 4-1 leaf 3D plane.
 
+use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::axis2_placement_3d::Axis2Placement3dHandler;
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
 use crate::ir::attr::{check_count, read_entity_ref, read_string};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Plane3, Surface};
@@ -12,12 +10,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct PlaneHandler;
 
+#[step_entity(name = "PLANE", pass = Pass4Leaf)]
 impl SimpleEntityHandler for PlaneHandler {
-    const NAME: &'static str = "PLANE";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass4Leaf;
     type WriteInput = Plane3;
 
     fn read(
@@ -51,13 +49,3 @@ impl SimpleEntityHandler for PlaneHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static PLANE_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: PlaneHandler::NAME,
-    pass_level: PlaneHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: PlaneHandler::read,
-    },
-};

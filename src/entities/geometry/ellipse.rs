@@ -1,9 +1,7 @@
 //! `ELLIPSE` handler — Pass 4-1 leaf 3D ellipse.
 
+use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::axis2_placement_3d::Axis2Placement3dHandler;
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
 use crate::ir::attr::{check_count, read_entity_ref, read_real, read_string};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Curve, Ellipse3};
@@ -12,12 +10,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct EllipseHandler;
 
+#[step_entity(name = "ELLIPSE", pass = Pass4Leaf)]
 impl SimpleEntityHandler for EllipseHandler {
-    const NAME: &'static str = "ELLIPSE";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass4Leaf;
     type WriteInput = Ellipse3;
 
     fn read(
@@ -67,13 +65,3 @@ impl SimpleEntityHandler for EllipseHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static ELLIPSE_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: EllipseHandler::NAME,
-    pass_level: EllipseHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: EllipseHandler::read,
-    },
-};

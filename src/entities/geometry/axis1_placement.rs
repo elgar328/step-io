@@ -3,11 +3,9 @@
 //! Mirrors the legacy `ReaderContext::convert_axis1_placement` and
 //! `WriteBuffer::emit_axis1_placement`.
 
+use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::cartesian_point::CartesianPointHandler;
 use crate::entities::geometry::direction::DirectionHandler;
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
 use crate::ir::Placement1dId;
 use crate::ir::attr::{check_count, read_entity_ref, read_string};
 use crate::ir::error::ConvertError;
@@ -17,12 +15,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct Axis1PlacementHandler;
 
+#[step_entity(name = "AXIS1_PLACEMENT", pass = Pass3)]
 impl SimpleEntityHandler for Axis1PlacementHandler {
-    const NAME: &'static str = "AXIS1_PLACEMENT";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass3;
     type WriteInput = Placement1dId;
 
     fn read(
@@ -68,13 +66,3 @@ impl SimpleEntityHandler for Axis1PlacementHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static AXIS1_PLACEMENT_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: Axis1PlacementHandler::NAME,
-    pass_level: Axis1PlacementHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: Axis1PlacementHandler::read,
-    },
-};

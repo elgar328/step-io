@@ -6,9 +6,7 @@
 //! the owning `COMPOSITE_CURVE` later assembles `CompositeSegment`
 //! values from that map.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_enum};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{CompositeSegment, TransitionCode};
@@ -17,12 +15,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct CompositeCurveSegmentHandler;
 
+#[step_entity(name = "COMPOSITE_CURVE_SEGMENT", pass = Pass4_3cTrimSeg)]
 impl SimpleEntityHandler for CompositeCurveSegmentHandler {
-    const NAME: &'static str = "COMPOSITE_CURVE_SEGMENT";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass4_3cTrimSeg;
     type WriteInput = CompositeSegment;
 
     fn read(
@@ -72,13 +70,3 @@ impl SimpleEntityHandler for CompositeCurveSegmentHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static COMPOSITE_CURVE_SEGMENT_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: CompositeCurveSegmentHandler::NAME,
-    pass_level: CompositeCurveSegmentHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: CompositeCurveSegmentHandler::read,
-    },
-};

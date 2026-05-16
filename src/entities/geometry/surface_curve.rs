@@ -8,9 +8,7 @@
 //! `surface_curve_pcurves_map` (formerly `ReaderContext::collect_surface_curve_pcurves`)
 //! also lives here so the entity module is self-contained.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::Pcurve;
 use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string};
 use crate::ir::error::ConvertError;
@@ -19,6 +17,7 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 /// Reader body shared by `SURFACE_CURVE` and `SEAM_CURVE`. Both alias
 /// the entity id to its underlying 3D curve in `curve_map`; pcurves are
@@ -103,9 +102,8 @@ pub(super) fn write_surface_or_seam_curve_body(
 
 pub(crate) struct SurfaceCurveHandler;
 
+#[step_entity(name = "SURFACE_CURVE", pass = Pass4_3SurfaceCurve)]
 impl SimpleEntityHandler for SurfaceCurveHandler {
-    const NAME: &'static str = "SURFACE_CURVE";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass4_3SurfaceCurve;
     /// `(curve_3d_ref, pcurves)` — caller (writer wrapper) already
     /// emitted the underlying 3D curve and hands over the resolved
     /// pcurve list.
@@ -127,13 +125,3 @@ impl SimpleEntityHandler for SurfaceCurveHandler {
         write_surface_or_seam_curve_body(buf, curve_3d_ref, &pcurves, false)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static SURFACE_CURVE_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: SurfaceCurveHandler::NAME,
-    pass_level: SurfaceCurveHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: SurfaceCurveHandler::read,
-    },
-};

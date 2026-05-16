@@ -7,9 +7,7 @@
 //! and `points` buckets; writer emits a single line under the requested
 //! entity name with the IR's curve / point ids inlined as entity refs.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::id::{CurveId, PointId};
@@ -17,6 +15,7 @@ use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
+use step_io_macros::step_entity;
 
 pub(crate) struct CurveSetWriteInput {
     pub(crate) curves: Vec<CurveId>,
@@ -74,9 +73,8 @@ pub(crate) fn write_geometric_curve_set(
 
 pub(crate) struct GeometricCurveSetHandler;
 
+#[step_entity(name = "GEOMETRIC_CURVE_SET", pass = Pass6CurveSet)]
 impl SimpleEntityHandler for GeometricCurveSetHandler {
-    const NAME: &'static str = "GEOMETRIC_CURVE_SET";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass6CurveSet;
     type WriteInput = CurveSetWriteInput;
 
     fn read(
@@ -92,13 +90,3 @@ impl SimpleEntityHandler for GeometricCurveSetHandler {
         write_geometric_curve_set(buf, "GEOMETRIC_CURVE_SET", input)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static GCS_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: GeometricCurveSetHandler::NAME,
-    pass_level: GeometricCurveSetHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: GeometricCurveSetHandler::read,
-    },
-};

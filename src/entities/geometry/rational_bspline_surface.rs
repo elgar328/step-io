@@ -7,10 +7,7 @@
 //! mistakes one for the other.
 
 use crate::entities::geometry::cartesian_point::CartesianPointHandler;
-use crate::entities::{
-    ComplexEntityHandler, ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind,
-    SimpleEntityHandler,
-};
+use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::attr::{
     logical_to_step, read_bool, read_entity_ref_grid, read_enum, read_integer, read_integer_list,
     read_logical, read_real_grid, read_real_list, read_string,
@@ -23,17 +20,14 @@ use crate::reader::require_part_attrs;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity_complex;
 
 pub(crate) struct RationalBsplineSurfaceHandler;
 
-impl ComplexEntityHandler for RationalBsplineSurfaceHandler {
-    const NAME: &'static str = "RATIONAL_B_SPLINE_SURFACE";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass4Rational;
-    const REQUIRED_PARTS: &'static [&'static str] = &[
-        "B_SPLINE_SURFACE",
+#[step_entity_complex(name = "RATIONAL_B_SPLINE_SURFACE", pass = Pass4Rational, required = ["B_SPLINE_SURFACE",
         "B_SPLINE_SURFACE_WITH_KNOTS",
-        "RATIONAL_B_SPLINE_SURFACE",
-    ];
+        "RATIONAL_B_SPLINE_SURFACE",])]
+impl ComplexEntityHandler for RationalBsplineSurfaceHandler {
     type WriteInput = NurbsSurface;
 
     #[allow(clippy::too_many_lines)]
@@ -230,14 +224,3 @@ impl ComplexEntityHandler for RationalBsplineSurfaceHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static RATIONAL_BSPLINE_SURFACE_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: RationalBsplineSurfaceHandler::NAME,
-    pass_level: RationalBsplineSurfaceHandler::PASS_LEVEL,
-    kind: ReadKind::Complex {
-        required_parts: RationalBsplineSurfaceHandler::REQUIRED_PARTS,
-        read: RationalBsplineSurfaceHandler::read_complex,
-    },
-};

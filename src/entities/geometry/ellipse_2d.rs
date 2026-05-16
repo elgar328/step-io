@@ -1,9 +1,7 @@
 //! `ELLIPSE` handler — Pass 4a-3 (2D, pcurve subtree).
 
+use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::axis2_placement_2d::Axis2Placement2dHandler;
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
 use crate::ir::attr::{check_count, read_entity_ref, read_real, read_string};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Curve2d, Ellipse2};
@@ -12,12 +10,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct Ellipse2dHandler;
 
+#[step_entity(name = "ELLIPSE", pass = Pass4aCurve)]
 impl SimpleEntityHandler for Ellipse2dHandler {
-    const NAME: &'static str = "ELLIPSE";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass4aCurve;
     type WriteInput = Ellipse2;
 
     fn read(
@@ -63,13 +61,3 @@ impl SimpleEntityHandler for Ellipse2dHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static ELLIPSE_2D_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: Ellipse2dHandler::NAME,
-    pass_level: Ellipse2dHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: Ellipse2dHandler::read,
-    },
-};

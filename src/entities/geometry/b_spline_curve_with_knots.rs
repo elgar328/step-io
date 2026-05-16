@@ -1,10 +1,8 @@
 //! `B_SPLINE_CURVE_WITH_KNOTS` handler — Pass 4-1 leaf NURBS curve
 //! (non-rational; rational form lives in `rational_bspline_curve.rs`).
 
+use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::cartesian_point::CartesianPointHandler;
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
 use crate::ir::attr::{
     check_count, logical_to_step, read_bool, read_entity_ref_list, read_enum, read_integer,
     read_integer_list, read_logical, read_real_list, read_string,
@@ -16,12 +14,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct BSplineCurveWithKnotsHandler;
 
+#[step_entity(name = "B_SPLINE_CURVE_WITH_KNOTS", pass = Pass4Leaf)]
 impl SimpleEntityHandler for BSplineCurveWithKnotsHandler {
-    const NAME: &'static str = "B_SPLINE_CURVE_WITH_KNOTS";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass4Leaf;
     type WriteInput = NurbsCurve;
 
     fn read(
@@ -121,13 +119,3 @@ impl SimpleEntityHandler for BSplineCurveWithKnotsHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static B_SPLINE_CURVE_WITH_KNOTS_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: BSplineCurveWithKnotsHandler::NAME,
-    pass_level: BSplineCurveWithKnotsHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: BSplineCurveWithKnotsHandler::read,
-    },
-};

@@ -3,10 +3,8 @@
 //! Mirrors `ReaderContext::convert_surface_of_linear_extrusion` and
 //! `WriteBuffer::emit_surface_of_linear_extrusion`.
 
+use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::vector::VectorHandler;
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
 use crate::ir::attr::{check_count, read_entity_ref, read_string};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Surface, SurfaceOfLinearExtrusion};
@@ -15,12 +13,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct SurfaceOfLinearExtrusionHandler;
 
+#[step_entity(name = "SURFACE_OF_LINEAR_EXTRUSION", pass = Pass4_4Swept)]
 impl SimpleEntityHandler for SurfaceOfLinearExtrusionHandler {
-    const NAME: &'static str = "SURFACE_OF_LINEAR_EXTRUSION";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass4_4Swept;
     type WriteInput = SurfaceOfLinearExtrusion;
 
     fn read(
@@ -66,13 +64,3 @@ impl SimpleEntityHandler for SurfaceOfLinearExtrusionHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static SURFACE_OF_LINEAR_EXTRUSION_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: SurfaceOfLinearExtrusionHandler::NAME,
-    pass_level: SurfaceOfLinearExtrusionHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: SurfaceOfLinearExtrusionHandler::read,
-    },
-};

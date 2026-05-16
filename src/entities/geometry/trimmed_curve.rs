@@ -3,10 +3,8 @@
 //! Mirrors `ReaderContext::convert_trimmed_curve` and
 //! `WriteBuffer::emit_trimmed_curve`.
 
+use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::cartesian_point::CartesianPointHandler;
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
 use crate::ir::PointId;
 use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_enum, read_string};
 use crate::ir::error::{AttributeKindTag, ConvertError};
@@ -16,12 +14,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct TrimmedCurveHandler;
 
+#[step_entity(name = "TRIMMED_CURVE", pass = Pass4_3cTrimSeg)]
 impl SimpleEntityHandler for TrimmedCurveHandler {
-    const NAME: &'static str = "TRIMMED_CURVE";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass4_3cTrimSeg;
     type WriteInput = TrimmedCurve;
 
     fn read(
@@ -151,13 +149,3 @@ fn build_trim_select(
     }
     Ok(elements)
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static TRIMMED_CURVE_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: TrimmedCurveHandler::NAME,
-    pass_level: TrimmedCurveHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: TrimmedCurveHandler::read,
-    },
-};

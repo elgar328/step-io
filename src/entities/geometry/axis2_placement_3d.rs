@@ -3,11 +3,9 @@
 //! Mirrors the legacy `ReaderContext::convert_axis2_placement_3d` and
 //! `WriteBuffer::emit_axis2_placement_3d`.
 
+use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::cartesian_point::CartesianPointHandler;
 use crate::entities::geometry::direction::DirectionHandler;
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
 use crate::ir::Placement3dId;
 use crate::ir::attr::{check_count, read_entity_ref, read_optional_entity_ref, read_string};
 use crate::ir::error::ConvertError;
@@ -17,12 +15,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct Axis2Placement3dHandler;
 
+#[step_entity(name = "AXIS2_PLACEMENT_3D", pass = Pass3)]
 impl SimpleEntityHandler for Axis2Placement3dHandler {
-    const NAME: &'static str = "AXIS2_PLACEMENT_3D";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass3;
     type WriteInput = Placement3dId;
 
     fn read(
@@ -91,13 +89,3 @@ impl SimpleEntityHandler for Axis2Placement3dHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static AXIS2_PLACEMENT_3D_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: Axis2Placement3dHandler::NAME,
-    pass_level: Axis2Placement3dHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: Axis2Placement3dHandler::read,
-    },
-};

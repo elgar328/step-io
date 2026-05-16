@@ -1,9 +1,7 @@
 //! `SPHERICAL_SURFACE` handler — Pass 4-1 leaf surface.
 
+use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::axis2_placement_3d::Axis2Placement3dHandler;
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
 use crate::ir::attr::{check_count, read_entity_ref, read_real, read_string};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{SphericalSurface, Surface};
@@ -12,12 +10,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct SphericalSurfaceHandler;
 
+#[step_entity(name = "SPHERICAL_SURFACE", pass = Pass4Leaf)]
 impl SimpleEntityHandler for SphericalSurfaceHandler {
-    const NAME: &'static str = "SPHERICAL_SURFACE";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass4Leaf;
     type WriteInput = SphericalSurface;
 
     fn read(
@@ -56,13 +54,3 @@ impl SimpleEntityHandler for SphericalSurfaceHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static SPHERICAL_SURFACE_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: SphericalSurfaceHandler::NAME,
-    pass_level: SphericalSurfaceHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: SphericalSurfaceHandler::read,
-    },
-};

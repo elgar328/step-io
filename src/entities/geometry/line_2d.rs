@@ -1,10 +1,8 @@
 //! `LINE` handler — Pass 4a-3 (2D, pcurve subtree).
 
+use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::cartesian_point_2d::CartesianPoint2dHandler;
 use crate::entities::geometry::vector_2d::Vector2dHandler;
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
 use crate::ir::attr::{check_count, read_entity_ref, read_string};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Curve2d, Line2};
@@ -13,12 +11,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct Line2dHandler;
 
+#[step_entity(name = "LINE", pass = Pass4aCurve)]
 impl SimpleEntityHandler for Line2dHandler {
-    const NAME: &'static str = "LINE";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass4aCurve;
     type WriteInput = Line2;
 
     fn read(
@@ -71,13 +69,3 @@ impl SimpleEntityHandler for Line2dHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static LINE_2D_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: Line2dHandler::NAME,
-    pass_level: Line2dHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: Line2dHandler::read,
-    },
-};

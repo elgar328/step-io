@@ -5,9 +5,7 @@
 //! its existing wrapper (`emit_vertex`) so callers in adjacent emit
 //! functions don't have to import the handler.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::VertexId;
 use crate::ir::attr::{check_count, read_entity_ref, read_string};
 use crate::ir::error::ConvertError;
@@ -17,12 +15,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct VertexPointHandler;
 
+#[step_entity(name = "VERTEX_POINT", pass = Pass5Vertex)]
 impl SimpleEntityHandler for VertexPointHandler {
-    const NAME: &'static str = "VERTEX_POINT";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass5Vertex;
     type WriteInput = VertexId;
 
     fn read(
@@ -73,13 +71,3 @@ impl SimpleEntityHandler for VertexPointHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static VERTEX_POINT_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: VertexPointHandler::NAME,
-    pass_level: VertexPointHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: VertexPointHandler::read,
-    },
-};

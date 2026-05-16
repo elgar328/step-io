@@ -4,11 +4,9 @@
 //! `emit_axis2_placement_2d`. Distinct STEP entity name (no 3D
 //! counterpart sharing it), so dispatch is straightforward.
 
+use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::cartesian_point_2d::CartesianPoint2dHandler;
 use crate::entities::geometry::direction_2d::Direction2dHandler;
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
 use crate::ir::Placement2dId;
 use crate::ir::attr::{check_count, read_entity_ref, read_optional_entity_ref, read_string};
 use crate::ir::error::ConvertError;
@@ -18,12 +16,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct Axis2Placement2dHandler;
 
+#[step_entity(name = "AXIS2_PLACEMENT_2D", pass = Pass4aVector)]
 impl SimpleEntityHandler for Axis2Placement2dHandler {
-    const NAME: &'static str = "AXIS2_PLACEMENT_2D";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass4aVector;
     type WriteInput = Placement2dId;
 
     fn read(
@@ -87,13 +85,3 @@ impl SimpleEntityHandler for Axis2Placement2dHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static AXIS2_PLACEMENT_2D_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: Axis2Placement2dHandler::NAME,
-    pass_level: Axis2Placement2dHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: Axis2Placement2dHandler::read,
-    },
-};

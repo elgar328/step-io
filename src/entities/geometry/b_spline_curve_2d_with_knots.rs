@@ -5,10 +5,8 @@
 //! `UnsupportedIrVariant` if `weights` is set since 2D rational NURBS
 //! has no fixture coverage yet.
 
+use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::cartesian_point_2d::CartesianPoint2dHandler;
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
 use crate::ir::attr::{
     check_count, read_bool, read_entity_ref_list, read_enum, read_integer, read_integer_list,
     read_real_list, read_string,
@@ -20,12 +18,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct BSplineCurve2dWithKnotsHandler;
 
+#[step_entity(name = "B_SPLINE_CURVE_WITH_KNOTS", pass = Pass4aCurve)]
 impl SimpleEntityHandler for BSplineCurve2dWithKnotsHandler {
-    const NAME: &'static str = "B_SPLINE_CURVE_WITH_KNOTS";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass4aCurve;
     type WriteInput = NurbsCurve2d;
 
     fn read(
@@ -135,13 +133,3 @@ impl SimpleEntityHandler for BSplineCurve2dWithKnotsHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static B_SPLINE_CURVE_2D_WITH_KNOTS_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: BSplineCurve2dWithKnotsHandler::NAME,
-    pass_level: BSplineCurve2dWithKnotsHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: BSplineCurve2dWithKnotsHandler::read,
-    },
-};

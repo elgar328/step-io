@@ -3,10 +3,8 @@
 //! Mirrors `ReaderContext::convert_surface_of_revolution` and
 //! `WriteBuffer::emit_surface_of_revolution`.
 
+use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::axis1_placement::Axis1PlacementHandler;
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
 use crate::ir::attr::{check_count, read_entity_ref, read_string};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Surface, SurfaceOfRevolution};
@@ -15,12 +13,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct SurfaceOfRevolutionHandler;
 
+#[step_entity(name = "SURFACE_OF_REVOLUTION", pass = Pass4_4Swept)]
 impl SimpleEntityHandler for SurfaceOfRevolutionHandler {
-    const NAME: &'static str = "SURFACE_OF_REVOLUTION";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass4_4Swept;
     type WriteInput = SurfaceOfRevolution;
 
     fn read(
@@ -64,13 +62,3 @@ impl SimpleEntityHandler for SurfaceOfRevolutionHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static SURFACE_OF_REVOLUTION_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: SurfaceOfRevolutionHandler::NAME,
-    pass_level: SurfaceOfRevolutionHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: SurfaceOfRevolutionHandler::read,
-    },
-};
