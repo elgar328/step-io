@@ -2,10 +2,10 @@
 //! (non-rational; rational form lives in `rational_bspline_curve.rs`).
 
 use crate::entities::SimpleEntityHandler;
-use crate::entities::geometry::cartesian_point::CartesianPointHandler;
+use crate::entities::geometry::nurbs_shared::build_curve_common;
 use crate::ir::attr::{
-    check_count, logical_to_step, read_bool, read_entity_ref_list, read_enum, read_integer,
-    read_integer_list, read_logical, read_real_list, read_string,
+    check_count, read_bool, read_entity_ref_list, read_enum, read_integer, read_integer_list,
+    read_logical, read_real_list, read_string,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{Curve, CurveForm, NurbsCurve, NurbsKind};
@@ -79,25 +79,7 @@ impl SimpleEntityHandler for BSplineCurveWithKnotsHandler {
             nurbs.weights().is_none(),
             "BSplineCurveWithKnotsHandler::write expects a non-rational curve"
         );
-        let mut cp_refs = Vec::with_capacity(nurbs.control_points.len());
-        for &pid in &nurbs.control_points {
-            cp_refs.push(CartesianPointHandler::write(buf, pid)?);
-        }
-        #[allow(clippy::cast_possible_wrap)]
-        let degree_attr = Attribute::Integer(i64::from(nurbs.degree));
-        let cps_attr = Attribute::List(cp_refs.into_iter().map(Attribute::EntityRef).collect());
-        let mults_attr = Attribute::List(
-            nurbs
-                .knot_multiplicities
-                .iter()
-                .copied()
-                .map(Attribute::Integer)
-                .collect(),
-        );
-        let knots_attr =
-            Attribute::List(nurbs.knots.iter().copied().map(Attribute::Real).collect());
-        let closed_attr = Attribute::Enum(if nurbs.closed { "T".into() } else { "F".into() });
-        let form = nurbs.form;
+        let common = build_curve_common(buf, &nurbs)?;
         let n = buf.fresh();
         buf.entities.push(WriterEntity {
             id: n,
@@ -105,14 +87,14 @@ impl SimpleEntityHandler for BSplineCurveWithKnotsHandler {
                 name: "B_SPLINE_CURVE_WITH_KNOTS".into(),
                 attrs: vec![
                     Attribute::String(String::new()),
-                    degree_attr,
-                    cps_attr,
-                    Attribute::Enum(form.as_step_enum().into()),
-                    closed_attr,
-                    Attribute::Enum(logical_to_step(nurbs.self_intersect).into()),
-                    mults_attr,
-                    knots_attr,
-                    Attribute::Enum("UNSPECIFIED".into()),
+                    common.degree,
+                    common.cps,
+                    common.form,
+                    common.closed,
+                    common.self_intersect,
+                    common.mults,
+                    common.knots,
+                    common.knot_spec,
                 ],
             },
         });

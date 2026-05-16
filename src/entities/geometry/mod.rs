@@ -24,6 +24,7 @@ pub mod geometric_curve_set;
 pub mod geometric_set;
 pub mod line;
 pub mod line_2d;
+mod nurbs_shared;
 pub mod offset_surface;
 pub mod plane;
 pub mod rational_bspline_curve;

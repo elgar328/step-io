@@ -9,9 +9,10 @@
 //! emission moves here.
 
 use crate::entities::ComplexEntityHandler;
+use crate::entities::geometry::nurbs_shared::build_curve_common;
 use crate::ir::attr::{
-    logical_to_step, read_bool, read_entity_ref_list, read_enum, read_integer, read_integer_list,
-    read_logical, read_real_list, read_string,
+    read_bool, read_entity_ref_list, read_enum, read_integer, read_integer_list, read_logical,
+    read_real_list, read_string,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::NurbsKind;
@@ -96,31 +97,12 @@ impl ComplexEntityHandler for RationalBsplineCurveHandler {
     }
 
     fn write(buf: &mut WriteBuffer, nurbs: NurbsCurve) -> Result<u64, WriteError> {
+        let common = build_curve_common(buf, &nurbs)?;
         let NurbsKind::Rational { weights } = nurbs.kind else {
             return Err(WriteError::UnsupportedIrVariant {
                 detail: "RationalBsplineCurveHandler::write requires weights".into(),
             });
         };
-
-        let mut cp_refs = Vec::with_capacity(nurbs.control_points.len());
-        for &pid in &nurbs.control_points {
-            cp_refs.push(buf.emit_point(pid)?);
-        }
-        #[allow(clippy::cast_possible_wrap)]
-        let degree_attr = Attribute::Integer(i64::from(nurbs.degree));
-        let cps_attr = Attribute::List(cp_refs.into_iter().map(Attribute::EntityRef).collect());
-        let mults_attr = Attribute::List(
-            nurbs
-                .knot_multiplicities
-                .iter()
-                .copied()
-                .map(Attribute::Integer)
-                .collect(),
-        );
-        let knots_attr =
-            Attribute::List(nurbs.knots.iter().copied().map(Attribute::Real).collect());
-        let closed_attr = Attribute::Enum(if nurbs.closed { "T".into() } else { "F".into() });
-        let form = nurbs.form;
         let weights_attr = Attribute::List(weights.into_iter().map(Attribute::Real).collect());
 
         let n = buf.fresh();
@@ -132,20 +114,16 @@ impl ComplexEntityHandler for RationalBsplineCurveHandler {
                     (
                         "B_SPLINE_CURVE".into(),
                         vec![
-                            degree_attr,
-                            cps_attr,
-                            Attribute::Enum(form.as_step_enum().into()),
-                            closed_attr,
-                            Attribute::Enum(logical_to_step(nurbs.self_intersect).into()),
+                            common.degree,
+                            common.cps,
+                            common.form,
+                            common.closed,
+                            common.self_intersect,
                         ],
                     ),
                     (
                         "B_SPLINE_CURVE_WITH_KNOTS".into(),
-                        vec![
-                            mults_attr,
-                            knots_attr,
-                            Attribute::Enum("UNSPECIFIED".into()),
-                        ],
+                        vec![common.mults, common.knots, common.knot_spec],
                     ),
                     ("CURVE".into(), vec![]),
                     ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),

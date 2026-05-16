@@ -2,10 +2,10 @@
 //! (non-rational; rational form lives in `rational_bspline_surface.rs`).
 
 use crate::entities::SimpleEntityHandler;
-use crate::entities::geometry::cartesian_point::CartesianPointHandler;
+use crate::entities::geometry::nurbs_shared::build_surface_common;
 use crate::ir::attr::{
-    check_count, logical_to_step, read_bool, read_entity_ref_grid, read_enum, read_integer,
-    read_integer_list, read_logical, read_real_list, read_string,
+    check_count, read_bool, read_entity_ref_grid, read_enum, read_integer, read_integer_list,
+    read_logical, read_real_list, read_string,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{NurbsSurface, NurbsSurfaceKind, Surface, SurfaceForm};
@@ -91,52 +91,7 @@ impl SimpleEntityHandler for BSplineSurfaceWithKnotsHandler {
             nurbs.weights().is_none(),
             "BSplineSurfaceWithKnotsHandler::write expects a non-rational surface"
         );
-        let mut cp_rows: Vec<Attribute> = Vec::with_capacity(nurbs.control_points.len());
-        for row in &nurbs.control_points {
-            let mut refs = Vec::with_capacity(row.len());
-            for &pid in row {
-                refs.push(Attribute::EntityRef(CartesianPointHandler::write(
-                    buf, pid,
-                )?));
-            }
-            cp_rows.push(Attribute::List(refs));
-        }
-        let cps_attr = Attribute::List(cp_rows);
-        #[allow(clippy::cast_possible_wrap)]
-        let u_deg = Attribute::Integer(i64::from(nurbs.u_degree));
-        #[allow(clippy::cast_possible_wrap)]
-        let v_deg = Attribute::Integer(i64::from(nurbs.v_degree));
-        let u_closed = Attribute::Enum(if nurbs.u_closed {
-            "T".into()
-        } else {
-            "F".into()
-        });
-        let v_closed = Attribute::Enum(if nurbs.v_closed {
-            "T".into()
-        } else {
-            "F".into()
-        });
-        let u_mults_attr = Attribute::List(
-            nurbs
-                .u_knot_multiplicities
-                .iter()
-                .copied()
-                .map(Attribute::Integer)
-                .collect(),
-        );
-        let v_mults_attr = Attribute::List(
-            nurbs
-                .v_knot_multiplicities
-                .iter()
-                .copied()
-                .map(Attribute::Integer)
-                .collect(),
-        );
-        let u_knots_attr =
-            Attribute::List(nurbs.u_knots.iter().copied().map(Attribute::Real).collect());
-        let v_knots_attr =
-            Attribute::List(nurbs.v_knots.iter().copied().map(Attribute::Real).collect());
-        let form = nurbs.form;
+        let common = build_surface_common(buf, &nurbs)?;
         let n = buf.fresh();
         buf.entities.push(WriterEntity {
             id: n,
@@ -144,18 +99,18 @@ impl SimpleEntityHandler for BSplineSurfaceWithKnotsHandler {
                 name: "B_SPLINE_SURFACE_WITH_KNOTS".into(),
                 attrs: vec![
                     Attribute::String(String::new()),
-                    u_deg,
-                    v_deg,
-                    cps_attr,
-                    Attribute::Enum(form.as_step_enum().into()),
-                    u_closed,
-                    v_closed,
-                    Attribute::Enum(logical_to_step(nurbs.self_intersect).into()),
-                    u_mults_attr,
-                    v_mults_attr,
-                    u_knots_attr,
-                    v_knots_attr,
-                    Attribute::Enum("UNSPECIFIED".into()),
+                    common.u_degree,
+                    common.v_degree,
+                    common.cps,
+                    common.form,
+                    common.u_closed,
+                    common.v_closed,
+                    common.self_intersect,
+                    common.u_mults,
+                    common.v_mults,
+                    common.u_knots,
+                    common.v_knots,
+                    common.knot_spec,
                 ],
             },
         });
