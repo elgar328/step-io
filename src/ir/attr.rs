@@ -598,24 +598,26 @@ pub fn read_logical(
     index: usize,
     entity_id: u64,
     field_name: &'static str,
-) -> Result<Option<bool>, ConvertError> {
+) -> Result<crate::ir::geometry::Logical, ConvertError> {
+    use crate::ir::geometry::Logical;
     let val = read_enum(attrs, index, entity_id, field_name)?;
     Ok(match val {
-        "T" => Some(true),
-        "F" => Some(false),
-        _ => None,
+        "T" => Logical::True,
+        "F" => Logical::False,
+        _ => Logical::Unknown,
     })
 }
 
-/// Render `Option<bool>` as a STEP `LOGICAL` enum string for writer
-/// `Attribute::Enum`: `Some(true)` → `"T"`, `Some(false)` → `"F"`,
-/// `None` → `"U"`.
+/// Render [`Logical`](crate::ir::geometry::Logical) as a STEP `LOGICAL` enum
+/// string for writer `Attribute::Enum`: `True` → `"T"`, `False` → `"F"`,
+/// `Unknown` → `"U"`.
 #[must_use]
-pub fn logical_to_step(value: Option<bool>) -> &'static str {
+pub fn logical_to_step(value: crate::ir::geometry::Logical) -> &'static str {
+    use crate::ir::geometry::Logical;
     match value {
-        Some(true) => "T",
-        Some(false) => "F",
-        None => "U",
+        Logical::True => "T",
+        Logical::False => "F",
+        Logical::Unknown => "U",
     }
 }
 

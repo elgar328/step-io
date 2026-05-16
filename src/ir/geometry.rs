@@ -303,8 +303,8 @@ pub enum TrimMaster {
 #[derive(Debug, Clone, PartialEq)]
 pub struct CompositeCurve {
     pub segments: Vec<CompositeSegment>,
-    /// `.T.` / `.F.` / `.U.` (None) from `self_intersect : LOGICAL`.
-    pub self_intersect: Option<bool>,
+    /// `self_intersect : LOGICAL`.
+    pub self_intersect: Logical,
 }
 
 /// One segment of a `CompositeCurve`. Mirrors STEP `COMPOSITE_CURVE_SEGMENT`
@@ -315,6 +315,15 @@ pub struct CompositeSegment {
     pub transition: TransitionCode,
     pub same_sense: bool,
     pub parent_curve: CurveId,
+}
+
+/// STEP `LOGICAL` 3-state. `Unknown` corresponds to the `.U.` literal.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Logical {
+    True,
+    False,
+    #[default]
+    Unknown,
 }
 
 /// `transition_code` of a `COMPOSITE_CURVE_SEGMENT` — geometric continuity
@@ -345,8 +354,8 @@ pub struct NurbsCurve {
     pub knots: Vec<f64>,
     pub closed: bool,
     pub form: CurveForm,
-    /// `.T.` / `.F.` / `.U.` (None) from `self_intersect : LOGICAL`.
-    pub self_intersect: Option<bool>,
+    /// `self_intersect : LOGICAL`.
+    pub self_intersect: Logical,
 }
 
 /// A NURBS (Non-Uniform Rational B-Spline) surface.
@@ -368,8 +377,8 @@ pub struct NurbsSurface {
     pub u_closed: bool,
     pub v_closed: bool,
     pub form: SurfaceForm,
-    /// `.T.` / `.F.` / `.U.` (None) from `self_intersect : LOGICAL`.
-    pub self_intersect: Option<bool>,
+    /// `self_intersect : LOGICAL`.
+    pub self_intersect: Logical,
 }
 
 /// A surface of revolution defined by rotating a curve around an axis.
@@ -396,8 +405,8 @@ pub struct SurfaceOfLinearExtrusion {
 pub struct SurfaceOfOffset {
     pub basis: SurfaceId,
     pub distance: f64,
-    /// `.T.` / `.F.` / `.U.` (None) from `self_intersect : LOGICAL`.
-    pub self_intersect: Option<bool>,
+    /// `self_intersect : LOGICAL`.
+    pub self_intersect: Logical,
 }
 
 // ---------------------------------------------------------------------------
