@@ -31,6 +31,11 @@ impl SimpleEntityHandler for EllipseHandler {
         let semi_axis_1 = read_real(attrs, 2, entity_id, "semi_axis_1")?;
         let semi_axis_2 = read_real(attrs, 3, entity_id, "semi_axis_2")?;
 
+        // If the placement is a known 2D placement, this ELLIPSE is
+        // the 2D sister variant — silently skip.
+        if ctx.placement_2d_map.contains_key(&pos_ref) {
+            return Ok(());
+        }
         let position = ctx.resolve_placement(entity_id, pos_ref, "position")?;
 
         let ellipse = Ellipse3 {

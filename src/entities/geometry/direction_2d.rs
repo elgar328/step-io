@@ -19,7 +19,7 @@ pub(crate) struct Direction2dHandler;
 
 impl SimpleEntityHandler for Direction2dHandler {
     const NAME: &'static str = "DIRECTION";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass4aPoint;
+    const PASS_LEVEL: PassLevel = PassLevel::Pass1;
     type WriteInput = Direction2dId;
 
     fn read(
@@ -31,12 +31,10 @@ impl SimpleEntityHandler for Direction2dHandler {
         let _name = read_string(attrs, 0, entity_id, "name")?;
         let coords = read_real_list(attrs, 1, entity_id, "direction_ratios")?;
         if coords.len() != 2 {
-            return Err(ConvertError::DimensionMismatch {
-                entity_id,
-                field_name: "direction_ratios",
-                expected: 2,
-                actual: coords.len(),
-            });
+            // Wrong dimension for the 2D arena. The 3D sister handler
+            // claims 3-component DIRECTIONs; anything else is silently
+            // dropped here.
+            return Ok(());
         }
         let id = ctx.geometry.directions_2d.push(Direction2 {
             x: coords[0],

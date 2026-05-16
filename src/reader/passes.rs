@@ -338,12 +338,13 @@ impl ReaderContext {
     /// part name. Mirrors the `run_pass!` macro body for the simple path
     /// and the hand-rolled Pass 4-2 loop for the complex path.
     fn dispatch_entry(&mut self, graph: &EntityGraph, entry: &EntityHandlerEntry) {
-        // CARTESIAN_POINT is classified by coordinate count (its 2D/3D
-        // sister handlers silently skip the wrong dimension), so it does
-        // not honour the pcurve-subtree partition: a 2-coord point can
-        // legitimately appear at the top level (orphan in IR) and must
-        // still reach the 2D arena for round-trip preservation.
-        let respect_pcurve_partition = entry.name != "CARTESIAN_POINT";
+        // CARTESIAN_POINT and DIRECTION are classified by coordinate
+        // count (their 2D/3D sister handlers silently skip the wrong
+        // dimension), so they do not honour the pcurve-subtree
+        // partition: a 2-component instance can legitimately appear at
+        // the top level (orphan in IR) and must still reach the 2D
+        // arena for round-trip preservation.
+        let respect_pcurve_partition = !matches!(entry.name, "CARTESIAN_POINT" | "DIRECTION");
         for (&id, ent) in &graph.entities {
             if respect_pcurve_partition && self.pcurve_subtree_ids.contains(&id) {
                 continue;
@@ -389,17 +390,16 @@ impl ReaderContext {
         }
     }
 
-    /// Apply one registry entry to every entity *inside* a pcurve
-    /// subtree — the mirror image of [`dispatch_entry`] (which skips
-    /// pcurve subtree members). The body is otherwise identical; the
-    /// duplication is a deliberate trade-off documented in the Plan 5.5
-    /// design (see `internal/IR_DESIGN.md` for the planned future
-    /// generalisation into a single `EntityContext`-driven dispatch).
+    /// Apply one registry entry to every entity, regardless of pcurve
+    /// subtree membership. Each 2D handler self-discriminates by
+    /// coordinate count (`DIRECTION` / `CARTESIAN_POINT`) or by the
+    /// first cross-reference (`VECTOR` / `AXIS2` / curves);
+    /// wrong-dimension or 3D entities silently return `Ok(())`. The 3D
+    /// dispatch path [`dispatch_entry`] still filters pcurve-subtree
+    /// members for handlers other than `CARTESIAN_POINT` / `DIRECTION`,
+    /// which are coord-count-classified and dispatched on every entity.
     fn dispatch_entry_2d(&mut self, graph: &EntityGraph, entry: &EntityHandlerEntry) {
         for (&id, ent) in &graph.entities {
-            if !self.pcurve_subtree_ids.contains(&id) {
-                continue;
-            }
             match (&entry.kind, ent) {
                 (
                     ReadKind::Simple { read },

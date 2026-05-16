@@ -36,6 +36,11 @@ impl SimpleEntityHandler for Axis2Placement3dHandler {
         let axis_ref = read_optional_entity_ref(attrs, 2, entity_id, "axis")?;
         let ref_dir_ref = read_optional_entity_ref(attrs, 3, entity_id, "ref_direction")?;
 
+        // If the location is a known 2D point, this is the 2D sister
+        // placement variant — silently skip.
+        if ctx.point_2d_map.contains_key(&loc_ref) {
+            return Ok(());
+        }
         let location = ctx.resolve_point(entity_id, loc_ref, "location")?;
         let axis = axis_ref
             .map(|r| ctx.resolve_direction(entity_id, r, "axis"))

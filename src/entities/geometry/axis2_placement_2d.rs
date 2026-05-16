@@ -36,14 +36,11 @@ impl SimpleEntityHandler for Axis2Placement2dHandler {
         let loc_ref = read_entity_ref(attrs, 1, entity_id, "location")?;
         let ref_dir_ref = read_optional_entity_ref(attrs, 2, entity_id, "ref_direction")?;
 
-        let location = *ctx
-            .point_2d_map
-            .get(&loc_ref)
-            .ok_or(ConvertError::MissingReference {
-                from: entity_id,
-                to: loc_ref,
-                field_name: "location",
-            })?;
+        // First cross-ref discriminates 2D vs 3D: if the location point
+        // is absent from the 2D arena, this is the 3D placement variant.
+        let Some(&location) = ctx.point_2d_map.get(&loc_ref) else {
+            return Ok(());
+        };
         let ref_direction = match ref_dir_ref {
             Some(r) => Some(*ctx.direction_2d_map.get(&r).ok_or(
                 ConvertError::MissingReference {

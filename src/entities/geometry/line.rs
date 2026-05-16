@@ -33,6 +33,11 @@ impl SimpleEntityHandler for LineHandler {
         let pnt_ref = read_entity_ref(attrs, 1, entity_id, "pnt")?;
         let dir_ref = read_entity_ref(attrs, 2, entity_id, "dir")?;
 
+        // If the referenced point is a known 2D point, this LINE is
+        // the 2D sister variant — silently skip.
+        if ctx.point_2d_map.contains_key(&pnt_ref) {
+            return Ok(());
+        }
         let point = ctx.resolve_point(entity_id, pnt_ref, "pnt")?;
         let (direction, magnitude) = ctx.resolve_vector(entity_id, dir_ref, "dir")?;
 

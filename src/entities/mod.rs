@@ -65,12 +65,12 @@ pub(crate) enum PassLevel {
     Pass4_4Swept,
 
     // ----- Plan 5.5 (PCURVE definitional 2D geometry) -----
-    /// 2D `DIRECTION` inside a PCURVE `DEFINITIONAL_REPRESENTATION`.
-    /// Shares the entity name with its 3D counterpart, but the registry's
-    /// `dispatch_*_2d` path filters on `pcurve_subtree_ids` membership so
-    /// they never collide. (2D `CARTESIAN_POINT` previously sat here too;
-    /// it now runs in `Pass1` alongside the 3D handler and selects its
-    /// arena by coordinate count, so orphan 2D points survive round-trip.)
+    /// 2D `DIRECTION`. Shares the entity name with its 3D counterpart;
+    /// each handler self-discriminates by coordinate count and silently
+    /// skips the wrong dimension, so orphan 2D directions (those not
+    /// reachable from a `DEFINITIONAL_REPRESENTATION`) still survive
+    /// round-trip. (2D `CARTESIAN_POINT` moved to `Pass1` for the same
+    /// reason and is dispatched alongside the 3D handler.)
     #[allow(dead_code)] // wired in Plan 5.5 stage C2
     Pass4aPoint,
     /// 2D `VECTOR` + `AXIS2_PLACEMENT_2D` (Pass 4a-2). Independent of
@@ -78,7 +78,9 @@ pub(crate) enum PassLevel {
     #[allow(dead_code)] // wired in Plan 5.5 stage C3
     Pass4aVector,
     /// 2D curves (Pass 4a-3) — `LINE` / `CIRCLE` / `ELLIPSE` /
-    /// `B_SPLINE_CURVE_WITH_KNOTS` inside a pcurve subtree.
+    /// `B_SPLINE_CURVE_WITH_KNOTS`. Each handler discriminates 2D vs 3D
+    /// by its first cross-reference (point / placement in the 2D arena)
+    /// and silently skips when the reference is absent.
     #[allow(dead_code)] // wired in Plan 5.5 stage C4
     Pass4aCurve,
 

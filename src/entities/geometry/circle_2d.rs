@@ -29,14 +29,11 @@ impl SimpleEntityHandler for Circle2dHandler {
         let _name = read_string(attrs, 0, entity_id, "name")?;
         let pos_ref = read_entity_ref(attrs, 1, entity_id, "position")?;
         let radius = read_real(attrs, 2, entity_id, "radius")?;
-        let position =
-            *ctx.placement_2d_map
-                .get(&pos_ref)
-                .ok_or(ConvertError::MissingReference {
-                    from: entity_id,
-                    to: pos_ref,
-                    field_name: "position",
-                })?;
+        // First cross-ref discriminates 2D vs 3D: if the placement is
+        // absent from the 2D arena, this is the 3D CIRCLE.
+        let Some(&position) = ctx.placement_2d_map.get(&pos_ref) else {
+            return Ok(());
+        };
         let id = ctx
             .geometry
             .curves_2d

@@ -30,14 +30,11 @@ impl SimpleEntityHandler for Ellipse2dHandler {
         let pos_ref = read_entity_ref(attrs, 1, entity_id, "position")?;
         let semi_axis_1 = read_real(attrs, 2, entity_id, "semi_axis_1")?;
         let semi_axis_2 = read_real(attrs, 3, entity_id, "semi_axis_2")?;
-        let position =
-            *ctx.placement_2d_map
-                .get(&pos_ref)
-                .ok_or(ConvertError::MissingReference {
-                    from: entity_id,
-                    to: pos_ref,
-                    field_name: "position",
-                })?;
+        // First cross-ref discriminates 2D vs 3D: if the placement is
+        // absent from the 2D arena, this is the 3D ELLIPSE.
+        let Some(&position) = ctx.placement_2d_map.get(&pos_ref) else {
+            return Ok(());
+        };
         let id = ctx.geometry.curves_2d.push(Curve2d::Ellipse(Ellipse2 {
             position,
             semi_axis_1,

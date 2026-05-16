@@ -30,14 +30,11 @@ impl SimpleEntityHandler for Line2dHandler {
         let _name = read_string(attrs, 0, entity_id, "name")?;
         let pnt_ref = read_entity_ref(attrs, 1, entity_id, "pnt")?;
         let vec_ref = read_entity_ref(attrs, 2, entity_id, "dir")?;
-        let point = *ctx
-            .point_2d_map
-            .get(&pnt_ref)
-            .ok_or(ConvertError::MissingReference {
-                from: entity_id,
-                to: pnt_ref,
-                field_name: "pnt",
-            })?;
+        // First cross-ref discriminates 2D vs 3D: if the referenced
+        // point is absent from the 2D arena, this is the 3D LINE.
+        let Some(&point) = ctx.point_2d_map.get(&pnt_ref) else {
+            return Ok(());
+        };
         let (direction, magnitude) =
             *ctx.vector_2d_map
                 .get(&vec_ref)

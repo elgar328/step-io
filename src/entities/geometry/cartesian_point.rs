@@ -33,11 +33,18 @@ impl SimpleEntityHandler for CartesianPointHandler {
         check_count(attrs, 2, entity_id, "CARTESIAN_POINT")?;
         let _name = read_string(attrs, 0, entity_id, "name")?;
         let coords = read_real_list(attrs, 1, entity_id, "coordinates")?;
-        if coords.len() != 3 {
-            // Wrong dimension for the 3D arena. The 2D sister handler
-            // claims 2-coordinate points; anything else is silently
-            // dropped here.
-            return Ok(());
+        match coords.len() {
+            3 => {}             // proceed
+            2 => return Ok(()), // 2D sister handler claims this entity
+            n => {
+                // Outside the 2/3 range allowed by STEP — surface a
+                // diagnostic so the malformed entity is not lost
+                // silently between the 2D and 3D handlers.
+                return Err(ConvertError::UnexpectedEntityForm {
+                    entity_id,
+                    detail: format!("CARTESIAN_POINT must have 2 or 3 coordinates, got {n}"),
+                });
+            }
         }
         let point = Point3 {
             x: coords[0],

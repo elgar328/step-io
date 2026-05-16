@@ -30,6 +30,11 @@ impl SimpleEntityHandler for CircleHandler {
         let pos_ref = read_entity_ref(attrs, 1, entity_id, "position")?;
         let radius = read_real(attrs, 2, entity_id, "radius")?;
 
+        // If the placement is a known 2D placement, this CIRCLE is the
+        // 2D sister variant — silently skip.
+        if ctx.placement_2d_map.contains_key(&pos_ref) {
+            return Ok(());
+        }
         let position = ctx.resolve_placement(entity_id, pos_ref, "position")?;
 
         let circle = Circle3 { position, radius };

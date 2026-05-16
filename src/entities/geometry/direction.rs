@@ -33,13 +33,15 @@ impl SimpleEntityHandler for DirectionHandler {
         check_count(attrs, 2, entity_id, "DIRECTION")?;
         let _name = read_string(attrs, 0, entity_id, "name")?;
         let ratios = read_real_list(attrs, 1, entity_id, "direction_ratios")?;
-        if ratios.len() != 3 {
-            return Err(ConvertError::DimensionMismatch {
-                entity_id,
-                field_name: "direction_ratios",
-                expected: 3,
-                actual: ratios.len(),
-            });
+        match ratios.len() {
+            3 => {}             // proceed
+            2 => return Ok(()), // 2D sister handler claims this entity
+            n => {
+                return Err(ConvertError::UnexpectedEntityForm {
+                    entity_id,
+                    detail: format!("DIRECTION must have 2 or 3 direction_ratios, got {n}"),
+                });
+            }
         }
         let dir = Direction3 {
             x: ratios[0],

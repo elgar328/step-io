@@ -177,6 +177,45 @@ fn convert_top_level_2d_point_lands_in_points_2d_arena() {
     assert!((pt.y - 20.0).abs() < f64::EPSILON);
 }
 
+#[test]
+fn convert_malformed_cartesian_point_coord_count_emits_warning() {
+    // STEP allows only 2- or 3-coord CARTESIAN_POINT. Anything else is
+    // genuinely malformed; the 3D handler surfaces it as a warning so
+    // it does not vanish silently between the 2D and 3D sister
+    // handlers (both of which would otherwise return Ok(()) for an
+    // unrecognised arity).
+    let result = convert_source(&minimal_step("#1 = CARTESIAN_POINT('',(1.,2.,3.,4.));"));
+    assert!(result.model.geometry.points.is_empty());
+    assert!(result.model.geometry.points_2d.is_empty());
+    assert_eq!(result.warnings.len(), 1);
+    assert!(matches!(
+        &result.warnings[0],
+        ConvertError::UnexpectedEntityForm { entity_id: 1, detail } if detail.contains("got 4")
+    ));
+}
+
+#[test]
+fn convert_top_level_2d_curve_chain_lands_in_curves_2d_arena() {
+    // A full 2D LINE chain (point + direction + vector + line) sits at
+    // the top level — no DEFINITIONAL_REPRESENTATION wraps it. Each
+    // handler discriminates 2D vs 3D by coordinate count or first
+    // cross-reference and pushes into the 2D arenas regardless of
+    // pcurve-subtree membership. Without this, an orphan 2D curve
+    // produced by a CAD kernel would be dropped on re-read, shifting
+    // arena IDs and breaking round-trip equality (see plan #5).
+    let src = minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.));\n\
+         #2 = DIRECTION('',(1.,0.));\n\
+         #3 = VECTOR('',#2,1.);\n\
+         #4 = LINE('',#1,#3);",
+    );
+    let result = convert_source(&src);
+    assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
+    assert_eq!(result.model.geometry.points_2d.len(), 1);
+    assert_eq!(result.model.geometry.directions_2d.len(), 1);
+    assert_eq!(result.model.geometry.curves_2d.len(), 1);
+}
+
 // --- DIRECTION ---
 
 #[test]

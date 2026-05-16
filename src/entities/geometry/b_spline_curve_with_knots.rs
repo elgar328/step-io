@@ -47,6 +47,13 @@ impl SimpleEntityHandler for BSplineCurveWithKnotsHandler {
             actual: AttributeKindTag::Integer,
         })?;
 
+        // If the first control point is a known 2D point, this is the
+        // 2D sister B_SPLINE_CURVE_WITH_KNOTS — silently skip.
+        if let Some(&first_ref) = cp_refs.first()
+            && ctx.point_2d_map.contains_key(&first_ref)
+        {
+            return Ok(());
+        }
         let mut control_points = Vec::with_capacity(cp_refs.len());
         for &r in &cp_refs {
             let pt = ctx.resolve_point(entity_id, r, "control_points_list")?;

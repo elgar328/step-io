@@ -34,14 +34,12 @@ impl SimpleEntityHandler for Vector2dHandler {
         let _name = read_string(attrs, 0, entity_id, "name")?;
         let dir_ref = read_entity_ref(attrs, 1, entity_id, "orientation")?;
         let magnitude = read_real(attrs, 2, entity_id, "magnitude")?;
-        let dir = *ctx
-            .direction_2d_map
-            .get(&dir_ref)
-            .ok_or(ConvertError::MissingReference {
-                from: entity_id,
-                to: dir_ref,
-                field_name: "orientation",
-            })?;
+        // First cross-ref is the 2D-vs-3D discriminator: if the
+        // referenced DIRECTION is not in the 2D direction map, this
+        // VECTOR is the 3D variant — handled by the sister handler.
+        let Some(&dir) = ctx.direction_2d_map.get(&dir_ref) else {
+            return Ok(());
+        };
         ctx.vector_2d_map.insert(entity_id, (dir, magnitude));
         Ok(())
     }

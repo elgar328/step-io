@@ -50,6 +50,15 @@ impl SimpleEntityHandler for BSplineCurve2dWithKnotsHandler {
         })?;
 
         let mut control_points = Vec::with_capacity(cp_refs.len());
+        // First control point discriminates 2D vs 3D: if it's absent
+        // from the 2D arena, this is the 3D B_SPLINE_CURVE_WITH_KNOTS.
+        // Once the first point is confirmed 2D, missing successors are
+        // legitimate errors.
+        if let Some(&first_ref) = cp_refs.first() {
+            if !ctx.point_2d_map.contains_key(&first_ref) {
+                return Ok(());
+            }
+        }
         for &r in &cp_refs {
             let pt = *ctx
                 .point_2d_map
