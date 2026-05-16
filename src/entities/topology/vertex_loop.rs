@@ -9,10 +9,8 @@
 // later IR refactor (Plan 7+) may unify the two into a single `Loop`
 // arena variant so the lookup is symmetric.
 
+use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::vertex_point::VertexPointHandler;
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
 use crate::ir::VertexId;
 use crate::ir::attr::{check_count, read_entity_ref, read_string};
 use crate::ir::error::ConvertError;
@@ -21,12 +19,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct VertexLoopHandler;
 
+#[step_entity(name = "VERTEX_LOOP", pass = Pass5EdgeLoop)]
 impl SimpleEntityHandler for VertexLoopHandler {
-    const NAME: &'static str = "VERTEX_LOOP";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass5EdgeLoop;
     type WriteInput = VertexId;
 
     fn read(
@@ -59,13 +57,3 @@ impl SimpleEntityHandler for VertexLoopHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static VERTEX_LOOP_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: VertexLoopHandler::NAME,
-    pass_level: VertexLoopHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: VertexLoopHandler::read,
-    },
-};

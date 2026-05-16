@@ -6,9 +6,7 @@
 //! the entity id, and the writer reconstructs an `OrientedEdge` value
 //! from `Wire::edges` at emit time. Same shape as the VECTOR pilot.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::OrientedEdge;
 use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_string};
 use crate::ir::error::ConvertError;
@@ -18,12 +16,12 @@ use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::buffer::topology::orientation_bool;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct OrientedEdgeHandler;
 
+#[step_entity(name = "ORIENTED_EDGE", pass = Pass5OrientedEdge)]
 impl SimpleEntityHandler for OrientedEdgeHandler {
-    const NAME: &'static str = "ORIENTED_EDGE";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass5OrientedEdge;
     type WriteInput = OrientedEdge;
 
     fn read(
@@ -67,13 +65,3 @@ impl SimpleEntityHandler for OrientedEdgeHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static ORIENTED_EDGE_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: OrientedEdgeHandler::NAME,
-    pass_level: OrientedEdgeHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: OrientedEdgeHandler::read,
-    },
-};

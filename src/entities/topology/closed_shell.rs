@@ -4,9 +4,7 @@
 //! helper. The writer keeps `emit_shell` as the dispatcher (keys off
 //! `Shell::is_open`), and the handler's `write` simply delegates there.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::ShellId;
 use crate::ir::attr::{check_count, read_entity_ref_list, read_string};
 use crate::ir::error::ConvertError;
@@ -16,6 +14,7 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 /// Reader body shared by `CLOSED_SHELL` and `OPEN_SHELL`. The only
 /// difference is the `is_open` flag stored on the IR `Shell`.
@@ -92,9 +91,8 @@ pub(super) fn write_shell_body(buf: &mut WriteBuffer, id: ShellId) -> Result<u64
 
 pub(crate) struct ClosedShellHandler;
 
+#[step_entity(name = "CLOSED_SHELL", pass = Pass5Shell)]
 impl SimpleEntityHandler for ClosedShellHandler {
-    const NAME: &'static str = "CLOSED_SHELL";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass5Shell;
     type WriteInput = ShellId;
 
     fn read(
@@ -110,13 +108,3 @@ impl SimpleEntityHandler for ClosedShellHandler {
         write_shell_body(buf, id)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static CLOSED_SHELL_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: ClosedShellHandler::NAME,
-    pass_level: ClosedShellHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: ClosedShellHandler::read,
-    },
-};

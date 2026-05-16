@@ -13,9 +13,7 @@
 // variant so the wrapper stays first-class instead of leaking into the
 // Shell record.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::SolidId;
 use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string};
 use crate::ir::error::ConvertError;
@@ -25,12 +23,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct BrepWithVoidsHandler;
 
+#[step_entity(name = "BREP_WITH_VOIDS", pass = Pass5Solid)]
 impl SimpleEntityHandler for BrepWithVoidsHandler {
-    const NAME: &'static str = "BREP_WITH_VOIDS";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass5Solid;
     type WriteInput = SolidId;
 
     fn read(
@@ -139,13 +137,3 @@ impl SimpleEntityHandler for BrepWithVoidsHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static BREP_WITH_VOIDS_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: BrepWithVoidsHandler::NAME,
-    pass_level: BrepWithVoidsHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: BrepWithVoidsHandler::read,
-    },
-};

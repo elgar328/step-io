@@ -4,9 +4,7 @@
 //! `read_face_bound_body` / `write_face_bound_body` helpers below; the
 //! sister handler (`face_outer_bound.rs`) imports those helpers.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::Orientation;
 use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_string};
 use crate::ir::error::ConvertError;
@@ -17,6 +15,7 @@ use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::buffer::topology::orientation_bool;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 /// Reader body shared by `FACE_BOUND` and `FACE_OUTER_BOUND`. The only
 /// difference is the `is_outer` flag stored on the resulting `Wire`.
@@ -97,9 +96,8 @@ pub(super) fn write_face_bound_body(
 
 pub(crate) struct FaceBoundHandler;
 
+#[step_entity(name = "FACE_BOUND", pass = Pass5FaceBound)]
 impl SimpleEntityHandler for FaceBoundHandler {
-    const NAME: &'static str = "FACE_BOUND";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass5FaceBound;
     type WriteInput = (u64, Orientation);
 
     fn read(
@@ -123,13 +121,3 @@ impl SimpleEntityHandler for FaceBoundHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static FACE_BOUND_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: FaceBoundHandler::NAME,
-    pass_level: FaceBoundHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: FaceBoundHandler::read,
-    },
-};

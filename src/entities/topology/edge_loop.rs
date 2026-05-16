@@ -5,10 +5,8 @@
 //! body when a `Wire` carries `edges`. The handler's `write` lifts that
 //! inline emission into the registry so callers can use it directly.
 
+use crate::entities::SimpleEntityHandler;
 use crate::entities::topology::oriented_edge::OrientedEdgeHandler;
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
 use crate::ir::OrientedEdge;
 use crate::ir::attr::{check_count, read_entity_ref_list, read_string};
 use crate::ir::error::ConvertError;
@@ -17,12 +15,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct EdgeLoopHandler;
 
+#[step_entity(name = "EDGE_LOOP", pass = Pass5EdgeLoop)]
 impl SimpleEntityHandler for EdgeLoopHandler {
-    const NAME: &'static str = "EDGE_LOOP";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass5EdgeLoop;
     type WriteInput = Vec<OrientedEdge>;
 
     fn read(
@@ -63,13 +61,3 @@ impl SimpleEntityHandler for EdgeLoopHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static EDGE_LOOP_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: EdgeLoopHandler::NAME,
-    pass_level: EdgeLoopHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: EdgeLoopHandler::read,
-    },
-};

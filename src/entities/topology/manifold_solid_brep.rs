@@ -4,9 +4,7 @@
 //! single-shell branch of `emit_solid`. The shared `solid_id_to_name`
 //! helper builds the optional `name` value common to both solid kinds.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::SolidId;
 use crate::ir::attr::{check_count, read_entity_ref, read_string};
 use crate::ir::error::ConvertError;
@@ -16,12 +14,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct ManifoldSolidBrepHandler;
 
+#[step_entity(name = "MANIFOLD_SOLID_BREP", pass = Pass5Solid)]
 impl SimpleEntityHandler for ManifoldSolidBrepHandler {
-    const NAME: &'static str = "MANIFOLD_SOLID_BREP";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass5Solid;
     type WriteInput = SolidId;
 
     fn read(
@@ -82,13 +80,3 @@ impl SimpleEntityHandler for ManifoldSolidBrepHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static MANIFOLD_SOLID_BREP_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: ManifoldSolidBrepHandler::NAME,
-    pass_level: ManifoldSolidBrepHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: ManifoldSolidBrepHandler::read,
-    },
-};

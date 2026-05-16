@@ -4,9 +4,7 @@
 //! `WriteBuffer::emit_edge` one-to-one. The writer keeps `emit_edge` as a
 //! pub(crate) wrapper (called by `emit_oriented_edge` etc.).
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::EdgeId;
 use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_string};
 use crate::ir::error::ConvertError;
@@ -17,12 +15,12 @@ use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::buffer::topology::orientation_bool;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct EdgeCurveHandler;
 
+#[step_entity(name = "EDGE_CURVE", pass = Pass5Edge)]
 impl SimpleEntityHandler for EdgeCurveHandler {
-    const NAME: &'static str = "EDGE_CURVE";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass5Edge;
     type WriteInput = EdgeId;
 
     fn read(
@@ -104,13 +102,3 @@ impl SimpleEntityHandler for EdgeCurveHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static EDGE_CURVE_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: EdgeCurveHandler::NAME,
-    pass_level: EdgeCurveHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: EdgeCurveHandler::read,
-    },
-};
