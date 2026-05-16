@@ -11,7 +11,7 @@ use crate::entities::{
     ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
 };
 use crate::ir::error::ConvertError;
-use crate::parser::entity::Attribute;
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -29,6 +29,7 @@ impl SimpleEntityHandler for ProductDefinitionWithAssociatedDocumentsHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         read_product_definition_body(ctx, entity_id, attrs)
     }

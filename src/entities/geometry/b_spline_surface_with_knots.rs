@@ -11,7 +11,7 @@ use crate::ir::attr::{
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{NurbsSurface, Surface, SurfaceForm};
-use crate::parser::entity::Attribute;
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -29,6 +29,7 @@ impl SimpleEntityHandler for BSplineSurfaceWithKnotsHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 13, entity_id, "B_SPLINE_SURFACE_WITH_KNOTS")?;
         let _name = read_string(attrs, 0, entity_id, "name")?;

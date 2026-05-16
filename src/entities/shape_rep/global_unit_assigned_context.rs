@@ -11,7 +11,7 @@ use crate::entities::{
 use crate::ir::attr::{check_count, read_entity_ref_list};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit, SolidAngleUnit, UnitContext};
-use crate::parser::entity::{Attribute, RawEntityPart};
+use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::{ReaderContext, require_part_attrs};
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -29,6 +29,7 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         let guac_attrs = require_part_attrs(parts, "GLOBAL_UNIT_ASSIGNED_CONTEXT", entity_id)?;
         check_count(guac_attrs, 1, entity_id, "GLOBAL_UNIT_ASSIGNED_CONTEXT")?;

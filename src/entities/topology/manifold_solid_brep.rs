@@ -11,7 +11,7 @@ use crate::ir::SolidId;
 use crate::ir::attr::{check_count, read_entity_ref, read_string};
 use crate::ir::error::ConvertError;
 use crate::ir::topology::Solid;
-use crate::parser::entity::Attribute;
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -28,6 +28,7 @@ impl SimpleEntityHandler for ManifoldSolidBrepHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "MANIFOLD_SOLID_BREP")?;
         let name_str = read_string(attrs, 0, entity_id, "name")?;

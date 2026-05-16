@@ -11,7 +11,7 @@ use crate::ir::PointId;
 use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_enum, read_string};
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{Curve, TrimMaster, TrimmedCurve};
-use crate::parser::entity::Attribute;
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -28,6 +28,7 @@ impl SimpleEntityHandler for TrimmedCurveHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 6, entity_id, "TRIMMED_CURVE")?;
         let _name = read_string(attrs, 0, entity_id, "name")?;

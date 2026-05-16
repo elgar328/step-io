@@ -11,7 +11,7 @@ use crate::entities::{
 use crate::ir::assembly::Transform3d;
 use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
-use crate::parser::entity::Attribute;
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -27,6 +27,7 @@ impl SimpleEntityHandler for ItemDefinedTransformationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 4, entity_id, "ITEM_DEFINED_TRANSFORMATION")?;
         // attrs[0] = name, attrs[1] = description — ignored.

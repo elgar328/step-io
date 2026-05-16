@@ -14,7 +14,7 @@ use crate::ir::attr::{
 };
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{CompositeCurve, CompositeSegment, Curve};
-use crate::parser::entity::Attribute;
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -31,6 +31,7 @@ impl SimpleEntityHandler for CompositeCurveHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 3, entity_id, "COMPOSITE_CURVE")?;
         let _name = read_string(attrs, 0, entity_id, "name")?;

@@ -14,7 +14,7 @@ use crate::entities::{
 use crate::ir::attr::{check_count, read_enum};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::AngleUnit;
-use crate::parser::entity::{Attribute, RawEntityPart};
+use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -33,6 +33,7 @@ impl ComplexEntityHandler for PlaneAngleUnitHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         if has_part(parts, "CONVERSION_BASED_UNIT") {
             return read_conversion_based_unit_body(ctx, entity_id, parts, false, true);

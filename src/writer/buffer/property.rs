@@ -7,6 +7,10 @@
 //! the visualization emit pattern.
 
 use super::WriteBuffer;
+use crate::entities::SimpleEntityHandler;
+use crate::entities::property::property_definition_representation::{
+    PropertyDefinitionRepresentationHandler, PropertyDefinitionRepresentationWriteInput,
+};
 use crate::ir::id::UnitContextId;
 use crate::ir::property::{MeasureKind, Property, PropertyMeasure};
 use crate::parser::entity::Attribute;
@@ -66,9 +70,9 @@ impl WriteBuffer<'_> {
         );
 
         // 4. PROPERTY_DEFINITION_REPRESENTATION binding the two.
-        self.push_simple(
-            "PROPERTY_DEFINITION_REPRESENTATION",
-            vec![Attribute::EntityRef(pd), Attribute::EntityRef(repr)],
+        let _ = PropertyDefinitionRepresentationHandler::write(
+            self,
+            PropertyDefinitionRepresentationWriteInput { pd, repr },
         );
     }
 

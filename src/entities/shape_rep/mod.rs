@@ -7,11 +7,6 @@
 //! folder is new in Plan 6 — no carry-over from prior plans. Stubs land in
 //! stage C1 and gain bodies in stages C4~C6.
 //!
-//! `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` and the
-//! `PRODUCT_DEFINITION_SHAPE` classifier remain hand-rolled in
-//! `src/reader/{assembly,passes}.rs` (`DOMAIN_TBD` markers there) — see Plan 6
-//! `Hand-rolled 유지` table for the rationale.
-//!
 //! `MDGPR` (Pass 7-11) lives here despite being a visualization wrapper:
 //! its dispatch boundary is `representation`, so the pool sits in
 //! `shape_rep` per the ir.toml blueprint.

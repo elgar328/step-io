@@ -1,6 +1,5 @@
 //! Pass orchestration for geometry, topology and assembly conversion.
 
-use super::assembly::{pdef_shape_to_nauo_ref, pdef_shape_to_pdef_ref};
 use super::{ReaderContext, has_all_parts};
 use crate::entities::{ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind};
 use crate::parser::entity::{EntityGraph, RawEntity};
@@ -129,14 +128,10 @@ impl ReaderContext {
 
     /// Pass 6: assembly/product graph (Phase A — PRODUCT chain + shape
     /// classification; Phase B adds instances, transforms, tree root).
-    #[allow(clippy::too_many_lines)]
     pub(super) fn run_assembly_passes(&mut self, graph: &EntityGraph) {
-        // Plan 7 stage C5 retired the bespoke `run_pass!` macro that used
-        // to live here — every Pass 6 / 7 / 8 sub-pass now dispatches
-        // through `dispatch_registry`. The remaining hand-rolled loops
-        // (CDSR, PDS classify, PDR) keep their bodies inline because their
-        // read bodies need `&EntityGraph` access not carried by the
-        // handler trait — see DOMAIN_TBD markers for the IR Roadmap follow-up.
+        // Every Pass 6 / 7 / 8 sub-pass dispatches through
+        // `dispatch_registry`. Graph-aware handlers (CDSR, PDS classify,
+        // PDR) receive `&EntityGraph` through the unified trait signature.
 
         // Pass 6-1: PRODUCT → Arena<Product> + product_arena_map
         self.dispatch_registry(graph, PassLevel::Pass6Product);
@@ -177,29 +172,7 @@ impl ReaderContext {
         // Pre-Pass 6-5: classify PRODUCT_DEFINITION_SHAPE entities by whether
         // their `definition` target is a PRODUCT_DEFINITION (product-owned)
         // versus a NAUO (instance-owned — Phase B).
-        //
-        // DOMAIN_TBD: PRODUCT_DEFINITION_SHAPE classification 은 convert_*
-        // 부재 (graph traversal 만 함) 라 handler trait 부적절. Plan 7+ 에서
-        // post-pass helper 추상화 검토 가능.
-        for (&id, entity) in &graph.entities {
-            if self.pcurve_subtree_ids.contains(&id) {
-                continue;
-            }
-            match entity {
-                RawEntity::Simple { name, .. } if name == "PRODUCT_DEFINITION_SHAPE" => {
-                    // A PDEF_SHAPE points at either a PRODUCT_DEFINITION
-                    // (product-describing, Phase A / Pass 6-5) or a NAUO
-                    // (instance-describing, Phase B / Pass 6-7). Populate
-                    // whichever map applies.
-                    if let Some(pdef_ref) = pdef_shape_to_pdef_ref(graph, id) {
-                        self.pdef_shape_to_pdef.insert(id, pdef_ref);
-                    } else if let Some(nauo_ref) = pdef_shape_to_nauo_ref(graph, id) {
-                        self.pdef_shape_to_nauo.insert(id, nauo_ref);
-                    }
-                }
-                _ => {}
-            }
-        }
+        self.dispatch_registry(graph, PassLevel::Pass6PdsClassify);
 
         // Pass 6-5: SHAPE_DEFINITION_REPRESENTATION — classify each product
         // as Solid(SolidId) or leave as Group(empty).
@@ -209,25 +182,8 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass6Idt);
 
         // Pass 6-7: CONTEXT_DEPENDENT_SHAPE_REPRESENTATION — bind each
-        // NAUO to a Transform3d. Custom loop because the converter needs
-        // access to `graph` to resolve the RR-complex sub-entity.
-        for (&id, entity) in &graph.entities {
-            if self.pcurve_subtree_ids.contains(&id) {
-                continue;
-            }
-            let (name, attrs) = match entity {
-                RawEntity::Simple {
-                    name, attributes, ..
-                } => (name.as_str(), attributes.as_slice()),
-                RawEntity::Complex { .. } => continue,
-            };
-            if name != "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION" {
-                continue;
-            }
-            if let Err(e) = self.convert_context_dependent_shape_representation(id, attrs, graph) {
-                self.warnings.push(e);
-            }
-        }
+        // NAUO to a Transform3d via the RR-complex sub-entity.
+        self.dispatch_registry(graph, PassLevel::Pass6Cdsr);
 
         // Pass 6-8: NEXT_ASSEMBLY_USAGE_OCCURRENCE — push Instances into
         // parent products' Group content.
@@ -264,32 +220,9 @@ impl ReaderContext {
         // resolving the PD's target).
         self.dispatch_registry(graph, PassLevel::Pass8Measure);
         self.dispatch_registry(graph, PassLevel::Pass8PropertyDef);
-
-        // PDR convert needs `&graph` to read the bound REPRESENTATION
-        // entity directly — REPRESENTATION is a generic entity name shared
-        // with MDGPR / SR, so a per-pass map would conflate them.
-        //
-        // DOMAIN_TBD: catalog property O but the read body needs `&EntityGraph`
-        // (REPRESENTATION generic name conflict with MDGPR / SR). Handler
-        // trait API 보존을 위해 hand-rolled 유지. CDSR 와 동일 구조 →
-        // Plan 7 후 IR Roadmap 시 graph 접근 일반화 시 함께 검토.
-        for (&id, entity) in &graph.entities {
-            if self.pcurve_subtree_ids.contains(&id) {
-                continue;
-            }
-            let (name, attrs) = match entity {
-                RawEntity::Simple {
-                    name, attributes, ..
-                } => (name.as_str(), attributes.as_slice()),
-                RawEntity::Complex { .. } => continue,
-            };
-            if name != "PROPERTY_DEFINITION_REPRESENTATION" {
-                continue;
-            }
-            if let Err(e) = self.convert_property_definition_representation(id, attrs, graph) {
-                self.warnings.push(e);
-            }
-        }
+        // PDR walks the bound REPRESENTATION through `graph` because the
+        // generic REPRESENTATION name conflicts with MDGPR / SR.
+        self.dispatch_registry(graph, PassLevel::Pass8Pdr);
     }
 
     /// Walk the [`ENTITY_HANDLERS`] registry and dispatch every handler whose
@@ -356,7 +289,7 @@ impl ReaderContext {
                         name, attributes, ..
                     },
                 ) if name == entry.name => {
-                    if let Err(e) = read(self, id, attributes) {
+                    if let Err(e) = read(self, id, attributes, graph) {
                         self.warnings.push(e);
                     }
                 }
@@ -367,7 +300,7 @@ impl ReaderContext {
                     },
                     RawEntity::Complex { parts, .. },
                 ) if has_all_parts(parts, required_parts) => {
-                    if let Err(e) = read(self, id, parts) {
+                    if let Err(e) = read(self, id, parts, graph) {
                         self.warnings.push(e);
                     }
                 }
@@ -407,7 +340,7 @@ impl ReaderContext {
                         name, attributes, ..
                     },
                 ) if name == entry.name => {
-                    if let Err(e) = read(self, id, attributes) {
+                    if let Err(e) = read(self, id, attributes, graph) {
                         self.warnings.push(e);
                     }
                 }
@@ -418,7 +351,7 @@ impl ReaderContext {
                     },
                     RawEntity::Complex { parts, .. },
                 ) if has_all_parts(parts, required_parts) => {
-                    if let Err(e) = read(self, id, parts) {
+                    if let Err(e) = read(self, id, parts, graph) {
                         self.warnings.push(e);
                     }
                 }

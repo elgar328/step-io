@@ -7,7 +7,7 @@
 //! family. Writer dispatch still goes through hand-rolled emit methods.
 
 use crate::ir::error::ConvertError;
-use crate::parser::entity::{Attribute, RawEntityPart};
+use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -188,6 +188,14 @@ pub(crate) enum PassLevel {
     /// parent products' Group content.
     #[allow(dead_code)] // wired in Plan 6 stage C7
     Pass6Nauo,
+    /// `PRODUCT_DEFINITION_SHAPE` classifier (Pass 6-4c) — classifies each
+    /// `PDEF_SHAPE` as product-owned (`PDEF` target) or instance-owned
+    /// (`NAUO` target). Reads only, no IR mutation beyond two lookup maps.
+    Pass6PdsClassify,
+    /// `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` (Pass 6-7) — binds each
+    /// NAUO to a Transform3d. Needs `graph` to resolve the RR-complex
+    /// sub-entity.
+    Pass6Cdsr,
 
     // ----- Plan 7 (Pass 4-4B + Pass 7 visualization + Pass 8 property/PMI) -----
     /// `OFFSET_SURFACE` (Pass 4-4B) — fixpoint dispatch. Dispatched via
@@ -246,6 +254,11 @@ pub(crate) enum PassLevel {
     /// for resolving the PD's target.
     #[allow(dead_code)] // wired in Plan 7 stage C5
     Pass8PropertyDef,
+    /// `PROPERTY_DEFINITION_REPRESENTATION` (Pass 8-3) — binds a
+    /// `PROPERTY_DEFINITION` to its underlying `REPRESENTATION`. Needs
+    /// `graph` to walk the bound REPRESENTATION (a generic entity name
+    /// shared with MDGPR / SR — a per-pass map would conflate them).
+    Pass8Pdr,
 }
 
 /// Handler for a [`RawEntity::Simple`] STEP entity. Reader receives a flat
@@ -264,10 +277,17 @@ pub(crate) trait SimpleEntityHandler {
 
     /// Read STEP attributes into the reader context. Body mirrors the
     /// legacy `convert_*` method one-to-one — `&mut self` becomes `ctx`.
+    ///
+    /// `graph` exposes the raw entity graph for sub-entity / ref-list
+    /// resolution. Pass-produced results (other handlers' IR output, per-pass
+    /// maps) must be reached through `ctx`, not through `graph`; consulting
+    /// the graph for another entity's *result* (vs its raw attributes) would
+    /// breach pass ordering.
     fn read(
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        graph: &EntityGraph,
     ) -> Result<(), ConvertError>;
 
     /// Emit a STEP entity from IR input. Returns the freshly-allocated
@@ -293,11 +313,13 @@ pub(crate) trait ComplexEntityHandler {
     /// Writer input. Same role as the simple-handler associated type.
     type WriteInput;
 
-    /// Read the complex parts into the reader context.
+    /// Read the complex parts into the reader context. See
+    /// [`SimpleEntityHandler::read`] for the `graph` usage contract.
     fn read_complex(
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
+        graph: &EntityGraph,
     ) -> Result<(), ConvertError>;
 
     /// Emit a STEP entity from IR input.
@@ -310,13 +332,14 @@ pub(crate) trait ComplexEntityHandler {
 pub(crate) enum ReadKind {
     /// Matches `RawEntity::Simple` whose name equals the entry's `name`.
     Simple {
-        read: fn(&mut ReaderContext, u64, &[Attribute]) -> Result<(), ConvertError>,
+        read: fn(&mut ReaderContext, u64, &[Attribute], &EntityGraph) -> Result<(), ConvertError>,
     },
     /// Matches `RawEntity::Complex` whose parts contain every name in
     /// `required_parts`.
     Complex {
         required_parts: &'static [&'static str],
-        read: fn(&mut ReaderContext, u64, &[RawEntityPart]) -> Result<(), ConvertError>,
+        read:
+            fn(&mut ReaderContext, u64, &[RawEntityPart], &EntityGraph) -> Result<(), ConvertError>,
     },
 }
 

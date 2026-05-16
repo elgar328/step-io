@@ -18,7 +18,7 @@ use crate::ir::attr::{
 };
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Surface, SurfaceOfOffset};
-use crate::parser::entity::Attribute;
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -35,6 +35,7 @@ impl SimpleEntityHandler for OffsetSurfaceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         // Pass 4-4B (multi-round): skip entities already interned by a
         // previous round so the arena does not accumulate duplicates.

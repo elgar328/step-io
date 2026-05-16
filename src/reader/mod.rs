@@ -24,11 +24,9 @@ use crate::ir::visualization::{
 };
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
 
-mod assembly;
 mod geometry;
 mod header;
 mod passes;
-mod property;
 
 #[cfg(test)]
 mod tests;

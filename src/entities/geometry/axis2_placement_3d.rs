@@ -12,7 +12,7 @@ use crate::ir::Placement3dId;
 use crate::ir::attr::{check_count, read_entity_ref, read_optional_entity_ref, read_string};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::Axis2Placement3d;
-use crate::parser::entity::Attribute;
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -29,6 +29,7 @@ impl SimpleEntityHandler for Axis2Placement3dHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 4, entity_id, "AXIS2_PLACEMENT_3D")?;
         let _name = read_string(attrs, 0, entity_id, "name")?;

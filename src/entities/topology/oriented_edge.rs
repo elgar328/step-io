@@ -12,7 +12,7 @@ use crate::entities::{
 use crate::ir::OrientedEdge;
 use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_string};
 use crate::ir::error::ConvertError;
-use crate::parser::entity::Attribute;
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::{ReaderContext, bool_to_orientation};
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -30,6 +30,7 @@ impl SimpleEntityHandler for OrientedEdgeHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 5, entity_id, "ORIENTED_EDGE")?;
         let _name = read_string(attrs, 0, entity_id, "name")?;

@@ -115,6 +115,7 @@ impl SimpleEntityHandler for SurfaceCurveHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         read_surface_or_seam_curve_body(ctx, entity_id, attrs, "SURFACE_CURVE")
     }

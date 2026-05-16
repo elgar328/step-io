@@ -89,7 +89,16 @@ impl WriteBuffer<'_> {
             let prod_entity = self.emit_product(product, &ctx);
             let formation = self.emit_formation(prod_entity, product);
             let pdef = self.emit_pdef(formation, ctx.pdef_ctx);
-            let pdef_shape = self.emit_pdef_shape(pdef);
+            let pdef_shape = {
+                use crate::entities::SimpleEntityHandler;
+                use crate::entities::assembly_product::product_definition_shape::{
+                    ProductDefinitionShapeHandler, ProductDefinitionShapeWriteInput,
+                };
+                ProductDefinitionShapeHandler::write(
+                    self,
+                    ProductDefinitionShapeWriteInput { pdef },
+                )?
+            };
             self.product_def_ids.insert(pid, pdef);
             self.product_def_shape_ids.insert(pid, pdef_shape);
             self.emit_product_category_chain(product, prod_entity);
@@ -298,17 +307,6 @@ impl WriteBuffer<'_> {
         .expect("PRODUCT_DEFINITION write only pushes one simple entity")
     }
 
-    fn emit_pdef_shape(&mut self, pdef: u64) -> u64 {
-        self.push_simple(
-            "PRODUCT_DEFINITION_SHAPE",
-            vec![
-                Attribute::String(String::new()),
-                Attribute::String(String::new()),
-                Attribute::EntityRef(pdef),
-            ],
-        )
-    }
-
     pub(crate) fn emit_mssr(
         &mut self,
         product: &Product,
@@ -469,7 +467,17 @@ impl WriteBuffer<'_> {
         let nauo = self.emit_nauo(inst, parent_pdef, child_pdef);
         let nauo_pds = self.emit_nauo_owned_pds(nauo);
         let rrwt = self.emit_rrwt_complex(parent_sr, child_sr, idt);
-        let _cdsr = self.emit_cdsr(rrwt, nauo_pds);
+        let _cdsr = {
+            use crate::entities::SimpleEntityHandler;
+            use crate::entities::assembly_product::context_dependent_shape_representation::{
+                ContextDependentShapeRepresentationHandler,
+                ContextDependentShapeRepresentationWriteInput,
+            };
+            ContextDependentShapeRepresentationHandler::write(
+                self,
+                ContextDependentShapeRepresentationWriteInput { rrwt, nauo_pds },
+            )?
+        };
         Ok(())
     }
 
@@ -539,13 +547,6 @@ impl WriteBuffer<'_> {
             },
         });
         n
-    }
-
-    fn emit_cdsr(&mut self, rrwt: u64, nauo_pds: u64) -> u64 {
-        self.push_simple(
-            "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
-            vec![Attribute::EntityRef(rrwt), Attribute::EntityRef(nauo_pds)],
-        )
     }
 
     // ----------------------------------------------------------------

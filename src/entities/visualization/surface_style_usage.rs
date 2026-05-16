@@ -7,7 +7,7 @@ use crate::entities::{
 use crate::ir::attr::{check_count, read_entity_ref, read_enum};
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::{SurfaceSide, SurfaceStyleUsage};
-use crate::parser::entity::Attribute;
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -25,6 +25,7 @@ impl SimpleEntityHandler for SurfaceStyleUsageHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "SURFACE_STYLE_USAGE")?;
         let side_str = read_enum(attrs, 0, entity_id, "side")?;

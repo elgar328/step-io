@@ -9,7 +9,7 @@ use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_s
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::Mdgpr;
 use crate::ir::visualization::VisualizationPool;
-use crate::parser::entity::Attribute;
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -27,6 +27,7 @@ impl SimpleEntityHandler for MdgprHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(
             attrs,

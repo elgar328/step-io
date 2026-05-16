@@ -12,7 +12,7 @@ use crate::entities::{
 };
 use crate::ir::attr::{check_count, read_string};
 use crate::ir::error::ConvertError;
-use crate::parser::entity::Attribute;
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -35,6 +35,7 @@ impl SimpleEntityHandler for ProductCategoryHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "PRODUCT_CATEGORY")?;
         let name = read_string(attrs, 0, entity_id, "name")?.to_owned();

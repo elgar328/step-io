@@ -11,7 +11,7 @@ use crate::ir::EdgeId;
 use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_string};
 use crate::ir::error::ConvertError;
 use crate::ir::topology::Edge;
-use crate::parser::entity::Attribute;
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::{ReaderContext, bool_to_orientation};
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -29,6 +29,7 @@ impl SimpleEntityHandler for EdgeCurveHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 5, entity_id, "EDGE_CURVE")?;
         let _name = read_string(attrs, 0, entity_id, "name")?;

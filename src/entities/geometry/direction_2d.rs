@@ -9,7 +9,7 @@ use crate::ir::Direction2dId;
 use crate::ir::attr::{check_count, read_real_list, read_string};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::Direction2;
-use crate::parser::entity::Attribute;
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -26,6 +26,7 @@ impl SimpleEntityHandler for Direction2dHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "DIRECTION")?;
         let _name = read_string(attrs, 0, entity_id, "name")?;

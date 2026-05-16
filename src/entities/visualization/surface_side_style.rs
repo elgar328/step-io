@@ -8,7 +8,7 @@ use crate::entities::{
 use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::{SurfaceSideStyle, SurfaceSideStyleEntry};
-use crate::parser::entity::Attribute;
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -27,6 +27,7 @@ impl SimpleEntityHandler for SurfaceSideStyleHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "SURFACE_SIDE_STYLE")?;
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();

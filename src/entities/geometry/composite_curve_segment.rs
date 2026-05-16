@@ -12,7 +12,7 @@ use crate::entities::{
 use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_enum};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{CompositeSegment, TransitionCode};
-use crate::parser::entity::Attribute;
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -29,6 +29,7 @@ impl SimpleEntityHandler for CompositeCurveSegmentHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 3, entity_id, "COMPOSITE_CURVE_SEGMENT")?;
         let transition_str = read_enum(attrs, 0, entity_id, "transition")?;

@@ -11,7 +11,7 @@ use crate::entities::{
 use crate::ir::assembly::ProductCategoryRoot;
 use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
-use crate::parser::entity::Attribute;
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -32,6 +32,7 @@ impl SimpleEntityHandler for ProductCategoryRelationshipHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 4, entity_id, "PRODUCT_CATEGORY_RELATIONSHIP")?;
         // attrs[0] / attrs[1] = name / description — visual cosmetics, ignored.

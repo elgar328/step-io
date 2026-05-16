@@ -13,7 +13,7 @@ use crate::ir::assembly::{Product, ProductContent};
 use crate::ir::attr::{check_count, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::id::Placement3dId;
-use crate::parser::entity::Attribute;
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -32,6 +32,7 @@ impl SimpleEntityHandler for ProductHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 4, entity_id, "PRODUCT")?;
         let id = read_string_or_unset(attrs, 0, entity_id, "id")?;

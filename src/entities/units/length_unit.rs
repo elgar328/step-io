@@ -15,7 +15,7 @@ use crate::entities::{
 use crate::ir::attr::{check_count, read_enum};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::LengthUnit;
-use crate::parser::entity::{Attribute, RawEntityPart};
+use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -35,6 +35,7 @@ impl ComplexEntityHandler for LengthUnitHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         // CONVERSION_BASED_UNIT (inch, foot, degree, or CBU-wrapped metric)
         // takes precedence over SI_UNIT: some AP242 files wrap SI units in a

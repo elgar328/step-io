@@ -17,7 +17,7 @@ use crate::ir::attr::{
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::{Curve, CurveForm, NurbsCurve};
-use crate::parser::entity::{Attribute, RawEntityPart};
+use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::ReaderContext;
 use crate::reader::require_part_attrs;
 use crate::writer::WriteError;
@@ -40,6 +40,7 @@ impl ComplexEntityHandler for RationalBsplineCurveHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         let repr_attrs = require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
         let _name = read_string(repr_attrs, 0, entity_id, "name")?;

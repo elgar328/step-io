@@ -12,7 +12,7 @@ use crate::ir::FaceId;
 use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_entity_ref_list, read_string};
 use crate::ir::error::ConvertError;
 use crate::ir::topology::{Face, FaceKind};
-use crate::parser::entity::Attribute;
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::{ReaderContext, bool_to_orientation};
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -110,6 +110,7 @@ impl SimpleEntityHandler for AdvancedFaceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         read_face_body(ctx, entity_id, attrs, FaceKind::Advanced)
     }

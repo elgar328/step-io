@@ -14,7 +14,7 @@ use crate::entities::{
 use crate::ir::attr::{check_count, read_enum};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::SolidAngleUnit;
-use crate::parser::entity::{Attribute, RawEntityPart};
+use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -34,6 +34,7 @@ impl ComplexEntityHandler for SolidAngleUnitHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         // SOLID_ANGLE_UNIT + CONVERSION_BASED_UNIT is theoretically possible
         // but not observed in practice; ignore silently to mirror the legacy

@@ -12,7 +12,7 @@ use crate::entities::{
 use crate::ir::assembly::ProductContent;
 use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
-use crate::parser::entity::Attribute;
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -33,6 +33,7 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "SHAPE_DEFINITION_REPRESENTATION")?;
         let pdef_shape_ref = read_entity_ref(attrs, 0, entity_id, "definition")?;

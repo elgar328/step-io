@@ -11,7 +11,7 @@ use crate::ir::attr::{
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{Curve, CurveForm, NurbsCurve};
-use crate::parser::entity::Attribute;
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -28,6 +28,7 @@ impl SimpleEntityHandler for BSplineCurveWithKnotsHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 9, entity_id, "B_SPLINE_CURVE_WITH_KNOTS")?;
         let _name = read_string(attrs, 0, entity_id, "name")?;

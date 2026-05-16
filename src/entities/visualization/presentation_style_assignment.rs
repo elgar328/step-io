@@ -12,7 +12,7 @@ use crate::entities::{
 use crate::ir::attr::{check_count, read_entity_ref_list};
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::PresentationStyleAssignment;
-use crate::parser::entity::Attribute;
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -30,6 +30,7 @@ impl SimpleEntityHandler for PresentationStyleAssignmentHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 1, entity_id, "PRESENTATION_STYLE_ASSIGNMENT")?;
         let style_refs = read_entity_ref_list(attrs, 0, entity_id, "styles")?;
