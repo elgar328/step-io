@@ -1,3 +1,6 @@
+[workspace]
+members = [".", "step-io-macros"]
+
 [package]
 name = "step-io"
 version = "0.1.0-alpha.1"
@@ -14,6 +17,7 @@ exclude = ["internal/"]
 [dependencies]
 linkme = "0.3"
 logos = "0.16"
+step-io-macros = { path = "./step-io-macros", version = "0.1.0" }
 
 [lints.rust]
 # `deny` (not `forbid`) so linkme's #[distributed_slice] can opt in via

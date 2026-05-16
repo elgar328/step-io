@@ -116,6 +116,16 @@ version = "0.1.0-alpha.1"
 dependencies = [
  "linkme",
  "logos",
+ "step-io-macros",
+]
+
+[[package]]
+name = "step-io-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
