@@ -126,13 +126,13 @@ pub fn step_entity(attr: TokenStream, item: TokenStream) -> TokenStream {
         Ok(id) => id.clone(),
         Err(e) => return e.to_compile_error().into(),
     };
-    let entry_ident = format_ident!("{}_HANDLER_ENTRY", args.name.value());
+    let entry_ident = format_ident!("__STEP_ENTRY_{}", handler_ident);
     let impl_with_consts = inject_consts(impl_block, &args.name, &args.pass);
 
     quote! {
         #impl_with_consts
 
-        #[allow(unsafe_code)] // linkme uses link_section internally
+        #[allow(unsafe_code, non_upper_case_globals)] // linkme uses link_section internally; ident derived from handler struct name
         #[linkme::distributed_slice(crate::entities::ENTITY_HANDLERS)]
         static #entry_ident: crate::entities::EntityHandlerEntry =
             crate::entities::EntityHandlerEntry {
@@ -154,7 +154,7 @@ pub fn step_entity_complex(attr: TokenStream, item: TokenStream) -> TokenStream 
         Ok(id) => id.clone(),
         Err(e) => return e.to_compile_error().into(),
     };
-    let entry_ident = format_ident!("{}_HANDLER_ENTRY", args.name.value());
+    let entry_ident = format_ident!("__STEP_ENTRY_{}", handler_ident);
     let required_parts_expr: &ExprArray = &args.required;
     // ComplexEntityHandler also requires `const REQUIRED_PARTS`.
     let mut impl_with_consts = inject_consts(impl_block, &args.name, &args.pass);
@@ -168,7 +168,7 @@ pub fn step_entity_complex(attr: TokenStream, item: TokenStream) -> TokenStream 
     quote! {
         #impl_with_consts
 
-        #[allow(unsafe_code)] // linkme uses link_section internally
+        #[allow(unsafe_code, non_upper_case_globals)] // linkme uses link_section internally; ident derived from handler struct name
         #[linkme::distributed_slice(crate::entities::ENTITY_HANDLERS)]
         static #entry_ident: crate::entities::EntityHandlerEntry =
             crate::entities::EntityHandlerEntry {
