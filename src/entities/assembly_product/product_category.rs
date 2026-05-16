@@ -7,9 +7,7 @@
 //! (`buffer/assembly.rs::emit_product_category_chain`) wires it together
 //! with PRPC + PCR.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_string};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -18,6 +16,7 @@ use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
 use super::shared::{optional_text, optional_text_attr};
+use step_io_macros::step_entity;
 
 pub(crate) struct ProductCategoryWriteInput {
     pub(crate) name: String,
@@ -26,9 +25,8 @@ pub(crate) struct ProductCategoryWriteInput {
 
 pub(crate) struct ProductCategoryHandler;
 
+#[step_entity(name = "PRODUCT_CATEGORY", pass = Pass6ProductCategory)]
 impl SimpleEntityHandler for ProductCategoryHandler {
-    const NAME: &'static str = "PRODUCT_CATEGORY";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass6ProductCategory;
     type WriteInput = ProductCategoryWriteInput;
 
     fn read(
@@ -54,13 +52,3 @@ impl SimpleEntityHandler for ProductCategoryHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static PRODUCT_CATEGORY_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: ProductCategoryHandler::NAME,
-    pass_level: ProductCategoryHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: ProductCategoryHandler::read,
-    },
-};

@@ -7,9 +7,7 @@
 //! ignores the extra `documentation_ids` attribute. Writer support is
 //! out of scope (round-trip downgrades to plain `PRODUCT_DEFINITION`).
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -17,12 +15,12 @@ use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
 use super::product_definition::{ProductDefinitionWriteInput, read_product_definition_body};
+use step_io_macros::step_entity;
 
 pub(crate) struct ProductDefinitionWithAssociatedDocumentsHandler;
 
+#[step_entity(name = "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS", pass = Pass6Pdef)]
 impl SimpleEntityHandler for ProductDefinitionWithAssociatedDocumentsHandler {
-    const NAME: &'static str = "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass6Pdef;
     type WriteInput = ProductDefinitionWriteInput;
 
     fn read(
@@ -50,13 +48,3 @@ impl SimpleEntityHandler for ProductDefinitionWithAssociatedDocumentsHandler {
         )
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static PDWAD_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: ProductDefinitionWithAssociatedDocumentsHandler::NAME,
-    pass_level: ProductDefinitionWithAssociatedDocumentsHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: ProductDefinitionWithAssociatedDocumentsHandler::read,
-    },
-};

@@ -5,9 +5,7 @@
 //! product the PRPC referenced. Writer emits the bare PCR line with the
 //! pair of entity refs.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::assembly::ProductCategoryRoot;
 use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
@@ -15,6 +13,7 @@ use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
+use step_io_macros::step_entity;
 
 pub(crate) struct ProductCategoryRelationshipWriteInput {
     pub(crate) pc_ref: u64,
@@ -23,9 +22,8 @@ pub(crate) struct ProductCategoryRelationshipWriteInput {
 
 pub(crate) struct ProductCategoryRelationshipHandler;
 
+#[step_entity(name = "PRODUCT_CATEGORY_RELATIONSHIP", pass = Pass6ProductCategoryRel)]
 impl SimpleEntityHandler for ProductCategoryRelationshipHandler {
-    const NAME: &'static str = "PRODUCT_CATEGORY_RELATIONSHIP";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass6ProductCategoryRel;
     type WriteInput = ProductCategoryRelationshipWriteInput;
 
     fn read(
@@ -85,13 +83,3 @@ impl SimpleEntityHandler for ProductCategoryRelationshipHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static PCR_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: ProductCategoryRelationshipHandler::NAME,
-    pass_level: ProductCategoryRelationshipHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: ProductCategoryRelationshipHandler::read,
-    },
-};

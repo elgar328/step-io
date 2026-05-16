@@ -7,15 +7,14 @@
 //! `_WITH_ASSOCIATED_DOCUMENTS` subtype reuses the same reader body via
 //! [`read_product_definition_body`].
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{read_entity_ref, read_string, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
+use step_io_macros::step_entity;
 
 /// Shared reader body for `PRODUCT_DEFINITION` and its
 /// `_WITH_ASSOCIATED_DOCUMENTS` subtype. Both share the first four attrs;
@@ -60,9 +59,8 @@ pub(crate) struct ProductDefinitionWriteInput {
 
 pub(crate) struct ProductDefinitionHandler;
 
+#[step_entity(name = "PRODUCT_DEFINITION", pass = Pass6Pdef)]
 impl SimpleEntityHandler for ProductDefinitionHandler {
-    const NAME: &'static str = "PRODUCT_DEFINITION";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass6Pdef;
     type WriteInput = ProductDefinitionWriteInput;
 
     fn read(
@@ -92,13 +90,3 @@ impl SimpleEntityHandler for ProductDefinitionHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static PDEF_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: ProductDefinitionHandler::NAME,
-    pass_level: ProductDefinitionHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: ProductDefinitionHandler::read,
-    },
-};

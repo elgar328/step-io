@@ -6,9 +6,7 @@
 //! referenced product immediately so the optional supertype side can fill
 //! in `root` later, even when no PCR exists.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::assembly::ProductCategoryChain;
 use crate::ir::attr::{check_count, read_entity_ref_list, read_string};
 use crate::ir::error::ConvertError;
@@ -18,6 +16,7 @@ use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
 use super::shared::{optional_text, optional_text_attr};
+use step_io_macros::step_entity;
 
 pub(crate) struct ProductRelatedProductCategoryWriteInput {
     pub(crate) kind: String,
@@ -27,9 +26,8 @@ pub(crate) struct ProductRelatedProductCategoryWriteInput {
 
 pub(crate) struct ProductRelatedProductCategoryHandler;
 
+#[step_entity(name = "PRODUCT_RELATED_PRODUCT_CATEGORY", pass = Pass6ProductCategory)]
 impl SimpleEntityHandler for ProductRelatedProductCategoryHandler {
-    const NAME: &'static str = "PRODUCT_RELATED_PRODUCT_CATEGORY";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass6ProductCategory;
     type WriteInput = ProductRelatedProductCategoryWriteInput;
 
     fn read(
@@ -78,13 +76,3 @@ impl SimpleEntityHandler for ProductRelatedProductCategoryHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static PRPC_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: ProductRelatedProductCategoryHandler::NAME,
-    pass_level: ProductRelatedProductCategoryHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: ProductRelatedProductCategoryHandler::read,
-    },
-};

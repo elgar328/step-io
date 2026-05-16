@@ -8,14 +8,13 @@
 //!
 //! Writer emits the standard three-attr form pointing at the PDEF.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
+use step_io_macros::step_entity;
 
 /// Accepted entity-type names for the `definition` slot of a
 /// `PRODUCT_DEFINITION_SHAPE` when classified as product-bearing.
@@ -32,9 +31,8 @@ pub(crate) struct ProductDefinitionShapeWriteInput {
 
 pub(crate) struct ProductDefinitionShapeHandler;
 
+#[step_entity(name = "PRODUCT_DEFINITION_SHAPE", pass = Pass6PdsClassify)]
 impl SimpleEntityHandler for ProductDefinitionShapeHandler {
-    const NAME: &'static str = "PRODUCT_DEFINITION_SHAPE";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass6PdsClassify;
     type WriteInput = ProductDefinitionShapeWriteInput;
 
     fn read(
@@ -88,13 +86,3 @@ fn pdef_shape_target(graph: &EntityGraph, pdef_shape_ref: u64, accepts: &[&str])
         _ => None,
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static PDS_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: ProductDefinitionShapeHandler::NAME,
-    pass_level: ProductDefinitionShapeHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: ProductDefinitionShapeHandler::read,
-    },
-};

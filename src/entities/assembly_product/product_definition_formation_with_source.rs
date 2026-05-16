@@ -6,9 +6,7 @@
 //! hard-coded `.NOT_KNOWN.` source enum (the only value seen in real
 //! AP203 fixtures).
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -16,12 +14,12 @@ use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
 use super::product_definition_formation::read_product_definition_formation_body;
+use step_io_macros::step_entity;
 
 pub(crate) struct ProductDefinitionFormationWithSourceHandler;
 
+#[step_entity(name = "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE", pass = Pass6PdefFormation)]
 impl SimpleEntityHandler for ProductDefinitionFormationWithSourceHandler {
-    const NAME: &'static str = "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass6PdefFormation;
     /// PRODUCT entity ref the formation points at.
     type WriteInput = u64;
 
@@ -46,13 +44,3 @@ impl SimpleEntityHandler for ProductDefinitionFormationWithSourceHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static PDF_WITH_SOURCE_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: ProductDefinitionFormationWithSourceHandler::NAME,
-    pass_level: ProductDefinitionFormationWithSourceHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: ProductDefinitionFormationWithSourceHandler::read,
-    },
-};

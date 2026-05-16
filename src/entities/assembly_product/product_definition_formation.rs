@@ -6,15 +6,14 @@
 //! the with-source variant additionally flips the loyalty flag on the
 //! referenced `Product`. Writer emits the bare base type (3 attrs).
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
+use step_io_macros::step_entity;
 
 /// Shared reader body for `PRODUCT_DEFINITION_FORMATION` and its
 /// `_WITH_SPECIFIED_SOURCE` subtype. Both share the first three attrs;
@@ -50,9 +49,8 @@ pub(crate) fn read_product_definition_formation_body(
 
 pub(crate) struct ProductDefinitionFormationHandler;
 
+#[step_entity(name = "PRODUCT_DEFINITION_FORMATION", pass = Pass6PdefFormation)]
 impl SimpleEntityHandler for ProductDefinitionFormationHandler {
-    const NAME: &'static str = "PRODUCT_DEFINITION_FORMATION";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass6PdefFormation;
     /// PRODUCT entity ref the formation points at.
     type WriteInput = u64;
 
@@ -76,13 +74,3 @@ impl SimpleEntityHandler for ProductDefinitionFormationHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static PDF_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: ProductDefinitionFormationHandler::NAME,
-    pass_level: ProductDefinitionFormationHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: ProductDefinitionFormationHandler::read,
-    },
-};

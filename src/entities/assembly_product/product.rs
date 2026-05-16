@@ -6,9 +6,7 @@
 //! formation / PDEF / SR / SDR) lives in `buffer/assembly.rs::emit_assembly_chain`
 //! which dispatches through this handler.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::assembly::{Product, ProductContent};
 use crate::ir::attr::{check_count, read_string_or_unset};
 use crate::ir::error::ConvertError;
@@ -18,12 +16,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::buffer::assembly::AssemblyContextIds;
+use step_io_macros::step_entity;
 
 pub(crate) struct ProductHandler;
 
+#[step_entity(name = "PRODUCT", pass = Pass6Product)]
 impl SimpleEntityHandler for ProductHandler {
-    const NAME: &'static str = "PRODUCT";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass6Product;
     /// `(product, context)` — `Product` clones from IR (single-emit per
     /// product, so the clone is incidental), `AssemblyContextIds` is `Copy`.
     type WriteInput = (Product, AssemblyContextIds);
@@ -89,13 +87,3 @@ impl SimpleEntityHandler for ProductHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static PRODUCT_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: ProductHandler::NAME,
-    pass_level: ProductHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: ProductHandler::read,
-    },
-};
