@@ -7,9 +7,7 @@
 //! used. Other property entities (`REFLECTANCE_AMBIENT` etc.) are silently
 //! dropped to preserve round-trip equality on supported subset.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_enum};
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::{
@@ -22,12 +20,12 @@ use crate::writer::buffer::WriteBuffer;
 
 use super::colour_rgb::ColourRgbHandler;
 use super::surface_style_transparent::SurfaceStyleTransparentHandler;
+use step_io_macros::step_entity;
 
 pub(crate) struct SurfaceStyleRenderingHandler;
 
+#[step_entity(name = "SURFACE_STYLE_RENDERING_WITH_PROPERTIES", pass = Pass7Rendering)]
 impl SimpleEntityHandler for SurfaceStyleRenderingHandler {
-    const NAME: &'static str = "SURFACE_STYLE_RENDERING_WITH_PROPERTIES";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass7Rendering;
     type WriteInput = SurfaceStyleRendering;
 
     fn read(
@@ -101,13 +99,3 @@ impl SimpleEntityHandler for SurfaceStyleRenderingHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static SSR_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: SurfaceStyleRenderingHandler::NAME,
-    pass_level: SurfaceStyleRenderingHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: SurfaceStyleRenderingHandler::read,
-    },
-};

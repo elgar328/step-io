@@ -2,21 +2,19 @@
 //! single transparency factor; populates `viz_transparent_map` for the
 //! rendering pass to consume.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_real};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
+use step_io_macros::step_entity;
 
 pub(crate) struct SurfaceStyleTransparentHandler;
 
+#[step_entity(name = "SURFACE_STYLE_TRANSPARENT", pass = Pass7Transparent)]
 impl SimpleEntityHandler for SurfaceStyleTransparentHandler {
-    const NAME: &'static str = "SURFACE_STYLE_TRANSPARENT";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass7Transparent;
     type WriteInput = f64;
 
     fn read(
@@ -38,13 +36,3 @@ impl SimpleEntityHandler for SurfaceStyleTransparentHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static SST_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: SurfaceStyleTransparentHandler::NAME,
-    pass_level: SurfaceStyleTransparentHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: SurfaceStyleTransparentHandler::read,
-    },
-};

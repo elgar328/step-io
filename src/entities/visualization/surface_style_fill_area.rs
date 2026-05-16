@@ -1,9 +1,7 @@
 //! `SURFACE_STYLE_FILL_AREA` handler — Pass 7-4. Wraps a `FILL_AREA_STYLE`
 //! into one of the `SURFACE_SIDE_STYLE` entry variants.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::{SurfaceSideStyleEntry, SurfaceStyleFillArea};
@@ -13,12 +11,12 @@ use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
 use super::fill_area_style::FillAreaStyleHandler;
+use step_io_macros::step_entity;
 
 pub(crate) struct SurfaceStyleFillAreaHandler;
 
+#[step_entity(name = "SURFACE_STYLE_FILL_AREA", pass = Pass7SurfaceFill)]
 impl SimpleEntityHandler for SurfaceStyleFillAreaHandler {
-    const NAME: &'static str = "SURFACE_STYLE_FILL_AREA";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass7SurfaceFill;
     type WriteInput = SurfaceStyleFillArea;
 
     fn read(
@@ -47,13 +45,3 @@ impl SimpleEntityHandler for SurfaceStyleFillAreaHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static SSFA_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: SurfaceStyleFillAreaHandler::NAME,
-    pass_level: SurfaceStyleFillAreaHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: SurfaceStyleFillAreaHandler::read,
-    },
-};

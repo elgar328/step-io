@@ -1,9 +1,7 @@
 //! `SURFACE_STYLE_USAGE` handler — Pass 7-8. Pairs a `SURFACE_SIDE_STYLE`
 //! with a side enum (Front / Back / Both).
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref, read_enum};
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::{SurfaceSide, SurfaceStyleUsage};
@@ -13,12 +11,12 @@ use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
 use super::surface_side_style::SurfaceSideStyleHandler;
+use step_io_macros::step_entity;
 
 pub(crate) struct SurfaceStyleUsageHandler;
 
+#[step_entity(name = "SURFACE_STYLE_USAGE", pass = Pass7Usage)]
 impl SimpleEntityHandler for SurfaceStyleUsageHandler {
-    const NAME: &'static str = "SURFACE_STYLE_USAGE";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass7Usage;
     type WriteInput = SurfaceStyleUsage;
 
     fn read(
@@ -59,13 +57,3 @@ impl SimpleEntityHandler for SurfaceStyleUsageHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static SSU_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: SurfaceStyleUsageHandler::NAME,
-    pass_level: SurfaceStyleUsageHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: SurfaceStyleUsageHandler::read,
-    },
-};

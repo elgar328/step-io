@@ -6,9 +6,7 @@
 //! time so the writer's symmetric drop preserves round-trip equality on
 //! the supported subset.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref_list};
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::PresentationStyleAssignment;
@@ -18,12 +16,12 @@ use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
 use super::surface_style_usage::SurfaceStyleUsageHandler;
+use step_io_macros::step_entity;
 
 pub(crate) struct PresentationStyleAssignmentHandler;
 
+#[step_entity(name = "PRESENTATION_STYLE_ASSIGNMENT", pass = Pass7Assignment)]
 impl SimpleEntityHandler for PresentationStyleAssignmentHandler {
-    const NAME: &'static str = "PRESENTATION_STYLE_ASSIGNMENT";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass7Assignment;
     type WriteInput = PresentationStyleAssignment;
 
     fn read(
@@ -58,13 +56,3 @@ impl SimpleEntityHandler for PresentationStyleAssignmentHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static PSA_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: PresentationStyleAssignmentHandler::NAME,
-    pass_level: PresentationStyleAssignmentHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: PresentationStyleAssignmentHandler::read,
-    },
-};

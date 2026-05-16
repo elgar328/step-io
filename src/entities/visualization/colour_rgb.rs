@@ -4,9 +4,7 @@
 //! 15 styled items sharing a colour in the source file emit 15 separate
 //! entities, mirroring the read-side de-deduplication.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_real, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::ColorRgb;
@@ -15,12 +13,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct ColourRgbHandler;
 
+#[step_entity(name = "COLOUR_RGB", pass = Pass7Colour)]
 impl SimpleEntityHandler for ColourRgbHandler {
-    const NAME: &'static str = "COLOUR_RGB";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass7Colour;
     type WriteInput = ColorRgb;
 
     fn read(
@@ -63,13 +61,3 @@ impl SimpleEntityHandler for ColourRgbHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static COLOUR_RGB_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: ColourRgbHandler::NAME,
-    pass_level: ColourRgbHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: ColourRgbHandler::read,
-    },
-};

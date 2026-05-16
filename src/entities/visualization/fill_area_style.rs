@@ -1,9 +1,7 @@
 //! `FILL_AREA_STYLE` handler — Pass 7-3. Aggregates one or more
 //! `FILL_AREA_STYLE_COLOUR` entries into a named fill-area style.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::FillAreaStyle;
@@ -13,12 +11,12 @@ use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
 use super::fill_area_style_colour::FillAreaStyleColourHandler;
+use step_io_macros::step_entity;
 
 pub(crate) struct FillAreaStyleHandler;
 
+#[step_entity(name = "FILL_AREA_STYLE", pass = Pass7FillArea)]
 impl SimpleEntityHandler for FillAreaStyleHandler {
-    const NAME: &'static str = "FILL_AREA_STYLE";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass7FillArea;
     type WriteInput = FillAreaStyle;
 
     fn read(
@@ -54,13 +52,3 @@ impl SimpleEntityHandler for FillAreaStyleHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static FAS_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: FillAreaStyleHandler::NAME,
-    pass_level: FillAreaStyleHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: FillAreaStyleHandler::read,
-    },
-};

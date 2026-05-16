@@ -2,9 +2,7 @@
 //! a name. Reader resolves the colour ref through `viz_colour_rgb_map`;
 //! writer dispatches the inner colour through `ColourRgbHandler`.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::FillAreaStyleColour;
@@ -14,12 +12,12 @@ use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
 use super::colour_rgb::ColourRgbHandler;
+use step_io_macros::step_entity;
 
 pub(crate) struct FillAreaStyleColourHandler;
 
+#[step_entity(name = "FILL_AREA_STYLE_COLOUR", pass = Pass7FillColour)]
 impl SimpleEntityHandler for FillAreaStyleColourHandler {
-    const NAME: &'static str = "FILL_AREA_STYLE_COLOUR";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass7FillColour;
     type WriteInput = FillAreaStyleColour;
 
     fn read(
@@ -50,13 +48,3 @@ impl SimpleEntityHandler for FillAreaStyleColourHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static FASC_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: FillAreaStyleColourHandler::NAME,
-    pass_level: FillAreaStyleColourHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: FillAreaStyleColourHandler::read,
-    },
-};
