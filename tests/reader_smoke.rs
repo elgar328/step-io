@@ -511,15 +511,14 @@ fn revolution_ap214_is_spot_check() {
     let rational_count = geo
         .curves
         .iter()
-        .filter(|c| matches!(c, Curve::Nurbs(n) if n.weights.is_some()))
+        .filter(|c| matches!(c, Curve::Nurbs(n) if n.weights().is_some()))
         .count();
     assert_eq!(rational_count, 2, "expected 2 rational NURBS curves");
 
     // Verify at least one weight is not 1.0 (true rational).
     let has_non_unit_weight = geo.curves.iter().any(|c| match c {
         Curve::Nurbs(n) => n
-            .weights
-            .as_ref()
+            .weights()
             .is_some_and(|ws| ws.iter().any(|&w| (w - 1.0).abs() > f64::EPSILON)),
         _ => false,
     });
@@ -674,7 +673,7 @@ fn tapered_box_ap214_is_spot_check() {
     let rational_surface_count = geo
         .surfaces
         .iter()
-        .filter(|s| matches!(s, Surface::Nurbs(n) if n.weights.is_some()))
+        .filter(|s| matches!(s, Surface::Nurbs(n) if n.weights().is_some()))
         .count();
     assert_eq!(
         rational_surface_count, 1,
@@ -683,7 +682,7 @@ fn tapered_box_ap214_is_spot_check() {
     let simple_surface_count = geo
         .surfaces
         .iter()
-        .filter(|s| matches!(s, Surface::Nurbs(n) if n.weights.is_none()))
+        .filter(|s| matches!(s, Surface::Nurbs(n) if n.weights().is_none()))
         .count();
     assert_eq!(
         simple_surface_count, 3,
@@ -695,11 +694,11 @@ fn tapered_box_ap214_is_spot_check() {
         .surfaces
         .iter()
         .find_map(|s| match s {
-            Surface::Nurbs(n) if n.weights.is_some() => Some(n),
+            Surface::Nurbs(n) if n.weights().is_some() => Some(n),
             _ => None,
         })
         .expect("rational NURBS surface missing");
-    let weights = rational.weights.as_ref().unwrap();
+    let weights = rational.weights().unwrap();
     assert_eq!(weights.len(), rational.control_points.len());
     for (w_row, cp_row) in weights.iter().zip(rational.control_points.iter()) {
         assert_eq!(w_row.len(), cp_row.len());
@@ -735,7 +734,7 @@ fn loft_ap214_is_spot_check_nurbs() {
     for nc in &nurbs_curves {
         assert_eq!(nc.degree, 1);
         assert_eq!(nc.control_points.len(), 2);
-        assert!(nc.weights.is_none());
+        assert!(nc.weights().is_none());
         assert_eq!(nc.knots.len(), nc.knot_multiplicities.len());
     }
 
@@ -752,7 +751,7 @@ fn loft_ap214_is_spot_check_nurbs() {
     for ns in &nurbs_surfaces {
         assert!(ns.u_degree >= 7);
         assert_eq!(ns.v_degree, 1);
-        assert!(ns.weights.is_none());
+        assert!(ns.weights().is_none());
         assert_eq!(ns.u_knots.len(), ns.u_knot_multiplicities.len());
         assert_eq!(ns.v_knots.len(), ns.v_knot_multiplicities.len());
     }

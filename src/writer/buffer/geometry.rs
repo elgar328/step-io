@@ -130,7 +130,7 @@ impl WriteBuffer<'_> {
     }
 
     fn emit_nurbs_curve(&mut self, nurbs: NurbsCurve) -> Result<u64, WriteError> {
-        if nurbs.weights.is_some() {
+        if nurbs.weights().is_some() {
             // Rational form → complex RATIONAL_B_SPLINE_CURVE (Plan 3).
             use crate::entities::ComplexEntityHandler;
             crate::entities::geometry::rational_bspline_curve::RationalBsplineCurveHandler::write(
@@ -144,7 +144,7 @@ impl WriteBuffer<'_> {
     }
 
     fn emit_nurbs_surface(&mut self, nurbs: NurbsSurface) -> Result<u64, WriteError> {
-        if nurbs.weights.is_some() {
+        if nurbs.weights().is_some() {
             // Rational form → complex RATIONAL_B_SPLINE_SURFACE (Plan 5 C3).
             use crate::entities::ComplexEntityHandler;
             crate::entities::geometry::rational_bspline_surface::RationalBsplineSurfaceHandler::write(self, nurbs)

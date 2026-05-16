@@ -8,7 +8,7 @@ use crate::ir::attr::{
     read_integer_list, read_logical, read_real_list, read_string,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
-use crate::ir::geometry::{NurbsSurface, Surface, SurfaceForm};
+use crate::ir::geometry::{NurbsSurface, NurbsSurfaceKind, Surface, SurfaceForm};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -71,7 +71,7 @@ impl SimpleEntityHandler for BSplineSurfaceWithKnotsHandler {
             u_degree,
             v_degree,
             control_points,
-            weights: None,
+            kind: NurbsSurfaceKind::NonRational,
             u_knot_multiplicities,
             v_knot_multiplicities,
             u_knots,
@@ -88,7 +88,7 @@ impl SimpleEntityHandler for BSplineSurfaceWithKnotsHandler {
 
     fn write(buf: &mut WriteBuffer, nurbs: NurbsSurface) -> Result<u64, WriteError> {
         debug_assert!(
-            nurbs.weights.is_none(),
+            nurbs.weights().is_none(),
             "BSplineSurfaceWithKnotsHandler::write expects a non-rational surface"
         );
         let mut cp_rows: Vec<Attribute> = Vec::with_capacity(nurbs.control_points.len());

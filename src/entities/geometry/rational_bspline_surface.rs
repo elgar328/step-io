@@ -13,7 +13,7 @@ use crate::ir::attr::{
     read_logical, read_real_grid, read_real_list, read_string,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
-use crate::ir::geometry::{NurbsSurface, Surface, SurfaceForm};
+use crate::ir::geometry::{NurbsSurface, NurbsSurfaceKind, Surface, SurfaceForm};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::ReaderContext;
 use crate::reader::require_part_attrs;
@@ -107,7 +107,7 @@ impl ComplexEntityHandler for RationalBsplineSurfaceHandler {
             u_degree,
             v_degree,
             control_points,
-            weights: Some(weights),
+            kind: NurbsSurfaceKind::Rational { weights },
             u_knot_multiplicities,
             v_knot_multiplicities,
             u_knots,
@@ -123,11 +123,11 @@ impl ComplexEntityHandler for RationalBsplineSurfaceHandler {
     }
 
     fn write(buf: &mut WriteBuffer, nurbs: NurbsSurface) -> Result<u64, WriteError> {
-        let weights = nurbs
-            .weights
-            .ok_or_else(|| WriteError::UnsupportedIrVariant {
+        let NurbsSurfaceKind::Rational { weights } = nurbs.kind else {
+            return Err(WriteError::UnsupportedIrVariant {
                 detail: "RationalBsplineSurfaceHandler::write requires weights".into(),
-            })?;
+            });
+        };
 
         let mut cp_rows: Vec<Attribute> = Vec::with_capacity(nurbs.control_points.len());
         for row in &nurbs.control_points {

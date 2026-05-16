@@ -8,7 +8,7 @@ use crate::ir::attr::{
     read_integer_list, read_logical, read_real_list, read_string,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
-use crate::ir::geometry::{Curve, CurveForm, NurbsCurve};
+use crate::ir::geometry::{Curve, CurveForm, NurbsCurve, NurbsKind};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -62,7 +62,7 @@ impl SimpleEntityHandler for BSplineCurveWithKnotsHandler {
         let curve = NurbsCurve {
             degree,
             control_points,
-            weights: None,
+            kind: NurbsKind::NonRational,
             knot_multiplicities,
             knots,
             closed,
@@ -76,7 +76,7 @@ impl SimpleEntityHandler for BSplineCurveWithKnotsHandler {
 
     fn write(buf: &mut WriteBuffer, nurbs: NurbsCurve) -> Result<u64, WriteError> {
         debug_assert!(
-            nurbs.weights.is_none(),
+            nurbs.weights().is_none(),
             "BSplineCurveWithKnotsHandler::write expects a non-rational curve"
         );
         let mut cp_refs = Vec::with_capacity(nurbs.control_points.len());

@@ -338,18 +338,37 @@ pub enum TransitionCode {
     Unspecified,
 }
 
+/// Rationality of a [`NurbsCurve`].
+///
+/// `NonRational` = `B_SPLINE_CURVE_WITH_KNOTS` (all weights implicitly 1.0).
+/// `Rational { weights }` = `RATIONAL_B_SPLINE_CURVE`; the writer expects
+/// `weights.len() == control_points.len()`.
+#[derive(Debug, Clone, PartialEq)]
+pub enum NurbsKind {
+    NonRational,
+    Rational { weights: Vec<f64> },
+}
+
+/// Rationality of a [`NurbsSurface`].
+///
+/// `Rational { weights }` carries a 2D grid matching the parent surface's
+/// `control_points` shape.
+#[derive(Debug, Clone, PartialEq)]
+pub enum NurbsSurfaceKind {
+    NonRational,
+    Rational { weights: Vec<Vec<f64>> },
+}
+
 /// A NURBS (Non-Uniform Rational B-Spline) curve.
 ///
-/// Unifies all B-Spline variants: `B_SPLINE_CURVE_WITH_KNOTS` (non-rational,
-/// `weights: None`) and `RATIONAL_B_SPLINE_CURVE` (rational, `weights: Some`).
+/// Unifies `B_SPLINE_CURVE_WITH_KNOTS` (non-rational) and
+/// `RATIONAL_B_SPLINE_CURVE` (rational) via [`NurbsKind`].
 // TODO: other B-Spline variants (UNIFORM_CURVE, BEZIER_CURVE) can also map here.
 #[derive(Debug, Clone, PartialEq)]
 pub struct NurbsCurve {
     pub degree: u32,
     pub control_points: Vec<PointId>,
-    /// `None` = non-rational (all weights implicitly 1.0).
-    /// `Some` = rational (NURBS) — populated from `RATIONAL_B_SPLINE_CURVE`.
-    pub weights: Option<Vec<f64>>,
+    pub kind: NurbsKind,
     pub knot_multiplicities: Vec<i64>,
     pub knots: Vec<f64>,
     pub closed: bool,
@@ -358,9 +377,22 @@ pub struct NurbsCurve {
     pub self_intersect: Logical,
 }
 
+impl NurbsCurve {
+    /// Returns `Some(&weights)` for rational, `None` for non-rational.
+    /// Convenience accessor for sites that only need to check rationality
+    /// or read the weight slice.
+    #[must_use]
+    pub fn weights(&self) -> Option<&[f64]> {
+        match &self.kind {
+            NurbsKind::NonRational => None,
+            NurbsKind::Rational { weights } => Some(weights),
+        }
+    }
+}
+
 /// A NURBS (Non-Uniform Rational B-Spline) surface.
 ///
-/// Unifies all B-Spline surface variants.
+/// Unifies all B-Spline surface variants via [`NurbsSurfaceKind`].
 // TODO: other B-Spline variants (UNIFORM_SURFACE, BEZIER_SURFACE) can also map here.
 #[derive(Debug, Clone, PartialEq)]
 pub struct NurbsSurface {
@@ -368,8 +400,7 @@ pub struct NurbsSurface {
     pub v_degree: u32,
     /// Row-major 2D grid: `control_points[u][v]`.
     pub control_points: Vec<Vec<PointId>>,
-    /// `None` = non-rational. `Some` = rational — 2D grid matching `control_points`.
-    pub weights: Option<Vec<Vec<f64>>>,
+    pub kind: NurbsSurfaceKind,
     pub u_knot_multiplicities: Vec<i64>,
     pub v_knot_multiplicities: Vec<i64>,
     pub u_knots: Vec<f64>,
@@ -379,6 +410,17 @@ pub struct NurbsSurface {
     pub form: SurfaceForm,
     /// `self_intersect : LOGICAL`.
     pub self_intersect: Logical,
+}
+
+impl NurbsSurface {
+    /// Returns `Some(&weights)` for rational, `None` for non-rational.
+    #[must_use]
+    pub fn weights(&self) -> Option<&[Vec<f64>]> {
+        match &self.kind {
+            NurbsSurfaceKind::NonRational => None,
+            NurbsSurfaceKind::Rational { weights } => Some(weights),
+        }
+    }
 }
 
 /// A surface of revolution defined by rotating a curve around an axis.

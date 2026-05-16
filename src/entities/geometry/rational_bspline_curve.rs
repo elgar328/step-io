@@ -14,6 +14,7 @@ use crate::ir::attr::{
     read_logical, read_real_list, read_string,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
+use crate::ir::geometry::NurbsKind;
 use crate::ir::{Curve, CurveForm, NurbsCurve};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::ReaderContext;
@@ -82,7 +83,7 @@ impl ComplexEntityHandler for RationalBsplineCurveHandler {
         let curve = NurbsCurve {
             degree,
             control_points,
-            weights: Some(weights),
+            kind: NurbsKind::Rational { weights },
             knot_multiplicities,
             knots,
             closed,
@@ -95,11 +96,11 @@ impl ComplexEntityHandler for RationalBsplineCurveHandler {
     }
 
     fn write(buf: &mut WriteBuffer, nurbs: NurbsCurve) -> Result<u64, WriteError> {
-        let weights = nurbs
-            .weights
-            .ok_or_else(|| WriteError::UnsupportedIrVariant {
+        let NurbsKind::Rational { weights } = nurbs.kind else {
+            return Err(WriteError::UnsupportedIrVariant {
                 detail: "RationalBsplineCurveHandler::write requires weights".into(),
-            })?;
+            });
+        };
 
         let mut cp_refs = Vec::with_capacity(nurbs.control_points.len());
         for &pid in &nurbs.control_points {

@@ -9,9 +9,9 @@ use step_io::ir::assembly::{AssemblyTree, Instance, Product, ProductContent, Tra
 use step_io::ir::geometry::Vertex;
 use step_io::ir::geometry::{
     Axis1Placement, Axis2Placement3d, Circle3, ConicalSurface, Curve, CurveForm,
-    CylindricalSurface, Direction3, Ellipse3, Line3, Logical, NurbsCurve, NurbsSurface, Plane3,
-    Point3, SphericalSurface, Surface, SurfaceForm, SurfaceOfLinearExtrusion, SurfaceOfRevolution,
-    ToroidalSurface,
+    CylindricalSurface, Direction3, Ellipse3, Line3, Logical, NurbsCurve, NurbsKind, NurbsSurface,
+    NurbsSurfaceKind, Plane3, Point3, SphericalSurface, Surface, SurfaceForm,
+    SurfaceOfLinearExtrusion, SurfaceOfRevolution, ToroidalSurface,
 };
 use step_io::ir::id::{DirectionId, Placement3dId, PointId, SolidId, UnitContextId};
 use step_io::ir::model::StepModel;
@@ -464,7 +464,7 @@ fn nurbs_surface_non_rational_round_trips() {
         u_degree: 1,
         v_degree: 1,
         control_points,
-        weights: None,
+        kind: NurbsSurfaceKind::NonRational,
         u_knot_multiplicities: vec![2, 2],
         v_knot_multiplicities: vec![2, 2],
         u_knots: vec![0.0, 1.0],
@@ -480,7 +480,7 @@ fn nurbs_surface_non_rational_round_trips() {
         Surface::Nurbs(s) => {
             assert_eq!(s.u_degree, 1);
             assert_eq!(s.v_degree, 1);
-            assert!(s.weights.is_none());
+            assert!(s.weights().is_none());
             assert_eq!(s.control_points.len(), 2);
             assert_eq!(s.control_points[0].len(), 2);
         }
@@ -496,7 +496,9 @@ fn nurbs_surface_rational_round_trips() {
         u_degree: 1,
         v_degree: 1,
         control_points,
-        weights: Some(vec![vec![1.0, 0.8], vec![0.8, 1.0]]),
+        kind: NurbsSurfaceKind::Rational {
+            weights: vec![vec![1.0, 0.8], vec![0.8, 1.0]],
+        },
         u_knot_multiplicities: vec![2, 2],
         v_knot_multiplicities: vec![2, 2],
         u_knots: vec![0.0, 1.0],
@@ -510,7 +512,7 @@ fn nurbs_surface_rational_round_trips() {
     let re = reconvert(&text);
     match re.geometry.surfaces.iter().next().unwrap() {
         Surface::Nurbs(s) => {
-            let weights = s.weights.as_ref().expect("rational surface has weights");
+            let weights = s.weights().expect("rational surface has weights");
             assert_eq!(weights.len(), 2);
             assert!((weights[0][1] - 0.8).abs() < f64::EPSILON);
             assert!((weights[1][0] - 0.8).abs() < f64::EPSILON);
@@ -546,7 +548,7 @@ fn nurbs_curve_non_rational_round_trips() {
     model.geometry.curves.push(Curve::Nurbs(NurbsCurve {
         degree: 2,
         control_points: control_points.clone(),
-        weights: None,
+        kind: NurbsKind::NonRational,
         knot_multiplicities: vec![3, 3],
         knots: vec![0.0, 1.0],
         closed: false,
@@ -559,7 +561,7 @@ fn nurbs_curve_non_rational_round_trips() {
         Curve::Nurbs(c) => {
             assert_eq!(c.degree, 2);
             assert_eq!(c.control_points.len(), 3);
-            assert!(c.weights.is_none());
+            assert!(c.weights().is_none());
             assert_eq!(c.knot_multiplicities, vec![3, 3]);
             assert_eq!(c.knots, vec![0.0, 1.0]);
             assert!(!c.closed);
@@ -575,7 +577,9 @@ fn nurbs_curve_rational_round_trips() {
     model.geometry.curves.push(Curve::Nurbs(NurbsCurve {
         degree: 2,
         control_points,
-        weights: Some(vec![1.0, 0.7, 1.0]),
+        kind: NurbsKind::Rational {
+            weights: vec![1.0, 0.7, 1.0],
+        },
         knot_multiplicities: vec![3, 3],
         knots: vec![0.0, 1.0],
         closed: false,
@@ -586,7 +590,7 @@ fn nurbs_curve_rational_round_trips() {
     let re = reconvert(&text);
     match re.geometry.curves.iter().next().unwrap() {
         Curve::Nurbs(c) => {
-            let weights = c.weights.as_ref().expect("rational curve has weights");
+            let weights = c.weights().expect("rational curve has weights");
             assert_eq!(weights.len(), 3);
             assert!((weights[1] - 0.7).abs() < f64::EPSILON);
         }
@@ -601,7 +605,7 @@ fn nurbs_curve_form_hint_round_trips() {
     model.geometry.curves.push(Curve::Nurbs(NurbsCurve {
         degree: 2,
         control_points,
-        weights: None,
+        kind: NurbsKind::NonRational,
         knot_multiplicities: vec![3, 3],
         knots: vec![0.0, 1.0],
         closed: false,
@@ -625,7 +629,7 @@ fn nurbs_surface_form_hint_round_trips() {
         u_degree: 1,
         v_degree: 1,
         control_points,
-        weights: None,
+        kind: NurbsSurfaceKind::NonRational,
         u_knot_multiplicities: vec![2, 2],
         v_knot_multiplicities: vec![2, 2],
         u_knots: vec![0.0, 1.0],

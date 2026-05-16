@@ -413,8 +413,8 @@ fn convert_rational_bspline_curve_complex() {
         Curve::Nurbs(n) => {
             assert_eq!(n.degree, 2);
             assert_eq!(n.control_points.len(), 3);
-            assert!(n.weights.is_some());
-            let ws = n.weights.as_ref().unwrap();
+            assert!(n.weights().is_some());
+            let ws = n.weights().unwrap();
             assert_eq!(ws.len(), 3);
             assert!((ws[1] - 0.707).abs() < 0.001);
         }
