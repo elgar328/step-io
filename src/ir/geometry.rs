@@ -262,19 +262,25 @@ impl SurfaceForm {
     }
 }
 
+/// SET element of a `TRIMMED_CURVE` trim slot — STEP SELECT
+/// `(PARAMETER_VALUE | CARTESIAN_POINT)`.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum TrimSelect {
+    Param(f64),
+    Point(PointId),
+}
+
 /// A trimmed curve — a portion of a basis curve bounded by two trim points.
 ///
 /// STEP `TRIMMED_CURVE(basis, trim_1, trim_2, sense_agreement, master_repr)`.
-/// Each trim slot is a SET that may carry a `CARTESIAN_POINT` reference, a
-/// `PARAMETER_VALUE`, or both (redundant form). `master` indicates which is
-/// authoritative when both are present.
-#[derive(Debug, Clone, Copy, PartialEq)]
+/// Each trim slot is a SET (cardinality 0~2) that may carry a `CARTESIAN_POINT`
+/// reference, a `PARAMETER_VALUE`, or both (redundant form). `master`
+/// indicates which form is authoritative when both are present.
+#[derive(Debug, Clone, PartialEq)]
 pub struct TrimmedCurve {
     pub basis: CurveId,
-    pub trim_1_param: Option<f64>,
-    pub trim_1_point: Option<PointId>,
-    pub trim_2_param: Option<f64>,
-    pub trim_2_point: Option<PointId>,
+    pub trim_1: Vec<TrimSelect>,
+    pub trim_2: Vec<TrimSelect>,
     pub sense_agreement: bool,
     pub master: TrimMaster,
 }

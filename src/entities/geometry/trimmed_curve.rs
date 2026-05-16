@@ -5,10 +5,9 @@
 
 use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::cartesian_point::CartesianPointHandler;
-use crate::ir::PointId;
 use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_enum, read_string};
 use crate::ir::error::{AttributeKindTag, ConvertError};
-use crate::ir::geometry::{Curve, TrimMaster, TrimmedCurve};
+use crate::ir::geometry::{Curve, TrimMaster, TrimSelect, TrimmedCurve};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -32,8 +31,8 @@ impl SimpleEntityHandler for TrimmedCurveHandler {
         let _name = read_string(attrs, 0, entity_id, "name")?;
         let basis_ref = read_entity_ref(attrs, 1, entity_id, "basis_curve")?;
         let basis = ctx.resolve_curve(entity_id, basis_ref, "basis_curve")?;
-        let (trim_1_param, trim_1_point) = read_trim_select(ctx, attrs, 2, entity_id, "trim_1")?;
-        let (trim_2_param, trim_2_point) = read_trim_select(ctx, attrs, 3, entity_id, "trim_2")?;
+        let trim_1 = read_trim_select(ctx, attrs, 2, entity_id, "trim_1")?;
+        let trim_2 = read_trim_select(ctx, attrs, 3, entity_id, "trim_2")?;
         let sense_agreement = read_bool(attrs, 4, entity_id, "sense_agreement")?;
         let master = read_enum(attrs, 5, entity_id, "master_representation")?;
         let master = match master {
@@ -44,10 +43,8 @@ impl SimpleEntityHandler for TrimmedCurveHandler {
 
         let trimmed = TrimmedCurve {
             basis,
-            trim_1_param,
-            trim_1_point,
-            trim_2_param,
-            trim_2_point,
+            trim_1,
+            trim_2,
             sense_agreement,
             master,
         };
@@ -58,8 +55,8 @@ impl SimpleEntityHandler for TrimmedCurveHandler {
 
     fn write(buf: &mut WriteBuffer, trimmed: TrimmedCurve) -> Result<u64, WriteError> {
         let basis = buf.emit_curve(trimmed.basis)?;
-        let trim_1 = build_trim_select(buf, trimmed.trim_1_point, trimmed.trim_1_param)?;
-        let trim_2 = build_trim_select(buf, trimmed.trim_2_point, trimmed.trim_2_param)?;
+        let trim_1 = build_trim_select(buf, &trimmed.trim_1)?;
+        let trim_2 = build_trim_select(buf, &trimmed.trim_2)?;
         let master = match trimmed.master {
             TrimMaster::Cartesian => "CARTESIAN",
             TrimMaster::Parameter => "PARAMETER",
@@ -86,15 +83,14 @@ impl SimpleEntityHandler for TrimmedCurveHandler {
 
 /// Decode a `TRIMMED_CURVE` trim slot — a SET (`Attribute::List`) of
 /// `CARTESIAN_POINT` refs and `PARAMETER_VALUE(real)` typed parameters.
-/// Either, both, or neither may appear; missing values come back as
-/// `None`.
+/// The SET may be empty (reader accepts; round-trip preserved).
 fn read_trim_select(
     ctx: &ReaderContext,
     attrs: &[Attribute],
     index: usize,
     entity_id: u64,
     field_name: &'static str,
-) -> Result<(Option<f64>, Option<PointId>), ConvertError> {
+) -> Result<Vec<TrimSelect>, ConvertError> {
     let Attribute::List(elements) = attrs.get(index).ok_or(ConvertError::AttributeCount {
         entity_id,
         entity_name: "TRIMMED_CURVE".into(),
@@ -109,43 +105,44 @@ fn read_trim_select(
             actual: AttributeKindTag::from_attribute(attrs.get(index).unwrap()),
         });
     };
-    let mut param = None;
-    let mut point = None;
+    let mut out = Vec::new();
     for el in elements {
         match el {
             Attribute::EntityRef(r) => {
                 if let Some(&pid) = ctx.point_map.get(r) {
-                    point = Some(pid);
+                    out.push(TrimSelect::Point(pid));
                 }
             }
             Attribute::Typed { type_name, value } if type_name == "PARAMETER_VALUE" => {
                 if let Attribute::Real(v) = **value {
-                    param = Some(v);
+                    out.push(TrimSelect::Param(v));
                 }
             }
             _ => {}
         }
     }
-    Ok((param, point))
+    Ok(out)
 }
 
 /// Build the SET-of-trim_select attribute list for a `TRIMMED_CURVE` slot.
-/// Either, both, or neither of the cartesian point and parameter value may
-/// be present; the writer emits whatever the IR carries, faithfully.
+/// The writer emits whatever the IR carries, faithfully (including empty).
 fn build_trim_select(
     buf: &mut WriteBuffer,
-    point: Option<PointId>,
-    param: Option<f64>,
+    items: &[TrimSelect],
 ) -> Result<Vec<Attribute>, WriteError> {
-    let mut elements = Vec::new();
-    if let Some(p) = point {
-        elements.push(Attribute::EntityRef(CartesianPointHandler::write(buf, p)?));
-    }
-    if let Some(v) = param {
-        elements.push(Attribute::Typed {
-            type_name: "PARAMETER_VALUE".into(),
-            value: Box::new(Attribute::Real(v)),
-        });
+    let mut elements = Vec::with_capacity(items.len());
+    for sel in items {
+        match *sel {
+            TrimSelect::Point(p) => {
+                elements.push(Attribute::EntityRef(CartesianPointHandler::write(buf, p)?));
+            }
+            TrimSelect::Param(v) => {
+                elements.push(Attribute::Typed {
+                    type_name: "PARAMETER_VALUE".into(),
+                    value: Box::new(Attribute::Real(v)),
+                });
+            }
+        }
     }
     Ok(elements)
 }
