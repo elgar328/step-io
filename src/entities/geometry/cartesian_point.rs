@@ -5,9 +5,7 @@
 //! `emit_point` as a thin wrapper because callers in adjacent emit
 //! functions reference it directly.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::PointId;
 use crate::ir::attr::{check_count, read_real_list, read_string};
 use crate::ir::error::ConvertError;
@@ -17,12 +15,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct CartesianPointHandler;
 
+#[step_entity(name = "CARTESIAN_POINT", pass = Pass1)]
 impl SimpleEntityHandler for CartesianPointHandler {
-    const NAME: &'static str = "CARTESIAN_POINT";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass1;
     type WriteInput = PointId;
 
     fn read(
@@ -90,13 +88,3 @@ impl SimpleEntityHandler for CartesianPointHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static CARTESIAN_POINT_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: CartesianPointHandler::NAME,
-    pass_level: CartesianPointHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: CartesianPointHandler::read,
-    },
-};
