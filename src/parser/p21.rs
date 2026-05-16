@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use super::entity::{Attribute, EntityGraph, ParseError, RawEntity, RawEntityPart};
+use super::entity::{Attribute, EntityGraph, ParseError, ParseWarning, RawEntity, RawEntityPart};
 use super::lexer::{Lexer, Span, Token, TokenKind};
 use super::schema::StepSchema;
 
@@ -39,6 +39,7 @@ pub fn parse_bytes(bytes: &[u8]) -> Result<EntityGraph, ParseError> {
 /// a one-pass iterator and cannot be rewound.
 pub struct Parser<'src> {
     lexer: Lexer<'src>,
+    warnings: Vec<ParseWarning>,
 }
 
 impl<'src> Parser<'src> {
@@ -46,6 +47,7 @@ impl<'src> Parser<'src> {
     pub fn new(source: &'src str) -> Self {
         Self {
             lexer: Lexer::new(source),
+            warnings: Vec::new(),
         }
     }
 
@@ -75,6 +77,13 @@ impl<'src> Parser<'src> {
         self.expect_token_kind(&TokenKind::EndSec, "ENDSEC")?;
         self.expect_semicolon()?;
 
+        // Optional P21 edition 3 sections (ANCHOR / REFERENCE /
+        // SIGNATURE). step-io does not yet model these in the IR, so
+        // their content is discarded — a ParseWarning records the loss.
+        while self.peek_is_ed3_section()? {
+            self.skip_ed3_section()?;
+        }
+
         // DATA; ... ENDSEC;
         self.expect_token_kind(&TokenKind::Data, "DATA")?;
         self.expect_semicolon()?;
@@ -100,7 +109,39 @@ impl<'src> Parser<'src> {
             schema,
             header,
             entities,
+            warnings: std::mem::take(&mut self.warnings),
         })
+    }
+
+    // ------------------------------------------------------------------
+    // P21 edition 3 sections (ANCHOR / REFERENCE / SIGNATURE)
+    // ------------------------------------------------------------------
+
+    fn peek_is_ed3_section(&mut self) -> Result<bool, ParseError> {
+        Ok(matches!(
+            self.peek_kind()?,
+            TokenKind::Keyword(k)
+                if matches!(k.to_uppercase().as_str(),
+                            "ANCHOR" | "REFERENCE" | "SIGNATURE")
+        ))
+    }
+
+    fn skip_ed3_section(&mut self) -> Result<(), ParseError> {
+        let tok = self.next_token()?;
+        let section = match &tok.kind {
+            TokenKind::Keyword(k) => k.to_uppercase(),
+            _ => unreachable!("peek_is_ed3_section guarantees a Keyword"),
+        };
+        let span = tok.span;
+        self.expect_semicolon()?;
+        while !matches!(self.peek_kind()?, TokenKind::EndSec) {
+            self.next_token()?;
+        }
+        self.expect_token_kind(&TokenKind::EndSec, "ENDSEC")?;
+        self.expect_semicolon()?;
+        self.warnings
+            .push(ParseWarning::Ed3SectionDiscarded { section, span });
+        Ok(())
     }
 
     // ------------------------------------------------------------------
@@ -139,7 +180,24 @@ impl<'src> Parser<'src> {
                 schema_raw = Self::extract_file_schema_strings(&attributes, tok.span)?;
             }
 
-            self.expect_semicolon()?;
+            // Some non-spec writers omit the trailing `;` after a HEADER
+            // entity. If the next token already starts the following
+            // entity (keyword) or closes the section (ENDSEC), accept
+            // the missing semicolon with a ParseWarning.
+            match self.peek_kind()? {
+                TokenKind::Semicolon => {
+                    self.next_token()?;
+                }
+                TokenKind::Keyword(_) | TokenKind::EndSec => {
+                    self.warnings.push(ParseWarning::MissingHeaderSemicolon {
+                        entity_name: name.clone(),
+                        span: tok.span,
+                    });
+                }
+                _ => {
+                    self.expect_semicolon()?;
+                }
+            }
 
             pseudo_id += 1;
             header.push(RawEntity::Simple {
@@ -345,13 +403,42 @@ impl<'src> Parser<'src> {
         if matches!(self.peek_kind()?, TokenKind::RParen) {
             return Ok(items);
         }
-        items.push(self.parse_parameter()?);
+        items.push(self.parse_parameter_or_unset_if_empty()?);
         while matches!(self.peek_kind()?, TokenKind::Comma) {
             // Consume the comma.
             self.next_token()?;
-            items.push(self.parse_parameter()?);
+            items.push(self.parse_parameter_or_unset_if_empty()?);
         }
         Ok(items)
+    }
+
+    /// Like [`Self::parse_parameter`] but tolerates a blank attribute
+    /// position — `(a, , b)` or trailing `(a, )`. Spec requires `$` for
+    /// omitted slots, but some writers leave them empty. The slot is
+    /// normalised to [`Attribute::Unset`] and a [`ParseWarning`] is
+    /// recorded so the lenient repair surfaces to the caller.
+    fn parse_parameter_or_unset_if_empty(&mut self) -> Result<Attribute, ParseError> {
+        if matches!(self.peek_kind()?, TokenKind::Comma | TokenKind::RParen) {
+            let span = self.peek_span().unwrap_or(Span {
+                start: 0,
+                end: 0,
+                line: 0,
+                column: 0,
+            });
+            self.warnings.push(ParseWarning::EmptyAttribute { span });
+            return Ok(Attribute::Unset);
+        }
+        self.parse_parameter()
+    }
+
+    /// Peek at the next token's span without consuming it. Returns
+    /// `None` on EOF or a lex error (the warning path then falls back
+    /// to a zero span — positional precision is non-critical).
+    fn peek_span(&mut self) -> Option<Span> {
+        match self.lexer.peek() {
+            Some(Ok(tok)) => Some(tok.span),
+            _ => None,
+        }
     }
 
     /// Parse a single Part 21 parameter value.
@@ -905,5 +992,83 @@ mod tests {
             panic!();
         };
         assert_eq!(s, "\u{00C0}");
+    }
+
+    // --- ParseWarning: lenient acceptance of non-spec / ed.3 inputs ---
+
+    #[test]
+    fn parse_warns_and_skips_ed3_anchor_section() {
+        let src = "ISO-10303-21;\n\
+                   HEADER;\n\
+                   FILE_DESCRIPTION((''),'2;1');\n\
+                   FILE_NAME('n','t',(''),(''),'p','o','a');\n\
+                   FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\n\
+                   ENDSEC;\n\
+                   ANCHOR;\n\
+                   <TestAnchor>=#1;\n\
+                   ENDSEC;\n\
+                   DATA;\n\
+                   #1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+                   ENDSEC;\n\
+                   END-ISO-10303-21;\n";
+        let graph = parse(src).expect("ed.3 ANCHOR must be tolerated");
+        assert_eq!(graph.entities.len(), 1);
+        assert!(
+            graph
+                .warnings
+                .iter()
+                .any(|w| matches!(w, ParseWarning::Ed3SectionDiscarded { section, .. } if section == "ANCHOR"))
+        );
+    }
+
+    #[test]
+    fn parse_warns_on_missing_header_semicolon() {
+        // FILE_DESCRIPTION lacks its trailing `;` — non-spec but common.
+        let src = "ISO-10303-21;\n\
+                   HEADER;\n\
+                   FILE_DESCRIPTION((''),'2;1')\n\
+                   FILE_NAME('n','t',(''),(''),'p','o','a');\n\
+                   FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\n\
+                   ENDSEC;\n\
+                   DATA;\n\
+                   ENDSEC;\n\
+                   END-ISO-10303-21;\n";
+        let graph = parse(src).expect("missing `;` must be tolerated");
+        assert!(graph.warnings.iter().any(|w| matches!(
+            w,
+            ParseWarning::MissingHeaderSemicolon { entity_name, .. }
+                if entity_name == "FILE_DESCRIPTION"
+        )));
+    }
+
+    #[test]
+    fn parse_normalises_empty_attribute_to_unset_with_warning() {
+        // Trailing blank attribute: `#0,   )` — spec wants `$`.
+        let src = "ISO-10303-21;\n\
+                   HEADER;\n\
+                   FILE_DESCRIPTION((''),'2;1');\n\
+                   FILE_NAME('n','t',(''),(''),'p','o','a');\n\
+                   FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\n\
+                   ENDSEC;\n\
+                   DATA;\n\
+                   #1 = EDGE_CURVE('', #2, #3, #0,   );\n\
+                   #2 = VERTEX_POINT('', #4);\n\
+                   #3 = VERTEX_POINT('', #4);\n\
+                   #4 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+                   ENDSEC;\n\
+                   END-ISO-10303-21;\n";
+        let graph = parse(src).expect("empty attribute slot must be tolerated");
+        // The fifth attribute of #1 is the omitted slot, normalised to Unset.
+        let RawEntity::Simple { attributes, .. } = &graph.entities[&1] else {
+            panic!("expected Simple entity");
+        };
+        assert_eq!(attributes.len(), 5);
+        assert!(matches!(attributes[4], Attribute::Unset));
+        assert!(
+            graph
+                .warnings
+                .iter()
+                .any(|w| matches!(w, ParseWarning::EmptyAttribute { .. }))
+        );
     }
 }

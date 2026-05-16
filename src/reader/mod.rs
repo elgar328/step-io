@@ -46,6 +46,12 @@ pub struct ConvertResult {
     /// continues for the rest. Messages intentionally omit the
     /// "skipped" verb — the type itself already implies skipping.
     pub warnings: Vec<ConvertError>,
+    /// Non-fatal issues observed during the parsing stage (forwarded
+    /// from [`EntityGraph::warnings`]). Lenient recoveries (missing
+    /// semicolons, blank attribute slots) and discarded P21 edition 3
+    /// sections land here. The IR carries the spec-conformant form;
+    /// these warnings are the only trace of what was repaired.
+    pub parse_warnings: Vec<crate::parser::ParseWarning>,
 }
 
 /// Accumulates converted IR objects and tracks the mapping from STEP entity
@@ -293,6 +299,7 @@ impl ReaderContext {
                 shape_aspects: ctx.shape_aspects,
             },
             warnings: ctx.warnings,
+            parse_warnings: graph.warnings.clone(),
         }
     }
 

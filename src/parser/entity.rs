@@ -88,6 +88,38 @@ pub struct EntityGraph {
     /// DATA section entities keyed by their `#N` identifier.
     /// `BTreeMap` gives deterministic iteration order (useful for the writer stage).
     pub entities: BTreeMap<u64, RawEntity>,
+    /// Non-fatal issues observed while parsing. Lenient recoveries
+    /// (missing semicolons, empty attribute slots) and P21 edition 3
+    /// sections that step-io does not yet model land here so callers can
+    /// surface them without aborting the parse.
+    pub warnings: Vec<ParseWarning>,
+}
+
+/// Non-fatal issues observed during parsing.
+///
+/// The parser admits a handful of spec-bending inputs to survive
+/// real-world STEP files; each tolerance pushes a [`ParseWarning`] so
+/// downstream stages can surface what was repaired or discarded. The
+/// IR itself never carries the non-standard form — input is normalised
+/// to a spec-conformant shape before it reaches [`EntityGraph`].
+#[derive(Debug, Clone, PartialEq)]
+pub enum ParseWarning {
+    /// A HEADER entity is missing its terminating `;`. The next keyword
+    /// is treated as the start of the next entity; the IR shows no trace.
+    MissingHeaderSemicolon {
+        entity_name: String,
+        span: super::lexer::Span,
+    },
+    /// An attribute position is blank — `(a, , b)` or trailing `(a, )`.
+    /// The slot is normalised to [`Attribute::Unset`] (the spec form `$`).
+    EmptyAttribute { span: super::lexer::Span },
+    /// A P21 edition 3 section was encountered (`ANCHOR`, `REFERENCE`,
+    /// or `SIGNATURE`) and discarded. step-io does not yet model these
+    /// sections in the IR.
+    Ed3SectionDiscarded {
+        section: String,
+        span: super::lexer::Span,
+    },
 }
 
 impl EntityGraph {
@@ -294,6 +326,7 @@ mod tests {
             schema: super::super::schema::StepSchema::default(),
             header: vec![],
             entities,
+            warnings: vec![],
         };
         assert_eq!(graph.get(1), Some(&entity));
         assert_eq!(graph.get(999), None);

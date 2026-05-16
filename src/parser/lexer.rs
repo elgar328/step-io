@@ -318,6 +318,13 @@ pub enum TokenKind {
         |lex| lex.slice().to_string()
     )]
     Keyword(String),
+
+    /// P21 edition 3 anchor reference (`<name>` or `<url#name>`). The
+    /// whole bracketed form is captured as a single token; the parser
+    /// currently discards these (ed.3 sections are skip-only — see
+    /// [`crate::parser::ParseWarning::Ed3SectionDiscarded`]).
+    #[regex(r"<[^>]+>", |lex| lex.slice().to_string())]
+    AnchorRef(String),
 }
 
 #[cfg(test)]
@@ -440,6 +447,22 @@ mod tests {
     #[test]
     fn lex_string_multibyte_japanese() {
         assert_eq!(first_token("'日本語'"), TokenKind::String("日本語".into()));
+    }
+
+    #[test]
+    fn lex_anchor_ref_simple() {
+        assert_eq!(
+            first_token("<TestAnchor>"),
+            TokenKind::AnchorRef("<TestAnchor>".into())
+        );
+    }
+
+    #[test]
+    fn lex_anchor_ref_with_url() {
+        assert_eq!(
+            first_token("<testAnchorAndData.stp#TestAnchor>"),
+            TokenKind::AnchorRef("<testAnchorAndData.stp#TestAnchor>".into())
+        );
     }
 
     #[test]

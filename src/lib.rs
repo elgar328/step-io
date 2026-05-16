@@ -16,7 +16,8 @@ pub use ir::{
     TopologyPool, ToroidalSurface, Transform3d, UnitContext, Vertex, VertexId, Wire, WireId,
 };
 pub use parser::{
-    Attribute, EntityGraph, LexError, LexErrorKind, Lexer, ParseError, Parser, RawEntity,
-    RawEntityPart, SchemaClass, Span, StepSchema, Token, TokenKind, parse, parse_bytes, tokenize,
+    Attribute, EntityGraph, LexError, LexErrorKind, Lexer, ParseError, ParseWarning, Parser,
+    RawEntity, RawEntityPart, SchemaClass, Span, StepSchema, Token, TokenKind, parse, parse_bytes,
+    tokenize,
 };
 pub use writer::WriteError;
