@@ -9,10 +9,8 @@
 //!     keeps `(DirectionId, f64)` in `vector_map` keyed by entity id, and
 //!     the writer reconstructs the entity inline at each call site.
 
+use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::direction::DirectionHandler;
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
 use crate::ir::DirectionId;
 use crate::ir::attr::{check_count, read_entity_ref, read_real, read_string};
 use crate::ir::error::ConvertError;
@@ -21,12 +19,12 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
 
 pub(crate) struct VectorHandler;
 
+#[step_entity(name = "VECTOR", pass = Pass2)]
 impl SimpleEntityHandler for VectorHandler {
-    const NAME: &'static str = "VECTOR";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass2;
     type WriteInput = (DirectionId, f64);
 
     fn read(
@@ -71,13 +69,3 @@ impl SimpleEntityHandler for VectorHandler {
         Ok(n)
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static VECTOR_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: VectorHandler::NAME,
-    pass_level: VectorHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: VectorHandler::read,
-    },
-};
