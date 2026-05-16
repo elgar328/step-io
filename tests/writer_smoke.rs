@@ -13,7 +13,7 @@ use step_io::ir::geometry::{
     SphericalSurface, Surface, SurfaceForm, SurfaceOfLinearExtrusion, SurfaceOfRevolution,
     ToroidalSurface,
 };
-use step_io::ir::id::{DirectionId, Placement3dId, PointId, SolidId};
+use step_io::ir::id::{DirectionId, Placement3dId, PointId, SolidId, UnitContextId};
 use step_io::ir::model::StepModel;
 use step_io::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit, UnitContext};
 use step_io::ir::topology::{Face, FaceKind, Orientation, Shell, Solid, Wire};
@@ -843,7 +843,7 @@ fn simple_assembly_round_trips() {
         outer_sr_frame: None,
         category: None,
         formation_with_source: false,
-        geometry_context: None,
+        geometry_context: Some(UnitContextId(0)),
     });
     let root_pid = tree.products.push(Product {
         id: "Root".into(),
@@ -859,7 +859,7 @@ fn simple_assembly_round_trips() {
         outer_sr_frame: None,
         category: None,
         formation_with_source: false,
-        geometry_context: None,
+        geometry_context: Some(UnitContextId(0)),
     });
     tree.root = Some(root_pid);
     model.assembly = Some(tree);
@@ -914,7 +914,7 @@ fn shared_child_assembly_round_trips() {
         outer_sr_frame: None,
         category: None,
         formation_with_source: false,
-        geometry_context: None,
+        geometry_context: Some(UnitContextId(0)),
     });
     let root_pid = tree.products.push(Product {
         id: "Root".into(),
@@ -938,7 +938,7 @@ fn shared_child_assembly_round_trips() {
         outer_sr_frame: None,
         category: None,
         formation_with_source: false,
-        geometry_context: None,
+        geometry_context: Some(UnitContextId(0)),
     });
     tree.root = Some(root_pid);
     model.assembly = Some(tree);
@@ -1005,7 +1005,7 @@ fn multi_body_solid_round_trips() {
         outer_sr_frame: None,
         category: None,
         formation_with_source: false,
-        geometry_context: None,
+        geometry_context: Some(UnitContextId(0)),
     });
     tree.root = Some(pid);
     model.assembly = Some(tree);
@@ -1030,6 +1030,64 @@ fn multi_body_solid_round_trips() {
         }
         other => panic!("expected Solid with 2 ids, got {other:?}"),
     }
+}
+
+#[test]
+fn metadata_only_product_round_trips_with_none_geometry_context() {
+    // A second sibling product with no shape representation in source
+    // STEP (NIST "document" style: `Group([])` + `geometry_context:
+    // None`). The writer must skip its SR + SDR emission so the
+    // re-read IR keeps `geometry_context: None`; falling back to a
+    // default context would surface as `Some(UnitContextId(0))` and
+    // break round-trip equality.
+    let mut model = empty_model();
+    model.units.push(mm_radian_steradian());
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    tree.products.push(Product {
+        id: "Main".into(),
+        name: "Main".into(),
+        description: None,
+        content: ProductContent::Solid(vec![solid_id]),
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+    });
+    tree.products.push(Product {
+        id: "MetadataDoc".into(),
+        name: "MetadataDoc".into(),
+        description: None,
+        content: ProductContent::Group(vec![]),
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: None,
+    });
+    model.assembly = Some(tree);
+
+    let text = model.write_to_string().expect("write");
+    // Skip the shared `reconvert` helper: two-root-candidate assemblies
+    // legitimately emit a non-fatal "using the first" warning that is
+    // unrelated to the geometry_context behaviour under test.
+    let graph = parse(&text).expect("writer output parses");
+    let re = ReaderContext::convert(&graph).model;
+    let r_asm = re.assembly.as_ref().expect("round-tripped has assembly");
+    assert_eq!(r_asm.products.len(), 2);
+    let meta = r_asm
+        .products
+        .iter()
+        .find(|p| p.id == "MetadataDoc")
+        .expect("metadata product survived");
+    assert!(
+        meta.geometry_context.is_none(),
+        "metadata product must keep geometry_context: None; got {:?}",
+        meta.geometry_context
+    );
 }
 
 #[test]

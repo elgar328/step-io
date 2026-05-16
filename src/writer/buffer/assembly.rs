@@ -59,18 +59,14 @@ impl WriteBuffer<'_> {
         Ok(())
     }
 
-    /// Resolve a product's `geometry_context` to a STEP entity id, falling
-    /// back to the first emitted context when the IR has no explicit ref.
-    /// Caller is responsible for skipping product emission entirely when
-    /// `unit_context_ids` is empty (see `emit_product_chain_if_eligible`).
-    fn resolve_product_ctx(&self, product: &Product) -> u64 {
-        if let Some(id) = product.geometry_context {
-            return self.unit_context_ids[id.0 as usize];
-        }
-        *self
-            .unit_context_ids
-            .first()
-            .expect("emit_product_chain_if_eligible bails out when no contexts exist")
+    /// Resolve a product's `geometry_context` to a STEP entity id, or
+    /// `None` when the IR has no explicit context for this product
+    /// (metadata-only product with no SHAPE_DEFINITION_REPRESENTATION
+    /// in source). Callers treat `None` as "skip SR + SDR emission so
+    /// round-trip preserves the absence of a shape representation".
+    fn resolve_product_ctx(&self, product: &Product) -> Option<u64> {
+        let id = product.geometry_context?;
+        Some(self.unit_context_ids[id.0 as usize])
     }
 
     fn emit_assembly_chain(
@@ -98,7 +94,14 @@ impl WriteBuffer<'_> {
             self.product_def_shape_ids.insert(pid, pdef_shape);
             self.emit_product_category_chain(product, prod_entity);
 
-            let unit_ctx = self.resolve_product_ctx(product);
+            // Metadata-only products (no SDR in source IR) carry
+            // `geometry_context: None`. Skip SR + SDR emission for
+            // them so the output mirrors the source absence; otherwise
+            // the writer would attach a default context that re-reads
+            // as `Some(UnitContextId(0))` and breaks IR equality.
+            let Some(unit_ctx) = self.resolve_product_ctx(product) else {
+                continue;
+            };
             let sr = match &product.content {
                 ProductContent::Solid(sids) => {
                     let solid_refs: Vec<u64> = sids
@@ -132,11 +135,28 @@ impl WriteBuffer<'_> {
             };
             let parent_pid = ProductId(parent_idx as u32);
             let parent_pdef = self.product_def_ids[&parent_pid];
-            let parent_sr = product_sr[&parent_pid];
+            // No SR for this parent → no shape to anchor instances on.
+            // Reached when the parent is a metadata-only Group([]) whose
+            // SR emission was skipped above.
+            let Some(&parent_sr) = product_sr.get(&parent_pid) else {
+                continue;
+            };
             // Clone product_def_ids for emit_instance_bundle so it can
             // borrow `&self` via emit_* methods without overlapping borrows.
             let product_def = self.product_def_ids.clone();
             for inst in instances {
+                if !product_sr.contains_key(&inst.child) {
+                    // Child product has no SR (geometry_context: None
+                    // — metadata-only). A CDSR/RRWT bundle can't point
+                    // into nothing; surface this instead of panicking
+                    // on the missing map entry.
+                    return Err(WriteError::DanglingId {
+                        detail: format!(
+                            "Instance child ProductId({}) has no SR (geometry_context: None)",
+                            inst.child.0
+                        ),
+                    });
+                }
                 self.emit_instance_bundle(inst, parent_pdef, parent_sr, &product_def, &product_sr)?;
             }
         }
