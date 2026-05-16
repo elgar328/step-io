@@ -7,9 +7,7 @@
 //! taken. The dispatch registry exact-matches entity names, so ABSR / MSSR
 //! never reach this handler.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::assembly::Product;
 use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
@@ -17,6 +15,7 @@ use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
+use step_io_macros::step_entity;
 
 pub(crate) struct ShapeRepresentationWriteInput {
     pub(crate) product: Product,
@@ -25,9 +24,8 @@ pub(crate) struct ShapeRepresentationWriteInput {
 
 pub(crate) struct ShapeRepresentationHandler;
 
+#[step_entity(name = "SHAPE_REPRESENTATION", pass = Pass6ShapeRep)]
 impl SimpleEntityHandler for ShapeRepresentationHandler {
-    const NAME: &'static str = "SHAPE_REPRESENTATION";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass6ShapeRep;
     type WriteInput = ShapeRepresentationWriteInput;
 
     fn read(
@@ -65,13 +63,3 @@ impl SimpleEntityHandler for ShapeRepresentationHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static SHAPE_REPRESENTATION_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: ShapeRepresentationHandler::NAME,
-    pass_level: ShapeRepresentationHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: ShapeRepresentationHandler::read,
-    },
-};

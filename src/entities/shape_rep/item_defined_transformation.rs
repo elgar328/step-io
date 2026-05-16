@@ -5,9 +5,7 @@
 //! `Transform3d` keyed by entity id in `transform_map`. Writer emits an
 //! IDT line with the per-instance source / target axis placements.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::assembly::Transform3d;
 use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
@@ -15,12 +13,12 @@ use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
+use step_io_macros::step_entity;
 
 pub(crate) struct ItemDefinedTransformationHandler;
 
+#[step_entity(name = "ITEM_DEFINED_TRANSFORMATION", pass = Pass6Idt)]
 impl SimpleEntityHandler for ItemDefinedTransformationHandler {
-    const NAME: &'static str = "ITEM_DEFINED_TRANSFORMATION";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass6Idt;
     type WriteInput = Transform3d;
 
     fn read(
@@ -54,13 +52,3 @@ impl SimpleEntityHandler for ItemDefinedTransformationHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static IDT_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: ItemDefinedTransformationHandler::NAME,
-    pass_level: ItemDefinedTransformationHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: ItemDefinedTransformationHandler::read,
-    },
-};

@@ -4,10 +4,7 @@ use crate::entities::units::length_unit::LengthUnitHandler;
 use crate::entities::units::plane_angle_unit::PlaneAngleUnitHandler;
 use crate::entities::units::solid_angle_unit::SolidAngleUnitHandler;
 use crate::entities::units::uncertainty_measure_with_unit::UncertaintyMeasureWithUnitHandler;
-use crate::entities::{
-    ComplexEntityHandler, ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind,
-    SimpleEntityHandler,
-};
+use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::attr::{check_count, read_entity_ref_list};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit, SolidAngleUnit, UnitContext};
@@ -16,13 +13,12 @@ use crate::reader::{ReaderContext, require_part_attrs};
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity_complex;
 
 pub(crate) struct GlobalUnitAssignedContextHandler;
 
+#[step_entity_complex(name = "GLOBAL_UNIT_ASSIGNED_CONTEXT", pass = Pass0Context, required = ["GLOBAL_UNIT_ASSIGNED_CONTEXT"])]
 impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
-    const NAME: &'static str = "GLOBAL_UNIT_ASSIGNED_CONTEXT";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass0Context;
-    const REQUIRED_PARTS: &'static [&'static str] = &["GLOBAL_UNIT_ASSIGNED_CONTEXT"];
     type WriteInput = UnitContext;
 
     fn read_complex(
@@ -228,14 +224,3 @@ fn extract_uncertainties(ctx: &ReaderContext, parts: &[RawEntityPart]) -> Uncert
     }
     (length, plane_angle, solid_angle)
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static GLOBAL_UNIT_ASSIGNED_CONTEXT_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: GlobalUnitAssignedContextHandler::NAME,
-    pass_level: GlobalUnitAssignedContextHandler::PASS_LEVEL,
-    kind: ReadKind::Complex {
-        required_parts: GlobalUnitAssignedContextHandler::REQUIRED_PARTS,
-        read: GlobalUnitAssignedContextHandler::read_complex,
-    },
-};

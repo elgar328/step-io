@@ -3,15 +3,14 @@
 //! the `_SURFACE_` wrapper name so the writer round-trips the spelling
 //! the source file used.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::assembly::WireframeReprKind;
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
+use step_io_macros::step_entity;
 
 use super::gbwsr::{
     WireframeRepresentationWriteInput, read_wireframe_representation_body,
@@ -20,9 +19,8 @@ use super::gbwsr::{
 
 pub(crate) struct GbssrHandler;
 
+#[step_entity(name = "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION", pass = Pass6Gbsr)]
 impl SimpleEntityHandler for GbssrHandler {
-    const NAME: &'static str = "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass6Gbsr;
     type WriteInput = WireframeRepresentationWriteInput;
 
     fn read(
@@ -45,13 +43,3 @@ impl SimpleEntityHandler for GbssrHandler {
         )
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static GBSSR_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: GbssrHandler::NAME,
-    pass_level: GbssrHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: GbssrHandler::read,
-    },
-};

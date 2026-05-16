@@ -6,9 +6,7 @@
 //! emit a per-product axis placement, then an SBSM wrapping all shells,
 //! and reference both from the MSSR line.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::assembly::Product;
 use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string};
 use crate::ir::error::ConvertError;
@@ -19,6 +17,7 @@ use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
 use crate::entities::geometry::shell_based_surface_model::ShellBasedSurfaceModelHandler;
+use step_io_macros::step_entity;
 
 pub(crate) struct ManifoldSurfaceShapeRepresentationWriteInput {
     pub(crate) product: Product,
@@ -28,9 +27,8 @@ pub(crate) struct ManifoldSurfaceShapeRepresentationWriteInput {
 
 pub(crate) struct ManifoldSurfaceShapeRepresentationHandler;
 
+#[step_entity(name = "MANIFOLD_SURFACE_SHAPE_REPRESENTATION", pass = Pass6ShapeRep)]
 impl SimpleEntityHandler for ManifoldSurfaceShapeRepresentationHandler {
-    const NAME: &'static str = "MANIFOLD_SURFACE_SHAPE_REPRESENTATION";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass6ShapeRep;
     type WriteInput = ManifoldSurfaceShapeRepresentationWriteInput;
 
     fn read(
@@ -83,13 +81,3 @@ impl SimpleEntityHandler for ManifoldSurfaceShapeRepresentationHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static MSSR_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: ManifoldSurfaceShapeRepresentationHandler::NAME,
-    pass_level: ManifoldSurfaceShapeRepresentationHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: ManifoldSurfaceShapeRepresentationHandler::read,
-    },
-};

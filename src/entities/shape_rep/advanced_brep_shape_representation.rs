@@ -6,9 +6,7 @@
 //! emits the ABSR line with the per-product axis placement followed by all
 //! solid refs the chain orchestrator pre-emitted, and the bound unit context.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::assembly::Product;
 use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string};
 use crate::ir::error::ConvertError;
@@ -16,6 +14,7 @@ use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
+use step_io_macros::step_entity;
 
 pub(crate) struct AdvancedBrepShapeRepresentationWriteInput {
     pub(crate) product: Product,
@@ -25,9 +24,8 @@ pub(crate) struct AdvancedBrepShapeRepresentationWriteInput {
 
 pub(crate) struct AdvancedBrepShapeRepresentationHandler;
 
+#[step_entity(name = "ADVANCED_BREP_SHAPE_REPRESENTATION", pass = Pass6ShapeRep)]
 impl SimpleEntityHandler for AdvancedBrepShapeRepresentationHandler {
-    const NAME: &'static str = "ADVANCED_BREP_SHAPE_REPRESENTATION";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass6ShapeRep;
     type WriteInput = AdvancedBrepShapeRepresentationWriteInput;
 
     fn read(
@@ -88,13 +86,3 @@ impl SimpleEntityHandler for AdvancedBrepShapeRepresentationHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static ABSR_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: AdvancedBrepShapeRepresentationHandler::NAME,
-    pass_level: AdvancedBrepShapeRepresentationHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: AdvancedBrepShapeRepresentationHandler::read,
-    },
-};

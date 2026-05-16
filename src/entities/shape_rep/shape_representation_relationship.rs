@@ -6,15 +6,14 @@
 //! SR) is recorded as equivalent. Multi-hop chains and complex
 //! `_WITH_TRANSFORMATION` variants belong to the CDSR / RRWT path.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
+use step_io_macros::step_entity;
 
 pub(crate) struct ShapeRepresentationRelationshipWriteInput {
     pub(crate) rep_1: u64,
@@ -23,9 +22,8 @@ pub(crate) struct ShapeRepresentationRelationshipWriteInput {
 
 pub(crate) struct ShapeRepresentationRelationshipHandler;
 
+#[step_entity(name = "SHAPE_REPRESENTATION_RELATIONSHIP", pass = Pass6SrRel)]
 impl SimpleEntityHandler for ShapeRepresentationRelationshipHandler {
-    const NAME: &'static str = "SHAPE_REPRESENTATION_RELATIONSHIP";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass6SrRel;
     type WriteInput = ShapeRepresentationRelationshipWriteInput;
 
     fn read(
@@ -84,13 +82,3 @@ impl SimpleEntityHandler for ShapeRepresentationRelationshipHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static SR_REL_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: ShapeRepresentationRelationshipHandler::NAME,
-    pass_level: ShapeRepresentationRelationshipHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: ShapeRepresentationRelationshipHandler::read,
-    },
-};

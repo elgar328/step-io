@@ -5,9 +5,7 @@
 //! Future PMI work (Tolerance / Datum / GD&T per ROADMAP Phase 2) hangs
 //! additional handlers off the same group.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::ShapeAspect;
@@ -15,6 +13,7 @@ use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
+use step_io_macros::step_entity;
 
 pub(crate) struct ShapeAspectWriteInput {
     pub(crate) name: String,
@@ -25,9 +24,8 @@ pub(crate) struct ShapeAspectWriteInput {
 
 pub(crate) struct ShapeAspectHandler;
 
+#[step_entity(name = "SHAPE_ASPECT", pass = Pass8ShapeAspect)]
 impl SimpleEntityHandler for ShapeAspectHandler {
-    const NAME: &'static str = "SHAPE_ASPECT";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass8ShapeAspect;
     type WriteInput = ShapeAspectWriteInput;
 
     fn read(
@@ -84,13 +82,3 @@ impl SimpleEntityHandler for ShapeAspectHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static SHAPE_ASPECT_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: ShapeAspectHandler::NAME,
-    pass_level: ShapeAspectHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: ShapeAspectHandler::read,
-    },
-};

@@ -2,9 +2,7 @@
 //! Pass 7-11. Top-level visualization wrapper holding a list of
 //! `STYLED_ITEM`s plus an optional unit context.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::Mdgpr;
@@ -15,12 +13,12 @@ use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
 use crate::entities::visualization::styled_item::StyledItemHandler;
+use step_io_macros::step_entity;
 
 pub(crate) struct MdgprHandler;
 
+#[step_entity(name = "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION", pass = Pass7Mdgpr)]
 impl SimpleEntityHandler for MdgprHandler {
-    const NAME: &'static str = "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass7Mdgpr;
     type WriteInput = Mdgpr;
 
     fn read(
@@ -81,13 +79,3 @@ impl SimpleEntityHandler for MdgprHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static MDGPR_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: MdgprHandler::NAME,
-    pass_level: MdgprHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: MdgprHandler::read,
-    },
-};
