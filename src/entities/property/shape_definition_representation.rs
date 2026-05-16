@@ -6,9 +6,7 @@
 //! Writer emits the bare two-attr SDR linking a `PRODUCT_DEFINITION_SHAPE`
 //! and the inner shape representation.
 
-use crate::entities::{
-    ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind, SimpleEntityHandler,
-};
+use crate::entities::SimpleEntityHandler;
 use crate::ir::assembly::ProductContent;
 use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
@@ -16,6 +14,7 @@ use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
+use step_io_macros::step_entity;
 
 pub(crate) struct ShapeDefinitionRepresentationWriteInput {
     pub(crate) pdef_shape: u64,
@@ -24,9 +23,8 @@ pub(crate) struct ShapeDefinitionRepresentationWriteInput {
 
 pub(crate) struct ShapeDefinitionRepresentationHandler;
 
+#[step_entity(name = "SHAPE_DEFINITION_REPRESENTATION", pass = Pass6Sdr)]
 impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
-    const NAME: &'static str = "SHAPE_DEFINITION_REPRESENTATION";
-    const PASS_LEVEL: PassLevel = PassLevel::Pass6Sdr;
     type WriteInput = ShapeDefinitionRepresentationWriteInput;
 
     fn read(
@@ -169,13 +167,3 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
         ))
     }
 }
-
-#[allow(unsafe_code)] // linkme uses link_section internally
-#[linkme::distributed_slice(ENTITY_HANDLERS)]
-static SDR_HANDLER_ENTRY: EntityHandlerEntry = EntityHandlerEntry {
-    name: ShapeDefinitionRepresentationHandler::NAME,
-    pass_level: ShapeDefinitionRepresentationHandler::PASS_LEVEL,
-    kind: ReadKind::Simple {
-        read: ShapeDefinitionRepresentationHandler::read,
-    },
-};
