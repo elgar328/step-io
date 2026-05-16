@@ -368,14 +368,7 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<PointId, ConvertError> {
-        self.point_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
+        resolve_in_map(&self.point_map, from, to, field_name)
     }
 
     pub(crate) fn resolve_direction(
@@ -384,14 +377,7 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<DirectionId, ConvertError> {
-        self.direction_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
+        resolve_in_map(&self.direction_map, from, to, field_name)
     }
 
     pub(crate) fn resolve_curve(
@@ -400,14 +386,7 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<CurveId, ConvertError> {
-        self.curve_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
+        resolve_in_map(&self.curve_map, from, to, field_name)
     }
 
     pub(crate) fn resolve_surface(
@@ -416,14 +395,7 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<SurfaceId, ConvertError> {
-        self.surface_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
+        resolve_in_map(&self.surface_map, from, to, field_name)
     }
 
     pub(crate) fn resolve_vertex(
@@ -432,14 +404,7 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<VertexId, ConvertError> {
-        self.vertex_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
+        resolve_in_map(&self.vertex_map, from, to, field_name)
     }
 
     pub(crate) fn resolve_edge(
@@ -448,14 +413,7 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<EdgeId, ConvertError> {
-        self.edge_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
+        resolve_in_map(&self.edge_map, from, to, field_name)
     }
 
     pub(crate) fn resolve_face_bound(
@@ -464,14 +422,7 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<WireId, ConvertError> {
-        self.face_bound_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
+        resolve_in_map(&self.face_bound_map, from, to, field_name)
     }
 
     pub(crate) fn resolve_face(
@@ -480,14 +431,7 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<FaceId, ConvertError> {
-        self.face_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
+        resolve_in_map(&self.face_map, from, to, field_name)
     }
 
     pub(crate) fn resolve_shell(
@@ -496,14 +440,7 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<ShellId, ConvertError> {
-        self.shell_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
+        resolve_in_map(&self.shell_map, from, to, field_name)
     }
 
     /// Two-step lookup `PRODUCT_DEFINITION #N → PRODUCT #N → ProductId`
@@ -538,14 +475,7 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<Placement3dId, ConvertError> {
-        self.placement_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
+        resolve_in_map(&self.placement_map, from, to, field_name)
     }
 
     pub(crate) fn resolve_vector(
@@ -554,14 +484,7 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<(DirectionId, f64), ConvertError> {
-        self.vector_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
+        resolve_in_map(&self.vector_map, from, to, field_name)
     }
 
     pub(crate) fn resolve_axis1(
@@ -570,14 +493,7 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<Placement1dId, ConvertError> {
-        self.axis1_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
+        resolve_in_map(&self.axis1_map, from, to, field_name)
     }
 
     pub(crate) fn resolve_oriented_edge(
@@ -586,14 +502,7 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<OrientedEdge, ConvertError> {
-        self.oriented_edge_map
-            .get(&to)
-            .copied()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
+        resolve_in_map(&self.oriented_edge_map, from, to, field_name)
     }
 
     pub(crate) fn resolve_edge_loop(
@@ -602,20 +511,43 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<Vec<OrientedEdge>, ConvertError> {
-        self.edge_loop_map
-            .get(&to)
-            .cloned()
-            .ok_or(ConvertError::MissingReference {
-                from,
-                to,
-                field_name,
-            })
+        resolve_in_map_cloned(&self.edge_loop_map, from, to, field_name)
     }
 }
 
 // ---------------------------------------------------------------------------
 // Free helpers (used by multiple submodules)
 // ---------------------------------------------------------------------------
+
+/// Look up `to` in `map` and return the stored value, raising
+/// `MissingReference` keyed by `(from, to, field_name)` when absent.
+pub(crate) fn resolve_in_map<V: Copy>(
+    map: &HashMap<u64, V>,
+    from: u64,
+    to: u64,
+    field_name: &'static str,
+) -> Result<V, ConvertError> {
+    map.get(&to).copied().ok_or(ConvertError::MissingReference {
+        from,
+        to,
+        field_name,
+    })
+}
+
+/// `Clone` variant of [`resolve_in_map`] for non-`Copy` map values
+/// (e.g. `Vec<OrientedEdge>`).
+pub(crate) fn resolve_in_map_cloned<V: Clone>(
+    map: &HashMap<u64, V>,
+    from: u64,
+    to: u64,
+    field_name: &'static str,
+) -> Result<V, ConvertError> {
+    map.get(&to).cloned().ok_or(ConvertError::MissingReference {
+        from,
+        to,
+        field_name,
+    })
+}
 
 pub(crate) fn bool_to_orientation(same_sense: bool) -> Orientation {
     if same_sense {

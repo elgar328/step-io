@@ -1,15 +1,11 @@
-//! Topology-group entity handlers (catalog `topology` group).
+//! Topology-group entity handlers (catalog `topology` group). Covers the
+//! Pass 5-1 ~ 5-8 family. Each handler impls
+//! [`crate::entities::SimpleEntityHandler`] and registers via the
+//! `#[step_entity]` proc-macro attribute from `step_io_macros`.
 //!
-//! Plan 4 migrates the Pass 5-1 ~ 5-8 family from `src/reader/topology.rs`
-//! and `src/writer/buffer/topology.rs` into per-entity handler modules.
-//! Each module impls [`crate::entities::SimpleEntityHandler`] and submits a
-//! [`crate::entities::EntityHandlerEntry`] via
-//! `#[linkme::distributed_slice(ENTITY_HANDLERS)]`.
-//!
-//! The Pass 5-N ordering is preserved through dedicated `PassLevel`
-//! variants (`Pass5Edge`, `Pass5OrientedEdge`, `Pass5EdgeLoop`,
+//! Pass ordering: `Pass5Edge`, `Pass5OrientedEdge`, `Pass5EdgeLoop`,
 //! `Pass5FaceBound`, `Pass5Face`, `Pass5Shell`, `Pass5OrientedShell`,
-//! `Pass5Solid`). `Pass5Vertex` lives here in ordering but the
+//! `Pass5Solid`. `Pass5Vertex` belongs to this family in ordering but the
 //! `VERTEX_POINT` handler sits in `entities/geometry/` per the ir.toml
 //! blueprint (`vertex_point` is also a `geometric_representation_item`).
 

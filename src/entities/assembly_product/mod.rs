@@ -1,10 +1,8 @@
-//! Assembly + product entity handlers (Pass 6-1 ~ 6-3, 6-8).
-//!
-//! Plan 6 migrates the bespoke `run_pass!` blocks in `run_assembly_passes`
-//! (`src/reader/passes.rs` line 178~282) into per-entity handlers. Each
-//! module impls one of the registry traits and submits itself via
-//! `#[linkme::distributed_slice(ENTITY_HANDLERS)]`. Stubs land in stage C1
-//! (skeleton commit) and gain bodies in stages C2~C7.
+//! Assembly + product entity handlers (Pass 6-1 ~ 6-3, 6-7, 6-8). Each
+//! handler impls [`crate::entities::SimpleEntityHandler`] and registers
+//! via the `#[step_entity]` proc-macro attribute from `step_io_macros`.
+//! The graph-aware variants (CDSR, `PRODUCT_DEFINITION_SHAPE` classifier)
+//! receive `&EntityGraph` through the unified handler signature.
 
 pub mod context_dependent_shape_representation;
 pub mod next_assembly_usage_occurrence;

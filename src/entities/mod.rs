@@ -39,29 +39,23 @@ pub(crate) enum PassLevel {
     // ----- Plan 5 (geometry_3d 3D) -----
     /// `AXIS2_PLACEMENT_3D` / `AXIS1_PLACEMENT` (Pass 3) — depend on
     /// points and directions.
-    #[allow(dead_code)] // wired in Plan 5 stage C1
     Pass3,
     /// Pass 4-1 leaf curves and surfaces — `LINE`, `CIRCLE`, `ELLIPSE`,
     /// `B_SPLINE_CURVE_WITH_KNOTS`, `PLANE`, `CYLINDRICAL_SURFACE`,
     /// `SPHERICAL_SURFACE`, `CONICAL_SURFACE`, `TOROIDAL_SURFACE`,
     /// `B_SPLINE_SURFACE_WITH_KNOTS`. All mutually independent.
-    #[allow(dead_code)] // wired in Plan 5 stage C2
     Pass4Leaf,
     /// `SURFACE_CURVE` / `SEAM_CURVE` (Pass 4-3) — alias to a 3D curve
     /// with associated pcurves resolved in a post-pass.
-    #[allow(dead_code)] // wired in Plan 5 stage C4
     Pass4_3SurfaceCurve,
     /// `TRIMMED_CURVE` + `COMPOSITE_CURVE_SEGMENT` (Pass 4-3c) — both
     /// depend on a basis curve but not on each other.
-    #[allow(dead_code)] // wired in Plan 5 stage C5
     Pass4_3cTrimSeg,
     /// `COMPOSITE_CURVE` (Pass 4-3c) — depends on
     /// `COMPOSITE_CURVE_SEGMENT`.
-    #[allow(dead_code)] // wired in Plan 5 stage C5
     Pass4_3cComp,
     /// `SURFACE_OF_REVOLUTION` / `SURFACE_OF_LINEAR_EXTRUSION`
     /// (Pass 4-4A) — derived surfaces wrapping a swept curve.
-    #[allow(dead_code)] // wired in Plan 5 stage C6
     Pass4_4Swept,
 
     // ----- Plan 5.5 (PCURVE definitional 2D geometry) -----
@@ -71,122 +65,94 @@ pub(crate) enum PassLevel {
     /// reachable from a `DEFINITIONAL_REPRESENTATION`) still survive
     /// round-trip. (2D `CARTESIAN_POINT` moved to `Pass1` for the same
     /// reason and is dispatched alongside the 3D handler.)
-    #[allow(dead_code)] // wired in Plan 5.5 stage C2
     Pass4aPoint,
     /// 2D `VECTOR` + `AXIS2_PLACEMENT_2D` (Pass 4a-2). Independent of
     /// each other; both depend only on `Pass4aPoint` outputs.
-    #[allow(dead_code)] // wired in Plan 5.5 stage C3
     Pass4aVector,
     /// 2D curves (Pass 4a-3) — `LINE` / `CIRCLE` / `ELLIPSE` /
     /// `B_SPLINE_CURVE_WITH_KNOTS`. Each handler discriminates 2D vs 3D
     /// by its first cross-reference (point / placement in the 2D arena)
     /// and silently skips when the reference is absent.
-    #[allow(dead_code)] // wired in Plan 5.5 stage C4
     Pass4aCurve,
 
     // ----- Plan 5.6 (units, Pass 0 — runs before geometry passes) -----
     /// 3 unit leaf complex entities (`LENGTH_UNIT` / `PLANE_ANGLE_UNIT`
     /// / `SOLID_ANGLE_UNIT` bearings). Mutually independent.
-    #[allow(dead_code)] // wired in Plan 5.6 stage C2
     Pass0Leaf,
     /// `UNCERTAINTY_MEASURE_WITH_UNIT` (simple). Depends on `Pass0Leaf`
     /// outputs (`length_unit_map`).
-    #[allow(dead_code)] // wired in Plan 5.6 stage C3
     Pass0Uncertainty,
     /// `GLOBAL_UNIT_ASSIGNED_CONTEXT` (complex orchestrator). Depends on
     /// `Pass0Leaf` + `Pass0Uncertainty` outputs.
-    #[allow(dead_code)] // wired in Plan 5.6 stage C4
     Pass0Context,
 
     // ----- Plan 4 (topology) -----
     /// `VERTEX_POINT` (Pass 5-1) — depends on `CARTESIAN_POINT`.
-    #[allow(dead_code)] // wired in Plan 4 stage C2
     Pass5Vertex,
     /// `EDGE_CURVE` (Pass 5-2) — depends on vertices and curves.
-    #[allow(dead_code)] // wired in Plan 4 stage C2
     Pass5Edge,
     /// `ORIENTED_EDGE` (Pass 5-3, intermediate map) — depends on edges.
-    #[allow(dead_code)] // wired in Plan 4 stage C3
     Pass5OrientedEdge,
     /// `EDGE_LOOP`, `VERTEX_LOOP` (Pass 5-4, intermediate map) — depend on
     /// oriented edges / vertices.
-    #[allow(dead_code)] // wired in Plan 4 stage C3
     Pass5EdgeLoop,
     /// `FACE_BOUND`, `FACE_OUTER_BOUND` (Pass 5-5, intermediate map) —
     /// depend on edge/vertex loops.
-    #[allow(dead_code)] // wired in Plan 4 stage C4
     Pass5FaceBound,
     /// `ADVANCED_FACE`, `FACE_SURFACE` (Pass 5-6) — depend on face bounds
     /// and surfaces.
-    #[allow(dead_code)] // wired in Plan 4 stage C4
     Pass5Face,
     /// `CLOSED_SHELL`, `OPEN_SHELL` (Pass 5-7a) — depend on faces.
-    #[allow(dead_code)] // wired in Plan 4 stage C5
     Pass5Shell,
     /// `ORIENTED_CLOSED_SHELL` (Pass 5-7b, intermediate map) — depends on
     /// `CLOSED_SHELL` already in arena.
-    #[allow(dead_code)] // wired in Plan 4 stage C5
     Pass5OrientedShell,
     /// `MANIFOLD_SOLID_BREP`, `BREP_WITH_VOIDS` (Pass 5-8) — depend on
     /// shells / oriented shells.
-    #[allow(dead_code)] // wired in Plan 4 stage C6
     Pass5Solid,
 
     // ----- Plan 6 (Pass 6: assembly + shape rep) -----
     /// `PRODUCT` (Pass 6-1) — top of the product chain.
-    #[allow(dead_code)] // wired in Plan 6 stage C2
     Pass6Product,
     /// `PRODUCT_CATEGORY` + `PRODUCT_RELATED_PRODUCT_CATEGORY`
     /// (Pass 6-1b sub-pass a). Mutually independent; both populate
     /// per-product metadata used by `ProductCategoryRelationship`.
-    #[allow(dead_code)] // wired in Plan 6 stage C2
     Pass6ProductCategory,
     /// `PRODUCT_CATEGORY_RELATIONSHIP` (Pass 6-1b sub-pass b) — depends on
     /// `Pass6ProductCategory` outputs.
-    #[allow(dead_code)] // wired in Plan 6 stage C2
     Pass6ProductCategoryRel,
     /// `PRODUCT_DEFINITION_FORMATION` +
     /// `PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE` (Pass 6-2).
     /// Independent of each other; both attach to a `Product`.
-    #[allow(dead_code)] // wired in Plan 6 stage C3
     Pass6PdefFormation,
     /// `PRODUCT_DEFINITION` (Pass 6-3) — depends on `Pass6PdefFormation`.
-    #[allow(dead_code)] // wired in Plan 6 stage C3
     Pass6Pdef,
     /// `SHELL_BASED_SURFACE_MODEL` (Pass 6-4) — must precede MSSR so the
     /// shell-list is available when the surface representation lands.
-    #[allow(dead_code)] // wired in Plan 6 stage C4
     Pass6Sbsm,
     /// `ADVANCED_BREP_SHAPE_REPRESENTATION` +
     /// `MANIFOLD_SURFACE_SHAPE_REPRESENTATION` + plain `SHAPE_REPRESENTATION`
     /// (Pass 6-4a). Three concrete entity names sharing one pass.
-    #[allow(dead_code)] // wired in Plan 6 stage C4
     Pass6ShapeRep,
     /// `GEOMETRIC_CURVE_SET` + `GEOMETRIC_SET` (Pass 6-4f). Must precede
     /// GBWSR/GBSSR so the wireframe converters can resolve the curve-set
     /// payload.
-    #[allow(dead_code)] // wired in Plan 6 stage C5
     Pass6CurveSet,
     /// `GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION` +
     /// `GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION` (Pass 6-4g).
     /// Both wrappers share the same inner shape (`convert_wireframe_*`).
-    #[allow(dead_code)] // wired in Plan 6 stage C5
     Pass6Gbsr,
     /// `SHAPE_REPRESENTATION_RELATIONSHIP` (Pass 6-4b) — must run after the
     /// shape-representation passes so the is-target lookup sees populated
     /// maps.
-    #[allow(dead_code)] // wired in Plan 6 stage C6
     Pass6SrRel,
     /// `SHAPE_DEFINITION_REPRESENTATION` (Pass 6-5) — classifies each
     /// product as Solid or Group.
-    #[allow(dead_code)] // wired in Plan 6 stage C6
     Pass6Sdr,
     /// `ITEM_DEFINED_TRANSFORMATION` (Pass 6-6) — builds `transform_map`.
-    #[allow(dead_code)] // wired in Plan 6 stage C6
     Pass6Idt,
     /// `NEXT_ASSEMBLY_USAGE_OCCURRENCE` (Pass 6-8) — pushes Instances into
     /// parent products' Group content.
-    #[allow(dead_code)] // wired in Plan 6 stage C7
     Pass6Nauo,
     /// `PRODUCT_DEFINITION_SHAPE` classifier (Pass 6-4c) — classifies each
     /// `PDEF_SHAPE` as product-owned (`PDEF` target) or instance-owned
@@ -201,58 +167,43 @@ pub(crate) enum PassLevel {
     /// `OFFSET_SURFACE` (Pass 4-4B) — fixpoint dispatch. Dispatched via
     /// [`Self::dispatch_registry_until_fixpoint`] because a chain of
     /// `OFFSET_SURFACE` on top of `OFFSET_SURFACE` may resolve in any order.
-    #[allow(dead_code)] // wired in Plan 7 stage C6
     Pass4_4Offset,
     /// `COLOUR_RGB` (Pass 7-1) — leaf, no entity-ref dependencies.
-    #[allow(dead_code)] // wired in Plan 7 stage C2
     Pass7Colour,
     /// `FILL_AREA_STYLE_COLOUR` (Pass 7-2) — depends on `Pass7Colour`.
-    #[allow(dead_code)] // wired in Plan 7 stage C2
     Pass7FillColour,
     /// `FILL_AREA_STYLE` (Pass 7-3) — depends on `Pass7FillColour`.
-    #[allow(dead_code)] // wired in Plan 7 stage C2
     Pass7FillArea,
     /// `SURFACE_STYLE_FILL_AREA` (Pass 7-4) — depends on `Pass7FillArea`.
-    #[allow(dead_code)] // wired in Plan 7 stage C2
     Pass7SurfaceFill,
     /// `SURFACE_STYLE_TRANSPARENT` (Pass 7-5) — leaf, populates the
     /// transparent map for `Pass7Rendering`.
-    #[allow(dead_code)] // wired in Plan 7 stage C3
     Pass7Transparent,
     /// `SURFACE_STYLE_RENDERING_WITH_PROPERTIES` (Pass 7-6) — depends on
     /// `Pass7Colour` + `Pass7Transparent`.
-    #[allow(dead_code)] // wired in Plan 7 stage C3
     Pass7Rendering,
     /// `SURFACE_SIDE_STYLE` (Pass 7-7) — depends on `Pass7SurfaceFill` +
     /// `Pass7Rendering`.
-    #[allow(dead_code)] // wired in Plan 7 stage C4
     Pass7SurfaceSide,
     /// `SURFACE_STYLE_USAGE` (Pass 7-8) — depends on `Pass7SurfaceSide`.
-    #[allow(dead_code)] // wired in Plan 7 stage C4
     Pass7Usage,
     /// `PRESENTATION_STYLE_ASSIGNMENT` (Pass 7-9) — depends on `Pass7Usage`.
-    #[allow(dead_code)] // wired in Plan 7 stage C4
     Pass7Assignment,
     /// `STYLED_ITEM` (Pass 7-10) — depends on `Pass7Assignment` plus
     /// multi-pool item lookup (solid / face / curve / point maps).
-    #[allow(dead_code)] // wired in Plan 7 stage C4
     Pass7StyledItem,
     /// `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION` (Pass 7-11)
     /// — depends on `Pass7StyledItem` outputs.
-    #[allow(dead_code)] // wired in Plan 7 stage C4
     Pass7Mdgpr,
     /// `SHAPE_ASPECT` (Pass 8-pre) — PMI scaffolding. Runs before the
     /// property converters so a future Pattern B PD pass can resolve its
     /// target ref through the `SHAPE_ASPECT` id map.
-    #[allow(dead_code)] // wired in Plan 7 stage C5
     Pass8ShapeAspect,
     /// `MEASURE_REPRESENTATION_ITEM` (Pass 8-1) — depends on Pass 0
     /// (unit ctx).
-    #[allow(dead_code)] // wired in Plan 7 stage C5
     Pass8Measure,
     /// `PROPERTY_DEFINITION` (Pass 8-2) — depends on Pass 6 (`pdef_to_product`)
     /// for resolving the PD's target.
-    #[allow(dead_code)] // wired in Plan 7 stage C5
     Pass8PropertyDef,
     /// `PROPERTY_DEFINITION_REPRESENTATION` (Pass 8-3) — binds a
     /// `PROPERTY_DEFINITION` to its underlying `REPRESENTATION`. Needs

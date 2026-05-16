@@ -1,12 +1,10 @@
-//! Visualization entity handlers (Pass 7-1 ~ 7-10).
-//!
-//! Plan 7 migrates the bespoke `run_pass!` blocks in `run_assembly_passes`
-//! (`src/reader/passes.rs` line 276~293) into per-entity handlers. The
-//! 10 entities form a chain: leaf colour / transparent → fill / surface
+//! Visualization entity handlers (Pass 7-1 ~ 7-10). Each handler impls
+//! [`crate::entities::SimpleEntityHandler`] and registers via the
+//! `#[step_entity]` proc-macro attribute from `step_io_macros`. The 10
+//! entities form a chain: leaf colour / transparent → fill / surface
 //! style aggregations → side / usage / assignment wrappers → styled item.
-//! Stubs land in stage C1 and gain bodies in stages C2~C4. The MDGPR
-//! top-level wrapper (Pass 7-11) sits in `entities/shape_rep/` because its
-//! dispatch boundary is `representation`.
+//! The MDGPR top-level wrapper (Pass 7-11) sits in `entities/shape_rep/`
+//! because its dispatch boundary is `representation`.
 
 pub mod colour_rgb;
 pub mod fill_area_style;
