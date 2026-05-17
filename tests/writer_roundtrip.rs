@@ -568,8 +568,17 @@ fn box_ap214_is_preserves_visualization() {
     );
     assert_eq!(si.styles.len(), 1);
     let psa = &si.styles[0];
-    assert_eq!(psa.styles.len(), 1, "PSA carries one SurfaceStyleUsage");
-    let entry = &psa.styles[0].style.styles[0];
+    // The PSA carries a SurfaceStyleUsage plus a CurveStyle reference; pick
+    // the surface entry out by variant.
+    let ssu = psa
+        .styles
+        .iter()
+        .find_map(|s| match s {
+            step_io::ir::visualization::PsaStyle::Surface(ssu) => Some(ssu),
+            step_io::ir::visualization::PsaStyle::Curve(_) => None,
+        })
+        .expect("PSA carries a SurfaceStyleUsage");
+    let entry = &ssu.style.styles[0];
     let SurfaceSideStyleEntry::FillArea(ssfa) = entry else {
         panic!("expected FillArea entry, got {entry:?}");
     };

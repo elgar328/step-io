@@ -6,7 +6,7 @@ use super::geometry::{
 };
 use super::shape_rep::{ShapeAspect, UnitContext};
 use super::topology::{Edge, Face, Shell, Solid, Wire};
-use super::visualization::Colour;
+use super::visualization::{Colour, CurveFont, CurveStyle};
 
 // Geometry Ids (3D)
 define_id!(PointId, Point3);
@@ -42,3 +42,7 @@ define_id!(ShapeAspectId, ShapeAspect);
 
 // Visualization Ids — Colour enum arena (ColourRgb + DraughtingPreDefinedColour).
 define_id!(ColourId, Colour);
+
+// Visualization Ids — CURVE_STYLE chain.
+define_id!(CurveFontId, CurveFont);
+define_id!(CurveStyleId, CurveStyle);

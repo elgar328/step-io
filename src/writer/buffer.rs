@@ -57,6 +57,14 @@ pub(crate) struct WriteBuffer<'m> {
     /// (`FILL_AREA_STYLE_COLOUR`, `SURFACE_STYLE_RENDERING_WITH_PROPERTIES`)
     /// needs to resolve a colour ref.
     pub(crate) colour_step_ids: Vec<u64>,
+    /// STEP entity id of every emitted curve-font entity (currently
+    /// `DRAUGHTING_PRE_DEFINED_CURVE_FONT`), indexed by `CurveFontId.0`.
+    /// Consumed by the `CURVE_STYLE` writer.
+    pub(crate) curve_font_step_ids: Vec<u64>,
+    /// STEP entity id of every emitted `CURVE_STYLE` entity, indexed by
+    /// `CurveStyleId.0`. Consumed by the PSA writer when dispatching a
+    /// `PsaStyle::Curve(...)` entry.
+    pub(crate) curve_style_step_ids: Vec<u64>,
     /// Per-`UnitContext` leaf STEP ids `(length, angle, solid_angle)`,
     /// indexed by `UnitContextId.0`. Each `UnitContext` in the IR arena
     /// emits its own leaf entities (no writer-side dedup) so the IR's
@@ -100,6 +108,8 @@ impl<'m> WriteBuffer<'m> {
             unit_context_ids: Vec::new(),
             unit_leaf_ids: Vec::new(),
             colour_step_ids: Vec::new(),
+            curve_font_step_ids: Vec::new(),
+            curve_style_step_ids: Vec::new(),
             product_def_ids: std::collections::HashMap::new(),
             product_def_shape_ids: std::collections::HashMap::new(),
         }

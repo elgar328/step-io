@@ -6,7 +6,7 @@
 //! remain tree-inline pending later phases of the blueprint migration.
 
 use super::arena::Arena;
-use super::id::{ColourId, CurveId, FaceId, PointId, SolidId};
+use super::id::{ColourId, CurveFontId, CurveId, CurveStyleId, FaceId, PointId, SolidId};
 use super::shape_rep::Mdgpr;
 
 /// Top-level container for visualization data extracted from
@@ -24,6 +24,47 @@ pub struct VisualizationPool {
     /// `COLOUR` arena — one entry per source `COLOUR_RGB` or
     /// `DRAUGHTING_PRE_DEFINED_COLOUR`. Consumers reference by [`ColourId`].
     pub colours: Arena<Colour>,
+    /// `curve_font` SELECT arena — one entry per source curve-font entity
+    /// (currently only `DRAUGHTING_PRE_DEFINED_CURVE_FONT`). Referenced by
+    /// [`CurveStyle::curve_font`] via [`CurveFontId`].
+    pub curve_fonts: Arena<CurveFont>,
+    /// `CURVE_STYLE` arena — referenced from `PresentationStyleAssignment`
+    /// when a PSA carries curve styling alongside surface styling.
+    pub curve_styles: Arena<CurveStyle>,
+}
+
+/// `CURVE_STYLE(name, curve_font, curve_width, curve_colour)` —
+/// reference-backed per the ir.toml blueprint
+/// (`pool = "visualization"`, `arena = "curve_style"`).
+#[derive(Debug, Clone, PartialEq)]
+pub struct CurveStyle {
+    pub name: String,
+    pub curve_font: CurveFontId,
+    pub curve_width: CurveWidth,
+    pub curve_colour: ColourId,
+}
+
+/// `curve_font_select` SELECT supertype. Only the variants step-io
+/// currently round-trips are listed; unsupported forms (composite
+/// `CURVE_STYLE_FONT`, etc.) are silently dropped at read.
+#[derive(Debug, Clone, PartialEq)]
+pub enum CurveFont {
+    PreDefined(DraughtingPreDefinedCurveFont),
+}
+
+/// `DRAUGHTING_PRE_DEFINED_CURVE_FONT(name)` — stock font reference.
+/// Common names: `"continuous"`, `"dashed"`, etc.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DraughtingPreDefinedCurveFont {
+    pub name: String,
+}
+
+/// `curve_width_select` SELECT supertype. STEP TYPE alias members
+/// (typed-real syntax like `POSITIVE_LENGTH_MEASURE(0.13)`); not
+/// entities, so stored inline with no arena.
+#[derive(Debug, Clone, PartialEq)]
+pub enum CurveWidth {
+    PositiveLengthMeasure(f64),
 }
 
 /// `COLOUR` SELECT supertype per the AP214/AP242 schema. Only the variants
@@ -62,14 +103,22 @@ pub enum StyledItemTarget {
     Point(PointId),
 }
 
-/// `PRESENTATION_STYLE_ASSIGNMENT(styles)`. Source PSA may carry
-/// `CURVE_STYLE` / `POINT_STYLE` / etc. in addition to
-/// `SURFACE_STYLE_USAGE`; this scope only models the surface variant
-/// (other entries are silently dropped on read — symmetric ignorance
-/// keeps round-trip equality intact).
+/// `PRESENTATION_STYLE_ASSIGNMENT(styles)`. Source PSA carries a mixed
+/// list of styling variants ([`SurfaceStyleUsage`] and [`CurveStyle`] are
+/// currently round-tripped; `POINT_STYLE` and other SELECT members are
+/// silently dropped on read).
 #[derive(Debug, Clone, PartialEq)]
 pub struct PresentationStyleAssignment {
-    pub styles: Vec<SurfaceStyleUsage>,
+    pub styles: Vec<PsaStyle>,
+}
+
+/// One element of [`PresentationStyleAssignment::styles`]. `CurveStyle`
+/// is referenced through its arena id ([`CurveStyleId`]); `SurfaceStyleUsage`
+/// is stored inline pending later phases of the visualization migration.
+#[derive(Debug, Clone, PartialEq)]
+pub enum PsaStyle {
+    Surface(SurfaceStyleUsage),
+    Curve(CurveStyleId),
 }
 
 /// `SURFACE_STYLE_USAGE(side, style)`.

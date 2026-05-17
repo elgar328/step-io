@@ -206,6 +206,9 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass7Rendering);
         self.dispatch_registry(graph, PassLevel::Pass7SurfaceSide);
         self.dispatch_registry(graph, PassLevel::Pass7Usage);
+        // CURVE_STYLE chain — must run before PSA so the assignment reader
+        // can dispatch curve-style refs to PsaStyle::Curve(...).
+        self.dispatch_registry(graph, PassLevel::Pass7CurveStyle);
         self.dispatch_registry(graph, PassLevel::Pass7Assignment);
         self.dispatch_registry(graph, PassLevel::Pass7StyledItem);
         self.dispatch_registry(graph, PassLevel::Pass7Mdgpr);

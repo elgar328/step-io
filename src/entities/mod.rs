@@ -191,7 +191,13 @@ pub(crate) enum PassLevel {
     Pass7SurfaceSide,
     /// `SURFACE_STYLE_USAGE` (Pass 7-8) — depends on `Pass7SurfaceSide`.
     Pass7Usage,
-    /// `PRESENTATION_STYLE_ASSIGNMENT` (Pass 7-9) — depends on `Pass7Usage`.
+    /// `CURVE_STYLE` (Pass 7-8b) — depends on `Pass7Colour` (the
+    /// `curve_colour` ref) and the font leaf populated alongside it.
+    /// Runs before `Pass7Assignment` so a PSA can dispatch curve-styling
+    /// refs.
+    Pass7CurveStyle,
+    /// `PRESENTATION_STYLE_ASSIGNMENT` (Pass 7-9) — depends on `Pass7Usage`
+    /// and `Pass7CurveStyle`.
     Pass7Assignment,
     /// `STYLED_ITEM` (Pass 7-10) — depends on `Pass7Assignment` plus
     /// multi-pool item lookup (solid / face / curve / point maps).

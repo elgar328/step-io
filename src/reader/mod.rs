@@ -11,9 +11,9 @@ use crate::ir::assembly::{AssemblyTree, Product, Transform3d, WireframeContent};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Pcurve, TransitionCode};
 use crate::ir::id::{
-    ColourId, Curve2dId, CurveId, Direction2dId, DirectionId, EdgeId, FaceId, Placement1dId,
-    Placement2dId, Placement3dId, Point2dId, PointId, ProductId, ShellId, SolidId, SurfaceId,
-    UnitContextId, VertexId, WireId,
+    ColourId, Curve2dId, CurveFontId, CurveId, CurveStyleId, Direction2dId, DirectionId, EdgeId,
+    FaceId, Placement1dId, Placement2dId, Placement3dId, Point2dId, PointId, ProductId, ShellId,
+    SolidId, SurfaceId, UnitContextId, VertexId, WireId,
 };
 use crate::ir::model::{GeometryPool, StepModel, TopologyPool};
 use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit, SolidAngleUnit, UnitContext};
@@ -22,6 +22,7 @@ use crate::ir::visualization::{
     FillAreaStyle, FillAreaStyleColour, PresentationStyleAssignment, StyledItem, SurfaceSideStyle,
     SurfaceSideStyleEntry, SurfaceStyleUsage, VisualizationPool,
 };
+// CurveFontId / CurveStyleId imported above; the map types reference them directly.
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
 
 mod geometry;
@@ -232,6 +233,14 @@ pub struct ReaderContext {
     /// `SURFACE_STYLE_RENDERING_WITH_PROPERTIES`) can resolve a colour ref
     /// to an arena index without copying the colour data.
     pub(crate) viz_colour_id_map: HashMap<u64, ColourId>,
+    /// `DRAUGHTING_PRE_DEFINED_CURVE_FONT` step entity id → `CurveFontId`.
+    /// Populated by the font leaf reader during Pass 7-1; consumed by the
+    /// `CURVE_STYLE` reader to resolve a font ref to an arena index.
+    pub(crate) viz_curve_font_id_map: HashMap<u64, CurveFontId>,
+    /// `CURVE_STYLE` step entity id → `CurveStyleId`. Populated during
+    /// `Pass7CurveStyle`; consumed by the PSA reader to dispatch styling
+    /// list entries to the `PsaStyle::Curve(...)` variant.
+    pub(crate) viz_curve_style_id_map: HashMap<u64, CurveStyleId>,
     /// `FILL_AREA_STYLE_COLOUR #N → FillAreaStyleColour` (Pass 7-2).
     pub(crate) viz_fasc_map: HashMap<u64, FillAreaStyleColour>,
     /// `FILL_AREA_STYLE #N → FillAreaStyle` (Pass 7-3).

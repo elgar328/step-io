@@ -5,7 +5,7 @@
 //! / `emit_face` wrappers in units / topology.
 
 use super::WriteBuffer;
-use crate::ir::visualization::Colour;
+use crate::ir::visualization::{Colour, CurveFont};
 use crate::writer::WriteError;
 
 impl WriteBuffer<'_> {
@@ -15,13 +15,17 @@ impl WriteBuffer<'_> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::shape_rep::mdgpr::MdgprHandler;
         use crate::entities::visualization::colour_rgb::ColourRgbHandler;
+        use crate::entities::visualization::curve_style::CurveStyleHandler;
         use crate::entities::visualization::draughting_pre_defined_colour::DraughtingPreDefinedColourHandler;
+        use crate::entities::visualization::draughting_pre_defined_curve_font::DraughtingPreDefinedCurveFontHandler;
         let Some(viz) = self.model.visualization.clone() else {
             return Ok(());
         };
-        // Colours first — populates `colour_step_ids` so every downstream
-        // consumer (FILL_AREA_STYLE_COLOUR, SURFACE_STYLE_RENDERING_WITH_PROPERTIES)
-        // can resolve a `ColourId` to a cached STEP id with one index lookup.
+        // Emit order: colours -> curve_fonts -> curve_styles -> mdgprs.
+        // Front-loading the leaf arenas populates the *_step_ids caches so
+        // every downstream consumer (FILL_AREA_STYLE_COLOUR, SSRWP,
+        // CURVE_STYLE, PSA) can resolve an arena reference to a cached
+        // STEP id with one index lookup.
         self.colour_step_ids = Vec::with_capacity(viz.colours.len());
         for colour in viz.colours.iter() {
             let id = match colour {
@@ -29,6 +33,20 @@ impl WriteBuffer<'_> {
                 Colour::PreDefined(c) => DraughtingPreDefinedColourHandler::write(self, c.clone())?,
             };
             self.colour_step_ids.push(id);
+        }
+        self.curve_font_step_ids = Vec::with_capacity(viz.curve_fonts.len());
+        for font in viz.curve_fonts.iter() {
+            let id = match font {
+                CurveFont::PreDefined(f) => {
+                    DraughtingPreDefinedCurveFontHandler::write(self, f.clone())?
+                }
+            };
+            self.curve_font_step_ids.push(id);
+        }
+        self.curve_style_step_ids = Vec::with_capacity(viz.curve_styles.len());
+        for cs in viz.curve_styles.iter() {
+            let id = CurveStyleHandler::write(self, cs.clone())?;
+            self.curve_style_step_ids.push(id);
         }
         for mdgpr in viz.mdgprs {
             MdgprHandler::write(self, mdgpr)?;
