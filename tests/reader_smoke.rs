@@ -1592,13 +1592,29 @@ fn external_temp_screw_parses() {
     // Sourced from an external sample (OCCT screw.step) as an
     // `external_temp_` placeholder per the test-fixture policy. Replace
     // with a hand-crafted fixture once one is available.
-    //
-    // Pre-C3 expectation: parse succeeds. The 2D rational B-spline curves
-    // inside its PCURVE definitional representations are not yet read
-    // (no Pass4aRational handler), so they land in the silent-skip path.
+    use step_io::ir::geometry::{Curve2d, NurbsKind2d};
+
     let src = include_str!("fixtures/external_temp_screw.step");
     let graph = step_io::parse(src).expect("external_temp_screw.step parses");
-    let _result = ReaderContext::convert(&graph);
+    let result = ReaderContext::convert(&graph);
+
+    // Pass4aRational populates curves_2d with at least one rational NURBS.
+    let rational_2d_count = result
+        .model
+        .geometry
+        .curves_2d
+        .iter()
+        .filter(|c| {
+            matches!(
+                c,
+                Curve2d::Nurbs(n) if matches!(n.kind, NurbsKind2d::Rational { .. })
+            )
+        })
+        .count();
+    assert!(
+        rational_2d_count > 0,
+        "expected at least one 2D rational NURBS, got {rational_2d_count}"
+    );
 }
 
 #[test]

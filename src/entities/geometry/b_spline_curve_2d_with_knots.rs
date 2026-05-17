@@ -84,15 +84,11 @@ impl SimpleEntityHandler for BSplineCurve2dWithKnotsHandler {
     }
 
     fn write(buf: &mut WriteBuffer, nurbs: NurbsCurve2d) -> Result<u64, WriteError> {
-        // 2D rational NURBS (complex RATIONAL_B_SPLINE_CURVE with 2D weights)
-        // has no fixture coverage yet — surface the gap explicitly so the
-        // missing fixture is the first failure mode rather than silent wrong
-        // output.
-        if nurbs.weights().is_some() {
-            return Err(WriteError::UnsupportedIrVariant {
-                detail: "rational 2D NURBS curve (no fixture yet)".into(),
-            });
-        }
+        debug_assert!(
+            nurbs.weights().is_none(),
+            "BSplineCurve2dWithKnotsHandler::write expects a non-rational curve; \
+             dispatch in emit_nurbs_curve_2d routes rational forms to the 2D rational handler",
+        );
         let mut cp_refs = Vec::with_capacity(nurbs.control_points.len());
         for &pid in &nurbs.control_points {
             cp_refs.push(CartesianPoint2dHandler::write(buf, pid)?);

@@ -74,6 +74,10 @@ pub(crate) enum PassLevel {
     /// by its first cross-reference (point / placement in the 2D arena)
     /// and silently skips when the reference is absent.
     Pass4aCurve,
+    /// 2D rational `RATIONAL_B_SPLINE_CURVE` (Pass 4a-4) — complex entity
+    /// living inside a PCURVE `DEFINITIONAL_REPRESENTATION`. Mirrors the
+    /// 3D `Pass4Rational` but dispatched through `dispatch_registry_2d`.
+    Pass4aRational,
 
     // ----- Plan 5.6 (units, Pass 0 — runs before geometry passes) -----
     /// 3 unit leaf complex entities (`LENGTH_UNIT` / `PLANE_ANGLE_UNIT`

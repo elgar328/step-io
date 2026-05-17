@@ -46,6 +46,8 @@ impl ReaderContext {
         self.dispatch_registry_2d(graph, PassLevel::Pass4aVector);
         // 4a-3: 2D curves.
         self.dispatch_registry_2d(graph, PassLevel::Pass4aCurve);
+        // 4a-4: 2D rational B-spline curves (complex entities).
+        self.dispatch_registry_2d(graph, PassLevel::Pass4aRational);
 
         // Pass 4-3: SURFACE_CURVE / SEAM_CURVE — alias to curve_3d so edges
         // that reference these see the underlying 3D curve. Must come after

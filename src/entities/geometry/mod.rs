@@ -28,6 +28,7 @@ mod nurbs_shared;
 pub mod offset_surface;
 pub mod plane;
 pub mod rational_bspline_curve;
+pub mod rational_bspline_curve_2d;
 pub mod rational_bspline_surface;
 pub mod seam_curve;
 pub mod shell_based_surface_model;

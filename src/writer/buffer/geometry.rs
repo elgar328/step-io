@@ -270,11 +270,15 @@ impl WriteBuffer<'_> {
     }
 
     fn emit_nurbs_curve_2d(&mut self, nurbs: &NurbsCurve2d) -> Result<u64, WriteError> {
-        // Plan 5.5 stage C4: dispatch through EntityHandler trait. The
-        // handler clones the IR struct (cheap — control_points is a small
-        // Vec of Copy ids).
-        use crate::entities::SimpleEntityHandler;
-        crate::entities::geometry::b_spline_curve_2d_with_knots::BSplineCurve2dWithKnotsHandler::write(self, nurbs.clone())
+        if nurbs.weights().is_some() {
+            // Rational form → complex RATIONAL_B_SPLINE_CURVE (2D).
+            use crate::entities::ComplexEntityHandler;
+            crate::entities::geometry::rational_bspline_curve_2d::RationalBsplineCurve2dHandler::write(self, nurbs.clone())
+        } else {
+            // Non-rational form → simple B_SPLINE_CURVE_WITH_KNOTS (2D).
+            use crate::entities::SimpleEntityHandler;
+            crate::entities::geometry::b_spline_curve_2d_with_knots::BSplineCurve2dWithKnotsHandler::write(self, nurbs.clone())
+        }
     }
 
     // -----------------------------------------------------------------
