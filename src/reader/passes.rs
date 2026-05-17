@@ -227,16 +227,35 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass8Pdr);
     }
 
-    /// Walk the [`ENTITY_HANDLERS`] registry and dispatch every handler whose
-    /// `pass_level` matches. Single-round only; for entities whose dispatch
-    /// must repeat until a fixpoint (e.g. `OFFSET_SURFACE` chains), see
-    /// [`Self::dispatch_registry_until_fixpoint`].
+    /// Walk every entity in `graph` (id-sorted via `BTreeMap`) and dispatch
+    /// every registry entry whose `pass_level` matches and whose
+    /// name/required-parts predicate matches the entity. Pool insertion
+    /// order across IR arenas therefore tracks source-file id order
+    /// regardless of how many handlers contribute to a given pool — adding
+    /// a new handler that pushes to an existing pool cannot reorder
+    /// pre-existing entries. Multiple handlers may match the same entity
+    /// by design (e.g. 3D / 2D `CARTESIAN_POINT` co-exist at `Pass1` and
+    /// self-discriminate by coordinate count).
     fn dispatch_registry(&mut self, graph: &EntityGraph, pass_level: PassLevel) {
-        for entry in ENTITY_HANDLERS {
-            if entry.pass_level != pass_level {
-                continue;
+        validate_registry_no_ambiguity();
+        for (&id, ent) in &graph.entities {
+            let is_pcurve = self.pcurve_subtree_ids.contains(&id);
+            for entry in ENTITY_HANDLERS {
+                if entry.pass_level != pass_level {
+                    continue;
+                }
+                // CARTESIAN_POINT / DIRECTION are coord-count classified
+                // (their 2D/3D sister handlers silently skip the wrong
+                // dimension), so they do not honour the pcurve-subtree
+                // partition: a 2-component instance can legitimately
+                // appear at the top level (orphan in IR) and must still
+                // reach the 2D arena for round-trip preservation.
+                let respect_pcurve = !matches!(entry.name, "CARTESIAN_POINT" | "DIRECTION");
+                if respect_pcurve && is_pcurve {
+                    continue;
+                }
+                self.dispatch_one(graph, entry, id, ent);
             }
-            self.dispatch_entry(graph, entry);
         }
     }
 
@@ -267,98 +286,100 @@ impl ReaderContext {
         }
     }
 
-    /// Apply one registry entry to every matching entity in the graph.
-    /// `ReadKind::Simple` matches `RawEntity::Simple` by name; `Complex`
-    /// matches `RawEntity::Complex` whose parts contain every required
-    /// part name. Mirrors the `run_pass!` macro body for the simple path
-    /// and the hand-rolled Pass 4-2 loop for the complex path.
-    fn dispatch_entry(&mut self, graph: &EntityGraph, entry: &EntityHandlerEntry) {
-        // CARTESIAN_POINT and DIRECTION are classified by coordinate
-        // count (their 2D/3D sister handlers silently skip the wrong
-        // dimension), so they do not honour the pcurve-subtree
-        // partition: a 2-component instance can legitimately appear at
-        // the top level (orphan in IR) and must still reach the 2D
-        // arena for round-trip preservation.
-        let respect_pcurve_partition = !matches!(entry.name, "CARTESIAN_POINT" | "DIRECTION");
-        for (&id, ent) in &graph.entities {
-            if respect_pcurve_partition && self.pcurve_subtree_ids.contains(&id) {
-                continue;
-            }
-            match (&entry.kind, ent) {
-                (
-                    ReadKind::Simple { read },
-                    RawEntity::Simple {
-                        name, attributes, ..
-                    },
-                ) if name == entry.name => {
-                    if let Err(e) = read(self, id, attributes, graph) {
-                        self.warnings.push(e);
-                    }
-                }
-                (
-                    ReadKind::Complex {
-                        required_parts,
-                        read,
-                    },
-                    RawEntity::Complex { parts, .. },
-                ) if has_all_parts(parts, required_parts) => {
-                    if let Err(e) = read(self, id, parts, graph) {
-                        self.warnings.push(e);
-                    }
-                }
-                _ => {}
-            }
-        }
-    }
-
     /// Like [`dispatch_registry`], but for handlers whose entities live
     /// inside a `PCURVE` `DEFINITIONAL_REPRESENTATION` subtree (2D
     /// geometry). Plan 5.5 introduced this twin entry point so that
     /// shared entity names (`CARTESIAN_POINT`, `DIRECTION`, `LINE`, …)
-    /// can have separate 3D / 2D handlers without confusion.
+    /// can have separate 3D / 2D handlers without confusion. Each 2D
+    /// handler self-discriminates by coordinate count or by the first
+    /// cross-reference and silently returns `Ok(())` for wrong-dimension
+    /// or 3D entities — pcurve-subtree filtering is not applied here.
     fn dispatch_registry_2d(&mut self, graph: &EntityGraph, pass_level: PassLevel) {
-        for entry in ENTITY_HANDLERS {
-            if entry.pass_level != pass_level {
-                continue;
+        validate_registry_no_ambiguity();
+        for (&id, ent) in &graph.entities {
+            for entry in ENTITY_HANDLERS {
+                if entry.pass_level != pass_level {
+                    continue;
+                }
+                self.dispatch_one(graph, entry, id, ent);
             }
-            self.dispatch_entry_2d(graph, entry);
         }
     }
 
-    /// Apply one registry entry to every entity, regardless of pcurve
-    /// subtree membership. Each 2D handler self-discriminates by
-    /// coordinate count (`DIRECTION` / `CARTESIAN_POINT`) or by the
-    /// first cross-reference (`VECTOR` / `AXIS2` / curves);
-    /// wrong-dimension or 3D entities silently return `Ok(())`. The 3D
-    /// dispatch path [`dispatch_entry`] still filters pcurve-subtree
-    /// members for handlers other than `CARTESIAN_POINT` / `DIRECTION`,
-    /// which are coord-count-classified and dispatched on every entity.
-    fn dispatch_entry_2d(&mut self, graph: &EntityGraph, entry: &EntityHandlerEntry) {
-        for (&id, ent) in &graph.entities {
-            match (&entry.kind, ent) {
-                (
-                    ReadKind::Simple { read },
-                    RawEntity::Simple {
-                        name, attributes, ..
-                    },
-                ) if name == entry.name => {
-                    if let Err(e) = read(self, id, attributes, graph) {
-                        self.warnings.push(e);
-                    }
+    /// Try to dispatch a single `(entry, entity)` pair. The handler runs
+    /// when name (simple) or required-parts (complex) match; otherwise
+    /// nothing happens. Multiple handlers may match the same entity by
+    /// design (self-discriminating sister handlers).
+    fn dispatch_one(
+        &mut self,
+        graph: &EntityGraph,
+        entry: &EntityHandlerEntry,
+        id: u64,
+        ent: &RawEntity,
+    ) {
+        match (&entry.kind, ent) {
+            (
+                ReadKind::Simple { read },
+                RawEntity::Simple {
+                    name, attributes, ..
+                },
+            ) if name == entry.name => {
+                if let Err(e) = read(self, id, attributes, graph) {
+                    self.warnings.push(e);
                 }
-                (
-                    ReadKind::Complex {
-                        required_parts,
-                        read,
-                    },
-                    RawEntity::Complex { parts, .. },
-                ) if has_all_parts(parts, required_parts) => {
-                    if let Err(e) = read(self, id, parts, graph) {
-                        self.warnings.push(e);
-                    }
-                }
-                _ => {}
             }
+            (
+                ReadKind::Complex {
+                    required_parts,
+                    read,
+                },
+                RawEntity::Complex { parts, .. },
+            ) if has_all_parts(parts, required_parts) => {
+                if let Err(e) = read(self, id, parts, graph) {
+                    self.warnings.push(e);
+                }
+            }
+            _ => {}
         }
     }
+}
+
+/// One-shot validator: flags pairs of complex handlers in the same pass
+/// whose `required_parts` sets are subset-related — such a pair would
+/// always double-fire on entities matching the larger set, producing
+/// duplicate IR pushes. Same-name simple handlers are *not* flagged:
+/// 3D/2D sister handlers (e.g. `CARTESIAN_POINT`, `DIRECTION`) share a
+/// name by design and self-discriminate by coordinate count.
+///
+/// Two complex handlers with disjoint required-parts can still both match
+/// a non-standard entity that carries every marker; that case is
+/// entity-level and outside this static check.
+fn validate_registry_no_ambiguity() {
+    use std::sync::OnceLock;
+    static CHECKED: OnceLock<()> = OnceLock::new();
+    CHECKED.get_or_init(|| {
+        for (i, a) in ENTITY_HANDLERS.iter().enumerate() {
+            for b in ENTITY_HANDLERS.iter().skip(i + 1) {
+                if a.pass_level != b.pass_level {
+                    continue;
+                }
+                if let (
+                    ReadKind::Complex {
+                        required_parts: ra, ..
+                    },
+                    ReadKind::Complex {
+                        required_parts: rb, ..
+                    },
+                ) = (&a.kind, &b.kind)
+                {
+                    let a_in_b = ra.iter().all(|p| rb.contains(p));
+                    let b_in_a = rb.iter().all(|p| ra.contains(p));
+                    assert!(
+                        !(a_in_b || b_in_a),
+                        "ambiguous complex handlers in pass: {ra:?} vs {rb:?}",
+                    );
+                }
+            }
+        }
+    });
 }
