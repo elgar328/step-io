@@ -514,6 +514,82 @@ fn convert_rational_quasi_uniform_curve_complex() {
     }
 }
 
+// --- Quasi-uniform B-Spline surface (simple, derived knots) ---
+
+#[test]
+fn convert_quasi_uniform_surface_simple() {
+    // QUASI_UNIFORM_SURFACE has 8 attrs (no knot lists — derived).
+    // u_degree=3, v_degree=1, 4x2 control points (matches fixture shape).
+    let result = convert_source(&minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = CARTESIAN_POINT('',(1.,0.,0.));\n\
+         #3 = CARTESIAN_POINT('',(2.,0.,0.));\n\
+         #4 = CARTESIAN_POINT('',(3.,0.,0.));\n\
+         #5 = CARTESIAN_POINT('',(0.,1.,0.));\n\
+         #6 = CARTESIAN_POINT('',(1.,1.,0.));\n\
+         #7 = CARTESIAN_POINT('',(2.,1.,0.));\n\
+         #8 = CARTESIAN_POINT('',(3.,1.,0.));\n\
+         #9 = QUASI_UNIFORM_SURFACE('',3,1,((#1,#5),(#2,#6),(#3,#7),(#4,#8)),.UNSPECIFIED.,.F.,.F.,.U.);",
+    ));
+    assert!(
+        result.warnings.is_empty(),
+        "expected no warnings, got {:#?}",
+        result.warnings
+    );
+    assert_eq!(result.model.geometry.surfaces.len(), 1);
+    match &result.model.geometry.surfaces[crate::SurfaceId(0)] {
+        Surface::Nurbs(s) => {
+            assert_eq!(s.u_degree, 3);
+            assert_eq!(s.v_degree, 1);
+            assert_eq!(s.control_points.len(), 4);
+            assert_eq!(s.control_points[0].len(), 2);
+            assert!(s.weights().is_none());
+            assert_eq!(s.u_knot_multiplicities, vec![4, 4]);
+            assert_eq!(s.v_knot_multiplicities, vec![2, 2]);
+            assert_eq!(s.u_knots, vec![0.0, 1.0]);
+            assert_eq!(s.v_knots, vec![0.0, 1.0]);
+        }
+        _ => panic!("expected Nurbs"),
+    }
+}
+
+#[test]
+fn convert_rational_quasi_uniform_surface_complex() {
+    let result = convert_source(&minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = CARTESIAN_POINT('',(1.,0.,0.));\n\
+         #3 = CARTESIAN_POINT('',(2.,0.,0.));\n\
+         #4 = CARTESIAN_POINT('',(3.,0.,0.));\n\
+         #5 = CARTESIAN_POINT('',(0.,1.,0.));\n\
+         #6 = CARTESIAN_POINT('',(1.,1.,0.));\n\
+         #7 = CARTESIAN_POINT('',(2.,1.,0.));\n\
+         #8 = CARTESIAN_POINT('',(3.,1.,0.));\n\
+         #9 = ( BOUNDED_SURFACE() \
+                B_SPLINE_SURFACE(3,1,((#1,#5),(#2,#6),(#3,#7),(#4,#8)),.UNSPECIFIED.,.F.,.F.,.U.) \
+                GEOMETRIC_REPRESENTATION_ITEM() \
+                QUASI_UNIFORM_SURFACE() \
+                RATIONAL_B_SPLINE_SURFACE(((1.,1.),(0.5,0.5),(0.5,0.5),(1.,1.))) \
+                REPRESENTATION_ITEM('') \
+                SURFACE() );",
+    ));
+    assert!(
+        result.warnings.is_empty(),
+        "expected no warnings, got {:#?}",
+        result.warnings
+    );
+    assert_eq!(result.model.geometry.surfaces.len(), 1);
+    match &result.model.geometry.surfaces[crate::SurfaceId(0)] {
+        Surface::Nurbs(s) => {
+            assert_eq!(s.u_degree, 3);
+            assert_eq!(s.v_degree, 1);
+            assert!(s.weights().is_some());
+            assert_eq!(s.u_knot_multiplicities, vec![4, 4]);
+            assert_eq!(s.v_knot_multiplicities, vec![2, 2]);
+        }
+        _ => panic!("expected Nurbs"),
+    }
+}
+
 // --- Topology: VERTEX_POINT ---
 
 #[test]

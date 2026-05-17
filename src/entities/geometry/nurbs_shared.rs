@@ -7,7 +7,7 @@
 //! pair lives here.
 
 use crate::ir::attr::logical_to_step;
-use crate::ir::geometry::{NurbsCurve, NurbsKind, NurbsSurface};
+use crate::ir::geometry::{NurbsCurve, NurbsKind, NurbsSurface, NurbsSurfaceKind};
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -90,6 +90,36 @@ pub(crate) fn detect_curve_schema_form(nurbs: &NurbsCurve) -> CurveSchemaForm {
         (NurbsKind::NonRational, false) => CurveSchemaForm::SimpleWithKnots,
         (NurbsKind::Rational { .. }, true) => CurveSchemaForm::ComplexRationalQuasiUniform,
         (NurbsKind::Rational { .. }, false) => CurveSchemaForm::ComplexRationalWithKnots,
+    }
+}
+
+/// Schema form to emit for a unified `NurbsSurface`. Detected from the
+/// IR pattern by [`detect_surface_schema_form`]. QUS requires both u
+/// and v directions to match the quasi-uniform pattern (bit-exact);
+/// mixed cases fall back to BSCWK emission since STEP has no half-QUS
+/// variant.
+pub(crate) enum SurfaceSchemaForm {
+    SimpleWithKnots,
+    SimpleQuasiUniform,
+    ComplexRationalWithKnots,
+    ComplexRationalQuasiUniform,
+}
+
+pub(crate) fn detect_surface_schema_form(nurbs: &NurbsSurface) -> SurfaceSchemaForm {
+    let u_cp = nurbs.control_points.len();
+    let v_cp = nurbs.control_points.first().map_or(0, Vec::len);
+    let u_quasi =
+        knots_match_quasi_uniform(nurbs.u_degree, &nurbs.u_knot_multiplicities, &nurbs.u_knots)
+            && mults_total_to_cp_count(nurbs.u_degree, &nurbs.u_knot_multiplicities) == u_cp;
+    let v_quasi =
+        knots_match_quasi_uniform(nurbs.v_degree, &nurbs.v_knot_multiplicities, &nurbs.v_knots)
+            && mults_total_to_cp_count(nurbs.v_degree, &nurbs.v_knot_multiplicities) == v_cp;
+    let quasi = u_quasi && v_quasi;
+    match (&nurbs.kind, quasi) {
+        (NurbsSurfaceKind::NonRational, true) => SurfaceSchemaForm::SimpleQuasiUniform,
+        (NurbsSurfaceKind::NonRational, false) => SurfaceSchemaForm::SimpleWithKnots,
+        (NurbsSurfaceKind::Rational { .. }, true) => SurfaceSchemaForm::ComplexRationalQuasiUniform,
+        (NurbsSurfaceKind::Rational { .. }, false) => SurfaceSchemaForm::ComplexRationalWithKnots,
     }
 }
 

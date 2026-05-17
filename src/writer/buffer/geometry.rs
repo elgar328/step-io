@@ -150,14 +150,24 @@ impl WriteBuffer<'_> {
     }
 
     fn emit_nurbs_surface(&mut self, nurbs: NurbsSurface) -> Result<u64, WriteError> {
-        if nurbs.weights().is_some() {
-            // Rational form → complex RATIONAL_B_SPLINE_SURFACE (Plan 5 C3).
-            use crate::entities::ComplexEntityHandler;
-            crate::entities::geometry::rational_bspline_surface::RationalBsplineSurfaceHandler::write(self, nurbs)
-        } else {
-            // Non-rational form → simple B_SPLINE_SURFACE_WITH_KNOTS (Plan 5 C2).
-            use crate::entities::SimpleEntityHandler;
-            crate::entities::geometry::b_spline_surface_with_knots::BSplineSurfaceWithKnotsHandler::write(self, nurbs)
+        use crate::entities::ComplexEntityHandler;
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::geometry::nurbs_shared::{
+            SurfaceSchemaForm, detect_surface_schema_form,
+        };
+        match detect_surface_schema_form(&nurbs) {
+            SurfaceSchemaForm::SimpleWithKnots => {
+                crate::entities::geometry::b_spline_surface_with_knots::BSplineSurfaceWithKnotsHandler::write(self, nurbs)
+            }
+            SurfaceSchemaForm::SimpleQuasiUniform => {
+                crate::entities::geometry::quasi_uniform_surface::QuasiUniformSurfaceHandler::write(self, nurbs)
+            }
+            SurfaceSchemaForm::ComplexRationalWithKnots => {
+                crate::entities::geometry::rational_bspline_surface::RationalBsplineSurfaceHandler::write(self, nurbs)
+            }
+            SurfaceSchemaForm::ComplexRationalQuasiUniform => {
+                crate::entities::geometry::rational_quasi_uniform_surface::RationalQuasiUniformSurfaceHandler::write(self, nurbs)
+            }
         }
     }
 
