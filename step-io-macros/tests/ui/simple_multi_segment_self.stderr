@@ -1,0 +1,5 @@
+error: expected single-segment ident
+ --> tests/ui/simple_multi_segment_self.rs:8:6
+  |
+8 | impl inner::Handler {}
+  |      ^^^^^^^^^^^^^^

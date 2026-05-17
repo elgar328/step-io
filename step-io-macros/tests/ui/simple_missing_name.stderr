@@ -1,0 +1,7 @@
+error: missing `name = "..."`
+ --> tests/ui/simple_missing_name.rs:5:1
+  |
+5 | #[step_entity(pass = Pass1)]
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in the attribute macro `step_entity` (in Nightly builds, run with -Z macro-backtrace for more info)

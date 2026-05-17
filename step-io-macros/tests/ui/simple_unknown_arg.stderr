@@ -1,0 +1,5 @@
+error: unknown step_entity argument: bogus
+ --> tests/ui/simple_unknown_arg.rs:5:43
+  |
+5 | #[step_entity(name = "FOO", pass = Pass1, bogus = 1)]
+  |                                           ^^^^^
