@@ -1588,6 +1588,20 @@ fn loft_ap214_is_collects_pcurves() {
 }
 
 #[test]
+fn external_temp_screw_parses() {
+    // Sourced from an external sample (OCCT screw.step) as an
+    // `external_temp_` placeholder per the test-fixture policy. Replace
+    // with a hand-crafted fixture once one is available.
+    //
+    // Pre-C3 expectation: parse succeeds. The 2D rational B-spline curves
+    // inside its PCURVE definitional representations are not yet read
+    // (no Pass4aRational handler), so they land in the silent-skip path.
+    let src = include_str!("fixtures/external_temp_screw.step");
+    let graph = step_io::parse(src).expect("external_temp_screw.step parses");
+    let _result = ReaderContext::convert(&graph);
+}
+
+#[test]
 fn pcurve_fixtures_convert_without_warnings() {
     const FIXTURES: &[(&str, &str)] = &[
         (
