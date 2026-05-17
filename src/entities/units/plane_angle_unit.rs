@@ -66,10 +66,6 @@ impl ComplexEntityHandler for PlaneAngleUnitHandler {
         buf: &mut WriteBuffer,
         (unit, cbu_wrapped, dim_exp_explicit): (AngleUnit, bool, bool),
     ) -> Result<u64, WriteError> {
-        let key = (unit, cbu_wrapped);
-        if let Some(&n) = buf.angle_unit_ids.get(&key) {
-            return Ok(n);
-        }
         let n = match unit {
             AngleUnit::Radian if cbu_wrapped => {
                 emit_conversion_based_angle(buf, "RADIAN", 1.0, dim_exp_explicit)
@@ -82,7 +78,6 @@ impl ComplexEntityHandler for PlaneAngleUnitHandler {
                 dim_exp_explicit,
             ),
         };
-        buf.angle_unit_ids.insert(key, n);
         Ok(n)
     }
 }

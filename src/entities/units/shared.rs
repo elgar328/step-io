@@ -144,12 +144,8 @@ pub(super) fn read_conversion_based_unit_body(
 }
 
 /// Emit the length-flavour `DIMENSIONAL_EXPONENTS` (1, 0, 0, 0, 0, 0, 0).
-/// Cached on `WriteBuffer::length_dim_exp_id` — every leaf with
-/// `dim_exp_explicit = true` shares the same id.
+/// Fresh entity per call — writer does no dedup; IR multiplicity rules.
 pub(super) fn emit_length_dim_exponents(buf: &mut WriteBuffer) -> u64 {
-    if let Some(n) = buf.length_dim_exp_id {
-        return n;
-    }
     let n = buf.fresh();
     buf.entities.push(WriterEntity {
         id: n,
@@ -166,17 +162,12 @@ pub(super) fn emit_length_dim_exponents(buf: &mut WriteBuffer) -> u64 {
             ],
         },
     });
-    buf.length_dim_exp_id = Some(n);
     n
 }
 
 /// Emit the dimensionless `DIMENSIONAL_EXPONENTS` (0, 0, 0, 0, 0, 0, 0).
-/// Cached on `WriteBuffer::dimensionless_dim_exp_id` — used by plane
-/// angle / solid angle leaves with `dim_exp_explicit = true`.
+/// Fresh entity per call — writer does no dedup; IR multiplicity rules.
 pub(super) fn emit_dimensionless_exponents(buf: &mut WriteBuffer) -> u64 {
-    if let Some(n) = buf.dimensionless_dim_exp_id {
-        return n;
-    }
     let n = buf.fresh();
     buf.entities.push(WriterEntity {
         id: n,
@@ -185,6 +176,5 @@ pub(super) fn emit_dimensionless_exponents(buf: &mut WriteBuffer) -> u64 {
             attrs: vec![Attribute::Real(0.0); 7],
         },
     });
-    buf.dimensionless_dim_exp_id = Some(n);
     n
 }

@@ -46,20 +46,17 @@ pub(crate) struct WriteBuffer<'m> {
     pub(crate) point_2d_ids: HashMap<Point2dId, u64>,
     pub(crate) direction_2d_ids: HashMap<Direction2dId, u64>,
     pub(crate) curve_2d_ids: HashMap<Curve2dId, u64>,
-    /// Cache of `LENGTH_UNIT` complex entities, keyed by the
-    /// defining IR fields `(length, length_cbu_wrapped)`. Sharing across
-    /// contexts that pick the same length unit; distinct keys (e.g. an inch
-    /// ctx + a mm ctx in the same file) emit separate leaf entities.
-    pub(crate) length_unit_ids: HashMap<(crate::ir::LengthUnit, bool), u64>,
-    /// Same idea for plane-angle units.
-    pub(crate) angle_unit_ids: HashMap<(crate::ir::AngleUnit, bool), u64>,
-    /// Same idea for solid-angle units.
-    pub(crate) solid_angle_unit_ids: HashMap<crate::ir::SolidAngleUnit, u64>,
     /// STEP entity ids of every emitted `REPRESENTATION_CONTEXT` complex
     /// entity, indexed by `UnitContextId.0`. Populated up-front in `emit_all`
     /// so every representation emitter can resolve its `Option<UnitContextId>`
     /// to a cached id.
     pub(crate) unit_context_ids: Vec<u64>,
+    /// Per-`UnitContext` leaf STEP ids `(length, angle, solid_angle)`,
+    /// indexed by `UnitContextId.0`. Each `UnitContext` in the IR arena
+    /// emits its own leaf entities (no writer-side dedup) so the IR's
+    /// multiplicity round-trips faithfully into STEP. Consumed by the
+    /// property emitter when resolving a measure's unit ref.
+    pub(crate) unit_leaf_ids: Vec<(u64, u64, u64)>,
     /// `ProductId → PRODUCT_DEFINITION step id`. Populated by
     /// `emit_assembly_chain`; consumed by the property emitter so a
     /// `Property.target` can be resolved to a STEP ref. Empty when the
@@ -70,12 +67,6 @@ pub(crate) struct WriteBuffer<'m> {
     /// `product_def_ids` but for the PDS sibling — consumed by the PMI
     /// emitter to resolve `ShapeAspect.target` (SAs reference PDS, not PD).
     pub(crate) product_def_shape_ids: std::collections::HashMap<ProductId, u64>,
-    /// Cached `DIMENSIONAL_EXPONENTS(1,0,0,0,0,0,0)` — length dimension.
-    /// Re-used by any `CONVERSION_BASED_UNIT` with a length flavour.
-    pub(crate) length_dim_exp_id: Option<u64>,
-    /// Cached `DIMENSIONAL_EXPONENTS(0,0,0,0,0,0,0)` — dimensionless.
-    /// Re-used by the degree `CONVERSION_BASED_UNIT`.
-    pub(crate) dimensionless_dim_exp_id: Option<u64>,
 }
 
 impl<'m> WriteBuffer<'m> {
@@ -100,14 +91,10 @@ impl<'m> WriteBuffer<'m> {
             point_2d_ids: HashMap::new(),
             direction_2d_ids: HashMap::new(),
             curve_2d_ids: HashMap::new(),
-            length_unit_ids: HashMap::new(),
-            angle_unit_ids: HashMap::new(),
-            solid_angle_unit_ids: HashMap::new(),
             unit_context_ids: Vec::new(),
+            unit_leaf_ids: Vec::new(),
             product_def_ids: std::collections::HashMap::new(),
             product_def_shape_ids: std::collections::HashMap::new(),
-            length_dim_exp_id: None,
-            dimensionless_dim_exp_id: None,
         }
     }
 
@@ -174,14 +161,14 @@ impl<'m> WriteBuffer<'m> {
             self.emit_solid(id)?;
         }
         // Emit one REPRESENTATION_CONTEXT per IR `UnitContext`. The cached
-        // STEP ids land in `unit_context_ids` so each downstream emitter can
-        // resolve `Option<UnitContextId>` with a single index lookup.
-        //
-        // Leaf-unit caches in `WriteBuffer` are keyed by their defining IR
-        // fields (e.g. `(LengthUnit, length_cbu_wrapped)`) so two contexts
-        // with identical units share the same `LENGTH_UNIT` entity, while
-        // contexts with different units emit separate leaves.
+        // STEP ids land in `unit_context_ids` and `unit_leaf_ids` so each
+        // downstream emitter can resolve `Option<UnitContextId>` with a
+        // single index lookup. Per-ctx leaf emission with no writer-side
+        // dedup — the IR's `UnitContext` arena multiplicity flows through
+        // to STEP unchanged. A kernel adapter that wants compact output
+        // should dedup at the IR level before invoking the writer.
         self.unit_context_ids = Vec::with_capacity(self.model.units.len());
+        self.unit_leaf_ids = Vec::with_capacity(self.model.units.len());
         for ctx in self.model.units.iter() {
             let id = self.emit_unit_context(ctx.clone())?;
             self.unit_context_ids.push(id);

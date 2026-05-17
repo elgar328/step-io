@@ -76,10 +76,6 @@ impl ComplexEntityHandler for LengthUnitHandler {
         buf: &mut WriteBuffer,
         (unit, cbu_wrapped, dim_exp_explicit): (LengthUnit, bool, bool),
     ) -> Result<u64, WriteError> {
-        let key = (unit, cbu_wrapped);
-        if let Some(&n) = buf.length_unit_ids.get(&key) {
-            return Ok(n);
-        }
         let n = match unit {
             LengthUnit::Millimetre if cbu_wrapped => emit_conversion_based_length(
                 buf,
@@ -108,7 +104,6 @@ impl ComplexEntityHandler for LengthUnitHandler {
                 emit_conversion_based_length(buf, "FOOT", Some("MILLI"), 304.8, dim_exp_explicit)
             }
         };
-        buf.length_unit_ids.insert(key, n);
         Ok(n)
     }
 }

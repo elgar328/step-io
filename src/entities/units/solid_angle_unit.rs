@@ -70,11 +70,8 @@ impl ComplexEntityHandler for SolidAngleUnitHandler {
 
     fn write(
         buf: &mut WriteBuffer,
-        (unit, dim_exp_explicit): (SolidAngleUnit, bool),
+        (_unit, dim_exp_explicit): (SolidAngleUnit, bool),
     ) -> Result<u64, WriteError> {
-        if let Some(&n) = buf.solid_angle_unit_ids.get(&unit) {
-            return Ok(n);
-        }
         let dim_exp_attr = if dim_exp_explicit {
             Attribute::EntityRef(emit_dimensionless_exponents(buf))
         } else {
@@ -93,7 +90,6 @@ impl ComplexEntityHandler for SolidAngleUnitHandler {
             id: n,
             body: WriterBody::Complex { parts },
         });
-        buf.solid_angle_unit_ids.insert(unit, n);
         Ok(n)
     }
 }

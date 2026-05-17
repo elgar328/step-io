@@ -100,35 +100,19 @@ impl WriteBuffer<'_> {
         )
     }
 
-    /// Pick the cached unit-leaf STEP id matching this measure's kind. Falls
-    /// back to the property's `context` `UnitContext` when set, or — if the
-    /// kernel-built IR omitted the context — the first emitted `UnitContext`.
-    /// The caches are populated by the unit-emit pass that ran earlier in
-    /// `emit_all`, so the ids are always present once any unit context has
-    /// been emitted.
+    /// Pick the unit-leaf STEP id matching this measure's kind and the
+    /// property's `UnitContext`. The `unit_leaf_ids` vec is populated by
+    /// the units emit pass that runs before properties in `emit_all`, so
+    /// indexing is always safe — upstream guards (assembly skip on empty
+    /// `unit_context_ids`, property skip on missing `product_def_ids`)
+    /// ensure this path is only reached when units are present.
     fn resolve_property_unit_ref(&self, ctx: Option<UnitContextId>, kind: MeasureKind) -> u64 {
-        // We don't currently model which UnitContext a property's units came
-        // from in the leaf-id maps (those are keyed by IR fields, not by
-        // ctx id). Look up the unit by IR fields of the chosen ctx.
-        let ctx_id = ctx.unwrap_or(UnitContextId(0));
-        let ctx_idx = ctx_id.0 as usize;
-        let units = &self.model.units[ctx_id];
+        let ctx_idx = ctx.unwrap_or(UnitContextId(0)).0 as usize;
+        let (length, angle, solid) = self.unit_leaf_ids[ctx_idx];
         match kind {
-            MeasureKind::Length => *self
-                .length_unit_ids
-                .get(&(units.length, units.length_cbu_wrapped))
-                .or_else(|| self.unit_context_ids.get(ctx_idx))
-                .expect("length unit emitted with the unit context"),
-            MeasureKind::PlaneAngle => *self
-                .angle_unit_ids
-                .get(&(units.plane_angle, units.plane_angle_cbu_wrapped))
-                .or_else(|| self.unit_context_ids.get(ctx_idx))
-                .expect("angle unit emitted with the unit context"),
-            MeasureKind::SolidAngle => *self
-                .solid_angle_unit_ids
-                .get(&units.solid_angle)
-                .or_else(|| self.unit_context_ids.get(ctx_idx))
-                .expect("solid-angle unit emitted with the unit context"),
+            MeasureKind::Length => length,
+            MeasureKind::PlaneAngle => angle,
+            MeasureKind::SolidAngle => solid,
         }
     }
 }

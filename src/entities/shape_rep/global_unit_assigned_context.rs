@@ -87,11 +87,11 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
     }
 
     fn write(buf: &mut WriteBuffer, units: UnitContext) -> Result<u64, WriteError> {
-        // No top-level cache — `emit_all` calls this once per
-        // `UnitContext` arena entry. The length / angle / solid_angle
-        // leaf caches still dedup the underlying unit references across
-        // contexts that share leaves (the common case for Fusion 360,
-        // where two contexts share #1034..#1036).
+        // No writer-side dedup — `emit_all` calls this once per
+        // `UnitContext` arena entry, and each call emits its own leaf
+        // entities. The resulting `(length, angle, solid)` tuple is
+        // pushed to `unit_leaf_ids` so the property emitter can resolve
+        // a measure's unit ref by `UnitContextId` index.
         let length = LengthUnitHandler::write(
             buf,
             (
@@ -109,6 +109,7 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
             ),
         )?;
         let solid = SolidAngleUnitHandler::write(buf, (units.solid_angle, units.dim_exp_explicit))?;
+        buf.unit_leaf_ids.push((length, angle, solid));
 
         // ISO 10303-21:2016 §11.2.5.1 — complex entity parts serialize in
         // alphabetical order. Final order with uncertainty present:
