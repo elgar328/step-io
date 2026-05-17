@@ -12,7 +12,7 @@ use crate::ir::attr::{
     read_real_list, read_string,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
-use crate::ir::geometry::{Curve2d, CurveForm, NurbsCurve2d};
+use crate::ir::geometry::{Curve2d, CurveForm, NurbsCurve2d, NurbsKind2d};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -73,7 +73,7 @@ impl SimpleEntityHandler for BSplineCurve2dWithKnotsHandler {
         let id = ctx.geometry.curves_2d.push(Curve2d::Nurbs(NurbsCurve2d {
             degree,
             control_points,
-            weights: None,
+            kind: NurbsKind2d::NonRational,
             knot_multiplicities,
             knots,
             closed,
@@ -88,7 +88,7 @@ impl SimpleEntityHandler for BSplineCurve2dWithKnotsHandler {
         // has no fixture coverage yet — surface the gap explicitly so the
         // missing fixture is the first failure mode rather than silent wrong
         // output.
-        if nurbs.weights.is_some() {
+        if nurbs.weights().is_some() {
             return Err(WriteError::UnsupportedIrVariant {
                 detail: "rational 2D NURBS curve (no fixture yet)".into(),
             });

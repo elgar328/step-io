@@ -522,18 +522,34 @@ pub struct Ellipse2 {
 
 /// A 2D NURBS curve. Structure mirrors the 3D [`NurbsCurve`] but with 2D
 /// control points. Rational 2D NURBS (complex entity `RATIONAL_B_SPLINE_CURVE`
-/// with 2D weights) is not yet produced by reader — `weights` stays `None`
-/// for all current fixtures. The field is kept for structural parity so a
-/// future rational converter can populate it without an IR change.
+/// with 2D weights) is not yet emitted by writer (see [`NurbsKind2d`]).
 #[derive(Debug, Clone, PartialEq)]
 pub struct NurbsCurve2d {
     pub degree: u32,
     pub control_points: Vec<Point2dId>,
-    pub weights: Option<Vec<f64>>,
+    pub kind: NurbsKind2d,
     pub knot_multiplicities: Vec<i64>,
     pub knots: Vec<f64>,
     pub closed: bool,
     pub form: CurveForm,
+}
+
+/// Rationality of a [`NurbsCurve2d`]. Same shape as 3D [`NurbsKind`].
+#[derive(Debug, Clone, PartialEq)]
+pub enum NurbsKind2d {
+    NonRational,
+    Rational { weights: Vec<f64> },
+}
+
+impl NurbsCurve2d {
+    /// Returns `Some(&weights)` for rational, `None` for non-rational.
+    #[must_use]
+    pub fn weights(&self) -> Option<&[f64]> {
+        match &self.kind {
+            NurbsKind2d::NonRational => None,
+            NurbsKind2d::Rational { weights } => Some(weights),
+        }
+    }
 }
 
 /// A 2D curve mounted on a 3D surface — one entry in a `SURFACE_CURVE` /
