@@ -130,44 +130,32 @@ impl WriteBuffer<'_> {
     }
 
     fn emit_nurbs_curve(&mut self, nurbs: NurbsCurve) -> Result<u64, WriteError> {
-        use crate::entities::ComplexEntityHandler;
-        use crate::entities::SimpleEntityHandler;
-        use crate::entities::geometry::nurbs_shared::{CurveSchemaForm, detect_curve_schema_form};
-        match detect_curve_schema_form(&nurbs) {
-            CurveSchemaForm::SimpleWithKnots => {
-                crate::entities::geometry::b_spline_curve_with_knots::BSplineCurveWithKnotsHandler::write(self, nurbs)
-            }
-            CurveSchemaForm::SimpleQuasiUniform => {
-                crate::entities::geometry::quasi_uniform_curve::QuasiUniformCurveHandler::write(self, nurbs)
-            }
-            CurveSchemaForm::ComplexRationalWithKnots => {
-                crate::entities::geometry::rational_bspline_curve::RationalBsplineCurveHandler::write(self, nurbs)
-            }
-            CurveSchemaForm::ComplexRationalQuasiUniform => {
-                crate::entities::geometry::rational_quasi_uniform_curve::RationalQuasiUniformCurveHandler::write(self, nurbs)
-            }
+        // Per the "compatibility-first form" policy (ROADMAP 전략 원칙):
+        // emit only the de-facto-universal B_SPLINE_CURVE_WITH_KNOTS form
+        // (or its rational complex variant). QUASI_UNIFORM_CURVE is read
+        // back via the QUC handler but never emitted, because corpus
+        // measurement showed BSCWK at 99.86% (700:1) prevalence — minority
+        // forms risk reader incompatibility on some CAD targets.
+        if nurbs.weights().is_some() {
+            use crate::entities::ComplexEntityHandler;
+            crate::entities::geometry::rational_bspline_curve::RationalBsplineCurveHandler::write(
+                self, nurbs,
+            )
+        } else {
+            use crate::entities::SimpleEntityHandler;
+            crate::entities::geometry::b_spline_curve_with_knots::BSplineCurveWithKnotsHandler::write(self, nurbs)
         }
     }
 
     fn emit_nurbs_surface(&mut self, nurbs: NurbsSurface) -> Result<u64, WriteError> {
-        use crate::entities::ComplexEntityHandler;
-        use crate::entities::SimpleEntityHandler;
-        use crate::entities::geometry::nurbs_shared::{
-            SurfaceSchemaForm, detect_surface_schema_form,
-        };
-        match detect_surface_schema_form(&nurbs) {
-            SurfaceSchemaForm::SimpleWithKnots => {
-                crate::entities::geometry::b_spline_surface_with_knots::BSplineSurfaceWithKnotsHandler::write(self, nurbs)
-            }
-            SurfaceSchemaForm::SimpleQuasiUniform => {
-                crate::entities::geometry::quasi_uniform_surface::QuasiUniformSurfaceHandler::write(self, nurbs)
-            }
-            SurfaceSchemaForm::ComplexRationalWithKnots => {
-                crate::entities::geometry::rational_bspline_surface::RationalBsplineSurfaceHandler::write(self, nurbs)
-            }
-            SurfaceSchemaForm::ComplexRationalQuasiUniform => {
-                crate::entities::geometry::rational_quasi_uniform_surface::RationalQuasiUniformSurfaceHandler::write(self, nurbs)
-            }
+        // See `emit_nurbs_curve` for the compatibility-first form policy.
+        // BSSWK measured at 99.95% (2,140:1) prevalence in corpus.
+        if nurbs.weights().is_some() {
+            use crate::entities::ComplexEntityHandler;
+            crate::entities::geometry::rational_bspline_surface::RationalBsplineSurfaceHandler::write(self, nurbs)
+        } else {
+            use crate::entities::SimpleEntityHandler;
+            crate::entities::geometry::b_spline_surface_with_knots::BSplineSurfaceWithKnotsHandler::write(self, nurbs)
         }
     }
 
