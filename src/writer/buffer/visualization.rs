@@ -15,6 +15,7 @@ impl WriteBuffer<'_> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::shape_rep::mdgpr::MdgprHandler;
         use crate::entities::visualization::colour_rgb::ColourRgbHandler;
+        use crate::entities::visualization::draughting_pre_defined_colour::DraughtingPreDefinedColourHandler;
         let Some(viz) = self.model.visualization.clone() else {
             return Ok(());
         };
@@ -25,6 +26,7 @@ impl WriteBuffer<'_> {
         for colour in viz.colours.iter() {
             let id = match colour {
                 Colour::Rgb(c) => ColourRgbHandler::write(self, c.clone())?,
+                Colour::PreDefined(c) => DraughtingPreDefinedColourHandler::write(self, c.clone())?,
             };
             self.colour_step_ids.push(id);
         }

@@ -32,6 +32,14 @@ pub struct VisualizationPool {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Colour {
     Rgb(ColourRgb),
+    PreDefined(DraughtingPreDefinedColour),
+}
+
+/// `DRAUGHTING_PRE_DEFINED_COLOUR(name)` — predefined colour reference.
+/// Common names: `"white"`, `"black"`, `"red"`, etc.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DraughtingPreDefinedColour {
+    pub name: String,
 }
 
 /// `STYLED_ITEM(name, styles, item)` — binds presentation styles to a
