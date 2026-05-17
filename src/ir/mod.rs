@@ -38,8 +38,8 @@ pub use shape_rep::{
 };
 pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Wire};
 pub use visualization::{
-    ColorRgb, FillAreaStyle, FillAreaStyleColour, PresentationStyleAssignment, RenderingProperty,
-    ShadingMethod, StyledItem, StyledItemTarget, SurfaceSide, SurfaceSideStyle,
+    Colour, ColourRgb, FillAreaStyle, FillAreaStyleColour, PresentationStyleAssignment,
+    RenderingProperty, ShadingMethod, StyledItem, StyledItemTarget, SurfaceSide, SurfaceSideStyle,
     SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleRendering, SurfaceStyleUsage,
     VisualizationPool,
 };

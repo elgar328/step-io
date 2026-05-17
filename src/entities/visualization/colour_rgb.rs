@@ -1,13 +1,15 @@
-//! `COLOUR_RGB` handler — Pass 7-1. Leaf colour record. Reader stores in
-//! `viz_colour_rgb_map`; the IR is tree-inline so each downstream consumer
-//! clones the record. Writer re-emits a fresh `COLOUR_RGB` per emission —
-//! 15 styled items sharing a colour in the source file emit 15 separate
-//! entities, mirroring the read-side de-deduplication.
+//! `COLOUR_RGB` handler — Pass 7-1. Leaf colour record. Reader pushes the
+//! resolved [`ColourRgb`] into `VisualizationPool::colours` as
+//! `Colour::Rgb(...)` and records the resulting `ColourId` in
+//! `viz_colour_id_map` so downstream consumers can resolve a colour ref
+//! to an arena index. Writer takes a `ColourRgb` (extracted from the
+//! `Colour::Rgb` variant by the visualization emit pass) and emits a
+//! fresh `COLOUR_RGB` entity each call — no semantic dedup.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_real, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::ColorRgb;
+use crate::ir::visualization::{Colour, ColourRgb, VisualizationPool};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -19,7 +21,7 @@ pub(crate) struct ColourRgbHandler;
 
 #[step_entity(name = "COLOUR_RGB", pass = Pass7Colour)]
 impl SimpleEntityHandler for ColourRgbHandler {
-    type WriteInput = ColorRgb;
+    type WriteInput = ColourRgb;
 
     fn read(
         ctx: &mut ReaderContext,
@@ -32,19 +34,20 @@ impl SimpleEntityHandler for ColourRgbHandler {
         let red = read_real(attrs, 1, entity_id, "red")?;
         let green = read_real(attrs, 2, entity_id, "green")?;
         let blue = read_real(attrs, 3, entity_id, "blue")?;
-        ctx.viz_colour_rgb_map.insert(
-            entity_id,
-            ColorRgb {
-                name,
-                red,
-                green,
-                blue,
-            },
-        );
+        let pool = ctx
+            .visualization
+            .get_or_insert_with(VisualizationPool::default);
+        let id = pool.colours.push(Colour::Rgb(ColourRgb {
+            name,
+            red,
+            green,
+            blue,
+        }));
+        ctx.viz_colour_id_map.insert(entity_id, id);
         Ok(())
     }
 
-    fn write(buf: &mut WriteBuffer, c: ColorRgb) -> Result<u64, WriteError> {
+    fn write(buf: &mut WriteBuffer, c: ColourRgb) -> Result<u64, WriteError> {
         let n = buf.fresh();
         buf.entities.push(WriterEntity {
             id: n,

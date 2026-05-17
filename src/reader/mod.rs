@@ -11,16 +11,16 @@ use crate::ir::assembly::{AssemblyTree, Product, Transform3d, WireframeContent};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Pcurve, TransitionCode};
 use crate::ir::id::{
-    Curve2dId, CurveId, Direction2dId, DirectionId, EdgeId, FaceId, Placement1dId, Placement2dId,
-    Placement3dId, Point2dId, PointId, ProductId, ShellId, SolidId, SurfaceId, UnitContextId,
-    VertexId, WireId,
+    ColourId, Curve2dId, CurveId, Direction2dId, DirectionId, EdgeId, FaceId, Placement1dId,
+    Placement2dId, Placement3dId, Point2dId, PointId, ProductId, ShellId, SolidId, SurfaceId,
+    UnitContextId, VertexId, WireId,
 };
 use crate::ir::model::{GeometryPool, StepModel, TopologyPool};
 use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit, SolidAngleUnit, UnitContext};
 use crate::ir::topology::{Orientation, OrientedEdge};
 use crate::ir::visualization::{
-    ColorRgb, FillAreaStyle, FillAreaStyleColour, PresentationStyleAssignment, StyledItem,
-    SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleUsage, VisualizationPool,
+    FillAreaStyle, FillAreaStyleColour, PresentationStyleAssignment, StyledItem, SurfaceSideStyle,
+    SurfaceSideStyleEntry, SurfaceStyleUsage, VisualizationPool,
 };
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
 
@@ -225,9 +225,13 @@ pub struct ReaderContext {
     /// Lazily-built `VisualizationPool` — Pass 7 's MDGPR convert pushes
     /// `Mdgpr` records here. `None` if no visualization entities were seen.
     pub(crate) visualization: Option<VisualizationPool>,
-    /// `COLOUR_RGB #N → ColorRgb` (Pass 7-1). Temp map — discarded after
-    /// `convert_fill_area_style_colour` consumes it.
-    pub(crate) viz_colour_rgb_map: HashMap<u64, ColorRgb>,
+    /// `COLOUR_RGB` / `DRAUGHTING_PRE_DEFINED_COLOUR` step entity id →
+    /// `ColourId`. Both colour-family readers push into the
+    /// `Arena<Colour>` on `ctx.visualization` and record the resulting id
+    /// here so downstream consumers (`FILL_AREA_STYLE_COLOUR`,
+    /// `SURFACE_STYLE_RENDERING_WITH_PROPERTIES`) can resolve a colour ref
+    /// to an arena index without copying the colour data.
+    pub(crate) viz_colour_id_map: HashMap<u64, ColourId>,
     /// `FILL_AREA_STYLE_COLOUR #N → FillAreaStyleColour` (Pass 7-2).
     pub(crate) viz_fasc_map: HashMap<u64, FillAreaStyleColour>,
     /// `FILL_AREA_STYLE #N → FillAreaStyle` (Pass 7-3).

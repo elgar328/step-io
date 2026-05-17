@@ -1,6 +1,7 @@
-//! `FILL_AREA_STYLE_COLOUR` handler — Pass 7-2. Wraps a `COLOUR_RGB` with
-//! a name. Reader resolves the colour ref through `viz_colour_rgb_map`;
-//! writer dispatches the inner colour through `ColourRgbHandler`.
+//! `FILL_AREA_STYLE_COLOUR` handler — Pass 7-2. Wraps a colour with a name.
+//! Reader resolves the colour ref through `viz_colour_id_map` and stores
+//! the `ColourId`; writer looks up the cached STEP id for that arena entry
+//! through `WriteBuffer::colour_step_ids`.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
@@ -11,7 +12,6 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
-use super::colour_rgb::ColourRgbHandler;
 use step_io_macros::step_entity;
 
 pub(crate) struct FillAreaStyleColourHandler;
@@ -29,7 +29,7 @@ impl SimpleEntityHandler for FillAreaStyleColourHandler {
         check_count(attrs, 2, entity_id, "FILL_AREA_STYLE_COLOUR")?;
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let colour_ref = read_entity_ref(attrs, 1, entity_id, "fill_colour")?;
-        let Some(colour) = ctx.viz_colour_rgb_map.get(&colour_ref).cloned() else {
+        let Some(&colour) = ctx.viz_colour_id_map.get(&colour_ref) else {
             return Ok(()); // symmetric ignorance — unknown ref skipped
         };
         ctx.viz_fasc_map
@@ -38,12 +38,12 @@ impl SimpleEntityHandler for FillAreaStyleColourHandler {
     }
 
     fn write(buf: &mut WriteBuffer, fasc: FillAreaStyleColour) -> Result<u64, WriteError> {
-        let colour_id = ColourRgbHandler::write(buf, fasc.colour)?;
+        let colour_step_id = buf.colour_step_ids[fasc.colour.0 as usize];
         Ok(buf.push_simple(
             "FILL_AREA_STYLE_COLOUR",
             vec![
                 Attribute::String(fasc.name),
-                Attribute::EntityRef(colour_id),
+                Attribute::EntityRef(colour_step_id),
             ],
         ))
     }

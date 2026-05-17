@@ -18,7 +18,6 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
-use super::colour_rgb::ColourRgbHandler;
 use super::surface_style_transparent::SurfaceStyleTransparentHandler;
 use step_io_macros::step_entity;
 
@@ -52,7 +51,7 @@ impl SimpleEntityHandler for SurfaceStyleRenderingHandler {
             None
         };
         let colour_ref = read_entity_ref(attrs, 1, entity_id, "surface_colour")?;
-        let Some(surface_colour) = ctx.viz_colour_rgb_map.get(&colour_ref).cloned() else {
+        let Some(&surface_colour) = ctx.viz_colour_id_map.get(&colour_ref) else {
             return Ok(());
         };
         let prop_refs = read_entity_ref_list(attrs, 2, entity_id, "properties")?;
@@ -74,7 +73,7 @@ impl SimpleEntityHandler for SurfaceStyleRenderingHandler {
     }
 
     fn write(buf: &mut WriteBuffer, ssr: SurfaceStyleRendering) -> Result<u64, WriteError> {
-        let colour_id = ColourRgbHandler::write(buf, ssr.surface_colour)?;
+        let colour_step_id = buf.colour_step_ids[ssr.surface_colour.0 as usize];
         let mut prop_refs = Vec::with_capacity(ssr.properties.len());
         for prop in ssr.properties {
             let prop_id = match prop {
@@ -93,7 +92,7 @@ impl SimpleEntityHandler for SurfaceStyleRenderingHandler {
             "SURFACE_STYLE_RENDERING_WITH_PROPERTIES",
             vec![
                 method_attr,
-                Attribute::EntityRef(colour_id),
+                Attribute::EntityRef(colour_step_id),
                 Attribute::List(prop_refs),
             ],
         ))

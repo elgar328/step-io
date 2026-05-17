@@ -51,6 +51,12 @@ pub(crate) struct WriteBuffer<'m> {
     /// so every representation emitter can resolve its `Option<UnitContextId>`
     /// to a cached id.
     pub(crate) unit_context_ids: Vec<u64>,
+    /// STEP entity id of every emitted `COLOUR_RGB` /
+    /// `DRAUGHTING_PRE_DEFINED_COLOUR` entity, indexed by `ColourId.0`.
+    /// Populated by `emit_visualization_if_set` before any consumer
+    /// (`FILL_AREA_STYLE_COLOUR`, `SURFACE_STYLE_RENDERING_WITH_PROPERTIES`)
+    /// needs to resolve a colour ref.
+    pub(crate) colour_step_ids: Vec<u64>,
     /// Per-`UnitContext` leaf STEP ids `(length, angle, solid_angle)`,
     /// indexed by `UnitContextId.0`. Each `UnitContext` in the IR arena
     /// emits its own leaf entities (no writer-side dedup) so the IR's
@@ -93,6 +99,7 @@ impl<'m> WriteBuffer<'m> {
             curve_2d_ids: HashMap::new(),
             unit_context_ids: Vec::new(),
             unit_leaf_ids: Vec::new(),
+            colour_step_ids: Vec::new(),
             product_def_ids: std::collections::HashMap::new(),
             product_def_shape_ids: std::collections::HashMap::new(),
         }

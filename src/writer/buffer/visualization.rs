@@ -5,6 +5,7 @@
 //! / `emit_face` wrappers in units / topology.
 
 use super::WriteBuffer;
+use crate::ir::visualization::Colour;
 use crate::writer::WriteError;
 
 impl WriteBuffer<'_> {
@@ -13,9 +14,20 @@ impl WriteBuffer<'_> {
     ) -> Result<(), WriteError> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::shape_rep::mdgpr::MdgprHandler;
+        use crate::entities::visualization::colour_rgb::ColourRgbHandler;
         let Some(viz) = self.model.visualization.clone() else {
             return Ok(());
         };
+        // Colours first — populates `colour_step_ids` so every downstream
+        // consumer (FILL_AREA_STYLE_COLOUR, SURFACE_STYLE_RENDERING_WITH_PROPERTIES)
+        // can resolve a `ColourId` to a cached STEP id with one index lookup.
+        self.colour_step_ids = Vec::with_capacity(viz.colours.len());
+        for colour in viz.colours.iter() {
+            let id = match colour {
+                Colour::Rgb(c) => ColourRgbHandler::write(self, c.clone())?,
+            };
+            self.colour_step_ids.push(id);
+        }
         for mdgpr in viz.mdgprs {
             MdgprHandler::write(self, mdgpr)?;
         }

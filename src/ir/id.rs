@@ -6,6 +6,7 @@ use super::geometry::{
 };
 use super::shape_rep::{ShapeAspect, UnitContext};
 use super::topology::{Edge, Face, Shell, Solid, Wire};
+use super::visualization::Colour;
 
 // Geometry Ids (3D)
 define_id!(PointId, Point3);
@@ -38,3 +39,6 @@ define_id!(UnitContextId, UnitContext);
 
 // PMI Ids — anchor for future Tolerance / Datum / GD&T work.
 define_id!(ShapeAspectId, ShapeAspect);
+
+// Visualization Ids — Colour enum arena (ColourRgb + DraughtingPreDefinedColour).
+define_id!(ColourId, Colour);

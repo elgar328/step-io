@@ -1,15 +1,12 @@
-//! Visualization data — `STYLED_ITEM` chain + `COLOUR_RGB` + style metadata.
+//! Visualization data — `STYLED_ITEM` chain + colours + style metadata.
 //!
-//! Preserved as a passive tree-inline IR — step-io does not interpret the
-//! semantics (no per-Face color lookup, no shared color resolution). Each
-//! [`StyledItem`] holds an inlined copy of its style chain down to
-//! [`ColorRgb`], so color sharing in the source file is lost (15 styled
-//! items referencing one `COLOUR_RGB` on disk become 15 inline `ColorRgb`
-//! values in the IR). This is a transitional design — when step-io grows
-//! a fully structured visualization layer (per-Face Color references,
-//! PMI-style annotations), the tree-inline IR will be replaced wholesale.
+//! Colours migrated to `Arena<Colour>` with `ColourId` references per the
+//! ir.toml blueprint (`pool = "visualization"`, `enum_of = "colour"`).
+//! Other styling types (`FillAreaStyle`, `SurfaceStyleRendering`, etc.)
+//! remain tree-inline pending later phases of the blueprint migration.
 
-use super::id::{CurveId, FaceId, PointId, SolidId};
+use super::arena::Arena;
+use super::id::{ColourId, CurveId, FaceId, PointId, SolidId};
 use super::shape_rep::Mdgpr;
 
 /// Top-level container for visualization data extracted from
@@ -24,6 +21,17 @@ use super::shape_rep::Mdgpr;
 pub struct VisualizationPool {
     /// Top-level MDGPR roots — emit order preserved.
     pub mdgprs: Vec<Mdgpr>,
+    /// `COLOUR` arena — one entry per source `COLOUR_RGB` or
+    /// `DRAUGHTING_PRE_DEFINED_COLOUR`. Consumers reference by [`ColourId`].
+    pub colours: Arena<Colour>,
+}
+
+/// `COLOUR` SELECT supertype per the AP214/AP242 schema. Only the variants
+/// step-io currently round-trips are listed; unsupported forms are
+/// silently dropped at read.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Colour {
+    Rgb(ColourRgb),
 }
 
 /// `STYLED_ITEM(name, styles, item)` — binds presentation styles to a
@@ -104,7 +112,7 @@ pub struct SurfaceStyleFillArea {
 #[derive(Debug, Clone, PartialEq)]
 pub struct SurfaceStyleRendering {
     pub rendering_method: Option<ShadingMethod>,
-    pub surface_colour: ColorRgb,
+    pub surface_colour: ColourId,
     pub properties: Vec<RenderingProperty>,
 }
 
@@ -137,12 +145,12 @@ pub struct FillAreaStyle {
 #[derive(Debug, Clone, PartialEq)]
 pub struct FillAreaStyleColour {
     pub name: String,
-    pub colour: ColorRgb,
+    pub colour: ColourId,
 }
 
 /// `COLOUR_RGB(name, red, green, blue)` — RGB triple in `[0.0, 1.0]`.
 #[derive(Debug, Clone, PartialEq)]
-pub struct ColorRgb {
+pub struct ColourRgb {
     pub name: String,
     pub red: f64,
     pub green: f64,
