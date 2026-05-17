@@ -451,6 +451,69 @@ fn rational_bspline_curve_weight_count_mismatch_warning() {
     ));
 }
 
+// --- Quasi-uniform B-Spline curve (simple, derived knots) ---
+
+#[test]
+fn convert_quasi_uniform_curve_simple() {
+    // QUASI_UNIFORM_CURVE has 6 attrs (no knot list — derived).
+    // degree=3, 4 control points → mults=[4,4], knots=[0.,1.].
+    let result = convert_source(&minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = CARTESIAN_POINT('',(1.,0.,0.));\n\
+         #3 = CARTESIAN_POINT('',(2.,0.,0.));\n\
+         #4 = CARTESIAN_POINT('',(3.,0.,0.));\n\
+         #5 = QUASI_UNIFORM_CURVE('',3,(#1,#2,#3,#4),.UNSPECIFIED.,.F.,.F.);",
+    ));
+    assert!(
+        result.warnings.is_empty(),
+        "expected no warnings, got {:#?}",
+        result.warnings
+    );
+    assert_eq!(result.model.geometry.curves.len(), 1);
+    match &result.model.geometry.curves[crate::CurveId(0)] {
+        Curve::Nurbs(n) => {
+            assert_eq!(n.degree, 3);
+            assert_eq!(n.control_points.len(), 4);
+            assert!(n.weights().is_none());
+            assert_eq!(n.knot_multiplicities, vec![4, 4]);
+            assert_eq!(n.knots, vec![0.0, 1.0]);
+        }
+        _ => panic!("expected Nurbs"),
+    }
+}
+
+#[test]
+fn convert_rational_quasi_uniform_curve_complex() {
+    let result = convert_source(&minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = CARTESIAN_POINT('',(1.,0.,0.));\n\
+         #3 = CARTESIAN_POINT('',(2.,0.,0.));\n\
+         #4 = CARTESIAN_POINT('',(3.,0.,0.));\n\
+         #5 = ( BOUNDED_CURVE() \
+                B_SPLINE_CURVE(3,(#1,#2,#3,#4),.UNSPECIFIED.,.F.,.F.) \
+                CURVE() \
+                GEOMETRIC_REPRESENTATION_ITEM() \
+                QUASI_UNIFORM_CURVE() \
+                RATIONAL_B_SPLINE_CURVE((1.,0.5,0.5,1.)) \
+                REPRESENTATION_ITEM('') );",
+    ));
+    assert!(
+        result.warnings.is_empty(),
+        "expected no warnings, got {:#?}",
+        result.warnings
+    );
+    assert_eq!(result.model.geometry.curves.len(), 1);
+    match &result.model.geometry.curves[crate::CurveId(0)] {
+        Curve::Nurbs(n) => {
+            assert_eq!(n.degree, 3);
+            assert!(n.weights().is_some());
+            assert_eq!(n.knot_multiplicities, vec![4, 4]);
+            assert_eq!(n.knots, vec![0.0, 1.0]);
+        }
+        _ => panic!("expected Nurbs"),
+    }
+}
+
 // --- Topology: VERTEX_POINT ---
 
 #[test]

@@ -130,16 +130,22 @@ impl WriteBuffer<'_> {
     }
 
     fn emit_nurbs_curve(&mut self, nurbs: NurbsCurve) -> Result<u64, WriteError> {
-        if nurbs.weights().is_some() {
-            // Rational form → complex RATIONAL_B_SPLINE_CURVE (Plan 3).
-            use crate::entities::ComplexEntityHandler;
-            crate::entities::geometry::rational_bspline_curve::RationalBsplineCurveHandler::write(
-                self, nurbs,
-            )
-        } else {
-            // Non-rational form → simple B_SPLINE_CURVE_WITH_KNOTS (Plan 5).
-            use crate::entities::SimpleEntityHandler;
-            crate::entities::geometry::b_spline_curve_with_knots::BSplineCurveWithKnotsHandler::write(self, nurbs)
+        use crate::entities::ComplexEntityHandler;
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::geometry::nurbs_shared::{CurveSchemaForm, detect_curve_schema_form};
+        match detect_curve_schema_form(&nurbs) {
+            CurveSchemaForm::SimpleWithKnots => {
+                crate::entities::geometry::b_spline_curve_with_knots::BSplineCurveWithKnotsHandler::write(self, nurbs)
+            }
+            CurveSchemaForm::SimpleQuasiUniform => {
+                crate::entities::geometry::quasi_uniform_curve::QuasiUniformCurveHandler::write(self, nurbs)
+            }
+            CurveSchemaForm::ComplexRationalWithKnots => {
+                crate::entities::geometry::rational_bspline_curve::RationalBsplineCurveHandler::write(self, nurbs)
+            }
+            CurveSchemaForm::ComplexRationalQuasiUniform => {
+                crate::entities::geometry::rational_quasi_uniform_curve::RationalQuasiUniformCurveHandler::write(self, nurbs)
+            }
         }
     }
 
