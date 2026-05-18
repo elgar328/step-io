@@ -244,6 +244,10 @@ impl ReaderContext {
         // Approval assignments — top-level (no consumers); reference
         // Approval + the assembly product chain via the items SELECT.
         self.dispatch_registry(graph, PassLevel::Pass9PlmAa);
+        // Security cluster — level leaf -> classification -> assignments.
+        self.dispatch_registry(graph, PassLevel::Pass9PlmSecLevel);
+        self.dispatch_registry(graph, PassLevel::Pass9PlmSecClass);
+        self.dispatch_registry(graph, PassLevel::Pass9PlmSca);
 
         // Pass 8: PMI scaffolding — SHAPE_ASPECT entries that anchor
         // future Tolerance / Datum / GD&T work. Runs before the property

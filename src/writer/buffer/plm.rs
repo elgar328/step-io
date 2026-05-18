@@ -105,6 +105,42 @@ impl WriteBuffer<'_> {
             }
         }
         self.emit_approval_cluster(&plm)?;
+        self.emit_security_cluster(&plm)?;
+        Ok(())
+    }
+
+    /// Emit the Security cluster (level leaf → classification →
+    /// assignments). Split out of `emit_plm_if_set` for line-budget
+    /// reasons, mirroring `emit_approval_cluster`.
+    fn emit_security_cluster(&mut self, plm: &crate::ir::PlmPool) -> Result<(), WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::plm::applied_security_classification_assignment::AppliedSecurityClassificationAssignmentHandler;
+        use crate::entities::plm::cc_design_security_classification::CcDesignSecurityClassificationHandler;
+        use crate::entities::plm::security_classification::SecurityClassificationHandler;
+        use crate::entities::plm::security_classification_level::SecurityClassificationLevelHandler;
+        use crate::ir::plm::SecurityClassificationAssignment;
+        self.plm_security_level_step_ids =
+            Vec::with_capacity(plm.security_classification_levels.len());
+        for l in plm.security_classification_levels.iter() {
+            let id = SecurityClassificationLevelHandler::write(self, l.clone())?;
+            self.plm_security_level_step_ids.push(id);
+        }
+        self.plm_security_classification_step_ids =
+            Vec::with_capacity(plm.security_classifications.len());
+        for s in plm.security_classifications.iter() {
+            let id = SecurityClassificationHandler::write(self, s.clone())?;
+            self.plm_security_classification_step_ids.push(id);
+        }
+        for sca in plm.security_classification_assignments.iter() {
+            match sca {
+                SecurityClassificationAssignment::Applied(a) => {
+                    AppliedSecurityClassificationAssignmentHandler::write(self, a.clone())?;
+                }
+                SecurityClassificationAssignment::CcDesign(c) => {
+                    CcDesignSecurityClassificationHandler::write(self, c.clone())?;
+                }
+            }
+        }
         Ok(())
     }
 

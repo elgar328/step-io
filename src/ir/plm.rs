@@ -12,7 +12,8 @@ use super::arena::Arena;
 use super::id::{
     ApprovalId, ApprovalRoleId, ApprovalStatusId, CoordinatedUniversalTimeOffsetId, DateAndTimeId,
     DateId, DateTimeRoleId, LocalTimeId, OrganizationId, PersonAndOrganizationId,
-    PersonAndOrganizationRoleId, PersonId, ProductId,
+    PersonAndOrganizationRoleId, PersonId, ProductId, SecurityClassificationId,
+    SecurityClassificationLevelId,
 };
 
 /// Top-level container for plm-domain entities. `None` on
@@ -67,6 +68,65 @@ pub struct PlmPool {
     /// an `Approval` to product targets via the AP214 `approval_item`
     /// SELECT.
     pub approval_assignments: Arena<ApprovalAssignment>,
+    /// `SECURITY_CLASSIFICATION_LEVEL` label entries.
+    pub security_classification_levels: Arena<SecurityClassificationLevel>,
+    /// `SECURITY_CLASSIFICATION` entries — composite of (name, purpose,
+    /// `security_level`).
+    pub security_classifications: Arena<SecurityClassification>,
+    /// `security_classification_assignment` arena enum covering both
+    /// `APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT` and
+    /// `CC_DESIGN_SECURITY_CLASSIFICATION`. Connects a
+    /// `SecurityClassification` to product targets via the AP214
+    /// `security_classification_item` SELECT.
+    pub security_classification_assignments: Arena<SecurityClassificationAssignment>,
+}
+
+/// `SECURITY_CLASSIFICATION_LEVEL(name)` — label entity.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SecurityClassificationLevel {
+    pub name: String,
+}
+
+/// `SECURITY_CLASSIFICATION(name, purpose, security_level)`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SecurityClassification {
+    pub name: String,
+    pub purpose: String,
+    pub security_level: SecurityClassificationLevelId,
+}
+
+/// `security_classification_assignment` arena enum per ir.toml. Two
+/// variants with identical field shape but distinct STEP entity names —
+/// the `CcDesign` variant's STEP name lacks the `_ASSIGNMENT` suffix.
+#[derive(Debug, Clone, PartialEq)]
+pub enum SecurityClassificationAssignment {
+    Applied(AppliedSecurityClassificationAssignment),
+    CcDesign(CcDesignSecurityClassification),
+}
+
+/// `APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT(assigned_security_classification, items)`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AppliedSecurityClassificationAssignment {
+    pub assigned_security_classification: SecurityClassificationId,
+    pub items: Vec<SecurityClassificationItem>,
+}
+
+/// `CC_DESIGN_SECURITY_CLASSIFICATION(assigned_security_classification, items)`.
+/// STEP entity name lacks the `_ASSIGNMENT` suffix carried by the Applied sibling.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CcDesignSecurityClassification {
+    pub assigned_security_classification: SecurityClassificationId,
+    pub items: Vec<SecurityClassificationItem>,
+}
+
+/// One element of a Security assignment's `items` set. Maps the AP214
+/// `security_classification_item` SELECT — currently scoped to
+/// `PRODUCT_DEFINITION` / `PRODUCT_DEFINITION_FORMATION` / `PRODUCT`
+/// (all collapsed to the underlying `ProductId` via the assembly
+/// product chain). Other variants drop silently on read.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SecurityClassificationItem {
+    Product(ProductId),
 }
 
 /// `approval_assignment` arena enum per ir.toml. Two variants with

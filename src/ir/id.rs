@@ -8,7 +8,8 @@ use super::plm::{
     Approval, ApprovalAssignment, ApprovalDateTime, ApprovalPersonOrganization, ApprovalRole,
     ApprovalStatus, CalendarDate, CoordinatedUniversalTimeOffset, DateAndTime,
     DateAndTimeAssignment, DateTimeRole, LocalTime, Organization, Person, PersonAndOrganization,
-    PersonAndOrganizationAssignment, PersonAndOrganizationRole,
+    PersonAndOrganizationAssignment, PersonAndOrganizationRole, SecurityClassification,
+    SecurityClassificationAssignment, SecurityClassificationLevel,
 };
 use super::shape_rep::{ShapeAspect, UnitContext};
 use super::topology::{Edge, Face, Shell, Solid, Wire};
@@ -101,3 +102,11 @@ define_id!(ApprovalId, Approval);
 define_id!(ApprovalDateTimeId, ApprovalDateTime);
 define_id!(ApprovalPersonOrganizationId, ApprovalPersonOrganization);
 define_id!(ApprovalAssignmentId, ApprovalAssignment);
+
+// plm Ids — Security cluster (Phase plm-4).
+define_id!(SecurityClassificationLevelId, SecurityClassificationLevel);
+define_id!(SecurityClassificationId, SecurityClassification);
+define_id!(
+    SecurityClassificationAssignmentId,
+    SecurityClassificationAssignment
+);

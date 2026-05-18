@@ -250,6 +250,16 @@ pub(crate) enum PassLevel {
     /// depend on `Pass9PlmApproval` (`assigned_approval` ref) and the
     /// assembly product chain (`Pass6`) for `items` PD targets.
     Pass9PlmAa,
+    /// `SECURITY_CLASSIFICATION_LEVEL` (Pass 9-12) — plm Security leaf.
+    Pass9PlmSecLevel,
+    /// `SECURITY_CLASSIFICATION` (Pass 9-13) — depends on
+    /// `Pass9PlmSecLevel` (`security_level` ref).
+    Pass9PlmSecClass,
+    /// `APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT` /
+    /// `CC_DESIGN_SECURITY_CLASSIFICATION` (Pass 9-14) — depend on
+    /// `Pass9PlmSecClass` and the assembly product chain (`Pass6`) for
+    /// `items` targets.
+    Pass9PlmSca,
     /// `SHAPE_ASPECT` (Pass 8-pre) — PMI scaffolding. Runs before the
     /// property converters so a future Pattern B PD pass can resolve its
     /// target ref through the `SHAPE_ASPECT` id map.

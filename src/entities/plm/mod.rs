@@ -5,6 +5,7 @@
 pub mod applied_approval_assignment;
 pub mod applied_date_and_time_assignment;
 pub mod applied_person_and_organization_assignment;
+pub mod applied_security_classification_assignment;
 pub mod approval;
 pub mod approval_date_time;
 pub mod approval_person_organization;
@@ -14,6 +15,7 @@ pub mod calendar_date;
 pub mod cc_design_approval;
 pub mod cc_design_date_and_time_assignment;
 pub mod cc_design_person_and_organization_assignment;
+pub mod cc_design_security_classification;
 pub mod coordinated_universal_time_offset;
 pub mod date_and_time;
 pub mod date_time_role;
@@ -22,17 +24,29 @@ pub mod organization;
 pub mod person;
 pub mod person_and_organization;
 pub mod person_and_organization_role;
+pub mod security_classification;
+pub mod security_classification_level;
 
 use crate::ir::ProductId;
 use crate::reader::ReaderContext;
 
-/// Resolve a `date_time_item` SELECT ref against step-io's product
-/// chain. The blueprint allows `PRODUCT_DEFINITION` (and several other
-/// targets); step-io currently models PD through the assembly pool, so
-/// other variants drop silently. Future plm phases (Security/Approval)
-/// will extend this lookup with additional arenas.
+/// Resolve a `date_time_item` / `approval_item` /
+/// `security_classification_item` / `person_organization_item` SELECT
+/// ref against step-io's product chain. The blueprints allow several
+/// targets (`PRODUCT_DEFINITION`, `PRODUCT_DEFINITION_FORMATION` and its
+/// `_WITH_SPECIFIED_SOURCE` subtype, plain `PRODUCT`, plus
+/// classification/document targets we do not yet model). step-io models
+/// only the product chain, so any of the three product-side variants
+/// collapses to the underlying `ProductId`; everything else drops
+/// silently. The helper name predates Approval / Security / P&O
+/// adoption and is retained pending a rename phase.
 pub(crate) fn resolve_date_time_item(ctx: &ReaderContext, item_ref: u64) -> Option<ProductId> {
     if let Some(&product_step) = ctx.pdef_to_product.get(&item_ref) {
+        if let Some(&pid) = ctx.product_arena_map.get(&product_step) {
+            return Some(pid);
+        }
+    }
+    if let Some(&product_step) = ctx.formation_to_product.get(&item_ref) {
         if let Some(&pid) = ctx.product_arena_map.get(&product_step) {
             return Some(pid);
         }
