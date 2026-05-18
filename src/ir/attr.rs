@@ -126,6 +126,74 @@ pub fn read_optional_integer(
     }
 }
 
+/// Extract an optional string from `attrs[index]`. `$` maps to `None`.
+///
+/// Use this when the schema field is `OPTIONAL STRING` and the IR needs
+/// to distinguish `$` from `''` (the lossy collapse of `read_string_or_unset`).
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeIndex`] or [`ConvertError::AttributeType`].
+pub fn read_optional_string(
+    attrs: &[Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<Option<String>, ConvertError> {
+    let attr = get_attr(attrs, index, entity_id, field_name)?;
+    match attr {
+        Attribute::String(s) => Ok(Some(s.clone())),
+        Attribute::Unset => Ok(None),
+        other => Err(ConvertError::AttributeType {
+            entity_id,
+            field_name,
+            expected: "String or Unset",
+            actual: AttributeKindTag::from_attribute(other),
+        }),
+    }
+}
+
+/// Extract an optional string list from `attrs[index]`. `$` maps to `None`,
+/// `(...)` maps to `Some(vec![...])`, including the empty list `()`.
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeIndex`] or [`ConvertError::AttributeType`].
+pub fn read_optional_string_list(
+    attrs: &[Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<Option<Vec<String>>, ConvertError> {
+    let attr = get_attr(attrs, index, entity_id, field_name)?;
+    match attr {
+        Attribute::List(items) => {
+            let mut out = Vec::with_capacity(items.len());
+            for item in items {
+                match item {
+                    Attribute::String(s) => out.push(s.clone()),
+                    other => {
+                        return Err(ConvertError::AttributeType {
+                            entity_id,
+                            field_name,
+                            expected: "String",
+                            actual: AttributeKindTag::from_attribute(other),
+                        });
+                    }
+                }
+            }
+            Ok(Some(out))
+        }
+        Attribute::Unset => Ok(None),
+        other => Err(ConvertError::AttributeType {
+            entity_id,
+            field_name,
+            expected: "List or Unset",
+            actual: AttributeKindTag::from_attribute(other),
+        }),
+    }
+}
+
 /// Extract an optional real from `attrs[index]`. `$` maps to `None`.
 ///
 /// # Errors

@@ -10,7 +10,8 @@
 
 use super::arena::Arena;
 use super::id::{
-    CoordinatedUniversalTimeOffsetId, DateAndTimeId, DateId, DateTimeRoleId, LocalTimeId, ProductId,
+    CoordinatedUniversalTimeOffsetId, DateAndTimeId, DateId, DateTimeRoleId, LocalTimeId,
+    OrganizationId, PersonId, ProductId,
 };
 
 /// Top-level container for plm-domain entities. `None` on
@@ -33,6 +34,49 @@ pub struct PlmPool {
     /// `CC_DESIGN_DATE_AND_TIME_ASSIGNMENT`. Connects Date primitives to
     /// product targets via the AP214 `date_time_item` SELECT.
     pub date_and_time_assignments: Arena<DateAndTimeAssignment>,
+    /// `PERSON` entries.
+    pub persons: Arena<Person>,
+    /// `ORGANIZATION` entries.
+    pub organizations: Arena<Organization>,
+    /// `PERSON_AND_ORGANIZATION` entries pairing one Person + one Organization.
+    pub person_and_organizations: Arena<PersonAndOrganization>,
+    /// `PERSON_AND_ORGANIZATION_ROLE` label entries.
+    pub p_and_o_roles: Arena<PersonAndOrganizationRole>,
+}
+
+/// `PERSON(id, last_name, first_name, middle_names, prefix_titles, suffix_titles)`.
+/// `id` is required; the five trailing fields are STEP optionals (`$` → `None`,
+/// `''`/`('')` → `Some("")` / `Some(vec![""])`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Person {
+    pub id: String,
+    pub last_name: Option<String>,
+    pub first_name: Option<String>,
+    pub middle_names: Option<Vec<String>>,
+    pub prefix_titles: Option<Vec<String>>,
+    pub suffix_titles: Option<Vec<String>>,
+}
+
+/// `ORGANIZATION(id, name, description)`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Organization {
+    pub id: Option<String>,
+    pub name: String,
+    pub description: String,
+}
+
+/// `PERSON_AND_ORGANIZATION(the_person, the_organization)`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PersonAndOrganization {
+    pub the_person: PersonId,
+    pub the_organization: OrganizationId,
+}
+
+/// `PERSON_AND_ORGANIZATION_ROLE(name)` — label entity
+/// (`design_owner`, `creator`, ...).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PersonAndOrganizationRole {
+    pub name: String,
 }
 
 /// `date_and_time_assignment` arena enum per ir.toml. The two variants

@@ -15,6 +15,10 @@ impl WriteBuffer<'_> {
         use crate::entities::plm::date_and_time::DateAndTimeHandler;
         use crate::entities::plm::date_time_role::DateTimeRoleHandler;
         use crate::entities::plm::local_time::LocalTimeHandler;
+        use crate::entities::plm::organization::OrganizationHandler;
+        use crate::entities::plm::person::PersonHandler;
+        use crate::entities::plm::person_and_organization::PersonAndOrganizationHandler;
+        use crate::entities::plm::person_and_organization_role::PersonAndOrganizationRoleHandler;
         use crate::ir::plm::DateAndTimeAssignment;
         let Some(plm) = self.model.plm.clone() else {
             return Ok(());
@@ -49,6 +53,28 @@ impl WriteBuffer<'_> {
         for dt in plm.date_and_times.iter() {
             let id = DateAndTimeHandler::write(self, *dt)?;
             self.plm_date_and_time_step_ids.push(id);
+        }
+        // Person/Org leaves. PersonAndOrganization needs Person + Organization
+        // caches; PersonAndOrganizationRole is independent.
+        self.plm_person_step_ids = Vec::with_capacity(plm.persons.len());
+        for p in plm.persons.iter() {
+            let id = PersonHandler::write(self, p.clone())?;
+            self.plm_person_step_ids.push(id);
+        }
+        self.plm_organization_step_ids = Vec::with_capacity(plm.organizations.len());
+        for o in plm.organizations.iter() {
+            let id = OrganizationHandler::write(self, o.clone())?;
+            self.plm_organization_step_ids.push(id);
+        }
+        self.plm_p_and_o_role_step_ids = Vec::with_capacity(plm.p_and_o_roles.len());
+        for r in plm.p_and_o_roles.iter() {
+            let id = PersonAndOrganizationRoleHandler::write(self, r.clone())?;
+            self.plm_p_and_o_role_step_ids.push(id);
+        }
+        self.plm_p_and_o_step_ids = Vec::with_capacity(plm.person_and_organizations.len());
+        for po in plm.person_and_organizations.iter() {
+            let id = PersonAndOrganizationHandler::write(self, *po)?;
+            self.plm_p_and_o_step_ids.push(id);
         }
         // Date-and-time assignments — top-level (no consumers), emit and
         // forget. Reads plm_date_and_time_step_ids + plm_date_time_role_step_ids

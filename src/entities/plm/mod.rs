@@ -9,6 +9,10 @@ pub mod coordinated_universal_time_offset;
 pub mod date_and_time;
 pub mod date_time_role;
 pub mod local_time;
+pub mod organization;
+pub mod person;
+pub mod person_and_organization;
+pub mod person_and_organization_role;
 
 use crate::ir::ProductId;
 use crate::reader::ReaderContext;

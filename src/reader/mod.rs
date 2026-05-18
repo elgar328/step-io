@@ -315,6 +315,14 @@ pub struct ReaderContext {
     /// `CC_DESIGN_DATE_AND_TIME_ASSIGNMENT` step entity id →
     /// `DateAndTimeAssignmentId`.
     pub(crate) plm_dta_id_map: HashMap<u64, crate::ir::DateAndTimeAssignmentId>,
+    /// `PERSON` step entity id → `PersonId`.
+    pub(crate) plm_person_id_map: HashMap<u64, crate::ir::PersonId>,
+    /// `ORGANIZATION` step entity id → `OrganizationId`.
+    pub(crate) plm_organization_id_map: HashMap<u64, crate::ir::OrganizationId>,
+    /// `PERSON_AND_ORGANIZATION` step entity id → `PersonAndOrganizationId`.
+    pub(crate) plm_p_and_o_id_map: HashMap<u64, crate::ir::PersonAndOrganizationId>,
+    /// `PERSON_AND_ORGANIZATION_ROLE` step entity id → `PersonAndOrganizationRoleId`.
+    pub(crate) plm_p_and_o_role_id_map: HashMap<u64, crate::ir::PersonAndOrganizationRoleId>,
 
     pub(crate) warnings: Vec<ConvertError>,
 }

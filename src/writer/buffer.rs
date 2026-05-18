@@ -97,6 +97,11 @@ pub(crate) struct WriteBuffer<'m> {
     pub(crate) plm_date_time_role_step_ids: Vec<u64>,
     pub(crate) plm_local_time_step_ids: Vec<u64>,
     pub(crate) plm_date_and_time_step_ids: Vec<u64>,
+    /// plm Person/Org caches — populated by `emit_plm_if_set`.
+    pub(crate) plm_person_step_ids: Vec<u64>,
+    pub(crate) plm_organization_step_ids: Vec<u64>,
+    pub(crate) plm_p_and_o_role_step_ids: Vec<u64>,
+    pub(crate) plm_p_and_o_step_ids: Vec<u64>,
     /// Per-`UnitContext` leaf STEP ids `(length, angle, solid_angle)`,
     /// indexed by `UnitContextId.0`. Each `UnitContext` in the IR arena
     /// emits its own leaf entities (no writer-side dedup) so the IR's
@@ -151,6 +156,10 @@ impl<'m> WriteBuffer<'m> {
             plm_date_time_role_step_ids: Vec::new(),
             plm_local_time_step_ids: Vec::new(),
             plm_date_and_time_step_ids: Vec::new(),
+            plm_person_step_ids: Vec::new(),
+            plm_organization_step_ids: Vec::new(),
+            plm_p_and_o_role_step_ids: Vec::new(),
+            plm_p_and_o_step_ids: Vec::new(),
             product_def_ids: std::collections::HashMap::new(),
             product_def_shape_ids: std::collections::HashMap::new(),
         }

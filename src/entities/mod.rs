@@ -226,6 +226,12 @@ pub(crate) enum PassLevel {
     /// `Pass9PlmDateAndTime` (`date_and_time` + role refs) and the
     /// assembly product chain (`Pass6`) for `items` PD targets.
     Pass9PlmDta,
+    /// `PERSON`, `ORGANIZATION`, `PERSON_AND_ORGANIZATION_ROLE` (Pass 9-5)
+    /// — plm leaves with no plm-internal refs.
+    Pass9PlmPoLeaves,
+    /// `PERSON_AND_ORGANIZATION` (Pass 9-6) — depends on `Pass9PlmPoLeaves`
+    /// (Person + Organization arenas).
+    Pass9PlmPersonAndOrganization,
     /// `SHAPE_ASPECT` (Pass 8-pre) — PMI scaffolding. Runs before the
     /// property converters so a future Pattern B PD pass can resolve its
     /// target ref through the `SHAPE_ASPECT` id map.
