@@ -209,6 +209,10 @@ pub(crate) enum PassLevel {
     /// `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION` (Pass 7-11)
     /// — depends on `Pass7StyledItem` outputs.
     Pass7Mdgpr,
+    /// `PRESENTATION_LAYER_ASSIGNMENT` (Pass 7-12) — depends on
+    /// `Pass7StyledItem` / `Pass7OverRiding` so each `assigned_items` ref
+    /// resolves to an existing `StyledItemId`.
+    Pass7Pla,
     /// `SHAPE_ASPECT` (Pass 8-pre) — PMI scaffolding. Runs before the
     /// property converters so a future Pattern B PD pass can resolve its
     /// target ref through the `SHAPE_ASPECT` id map.

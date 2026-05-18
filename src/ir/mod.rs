@@ -40,8 +40,9 @@ pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid
 pub use visualization::{
     Colour, ColourRgb, CurveFont, CurveStyle, CurveWidth, DraughtingPreDefinedColour,
     DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour, FoundedItem,
-    OverRidingStyledItem, PlainStyledItem, PresentationStyleAssignment, PsaStyle,
-    RenderingProperty, ShadingMethod, StyledItem, StyledItemTarget, SurfaceSide, SurfaceSideStyle,
+    OverRidingStyledItem, PlainStyledItem, PresentationLayerAssignment,
+    PresentationLayerAssignmentItem, PresentationStyleAssignment, PsaStyle, RenderingProperty,
+    ShadingMethod, StyledItem, StyledItemTarget, SurfaceSide, SurfaceSideStyle,
     SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleRendering, SurfaceStyleRenderingData,
     SurfaceStyleRenderingWithProperties, SurfaceStyleUsage, VisualizationPool,
 };

@@ -21,6 +21,7 @@ impl WriteBuffer<'_> {
         use crate::entities::visualization::draughting_pre_defined_colour::DraughtingPreDefinedColourHandler;
         use crate::entities::visualization::draughting_pre_defined_curve_font::DraughtingPreDefinedCurveFontHandler;
         use crate::entities::visualization::over_riding_styled_item::OverRidingStyledItemHandler;
+        use crate::entities::visualization::presentation_layer_assignment::PresentationLayerAssignmentHandler;
         use crate::entities::visualization::presentation_style_assignment::PresentationStyleAssignmentHandler;
         use crate::entities::visualization::styled_item::StyledItemHandler;
         use crate::entities::visualization::surface_style_rendering::SurfaceStyleRenderingHandler;
@@ -110,6 +111,9 @@ impl WriteBuffer<'_> {
         }
         for mdgpr in viz.mdgprs {
             MdgprHandler::write(self, mdgpr)?;
+        }
+        for pla in viz.presentation_layer_assignments.iter() {
+            PresentationLayerAssignmentHandler::write(self, pla.clone())?;
         }
         Ok(())
     }

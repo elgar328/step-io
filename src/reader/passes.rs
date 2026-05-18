@@ -216,6 +216,11 @@ impl ReaderContext {
         // resolve to an existing entry).
         self.dispatch_registry(graph, PassLevel::Pass7OverRiding);
         self.dispatch_registry(graph, PassLevel::Pass7Mdgpr);
+        // PRESENTATION_LAYER_ASSIGNMENT — top-level grouping of STYLED_ITEM
+        // entries into named display layers. Runs after the styled-item
+        // arena is populated by Pass7OverRiding so `assigned_items` refs
+        // resolve to existing arena ids.
+        self.dispatch_registry(graph, PassLevel::Pass7Pla);
 
         // Pass 8: PMI scaffolding — SHAPE_ASPECT entries that anchor
         // future Tolerance / Datum / GD&T work. Runs before the property

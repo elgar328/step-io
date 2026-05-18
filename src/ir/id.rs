@@ -7,8 +7,8 @@ use super::geometry::{
 use super::shape_rep::{ShapeAspect, UnitContext};
 use super::topology::{Edge, Face, Shell, Solid, Wire};
 use super::visualization::{
-    Colour, CurveFont, CurveStyle, FoundedItem, PresentationStyleAssignment, StyledItem,
-    SurfaceStyleRendering,
+    Colour, CurveFont, CurveStyle, FoundedItem, PresentationLayerAssignment,
+    PresentationStyleAssignment, StyledItem, SurfaceStyleRendering,
 };
 
 // Geometry Ids (3D)
@@ -64,3 +64,7 @@ define_id!(SurfaceStyleRenderingId, SurfaceStyleRendering);
 // Visualization Ids — founded_item enum arena (AP214 founded-item
 // supertype; E1 covers FillAreaStyle + SurfaceStyleFillArea).
 define_id!(FoundedItemId, FoundedItem);
+
+// Visualization Ids — PRESENTATION_LAYER_ASSIGNMENT arena (top-level;
+// no other entity refs it, the id exists for blueprint symmetry).
+define_id!(PresentationLayerAssignmentId, PresentationLayerAssignment);

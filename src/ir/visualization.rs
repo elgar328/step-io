@@ -61,6 +61,32 @@ pub struct VisualizationPool {
     /// `SurfaceStyleBoundary`, `SurfaceStyleParameterLine`, `SymbolStyle`,
     /// `ViewVolume`) are silently dropped at read.
     pub founded_items: Arena<FoundedItem>,
+    /// `PRESENTATION_LAYER_ASSIGNMENT` arena per ir.toml
+    /// (`pool = "visualization"`). Groups `STYLED_ITEM` entries into named
+    /// display layers ("VISIBLE", "HIDDEN", numeric ids, ...). Top-level —
+    /// no other entity references this arena, so the id newtype exists
+    /// only for blueprint symmetry.
+    pub presentation_layer_assignments: Arena<PresentationLayerAssignment>,
+}
+
+/// `PRESENTATION_LAYER_ASSIGNMENT(name, description, assigned_items)`.
+/// `assigned_items` is the AP214 `layered_item` SELECT — a broad
+/// `representation_item` reference. step-io models the `STYLED_ITEM`
+/// target (the corpus-dominant variant); other source-side variants
+/// (direct geometry refs, etc.) are silently dropped on read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PresentationLayerAssignment {
+    pub name: String,
+    pub description: String,
+    pub assigned_items: Vec<PresentationLayerAssignmentItem>,
+}
+
+/// One element of [`PresentationLayerAssignment::assigned_items`].
+/// Scoped to `STYLED_ITEM` today; future kernel adapters that produce
+/// direct-geometry layered items can grow this enum.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum PresentationLayerAssignmentItem {
+    StyledItem(StyledItemId),
 }
 
 /// `founded_item` enum arena per ir.toml. Each variant wraps a concrete
