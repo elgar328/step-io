@@ -14,6 +14,7 @@ pub mod visualization;
 pub use arena::Arena;
 pub use assembly::{
     AssemblyTree, Instance, Product, ProductCategoryChain, ProductCategoryRoot, ProductContent,
+    ProductContext, ProductContextKind, ProductDefinitionContext, ProductDefinitionContextKind,
     Transform3d, WireframeContent, WireframeReprKind,
 };
 pub use error::{AttributeKindTag, ConvertError};
@@ -34,10 +35,10 @@ pub use id::{
     FaceId, FoundedItemId, GroupAssignmentId, GroupId, IdentificationAssignmentId,
     IdentificationRoleId, LocalTimeId, ObjectRoleId, OrganizationId,
     PersonAndOrganizationAssignmentId, PersonAndOrganizationId, PersonAndOrganizationRoleId,
-    PersonId, Placement1dId, Placement2dId, Placement3dId, Point2dId, PointId, ProductId,
-    RoleAssociationId, SecurityClassificationAssignmentId, SecurityClassificationId,
-    SecurityClassificationLevelId, ShapeAspectId, ShellId, SolidId, SurfaceId, UnitContextId,
-    VertexId, WireId,
+    PersonId, Placement1dId, Placement2dId, Placement3dId, Point2dId, PointId, ProductContextId,
+    ProductDefinitionContextId, ProductId, RoleAssociationId, SecurityClassificationAssignmentId,
+    SecurityClassificationId, SecurityClassificationLevelId, ShapeAspectId, ShellId, SolidId,
+    SurfaceId, UnitContextId, VertexId, WireId,
 };
 pub use model::{
     FileHeader, GeometryPool, ImplementationLevel, NonEmptyStringList, StepModel, TopologyPool,

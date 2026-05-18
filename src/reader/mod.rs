@@ -158,6 +158,11 @@ pub struct ReaderContext {
     // `assembly` is filled in `convert()` after Pass 6 if any PRODUCT was seen.
     pub(crate) assembly: Option<AssemblyTree>,
     pub(crate) assembly_products: Arena<Product>,
+    pub(crate) product_contexts: Arena<crate::ir::ProductContext>,
+    pub(crate) product_definition_contexts: Arena<crate::ir::ProductDefinitionContext>,
+    pub(crate) product_context_id_map: HashMap<u64, crate::ir::ProductContextId>,
+    pub(crate) product_definition_context_id_map:
+        HashMap<u64, crate::ir::ProductDefinitionContextId>,
     pub(crate) product_arena_map: HashMap<u64, ProductId>,
     pub(crate) formation_to_product: HashMap<u64, u64>,
     pub(crate) pdef_to_product: HashMap<u64, u64>,
@@ -470,7 +475,14 @@ impl ReaderContext {
             }
         };
         let products = std::mem::take(&mut self.assembly_products);
-        self.assembly = Some(AssemblyTree { products, root });
+        let product_contexts = std::mem::take(&mut self.product_contexts);
+        let product_definition_contexts = std::mem::take(&mut self.product_definition_contexts);
+        self.assembly = Some(AssemblyTree {
+            products,
+            root,
+            product_contexts,
+            product_definition_contexts,
+        });
     }
 
     // ---------------------------------------------------------------------

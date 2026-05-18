@@ -296,6 +296,10 @@ pub(crate) enum PassLevel {
     /// `APPLICATION_PROTOCOL_DEFINITION` (Pass 9-26) — refs
     /// `Pass9PlmAppContext`.
     Pass9PlmAppProtocol,
+    /// `PRODUCT_CONTEXT` / `MECHANICAL_CONTEXT` /
+    /// `PRODUCT_DEFINITION_CONTEXT` / `DESIGN_CONTEXT` (Pass 9-27) —
+    /// refs `Pass9PlmAppContext` for the AC `frame_of_reference`.
+    Pass9AssemblyContext,
     /// `SHAPE_ASPECT` (Pass 8-pre) — PMI scaffolding. Runs before the
     /// property converters so a future Pattern B PD pass can resolve its
     /// target ref through the `SHAPE_ASPECT` id map.

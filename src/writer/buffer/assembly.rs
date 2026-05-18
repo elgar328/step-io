@@ -175,6 +175,7 @@ impl WriteBuffer<'_> {
     // Context
     // ----------------------------------------------------------------
 
+    #[allow(clippy::too_many_lines)]
     fn emit_application_context(&mut self, schema: &StepSchema) -> AssemblyContextIds {
         // IR-driven path: when the plm pool carries an AC, use the
         // captured strings so the round-trip preserves the source-file
@@ -224,22 +225,70 @@ impl WriteBuffer<'_> {
             );
             step
         };
-        let product_ctx = self.push_simple(
-            "PRODUCT_CONTEXT",
-            vec![
-                Attribute::String(String::new()),
-                Attribute::EntityRef(app_ctx),
-                Attribute::String("mechanical".into()),
-            ],
-        );
-        let pdef_ctx = self.push_simple(
-            "PRODUCT_DEFINITION_CONTEXT",
-            vec![
-                Attribute::String("part definition".into()),
-                Attribute::EntityRef(app_ctx),
-                Attribute::String("design".into()),
-            ],
-        );
+        // PC: IR 우선 (assembly.product_contexts[0]), 없으면 합성.
+        let product_ctx = {
+            use crate::ir::ProductContextKind;
+            let from_ir = self
+                .model
+                .assembly
+                .as_ref()
+                .and_then(|a| a.product_contexts.iter().next().cloned());
+            if let Some(pc) = from_ir {
+                let entity_name = match pc.kind {
+                    ProductContextKind::Plain => "PRODUCT_CONTEXT",
+                    ProductContextKind::Mechanical => "MECHANICAL_CONTEXT",
+                };
+                self.push_simple(
+                    entity_name,
+                    vec![
+                        Attribute::String(pc.name),
+                        Attribute::EntityRef(app_ctx),
+                        Attribute::String(pc.discipline_type),
+                    ],
+                )
+            } else {
+                self.push_simple(
+                    "PRODUCT_CONTEXT",
+                    vec![
+                        Attribute::String(String::new()),
+                        Attribute::EntityRef(app_ctx),
+                        Attribute::String("mechanical".into()),
+                    ],
+                )
+            }
+        };
+        // PDC: same IR-우선 + fallback pattern.
+        let pdef_ctx = {
+            use crate::ir::ProductDefinitionContextKind;
+            let from_ir = self
+                .model
+                .assembly
+                .as_ref()
+                .and_then(|a| a.product_definition_contexts.iter().next().cloned());
+            if let Some(pdc) = from_ir {
+                let entity_name = match pdc.kind {
+                    ProductDefinitionContextKind::Plain => "PRODUCT_DEFINITION_CONTEXT",
+                    ProductDefinitionContextKind::Design => "DESIGN_CONTEXT",
+                };
+                self.push_simple(
+                    entity_name,
+                    vec![
+                        Attribute::String(pdc.name),
+                        Attribute::EntityRef(app_ctx),
+                        Attribute::String(pdc.life_cycle_stage),
+                    ],
+                )
+            } else {
+                self.push_simple(
+                    "PRODUCT_DEFINITION_CONTEXT",
+                    vec![
+                        Attribute::String("part definition".into()),
+                        Attribute::EntityRef(app_ctx),
+                        Attribute::String("design".into()),
+                    ],
+                )
+            }
+        };
         AssemblyContextIds {
             product_ctx,
             pdef_ctx,

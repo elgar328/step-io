@@ -5,11 +5,15 @@
 //! receive `&EntityGraph` through the unified handler signature.
 
 pub mod context_dependent_shape_representation;
+pub mod design_context;
+pub mod mechanical_context;
 pub mod next_assembly_usage_occurrence;
 pub mod product;
 pub mod product_category;
 pub mod product_category_relationship;
+pub mod product_context;
 pub mod product_definition;
+pub mod product_definition_context;
 pub mod product_definition_formation;
 pub mod product_definition_formation_with_source;
 pub mod product_definition_shape;

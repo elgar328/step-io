@@ -7,7 +7,10 @@
 //! owns the product arena and the resolved root.
 
 use super::arena::Arena;
-use super::id::{CurveId, Placement3dId, PointId, ProductId, ShellId, SolidId, UnitContextId};
+use super::id::{
+    ApplicationContextId, CurveId, Placement3dId, PointId, ProductId, ShellId, SolidId,
+    UnitContextId,
+};
 
 /// Assembly graph. Conventionally called a "tree" but shared instances
 /// make it a DAG in general (the same product can be reached through
@@ -20,6 +23,13 @@ pub struct AssemblyTree {
     pub products: Arena<Product>,
     /// Phase A: always `None`. Phase B fills this in.
     pub root: Option<ProductId>,
+    /// `PRODUCT_CONTEXT` / `MECHANICAL_CONTEXT` arena. The writer
+    /// currently emits the first entry; additional entries drop
+    /// (single-context emit pattern shared with the AC chain).
+    pub product_contexts: Arena<ProductContext>,
+    /// `PRODUCT_DEFINITION_CONTEXT` / `DESIGN_CONTEXT` arena. Same
+    /// single-emit constraint as `product_contexts`.
+    pub product_definition_contexts: Arena<ProductDefinitionContext>,
 }
 
 /// A single STEP `PRODUCT` with its resolved content.
@@ -197,4 +207,48 @@ pub struct Instance {
 pub struct Transform3d {
     pub source: Placement3dId,
     pub target: Placement3dId,
+}
+
+/// `PRODUCT_CONTEXT` vs `MECHANICAL_CONTEXT` discriminator. The two
+/// `AP203` / `AP214e3` entities share identical fields; only the STEP
+/// entity name differs at write time (`MECHANICAL_CONTEXT` is an
+/// `AP203` subtype with a `discipline_type='mechanical'` `WHERE`
+/// constraint).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum ProductContextKind {
+    #[default]
+    Plain,
+    Mechanical,
+}
+
+/// `PRODUCT_CONTEXT(name, frame_of_reference, discipline_type)` per
+/// `AP214e3`. `MECHANICAL_CONTEXT` reuses this struct with
+/// `kind = Mechanical`; the writer picks the STEP entity name based
+/// on `kind`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ProductContext {
+    pub name: String,
+    pub frame_of_reference: ApplicationContextId,
+    pub discipline_type: String,
+    pub kind: ProductContextKind,
+}
+
+/// `PRODUCT_DEFINITION_CONTEXT` vs `DESIGN_CONTEXT` discriminator.
+/// Same `base_parallel` pattern as `ProductContextKind`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum ProductDefinitionContextKind {
+    #[default]
+    Plain,
+    Design,
+}
+
+/// `PRODUCT_DEFINITION_CONTEXT(name, frame_of_reference,
+/// life_cycle_stage)` per `AP214e3`. `DESIGN_CONTEXT` reuses this
+/// struct with `kind = Design`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ProductDefinitionContext {
+    pub name: String,
+    pub frame_of_reference: ApplicationContextId,
+    pub life_cycle_stage: String,
+    pub kind: ProductDefinitionContextKind,
 }
