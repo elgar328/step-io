@@ -169,6 +169,11 @@ pub struct ReaderContext {
     pub(crate) product_pc_step_refs: HashMap<ProductId, u64>,
     /// Same pattern, populated by `PRODUCT_DEFINITION.frame_of_reference`.
     pub(crate) product_pdc_step_refs: HashMap<ProductId, u64>,
+    pub(crate) product_definition_context_roles: Arena<crate::ir::ProductDefinitionContextRole>,
+    pub(crate) product_definition_context_associations:
+        Arena<crate::ir::ProductDefinitionContextAssociation>,
+    pub(crate) pdc_role_id_map: HashMap<u64, crate::ir::ProductDefinitionContextRoleId>,
+    pub(crate) pdca_id_map: HashMap<u64, crate::ir::ProductDefinitionContextAssociationId>,
     pub(crate) product_arena_map: HashMap<u64, ProductId>,
     pub(crate) formation_to_product: HashMap<u64, u64>,
     pub(crate) pdef_to_product: HashMap<u64, u64>,
@@ -502,11 +507,17 @@ impl ReaderContext {
         let products = std::mem::take(&mut self.assembly_products);
         let product_contexts = std::mem::take(&mut self.product_contexts);
         let product_definition_contexts = std::mem::take(&mut self.product_definition_contexts);
+        let product_definition_context_roles =
+            std::mem::take(&mut self.product_definition_context_roles);
+        let product_definition_context_associations =
+            std::mem::take(&mut self.product_definition_context_associations);
         self.assembly = Some(AssemblyTree {
             products,
             root,
             product_contexts,
             product_definition_contexts,
+            product_definition_context_roles,
+            product_definition_context_associations,
         });
     }
 

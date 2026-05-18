@@ -57,7 +57,46 @@ impl WriteBuffer<'_> {
         let schema = self.model.schema.clone();
         let products = assembly.products.clone();
         self.emit_assembly_chain(&products, &schema)?;
+        self.emit_pdca_cluster();
         Ok(())
+    }
+
+    /// Emit `PRODUCT_DEFINITION_CONTEXT_ROLE` + `PRODUCT_DEFINITION_CONTEXT_ASSOCIATION`
+    /// after the assembly chain has been written. Requires
+    /// `product_def_ids` (populated by `emit_assembly_chain`) and
+    /// `pdc_step_ids` (populated by `emit_application_context`).
+    fn emit_pdca_cluster(&mut self) {
+        let Some(assembly) = self.model.assembly.clone() else {
+            return;
+        };
+        let mut pdcr_step_ids: Vec<u64> =
+            Vec::with_capacity(assembly.product_definition_context_roles.len());
+        for r in assembly.product_definition_context_roles.iter() {
+            let desc_attr = match &r.description {
+                Some(d) => Attribute::String(d.clone()),
+                None => Attribute::Unset,
+            };
+            let id = self.push_simple(
+                "PRODUCT_DEFINITION_CONTEXT_ROLE",
+                vec![Attribute::String(r.name.clone()), desc_attr],
+            );
+            pdcr_step_ids.push(id);
+        }
+        for a in assembly.product_definition_context_associations.iter() {
+            let Some(&pdef_step) = self.product_def_ids.get(&a.definition) else {
+                continue;
+            };
+            let pdc_step = self.pdc_step_ids[a.frame_of_reference.0 as usize];
+            let role_step = pdcr_step_ids[a.role.0 as usize];
+            let _ = self.push_simple(
+                "PRODUCT_DEFINITION_CONTEXT_ASSOCIATION",
+                vec![
+                    Attribute::EntityRef(pdef_step),
+                    Attribute::EntityRef(pdc_step),
+                    Attribute::EntityRef(role_step),
+                ],
+            );
+        }
     }
 
     /// Resolve a product's `geometry_context` to a STEP entity id, or

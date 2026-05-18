@@ -14,8 +14,9 @@ pub mod visualization;
 pub use arena::Arena;
 pub use assembly::{
     AssemblyTree, Instance, Product, ProductCategoryChain, ProductCategoryRoot, ProductContent,
-    ProductContext, ProductContextKind, ProductDefinitionContext, ProductDefinitionContextKind,
-    Transform3d, WireframeContent, WireframeReprKind,
+    ProductContext, ProductContextKind, ProductDefinitionContext,
+    ProductDefinitionContextAssociation, ProductDefinitionContextKind,
+    ProductDefinitionContextRole, Transform3d, WireframeContent, WireframeReprKind,
 };
 pub use error::{AttributeKindTag, ConvertError};
 pub use geometry::{
@@ -36,9 +37,10 @@ pub use id::{
     IdentificationRoleId, LocalTimeId, ObjectRoleId, OrganizationId,
     PersonAndOrganizationAssignmentId, PersonAndOrganizationId, PersonAndOrganizationRoleId,
     PersonId, Placement1dId, Placement2dId, Placement3dId, Point2dId, PointId, ProductContextId,
-    ProductDefinitionContextId, ProductId, RoleAssociationId, SecurityClassificationAssignmentId,
-    SecurityClassificationId, SecurityClassificationLevelId, ShapeAspectId, ShellId, SolidId,
-    SurfaceId, UnitContextId, VertexId, WireId,
+    ProductDefinitionContextAssociationId, ProductDefinitionContextId,
+    ProductDefinitionContextRoleId, ProductId, RoleAssociationId,
+    SecurityClassificationAssignmentId, SecurityClassificationId, SecurityClassificationLevelId,
+    ShapeAspectId, ShellId, SolidId, SurfaceId, UnitContextId, VertexId, WireId,
 };
 pub use model::{
     FileHeader, GeometryPool, ImplementationLevel, NonEmptyStringList, StepModel, TopologyPool,

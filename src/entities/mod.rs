@@ -300,6 +300,11 @@ pub(crate) enum PassLevel {
     /// `PRODUCT_DEFINITION_CONTEXT` / `DESIGN_CONTEXT` (Pass 9-27) —
     /// refs `Pass9PlmAppContext` for the AC `frame_of_reference`.
     Pass9AssemblyContext,
+    /// `PRODUCT_DEFINITION_CONTEXT_ROLE` (Pass 9-28) — leaf for PDCA.
+    Pass9PdcRole,
+    /// `PRODUCT_DEFINITION_CONTEXT_ASSOCIATION` (Pass 9-29) — refs PDC,
+    /// PDEF (via `pdef_to_product`), PDCR.
+    Pass9Pdca,
     /// `SHAPE_ASPECT` (Pass 8-pre) — PMI scaffolding. Runs before the
     /// property converters so a future Pattern B PD pass can resolve its
     /// target ref through the `SHAPE_ASPECT` id map.

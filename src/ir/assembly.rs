@@ -9,7 +9,8 @@
 use super::arena::Arena;
 use super::id::{
     ApplicationContextId, CurveId, Placement3dId, PointId, ProductContextId,
-    ProductDefinitionContextId, ProductId, ShellId, SolidId, UnitContextId,
+    ProductDefinitionContextId, ProductDefinitionContextRoleId, ProductId, ShellId, SolidId,
+    UnitContextId,
 };
 
 /// Assembly graph. Conventionally called a "tree" but shared instances
@@ -30,6 +31,13 @@ pub struct AssemblyTree {
     /// `PRODUCT_DEFINITION_CONTEXT` / `DESIGN_CONTEXT` arena. Same
     /// single-emit constraint as `product_contexts`.
     pub product_definition_contexts: Arena<ProductDefinitionContext>,
+    /// `PRODUCT_DEFINITION_CONTEXT_ROLE` arena. Leaf entries referenced
+    /// by `ProductDefinitionContextAssociation`.
+    pub product_definition_context_roles: Arena<ProductDefinitionContextRole>,
+    /// `PRODUCT_DEFINITION_CONTEXT_ASSOCIATION` arena. Top-level (no
+    /// current IR consumer); links a `PRODUCT_DEFINITION` to a
+    /// `ProductDefinitionContext` via a role tag.
+    pub product_definition_context_associations: Arena<ProductDefinitionContextAssociation>,
 }
 
 /// A single STEP `PRODUCT` with its resolved content.
@@ -260,4 +268,23 @@ pub struct ProductDefinitionContext {
     pub frame_of_reference: ApplicationContextId,
     pub life_cycle_stage: String,
     pub kind: ProductDefinitionContextKind,
+}
+
+/// `PRODUCT_DEFINITION_CONTEXT_ROLE(name, description)` per `AP214e3`.
+/// Leaf entity referenced by `ProductDefinitionContextAssociation`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ProductDefinitionContextRole {
+    pub name: String,
+    pub description: Option<String>,
+}
+
+/// `PRODUCT_DEFINITION_CONTEXT_ASSOCIATION(definition, frame_of_reference,
+/// role)` per `AP214e3`. `definition` references a `PRODUCT_DEFINITION` —
+/// step-io maps this to the parent `ProductId` since `PRODUCT_DEFINITION`
+/// data is conflated into the `Product` struct (no separate PDEF arena).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ProductDefinitionContextAssociation {
+    pub definition: ProductId,
+    pub frame_of_reference: ProductDefinitionContextId,
+    pub role: ProductDefinitionContextRoleId,
 }

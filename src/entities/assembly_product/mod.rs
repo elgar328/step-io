@@ -14,6 +14,8 @@ pub mod product_category_relationship;
 pub mod product_context;
 pub mod product_definition;
 pub mod product_definition_context;
+pub mod product_definition_context_association;
+pub mod product_definition_context_role;
 pub mod product_definition_formation;
 pub mod product_definition_formation_with_source;
 pub mod product_definition_shape;

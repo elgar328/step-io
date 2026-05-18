@@ -268,6 +268,9 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass9PlmAppProtocol);
         // Assembly-product context — PC/MC + PDC/DC (refs AC).
         self.dispatch_registry(graph, PassLevel::Pass9AssemblyContext);
+        // PDCA cluster — PDCR leaf -> PDCA (refs PDC + PDEF + PDCR).
+        self.dispatch_registry(graph, PassLevel::Pass9PdcRole);
+        self.dispatch_registry(graph, PassLevel::Pass9Pdca);
 
         // Pass 8: PMI scaffolding — SHAPE_ASPECT entries that anchor
         // future Tolerance / Datum / GD&T work. Runs before the property
