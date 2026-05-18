@@ -236,6 +236,11 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass9PlmPoLeaves);
         self.dispatch_registry(graph, PassLevel::Pass9PlmPersonAndOrganization);
         self.dispatch_registry(graph, PassLevel::Pass9PlmPoa);
+        // Approval cluster — leaves (status / role) -> Approval (status ref)
+        // -> linkers (date-time / person-organization).
+        self.dispatch_registry(graph, PassLevel::Pass9PlmApprovalLeaves);
+        self.dispatch_registry(graph, PassLevel::Pass9PlmApproval);
+        self.dispatch_registry(graph, PassLevel::Pass9PlmApprovalLinkers);
 
         // Pass 8: PMI scaffolding — SHAPE_ASPECT entries that anchor
         // future Tolerance / Datum / GD&T work. Runs before the property

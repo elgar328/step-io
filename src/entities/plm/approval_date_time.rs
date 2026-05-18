@@ -1,0 +1,61 @@
+//! `APPROVAL_DATE_TIME` handler — Pass 9-10 plm. Depends on
+//! `Pass9PlmApproval` (`dated_approval` ref) and `Pass9PlmDateAndTime`
+//! (`date_time` SELECT).
+
+use crate::entities::SimpleEntityHandler;
+use crate::ir::attr::{check_count, read_entity_ref};
+use crate::ir::error::ConvertError;
+use crate::ir::plm::{ApprovalDateTime, ApprovalDateTimeSelect, PlmPool};
+use crate::parser::entity::{Attribute, EntityGraph};
+use crate::reader::ReaderContext;
+use crate::writer::WriteError;
+use crate::writer::buffer::WriteBuffer;
+use step_io_macros::step_entity;
+
+pub(crate) struct ApprovalDateTimeHandler;
+
+#[step_entity(name = "APPROVAL_DATE_TIME", pass = Pass9PlmApprovalLinkers)]
+impl SimpleEntityHandler for ApprovalDateTimeHandler {
+    type WriteInput = ApprovalDateTime;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 2, entity_id, "APPROVAL_DATE_TIME")?;
+        let dt_ref = read_entity_ref(attrs, 0, entity_id, "date_time")?;
+        let approval_ref = read_entity_ref(attrs, 1, entity_id, "dated_approval")?;
+        let Some(&dt_id) = ctx.plm_date_and_time_id_map.get(&dt_ref) else {
+            // Unsupported SELECT variant (direct CALENDAR_DATE / LOCAL_TIME).
+            return Ok(());
+        };
+        let Some(&dated_approval) = ctx.plm_approval_id_map.get(&approval_ref) else {
+            return Ok(());
+        };
+        let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+        let id = pool.approval_date_times.push(ApprovalDateTime {
+            date_time: ApprovalDateTimeSelect::DateAndTime(dt_id),
+            dated_approval,
+        });
+        ctx.plm_approval_date_time_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, a: ApprovalDateTime) -> Result<u64, WriteError> {
+        let dt_step = match a.date_time {
+            ApprovalDateTimeSelect::DateAndTime(id) => {
+                buf.plm_date_and_time_step_ids[id.0 as usize]
+            }
+        };
+        let approval_step = buf.plm_approval_step_ids[a.dated_approval.0 as usize];
+        Ok(buf.push_simple(
+            "APPROVAL_DATE_TIME",
+            vec![
+                Attribute::EntityRef(dt_step),
+                Attribute::EntityRef(approval_step),
+            ],
+        ))
+    }
+}

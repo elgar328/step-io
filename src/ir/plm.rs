@@ -10,8 +10,9 @@
 
 use super::arena::Arena;
 use super::id::{
-    CoordinatedUniversalTimeOffsetId, DateAndTimeId, DateId, DateTimeRoleId, LocalTimeId,
-    OrganizationId, PersonAndOrganizationId, PersonAndOrganizationRoleId, PersonId, ProductId,
+    ApprovalId, ApprovalRoleId, ApprovalStatusId, CoordinatedUniversalTimeOffsetId, DateAndTimeId,
+    DateId, DateTimeRoleId, LocalTimeId, OrganizationId, PersonAndOrganizationId,
+    PersonAndOrganizationRoleId, PersonId, ProductId,
 };
 
 /// Top-level container for plm-domain entities. `None` on
@@ -48,6 +49,108 @@ pub struct PlmPool {
     /// `PersonAndOrganization` to product targets via the AP214
     /// `person_organization_item` SELECT.
     pub person_and_organization_assignments: Arena<PersonAndOrganizationAssignment>,
+    /// `APPROVAL_STATUS` label entries.
+    pub approval_statuses: Arena<ApprovalStatus>,
+    /// `APPROVAL_ROLE` label entries.
+    pub approval_roles: Arena<ApprovalRole>,
+    /// `APPROVAL` entries — pair of (status, level).
+    pub approvals: Arena<Approval>,
+    /// `APPROVAL_DATE_TIME` entries — link `DateAndTime` to an `Approval`
+    /// via AP214 `date_time_select`.
+    pub approval_date_times: Arena<ApprovalDateTime>,
+    /// `APPROVAL_PERSON_ORGANIZATION` entries — link a
+    /// `PersonAndOrganization` to an `Approval` via AP214
+    /// `person_organization_select`, tagged by `ApprovalRole`.
+    pub approval_person_organizations: Arena<ApprovalPersonOrganization>,
+    /// `approval_assignment` arena enum covering both
+    /// `APPLIED_APPROVAL_ASSIGNMENT` and `CC_DESIGN_APPROVAL`. Connects
+    /// an `Approval` to product targets via the AP214 `approval_item`
+    /// SELECT.
+    pub approval_assignments: Arena<ApprovalAssignment>,
+}
+
+/// `approval_assignment` arena enum per ir.toml. Two variants with
+/// identical field shape but distinct STEP entity names — the CcDesign
+/// variant's STEP name lacks the `_ASSIGNMENT` suffix.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ApprovalAssignment {
+    Applied(AppliedApprovalAssignment),
+    CcDesign(CcDesignApproval),
+}
+
+/// `APPLIED_APPROVAL_ASSIGNMENT(assigned_approval, items)`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AppliedApprovalAssignment {
+    pub assigned_approval: ApprovalId,
+    pub items: Vec<ApprovalItem>,
+}
+
+/// `CC_DESIGN_APPROVAL(assigned_approval, items)`. STEP entity name lacks
+/// the `_ASSIGNMENT` suffix that the Applied variant carries.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CcDesignApproval {
+    pub assigned_approval: ApprovalId,
+    pub items: Vec<ApprovalItem>,
+}
+
+/// One element of an Approval assignment's `items` set. Maps the AP214
+/// `approval_item` SELECT — currently scoped to `PRODUCT_DEFINITION` /
+/// `PRODUCT` (resolved through the assembly product chain).
+/// `PRODUCT_DEFINITION_FORMATION_*` / `SECURITY_CLASSIFICATION` /
+/// `DOCUMENT` direct targets drop silently on read.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ApprovalItem {
+    Product(ProductId),
+}
+
+/// `APPROVAL_STATUS(name)` — label entity (e.g. `"approved"`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ApprovalStatus {
+    pub name: String,
+}
+
+/// `APPROVAL_ROLE(role)` — label entity (e.g. `"approver"`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ApprovalRole {
+    pub role: String,
+}
+
+/// `APPROVAL(status, level)`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Approval {
+    pub status: ApprovalStatusId,
+    pub level: String,
+}
+
+/// `APPROVAL_DATE_TIME(date_time, dated_approval)`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ApprovalDateTime {
+    pub date_time: ApprovalDateTimeSelect,
+    pub dated_approval: ApprovalId,
+}
+
+/// AP214 `date_time_select` — step-io currently models the
+/// `DATE_AND_TIME` variant only. Direct `CALENDAR_DATE` / `LOCAL_TIME`
+/// targets drop silently at read.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ApprovalDateTimeSelect {
+    DateAndTime(DateAndTimeId),
+}
+
+/// `APPROVAL_PERSON_ORGANIZATION(person_organization, authorized_approval, role)`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ApprovalPersonOrganization {
+    pub person_organization: PersonOrganizationSelect,
+    pub authorized_approval: ApprovalId,
+    pub role: ApprovalRoleId,
+}
+
+/// AP214 `person_organization_select` — step-io currently models the
+/// `PERSON_AND_ORGANIZATION` variant only. Direct `PERSON` / `ORGANIZATION`
+/// targets drop silently at read.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PersonOrganizationSelect {
+    PersonAndOrganization(PersonAndOrganizationId),
 }
 
 /// `person_and_organization_assignment` arena enum per ir.toml. The two

@@ -327,6 +327,17 @@ pub struct ReaderContext {
     /// `CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT` step entity id →
     /// `PersonAndOrganizationAssignmentId`.
     pub(crate) plm_poa_id_map: HashMap<u64, crate::ir::PersonAndOrganizationAssignmentId>,
+    /// `APPROVAL_STATUS` step entity id → `ApprovalStatusId`.
+    pub(crate) plm_approval_status_id_map: HashMap<u64, crate::ir::ApprovalStatusId>,
+    /// `APPROVAL_ROLE` step entity id → `ApprovalRoleId`.
+    pub(crate) plm_approval_role_id_map: HashMap<u64, crate::ir::ApprovalRoleId>,
+    /// `APPROVAL` step entity id → `ApprovalId`.
+    pub(crate) plm_approval_id_map: HashMap<u64, crate::ir::ApprovalId>,
+    /// `APPROVAL_DATE_TIME` step entity id → `ApprovalDateTimeId`.
+    pub(crate) plm_approval_date_time_id_map: HashMap<u64, crate::ir::ApprovalDateTimeId>,
+    /// `APPROVAL_PERSON_ORGANIZATION` step entity id → `ApprovalPersonOrganizationId`.
+    pub(crate) plm_approval_person_organization_id_map:
+        HashMap<u64, crate::ir::ApprovalPersonOrganizationId>,
 
     pub(crate) warnings: Vec<ConvertError>,
 }

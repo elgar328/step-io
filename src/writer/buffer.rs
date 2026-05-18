@@ -102,6 +102,13 @@ pub(crate) struct WriteBuffer<'m> {
     pub(crate) plm_organization_step_ids: Vec<u64>,
     pub(crate) plm_p_and_o_role_step_ids: Vec<u64>,
     pub(crate) plm_p_and_o_step_ids: Vec<u64>,
+    /// plm Approval caches — populated by `emit_plm_if_set` in dependency
+    /// order: leaves (status / role) → `Approval` → linkers.
+    pub(crate) plm_approval_status_step_ids: Vec<u64>,
+    pub(crate) plm_approval_role_step_ids: Vec<u64>,
+    pub(crate) plm_approval_step_ids: Vec<u64>,
+    pub(crate) plm_approval_date_time_step_ids: Vec<u64>,
+    pub(crate) plm_approval_person_organization_step_ids: Vec<u64>,
     /// Per-`UnitContext` leaf STEP ids `(length, angle, solid_angle)`,
     /// indexed by `UnitContextId.0`. Each `UnitContext` in the IR arena
     /// emits its own leaf entities (no writer-side dedup) so the IR's
@@ -160,6 +167,11 @@ impl<'m> WriteBuffer<'m> {
             plm_organization_step_ids: Vec::new(),
             plm_p_and_o_role_step_ids: Vec::new(),
             plm_p_and_o_step_ids: Vec::new(),
+            plm_approval_status_step_ids: Vec::new(),
+            plm_approval_role_step_ids: Vec::new(),
+            plm_approval_step_ids: Vec::new(),
+            plm_approval_date_time_step_ids: Vec::new(),
+            plm_approval_person_organization_step_ids: Vec::new(),
             product_def_ids: std::collections::HashMap::new(),
             product_def_shape_ids: std::collections::HashMap::new(),
         }

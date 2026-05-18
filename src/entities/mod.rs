@@ -237,6 +237,15 @@ pub(crate) enum PassLevel {
     /// on `Pass9PlmPersonAndOrganization` (P&O ref) + `Pass9PlmPoLeaves`
     /// (role) and the assembly product chain (`Pass6`) for `items` PD targets.
     Pass9PlmPoa,
+    /// `APPROVAL_STATUS`, `APPROVAL_ROLE` (Pass 9-8) — plm Approval leaves.
+    Pass9PlmApprovalLeaves,
+    /// `APPROVAL` (Pass 9-9) — depends on `Pass9PlmApprovalLeaves` for the
+    /// status ref.
+    Pass9PlmApproval,
+    /// `APPROVAL_DATE_TIME` / `APPROVAL_PERSON_ORGANIZATION` (Pass 9-10) —
+    /// depend on `Pass9PlmApproval` plus `Pass9PlmDateAndTime` /
+    /// `Pass9PlmPersonAndOrganization` for the SELECT refs.
+    Pass9PlmApprovalLinkers,
     /// `SHAPE_ASPECT` (Pass 8-pre) — PMI scaffolding. Runs before the
     /// property converters so a future Pattern B PD pass can resolve its
     /// target ref through the `SHAPE_ASPECT` id map.

@@ -5,6 +5,7 @@ use super::geometry::{
     Point2, Point3, Surface, Vertex,
 };
 use super::plm::{
+    Approval, ApprovalDateTime, ApprovalPersonOrganization, ApprovalRole, ApprovalStatus,
     CalendarDate, CoordinatedUniversalTimeOffset, DateAndTime, DateAndTimeAssignment, DateTimeRole,
     LocalTime, Organization, Person, PersonAndOrganization, PersonAndOrganizationAssignment,
     PersonAndOrganizationRole,
@@ -92,3 +93,10 @@ define_id!(
     PersonAndOrganizationAssignmentId,
     PersonAndOrganizationAssignment
 );
+
+// plm Ids — Approval primitives + linkers (Phase plm-3a).
+define_id!(ApprovalStatusId, ApprovalStatus);
+define_id!(ApprovalRoleId, ApprovalRole);
+define_id!(ApprovalId, Approval);
+define_id!(ApprovalDateTimeId, ApprovalDateTime);
+define_id!(ApprovalPersonOrganizationId, ApprovalPersonOrganization);

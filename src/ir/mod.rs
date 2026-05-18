@@ -26,6 +26,7 @@ pub use geometry::{
     TrimmedCurve, Vertex,
 };
 pub use id::{
+    ApprovalDateTimeId, ApprovalId, ApprovalPersonOrganizationId, ApprovalRoleId, ApprovalStatusId,
     CoordinatedUniversalTimeOffsetId, Curve2dId, CurveId, DateAndTimeAssignmentId, DateAndTimeId,
     DateId, DateTimeRoleId, Direction2dId, DirectionId, EdgeId, FaceId, FoundedItemId, LocalTimeId,
     OrganizationId, PersonAndOrganizationAssignmentId, PersonAndOrganizationId,
@@ -37,10 +38,12 @@ pub use model::{
     FileHeader, GeometryPool, ImplementationLevel, NonEmptyStringList, StepModel, TopologyPool,
 };
 pub use plm::{
-    AheadOrBehind, AppliedDateAndTimeAssignment, CalendarDate, CcDesignDateAndTimeAssignment,
-    CoordinatedUniversalTimeOffset, DateAndTime, DateAndTimeAssignment, DateTimeItem, DateTimeRole,
-    LocalTime, Organization, Person, PersonAndOrganization, PersonAndOrganizationAssignment,
-    PersonAndOrganizationRole, PersonOrganizationItem, PlmPool,
+    AheadOrBehind, AppliedDateAndTimeAssignment, Approval, ApprovalDateTime,
+    ApprovalDateTimeSelect, ApprovalPersonOrganization, ApprovalRole, ApprovalStatus, CalendarDate,
+    CcDesignDateAndTimeAssignment, CoordinatedUniversalTimeOffset, DateAndTime,
+    DateAndTimeAssignment, DateTimeItem, DateTimeRole, LocalTime, Organization, Person,
+    PersonAndOrganization, PersonAndOrganizationAssignment, PersonAndOrganizationRole,
+    PersonOrganizationItem, PersonOrganizationSelect, PlmPool,
 };
 pub use property::{MeasureKind, Property, PropertyMeasure, PropertyPool};
 pub use shape_rep::{

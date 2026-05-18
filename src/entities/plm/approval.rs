@@ -1,0 +1,48 @@
+//! `APPROVAL` handler — Pass 9-9 plm. Depends on `Pass9PlmApprovalLeaves`
+//! for the status ref.
+
+use crate::entities::SimpleEntityHandler;
+use crate::ir::attr::{check_count, read_entity_ref, read_string};
+use crate::ir::error::ConvertError;
+use crate::ir::plm::{Approval, PlmPool};
+use crate::parser::entity::{Attribute, EntityGraph};
+use crate::reader::ReaderContext;
+use crate::writer::WriteError;
+use crate::writer::buffer::WriteBuffer;
+use step_io_macros::step_entity;
+
+pub(crate) struct ApprovalHandler;
+
+#[step_entity(name = "APPROVAL", pass = Pass9PlmApproval)]
+impl SimpleEntityHandler for ApprovalHandler {
+    type WriteInput = Approval;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 2, entity_id, "APPROVAL")?;
+        let status_ref = read_entity_ref(attrs, 0, entity_id, "status")?;
+        let level = read_string(attrs, 1, entity_id, "level")?.to_owned();
+        let Some(&status) = ctx.plm_approval_status_id_map.get(&status_ref) else {
+            return Ok(());
+        };
+        let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+        let id = pool.approvals.push(Approval { status, level });
+        ctx.plm_approval_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, a: Approval) -> Result<u64, WriteError> {
+        let status_step = buf.plm_approval_status_step_ids[a.status.0 as usize];
+        Ok(buf.push_simple(
+            "APPROVAL",
+            vec![
+                Attribute::EntityRef(status_step),
+                Attribute::String(a.level),
+            ],
+        ))
+    }
+}

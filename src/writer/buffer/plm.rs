@@ -104,6 +104,45 @@ impl WriteBuffer<'_> {
                 }
             }
         }
+        self.emit_approval_cluster(&plm)?;
+        Ok(())
+    }
+
+    /// Emit the Approval cluster (status / role leaves -> `Approval` ->
+    /// linkers). Split out of `emit_plm_if_set` for line-budget reasons.
+    fn emit_approval_cluster(&mut self, plm: &crate::ir::PlmPool) -> Result<(), WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::plm::approval::ApprovalHandler;
+        use crate::entities::plm::approval_date_time::ApprovalDateTimeHandler;
+        use crate::entities::plm::approval_person_organization::ApprovalPersonOrganizationHandler;
+        use crate::entities::plm::approval_role::ApprovalRoleHandler;
+        use crate::entities::plm::approval_status::ApprovalStatusHandler;
+        self.plm_approval_status_step_ids = Vec::with_capacity(plm.approval_statuses.len());
+        for s in plm.approval_statuses.iter() {
+            let id = ApprovalStatusHandler::write(self, s.clone())?;
+            self.plm_approval_status_step_ids.push(id);
+        }
+        self.plm_approval_role_step_ids = Vec::with_capacity(plm.approval_roles.len());
+        for r in plm.approval_roles.iter() {
+            let id = ApprovalRoleHandler::write(self, r.clone())?;
+            self.plm_approval_role_step_ids.push(id);
+        }
+        self.plm_approval_step_ids = Vec::with_capacity(plm.approvals.len());
+        for a in plm.approvals.iter() {
+            let id = ApprovalHandler::write(self, a.clone())?;
+            self.plm_approval_step_ids.push(id);
+        }
+        self.plm_approval_date_time_step_ids = Vec::with_capacity(plm.approval_date_times.len());
+        for a in plm.approval_date_times.iter() {
+            let id = ApprovalDateTimeHandler::write(self, *a)?;
+            self.plm_approval_date_time_step_ids.push(id);
+        }
+        self.plm_approval_person_organization_step_ids =
+            Vec::with_capacity(plm.approval_person_organizations.len());
+        for a in plm.approval_person_organizations.iter() {
+            let id = ApprovalPersonOrganizationHandler::write(self, *a)?;
+            self.plm_approval_person_organization_step_ids.push(id);
+        }
         Ok(())
     }
 }

@@ -4,6 +4,11 @@
 
 pub mod applied_date_and_time_assignment;
 pub mod applied_person_and_organization_assignment;
+pub mod approval;
+pub mod approval_date_time;
+pub mod approval_person_organization;
+pub mod approval_role;
+pub mod approval_status;
 pub mod calendar_date;
 pub mod cc_design_date_and_time_assignment;
 pub mod cc_design_person_and_organization_assignment;
