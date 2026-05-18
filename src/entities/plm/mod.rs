@@ -6,7 +6,6 @@ pub mod applied_approval_assignment;
 pub mod applied_date_and_time_assignment;
 pub mod applied_document_reference;
 pub mod applied_external_identification_assignment;
-pub mod applied_identification_assignment;
 pub mod applied_person_and_organization_assignment;
 pub mod applied_security_classification_assignment;
 pub mod approval;

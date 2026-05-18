@@ -115,7 +115,8 @@ pub(crate) struct WriteBuffer<'m> {
     pub(crate) plm_security_level_step_ids: Vec<u64>,
     pub(crate) plm_security_classification_step_ids: Vec<u64>,
     /// plm Identification caches — populated by `emit_plm_if_set`.
-    /// `IdentificationAssignment` itself has no consumers and is not cached.
+    /// `AppliedExternalIdentificationAssignment` itself has no consumers
+    /// and is not cached.
     pub(crate) plm_identification_role_step_ids: Vec<u64>,
     pub(crate) plm_external_source_step_ids: Vec<u64>,
     /// plm Document caches — populated by `emit_plm_if_set`. `Applied`

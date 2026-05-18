@@ -5,9 +5,7 @@
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string};
 use crate::ir::error::ConvertError;
-use crate::ir::plm::{
-    AppliedExternalIdentificationAssignment, IdentificationAssignment, IdentificationItem, PlmPool,
-};
+use crate::ir::plm::{AppliedExternalIdentificationAssignment, IdentificationItem, PlmPool};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -53,14 +51,12 @@ impl SimpleEntityHandler for AppliedExternalIdentificationAssignmentHandler {
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
         let id = pool
             .identification_assignments
-            .push(IdentificationAssignment::AppliedExternal(
-                AppliedExternalIdentificationAssignment {
-                    assigned_id,
-                    role,
-                    source,
-                    items,
-                },
-            ));
+            .push(AppliedExternalIdentificationAssignment {
+                assigned_id,
+                role,
+                source,
+                items,
+            });
         ctx.plm_ia_id_map.insert(entity_id, id);
         Ok(())
     }

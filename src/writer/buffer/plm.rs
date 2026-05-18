@@ -160,10 +160,8 @@ impl WriteBuffer<'_> {
     fn emit_identification_cluster(&mut self, plm: &crate::ir::PlmPool) -> Result<(), WriteError> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::plm::applied_external_identification_assignment::AppliedExternalIdentificationAssignmentHandler;
-        use crate::entities::plm::applied_identification_assignment::AppliedIdentificationAssignmentHandler;
         use crate::entities::plm::external_source::ExternalSourceHandler;
         use crate::entities::plm::identification_role::IdentificationRoleHandler;
-        use crate::ir::plm::IdentificationAssignment;
         self.plm_identification_role_step_ids = Vec::with_capacity(plm.identification_roles.len());
         for r in plm.identification_roles.iter() {
             let id = IdentificationRoleHandler::write(self, r.clone())?;
@@ -175,14 +173,7 @@ impl WriteBuffer<'_> {
             self.plm_external_source_step_ids.push(id);
         }
         for ia in plm.identification_assignments.iter() {
-            match ia {
-                IdentificationAssignment::Applied(a) => {
-                    AppliedIdentificationAssignmentHandler::write(self, a.clone())?;
-                }
-                IdentificationAssignment::AppliedExternal(a) => {
-                    AppliedExternalIdentificationAssignmentHandler::write(self, a.clone())?;
-                }
-            }
+            AppliedExternalIdentificationAssignmentHandler::write(self, ia.clone())?;
         }
         Ok(())
     }

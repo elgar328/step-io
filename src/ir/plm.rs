@@ -83,12 +83,10 @@ pub struct PlmPool {
     pub identification_roles: Arena<IdentificationRole>,
     /// `EXTERNAL_SOURCE` entries.
     pub external_sources: Arena<ExternalSource>,
-    /// `identification_assignment` arena enum covering both
-    /// `APPLIED_IDENTIFICATION_ASSIGNMENT` and
-    /// `APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT`. The two variants
-    /// have different field counts — `AppliedExternal` adds a `source`
-    /// ref absent from `Applied`.
-    pub identification_assignments: Arena<IdentificationAssignment>,
+    /// `APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT` entries. The
+    /// blueprint scopes the `identification_assignment` arena to this
+    /// single subtype only (no enum wrapper).
+    pub identification_assignments: Arena<AppliedExternalIdentificationAssignment>,
     /// `DOCUMENT_TYPE` label entries.
     pub document_types: Arena<DocumentType>,
     /// `document` arena enum covering plain `DOCUMENT` (`Itself`) and
@@ -201,23 +199,6 @@ pub struct ExternalSource {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ExternalSourceItem {
     Identifier(String),
-}
-
-/// `identification_assignment` arena enum per ir.toml. Unlike Approval /
-/// Security clusters, the two variants have different field counts —
-/// `AppliedExternal` carries an extra `source` field absent from `Applied`.
-#[derive(Debug, Clone, PartialEq)]
-pub enum IdentificationAssignment {
-    Applied(AppliedIdentificationAssignment),
-    AppliedExternal(AppliedExternalIdentificationAssignment),
-}
-
-/// `APPLIED_IDENTIFICATION_ASSIGNMENT(assigned_id, role, items)`.
-#[derive(Debug, Clone, PartialEq)]
-pub struct AppliedIdentificationAssignment {
-    pub assigned_id: String,
-    pub role: IdentificationRoleId,
-    pub items: Vec<IdentificationItem>,
 }
 
 /// `APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT(assigned_id, role, source, items)`.
