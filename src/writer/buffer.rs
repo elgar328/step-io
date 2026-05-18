@@ -135,6 +135,9 @@ pub(crate) struct WriteBuffer<'m> {
     /// plm Role cache — `RoleAssociation` is top-level (no consumer)
     /// and not cached.
     pub(crate) plm_object_role_step_ids: Vec<u64>,
+    /// plm `address` arena — top-level (no current consumer); cache
+    /// reserved for future enhancement phases.
+    pub(crate) plm_address_step_ids: Vec<u64>,
     /// Per-`UnitContext` leaf STEP ids `(length, angle, solid_angle)`,
     /// indexed by `UnitContextId.0`. Each `UnitContext` in the IR arena
     /// emits its own leaf entities (no writer-side dedup) so the IR's
@@ -209,6 +212,7 @@ impl<'m> WriteBuffer<'m> {
             plm_group_step_ids: Vec::new(),
             plm_document_reference_step_ids: Vec::new(),
             plm_object_role_step_ids: Vec::new(),
+            plm_address_step_ids: Vec::new(),
             product_def_ids: std::collections::HashMap::new(),
             product_def_shape_ids: std::collections::HashMap::new(),
         }

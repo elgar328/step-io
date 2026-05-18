@@ -288,6 +288,9 @@ pub(crate) enum PassLevel {
     /// `ROLE_ASSOCIATION` (Pass 9-23) — depends on `Pass9PlmObjectRole`
     /// plus `Pass9PlmDocLinkers` (ADR ref for the `item_with_role` SELECT).
     Pass9PlmRoleAssoc,
+    /// `ADDRESS` / `PERSONAL_ADDRESS` (Pass 9-24) — Address cluster.
+    /// `PersonalAddress` refs Person from `Pass9PlmPersonOrg`.
+    Pass9PlmAddress,
     /// `SHAPE_ASPECT` (Pass 8-pre) — PMI scaffolding. Runs before the
     /// property converters so a future Pattern B PD pass can resolve its
     /// target ref through the `SHAPE_ASPECT` id map.

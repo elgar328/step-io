@@ -5,14 +5,14 @@ use super::geometry::{
     Point2, Point3, Surface, Vertex,
 };
 use super::plm::{
-    AppliedDocumentReference, AppliedExternalIdentificationAssignment, AppliedGroupAssignment,
-    Approval, ApprovalAssignment, ApprovalDateTime, ApprovalPersonOrganization, ApprovalRole,
-    ApprovalStatus, CalendarDate, CoordinatedUniversalTimeOffset, DateAndTime,
-    DateAndTimeAssignment, DateTimeRole, Document, DocumentProductEquivalence,
-    DocumentRepresentationType, DocumentType, ExternalSource, Group, IdentificationRole, LocalTime,
-    ObjectRole, Organization, Person, PersonAndOrganization, PersonAndOrganizationAssignment,
-    PersonAndOrganizationRole, RoleAssociation, SecurityClassification,
-    SecurityClassificationAssignment, SecurityClassificationLevel,
+    Address, AppliedDocumentReference, AppliedExternalIdentificationAssignment,
+    AppliedGroupAssignment, Approval, ApprovalAssignment, ApprovalDateTime,
+    ApprovalPersonOrganization, ApprovalRole, ApprovalStatus, CalendarDate,
+    CoordinatedUniversalTimeOffset, DateAndTime, DateAndTimeAssignment, DateTimeRole, Document,
+    DocumentProductEquivalence, DocumentRepresentationType, DocumentType, ExternalSource, Group,
+    IdentificationRole, LocalTime, ObjectRole, Organization, Person, PersonAndOrganization,
+    PersonAndOrganizationAssignment, PersonAndOrganizationRole, RoleAssociation,
+    SecurityClassification, SecurityClassificationAssignment, SecurityClassificationLevel,
 };
 use super::shape_rep::{ShapeAspect, UnitContext};
 use super::topology::{Edge, Face, Shell, Solid, Wire};
@@ -136,3 +136,6 @@ define_id!(GroupAssignmentId, AppliedGroupAssignment);
 // plm Ids — Role cluster (Phase plm-8).
 define_id!(ObjectRoleId, ObjectRole);
 define_id!(RoleAssociationId, RoleAssociation);
+
+// plm Ids — Address cluster (Phase plm-9).
+define_id!(AddressId, Address);

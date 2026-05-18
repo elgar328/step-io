@@ -378,6 +378,8 @@ pub struct ReaderContext {
     pub(crate) plm_object_role_id_map: HashMap<u64, crate::ir::ObjectRoleId>,
     /// `ROLE_ASSOCIATION` step entity id → `RoleAssociationId`.
     pub(crate) plm_role_association_id_map: HashMap<u64, crate::ir::RoleAssociationId>,
+    /// `ADDRESS` / `PERSONAL_ADDRESS` step entity id → `AddressId`.
+    pub(crate) plm_address_id_map: HashMap<u64, crate::ir::AddressId>,
 
     pub(crate) warnings: Vec<ConvertError>,
 }

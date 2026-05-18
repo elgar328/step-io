@@ -261,6 +261,8 @@ impl ReaderContext {
         // Role cluster — ObjectRole leaf -> RoleAssociation.
         self.dispatch_registry(graph, PassLevel::Pass9PlmObjectRole);
         self.dispatch_registry(graph, PassLevel::Pass9PlmRoleAssoc);
+        // Address cluster — ADDRESS (Itself) + PERSONAL_ADDRESS (refs Person).
+        self.dispatch_registry(graph, PassLevel::Pass9PlmAddress);
 
         // Pass 8: PMI scaffolding — SHAPE_ASPECT entries that anchor
         // future Tolerance / Datum / GD&T work. Runs before the property

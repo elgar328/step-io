@@ -112,6 +112,9 @@ pub struct PlmPool {
     /// `ROLE_ASSOCIATION` entries — bind an `ObjectRole` to a target via
     /// the AP214 `role_select` SELECT.
     pub role_associations: Arena<RoleAssociation>,
+    /// `address` arena. `Itself` is plain `ADDRESS`; `PersonalAddress`
+    /// is the `PERSONAL_ADDRESS` subtype binding to a set of Persons.
+    pub addresses: Arena<Address>,
 }
 
 /// `OBJECT_ROLE(name, description)`. `AP214e3` schema lines 7533–7536.
@@ -565,4 +568,42 @@ pub struct DateAndTime {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DateTimeRole {
     pub name: String,
+}
+
+/// `ADDRESS` inherited shape (12 OPTIONAL string fields, `AP214e3`
+/// schema lines 175–192). Shared by `Address::Itself` and
+/// `PersonalAddress`.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct AddressData {
+    pub internal_location: Option<String>,
+    pub street_number: Option<String>,
+    pub street: Option<String>,
+    pub postal_box: Option<String>,
+    pub town: Option<String>,
+    pub region: Option<String>,
+    pub postal_code: Option<String>,
+    pub country: Option<String>,
+    pub facsimile_number: Option<String>,
+    pub telephone_number: Option<String>,
+    pub electronic_mail_address: Option<String>,
+    pub telex_number: Option<String>,
+}
+
+/// `PERSONAL_ADDRESS` adds `(people, description)` to the inherited
+/// `ADDRESS` fields. `AP214e3` schema; `description` is required text
+/// and `people` is `SET[1:?] OF person`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PersonalAddress {
+    pub inherited: AddressData,
+    pub people: Vec<PersonId>,
+    pub description: String,
+}
+
+/// `address` arena enum per ir.toml. `Itself` covers a plain `ADDRESS`
+/// instance (concrete supertype); `PersonalAddress` covers the
+/// `PERSONAL_ADDRESS` subtype.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Address {
+    Itself(AddressData),
+    PersonalAddress(PersonalAddress),
 }

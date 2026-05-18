@@ -26,7 +26,7 @@ pub use geometry::{
     TrimmedCurve, Vertex,
 };
 pub use id::{
-    ApprovalAssignmentId, ApprovalDateTimeId, ApprovalId, ApprovalPersonOrganizationId,
+    AddressId, ApprovalAssignmentId, ApprovalDateTimeId, ApprovalId, ApprovalPersonOrganizationId,
     ApprovalRoleId, ApprovalStatusId, CoordinatedUniversalTimeOffsetId, Curve2dId, CurveId,
     DateAndTimeAssignmentId, DateAndTimeId, DateId, DateTimeRoleId, Direction2dId, DirectionId,
     DocumentId, DocumentProductEquivalenceId, DocumentReferenceId, DocumentRepresentationTypeId,
@@ -42,7 +42,7 @@ pub use model::{
     FileHeader, GeometryPool, ImplementationLevel, NonEmptyStringList, StepModel, TopologyPool,
 };
 pub use plm::{
-    AheadOrBehind, AppliedApprovalAssignment, AppliedDateAndTimeAssignment,
+    Address, AddressData, AheadOrBehind, AppliedApprovalAssignment, AppliedDateAndTimeAssignment,
     AppliedDocumentReference, AppliedExternalIdentificationAssignment, AppliedGroupAssignment,
     AppliedSecurityClassificationAssignment, Approval, ApprovalAssignment, ApprovalDateTime,
     ApprovalDateTimeSelect, ApprovalItem, ApprovalPersonOrganization, ApprovalRole, ApprovalStatus,
@@ -52,8 +52,8 @@ pub use plm::{
     DocumentReferenceItem, DocumentRepresentationType, DocumentType, ExternalSource,
     ExternalSourceItem, Group, GroupItem, IdentificationItem, IdentificationRole, LocalTime,
     ObjectRole, Organization, Person, PersonAndOrganization, PersonAndOrganizationAssignment,
-    PersonAndOrganizationRole, PersonOrganizationItem, PersonOrganizationSelect, PlmPool,
-    RoleAssociation, RoleSelect, SecurityClassification, SecurityClassificationAssignment,
+    PersonAndOrganizationRole, PersonOrganizationItem, PersonOrganizationSelect, PersonalAddress,
+    PlmPool, RoleAssociation, RoleSelect, SecurityClassification, SecurityClassificationAssignment,
     SecurityClassificationItem, SecurityClassificationLevel,
 };
 pub use property::{MeasureKind, Property, PropertyMeasure, PropertyPool};

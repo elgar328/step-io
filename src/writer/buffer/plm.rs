@@ -110,6 +110,26 @@ impl WriteBuffer<'_> {
         self.emit_document_cluster(&plm)?;
         self.emit_group_cluster(&plm)?;
         self.emit_role_cluster(&plm)?;
+        self.emit_address_cluster(&plm)?;
+        Ok(())
+    }
+
+    /// Emit the Address cluster (`ADDRESS` Itself + `PERSONAL_ADDRESS`).
+    /// Both variants live in the same arena and emit top-level; their
+    /// step ids are cached for future enhancement consumers.
+    fn emit_address_cluster(&mut self, plm: &crate::ir::PlmPool) -> Result<(), WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::plm::address::AddressHandler;
+        use crate::entities::plm::personal_address::PersonalAddressHandler;
+        use crate::ir::plm::Address;
+        self.plm_address_step_ids = Vec::with_capacity(plm.addresses.len());
+        for addr in plm.addresses.iter() {
+            let id = match addr {
+                Address::Itself(_) => AddressHandler::write(self, addr.clone())?,
+                Address::PersonalAddress(_) => PersonalAddressHandler::write(self, addr.clone())?,
+            };
+            self.plm_address_step_ids.push(id);
+        }
         Ok(())
     }
 
