@@ -65,6 +65,11 @@ pub(crate) struct WriteBuffer<'m> {
     /// `CurveStyleId.0`. Consumed by the PSA writer when dispatching a
     /// `PsaStyle::Curve(...)` entry.
     pub(crate) curve_style_step_ids: Vec<u64>,
+    /// STEP entity id of every emitted `STYLED_ITEM` entity, indexed by
+    /// `StyledItemId.0`. Populated by `emit_visualization_if_set` before
+    /// MDGPR emission so each MDGPR can resolve its `items` list to
+    /// cached STEP ids with one index lookup per entry.
+    pub(crate) styled_item_step_ids: Vec<u64>,
     /// Per-`UnitContext` leaf STEP ids `(length, angle, solid_angle)`,
     /// indexed by `UnitContextId.0`. Each `UnitContext` in the IR arena
     /// emits its own leaf entities (no writer-side dedup) so the IR's
@@ -110,6 +115,7 @@ impl<'m> WriteBuffer<'m> {
             colour_step_ids: Vec::new(),
             curve_font_step_ids: Vec::new(),
             curve_style_step_ids: Vec::new(),
+            styled_item_step_ids: Vec::new(),
             product_def_ids: std::collections::HashMap::new(),
             product_def_shape_ids: std::collections::HashMap::new(),
         }

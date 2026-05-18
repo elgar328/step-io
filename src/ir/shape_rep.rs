@@ -6,8 +6,8 @@
 //! `crate::entities::shape_rep`; this module holds the corresponding data
 //! struct definitions.
 
+use super::id::StyledItemId;
 use super::id::{ProductId, UnitContextId};
-use super::visualization::StyledItem;
 
 /// Units declared in the STEP file's HEADER section.
 ///
@@ -119,7 +119,7 @@ pub enum SolidAngleUnit {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Mdgpr {
     pub name: String,
-    pub items: Vec<StyledItem>,
+    pub items: Vec<StyledItemId>,
     /// Unit / uncertainty context referenced by this MDGPR. `Some(id)` indexes
     /// into [`crate::ir::model::StepModel::units`]. Fusion 360 typically uses
     /// a separate context here (different uncertainty than the geometry rep).

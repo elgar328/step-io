@@ -5,7 +5,7 @@
 //! / `emit_face` wrappers in units / topology.
 
 use super::WriteBuffer;
-use crate::ir::visualization::{Colour, CurveFont};
+use crate::ir::visualization::{Colour, CurveFont, StyledItem};
 use crate::writer::WriteError;
 
 impl WriteBuffer<'_> {
@@ -18,6 +18,7 @@ impl WriteBuffer<'_> {
         use crate::entities::visualization::curve_style::CurveStyleHandler;
         use crate::entities::visualization::draughting_pre_defined_colour::DraughtingPreDefinedColourHandler;
         use crate::entities::visualization::draughting_pre_defined_curve_font::DraughtingPreDefinedCurveFontHandler;
+        use crate::entities::visualization::styled_item::StyledItemHandler;
         let Some(viz) = self.model.visualization.clone() else {
             return Ok(());
         };
@@ -47,6 +48,16 @@ impl WriteBuffer<'_> {
         for cs in viz.curve_styles.iter() {
             let id = CurveStyleHandler::write(self, cs.clone())?;
             self.curve_style_step_ids.push(id);
+        }
+        // STYLED_ITEM arena — emit each variant body then cache the STEP
+        // id so MDGPR (and future OverRidingStyledItem fix-up passes) can
+        // resolve `StyledItemId.0` to a STEP entity with one lookup.
+        self.styled_item_step_ids = Vec::with_capacity(viz.styled_items.len());
+        for si in viz.styled_items.iter() {
+            let id = match si {
+                StyledItem::Plain(p) => StyledItemHandler::write(self, p.clone())?,
+            };
+            self.styled_item_step_ids.push(id);
         }
         for mdgpr in viz.mdgprs {
             MdgprHandler::write(self, mdgpr)?;

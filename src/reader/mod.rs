@@ -13,16 +13,16 @@ use crate::ir::geometry::{Pcurve, TransitionCode};
 use crate::ir::id::{
     ColourId, Curve2dId, CurveFontId, CurveId, CurveStyleId, Direction2dId, DirectionId, EdgeId,
     FaceId, Placement1dId, Placement2dId, Placement3dId, Point2dId, PointId, ProductId, ShellId,
-    SolidId, SurfaceId, UnitContextId, VertexId, WireId,
+    SolidId, StyledItemId, SurfaceId, UnitContextId, VertexId, WireId,
 };
 use crate::ir::model::{GeometryPool, StepModel, TopologyPool};
 use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit, SolidAngleUnit, UnitContext};
 use crate::ir::topology::{Orientation, OrientedEdge};
 use crate::ir::visualization::{
-    FillAreaStyle, FillAreaStyleColour, PresentationStyleAssignment, StyledItem, SurfaceSideStyle,
+    FillAreaStyle, FillAreaStyleColour, PresentationStyleAssignment, SurfaceSideStyle,
     SurfaceSideStyleEntry, SurfaceStyleUsage, VisualizationPool,
 };
-// CurveFontId / CurveStyleId imported above; the map types reference them directly.
+// CurveFontId / CurveStyleId / StyledItemId imported above; the map types reference them directly.
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
 
 mod geometry;
@@ -257,8 +257,11 @@ pub struct ReaderContext {
     pub(crate) viz_ssu_map: HashMap<u64, SurfaceStyleUsage>,
     /// `PRESENTATION_STYLE_ASSIGNMENT #N → PresentationStyleAssignment` (Pass 7-7).
     pub(crate) viz_psa_map: HashMap<u64, PresentationStyleAssignment>,
-    /// `STYLED_ITEM #N → StyledItem` (Pass 7-8).
-    pub(crate) viz_styled_item_map: HashMap<u64, StyledItem>,
+    /// `STYLED_ITEM` step entity id → `StyledItemId`. Populated by the
+    /// `Pass7StyledItem` reader after pushing the resolved `StyledItem`
+    /// variant into `VisualizationPool::styled_items`. Consumed by the
+    /// MDGPR reader to convert its `items` list into arena references.
+    pub(crate) viz_styled_item_id_map: HashMap<u64, StyledItemId>,
 
     /// Lazily-built property pool — populated by Pass 8's PDR converter.
     /// `None` if the source had no `PROPERTY_DEFINITION_REPRESENTATION`.

@@ -39,8 +39,8 @@ pub use shape_rep::{
 pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Wire};
 pub use visualization::{
     Colour, ColourRgb, CurveFont, CurveStyle, CurveWidth, DraughtingPreDefinedColour,
-    DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour, PresentationStyleAssignment,
-    PsaStyle, RenderingProperty, ShadingMethod, StyledItem, StyledItemTarget, SurfaceSide,
-    SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleRendering,
-    SurfaceStyleUsage, VisualizationPool,
+    DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour, PlainStyledItem,
+    PresentationStyleAssignment, PsaStyle, RenderingProperty, ShadingMethod, StyledItem,
+    StyledItemTarget, SurfaceSide, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea,
+    SurfaceStyleRendering, SurfaceStyleUsage, VisualizationPool,
 };

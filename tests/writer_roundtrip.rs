@@ -560,7 +560,7 @@ fn box_ap214_is_preserves_visualization() {
     assert_eq!(viz.mdgprs.len(), 1);
     let mdgpr = &viz.mdgprs[0];
     assert_eq!(mdgpr.items.len(), 1);
-    let si = &mdgpr.items[0];
+    let step_io::ir::visualization::StyledItem::Plain(si) = &viz.styled_items[mdgpr.items[0]];
     assert!(
         matches!(si.item, StyledItemTarget::Solid(_)),
         "STYLED_ITEM should bind to a Solid, got {:?}",

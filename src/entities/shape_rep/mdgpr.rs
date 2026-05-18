@@ -12,7 +12,6 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
-use crate::entities::visualization::styled_item::StyledItemHandler;
 use step_io_macros::step_entity;
 
 pub(crate) struct MdgprHandler;
@@ -40,8 +39,8 @@ impl SimpleEntityHandler for MdgprHandler {
 
         let mut items = Vec::with_capacity(item_refs.len());
         for r in item_refs {
-            if let Some(si) = ctx.viz_styled_item_map.get(&r).cloned() {
-                items.push(si);
+            if let Some(&id) = ctx.viz_styled_item_id_map.get(&r) {
+                items.push(id);
             }
         }
 
@@ -58,9 +57,9 @@ impl SimpleEntityHandler for MdgprHandler {
 
     fn write(buf: &mut WriteBuffer, mdgpr: Mdgpr) -> Result<u64, WriteError> {
         let mut item_refs = Vec::with_capacity(mdgpr.items.len());
-        for si in mdgpr.items {
-            let id = StyledItemHandler::write(buf, si)?;
-            item_refs.push(Attribute::EntityRef(id));
+        for id in mdgpr.items {
+            let step_id = buf.styled_item_step_ids[id.0 as usize];
+            item_refs.push(Attribute::EntityRef(step_id));
         }
         // MDGPR's `context_of_items` is required by the spec but the IR
         // accepts `None` for kernel-built fragments. Some(id) → resolve via

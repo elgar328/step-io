@@ -6,7 +6,7 @@
 //! remain tree-inline pending later phases of the blueprint migration.
 
 use super::arena::Arena;
-use super::id::{ColourId, CurveFontId, CurveId, CurveStyleId, FaceId, PointId, SolidId};
+use super::id::{ColourId, CurveFontId, CurveId, CurveStyleId, EdgeId, FaceId, PointId, SolidId};
 use super::shape_rep::Mdgpr;
 
 /// Top-level container for visualization data extracted from
@@ -31,6 +31,12 @@ pub struct VisualizationPool {
     /// `CURVE_STYLE` arena — referenced from `PresentationStyleAssignment`
     /// when a PSA carries curve styling alongside surface styling.
     pub curve_styles: Arena<CurveStyle>,
+    /// `STYLED_ITEM` arena — referenced from `Mdgpr.items` by
+    /// [`crate::ir::id::StyledItemId`]. Phase C migrates `STYLED_ITEM`
+    /// out of the previously-inline tree storage so future
+    /// `OverRidingStyledItem` / `ContextDependentOverRidingStyledItem`
+    /// variants can reference existing entries through the same id.
+    pub styled_items: Arena<StyledItem>,
 }
 
 /// `CURVE_STYLE(name, curve_font, curve_width, curve_colour)` —
@@ -83,22 +89,35 @@ pub struct DraughtingPreDefinedColour {
     pub name: String,
 }
 
-/// `STYLED_ITEM(name, styles, item)` — binds presentation styles to a
-/// geometry IR object.
+/// `STYLED_ITEM` enum per the ir.toml blueprint
+/// (`enum_of = "styled_item"`). Future phases add
+/// `OverRiding(OverRidingStyledItem)` and
+/// `ContextDependent(ContextDependentOverRidingStyledItem)` variants;
+/// the current phase models only the base `Plain` form.
 #[derive(Debug, Clone, PartialEq)]
-pub struct StyledItem {
+pub enum StyledItem {
+    Plain(PlainStyledItem),
+}
+
+/// `STYLED_ITEM(name, styles, item)` — binds presentation styles to a
+/// geometry/topology IR object.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlainStyledItem {
     pub name: String,
     pub styles: Vec<PresentationStyleAssignment>,
     pub item: StyledItemTarget,
 }
 
-/// What the `STYLED_ITEM.item` ref resolved to in step-io's geometry IR.
-/// Fusion 360 commonly styles individual `ADVANCED_FACE` entities (per-face
-/// coloring); CATIA mostly styles whole solids and wire fragments.
+/// What the `STYLED_ITEM.item` ref resolved to in step-io's IR. The STEP
+/// `representation_item` SELECT is broad; this enum lists the variants
+/// step-io currently round-trips. Fusion 360 commonly styles individual
+/// `ADVANCED_FACE` entities (per-face colouring); ABC-corpus files
+/// frequently style `EDGE_CURVE` entities for line decoration.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum StyledItemTarget {
     Solid(SolidId),
     Face(FaceId),
+    Edge(EdgeId),
     Curve(CurveId),
     Point(PointId),
 }
