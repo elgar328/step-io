@@ -10,9 +10,9 @@ use super::plm::{
     ApprovalStatus, CalendarDate, CoordinatedUniversalTimeOffset, DateAndTime,
     DateAndTimeAssignment, DateTimeRole, Document, DocumentProductEquivalence,
     DocumentRepresentationType, DocumentType, ExternalSource, Group, IdentificationRole, LocalTime,
-    Organization, Person, PersonAndOrganization, PersonAndOrganizationAssignment,
-    PersonAndOrganizationRole, SecurityClassification, SecurityClassificationAssignment,
-    SecurityClassificationLevel,
+    ObjectRole, Organization, Person, PersonAndOrganization, PersonAndOrganizationAssignment,
+    PersonAndOrganizationRole, RoleAssociation, SecurityClassification,
+    SecurityClassificationAssignment, SecurityClassificationLevel,
 };
 use super::shape_rep::{ShapeAspect, UnitContext};
 use super::topology::{Edge, Face, Shell, Solid, Wire};
@@ -132,3 +132,7 @@ define_id!(DocumentReferenceId, AppliedDocumentReference);
 // plm Ids — Group cluster (Phase plm-7).
 define_id!(GroupId, Group);
 define_id!(GroupAssignmentId, AppliedGroupAssignment);
+
+// plm Ids — Role cluster (Phase plm-8).
+define_id!(ObjectRoleId, ObjectRole);
+define_id!(RoleAssociationId, RoleAssociation);

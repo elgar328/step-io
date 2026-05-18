@@ -283,6 +283,11 @@ pub(crate) enum PassLevel {
     /// `Pass9PlmGroup` plus the assembly product chain (`Pass6`) for
     /// `items` targets.
     Pass9PlmGa,
+    /// `OBJECT_ROLE` (Pass 9-22) — plm Role leaf.
+    Pass9PlmObjectRole,
+    /// `ROLE_ASSOCIATION` (Pass 9-23) — depends on `Pass9PlmObjectRole`
+    /// plus `Pass9PlmDocLinkers` (ADR ref for the `item_with_role` SELECT).
+    Pass9PlmRoleAssoc,
     /// `SHAPE_ASPECT` (Pass 8-pre) — PMI scaffolding. Runs before the
     /// property converters so a future Pattern B PD pass can resolve its
     /// target ref through the `SHAPE_ASPECT` id map.

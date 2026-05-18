@@ -31,11 +31,12 @@ pub use id::{
     DateAndTimeAssignmentId, DateAndTimeId, DateId, DateTimeRoleId, Direction2dId, DirectionId,
     DocumentId, DocumentProductEquivalenceId, DocumentReferenceId, DocumentRepresentationTypeId,
     DocumentTypeId, EdgeId, ExternalSourceId, FaceId, FoundedItemId, GroupAssignmentId, GroupId,
-    IdentificationAssignmentId, IdentificationRoleId, LocalTimeId, OrganizationId,
+    IdentificationAssignmentId, IdentificationRoleId, LocalTimeId, ObjectRoleId, OrganizationId,
     PersonAndOrganizationAssignmentId, PersonAndOrganizationId, PersonAndOrganizationRoleId,
     PersonId, Placement1dId, Placement2dId, Placement3dId, Point2dId, PointId, ProductId,
-    SecurityClassificationAssignmentId, SecurityClassificationId, SecurityClassificationLevelId,
-    ShapeAspectId, ShellId, SolidId, SurfaceId, UnitContextId, VertexId, WireId,
+    RoleAssociationId, SecurityClassificationAssignmentId, SecurityClassificationId,
+    SecurityClassificationLevelId, ShapeAspectId, ShellId, SolidId, SurfaceId, UnitContextId,
+    VertexId, WireId,
 };
 pub use model::{
     FileHeader, GeometryPool, ImplementationLevel, NonEmptyStringList, StepModel, TopologyPool,
@@ -50,10 +51,10 @@ pub use plm::{
     Document, DocumentData, DocumentFile, DocumentProductEquivalence, DocumentProductItem,
     DocumentReferenceItem, DocumentRepresentationType, DocumentType, ExternalSource,
     ExternalSourceItem, Group, GroupItem, IdentificationItem, IdentificationRole, LocalTime,
-    Organization, Person, PersonAndOrganization, PersonAndOrganizationAssignment,
+    ObjectRole, Organization, Person, PersonAndOrganization, PersonAndOrganizationAssignment,
     PersonAndOrganizationRole, PersonOrganizationItem, PersonOrganizationSelect, PlmPool,
-    SecurityClassification, SecurityClassificationAssignment, SecurityClassificationItem,
-    SecurityClassificationLevel,
+    RoleAssociation, RoleSelect, SecurityClassification, SecurityClassificationAssignment,
+    SecurityClassificationItem, SecurityClassificationLevel,
 };
 pub use property::{MeasureKind, Property, PropertyMeasure, PropertyPool};
 pub use shape_rep::{

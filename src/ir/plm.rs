@@ -11,10 +11,10 @@
 use super::arena::Arena;
 use super::id::{
     ApprovalId, ApprovalRoleId, ApprovalStatusId, CoordinatedUniversalTimeOffsetId, DateAndTimeId,
-    DateId, DateTimeRoleId, DocumentId, DocumentTypeId, ExternalSourceId, GroupId,
-    IdentificationRoleId, LocalTimeId, OrganizationId, PersonAndOrganizationId,
-    PersonAndOrganizationRoleId, PersonId, ProductId, SecurityClassificationId,
-    SecurityClassificationLevelId,
+    DateId, DateTimeRoleId, DocumentId, DocumentReferenceId, DocumentTypeId, ExternalSourceId,
+    GroupId, IdentificationRoleId, LocalTimeId, ObjectRoleId, OrganizationId,
+    PersonAndOrganizationId, PersonAndOrganizationRoleId, PersonId, ProductId,
+    SecurityClassificationId, SecurityClassificationLevelId,
 };
 
 /// Top-level container for plm-domain entities. `None` on
@@ -106,6 +106,37 @@ pub struct PlmPool {
     /// `APPLIED_GROUP_ASSIGNMENT` entries. Connects a `Group` to product
     /// targets via the AP214 `group_item` SELECT.
     pub group_assignments: Arena<AppliedGroupAssignment>,
+    /// `OBJECT_ROLE` label entries — used by `ROLE_ASSOCIATION` to tag a
+    /// targeted entity with a role string.
+    pub object_roles: Arena<ObjectRole>,
+    /// `ROLE_ASSOCIATION` entries — bind an `ObjectRole` to a target via
+    /// the AP214 `role_select` SELECT.
+    pub role_associations: Arena<RoleAssociation>,
+}
+
+/// `OBJECT_ROLE(name, description)`. `AP214e3` schema lines 7533–7536.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ObjectRole {
+    pub name: String,
+    pub description: Option<String>,
+}
+
+/// `ROLE_ASSOCIATION(role, item_with_role)`. `AP214e3` schema lines
+/// 9773–9776. `item_with_role` is the AP214 `role_select` SELECT —
+/// step-io currently scopes to `APPLIED_DOCUMENT_REFERENCE` only;
+/// other variants drop silently on read.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RoleAssociation {
+    pub role: ObjectRoleId,
+    pub item_with_role: RoleSelect,
+}
+
+/// AP214 `role_select` SELECT — currently scoped to
+/// `APPLIED_DOCUMENT_REFERENCE`. Other variants (Approval / DTA / POA
+/// 등) drop on read; future enhancement phase may extend.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RoleSelect {
+    DocumentReference(DocumentReferenceId),
 }
 
 /// `GROUP(name, description)`. `AP214e3` schema lines 5785–5792.

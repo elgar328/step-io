@@ -109,6 +109,7 @@ impl WriteBuffer<'_> {
         self.emit_identification_cluster(&plm)?;
         self.emit_document_cluster(&plm)?;
         self.emit_group_cluster(&plm)?;
+        self.emit_role_cluster(&plm)?;
         Ok(())
     }
 
@@ -166,8 +167,28 @@ impl WriteBuffer<'_> {
             let id = DocumentProductEquivalenceHandler::write(self, d.clone())?;
             self.plm_document_product_equivalence_step_ids.push(id);
         }
+        self.plm_document_reference_step_ids = Vec::with_capacity(plm.document_references.len());
         for adr in plm.document_references.iter() {
-            AppliedDocumentReferenceHandler::write(self, adr.clone())?;
+            let id = AppliedDocumentReferenceHandler::write(self, adr.clone())?;
+            self.plm_document_reference_step_ids.push(id);
+        }
+        Ok(())
+    }
+
+    /// Emit the Role cluster (`ObjectRole` leaf -> `RoleAssociation`).
+    /// `RoleAssociation` is top-level (no consumer); `ObjectRole`
+    /// step-ids are cached for the association loop.
+    fn emit_role_cluster(&mut self, plm: &crate::ir::PlmPool) -> Result<(), WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::plm::object_role::ObjectRoleHandler;
+        use crate::entities::plm::role_association::RoleAssociationHandler;
+        self.plm_object_role_step_ids = Vec::with_capacity(plm.object_roles.len());
+        for r in plm.object_roles.iter() {
+            let id = ObjectRoleHandler::write(self, r.clone())?;
+            self.plm_object_role_step_ids.push(id);
+        }
+        for ra in plm.role_associations.iter() {
+            RoleAssociationHandler::write(self, *ra)?;
         }
         Ok(())
     }

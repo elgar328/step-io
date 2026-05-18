@@ -31,10 +31,12 @@ pub mod external_source;
 pub mod group;
 pub mod identification_role;
 pub mod local_time;
+pub mod object_role;
 pub mod organization;
 pub mod person;
 pub mod person_and_organization;
 pub mod person_and_organization_role;
+pub mod role_association;
 pub mod security_classification;
 pub mod security_classification_level;
 
