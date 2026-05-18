@@ -570,10 +570,14 @@ fn box_ap214_is_preserves_visualization() {
         si.item
     );
     assert_eq!(si.styles.len(), 1);
-    let psa = &si.styles[0];
+    let step_io::ir::visualization::PresentationStyleAssignment::Itself(psa_data) =
+        &viz.presentation_style_assignments[si.styles[0]]
+    else {
+        panic!("expected Itself PSA variant");
+    };
     // The PSA carries a SurfaceStyleUsage plus a CurveStyle reference; pick
     // the surface entry out by variant.
-    let ssu = psa
+    let ssu = psa_data
         .styles
         .iter()
         .find_map(|s| match s {

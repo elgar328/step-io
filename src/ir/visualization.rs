@@ -7,7 +7,8 @@
 
 use super::arena::Arena;
 use super::id::{
-    ColourId, CurveFontId, CurveId, CurveStyleId, EdgeId, FaceId, PointId, SolidId, StyledItemId,
+    ColourId, CurveFontId, CurveId, CurveStyleId, EdgeId, FaceId, PointId,
+    PresentationStyleAssignmentId, SolidId, StyledItemId,
 };
 use super::shape_rep::Mdgpr;
 
@@ -39,6 +40,13 @@ pub struct VisualizationPool {
     /// `OverRidingStyledItem` / `ContextDependentOverRidingStyledItem`
     /// variants can reference existing entries through the same id.
     pub styled_items: Arena<StyledItem>,
+    /// `PRESENTATION_STYLE_ASSIGNMENT` arena per the ir.toml blueprint
+    /// (`arena = "presentation_style_assignment"`). `STYLED_ITEM` /
+    /// `OVER_RIDING_STYLED_ITEM` consumers hold
+    /// [`PresentationStyleAssignmentId`] refs into this arena so a PSA
+    /// shared by multiple styled items round-trips as a single STEP entity
+    /// instead of being duplicated per occurrence.
+    pub presentation_style_assignments: Arena<PresentationStyleAssignment>,
 }
 
 /// `CURVE_STYLE(name, curve_font, curve_width, curve_colour)` —
@@ -109,7 +117,7 @@ pub enum StyledItem {
 #[derive(Debug, Clone, PartialEq)]
 pub struct PlainStyledItem {
     pub name: String,
-    pub styles: Vec<PresentationStyleAssignment>,
+    pub styles: Vec<PresentationStyleAssignmentId>,
     pub item: StyledItemTarget,
 }
 
@@ -119,7 +127,7 @@ pub struct PlainStyledItem {
 #[derive(Debug, Clone, PartialEq)]
 pub struct OverRidingStyledItem {
     pub name: String,
-    pub styles: Vec<PresentationStyleAssignment>,
+    pub styles: Vec<PresentationStyleAssignmentId>,
     pub item: StyledItemTarget,
     pub over_ridden_style: StyledItemId,
 }
@@ -138,12 +146,37 @@ pub enum StyledItemTarget {
     Point(PointId),
 }
 
-/// `PRESENTATION_STYLE_ASSIGNMENT(styles)`. Source PSA carries a mixed
-/// list of styling variants ([`SurfaceStyleUsage`] and [`CurveStyle`] are
-/// currently round-tripped; `POINT_STYLE` and other SELECT members are
-/// silently dropped on read).
+/// `PRESENTATION_STYLE_ASSIGNMENT` enum per the ir.toml blueprint
+/// (`enum_of = "presentation_style_assignment"`). `Itself` covers the
+/// base `PRESENTATION_STYLE_ASSIGNMENT`; `PresentationStyleByContext`
+/// covers the `PRESENTATION_STYLE_BY_CONTEXT` subtype whose
+/// `style_context` field references `REPRESENTATION` / `REPRESENTATION_ITEM`
+/// — step-io does not yet model representations as first-class IR objects,
+/// so the reader leaves the by-context handler unregistered (silent skip).
+/// The enum variant exists to keep the IR aligned with the blueprint for
+/// the eventual Representation-IR phase.
 #[derive(Debug, Clone, PartialEq)]
-pub struct PresentationStyleAssignment {
+pub enum PresentationStyleAssignment {
+    Itself(PresentationStyleAssignmentData),
+    PresentationStyleByContext(PresentationStyleByContext),
+}
+
+/// `PRESENTATION_STYLE_ASSIGNMENT(styles)` body. Source PSA carries a
+/// mixed list of styling variants ([`SurfaceStyleUsage`] and
+/// [`CurveStyle`] are currently round-tripped; `POINT_STYLE` and other
+/// SELECT members are silently dropped on read).
+#[derive(Debug, Clone, PartialEq)]
+pub struct PresentationStyleAssignmentData {
+    pub styles: Vec<PsaStyle>,
+}
+
+/// `PRESENTATION_STYLE_BY_CONTEXT(styles, style_context)` body. The
+/// `style_context` field maps to `presentation_style_context_select`
+/// (`REPRESENTATION` / `REPRESENTATION_ITEM`); step-io does not model
+/// representations yet, so this struct is a placeholder pending that
+/// phase. No reader handler is currently registered.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PresentationStyleByContext {
     pub styles: Vec<PsaStyle>,
 }
 

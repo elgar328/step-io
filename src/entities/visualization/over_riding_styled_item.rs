@@ -19,7 +19,6 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
-use super::presentation_style_assignment::PresentationStyleAssignmentHandler;
 use super::styled_item::resolve_styled_item_target;
 use step_io_macros::step_entity;
 
@@ -43,8 +42,8 @@ impl SimpleEntityHandler for OverRidingStyledItemHandler {
 
         let mut styles = Vec::with_capacity(style_refs.len());
         for r in style_refs {
-            if let Some(psa) = ctx.viz_psa_map.get(&r).cloned() {
-                styles.push(psa);
+            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+                styles.push(psa_id);
             }
         }
         let Some(item) = resolve_styled_item_target(ctx, item_ref) else {
@@ -78,10 +77,8 @@ impl SimpleEntityHandler for OverRidingStyledItemHandler {
             StyledItemTarget::Point(pid) => buf.emit_point(pid)?,
         };
         let mut style_refs = Vec::with_capacity(osi.styles.len());
-        for psa in osi.styles {
-            style_refs.push(Attribute::EntityRef(
-                PresentationStyleAssignmentHandler::write(buf, psa)?,
-            ));
+        for psa_id in osi.styles {
+            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
         }
         let over_ridden_step_id = buf.styled_item_step_ids[osi.over_ridden_style.0 as usize];
         Ok(buf.push_simple(

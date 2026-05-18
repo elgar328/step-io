@@ -70,6 +70,12 @@ pub(crate) struct WriteBuffer<'m> {
     /// MDGPR emission so each MDGPR can resolve its `items` list to
     /// cached STEP ids with one index lookup per entry.
     pub(crate) styled_item_step_ids: Vec<u64>,
+    /// STEP entity id of every emitted `PRESENTATION_STYLE_ASSIGNMENT`
+    /// entity, indexed by `PresentationStyleAssignmentId.0`. Populated by
+    /// `emit_visualization_if_set` before any `STYLED_ITEM` /
+    /// `OVER_RIDING_STYLED_ITEM` emission so each styled item resolves its
+    /// `styles` ref list with one index lookup per entry.
+    pub(crate) psa_step_ids: Vec<u64>,
     /// Per-`UnitContext` leaf STEP ids `(length, angle, solid_angle)`,
     /// indexed by `UnitContextId.0`. Each `UnitContext` in the IR arena
     /// emits its own leaf entities (no writer-side dedup) so the IR's
@@ -116,6 +122,7 @@ impl<'m> WriteBuffer<'m> {
             curve_font_step_ids: Vec::new(),
             curve_style_step_ids: Vec::new(),
             styled_item_step_ids: Vec::new(),
+            psa_step_ids: Vec::new(),
             product_def_ids: std::collections::HashMap::new(),
             product_def_shape_ids: std::collections::HashMap::new(),
         }

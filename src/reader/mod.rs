@@ -12,15 +12,16 @@ use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Pcurve, TransitionCode};
 use crate::ir::id::{
     ColourId, Curve2dId, CurveFontId, CurveId, CurveStyleId, Direction2dId, DirectionId, EdgeId,
-    FaceId, Placement1dId, Placement2dId, Placement3dId, Point2dId, PointId, ProductId, ShellId,
-    SolidId, StyledItemId, SurfaceId, UnitContextId, VertexId, WireId,
+    FaceId, Placement1dId, Placement2dId, Placement3dId, Point2dId, PointId,
+    PresentationStyleAssignmentId, ProductId, ShellId, SolidId, StyledItemId, SurfaceId,
+    UnitContextId, VertexId, WireId,
 };
 use crate::ir::model::{GeometryPool, StepModel, TopologyPool};
 use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit, SolidAngleUnit, UnitContext};
 use crate::ir::topology::{Orientation, OrientedEdge};
 use crate::ir::visualization::{
-    FillAreaStyle, FillAreaStyleColour, PresentationStyleAssignment, SurfaceSideStyle,
-    SurfaceSideStyleEntry, SurfaceStyleUsage, VisualizationPool,
+    FillAreaStyle, FillAreaStyleColour, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleUsage,
+    VisualizationPool,
 };
 // CurveFontId / CurveStyleId / StyledItemId imported above; the map types reference them directly.
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
@@ -255,8 +256,13 @@ pub struct ReaderContext {
     pub(crate) viz_sss_map: HashMap<u64, SurfaceSideStyle>,
     /// `SURFACE_STYLE_USAGE #N → SurfaceStyleUsage` (Pass 7-6).
     pub(crate) viz_ssu_map: HashMap<u64, SurfaceStyleUsage>,
-    /// `PRESENTATION_STYLE_ASSIGNMENT #N → PresentationStyleAssignment` (Pass 7-7).
-    pub(crate) viz_psa_map: HashMap<u64, PresentationStyleAssignment>,
+    /// `PRESENTATION_STYLE_ASSIGNMENT` step entity id →
+    /// `PresentationStyleAssignmentId`. Populated by the PSA handler after
+    /// pushing the resolved variant into
+    /// `VisualizationPool::presentation_style_assignments`; consumed by the
+    /// `STYLED_ITEM` / `OVER_RIDING_STYLED_ITEM` readers to convert their
+    /// `styles` ref lists into arena ids.
+    pub(crate) viz_psa_id_map: HashMap<u64, PresentationStyleAssignmentId>,
     /// `STYLED_ITEM` step entity id → `StyledItemId`. Populated by the
     /// `Pass7StyledItem` reader after pushing the resolved `StyledItem`
     /// variant into `VisualizationPool::styled_items`. Consumed by the

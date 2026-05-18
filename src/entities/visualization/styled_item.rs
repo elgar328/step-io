@@ -25,7 +25,6 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
-use super::presentation_style_assignment::PresentationStyleAssignmentHandler;
 use step_io_macros::step_entity;
 
 pub(crate) struct StyledItemHandler;
@@ -47,8 +46,8 @@ impl SimpleEntityHandler for StyledItemHandler {
 
         let mut styles = Vec::with_capacity(style_refs.len());
         for r in style_refs {
-            if let Some(psa) = ctx.viz_psa_map.get(&r).cloned() {
-                styles.push(psa);
+            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+                styles.push(psa_id);
             }
         }
 
@@ -75,10 +74,8 @@ impl SimpleEntityHandler for StyledItemHandler {
             StyledItemTarget::Point(pid) => buf.emit_point(pid)?,
         };
         let mut style_refs = Vec::with_capacity(si.styles.len());
-        for psa in si.styles {
-            style_refs.push(Attribute::EntityRef(
-                PresentationStyleAssignmentHandler::write(buf, psa)?,
-            ));
+        for psa_id in si.styles {
+            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
         }
         Ok(buf.push_simple(
             "STYLED_ITEM",

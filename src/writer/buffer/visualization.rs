@@ -5,7 +5,7 @@
 //! / `emit_face` wrappers in units / topology.
 
 use super::WriteBuffer;
-use crate::ir::visualization::{Colour, CurveFont, StyledItem};
+use crate::ir::visualization::{Colour, CurveFont, PresentationStyleAssignment, StyledItem};
 use crate::writer::WriteError;
 
 impl WriteBuffer<'_> {
@@ -19,6 +19,7 @@ impl WriteBuffer<'_> {
         use crate::entities::visualization::draughting_pre_defined_colour::DraughtingPreDefinedColourHandler;
         use crate::entities::visualization::draughting_pre_defined_curve_font::DraughtingPreDefinedCurveFontHandler;
         use crate::entities::visualization::over_riding_styled_item::OverRidingStyledItemHandler;
+        use crate::entities::visualization::presentation_style_assignment::PresentationStyleAssignmentHandler;
         use crate::entities::visualization::styled_item::StyledItemHandler;
         let Some(viz) = self.model.visualization.clone() else {
             return Ok(());
@@ -49,6 +50,22 @@ impl WriteBuffer<'_> {
         for cs in viz.curve_styles.iter() {
             let id = CurveStyleHandler::write(self, cs.clone())?;
             self.curve_style_step_ids.push(id);
+        }
+        // PRESENTATION_STYLE_ASSIGNMENT arena — emit every PSA up-front so
+        // STYLED_ITEM / OVER_RIDING_STYLED_ITEM writers can resolve their
+        // styles refs through psa_step_ids[id.0]. `ByContext` variant is
+        // never produced by the current reader (handler unregistered
+        // pending Representation IR phase); placeholder 0 keeps the
+        // indexing aligned should one ever appear from a kernel adapter.
+        self.psa_step_ids = Vec::with_capacity(viz.presentation_style_assignments.len());
+        for psa in viz.presentation_style_assignments.iter() {
+            let id = match psa {
+                PresentationStyleAssignment::Itself(data) => {
+                    PresentationStyleAssignmentHandler::write(self, data.clone())?
+                }
+                PresentationStyleAssignment::PresentationStyleByContext(_) => 0,
+            };
+            self.psa_step_ids.push(id);
         }
         // STYLED_ITEM arena — emit Plain entries first so their STEP ids
         // are cached when OverRiding entries reference them through
