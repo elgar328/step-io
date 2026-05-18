@@ -8,8 +8,8 @@
 
 use super::arena::Arena;
 use super::id::{
-    ApplicationContextId, CurveId, Placement3dId, PointId, ProductId, ShellId, SolidId,
-    UnitContextId,
+    ApplicationContextId, CurveId, Placement3dId, PointId, ProductContextId,
+    ProductDefinitionContextId, ProductId, ShellId, SolidId, UnitContextId,
 };
 
 /// Assembly graph. Conventionally called a "tree" but shared instances
@@ -81,6 +81,15 @@ pub struct Product {
     /// `None` for kernel-built IR; the writer falls back to the first arena
     /// entry (synthesizing a default if needed).
     pub geometry_context: Option<UnitContextId>,
+    /// `PRODUCT_CONTEXT` (or `AP203` `MECHANICAL_CONTEXT`) referenced by
+    /// this product's `frame_of_reference`. `None` for kernel-built IR
+    /// or files without an explicit PC chain — writer falls back to
+    /// IR[0] or synthesised context.
+    pub product_context: Option<ProductContextId>,
+    /// `PRODUCT_DEFINITION_CONTEXT` (or `AP203` `DESIGN_CONTEXT`)
+    /// referenced by this product's `PRODUCT_DEFINITION.frame_of_reference`.
+    /// Same fallback semantics as `product_context`.
+    pub pdef_context: Option<ProductDefinitionContextId>,
 }
 
 /// `PRODUCT_CATEGORY` chain attached to a [`Product`] — preserves the source

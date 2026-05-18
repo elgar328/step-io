@@ -75,7 +75,7 @@ impl WriteBuffer<'_> {
         products: &Arena<Product>,
         schema: &StepSchema,
     ) -> Result<(), WriteError> {
-        let ctx = self.emit_application_context(schema);
+        let fallback_ctx = self.emit_application_context(schema);
 
         // Emit PRODUCT chain + shape representation + SDR for every product;
         // collect each product's PDEF and SR entity ids for later instance
@@ -85,9 +85,24 @@ impl WriteBuffer<'_> {
         let mut product_sr: HashMap<ProductId, u64> = HashMap::new();
 
         for (pid, product) in products.iter_with_ids() {
-            let prod_entity = self.emit_product(product, &ctx);
+            // Per-product context: use the IR-recorded PC/PDC when present
+            // (multi-product AP203 corpus), otherwise fall back to the
+            // shared synthesised context.
+            let product_ctx = product
+                .product_context
+                .map_or(fallback_ctx.product_ctx, |id| {
+                    self.pc_step_ids[id.0 as usize]
+                });
+            let pdef_ctx_step = product
+                .pdef_context
+                .map_or(fallback_ctx.pdef_ctx, |id| self.pdc_step_ids[id.0 as usize]);
+            let per_product_ctx = AssemblyContextIds {
+                product_ctx,
+                pdef_ctx: pdef_ctx_step,
+            };
+            let prod_entity = self.emit_product(product, &per_product_ctx);
             let formation = self.emit_formation(prod_entity, product);
-            let pdef = self.emit_pdef(formation, ctx.pdef_ctx);
+            let pdef = self.emit_pdef(formation, per_product_ctx.pdef_ctx);
             let pdef_shape = {
                 use crate::entities::SimpleEntityHandler;
                 use crate::entities::assembly_product::product_definition_shape::{
@@ -177,118 +192,153 @@ impl WriteBuffer<'_> {
 
     #[allow(clippy::too_many_lines)]
     fn emit_application_context(&mut self, schema: &StepSchema) -> AssemblyContextIds {
-        // IR-driven path: when the plm pool carries an AC, use the
-        // captured strings so the round-trip preserves the source-file
-        // wording. Only the first AC / APD entry is emitted (assembly
-        // chain assumes a single context per file); extras drop.
-        let ir_ac = self
+        use crate::ir::{ProductContextKind, ProductDefinitionContextKind};
+        let has_ac = self
             .model
             .plm
             .as_ref()
-            .and_then(|p| p.application_contexts.iter().next().cloned());
-        let app_ctx = if let Some(ac) = ir_ac {
-            let step = self.push_simple(
-                "APPLICATION_CONTEXT",
-                vec![Attribute::String(ac.application)],
-            );
-            if let Some(apd) = self
-                .model
-                .plm
-                .as_ref()
-                .and_then(|p| p.application_protocol_definitions.iter().next())
-            {
+            .is_some_and(|p| !p.application_contexts.is_empty());
+        let has_pc_pdc = self.model.assembly.as_ref().is_some_and(|a| {
+            !a.product_contexts.is_empty() || !a.product_definition_contexts.is_empty()
+        });
+        if has_ac || has_pc_pdc {
+            // 1) Emit all IR AC entries, caching step ids by IR index.
+            let plm = self.model.plm.clone().unwrap_or_default();
+            self.ac_step_ids = Vec::with_capacity(plm.application_contexts.len());
+            for ac in plm.application_contexts.iter() {
+                let id = self.push_simple(
+                    "APPLICATION_CONTEXT",
+                    vec![Attribute::String(ac.application.clone())],
+                );
+                self.ac_step_ids.push(id);
+            }
+            // If IR has no AC but does have PC/PDC, synthesise one AC for
+            // PC.frame_of_reference to point at.
+            if self.ac_step_ids.is_empty() {
+                let (desc, status, name, year) = apd_info(schema);
+                let id =
+                    self.push_simple("APPLICATION_CONTEXT", vec![Attribute::String(desc.into())]);
+                self.ac_step_ids.push(id);
                 let _ = self.push_simple(
+                    "APPLICATION_PROTOCOL_DEFINITION",
+                    vec![
+                        Attribute::String(status.into()),
+                        Attribute::String(name.into()),
+                        Attribute::Integer(year),
+                        Attribute::EntityRef(id),
+                    ],
+                );
+            }
+            // 2) Emit all APD entries (refs AC via cache).
+            self.apd_step_ids = Vec::with_capacity(plm.application_protocol_definitions.len());
+            for apd in plm.application_protocol_definitions.iter() {
+                let ac_step = self.ac_step_ids[apd.application.0 as usize];
+                let id = self.push_simple(
                     "APPLICATION_PROTOCOL_DEFINITION",
                     vec![
                         Attribute::String(apd.status.clone()),
                         Attribute::String(apd.application_interpreted_model_schema_name.clone()),
                         Attribute::Integer(apd.application_protocol_year),
-                        Attribute::EntityRef(step),
+                        Attribute::EntityRef(ac_step),
                     ],
                 );
+                self.apd_step_ids.push(id);
             }
-            step
-        } else {
-            // Fallback: synthesise from schema class. Kernel-built IR
-            // and source files without AC land here.
-            let (desc, status, name, year) = apd_info(schema);
-            let step =
-                self.push_simple("APPLICATION_CONTEXT", vec![Attribute::String(desc.into())]);
-            let _ = self.push_simple(
-                "APPLICATION_PROTOCOL_DEFINITION",
-                vec![
-                    Attribute::String(status.into()),
-                    Attribute::String(name.into()),
-                    Attribute::Integer(year),
-                    Attribute::EntityRef(step),
-                ],
-            );
-            step
-        };
-        // PC: IR 우선 (assembly.product_contexts[0]), 없으면 합성.
-        let product_ctx = {
-            use crate::ir::ProductContextKind;
-            let from_ir = self
-                .model
-                .assembly
-                .as_ref()
-                .and_then(|a| a.product_contexts.iter().next().cloned());
-            if let Some(pc) = from_ir {
+            // 3) Emit all PC entries (refs AC via cache).
+            let assembly = self.model.assembly.clone().unwrap_or_default();
+            self.pc_step_ids = Vec::with_capacity(assembly.product_contexts.len());
+            for pc in assembly.product_contexts.iter() {
                 let entity_name = match pc.kind {
                     ProductContextKind::Plain => "PRODUCT_CONTEXT",
                     ProductContextKind::Mechanical => "MECHANICAL_CONTEXT",
                 };
-                self.push_simple(
+                let ac_step = self.ac_step_ids[pc.frame_of_reference.0 as usize];
+                let id = self.push_simple(
                     entity_name,
                     vec![
-                        Attribute::String(pc.name),
-                        Attribute::EntityRef(app_ctx),
-                        Attribute::String(pc.discipline_type),
+                        Attribute::String(pc.name.clone()),
+                        Attribute::EntityRef(ac_step),
+                        Attribute::String(pc.discipline_type.clone()),
                     ],
-                )
+                );
+                self.pc_step_ids.push(id);
+            }
+            // 4) Emit all PDC entries (refs AC via cache).
+            self.pdc_step_ids = Vec::with_capacity(assembly.product_definition_contexts.len());
+            for pdc in assembly.product_definition_contexts.iter() {
+                let entity_name = match pdc.kind {
+                    ProductDefinitionContextKind::Plain => "PRODUCT_DEFINITION_CONTEXT",
+                    ProductDefinitionContextKind::Design => "DESIGN_CONTEXT",
+                };
+                let ac_step = self.ac_step_ids[pdc.frame_of_reference.0 as usize];
+                let id = self.push_simple(
+                    entity_name,
+                    vec![
+                        Attribute::String(pdc.name.clone()),
+                        Attribute::EntityRef(ac_step),
+                        Attribute::String(pdc.life_cycle_stage.clone()),
+                    ],
+                );
+                self.pdc_step_ids.push(id);
+            }
+            // Fallback PC/PDC for products without explicit context.
+            let product_ctx = if let Some(&id) = self.pc_step_ids.first() {
+                id
             } else {
                 self.push_simple(
                     "PRODUCT_CONTEXT",
                     vec![
                         Attribute::String(String::new()),
-                        Attribute::EntityRef(app_ctx),
+                        Attribute::EntityRef(self.ac_step_ids[0]),
                         Attribute::String("mechanical".into()),
                     ],
                 )
-            }
-        };
-        // PDC: same IR-우선 + fallback pattern.
-        let pdef_ctx = {
-            use crate::ir::ProductDefinitionContextKind;
-            let from_ir = self
-                .model
-                .assembly
-                .as_ref()
-                .and_then(|a| a.product_definition_contexts.iter().next().cloned());
-            if let Some(pdc) = from_ir {
-                let entity_name = match pdc.kind {
-                    ProductDefinitionContextKind::Plain => "PRODUCT_DEFINITION_CONTEXT",
-                    ProductDefinitionContextKind::Design => "DESIGN_CONTEXT",
-                };
-                self.push_simple(
-                    entity_name,
-                    vec![
-                        Attribute::String(pdc.name),
-                        Attribute::EntityRef(app_ctx),
-                        Attribute::String(pdc.life_cycle_stage),
-                    ],
-                )
+            };
+            let pdef_ctx = if let Some(&id) = self.pdc_step_ids.first() {
+                id
             } else {
                 self.push_simple(
                     "PRODUCT_DEFINITION_CONTEXT",
                     vec![
                         Attribute::String("part definition".into()),
-                        Attribute::EntityRef(app_ctx),
+                        Attribute::EntityRef(self.ac_step_ids[0]),
                         Attribute::String("design".into()),
                     ],
                 )
-            }
-        };
+            };
+            return AssemblyContextIds {
+                product_ctx,
+                pdef_ctx,
+            };
+        }
+        // Fallback: synthesise from schema class (no IR context entries).
+        let (desc, status, name, year) = apd_info(schema);
+        let app_ctx = self.push_simple("APPLICATION_CONTEXT", vec![Attribute::String(desc.into())]);
+        let _ = self.push_simple(
+            "APPLICATION_PROTOCOL_DEFINITION",
+            vec![
+                Attribute::String(status.into()),
+                Attribute::String(name.into()),
+                Attribute::Integer(year),
+                Attribute::EntityRef(app_ctx),
+            ],
+        );
+        let product_ctx = self.push_simple(
+            "PRODUCT_CONTEXT",
+            vec![
+                Attribute::String(String::new()),
+                Attribute::EntityRef(app_ctx),
+                Attribute::String("mechanical".into()),
+            ],
+        );
+        let pdef_ctx = self.push_simple(
+            "PRODUCT_DEFINITION_CONTEXT",
+            vec![
+                Attribute::String("part definition".into()),
+                Attribute::EntityRef(app_ctx),
+                Attribute::String("design".into()),
+            ],
+        );
         AssemblyContextIds {
             product_ctx,
             pdef_ctx,

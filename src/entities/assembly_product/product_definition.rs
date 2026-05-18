@@ -39,7 +39,8 @@ pub(crate) fn read_product_definition_body(
     let _id = read_string(attrs, 0, entity_id, "id")?;
     let _description = read_string_or_unset(attrs, 1, entity_id, "description")?;
     let formation_ref = read_entity_ref(attrs, 2, entity_id, "formation")?;
-    // attrs[3] = frame_of_reference (PRODUCT_DEFINITION_CONTEXT) — ignored.
+    // attrs[3] = frame_of_reference (PRODUCT_DEFINITION_CONTEXT).
+    let pdc_step_ref = read_entity_ref(attrs, 3, entity_id, "frame_of_reference").ok();
 
     let Some(&product_ref) = ctx.formation_to_product.get(&formation_ref) else {
         return Err(ConvertError::MissingReference {
@@ -49,6 +50,11 @@ pub(crate) fn read_product_definition_body(
         });
     };
     ctx.pdef_to_product.insert(entity_id, product_ref);
+    if let Some(pdc_ref) = pdc_step_ref {
+        if let Some(&pid) = ctx.product_arena_map.get(&product_ref) {
+            ctx.product_pdc_step_refs.insert(pid, pdc_ref);
+        }
+    }
     Ok(())
 }
 

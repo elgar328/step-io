@@ -163,6 +163,12 @@ pub struct ReaderContext {
     pub(crate) product_context_id_map: HashMap<u64, crate::ir::ProductContextId>,
     pub(crate) product_definition_context_id_map:
         HashMap<u64, crate::ir::ProductDefinitionContextId>,
+    /// `ProductId → raw STEP entity id of the product's first PC`
+    /// (`PRODUCT.frame_of_reference[0]`). `resolve_product_contexts`
+    /// converts these refs to `ProductContextId` after `Pass9AssemblyContext`.
+    pub(crate) product_pc_step_refs: HashMap<ProductId, u64>,
+    /// Same pattern, populated by `PRODUCT_DEFINITION.frame_of_reference`.
+    pub(crate) product_pdc_step_refs: HashMap<ProductId, u64>,
     pub(crate) product_arena_map: HashMap<u64, ProductId>,
     pub(crate) formation_to_product: HashMap<u64, u64>,
     pub(crate) pdef_to_product: HashMap<u64, u64>,
@@ -410,6 +416,7 @@ impl ReaderContext {
         ctx.run_geometry_passes(graph);
         ctx.run_topology_passes(graph);
         ctx.run_assembly_passes(graph);
+        ctx.resolve_product_contexts();
         ctx.finalize_assembly();
         let header = header::extract_file_header(&graph.header, &mut ctx.warnings);
         ConvertResult {
@@ -427,6 +434,24 @@ impl ReaderContext {
             },
             warnings: ctx.warnings,
             parse_warnings: graph.warnings.clone(),
+        }
+    }
+
+    /// Resolve `product_pc_step_refs` / `product_pdc_step_refs` (raw STEP
+    /// entity ids captured at `Pass6Product` / `Pass6Pdef`) into typed
+    /// `ProductContextId` / `ProductDefinitionContextId` and write them
+    /// back onto each `Product`. Run after `Pass9AssemblyContext`
+    /// (which populates the id maps).
+    fn resolve_product_contexts(&mut self) {
+        for (pid, pc_step_id) in &self.product_pc_step_refs {
+            if let Some(&pcid) = self.product_context_id_map.get(pc_step_id) {
+                self.assembly_products[*pid].product_context = Some(pcid);
+            }
+        }
+        for (pid, pdc_step_id) in &self.product_pdc_step_refs {
+            if let Some(&pdcid) = self.product_definition_context_id_map.get(pdc_step_id) {
+                self.assembly_products[*pid].pdef_context = Some(pdcid);
+            }
         }
     }
 

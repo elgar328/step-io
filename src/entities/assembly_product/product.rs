@@ -36,7 +36,17 @@ impl SimpleEntityHandler for ProductHandler {
         let id = read_string_or_unset(attrs, 0, entity_id, "id")?;
         let name = read_string_or_unset(attrs, 1, entity_id, "name")?;
         let description_raw = read_string_or_unset(attrs, 2, entity_id, "description")?;
-        // attrs[3] = frame_of_reference (list of PRODUCT_CONTEXT) — ignored.
+        // attrs[3] = frame_of_reference (SET[1:?] OF PRODUCT_CONTEXT).
+        // Capture the first ref for per-product context wiring; the resolve
+        // to ProductContextId happens after Pass9AssemblyContext fills the
+        // id map. Corpus is consistently a single-element set.
+        let pc_step_ref = match attrs.get(3) {
+            Some(Attribute::List(refs)) => match refs.first() {
+                Some(Attribute::EntityRef(r)) => Some(*r),
+                _ => None,
+            },
+            _ => None,
+        };
 
         let description = if description_raw.is_empty() {
             None
@@ -65,9 +75,14 @@ impl SimpleEntityHandler for ProductHandler {
             category: None,
             formation_with_source: false,
             geometry_context: None,
+            product_context: None,
+            pdef_context: None,
         };
         let pid = ctx.assembly_products.push(product);
         ctx.product_arena_map.insert(entity_id, pid);
+        if let Some(r) = pc_step_ref {
+            ctx.product_pc_step_refs.insert(pid, r);
+        }
         Ok(())
     }
 

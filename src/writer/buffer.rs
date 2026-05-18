@@ -138,6 +138,17 @@ pub(crate) struct WriteBuffer<'m> {
     /// plm `address` arena — top-level (no current consumer); cache
     /// reserved for future enhancement phases.
     pub(crate) plm_address_step_ids: Vec<u64>,
+    /// IR `ApplicationContext` index → emitted `APPLICATION_CONTEXT` step id.
+    pub(crate) ac_step_ids: Vec<u64>,
+    /// IR `ApplicationProtocolDefinition` index → emitted
+    /// `APPLICATION_PROTOCOL_DEFINITION` step id.
+    pub(crate) apd_step_ids: Vec<u64>,
+    /// IR `ProductContext` index → emitted `PRODUCT_CONTEXT`
+    /// (or `MECHANICAL_CONTEXT`) step id.
+    pub(crate) pc_step_ids: Vec<u64>,
+    /// IR `ProductDefinitionContext` index → emitted
+    /// `PRODUCT_DEFINITION_CONTEXT` (or `DESIGN_CONTEXT`) step id.
+    pub(crate) pdc_step_ids: Vec<u64>,
     /// Per-`UnitContext` leaf STEP ids `(length, angle, solid_angle)`,
     /// indexed by `UnitContextId.0`. Each `UnitContext` in the IR arena
     /// emits its own leaf entities (no writer-side dedup) so the IR's
@@ -213,6 +224,10 @@ impl<'m> WriteBuffer<'m> {
             plm_document_reference_step_ids: Vec::new(),
             plm_object_role_step_ids: Vec::new(),
             plm_address_step_ids: Vec::new(),
+            ac_step_ids: Vec::new(),
+            apd_step_ids: Vec::new(),
+            pc_step_ids: Vec::new(),
+            pdc_step_ids: Vec::new(),
             product_def_ids: std::collections::HashMap::new(),
             product_def_shape_ids: std::collections::HashMap::new(),
         }
