@@ -26,20 +26,21 @@ pub use geometry::{
     TrimmedCurve, Vertex,
 };
 pub use id::{
-    ApprovalDateTimeId, ApprovalId, ApprovalPersonOrganizationId, ApprovalRoleId, ApprovalStatusId,
-    CoordinatedUniversalTimeOffsetId, Curve2dId, CurveId, DateAndTimeAssignmentId, DateAndTimeId,
-    DateId, DateTimeRoleId, Direction2dId, DirectionId, EdgeId, FaceId, FoundedItemId, LocalTimeId,
-    OrganizationId, PersonAndOrganizationAssignmentId, PersonAndOrganizationId,
-    PersonAndOrganizationRoleId, PersonId, Placement1dId, Placement2dId, Placement3dId, Point2dId,
-    PointId, ProductId, ShapeAspectId, ShellId, SolidId, SurfaceId, UnitContextId, VertexId,
-    WireId,
+    ApprovalAssignmentId, ApprovalDateTimeId, ApprovalId, ApprovalPersonOrganizationId,
+    ApprovalRoleId, ApprovalStatusId, CoordinatedUniversalTimeOffsetId, Curve2dId, CurveId,
+    DateAndTimeAssignmentId, DateAndTimeId, DateId, DateTimeRoleId, Direction2dId, DirectionId,
+    EdgeId, FaceId, FoundedItemId, LocalTimeId, OrganizationId, PersonAndOrganizationAssignmentId,
+    PersonAndOrganizationId, PersonAndOrganizationRoleId, PersonId, Placement1dId, Placement2dId,
+    Placement3dId, Point2dId, PointId, ProductId, ShapeAspectId, ShellId, SolidId, SurfaceId,
+    UnitContextId, VertexId, WireId,
 };
 pub use model::{
     FileHeader, GeometryPool, ImplementationLevel, NonEmptyStringList, StepModel, TopologyPool,
 };
 pub use plm::{
-    AheadOrBehind, AppliedDateAndTimeAssignment, Approval, ApprovalDateTime,
-    ApprovalDateTimeSelect, ApprovalPersonOrganization, ApprovalRole, ApprovalStatus, CalendarDate,
+    AheadOrBehind, AppliedApprovalAssignment, AppliedDateAndTimeAssignment, Approval,
+    ApprovalAssignment, ApprovalDateTime, ApprovalDateTimeSelect, ApprovalItem,
+    ApprovalPersonOrganization, ApprovalRole, ApprovalStatus, CalendarDate, CcDesignApproval,
     CcDesignDateAndTimeAssignment, CoordinatedUniversalTimeOffset, DateAndTime,
     DateAndTimeAssignment, DateTimeItem, DateTimeRole, LocalTime, Organization, Person,
     PersonAndOrganization, PersonAndOrganizationAssignment, PersonAndOrganizationRole,

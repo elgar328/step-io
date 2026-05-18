@@ -338,6 +338,9 @@ pub struct ReaderContext {
     /// `APPROVAL_PERSON_ORGANIZATION` step entity id → `ApprovalPersonOrganizationId`.
     pub(crate) plm_approval_person_organization_id_map:
         HashMap<u64, crate::ir::ApprovalPersonOrganizationId>,
+    /// `APPLIED_APPROVAL_ASSIGNMENT` / `CC_DESIGN_APPROVAL` step entity id →
+    /// `ApprovalAssignmentId`.
+    pub(crate) plm_aa_id_map: HashMap<u64, crate::ir::ApprovalAssignmentId>,
 
     pub(crate) warnings: Vec<ConvertError>,
 }

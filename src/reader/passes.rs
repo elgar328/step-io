@@ -241,6 +241,9 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass9PlmApprovalLeaves);
         self.dispatch_registry(graph, PassLevel::Pass9PlmApproval);
         self.dispatch_registry(graph, PassLevel::Pass9PlmApprovalLinkers);
+        // Approval assignments — top-level (no consumers); reference
+        // Approval + the assembly product chain via the items SELECT.
+        self.dispatch_registry(graph, PassLevel::Pass9PlmAa);
 
         // Pass 8: PMI scaffolding — SHAPE_ASPECT entries that anchor
         // future Tolerance / Datum / GD&T work. Runs before the property

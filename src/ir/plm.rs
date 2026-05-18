@@ -70,8 +70,8 @@ pub struct PlmPool {
 }
 
 /// `approval_assignment` arena enum per ir.toml. Two variants with
-/// identical field shape but distinct STEP entity names — the CcDesign
-/// variant's STEP name lacks the `_ASSIGNMENT` suffix.
+/// identical field shape but distinct STEP entity names — the
+/// `CcDesign` variant's STEP name lacks the `_ASSIGNMENT` suffix.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ApprovalAssignment {
     Applied(AppliedApprovalAssignment),

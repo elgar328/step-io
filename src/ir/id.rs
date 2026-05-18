@@ -5,10 +5,10 @@ use super::geometry::{
     Point2, Point3, Surface, Vertex,
 };
 use super::plm::{
-    Approval, ApprovalDateTime, ApprovalPersonOrganization, ApprovalRole, ApprovalStatus,
-    CalendarDate, CoordinatedUniversalTimeOffset, DateAndTime, DateAndTimeAssignment, DateTimeRole,
-    LocalTime, Organization, Person, PersonAndOrganization, PersonAndOrganizationAssignment,
-    PersonAndOrganizationRole,
+    Approval, ApprovalAssignment, ApprovalDateTime, ApprovalPersonOrganization, ApprovalRole,
+    ApprovalStatus, CalendarDate, CoordinatedUniversalTimeOffset, DateAndTime,
+    DateAndTimeAssignment, DateTimeRole, LocalTime, Organization, Person, PersonAndOrganization,
+    PersonAndOrganizationAssignment, PersonAndOrganizationRole,
 };
 use super::shape_rep::{ShapeAspect, UnitContext};
 use super::topology::{Edge, Face, Shell, Solid, Wire};
@@ -100,3 +100,4 @@ define_id!(ApprovalRoleId, ApprovalRole);
 define_id!(ApprovalId, Approval);
 define_id!(ApprovalDateTimeId, ApprovalDateTime);
 define_id!(ApprovalPersonOrganizationId, ApprovalPersonOrganization);
+define_id!(ApprovalAssignmentId, ApprovalAssignment);

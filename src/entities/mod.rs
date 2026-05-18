@@ -246,6 +246,10 @@ pub(crate) enum PassLevel {
     /// depend on `Pass9PlmApproval` plus `Pass9PlmDateAndTime` /
     /// `Pass9PlmPersonAndOrganization` for the SELECT refs.
     Pass9PlmApprovalLinkers,
+    /// `APPLIED_APPROVAL_ASSIGNMENT` / `CC_DESIGN_APPROVAL` (Pass 9-11) —
+    /// depend on `Pass9PlmApproval` (`assigned_approval` ref) and the
+    /// assembly product chain (`Pass6`) for `items` PD targets.
+    Pass9PlmAa,
     /// `SHAPE_ASPECT` (Pass 8-pre) — PMI scaffolding. Runs before the
     /// property converters so a future Pattern B PD pass can resolve its
     /// target ref through the `SHAPE_ASPECT` id map.
