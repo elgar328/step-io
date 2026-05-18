@@ -577,15 +577,25 @@ fn box_ap214_is_preserves_visualization() {
     };
     // The PSA carries a SurfaceStyleUsage plus a CurveStyle reference; pick
     // the surface entry out by variant.
-    let ssu = psa_data
+    let ssu_id = psa_data
         .styles
         .iter()
         .find_map(|s| match s {
-            step_io::ir::visualization::PsaStyle::Surface(ssu) => Some(ssu),
+            step_io::ir::visualization::PsaStyle::Surface(id) => Some(*id),
             step_io::ir::visualization::PsaStyle::Curve(_) => None,
         })
         .expect("PSA carries a SurfaceStyleUsage");
-    let entry = &ssu.style.styles[0];
+    let step_io::ir::visualization::FoundedItem::SurfaceStyleUsage(ssu) =
+        &viz.founded_items[ssu_id]
+    else {
+        panic!("expected SurfaceStyleUsage founded-item variant");
+    };
+    let step_io::ir::visualization::FoundedItem::SurfaceSideStyle(sss) =
+        &viz.founded_items[ssu.style]
+    else {
+        panic!("expected SurfaceSideStyle founded-item variant");
+    };
+    let entry = &sss.styles[0];
     let SurfaceSideStyleEntry::FillArea(ssfa_id) = entry else {
         panic!("expected FillArea entry, got {entry:?}");
     };

@@ -72,6 +72,8 @@ pub struct VisualizationPool {
 pub enum FoundedItem {
     FillAreaStyle(FillAreaStyle),
     SurfaceStyleFillArea(SurfaceStyleFillArea),
+    SurfaceSideStyle(SurfaceSideStyle),
+    SurfaceStyleUsage(SurfaceStyleUsage),
 }
 
 /// `CURVE_STYLE(name, curve_font, curve_width, curve_colour)` —
@@ -205,20 +207,22 @@ pub struct PresentationStyleByContext {
     pub styles: Vec<PsaStyle>,
 }
 
-/// One element of [`PresentationStyleAssignment::styles`]. `CurveStyle`
-/// is referenced through its arena id ([`CurveStyleId`]); `SurfaceStyleUsage`
-/// is stored inline pending later phases of the visualization migration.
+/// One element of [`PresentationStyleAssignmentData::styles`]. Both
+/// variants reference their target through arena ids — `Surface` carries
+/// a [`FoundedItemId`] aimed at a `FoundedItem::SurfaceStyleUsage` entry,
+/// and `Curve` carries a [`CurveStyleId`].
 #[derive(Debug, Clone, PartialEq)]
 pub enum PsaStyle {
-    Surface(SurfaceStyleUsage),
+    Surface(FoundedItemId),
     Curve(CurveStyleId),
 }
 
-/// `SURFACE_STYLE_USAGE(side, style)`.
+/// `SURFACE_STYLE_USAGE(side, style)`. The `style` field references a
+/// `FoundedItem::SurfaceSideStyle` entry through its [`FoundedItemId`].
 #[derive(Debug, Clone, PartialEq)]
 pub struct SurfaceStyleUsage {
     pub side: SurfaceSide,
-    pub style: SurfaceSideStyle,
+    pub style: FoundedItemId,
 }
 
 /// `surface_side` enum from `SURFACE_STYLE_USAGE`.

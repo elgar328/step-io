@@ -1,16 +1,15 @@
 //! `SURFACE_STYLE_USAGE` handler — Pass 7-8. Pairs a `SURFACE_SIDE_STYLE`
-//! with a side enum (Front / Back / Both).
+//! arena ref with a side enum (Front / Back / Both). Pushes into the
+//! shared `founded_item` arena as the `SurfaceStyleUsage` variant.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref, read_enum};
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::{SurfaceSide, SurfaceStyleUsage};
+use crate::ir::visualization::{FoundedItem, SurfaceSide, SurfaceStyleUsage, VisualizationPool};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
-
-use super::surface_side_style::SurfaceSideStyleHandler;
 use step_io_macros::step_entity;
 
 pub(crate) struct SurfaceStyleUsageHandler;
@@ -33,16 +32,24 @@ impl SimpleEntityHandler for SurfaceStyleUsageHandler {
             _ => SurfaceSide::Both, // BOTH or unknown
         };
         let style_ref = read_entity_ref(attrs, 1, entity_id, "style")?;
-        let Some(style) = ctx.viz_sss_map.get(&style_ref).cloned() else {
+        let Some(&style) = ctx.viz_sss_id_map.get(&style_ref) else {
             return Ok(());
         };
-        ctx.viz_ssu_map
-            .insert(entity_id, SurfaceStyleUsage { side, style });
+        let pool = ctx
+            .visualization
+            .get_or_insert_with(VisualizationPool::default);
+        let id = pool
+            .founded_items
+            .push(FoundedItem::SurfaceStyleUsage(SurfaceStyleUsage {
+                side,
+                style,
+            }));
+        ctx.viz_ssu_id_map.insert(entity_id, id);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, ssu: SurfaceStyleUsage) -> Result<u64, WriteError> {
-        let style_ref = SurfaceSideStyleHandler::write(buf, ssu.style)?;
+        let style_ref = buf.founded_item_step_ids[ssu.style.0 as usize];
         let side = match ssu.side {
             SurfaceSide::Front => "POSITIVE",
             SurfaceSide::Back => "NEGATIVE",

@@ -1,11 +1,14 @@
 //! `SURFACE_SIDE_STYLE` handler — Pass 7-7. Aggregates one or more
 //! `SURFACE_SIDE_STYLE` entries (each a fill-area or rendering style)
-//! into a named composite.
+//! into a named composite. Pushes into the shared `founded_item` arena
+//! as the `SurfaceSideStyle` variant.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::{SurfaceSideStyle, SurfaceSideStyleEntry};
+use crate::ir::visualization::{
+    FoundedItem, SurfaceSideStyle, SurfaceSideStyleEntry, VisualizationPool,
+};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -36,8 +39,16 @@ impl SimpleEntityHandler for SurfaceSideStyleHandler {
                 styles.push(SurfaceSideStyleEntry::Rendering(ssr_id));
             }
         }
-        ctx.viz_sss_map
-            .insert(entity_id, SurfaceSideStyle { name, styles });
+        let pool = ctx
+            .visualization
+            .get_or_insert_with(VisualizationPool::default);
+        let id = pool
+            .founded_items
+            .push(FoundedItem::SurfaceSideStyle(SurfaceSideStyle {
+                name,
+                styles,
+            }));
+        ctx.viz_sss_id_map.insert(entity_id, id);
         Ok(())
     }
 

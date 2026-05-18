@@ -19,9 +19,7 @@ use crate::ir::id::{
 use crate::ir::model::{GeometryPool, StepModel, TopologyPool};
 use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit, SolidAngleUnit, UnitContext};
 use crate::ir::topology::{Orientation, OrientedEdge};
-use crate::ir::visualization::{
-    FillAreaStyleColour, SurfaceSideStyle, SurfaceStyleUsage, VisualizationPool,
-};
+use crate::ir::visualization::{FillAreaStyleColour, VisualizationPool};
 // CurveFontId / CurveStyleId / StyledItemId imported above; the map types reference them directly.
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
 
@@ -261,10 +259,15 @@ pub struct ReaderContext {
     pub(crate) viz_ssr_id_map: HashMap<u64, SurfaceStyleRenderingId>,
     /// `SURFACE_STYLE_TRANSPARENT #N → transparency value` (Pass 7-3b).
     pub(crate) viz_transparent_map: HashMap<u64, f64>,
-    /// `SURFACE_SIDE_STYLE #N → SurfaceSideStyle` (Pass 7-5).
-    pub(crate) viz_sss_map: HashMap<u64, SurfaceSideStyle>,
-    /// `SURFACE_STYLE_USAGE #N → SurfaceStyleUsage` (Pass 7-6).
-    pub(crate) viz_ssu_map: HashMap<u64, SurfaceStyleUsage>,
+    /// `SURFACE_SIDE_STYLE` step entity id → `FoundedItemId`. Populated by
+    /// the SSS handler after pushing the `FoundedItem::SurfaceSideStyle`
+    /// variant; consumed by the `SURFACE_STYLE_USAGE` reader for its
+    /// `style` ref.
+    pub(crate) viz_sss_id_map: HashMap<u64, FoundedItemId>,
+    /// `SURFACE_STYLE_USAGE` step entity id → `FoundedItemId`. Populated by
+    /// the SSU handler after pushing the `FoundedItem::SurfaceStyleUsage`
+    /// variant; consumed by the PSA reader for `PsaStyle::Surface(...)`.
+    pub(crate) viz_ssu_id_map: HashMap<u64, FoundedItemId>,
     /// `PRESENTATION_STYLE_ASSIGNMENT` step entity id →
     /// `PresentationStyleAssignmentId`. Populated by the PSA handler after
     /// pushing the resolved variant into

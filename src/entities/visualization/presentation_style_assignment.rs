@@ -17,7 +17,6 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
-use super::surface_style_usage::SurfaceStyleUsageHandler;
 use step_io_macros::step_entity;
 
 pub(crate) struct PresentationStyleAssignmentHandler;
@@ -36,8 +35,8 @@ impl SimpleEntityHandler for PresentationStyleAssignmentHandler {
         let style_refs = read_entity_ref_list(attrs, 0, entity_id, "styles")?;
         let mut styles = Vec::new();
         for r in style_refs {
-            if let Some(ssu) = ctx.viz_ssu_map.get(&r).cloned() {
-                styles.push(PsaStyle::Surface(ssu));
+            if let Some(&ssu_id) = ctx.viz_ssu_id_map.get(&r) {
+                styles.push(PsaStyle::Surface(ssu_id));
             } else if let Some(&cs_id) = ctx.viz_curve_style_id_map.get(&r) {
                 styles.push(PsaStyle::Curve(cs_id));
             }
@@ -61,7 +60,7 @@ impl SimpleEntityHandler for PresentationStyleAssignmentHandler {
         let mut style_refs = Vec::with_capacity(data.styles.len());
         for style in data.styles {
             let ref_id = match style {
-                PsaStyle::Surface(ssu) => SurfaceStyleUsageHandler::write(buf, ssu)?,
+                PsaStyle::Surface(ssu_id) => buf.founded_item_step_ids[ssu_id.0 as usize],
                 PsaStyle::Curve(cs_id) => buf.curve_style_step_ids[cs_id.0 as usize],
             };
             style_refs.push(Attribute::EntityRef(ref_id));

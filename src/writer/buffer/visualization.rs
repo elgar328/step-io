@@ -20,11 +20,9 @@ impl WriteBuffer<'_> {
         use crate::entities::visualization::curve_style::CurveStyleHandler;
         use crate::entities::visualization::draughting_pre_defined_colour::DraughtingPreDefinedColourHandler;
         use crate::entities::visualization::draughting_pre_defined_curve_font::DraughtingPreDefinedCurveFontHandler;
-        use crate::entities::visualization::fill_area_style::FillAreaStyleHandler;
         use crate::entities::visualization::over_riding_styled_item::OverRidingStyledItemHandler;
         use crate::entities::visualization::presentation_style_assignment::PresentationStyleAssignmentHandler;
         use crate::entities::visualization::styled_item::StyledItemHandler;
-        use crate::entities::visualization::surface_style_fill_area::SurfaceStyleFillAreaHandler;
         use crate::entities::visualization::surface_style_rendering::SurfaceStyleRenderingHandler;
         use crate::entities::visualization::surface_style_rendering_with_properties::SurfaceStyleRenderingWithPropertiesHandler;
         let Some(viz) = self.model.visualization.clone() else {
@@ -75,26 +73,7 @@ impl WriteBuffer<'_> {
             };
             self.ssr_step_ids.push(id);
         }
-        // founded_item arena — 2-pass pre-emit so wrapper variants can
-        // resolve their inner refs through founded_item_step_ids. Pass 1
-        // emits leaf-shaped FillAreaStyle entries; Pass 2 emits the
-        // SurfaceStyleFillArea wrappers that read FillAreaStyle's cached
-        // STEP id. E2 will extend this pre-emit with SurfaceSideStyle /
-        // SurfaceStyleUsage variants (each in its dependency-appropriate
-        // pass).
-        self.founded_item_step_ids = vec![0; viz.founded_items.len()];
-        for (idx, item) in viz.founded_items.iter().enumerate() {
-            if let FoundedItem::FillAreaStyle(fas) = item {
-                let id = FillAreaStyleHandler::write(self, fas.clone())?;
-                self.founded_item_step_ids[idx] = id;
-            }
-        }
-        for (idx, item) in viz.founded_items.iter().enumerate() {
-            if let FoundedItem::SurfaceStyleFillArea(ssfa) = item {
-                let id = SurfaceStyleFillAreaHandler::write(self, ssfa.clone())?;
-                self.founded_item_step_ids[idx] = id;
-            }
-        }
+        self.emit_founded_item_arena(&viz.founded_items)?;
         // PRESENTATION_STYLE_ASSIGNMENT arena — emit every PSA up-front so
         // STYLED_ITEM / OVER_RIDING_STYLED_ITEM writers can resolve their
         // styles refs through psa_step_ids[id.0]. `ByContext` variant is
@@ -131,6 +110,48 @@ impl WriteBuffer<'_> {
         }
         for mdgpr in viz.mdgprs {
             MdgprHandler::write(self, mdgpr)?;
+        }
+        Ok(())
+    }
+
+    /// Pre-emit the `founded_item` arena variant-by-variant so each pass
+    /// can resolve its predecessors through `founded_item_step_ids`.
+    /// Order: `FillAreaStyle` -> `SurfaceStyleFillArea` -> `SurfaceSideStyle`
+    /// -> `SurfaceStyleUsage`. arena iteration order already matches reader
+    /// pass order, but the defensive variant split keeps this safe if a
+    /// kernel adapter ever reorders pushes.
+    fn emit_founded_item_arena(
+        &mut self,
+        founded_items: &crate::ir::Arena<FoundedItem>,
+    ) -> Result<(), WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::visualization::fill_area_style::FillAreaStyleHandler;
+        use crate::entities::visualization::surface_side_style::SurfaceSideStyleHandler;
+        use crate::entities::visualization::surface_style_fill_area::SurfaceStyleFillAreaHandler;
+        use crate::entities::visualization::surface_style_usage::SurfaceStyleUsageHandler;
+        self.founded_item_step_ids = vec![0; founded_items.len()];
+        for (idx, item) in founded_items.iter().enumerate() {
+            if let FoundedItem::FillAreaStyle(fas) = item {
+                self.founded_item_step_ids[idx] = FillAreaStyleHandler::write(self, fas.clone())?;
+            }
+        }
+        for (idx, item) in founded_items.iter().enumerate() {
+            if let FoundedItem::SurfaceStyleFillArea(ssfa) = item {
+                self.founded_item_step_ids[idx] =
+                    SurfaceStyleFillAreaHandler::write(self, ssfa.clone())?;
+            }
+        }
+        for (idx, item) in founded_items.iter().enumerate() {
+            if let FoundedItem::SurfaceSideStyle(sss) = item {
+                self.founded_item_step_ids[idx] =
+                    SurfaceSideStyleHandler::write(self, sss.clone())?;
+            }
+        }
+        for (idx, item) in founded_items.iter().enumerate() {
+            if let FoundedItem::SurfaceStyleUsage(ssu) = item {
+                self.founded_item_step_ids[idx] =
+                    SurfaceStyleUsageHandler::write(self, ssu.clone())?;
+            }
         }
         Ok(())
     }
