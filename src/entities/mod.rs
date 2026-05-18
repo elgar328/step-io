@@ -221,6 +221,11 @@ pub(crate) enum PassLevel {
     Pass9PlmLocalTime,
     /// `DATE_AND_TIME` (Pass 9-3) — depends on date arena + `LocalTime` arena.
     Pass9PlmDateAndTime,
+    /// `APPLIED_DATE_AND_TIME_ASSIGNMENT` /
+    /// `CC_DESIGN_DATE_AND_TIME_ASSIGNMENT` (Pass 9-4) — depends on
+    /// `Pass9PlmDateAndTime` (`date_and_time` + role refs) and the
+    /// assembly product chain (`Pass6`) for `items` PD targets.
+    Pass9PlmDta,
     /// `SHAPE_ASPECT` (Pass 8-pre) — PMI scaffolding. Runs before the
     /// property converters so a future Pattern B PD pass can resolve its
     /// target ref through the `SHAPE_ASPECT` id map.

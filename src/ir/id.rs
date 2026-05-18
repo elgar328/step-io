@@ -5,7 +5,8 @@ use super::geometry::{
     Point2, Point3, Surface, Vertex,
 };
 use super::plm::{
-    CalendarDate, CoordinatedUniversalTimeOffset, DateAndTime, DateTimeRole, LocalTime,
+    CalendarDate, CoordinatedUniversalTimeOffset, DateAndTime, DateAndTimeAssignment, DateTimeRole,
+    LocalTime,
 };
 use super::shape_rep::{ShapeAspect, UnitContext};
 use super::topology::{Edge, Face, Shell, Solid, Wire};
@@ -81,3 +82,4 @@ define_id!(
 );
 define_id!(DateAndTimeId, DateAndTime);
 define_id!(DateTimeRoleId, DateTimeRole);
+define_id!(DateAndTimeAssignmentId, DateAndTimeAssignment);

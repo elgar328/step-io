@@ -26,16 +26,17 @@ pub use geometry::{
     TrimmedCurve, Vertex,
 };
 pub use id::{
-    CoordinatedUniversalTimeOffsetId, Curve2dId, CurveId, DateAndTimeId, DateId, DateTimeRoleId,
-    Direction2dId, DirectionId, EdgeId, FaceId, FoundedItemId, LocalTimeId, Placement1dId,
-    Placement2dId, Placement3dId, Point2dId, PointId, ProductId, ShapeAspectId, ShellId, SolidId,
-    SurfaceId, UnitContextId, VertexId, WireId,
+    CoordinatedUniversalTimeOffsetId, Curve2dId, CurveId, DateAndTimeAssignmentId, DateAndTimeId,
+    DateId, DateTimeRoleId, Direction2dId, DirectionId, EdgeId, FaceId, FoundedItemId, LocalTimeId,
+    Placement1dId, Placement2dId, Placement3dId, Point2dId, PointId, ProductId, ShapeAspectId,
+    ShellId, SolidId, SurfaceId, UnitContextId, VertexId, WireId,
 };
 pub use model::{
     FileHeader, GeometryPool, ImplementationLevel, NonEmptyStringList, StepModel, TopologyPool,
 };
 pub use plm::{
-    AheadOrBehind, CalendarDate, CoordinatedUniversalTimeOffset, DateAndTime, DateTimeRole,
+    AheadOrBehind, AppliedDateAndTimeAssignment, CalendarDate, CcDesignDateAndTimeAssignment,
+    CoordinatedUniversalTimeOffset, DateAndTime, DateAndTimeAssignment, DateTimeItem, DateTimeRole,
     LocalTime, PlmPool,
 };
 pub use property::{MeasureKind, Property, PropertyMeasure, PropertyPool};

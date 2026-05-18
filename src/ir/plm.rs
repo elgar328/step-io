@@ -9,8 +9,9 @@
 //! enums and the Person / Approval / Security clusters.
 
 use super::arena::Arena;
-use super::id::CoordinatedUniversalTimeOffsetId;
-use super::id::{DateId, LocalTimeId};
+use super::id::{
+    CoordinatedUniversalTimeOffsetId, DateAndTimeId, DateId, DateTimeRoleId, LocalTimeId, ProductId,
+};
 
 /// Top-level container for plm-domain entities. `None` on
 /// [`crate::ir::StepModel`] means the source file had no plm metadata
@@ -27,6 +28,45 @@ pub struct PlmPool {
     pub date_and_times: Arena<DateAndTime>,
     /// `DATE_TIME_ROLE` entries — label entities (`creation_date` etc.).
     pub date_time_roles: Arena<DateTimeRole>,
+    /// `date_and_time_assignment` arena enum covering both
+    /// `APPLIED_DATE_AND_TIME_ASSIGNMENT` and
+    /// `CC_DESIGN_DATE_AND_TIME_ASSIGNMENT`. Connects Date primitives to
+    /// product targets via the AP214 `date_time_item` SELECT.
+    pub date_and_time_assignments: Arena<DateAndTimeAssignment>,
+}
+
+/// `date_and_time_assignment` arena enum per ir.toml. The two variants
+/// carry identical field shape but differ in AP214 `ApplicationContext`.
+#[derive(Debug, Clone, PartialEq)]
+pub enum DateAndTimeAssignment {
+    Applied(AppliedDateAndTimeAssignment),
+    CcDesign(CcDesignDateAndTimeAssignment),
+}
+
+/// `APPLIED_DATE_AND_TIME_ASSIGNMENT(assigned_date_and_time, role, items)`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AppliedDateAndTimeAssignment {
+    pub assigned_date_and_time: DateAndTimeId,
+    pub role: DateTimeRoleId,
+    pub items: Vec<DateTimeItem>,
+}
+
+/// `CC_DESIGN_DATE_AND_TIME_ASSIGNMENT(assigned_date_and_time, role, items)`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CcDesignDateAndTimeAssignment {
+    pub assigned_date_and_time: DateAndTimeId,
+    pub role: DateTimeRoleId,
+    pub items: Vec<DateTimeItem>,
+}
+
+/// One element of an assignment's `items` set. Maps the AP214
+/// `date_time_item` SELECT — currently scoped to `PRODUCT_DEFINITION`
+/// (resolved to the assembly pool's [`ProductId`]). Other source-side
+/// variants (`SECURITY_CLASSIFICATION`, `APPROVAL`, `DOCUMENT`, ...) are
+/// silently dropped on read; future plm phases extend this enum.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DateTimeItem {
+    Product(ProductId),
 }
 
 /// `CALENDAR_DATE(year_component, month_component, day_component)`.

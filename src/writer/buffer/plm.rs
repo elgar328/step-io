@@ -8,11 +8,14 @@ use crate::writer::WriteError;
 impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_plm_if_set(&mut self) -> Result<(), WriteError> {
         use crate::entities::SimpleEntityHandler;
+        use crate::entities::plm::applied_date_and_time_assignment::AppliedDateAndTimeAssignmentHandler;
         use crate::entities::plm::calendar_date::CalendarDateHandler;
+        use crate::entities::plm::cc_design_date_and_time_assignment::CcDesignDateAndTimeAssignmentHandler;
         use crate::entities::plm::coordinated_universal_time_offset::CoordinatedUniversalTimeOffsetHandler;
         use crate::entities::plm::date_and_time::DateAndTimeHandler;
         use crate::entities::plm::date_time_role::DateTimeRoleHandler;
         use crate::entities::plm::local_time::LocalTimeHandler;
+        use crate::ir::plm::DateAndTimeAssignment;
         let Some(plm) = self.model.plm.clone() else {
             return Ok(());
         };
@@ -46,6 +49,19 @@ impl WriteBuffer<'_> {
         for dt in plm.date_and_times.iter() {
             let id = DateAndTimeHandler::write(self, *dt)?;
             self.plm_date_and_time_step_ids.push(id);
+        }
+        // Date-and-time assignments — top-level (no consumers), emit and
+        // forget. Reads plm_date_and_time_step_ids + plm_date_time_role_step_ids
+        // + product_def_ids for the items SELECT.
+        for dta in plm.date_and_time_assignments.iter() {
+            match dta {
+                DateAndTimeAssignment::Applied(a) => {
+                    AppliedDateAndTimeAssignmentHandler::write(self, a.clone())?;
+                }
+                DateAndTimeAssignment::CcDesign(c) => {
+                    CcDesignDateAndTimeAssignmentHandler::write(self, c.clone())?;
+                }
+            }
         }
         Ok(())
     }

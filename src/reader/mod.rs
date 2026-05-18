@@ -311,6 +311,10 @@ pub struct ReaderContext {
     pub(crate) plm_date_and_time_id_map: HashMap<u64, crate::ir::DateAndTimeId>,
     /// `DATE_TIME_ROLE` step entity id → `DateTimeRoleId`.
     pub(crate) plm_date_time_role_id_map: HashMap<u64, crate::ir::DateTimeRoleId>,
+    /// `APPLIED_DATE_AND_TIME_ASSIGNMENT` /
+    /// `CC_DESIGN_DATE_AND_TIME_ASSIGNMENT` step entity id →
+    /// `DateAndTimeAssignmentId`.
+    pub(crate) plm_dta_id_map: HashMap<u64, crate::ir::DateAndTimeAssignmentId>,
 
     pub(crate) warnings: Vec<ConvertError>,
 }
