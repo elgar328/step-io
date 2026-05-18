@@ -102,6 +102,56 @@ pub fn read_integer(
     }
 }
 
+/// Extract an optional integer from `attrs[index]`. `$` maps to `None`.
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeIndex`] or [`ConvertError::AttributeType`].
+pub fn read_optional_integer(
+    attrs: &[Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<Option<i64>, ConvertError> {
+    let attr = get_attr(attrs, index, entity_id, field_name)?;
+    match attr {
+        Attribute::Integer(v) => Ok(Some(*v)),
+        Attribute::Unset => Ok(None),
+        other => Err(ConvertError::AttributeType {
+            entity_id,
+            field_name,
+            expected: "Integer or Unset",
+            actual: AttributeKindTag::from_attribute(other),
+        }),
+    }
+}
+
+/// Extract an optional real from `attrs[index]`. `$` maps to `None`.
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeIndex`] or [`ConvertError::AttributeType`].
+pub fn read_optional_real(
+    attrs: &[Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<Option<f64>, ConvertError> {
+    let attr = get_attr(attrs, index, entity_id, field_name)?;
+    match attr {
+        Attribute::Real(v) => Ok(Some(*v)),
+        #[allow(clippy::cast_precision_loss)]
+        Attribute::Integer(v) => Ok(Some(*v as f64)),
+        Attribute::Unset => Ok(None),
+        other => Err(ConvertError::AttributeType {
+            entity_id,
+            field_name,
+            expected: "Real or Unset",
+            actual: AttributeKindTag::from_attribute(other),
+        }),
+    }
+}
+
 /// Extract a string reference from `attrs[index]`.
 ///
 /// # Errors

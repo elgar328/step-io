@@ -297,6 +297,21 @@ pub struct ReaderContext {
     /// here. Empty when no PMI entities were seen.
     pub(crate) shape_aspects: crate::ir::Arena<crate::ir::ShapeAspect>,
 
+    /// Lazily-built plm pool — populated by the Pass 9 plm reader chain
+    /// (`CalendarDate` / `LocalTime` / UTC / `DateAndTime` / `DateTimeRole`
+    /// in Phase plm-1a; Person/Approval/Security clusters later).
+    pub(crate) plm: Option<crate::ir::PlmPool>,
+    /// `CALENDAR_DATE` step entity id → `DateId`.
+    pub(crate) plm_date_id_map: HashMap<u64, crate::ir::DateId>,
+    /// `LOCAL_TIME` step entity id → `LocalTimeId`.
+    pub(crate) plm_local_time_id_map: HashMap<u64, crate::ir::LocalTimeId>,
+    /// `COORDINATED_UNIVERSAL_TIME_OFFSET` step entity id → `CoordinatedUniversalTimeOffsetId`.
+    pub(crate) plm_utc_id_map: HashMap<u64, crate::ir::CoordinatedUniversalTimeOffsetId>,
+    /// `DATE_AND_TIME` step entity id → `DateAndTimeId`.
+    pub(crate) plm_date_and_time_id_map: HashMap<u64, crate::ir::DateAndTimeId>,
+    /// `DATE_TIME_ROLE` step entity id → `DateTimeRoleId`.
+    pub(crate) plm_date_time_role_id_map: HashMap<u64, crate::ir::DateTimeRoleId>,
+
     pub(crate) warnings: Vec<ConvertError>,
 }
 
@@ -329,6 +344,7 @@ impl ReaderContext {
                 visualization: ctx.visualization,
                 properties: ctx.properties,
                 shape_aspects: ctx.shape_aspects,
+                plm: ctx.plm,
             },
             warnings: ctx.warnings,
             parse_warnings: graph.warnings.clone(),

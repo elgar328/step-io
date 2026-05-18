@@ -4,6 +4,9 @@ use super::geometry::{
     Axis1Placement, Axis2Placement2d, Axis2Placement3d, Curve, Curve2d, Direction2, Direction3,
     Point2, Point3, Surface, Vertex,
 };
+use super::plm::{
+    CalendarDate, CoordinatedUniversalTimeOffset, DateAndTime, DateTimeRole, LocalTime,
+};
 use super::shape_rep::{ShapeAspect, UnitContext};
 use super::topology::{Edge, Face, Shell, Solid, Wire};
 use super::visualization::{
@@ -68,3 +71,13 @@ define_id!(FoundedItemId, FoundedItem);
 // Visualization Ids — PRESENTATION_LAYER_ASSIGNMENT arena (top-level;
 // no other entity refs it, the id exists for blueprint symmetry).
 define_id!(PresentationLayerAssignmentId, PresentationLayerAssignment);
+
+// plm Ids — Date/Time primitives (Phase plm-1a).
+define_id!(DateId, CalendarDate);
+define_id!(LocalTimeId, LocalTime);
+define_id!(
+    CoordinatedUniversalTimeOffsetId,
+    CoordinatedUniversalTimeOffset
+);
+define_id!(DateAndTimeId, DateAndTime);
+define_id!(DateTimeRoleId, DateTimeRole);

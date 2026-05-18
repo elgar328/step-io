@@ -20,6 +20,7 @@ use crate::ir::{
 
 pub(crate) mod assembly;
 pub(crate) mod geometry;
+pub(crate) mod plm;
 pub(crate) mod pmi;
 pub(crate) mod property;
 pub(crate) mod topology;
@@ -88,6 +89,14 @@ pub(crate) struct WriteBuffer<'m> {
     /// resolve its `fill_area` ref); consumed by
     /// `SurfaceStyleFillAreaHandler` and downstream styled-side writers.
     pub(crate) founded_item_step_ids: Vec<u64>,
+    /// plm Date/Time caches — populated by `emit_plm_if_set` in
+    /// dependency order so downstream entities (`LocalTime`, `DateAndTime`)
+    /// resolve refs through one index lookup.
+    pub(crate) plm_utc_step_ids: Vec<u64>,
+    pub(crate) plm_date_step_ids: Vec<u64>,
+    pub(crate) plm_date_time_role_step_ids: Vec<u64>,
+    pub(crate) plm_local_time_step_ids: Vec<u64>,
+    pub(crate) plm_date_and_time_step_ids: Vec<u64>,
     /// Per-`UnitContext` leaf STEP ids `(length, angle, solid_angle)`,
     /// indexed by `UnitContextId.0`. Each `UnitContext` in the IR arena
     /// emits its own leaf entities (no writer-side dedup) so the IR's
@@ -137,6 +146,11 @@ impl<'m> WriteBuffer<'m> {
             psa_step_ids: Vec::new(),
             ssr_step_ids: Vec::new(),
             founded_item_step_ids: Vec::new(),
+            plm_utc_step_ids: Vec::new(),
+            plm_date_step_ids: Vec::new(),
+            plm_date_time_role_step_ids: Vec::new(),
+            plm_local_time_step_ids: Vec::new(),
+            plm_date_and_time_step_ids: Vec::new(),
             product_def_ids: std::collections::HashMap::new(),
             product_def_shape_ids: std::collections::HashMap::new(),
         }
@@ -221,6 +235,7 @@ impl<'m> WriteBuffer<'m> {
         self.emit_pmi_if_set();
         self.emit_visualization_if_set()?;
         self.emit_properties_if_set();
+        self.emit_plm_if_set()?;
         Ok(())
     }
 

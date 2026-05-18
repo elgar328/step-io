@@ -5,6 +5,7 @@ pub mod error;
 pub mod geometry;
 pub mod id;
 pub mod model;
+pub mod plm;
 pub mod property;
 pub mod shape_rep;
 pub mod topology;
@@ -25,12 +26,17 @@ pub use geometry::{
     TrimmedCurve, Vertex,
 };
 pub use id::{
-    Curve2dId, CurveId, Direction2dId, DirectionId, EdgeId, FaceId, FoundedItemId, Placement1dId,
+    CoordinatedUniversalTimeOffsetId, Curve2dId, CurveId, DateAndTimeId, DateId, DateTimeRoleId,
+    Direction2dId, DirectionId, EdgeId, FaceId, FoundedItemId, LocalTimeId, Placement1dId,
     Placement2dId, Placement3dId, Point2dId, PointId, ProductId, ShapeAspectId, ShellId, SolidId,
     SurfaceId, UnitContextId, VertexId, WireId,
 };
 pub use model::{
     FileHeader, GeometryPool, ImplementationLevel, NonEmptyStringList, StepModel, TopologyPool,
+};
+pub use plm::{
+    AheadOrBehind, CalendarDate, CoordinatedUniversalTimeOffset, DateAndTime, DateTimeRole,
+    LocalTime, PlmPool,
 };
 pub use property::{MeasureKind, Property, PropertyMeasure, PropertyPool};
 pub use shape_rep::{

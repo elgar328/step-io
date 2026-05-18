@@ -14,6 +14,7 @@ use crate::writer::buffer::WriteBuffer;
 
 pub mod assembly_product;
 pub mod geometry;
+pub mod plm;
 pub mod property;
 pub mod shape_rep;
 pub mod topology;
@@ -213,6 +214,13 @@ pub(crate) enum PassLevel {
     /// `Pass7StyledItem` / `Pass7OverRiding` so each `assigned_items` ref
     /// resolves to an existing `StyledItemId`.
     Pass7Pla,
+    /// plm Date/Time leaves (Pass 9-1) — `CALENDAR_DATE`,
+    /// `COORDINATED_UNIVERSAL_TIME_OFFSET`, `DATE_TIME_ROLE`. No external deps.
+    Pass9PlmDateLeaves,
+    /// `LOCAL_TIME` (Pass 9-2) — depends on `Pass9PlmDateLeaves` (UTC ref).
+    Pass9PlmLocalTime,
+    /// `DATE_AND_TIME` (Pass 9-3) — depends on date arena + `LocalTime` arena.
+    Pass9PlmDateAndTime,
     /// `SHAPE_ASPECT` (Pass 8-pre) — PMI scaffolding. Runs before the
     /// property converters so a future Pattern B PD pass can resolve its
     /// target ref through the `SHAPE_ASPECT` id map.

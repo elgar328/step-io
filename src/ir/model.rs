@@ -5,6 +5,7 @@ use super::geometry::{
     Point2, Point3, Surface, Vertex,
 };
 use super::id::Placement3dId;
+use super::plm::PlmPool;
 use super::shape_rep::{ShapeAspect, UnitContext};
 use super::topology::{Edge, Face, Shell, Solid, Wire};
 use super::visualization::VisualizationPool;
@@ -191,6 +192,11 @@ pub struct StepModel {
     /// alongside this one — all under the `shape_rep` pool per the
     /// ir.toml blueprint.
     pub shape_aspects: Arena<ShapeAspect>,
+    /// Product-lifecycle metadata (Person/Org/Date/Approval/Security).
+    /// `None` for files without plm content. Phase plm-1a populates the
+    /// Date/Time primitives; later phases add Person/Approval/Security
+    /// clusters alongside them in the same pool.
+    pub plm: Option<PlmPool>,
 }
 
 /// Arena-based storage for all topology objects.

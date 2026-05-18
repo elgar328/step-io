@@ -221,6 +221,13 @@ impl ReaderContext {
         // arena is populated by Pass7OverRiding so `assigned_items` refs
         // resolve to existing arena ids.
         self.dispatch_registry(graph, PassLevel::Pass7Pla);
+        // plm Date/Time chain — leaves (Pass9PlmDateLeaves: CALENDAR_DATE,
+        // COORDINATED_UNIVERSAL_TIME_OFFSET, DATE_TIME_ROLE) → LOCAL_TIME
+        // (Pass9PlmLocalTime, UTC dep) → DATE_AND_TIME (Pass9PlmDateAndTime,
+        // date + local_time dep).
+        self.dispatch_registry(graph, PassLevel::Pass9PlmDateLeaves);
+        self.dispatch_registry(graph, PassLevel::Pass9PlmLocalTime);
+        self.dispatch_registry(graph, PassLevel::Pass9PlmDateAndTime);
 
         // Pass 8: PMI scaffolding — SHAPE_ASPECT entries that anchor
         // future Tolerance / Datum / GD&T work. Runs before the property
