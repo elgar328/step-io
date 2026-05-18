@@ -5,9 +5,9 @@ use super::geometry::{
     Point2, Point3, Surface, Vertex,
 };
 use super::plm::{
-    Address, AppliedDocumentReference, AppliedExternalIdentificationAssignment,
-    AppliedGroupAssignment, Approval, ApprovalAssignment, ApprovalDateTime,
-    ApprovalPersonOrganization, ApprovalRole, ApprovalStatus, CalendarDate,
+    Address, ApplicationContext, ApplicationProtocolDefinition, AppliedDocumentReference,
+    AppliedExternalIdentificationAssignment, AppliedGroupAssignment, Approval, ApprovalAssignment,
+    ApprovalDateTime, ApprovalPersonOrganization, ApprovalRole, ApprovalStatus, CalendarDate,
     CoordinatedUniversalTimeOffset, DateAndTime, DateAndTimeAssignment, DateTimeRole, Document,
     DocumentProductEquivalence, DocumentRepresentationType, DocumentType, ExternalSource, Group,
     IdentificationRole, LocalTime, ObjectRole, Organization, Person, PersonAndOrganization,
@@ -139,3 +139,10 @@ define_id!(RoleAssociationId, RoleAssociation);
 
 // plm Ids — Address cluster (Phase plm-9).
 define_id!(AddressId, Address);
+
+// plm Ids — Application cluster (Phase plm-10).
+define_id!(ApplicationContextId, ApplicationContext);
+define_id!(
+    ApplicationProtocolDefinitionId,
+    ApplicationProtocolDefinition
+);

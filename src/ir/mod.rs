@@ -26,12 +26,13 @@ pub use geometry::{
     TrimmedCurve, Vertex,
 };
 pub use id::{
-    AddressId, ApprovalAssignmentId, ApprovalDateTimeId, ApprovalId, ApprovalPersonOrganizationId,
-    ApprovalRoleId, ApprovalStatusId, CoordinatedUniversalTimeOffsetId, Curve2dId, CurveId,
-    DateAndTimeAssignmentId, DateAndTimeId, DateId, DateTimeRoleId, Direction2dId, DirectionId,
-    DocumentId, DocumentProductEquivalenceId, DocumentReferenceId, DocumentRepresentationTypeId,
-    DocumentTypeId, EdgeId, ExternalSourceId, FaceId, FoundedItemId, GroupAssignmentId, GroupId,
-    IdentificationAssignmentId, IdentificationRoleId, LocalTimeId, ObjectRoleId, OrganizationId,
+    AddressId, ApplicationContextId, ApplicationProtocolDefinitionId, ApprovalAssignmentId,
+    ApprovalDateTimeId, ApprovalId, ApprovalPersonOrganizationId, ApprovalRoleId, ApprovalStatusId,
+    CoordinatedUniversalTimeOffsetId, Curve2dId, CurveId, DateAndTimeAssignmentId, DateAndTimeId,
+    DateId, DateTimeRoleId, Direction2dId, DirectionId, DocumentId, DocumentProductEquivalenceId,
+    DocumentReferenceId, DocumentRepresentationTypeId, DocumentTypeId, EdgeId, ExternalSourceId,
+    FaceId, FoundedItemId, GroupAssignmentId, GroupId, IdentificationAssignmentId,
+    IdentificationRoleId, LocalTimeId, ObjectRoleId, OrganizationId,
     PersonAndOrganizationAssignmentId, PersonAndOrganizationId, PersonAndOrganizationRoleId,
     PersonId, Placement1dId, Placement2dId, Placement3dId, Point2dId, PointId, ProductId,
     RoleAssociationId, SecurityClassificationAssignmentId, SecurityClassificationId,
@@ -42,8 +43,9 @@ pub use model::{
     FileHeader, GeometryPool, ImplementationLevel, NonEmptyStringList, StepModel, TopologyPool,
 };
 pub use plm::{
-    Address, AddressData, AheadOrBehind, AppliedApprovalAssignment, AppliedDateAndTimeAssignment,
-    AppliedDocumentReference, AppliedExternalIdentificationAssignment, AppliedGroupAssignment,
+    Address, AddressData, AheadOrBehind, ApplicationContext, ApplicationProtocolDefinition,
+    AppliedApprovalAssignment, AppliedDateAndTimeAssignment, AppliedDocumentReference,
+    AppliedExternalIdentificationAssignment, AppliedGroupAssignment,
     AppliedSecurityClassificationAssignment, Approval, ApprovalAssignment, ApprovalDateTime,
     ApprovalDateTimeSelect, ApprovalItem, ApprovalPersonOrganization, ApprovalRole, ApprovalStatus,
     CalendarDate, CcDesignApproval, CcDesignDateAndTimeAssignment, CcDesignSecurityClassification,

@@ -176,17 +176,54 @@ impl WriteBuffer<'_> {
     // ----------------------------------------------------------------
 
     fn emit_application_context(&mut self, schema: &StepSchema) -> AssemblyContextIds {
-        let (desc, status, name, year) = apd_info(schema);
-        let app_ctx = self.push_simple("APPLICATION_CONTEXT", vec![Attribute::String(desc.into())]);
-        let _apd = self.push_simple(
-            "APPLICATION_PROTOCOL_DEFINITION",
-            vec![
-                Attribute::String(status.into()),
-                Attribute::String(name.into()),
-                Attribute::Integer(year),
-                Attribute::EntityRef(app_ctx),
-            ],
-        );
+        // IR-driven path: when the plm pool carries an AC, use the
+        // captured strings so the round-trip preserves the source-file
+        // wording. Only the first AC / APD entry is emitted (assembly
+        // chain assumes a single context per file); extras drop.
+        let ir_ac = self
+            .model
+            .plm
+            .as_ref()
+            .and_then(|p| p.application_contexts.iter().next().cloned());
+        let app_ctx = if let Some(ac) = ir_ac {
+            let step = self.push_simple(
+                "APPLICATION_CONTEXT",
+                vec![Attribute::String(ac.application)],
+            );
+            if let Some(apd) = self
+                .model
+                .plm
+                .as_ref()
+                .and_then(|p| p.application_protocol_definitions.iter().next())
+            {
+                let _ = self.push_simple(
+                    "APPLICATION_PROTOCOL_DEFINITION",
+                    vec![
+                        Attribute::String(apd.status.clone()),
+                        Attribute::String(apd.application_interpreted_model_schema_name.clone()),
+                        Attribute::Integer(apd.application_protocol_year),
+                        Attribute::EntityRef(step),
+                    ],
+                );
+            }
+            step
+        } else {
+            // Fallback: synthesise from schema class. Kernel-built IR
+            // and source files without AC land here.
+            let (desc, status, name, year) = apd_info(schema);
+            let step =
+                self.push_simple("APPLICATION_CONTEXT", vec![Attribute::String(desc.into())]);
+            let _ = self.push_simple(
+                "APPLICATION_PROTOCOL_DEFINITION",
+                vec![
+                    Attribute::String(status.into()),
+                    Attribute::String(name.into()),
+                    Attribute::Integer(year),
+                    Attribute::EntityRef(step),
+                ],
+            );
+            step
+        };
         let product_ctx = self.push_simple(
             "PRODUCT_CONTEXT",
             vec![

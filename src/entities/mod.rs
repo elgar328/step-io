@@ -291,6 +291,11 @@ pub(crate) enum PassLevel {
     /// `ADDRESS` / `PERSONAL_ADDRESS` (Pass 9-24) — Address cluster.
     /// `PersonalAddress` refs Person from `Pass9PlmPersonOrg`.
     Pass9PlmAddress,
+    /// `APPLICATION_CONTEXT` (Pass 9-25) — Application leaf.
+    Pass9PlmAppContext,
+    /// `APPLICATION_PROTOCOL_DEFINITION` (Pass 9-26) — refs
+    /// `Pass9PlmAppContext`.
+    Pass9PlmAppProtocol,
     /// `SHAPE_ASPECT` (Pass 8-pre) — PMI scaffolding. Runs before the
     /// property converters so a future Pattern B PD pass can resolve its
     /// target ref through the `SHAPE_ASPECT` id map.

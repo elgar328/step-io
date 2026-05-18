@@ -3,6 +3,8 @@
 //! chain that lands in plm-1b.
 
 pub mod address;
+pub mod application_context;
+pub mod application_protocol_definition;
 pub mod applied_approval_assignment;
 pub mod applied_date_and_time_assignment;
 pub mod applied_document_reference;

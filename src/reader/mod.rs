@@ -380,6 +380,11 @@ pub struct ReaderContext {
     pub(crate) plm_role_association_id_map: HashMap<u64, crate::ir::RoleAssociationId>,
     /// `ADDRESS` / `PERSONAL_ADDRESS` step entity id → `AddressId`.
     pub(crate) plm_address_id_map: HashMap<u64, crate::ir::AddressId>,
+    /// `APPLICATION_CONTEXT` step entity id → `ApplicationContextId`.
+    pub(crate) plm_application_context_id_map: HashMap<u64, crate::ir::ApplicationContextId>,
+    /// `APPLICATION_PROTOCOL_DEFINITION` step entity id → `ApplicationProtocolDefinitionId`.
+    pub(crate) plm_application_protocol_definition_id_map:
+        HashMap<u64, crate::ir::ApplicationProtocolDefinitionId>,
 
     pub(crate) warnings: Vec<ConvertError>,
 }

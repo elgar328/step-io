@@ -10,11 +10,12 @@
 
 use super::arena::Arena;
 use super::id::{
-    ApprovalId, ApprovalRoleId, ApprovalStatusId, CoordinatedUniversalTimeOffsetId, DateAndTimeId,
-    DateId, DateTimeRoleId, DocumentId, DocumentReferenceId, DocumentTypeId, ExternalSourceId,
-    GroupId, IdentificationRoleId, LocalTimeId, ObjectRoleId, OrganizationId,
-    PersonAndOrganizationId, PersonAndOrganizationRoleId, PersonId, ProductId,
-    SecurityClassificationId, SecurityClassificationLevelId,
+    ApplicationContextId, ApprovalId, ApprovalRoleId, ApprovalStatusId,
+    CoordinatedUniversalTimeOffsetId, DateAndTimeId, DateId, DateTimeRoleId, DocumentId,
+    DocumentReferenceId, DocumentTypeId, ExternalSourceId, GroupId, IdentificationRoleId,
+    LocalTimeId, ObjectRoleId, OrganizationId, PersonAndOrganizationId,
+    PersonAndOrganizationRoleId, PersonId, ProductId, SecurityClassificationId,
+    SecurityClassificationLevelId,
 };
 
 /// Top-level container for plm-domain entities. `None` on
@@ -115,6 +116,13 @@ pub struct PlmPool {
     /// `address` arena. `Itself` is plain `ADDRESS`; `PersonalAddress`
     /// is the `PERSONAL_ADDRESS` subtype binding to a set of Persons.
     pub addresses: Arena<Address>,
+    /// `APPLICATION_CONTEXT` arena. The writer emits the first entry
+    /// (if any) in the assembly chain; additional entries drop silently
+    /// (single-AC assumption matches the assembly emit pattern).
+    pub application_contexts: Arena<ApplicationContext>,
+    /// `APPLICATION_PROTOCOL_DEFINITION` arena. Same single-entry
+    /// emit constraint as `application_contexts`.
+    pub application_protocol_definitions: Arena<ApplicationProtocolDefinition>,
 }
 
 /// `OBJECT_ROLE(name, description)`. `AP214e3` schema lines 7533–7536.
@@ -606,4 +614,23 @@ pub struct PersonalAddress {
 pub enum Address {
     Itself(AddressData),
     PersonalAddress(PersonalAddress),
+}
+
+/// `APPLICATION_CONTEXT(application)`. `AP214e3` schema; the
+/// `application` string is the free-form context description
+/// (e.g. `"Core Data for Automotive Mechanical Design Process"`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ApplicationContext {
+    pub application: String,
+}
+
+/// `APPLICATION_PROTOCOL_DEFINITION(status,
+/// application_interpreted_model_schema_name, application_protocol_year,
+/// application)`. References one `ApplicationContext` arena entry.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ApplicationProtocolDefinition {
+    pub status: String,
+    pub application_interpreted_model_schema_name: String,
+    pub application_protocol_year: i64,
+    pub application: ApplicationContextId,
 }
