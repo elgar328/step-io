@@ -155,11 +155,23 @@ pub(crate) struct WriteBuffer<'m> {
     /// multiplicity round-trips faithfully into STEP. Consumed by the
     /// property emitter when resolving a measure's unit ref.
     pub(crate) unit_leaf_ids: Vec<(u64, u64, u64)>,
-    /// `ProductId → PRODUCT_DEFINITION step id`. Populated by
-    /// `emit_assembly_chain`; consumed by the property emitter so a
-    /// `Property.target` can be resolved to a STEP ref. Empty when the
-    /// model has no assembly (kernel-built IR with properties only — the
-    /// property emitter silently skips in that case).
+    /// `ProductId → best step id for cross-references that target this
+    /// product`. Populated by `emit_assembly_chain`; consumed by the
+    /// property emitter and the plm `applied_*_assignment` writers so
+    /// `Property.target` / SELECT items can be resolved to a STEP ref.
+    ///
+    /// Value is the `PRODUCT_DEFINITION` step id for products that have a
+    /// PDEF chain (the common case — every product that came from a source
+    /// `PRODUCT_DEFINITION` or that the kernel built with a
+    /// `geometry_context`). For document-style products (`pdef_context =
+    /// None && geometry_context = None`, observed in NIST AP242 PMI
+    /// fixtures) the PDEF chain is skipped and the value is the `PRODUCT`
+    /// step id itself. plm SELECT readers handle both via
+    /// `entities/plm/mod.rs::resolve_date_time_item` (chain 3 walks
+    /// `product_arena_map` directly), so the round-trip stays symmetric.
+    ///
+    /// Empty when the model has no assembly (kernel-built IR with
+    /// properties only — the property emitter silently skips in that case).
     pub(crate) product_def_ids: std::collections::HashMap<ProductId, u64>,
     /// `ProductId → PRODUCT_DEFINITION_SHAPE step id`. Same role as
     /// `product_def_ids` but for the PDS sibling — consumed by the PMI

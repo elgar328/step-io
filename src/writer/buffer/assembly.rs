@@ -140,6 +140,28 @@ impl WriteBuffer<'_> {
                 pdef_ctx: pdef_ctx_step,
             };
             let prod_entity = self.emit_product(product, &per_product_ctx);
+            // Document-style products — `pdef_context = None && geometry_context
+            // = None`, typically `category.kind = "document"` observed in NIST
+            // AP242 PMI fixtures. Source had only the bare PRODUCT entity (no
+            // FORMATION / PDEF / SDR), so skip emitting the synthetic chain;
+            // otherwise round-trip would re-introduce a PDEF and break IR
+            // idempotency (`pdef_context` goes from `None` → `Some(PDC[0])`).
+            //
+            // plm SELECT items that target this product still need a step ref,
+            // so record the PRODUCT step id in `product_def_ids` — the lookup
+            // map's value is the "best ref" for this product (PDEF when the
+            // chain exists, PRODUCT otherwise). Reader-side symmetry is via
+            // `entities/plm/mod.rs::resolve_date_time_item` chain 3, which
+            // walks `product_arena_map` for direct PRODUCT refs.
+            //
+            // Kernel-built IR keeps `geometry_context = Some(_)` (the adapter
+            // sets it when constructing geometry) so it bypasses this branch
+            // and gets the full chain as before.
+            if product.pdef_context.is_none() && product.geometry_context.is_none() {
+                self.emit_product_category_chain(product, prod_entity);
+                self.product_def_ids.insert(pid, prod_entity);
+                continue;
+            }
             let formation = self.emit_formation(prod_entity, product);
             let pdef = self.emit_pdef(formation, per_product_ctx.pdef_ctx);
             let pdef_shape = {
@@ -195,7 +217,12 @@ impl WriteBuffer<'_> {
             let ProductContent::Group(group) = &parent.content else {
                 continue;
             };
-            let parent_pdef = self.product_def_ids[&parent_pid];
+            // Document-style Group products skip the PDEF chain above, so
+            // their entry in `product_def_ids` is absent. Such products
+            // never have instances; skip them here for symmetry.
+            let Some(&parent_pdef) = self.product_def_ids.get(&parent_pid) else {
+                continue;
+            };
             // No SR for this parent → no shape to anchor instances on.
             // Reached when the parent is a metadata-only Group([]) whose
             // SR emission was skipped above.
