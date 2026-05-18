@@ -6,7 +6,9 @@
 //! remain tree-inline pending later phases of the blueprint migration.
 
 use super::arena::Arena;
-use super::id::{ColourId, CurveFontId, CurveId, CurveStyleId, EdgeId, FaceId, PointId, SolidId};
+use super::id::{
+    ColourId, CurveFontId, CurveId, CurveStyleId, EdgeId, FaceId, PointId, SolidId, StyledItemId,
+};
 use super::shape_rep::Mdgpr;
 
 /// Top-level container for visualization data extracted from
@@ -90,13 +92,16 @@ pub struct DraughtingPreDefinedColour {
 }
 
 /// `STYLED_ITEM` enum per the ir.toml blueprint
-/// (`enum_of = "styled_item"`). Future phases add
-/// `OverRiding(OverRidingStyledItem)` and
-/// `ContextDependent(ContextDependentOverRidingStyledItem)` variants;
-/// the current phase models only the base `Plain` form.
+/// (`enum_of = "styled_item"`). `Plain` covers the base `STYLED_ITEM`
+/// entity; `OverRiding` covers `OVER_RIDING_STYLED_ITEM`, which decorates
+/// another `StyledItem` with replacement styles.
+/// `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` is a future phase — its
+/// `style_context` field references `REPRESENTATION_RELATIONSHIP*`
+/// entities that step-io's IR does not yet model.
 #[derive(Debug, Clone, PartialEq)]
 pub enum StyledItem {
     Plain(PlainStyledItem),
+    OverRiding(OverRidingStyledItem),
 }
 
 /// `STYLED_ITEM(name, styles, item)` — binds presentation styles to a
@@ -106,6 +111,17 @@ pub struct PlainStyledItem {
     pub name: String,
     pub styles: Vec<PresentationStyleAssignment>,
     pub item: StyledItemTarget,
+}
+
+/// `OVER_RIDING_STYLED_ITEM(name, styles, item, over_ridden_style)` —
+/// inherits from `STYLED_ITEM` with one extra field referencing the
+/// `StyledItem` whose styles this entity replaces.
+#[derive(Debug, Clone, PartialEq)]
+pub struct OverRidingStyledItem {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignment>,
+    pub item: StyledItemTarget,
+    pub over_ridden_style: StyledItemId,
 }
 
 /// What the `STYLED_ITEM.item` ref resolved to in step-io's IR. The STEP

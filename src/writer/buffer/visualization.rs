@@ -18,6 +18,7 @@ impl WriteBuffer<'_> {
         use crate::entities::visualization::curve_style::CurveStyleHandler;
         use crate::entities::visualization::draughting_pre_defined_colour::DraughtingPreDefinedColourHandler;
         use crate::entities::visualization::draughting_pre_defined_curve_font::DraughtingPreDefinedCurveFontHandler;
+        use crate::entities::visualization::over_riding_styled_item::OverRidingStyledItemHandler;
         use crate::entities::visualization::styled_item::StyledItemHandler;
         let Some(viz) = self.model.visualization.clone() else {
             return Ok(());
@@ -49,15 +50,23 @@ impl WriteBuffer<'_> {
             let id = CurveStyleHandler::write(self, cs.clone())?;
             self.curve_style_step_ids.push(id);
         }
-        // STYLED_ITEM arena — emit each variant body then cache the STEP
-        // id so MDGPR (and future OverRidingStyledItem fix-up passes) can
-        // resolve `StyledItemId.0` to a STEP entity with one lookup.
-        self.styled_item_step_ids = Vec::with_capacity(viz.styled_items.len());
-        for si in viz.styled_items.iter() {
-            let id = match si {
-                StyledItem::Plain(p) => StyledItemHandler::write(self, p.clone())?,
-            };
-            self.styled_item_step_ids.push(id);
+        // STYLED_ITEM arena — emit Plain entries first so their STEP ids
+        // are cached when OverRiding entries reference them through
+        // `over_ridden_style`. The vec is pre-sized to viz.styled_items.len()
+        // and each pass writes into its variant's slot; downstream
+        // consumers (MDGPR, PSA) read `styled_item_step_ids[id.0]`.
+        self.styled_item_step_ids = vec![0; viz.styled_items.len()];
+        for (idx, si) in viz.styled_items.iter().enumerate() {
+            if let StyledItem::Plain(p) = si {
+                let id = StyledItemHandler::write(self, p.clone())?;
+                self.styled_item_step_ids[idx] = id;
+            }
+        }
+        for (idx, si) in viz.styled_items.iter().enumerate() {
+            if let StyledItem::OverRiding(o) = si {
+                let id = OverRidingStyledItemHandler::write(self, o.clone())?;
+                self.styled_item_step_ids[idx] = id;
+            }
         }
         for mdgpr in viz.mdgprs {
             MdgprHandler::write(self, mdgpr)?;

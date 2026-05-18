@@ -202,6 +202,10 @@ pub(crate) enum PassLevel {
     /// `STYLED_ITEM` (Pass 7-10) — depends on `Pass7Assignment` plus
     /// multi-pool item lookup (solid / face / curve / point maps).
     Pass7StyledItem,
+    /// `OVER_RIDING_STYLED_ITEM` (Pass 7-10b) — depends on `Pass7StyledItem`
+    /// so its `over_ridden_style` ref resolves to an existing entry in
+    /// `VisualizationPool::styled_items`.
+    Pass7OverRiding,
     /// `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION` (Pass 7-11)
     /// — depends on `Pass7StyledItem` outputs.
     Pass7Mdgpr,

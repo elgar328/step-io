@@ -211,6 +211,10 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass7CurveStyle);
         self.dispatch_registry(graph, PassLevel::Pass7Assignment);
         self.dispatch_registry(graph, PassLevel::Pass7StyledItem);
+        // OVER_RIDING_STYLED_ITEM — depends on the styled_item arena
+        // populated by Pass7StyledItem (its over_ridden_style ref must
+        // resolve to an existing entry).
+        self.dispatch_registry(graph, PassLevel::Pass7OverRiding);
         self.dispatch_registry(graph, PassLevel::Pass7Mdgpr);
 
         // Pass 8: PMI scaffolding — SHAPE_ASPECT entries that anchor

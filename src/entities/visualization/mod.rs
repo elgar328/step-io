@@ -12,6 +12,7 @@ pub mod draughting_pre_defined_colour;
 pub mod draughting_pre_defined_curve_font;
 pub mod fill_area_style;
 pub mod fill_area_style_colour;
+pub mod over_riding_styled_item;
 pub mod presentation_style_assignment;
 pub mod styled_item;
 pub mod surface_side_style;
