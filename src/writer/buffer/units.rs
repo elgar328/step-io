@@ -55,8 +55,26 @@ impl WriteBuffer<'_> {
             let step = emit_derived_unit_element(self, unit_step, due.exponent)?;
             self.due_step_ids[id.0 as usize] = step;
         }
+        // units-1b: DERIVED_UNIT wraps DUE refs — emit after the DUE
+        // loop so `due_step_ids` is fully populated.
+        self.derived_unit_step_ids
+            .resize(pool.derived_units.len(), 0);
+        for (id, du) in pool.derived_units.iter_with_ids() {
+            let element_steps: Vec<u64> = du
+                .elements
+                .iter()
+                .map(|e| self.due_step_ids[e.0 as usize])
+                .collect();
+            let step = emit_derived_unit(self, element_steps)?;
+            self.derived_unit_step_ids[id.0 as usize] = step;
+        }
         Ok(())
     }
+}
+
+fn emit_derived_unit(buf: &mut WriteBuffer<'_>, elements: Vec<u64>) -> Result<u64, WriteError> {
+    use crate::entities::SimpleEntityHandler;
+    crate::entities::units::derived_unit::DerivedUnitHandler::write(buf, elements)
 }
 
 fn emit_derived_unit_element(

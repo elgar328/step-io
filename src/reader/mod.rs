@@ -19,7 +19,7 @@ use crate::ir::id::{
 use crate::ir::model::{GeometryPool, StepModel, TopologyPool};
 use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit, SolidAngleUnit, UnitContext};
 use crate::ir::topology::{Orientation, OrientedEdge};
-use crate::ir::units::{DerivedUnitElement, MeasureWithUnit, NamedUnit, UnitsPool};
+use crate::ir::units::{DerivedUnit, DerivedUnitElement, MeasureWithUnit, NamedUnit, UnitsPool};
 use crate::ir::visualization::{FillAreaStyleColour, VisualizationPool};
 // CurveFontId / CurveStyleId / StyledItemId imported above; the map types reference them directly.
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
@@ -120,6 +120,11 @@ pub struct ReaderContext {
     pub(crate) mwu_id_map: HashMap<u64, crate::ir::id::MeasureWithUnitId>,
     /// `DERIVED_UNIT_ELEMENT` `#N → DerivedUnitElementId` (units-1).
     pub(crate) due_id_map: HashMap<u64, crate::ir::id::DerivedUnitElementId>,
+    /// `DERIVED_UNIT` arena (units-1b). Populated by `Pass0Du`.
+    pub(crate) derived_unit_arena: Arena<DerivedUnit>,
+    /// `DERIVED_UNIT` `#N → DerivedUnitId` (units-1b). Reserved for future
+    /// consumers (no entity references it in the current IR).
+    pub(crate) derived_unit_id_map: HashMap<u64, crate::ir::id::DerivedUnitId>,
     /// MWU step ids that appear as the `conversion_factor` of a
     /// `CONVERSION_BASED_UNIT` complex (units-1). Populated by the unit
     /// complex handlers in `Pass0Leaf` and consulted by `Pass0MwuDue` MWU
@@ -460,7 +465,12 @@ impl ReaderContext {
                 properties: ctx.properties,
                 shape_aspects: ctx.shape_aspects,
                 plm: ctx.plm,
-                units_pool: build_units_pool(ctx.named_units_arena, ctx.mwu_arena, ctx.due_arena),
+                units_pool: build_units_pool(
+                    ctx.named_units_arena,
+                    ctx.mwu_arena,
+                    ctx.due_arena,
+                    ctx.derived_unit_arena,
+                ),
             },
             warnings: ctx.warnings,
             parse_warnings: graph.warnings.clone(),
@@ -739,22 +749,28 @@ pub(crate) fn resolve_in_map_cloned<V: Clone>(
     })
 }
 
-/// Wrap the three units-1 arenas into a [`UnitsPool`], returning `None`
-/// when all three are empty (the common case for fixtures without MWU /
-/// DUE / MASS content). Called by [`ReaderContext::convert`] when
-/// assembling the final [`StepModel`].
+/// Wrap the units arenas into a [`UnitsPool`], returning `None` when all
+/// are empty (the common case for fixtures without MWU / DUE / DU / MASS
+/// content). Called by [`ReaderContext::convert`] when assembling the
+/// final [`StepModel`].
 fn build_units_pool(
     named_units: Arena<NamedUnit>,
     measure_with_units: Arena<MeasureWithUnit>,
     derived_unit_elements: Arena<DerivedUnitElement>,
+    derived_units: Arena<DerivedUnit>,
 ) -> Option<UnitsPool> {
-    if named_units.is_empty() && measure_with_units.is_empty() && derived_unit_elements.is_empty() {
+    if named_units.is_empty()
+        && measure_with_units.is_empty()
+        && derived_unit_elements.is_empty()
+        && derived_units.is_empty()
+    {
         None
     } else {
         Some(UnitsPool {
             named_units,
             measure_with_units,
             derived_unit_elements,
+            derived_units,
         })
     }
 }

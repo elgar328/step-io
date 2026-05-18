@@ -19,7 +19,7 @@ use super::plm::{
 };
 use super::shape_rep::{ShapeAspect, UnitContext};
 use super::topology::{Edge, Face, Shell, Solid, Wire};
-use super::units::{DerivedUnitElement, MeasureWithUnit, NamedUnit};
+use super::units::{DerivedUnit, DerivedUnitElement, MeasureWithUnit, NamedUnit};
 use super::visualization::{
     Colour, CurveFont, CurveStyle, FoundedItem, PresentationLayerAssignment,
     PresentationStyleAssignment, StyledItem, SurfaceStyleRendering,
@@ -163,3 +163,4 @@ define_id!(
 define_id!(NamedUnitId, NamedUnit);
 define_id!(MeasureWithUnitId, MeasureWithUnit);
 define_id!(DerivedUnitElementId, DerivedUnitElement);
+define_id!(DerivedUnitId, DerivedUnit);

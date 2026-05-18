@@ -14,12 +14,13 @@
 use super::arena::Arena;
 use super::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit};
 
-/// Container for the `units` pool entities introduced by units-1.
+/// Container for the `units` pool entities introduced by units-1 / units-1b.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct UnitsPool {
     pub named_units: Arena<NamedUnit>,
     pub measure_with_units: Arena<MeasureWithUnit>,
     pub derived_unit_elements: Arena<DerivedUnitElement>,
+    pub derived_units: Arena<DerivedUnit>,
 }
 
 /// `NAMED_UNIT` arena enum — one entry per STEP `NAMED_UNIT` complex
@@ -88,4 +89,17 @@ pub enum MeasureWithUnit {
 pub struct DerivedUnitElement {
     pub unit: super::id::NamedUnitId,
     pub exponent: f64,
+}
+
+/// `DERIVED_UNIT(elements: SET[1:?] OF derived_unit_element)`.
+///
+/// AP214 wrapper around 1+ DUE. Currently a structural leaf in step-io's
+/// IR — no other IR type references [`crate::ir::id::DerivedUnitId`].
+/// Exists to round-trip the grabcad corpus footprint that wraps DUE
+/// chains in `DERIVED_UNIT((...))`. The schema's `SET[1:?]` cardinality
+/// is enforced at read: instances whose `elements` resolve to an empty
+/// list are dropped with a warning rather than admitted to the arena.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DerivedUnit {
+    pub elements: Vec<super::id::DerivedUnitElementId>,
 }

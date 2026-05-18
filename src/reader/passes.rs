@@ -24,6 +24,10 @@ impl ReaderContext {
         // MASS_UNIT + DERIVED_UNIT_ELEMENT. Depends on `named_unit_id_map`
         // populated by Pass 0-1 unit-leaf handlers.
         self.dispatch_registry(graph, PassLevel::Pass0MwuDue);
+
+        // Pass 0-4 (units-1b): DERIVED_UNIT — depends on `due_id_map`
+        // populated by Pass 0-3.
+        self.dispatch_registry(graph, PassLevel::Pass0Du);
     }
 
     pub(super) fn run_geometry_passes(&mut self, graph: &EntityGraph) {

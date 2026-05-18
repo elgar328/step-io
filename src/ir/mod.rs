@@ -32,8 +32,8 @@ pub use id::{
     AddressId, ApplicationContextId, ApplicationProtocolDefinitionId, ApprovalAssignmentId,
     ApprovalDateTimeId, ApprovalId, ApprovalPersonOrganizationId, ApprovalRoleId, ApprovalStatusId,
     CoordinatedUniversalTimeOffsetId, Curve2dId, CurveId, DateAndTimeAssignmentId, DateAndTimeId,
-    DateId, DateTimeRoleId, DerivedUnitElementId, Direction2dId, DirectionId, DocumentId,
-    DocumentProductEquivalenceId, DocumentReferenceId, DocumentRepresentationTypeId,
+    DateId, DateTimeRoleId, DerivedUnitElementId, DerivedUnitId, Direction2dId, DirectionId,
+    DocumentId, DocumentProductEquivalenceId, DocumentReferenceId, DocumentRepresentationTypeId,
     DocumentTypeId, EdgeId, ExternalSourceId, FaceId, FoundedItemId, GroupAssignmentId, GroupId,
     IdentificationAssignmentId, IdentificationRoleId, LocalTimeId, MeasureWithUnitId, NamedUnitId,
     ObjectRoleId, OrganizationId, PersonAndOrganizationAssignmentId, PersonAndOrganizationId,
@@ -67,7 +67,7 @@ pub use shape_rep::{
     AngleUnit, LengthUncertainty, LengthUnit, Mdgpr, ShapeAspect, SolidAngleUnit, UnitContext,
 };
 pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Wire};
-pub use units::{DerivedUnitElement, MassUnit, MeasureWithUnit, NamedUnit, UnitsPool};
+pub use units::{DerivedUnit, DerivedUnitElement, MassUnit, MeasureWithUnit, NamedUnit, UnitsPool};
 pub use visualization::{
     Colour, ColourRgb, CurveFont, CurveStyle, CurveWidth, DraughtingPreDefinedColour,
     DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour, FoundedItem,

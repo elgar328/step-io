@@ -97,6 +97,9 @@ pub(crate) enum PassLevel {
     /// `named_unit_id_map`). Runs after `Pass0Context` so the entire Pass 0
     /// unit machinery has settled before MWU consumers fire.
     Pass0MwuDue,
+    /// `DERIVED_UNIT` (units-1b) — depends on `Pass0MwuDue` outputs
+    /// (`due_id_map`) for its `elements` SET ref list.
+    Pass0Du,
 
     // ----- Plan 4 (topology) -----
     /// `VERTEX_POINT` (Pass 5-1) — depends on `CARTESIAN_POINT`.

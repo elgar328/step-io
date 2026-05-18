@@ -71,9 +71,14 @@ pub(crate) struct WriteBuffer<'m> {
     /// support post-units-1 consumers (e.g. MFUO `quantity`).
     pub(crate) mwu_step_ids: Vec<u64>,
     /// STEP entity id of every emitted `DERIVED_UNIT_ELEMENT`, indexed by
-    /// `DerivedUnitElementId.0`. Same usage note as [`Self::mwu_step_ids`]
-    /// — populated for future `DERIVED_UNIT` parent emission.
+    /// `DerivedUnitElementId.0`. Consumed by `DERIVED_UNIT` emission
+    /// (units-1b) to resolve `elements` refs.
     pub(crate) due_step_ids: Vec<u64>,
+    /// STEP entity id of every emitted `DERIVED_UNIT`, indexed by
+    /// `DerivedUnitId.0`. Currently unused by downstream emitters; kept
+    /// for parity with the other units-pool caches and for any future
+    /// consumer that wires a `ref_derived_unit` field.
+    pub(crate) derived_unit_step_ids: Vec<u64>,
     /// STEP entity id of every emitted `COLOUR_RGB` /
     /// `DRAUGHTING_PRE_DEFINED_COLOUR` entity, indexed by `ColourId.0`.
     /// Populated by `emit_visualization_if_set` before any consumer
@@ -228,6 +233,7 @@ impl<'m> WriteBuffer<'m> {
             named_unit_step_ids: Vec::new(),
             mwu_step_ids: Vec::new(),
             due_step_ids: Vec::new(),
+            derived_unit_step_ids: Vec::new(),
             colour_step_ids: Vec::new(),
             curve_font_step_ids: Vec::new(),
             curve_style_step_ids: Vec::new(),
