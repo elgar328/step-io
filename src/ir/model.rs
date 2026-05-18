@@ -8,6 +8,7 @@ use super::id::Placement3dId;
 use super::plm::PlmPool;
 use super::shape_rep::{ShapeAspect, UnitContext};
 use super::topology::{Edge, Face, Shell, Solid, Wire};
+use super::units::UnitsPool;
 use super::visualization::VisualizationPool;
 use crate::parser::schema::StepSchema;
 
@@ -197,6 +198,11 @@ pub struct StepModel {
     /// Date/Time primitives; later phases add Person/Approval/Security
     /// clusters alongside them in the same pool.
     pub plm: Option<PlmPool>,
+    /// Per-instance units arena (named-unit / measure-with-unit /
+    /// derived-unit-element). `None` for files where no MWU / DUE / MASS
+    /// entity was observed. Coexists with [`Self::units`] (per-context
+    /// bundled enums) during the units-1 dual-tracking period.
+    pub units_pool: Option<UnitsPool>,
 }
 
 /// Arena-based storage for all topology objects.

@@ -19,6 +19,7 @@ use super::plm::{
 };
 use super::shape_rep::{ShapeAspect, UnitContext};
 use super::topology::{Edge, Face, Shell, Solid, Wire};
+use super::units::{DerivedUnitElement, MeasureWithUnit, NamedUnit};
 use super::visualization::{
     Colour, CurveFont, CurveStyle, FoundedItem, PresentationLayerAssignment,
     PresentationStyleAssignment, StyledItem, SurfaceStyleRendering,
@@ -156,3 +157,9 @@ define_id!(
     ApplicationProtocolDefinitionId,
     ApplicationProtocolDefinition
 );
+
+// units pool Ids (Phase units-1) — per-instance `NAMED_UNIT` complexes,
+// `MEASURE_WITH_UNIT` subtypes, and `DERIVED_UNIT_ELEMENT`.
+define_id!(NamedUnitId, NamedUnit);
+define_id!(MeasureWithUnitId, MeasureWithUnit);
+define_id!(DerivedUnitElementId, DerivedUnitElement);

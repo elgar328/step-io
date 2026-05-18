@@ -6,7 +6,7 @@
 //! the `emit_face` / `emit_curve` wrappers in geometry / topology.
 
 use super::WriteBuffer;
-use crate::ir::UnitContext;
+use crate::ir::{MeasureWithUnit, NamedUnit, UnitContext};
 use crate::writer::WriteError;
 
 impl WriteBuffer<'_> {
@@ -19,6 +19,104 @@ impl WriteBuffer<'_> {
         // `src/entities/shape_rep/global_unit_assigned_context.rs`.
         use crate::entities::ComplexEntityHandler;
         crate::entities::shape_rep::global_unit_assigned_context::GlobalUnitAssignedContextHandler::write(self, units)
+    }
+
+    /// units-1: emit the [`UnitsPool`] arenas (per-instance `NamedUnit`,
+    /// `MeasureWithUnit`, `DerivedUnitElement`) and populate the three
+    /// step-id caches.
+    ///
+    /// These are emitted in addition to (not in place of) the existing
+    /// `UnitContext` leaves — the dual-tracking period. The extra
+    /// `NAMED_UNIT` complexes are not referenced by GUAC; they exist only
+    /// so MWU / DUE arena emits have well-formed `unit` refs. See the
+    /// units-1 plan for the round-trip-fidelity trade-off note.
+    ///
+    /// [`UnitsPool`]: crate::ir::UnitsPool
+    pub(crate) fn emit_units_pool_if_set(&mut self) -> Result<(), WriteError> {
+        let Some(pool) = self.model.units_pool.as_ref() else {
+            return Ok(());
+        };
+        // Pre-size caches so writers can index without `Vec::push` order
+        // worries. We then walk arenas in id order and assign.
+        self.named_unit_step_ids.resize(pool.named_units.len(), 0);
+        for (id, named) in pool.named_units.iter_with_ids() {
+            let step = emit_named_unit(self, named)?;
+            self.named_unit_step_ids[id.0 as usize] = step;
+        }
+        self.mwu_step_ids.resize(pool.measure_with_units.len(), 0);
+        for (id, mwu) in pool.measure_with_units.iter_with_ids() {
+            let step = emit_measure_with_unit(self, mwu)?;
+            self.mwu_step_ids[id.0 as usize] = step;
+        }
+        self.due_step_ids
+            .resize(pool.derived_unit_elements.len(), 0);
+        for (id, due) in pool.derived_unit_elements.iter_with_ids() {
+            let unit_step = self.named_unit_step_ids[due.unit.0 as usize];
+            let step = emit_derived_unit_element(self, unit_step, due.exponent)?;
+            self.due_step_ids[id.0 as usize] = step;
+        }
+        Ok(())
+    }
+}
+
+fn emit_derived_unit_element(
+    buf: &mut WriteBuffer<'_>,
+    unit_step: u64,
+    exponent: f64,
+) -> Result<u64, WriteError> {
+    use crate::entities::SimpleEntityHandler;
+    crate::entities::units::derived_unit_element::DerivedUnitElementHandler::write(
+        buf,
+        (unit_step, exponent),
+    )
+}
+
+fn emit_named_unit(buf: &mut WriteBuffer<'_>, named: &NamedUnit) -> Result<u64, WriteError> {
+    use crate::entities::ComplexEntityHandler;
+    use crate::entities::units::length_unit::LengthUnitHandler;
+    use crate::entities::units::mass_unit::MassUnitHandler;
+    use crate::entities::units::plane_angle_unit::PlaneAngleUnitHandler;
+    use crate::entities::units::solid_angle_unit::SolidAngleUnitHandler;
+    // Use the existing leaf writers with no CBU-wrap / no explicit DE.
+    // The units-1 NamedUnit arena entries are stand-alone NAMED_UNIT
+    // complexes detached from any GUAC; they don't carry the per-context
+    // sticky flags the UnitContext path threads through.
+    match *named {
+        NamedUnit::Length(u) => LengthUnitHandler::write(buf, (u, false, false)),
+        NamedUnit::PlaneAngle(u) => PlaneAngleUnitHandler::write(buf, (u, false, false)),
+        NamedUnit::SolidAngle(u) => SolidAngleUnitHandler::write(buf, (u, false)),
+        NamedUnit::Mass(u) => MassUnitHandler::write(buf, u),
+    }
+}
+
+fn emit_measure_with_unit(
+    buf: &mut WriteBuffer<'_>,
+    mwu: &MeasureWithUnit,
+) -> Result<u64, WriteError> {
+    use crate::entities::SimpleEntityHandler;
+    use crate::entities::units::{
+        length_measure_with_unit::LengthMeasureWithUnitHandler,
+        mass_measure_with_unit::MassMeasureWithUnitHandler,
+        plane_angle_measure_with_unit::PlaneAngleMeasureWithUnitHandler,
+        ratio_measure_with_unit::RatioMeasureWithUnitHandler,
+    };
+    match *mwu {
+        MeasureWithUnit::Length { value, unit } => {
+            let unit_step = buf.named_unit_step_ids[unit.0 as usize];
+            LengthMeasureWithUnitHandler::write(buf, (value, unit_step))
+        }
+        MeasureWithUnit::Mass { value, unit } => {
+            let unit_step = buf.named_unit_step_ids[unit.0 as usize];
+            MassMeasureWithUnitHandler::write(buf, (value, unit_step))
+        }
+        MeasureWithUnit::PlaneAngle { value, unit } => {
+            let unit_step = buf.named_unit_step_ids[unit.0 as usize];
+            PlaneAngleMeasureWithUnitHandler::write(buf, (value, unit_step))
+        }
+        MeasureWithUnit::Ratio { value, unit } => {
+            let unit_step = buf.named_unit_step_ids[unit.0 as usize];
+            RatioMeasureWithUnitHandler::write(buf, (value, unit_step))
+        }
     }
 }
 

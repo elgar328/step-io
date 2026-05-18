@@ -12,6 +12,7 @@ use crate::entities::units::shared::{
 use crate::ir::attr::{check_count, read_enum};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::AngleUnit;
+use crate::ir::units::NamedUnit;
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
 use crate::writer::WriteError;
@@ -33,7 +34,9 @@ impl ComplexEntityHandler for PlaneAngleUnitHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         if has_part(parts, "CONVERSION_BASED_UNIT") {
-            return read_conversion_based_unit_body(ctx, entity_id, parts, false, true);
+            read_conversion_based_unit_body(ctx, entity_id, parts, false, true)?;
+            register_named_plane_angle(ctx, entity_id);
+            return Ok(());
         }
 
         if !has_part(parts, "SI_UNIT") {
@@ -53,6 +56,7 @@ impl ComplexEntityHandler for PlaneAngleUnitHandler {
 
         if let Some(unit) = match_angle_unit(prefix, name) {
             ctx.angle_unit_map.insert(entity_id, unit);
+            register_named_plane_angle(ctx, entity_id);
         } else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                 entity_id,
@@ -79,6 +83,14 @@ impl ComplexEntityHandler for PlaneAngleUnitHandler {
             ),
         };
         Ok(n)
+    }
+}
+
+/// units-1: see `length_unit::register_named_length` for the rationale.
+fn register_named_plane_angle(ctx: &mut ReaderContext, entity_id: u64) {
+    if let Some(&unit) = ctx.angle_unit_map.get(&entity_id) {
+        let id = ctx.named_units_arena.push(NamedUnit::PlaneAngle(unit));
+        ctx.named_unit_id_map.insert(entity_id, id);
     }
 }
 

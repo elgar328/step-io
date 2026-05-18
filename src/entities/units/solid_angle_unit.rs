@@ -12,6 +12,7 @@ use crate::entities::units::shared::{
 use crate::ir::attr::{check_count, read_enum};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::SolidAngleUnit;
+use crate::ir::units::NamedUnit;
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
 use crate::writer::WriteError;
@@ -57,6 +58,8 @@ impl ComplexEntityHandler for SolidAngleUnitHandler {
 
         if let Some(unit) = match_solid_angle_unit(prefix, name) {
             ctx.solid_angle_unit_map.insert(entity_id, unit);
+            let id = ctx.named_units_arena.push(NamedUnit::SolidAngle(unit));
+            ctx.named_unit_id_map.insert(entity_id, id);
         } else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                 entity_id,

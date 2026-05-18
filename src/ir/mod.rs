@@ -9,6 +9,7 @@ pub mod plm;
 pub mod property;
 pub mod shape_rep;
 pub mod topology;
+pub mod units;
 pub mod visualization;
 
 pub use arena::Arena;
@@ -31,13 +32,13 @@ pub use id::{
     AddressId, ApplicationContextId, ApplicationProtocolDefinitionId, ApprovalAssignmentId,
     ApprovalDateTimeId, ApprovalId, ApprovalPersonOrganizationId, ApprovalRoleId, ApprovalStatusId,
     CoordinatedUniversalTimeOffsetId, Curve2dId, CurveId, DateAndTimeAssignmentId, DateAndTimeId,
-    DateId, DateTimeRoleId, Direction2dId, DirectionId, DocumentId, DocumentProductEquivalenceId,
-    DocumentReferenceId, DocumentRepresentationTypeId, DocumentTypeId, EdgeId, ExternalSourceId,
-    FaceId, FoundedItemId, GroupAssignmentId, GroupId, IdentificationAssignmentId,
-    IdentificationRoleId, LocalTimeId, ObjectRoleId, OrganizationId,
-    PersonAndOrganizationAssignmentId, PersonAndOrganizationId, PersonAndOrganizationRoleId,
-    PersonId, Placement1dId, Placement2dId, Placement3dId, Point2dId, PointId, ProductContextId,
-    ProductDefinitionContextAssociationId, ProductDefinitionContextId,
+    DateId, DateTimeRoleId, DerivedUnitElementId, Direction2dId, DirectionId, DocumentId,
+    DocumentProductEquivalenceId, DocumentReferenceId, DocumentRepresentationTypeId,
+    DocumentTypeId, EdgeId, ExternalSourceId, FaceId, FoundedItemId, GroupAssignmentId, GroupId,
+    IdentificationAssignmentId, IdentificationRoleId, LocalTimeId, MeasureWithUnitId, NamedUnitId,
+    ObjectRoleId, OrganizationId, PersonAndOrganizationAssignmentId, PersonAndOrganizationId,
+    PersonAndOrganizationRoleId, PersonId, Placement1dId, Placement2dId, Placement3dId, Point2dId,
+    PointId, ProductContextId, ProductDefinitionContextAssociationId, ProductDefinitionContextId,
     ProductDefinitionContextRoleId, ProductId, RoleAssociationId,
     SecurityClassificationAssignmentId, SecurityClassificationId, SecurityClassificationLevelId,
     ShapeAspectId, ShellId, SolidId, SurfaceId, UnitContextId, VertexId, WireId,
@@ -66,6 +67,7 @@ pub use shape_rep::{
     AngleUnit, LengthUncertainty, LengthUnit, Mdgpr, ShapeAspect, SolidAngleUnit, UnitContext,
 };
 pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Wire};
+pub use units::{DerivedUnitElement, MassUnit, MeasureWithUnit, NamedUnit, UnitsPool};
 pub use visualization::{
     Colour, ColourRgb, CurveFont, CurveStyle, CurveWidth, DraughtingPreDefinedColour,
     DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour, FoundedItem,

@@ -19,6 +19,7 @@ use crate::ir::id::{
 use crate::ir::model::{GeometryPool, StepModel, TopologyPool};
 use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit, SolidAngleUnit, UnitContext};
 use crate::ir::topology::{Orientation, OrientedEdge};
+use crate::ir::units::{DerivedUnitElement, MeasureWithUnit, NamedUnit, UnitsPool};
 use crate::ir::visualization::{FillAreaStyleColour, VisualizationPool};
 // CurveFontId / CurveStyleId / StyledItemId imported above; the map types reference them directly.
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
@@ -103,6 +104,29 @@ pub struct ReaderContext {
     pub(crate) length_unit_map: HashMap<u64, LengthUnit>,
     pub(crate) angle_unit_map: HashMap<u64, AngleUnit>,
     pub(crate) solid_angle_unit_map: HashMap<u64, SolidAngleUnit>,
+    /// Per-instance `NAMED_UNIT` arena (units-1). Populated by the
+    /// `LENGTH` / `PLANE_ANGLE` / `SOLID_ANGLE` / `MASS` unit complex
+    /// handlers alongside their existing flavour-specific maps.
+    pub(crate) named_units_arena: Arena<NamedUnit>,
+    /// `MEASURE_WITH_UNIT` arena (units-1). Populated by `Pass0MwuDue`.
+    pub(crate) mwu_arena: Arena<MeasureWithUnit>,
+    /// `DERIVED_UNIT_ELEMENT` arena (units-1). Populated by `Pass0MwuDue`.
+    pub(crate) due_arena: Arena<DerivedUnitElement>,
+    /// `NAMED_UNIT` complex `#N → NamedUnitId` (units-1). Used by MWU
+    /// readers (`unit_component` ref) and the DUE reader (`unit` ref) to
+    /// resolve their named-unit reference.
+    pub(crate) named_unit_id_map: HashMap<u64, crate::ir::id::NamedUnitId>,
+    /// `MEASURE_WITH_UNIT` `#N → MeasureWithUnitId` (units-1).
+    pub(crate) mwu_id_map: HashMap<u64, crate::ir::id::MeasureWithUnitId>,
+    /// `DERIVED_UNIT_ELEMENT` `#N → DerivedUnitElementId` (units-1).
+    pub(crate) due_id_map: HashMap<u64, crate::ir::id::DerivedUnitElementId>,
+    /// MWU step ids that appear as the `conversion_factor` of a
+    /// `CONVERSION_BASED_UNIT` complex (units-1). Populated by the unit
+    /// complex handlers in `Pass0Leaf` and consulted by `Pass0MwuDue` MWU
+    /// readers — those MWUs are re-emitted inline by the CBU writer
+    /// chain, so adding them to `mwu_arena` would cause double-emit on
+    /// round-trip.
+    pub(crate) cbu_internal_mwu_refs: HashSet<u64>,
     /// `UNCERTAINTY_MEASURE_WITH_UNIT #N → value+metadata` for uncertainty
     /// entities whose `unit_component` resolved to a length unit. Populated
     /// between Pass 0-1 (unit leaves) and Pass 0-2 (context assembly).
@@ -436,6 +460,7 @@ impl ReaderContext {
                 properties: ctx.properties,
                 shape_aspects: ctx.shape_aspects,
                 plm: ctx.plm,
+                units_pool: build_units_pool(ctx.named_units_arena, ctx.mwu_arena, ctx.due_arena),
             },
             warnings: ctx.warnings,
             parse_warnings: graph.warnings.clone(),
@@ -712,6 +737,26 @@ pub(crate) fn resolve_in_map_cloned<V: Clone>(
         to,
         field_name,
     })
+}
+
+/// Wrap the three units-1 arenas into a [`UnitsPool`], returning `None`
+/// when all three are empty (the common case for fixtures without MWU /
+/// DUE / MASS content). Called by [`ReaderContext::convert`] when
+/// assembling the final [`StepModel`].
+fn build_units_pool(
+    named_units: Arena<NamedUnit>,
+    measure_with_units: Arena<MeasureWithUnit>,
+    derived_unit_elements: Arena<DerivedUnitElement>,
+) -> Option<UnitsPool> {
+    if named_units.is_empty() && measure_with_units.is_empty() && derived_unit_elements.is_empty() {
+        None
+    } else {
+        Some(UnitsPool {
+            named_units,
+            measure_with_units,
+            derived_unit_elements,
+        })
+    }
 }
 
 pub(crate) fn bool_to_orientation(same_sense: bool) -> Orientation {

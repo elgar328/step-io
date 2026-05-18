@@ -13,8 +13,14 @@
 //! ir.toml pool is `units` (arena `measure_with_unit`), so the file
 //! stays here. Catalog reconciliation is a separate task.
 
+pub mod derived_unit_element;
+pub mod length_measure_with_unit;
 pub mod length_unit;
+pub mod mass_measure_with_unit;
+pub mod mass_unit;
+pub mod plane_angle_measure_with_unit;
 pub mod plane_angle_unit;
+pub mod ratio_measure_with_unit;
 mod shared;
 pub mod solid_angle_unit;
 pub mod uncertainty_measure_with_unit;

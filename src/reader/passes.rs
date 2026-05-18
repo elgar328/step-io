@@ -19,6 +19,11 @@ impl ReaderContext {
 
         // Pass 0-2: GLOBAL_UNIT_ASSIGNED_CONTEXT.
         self.dispatch_registry(graph, PassLevel::Pass0Context);
+
+        // Pass 0-3 (units-1): MEASURE_WITH_UNIT subtype family +
+        // MASS_UNIT + DERIVED_UNIT_ELEMENT. Depends on `named_unit_id_map`
+        // populated by Pass 0-1 unit-leaf handlers.
+        self.dispatch_registry(graph, PassLevel::Pass0MwuDue);
     }
 
     pub(super) fn run_geometry_passes(&mut self, graph: &EntityGraph) {

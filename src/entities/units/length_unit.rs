@@ -13,6 +13,7 @@ use crate::entities::units::shared::{
 use crate::ir::attr::{check_count, read_enum};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::LengthUnit;
+use crate::ir::units::NamedUnit;
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
 use crate::writer::WriteError;
@@ -38,7 +39,9 @@ impl ComplexEntityHandler for LengthUnitHandler {
         // takes precedence over SI_UNIT: some AP242 files wrap SI units in a
         // CONVERSION_BASED_UNIT, and the CBU name is the authoritative identity.
         if has_part(parts, "CONVERSION_BASED_UNIT") {
-            return read_conversion_based_unit_body(ctx, entity_id, parts, true, false);
+            read_conversion_based_unit_body(ctx, entity_id, parts, true, false)?;
+            register_named_length(ctx, entity_id);
+            return Ok(());
         }
 
         if !has_part(parts, "SI_UNIT") {
@@ -63,6 +66,7 @@ impl ComplexEntityHandler for LengthUnitHandler {
 
         if let Some(unit) = match_length_unit(prefix, name) {
             ctx.length_unit_map.insert(entity_id, unit);
+            register_named_length(ctx, entity_id);
         } else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                 entity_id,
@@ -105,6 +109,17 @@ impl ComplexEntityHandler for LengthUnitHandler {
             }
         };
         Ok(n)
+    }
+}
+
+/// units-1: record this `LENGTH_UNIT` complex in the `NamedUnit` arena so
+/// MWU / DUE consumers can resolve `unit_component` / `unit` refs through
+/// `named_unit_id_map`. Coexists with `length_unit_map` during the
+/// dual-tracking period.
+fn register_named_length(ctx: &mut ReaderContext, entity_id: u64) {
+    if let Some(&unit) = ctx.length_unit_map.get(&entity_id) {
+        let id = ctx.named_units_arena.push(NamedUnit::Length(unit));
+        ctx.named_unit_id_map.insert(entity_id, id);
     }
 }
 

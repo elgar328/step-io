@@ -10,7 +10,7 @@
 //! (ABC-tier loyalty) — the cache fields live on `WriteBuffer`, so the
 //! helpers take `&mut WriteBuffer`.
 
-use crate::ir::attr::{check_count, read_enum, read_string};
+use crate::ir::attr::{check_count, read_entity_ref, read_enum, read_string};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit};
 use crate::parser::entity::{Attribute, RawEntityPart};
@@ -114,6 +114,12 @@ pub(super) fn read_conversion_based_unit_body(
     check_count(cbu_attrs, 2, entity_id, "CONVERSION_BASED_UNIT")?;
     let name = read_string(cbu_attrs, 0, entity_id, "name")?;
     let upper = name.to_uppercase();
+    // units-1: capture the embedded `conversion_factor` MWU ref so the MWU
+    // handler can suppress duplicate arena entries — these MWUs are
+    // re-emitted inline by the CBU writer chain on round-trip.
+    if let Some(Attribute::EntityRef(mwu_ref)) = cbu_attrs.get(1) {
+        ctx.cbu_internal_mwu_refs.insert(*mwu_ref);
+    }
 
     if is_length {
         if let Some((unit, form)) = match_length_conversion(&upper) {
@@ -141,6 +147,33 @@ pub(super) fn read_conversion_based_unit_body(
         }
     }
     Ok(())
+}
+
+/// Read the shared `(value_component, unit_component)` shape of all four
+/// `MEASURE_WITH_UNIT` subtypes (`LENGTH` / `MASS` / `PLANE_ANGLE` /
+/// `RATIO`).
+///
+/// `value_component` is a typed real (`LENGTH_MEASURE(1.0)` /
+/// `MASS_MEASURE(0.45)` / etc); `unit_component` is an entity ref to a
+/// `NAMED_UNIT` complex. Returns `None` when the attribute shape doesn't
+/// match the expected typed-real form (the unsupported variants — e.g.
+/// `THERMODYNAMIC_TEMPERATURE_MEASURE` — are silently dropped per the
+/// units-1 permanent-loss-boundary note).
+pub(crate) fn read_mwu_attrs(
+    attrs: &[Attribute],
+    entity_id: u64,
+    entity_name: &'static str,
+) -> Result<Option<(f64, u64)>, ConvertError> {
+    check_count(attrs, 2, entity_id, entity_name)?;
+    let value = match attrs.first() {
+        Some(Attribute::Typed { value, .. }) => match value.as_ref() {
+            Attribute::Real(v) => *v,
+            _ => return Ok(None),
+        },
+        _ => return Ok(None),
+    };
+    let unit_step = read_entity_ref(attrs, 1, entity_id, "unit_component")?;
+    Ok(Some((value, unit_step)))
 }
 
 /// Emit the length-flavour `DIMENSIONAL_EXPONENTS` (1, 0, 0, 0, 0, 0, 0).

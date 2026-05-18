@@ -90,6 +90,13 @@ pub(crate) enum PassLevel {
     /// `GLOBAL_UNIT_ASSIGNED_CONTEXT` (complex orchestrator). Depends on
     /// `Pass0Leaf` + `Pass0Uncertainty` outputs.
     Pass0Context,
+    /// `MEASURE_WITH_UNIT` subtype family (`LENGTH` / `MASS` / `PLANE_ANGLE`
+    /// / `RATIO`) plus `DERIVED_UNIT_ELEMENT` and `MASS_UNIT` (units-1).
+    /// Depends on `Pass0Leaf` (named-unit arena populated by the unit-leaf
+    /// handlers — MWU and DUE resolve their unit ref through
+    /// `named_unit_id_map`). Runs after `Pass0Context` so the entire Pass 0
+    /// unit machinery has settled before MWU consumers fire.
+    Pass0MwuDue,
 
     // ----- Plan 4 (topology) -----
     /// `VERTEX_POINT` (Pass 5-1) — depends on `CARTESIAN_POINT`.

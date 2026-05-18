@@ -52,6 +52,28 @@ pub(crate) struct WriteBuffer<'m> {
     /// so every representation emitter can resolve its `Option<UnitContextId>`
     /// to a cached id.
     pub(crate) unit_context_ids: Vec<u64>,
+    /// STEP entity id of every emitted `NAMED_UNIT` complex from
+    /// [`crate::ir::UnitsPool::named_units`], indexed by `NamedUnitId.0`.
+    /// Populated by `emit_units_pool_if_set` before MWU / DUE emission so
+    /// each consumer resolves its `NamedUnitId` ref with a single index
+    /// lookup. Coexists with [`Self::unit_leaf_ids`]: the existing
+    /// `UnitContext` emit path produces its own `LENGTH` / `PLANE_ANGLE`
+    /// / `SOLID_ANGLE` leaves bound to the GUAC complex, while these are
+    /// separate per-instance `NamedUnit` emits driven by the arena. Future
+    /// units-2 refactor will collapse the two emit paths.
+    pub(crate) named_unit_step_ids: Vec<u64>,
+    /// STEP entity id of every emitted `MEASURE_WITH_UNIT` subtype, indexed
+    /// by `MeasureWithUnitId.0`. Currently unused by downstream emitters
+    /// (no entity in this phase consumes an MWU ref through the units
+    /// pool — the existing `UMU` / `PROPERTY_DEFINITION_REPRESENTATION`
+    /// paths predate units-1 and route through the legacy ctx caches).
+    /// The vec is populated for parity with the other arenas and to
+    /// support post-units-1 consumers (e.g. MFUO `quantity`).
+    pub(crate) mwu_step_ids: Vec<u64>,
+    /// STEP entity id of every emitted `DERIVED_UNIT_ELEMENT`, indexed by
+    /// `DerivedUnitElementId.0`. Same usage note as [`Self::mwu_step_ids`]
+    /// — populated for future `DERIVED_UNIT` parent emission.
+    pub(crate) due_step_ids: Vec<u64>,
     /// STEP entity id of every emitted `COLOUR_RGB` /
     /// `DRAUGHTING_PRE_DEFINED_COLOUR` entity, indexed by `ColourId.0`.
     /// Populated by `emit_visualization_if_set` before any consumer
@@ -203,6 +225,9 @@ impl<'m> WriteBuffer<'m> {
             curve_2d_ids: HashMap::new(),
             unit_context_ids: Vec::new(),
             unit_leaf_ids: Vec::new(),
+            named_unit_step_ids: Vec::new(),
+            mwu_step_ids: Vec::new(),
+            due_step_ids: Vec::new(),
             colour_step_ids: Vec::new(),
             curve_font_step_ids: Vec::new(),
             curve_style_step_ids: Vec::new(),
@@ -320,6 +345,7 @@ impl<'m> WriteBuffer<'m> {
             let id = self.emit_unit_context(ctx.clone())?;
             self.unit_context_ids.push(id);
         }
+        self.emit_units_pool_if_set()?;
         self.emit_product_chain_if_eligible()?;
         self.emit_pmi_if_set();
         self.emit_visualization_if_set()?;
