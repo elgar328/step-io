@@ -7,7 +7,8 @@ use super::geometry::{
 use super::plm::{
     Approval, ApprovalAssignment, ApprovalDateTime, ApprovalPersonOrganization, ApprovalRole,
     ApprovalStatus, CalendarDate, CoordinatedUniversalTimeOffset, DateAndTime,
-    DateAndTimeAssignment, DateTimeRole, LocalTime, Organization, Person, PersonAndOrganization,
+    DateAndTimeAssignment, DateTimeRole, ExternalSource, IdentificationAssignment,
+    IdentificationRole, LocalTime, Organization, Person, PersonAndOrganization,
     PersonAndOrganizationAssignment, PersonAndOrganizationRole, SecurityClassification,
     SecurityClassificationAssignment, SecurityClassificationLevel,
 };
@@ -110,3 +111,8 @@ define_id!(
     SecurityClassificationAssignmentId,
     SecurityClassificationAssignment
 );
+
+// plm Ids — Identification cluster (Phase plm-5).
+define_id!(IdentificationRoleId, IdentificationRole);
+define_id!(ExternalSourceId, ExternalSource);
+define_id!(IdentificationAssignmentId, IdentificationAssignment);

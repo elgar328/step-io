@@ -106,6 +106,40 @@ impl WriteBuffer<'_> {
         }
         self.emit_approval_cluster(&plm)?;
         self.emit_security_cluster(&plm)?;
+        self.emit_identification_cluster(&plm)?;
+        Ok(())
+    }
+
+    /// Emit the Identification cluster (role + `external_source` leaves →
+    /// assignments). Split for line-budget reasons, mirroring the other
+    /// cluster helpers.
+    fn emit_identification_cluster(&mut self, plm: &crate::ir::PlmPool) -> Result<(), WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::plm::applied_external_identification_assignment::AppliedExternalIdentificationAssignmentHandler;
+        use crate::entities::plm::applied_identification_assignment::AppliedIdentificationAssignmentHandler;
+        use crate::entities::plm::external_source::ExternalSourceHandler;
+        use crate::entities::plm::identification_role::IdentificationRoleHandler;
+        use crate::ir::plm::IdentificationAssignment;
+        self.plm_identification_role_step_ids = Vec::with_capacity(plm.identification_roles.len());
+        for r in plm.identification_roles.iter() {
+            let id = IdentificationRoleHandler::write(self, r.clone())?;
+            self.plm_identification_role_step_ids.push(id);
+        }
+        self.plm_external_source_step_ids = Vec::with_capacity(plm.external_sources.len());
+        for s in plm.external_sources.iter() {
+            let id = ExternalSourceHandler::write(self, s.clone())?;
+            self.plm_external_source_step_ids.push(id);
+        }
+        for ia in plm.identification_assignments.iter() {
+            match ia {
+                IdentificationAssignment::Applied(a) => {
+                    AppliedIdentificationAssignmentHandler::write(self, a.clone())?;
+                }
+                IdentificationAssignment::AppliedExternal(a) => {
+                    AppliedExternalIdentificationAssignmentHandler::write(self, a.clone())?;
+                }
+            }
+        }
         Ok(())
     }
 

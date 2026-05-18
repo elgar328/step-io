@@ -350,6 +350,14 @@ pub struct ReaderContext {
     /// `CC_DESIGN_SECURITY_CLASSIFICATION` step entity id →
     /// `SecurityClassificationAssignmentId`.
     pub(crate) plm_sca_id_map: HashMap<u64, crate::ir::SecurityClassificationAssignmentId>,
+    /// `IDENTIFICATION_ROLE` step entity id → `IdentificationRoleId`.
+    pub(crate) plm_identification_role_id_map: HashMap<u64, crate::ir::IdentificationRoleId>,
+    /// `EXTERNAL_SOURCE` step entity id → `ExternalSourceId`.
+    pub(crate) plm_external_source_id_map: HashMap<u64, crate::ir::ExternalSourceId>,
+    /// `APPLIED_IDENTIFICATION_ASSIGNMENT` /
+    /// `APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT` step entity id →
+    /// `IdentificationAssignmentId`.
+    pub(crate) plm_ia_id_map: HashMap<u64, crate::ir::IdentificationAssignmentId>,
 
     pub(crate) warnings: Vec<ConvertError>,
 }

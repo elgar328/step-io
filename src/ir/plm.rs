@@ -11,9 +11,9 @@
 use super::arena::Arena;
 use super::id::{
     ApprovalId, ApprovalRoleId, ApprovalStatusId, CoordinatedUniversalTimeOffsetId, DateAndTimeId,
-    DateId, DateTimeRoleId, LocalTimeId, OrganizationId, PersonAndOrganizationId,
-    PersonAndOrganizationRoleId, PersonId, ProductId, SecurityClassificationId,
-    SecurityClassificationLevelId,
+    DateId, DateTimeRoleId, ExternalSourceId, IdentificationRoleId, LocalTimeId, OrganizationId,
+    PersonAndOrganizationId, PersonAndOrganizationRoleId, PersonId, ProductId,
+    SecurityClassificationId, SecurityClassificationLevelId,
 };
 
 /// Top-level container for plm-domain entities. `None` on
@@ -79,6 +79,73 @@ pub struct PlmPool {
     /// `SecurityClassification` to product targets via the AP214
     /// `security_classification_item` SELECT.
     pub security_classification_assignments: Arena<SecurityClassificationAssignment>,
+    /// `IDENTIFICATION_ROLE` label entries.
+    pub identification_roles: Arena<IdentificationRole>,
+    /// `EXTERNAL_SOURCE` entries.
+    pub external_sources: Arena<ExternalSource>,
+    /// `identification_assignment` arena enum covering both
+    /// `APPLIED_IDENTIFICATION_ASSIGNMENT` and
+    /// `APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT`. The two variants
+    /// have different field counts — `AppliedExternal` adds a `source`
+    /// ref absent from `Applied`.
+    pub identification_assignments: Arena<IdentificationAssignment>,
+}
+
+/// `IDENTIFICATION_ROLE(name, description)`. `description` is `opt_string`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct IdentificationRole {
+    pub name: String,
+    pub description: Option<String>,
+}
+
+/// `EXTERNAL_SOURCE(source_id)`. AP214 `source_item` SELECT — step-io
+/// supports the `IDENTIFIER` variant only; other variants drop on read.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExternalSource {
+    pub source_id: ExternalSourceItem,
+}
+
+/// AP214 `source_item` SELECT — single variant currently supported.
+/// Corpus observation = `IDENTIFIER('...')` typed-value. `MESSAGE` and
+/// other variants drop silently on read.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ExternalSourceItem {
+    Identifier(String),
+}
+
+/// `identification_assignment` arena enum per ir.toml. Unlike Approval /
+/// Security clusters, the two variants have different field counts —
+/// `AppliedExternal` carries an extra `source` field absent from `Applied`.
+#[derive(Debug, Clone, PartialEq)]
+pub enum IdentificationAssignment {
+    Applied(AppliedIdentificationAssignment),
+    AppliedExternal(AppliedExternalIdentificationAssignment),
+}
+
+/// `APPLIED_IDENTIFICATION_ASSIGNMENT(assigned_id, role, items)`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AppliedIdentificationAssignment {
+    pub assigned_id: String,
+    pub role: IdentificationRoleId,
+    pub items: Vec<IdentificationItem>,
+}
+
+/// `APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT(assigned_id, role, source, items)`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AppliedExternalIdentificationAssignment {
+    pub assigned_id: String,
+    pub role: IdentificationRoleId,
+    pub source: ExternalSourceId,
+    pub items: Vec<IdentificationItem>,
+}
+
+/// AP214 `identification_item` SELECT — same product-chain pattern as
+/// `DateTimeItem` / `ApprovalItem` / `SecurityClassificationItem`. Other
+/// targets (`APPLIED_ORGANIZATION_ASSIGNMENT`, `DOCUMENT_FILE`, ...)
+/// drop silently on read pending later plm phases.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum IdentificationItem {
+    Product(ProductId),
 }
 
 /// `SECURITY_CLASSIFICATION_LEVEL(name)` — label entity.

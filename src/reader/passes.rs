@@ -248,6 +248,9 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass9PlmSecLevel);
         self.dispatch_registry(graph, PassLevel::Pass9PlmSecClass);
         self.dispatch_registry(graph, PassLevel::Pass9PlmSca);
+        // Identification cluster — role + external_source leaves -> assignments.
+        self.dispatch_registry(graph, PassLevel::Pass9PlmIdLeaves);
+        self.dispatch_registry(graph, PassLevel::Pass9PlmIa);
 
         // Pass 8: PMI scaffolding — SHAPE_ASPECT entries that anchor
         // future Tolerance / Datum / GD&T work. Runs before the property

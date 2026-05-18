@@ -4,6 +4,8 @@
 
 pub mod applied_approval_assignment;
 pub mod applied_date_and_time_assignment;
+pub mod applied_external_identification_assignment;
+pub mod applied_identification_assignment;
 pub mod applied_person_and_organization_assignment;
 pub mod applied_security_classification_assignment;
 pub mod approval;
@@ -19,6 +21,8 @@ pub mod cc_design_security_classification;
 pub mod coordinated_universal_time_offset;
 pub mod date_and_time;
 pub mod date_time_role;
+pub mod external_source;
+pub mod identification_role;
 pub mod local_time;
 pub mod organization;
 pub mod person;
