@@ -231,9 +231,11 @@ impl ReaderContext {
         // Date-and-time assignment — references DateAndTime + DateTimeRole
         // arenas + the assembly product chain via `items` SELECT.
         self.dispatch_registry(graph, PassLevel::Pass9PlmDta);
-        // Person/Org cluster leaves -> PersonAndOrganization (pairing).
+        // Person/Org cluster leaves -> PersonAndOrganization (pairing) ->
+        // PersonAndOrganizationAssignment.
         self.dispatch_registry(graph, PassLevel::Pass9PlmPoLeaves);
         self.dispatch_registry(graph, PassLevel::Pass9PlmPersonAndOrganization);
+        self.dispatch_registry(graph, PassLevel::Pass9PlmPoa);
 
         // Pass 8: PMI scaffolding — SHAPE_ASPECT entries that anchor
         // future Tolerance / Datum / GD&T work. Runs before the property

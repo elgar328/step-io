@@ -6,7 +6,8 @@ use super::geometry::{
 };
 use super::plm::{
     CalendarDate, CoordinatedUniversalTimeOffset, DateAndTime, DateAndTimeAssignment, DateTimeRole,
-    LocalTime, Organization, Person, PersonAndOrganization, PersonAndOrganizationRole,
+    LocalTime, Organization, Person, PersonAndOrganization, PersonAndOrganizationAssignment,
+    PersonAndOrganizationRole,
 };
 use super::shape_rep::{ShapeAspect, UnitContext};
 use super::topology::{Edge, Face, Shell, Solid, Wire};
@@ -87,3 +88,7 @@ define_id!(PersonId, Person);
 define_id!(OrganizationId, Organization);
 define_id!(PersonAndOrganizationId, PersonAndOrganization);
 define_id!(PersonAndOrganizationRoleId, PersonAndOrganizationRole);
+define_id!(
+    PersonAndOrganizationAssignmentId,
+    PersonAndOrganizationAssignment
+);

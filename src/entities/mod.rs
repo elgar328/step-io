@@ -232,6 +232,11 @@ pub(crate) enum PassLevel {
     /// `PERSON_AND_ORGANIZATION` (Pass 9-6) — depends on `Pass9PlmPoLeaves`
     /// (Person + Organization arenas).
     Pass9PlmPersonAndOrganization,
+    /// `APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT` /
+    /// `CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT` (Pass 9-7) — depends
+    /// on `Pass9PlmPersonAndOrganization` (P&O ref) + `Pass9PlmPoLeaves`
+    /// (role) and the assembly product chain (`Pass6`) for `items` PD targets.
+    Pass9PlmPoa,
     /// `SHAPE_ASPECT` (Pass 8-pre) — PMI scaffolding. Runs before the
     /// property converters so a future Pattern B PD pass can resolve its
     /// target ref through the `SHAPE_ASPECT` id map.

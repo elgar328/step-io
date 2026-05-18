@@ -3,8 +3,10 @@
 //! chain that lands in plm-1b.
 
 pub mod applied_date_and_time_assignment;
+pub mod applied_person_and_organization_assignment;
 pub mod calendar_date;
 pub mod cc_design_date_and_time_assignment;
+pub mod cc_design_person_and_organization_assignment;
 pub mod coordinated_universal_time_offset;
 pub mod date_and_time;
 pub mod date_time_role;

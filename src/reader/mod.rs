@@ -323,6 +323,10 @@ pub struct ReaderContext {
     pub(crate) plm_p_and_o_id_map: HashMap<u64, crate::ir::PersonAndOrganizationId>,
     /// `PERSON_AND_ORGANIZATION_ROLE` step entity id → `PersonAndOrganizationRoleId`.
     pub(crate) plm_p_and_o_role_id_map: HashMap<u64, crate::ir::PersonAndOrganizationRoleId>,
+    /// `APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT` /
+    /// `CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT` step entity id →
+    /// `PersonAndOrganizationAssignmentId`.
+    pub(crate) plm_poa_id_map: HashMap<u64, crate::ir::PersonAndOrganizationAssignmentId>,
 
     pub(crate) warnings: Vec<ConvertError>,
 }

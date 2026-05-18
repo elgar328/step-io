@@ -28,9 +28,10 @@ pub use geometry::{
 pub use id::{
     CoordinatedUniversalTimeOffsetId, Curve2dId, CurveId, DateAndTimeAssignmentId, DateAndTimeId,
     DateId, DateTimeRoleId, Direction2dId, DirectionId, EdgeId, FaceId, FoundedItemId, LocalTimeId,
-    OrganizationId, PersonAndOrganizationId, PersonAndOrganizationRoleId, PersonId, Placement1dId,
-    Placement2dId, Placement3dId, Point2dId, PointId, ProductId, ShapeAspectId, ShellId, SolidId,
-    SurfaceId, UnitContextId, VertexId, WireId,
+    OrganizationId, PersonAndOrganizationAssignmentId, PersonAndOrganizationId,
+    PersonAndOrganizationRoleId, PersonId, Placement1dId, Placement2dId, Placement3dId, Point2dId,
+    PointId, ProductId, ShapeAspectId, ShellId, SolidId, SurfaceId, UnitContextId, VertexId,
+    WireId,
 };
 pub use model::{
     FileHeader, GeometryPool, ImplementationLevel, NonEmptyStringList, StepModel, TopologyPool,
@@ -38,7 +39,8 @@ pub use model::{
 pub use plm::{
     AheadOrBehind, AppliedDateAndTimeAssignment, CalendarDate, CcDesignDateAndTimeAssignment,
     CoordinatedUniversalTimeOffset, DateAndTime, DateAndTimeAssignment, DateTimeItem, DateTimeRole,
-    LocalTime, Organization, Person, PersonAndOrganization, PersonAndOrganizationRole, PlmPool,
+    LocalTime, Organization, Person, PersonAndOrganization, PersonAndOrganizationAssignment,
+    PersonAndOrganizationRole, PersonOrganizationItem, PlmPool,
 };
 pub use property::{MeasureKind, Property, PropertyMeasure, PropertyPool};
 pub use shape_rep::{

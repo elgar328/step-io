@@ -9,8 +9,10 @@ impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_plm_if_set(&mut self) -> Result<(), WriteError> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::plm::applied_date_and_time_assignment::AppliedDateAndTimeAssignmentHandler;
+        use crate::entities::plm::applied_person_and_organization_assignment::AppliedPersonAndOrganizationAssignmentHandler;
         use crate::entities::plm::calendar_date::CalendarDateHandler;
         use crate::entities::plm::cc_design_date_and_time_assignment::CcDesignDateAndTimeAssignmentHandler;
+        use crate::entities::plm::cc_design_person_and_organization_assignment::CcDesignPersonAndOrganizationAssignmentHandler;
         use crate::entities::plm::coordinated_universal_time_offset::CoordinatedUniversalTimeOffsetHandler;
         use crate::entities::plm::date_and_time::DateAndTimeHandler;
         use crate::entities::plm::date_time_role::DateTimeRoleHandler;
@@ -19,7 +21,7 @@ impl WriteBuffer<'_> {
         use crate::entities::plm::person::PersonHandler;
         use crate::entities::plm::person_and_organization::PersonAndOrganizationHandler;
         use crate::entities::plm::person_and_organization_role::PersonAndOrganizationRoleHandler;
-        use crate::ir::plm::DateAndTimeAssignment;
+        use crate::ir::plm::{DateAndTimeAssignment, PersonAndOrganizationAssignment};
         let Some(plm) = self.model.plm.clone() else {
             return Ok(());
         };
@@ -86,6 +88,19 @@ impl WriteBuffer<'_> {
                 }
                 DateAndTimeAssignment::CcDesign(c) => {
                     CcDesignDateAndTimeAssignmentHandler::write(self, c.clone())?;
+                }
+            }
+        }
+        // Person-and-organization assignments — top-level (no consumers),
+        // same shape/pattern as DTA. Reads plm_p_and_o_step_ids +
+        // plm_p_and_o_role_step_ids + product_def_ids.
+        for poa in plm.person_and_organization_assignments.iter() {
+            match poa {
+                PersonAndOrganizationAssignment::Applied(a) => {
+                    AppliedPersonAndOrganizationAssignmentHandler::write(self, a.clone())?;
+                }
+                PersonAndOrganizationAssignment::CcDesign(c) => {
+                    CcDesignPersonAndOrganizationAssignmentHandler::write(self, c.clone())?;
                 }
             }
         }

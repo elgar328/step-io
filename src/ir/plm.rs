@@ -11,7 +11,7 @@
 use super::arena::Arena;
 use super::id::{
     CoordinatedUniversalTimeOffsetId, DateAndTimeId, DateId, DateTimeRoleId, LocalTimeId,
-    OrganizationId, PersonId, ProductId,
+    OrganizationId, PersonAndOrganizationId, PersonAndOrganizationRoleId, PersonId, ProductId,
 };
 
 /// Top-level container for plm-domain entities. `None` on
@@ -42,6 +42,48 @@ pub struct PlmPool {
     pub person_and_organizations: Arena<PersonAndOrganization>,
     /// `PERSON_AND_ORGANIZATION_ROLE` label entries.
     pub p_and_o_roles: Arena<PersonAndOrganizationRole>,
+    /// `person_and_organization_assignment` arena enum covering both
+    /// `APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT` and
+    /// `CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT`. Connects
+    /// `PersonAndOrganization` to product targets via the AP214
+    /// `person_organization_item` SELECT.
+    pub person_and_organization_assignments: Arena<PersonAndOrganizationAssignment>,
+}
+
+/// `person_and_organization_assignment` arena enum per ir.toml. The two
+/// variants share field shape but differ in AP214 `ApplicationContext`.
+#[derive(Debug, Clone, PartialEq)]
+pub enum PersonAndOrganizationAssignment {
+    Applied(AppliedPersonAndOrganizationAssignment),
+    CcDesign(CcDesignPersonAndOrganizationAssignment),
+}
+
+/// `APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT(assigned_person_and_organization,
+/// role, items)`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AppliedPersonAndOrganizationAssignment {
+    pub assigned_person_and_organization: PersonAndOrganizationId,
+    pub role: PersonAndOrganizationRoleId,
+    pub items: Vec<PersonOrganizationItem>,
+}
+
+/// `CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT(assigned_person_and_organization,
+/// role, items)`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CcDesignPersonAndOrganizationAssignment {
+    pub assigned_person_and_organization: PersonAndOrganizationId,
+    pub role: PersonAndOrganizationRoleId,
+    pub items: Vec<PersonOrganizationItem>,
+}
+
+/// One element of P&O assignment `items`. AP214 `person_organization_item`
+/// SELECT — currently scoped to `PRODUCT_DEFINITION` / `PRODUCT` (resolved
+/// through the assembly product chain). PDFWSS / `SECURITY_CLASSIFICATION`
+/// / `APPROVAL` / `DOCUMENT` targets drop silently; future plm phases
+/// extend this enum.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PersonOrganizationItem {
+    Product(ProductId),
 }
 
 /// `PERSON(id, last_name, first_name, middle_names, prefix_titles, suffix_titles)`.
