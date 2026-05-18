@@ -82,6 +82,12 @@ pub(crate) struct WriteBuffer<'m> {
     /// before `SURFACE_SIDE_STYLE` emission so each
     /// `SurfaceSideStyleEntry::Rendering` resolves with one index lookup.
     pub(crate) ssr_step_ids: Vec<u64>,
+    /// STEP entity id of every emitted `FoundedItem` arena entry, indexed
+    /// by `FoundedItemId.0`. Populated by `emit_visualization_if_set` in a
+    /// 2-pass walk (`FillAreaStyle` first so `SurfaceStyleFillArea` can
+    /// resolve its `fill_area` ref); consumed by
+    /// `SurfaceStyleFillAreaHandler` and downstream styled-side writers.
+    pub(crate) founded_item_step_ids: Vec<u64>,
     /// Per-`UnitContext` leaf STEP ids `(length, angle, solid_angle)`,
     /// indexed by `UnitContextId.0`. Each `UnitContext` in the IR arena
     /// emits its own leaf entities (no writer-side dedup) so the IR's
@@ -130,6 +136,7 @@ impl<'m> WriteBuffer<'m> {
             styled_item_step_ids: Vec::new(),
             psa_step_ids: Vec::new(),
             ssr_step_ids: Vec::new(),
+            founded_item_step_ids: Vec::new(),
             product_def_ids: std::collections::HashMap::new(),
             product_def_shape_ids: std::collections::HashMap::new(),
         }

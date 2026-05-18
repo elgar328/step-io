@@ -6,7 +6,7 @@
 
 use super::WriteBuffer;
 use crate::ir::visualization::{
-    Colour, CurveFont, PresentationStyleAssignment, StyledItem, SurfaceStyleRendering,
+    Colour, CurveFont, FoundedItem, PresentationStyleAssignment, StyledItem, SurfaceStyleRendering,
 };
 use crate::writer::WriteError;
 
@@ -20,9 +20,11 @@ impl WriteBuffer<'_> {
         use crate::entities::visualization::curve_style::CurveStyleHandler;
         use crate::entities::visualization::draughting_pre_defined_colour::DraughtingPreDefinedColourHandler;
         use crate::entities::visualization::draughting_pre_defined_curve_font::DraughtingPreDefinedCurveFontHandler;
+        use crate::entities::visualization::fill_area_style::FillAreaStyleHandler;
         use crate::entities::visualization::over_riding_styled_item::OverRidingStyledItemHandler;
         use crate::entities::visualization::presentation_style_assignment::PresentationStyleAssignmentHandler;
         use crate::entities::visualization::styled_item::StyledItemHandler;
+        use crate::entities::visualization::surface_style_fill_area::SurfaceStyleFillAreaHandler;
         use crate::entities::visualization::surface_style_rendering::SurfaceStyleRenderingHandler;
         use crate::entities::visualization::surface_style_rendering_with_properties::SurfaceStyleRenderingWithPropertiesHandler;
         let Some(viz) = self.model.visualization.clone() else {
@@ -72,6 +74,26 @@ impl WriteBuffer<'_> {
                 }
             };
             self.ssr_step_ids.push(id);
+        }
+        // founded_item arena — 2-pass pre-emit so wrapper variants can
+        // resolve their inner refs through founded_item_step_ids. Pass 1
+        // emits leaf-shaped FillAreaStyle entries; Pass 2 emits the
+        // SurfaceStyleFillArea wrappers that read FillAreaStyle's cached
+        // STEP id. E2 will extend this pre-emit with SurfaceSideStyle /
+        // SurfaceStyleUsage variants (each in its dependency-appropriate
+        // pass).
+        self.founded_item_step_ids = vec![0; viz.founded_items.len()];
+        for (idx, item) in viz.founded_items.iter().enumerate() {
+            if let FoundedItem::FillAreaStyle(fas) = item {
+                let id = FillAreaStyleHandler::write(self, fas.clone())?;
+                self.founded_item_step_ids[idx] = id;
+            }
+        }
+        for (idx, item) in viz.founded_items.iter().enumerate() {
+            if let FoundedItem::SurfaceStyleFillArea(ssfa) = item {
+                let id = SurfaceStyleFillAreaHandler::write(self, ssfa.clone())?;
+                self.founded_item_step_ids[idx] = id;
+            }
         }
         // PRESENTATION_STYLE_ASSIGNMENT arena — emit every PSA up-front so
         // STYLED_ITEM / OVER_RIDING_STYLED_ITEM writers can resolve their

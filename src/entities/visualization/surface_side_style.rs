@@ -11,7 +11,6 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
-use super::surface_style_fill_area::SurfaceStyleFillAreaHandler;
 use step_io_macros::step_entity;
 
 pub(crate) struct SurfaceSideStyleHandler;
@@ -31,8 +30,8 @@ impl SimpleEntityHandler for SurfaceSideStyleHandler {
         let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
         let mut styles = Vec::with_capacity(style_refs.len());
         for r in style_refs {
-            if let Some(entry) = ctx.viz_sss_entry_map.get(&r).cloned() {
-                styles.push(entry);
+            if let Some(&ssfa_id) = ctx.viz_ssfa_id_map.get(&r) {
+                styles.push(SurfaceSideStyleEntry::FillArea(ssfa_id));
             } else if let Some(&ssr_id) = ctx.viz_ssr_id_map.get(&r) {
                 styles.push(SurfaceSideStyleEntry::Rendering(ssr_id));
             }
@@ -46,8 +45,8 @@ impl SimpleEntityHandler for SurfaceSideStyleHandler {
         let mut style_refs = Vec::with_capacity(sss.styles.len());
         for entry in sss.styles {
             let entry_id = match entry {
-                SurfaceSideStyleEntry::FillArea(ssfa) => {
-                    SurfaceStyleFillAreaHandler::write(buf, ssfa)?
+                SurfaceSideStyleEntry::FillArea(ssfa_id) => {
+                    buf.founded_item_step_ids[ssfa_id.0 as usize]
                 }
                 SurfaceSideStyleEntry::Rendering(ssr_id) => buf.ssr_step_ids[ssr_id.0 as usize],
             };

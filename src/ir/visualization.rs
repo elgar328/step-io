@@ -7,7 +7,7 @@
 
 use super::arena::Arena;
 use super::id::{
-    ColourId, CurveFontId, CurveId, CurveStyleId, EdgeId, FaceId, PointId,
+    ColourId, CurveFontId, CurveId, CurveStyleId, EdgeId, FaceId, FoundedItemId, PointId,
     PresentationStyleAssignmentId, SolidId, StyledItemId, SurfaceStyleRenderingId,
 };
 use super::shape_rep::Mdgpr;
@@ -53,6 +53,25 @@ pub struct VisualizationPool {
     /// of the same id namespace. `SurfaceSideStyleEntry::Rendering` carries
     /// a [`SurfaceStyleRenderingId`] into this arena.
     pub surface_style_renderings: Arena<SurfaceStyleRendering>,
+    /// `founded_item` arena per ir.toml (`enum_base`). Holds the AP214
+    /// "founded item" subtype hierarchy as enum variants of one shared
+    /// id namespace. Phase E1 covers `FillAreaStyle` and
+    /// `SurfaceStyleFillArea`; `SurfaceSideStyle` and `SurfaceStyleUsage`
+    /// land in E2. Unsupported source-side variants (`PointStyle`,
+    /// `SurfaceStyleBoundary`, `SurfaceStyleParameterLine`, `SymbolStyle`,
+    /// `ViewVolume`) are silently dropped at read.
+    pub founded_items: Arena<FoundedItem>,
+}
+
+/// `founded_item` enum arena per ir.toml. Each variant wraps a concrete
+/// "founded item" subtype that the source `STYLED_ITEM` chain references
+/// through a [`FoundedItemId`]. Phase E1 carries the inner pair
+/// (`FillAreaStyle` and its wrapper `SurfaceStyleFillArea`); E2 adds the
+/// outer pair (`SurfaceSideStyle` / `SurfaceStyleUsage`).
+#[derive(Debug, Clone, PartialEq)]
+pub enum FoundedItem {
+    FillAreaStyle(FillAreaStyle),
+    SurfaceStyleFillArea(SurfaceStyleFillArea),
 }
 
 /// `CURVE_STYLE(name, curve_font, curve_width, curve_colour)` —
@@ -223,14 +242,15 @@ pub struct SurfaceSideStyle {
 /// (color + transparency / other rendering hints).
 #[derive(Debug, Clone, PartialEq)]
 pub enum SurfaceSideStyleEntry {
-    FillArea(SurfaceStyleFillArea),
+    FillArea(FoundedItemId),
     Rendering(SurfaceStyleRenderingId),
 }
 
-/// `SURFACE_STYLE_FILL_AREA(fill_area)`.
+/// `SURFACE_STYLE_FILL_AREA(fill_area)`. The `fill_area` field points at
+/// a `FoundedItem::FillAreaStyle` arena entry.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SurfaceStyleFillArea {
-    pub fill_area: FillAreaStyle,
+    pub fill_area: FoundedItemId,
 }
 
 /// `surface_style_rendering` arena enum per ir.toml. `Itself` covers the

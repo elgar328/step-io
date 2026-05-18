@@ -586,10 +586,20 @@ fn box_ap214_is_preserves_visualization() {
         })
         .expect("PSA carries a SurfaceStyleUsage");
     let entry = &ssu.style.styles[0];
-    let SurfaceSideStyleEntry::FillArea(ssfa) = entry else {
+    let SurfaceSideStyleEntry::FillArea(ssfa_id) = entry else {
         panic!("expected FillArea entry, got {entry:?}");
     };
-    let colour_id = ssfa.fill_area.fill_styles[0].colour;
+    let step_io::ir::visualization::FoundedItem::SurfaceStyleFillArea(ssfa) =
+        &viz.founded_items[*ssfa_id]
+    else {
+        panic!("expected SurfaceStyleFillArea founded-item variant");
+    };
+    let step_io::ir::visualization::FoundedItem::FillAreaStyle(fas) =
+        &viz.founded_items[ssfa.fill_area]
+    else {
+        panic!("expected FillAreaStyle founded-item variant");
+    };
+    let colour_id = fas.fill_styles[0].colour;
     let step_io::ir::visualization::Colour::Rgb(color) = &viz.colours[colour_id] else {
         panic!("expected Rgb colour variant");
     };

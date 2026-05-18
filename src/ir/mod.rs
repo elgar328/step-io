@@ -25,9 +25,9 @@ pub use geometry::{
     TrimmedCurve, Vertex,
 };
 pub use id::{
-    Curve2dId, CurveId, Direction2dId, DirectionId, EdgeId, FaceId, Placement1dId, Placement2dId,
-    Placement3dId, Point2dId, PointId, ProductId, ShapeAspectId, ShellId, SolidId, SurfaceId,
-    UnitContextId, VertexId, WireId,
+    Curve2dId, CurveId, Direction2dId, DirectionId, EdgeId, FaceId, FoundedItemId, Placement1dId,
+    Placement2dId, Placement3dId, Point2dId, PointId, ProductId, ShapeAspectId, ShellId, SolidId,
+    SurfaceId, UnitContextId, VertexId, WireId,
 };
 pub use model::{
     FileHeader, GeometryPool, ImplementationLevel, NonEmptyStringList, StepModel, TopologyPool,
@@ -39,9 +39,9 @@ pub use shape_rep::{
 pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Wire};
 pub use visualization::{
     Colour, ColourRgb, CurveFont, CurveStyle, CurveWidth, DraughtingPreDefinedColour,
-    DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour, OverRidingStyledItem,
-    PlainStyledItem, PresentationStyleAssignment, PsaStyle, RenderingProperty, ShadingMethod,
-    StyledItem, StyledItemTarget, SurfaceSide, SurfaceSideStyle, SurfaceSideStyleEntry,
-    SurfaceStyleFillArea, SurfaceStyleRendering, SurfaceStyleRenderingData,
+    DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour, FoundedItem,
+    OverRidingStyledItem, PlainStyledItem, PresentationStyleAssignment, PsaStyle,
+    RenderingProperty, ShadingMethod, StyledItem, StyledItemTarget, SurfaceSide, SurfaceSideStyle,
+    SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleRendering, SurfaceStyleRenderingData,
     SurfaceStyleRenderingWithProperties, SurfaceStyleUsage, VisualizationPool,
 };

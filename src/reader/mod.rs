@@ -12,7 +12,7 @@ use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Pcurve, TransitionCode};
 use crate::ir::id::{
     ColourId, Curve2dId, CurveFontId, CurveId, CurveStyleId, Direction2dId, DirectionId, EdgeId,
-    FaceId, Placement1dId, Placement2dId, Placement3dId, Point2dId, PointId,
+    FaceId, FoundedItemId, Placement1dId, Placement2dId, Placement3dId, Point2dId, PointId,
     PresentationStyleAssignmentId, ProductId, ShellId, SolidId, StyledItemId, SurfaceId,
     SurfaceStyleRenderingId, UnitContextId, VertexId, WireId,
 };
@@ -20,8 +20,7 @@ use crate::ir::model::{GeometryPool, StepModel, TopologyPool};
 use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit, SolidAngleUnit, UnitContext};
 use crate::ir::topology::{Orientation, OrientedEdge};
 use crate::ir::visualization::{
-    FillAreaStyle, FillAreaStyleColour, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleUsage,
-    VisualizationPool,
+    FillAreaStyleColour, SurfaceSideStyle, SurfaceStyleUsage, VisualizationPool,
 };
 // CurveFontId / CurveStyleId / StyledItemId imported above; the map types reference them directly.
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
@@ -244,12 +243,16 @@ pub struct ReaderContext {
     pub(crate) viz_curve_style_id_map: HashMap<u64, CurveStyleId>,
     /// `FILL_AREA_STYLE_COLOUR #N → FillAreaStyleColour` (Pass 7-2).
     pub(crate) viz_fasc_map: HashMap<u64, FillAreaStyleColour>,
-    /// `FILL_AREA_STYLE #N → FillAreaStyle` (Pass 7-3).
-    pub(crate) viz_fas_map: HashMap<u64, FillAreaStyle>,
-    /// `SURFACE_STYLE_FILL_AREA #N → SurfaceSideStyleEntry::FillArea`.
-    /// Rendering-style entries land in [`Self::viz_ssr_id_map`] instead so
-    /// the `SURFACE_SIDE_STYLE` reader picks each variant from its own arena.
-    pub(crate) viz_sss_entry_map: HashMap<u64, SurfaceSideStyleEntry>,
+    /// `FILL_AREA_STYLE` step entity id → `FoundedItemId`. Populated by the
+    /// FAS handler after pushing the `FoundedItem::FillAreaStyle` variant
+    /// into `VisualizationPool::founded_items`; consumed by the
+    /// `SURFACE_STYLE_FILL_AREA` reader to resolve its `fill_area` ref.
+    pub(crate) viz_fas_id_map: HashMap<u64, FoundedItemId>,
+    /// `SURFACE_STYLE_FILL_AREA` step entity id → `FoundedItemId`.
+    /// Populated by the SSFA handler after pushing the
+    /// `FoundedItem::SurfaceStyleFillArea` variant; consumed by the
+    /// `SURFACE_SIDE_STYLE` reader for `SurfaceSideStyleEntry::FillArea`.
+    pub(crate) viz_ssfa_id_map: HashMap<u64, FoundedItemId>,
     /// `SURFACE_STYLE_RENDERING #N | SURFACE_STYLE_RENDERING_WITH_PROPERTIES #N
     /// → SurfaceStyleRenderingId`. Populated by the SSR handlers after
     /// pushing the resolved enum variant into

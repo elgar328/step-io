@@ -1,10 +1,11 @@
 //! `FILL_AREA_STYLE` handler — Pass 7-3. Aggregates one or more
-//! `FILL_AREA_STYLE_COLOUR` entries into a named fill-area style.
+//! `FILL_AREA_STYLE_COLOUR` entries into a named fill-area style. Pushes
+//! into the shared `founded_item` arena as the `FillAreaStyle` variant.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::FillAreaStyle;
+use crate::ir::visualization::{FillAreaStyle, FoundedItem, VisualizationPool};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -34,8 +35,16 @@ impl SimpleEntityHandler for FillAreaStyleHandler {
                 fill_styles.push(fasc);
             }
         }
-        ctx.viz_fas_map
-            .insert(entity_id, FillAreaStyle { name, fill_styles });
+        let pool = ctx
+            .visualization
+            .get_or_insert_with(VisualizationPool::default);
+        let id = pool
+            .founded_items
+            .push(FoundedItem::FillAreaStyle(FillAreaStyle {
+                name,
+                fill_styles,
+            }));
+        ctx.viz_fas_id_map.insert(entity_id, id);
         Ok(())
     }
 
