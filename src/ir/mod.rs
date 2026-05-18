@@ -29,7 +29,8 @@ pub use id::{
     ApprovalAssignmentId, ApprovalDateTimeId, ApprovalId, ApprovalPersonOrganizationId,
     ApprovalRoleId, ApprovalStatusId, CoordinatedUniversalTimeOffsetId, Curve2dId, CurveId,
     DateAndTimeAssignmentId, DateAndTimeId, DateId, DateTimeRoleId, Direction2dId, DirectionId,
-    EdgeId, ExternalSourceId, FaceId, FoundedItemId, IdentificationAssignmentId,
+    DocumentId, DocumentProductEquivalenceId, DocumentReferenceId, DocumentRepresentationTypeId,
+    DocumentTypeId, EdgeId, ExternalSourceId, FaceId, FoundedItemId, IdentificationAssignmentId,
     IdentificationRoleId, LocalTimeId, OrganizationId, PersonAndOrganizationAssignmentId,
     PersonAndOrganizationId, PersonAndOrganizationRoleId, PersonId, Placement1dId, Placement2dId,
     Placement3dId, Point2dId, PointId, ProductId, SecurityClassificationAssignmentId,
@@ -41,16 +42,18 @@ pub use model::{
 };
 pub use plm::{
     AheadOrBehind, AppliedApprovalAssignment, AppliedDateAndTimeAssignment,
-    AppliedExternalIdentificationAssignment, AppliedIdentificationAssignment,
-    AppliedSecurityClassificationAssignment, Approval, ApprovalAssignment, ApprovalDateTime,
-    ApprovalDateTimeSelect, ApprovalItem, ApprovalPersonOrganization, ApprovalRole, ApprovalStatus,
-    CalendarDate, CcDesignApproval, CcDesignDateAndTimeAssignment, CcDesignSecurityClassification,
-    CoordinatedUniversalTimeOffset, DateAndTime, DateAndTimeAssignment, DateTimeItem, DateTimeRole,
-    ExternalSource, ExternalSourceItem, IdentificationAssignment, IdentificationItem,
-    IdentificationRole, LocalTime, Organization, Person, PersonAndOrganization,
-    PersonAndOrganizationAssignment, PersonAndOrganizationRole, PersonOrganizationItem,
-    PersonOrganizationSelect, PlmPool, SecurityClassification, SecurityClassificationAssignment,
-    SecurityClassificationItem, SecurityClassificationLevel,
+    AppliedDocumentReference, AppliedExternalIdentificationAssignment,
+    AppliedIdentificationAssignment, AppliedSecurityClassificationAssignment, Approval,
+    ApprovalAssignment, ApprovalDateTime, ApprovalDateTimeSelect, ApprovalItem,
+    ApprovalPersonOrganization, ApprovalRole, ApprovalStatus, CalendarDate, CcDesignApproval,
+    CcDesignDateAndTimeAssignment, CcDesignSecurityClassification, CoordinatedUniversalTimeOffset,
+    DateAndTime, DateAndTimeAssignment, DateTimeItem, DateTimeRole, Document, DocumentData,
+    DocumentFile, DocumentProductEquivalence, DocumentProductItem, DocumentReferenceItem,
+    DocumentRepresentationType, DocumentType, ExternalSource, ExternalSourceItem,
+    IdentificationAssignment, IdentificationItem, IdentificationRole, LocalTime, Organization,
+    Person, PersonAndOrganization, PersonAndOrganizationAssignment, PersonAndOrganizationRole,
+    PersonOrganizationItem, PersonOrganizationSelect, PlmPool, SecurityClassification,
+    SecurityClassificationAssignment, SecurityClassificationItem, SecurityClassificationLevel,
 };
 pub use property::{MeasureKind, Property, PropertyMeasure, PropertyPool};
 pub use shape_rep::{

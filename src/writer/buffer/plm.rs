@@ -107,6 +107,50 @@ impl WriteBuffer<'_> {
         self.emit_approval_cluster(&plm)?;
         self.emit_security_cluster(&plm)?;
         self.emit_identification_cluster(&plm)?;
+        self.emit_document_cluster(&plm)?;
+        Ok(())
+    }
+
+    /// Emit the Document cluster (type leaf → document arena → linkers).
+    /// `DOCUMENT` instances emit as `DOCUMENT` or `DOCUMENT_FILE` per
+    /// the arena enum variant. Split for line-budget reasons.
+    fn emit_document_cluster(&mut self, plm: &crate::ir::PlmPool) -> Result<(), WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::plm::applied_document_reference::AppliedDocumentReferenceHandler;
+        use crate::entities::plm::document::DocumentHandler;
+        use crate::entities::plm::document_file::DocumentFileHandler;
+        use crate::entities::plm::document_product_equivalence::DocumentProductEquivalenceHandler;
+        use crate::entities::plm::document_representation_type::DocumentRepresentationTypeHandler;
+        use crate::entities::plm::document_type::DocumentTypeHandler;
+        use crate::ir::plm::Document;
+        self.plm_document_type_step_ids = Vec::with_capacity(plm.document_types.len());
+        for t in plm.document_types.iter() {
+            let id = DocumentTypeHandler::write(self, t.clone())?;
+            self.plm_document_type_step_ids.push(id);
+        }
+        self.plm_document_step_ids = Vec::with_capacity(plm.documents.len());
+        for d in plm.documents.iter() {
+            let id = match d {
+                Document::Itself(data) => DocumentHandler::write(self, data.clone())?,
+                Document::DocumentFile(file) => DocumentFileHandler::write(self, file.clone())?,
+            };
+            self.plm_document_step_ids.push(id);
+        }
+        self.plm_document_representation_type_step_ids =
+            Vec::with_capacity(plm.document_representation_types.len());
+        for d in plm.document_representation_types.iter() {
+            let id = DocumentRepresentationTypeHandler::write(self, d.clone())?;
+            self.plm_document_representation_type_step_ids.push(id);
+        }
+        self.plm_document_product_equivalence_step_ids =
+            Vec::with_capacity(plm.document_product_equivalences.len());
+        for d in plm.document_product_equivalences.iter() {
+            let id = DocumentProductEquivalenceHandler::write(self, d.clone())?;
+            self.plm_document_product_equivalence_step_ids.push(id);
+        }
+        for adr in plm.document_references.iter() {
+            AppliedDocumentReferenceHandler::write(self, adr.clone())?;
+        }
         Ok(())
     }
 

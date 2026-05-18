@@ -358,6 +358,18 @@ pub struct ReaderContext {
     /// `APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT` step entity id →
     /// `IdentificationAssignmentId`.
     pub(crate) plm_ia_id_map: HashMap<u64, crate::ir::IdentificationAssignmentId>,
+    /// `DOCUMENT_TYPE` step entity id → `DocumentTypeId`.
+    pub(crate) plm_document_type_id_map: HashMap<u64, crate::ir::DocumentTypeId>,
+    /// `DOCUMENT` / `DOCUMENT_FILE` step entity id → `DocumentId`.
+    pub(crate) plm_document_id_map: HashMap<u64, crate::ir::DocumentId>,
+    /// `DOCUMENT_REPRESENTATION_TYPE` step entity id → `DocumentRepresentationTypeId`.
+    pub(crate) plm_document_representation_type_id_map:
+        HashMap<u64, crate::ir::DocumentRepresentationTypeId>,
+    /// `DOCUMENT_PRODUCT_EQUIVALENCE` step entity id → `DocumentProductEquivalenceId`.
+    pub(crate) plm_document_product_equivalence_id_map:
+        HashMap<u64, crate::ir::DocumentProductEquivalenceId>,
+    /// `APPLIED_DOCUMENT_REFERENCE` step entity id → `DocumentReferenceId`.
+    pub(crate) plm_document_reference_id_map: HashMap<u64, crate::ir::DocumentReferenceId>,
 
     pub(crate) warnings: Vec<ConvertError>,
 }

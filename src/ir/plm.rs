@@ -11,9 +11,9 @@
 use super::arena::Arena;
 use super::id::{
     ApprovalId, ApprovalRoleId, ApprovalStatusId, CoordinatedUniversalTimeOffsetId, DateAndTimeId,
-    DateId, DateTimeRoleId, ExternalSourceId, IdentificationRoleId, LocalTimeId, OrganizationId,
-    PersonAndOrganizationId, PersonAndOrganizationRoleId, PersonId, ProductId,
-    SecurityClassificationId, SecurityClassificationLevelId,
+    DateId, DateTimeRoleId, DocumentId, DocumentTypeId, ExternalSourceId, IdentificationRoleId,
+    LocalTimeId, OrganizationId, PersonAndOrganizationId, PersonAndOrganizationRoleId, PersonId,
+    ProductId, SecurityClassificationId, SecurityClassificationLevelId,
 };
 
 /// Top-level container for plm-domain entities. `None` on
@@ -89,6 +89,96 @@ pub struct PlmPool {
     /// have different field counts — `AppliedExternal` adds a `source`
     /// ref absent from `Applied`.
     pub identification_assignments: Arena<IdentificationAssignment>,
+    /// `DOCUMENT_TYPE` label entries.
+    pub document_types: Arena<DocumentType>,
+    /// `document` arena enum covering plain `DOCUMENT` (`Itself`) and
+    /// `DOCUMENT_FILE` (`in_enum` variant). `AP214e3` `DOCUMENT_FILE` 6-arg
+    /// instances drop on read (only the inherited 4 fields are modeled).
+    pub documents: Arena<Document>,
+    /// `DOCUMENT_REPRESENTATION_TYPE` entries.
+    pub document_representation_types: Arena<DocumentRepresentationType>,
+    /// `DOCUMENT_PRODUCT_EQUIVALENCE` entries.
+    pub document_product_equivalences: Arena<DocumentProductEquivalence>,
+    /// `APPLIED_DOCUMENT_REFERENCE` entries. Connects a `Document` to
+    /// product targets via the AP214 `document_reference_item` SELECT.
+    pub document_references: Arena<AppliedDocumentReference>,
+}
+
+/// `DOCUMENT_TYPE(product_data_type)` — label entity.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DocumentType {
+    pub product_data_type: String,
+}
+
+/// `document` arena enum per ir.toml. The `Itself` variant covers a
+/// plain `DOCUMENT` instance; `DocumentFile` covers the `DOCUMENT_FILE`
+/// subtype carrying identical field shape (`AP214e3` multi-supertype
+/// trailing fields drop silently — see plm-6 plan).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Document {
+    Itself(DocumentData),
+    DocumentFile(DocumentFile),
+}
+
+/// Carrier for a plain `DOCUMENT(id, name, description, kind)`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DocumentData {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    pub kind: DocumentTypeId,
+}
+
+/// `DOCUMENT_FILE(id, name, description, kind, ...)`. Currently carries
+/// only the inherited `document` fields; `AP214e3` multi-supertype
+/// trailing fields (`characterized_object.name`, `description`) drop on
+/// read.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DocumentFile {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    pub kind: DocumentTypeId,
+}
+
+/// `DOCUMENT_REPRESENTATION_TYPE(name, represented_document)`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DocumentRepresentationType {
+    pub name: String,
+    pub represented_document: DocumentId,
+}
+
+/// `DOCUMENT_PRODUCT_EQUIVALENCE(name, description, relating_document, related_product)`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DocumentProductEquivalence {
+    pub name: String,
+    pub description: Option<String>,
+    pub relating_document: DocumentId,
+    pub related_product: DocumentProductItem,
+}
+
+/// AP214 `product_or_formation_or_definition` SELECT — step-io scopes
+/// to the product chain (`Product` only). Other variants drop silently.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DocumentProductItem {
+    Product(ProductId),
+}
+
+/// `APPLIED_DOCUMENT_REFERENCE(assigned_document, source, items)`.
+/// `source` (string) is inherited from `document_reference` supertype
+/// per `AP214e3` schema (lines 4163–4165).
+#[derive(Debug, Clone, PartialEq)]
+pub struct AppliedDocumentReference {
+    pub assigned_document: DocumentId,
+    pub source: String,
+    pub items: Vec<DocumentReferenceItem>,
+}
+
+/// AP214 `document_reference_item` SELECT — step-io scopes to the
+/// product chain (`Product` only). Other variants drop silently.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DocumentReferenceItem {
+    Product(ProductId),
 }
 
 /// `IDENTIFICATION_ROLE(name, description)`. `description` is `opt_string`.

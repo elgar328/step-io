@@ -268,6 +268,15 @@ pub(crate) enum PassLevel {
     /// on `Pass9PlmIdLeaves` plus the assembly product chain (`Pass6`)
     /// for `items` targets.
     Pass9PlmIa,
+    /// `DOCUMENT_TYPE` (Pass 9-17) — plm Document leaf.
+    Pass9PlmDocType,
+    /// `DOCUMENT` + `DOCUMENT_FILE` (Pass 9-18) — depend on `Pass9PlmDocType`.
+    Pass9PlmDocument,
+    /// `DOCUMENT_REPRESENTATION_TYPE`, `DOCUMENT_PRODUCT_EQUIVALENCE`,
+    /// `APPLIED_DOCUMENT_REFERENCE` (Pass 9-19) — depend on
+    /// `Pass9PlmDocument` plus the assembly product chain (`Pass6`) for
+    /// SELECT targets.
+    Pass9PlmDocLinkers,
     /// `SHAPE_ASPECT` (Pass 8-pre) — PMI scaffolding. Runs before the
     /// property converters so a future Pattern B PD pass can resolve its
     /// target ref through the `SHAPE_ASPECT` id map.

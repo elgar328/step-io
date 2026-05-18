@@ -118,6 +118,12 @@ pub(crate) struct WriteBuffer<'m> {
     /// `IdentificationAssignment` itself has no consumers and is not cached.
     pub(crate) plm_identification_role_step_ids: Vec<u64>,
     pub(crate) plm_external_source_step_ids: Vec<u64>,
+    /// plm Document caches — populated by `emit_plm_if_set`. `Applied`
+    /// `DocumentReference` is top-level (no consumer) and not cached.
+    pub(crate) plm_document_type_step_ids: Vec<u64>,
+    pub(crate) plm_document_step_ids: Vec<u64>,
+    pub(crate) plm_document_representation_type_step_ids: Vec<u64>,
+    pub(crate) plm_document_product_equivalence_step_ids: Vec<u64>,
     /// Per-`UnitContext` leaf STEP ids `(length, angle, solid_angle)`,
     /// indexed by `UnitContextId.0`. Each `UnitContext` in the IR arena
     /// emits its own leaf entities (no writer-side dedup) so the IR's
@@ -185,6 +191,10 @@ impl<'m> WriteBuffer<'m> {
             plm_security_classification_step_ids: Vec::new(),
             plm_identification_role_step_ids: Vec::new(),
             plm_external_source_step_ids: Vec::new(),
+            plm_document_type_step_ids: Vec::new(),
+            plm_document_step_ids: Vec::new(),
+            plm_document_representation_type_step_ids: Vec::new(),
+            plm_document_product_equivalence_step_ids: Vec::new(),
             product_def_ids: std::collections::HashMap::new(),
             product_def_shape_ids: std::collections::HashMap::new(),
         }
