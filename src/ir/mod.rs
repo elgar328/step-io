@@ -62,9 +62,10 @@ pub use plm::{
     PlmPool, RoleAssociation, RoleSelect, SecurityClassification, SecurityClassificationAssignment,
     SecurityClassificationItem, SecurityClassificationLevel,
 };
-pub use property::{MeasureKind, Property, PropertyMeasure, PropertyPool};
+pub use property::{MeasureKind, Property, PropertyItem, PropertyMeasure, PropertyPool};
 pub use shape_rep::{
-    AngleUnit, LengthUncertainty, LengthUnit, Mdgpr, ShapeAspect, SolidAngleUnit, UnitContext,
+    AngleUnit, DescriptiveItem, LengthUncertainty, LengthUnit, Mdgpr, ShapeAspect, SolidAngleUnit,
+    UnitContext,
 };
 pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Wire};
 pub use units::{DerivedUnit, DerivedUnitElement, MassUnit, MeasureWithUnit, NamedUnit, UnitsPool};

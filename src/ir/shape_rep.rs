@@ -139,6 +139,21 @@ pub struct Mdgpr {
 /// Future PMI work (Tolerance / Datum / GD&T per ROADMAP Phase 2) adds
 /// further structs alongside this one — all share the `shape_rep` pool
 /// per the ir.toml blueprint.
+/// `DESCRIPTIVE_REPRESENTATION_ITEM(name, description)` — free-form
+/// textual property item.
+///
+/// Per the ir.toml blueprint (`descriptive_representation_item`,
+/// `SingleStruct`, pool = `shape_rep`). Lives in `shape_rep` so that any
+/// future consumer beyond [`crate::ir::property::PropertyItem`] can
+/// reference it without crossing pool boundaries. Common usage:
+/// `('Material', 'Steel')` label/value pairs inside a property
+/// representation.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DescriptiveItem {
+    pub name: String,
+    pub description: String,
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeAspect {
     /// `SHAPE_ASPECT.name` — typically `''`.

@@ -12,7 +12,8 @@ use crate::entities::property::property_definition_representation::{
     PropertyDefinitionRepresentationHandler, PropertyDefinitionRepresentationWriteInput,
 };
 use crate::ir::id::UnitContextId;
-use crate::ir::property::{MeasureKind, Property, PropertyMeasure};
+use crate::ir::property::{MeasureKind, Property, PropertyItem, PropertyMeasure};
+use crate::ir::shape_rep::DescriptiveItem;
 use crate::parser::entity::Attribute;
 
 impl WriteBuffer<'_> {
@@ -34,11 +35,14 @@ impl WriteBuffer<'_> {
             return;
         };
 
-        // 1. Emit MEASURE items.
+        // 1. Emit items (mixed MEASURE / DESCRIPTIVE in source order).
         let item_refs: Vec<u64> = prop
             .items
             .iter()
-            .map(|m| self.emit_property_measure(m, prop.context))
+            .map(|item| match item {
+                PropertyItem::Measure(m) => self.emit_property_measure(m, prop.context),
+                PropertyItem::Descriptive(d) => self.emit_descriptive_item(d.clone()),
+            })
             .collect();
 
         // 2. REPRESENTATION wrapping the items.
@@ -74,6 +78,14 @@ impl WriteBuffer<'_> {
             self,
             PropertyDefinitionRepresentationWriteInput { pd, repr },
         );
+    }
+
+    /// Emit a `DESCRIPTIVE_REPRESENTATION_ITEM` for a property's
+    /// descriptive item. Wraps the `shape_rep` handler so callers don't
+    /// need to drag the trait import through every site.
+    pub(crate) fn emit_descriptive_item(&mut self, item: DescriptiveItem) -> u64 {
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::shape_rep::descriptive_representation_item::DescriptiveRepresentationItemHandler::write(self, item).expect("descriptive item emit is infallible")
     }
 
     pub(crate) fn emit_property_measure(

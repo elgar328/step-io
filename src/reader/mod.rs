@@ -333,6 +333,10 @@ pub struct ReaderContext {
     /// Items with unsupported `MeasureKind` (e.g. `AREA_MEASURE`) are
     /// silently skipped — no map entry. Temp; discarded after Pass 8.
     pub(crate) measure_item_map: HashMap<u64, crate::ir::property::PropertyMeasure>,
+    /// `DESCRIPTIVE_REPRESENTATION_ITEM #N → DescriptiveItem` (Pass 8-1).
+    /// Temp; discarded after Pass 8. PDR handler consults both this map
+    /// and `measure_item_map` when resolving `REPRESENTATION.items` refs.
+    pub(crate) descriptive_item_map: HashMap<u64, crate::ir::shape_rep::DescriptiveItem>,
     /// `PROPERTY_DEFINITION #N → (name, description, target ProductId)`
     /// (Pass 8-3). PDs whose target ref does not resolve to a Product
     /// (e.g. `SHAPE_ASPECT`) are silently dropped — no map entry.

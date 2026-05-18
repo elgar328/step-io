@@ -11,6 +11,7 @@
 //! visualization design (see `crate::ir::visualization`).
 
 use super::id::{ProductId, UnitContextId};
+use super::shape_rep::DescriptiveItem;
 
 /// Top-level container for property data extracted from
 /// `PROPERTY_DEFINITION_REPRESENTATION` chains. Empty when the source file
@@ -41,8 +42,25 @@ pub struct Property {
     /// `REPRESENTATION.context_of_items` — links to a [`UnitContext`] entry.
     /// `None` when the source omitted it (rare).
     pub context: Option<UnitContextId>,
-    /// `REPRESENTATION.items` — passive measure values.
-    pub items: Vec<PropertyMeasure>,
+    /// `REPRESENTATION.items` — polymorphic items in source order.
+    pub items: Vec<PropertyItem>,
+}
+
+/// Polymorphic container for `REPRESENTATION.items` entries reached
+/// through the property cluster.
+///
+/// This is a **step-io composite enum** — not to be confused with the
+/// ir.toml blueprint's `RepresentationItem` enum (which has five direct
+/// variants: integer / measure / qualified / real / value
+/// representation items). step-io picks a subset of the schema's
+/// `representation_item` ISA subtree by composing blueprint building
+/// blocks ([`PropertyMeasure`] and
+/// [`crate::ir::shape_rep::DescriptiveItem`]). Future phases extend
+/// this enum in-place — variant name and module location stay stable.
+#[derive(Debug, Clone, PartialEq)]
+pub enum PropertyItem {
+    Measure(PropertyMeasure),
+    Descriptive(DescriptiveItem),
 }
 
 /// `MEASURE_REPRESENTATION_ITEM(name, typed_value, unit_ref)` reduced to a

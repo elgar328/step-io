@@ -8,7 +8,7 @@
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::property::{Property, PropertyMeasure, PropertyPool};
+use crate::ir::property::{Property, PropertyItem, PropertyPool};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -58,9 +58,18 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
         let ctx_ref = read_entity_ref(repr_attrs, 2, repr_ref, "context_of_items")?;
         let context = ctx.context_id_map.get(&ctx_ref).copied();
 
-        let items: Vec<PropertyMeasure> = item_refs
+        let items: Vec<PropertyItem> = item_refs
             .into_iter()
-            .filter_map(|r| ctx.measure_item_map.get(&r).cloned())
+            .filter_map(|r| {
+                if let Some(m) = ctx.measure_item_map.get(&r) {
+                    Some(PropertyItem::Measure(m.clone()))
+                } else {
+                    ctx.descriptive_item_map
+                        .get(&r)
+                        .cloned()
+                        .map(PropertyItem::Descriptive)
+                }
+            })
             .collect();
 
         ctx.properties

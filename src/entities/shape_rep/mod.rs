@@ -11,6 +11,7 @@
 //! `shape_rep` per the ir.toml blueprint.
 
 pub mod advanced_brep_shape_representation;
+pub mod descriptive_representation_item;
 pub mod gbssr;
 pub mod gbwsr;
 pub mod global_unit_assigned_context;
