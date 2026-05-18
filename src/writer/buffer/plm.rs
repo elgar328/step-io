@@ -108,6 +108,24 @@ impl WriteBuffer<'_> {
         self.emit_security_cluster(&plm)?;
         self.emit_identification_cluster(&plm)?;
         self.emit_document_cluster(&plm)?;
+        self.emit_group_cluster(&plm)?;
+        Ok(())
+    }
+
+    /// Emit the Group cluster (Group leaf → AGA). Split for line-budget
+    /// reasons, mirroring the other cluster helpers.
+    fn emit_group_cluster(&mut self, plm: &crate::ir::PlmPool) -> Result<(), WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::plm::applied_group_assignment::AppliedGroupAssignmentHandler;
+        use crate::entities::plm::group::GroupHandler;
+        self.plm_group_step_ids = Vec::with_capacity(plm.groups.len());
+        for g in plm.groups.iter() {
+            let id = GroupHandler::write(self, g.clone())?;
+            self.plm_group_step_ids.push(id);
+        }
+        for aga in plm.group_assignments.iter() {
+            AppliedGroupAssignmentHandler::write(self, aga.clone())?;
+        }
         Ok(())
     }
 

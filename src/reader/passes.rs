@@ -255,6 +255,9 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass9PlmDocType);
         self.dispatch_registry(graph, PassLevel::Pass9PlmDocument);
         self.dispatch_registry(graph, PassLevel::Pass9PlmDocLinkers);
+        // Group cluster — leaf -> assignment.
+        self.dispatch_registry(graph, PassLevel::Pass9PlmGroup);
+        self.dispatch_registry(graph, PassLevel::Pass9PlmGa);
 
         // Pass 8: PMI scaffolding — SHAPE_ASPECT entries that anchor
         // future Tolerance / Datum / GD&T work. Runs before the property

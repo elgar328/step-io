@@ -11,9 +11,10 @@
 use super::arena::Arena;
 use super::id::{
     ApprovalId, ApprovalRoleId, ApprovalStatusId, CoordinatedUniversalTimeOffsetId, DateAndTimeId,
-    DateId, DateTimeRoleId, DocumentId, DocumentTypeId, ExternalSourceId, IdentificationRoleId,
-    LocalTimeId, OrganizationId, PersonAndOrganizationId, PersonAndOrganizationRoleId, PersonId,
-    ProductId, SecurityClassificationId, SecurityClassificationLevelId,
+    DateId, DateTimeRoleId, DocumentId, DocumentTypeId, ExternalSourceId, GroupId,
+    IdentificationRoleId, LocalTimeId, OrganizationId, PersonAndOrganizationId,
+    PersonAndOrganizationRoleId, PersonId, ProductId, SecurityClassificationId,
+    SecurityClassificationLevelId,
 };
 
 /// Top-level container for plm-domain entities. `None` on
@@ -100,6 +101,33 @@ pub struct PlmPool {
     /// `APPLIED_DOCUMENT_REFERENCE` entries. Connects a `Document` to
     /// product targets via the AP214 `document_reference_item` SELECT.
     pub document_references: Arena<AppliedDocumentReference>,
+    /// `GROUP` label entries.
+    pub groups: Arena<Group>,
+    /// `APPLIED_GROUP_ASSIGNMENT` entries. Connects a `Group` to product
+    /// targets via the AP214 `group_item` SELECT.
+    pub group_assignments: Arena<AppliedGroupAssignment>,
+}
+
+/// `GROUP(name, description)`. `AP214e3` schema lines 5785–5792.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Group {
+    pub name: String,
+    pub description: Option<String>,
+}
+
+/// `APPLIED_GROUP_ASSIGNMENT(assigned_group, items)`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AppliedGroupAssignment {
+    pub assigned_group: GroupId,
+    pub items: Vec<GroupItem>,
+}
+
+/// AP214 `group_item` SELECT — step-io scopes to the product chain.
+/// `ACTION` / `SHAPE_ASPECT` / `GEOMETRIC_REPRESENTATION_ITEM` 등 비-PD
+/// targets drop silently on read.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GroupItem {
+    Product(ProductId),
 }
 
 /// `DOCUMENT_TYPE(product_data_type)` — label entity.

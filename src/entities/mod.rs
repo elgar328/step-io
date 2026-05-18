@@ -277,6 +277,12 @@ pub(crate) enum PassLevel {
     /// `Pass9PlmDocument` plus the assembly product chain (`Pass6`) for
     /// SELECT targets.
     Pass9PlmDocLinkers,
+    /// `GROUP` (Pass 9-20) — plm Group leaf.
+    Pass9PlmGroup,
+    /// `APPLIED_GROUP_ASSIGNMENT` (Pass 9-21) — depends on
+    /// `Pass9PlmGroup` plus the assembly product chain (`Pass6`) for
+    /// `items` targets.
+    Pass9PlmGa,
     /// `SHAPE_ASPECT` (Pass 8-pre) — PMI scaffolding. Runs before the
     /// property converters so a future Pattern B PD pass can resolve its
     /// target ref through the `SHAPE_ASPECT` id map.

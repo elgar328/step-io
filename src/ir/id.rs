@@ -5,13 +5,14 @@ use super::geometry::{
     Point2, Point3, Surface, Vertex,
 };
 use super::plm::{
-    AppliedDocumentReference, AppliedExternalIdentificationAssignment, Approval,
-    ApprovalAssignment, ApprovalDateTime, ApprovalPersonOrganization, ApprovalRole, ApprovalStatus,
-    CalendarDate, CoordinatedUniversalTimeOffset, DateAndTime, DateAndTimeAssignment, DateTimeRole,
-    Document, DocumentProductEquivalence, DocumentRepresentationType, DocumentType, ExternalSource,
-    IdentificationRole, LocalTime, Organization, Person, PersonAndOrganization,
-    PersonAndOrganizationAssignment, PersonAndOrganizationRole, SecurityClassification,
-    SecurityClassificationAssignment, SecurityClassificationLevel,
+    AppliedDocumentReference, AppliedExternalIdentificationAssignment, AppliedGroupAssignment,
+    Approval, ApprovalAssignment, ApprovalDateTime, ApprovalPersonOrganization, ApprovalRole,
+    ApprovalStatus, CalendarDate, CoordinatedUniversalTimeOffset, DateAndTime,
+    DateAndTimeAssignment, DateTimeRole, Document, DocumentProductEquivalence,
+    DocumentRepresentationType, DocumentType, ExternalSource, Group, IdentificationRole, LocalTime,
+    Organization, Person, PersonAndOrganization, PersonAndOrganizationAssignment,
+    PersonAndOrganizationRole, SecurityClassification, SecurityClassificationAssignment,
+    SecurityClassificationLevel,
 };
 use super::shape_rep::{ShapeAspect, UnitContext};
 use super::topology::{Edge, Face, Shell, Solid, Wire};
@@ -127,3 +128,7 @@ define_id!(DocumentId, Document);
 define_id!(DocumentRepresentationTypeId, DocumentRepresentationType);
 define_id!(DocumentProductEquivalenceId, DocumentProductEquivalence);
 define_id!(DocumentReferenceId, AppliedDocumentReference);
+
+// plm Ids — Group cluster (Phase plm-7).
+define_id!(GroupId, Group);
+define_id!(GroupAssignmentId, AppliedGroupAssignment);

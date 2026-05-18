@@ -370,6 +370,10 @@ pub struct ReaderContext {
         HashMap<u64, crate::ir::DocumentProductEquivalenceId>,
     /// `APPLIED_DOCUMENT_REFERENCE` step entity id → `DocumentReferenceId`.
     pub(crate) plm_document_reference_id_map: HashMap<u64, crate::ir::DocumentReferenceId>,
+    /// `GROUP` step entity id → `GroupId`.
+    pub(crate) plm_group_id_map: HashMap<u64, crate::ir::GroupId>,
+    /// `APPLIED_GROUP_ASSIGNMENT` step entity id → `GroupAssignmentId`.
+    pub(crate) plm_ga_id_map: HashMap<u64, crate::ir::GroupAssignmentId>,
 
     pub(crate) warnings: Vec<ConvertError>,
 }
