@@ -14,7 +14,7 @@ use crate::ir::id::{
     ColourId, Curve2dId, CurveFontId, CurveId, CurveStyleId, Direction2dId, DirectionId, EdgeId,
     FaceId, Placement1dId, Placement2dId, Placement3dId, Point2dId, PointId,
     PresentationStyleAssignmentId, ProductId, ShellId, SolidId, StyledItemId, SurfaceId,
-    UnitContextId, VertexId, WireId,
+    SurfaceStyleRenderingId, UnitContextId, VertexId, WireId,
 };
 use crate::ir::model::{GeometryPool, StepModel, TopologyPool};
 use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit, SolidAngleUnit, UnitContext};
@@ -246,10 +246,16 @@ pub struct ReaderContext {
     pub(crate) viz_fasc_map: HashMap<u64, FillAreaStyleColour>,
     /// `FILL_AREA_STYLE #N → FillAreaStyle` (Pass 7-3).
     pub(crate) viz_fas_map: HashMap<u64, FillAreaStyle>,
-    /// `SURFACE_STYLE_FILL_AREA #N | SURFACE_STYLE_RENDERING_WITH_PROPERTIES #N
-    /// → SurfaceSideStyleEntry`. Both entity types funnel into the same map
-    /// so `SURFACE_SIDE_STYLE` convert can resolve mixed style lists.
+    /// `SURFACE_STYLE_FILL_AREA #N → SurfaceSideStyleEntry::FillArea`.
+    /// Rendering-style entries land in [`Self::viz_ssr_id_map`] instead so
+    /// the `SURFACE_SIDE_STYLE` reader picks each variant from its own arena.
     pub(crate) viz_sss_entry_map: HashMap<u64, SurfaceSideStyleEntry>,
+    /// `SURFACE_STYLE_RENDERING #N | SURFACE_STYLE_RENDERING_WITH_PROPERTIES #N
+    /// → SurfaceStyleRenderingId`. Populated by the SSR handlers after
+    /// pushing the resolved enum variant into
+    /// `VisualizationPool::surface_style_renderings`; consumed by the
+    /// `SURFACE_SIDE_STYLE` reader to build `SurfaceSideStyleEntry::Rendering(...)`.
+    pub(crate) viz_ssr_id_map: HashMap<u64, SurfaceStyleRenderingId>,
     /// `SURFACE_STYLE_TRANSPARENT #N → transparency value` (Pass 7-3b).
     pub(crate) viz_transparent_map: HashMap<u64, f64>,
     /// `SURFACE_SIDE_STYLE #N → SurfaceSideStyle` (Pass 7-5).

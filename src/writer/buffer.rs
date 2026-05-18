@@ -76,6 +76,12 @@ pub(crate) struct WriteBuffer<'m> {
     /// `OVER_RIDING_STYLED_ITEM` emission so each styled item resolves its
     /// `styles` ref list with one index lookup per entry.
     pub(crate) psa_step_ids: Vec<u64>,
+    /// STEP entity id of every emitted `SURFACE_STYLE_RENDERING` /
+    /// `SURFACE_STYLE_RENDERING_WITH_PROPERTIES` entity, indexed by
+    /// `SurfaceStyleRenderingId.0`. Populated by `emit_visualization_if_set`
+    /// before `SURFACE_SIDE_STYLE` emission so each
+    /// `SurfaceSideStyleEntry::Rendering` resolves with one index lookup.
+    pub(crate) ssr_step_ids: Vec<u64>,
     /// Per-`UnitContext` leaf STEP ids `(length, angle, solid_angle)`,
     /// indexed by `UnitContextId.0`. Each `UnitContext` in the IR arena
     /// emits its own leaf entities (no writer-side dedup) so the IR's
@@ -123,6 +129,7 @@ impl<'m> WriteBuffer<'m> {
             curve_style_step_ids: Vec::new(),
             styled_item_step_ids: Vec::new(),
             psa_step_ids: Vec::new(),
+            ssr_step_ids: Vec::new(),
             product_def_ids: std::collections::HashMap::new(),
             product_def_shape_ids: std::collections::HashMap::new(),
         }

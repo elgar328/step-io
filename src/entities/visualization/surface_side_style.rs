@@ -12,7 +12,6 @@ use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
 use super::surface_style_fill_area::SurfaceStyleFillAreaHandler;
-use super::surface_style_rendering_with_properties::SurfaceStyleRenderingHandler;
 use step_io_macros::step_entity;
 
 pub(crate) struct SurfaceSideStyleHandler;
@@ -34,6 +33,8 @@ impl SimpleEntityHandler for SurfaceSideStyleHandler {
         for r in style_refs {
             if let Some(entry) = ctx.viz_sss_entry_map.get(&r).cloned() {
                 styles.push(entry);
+            } else if let Some(&ssr_id) = ctx.viz_ssr_id_map.get(&r) {
+                styles.push(SurfaceSideStyleEntry::Rendering(ssr_id));
             }
         }
         ctx.viz_sss_map
@@ -48,9 +49,7 @@ impl SimpleEntityHandler for SurfaceSideStyleHandler {
                 SurfaceSideStyleEntry::FillArea(ssfa) => {
                     SurfaceStyleFillAreaHandler::write(buf, ssfa)?
                 }
-                SurfaceSideStyleEntry::Rendering(ssr) => {
-                    SurfaceStyleRenderingHandler::write(buf, ssr)?
-                }
+                SurfaceSideStyleEntry::Rendering(ssr_id) => buf.ssr_step_ids[ssr_id.0 as usize],
             };
             style_refs.push(Attribute::EntityRef(entry_id));
         }

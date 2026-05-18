@@ -8,7 +8,7 @@
 use super::arena::Arena;
 use super::id::{
     ColourId, CurveFontId, CurveId, CurveStyleId, EdgeId, FaceId, PointId,
-    PresentationStyleAssignmentId, SolidId, StyledItemId,
+    PresentationStyleAssignmentId, SolidId, StyledItemId, SurfaceStyleRenderingId,
 };
 use super::shape_rep::Mdgpr;
 
@@ -47,6 +47,12 @@ pub struct VisualizationPool {
     /// shared by multiple styled items round-trips as a single STEP entity
     /// instead of being duplicated per occurrence.
     pub presentation_style_assignments: Arena<PresentationStyleAssignment>,
+    /// `surface_style_rendering` arena per ir.toml. Holds both the base
+    /// `SURFACE_STYLE_RENDERING` (`Itself` variant) and its
+    /// `SURFACE_STYLE_RENDERING_WITH_PROPERTIES` subtype as enum variants
+    /// of the same id namespace. `SurfaceSideStyleEntry::Rendering` carries
+    /// a [`SurfaceStyleRenderingId`] into this arena.
+    pub surface_style_renderings: Arena<SurfaceStyleRendering>,
 }
 
 /// `CURVE_STYLE(name, curve_font, curve_width, curve_colour)` —
@@ -213,12 +219,12 @@ pub struct SurfaceSideStyle {
 
 /// One element of a `SURFACE_SIDE_STYLE.styles` list. STEP allows several
 /// style entry types here; this scope covers `SURFACE_STYLE_FILL_AREA`
-/// (color fill) and `SURFACE_STYLE_RENDERING_WITH_PROPERTIES`
+/// (color fill) and the `SURFACE_STYLE_RENDERING` arena
 /// (color + transparency / other rendering hints).
 #[derive(Debug, Clone, PartialEq)]
 pub enum SurfaceSideStyleEntry {
     FillArea(SurfaceStyleFillArea),
-    Rendering(SurfaceStyleRendering),
+    Rendering(SurfaceStyleRenderingId),
 }
 
 /// `SURFACE_STYLE_FILL_AREA(fill_area)`.
@@ -227,15 +233,34 @@ pub struct SurfaceStyleFillArea {
     pub fill_area: FillAreaStyle,
 }
 
-/// `SURFACE_STYLE_RENDERING_WITH_PROPERTIES(rendering_method, surface_colour,
-/// properties)`. The first attribute is the `shading_surface_method` enum
-/// per the AP214 schema, but Fusion 360 commonly emits `$` (unset) for it —
-/// we accept both, storing `None` for the unset case to round-trip the
-/// distinction. `properties` is a list of additional rendering hints; we
-/// currently model `SURFACE_STYLE_TRANSPARENT` as the only
-/// [`RenderingProperty`] variant.
+/// `surface_style_rendering` arena enum per ir.toml. `Itself` covers the
+/// base `SURFACE_STYLE_RENDERING(rendering_method, surface_colour)`;
+/// `SurfaceStyleRenderingWithProperties` covers the
+/// `SURFACE_STYLE_RENDERING_WITH_PROPERTIES` subtype that adds a
+/// `properties` list. Both share the same [`SurfaceStyleRenderingId`].
 #[derive(Debug, Clone, PartialEq)]
-pub struct SurfaceStyleRendering {
+pub enum SurfaceStyleRendering {
+    Itself(SurfaceStyleRenderingData),
+    SurfaceStyleRenderingWithProperties(SurfaceStyleRenderingWithProperties),
+}
+
+/// `SURFACE_STYLE_RENDERING(rendering_method, surface_colour)` body. The
+/// `rendering_method` field is non-optional in the schema, but Fusion 360
+/// commonly emits `$` (Unset); the `Option<ShadingMethod>` preserves that
+/// distinction.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceStyleRenderingData {
+    pub rendering_method: Option<ShadingMethod>,
+    pub surface_colour: ColourId,
+}
+
+/// `SURFACE_STYLE_RENDERING_WITH_PROPERTIES(rendering_method, surface_colour,
+/// properties)` body. Same fields as the base entity plus a list of
+/// additional rendering hints — only `SURFACE_STYLE_TRANSPARENT` is
+/// currently modelled (see [`RenderingProperty`]); other property entries
+/// are silently dropped on read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceStyleRenderingWithProperties {
     pub rendering_method: Option<ShadingMethod>,
     pub surface_colour: ColourId,
     pub properties: Vec<RenderingProperty>,

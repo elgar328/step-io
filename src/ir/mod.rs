@@ -42,5 +42,6 @@ pub use visualization::{
     DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour, OverRidingStyledItem,
     PlainStyledItem, PresentationStyleAssignment, PsaStyle, RenderingProperty, ShadingMethod,
     StyledItem, StyledItemTarget, SurfaceSide, SurfaceSideStyle, SurfaceSideStyleEntry,
-    SurfaceStyleFillArea, SurfaceStyleRendering, SurfaceStyleUsage, VisualizationPool,
+    SurfaceStyleFillArea, SurfaceStyleRendering, SurfaceStyleRenderingData,
+    SurfaceStyleRenderingWithProperties, SurfaceStyleUsage, VisualizationPool,
 };

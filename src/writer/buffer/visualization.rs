@@ -5,7 +5,9 @@
 //! / `emit_face` wrappers in units / topology.
 
 use super::WriteBuffer;
-use crate::ir::visualization::{Colour, CurveFont, PresentationStyleAssignment, StyledItem};
+use crate::ir::visualization::{
+    Colour, CurveFont, PresentationStyleAssignment, StyledItem, SurfaceStyleRendering,
+};
 use crate::writer::WriteError;
 
 impl WriteBuffer<'_> {
@@ -21,6 +23,8 @@ impl WriteBuffer<'_> {
         use crate::entities::visualization::over_riding_styled_item::OverRidingStyledItemHandler;
         use crate::entities::visualization::presentation_style_assignment::PresentationStyleAssignmentHandler;
         use crate::entities::visualization::styled_item::StyledItemHandler;
+        use crate::entities::visualization::surface_style_rendering::SurfaceStyleRenderingHandler;
+        use crate::entities::visualization::surface_style_rendering_with_properties::SurfaceStyleRenderingWithPropertiesHandler;
         let Some(viz) = self.model.visualization.clone() else {
             return Ok(());
         };
@@ -50,6 +54,24 @@ impl WriteBuffer<'_> {
         for cs in viz.curve_styles.iter() {
             let id = CurveStyleHandler::write(self, cs.clone())?;
             self.curve_style_step_ids.push(id);
+        }
+        // SURFACE_STYLE_RENDERING arena — emit every entry up-front so the
+        // downstream SURFACE_SIDE_STYLE writer (invoked transitively from
+        // each PSA's SSU body) resolves SurfaceSideStyleEntry::Rendering
+        // through ssr_step_ids[id.0]. Pre-emit runs before the PSA cache
+        // population so the SSU/SSS chain inside each PSA can hit the
+        // cache.
+        self.ssr_step_ids = Vec::with_capacity(viz.surface_style_renderings.len());
+        for ssr in viz.surface_style_renderings.iter() {
+            let id = match ssr {
+                SurfaceStyleRendering::Itself(data) => {
+                    SurfaceStyleRenderingHandler::write(self, data.clone())?
+                }
+                SurfaceStyleRendering::SurfaceStyleRenderingWithProperties(data) => {
+                    SurfaceStyleRenderingWithPropertiesHandler::write(self, data.clone())?
+                }
+            };
+            self.ssr_step_ids.push(id);
         }
         // PRESENTATION_STYLE_ASSIGNMENT arena — emit every PSA up-front so
         // STYLED_ITEM / OVER_RIDING_STYLED_ITEM writers can resolve their

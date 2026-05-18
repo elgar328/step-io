@@ -7,7 +7,7 @@ use super::geometry::{
 use super::shape_rep::{ShapeAspect, UnitContext};
 use super::topology::{Edge, Face, Shell, Solid, Wire};
 use super::visualization::{
-    Colour, CurveFont, CurveStyle, PresentationStyleAssignment, StyledItem,
+    Colour, CurveFont, CurveStyle, PresentationStyleAssignment, StyledItem, SurfaceStyleRendering,
 };
 
 // Geometry Ids (3D)
@@ -55,3 +55,7 @@ define_id!(StyledItemId, StyledItem);
 // Visualization Ids — PRESENTATION_STYLE_ASSIGNMENT enum arena
 // (Itself + PresentationStyleByContext).
 define_id!(PresentationStyleAssignmentId, PresentationStyleAssignment);
+
+// Visualization Ids — SURFACE_STYLE_RENDERING enum arena
+// (Itself + SurfaceStyleRenderingWithProperties).
+define_id!(SurfaceStyleRenderingId, SurfaceStyleRendering);

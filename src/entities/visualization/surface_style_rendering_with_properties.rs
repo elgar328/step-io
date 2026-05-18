@@ -11,21 +11,23 @@ use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_enum};
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::{
-    RenderingProperty, ShadingMethod, SurfaceSideStyleEntry, SurfaceStyleRendering,
+    RenderingProperty, ShadingMethod, SurfaceStyleRendering, SurfaceStyleRenderingWithProperties,
+    VisualizationPool,
 };
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
+use super::surface_style_rendering::shading_method_attr;
 use super::surface_style_transparent::SurfaceStyleTransparentHandler;
 use step_io_macros::step_entity;
 
-pub(crate) struct SurfaceStyleRenderingHandler;
+pub(crate) struct SurfaceStyleRenderingWithPropertiesHandler;
 
 #[step_entity(name = "SURFACE_STYLE_RENDERING_WITH_PROPERTIES", pass = Pass7Rendering)]
-impl SimpleEntityHandler for SurfaceStyleRenderingHandler {
-    type WriteInput = SurfaceStyleRendering;
+impl SimpleEntityHandler for SurfaceStyleRenderingWithPropertiesHandler {
+    type WriteInput = SurfaceStyleRenderingWithProperties;
 
     fn read(
         ctx: &mut ReaderContext,
@@ -61,18 +63,26 @@ impl SimpleEntityHandler for SurfaceStyleRenderingHandler {
                 properties.push(RenderingProperty::Transparent(t));
             }
         }
-        ctx.viz_sss_entry_map.insert(
-            entity_id,
-            SurfaceSideStyleEntry::Rendering(SurfaceStyleRendering {
-                rendering_method,
-                surface_colour,
-                properties,
-            }),
+        let pool = ctx
+            .visualization
+            .get_or_insert_with(VisualizationPool::default);
+        let id = pool.surface_style_renderings.push(
+            SurfaceStyleRendering::SurfaceStyleRenderingWithProperties(
+                SurfaceStyleRenderingWithProperties {
+                    rendering_method,
+                    surface_colour,
+                    properties,
+                },
+            ),
         );
+        ctx.viz_ssr_id_map.insert(entity_id, id);
         Ok(())
     }
 
-    fn write(buf: &mut WriteBuffer, ssr: SurfaceStyleRendering) -> Result<u64, WriteError> {
+    fn write(
+        buf: &mut WriteBuffer,
+        ssr: SurfaceStyleRenderingWithProperties,
+    ) -> Result<u64, WriteError> {
         let colour_step_id = buf.colour_step_ids[ssr.surface_colour.0 as usize];
         let mut prop_refs = Vec::with_capacity(ssr.properties.len());
         for prop in ssr.properties {
@@ -81,17 +91,10 @@ impl SimpleEntityHandler for SurfaceStyleRenderingHandler {
             };
             prop_refs.push(Attribute::EntityRef(prop_id));
         }
-        let method_attr = match ssr.rendering_method {
-            None => Attribute::Unset,
-            Some(ShadingMethod::Constant) => Attribute::Enum("CONSTANT_SHADING".into()),
-            Some(ShadingMethod::Colour) => Attribute::Enum("COLOUR_SHADING".into()),
-            Some(ShadingMethod::Dot) => Attribute::Enum("DOT_SHADING".into()),
-            Some(ShadingMethod::Normal) => Attribute::Enum("NORMAL_SHADING".into()),
-        };
         Ok(buf.push_simple(
             "SURFACE_STYLE_RENDERING_WITH_PROPERTIES",
             vec![
-                method_attr,
+                shading_method_attr(ssr.rendering_method),
                 Attribute::EntityRef(colour_step_id),
                 Attribute::List(prop_refs),
             ],
