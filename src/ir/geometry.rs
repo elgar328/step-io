@@ -143,7 +143,17 @@ pub enum Curve {
     Polyline(Polyline),
     Hyperbola(Hyperbola),
     Parabola(Parabola),
-    // Future: Offset
+    OffsetCurve3d(OffsetCurve3d),
+}
+
+/// `OFFSET_CURVE_3D(name, basis_curve, distance, self_intersect, ref_direction)`.
+/// Offset of a basis 3D curve by `distance` along `ref_direction`.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct OffsetCurve3d {
+    pub basis: CurveId,
+    pub distance: f64,
+    pub self_intersect: Logical,
+    pub ref_direction: DirectionId,
 }
 
 /// `HYPERBOLA(name, position, semi_axis, semi_imag_axis)` — 3D conic.

@@ -26,6 +26,7 @@ pub mod hyperbola;
 pub mod line;
 pub mod line_2d;
 pub(crate) mod nurbs_shared;
+pub mod offset_curve_3d;
 pub mod offset_surface;
 pub mod parabola;
 pub mod plane;
