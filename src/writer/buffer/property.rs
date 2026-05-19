@@ -100,6 +100,7 @@ impl WriteBuffer<'_> {
             MeasureKind::PlaneAngle => "PLANE_ANGLE_MEASURE",
             MeasureKind::SolidAngle => "SOLID_ANGLE_MEASURE",
             MeasureKind::PositiveRatio => "POSITIVE_RATIO_MEASURE",
+            MeasureKind::Mass => "MASS_MEASURE",
         };
         let unit_ref = self
             .resolve_explicit_unit_ref(m.unit_ref)
@@ -141,7 +142,7 @@ impl WriteBuffer<'_> {
         let ctx_idx = ctx.unwrap_or(UnitContextId(0)).0 as usize;
         let (length, angle, solid) = self.unit_leaf_ids[ctx_idx];
         match kind {
-            MeasureKind::Length | MeasureKind::PositiveRatio => length,
+            MeasureKind::Length | MeasureKind::PositiveRatio | MeasureKind::Mass => length,
             MeasureKind::PlaneAngle => angle,
             MeasureKind::SolidAngle => solid,
         }

@@ -97,4 +97,5 @@ pub enum MeasureKind {
     PlaneAngle,
     SolidAngle,
     PositiveRatio,
+    Mass,
 }
