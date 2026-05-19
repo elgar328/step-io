@@ -452,7 +452,9 @@ fn convert_rational_bspline_curve_complex() {
         | Curve::Ellipse(_)
         | Curve::Trimmed(_)
         | Curve::Composite(_)
-        | Curve::Polyline(_) => panic!("expected Nurbs"),
+        | Curve::Polyline(_)
+        | Curve::Hyperbola(_)
+        | Curve::Parabola(_) => panic!("expected Nurbs"),
     }
 }
 

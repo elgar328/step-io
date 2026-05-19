@@ -126,7 +126,25 @@ pub enum Curve {
     Trimmed(TrimmedCurve),
     Composite(CompositeCurve),
     Polyline(Polyline),
+    Hyperbola(Hyperbola),
+    Parabola(Parabola),
     // Future: Offset
+}
+
+/// `HYPERBOLA(name, position, semi_axis, semi_imag_axis)` — 3D conic.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Hyperbola {
+    pub position: Placement3dId,
+    pub semi_axis: f64,
+    pub semi_imag_axis: f64,
+}
+
+/// `PARABOLA(name, position, focal_dist)` — 3D conic. `focal_dist` is
+/// signed; the sign selects orientation along `position.axis`.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Parabola {
+    pub position: Placement3dId,
+    pub focal_dist: f64,
 }
 
 /// A 3D polyline: ordered list of point ids forming a piecewise-linear curve.

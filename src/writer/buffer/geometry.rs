@@ -5,11 +5,11 @@
 use super::WriteBuffer;
 use crate::ir::{
     Circle2, Circle3, CompositeCurve, ConicalSurface, Curve, Curve2d, Curve2dId, CurveId,
-    CylindricalSurface, Direction2dId, Direction3, DirectionId, Ellipse2, Ellipse3, Line2, Line3,
-    NurbsCurve, NurbsCurve2d, NurbsSurface, Pcurve, Placement1dId, Placement2dId, Placement3dId,
-    Plane3, Point2dId, PointId, Polyline, Polyline2d, SphericalSurface, StepModel, Surface,
-    SurfaceId, SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface,
-    TrimmedCurve,
+    CylindricalSurface, Direction2dId, Direction3, DirectionId, Ellipse2, Ellipse3, Hyperbola,
+    Line2, Line3, NurbsCurve, NurbsCurve2d, NurbsSurface, Parabola, Pcurve, Placement1dId,
+    Placement2dId, Placement3dId, Plane3, Point2dId, PointId, Polyline, Polyline2d,
+    SphericalSurface, StepModel, Surface, SurfaceId, SurfaceOfLinearExtrusion, SurfaceOfOffset,
+    SurfaceOfRevolution, ToroidalSurface, TrimmedCurve,
 };
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
@@ -49,6 +49,8 @@ impl WriteBuffer<'_> {
             Curve::Trimmed(trimmed) => self.emit_trimmed_curve(trimmed)?,
             Curve::Composite(composite) => self.emit_composite_curve(&composite)?,
             Curve::Polyline(polyline) => self.emit_polyline(polyline)?,
+            Curve::Hyperbola(h) => self.emit_hyperbola(h)?,
+            Curve::Parabola(p) => self.emit_parabola(p)?,
         };
         self.curve_ids.insert(id, n);
         Ok(n)
@@ -57,6 +59,16 @@ impl WriteBuffer<'_> {
     fn emit_polyline(&mut self, polyline: Polyline) -> Result<u64, WriteError> {
         use crate::entities::SimpleEntityHandler;
         crate::entities::geometry::polyline::PolylineHandler::write(self, polyline)
+    }
+
+    fn emit_hyperbola(&mut self, h: Hyperbola) -> Result<u64, WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::hyperbola::HyperbolaHandler::write(self, h)
+    }
+
+    fn emit_parabola(&mut self, p: Parabola) -> Result<u64, WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::parabola::ParabolaHandler::write(self, p)
     }
 
     fn emit_trimmed_curve(&mut self, trimmed: TrimmedCurve) -> Result<u64, WriteError> {
