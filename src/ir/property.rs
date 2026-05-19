@@ -98,4 +98,6 @@ pub enum MeasureKind {
     SolidAngle,
     PositiveRatio,
     Mass,
+    Area,
+    Volume,
 }

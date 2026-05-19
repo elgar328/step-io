@@ -91,6 +91,8 @@ fn match_measure_kind(type_name: &str) -> Option<MeasureKind> {
         "SOLID_ANGLE_MEASURE" => Some(MeasureKind::SolidAngle),
         "POSITIVE_RATIO_MEASURE" => Some(MeasureKind::PositiveRatio),
         "MASS_MEASURE" => Some(MeasureKind::Mass),
+        "AREA_MEASURE" => Some(MeasureKind::Area),
+        "VOLUME_MEASURE" => Some(MeasureKind::Volume),
         _ => None,
     }
 }
