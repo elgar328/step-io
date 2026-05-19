@@ -18,6 +18,7 @@ use super::plm::{
     PersonAndOrganizationAssignment, PersonAndOrganizationRole, RoleAssociation,
     SecurityClassification, SecurityClassificationAssignment, SecurityClassificationLevel,
 };
+use super::property::{DescriptionAttribute, NameAttribute};
 use super::shape_rep::{ShapeAspect, UnitContext};
 use super::topology::{Edge, Face, Shell, Solid, Wire};
 use super::units::{DerivedUnit, DerivedUnitElement, MeasureWithUnit, NamedUnit};
@@ -62,6 +63,8 @@ define_id!(
     ProductDefinitionRelationship
 );
 define_id!(FeatureDefinitionId, Step);
+define_id!(NameAttributeId, NameAttribute);
+define_id!(DescriptionAttributeId, DescriptionAttribute);
 
 // Unit context Ids — multi-context support (one entry per
 // REPRESENTATION_CONTEXT in the source file).

@@ -36,14 +36,14 @@ pub use id::{
     AddressId, ApplicationContextId, ApplicationProtocolDefinitionId, ApprovalAssignmentId,
     ApprovalDateTimeId, ApprovalId, ApprovalPersonOrganizationId, ApprovalRoleId, ApprovalStatusId,
     CoordinatedUniversalTimeOffsetId, Curve2dId, CurveId, DateAndTimeAssignmentId, DateAndTimeId,
-    DateId, DateTimeRoleId, DerivedUnitElementId, DerivedUnitId, Direction2dId, DirectionId,
-    DocumentId, DocumentProductEquivalenceId, DocumentReferenceId, DocumentRepresentationTypeId,
-    DocumentTypeId, EdgeId, ExternalSourceId, FaceId, FeatureDefinitionId, FoundedItemId,
-    GroupAssignmentId, GroupId, IdentificationAssignmentId, IdentificationRoleId, LocalTimeId,
-    MeasureWithUnitId, NamedUnitId, ObjectRoleId, OrganizationId,
-    PersonAndOrganizationAssignmentId, PersonAndOrganizationId, PersonAndOrganizationRoleId,
-    PersonId, Placement1dId, Placement2dId, Placement3dId, Point2dId, PointId, ProductContextId,
-    ProductDefinitionContextAssociationId, ProductDefinitionContextId,
+    DateId, DateTimeRoleId, DerivedUnitElementId, DerivedUnitId, DescriptionAttributeId,
+    Direction2dId, DirectionId, DocumentId, DocumentProductEquivalenceId, DocumentReferenceId,
+    DocumentRepresentationTypeId, DocumentTypeId, EdgeId, ExternalSourceId, FaceId,
+    FeatureDefinitionId, FoundedItemId, GroupAssignmentId, GroupId, IdentificationAssignmentId,
+    IdentificationRoleId, LocalTimeId, MeasureWithUnitId, NameAttributeId, NamedUnitId,
+    ObjectRoleId, OrganizationId, PersonAndOrganizationAssignmentId, PersonAndOrganizationId,
+    PersonAndOrganizationRoleId, PersonId, Placement1dId, Placement2dId, Placement3dId, Point2dId,
+    PointId, ProductContextId, ProductDefinitionContextAssociationId, ProductDefinitionContextId,
     ProductDefinitionContextRoleId, ProductDefinitionRelationshipId, ProductId, RoleAssociationId,
     SecurityClassificationAssignmentId, SecurityClassificationId, SecurityClassificationLevelId,
     ShapeAspectId, ShellId, SolidId, SurfaceId, UnitContextId, VertexId, WireId,
@@ -68,7 +68,8 @@ pub use plm::{
     SecurityClassificationItem, SecurityClassificationLevel,
 };
 pub use property::{
-    MeasureKind, Property, PropertyItem, PropertyMeasure, PropertyMeasureUnit, PropertyPool,
+    DescriptionAttribute, DescriptionAttributeItem, MeasureKind, NameAttribute, NameAttributeItem,
+    Property, PropertyItem, PropertyMeasure, PropertyMeasureUnit, PropertyPool,
 };
 pub use shape_rep::{
     AngleUnit, DescriptiveItem, LengthUncertainty, LengthUnit, Mdgpr, ShapeAspect, SolidAngleUnit,

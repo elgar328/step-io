@@ -311,6 +311,10 @@ pub(crate) enum PassLevel {
     Pass9PlmAddress,
     /// `APPLICATION_CONTEXT` (Pass 9-25) — Application leaf.
     Pass9PlmAppContext,
+    /// `NAME_ATTRIBUTE` / `DESCRIPTION_ATTRIBUTE` (Pass 9-25b) — depend on
+    /// the plm chain (PAO ref via `plm_p_and_o_id_map`) plus Pass 0
+    /// derived-units and Pass 6 PDEF mappings (`pdef_to_product`).
+    Pass9PlmAttributes,
     /// `APPLICATION_PROTOCOL_DEFINITION` (Pass 9-26) — refs
     /// `Pass9PlmAppContext`.
     Pass9PlmAppProtocol,

@@ -10,7 +10,8 @@
 //! values preserved for kernel adapters that may inspect them. Mirrors the
 //! visualization design (see `crate::ir::visualization`).
 
-use super::id::{DerivedUnitId, NamedUnitId, ProductId, UnitContextId};
+use super::arena::Arena;
+use super::id::{DerivedUnitId, NamedUnitId, PersonAndOrganizationId, ProductId, UnitContextId};
 use super::shape_rep::DescriptiveItem;
 
 /// Top-level container for property data extracted from
@@ -21,6 +22,45 @@ use super::shape_rep::DescriptiveItem;
 pub struct PropertyPool {
     /// Top-level property records — emit order preserved.
     pub properties: Vec<Property>,
+    /// `NAME_ATTRIBUTE` arena. Initial SELECT coverage:
+    /// [`NameAttributeItem::ProductDefinition`] + [`NameAttributeItem::DerivedUnit`].
+    pub name_attributes: Arena<NameAttribute>,
+    /// `DESCRIPTION_ATTRIBUTE` arena. Initial SELECT coverage:
+    /// [`DescriptionAttributeItem::PersonAndOrganization`].
+    pub description_attributes: Arena<DescriptionAttribute>,
+}
+
+/// `NAME_ATTRIBUTE(attribute_value, named_item)` — AP242 metadata
+/// annotation attaching a free-form label to another entity.
+#[derive(Debug, Clone, PartialEq)]
+pub struct NameAttribute {
+    pub attribute_value: String,
+    pub named_item: NameAttributeItem,
+}
+
+/// SELECT target for [`NameAttribute::named_item`]. Initial coverage of
+/// the broad `name_attribute_select` SELECT — unsupported variants are
+/// dropped at read time with a warning; future phases expand the enum.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum NameAttributeItem {
+    ProductDefinition(ProductId),
+    DerivedUnit(DerivedUnitId),
+}
+
+/// `DESCRIPTION_ATTRIBUTE(attribute_value, described_item)` — AP242
+/// metadata annotation attaching free-form descriptive text.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DescriptionAttribute {
+    pub attribute_value: String,
+    pub described_item: DescriptionAttributeItem,
+}
+
+/// SELECT target for [`DescriptionAttribute::described_item`]. Initial
+/// coverage of the broad `description_attribute_select` SELECT — see
+/// [`NameAttributeItem`] for the same expansion policy.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum DescriptionAttributeItem {
+    PersonAndOrganization(PersonAndOrganizationId),
 }
 
 /// `PROPERTY_DEFINITION` + bound `REPRESENTATION` collapsed into a single

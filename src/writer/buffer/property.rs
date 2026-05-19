@@ -26,6 +26,64 @@ impl WriteBuffer<'_> {
         for prop in &pool.properties {
             self.emit_property(prop);
         }
+        self.emit_name_attributes(&pool);
+        self.emit_description_attributes(&pool);
+    }
+
+    fn emit_name_attributes(&mut self, pool: &crate::ir::PropertyPool) {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::property::name_attribute::{
+            NameAttributeHandler, NameAttributeWriteInput,
+        };
+        use crate::ir::NameAttributeItem;
+        for attr in pool.name_attributes.iter() {
+            let item_step = match attr.named_item {
+                NameAttributeItem::ProductDefinition(pid) => {
+                    let Some(&step) = self.product_def_ids.get(&pid) else {
+                        continue;
+                    };
+                    step
+                }
+                NameAttributeItem::DerivedUnit(du_id) => {
+                    let Some(&step) = self.derived_unit_step_ids.get(du_id.0 as usize) else {
+                        continue;
+                    };
+                    step
+                }
+            };
+            let _ = NameAttributeHandler::write(
+                self,
+                NameAttributeWriteInput {
+                    attr: attr.clone(),
+                    item_step,
+                },
+            );
+        }
+    }
+
+    fn emit_description_attributes(&mut self, pool: &crate::ir::PropertyPool) {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::property::description_attribute::{
+            DescriptionAttributeHandler, DescriptionAttributeWriteInput,
+        };
+        use crate::ir::DescriptionAttributeItem;
+        for attr in pool.description_attributes.iter() {
+            let item_step = match attr.described_item {
+                DescriptionAttributeItem::PersonAndOrganization(pao_id) => {
+                    let Some(&step) = self.plm_p_and_o_step_ids.get(pao_id.0 as usize) else {
+                        continue;
+                    };
+                    step
+                }
+            };
+            let _ = DescriptionAttributeHandler::write(
+                self,
+                DescriptionAttributeWriteInput {
+                    attr: attr.clone(),
+                    item_step,
+                },
+            );
+        }
     }
 
     fn emit_property(&mut self, prop: &Property) {
