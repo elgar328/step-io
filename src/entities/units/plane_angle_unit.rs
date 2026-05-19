@@ -6,8 +6,8 @@
 
 use crate::entities::ComplexEntityHandler;
 use crate::entities::units::shared::{
-    emit_dimensionless_exponents, has_part, match_angle_unit, read_conversion_based_unit_body,
-    read_optional_enum,
+    CbuFlavor, emit_dimensionless_exponents, has_part, match_angle_unit,
+    read_conversion_based_unit_body, read_optional_enum,
 };
 use crate::ir::attr::{check_count, read_enum};
 use crate::ir::error::ConvertError;
@@ -35,7 +35,7 @@ impl ComplexEntityHandler for PlaneAngleUnitHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         if has_part(parts, "CONVERSION_BASED_UNIT") {
-            read_conversion_based_unit_body(ctx, entity_id, parts, false, true)?;
+            read_conversion_based_unit_body(ctx, entity_id, parts, CbuFlavor::PlaneAngle)?;
             register_named_plane_angle(ctx, entity_id, None);
             return Ok(());
         }

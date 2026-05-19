@@ -1,9 +1,10 @@
-//! Helpers shared by the three Pass 0-1 unit-leaf handlers
-//! (`LengthUnitHandler` / `PlaneAngleUnitHandler` / `SolidAngleUnitHandler`).
+//! Helpers shared by the four Pass 0-1 unit-leaf handlers
+//! (`LengthUnitHandler` / `PlaneAngleUnitHandler` / `SolidAngleUnitHandler` /
+//! `MassUnitHandler`).
 //!
 //! Reader side: SI / `CONVERSION_BASED_UNIT` matchers and the shared
 //! `read_conversion_based_unit_body` covering the CBU branch (length /
-//! plane-angle only — solid-angle CBU forms are unobserved).
+//! plane-angle / mass — solid-angle CBU forms are unobserved).
 //!
 //! Writer side: cached `DIMENSIONAL_EXPONENTS` emitters used by every
 //! leaf when it produces an explicit `NAMED_UNIT.dimensions`
@@ -13,6 +14,7 @@
 use crate::ir::attr::{check_count, read_entity_ref, read_enum, read_string};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit};
+use crate::ir::units::MassUnit;
 use crate::parser::entity::{Attribute, RawEntityPart};
 use crate::reader::{ReaderContext, has_all_parts, require_part_attrs};
 use crate::writer::buffer::WriteBuffer;
@@ -96,56 +98,98 @@ pub(super) fn match_angle_conversion(upper_name: &str) -> Option<(AngleUnit, Con
     }
 }
 
-/// Reader body shared by `LengthUnitHandler` and `PlaneAngleUnitHandler`
-/// for the `CONVERSION_BASED_UNIT` branch. Mirrors the legacy
-/// `ReaderContext::convert_conversion_based_unit` — only the boolean
-/// `is_length` / `is_plane_angle` selector remains (Plan 1's
-/// "semantic-preserving migration" — `UnitKind` enum cleanup is out of
-/// scope). `SOLID_ANGLE_UNIT + CONVERSION_BASED_UNIT` is unobserved and
-/// therefore uncovered here.
+pub(super) fn match_mass_conversion(upper_name: &str) -> Option<MassUnit> {
+    match upper_name {
+        "POUND" => Some(MassUnit::Pound),
+        _ => None,
+    }
+}
+
+/// Which flavour's CBU branch is being read. Replaces the prior asymmetric
+/// `(is_length, is_plane_angle)` bool pair on
+/// [`read_conversion_based_unit_body`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum CbuFlavor {
+    Length,
+    PlaneAngle,
+    Mass,
+}
+
+/// Reader body shared by `LengthUnitHandler` / `PlaneAngleUnitHandler` /
+/// `MassUnitHandler` for the `CONVERSION_BASED_UNIT` branch. The flavour
+/// selector picks the right name matcher and per-flavour bookkeeping (e.g.
+/// `length_cbu_wrapped`). Unrecognised CBU names are dropped with a warning
+/// and **not** recorded in `cbu_outer_to_mwu` — the outer never reaches
+/// `NamedUnit` registration so the backfill lookup would be a dead entry.
+/// `SOLID_ANGLE_UNIT + CONVERSION_BASED_UNIT` is unobserved and therefore
+/// uncovered here.
 pub(super) fn read_conversion_based_unit_body(
     ctx: &mut ReaderContext,
     entity_id: u64,
     parts: &[RawEntityPart],
-    is_length: bool,
-    is_plane_angle: bool,
+    flavor: CbuFlavor,
 ) -> Result<(), ConvertError> {
     let cbu_attrs = require_part_attrs(parts, "CONVERSION_BASED_UNIT", entity_id)?;
     check_count(cbu_attrs, 2, entity_id, "CONVERSION_BASED_UNIT")?;
     let name = read_string(cbu_attrs, 0, entity_id, "name")?;
     let upper = name.to_uppercase();
-    // units-1: capture the embedded `conversion_factor` MWU ref so the MWU
-    // handler can suppress duplicate arena entries — these MWUs are
-    // re-emitted inline by the CBU writer chain on round-trip.
-    if let Some(Attribute::EntityRef(mwu_ref)) = cbu_attrs.get(1) {
-        ctx.cbu_internal_mwu_refs.insert(*mwu_ref);
-        ctx.cbu_outer_to_mwu.insert(entity_id, *mwu_ref);
+    let mwu_ref = match cbu_attrs.get(1) {
+        Some(Attribute::EntityRef(r)) => Some(*r),
+        _ => None,
+    };
+    // units-1: always suppress the embedded `conversion_factor` MWU duplicate;
+    // `cbu_outer_to_mwu` is populated only on recognised names so the
+    // post-Pass0Leaf backfill never chases a dead outer.
+    if let Some(r) = mwu_ref {
+        ctx.cbu_internal_mwu_refs.insert(r);
     }
 
-    if is_length {
-        if let Some((unit, form)) = match_length_conversion(&upper) {
-            ctx.length_unit_map.insert(entity_id, unit);
-            if form == ConversionForm::SiSelf {
-                ctx.length_cbu_wrapped = true;
+    let recognised = match flavor {
+        CbuFlavor::Length => {
+            if let Some((unit, form)) = match_length_conversion(&upper) {
+                ctx.length_unit_map.insert(entity_id, unit);
+                if form == ConversionForm::SiSelf {
+                    ctx.length_cbu_wrapped = true;
+                }
+                true
+            } else {
+                ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                    entity_id,
+                    detail: format!("unsupported CONVERSION_BASED_UNIT length name: {name:?}"),
+                });
+                false
             }
-        } else {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!("unsupported CONVERSION_BASED_UNIT length name: {name:?}"),
-            });
         }
-    } else if is_plane_angle {
-        if let Some((unit, form)) = match_angle_conversion(&upper) {
-            ctx.angle_unit_map.insert(entity_id, unit);
-            if form == ConversionForm::SiSelf {
-                ctx.plane_angle_cbu_wrapped = true;
+        CbuFlavor::PlaneAngle => {
+            if let Some((unit, form)) = match_angle_conversion(&upper) {
+                ctx.angle_unit_map.insert(entity_id, unit);
+                if form == ConversionForm::SiSelf {
+                    ctx.plane_angle_cbu_wrapped = true;
+                }
+                true
+            } else {
+                ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                    entity_id,
+                    detail: format!("unsupported CONVERSION_BASED_UNIT angle name: {name:?}"),
+                });
+                false
             }
-        } else {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!("unsupported CONVERSION_BASED_UNIT angle name: {name:?}"),
-            });
         }
+        CbuFlavor::Mass => {
+            if let Some(unit) = match_mass_conversion(&upper) {
+                ctx.mass_unit_map.insert(entity_id, unit);
+                true
+            } else {
+                ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                    entity_id,
+                    detail: format!("unsupported CONVERSION_BASED_UNIT mass name: {name:?}"),
+                });
+                false
+            }
+        }
+    };
+    if recognised && let Some(r) = mwu_ref {
+        ctx.cbu_outer_to_mwu.insert(entity_id, r);
     }
     Ok(())
 }

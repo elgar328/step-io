@@ -7,8 +7,8 @@
 
 use crate::entities::ComplexEntityHandler;
 use crate::entities::units::shared::{
-    emit_length_dim_exponents, has_part, match_length_unit, read_conversion_based_unit_body,
-    read_optional_enum,
+    CbuFlavor, emit_length_dim_exponents, has_part, match_length_unit,
+    read_conversion_based_unit_body, read_optional_enum,
 };
 use crate::ir::attr::{check_count, read_enum};
 use crate::ir::error::ConvertError;
@@ -40,7 +40,7 @@ impl ComplexEntityHandler for LengthUnitHandler {
         // takes precedence over SI_UNIT: some AP242 files wrap SI units in a
         // CONVERSION_BASED_UNIT, and the CBU name is the authoritative identity.
         if has_part(parts, "CONVERSION_BASED_UNIT") {
-            read_conversion_based_unit_body(ctx, entity_id, parts, true, false)?;
+            read_conversion_based_unit_body(ctx, entity_id, parts, CbuFlavor::Length)?;
             register_named_length(ctx, entity_id, None);
             return Ok(());
         }

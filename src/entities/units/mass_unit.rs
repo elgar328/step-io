@@ -15,8 +15,10 @@
 //! downstream code never sees a misrepresentation of magnitude.
 
 use crate::entities::ComplexEntityHandler;
-use crate::entities::units::shared::{has_part, read_optional_enum};
-use crate::ir::attr::{check_count, read_enum, read_string};
+use crate::entities::units::shared::{
+    CbuFlavor, has_part, read_conversion_based_unit_body, read_optional_enum,
+};
+use crate::ir::attr::{check_count, read_enum};
 use crate::ir::error::ConvertError;
 use crate::ir::units::{MassFlavor, MassUnit, NamedUnit};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
@@ -38,74 +40,39 @@ impl ComplexEntityHandler for MassUnitHandler {
         parts: &[RawEntityPart],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let unit = if has_part(parts, "CONVERSION_BASED_UNIT") {
-            let cbu_attrs = require_part_attrs(parts, "CONVERSION_BASED_UNIT", entity_id)?;
-            check_count(cbu_attrs, 2, entity_id, "CONVERSION_BASED_UNIT")?;
-            // Suppress duplicate MWU arena entries — see `shared.rs`. Always
-            // record the MWU as CBU-internal so the MWU handler skips it,
-            // even when the CBU name itself is unrecognized below.
-            if let Some(Attribute::EntityRef(mwu_ref)) = cbu_attrs.get(1) {
-                ctx.cbu_internal_mwu_refs.insert(*mwu_ref);
-            }
-            let name = read_string(cbu_attrs, 0, entity_id, "name")?;
-            if name.eq_ignore_ascii_case("POUND") {
-                // Only record the outer→MWU link for recognized names —
-                // unrecognized outers don't get a `NamedUnit` arena entry,
-                // so there's nothing for `backfill_cbu_base` to patch.
-                if let Some(Attribute::EntityRef(mwu_ref)) = cbu_attrs.get(1) {
-                    ctx.cbu_outer_to_mwu.insert(entity_id, *mwu_ref);
-                }
-                MassUnit::Pound
-            } else {
-                // Unrecognized CBU mass name (e.g. 'ton'). Skip registration
-                // entirely — mirrors how `shared.rs` drops unrecognized
-                // length / angle CBU names, and avoids a Kilogram-fallback
-                // entry that the writer can't faithfully re-emit (the
-                // `cbu_base` chain has no representable outer).
-                ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                    entity_id,
-                    detail: format!("unsupported CONVERSION_BASED_UNIT mass name: {name:?}"),
-                });
-                return Ok(());
-            }
-        } else if has_part(parts, "SI_UNIT") {
-            let si_attrs = require_part_attrs(parts, "SI_UNIT", entity_id)?;
-            check_count(si_attrs, 2, entity_id, "SI_UNIT")?;
-            let prefix = read_optional_enum(si_attrs, 0, entity_id, "prefix")?;
-            let name = read_enum(si_attrs, 1, entity_id, "name")?;
-            match (prefix, name) {
-                (Some("KILO"), "GRAM") => MassUnit::Kilogram,
-                (None, "GRAM") => MassUnit::Gram,
-                _ => {
-                    // Unsupported SI mass spelling (e.g. (MEGA, GRAM)).
-                    // Drop rather than fall back to Kilogram — fake matching
-                    // misrepresents the magnitude (1 Mg ≠ 1 kg). Mirrors the
-                    // unrecognized-CBU policy.
-                    ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                        entity_id,
-                        detail: format!(
-                            "unsupported SI mass unit (prefix={prefix:?}, name={name:?})"
-                        ),
-                    });
-                    return Ok(());
-                }
-            }
-        } else {
-            // Neither SI nor CBU — uncovered shape (malformed complex).
-            // Warn so the caller can see what was dropped.
+        if has_part(parts, "CONVERSION_BASED_UNIT") {
+            read_conversion_based_unit_body(ctx, entity_id, parts, CbuFlavor::Mass)?;
+            register_named_mass(ctx, entity_id, None);
+            return Ok(());
+        }
+        if !has_part(parts, "SI_UNIT") {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                 entity_id,
                 detail: "MASS_UNIT complex carries neither SI_UNIT nor CONVERSION_BASED_UNIT"
                     .into(),
             });
             return Ok(());
+        }
+        let si_attrs = require_part_attrs(parts, "SI_UNIT", entity_id)?;
+        check_count(si_attrs, 2, entity_id, "SI_UNIT")?;
+        let prefix = read_optional_enum(si_attrs, 0, entity_id, "prefix")?;
+        let name = read_enum(si_attrs, 1, entity_id, "name")?;
+        let unit = match (prefix, name) {
+            (Some("KILO"), "GRAM") => MassUnit::Kilogram,
+            (None, "GRAM") => MassUnit::Gram,
+            _ => {
+                // Unsupported SI mass spelling (e.g. (MEGA, GRAM)). Drop
+                // rather than fall back to Kilogram — fake matching
+                // misrepresents the magnitude (1 Mg ≠ 1 kg).
+                ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                    entity_id,
+                    detail: format!("unsupported SI mass unit (prefix={prefix:?}, name={name:?})"),
+                });
+                return Ok(());
+            }
         };
-        let flavor = MassFlavor {
-            unit,
-            cbu_base: None,
-        };
-        let id = ctx.named_units_arena.push(NamedUnit::Mass(flavor));
-        ctx.named_unit_id_map.insert(entity_id, id);
+        ctx.mass_unit_map.insert(entity_id, unit);
+        register_named_mass(ctx, entity_id, None);
         Ok(())
     }
 
@@ -121,6 +88,22 @@ impl ComplexEntityHandler for MassUnitHandler {
         };
         emit_plain_si_mass(buf, prefix, target_id);
         Ok(target_id)
+    }
+}
+
+/// Push a `NamedUnit::Mass` entry once the SI / CBU branch has resolved
+/// the unit into `mass_unit_map`. Mirrors `register_named_length` —
+/// `cbu_base` is set to `None` here and patched by the post-Pass0Leaf
+/// `backfill_cbu_base` once the outer↔base SI link is known.
+fn register_named_mass(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    cbu_base: Option<crate::ir::id::NamedUnitId>,
+) {
+    if let Some(&unit) = ctx.mass_unit_map.get(&entity_id) {
+        let flavor = MassFlavor { unit, cbu_base };
+        let id = ctx.named_units_arena.push(NamedUnit::Mass(flavor));
+        ctx.named_unit_id_map.insert(entity_id, id);
     }
 }
 

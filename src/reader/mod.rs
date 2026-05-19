@@ -104,6 +104,7 @@ pub struct ReaderContext {
     pub(crate) length_unit_map: HashMap<u64, LengthUnit>,
     pub(crate) angle_unit_map: HashMap<u64, AngleUnit>,
     pub(crate) solid_angle_unit_map: HashMap<u64, SolidAngleUnit>,
+    pub(crate) mass_unit_map: HashMap<u64, crate::ir::units::MassUnit>,
     /// Per-instance `NAMED_UNIT` arena (units-1). Populated by the
     /// `LENGTH` / `PLANE_ANGLE` / `SOLID_ANGLE` / `MASS` unit complex
     /// handlers alongside their existing flavour-specific maps.
