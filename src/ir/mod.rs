@@ -2,6 +2,7 @@ pub mod arena;
 pub mod assembly;
 pub mod attr;
 pub mod error;
+pub mod form_features;
 pub mod geometry;
 pub mod id;
 pub mod model;
@@ -21,6 +22,7 @@ pub use assembly::{
     WireframeReprKind,
 };
 pub use error::{AttributeKindTag, ConvertError};
+pub use form_features::{FormFeaturesPool, Step};
 pub use geometry::{
     Axis1Placement, Axis2Placement2d, Axis2Placement3d, Circle2, Circle3, CompositeCurve,
     CompositeSegment, ConicalSurface, Curve, Curve2d, CurveForm, CylindricalSurface, Direction2,
@@ -36,11 +38,12 @@ pub use id::{
     CoordinatedUniversalTimeOffsetId, Curve2dId, CurveId, DateAndTimeAssignmentId, DateAndTimeId,
     DateId, DateTimeRoleId, DerivedUnitElementId, DerivedUnitId, Direction2dId, DirectionId,
     DocumentId, DocumentProductEquivalenceId, DocumentReferenceId, DocumentRepresentationTypeId,
-    DocumentTypeId, EdgeId, ExternalSourceId, FaceId, FoundedItemId, GroupAssignmentId, GroupId,
-    IdentificationAssignmentId, IdentificationRoleId, LocalTimeId, MeasureWithUnitId, NamedUnitId,
-    ObjectRoleId, OrganizationId, PersonAndOrganizationAssignmentId, PersonAndOrganizationId,
-    PersonAndOrganizationRoleId, PersonId, Placement1dId, Placement2dId, Placement3dId, Point2dId,
-    PointId, ProductContextId, ProductDefinitionContextAssociationId, ProductDefinitionContextId,
+    DocumentTypeId, EdgeId, ExternalSourceId, FaceId, FeatureDefinitionId, FoundedItemId,
+    GroupAssignmentId, GroupId, IdentificationAssignmentId, IdentificationRoleId, LocalTimeId,
+    MeasureWithUnitId, NamedUnitId, ObjectRoleId, OrganizationId,
+    PersonAndOrganizationAssignmentId, PersonAndOrganizationId, PersonAndOrganizationRoleId,
+    PersonId, Placement1dId, Placement2dId, Placement3dId, Point2dId, PointId, ProductContextId,
+    ProductDefinitionContextAssociationId, ProductDefinitionContextId,
     ProductDefinitionContextRoleId, ProductDefinitionRelationshipId, ProductId, RoleAssociationId,
     SecurityClassificationAssignmentId, SecurityClassificationId, SecurityClassificationLevelId,
     ShapeAspectId, ShellId, SolidId, SurfaceId, UnitContextId, VertexId, WireId,

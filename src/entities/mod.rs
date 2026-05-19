@@ -13,6 +13,7 @@ use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
 pub mod assembly_product;
+pub mod form_features;
 pub mod geometry;
 pub mod plm;
 pub mod property;
@@ -146,6 +147,9 @@ pub(crate) enum PassLevel {
     /// (Pass 6-3b). Depend on `Pass6Pdef` (via `pdef_to_product`) and on
     /// `Pass0MwuDue` (`mwu_id_map` for MFU's `quantity` ref).
     Pass6Pdr,
+    /// `STEP` manufacturing-feature (Pass 6-3c). No cross-refs — runs after
+    /// other Pass 6 sub-passes for ordering stability with future PMI consumers.
+    Pass6Features,
     /// `SHELL_BASED_SURFACE_MODEL` (Pass 6-4) — must precede MSSR so the
     /// shell-list is available when the surface representation lands.
     Pass6Sbsm,

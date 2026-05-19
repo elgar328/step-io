@@ -3,6 +3,7 @@ use super::assembly::{
     Product, ProductContext, ProductDefinitionContext, ProductDefinitionContextAssociation,
     ProductDefinitionContextRole, ProductDefinitionRelationship,
 };
+use super::form_features::Step;
 use super::geometry::{
     Axis1Placement, Axis2Placement2d, Axis2Placement3d, Curve, Curve2d, Direction2, Direction3,
     Point2, Point3, Surface, Vertex,
@@ -60,6 +61,7 @@ define_id!(
     ProductDefinitionRelationshipId,
     ProductDefinitionRelationship
 );
+define_id!(FeatureDefinitionId, Step);
 
 // Unit context Ids — multi-context support (one entry per
 // REPRESENTATION_CONTEXT in the source file).

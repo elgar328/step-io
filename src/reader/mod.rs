@@ -195,6 +195,10 @@ pub struct ReaderContext {
     pub(crate) pdca_id_map: HashMap<u64, crate::ir::ProductDefinitionContextAssociationId>,
     pub(crate) product_definition_relationships: Arena<crate::ir::ProductDefinitionRelationship>,
     pub(crate) pdr_id_map: HashMap<u64, crate::ir::ProductDefinitionRelationshipId>,
+    /// `form_features` pool staging. Moved into `StepModel.form_features` at `into_model` time.
+    pub(crate) form_features: Option<crate::ir::FormFeaturesPool>,
+    /// `STEP feature` `#N → FeatureDefinitionId`. Reserved for future PMI consumers.
+    pub(crate) feature_definition_id_map: HashMap<u64, crate::ir::FeatureDefinitionId>,
     pub(crate) product_arena_map: HashMap<u64, ProductId>,
     pub(crate) formation_to_product: HashMap<u64, u64>,
     pub(crate) pdef_to_product: HashMap<u64, u64>,
@@ -467,6 +471,7 @@ impl ReaderContext {
                     ctx.due_arena,
                     ctx.derived_unit_arena,
                 ),
+                form_features: ctx.form_features,
             },
             warnings: ctx.warnings,
             parse_warnings: graph.warnings.clone(),

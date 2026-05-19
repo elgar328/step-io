@@ -19,6 +19,7 @@ use crate::ir::{
 };
 
 pub(crate) mod assembly;
+pub(crate) mod form_features;
 pub(crate) mod geometry;
 pub(crate) mod plm;
 pub(crate) mod pmi;
@@ -370,6 +371,7 @@ impl<'m> WriteBuffer<'m> {
         self.emit_visualization_if_set()?;
         self.emit_properties_if_set();
         self.emit_plm_if_set()?;
+        self.emit_form_features_if_set()?;
         Ok(())
     }
 

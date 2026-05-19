@@ -203,6 +203,9 @@ pub struct StepModel {
     /// entity was observed. Coexists with [`Self::units`] (per-context
     /// bundled enums) during the units-1 dual-tracking period.
     pub units_pool: Option<UnitsPool>,
+    /// Manufacturing feature definitions (currently `STEP` only). `None`
+    /// when the source file carries no `feature_definition` entries.
+    pub form_features: Option<crate::ir::form_features::FormFeaturesPool>,
 }
 
 /// Arena-based storage for all topology objects.
