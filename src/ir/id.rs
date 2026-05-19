@@ -1,7 +1,7 @@
 use super::arena::{Arena, define_id};
 use super::assembly::{
     Product, ProductContext, ProductDefinitionContext, ProductDefinitionContextAssociation,
-    ProductDefinitionContextRole,
+    ProductDefinitionContextRole, ProductDefinitionRelationship,
 };
 use super::geometry::{
     Axis1Placement, Axis2Placement2d, Axis2Placement3d, Curve, Curve2d, Direction2, Direction3,
@@ -55,6 +55,10 @@ define_id!(ProductDefinitionContextRoleId, ProductDefinitionContextRole);
 define_id!(
     ProductDefinitionContextAssociationId,
     ProductDefinitionContextAssociation
+);
+define_id!(
+    ProductDefinitionRelationshipId,
+    ProductDefinitionRelationship
 );
 
 // Unit context Ids — multi-context support (one entry per

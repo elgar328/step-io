@@ -142,6 +142,10 @@ pub(crate) enum PassLevel {
     Pass6PdefFormation,
     /// `PRODUCT_DEFINITION` (Pass 6-3) — depends on `Pass6PdefFormation`.
     Pass6Pdef,
+    /// `PRODUCT_DEFINITION_RELATIONSHIP` + `MAKE_FROM_USAGE_OPTION`
+    /// (Pass 6-3b). Depend on `Pass6Pdef` (via `pdef_to_product`) and on
+    /// `Pass0MwuDue` (`mwu_id_map` for MFU's `quantity` ref).
+    Pass6Pdr,
     /// `SHELL_BASED_SURFACE_MODEL` (Pass 6-4) — must precede MSSR so the
     /// shell-list is available when the surface representation lands.
     Pass6Sbsm,

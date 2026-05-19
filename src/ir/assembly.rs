@@ -8,7 +8,7 @@
 
 use super::arena::Arena;
 use super::id::{
-    ApplicationContextId, CurveId, Placement3dId, PointId, ProductContextId,
+    ApplicationContextId, CurveId, MeasureWithUnitId, Placement3dId, PointId, ProductContextId,
     ProductDefinitionContextId, ProductDefinitionContextRoleId, ProductId, ShellId, SolidId,
     UnitContextId,
 };
@@ -38,6 +38,43 @@ pub struct AssemblyTree {
     /// current IR consumer); links a `PRODUCT_DEFINITION` to a
     /// `ProductDefinitionContext` via a role tag.
     pub product_definition_context_associations: Arena<ProductDefinitionContextAssociation>,
+    /// `PRODUCT_DEFINITION_RELATIONSHIP` arena, carrying both the plain
+    /// supertype form and the `MAKE_FROM_USAGE_OPTION` in-enum subtype.
+    pub product_definition_relationships: Arena<ProductDefinitionRelationship>,
+}
+
+/// `PRODUCT_DEFINITION_RELATIONSHIP` arena entry. Carries the plain base
+/// form and the `MAKE_FROM_USAGE_OPTION` subtype as flat enum variants —
+/// mirrors the [`crate::ir::visualization::StyledItem`] carrier pattern
+/// (inline fields rather than a nested base struct).
+#[derive(Debug, Clone, PartialEq)]
+pub enum ProductDefinitionRelationship {
+    Plain(PlainProductDefinitionRelationship),
+    MakeFrom(MakeFromUsageOption),
+}
+
+/// Plain `PRODUCT_DEFINITION_RELATIONSHIP(id, name, description, relating, related)`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlainProductDefinitionRelationship {
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub relating: ProductId,
+    pub related: ProductId,
+}
+
+/// `MAKE_FROM_USAGE_OPTION` — SUBTYPE OF `PRODUCT_DEFINITION_RELATIONSHIP`
+/// adding `ranking`, `ranking_rationale`, `quantity`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct MakeFromUsageOption {
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub relating: ProductId,
+    pub related: ProductId,
+    pub ranking: i64,
+    pub ranking_rationale: String,
+    pub quantity: MeasureWithUnitId,
 }
 
 /// A single STEP `PRODUCT` with its resolved content.

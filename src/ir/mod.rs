@@ -14,10 +14,11 @@ pub mod visualization;
 
 pub use arena::Arena;
 pub use assembly::{
-    AssemblyTree, Instance, Product, ProductCategoryChain, ProductCategoryRoot, ProductContent,
-    ProductContext, ProductContextKind, ProductDefinitionContext,
-    ProductDefinitionContextAssociation, ProductDefinitionContextKind,
-    ProductDefinitionContextRole, Transform3d, WireframeContent, WireframeReprKind,
+    AssemblyTree, Instance, MakeFromUsageOption, PlainProductDefinitionRelationship, Product,
+    ProductCategoryChain, ProductCategoryRoot, ProductContent, ProductContext, ProductContextKind,
+    ProductDefinitionContext, ProductDefinitionContextAssociation, ProductDefinitionContextKind,
+    ProductDefinitionContextRole, ProductDefinitionRelationship, Transform3d, WireframeContent,
+    WireframeReprKind,
 };
 pub use error::{AttributeKindTag, ConvertError};
 pub use geometry::{
@@ -39,7 +40,7 @@ pub use id::{
     ObjectRoleId, OrganizationId, PersonAndOrganizationAssignmentId, PersonAndOrganizationId,
     PersonAndOrganizationRoleId, PersonId, Placement1dId, Placement2dId, Placement3dId, Point2dId,
     PointId, ProductContextId, ProductDefinitionContextAssociationId, ProductDefinitionContextId,
-    ProductDefinitionContextRoleId, ProductId, RoleAssociationId,
+    ProductDefinitionContextRoleId, ProductDefinitionRelationshipId, ProductId, RoleAssociationId,
     SecurityClassificationAssignmentId, SecurityClassificationId, SecurityClassificationLevelId,
     ShapeAspectId, ShellId, SolidId, SurfaceId, UnitContextId, VertexId, WireId,
 };

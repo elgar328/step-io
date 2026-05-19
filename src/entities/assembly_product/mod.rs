@@ -6,6 +6,7 @@
 
 pub mod context_dependent_shape_representation;
 pub mod design_context;
+pub mod make_from_usage_option;
 pub mod mechanical_context;
 pub mod next_assembly_usage_occurrence;
 pub mod product;
@@ -18,6 +19,7 @@ pub mod product_definition_context_association;
 pub mod product_definition_context_role;
 pub mod product_definition_formation;
 pub mod product_definition_formation_with_source;
+pub mod product_definition_relationship;
 pub mod product_definition_shape;
 pub mod product_definition_with_associated_documents;
 pub mod product_related_product_category;

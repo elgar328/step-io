@@ -58,7 +58,64 @@ impl WriteBuffer<'_> {
         let products = assembly.products.clone();
         self.emit_assembly_chain(&products, &schema)?;
         self.emit_pdca_cluster();
+        self.emit_pdr_cluster();
         Ok(())
+    }
+
+    /// Emit `PRODUCT_DEFINITION_RELATIONSHIP` + `MAKE_FROM_USAGE_OPTION`
+    /// arena entries after the assembly chain has populated
+    /// `product_def_ids` and units pass has populated `mwu_step_ids`.
+    fn emit_pdr_cluster(&mut self) {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::assembly_product::make_from_usage_option::{
+            MakeFromUsageOptionHandler, MakeFromUsageOptionWriteInput,
+        };
+        use crate::entities::assembly_product::product_definition_relationship::{
+            ProductDefinitionRelationshipHandler, ProductDefinitionRelationshipWriteInput,
+        };
+        use crate::ir::ProductDefinitionRelationship;
+
+        let Some(assembly) = self.model.assembly.clone() else {
+            return;
+        };
+        for entry in assembly.product_definition_relationships.iter() {
+            match entry {
+                ProductDefinitionRelationship::Plain(plain) => {
+                    let (Some(&relating_step), Some(&related_step)) = (
+                        self.product_def_ids.get(&plain.relating),
+                        self.product_def_ids.get(&plain.related),
+                    ) else {
+                        continue;
+                    };
+                    let _ = ProductDefinitionRelationshipHandler::write(
+                        self,
+                        ProductDefinitionRelationshipWriteInput {
+                            plain: plain.clone(),
+                            relating_pdef_step: relating_step,
+                            related_pdef_step: related_step,
+                        },
+                    );
+                }
+                ProductDefinitionRelationship::MakeFrom(mfu) => {
+                    let (Some(&relating_step), Some(&related_step)) = (
+                        self.product_def_ids.get(&mfu.relating),
+                        self.product_def_ids.get(&mfu.related),
+                    ) else {
+                        continue;
+                    };
+                    let quantity_step = self.mwu_step_ids[mfu.quantity.0 as usize];
+                    let _ = MakeFromUsageOptionHandler::write(
+                        self,
+                        MakeFromUsageOptionWriteInput {
+                            mfu: mfu.clone(),
+                            relating_pdef_step: relating_step,
+                            related_pdef_step: related_step,
+                            quantity_step,
+                        },
+                    );
+                }
+            }
+        }
     }
 
     /// Emit `PRODUCT_DEFINITION_CONTEXT_ROLE` + `PRODUCT_DEFINITION_CONTEXT_ASSOCIATION`

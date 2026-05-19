@@ -193,6 +193,8 @@ pub struct ReaderContext {
         Arena<crate::ir::ProductDefinitionContextAssociation>,
     pub(crate) pdc_role_id_map: HashMap<u64, crate::ir::ProductDefinitionContextRoleId>,
     pub(crate) pdca_id_map: HashMap<u64, crate::ir::ProductDefinitionContextAssociationId>,
+    pub(crate) product_definition_relationships: Arena<crate::ir::ProductDefinitionRelationship>,
+    pub(crate) pdr_id_map: HashMap<u64, crate::ir::ProductDefinitionRelationshipId>,
     pub(crate) product_arena_map: HashMap<u64, ProductId>,
     pub(crate) formation_to_product: HashMap<u64, u64>,
     pub(crate) pdef_to_product: HashMap<u64, u64>,
@@ -540,6 +542,8 @@ impl ReaderContext {
             std::mem::take(&mut self.product_definition_context_roles);
         let product_definition_context_associations =
             std::mem::take(&mut self.product_definition_context_associations);
+        let product_definition_relationships =
+            std::mem::take(&mut self.product_definition_relationships);
         self.assembly = Some(AssemblyTree {
             products,
             root,
@@ -547,6 +551,7 @@ impl ReaderContext {
             product_definition_contexts,
             product_definition_context_roles,
             product_definition_context_associations,
+            product_definition_relationships,
         });
     }
 
