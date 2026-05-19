@@ -27,6 +27,8 @@ pub mod line_2d;
 pub(crate) mod nurbs_shared;
 pub mod offset_surface;
 pub mod plane;
+pub mod polyline;
+pub mod polyline_2d;
 pub mod quasi_uniform_curve;
 pub mod quasi_uniform_surface;
 pub mod rational_bspline_curve;

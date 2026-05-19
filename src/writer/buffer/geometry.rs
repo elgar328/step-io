@@ -7,8 +7,9 @@ use crate::ir::{
     Circle2, Circle3, CompositeCurve, ConicalSurface, Curve, Curve2d, Curve2dId, CurveId,
     CylindricalSurface, Direction2dId, Direction3, DirectionId, Ellipse2, Ellipse3, Line2, Line3,
     NurbsCurve, NurbsCurve2d, NurbsSurface, Pcurve, Placement1dId, Placement2dId, Placement3dId,
-    Plane3, Point2dId, PointId, SphericalSurface, StepModel, Surface, SurfaceId,
-    SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TrimmedCurve,
+    Plane3, Point2dId, PointId, Polyline, Polyline2d, SphericalSurface, StepModel, Surface,
+    SurfaceId, SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface,
+    TrimmedCurve,
 };
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
@@ -47,9 +48,15 @@ impl WriteBuffer<'_> {
             Curve::Nurbs(nurbs) => self.emit_nurbs_curve(nurbs)?,
             Curve::Trimmed(trimmed) => self.emit_trimmed_curve(trimmed)?,
             Curve::Composite(composite) => self.emit_composite_curve(&composite)?,
+            Curve::Polyline(polyline) => self.emit_polyline(polyline)?,
         };
         self.curve_ids.insert(id, n);
         Ok(n)
+    }
+
+    fn emit_polyline(&mut self, polyline: Polyline) -> Result<u64, WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::polyline::PolylineHandler::write(self, polyline)
     }
 
     fn emit_trimmed_curve(&mut self, trimmed: TrimmedCurve) -> Result<u64, WriteError> {
@@ -252,9 +259,15 @@ impl WriteBuffer<'_> {
             Curve2d::Circle(c) => self.emit_circle_2d(c)?,
             Curve2d::Ellipse(e) => self.emit_ellipse_2d(e)?,
             Curve2d::Nurbs(nu) => self.emit_nurbs_curve_2d(&nu)?,
+            Curve2d::Polyline(polyline) => self.emit_polyline_2d(polyline)?,
         };
         self.curve_2d_ids.insert(id, n);
         Ok(n)
+    }
+
+    fn emit_polyline_2d(&mut self, polyline: Polyline2d) -> Result<u64, WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::polyline_2d::Polyline2dHandler::write(self, polyline)
     }
 
     fn emit_line_2d(&mut self, line: Line2) -> Result<u64, WriteError> {

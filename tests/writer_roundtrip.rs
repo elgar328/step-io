@@ -694,6 +694,32 @@ fn external_temp_abc_explicit_de_round_trip() {
     assert_unit_contexts_equivalent("abc_explicit_de", &model, &back);
 }
 
+/// `STEPCode` `AP214e3` fixture (`io1-cm-214.stp`, temporarily borrowed —
+/// `external_temp_` prefix) carrying three `POLYLINE` entities, each with
+/// two `CARTESIAN_POINT` refs. Verifies the 3D polyline handler round-trips
+/// the IR `Curve::Polyline` variant.
+#[test]
+fn external_temp_polyline_round_trip() {
+    let src = include_str!("fixtures/external_temp_polyline.step");
+    let model = ReaderContext::convert(&parse(src).expect("parse")).model;
+    let polyline_count = model
+        .geometry
+        .curves
+        .iter()
+        .filter(|c| matches!(c, step_io::ir::geometry::Curve::Polyline(_)))
+        .count();
+    assert_eq!(polyline_count, 3, "fixture must yield three polylines");
+    let text = model.write_to_string().expect("write");
+    let back = ReaderContext::convert(&parse(&text).expect("re-parse")).model;
+    let back_count = back
+        .geometry
+        .curves
+        .iter()
+        .filter(|c| matches!(c, step_io::ir::geometry::Curve::Polyline(_)))
+        .count();
+    assert_eq!(back_count, 3, "round-trip preserves polyline count");
+}
+
 /// Multi-context Fusion 360 fixture (temporarily borrowed from
 /// `step-io-reference-check/fixtures/fusion360/32879_49552f2f_3.stp` — the
 /// user plans to replace it with a hand-curated minimal fixture later,

@@ -125,7 +125,14 @@ pub enum Curve {
     Nurbs(NurbsCurve),
     Trimmed(TrimmedCurve),
     Composite(CompositeCurve),
+    Polyline(Polyline),
     // Future: Offset
+}
+
+/// A 3D polyline: ordered list of point ids forming a piecewise-linear curve.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Polyline {
+    pub points: Vec<PointId>,
 }
 
 /// A circle defined by an axis placement and a radius.
@@ -495,6 +502,13 @@ pub enum Curve2d {
     Circle(Circle2),
     Ellipse(Ellipse2),
     Nurbs(NurbsCurve2d),
+    Polyline(Polyline2d),
+}
+
+/// A 2D polyline: ordered list of 2D point ids forming a piecewise-linear curve.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Polyline2d {
+    pub points: Vec<Point2dId>,
 }
 
 /// A 2D line: point + direction + magnitude (2D VECTOR scalar).

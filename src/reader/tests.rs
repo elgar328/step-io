@@ -451,7 +451,8 @@ fn convert_rational_bspline_curve_complex() {
         | Curve::Circle(_)
         | Curve::Ellipse(_)
         | Curve::Trimmed(_)
-        | Curve::Composite(_) => panic!("expected Nurbs"),
+        | Curve::Composite(_)
+        | Curve::Polyline(_) => panic!("expected Nurbs"),
     }
 }
 
