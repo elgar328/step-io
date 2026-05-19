@@ -29,7 +29,6 @@ impl UnitsPool {
     pub fn push_plain_length(&mut self, unit: LengthUnit, dim_exp_explicit: bool) -> NamedUnitId {
         self.named_units.push(NamedUnit::Length(LengthFlavor {
             unit,
-            cbu_wrapped: false,
             dim_exp_explicit,
             cbu_base: None,
         }))
@@ -38,6 +37,7 @@ impl UnitsPool {
     /// Push a `CONVERSION_BASED_UNIT` length outer that wraps `base`.
     /// `base` should be an SI length (Millimetre / Metre / Centimetre);
     /// it is pushed first as a plain SI entry and the outer references it.
+    /// Self-wrap (outer == base) is preserved structurally via `cbu_base`.
     pub fn push_cbu_length(
         &mut self,
         outer: LengthUnit,
@@ -47,7 +47,6 @@ impl UnitsPool {
         let base_id = self.push_plain_length(base, dim_exp_explicit);
         self.named_units.push(NamedUnit::Length(LengthFlavor {
             unit: outer,
-            cbu_wrapped: outer == base,
             dim_exp_explicit,
             cbu_base: Some(base_id),
         }))
@@ -61,7 +60,6 @@ impl UnitsPool {
         self.named_units
             .push(NamedUnit::PlaneAngle(PlaneAngleFlavor {
                 unit,
-                cbu_wrapped: false,
                 dim_exp_explicit,
                 cbu_base: None,
             }))
@@ -77,7 +75,6 @@ impl UnitsPool {
         self.named_units
             .push(NamedUnit::PlaneAngle(PlaneAngleFlavor {
                 unit: outer,
-                cbu_wrapped: outer == base,
                 dim_exp_explicit,
                 cbu_base: Some(base_id),
             }))
@@ -137,24 +134,20 @@ pub enum NamedUnit {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LengthFlavor {
     pub unit: LengthUnit,
-    /// `true` when the source carried `CBU('METRE', ..., base=METRE)` — i.e.
-    /// SI self-wrap. Writer reproduces the wrapper. `false` for plain SI and
-    /// for genuine non-SI CBUs (Inch / Foot). Presentation flag — slated to
-    /// be removed in units-3.
-    pub cbu_wrapped: bool,
     /// `true` when this complex's `NAMED_UNIT.dimensions` slot carried an
     /// explicit `DIMENSIONAL_EXPONENTS` ref (ABC-tier convention) rather
     /// than `*` Derived. Presentation flag — units-3 cleanup target.
     pub dim_exp_explicit: bool,
     /// `Some(id)` → this entry is a CBU outer and `id` resolves to the
     /// base SI's `NamedUnit::Length` arena entry. `None` → plain SI.
+    /// Self-wrap (`CBU('METRE', ..., base=METRE)`) is represented by
+    /// `cbu_base = Some(<METRE id>)` with `unit == lookup(cbu_base).unit`.
     pub cbu_base: Option<NamedUnitId>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PlaneAngleFlavor {
     pub unit: AngleUnit,
-    pub cbu_wrapped: bool,
     pub dim_exp_explicit: bool,
     pub cbu_base: Option<NamedUnitId>,
 }

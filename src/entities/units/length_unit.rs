@@ -132,7 +132,6 @@ fn register_named_length(ctx: &mut ReaderContext, entity_id: u64, cbu_base: Opti
     if let Some(&unit) = ctx.length_unit_map.get(&entity_id) {
         let flavor = LengthFlavor {
             unit,
-            cbu_wrapped: ctx.length_cbu_wrapped,
             dim_exp_explicit: ctx.dim_exp_explicit,
             cbu_base,
         };

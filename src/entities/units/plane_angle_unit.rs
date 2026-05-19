@@ -113,7 +113,6 @@ fn register_named_plane_angle(
     if let Some(&unit) = ctx.angle_unit_map.get(&entity_id) {
         let flavor = PlaneAngleFlavor {
             unit,
-            cbu_wrapped: ctx.plane_angle_cbu_wrapped,
             dim_exp_explicit: ctx.dim_exp_explicit,
             cbu_base,
         };

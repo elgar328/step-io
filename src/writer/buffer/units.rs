@@ -241,8 +241,8 @@ mod tests {
         length: LengthUnit,
         plane_angle: AngleUnit,
         solid_angle: SolidAngleUnit,
-        length_cbu_wrapped: bool,
-        plane_angle_cbu_wrapped: bool,
+        length_self_wrap: bool,
+        plane_angle_self_wrap: bool,
         dim_exp_explicit: bool,
         length_uncertainty: Option<LengthUncertainty>,
         plane_angle_uncertainty: Option<LengthUncertainty>,
@@ -255,20 +255,22 @@ mod tests {
                 length,
                 plane_angle: plane,
                 solid_angle: solid,
-                length_cbu_wrapped: false,
-                plane_angle_cbu_wrapped: false,
+                length_self_wrap: false,
+                plane_angle_self_wrap: false,
                 dim_exp_explicit: false,
                 length_uncertainty: None,
                 plane_angle_uncertainty: None,
                 solid_angle_uncertainty: None,
             }
         }
-        fn length_cbu_wrapped(mut self, v: bool) -> Self {
-            self.length_cbu_wrapped = v;
+        /// Wrap the SI length in a `CONVERSION_BASED_UNIT('METRE', ...)` outer
+        /// whose base is the same SI unit (corpus self-wrap pattern).
+        fn length_self_wrap(mut self, v: bool) -> Self {
+            self.length_self_wrap = v;
             self
         }
-        fn plane_angle_cbu_wrapped(mut self, v: bool) -> Self {
-            self.plane_angle_cbu_wrapped = v;
+        fn plane_angle_self_wrap(mut self, v: bool) -> Self {
+            self.plane_angle_self_wrap = v;
             self
         }
         fn length_uncertainty(mut self, v: LengthUncertainty) -> Self {
@@ -288,20 +290,20 @@ mod tests {
             let mut pool = UnitsPool::default();
             let dim = self.dim_exp_explicit;
 
-            // Length: non-SI (Inch / Foot) or SI-self-wrap → CBU outer with
+            // Length: non-SI (Inch / Foot) or self-wrap → CBU outer with
             // a base SI Millimetre entry. Plain SI → no base.
             let length_id = match self.length {
                 LengthUnit::Inch | LengthUnit::Foot => {
                     pool.push_cbu_length(self.length, LengthUnit::Millimetre, dim)
                 }
-                _ if self.length_cbu_wrapped => pool.push_cbu_length(self.length, self.length, dim),
+                _ if self.length_self_wrap => pool.push_cbu_length(self.length, self.length, dim),
                 _ => pool.push_plain_length(self.length, dim),
             };
             let plane_id = match self.plane_angle {
                 AngleUnit::Degree => {
                     pool.push_cbu_plane_angle(self.plane_angle, AngleUnit::Radian, dim)
                 }
-                AngleUnit::Radian if self.plane_angle_cbu_wrapped => {
+                AngleUnit::Radian if self.plane_angle_self_wrap => {
                     pool.push_cbu_plane_angle(self.plane_angle, self.plane_angle, dim)
                 }
                 AngleUnit::Radian => pool.push_plain_plane_angle(self.plane_angle, dim),
@@ -490,12 +492,12 @@ mod tests {
                 AngleUnit::Radian,
                 SolidAngleUnit::Steradian,
             )
-            .length_cbu_wrapped(true),
+            .length_self_wrap(true),
         );
         let text = model.write_to_string().expect("write");
         assert!(
             text.contains("CONVERSION_BASED_UNIT('METRE'"),
-            "writer must emit CBU('METRE') when length_cbu_wrapped: {text}"
+            "writer must emit CBU('METRE') for self-wrap length: {text}"
         );
         assert!(text.contains("LENGTH_MEASURE_WITH_UNIT(1."));
         assert!(text.contains("DIMENSIONAL_EXPONENTS(1."));
@@ -514,12 +516,12 @@ mod tests {
                 AngleUnit::Radian,
                 SolidAngleUnit::Steradian,
             )
-            .plane_angle_cbu_wrapped(true),
+            .plane_angle_self_wrap(true),
         );
         let text = model.write_to_string().expect("write");
         assert!(
             text.contains("CONVERSION_BASED_UNIT('RADIAN'"),
-            "writer must emit CBU('RADIAN'): {text}"
+            "writer must emit CBU('RADIAN') for self-wrap angle: {text}"
         );
 
         let graph = parse(&text).expect("re-parse");

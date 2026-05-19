@@ -53,7 +53,6 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
         let length = length.unwrap_or_else(|| {
             ctx.named_units_arena.push(NamedUnit::Length(LengthFlavor {
                 unit: LengthUnit::Millimetre,
-                cbu_wrapped: ctx.length_cbu_wrapped,
                 dim_exp_explicit: ctx.dim_exp_explicit,
                 cbu_base: None,
             }))
@@ -62,7 +61,6 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
             ctx.named_units_arena
                 .push(NamedUnit::PlaneAngle(PlaneAngleFlavor {
                     unit: AngleUnit::Radian,
-                    cbu_wrapped: ctx.plane_angle_cbu_wrapped,
                     dim_exp_explicit: ctx.dim_exp_explicit,
                     cbu_base: None,
                 }))

@@ -76,16 +76,6 @@ pub struct ReaderContext {
     /// MDGPR resolves directly into `Mdgpr.context` and does not use this map.
     pub(crate) repr_context_map: HashMap<u64, UnitContextId>,
 
-    /// `true` if any `CONVERSION_BASED_UNIT` whose `name` matched an SI
-    /// length spelling (`'METRE'` / `'MILLIMETRE'` / `'CENTIMETRE'`) was
-    /// processed. Surfaces into [`crate::ir::units::LengthFlavor::cbu_wrapped`]
-    /// via the post-Pass0Leaf flavor backfill so the writer reproduces
-    /// the wrapper. Reset per `convert()` call via `Default`.
-    pub(crate) length_cbu_wrapped: bool,
-    /// Same idea as `length_cbu_wrapped` but for plane-angle units —
-    /// `'RADIAN'` self-wrap. Backfilled into
-    /// [`crate::ir::units::PlaneAngleFlavor::cbu_wrapped`].
-    pub(crate) plane_angle_cbu_wrapped: bool,
     /// `true` once any plain SI unit complex (no `CONVERSION_BASED_UNIT`
     /// part) was observed with an explicit `DIMENSIONAL_EXPONENTS` entity
     /// ref in its `NAMED_UNIT.dimensions` slot — the ABC-tier convention.

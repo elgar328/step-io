@@ -20,9 +20,8 @@ impl ReaderContext {
         // outer's flavor entry to point at the base's `NamedUnitId`.
         self.backfill_cbu_base(graph);
 
-        // Also backfill presentation flags (length_cbu_wrapped /
-        // plane_angle_cbu_wrapped / dim_exp_explicit) — sticky cumulative
-        // state, so only the file-wide final value is meaningful.
+        // Also backfill the sticky cumulative `dim_exp_explicit` flag —
+        // only the file-wide final value is meaningful.
         self.backfill_named_unit_flavors();
 
         // Pass 0-1b: UNCERTAINTY_MEASURE_WITH_UNIT (simple entity that
@@ -82,29 +81,18 @@ impl ReaderContext {
         }
     }
 
-    /// Apply the file-wide sticky presentation flags (`length_cbu_wrapped`,
-    /// `plane_angle_cbu_wrapped`, `dim_exp_explicit`) to every
+    /// Apply the file-wide sticky `dim_exp_explicit` flag to every
     /// `NamedUnit::{Length, PlaneAngle, SolidAngle}` arena entry. Mass
-    /// currently doesn't carry these flags (always emits Derived); its
-    /// arm is a no-op.
+    /// always emits Derived so its arm is a no-op; AREA/VOLUME live in
+    /// the `derived_unit` arena and are skipped here.
     fn backfill_named_unit_flavors(&mut self) {
         use crate::ir::units::NamedUnit;
-        let length_cbu = self.length_cbu_wrapped;
-        let plane_cbu = self.plane_angle_cbu_wrapped;
         let dim_exp = self.dim_exp_explicit;
         for nu in &mut self.named_units_arena.items {
             match nu {
-                NamedUnit::Length(f) => {
-                    f.cbu_wrapped = length_cbu;
-                    f.dim_exp_explicit = dim_exp;
-                }
-                NamedUnit::PlaneAngle(f) => {
-                    f.cbu_wrapped = plane_cbu;
-                    f.dim_exp_explicit = dim_exp;
-                }
-                NamedUnit::SolidAngle(f) => {
-                    f.dim_exp_explicit = dim_exp;
-                }
+                NamedUnit::Length(f) => f.dim_exp_explicit = dim_exp,
+                NamedUnit::PlaneAngle(f) => f.dim_exp_explicit = dim_exp,
+                NamedUnit::SolidAngle(f) => f.dim_exp_explicit = dim_exp,
                 NamedUnit::Mass(_) => {}
             }
         }
