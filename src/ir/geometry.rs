@@ -77,6 +77,19 @@ pub enum Surface {
     Offset(SurfaceOfOffset),
     Nurbs(NurbsSurface),
     RectangularTrimmed(RectangularTrimmedSurface),
+    DegenerateToroidal(DegenerateToroidalSurface),
+}
+
+/// `DEGENERATE_TOROIDAL_SURFACE(name, position, major_radius, minor_radius,
+/// select_outer)`. SUBTYPE OF `toroidal_surface` — covers degenerate cases
+/// where the minor radius produces self-intersection; `select_outer`
+/// chooses the outer or inner sheet of the resulting surface.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct DegenerateToroidalSurface {
+    pub position: Placement3dId,
+    pub major_radius: f64,
+    pub minor_radius: f64,
+    pub select_outer: bool,
 }
 
 /// An infinite plane defined by an axis placement.

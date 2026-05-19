@@ -5,11 +5,12 @@
 use super::WriteBuffer;
 use crate::ir::{
     Circle2, Circle3, CompositeCurve, ConicalSurface, Curve, Curve2d, Curve2dId, CurveId,
-    CylindricalSurface, Direction2dId, Direction3, DirectionId, Ellipse2, Ellipse3, Hyperbola,
-    Line2, Line3, NurbsCurve, NurbsCurve2d, NurbsSurface, OffsetCurve3d, Parabola, Pcurve,
-    Placement1dId, Placement2dId, Placement3dId, Plane3, Point2dId, PointId, Polyline, Polyline2d,
-    RectangularTrimmedSurface, SphericalSurface, StepModel, Surface, SurfaceId,
-    SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TrimmedCurve,
+    CylindricalSurface, DegenerateToroidalSurface, Direction2dId, Direction3, DirectionId,
+    Ellipse2, Ellipse3, Hyperbola, Line2, Line3, NurbsCurve, NurbsCurve2d, NurbsSurface,
+    OffsetCurve3d, Parabola, Pcurve, Placement1dId, Placement2dId, Placement3dId, Plane3,
+    Point2dId, PointId, Polyline, Polyline2d, RectangularTrimmedSurface, SphericalSurface,
+    StepModel, Surface, SurfaceId, SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution,
+    ToroidalSurface, TrimmedCurve,
 };
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
@@ -125,6 +126,7 @@ impl WriteBuffer<'_> {
             Surface::Offset(o) => self.emit_offset_surface(o)?,
             Surface::Nurbs(nurbs) => self.emit_nurbs_surface(nurbs)?,
             Surface::RectangularTrimmed(rts) => self.emit_rectangular_trimmed_surface(rts)?,
+            Surface::DegenerateToroidal(dts) => self.emit_degenerate_toroidal_surface(dts)?,
         };
         self.surface_ids.insert(id, n);
         Ok(n)
@@ -161,6 +163,14 @@ impl WriteBuffer<'_> {
     ) -> Result<u64, WriteError> {
         use crate::entities::SimpleEntityHandler;
         crate::entities::geometry::rectangular_trimmed_surface::RectangularTrimmedSurfaceHandler::write(self, rts)
+    }
+
+    fn emit_degenerate_toroidal_surface(
+        &mut self,
+        dts: DegenerateToroidalSurface,
+    ) -> Result<u64, WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::degenerate_toroidal_surface::DegenerateToroidalSurfaceHandler::write(self, dts)
     }
 
     fn emit_nurbs_curve(&mut self, nurbs: NurbsCurve) -> Result<u64, WriteError> {
