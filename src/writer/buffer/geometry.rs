@@ -8,8 +8,8 @@ use crate::ir::{
     CylindricalSurface, Direction2dId, Direction3, DirectionId, Ellipse2, Ellipse3, Hyperbola,
     Line2, Line3, NurbsCurve, NurbsCurve2d, NurbsSurface, Parabola, Pcurve, Placement1dId,
     Placement2dId, Placement3dId, Plane3, Point2dId, PointId, Polyline, Polyline2d,
-    SphericalSurface, StepModel, Surface, SurfaceId, SurfaceOfLinearExtrusion, SurfaceOfOffset,
-    SurfaceOfRevolution, ToroidalSurface, TrimmedCurve,
+    RectangularTrimmedSurface, SphericalSurface, StepModel, Surface, SurfaceId,
+    SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TrimmedCurve,
 };
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
@@ -118,6 +118,7 @@ impl WriteBuffer<'_> {
             Surface::Extrusion(e) => self.emit_surface_of_linear_extrusion(e)?,
             Surface::Offset(o) => self.emit_offset_surface(o)?,
             Surface::Nurbs(nurbs) => self.emit_nurbs_surface(nurbs)?,
+            Surface::RectangularTrimmed(rts) => self.emit_rectangular_trimmed_surface(rts)?,
         };
         self.surface_ids.insert(id, n);
         Ok(n)
@@ -146,6 +147,14 @@ impl WriteBuffer<'_> {
     fn emit_torus(&mut self, t: ToroidalSurface) -> Result<u64, WriteError> {
         use crate::entities::SimpleEntityHandler;
         crate::entities::geometry::toroidal_surface::ToroidalSurfaceHandler::write(self, t)
+    }
+
+    fn emit_rectangular_trimmed_surface(
+        &mut self,
+        rts: RectangularTrimmedSurface,
+    ) -> Result<u64, WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        crate::entities::geometry::rectangular_trimmed_surface::RectangularTrimmedSurfaceHandler::write(self, rts)
     }
 
     fn emit_nurbs_curve(&mut self, nurbs: NurbsCurve) -> Result<u64, WriteError> {

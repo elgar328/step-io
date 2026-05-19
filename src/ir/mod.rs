@@ -25,9 +25,10 @@ pub use geometry::{
     Axis1Placement, Axis2Placement2d, Axis2Placement3d, Circle2, Circle3, CompositeCurve,
     CompositeSegment, ConicalSurface, Curve, Curve2d, CurveForm, CylindricalSurface, Direction2,
     Direction3, Ellipse2, Ellipse3, Hyperbola, Line2, Line3, NurbsCurve, NurbsCurve2d,
-    NurbsSurface, Parabola, Pcurve, Plane3, Point2, Point3, Polyline, Polyline2d, SphericalSurface,
-    Surface, SurfaceForm, SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution,
-    ToroidalSurface, TransitionCode, TrimMaster, TrimmedCurve, Vertex,
+    NurbsSurface, Parabola, Pcurve, Plane3, Point2, Point3, Polyline, Polyline2d,
+    RectangularTrimmedSurface, SphericalSurface, Surface, SurfaceForm, SurfaceOfLinearExtrusion,
+    SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TransitionCode, TrimMaster,
+    TrimmedCurve, Vertex,
 };
 pub use id::{
     AddressId, ApplicationContextId, ApplicationProtocolDefinitionId, ApprovalAssignmentId,

@@ -38,6 +38,7 @@ pub mod rational_bspline_curve_2d;
 pub mod rational_bspline_surface;
 pub mod rational_quasi_uniform_curve;
 pub mod rational_quasi_uniform_surface;
+pub mod rectangular_trimmed_surface;
 pub mod seam_curve;
 pub mod shell_based_surface_model;
 pub mod spherical_surface;

@@ -76,6 +76,7 @@ pub enum Surface {
     Extrusion(SurfaceOfLinearExtrusion),
     Offset(SurfaceOfOffset),
     Nurbs(NurbsSurface),
+    RectangularTrimmed(RectangularTrimmedSurface),
 }
 
 /// An infinite plane defined by an axis placement.
@@ -114,6 +115,20 @@ pub struct ToroidalSurface {
 pub struct SphericalSurface {
     pub position: Placement3dId,
     pub radius: f64,
+}
+
+/// `RECTANGULAR_TRIMMED_SURFACE(name, basis_surface, u1, u2, usense, v1, v2, vsense)`.
+/// Parameter-space rectangle trimming a basis surface. `usense` / `vsense`
+/// select the trim direction along each parameter (`true` → increasing parameter).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct RectangularTrimmedSurface {
+    pub basis: SurfaceId,
+    pub u1: f64,
+    pub u2: f64,
+    pub usense: bool,
+    pub v1: f64,
+    pub v2: f64,
+    pub vsense: bool,
 }
 
 /// All curve variants.
