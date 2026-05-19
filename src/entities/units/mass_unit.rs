@@ -178,6 +178,9 @@ fn emit_plain_si_mass(buf: &mut WriteBuffer, prefix: Option<&'static str>, targe
 }
 
 fn emit_mass_dim_exponents(buf: &mut WriteBuffer) -> u64 {
+    if let Some(id) = buf.mass_dim_exp_step {
+        return id;
+    }
     let n = buf.fresh();
     buf.entities.push(WriterEntity {
         id: n,
@@ -194,5 +197,6 @@ fn emit_mass_dim_exponents(buf: &mut WriteBuffer) -> u64 {
             ],
         },
     });
+    buf.mass_dim_exp_step = Some(n);
     n
 }

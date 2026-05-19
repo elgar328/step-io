@@ -76,6 +76,17 @@ pub(crate) struct WriteBuffer<'m> {
     /// for parity with the other units-pool caches and for any future
     /// consumer that wires a `ref_derived_unit` field.
     pub(crate) derived_unit_step_ids: Vec<u64>,
+    /// Lazily emitted `DIMENSIONAL_EXPONENTS(1, 0, ...)` step id, shared by
+    /// every length-flavour CBU outer in this file. `None` until the first
+    /// length CBU is emitted (units-3c dedup).
+    pub(crate) length_dim_exp_step: Option<u64>,
+    /// Lazily emitted `DIMENSIONAL_EXPONENTS(0, 0, ...)` step id, shared by
+    /// every dimensionless emitter (plane-angle / solid-angle CBU outers,
+    /// area / volume DUE consumers).
+    pub(crate) dimensionless_dim_exp_step: Option<u64>,
+    /// Lazily emitted `DIMENSIONAL_EXPONENTS(0, 0, 1, ...)` step id, shared
+    /// by every mass CBU outer.
+    pub(crate) mass_dim_exp_step: Option<u64>,
     /// STEP entity id of every emitted `COLOUR_RGB` /
     /// `DRAUGHTING_PRE_DEFINED_COLOUR` entity, indexed by `ColourId.0`.
     /// Populated by `emit_visualization_if_set` before any consumer
@@ -232,6 +243,9 @@ impl<'m> WriteBuffer<'m> {
             mwu_step_ids: Vec::new(),
             due_step_ids: Vec::new(),
             derived_unit_step_ids: Vec::new(),
+            length_dim_exp_step: None,
+            dimensionless_dim_exp_step: None,
+            mass_dim_exp_step: None,
             colour_step_ids: Vec::new(),
             curve_font_step_ids: Vec::new(),
             curve_style_step_ids: Vec::new(),

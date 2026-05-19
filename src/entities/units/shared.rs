@@ -206,9 +206,13 @@ pub(crate) fn read_mwu_attrs(
     Ok(Some((value, unit_step)))
 }
 
-/// Emit the length-flavour `DIMENSIONAL_EXPONENTS` (1, 0, 0, 0, 0, 0, 0).
-/// Fresh entity per call — writer does no dedup; IR multiplicity rules.
+/// Emit the length-flavour `DIMENSIONAL_EXPONENTS` (1, 0, 0, 0, 0, 0, 0)
+/// once per `WriteBuffer` and cache the step id (units-3c dedup); later
+/// callers receive the cached id.
 pub(super) fn emit_length_dim_exponents(buf: &mut WriteBuffer) -> u64 {
+    if let Some(id) = buf.length_dim_exp_step {
+        return id;
+    }
     let n = buf.fresh();
     buf.entities.push(WriterEntity {
         id: n,
@@ -225,12 +229,16 @@ pub(super) fn emit_length_dim_exponents(buf: &mut WriteBuffer) -> u64 {
             ],
         },
     });
+    buf.length_dim_exp_step = Some(n);
     n
 }
 
-/// Emit the dimensionless `DIMENSIONAL_EXPONENTS` (0, 0, 0, 0, 0, 0, 0).
-/// Fresh entity per call — writer does no dedup; IR multiplicity rules.
+/// Emit the dimensionless `DIMENSIONAL_EXPONENTS` (0, 0, 0, 0, 0, 0, 0)
+/// once per `WriteBuffer` and cache the step id.
 pub(super) fn emit_dimensionless_exponents(buf: &mut WriteBuffer) -> u64 {
+    if let Some(id) = buf.dimensionless_dim_exp_step {
+        return id;
+    }
     let n = buf.fresh();
     buf.entities.push(WriterEntity {
         id: n,
@@ -239,5 +247,6 @@ pub(super) fn emit_dimensionless_exponents(buf: &mut WriteBuffer) -> u64 {
             attrs: vec![Attribute::Real(0.0); 7],
         },
     });
+    buf.dimensionless_dim_exp_step = Some(n);
     n
 }
