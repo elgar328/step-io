@@ -133,7 +133,7 @@ fn cbu_base_of(named: &NamedUnit) -> Option<crate::ir::id::NamedUnitId> {
     match named {
         NamedUnit::Length(f) => f.cbu_base,
         NamedUnit::PlaneAngle(f) => f.cbu_base,
-        NamedUnit::SolidAngle(_) => None,
+        NamedUnit::SolidAngle(_) | NamedUnit::Ratio(_) => None,
         NamedUnit::Mass(f) => f.cbu_base,
     }
 }
@@ -147,12 +147,14 @@ fn emit_named_unit_plain(
     use crate::entities::units::length_unit::LengthUnitHandler;
     use crate::entities::units::mass_unit::MassUnitHandler;
     use crate::entities::units::plane_angle_unit::PlaneAngleUnitHandler;
+    use crate::entities::units::ratio_unit::RatioUnitHandler;
     use crate::entities::units::solid_angle_unit::SolidAngleUnitHandler;
     match named {
         NamedUnit::Length(f) => LengthUnitHandler::write(buf, (f.unit, target_id)),
         NamedUnit::PlaneAngle(f) => PlaneAngleUnitHandler::write(buf, (f.unit, target_id)),
         NamedUnit::SolidAngle(f) => SolidAngleUnitHandler::write(buf, (f.unit, target_id)),
         NamedUnit::Mass(f) => MassUnitHandler::write(buf, (f.unit, target_id)),
+        NamedUnit::Ratio(_) => RatioUnitHandler::write(buf, target_id),
     }
 }
 
@@ -171,8 +173,10 @@ fn emit_named_unit_cbu(
             buf, f.unit, base_step, target_id,
         )),
         NamedUnit::Mass(f) => emit_mass_cbu_outer(buf, f.unit, base_step, target_id),
-        // SolidAngle has no CBU variant; if ever reached, just emit plain.
-        NamedUnit::SolidAngle(_) => emit_named_unit_plain(buf, named, target_id),
+        // SolidAngle and Ratio have no CBU variant; fall through to plain.
+        NamedUnit::SolidAngle(_) | NamedUnit::Ratio(_) => {
+            emit_named_unit_plain(buf, named, target_id)
+        }
     }
 }
 

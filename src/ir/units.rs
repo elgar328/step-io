@@ -91,15 +91,21 @@ impl UnitsPool {
 /// `named_unit` variants (`si_unit`, `conversion_based_unit`,
 /// `context_dependent_unit`) aren't separate variants here — the SI / CBU
 /// character is folded into each flavour struct (`cbu_base`, `cbu_wrapped`).
-/// `area_unit` / `volume_unit` / `ratio_unit` are deferred (tiny corpus
-/// footprint).
+/// `area_unit` / `volume_unit` are deferred (tiny corpus footprint).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum NamedUnit {
     Length(LengthFlavor),
     PlaneAngle(PlaneAngleFlavor),
     SolidAngle(SolidAngleFlavor),
     Mass(MassFlavor),
+    Ratio(RatioFlavor),
 }
+
+/// `RATIO_UNIT` flavour — always dimensionless and without a CBU variant in
+/// the observed corpus. Zero-sized marker; presence in [`NamedUnit`] signals
+/// "ratio" to downstream consumers.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub struct RatioFlavor;
 
 /// `LENGTH_UNIT` complex flavour. `cbu_base` is `Some(id)` for
 /// `CONVERSION_BASED_UNIT` outers and `None` for plain SI complexes.

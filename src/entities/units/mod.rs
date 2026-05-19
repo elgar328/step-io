@@ -23,6 +23,7 @@ pub mod mass_unit;
 pub mod plane_angle_measure_with_unit;
 pub mod plane_angle_unit;
 pub mod ratio_measure_with_unit;
+pub mod ratio_unit;
 mod shared;
 pub mod solid_angle_unit;
 pub mod uncertainty_measure_with_unit;

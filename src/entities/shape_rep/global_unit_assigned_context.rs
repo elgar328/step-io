@@ -42,7 +42,8 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
                     NamedUnit::Length(_) => length = Some(nu_id),
                     NamedUnit::PlaneAngle(_) => plane_angle = Some(nu_id),
                     NamedUnit::SolidAngle(_) => solid_angle = Some(nu_id),
-                    NamedUnit::Mass(_) => {} // GUAC does not reference mass
+                    // GUAC does not reference mass or ratio.
+                    NamedUnit::Mass(_) | NamedUnit::Ratio(_) => {}
                 }
             }
         }

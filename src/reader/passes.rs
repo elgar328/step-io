@@ -72,7 +72,8 @@ impl ReaderContext {
                 NamedUnit::Length(f) => f.cbu_base = Some(base_nuid),
                 NamedUnit::PlaneAngle(f) => f.cbu_base = Some(base_nuid),
                 NamedUnit::Mass(f) => f.cbu_base = Some(base_nuid),
-                NamedUnit::SolidAngle(_) => {} // no CBU variant in corpus
+                // SolidAngle and Ratio have no CBU variant in corpus.
+                NamedUnit::SolidAngle(_) | NamedUnit::Ratio(_) => {}
             }
         }
     }
