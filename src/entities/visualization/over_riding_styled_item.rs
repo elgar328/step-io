@@ -75,6 +75,9 @@ impl SimpleEntityHandler for OverRidingStyledItemHandler {
             StyledItemTarget::Edge(eid) => buf.emit_edge(eid)?,
             StyledItemTarget::Curve(cid) => buf.emit_curve(cid)?,
             StyledItemTarget::Point(pid) => buf.emit_point(pid)?,
+            StyledItemTarget::Surface(sid) => buf.emit_surface(sid)?,
+            StyledItemTarget::Vertex(vid) => buf.emit_vertex(vid)?,
+            StyledItemTarget::Shell(shid) => buf.emit_shell(shid)?,
         };
         let mut style_refs = Vec::with_capacity(osi.styles.len());
         for psa_id in osi.styles {

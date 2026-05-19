@@ -8,7 +8,8 @@
 use super::arena::Arena;
 use super::id::{
     ColourId, CurveFontId, CurveId, CurveStyleId, EdgeId, FaceId, FoundedItemId, PointId,
-    PresentationStyleAssignmentId, SolidId, StyledItemId, SurfaceStyleRenderingId,
+    PresentationStyleAssignmentId, ShellId, SolidId, StyledItemId, SurfaceId,
+    SurfaceStyleRenderingId, VertexId,
 };
 use super::shape_rep::Mdgpr;
 
@@ -197,6 +198,9 @@ pub enum StyledItemTarget {
     Edge(EdgeId),
     Curve(CurveId),
     Point(PointId),
+    Surface(SurfaceId),
+    Vertex(VertexId),
+    Shell(ShellId),
 }
 
 /// `PRESENTATION_STYLE_ASSIGNMENT` enum per the ir.toml blueprint

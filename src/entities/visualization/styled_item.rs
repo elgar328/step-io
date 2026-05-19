@@ -72,6 +72,9 @@ impl SimpleEntityHandler for StyledItemHandler {
             StyledItemTarget::Edge(eid) => buf.emit_edge(eid)?,
             StyledItemTarget::Curve(cid) => buf.emit_curve(cid)?,
             StyledItemTarget::Point(pid) => buf.emit_point(pid)?,
+            StyledItemTarget::Surface(sid) => buf.emit_surface(sid)?,
+            StyledItemTarget::Vertex(vid) => buf.emit_vertex(vid)?,
+            StyledItemTarget::Shell(shid) => buf.emit_shell(shid)?,
         };
         let mut style_refs = Vec::with_capacity(si.styles.len());
         for psa_id in si.styles {
@@ -111,6 +114,15 @@ pub(crate) fn resolve_styled_item_target(
     }
     if let Some(&pid) = ctx.point_map.get(&item_ref) {
         return Some(StyledItemTarget::Point(pid));
+    }
+    if let Some(&sid) = ctx.surface_map.get(&item_ref) {
+        return Some(StyledItemTarget::Surface(sid));
+    }
+    if let Some(&vid) = ctx.vertex_map.get(&item_ref) {
+        return Some(StyledItemTarget::Vertex(vid));
+    }
+    if let Some(&shid) = ctx.shell_map.get(&item_ref) {
+        return Some(StyledItemTarget::Shell(shid));
     }
     None
 }
