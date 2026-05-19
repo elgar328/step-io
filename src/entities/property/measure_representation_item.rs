@@ -9,7 +9,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::id::UnitContextId;
-use crate::ir::property::{MeasureKind, PropertyMeasure};
+use crate::ir::property::{MeasureKind, PropertyMeasure, PropertyMeasureUnit};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -44,16 +44,33 @@ impl SimpleEntityHandler for MeasureRepresentationItemHandler {
         let Attribute::Real(measure_value) = value.as_ref() else {
             return Ok(());
         };
-        // attrs[2] = unit_component — ignored. The bound REPRESENTATION's
-        // `context_of_items` field (or the parent Property's `context`) is
-        // the authoritative unit reference; the writer reproduces it from
-        // there.
+        // attrs[2] = unit_component. Try to resolve it to an explicit
+        // NamedUnit / DerivedUnit arena ref so the writer can reproduce
+        // the original unit (especially DERIVED_UNIT composite refs that
+        // the per-kind context lookup can't recover). Non-resolving refs
+        // fall through to `unit_ref = None` and the writer's legacy
+        // context-based fallback.
+        let unit_ref = match attrs.get(2) {
+            Some(Attribute::EntityRef(uref)) => ctx
+                .named_unit_id_map
+                .get(uref)
+                .copied()
+                .map(PropertyMeasureUnit::Named)
+                .or_else(|| {
+                    ctx.derived_unit_id_map
+                        .get(uref)
+                        .copied()
+                        .map(PropertyMeasureUnit::Derived)
+                }),
+            _ => None,
+        };
         ctx.measure_item_map.insert(
             entity_id,
             PropertyMeasure {
                 name,
                 kind,
                 value: *measure_value,
+                unit_ref,
             },
         );
         Ok(())
@@ -72,6 +89,7 @@ fn match_measure_kind(type_name: &str) -> Option<MeasureKind> {
         "LENGTH_MEASURE" => Some(MeasureKind::Length),
         "PLANE_ANGLE_MEASURE" => Some(MeasureKind::PlaneAngle),
         "SOLID_ANGLE_MEASURE" => Some(MeasureKind::SolidAngle),
+        "POSITIVE_RATIO_MEASURE" => Some(MeasureKind::PositiveRatio),
         _ => None,
     }
 }

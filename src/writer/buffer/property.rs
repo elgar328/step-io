@@ -12,7 +12,9 @@ use crate::entities::property::property_definition_representation::{
     PropertyDefinitionRepresentationHandler, PropertyDefinitionRepresentationWriteInput,
 };
 use crate::ir::id::UnitContextId;
-use crate::ir::property::{MeasureKind, Property, PropertyItem, PropertyMeasure};
+use crate::ir::property::{
+    MeasureKind, Property, PropertyItem, PropertyMeasure, PropertyMeasureUnit,
+};
 use crate::ir::shape_rep::DescriptiveItem;
 use crate::parser::entity::Attribute;
 
@@ -97,8 +99,11 @@ impl WriteBuffer<'_> {
             MeasureKind::Length => "LENGTH_MEASURE",
             MeasureKind::PlaneAngle => "PLANE_ANGLE_MEASURE",
             MeasureKind::SolidAngle => "SOLID_ANGLE_MEASURE",
+            MeasureKind::PositiveRatio => "POSITIVE_RATIO_MEASURE",
         };
-        let unit_ref = self.resolve_property_unit_ref(ctx, m.kind);
+        let unit_ref = self
+            .resolve_explicit_unit_ref(m.unit_ref)
+            .unwrap_or_else(|| self.resolve_property_unit_ref(ctx, m.kind));
         self.push_simple(
             "MEASURE_REPRESENTATION_ITEM",
             vec![
@@ -112,17 +117,31 @@ impl WriteBuffer<'_> {
         )
     }
 
+    /// Resolve an explicit [`PropertyMeasureUnit`] to its emitted STEP id.
+    /// `None` falls through to the legacy context-based lookup.
+    fn resolve_explicit_unit_ref(&self, unit_ref: Option<PropertyMeasureUnit>) -> Option<u64> {
+        match unit_ref? {
+            PropertyMeasureUnit::Named(id) => self.named_unit_step_ids.get(id.0 as usize).copied(),
+            PropertyMeasureUnit::Derived(id) => {
+                self.derived_unit_step_ids.get(id.0 as usize).copied()
+            }
+        }
+    }
+
     /// Pick the unit-leaf STEP id matching this measure's kind and the
     /// property's `UnitContext`. The `unit_leaf_ids` vec is populated by
     /// the units emit pass that runs before properties in `emit_all`, so
     /// indexing is always safe — upstream guards (assembly skip on empty
     /// `unit_context_ids`, property skip on missing `product_def_ids`)
     /// ensure this path is only reached when units are present.
+    ///
+    /// `PositiveRatio` reaches this path only for kernel-built IR without
+    /// an explicit `unit_ref` — falls back to the length leaf (lossy).
     fn resolve_property_unit_ref(&self, ctx: Option<UnitContextId>, kind: MeasureKind) -> u64 {
         let ctx_idx = ctx.unwrap_or(UnitContextId(0)).0 as usize;
         let (length, angle, solid) = self.unit_leaf_ids[ctx_idx];
         match kind {
-            MeasureKind::Length => length,
+            MeasureKind::Length | MeasureKind::PositiveRatio => length,
             MeasureKind::PlaneAngle => angle,
             MeasureKind::SolidAngle => solid,
         }

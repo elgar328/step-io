@@ -62,7 +62,9 @@ pub use plm::{
     PlmPool, RoleAssociation, RoleSelect, SecurityClassification, SecurityClassificationAssignment,
     SecurityClassificationItem, SecurityClassificationLevel,
 };
-pub use property::{MeasureKind, Property, PropertyItem, PropertyMeasure, PropertyPool};
+pub use property::{
+    MeasureKind, Property, PropertyItem, PropertyMeasure, PropertyMeasureUnit, PropertyPool,
+};
 pub use shape_rep::{
     AngleUnit, DescriptiveItem, LengthUncertainty, LengthUnit, Mdgpr, ShapeAspect, SolidAngleUnit,
     UnitContext,

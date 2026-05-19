@@ -10,7 +10,7 @@
 //! values preserved for kernel adapters that may inspect them. Mirrors the
 //! visualization design (see `crate::ir::visualization`).
 
-use super::id::{ProductId, UnitContextId};
+use super::id::{DerivedUnitId, NamedUnitId, ProductId, UnitContextId};
 use super::shape_rep::DescriptiveItem;
 
 /// Top-level container for property data extracted from
@@ -64,18 +64,30 @@ pub enum PropertyItem {
 }
 
 /// `MEASURE_REPRESENTATION_ITEM(name, typed_value, unit_ref)` reduced to a
-/// passive value carrier. The unit reference is implied by the parent
-/// [`Property`]'s context plus the [`MeasureKind`] — writer resolves the
-/// correct length / plane-angle / solid-angle leaf at emit time.
+/// passive value carrier. When the source MRI's `unit_component` resolves to
+/// a known unit in the IR, [`unit_ref`] holds the explicit reference;
+/// otherwise it is `None` and the writer falls back to resolving the unit
+/// from the parent [`Property`]'s context + the [`MeasureKind`].
 #[derive(Debug, Clone, PartialEq)]
 pub struct PropertyMeasure {
     /// `MEASURE_REPRESENTATION_ITEM.name` (often `''`).
     pub name: String,
-    /// Typed value wrapper. Items with kinds outside [`MeasureKind`] (e.g.
-    /// `AREA_MEASURE`, `VOLUME_MEASURE`, `CONTEXT_DEPENDENT_MEASURE`) are
-    /// silently dropped at read — see Pattern B note in this module's docs.
+    /// Typed value wrapper.
     pub kind: MeasureKind,
     pub value: f64,
+    /// Explicit unit reference captured from `MEASURE_REPRESENTATION_ITEM.unit_component`.
+    /// `None` when the `unit_component` ref did not resolve to a known
+    /// `NamedUnit` / `DerivedUnit` arena entry (legacy fixtures, kernel-built
+    /// IR). The writer falls back to dynamic `UnitContext` lookup in that case.
+    pub unit_ref: Option<PropertyMeasureUnit>,
+}
+
+/// Source of a [`PropertyMeasure`]'s unit. `Named` for simple units
+/// (length, mass, ...), `Derived` for composite units (e.g. kg/m³).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum PropertyMeasureUnit {
+    Named(NamedUnitId),
+    Derived(DerivedUnitId),
 }
 
 /// Subset of STEP measure kinds that step-io currently round-trips.
@@ -84,4 +96,5 @@ pub enum MeasureKind {
     Length,
     PlaneAngle,
     SolidAngle,
+    PositiveRatio,
 }
