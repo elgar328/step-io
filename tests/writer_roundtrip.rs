@@ -29,29 +29,29 @@ fn assert_unit_contexts_equivalent(
         // Compare semantic content (unit enum + flag bits); skip `cbu_base`
         // since it's an arena ref whose absolute value depends on emit order.
         let l_len = match lpool.named_units[lc.length] {
-            NamedUnit::Length(f) => (f.unit, f.dim_exp_explicit, f.cbu_base.is_some()),
+            NamedUnit::Length(f) => (f.unit, f.cbu_base.is_some()),
             _ => panic!("{name}: lhs length slot is not Length"),
         };
         let r_len = match rpool.named_units[rc.length] {
-            NamedUnit::Length(f) => (f.unit, f.dim_exp_explicit, f.cbu_base.is_some()),
+            NamedUnit::Length(f) => (f.unit, f.cbu_base.is_some()),
             _ => panic!("{name}: rhs length slot is not Length"),
         };
         assert_eq!(l_len, r_len, "{name}: length");
         let l_pa = match lpool.named_units[lc.plane_angle] {
-            NamedUnit::PlaneAngle(f) => (f.unit, f.dim_exp_explicit, f.cbu_base.is_some()),
+            NamedUnit::PlaneAngle(f) => (f.unit, f.cbu_base.is_some()),
             _ => panic!("{name}: lhs plane_angle slot is not PlaneAngle"),
         };
         let r_pa = match rpool.named_units[rc.plane_angle] {
-            NamedUnit::PlaneAngle(f) => (f.unit, f.dim_exp_explicit, f.cbu_base.is_some()),
+            NamedUnit::PlaneAngle(f) => (f.unit, f.cbu_base.is_some()),
             _ => panic!("{name}: rhs plane_angle slot is not PlaneAngle"),
         };
         assert_eq!(l_pa, r_pa, "{name}: plane_angle");
         let l_solid = match lpool.named_units[lc.solid_angle] {
-            NamedUnit::SolidAngle(f) => (f.unit, f.dim_exp_explicit),
+            NamedUnit::SolidAngle(f) => f.unit,
             _ => panic!("{name}: lhs solid_angle slot is not SolidAngle"),
         };
         let r_solid = match rpool.named_units[rc.solid_angle] {
-            NamedUnit::SolidAngle(f) => (f.unit, f.dim_exp_explicit),
+            NamedUnit::SolidAngle(f) => f.unit,
             _ => panic!("{name}: rhs solid_angle slot is not SolidAngle"),
         };
         assert_eq!(l_solid, r_solid, "{name}: solid_angle");
@@ -67,15 +67,6 @@ fn assert_unit_contexts_equivalent(
             lc.solid_angle_uncertainty, rc.solid_angle_uncertainty,
             "{name}: solid_angle_uncertainty"
         );
-    }
-}
-
-fn length_dim_exp_explicit(model: &step_io::ir::model::StepModel) -> bool {
-    let units = model.units.iter().next().expect("ctx present");
-    let pool = model.units_pool.as_ref().expect("units pool");
-    match pool.named_units[units.length] {
-        NamedUnit::Length(f) => f.dim_exp_explicit,
-        _ => panic!("expected length NamedUnit"),
     }
 }
 
@@ -690,26 +681,17 @@ fn box_ap214_is_preserves_visualization() {
 /// `step-io-reference-check/fixtures/abc/00009954_*.step` — the user plans
 /// to replace it with a hand-curated minimal fixture later, hence the
 /// `external_temp_` prefix). ABC files emit explicit `DIMENSIONAL_EXPONENTS`
-/// references in plain SI unit complexes' `NAMED_UNIT.dimensions` slot,
-/// while OCCT/Fusion/FreeCAD use `*` (Derived). This test asserts that the
-/// reader detects the pattern and the round-trip preserves the flag —
-/// implying the writer emitted the DE refs and the re-parse rebuilt the
-/// same flag. String-matching the output text would be fragile to
-/// formatting changes.
+/// references in plain SI unit complexes' `NAMED_UNIT.dimensions` slot;
+/// units-3b normalises that surface form to `*` Derived on emit so the
+/// surface DE entities disappear. The IR-level round-trip must still
+/// produce the same `LengthUnit` / `AngleUnit` / `SolidAngleUnit` in the context.
 #[test]
 fn external_temp_abc_explicit_de_round_trip() {
     let src = include_str!("fixtures/external_temp_abc_explicit_de.step");
     let model = ReaderContext::convert(&parse(src).expect("parse")).model;
-    assert!(
-        length_dim_exp_explicit(&model),
-        "ABC fixture must mark dim_exp_explicit=true on read"
-    );
     let text = model.write_to_string().expect("write");
     let back = ReaderContext::convert(&parse(&text).expect("re-parse")).model;
-    assert!(
-        length_dim_exp_explicit(&back),
-        "dim_exp_explicit flag round-trips"
-    );
+    assert_unit_contexts_equivalent("abc_explicit_de", &model, &back);
 }
 
 /// Multi-context Fusion 360 fixture (temporarily borrowed from

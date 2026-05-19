@@ -20,10 +20,6 @@ impl ReaderContext {
         // outer's flavor entry to point at the base's `NamedUnitId`.
         self.backfill_cbu_base(graph);
 
-        // Also backfill the sticky cumulative `dim_exp_explicit` flag —
-        // only the file-wide final value is meaningful.
-        self.backfill_named_unit_flavors();
-
         // Pass 0-1b: UNCERTAINTY_MEASURE_WITH_UNIT (simple entity that
         // depends on Pass 0-1's length_unit_map).
         self.dispatch_registry(graph, PassLevel::Pass0Uncertainty);
@@ -77,23 +73,6 @@ impl ReaderContext {
                 NamedUnit::PlaneAngle(f) => f.cbu_base = Some(base_nuid),
                 NamedUnit::Mass(f) => f.cbu_base = Some(base_nuid),
                 NamedUnit::SolidAngle(_) => {} // no CBU variant in corpus
-            }
-        }
-    }
-
-    /// Apply the file-wide sticky `dim_exp_explicit` flag to every
-    /// `NamedUnit::{Length, PlaneAngle, SolidAngle}` arena entry. Mass
-    /// always emits Derived so its arm is a no-op; AREA/VOLUME live in
-    /// the `derived_unit` arena and are skipped here.
-    fn backfill_named_unit_flavors(&mut self) {
-        use crate::ir::units::NamedUnit;
-        let dim_exp = self.dim_exp_explicit;
-        for nu in &mut self.named_units_arena.items {
-            match nu {
-                NamedUnit::Length(f) => f.dim_exp_explicit = dim_exp,
-                NamedUnit::PlaneAngle(f) => f.dim_exp_explicit = dim_exp,
-                NamedUnit::SolidAngle(f) => f.dim_exp_explicit = dim_exp,
-                NamedUnit::Mass(_) => {}
             }
         }
     }

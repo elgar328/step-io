@@ -26,10 +26,9 @@ pub struct UnitsPool {
 
 impl UnitsPool {
     /// Push a plain SI length unit and return its arena ref.
-    pub fn push_plain_length(&mut self, unit: LengthUnit, dim_exp_explicit: bool) -> NamedUnitId {
+    pub fn push_plain_length(&mut self, unit: LengthUnit) -> NamedUnitId {
         self.named_units.push(NamedUnit::Length(LengthFlavor {
             unit,
-            dim_exp_explicit,
             cbu_base: None,
         }))
     }
@@ -38,58 +37,34 @@ impl UnitsPool {
     /// `base` should be an SI length (Millimetre / Metre / Centimetre);
     /// it is pushed first as a plain SI entry and the outer references it.
     /// Self-wrap (outer == base) is preserved structurally via `cbu_base`.
-    pub fn push_cbu_length(
-        &mut self,
-        outer: LengthUnit,
-        base: LengthUnit,
-        dim_exp_explicit: bool,
-    ) -> NamedUnitId {
-        let base_id = self.push_plain_length(base, dim_exp_explicit);
+    pub fn push_cbu_length(&mut self, outer: LengthUnit, base: LengthUnit) -> NamedUnitId {
+        let base_id = self.push_plain_length(base);
         self.named_units.push(NamedUnit::Length(LengthFlavor {
             unit: outer,
-            dim_exp_explicit,
             cbu_base: Some(base_id),
         }))
     }
 
-    pub fn push_plain_plane_angle(
-        &mut self,
-        unit: AngleUnit,
-        dim_exp_explicit: bool,
-    ) -> NamedUnitId {
+    pub fn push_plain_plane_angle(&mut self, unit: AngleUnit) -> NamedUnitId {
         self.named_units
             .push(NamedUnit::PlaneAngle(PlaneAngleFlavor {
                 unit,
-                dim_exp_explicit,
                 cbu_base: None,
             }))
     }
 
-    pub fn push_cbu_plane_angle(
-        &mut self,
-        outer: AngleUnit,
-        base: AngleUnit,
-        dim_exp_explicit: bool,
-    ) -> NamedUnitId {
-        let base_id = self.push_plain_plane_angle(base, dim_exp_explicit);
+    pub fn push_cbu_plane_angle(&mut self, outer: AngleUnit, base: AngleUnit) -> NamedUnitId {
+        let base_id = self.push_plain_plane_angle(base);
         self.named_units
             .push(NamedUnit::PlaneAngle(PlaneAngleFlavor {
                 unit: outer,
-                dim_exp_explicit,
                 cbu_base: Some(base_id),
             }))
     }
 
-    pub fn push_plain_solid_angle(
-        &mut self,
-        unit: SolidAngleUnit,
-        dim_exp_explicit: bool,
-    ) -> NamedUnitId {
+    pub fn push_plain_solid_angle(&mut self, unit: SolidAngleUnit) -> NamedUnitId {
         self.named_units
-            .push(NamedUnit::SolidAngle(SolidAngleFlavor {
-                unit,
-                dim_exp_explicit,
-            }))
+            .push(NamedUnit::SolidAngle(SolidAngleFlavor { unit }))
     }
 
     pub fn push_plain_mass(&mut self, unit: MassUnit) -> NamedUnitId {
@@ -134,10 +109,6 @@ pub enum NamedUnit {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct LengthFlavor {
     pub unit: LengthUnit,
-    /// `true` when this complex's `NAMED_UNIT.dimensions` slot carried an
-    /// explicit `DIMENSIONAL_EXPONENTS` ref (ABC-tier convention) rather
-    /// than `*` Derived. Presentation flag — units-3 cleanup target.
-    pub dim_exp_explicit: bool,
     /// `Some(id)` → this entry is a CBU outer and `id` resolves to the
     /// base SI's `NamedUnit::Length` arena entry. `None` → plain SI.
     /// Self-wrap (`CBU('METRE', ..., base=METRE)`) is represented by
@@ -148,14 +119,12 @@ pub struct LengthFlavor {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PlaneAngleFlavor {
     pub unit: AngleUnit,
-    pub dim_exp_explicit: bool,
     pub cbu_base: Option<NamedUnitId>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SolidAngleFlavor {
     pub unit: SolidAngleUnit,
-    pub dim_exp_explicit: bool,
     // No CBU variant observed in corpus — `SOLID_ANGLE_UNIT +
     // CONVERSION_BASED_UNIT` is silently dropped on read.
 }

@@ -15,7 +15,7 @@ use crate::ir::id::NamedUnitId;
 use crate::ir::shape_rep::AngleUnit;
 use crate::ir::units::{NamedUnit, PlaneAngleFlavor};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
-use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
+use crate::reader::{ReaderContext, require_part_attrs};
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
@@ -25,8 +25,8 @@ pub(crate) struct PlaneAngleUnitHandler;
 
 #[step_entity_complex(name = "PLANE_ANGLE_UNIT", pass = Pass0Leaf, required = ["PLANE_ANGLE_UNIT"])]
 impl ComplexEntityHandler for PlaneAngleUnitHandler {
-    /// `(unit, dim_exp_explicit, target_id)`.
-    type WriteInput = (AngleUnit, bool, u64);
+    /// `(unit, target_id)`.
+    type WriteInput = (AngleUnit, u64);
 
     fn read_complex(
         ctx: &mut ReaderContext,
@@ -48,12 +48,6 @@ impl ComplexEntityHandler for PlaneAngleUnitHandler {
                         .into(),
             });
             return Ok(());
-        }
-
-        if let Some(named_attrs) = find_part_attrs(parts, "NAMED_UNIT")
-            && let Some(Attribute::EntityRef(_)) = named_attrs.first()
-        {
-            ctx.dim_exp_explicit = true;
         }
 
         let si_attrs = require_part_attrs(parts, "SI_UNIT", entity_id)?;
@@ -81,9 +75,9 @@ impl ComplexEntityHandler for PlaneAngleUnitHandler {
     /// fallback rather than panic.
     fn write(
         buf: &mut WriteBuffer,
-        (_unit, dim_exp_explicit, target_id): (AngleUnit, bool, u64),
+        (_unit, target_id): (AngleUnit, u64),
     ) -> Result<u64, WriteError> {
-        emit_plain_si_radian(buf, dim_exp_explicit, target_id);
+        emit_plain_si_radian(buf, target_id);
         Ok(target_id)
     }
 }
@@ -93,7 +87,6 @@ impl ComplexEntityHandler for PlaneAngleUnitHandler {
 pub(crate) fn emit_plane_angle_cbu_outer(
     buf: &mut WriteBuffer,
     unit: AngleUnit,
-    _dim_exp_explicit: bool,
     base_step: u64,
     target_id: u64,
 ) -> u64 {
@@ -111,22 +104,15 @@ fn register_named_plane_angle(
     cbu_base: Option<NamedUnitId>,
 ) {
     if let Some(&unit) = ctx.angle_unit_map.get(&entity_id) {
-        let flavor = PlaneAngleFlavor {
-            unit,
-            dim_exp_explicit: ctx.dim_exp_explicit,
-            cbu_base,
-        };
+        let flavor = PlaneAngleFlavor { unit, cbu_base };
         let id = ctx.named_units_arena.push(NamedUnit::PlaneAngle(flavor));
         ctx.named_unit_id_map.insert(entity_id, id);
     }
 }
 
-fn emit_plain_si_radian(buf: &mut WriteBuffer, dim_exp_explicit: bool, target_id: u64) {
-    let dim_exp_attr = if dim_exp_explicit {
-        Attribute::EntityRef(emit_dimensionless_exponents(buf))
-    } else {
-        Attribute::Derived
-    };
+/// Canonical plain SI radian — `NAMED_UNIT.dimensions` is `*` Derived
+/// (units-3b dropped the input-preserving explicit-DE flag).
+fn emit_plain_si_radian(buf: &mut WriteBuffer, target_id: u64) {
     buf.entities.push(WriterEntity {
         id: target_id,
         body: WriterBody::Complex {
@@ -135,7 +121,7 @@ fn emit_plain_si_radian(buf: &mut WriteBuffer, dim_exp_explicit: bool, target_id
                     "SI_UNIT".into(),
                     vec![Attribute::Unset, Attribute::Enum("RADIAN".into())],
                 ),
-                ("NAMED_UNIT".into(), vec![dim_exp_attr]),
+                ("NAMED_UNIT".into(), vec![Attribute::Derived]),
                 ("PLANE_ANGLE_UNIT".into(), vec![]),
             ],
         },

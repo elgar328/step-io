@@ -76,13 +76,6 @@ pub struct ReaderContext {
     /// MDGPR resolves directly into `Mdgpr.context` and does not use this map.
     pub(crate) repr_context_map: HashMap<u64, UnitContextId>,
 
-    /// `true` once any plain SI unit complex (no `CONVERSION_BASED_UNIT`
-    /// part) was observed with an explicit `DIMENSIONAL_EXPONENTS` entity
-    /// ref in its `NAMED_UNIT.dimensions` slot — the ABC-tier convention.
-    /// Sticky cumulative; backfilled into every `Length` / `PlaneAngle` /
-    /// `SolidAngle` flavor entry after `Pass0Leaf` finishes.
-    pub(crate) dim_exp_explicit: bool,
-
     /// Entity ids inside any `DEFINITIONAL_REPRESENTATION` subtree (PCURVE
     /// parametric-space geometry). 3D passes skip them so their 2D
     /// `CARTESIAN_POINT` / `DIRECTION` / `LINE` / … don't collide with 3D

@@ -34,9 +34,9 @@ fn empty_model() -> StepModel {
 fn mm_radian_steradian(model: &mut StepModel) -> UnitContext {
     let pool = model.units_pool.get_or_insert_with(UnitsPool::default);
     UnitContext {
-        length: pool.push_plain_length(LengthUnit::Millimetre, false),
-        plane_angle: pool.push_plain_plane_angle(AngleUnit::Radian, false),
-        solid_angle: pool.push_plain_solid_angle(SolidAngleUnit::Steradian, false),
+        length: pool.push_plain_length(LengthUnit::Millimetre),
+        plane_angle: pool.push_plain_plane_angle(AngleUnit::Radian),
+        solid_angle: pool.push_plain_solid_angle(SolidAngleUnit::Steradian),
         length_uncertainty: None,
         plane_angle_uncertainty: None,
         solid_angle_uncertainty: None,

@@ -149,15 +149,9 @@ fn emit_named_unit_plain(
     use crate::entities::units::plane_angle_unit::PlaneAngleUnitHandler;
     use crate::entities::units::solid_angle_unit::SolidAngleUnitHandler;
     match named {
-        NamedUnit::Length(f) => {
-            LengthUnitHandler::write(buf, (f.unit, f.dim_exp_explicit, target_id))
-        }
-        NamedUnit::PlaneAngle(f) => {
-            PlaneAngleUnitHandler::write(buf, (f.unit, f.dim_exp_explicit, target_id))
-        }
-        NamedUnit::SolidAngle(f) => {
-            SolidAngleUnitHandler::write(buf, (f.unit, f.dim_exp_explicit, target_id))
-        }
+        NamedUnit::Length(f) => LengthUnitHandler::write(buf, (f.unit, target_id)),
+        NamedUnit::PlaneAngle(f) => PlaneAngleUnitHandler::write(buf, (f.unit, target_id)),
+        NamedUnit::SolidAngle(f) => SolidAngleUnitHandler::write(buf, (f.unit, target_id)),
         NamedUnit::Mass(f) => MassUnitHandler::write(buf, (f.unit, target_id)),
     }
 }
@@ -172,19 +166,9 @@ fn emit_named_unit_cbu(
     use crate::entities::units::mass_unit::emit_mass_cbu_outer;
     use crate::entities::units::plane_angle_unit::emit_plane_angle_cbu_outer;
     match named {
-        NamedUnit::Length(f) => Ok(emit_length_cbu_outer(
-            buf,
-            f.unit,
-            f.dim_exp_explicit,
-            base_step,
-            target_id,
-        )),
+        NamedUnit::Length(f) => Ok(emit_length_cbu_outer(buf, f.unit, base_step, target_id)),
         NamedUnit::PlaneAngle(f) => Ok(emit_plane_angle_cbu_outer(
-            buf,
-            f.unit,
-            f.dim_exp_explicit,
-            base_step,
-            target_id,
+            buf, f.unit, base_step, target_id,
         )),
         NamedUnit::Mass(f) => emit_mass_cbu_outer(buf, f.unit, base_step, target_id),
         // SolidAngle has no CBU variant; if ever reached, just emit plain.
@@ -243,7 +227,6 @@ mod tests {
         solid_angle: SolidAngleUnit,
         length_self_wrap: bool,
         plane_angle_self_wrap: bool,
-        dim_exp_explicit: bool,
         length_uncertainty: Option<LengthUncertainty>,
         plane_angle_uncertainty: Option<LengthUncertainty>,
         solid_angle_uncertainty: Option<LengthUncertainty>,
@@ -257,7 +240,6 @@ mod tests {
                 solid_angle: solid,
                 length_self_wrap: false,
                 plane_angle_self_wrap: false,
-                dim_exp_explicit: false,
                 length_uncertainty: None,
                 plane_angle_uncertainty: None,
                 solid_angle_uncertainty: None,
@@ -288,27 +270,24 @@ mod tests {
 
         fn build(self) -> StepModel {
             let mut pool = UnitsPool::default();
-            let dim = self.dim_exp_explicit;
 
             // Length: non-SI (Inch / Foot) or self-wrap → CBU outer with
             // a base SI Millimetre entry. Plain SI → no base.
             let length_id = match self.length {
                 LengthUnit::Inch | LengthUnit::Foot => {
-                    pool.push_cbu_length(self.length, LengthUnit::Millimetre, dim)
+                    pool.push_cbu_length(self.length, LengthUnit::Millimetre)
                 }
-                _ if self.length_self_wrap => pool.push_cbu_length(self.length, self.length, dim),
-                _ => pool.push_plain_length(self.length, dim),
+                _ if self.length_self_wrap => pool.push_cbu_length(self.length, self.length),
+                _ => pool.push_plain_length(self.length),
             };
             let plane_id = match self.plane_angle {
-                AngleUnit::Degree => {
-                    pool.push_cbu_plane_angle(self.plane_angle, AngleUnit::Radian, dim)
-                }
+                AngleUnit::Degree => pool.push_cbu_plane_angle(self.plane_angle, AngleUnit::Radian),
                 AngleUnit::Radian if self.plane_angle_self_wrap => {
-                    pool.push_cbu_plane_angle(self.plane_angle, self.plane_angle, dim)
+                    pool.push_cbu_plane_angle(self.plane_angle, self.plane_angle)
                 }
-                AngleUnit::Radian => pool.push_plain_plane_angle(self.plane_angle, dim),
+                AngleUnit::Radian => pool.push_plain_plane_angle(self.plane_angle),
             };
-            let solid_id = pool.push_plain_solid_angle(self.solid_angle, dim);
+            let solid_id = pool.push_plain_solid_angle(self.solid_angle);
 
             let ctx = UnitContext {
                 length: length_id,

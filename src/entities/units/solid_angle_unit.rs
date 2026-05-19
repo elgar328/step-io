@@ -6,15 +6,13 @@
 //! the SI path; `WriteInput` carries no `cbu_wrapped` flag.
 
 use crate::entities::ComplexEntityHandler;
-use crate::entities::units::shared::{
-    emit_dimensionless_exponents, has_part, match_solid_angle_unit, read_optional_enum,
-};
+use crate::entities::units::shared::{has_part, match_solid_angle_unit, read_optional_enum};
 use crate::ir::attr::{check_count, read_enum};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::SolidAngleUnit;
 use crate::ir::units::{NamedUnit, SolidAngleFlavor};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
-use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
+use crate::reader::{ReaderContext, require_part_attrs};
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
@@ -24,9 +22,10 @@ pub(crate) struct SolidAngleUnitHandler;
 
 #[step_entity_complex(name = "SOLID_ANGLE_UNIT", pass = Pass0Leaf, required = ["SOLID_ANGLE_UNIT"])]
 impl ComplexEntityHandler for SolidAngleUnitHandler {
-    /// `(unit, dim_exp_explicit)`. No `cbu_wrapped` flag — solid-angle
-    /// CBU forms are unobserved.
-    type WriteInput = (SolidAngleUnit, bool, u64);
+    /// `(unit, target_id)`. No `cbu_wrapped` / `dim_exp_explicit` flags —
+    /// solid-angle CBU forms are unobserved and `NAMED_UNIT.dimensions`
+    /// is canonical Derived.
+    type WriteInput = (SolidAngleUnit, u64);
 
     fn read_complex(
         ctx: &mut ReaderContext,
@@ -55,12 +54,6 @@ impl ComplexEntityHandler for SolidAngleUnitHandler {
             return Ok(());
         }
 
-        if let Some(named_attrs) = find_part_attrs(parts, "NAMED_UNIT")
-            && let Some(Attribute::EntityRef(_)) = named_attrs.first()
-        {
-            ctx.dim_exp_explicit = true;
-        }
-
         let si_attrs = require_part_attrs(parts, "SI_UNIT", entity_id)?;
         check_count(si_attrs, 2, entity_id, "SI_UNIT")?;
         let prefix = read_optional_enum(si_attrs, 0, entity_id, "prefix")?;
@@ -68,10 +61,7 @@ impl ComplexEntityHandler for SolidAngleUnitHandler {
 
         if let Some(unit) = match_solid_angle_unit(prefix, name) {
             ctx.solid_angle_unit_map.insert(entity_id, unit);
-            let flavor = SolidAngleFlavor {
-                unit,
-                dim_exp_explicit: ctx.dim_exp_explicit,
-            };
+            let flavor = SolidAngleFlavor { unit };
             let id = ctx.named_units_arena.push(NamedUnit::SolidAngle(flavor));
             ctx.named_unit_id_map.insert(entity_id, id);
         } else {
@@ -87,19 +77,14 @@ impl ComplexEntityHandler for SolidAngleUnitHandler {
 
     fn write(
         buf: &mut WriteBuffer,
-        (_unit, dim_exp_explicit, target_id): (SolidAngleUnit, bool, u64),
+        (_unit, target_id): (SolidAngleUnit, u64),
     ) -> Result<u64, WriteError> {
-        let dim_exp_attr = if dim_exp_explicit {
-            Attribute::EntityRef(emit_dimensionless_exponents(buf))
-        } else {
-            Attribute::Derived
-        };
         let parts = vec![
             (
                 "SI_UNIT".into(),
                 vec![Attribute::Unset, Attribute::Enum("STERADIAN".into())],
             ),
-            ("NAMED_UNIT".into(), vec![dim_exp_attr]),
+            ("NAMED_UNIT".into(), vec![Attribute::Derived]),
             ("SOLID_ANGLE_UNIT".into(), vec![]),
         ];
         buf.entities.push(WriterEntity {

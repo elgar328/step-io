@@ -53,7 +53,6 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
         let length = length.unwrap_or_else(|| {
             ctx.named_units_arena.push(NamedUnit::Length(LengthFlavor {
                 unit: LengthUnit::Millimetre,
-                dim_exp_explicit: ctx.dim_exp_explicit,
                 cbu_base: None,
             }))
         });
@@ -61,7 +60,6 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
             ctx.named_units_arena
                 .push(NamedUnit::PlaneAngle(PlaneAngleFlavor {
                     unit: AngleUnit::Radian,
-                    dim_exp_explicit: ctx.dim_exp_explicit,
                     cbu_base: None,
                 }))
         });
@@ -69,7 +67,6 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
             ctx.named_units_arena
                 .push(NamedUnit::SolidAngle(SolidAngleFlavor {
                     unit: SolidAngleUnit::Steradian,
-                    dim_exp_explicit: ctx.dim_exp_explicit,
                 }))
         });
         if incomplete {
