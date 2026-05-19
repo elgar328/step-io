@@ -222,15 +222,28 @@ pub struct DerivedUnitElement {
     pub exponent: f64,
 }
 
-/// `DERIVED_UNIT(elements: SET[1:?] OF derived_unit_element)`.
-///
-/// AP214 wrapper around 1+ DUE. Currently a structural leaf in step-io's
-/// IR — no other IR type references [`crate::ir::id::DerivedUnitId`].
-/// Exists to round-trip the grabcad corpus footprint that wraps DUE
-/// chains in `DERIVED_UNIT((...))`. The schema's `SET[1:?]` cardinality
-/// is enforced at read: instances whose `elements` resolve to an empty
-/// list are dropped with a warning rather than admitted to the arena.
+/// `DERIVED_UNIT(elements: SET[1:?] OF derived_unit_element)` and its
+/// dimension-constrained subtypes (`AREA_UNIT`, `VOLUME_UNIT`). Per EXPRESS,
+/// `AREA_UNIT` / `VOLUME_UNIT` are `SUBTYPE OF (derived_unit)` carrying the
+/// same `elements` set with a `WHERE` clause fixing the dimensional
+/// exponents. step-io models them as a single arena keyed by [`DerivedUnitKind`]
+/// — corpus form `AREA_UNIT((#e1, #e2))` maps to `DerivedUnit { elements,
+/// kind: AreaUnit }`. The schema's `SET[1:?]` cardinality is enforced at
+/// read: instances whose `elements` resolve to an empty list are dropped
+/// with a warning rather than admitted to the arena.
 #[derive(Debug, Clone, PartialEq)]
 pub struct DerivedUnit {
     pub elements: Vec<super::id::DerivedUnitElementId>,
+    pub kind: DerivedUnitKind,
+}
+
+/// Concrete `derived_unit` subtype indicator. `Plain` is the bare
+/// `DERIVED_UNIT`; `AreaUnit` / `VolumeUnit` are the dimension-constrained
+/// subtypes from ISO 10303-41 `measure_schema`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub enum DerivedUnitKind {
+    #[default]
+    Plain,
+    AreaUnit,
+    VolumeUnit,
 }

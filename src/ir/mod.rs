@@ -70,7 +70,10 @@ pub use shape_rep::{
     UnitContext,
 };
 pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Wire};
-pub use units::{DerivedUnit, DerivedUnitElement, MassUnit, MeasureWithUnit, NamedUnit, UnitsPool};
+pub use units::{
+    DerivedUnit, DerivedUnitElement, DerivedUnitKind, MassUnit, MeasureWithUnit, NamedUnit,
+    UnitsPool,
+};
 pub use visualization::{
     Colour, ColourRgb, CurveFont, CurveStyle, CurveWidth, DraughtingPreDefinedColour,
     DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour, FoundedItem,

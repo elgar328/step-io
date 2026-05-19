@@ -11,7 +11,7 @@
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref_list};
 use crate::ir::error::ConvertError;
-use crate::ir::units::DerivedUnit;
+use crate::ir::units::{DerivedUnit, DerivedUnitKind};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -48,21 +48,35 @@ impl SimpleEntityHandler for DerivedUnitHandler {
             });
             return Ok(());
         }
-        let id = ctx.derived_unit_arena.push(DerivedUnit { elements });
+        let id = ctx.derived_unit_arena.push(DerivedUnit {
+            elements,
+            kind: DerivedUnitKind::Plain,
+        });
         ctx.derived_unit_id_map.insert(entity_id, id);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, refs: Vec<u64>) -> Result<u64, WriteError> {
-        let list = refs.into_iter().map(Attribute::EntityRef).collect();
-        let n = buf.fresh();
-        buf.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "DERIVED_UNIT".into(),
-                attrs: vec![Attribute::List(list)],
-            },
-        });
-        Ok(n)
+        Ok(emit_derived_unit_named(buf, "DERIVED_UNIT", refs))
     }
+}
+
+/// Emit a `DERIVED_UNIT` / `AREA_UNIT` / `VOLUME_UNIT` line. The three
+/// share the same `(SET[1:?] OF derived_unit_element)` body and differ
+/// only in entity name.
+pub(crate) fn emit_derived_unit_named(
+    buf: &mut WriteBuffer,
+    name: &'static str,
+    refs: Vec<u64>,
+) -> u64 {
+    let list = refs.into_iter().map(Attribute::EntityRef).collect();
+    let n = buf.fresh();
+    buf.entities.push(WriterEntity {
+        id: n,
+        body: WriterBody::Simple {
+            name: name.into(),
+            attrs: vec![Attribute::List(list)],
+        },
+    });
+    n
 }
