@@ -52,12 +52,13 @@ impl SimpleEntityHandler for ShapeAspectHandler {
             return Ok(());
         };
 
-        ctx.shape_aspects.push(ShapeAspect {
+        let id = ctx.shape_aspects.push(ShapeAspect {
             name,
             description,
             target: product_id,
             product_definitional,
         });
+        ctx.shape_aspect_id_map.insert(entity_id, id);
         Ok(())
     }
 

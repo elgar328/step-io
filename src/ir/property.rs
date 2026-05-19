@@ -11,7 +11,10 @@
 //! visualization design (see `crate::ir::visualization`).
 
 use super::arena::Arena;
-use super::id::{DerivedUnitId, NamedUnitId, PersonAndOrganizationId, ProductId, UnitContextId};
+use super::id::{
+    AddressId, ApplicationContextId, DerivedUnitId, GroupId, NamedUnitId, PersonAndOrganizationId,
+    ProductId, ShapeAspectId, UnitContextId,
+};
 use super::shape_rep::DescriptiveItem;
 
 /// Top-level container for property data extracted from
@@ -28,6 +31,10 @@ pub struct PropertyPool {
     /// `DESCRIPTION_ATTRIBUTE` arena. Initial SELECT coverage:
     /// [`DescriptionAttributeItem::PersonAndOrganization`].
     pub description_attributes: Arena<DescriptionAttribute>,
+    /// `ID_ATTRIBUTE` arena. Initial SELECT coverage:
+    /// [`IdAttributeItem::ShapeAspect`] / [`IdAttributeItem::Group`] /
+    /// [`IdAttributeItem::Address`] / [`IdAttributeItem::ApplicationContext`].
+    pub id_attributes: Arena<IdAttribute>,
 }
 
 /// `NAME_ATTRIBUTE(attribute_value, named_item)` — AP242 metadata
@@ -61,6 +68,28 @@ pub struct DescriptionAttribute {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DescriptionAttributeItem {
     PersonAndOrganization(PersonAndOrganizationId),
+}
+
+/// `ID_ATTRIBUTE(attribute_value, identified_item)` — AP242 identifier
+/// annotation attaching a label to another entity.
+#[derive(Debug, Clone, PartialEq)]
+pub struct IdAttribute {
+    pub attribute_value: String,
+    pub identified_item: IdAttributeItem,
+}
+
+/// SELECT target for [`IdAttribute::identified_item`]. Initial coverage
+/// (`ShapeAspect` / `Group` / `Address` / `ApplicationContext`) covers
+/// PMI-bearing and plm-metadata reference patterns. Other variants
+/// (`action`, `dimensional_size`, `geometric_tolerance`, `representation`,
+/// `product_category`, `property_definition`, `shape_aspect_relationship`,
+/// `organizational_project`) are dropped at read time with a warning.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum IdAttributeItem {
+    ShapeAspect(ShapeAspectId),
+    Group(GroupId),
+    Address(AddressId),
+    ApplicationContext(ApplicationContextId),
 }
 
 /// `PROPERTY_DEFINITION` + bound `REPRESENTATION` collapsed into a single

@@ -28,6 +28,51 @@ impl WriteBuffer<'_> {
         }
         self.emit_name_attributes(&pool);
         self.emit_description_attributes(&pool);
+        self.emit_id_attributes(&pool);
+    }
+
+    fn emit_id_attributes(&mut self, pool: &crate::ir::PropertyPool) {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::property::id_attribute::{IdAttributeHandler, IdAttributeWriteInput};
+        use crate::ir::IdAttributeItem;
+        for attr in pool.id_attributes.iter() {
+            let item_step = match attr.identified_item {
+                IdAttributeItem::ShapeAspect(sa_id) => {
+                    let Some(&step) = self.shape_aspect_step_ids.get(sa_id.0 as usize) else {
+                        continue;
+                    };
+                    if step == 0 {
+                        continue; // SA emit skipped — its target didn't resolve.
+                    }
+                    step
+                }
+                IdAttributeItem::Group(g_id) => {
+                    let Some(&step) = self.plm_group_step_ids.get(g_id.0 as usize) else {
+                        continue;
+                    };
+                    step
+                }
+                IdAttributeItem::Address(a_id) => {
+                    let Some(&step) = self.plm_address_step_ids.get(a_id.0 as usize) else {
+                        continue;
+                    };
+                    step
+                }
+                IdAttributeItem::ApplicationContext(ac_id) => {
+                    let Some(&step) = self.ac_step_ids.get(ac_id.0 as usize) else {
+                        continue;
+                    };
+                    step
+                }
+            };
+            let _ = IdAttributeHandler::write(
+                self,
+                IdAttributeWriteInput {
+                    attr: attr.clone(),
+                    item_step,
+                },
+            );
+        }
     }
 
     fn emit_name_attributes(&mut self, pool: &crate::ir::PropertyPool) {

@@ -13,7 +13,8 @@ impl WriteBuffer<'_> {
         // Snapshot to release the &model borrow before per-SA emission
         // (handler.write mutates self via push_simple).
         let entries: Vec<ShapeAspect> = self.model.shape_aspects.iter().cloned().collect();
-        for sa in &entries {
+        self.shape_aspect_step_ids.resize(entries.len(), 0);
+        for (index, sa) in entries.iter().enumerate() {
             // Defensive: silent skip when product chain wasn't emitted (e.g.
             // kernel-built IR with PMI only, or model.units empty so the
             // assembly pass bailed out). Reader symmetry — reader silent
@@ -21,7 +22,7 @@ impl WriteBuffer<'_> {
             let Some(&pds_step_id) = self.product_def_shape_ids.get(&sa.target) else {
                 continue;
             };
-            let _ = ShapeAspectHandler::write(
+            if let Ok(step_id) = ShapeAspectHandler::write(
                 self,
                 ShapeAspectWriteInput {
                     name: sa.name.clone(),
@@ -29,7 +30,9 @@ impl WriteBuffer<'_> {
                     pds_step_id,
                     product_definitional: sa.product_definitional,
                 },
-            );
+            ) {
+                self.shape_aspect_step_ids[index] = step_id;
+            }
         }
     }
 }

@@ -341,6 +341,10 @@ pub struct ReaderContext {
     /// `SHAPE_ASPECT` arena — Pass 8 's `SHAPE_ASPECT` convert pushes
     /// here. Empty when no PMI entities were seen.
     pub(crate) shape_aspects: crate::ir::Arena<crate::ir::ShapeAspect>,
+    /// `SHAPE_ASPECT` `#N → ShapeAspectId`. Populated by `Pass8ShapeAspect`;
+    /// consumed by `id_attribute` (`Pass9PlmAttributes`) and future PMI
+    /// handlers that resolve shape-aspect refs.
+    pub(crate) shape_aspect_id_map: HashMap<u64, crate::ir::ShapeAspectId>,
 
     /// Lazily-built plm pool — populated by the Pass 9 plm reader chain
     /// (`CalendarDate` / `LocalTime` / UTC / `DateAndTime` / `DateTimeRole`
