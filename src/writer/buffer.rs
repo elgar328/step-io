@@ -54,13 +54,10 @@ pub(crate) struct WriteBuffer<'m> {
     pub(crate) unit_context_ids: Vec<u64>,
     /// STEP entity id of every emitted `NAMED_UNIT` complex from
     /// [`crate::ir::UnitsPool::named_units`], indexed by `NamedUnitId.0`.
-    /// Populated by `emit_units_pool_if_set` before MWU / DUE emission so
-    /// each consumer resolves its `NamedUnitId` ref with a single index
-    /// lookup. Coexists with [`Self::unit_leaf_ids`]: the existing
-    /// `UnitContext` emit path produces its own `LENGTH` / `PLANE_ANGLE`
-    /// / `SOLID_ANGLE` leaves bound to the GUAC complex, while these are
-    /// separate per-instance `NamedUnit` emits driven by the arena. Future
-    /// units-2 refactor will collapse the two emit paths.
+    /// Populated by `emit_units_pool_if_set` before GUAC + MWU + DUE emit,
+    /// so every consumer (including the GUAC writer that resolves
+    /// `UnitContext.{length, plane_angle, solid_angle}`) resolves its
+    /// `NamedUnitId` ref with a single index lookup.
     pub(crate) named_unit_step_ids: Vec<u64>,
     /// STEP entity id of every emitted `MEASURE_WITH_UNIT` subtype, indexed
     /// by `MeasureWithUnitId.0`. Currently unused by downstream emitters
@@ -176,11 +173,12 @@ pub(crate) struct WriteBuffer<'m> {
     /// IR `ProductDefinitionContext` index → emitted
     /// `PRODUCT_DEFINITION_CONTEXT` (or `DESIGN_CONTEXT`) step id.
     pub(crate) pdc_step_ids: Vec<u64>,
-    /// Per-`UnitContext` leaf STEP ids `(length, angle, solid_angle)`,
-    /// indexed by `UnitContextId.0`. Each `UnitContext` in the IR arena
-    /// emits its own leaf entities (no writer-side dedup) so the IR's
-    /// multiplicity round-trips faithfully into STEP. Consumed by the
-    /// property emitter when resolving a measure's unit ref.
+    /// Per-`UnitContext` resolved leaf STEP ids `(length, angle, solid_angle)`,
+    /// indexed by `UnitContextId.0`. Each tuple is filled in by the GUAC
+    /// writer by looking up `UnitContext.{length, plane_angle, solid_angle}`
+    /// in [`Self::named_unit_step_ids`] — no new leaf entities are emitted
+    /// here. Consumed by the property emitter when resolving a measure's
+    /// unit ref.
     pub(crate) unit_leaf_ids: Vec<(u64, u64, u64)>,
     /// `ProductId → best step id for cross-references that target this
     /// product`. Populated by `emit_assembly_chain`; consumed by the
@@ -338,20 +336,21 @@ impl<'m> WriteBuffer<'m> {
         for id in self.model.topology.solids.iter_ids() {
             self.emit_solid(id)?;
         }
+        // units-2: emit the units pool first so `named_unit_step_ids` is
+        // populated before GUAC emit (which now looks up its leaf step
+        // ids from that cache instead of producing fresh entities).
+        self.emit_units_pool_if_set()?;
         // Emit one REPRESENTATION_CONTEXT per IR `UnitContext`. The cached
         // STEP ids land in `unit_context_ids` and `unit_leaf_ids` so each
         // downstream emitter can resolve `Option<UnitContextId>` with a
-        // single index lookup. Per-ctx leaf emission with no writer-side
-        // dedup — the IR's `UnitContext` arena multiplicity flows through
-        // to STEP unchanged. A kernel adapter that wants compact output
-        // should dedup at the IR level before invoking the writer.
+        // single index lookup. Leaf entities are reused from the units
+        // pool — see GUAC writer.
         self.unit_context_ids = Vec::with_capacity(self.model.units.len());
         self.unit_leaf_ids = Vec::with_capacity(self.model.units.len());
         for ctx in self.model.units.iter() {
             let id = self.emit_unit_context(ctx.clone())?;
             self.unit_context_ids.push(id);
         }
-        self.emit_units_pool_if_set()?;
         self.emit_product_chain_if_eligible()?;
         self.emit_pmi_if_set();
         self.emit_visualization_if_set()?;

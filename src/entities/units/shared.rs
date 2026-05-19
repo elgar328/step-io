@@ -119,6 +119,7 @@ pub(super) fn read_conversion_based_unit_body(
     // re-emitted inline by the CBU writer chain on round-trip.
     if let Some(Attribute::EntityRef(mwu_ref)) = cbu_attrs.get(1) {
         ctx.cbu_internal_mwu_refs.insert(*mwu_ref);
+        ctx.cbu_outer_to_mwu.insert(entity_id, *mwu_ref);
     }
 
     if is_length {

@@ -1,20 +1,21 @@
 //! Units pool IR — per the ir.toml blueprint (`units` pool).
 //!
-//! Coexists with [`crate::ir::shape_rep::UnitContext`] (per-file bundled
-//! enums) during the dual-tracking period. `UnitContext` keeps a single
-//! `LengthUnit` / `AngleUnit` / `SolidAngleUnit` per representation context
-//! and is what the writer's existing unit-emit path consumes; the
-//! [`UnitsPool`] introduced here is per-instance — every STEP `NAMED_UNIT`
-//! complex (`LENGTH` / `PLANE_ANGLE` / `SOLID_ANGLE` / `MASS`) gets a
-//! distinct [`NamedUnitId`].
+//! Every STEP `NAMED_UNIT` complex (`LENGTH` / `PLANE_ANGLE` / `SOLID_ANGLE`
+//! / `MASS`) gets a distinct [`NamedUnitId`] in [`UnitsPool::named_units`].
+//! [`crate::ir::shape_rep::UnitContext`] references these by id, and
+//! `MEASURE_WITH_UNIT` / `DERIVED_UNIT_ELEMENT` entries do the same — there
+//! is no duplicate per-file enum carrier.
 //!
-//! A future units-2 refactor will collapse [`UnitContext`] into named-unit
-//! refs; this phase ships the arenas alongside it.
+//! CBU outer ↔ base SI is modelled explicitly via the `cbu_base` field on
+//! [`LengthFlavor`] / [`PlaneAngleFlavor`] / [`MassFlavor`], so the writer
+//! reproduces the source file's `NAMED_UNIT` entity-id ordering on round-trip
+//! (no inline base-SI generation that would shift arena indices).
 
 use super::arena::Arena;
+use super::id::NamedUnitId;
 use super::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit};
 
-/// Container for the `units` pool entities introduced by units-1 / units-1b.
+/// Container for the `units` pool entities.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct UnitsPool {
     pub named_units: Arena<NamedUnit>,
@@ -23,32 +24,162 @@ pub struct UnitsPool {
     pub derived_units: Arena<DerivedUnit>,
 }
 
+impl UnitsPool {
+    /// Push a plain SI length unit and return its arena ref.
+    pub fn push_plain_length(&mut self, unit: LengthUnit, dim_exp_explicit: bool) -> NamedUnitId {
+        self.named_units.push(NamedUnit::Length(LengthFlavor {
+            unit,
+            cbu_wrapped: false,
+            dim_exp_explicit,
+            cbu_base: None,
+        }))
+    }
+
+    /// Push a `CONVERSION_BASED_UNIT` length outer that wraps `base`.
+    /// `base` should be an SI length (Millimetre / Metre / Centimetre);
+    /// it is pushed first as a plain SI entry and the outer references it.
+    pub fn push_cbu_length(
+        &mut self,
+        outer: LengthUnit,
+        base: LengthUnit,
+        dim_exp_explicit: bool,
+    ) -> NamedUnitId {
+        let base_id = self.push_plain_length(base, dim_exp_explicit);
+        self.named_units.push(NamedUnit::Length(LengthFlavor {
+            unit: outer,
+            cbu_wrapped: outer == base,
+            dim_exp_explicit,
+            cbu_base: Some(base_id),
+        }))
+    }
+
+    pub fn push_plain_plane_angle(
+        &mut self,
+        unit: AngleUnit,
+        dim_exp_explicit: bool,
+    ) -> NamedUnitId {
+        self.named_units
+            .push(NamedUnit::PlaneAngle(PlaneAngleFlavor {
+                unit,
+                cbu_wrapped: false,
+                dim_exp_explicit,
+                cbu_base: None,
+            }))
+    }
+
+    pub fn push_cbu_plane_angle(
+        &mut self,
+        outer: AngleUnit,
+        base: AngleUnit,
+        dim_exp_explicit: bool,
+    ) -> NamedUnitId {
+        let base_id = self.push_plain_plane_angle(base, dim_exp_explicit);
+        self.named_units
+            .push(NamedUnit::PlaneAngle(PlaneAngleFlavor {
+                unit: outer,
+                cbu_wrapped: outer == base,
+                dim_exp_explicit,
+                cbu_base: Some(base_id),
+            }))
+    }
+
+    pub fn push_plain_solid_angle(
+        &mut self,
+        unit: SolidAngleUnit,
+        dim_exp_explicit: bool,
+    ) -> NamedUnitId {
+        self.named_units
+            .push(NamedUnit::SolidAngle(SolidAngleFlavor {
+                unit,
+                dim_exp_explicit,
+            }))
+    }
+
+    pub fn push_plain_mass(&mut self, unit: MassUnit) -> NamedUnitId {
+        self.named_units.push(NamedUnit::Mass(MassFlavor {
+            unit,
+            cbu_base: None,
+        }))
+    }
+
+    pub fn push_cbu_mass(&mut self, outer: MassUnit, base: MassUnit) -> NamedUnitId {
+        let base_id = self.push_plain_mass(base);
+        self.named_units.push(NamedUnit::Mass(MassFlavor {
+            unit: outer,
+            cbu_base: Some(base_id),
+        }))
+    }
+}
+
 /// `NAMED_UNIT` arena enum — one entry per STEP `NAMED_UNIT` complex
 /// entity in the source.
 ///
-/// **In-enum variant scope for units-1**: `Length` / `PlaneAngle` /
-/// `SolidAngle` / `Mass`. The blueprint's additional `named_unit` in-enum
-/// variants (`si_unit` — 92% of named-unit instances,
-/// `conversion_based_unit`, `context_dependent_unit`) are intentionally
-/// **not** separate variants: step-io's existing complex-entity handlers
-/// fold the SI / CBU / CDU character into the dimensional flavour (e.g.
-/// `LengthUnit::Millimetre` already carries the SI characterisation).
-/// Separating those is a units-2 refactor concern.
-///
+/// `Length` / `PlaneAngle` / `SolidAngle` / `Mass` cover the four
+/// dimensional flavours observed in fixtures. The blueprint's additional
+/// `named_unit` variants (`si_unit`, `conversion_based_unit`,
+/// `context_dependent_unit`) aren't separate variants here — the SI / CBU
+/// character is folded into each flavour struct (`cbu_base`, `cbu_wrapped`).
 /// `area_unit` / `volume_unit` / `ratio_unit` are deferred (tiny corpus
 /// footprint).
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum NamedUnit {
-    Length(LengthUnit),
-    PlaneAngle(AngleUnit),
-    SolidAngle(SolidAngleUnit),
-    Mass(MassUnit),
+    Length(LengthFlavor),
+    PlaneAngle(PlaneAngleFlavor),
+    SolidAngle(SolidAngleFlavor),
+    Mass(MassFlavor),
+}
+
+/// `LENGTH_UNIT` complex flavour. `cbu_base` is `Some(id)` for
+/// `CONVERSION_BASED_UNIT` outers and `None` for plain SI complexes.
+/// The base ref makes the writer's CBU emit path lookup-driven instead
+/// of inline-generating an extra `LENGTH_UNIT` entity that would otherwise
+/// re-register on round-trip and shift downstream `NamedUnitId`s.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct LengthFlavor {
+    pub unit: LengthUnit,
+    /// `true` when the source carried `CBU('METRE', ..., base=METRE)` — i.e.
+    /// SI self-wrap. Writer reproduces the wrapper. `false` for plain SI and
+    /// for genuine non-SI CBUs (Inch / Foot). Presentation flag — slated to
+    /// be removed in units-3.
+    pub cbu_wrapped: bool,
+    /// `true` when this complex's `NAMED_UNIT.dimensions` slot carried an
+    /// explicit `DIMENSIONAL_EXPONENTS` ref (ABC-tier convention) rather
+    /// than `*` Derived. Presentation flag — units-3 cleanup target.
+    pub dim_exp_explicit: bool,
+    /// `Some(id)` → this entry is a CBU outer and `id` resolves to the
+    /// base SI's `NamedUnit::Length` arena entry. `None` → plain SI.
+    pub cbu_base: Option<NamedUnitId>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct PlaneAngleFlavor {
+    pub unit: AngleUnit,
+    pub cbu_wrapped: bool,
+    pub dim_exp_explicit: bool,
+    pub cbu_base: Option<NamedUnitId>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct SolidAngleFlavor {
+    pub unit: SolidAngleUnit,
+    pub dim_exp_explicit: bool,
+    // No CBU variant observed in corpus — `SOLID_ANGLE_UNIT +
+    // CONVERSION_BASED_UNIT` is silently dropped on read.
 }
 
 /// `MASS_UNIT` flavour. `AP214e3` constrains `dimensions` to
 /// `(0, 1, 0, 0, 0, 0, 0)` — only the mass exponent is non-zero.
 ///
-/// Variants reflect the corpus: kilogram (plain SI), gram (plain SI), and
+/// Mass currently always emits `NAMED_UNIT.dimensions = *` (Derived) so
+/// no `dim_exp_explicit` flag — units-3 will revisit if any fixture
+/// turns up an explicit-DE mass.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct MassFlavor {
+    pub unit: MassUnit,
+    pub cbu_base: Option<NamedUnitId>,
+}
+
+/// `MASS_UNIT` value variant. Corpus: kilogram (plain SI), gram (plain SI),
 /// pound (`CONVERSION_BASED_UNIT` wrapper). Unknown CBU names fall back to
 /// [`MassUnit::Kilogram`] (lossy round-trip) — observed names are added as
 /// variants when the corpus reveals them.

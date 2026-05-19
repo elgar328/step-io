@@ -12,7 +12,7 @@ use crate::entities::units::shared::{
 use crate::ir::attr::{check_count, read_enum};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::SolidAngleUnit;
-use crate::ir::units::NamedUnit;
+use crate::ir::units::{NamedUnit, SolidAngleFlavor};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
 use crate::writer::WriteError;
@@ -26,7 +26,7 @@ pub(crate) struct SolidAngleUnitHandler;
 impl ComplexEntityHandler for SolidAngleUnitHandler {
     /// `(unit, dim_exp_explicit)`. No `cbu_wrapped` flag — solid-angle
     /// CBU forms are unobserved.
-    type WriteInput = (SolidAngleUnit, bool);
+    type WriteInput = (SolidAngleUnit, bool, u64);
 
     fn read_complex(
         ctx: &mut ReaderContext,
@@ -35,13 +35,23 @@ impl ComplexEntityHandler for SolidAngleUnitHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         // SOLID_ANGLE_UNIT + CONVERSION_BASED_UNIT is theoretically possible
-        // but not observed in practice; ignore silently to mirror the legacy
-        // convert_unit_leaf behaviour.
+        // but not observed in practice; drop with a warning so the caller
+        // can see what was lost.
         if has_part(parts, "CONVERSION_BASED_UNIT") {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: "SOLID_ANGLE_UNIT + CONVERSION_BASED_UNIT is unsupported".into(),
+            });
             return Ok(());
         }
 
         if !has_part(parts, "SI_UNIT") {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail:
+                    "SOLID_ANGLE_UNIT complex carries neither SI_UNIT nor CONVERSION_BASED_UNIT"
+                        .into(),
+            });
             return Ok(());
         }
 
@@ -58,7 +68,11 @@ impl ComplexEntityHandler for SolidAngleUnitHandler {
 
         if let Some(unit) = match_solid_angle_unit(prefix, name) {
             ctx.solid_angle_unit_map.insert(entity_id, unit);
-            let id = ctx.named_units_arena.push(NamedUnit::SolidAngle(unit));
+            let flavor = SolidAngleFlavor {
+                unit,
+                dim_exp_explicit: ctx.dim_exp_explicit,
+            };
+            let id = ctx.named_units_arena.push(NamedUnit::SolidAngle(flavor));
             ctx.named_unit_id_map.insert(entity_id, id);
         } else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
@@ -73,7 +87,7 @@ impl ComplexEntityHandler for SolidAngleUnitHandler {
 
     fn write(
         buf: &mut WriteBuffer,
-        (_unit, dim_exp_explicit): (SolidAngleUnit, bool),
+        (_unit, dim_exp_explicit, target_id): (SolidAngleUnit, bool, u64),
     ) -> Result<u64, WriteError> {
         let dim_exp_attr = if dim_exp_explicit {
             Attribute::EntityRef(emit_dimensionless_exponents(buf))
@@ -88,11 +102,10 @@ impl ComplexEntityHandler for SolidAngleUnitHandler {
             ("NAMED_UNIT".into(), vec![dim_exp_attr]),
             ("SOLID_ANGLE_UNIT".into(), vec![]),
         ];
-        let n = buf.fresh();
         buf.entities.push(WriterEntity {
-            id: n,
+            id: target_id,
             body: WriterBody::Complex { parts },
         });
-        Ok(n)
+        Ok(target_id)
     }
 }

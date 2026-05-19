@@ -13,6 +13,18 @@ impl ReaderContext {
         // own ComplexEntityHandler keyed on the kind-specific part.
         self.dispatch_registry(graph, PassLevel::Pass0Leaf);
 
+        // units-2: every CBU outer registered with `cbu_base = None` during
+        // Pass0Leaf (the base SI may not have been processed yet — entity-id
+        // order is fixture-dependent). Walk the recorded `outer → MWU` map,
+        // resolve each MWU's `unit_component` via the graph, and mutate the
+        // outer's flavor entry to point at the base's `NamedUnitId`.
+        self.backfill_cbu_base(graph);
+
+        // Also backfill presentation flags (length_cbu_wrapped /
+        // plane_angle_cbu_wrapped / dim_exp_explicit) — sticky cumulative
+        // state, so only the file-wide final value is meaningful.
+        self.backfill_named_unit_flavors();
+
         // Pass 0-1b: UNCERTAINTY_MEASURE_WITH_UNIT (simple entity that
         // depends on Pass 0-1's length_unit_map).
         self.dispatch_registry(graph, PassLevel::Pass0Uncertainty);
@@ -28,6 +40,74 @@ impl ReaderContext {
         // Pass 0-4 (units-1b): DERIVED_UNIT — depends on `due_id_map`
         // populated by Pass 0-3.
         self.dispatch_registry(graph, PassLevel::Pass0Du);
+    }
+
+    /// For each CBU outer recorded in `cbu_outer_to_mwu`, look up its
+    /// conversion-factor MWU in `graph`, extract `unit_component` to get
+    /// the base SI's `entity_id`, then mutate the outer's flavor entry in
+    /// `named_units_arena` to set `cbu_base = Some(base_NamedUnitId)`.
+    fn backfill_cbu_base(&mut self, graph: &EntityGraph) {
+        use crate::ir::units::NamedUnit;
+        let pairs: Vec<(u64, u64)> = self
+            .cbu_outer_to_mwu
+            .iter()
+            .map(|(&o, &m)| (o, m))
+            .collect();
+        for (outer_id, mwu_id) in pairs {
+            let base_entity = match graph.entities.get(&mwu_id) {
+                Some(RawEntity::Simple { attributes, .. }) => {
+                    attributes.iter().find_map(|a| match a {
+                        // Typed wrapper: MEASURE_TYPE(real). Skip — that's the value.
+                        crate::parser::entity::Attribute::EntityRef(e) => Some(*e),
+                        _ => None,
+                    })
+                }
+                _ => None,
+            };
+            let Some(base_entity_id) = base_entity else {
+                continue;
+            };
+            let Some(&base_nuid) = self.named_unit_id_map.get(&base_entity_id) else {
+                continue;
+            };
+            let Some(&outer_nuid) = self.named_unit_id_map.get(&outer_id) else {
+                continue;
+            };
+            match &mut self.named_units_arena.items[outer_nuid.0 as usize] {
+                NamedUnit::Length(f) => f.cbu_base = Some(base_nuid),
+                NamedUnit::PlaneAngle(f) => f.cbu_base = Some(base_nuid),
+                NamedUnit::Mass(f) => f.cbu_base = Some(base_nuid),
+                NamedUnit::SolidAngle(_) => {} // no CBU variant in corpus
+            }
+        }
+    }
+
+    /// Apply the file-wide sticky presentation flags (`length_cbu_wrapped`,
+    /// `plane_angle_cbu_wrapped`, `dim_exp_explicit`) to every
+    /// `NamedUnit::{Length, PlaneAngle, SolidAngle}` arena entry. Mass
+    /// currently doesn't carry these flags (always emits Derived); its
+    /// arm is a no-op.
+    fn backfill_named_unit_flavors(&mut self) {
+        use crate::ir::units::NamedUnit;
+        let length_cbu = self.length_cbu_wrapped;
+        let plane_cbu = self.plane_angle_cbu_wrapped;
+        let dim_exp = self.dim_exp_explicit;
+        for nu in &mut self.named_units_arena.items {
+            match nu {
+                NamedUnit::Length(f) => {
+                    f.cbu_wrapped = length_cbu;
+                    f.dim_exp_explicit = dim_exp;
+                }
+                NamedUnit::PlaneAngle(f) => {
+                    f.cbu_wrapped = plane_cbu;
+                    f.dim_exp_explicit = dim_exp;
+                }
+                NamedUnit::SolidAngle(f) => {
+                    f.dim_exp_explicit = dim_exp;
+                }
+                NamedUnit::Mass(_) => {}
+            }
+        }
     }
 
     pub(super) fn run_geometry_passes(&mut self, graph: &EntityGraph) {

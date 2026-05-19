@@ -12,8 +12,9 @@ use crate::entities::units::shared::{
 };
 use crate::ir::attr::{check_count, read_enum};
 use crate::ir::error::ConvertError;
+use crate::ir::id::NamedUnitId;
 use crate::ir::shape_rep::LengthUnit;
-use crate::ir::units::NamedUnit;
+use crate::ir::units::{LengthFlavor, NamedUnit};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
 use crate::writer::WriteError;
@@ -25,9 +26,9 @@ pub(crate) struct LengthUnitHandler;
 
 #[step_entity_complex(name = "LENGTH_UNIT", pass = Pass0Leaf, required = ["LENGTH_UNIT"])]
 impl ComplexEntityHandler for LengthUnitHandler {
-    /// `(unit, length_cbu_wrapped, dim_exp_explicit)` — flat tuple
-    /// matches the `(DirectionId, f64)` style used elsewhere.
-    type WriteInput = (LengthUnit, bool, bool);
+    /// `(unit, dim_exp_explicit, target_id)` — caller pre-reserves the
+    /// `LENGTH_UNIT` complex's step id so arena order is preserved on round-trip.
+    type WriteInput = (LengthUnit, bool, u64);
 
     fn read_complex(
         ctx: &mut ReaderContext,
@@ -40,11 +41,16 @@ impl ComplexEntityHandler for LengthUnitHandler {
         // CONVERSION_BASED_UNIT, and the CBU name is the authoritative identity.
         if has_part(parts, "CONVERSION_BASED_UNIT") {
             read_conversion_based_unit_body(ctx, entity_id, parts, true, false)?;
-            register_named_length(ctx, entity_id);
+            register_named_length(ctx, entity_id, None);
             return Ok(());
         }
 
         if !has_part(parts, "SI_UNIT") {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: "LENGTH_UNIT complex carries neither SI_UNIT nor CONVERSION_BASED_UNIT"
+                    .into(),
+            });
             return Ok(());
         }
 
@@ -66,7 +72,7 @@ impl ComplexEntityHandler for LengthUnitHandler {
 
         if let Some(unit) = match_length_unit(prefix, name) {
             ctx.length_unit_map.insert(entity_id, unit);
-            register_named_length(ctx, entity_id);
+            register_named_length(ctx, entity_id, None);
         } else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                 entity_id,
@@ -76,49 +82,61 @@ impl ComplexEntityHandler for LengthUnitHandler {
         Ok(())
     }
 
+    /// Emit a **plain SI** length unit complex at the *caller-supplied*
+    /// `target_id`. CBU outers (Inch / Foot / SI self-wrap) are emitted via
+    /// [`emit_length_cbu_outer`]. Pre-reserving step ids in arena order lets
+    /// the writer preserve the input file's `NAMED_UNIT` entity-id ordering
+    /// across round-trip.
     fn write(
         buf: &mut WriteBuffer,
-        (unit, cbu_wrapped, dim_exp_explicit): (LengthUnit, bool, bool),
+        (unit, dim_exp_explicit, target_id): (LengthUnit, bool, u64),
     ) -> Result<u64, WriteError> {
-        let n = match unit {
-            LengthUnit::Millimetre if cbu_wrapped => emit_conversion_based_length(
-                buf,
-                "MILLIMETRE",
-                Some("MILLI"),
-                1.0,
-                dim_exp_explicit,
-            ),
-            LengthUnit::Centimetre if cbu_wrapped => emit_conversion_based_length(
-                buf,
-                "CENTIMETRE",
-                Some("CENTI"),
-                1.0,
-                dim_exp_explicit,
-            ),
-            LengthUnit::Metre if cbu_wrapped => {
-                emit_conversion_based_length(buf, "METRE", None, 1.0, dim_exp_explicit)
-            }
-            LengthUnit::Millimetre => emit_plain_si_length(buf, Some("MILLI"), dim_exp_explicit),
-            LengthUnit::Centimetre => emit_plain_si_length(buf, Some("CENTI"), dim_exp_explicit),
-            LengthUnit::Metre => emit_plain_si_length(buf, None, dim_exp_explicit),
-            LengthUnit::Inch => {
-                emit_conversion_based_length(buf, "INCH", Some("MILLI"), 25.4, dim_exp_explicit)
-            }
-            LengthUnit::Foot => {
-                emit_conversion_based_length(buf, "FOOT", Some("MILLI"), 304.8, dim_exp_explicit)
-            }
+        // Non-SI (Inch / Foot) reaching the plain path is a kernel-built
+        // IR misuse — fall back to MILLI METRE so the writer stays total.
+        let prefix = match unit {
+            LengthUnit::Centimetre => Some("CENTI"),
+            LengthUnit::Metre => None,
+            LengthUnit::Millimetre | LengthUnit::Inch | LengthUnit::Foot => Some("MILLI"),
         };
-        Ok(n)
+        emit_plain_si_length(buf, prefix, dim_exp_explicit, target_id);
+        Ok(target_id)
     }
 }
 
-/// units-1: record this `LENGTH_UNIT` complex in the `NamedUnit` arena so
-/// MWU / DUE consumers can resolve `unit_component` / `unit` refs through
-/// `named_unit_id_map`. Coexists with `length_unit_map` during the
-/// dual-tracking period.
-fn register_named_length(ctx: &mut ReaderContext, entity_id: u64) {
+/// Emit a `CONVERSION_BASED_UNIT` length outer at `target_id` referencing
+/// `base_step`. Sub-entities (DE, MWU) use `buf.fresh()` and get ids after
+/// the pre-reserved `NamedUnit` id block.
+pub(crate) fn emit_length_cbu_outer(
+    buf: &mut WriteBuffer,
+    unit: LengthUnit,
+    dim_exp_explicit: bool,
+    base_step: u64,
+    target_id: u64,
+) -> u64 {
+    let (name, factor) = match unit {
+        LengthUnit::Millimetre => ("MILLIMETRE", 1.0),
+        LengthUnit::Centimetre => ("CENTIMETRE", 1.0),
+        LengthUnit::Metre => ("METRE", 1.0),
+        LengthUnit::Inch => ("INCH", 25.4),
+        LengthUnit::Foot => ("FOOT", 304.8),
+    };
+    emit_conversion_based_length(buf, name, factor, dim_exp_explicit, base_step, target_id)
+}
+
+/// Record this `LENGTH_UNIT` complex in the `NamedUnit` arena so that
+/// MWU / DUE consumers and `GLOBAL_UNIT_ASSIGNED_CONTEXT` can resolve their
+/// `unit_component` / `units` refs through `named_unit_id_map`. CBU outers
+/// pass `cbu_base = None` here; the post-Pass0Leaf backfill patches in the
+/// actual base `NamedUnitId` once both ends of the chain are registered.
+fn register_named_length(ctx: &mut ReaderContext, entity_id: u64, cbu_base: Option<NamedUnitId>) {
     if let Some(&unit) = ctx.length_unit_map.get(&entity_id) {
-        let id = ctx.named_units_arena.push(NamedUnit::Length(unit));
+        let flavor = LengthFlavor {
+            unit,
+            cbu_wrapped: ctx.length_cbu_wrapped,
+            dim_exp_explicit: ctx.dim_exp_explicit,
+            cbu_base,
+        };
+        let id = ctx.named_units_arena.push(NamedUnit::Length(flavor));
         ctx.named_unit_id_map.insert(entity_id, id);
     }
 }
@@ -131,7 +149,8 @@ fn emit_plain_si_length(
     buf: &mut WriteBuffer,
     prefix: Option<&'static str>,
     dim_exp_explicit: bool,
-) -> u64 {
+    target_id: u64,
+) {
     let si_attrs = match prefix {
         Some(p) => vec![Attribute::Enum(p.into()), Attribute::Enum("METRE".into())],
         None => vec![Attribute::Unset, Attribute::Enum("METRE".into())],
@@ -141,9 +160,8 @@ fn emit_plain_si_length(
     } else {
         Attribute::Derived
     };
-    let n = buf.fresh();
     buf.entities.push(WriterEntity {
-        id: n,
+        id: target_id,
         body: WriterBody::Complex {
             parts: vec![
                 ("LENGTH_UNIT".into(), vec![]),
@@ -152,70 +170,33 @@ fn emit_plain_si_length(
             ],
         },
     });
-    n
 }
 
-/// Emit an SI length unit complex used internally as the base for a
-/// `CONVERSION_BASED_UNIT` length chain. `prefix = None` for plain METRE,
-/// `Some("MILLI")` for MILLIMETRE, `Some("CENTI")` for CENTIMETRE, etc.
-/// `dim_exp_explicit` mirrors the plain SI path — ABC's CBU base SI
-/// (`#329`) carries the same DE ref as the rest of the file.
-fn emit_base_si_length(
-    buf: &mut WriteBuffer,
-    prefix: Option<&'static str>,
-    dim_exp_explicit: bool,
-) -> u64 {
-    let prefix_attr = match prefix {
-        Some(p) => Attribute::Enum(p.into()),
-        None => Attribute::Unset,
-    };
-    let dim_exp_attr = if dim_exp_explicit {
-        Attribute::EntityRef(emit_length_dim_exponents(buf))
-    } else {
-        Attribute::Derived
-    };
-    let n = buf.fresh();
-    buf.entities.push(WriterEntity {
-        id: n,
-        body: WriterBody::Complex {
-            parts: vec![
-                ("LENGTH_UNIT".into(), vec![]),
-                ("NAMED_UNIT".into(), vec![dim_exp_attr]),
-                (
-                    "SI_UNIT".into(),
-                    vec![prefix_attr, Attribute::Enum("METRE".into())],
-                ),
-            ],
-        },
-    });
-    n
-}
-
-/// Emit a `CONVERSION_BASED_UNIT` length chain. Used for both genuine
-/// non-SI units (Inch / Foot — base MILLI METRE, factor 25.4 / 304.8)
-/// and SI self-wraps (METRE / MILLIMETRE / CENTIMETRE — base same as
-/// the unit, factor 1.0). Wraps `LENGTH_MEASURE_WITH_UNIT` referencing
-/// the SI base and the shared `DIMENSIONAL_EXPONENTS(1, ...)`.
+/// Emit a `CONVERSION_BASED_UNIT` length chain wrapping the **already-emitted**
+/// base SI at `base_step`. Used for both genuine non-SI units (Inch / Foot
+/// — factor 25.4 / 304.8) and SI self-wraps (METRE / MILLIMETRE / CENTIMETRE
+/// — factor 1.0). Wraps `LENGTH_MEASURE_WITH_UNIT(factor, base_step)` plus
+/// the shared `DIMENSIONAL_EXPONENTS(1, ...)`.
 fn emit_conversion_based_length(
     buf: &mut WriteBuffer,
     name: &str,
-    base_prefix: Option<&'static str>,
     factor: f64,
     dim_exp_explicit: bool,
+    base_step: u64,
+    target_id: u64,
 ) -> u64 {
-    let base_si = emit_base_si_length(buf, base_prefix, dim_exp_explicit);
+    let _ = dim_exp_explicit; // outer always carries explicit DE (spec)
     let dim_exp = emit_length_dim_exponents(buf);
     let measure = buf.fresh();
     buf.entities.push(WriterEntity {
         id: measure,
         body: WriterBody::Simple {
             name: "LENGTH_MEASURE_WITH_UNIT".into(),
-            attrs: vec![Attribute::Real(factor), Attribute::EntityRef(base_si)],
+            attrs: vec![Attribute::Real(factor), Attribute::EntityRef(base_step)],
         },
     });
-    let outer = buf.fresh();
     buf.entities.push(WriterEntity {
-        id: outer,
+        id: target_id,
         body: WriterBody::Complex {
             parts: vec![
                 (
@@ -230,5 +211,5 @@ fn emit_conversion_based_length(
             ],
         },
     });
-    outer
+    target_id
 }

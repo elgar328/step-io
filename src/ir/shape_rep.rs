@@ -7,7 +7,7 @@
 //! struct definitions.
 
 use super::id::StyledItemId;
-use super::id::{ProductId, UnitContextId};
+use super::id::{NamedUnitId, ProductId, UnitContextId};
 
 /// Units declared in the STEP file's HEADER section.
 ///
@@ -21,11 +21,17 @@ use super::id::{ProductId, UnitContextId};
 /// `name` / `description` strings are preserved verbatim so round-trip
 /// reproduces the original metadata (writers no longer hardcode
 /// `'distance_accuracy_value'` / `'confusion accuracy'`).
+/// units-2: `length` / `plane_angle` / `solid_angle` are `NamedUnitId`
+/// refs into `StepModel.units_pool.named_units`. Presentation flags
+/// (`cbu_wrapped`, `dim_exp_explicit`) moved into the per-flavour
+/// [`crate::ir::units::LengthFlavor`] / [`crate::ir::units::PlaneAngleFlavor`]
+/// structs, so a single source `NAMED_UNIT` entity round-trips to a single
+/// output entity (no dual-emit).
 #[derive(Debug, Clone, PartialEq)]
 pub struct UnitContext {
-    pub length: LengthUnit,
-    pub plane_angle: AngleUnit,
-    pub solid_angle: SolidAngleUnit,
+    pub length: NamedUnitId,
+    pub plane_angle: NamedUnitId,
+    pub solid_angle: NamedUnitId,
     pub length_uncertainty: Option<LengthUncertainty>,
     /// Optional plane-angle uncertainty (e.g. `'angle_accuracy'` in some
     /// CAD exports). `None` when the source carried no angle-typed
@@ -34,45 +40,6 @@ pub struct UnitContext {
     pub plane_angle_uncertainty: Option<LengthUncertainty>,
     /// Optional solid-angle uncertainty. `None` for the typical case.
     pub solid_angle_uncertainty: Option<LengthUncertainty>,
-    /// `true` when the source file wrapped the length unit in
-    /// `CONVERSION_BASED_UNIT` even though the unit is SI (e.g. ABC tier
-    /// emits `CBU('METRE', 1.0, base=METRE)` instead of plain SI METRE).
-    /// Writer re-emits the CBU wrapper when set; non-SI units (Inch / Foot)
-    /// always emit CBU regardless of this flag.
-    pub length_cbu_wrapped: bool,
-    /// `true` when the source file wrapped the plane-angle unit (Radian)
-    /// in a self-conversion `CONVERSION_BASED_UNIT`. Degree is non-SI and
-    /// always emits CBU regardless of this flag.
-    pub plane_angle_cbu_wrapped: bool,
-    /// `true` when the source file emits explicit `DIMENSIONAL_EXPONENTS`
-    /// references in plain SI unit complexes' `NAMED_UNIT.dimensions` slot
-    /// (ABC-tier convention — every plain SI shares one length DE and one
-    /// dimensionless DE entity). `false` when the source uses `*` (Derived) —
-    /// the OCCT / `Fusion 360` / `FreeCAD` convention. Writer threads this
-    /// flag through every plain-SI and CBU base-SI emit path. CBU outer
-    /// complexes always carry an explicit DE regardless of this flag
-    /// (existing emit behaviour, matches every observed fixture).
-    pub dim_exp_explicit: bool,
-}
-
-impl Default for UnitContext {
-    /// Default unit context — millimetre / radian / steradian, no uncertainty,
-    /// no CBU wrapping. Used by the writer to synthesize a context when a
-    /// kernel-built IR has products/visualization but no explicit `units`
-    /// entry, so the emitted STEP file is still well-formed.
-    fn default() -> Self {
-        Self {
-            length: LengthUnit::Millimetre,
-            plane_angle: AngleUnit::Radian,
-            solid_angle: SolidAngleUnit::Steradian,
-            length_uncertainty: None,
-            plane_angle_uncertainty: None,
-            solid_angle_uncertainty: None,
-            length_cbu_wrapped: false,
-            plane_angle_cbu_wrapped: false,
-            dim_exp_explicit: false,
-        }
-    }
 }
 
 /// `UNCERTAINTY_MEASURE_WITH_UNIT(value, unit_ref, name, description)`.

@@ -78,19 +78,19 @@ pub struct ReaderContext {
 
     /// `true` if any `CONVERSION_BASED_UNIT` whose `name` matched an SI
     /// length spelling (`'METRE'` / `'MILLIMETRE'` / `'CENTIMETRE'`) was
-    /// processed. Surfaces into `UnitContext.length_cbu_wrapped` so the
-    /// writer reproduces the wrapper. Reset per `convert()` call via
-    /// `Default`.
+    /// processed. Surfaces into [`crate::ir::units::LengthFlavor::cbu_wrapped`]
+    /// via the post-Pass0Leaf flavor backfill so the writer reproduces
+    /// the wrapper. Reset per `convert()` call via `Default`.
     pub(crate) length_cbu_wrapped: bool,
     /// Same idea as `length_cbu_wrapped` but for plane-angle units —
-    /// `'RADIAN'` self-wrap. Surfaces into
-    /// `UnitContext.plane_angle_cbu_wrapped`.
+    /// `'RADIAN'` self-wrap. Backfilled into
+    /// [`crate::ir::units::PlaneAngleFlavor::cbu_wrapped`].
     pub(crate) plane_angle_cbu_wrapped: bool,
     /// `true` once any plain SI unit complex (no `CONVERSION_BASED_UNIT`
     /// part) was observed with an explicit `DIMENSIONAL_EXPONENTS` entity
     /// ref in its `NAMED_UNIT.dimensions` slot — the ABC-tier convention.
-    /// Sticky cumulative: a single explicit observation locks the flag,
-    /// every subsequently built `UnitContext` carries the same value.
+    /// Sticky cumulative; backfilled into every `Length` / `PlaneAngle` /
+    /// `SolidAngle` flavor entry after `Pass0Leaf` finishes.
     pub(crate) dim_exp_explicit: bool,
 
     /// Entity ids inside any `DEFINITIONAL_REPRESENTATION` subtree (PCURVE
@@ -132,6 +132,12 @@ pub struct ReaderContext {
     /// chain, so adding them to `mwu_arena` would cause double-emit on
     /// round-trip.
     pub(crate) cbu_internal_mwu_refs: HashSet<u64>,
+    /// units-2: `CBU outer entity_id → conversion_factor MWU entity_id`.
+    /// Populated by `read_conversion_based_unit_body` (`LENGTH` / `PLANE_ANGLE`
+    /// / `MASS` branches) and consumed by `backfill_cbu_base` after `Pass0Leaf`
+    /// to set each outer's `LengthFlavor.cbu_base` (etc.) to the
+    /// `NamedUnitId` of its base SI entry.
+    pub(crate) cbu_outer_to_mwu: HashMap<u64, u64>,
     /// `UNCERTAINTY_MEASURE_WITH_UNIT #N → value+metadata` for uncertainty
     /// entities whose `unit_component` resolved to a length unit. Populated
     /// between Pass 0-1 (unit leaves) and Pass 0-2 (context assembly).

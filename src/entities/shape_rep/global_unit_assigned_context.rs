@@ -1,13 +1,11 @@
 //! `GLOBAL_UNIT_ASSIGNED_CONTEXT` handler — Pass 0-2 orchestrator.
 
-use crate::entities::units::length_unit::LengthUnitHandler;
-use crate::entities::units::plane_angle_unit::PlaneAngleUnitHandler;
-use crate::entities::units::solid_angle_unit::SolidAngleUnitHandler;
 use crate::entities::units::uncertainty_measure_with_unit::UncertaintyMeasureWithUnitHandler;
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::attr::{check_count, read_entity_ref_list};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit, SolidAngleUnit, UnitContext};
+use crate::ir::units::{LengthFlavor, NamedUnit, PlaneAngleFlavor, SolidAngleFlavor};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::{ReaderContext, require_part_attrs};
 use crate::writer::WriteError;
@@ -31,44 +29,58 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
         check_count(guac_attrs, 1, entity_id, "GLOBAL_UNIT_ASSIGNED_CONTEXT")?;
         let unit_refs = read_entity_ref_list(guac_attrs, 0, entity_id, "units")?;
 
+        // Walk each ref — variant-classify via the already-populated
+        // named_unit arena (units-2: every LENGTH/PLANE_ANGLE/SOLID_ANGLE
+        // complex registers a NamedUnit entry; this loop picks the entry
+        // that matches each GUAC ref).
         let mut length = None;
         let mut plane_angle = None;
         let mut solid_angle = None;
         for r in &unit_refs {
-            if let Some(&u) = ctx.length_unit_map.get(r) {
-                length = Some(u);
-            } else if let Some(&u) = ctx.angle_unit_map.get(r) {
-                plane_angle = Some(u);
-            } else if let Some(&u) = ctx.solid_angle_unit_map.get(r) {
-                solid_angle = Some(u);
+            if let Some(&nu_id) = ctx.named_unit_id_map.get(r) {
+                match ctx.named_units_arena[nu_id] {
+                    NamedUnit::Length(_) => length = Some(nu_id),
+                    NamedUnit::PlaneAngle(_) => plane_angle = Some(nu_id),
+                    NamedUnit::SolidAngle(_) => solid_angle = Some(nu_id),
+                    NamedUnit::Mass(_) => {} // GUAC does not reference mass
+                }
             }
         }
 
-        // Fallback for incomplete unit contexts (unrecognized CBU names,
-        // anonymised fixtures, vendor quirks): fill missing components with
-        // SI defaults (Millimetre / Radian / Steradian) and emit a warning.
-        // Without this fallback, an unrecognised plane-angle CBU name would
-        // leave `model.units` empty and the writer's PRODUCT chain emit path
-        // would short-circuit, silently losing the entire assembly.
-        let (length, plane_angle, solid_angle) = match (length, plane_angle, solid_angle) {
-            (Some(l), Some(p), Some(s)) => (l, p, s),
-            (l, p, s) => {
-                ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                    entity_id,
-                    detail: format!(
-                        "incomplete unit context (defaulting missing to SI): length={}, plane_angle={}, solid_angle={}",
-                        l.is_some(),
-                        p.is_some(),
-                        s.is_some(),
-                    ),
-                });
-                (
-                    l.unwrap_or(LengthUnit::Millimetre),
-                    p.unwrap_or(AngleUnit::Radian),
-                    s.unwrap_or(SolidAngleUnit::Steradian),
-                )
-            }
-        };
+        // Fallback for incomplete unit contexts: synthesize missing slots
+        // with SI defaults so `UnitContext` always has a valid arena ref.
+        let incomplete = length.is_none() || plane_angle.is_none() || solid_angle.is_none();
+        let length = length.unwrap_or_else(|| {
+            ctx.named_units_arena.push(NamedUnit::Length(LengthFlavor {
+                unit: LengthUnit::Millimetre,
+                cbu_wrapped: ctx.length_cbu_wrapped,
+                dim_exp_explicit: ctx.dim_exp_explicit,
+                cbu_base: None,
+            }))
+        });
+        let plane_angle = plane_angle.unwrap_or_else(|| {
+            ctx.named_units_arena
+                .push(NamedUnit::PlaneAngle(PlaneAngleFlavor {
+                    unit: AngleUnit::Radian,
+                    cbu_wrapped: ctx.plane_angle_cbu_wrapped,
+                    dim_exp_explicit: ctx.dim_exp_explicit,
+                    cbu_base: None,
+                }))
+        });
+        let solid_angle = solid_angle.unwrap_or_else(|| {
+            ctx.named_units_arena
+                .push(NamedUnit::SolidAngle(SolidAngleFlavor {
+                    unit: SolidAngleUnit::Steradian,
+                    dim_exp_explicit: ctx.dim_exp_explicit,
+                }))
+        });
+        if incomplete {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: "incomplete unit context (synthesized missing components as SI defaults)"
+                    .into(),
+            });
+        }
         let (length_uncertainty, plane_angle_uncertainty, solid_angle_uncertainty) =
             extract_uncertainties(ctx, parts);
         let ctx_id = ctx.units.push(UnitContext {
@@ -78,37 +90,18 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
             length_uncertainty,
             plane_angle_uncertainty,
             solid_angle_uncertainty,
-            length_cbu_wrapped: ctx.length_cbu_wrapped,
-            plane_angle_cbu_wrapped: ctx.plane_angle_cbu_wrapped,
-            dim_exp_explicit: ctx.dim_exp_explicit,
         });
         ctx.context_id_map.insert(entity_id, ctx_id);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, units: UnitContext) -> Result<u64, WriteError> {
-        // No writer-side dedup — `emit_all` calls this once per
-        // `UnitContext` arena entry, and each call emits its own leaf
-        // entities. The resulting `(length, angle, solid)` tuple is
-        // pushed to `unit_leaf_ids` so the property emitter can resolve
-        // a measure's unit ref by `UnitContextId` index.
-        let length = LengthUnitHandler::write(
-            buf,
-            (
-                units.length,
-                units.length_cbu_wrapped,
-                units.dim_exp_explicit,
-            ),
-        )?;
-        let angle = PlaneAngleUnitHandler::write(
-            buf,
-            (
-                units.plane_angle,
-                units.plane_angle_cbu_wrapped,
-                units.dim_exp_explicit,
-            ),
-        )?;
-        let solid = SolidAngleUnitHandler::write(buf, (units.solid_angle, units.dim_exp_explicit))?;
+        // units-2: leaf entities are emitted once by `emit_units_pool_if_set`
+        // before `emit_all` reaches the GUAC loop. Here we resolve each
+        // `NamedUnitId` to the already-emitted step id via the cache.
+        let length = buf.named_unit_step_ids[units.length.0 as usize];
+        let angle = buf.named_unit_step_ids[units.plane_angle.0 as usize];
+        let solid = buf.named_unit_step_ids[units.solid_angle.0 as usize];
         buf.unit_leaf_ids.push((length, angle, solid));
 
         // ISO 10303-21:2016 §11.2.5.1 — complex entity parts serialize in

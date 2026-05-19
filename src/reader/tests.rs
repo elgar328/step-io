@@ -2,8 +2,37 @@ use super::*;
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Curve, Surface};
 use crate::ir::id::{Point2dId, PointId};
-use crate::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit, UnitContext};
+use crate::ir::model::StepModel;
+use crate::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit};
 use crate::ir::topology::Orientation;
+use crate::ir::units::NamedUnit;
+
+/// units-2 helpers: resolve the first `UnitContext`'s `length / plane_angle
+/// / solid_angle` `NamedUnitId` to its enum value via the units pool.
+fn first_length(model: &StepModel) -> Option<LengthUnit> {
+    let ctx = model.units.iter().next()?;
+    let pool = model.units_pool.as_ref()?;
+    match pool.named_units[ctx.length] {
+        NamedUnit::Length(f) => Some(f.unit),
+        _ => None,
+    }
+}
+fn first_plane_angle(model: &StepModel) -> Option<AngleUnit> {
+    let ctx = model.units.iter().next()?;
+    let pool = model.units_pool.as_ref()?;
+    match pool.named_units[ctx.plane_angle] {
+        NamedUnit::PlaneAngle(f) => Some(f.unit),
+        _ => None,
+    }
+}
+fn first_solid_angle(model: &StepModel) -> Option<SolidAngleUnit> {
+    let ctx = model.units.iter().next()?;
+    let pool = model.units_pool.as_ref()?;
+    match pool.named_units[ctx.solid_angle] {
+        NamedUnit::SolidAngle(f) => Some(f.unit),
+        _ => None,
+    }
+}
 
 // ---------------------------------------------------------------------------
 // HEADER extraction
@@ -772,40 +801,30 @@ fn unit_data(length_prefix: &str) -> String {
 fn unit_millimetre_radian_steradian() {
     let result = convert_source(&minimal_step(&unit_data(".MILLI.")));
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
+    assert_eq!(first_length(&result.model), Some(LengthUnit::Millimetre));
+    assert_eq!(first_plane_angle(&result.model), Some(AngleUnit::Radian));
     assert_eq!(
-        result.model.units.iter().next().cloned(),
-        Some(UnitContext {
-            length: LengthUnit::Millimetre,
-            plane_angle: AngleUnit::Radian,
-            solid_angle: SolidAngleUnit::Steradian,
-            length_uncertainty: None,
-            plane_angle_uncertainty: None,
-            solid_angle_uncertainty: None,
-            length_cbu_wrapped: false,
-            plane_angle_cbu_wrapped: false,
-            dim_exp_explicit: false,
-        }),
+        first_solid_angle(&result.model),
+        Some(SolidAngleUnit::Steradian)
     );
+    let ctx = result.model.units.iter().next().expect("ctx");
+    assert!(ctx.length_uncertainty.is_none());
+    assert!(ctx.plane_angle_uncertainty.is_none());
+    assert!(ctx.solid_angle_uncertainty.is_none());
 }
 
 #[test]
 fn unit_centimetre_mapping() {
     let result = convert_source(&minimal_step(&unit_data(".CENTI.")));
     assert!(result.warnings.is_empty());
-    assert_eq!(
-        result.model.units.iter().next().map(|u| u.length),
-        Some(LengthUnit::Centimetre),
-    );
+    assert_eq!(first_length(&result.model), Some(LengthUnit::Centimetre),);
 }
 
 #[test]
 fn unit_plain_metre_mapping() {
     let result = convert_source(&minimal_step(&unit_data("$")));
     assert!(result.warnings.is_empty());
-    assert_eq!(
-        result.model.units.iter().next().map(|u| u.length),
-        Some(LengthUnit::Metre),
-    );
+    assert_eq!(first_length(&result.model), Some(LengthUnit::Metre),);
 }
 
 #[test]
@@ -832,7 +851,8 @@ fn unit_unsupported_prefix_produces_warning_and_default_length() {
         .iter()
         .next()
         .expect("fallback context pushed");
-    assert_eq!(unit.length, LengthUnit::Millimetre);
+    let _ = unit;
+    assert_eq!(first_length(&result.model), Some(LengthUnit::Millimetre));
 }
 
 // ---------------------------------------------------------------------------
@@ -864,10 +884,7 @@ fn reads_inch_milli_untyped_convention() {
          #4 = ( CONVERSION_BASED_UNIT('INCH',#3) LENGTH_UNIT() NAMED_UNIT(#2) );";
     let result = convert_source(&cbu_unit_step(block, 4));
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
-    assert_eq!(
-        result.model.units.iter().next().map(|u| u.length),
-        Some(LengthUnit::Inch),
-    );
+    assert_eq!(first_length(&result.model), Some(LengthUnit::Inch),);
 }
 
 #[test]
@@ -880,10 +897,7 @@ fn reads_inch_centi_typed_convention() {
          #4 = ( CONVERSION_BASED_UNIT('INCH',#3) LENGTH_UNIT() NAMED_UNIT(#2) );";
     let result = convert_source(&cbu_unit_step(block, 4));
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
-    assert_eq!(
-        result.model.units.iter().next().map(|u| u.length),
-        Some(LengthUnit::Inch),
-    );
+    assert_eq!(first_length(&result.model), Some(LengthUnit::Inch),);
 }
 
 #[test]
@@ -896,10 +910,7 @@ fn reads_inch_lowercase_name() {
          #4 = ( CONVERSION_BASED_UNIT('inch',#3) LENGTH_UNIT() NAMED_UNIT(#2) );";
     let result = convert_source(&cbu_unit_step(block, 4));
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
-    assert_eq!(
-        result.model.units.iter().next().map(|u| u.length),
-        Some(LengthUnit::Inch),
-    );
+    assert_eq!(first_length(&result.model), Some(LengthUnit::Inch),);
 }
 
 #[test]
@@ -911,10 +922,7 @@ fn reads_foot_standard() {
          #4 = ( CONVERSION_BASED_UNIT('FOOT',#3) LENGTH_UNIT() NAMED_UNIT(#2) );";
     let result = convert_source(&cbu_unit_step(block, 4));
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
-    assert_eq!(
-        result.model.units.iter().next().map(|u| u.length),
-        Some(LengthUnit::Foot),
-    );
+    assert_eq!(first_length(&result.model), Some(LengthUnit::Foot),);
 }
 
 #[test]
@@ -933,10 +941,7 @@ fn reads_degree_uppercase() {
     );
     let result = convert_source(&step);
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
-    assert_eq!(
-        result.model.units.iter().next().map(|u| u.plane_angle),
-        Some(AngleUnit::Degree),
-    );
+    assert_eq!(first_plane_angle(&result.model), Some(AngleUnit::Degree),);
 }
 
 #[test]
@@ -954,10 +959,7 @@ fn reads_degree_lowercase() {
     );
     let result = convert_source(&step);
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
-    assert_eq!(
-        result.model.units.iter().next().map(|u| u.plane_angle),
-        Some(AngleUnit::Degree),
-    );
+    assert_eq!(first_plane_angle(&result.model), Some(AngleUnit::Degree),);
 }
 
 #[test]
@@ -971,10 +973,7 @@ fn reads_millimetre_cbu_wrap() {
          #4 = ( CONVERSION_BASED_UNIT('MILLIMETRE',#3) LENGTH_UNIT() NAMED_UNIT(#2) );";
     let result = convert_source(&cbu_unit_step(block, 4));
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
-    assert_eq!(
-        result.model.units.iter().next().map(|u| u.length),
-        Some(LengthUnit::Millimetre),
-    );
+    assert_eq!(first_length(&result.model), Some(LengthUnit::Millimetre),);
 }
 
 #[test]
@@ -995,8 +994,7 @@ fn reads_degrees_plural_cbu_name() {
     );
     let result = convert_source(&source);
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
-    let unit = result.model.units.iter().next().expect("unit context");
-    assert_eq!(unit.plane_angle, AngleUnit::Degree);
+    assert_eq!(first_plane_angle(&result.model), Some(AngleUnit::Degree));
 }
 
 #[test]
@@ -1034,7 +1032,8 @@ fn reads_unrecognized_cbu_name_warns() {
         .iter()
         .next()
         .expect("fallback context pushed");
-    assert_eq!(unit.length, LengthUnit::Millimetre);
+    let _ = unit;
+    assert_eq!(first_length(&result.model), Some(LengthUnit::Millimetre));
 }
 
 #[test]
@@ -1084,8 +1083,9 @@ fn garbage_angle_cbu_falls_back_to_radian_with_warning() {
         .iter()
         .next()
         .expect("fallback context pushed");
-    assert_eq!(unit.plane_angle, AngleUnit::Radian);
-    assert_eq!(unit.length, LengthUnit::Millimetre);
+    let _ = unit;
+    assert_eq!(first_plane_angle(&result.model), Some(AngleUnit::Radian));
+    assert_eq!(first_length(&result.model), Some(LengthUnit::Millimetre));
 }
 
 #[test]

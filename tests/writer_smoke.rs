@@ -19,6 +19,7 @@ use step_io::ir::id::{DirectionId, Placement3dId, PointId, SolidId, UnitContextI
 use step_io::ir::model::StepModel;
 use step_io::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit, UnitContext};
 use step_io::ir::topology::{Face, FaceKind, Orientation, Shell, Solid, Wire};
+use step_io::ir::units::{NamedUnit, UnitsPool};
 use step_io::parser::schema::{SchemaClass, StepSchema};
 use step_io::reader::ReaderContext;
 use step_io::{WriteError, parse};
@@ -27,17 +28,18 @@ fn empty_model() -> StepModel {
     StepModel::default()
 }
 
-fn mm_radian_steradian() -> UnitContext {
+/// units-2: push mm / radian / steradian named-unit arena entries into
+/// the model's units pool and return a fully-populated `UnitContext`
+/// referencing them.
+fn mm_radian_steradian(model: &mut StepModel) -> UnitContext {
+    let pool = model.units_pool.get_or_insert_with(UnitsPool::default);
     UnitContext {
-        length: LengthUnit::Millimetre,
-        plane_angle: AngleUnit::Radian,
-        solid_angle: SolidAngleUnit::Steradian,
+        length: pool.push_plain_length(LengthUnit::Millimetre, false),
+        plane_angle: pool.push_plain_plane_angle(AngleUnit::Radian, false),
+        solid_angle: pool.push_plain_solid_angle(SolidAngleUnit::Steradian, false),
         length_uncertainty: None,
         plane_angle_uncertainty: None,
         solid_angle_uncertainty: None,
-        length_cbu_wrapped: false,
-        plane_angle_cbu_wrapped: false,
-        dim_exp_explicit: false,
     }
 }
 
@@ -245,10 +247,26 @@ fn unset_axis_directions_round_trip_as_none() {
 #[test]
 fn unit_context_mm_radian_steradian_round_trips() {
     let mut model = empty_model();
-    model.units.push(mm_radian_steradian());
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.units.iter().next().cloned(), Some(mm_radian_steradian()));
+    // units-2: NamedUnitId may shift due to pool emit ordering — compare
+    // the resolved enum values via arena lookup.
+    let ctx_back = re.units.iter().next().expect("ctx");
+    let pool = re.units_pool.as_ref().expect("units pool");
+    match pool.named_units[ctx_back.length] {
+        NamedUnit::Length(f) => assert_eq!(f.unit, LengthUnit::Millimetre),
+        _ => panic!("length not Length"),
+    }
+    match pool.named_units[ctx_back.plane_angle] {
+        NamedUnit::PlaneAngle(f) => assert_eq!(f.unit, AngleUnit::Radian),
+        _ => panic!("plane_angle not PlaneAngle"),
+    }
+    match pool.named_units[ctx_back.solid_angle] {
+        NamedUnit::SolidAngle(f) => assert_eq!(f.unit, SolidAngleUnit::Steradian),
+        _ => panic!("solid_angle not SolidAngle"),
+    }
 }
 
 #[test]
@@ -262,7 +280,8 @@ fn unit_context_absent_stays_none() {
 #[test]
 fn write_to_and_write_to_string_produce_identical_bytes() {
     let mut model = empty_model();
-    model.units.push(mm_radian_steradian());
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
     let via_string = model.write_to_string().expect("string");
     let mut via_writer = Vec::new();
     model.write_to(&mut via_writer).expect("writer");
@@ -834,7 +853,8 @@ fn identity_transform(model: &mut StepModel) -> Transform3d {
 fn simple_assembly_round_trips() {
     // Root Group holding one Instance that points at a Solid leaf product.
     let mut model = empty_model();
-    model.units.push(mm_radian_steradian());
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let transform = identity_transform(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -913,7 +933,8 @@ fn shared_child_assembly_round_trips() {
     // Same Leaf referenced twice from the Root Group with different
     // occurrence ids — the classic shared-instance case.
     let mut model = empty_model();
-    model.units.push(mm_radian_steradian());
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let transform = identity_transform(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -1012,7 +1033,8 @@ fn multi_body_solid_round_trips() {
     // STEP). The reader collects all of them into ProductContent::Solid;
     // the writer emits one MSB ref per SolidId in the items list.
     let mut model = empty_model();
-    model.units.push(mm_radian_steradian());
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
     let s1 = push_minimal_solid(&mut model);
     let s2 = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -1065,7 +1087,8 @@ fn metadata_only_product_round_trips_with_none_geometry_context() {
     // default context would surface as `Some(UnitContextId(0))` and
     // break round-trip equality.
     let mut model = empty_model();
-    model.units.push(mm_radian_steradian());
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -1128,7 +1151,8 @@ fn empty_group_product_preserves_non_identity_shape_ref_frame() {
     // the SDR pass must pull the placement out of `plain_sr_frame_map`,
     // not leave it at the PRODUCT-pass placeholder Placement3dId(0).
     let mut model = empty_model();
-    model.units.push(mm_radian_steradian());
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
     let offset_loc = model.geometry.points.push(Point3 {

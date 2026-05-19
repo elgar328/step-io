@@ -3,6 +3,7 @@
 use step_io::ir::geometry::{Curve, Surface};
 use step_io::ir::id::PointId;
 use step_io::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit};
+use step_io::ir::units::NamedUnit;
 use step_io::reader::ReaderContext;
 
 // ------------------------------------------------------------------
@@ -1341,22 +1342,37 @@ fn every_fixture_has_expected_units() {
                 .iter()
                 .next()
                 .cloned()
-                .unwrap_or_else(|| {
-                    panic!("fixture {name}: units missing");
-                });
+                .unwrap_or_else(|| panic!("fixture {name}: units missing"));
+            let pool = result
+                .model
+                .units_pool
+                .as_ref()
+                .unwrap_or_else(|| panic!("fixture {name}: units pool missing"));
+            let length = match pool.named_units[units.length] {
+                NamedUnit::Length(f) => f.unit,
+                _ => panic!("fixture {name}: length slot is not Length"),
+            };
+            let plane_angle = match pool.named_units[units.plane_angle] {
+                NamedUnit::PlaneAngle(f) => f.unit,
+                _ => panic!("fixture {name}: plane_angle slot is not PlaneAngle"),
+            };
+            let solid_angle = match pool.named_units[units.solid_angle] {
+                NamedUnit::SolidAngle(f) => f.unit,
+                _ => panic!("fixture {name}: solid_angle slot is not SolidAngle"),
+            };
             let expected_length = if *name == "fillet_box_ap214_is" {
                 LengthUnit::Inch
             } else {
                 LengthUnit::Millimetre
             };
-            assert_eq!(units.length, expected_length, "fixture {name}: length");
+            assert_eq!(length, expected_length, "fixture {name}: length");
             assert_eq!(
-                units.plane_angle,
+                plane_angle,
                 AngleUnit::Radian,
-                "fixture {name}: plane_angle",
+                "fixture {name}: plane_angle"
             );
             assert_eq!(
-                units.solid_angle,
+                solid_angle,
                 SolidAngleUnit::Steradian,
                 "fixture {name}: solid_angle",
             );

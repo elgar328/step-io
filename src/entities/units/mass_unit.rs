@@ -1,4 +1,4 @@
-//! `MASS_UNIT` handler — Pass 0-1 leaf for mass flavour (units-1).
+//! `MASS_UNIT` handler — Pass 0-1 leaf for mass flavour.
 //!
 //! Mirrors the `LENGTH` / `PLANE_ANGLE` / `SOLID_ANGLE` leaves: dispatch keys on
 //! the `MASS_UNIT` part, the SI branch reads `(prefix, name)` from
@@ -9,16 +9,16 @@
 //! - SI `(None, GRAM)` → [`MassUnit::Gram`]
 //! - CBU `'POUND'`     → [`MassUnit::Pound`]
 //!
-//! Unrecognised SI prefixes or CBU names fall back to
-//! [`MassUnit::Kilogram`] (round-trip lossy) so the named-unit arena
-//! still captures the entity; the reader emits a warning so the fallback
-//! is visible.
+//! Any other SI spelling or CBU name is dropped with a warning rather than
+//! being faked as Kilogram — mirroring `length_unit` / `plane_angle_unit`'s
+//! unrecognized-CBU policy. The named-unit arena loses the entry, but
+//! downstream code never sees a misrepresentation of magnitude.
 
 use crate::entities::ComplexEntityHandler;
 use crate::entities::units::shared::{has_part, read_optional_enum};
 use crate::ir::attr::{check_count, read_enum, read_string};
 use crate::ir::error::ConvertError;
-use crate::ir::units::{MassUnit, NamedUnit};
+use crate::ir::units::{MassFlavor, MassUnit, NamedUnit};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::{ReaderContext, require_part_attrs};
 use crate::writer::WriteError;
@@ -30,7 +30,7 @@ pub(crate) struct MassUnitHandler;
 
 #[step_entity_complex(name = "MASS_UNIT", pass = Pass0Leaf, required = ["MASS_UNIT"])]
 impl ComplexEntityHandler for MassUnitHandler {
-    type WriteInput = MassUnit;
+    type WriteInput = (MassUnit, u64);
 
     fn read_complex(
         ctx: &mut ReaderContext,
@@ -41,19 +41,32 @@ impl ComplexEntityHandler for MassUnitHandler {
         let unit = if has_part(parts, "CONVERSION_BASED_UNIT") {
             let cbu_attrs = require_part_attrs(parts, "CONVERSION_BASED_UNIT", entity_id)?;
             check_count(cbu_attrs, 2, entity_id, "CONVERSION_BASED_UNIT")?;
-            // Suppress duplicate MWU arena entries — see `shared.rs`.
+            // Suppress duplicate MWU arena entries — see `shared.rs`. Always
+            // record the MWU as CBU-internal so the MWU handler skips it,
+            // even when the CBU name itself is unrecognized below.
             if let Some(Attribute::EntityRef(mwu_ref)) = cbu_attrs.get(1) {
                 ctx.cbu_internal_mwu_refs.insert(*mwu_ref);
             }
             let name = read_string(cbu_attrs, 0, entity_id, "name")?;
             if name.eq_ignore_ascii_case("POUND") {
+                // Only record the outer→MWU link for recognized names —
+                // unrecognized outers don't get a `NamedUnit` arena entry,
+                // so there's nothing for `backfill_cbu_base` to patch.
+                if let Some(Attribute::EntityRef(mwu_ref)) = cbu_attrs.get(1) {
+                    ctx.cbu_outer_to_mwu.insert(entity_id, *mwu_ref);
+                }
                 MassUnit::Pound
             } else {
+                // Unrecognized CBU mass name (e.g. 'ton'). Skip registration
+                // entirely — mirrors how `shared.rs` drops unrecognized
+                // length / angle CBU names, and avoids a Kilogram-fallback
+                // entry that the writer can't faithfully re-emit (the
+                // `cbu_base` chain has no representable outer).
                 ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                     entity_id,
                     detail: format!("unsupported CONVERSION_BASED_UNIT mass name: {name:?}"),
                 });
-                MassUnit::Kilogram
+                return Ok(());
             }
         } else if has_part(parts, "SI_UNIT") {
             let si_attrs = require_part_attrs(parts, "SI_UNIT", entity_id)?;
@@ -64,43 +77,110 @@ impl ComplexEntityHandler for MassUnitHandler {
                 (Some("KILO"), "GRAM") => MassUnit::Kilogram,
                 (None, "GRAM") => MassUnit::Gram,
                 _ => {
+                    // Unsupported SI mass spelling (e.g. (MEGA, GRAM)).
+                    // Drop rather than fall back to Kilogram — fake matching
+                    // misrepresents the magnitude (1 Mg ≠ 1 kg). Mirrors the
+                    // unrecognized-CBU policy.
                     ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                         entity_id,
                         detail: format!(
                             "unsupported SI mass unit (prefix={prefix:?}, name={name:?})"
                         ),
                     });
-                    MassUnit::Kilogram
+                    return Ok(());
                 }
             }
         } else {
-            // Neither SI nor CBU — uncovered shape. Skip silently to match
-            // the legacy unit-leaf handling of malformed complexes.
+            // Neither SI nor CBU — uncovered shape (malformed complex).
+            // Warn so the caller can see what was dropped.
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: "MASS_UNIT complex carries neither SI_UNIT nor CONVERSION_BASED_UNIT"
+                    .into(),
+            });
             return Ok(());
         };
-        let id = ctx.named_units_arena.push(NamedUnit::Mass(unit));
+        let flavor = MassFlavor {
+            unit,
+            cbu_base: None,
+        };
+        let id = ctx.named_units_arena.push(NamedUnit::Mass(flavor));
         ctx.named_unit_id_map.insert(entity_id, id);
         Ok(())
     }
 
-    fn write(buf: &mut WriteBuffer, unit: MassUnit) -> Result<u64, WriteError> {
-        let n = match unit {
-            MassUnit::Kilogram => emit_plain_si_mass(buf, Some("KILO")),
-            MassUnit::Gram => emit_plain_si_mass(buf, None),
-            MassUnit::Pound => emit_pound(buf),
+    /// Emit a **plain SI** mass unit. CBU outers (Pound) go through
+    /// [`emit_mass_cbu_outer`] which takes the pre-emitted base step id.
+    /// Pound reaching this path is a kernel-built IR mistake — fall back
+    /// to Kilogram emit.
+    fn write(buf: &mut WriteBuffer, (unit, target_id): (MassUnit, u64)) -> Result<u64, WriteError> {
+        let prefix = match unit {
+            MassUnit::Gram => None,
+            // Kilogram / Pound fallback both emit KILO-GRAM.
+            MassUnit::Kilogram | MassUnit::Pound => Some("KILO"),
         };
-        Ok(n)
+        emit_plain_si_mass(buf, prefix, target_id);
+        Ok(target_id)
     }
 }
 
-fn emit_plain_si_mass(buf: &mut WriteBuffer, prefix: Option<&'static str>) -> u64 {
+/// Emit a `CONVERSION_BASED_UNIT` mass outer at `target_id` wrapping the
+/// already-emitted base SI kilogram at `base_step`. Currently only Pound
+/// (factor 0.45359237). Returns `Result` to mirror the dispatcher signature.
+#[allow(clippy::unnecessary_wraps)]
+pub(crate) fn emit_mass_cbu_outer(
+    buf: &mut WriteBuffer,
+    unit: MassUnit,
+    base_step: u64,
+    target_id: u64,
+) -> Result<u64, WriteError> {
+    let (name, factor) = match unit {
+        MassUnit::Pound => ("POUND", 0.453_592_37),
+        // SI variants reaching the CBU path are unexpected; fall back to
+        // returning the already-emitted base step id (no extra entity).
+        MassUnit::Kilogram | MassUnit::Gram => return Ok(base_step),
+    };
+    let dim_exp = emit_mass_dim_exponents(buf);
+    let measure = buf.fresh();
+    buf.entities.push(WriterEntity {
+        id: measure,
+        body: WriterBody::Simple {
+            name: "MASS_MEASURE_WITH_UNIT".into(),
+            attrs: vec![
+                Attribute::Typed {
+                    type_name: "MASS_MEASURE".into(),
+                    value: Box::new(Attribute::Real(factor)),
+                },
+                Attribute::EntityRef(base_step),
+            ],
+        },
+    });
+    buf.entities.push(WriterEntity {
+        id: target_id,
+        body: WriterBody::Complex {
+            parts: vec![
+                (
+                    "CONVERSION_BASED_UNIT".into(),
+                    vec![
+                        Attribute::String(name.into()),
+                        Attribute::EntityRef(measure),
+                    ],
+                ),
+                ("MASS_UNIT".into(), vec![]),
+                ("NAMED_UNIT".into(), vec![Attribute::EntityRef(dim_exp)]),
+            ],
+        },
+    });
+    Ok(target_id)
+}
+
+fn emit_plain_si_mass(buf: &mut WriteBuffer, prefix: Option<&'static str>, target_id: u64) {
     let prefix_attr = match prefix {
         Some(p) => Attribute::Enum(p.into()),
         None => Attribute::Unset,
     };
-    let n = buf.fresh();
     buf.entities.push(WriterEntity {
-        id: n,
+        id: target_id,
         body: WriterBody::Complex {
             parts: vec![
                 ("MASS_UNIT".into(), vec![]),
@@ -112,72 +192,6 @@ fn emit_plain_si_mass(buf: &mut WriteBuffer, prefix: Option<&'static str>) -> u6
             ],
         },
     });
-    n
-}
-
-/// Emit a `CONVERSION_BASED_UNIT` mass chain for `POUND`.
-///
-/// AP214 schema requires the CBU's `conversion_factor` to be a
-/// `MASS_MEASURE_WITH_UNIT` whose `unit_component` is a base SI kilogram.
-/// 1 pound = 0.45359237 kg; the base SI complex carries explicit
-/// `DIMENSIONAL_EXPONENTS(0, 0, 1, 0, 0, 0, 0)` (mass exponent = 1) since
-/// the CBU outer needs the same DE in its `NAMED_UNIT.dimensions` slot.
-fn emit_pound(buf: &mut WriteBuffer) -> u64 {
-    let dim_exp = emit_mass_dim_exponents(buf);
-    let base_kg = emit_base_si_kilogram(buf);
-    let measure = buf.fresh();
-    buf.entities.push(WriterEntity {
-        id: measure,
-        body: WriterBody::Simple {
-            name: "MASS_MEASURE_WITH_UNIT".into(),
-            attrs: vec![
-                Attribute::Typed {
-                    type_name: "MASS_MEASURE".into(),
-                    value: Box::new(Attribute::Real(0.453_592_37)),
-                },
-                Attribute::EntityRef(base_kg),
-            ],
-        },
-    });
-    let outer = buf.fresh();
-    buf.entities.push(WriterEntity {
-        id: outer,
-        body: WriterBody::Complex {
-            parts: vec![
-                (
-                    "CONVERSION_BASED_UNIT".into(),
-                    vec![
-                        Attribute::String("POUND".into()),
-                        Attribute::EntityRef(measure),
-                    ],
-                ),
-                ("MASS_UNIT".into(), vec![]),
-                ("NAMED_UNIT".into(), vec![Attribute::EntityRef(dim_exp)]),
-            ],
-        },
-    });
-    outer
-}
-
-fn emit_base_si_kilogram(buf: &mut WriteBuffer) -> u64 {
-    let n = buf.fresh();
-    buf.entities.push(WriterEntity {
-        id: n,
-        body: WriterBody::Complex {
-            parts: vec![
-                ("MASS_UNIT".into(), vec![]),
-                ("NAMED_UNIT".into(), vec![Attribute::Derived]),
-                (
-                    "SI_UNIT".into(),
-                    vec![
-                        Attribute::Enum("KILO".into()),
-                        Attribute::Enum("GRAM".into()),
-                    ],
-                ),
-            ],
-        },
-    });
-    n
 }
 
 fn emit_mass_dim_exponents(buf: &mut WriteBuffer) -> u64 {

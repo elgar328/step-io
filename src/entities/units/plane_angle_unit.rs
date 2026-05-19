@@ -11,8 +11,9 @@ use crate::entities::units::shared::{
 };
 use crate::ir::attr::{check_count, read_enum};
 use crate::ir::error::ConvertError;
+use crate::ir::id::NamedUnitId;
 use crate::ir::shape_rep::AngleUnit;
-use crate::ir::units::NamedUnit;
+use crate::ir::units::{NamedUnit, PlaneAngleFlavor};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
 use crate::writer::WriteError;
@@ -24,8 +25,8 @@ pub(crate) struct PlaneAngleUnitHandler;
 
 #[step_entity_complex(name = "PLANE_ANGLE_UNIT", pass = Pass0Leaf, required = ["PLANE_ANGLE_UNIT"])]
 impl ComplexEntityHandler for PlaneAngleUnitHandler {
-    /// `(unit, plane_angle_cbu_wrapped, dim_exp_explicit)`.
-    type WriteInput = (AngleUnit, bool, bool);
+    /// `(unit, dim_exp_explicit, target_id)`.
+    type WriteInput = (AngleUnit, bool, u64);
 
     fn read_complex(
         ctx: &mut ReaderContext,
@@ -35,11 +36,17 @@ impl ComplexEntityHandler for PlaneAngleUnitHandler {
     ) -> Result<(), ConvertError> {
         if has_part(parts, "CONVERSION_BASED_UNIT") {
             read_conversion_based_unit_body(ctx, entity_id, parts, false, true)?;
-            register_named_plane_angle(ctx, entity_id);
+            register_named_plane_angle(ctx, entity_id, None);
             return Ok(());
         }
 
         if !has_part(parts, "SI_UNIT") {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail:
+                    "PLANE_ANGLE_UNIT complex carries neither SI_UNIT nor CONVERSION_BASED_UNIT"
+                        .into(),
+            });
             return Ok(());
         }
 
@@ -56,7 +63,7 @@ impl ComplexEntityHandler for PlaneAngleUnitHandler {
 
         if let Some(unit) = match_angle_unit(prefix, name) {
             ctx.angle_unit_map.insert(entity_id, unit);
-            register_named_plane_angle(ctx, entity_id);
+            register_named_plane_angle(ctx, entity_id, None);
         } else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                 entity_id,
@@ -66,43 +73,63 @@ impl ComplexEntityHandler for PlaneAngleUnitHandler {
         Ok(())
     }
 
+    /// Emit plain SI radian only — CBU outers (Degree, CBU(RADIAN)) go
+    /// through [`emit_plane_angle_cbu_outer`] (units-2 2-pass writer).
+    /// Plain SI emission only. Degree (non-SI) and CBU(RADIAN) self-wrap
+    /// go through [`emit_plane_angle_cbu_outer`]; if Degree ever reaches
+    /// this path (kernel-built IR misuse) we emit plain RADIAN as a
+    /// fallback rather than panic.
     fn write(
         buf: &mut WriteBuffer,
-        (unit, cbu_wrapped, dim_exp_explicit): (AngleUnit, bool, bool),
+        (_unit, dim_exp_explicit, target_id): (AngleUnit, bool, u64),
     ) -> Result<u64, WriteError> {
-        let n = match unit {
-            AngleUnit::Radian if cbu_wrapped => {
-                emit_conversion_based_angle(buf, "RADIAN", 1.0, dim_exp_explicit)
-            }
-            AngleUnit::Radian => emit_plain_si_radian(buf, dim_exp_explicit),
-            AngleUnit::Degree => emit_conversion_based_angle(
-                buf,
-                "DEGREE",
-                std::f64::consts::PI / 180.0,
-                dim_exp_explicit,
-            ),
-        };
-        Ok(n)
+        emit_plain_si_radian(buf, dim_exp_explicit, target_id);
+        Ok(target_id)
     }
 }
 
-/// units-1: see `length_unit::register_named_length` for the rationale.
-fn register_named_plane_angle(ctx: &mut ReaderContext, entity_id: u64) {
+/// Emit a `CONVERSION_BASED_UNIT` plane-angle outer at `target_id` wrapping
+/// the already-emitted base SI radian at `base_step`.
+pub(crate) fn emit_plane_angle_cbu_outer(
+    buf: &mut WriteBuffer,
+    unit: AngleUnit,
+    _dim_exp_explicit: bool,
+    base_step: u64,
+    target_id: u64,
+) -> u64 {
+    let (name, factor) = match unit {
+        AngleUnit::Radian => ("RADIAN", 1.0),
+        AngleUnit::Degree => ("DEGREE", std::f64::consts::PI / 180.0),
+    };
+    emit_conversion_based_angle(buf, name, factor, base_step, target_id)
+}
+
+/// See `length_unit::register_named_length` for the rationale.
+fn register_named_plane_angle(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    cbu_base: Option<NamedUnitId>,
+) {
     if let Some(&unit) = ctx.angle_unit_map.get(&entity_id) {
-        let id = ctx.named_units_arena.push(NamedUnit::PlaneAngle(unit));
+        let flavor = PlaneAngleFlavor {
+            unit,
+            cbu_wrapped: ctx.plane_angle_cbu_wrapped,
+            dim_exp_explicit: ctx.dim_exp_explicit,
+            cbu_base,
+        };
+        let id = ctx.named_units_arena.push(NamedUnit::PlaneAngle(flavor));
         ctx.named_unit_id_map.insert(entity_id, id);
     }
 }
 
-fn emit_plain_si_radian(buf: &mut WriteBuffer, dim_exp_explicit: bool) -> u64 {
+fn emit_plain_si_radian(buf: &mut WriteBuffer, dim_exp_explicit: bool, target_id: u64) {
     let dim_exp_attr = if dim_exp_explicit {
         Attribute::EntityRef(emit_dimensionless_exponents(buf))
     } else {
         Attribute::Derived
     };
-    let n = buf.fresh();
     buf.entities.push(WriterEntity {
-        id: n,
+        id: target_id,
         body: WriterBody::Complex {
             parts: vec![
                 (
@@ -114,57 +141,29 @@ fn emit_plain_si_radian(buf: &mut WriteBuffer, dim_exp_explicit: bool) -> u64 {
             ],
         },
     });
-    n
 }
 
-/// Emit a bare SI radian entity used as the base inside a Degree
-/// `CONVERSION_BASED_UNIT` chain. Mirrors `emit_plain_si_radian`'s
-/// `dim_exp_explicit` branching for ABC-tier loyalty.
-fn emit_base_si_radian(buf: &mut WriteBuffer, dim_exp_explicit: bool) -> u64 {
-    let dim_exp_attr = if dim_exp_explicit {
-        Attribute::EntityRef(emit_dimensionless_exponents(buf))
-    } else {
-        Attribute::Derived
-    };
-    let n = buf.fresh();
-    buf.entities.push(WriterEntity {
-        id: n,
-        body: WriterBody::Complex {
-            parts: vec![
-                ("NAMED_UNIT".into(), vec![dim_exp_attr]),
-                ("PLANE_ANGLE_UNIT".into(), vec![]),
-                (
-                    "SI_UNIT".into(),
-                    vec![Attribute::Unset, Attribute::Enum("RADIAN".into())],
-                ),
-            ],
-        },
-    });
-    n
-}
-
-/// Emit a `CONVERSION_BASED_UNIT` plane-angle chain. Used for genuine
-/// non-SI angles (Degree — factor π/180) and for SI self-wrap (Radian
-/// — factor 1.0). Base is always plain SI RADIAN.
+/// Emit a `CONVERSION_BASED_UNIT` plane-angle outer at `target_id` wrapping
+/// the already-emitted base SI at `base_step`. Used for Degree (factor π/180)
+/// and CBU(RADIAN) self-wrap (factor 1.0).
 fn emit_conversion_based_angle(
     buf: &mut WriteBuffer,
     name: &str,
     factor: f64,
-    dim_exp_explicit: bool,
+    base_step: u64,
+    target_id: u64,
 ) -> u64 {
-    let base_si = emit_base_si_radian(buf, dim_exp_explicit);
     let dim_exp = emit_dimensionless_exponents(buf);
     let measure = buf.fresh();
     buf.entities.push(WriterEntity {
         id: measure,
         body: WriterBody::Simple {
             name: "PLANE_ANGLE_MEASURE_WITH_UNIT".into(),
-            attrs: vec![Attribute::Real(factor), Attribute::EntityRef(base_si)],
+            attrs: vec![Attribute::Real(factor), Attribute::EntityRef(base_step)],
         },
     });
-    let outer = buf.fresh();
     buf.entities.push(WriterEntity {
-        id: outer,
+        id: target_id,
         body: WriterBody::Complex {
             parts: vec![
                 (
@@ -179,5 +178,5 @@ fn emit_conversion_based_angle(
             ],
         },
     });
-    outer
+    target_id
 }
