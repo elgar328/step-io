@@ -17,6 +17,7 @@ impl WriteBuffer<'_> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::shape_rep::mdgpr::MdgprHandler;
         use crate::entities::visualization::colour_rgb::ColourRgbHandler;
+        use crate::entities::visualization::context_dependent_over_riding_styled_item::ContextDependentOverRidingStyledItemHandler;
         use crate::entities::visualization::curve_style::CurveStyleHandler;
         use crate::entities::visualization::draughting_pre_defined_colour::DraughtingPreDefinedColourHandler;
         use crate::entities::visualization::draughting_pre_defined_curve_font::DraughtingPreDefinedCurveFontHandler;
@@ -106,6 +107,12 @@ impl WriteBuffer<'_> {
         for (idx, si) in viz.styled_items.iter().enumerate() {
             if let StyledItem::OverRiding(o) = si {
                 let id = OverRidingStyledItemHandler::write(self, o.clone())?;
+                self.styled_item_step_ids[idx] = id;
+            }
+        }
+        for (idx, si) in viz.styled_items.iter().enumerate() {
+            if let StyledItem::ContextDependent(cd) = si {
+                let id = ContextDependentOverRidingStyledItemHandler::write(self, cd.clone())?;
                 self.styled_item_step_ids[idx] = id;
             }
         }

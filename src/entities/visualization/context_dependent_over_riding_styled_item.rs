@@ -1,0 +1,137 @@
+//! `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` (CDOSI) handler — Pass 7-10c.
+//!
+//! Extends [`super::over_riding_styled_item::OverRidingStyledItemHandler`]
+//! with the additional `style_context` SELECT list. Initial scope covers
+//! the `representation_item` variant only (via [`resolve_styled_item_target`]
+//! reuse); `representation` / `shape_representation` / `shape_aspect` refs
+//! are silently dropped with a warning. `ShapeAspect` support is deferred
+//! pending pass-ordering work (its `id_map` is populated by Pass 8, which
+//! runs after this pass — placing CDOSI later would break `Pass7Mdgpr`'s
+//! visibility into the new arena entries).
+
+use crate::entities::SimpleEntityHandler;
+use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
+use crate::ir::error::ConvertError;
+use crate::ir::visualization::{
+    ContextDependentOverRidingStyledItem, StyleContextRef, StyledItem, StyledItemTarget,
+    VisualizationPool,
+};
+use crate::parser::entity::{Attribute, EntityGraph};
+use crate::reader::ReaderContext;
+use crate::writer::WriteError;
+use crate::writer::buffer::WriteBuffer;
+
+use super::styled_item::resolve_styled_item_target;
+use step_io_macros::step_entity;
+
+pub(crate) struct ContextDependentOverRidingStyledItemHandler;
+
+#[step_entity(name = "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", pass = Pass7ContextDependent)]
+impl SimpleEntityHandler for ContextDependentOverRidingStyledItemHandler {
+    type WriteInput = ContextDependentOverRidingStyledItem;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(
+            attrs,
+            5,
+            entity_id,
+            "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+        )?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
+        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
+        let over_ridden_ref = read_entity_ref(attrs, 3, entity_id, "over_ridden_style")?;
+        let context_refs = read_entity_ref_list(attrs, 4, entity_id, "style_context")?;
+
+        let mut styles = Vec::with_capacity(style_refs.len());
+        for r in style_refs {
+            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+                styles.push(psa_id);
+            }
+        }
+        let Some(item) = resolve_styled_item_target(ctx, item_ref) else {
+            return Ok(());
+        };
+        let Some(&over_ridden_style) = ctx.viz_styled_item_id_map.get(&over_ridden_ref) else {
+            return Ok(());
+        };
+
+        let mut style_context = Vec::with_capacity(context_refs.len());
+        for r in &context_refs {
+            if let Some(target) = resolve_styled_item_target(ctx, *r) {
+                style_context.push(StyleContextRef::RepresentationItem(target));
+            } else {
+                ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                    entity_id,
+                    detail: format!(
+                        "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.style_context #{r} target type unsupported"
+                    ),
+                });
+            }
+        }
+
+        let pool = ctx
+            .visualization
+            .get_or_insert_with(VisualizationPool::default);
+        let id = pool.styled_items.push(StyledItem::ContextDependent(
+            ContextDependentOverRidingStyledItem {
+                name,
+                styles,
+                item,
+                over_ridden_style,
+                style_context,
+            },
+        ));
+        ctx.viz_styled_item_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        cd: ContextDependentOverRidingStyledItem,
+    ) -> Result<u64, WriteError> {
+        let item_id = emit_target(buf, cd.item)?;
+        let mut style_refs = Vec::with_capacity(cd.styles.len());
+        for psa_id in cd.styles {
+            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+        }
+        let over_ridden_step_id = buf.styled_item_step_ids[cd.over_ridden_style.0 as usize];
+        let mut context_refs = Vec::with_capacity(cd.style_context.len());
+        for ctx_ref in cd.style_context {
+            match ctx_ref {
+                StyleContextRef::RepresentationItem(target) => {
+                    let step_id = emit_target(buf, target)?;
+                    context_refs.push(Attribute::EntityRef(step_id));
+                }
+            }
+        }
+        Ok(buf.push_simple(
+            "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+            vec![
+                Attribute::String(cd.name),
+                Attribute::List(style_refs),
+                Attribute::EntityRef(item_id),
+                Attribute::EntityRef(over_ridden_step_id),
+                Attribute::List(context_refs),
+            ],
+        ))
+    }
+}
+
+fn emit_target(buf: &mut WriteBuffer, target: StyledItemTarget) -> Result<u64, WriteError> {
+    match target {
+        StyledItemTarget::Solid(sid) => buf.emit_solid(sid),
+        StyledItemTarget::Face(fid) => buf.emit_face(fid),
+        StyledItemTarget::Edge(eid) => buf.emit_edge(eid),
+        StyledItemTarget::Curve(cid) => buf.emit_curve(cid),
+        StyledItemTarget::Point(pid) => buf.emit_point(pid),
+        StyledItemTarget::Surface(sid) => buf.emit_surface(sid),
+        StyledItemTarget::Vertex(vid) => buf.emit_vertex(vid),
+        StyledItemTarget::Shell(shid) => buf.emit_shell(shid),
+    }
+}

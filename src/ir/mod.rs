@@ -83,11 +83,11 @@ pub use units::{
     UnitsPool,
 };
 pub use visualization::{
-    Colour, ColourRgb, CurveFont, CurveStyle, CurveWidth, DraughtingPreDefinedColour,
-    DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour, FoundedItem,
-    OverRidingStyledItem, PlainStyledItem, PresentationLayerAssignment,
+    Colour, ColourRgb, ContextDependentOverRidingStyledItem, CurveFont, CurveStyle, CurveWidth,
+    DraughtingPreDefinedColour, DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour,
+    FoundedItem, OverRidingStyledItem, PlainStyledItem, PresentationLayerAssignment,
     PresentationLayerAssignmentItem, PresentationStyleAssignment, PsaStyle, RenderingProperty,
-    ShadingMethod, StyledItem, StyledItemTarget, SurfaceSide, SurfaceSideStyle,
+    ShadingMethod, StyleContextRef, StyledItem, StyledItemTarget, SurfaceSide, SurfaceSideStyle,
     SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleRendering, SurfaceStyleRenderingData,
     SurfaceStyleRenderingWithProperties, SurfaceStyleUsage, VisualizationPool,
 };

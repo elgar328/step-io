@@ -225,6 +225,11 @@ pub(crate) enum PassLevel {
     /// so its `over_ridden_style` ref resolves to an existing entry in
     /// `VisualizationPool::styled_items`.
     Pass7OverRiding,
+    /// `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` (Pass 7-10c) — depends on
+    /// `Pass7OverRiding` so `over_ridden_style` refs that point at `OverRiding`
+    /// entries resolve; runs before `Pass7Mdgpr` so `Mdgpr.items` CDOSI refs
+    /// can locate the new arena entry via `viz_styled_item_id_map`.
+    Pass7ContextDependent,
     /// `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION` (Pass 7-11)
     /// — depends on `Pass7StyledItem` outputs.
     Pass7Mdgpr,

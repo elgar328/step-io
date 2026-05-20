@@ -157,13 +157,11 @@ pub struct DraughtingPreDefinedColour {
 /// (`enum_of = "styled_item"`). `Plain` covers the base `STYLED_ITEM`
 /// entity; `OverRiding` covers `OVER_RIDING_STYLED_ITEM`, which decorates
 /// another `StyledItem` with replacement styles.
-/// `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` is a future phase — its
-/// `style_context` field references `REPRESENTATION_RELATIONSHIP*`
-/// entities that step-io's IR does not yet model.
 #[derive(Debug, Clone, PartialEq)]
 pub enum StyledItem {
     Plain(PlainStyledItem),
     OverRiding(OverRidingStyledItem),
+    ContextDependent(ContextDependentOverRidingStyledItem),
 }
 
 /// `STYLED_ITEM(name, styles, item)` — binds presentation styles to a
@@ -184,6 +182,31 @@ pub struct OverRidingStyledItem {
     pub styles: Vec<PresentationStyleAssignmentId>,
     pub item: StyledItemTarget,
     pub over_ridden_style: StyledItemId,
+}
+
+/// `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM(name, styles, item,
+/// over_ridden_style, style_context)` — extends `OVER_RIDING_STYLED_ITEM`
+/// with a non-empty SELECT list designating the contexts (`shape` /
+/// `representation` / `representation_item` / `shape_aspect`) where the
+/// style override applies.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ContextDependentOverRidingStyledItem {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentId>,
+    pub item: StyledItemTarget,
+    pub over_ridden_style: StyledItemId,
+    pub style_context: Vec<StyleContextRef>,
+}
+
+/// SELECT target for [`ContextDependentOverRidingStyledItem::style_context`].
+/// Initial coverage: `RepresentationItem` (geometry / topology via
+/// [`StyledItemTarget`]). Other variants (`representation`,
+/// `shape_representation`, `shape_aspect`) silently dropped at read time
+/// with a warning; future phases expand the enum once representation IR
+/// and `ShapeAspect` pass-ordering are addressed.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum StyleContextRef {
+    RepresentationItem(StyledItemTarget),
 }
 
 /// What the `STYLED_ITEM.item` ref resolved to in step-io's IR. The STEP

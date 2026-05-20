@@ -7,6 +7,7 @@
 //! because its dispatch boundary is `representation`.
 
 pub mod colour_rgb;
+pub mod context_dependent_over_riding_styled_item;
 pub mod curve_style;
 pub mod draughting_pre_defined_colour;
 pub mod draughting_pre_defined_curve_font;
