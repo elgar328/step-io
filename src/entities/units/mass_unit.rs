@@ -8,6 +8,7 @@
 //! - SI `(KILO, GRAM)` → [`MassUnit::Kilogram`]
 //! - SI `(None, GRAM)` → [`MassUnit::Gram`]
 //! - CBU `'POUND'`     → [`MassUnit::Pound`]
+//! - CBU `'GRAM'`      → [`MassUnit::Gram`] (0.001 of the SI kilogram)
 //!
 //! Any other SI spelling or CBU name is dropped with a warning rather than
 //! being faked as Kilogram — mirroring `length_unit` / `plane_angle_unit`'s
@@ -108,8 +109,8 @@ fn register_named_mass(
 }
 
 /// Emit a `CONVERSION_BASED_UNIT` mass outer at `target_id` wrapping the
-/// already-emitted base SI kilogram at `base_step`. Currently only Pound
-/// (factor 0.45359237). Returns `Result` to mirror the dispatcher signature.
+/// already-emitted base SI kilogram at `base_step` — Pound (0.45359237) or
+/// gram (0.001). Returns `Result` to mirror the dispatcher signature.
 #[allow(clippy::unnecessary_wraps)]
 pub(crate) fn emit_mass_cbu_outer(
     buf: &mut WriteBuffer,
@@ -119,9 +120,10 @@ pub(crate) fn emit_mass_cbu_outer(
 ) -> Result<u64, WriteError> {
     let (name, factor) = match unit {
         MassUnit::Pound => ("POUND", 0.453_592_37),
-        // SI variants reaching the CBU path are unexpected; fall back to
-        // returning the already-emitted base step id (no extra entity).
-        MassUnit::Kilogram | MassUnit::Gram => return Ok(base_step),
+        MassUnit::Gram => ("GRAM", 0.001),
+        // Kilogram reaching the CBU path is unexpected (kernel-built IR);
+        // fall back to the already-emitted base step id (no extra entity).
+        MassUnit::Kilogram => return Ok(base_step),
     };
     let dim_exp = emit_mass_dim_exponents(buf);
     let measure = buf.fresh();

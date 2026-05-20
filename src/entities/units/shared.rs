@@ -92,6 +92,9 @@ pub(super) fn match_angle_conversion(upper_name: &str) -> Option<AngleUnit> {
 pub(super) fn match_mass_conversion(upper_name: &str) -> Option<MassUnit> {
     match upper_name {
         "POUND" => Some(MassUnit::Pound),
+        // gram defined as a CONVERSION_BASED_UNIT (0.001 of the SI kg) —
+        // a genuine conversion, like INCH for length.
+        "GRAM" => Some(MassUnit::Gram),
         _ => None,
     }
 }

@@ -24,7 +24,7 @@ use step_io::ir::property::{
 };
 use step_io::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit, UnitContext};
 use step_io::ir::topology::{Face, FaceKind, Orientation, Shell, Solid, Wire};
-use step_io::ir::units::{NamedUnit, UnitsPool};
+use step_io::ir::units::{MassFlavor, MassUnit, NamedUnit, UnitsPool};
 use step_io::parser::schema::{SchemaClass, StepSchema};
 use step_io::reader::ReaderContext;
 use step_io::{WriteError, parse};
@@ -1389,4 +1389,39 @@ fn multi_root_independent_products_round_trip() {
     let r_asm = re.assembly.as_ref().expect("round-tripped has assembly");
     assert_eq!(r_asm.products.len(), 2);
     assert_eq!(r_asm.roots, pids, "both independent products are roots");
+}
+
+#[test]
+fn gram_conversion_based_unit_round_trips() {
+    // A gram defined as a CONVERSION_BASED_UNIT (0.001 of the SI kilogram).
+    // The reader must recognize the 'GRAM' CBU name, not just 'POUND'.
+    // `reconvert` asserts the reader produced no warnings.
+    let mut model = empty_model();
+    let mut pool = UnitsPool::default();
+    let kg = pool.named_units.push(NamedUnit::Mass(MassFlavor {
+        unit: MassUnit::Kilogram,
+        cbu_base: None,
+    }));
+    pool.named_units.push(NamedUnit::Mass(MassFlavor {
+        unit: MassUnit::Gram,
+        cbu_base: Some(kg),
+    }));
+    model.units_pool = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pool = re.units_pool.as_ref().expect("round-tripped units pool");
+    assert_eq!(re_pool.named_units.len(), 2);
+    let gram = re_pool
+        .named_units
+        .iter()
+        .find_map(|n| match n {
+            NamedUnit::Mass(f) if f.unit == MassUnit::Gram => Some(f),
+            _ => None,
+        })
+        .expect("gram NamedUnit survived round-trip");
+    assert!(
+        gram.cbu_base.is_some(),
+        "gram round-trips as a CBU-wrapped unit"
+    );
 }
