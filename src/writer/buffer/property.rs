@@ -23,12 +23,58 @@ impl WriteBuffer<'_> {
         let Some(pool) = self.model.properties.clone() else {
             return;
         };
-        for prop in &pool.properties {
-            self.emit_property(prop);
+        self.property_step_ids = vec![0; pool.properties.len()];
+        for (id, prop) in pool.properties.iter_with_ids() {
+            let pd = self.emit_property(prop);
+            self.property_step_ids[id.0 as usize] = pd;
         }
         self.emit_name_attributes(&pool);
         self.emit_description_attributes(&pool);
         self.emit_id_attributes(&pool);
+        self.emit_general_properties(&pool);
+        self.emit_general_property_associations(&pool);
+    }
+
+    /// Emit every `GENERAL_PROPERTY` in arena order, caching step ids in
+    /// `general_property_step_ids` for the GPA emitter.
+    fn emit_general_properties(&mut self, pool: &crate::ir::PropertyPool) {
+        use crate::entities::property::general_property::GeneralPropertyHandler;
+        self.general_property_step_ids = vec![0; pool.general_properties.len()];
+        for (id, gp) in pool.general_properties.iter_with_ids() {
+            let step = GeneralPropertyHandler::write(self, gp.clone())
+                .expect("GENERAL_PROPERTY write only pushes one simple entity");
+            self.general_property_step_ids[id.0 as usize] = step;
+        }
+    }
+
+    /// Emit every `GENERAL_PROPERTY_ASSOCIATION`, resolving `base_definition`
+    /// and `derived_definition` through the cached step ids. A reference
+    /// whose target was not emitted (0 slot) is skipped — symmetric with the
+    /// reader, which drops a GPA whose refs do not resolve.
+    fn emit_general_property_associations(&mut self, pool: &crate::ir::PropertyPool) {
+        use crate::entities::property::general_property_association::{
+            GeneralPropertyAssociationHandler, GeneralPropertyAssociationWriteInput,
+        };
+        use crate::ir::DerivedDefinitionItem;
+        for gpa in pool.general_property_associations.iter() {
+            let base_step = self.general_property_step_ids[gpa.base_definition.0 as usize];
+            let derived_step = match gpa.derived_definition {
+                DerivedDefinitionItem::PropertyDefinition(pid) => {
+                    self.property_step_ids[pid.0 as usize]
+                }
+            };
+            if base_step == 0 || derived_step == 0 {
+                continue;
+            }
+            let _ = GeneralPropertyAssociationHandler::write(
+                self,
+                GeneralPropertyAssociationWriteInput {
+                    gpa: gpa.clone(),
+                    base_step,
+                    derived_step,
+                },
+            );
+        }
     }
 
     fn emit_id_attributes(&mut self, pool: &crate::ir::PropertyPool) {
@@ -131,13 +177,16 @@ impl WriteBuffer<'_> {
         }
     }
 
-    fn emit_property(&mut self, prop: &Property) {
+    /// Emit a property's PD + REPRESENTATION + PDR chain. Returns the
+    /// `PROPERTY_DEFINITION` step id, or 0 when the product chain was not
+    /// emitted (the caller leaves a 0 slot in `property_step_ids`).
+    fn emit_property(&mut self, prop: &Property) -> u64 {
         // Defensive: silent skip when product chain wasn't emitted (e.g.,
         // kernel-built IR with `properties` populated but no assembly).
         // Reader symmetry — reader silent skips PDs whose target wasn't a
         // resolvable Product.
         let Some(&pdef_id) = self.product_def_ids.get(&prop.target) else {
-            return;
+            return 0;
         };
 
         // 1. Emit items (mixed MEASURE / DESCRIPTIVE in source order).
@@ -183,6 +232,7 @@ impl WriteBuffer<'_> {
             self,
             PropertyDefinitionRepresentationWriteInput { pd, repr },
         );
+        pd
     }
 
     /// Emit a `DESCRIPTIVE_REPRESENTATION_ITEM` for a property's

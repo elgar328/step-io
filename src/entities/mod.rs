@@ -347,6 +347,13 @@ pub(crate) enum PassLevel {
     /// `graph` to walk the bound REPRESENTATION (a generic entity name
     /// shared with MDGPR / SR — a per-pass map would conflate them).
     Pass8Pdr,
+    /// `GENERAL_PROPERTY` (Pass 8-4) — AP242 user-defined attribute
+    /// definition. Leaf; referenced only by `Pass8Gpa`.
+    Pass8GeneralProperty,
+    /// `GENERAL_PROPERTY_ASSOCIATION` (Pass 8-5) — refs a `GeneralProperty`
+    /// (`Pass8GeneralProperty`) and a `PROPERTY_DEFINITION` resolved through
+    /// the property arena `Pass8Pdr` builds.
+    Pass8Gpa,
 }
 
 /// Handler for a [`RawEntity::Simple`] STEP entity. Reader receives a flat

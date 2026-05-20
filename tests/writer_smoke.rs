@@ -15,8 +15,13 @@ use step_io::ir::geometry::{
     NurbsSurfaceKind, Plane3, Point3, SphericalSurface, Surface, SurfaceForm,
     SurfaceOfLinearExtrusion, SurfaceOfRevolution, ToroidalSurface,
 };
-use step_io::ir::id::{DirectionId, Placement3dId, PointId, SolidId, UnitContextId};
+use step_io::ir::id::{
+    DirectionId, GeneralPropertyId, Placement3dId, PointId, PropertyId, SolidId, UnitContextId,
+};
 use step_io::ir::model::StepModel;
+use step_io::ir::property::{
+    DerivedDefinitionItem, GeneralProperty, GeneralPropertyAssociation, Property, PropertyPool,
+};
 use step_io::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit, UnitContext};
 use step_io::ir::topology::{Face, FaceKind, Orientation, Shell, Solid, Wire};
 use step_io::ir::units::{NamedUnit, UnitsPool};
@@ -1262,4 +1267,82 @@ fn explicit_ap203_schema_round_trips() {
     );
     let re = reconvert(&text);
     assert_eq!(re.schema.class(), Some(SchemaClass::Ap203));
+}
+
+#[test]
+fn general_property_and_association_round_trip() {
+    // AP242 user-defined attribute: a GENERAL_PROPERTY defines the
+    // attribute, a GENERAL_PROPERTY_ASSOCIATION binds it to a product's
+    // PROPERTY_DEFINITION.
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        content: ProductContent::Solid(SolidContent {
+            ids: vec![solid_id],
+        }),
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+    });
+    tree.root = Some(part_pid);
+    model.assembly = Some(tree);
+
+    let mut pool = PropertyPool::default();
+    pool.properties.push(Property {
+        name: "p1".into(),
+        description: Some("user defined attribute".into()),
+        target: part_pid,
+        representation_name: String::new(),
+        context: Some(UnitContextId(0)),
+        items: Vec::new(),
+    });
+    pool.general_properties.push(GeneralProperty {
+        id: String::new(),
+        name: "SACHNUMMER".into(),
+        description: Some("user defined attribute".into()),
+    });
+    pool.general_property_associations
+        .push(GeneralPropertyAssociation {
+            name: "user defined attribute".into(),
+            description: None,
+            base_definition: GeneralPropertyId(0),
+            derived_definition: DerivedDefinitionItem::PropertyDefinition(PropertyId(0)),
+        });
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pool = re
+        .properties
+        .as_ref()
+        .expect("round-tripped has properties");
+    assert_eq!(re_pool.general_properties.len(), 1);
+    assert_eq!(re_pool.general_property_associations.len(), 1);
+
+    let gp = re_pool.general_properties.iter().next().unwrap();
+    assert_eq!(gp.name, "SACHNUMMER");
+    assert_eq!(gp.description.as_deref(), Some("user defined attribute"));
+
+    let gpa = re_pool.general_property_associations.iter().next().unwrap();
+    assert_eq!(gpa.name, "user defined attribute");
+    assert_eq!(gpa.description, None);
+    assert_eq!(gpa.base_definition, GeneralPropertyId(0));
+    assert_eq!(
+        gpa.derived_definition,
+        DerivedDefinitionItem::PropertyDefinition(PropertyId(0))
+    );
 }

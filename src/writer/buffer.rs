@@ -227,6 +227,15 @@ pub(crate) struct WriteBuffer<'m> {
     /// `product_def_ids` but for the PDS sibling — consumed by the PMI
     /// emitter to resolve `ShapeAspect.target` (SAs reference PDS, not PD).
     pub(crate) product_def_shape_ids: std::collections::HashMap<ProductId, u64>,
+    /// STEP entity id of every emitted `PROPERTY_DEFINITION`, indexed by
+    /// `PropertyId.0`. Filled by `emit_properties_if_set`; consumed by the
+    /// `GENERAL_PROPERTY_ASSOCIATION` emitter to resolve `derived_definition`.
+    /// A slot stays 0 when that property's emit early-returned (no product
+    /// chain) — the GPA emitter skips a 0 slot.
+    pub(crate) property_step_ids: Vec<u64>,
+    /// STEP entity id of every emitted `GENERAL_PROPERTY`, indexed by
+    /// `GeneralPropertyId.0`. Consumed by the GPA emitter for `base_definition`.
+    pub(crate) general_property_step_ids: Vec<u64>,
 }
 
 impl<'m> WriteBuffer<'m> {
@@ -301,6 +310,8 @@ impl<'m> WriteBuffer<'m> {
             pdc_step_ids: Vec::new(),
             product_def_ids: std::collections::HashMap::new(),
             product_def_shape_ids: std::collections::HashMap::new(),
+            property_step_ids: Vec::new(),
+            general_property_step_ids: Vec::new(),
         }
     }
 

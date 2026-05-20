@@ -39,13 +39,14 @@ pub use id::{
     DateId, DateTimeRoleId, DerivedUnitElementId, DerivedUnitId, DescriptionAttributeId,
     Direction2dId, DirectionId, DocumentId, DocumentProductEquivalenceId, DocumentReferenceId,
     DocumentRepresentationTypeId, DocumentTypeId, EdgeId, ExternalSourceId, FaceId,
-    FeatureDefinitionId, FoundedItemId, GroupAssignmentId, GroupId, IdAttributeId,
-    IdentificationAssignmentId, IdentificationRoleId, LocalTimeId, MeasureWithUnitId,
-    NameAttributeId, NamedUnitId, ObjectRoleId, OrganizationId, PersonAndOrganizationAssignmentId,
-    PersonAndOrganizationId, PersonAndOrganizationRoleId, PersonId, Placement1dId, Placement2dId,
-    Placement3dId, Point2dId, PointId, ProductContextId, ProductDefinitionContextAssociationId,
-    ProductDefinitionContextId, ProductDefinitionContextRoleId, ProductDefinitionRelationshipId,
-    ProductId, RepresentationId, RoleAssociationId, SecurityClassificationAssignmentId,
+    FeatureDefinitionId, FoundedItemId, GeneralPropertyAssociationId, GeneralPropertyId,
+    GroupAssignmentId, GroupId, IdAttributeId, IdentificationAssignmentId, IdentificationRoleId,
+    LocalTimeId, MeasureWithUnitId, NameAttributeId, NamedUnitId, ObjectRoleId, OrganizationId,
+    PersonAndOrganizationAssignmentId, PersonAndOrganizationId, PersonAndOrganizationRoleId,
+    PersonId, Placement1dId, Placement2dId, Placement3dId, Point2dId, PointId, ProductContextId,
+    ProductDefinitionContextAssociationId, ProductDefinitionContextId,
+    ProductDefinitionContextRoleId, ProductDefinitionRelationshipId, ProductId, PropertyId,
+    RepresentationId, RoleAssociationId, SecurityClassificationAssignmentId,
     SecurityClassificationId, SecurityClassificationLevelId, ShapeAspectId, ShellId, SolidId,
     SurfaceId, UnitContextId, VertexId, WireId,
 };
@@ -69,9 +70,9 @@ pub use plm::{
     SecurityClassificationItem, SecurityClassificationLevel,
 };
 pub use property::{
-    DescriptionAttribute, DescriptionAttributeItem, IdAttribute, IdAttributeItem, MeasureKind,
-    NameAttribute, NameAttributeItem, Property, PropertyItem, PropertyMeasure, PropertyMeasureUnit,
-    PropertyPool,
+    DerivedDefinitionItem, DescriptionAttribute, DescriptionAttributeItem, GeneralProperty,
+    GeneralPropertyAssociation, IdAttribute, IdAttributeItem, MeasureKind, NameAttribute,
+    NameAttributeItem, Property, PropertyItem, PropertyMeasure, PropertyMeasureUnit, PropertyPool,
 };
 pub use shape_rep::{
     AdvancedBrepRepr, AngleUnit, DescriptiveItem, LengthUncertainty, LengthUnit,

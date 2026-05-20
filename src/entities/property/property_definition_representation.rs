@@ -72,7 +72,8 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
             })
             .collect();
 
-        ctx.properties
+        let prop_id = ctx
+            .properties
             .get_or_insert_with(PropertyPool::default)
             .properties
             .push(Property {
@@ -83,6 +84,9 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
                 context,
                 items,
             });
+        // Record PD `#N → PropertyId` so the GPA reader can resolve a
+        // `derived_definition` pointing at this PROPERTY_DEFINITION.
+        ctx.property_step_to_id.insert(pd_ref, prop_id);
         Ok(())
     }
 

@@ -337,6 +337,14 @@ pub struct ReaderContext {
     /// (Pass 8-3). PDs whose target ref does not resolve to a Product
     /// (e.g. `SHAPE_ASPECT`) are silently dropped — no map entry.
     pub(crate) property_def_map: HashMap<u64, (String, Option<String>, ProductId)>,
+    /// `PROPERTY_DEFINITION #N → PropertyId` (Pass 8-3). Recorded by the
+    /// PDR reader when it pushes a `Property`; consumed by the GPA reader
+    /// to resolve `derived_definition`. Temp; discarded after Pass 8.
+    pub(crate) property_step_to_id: HashMap<u64, crate::ir::PropertyId>,
+    /// `GENERAL_PROPERTY #N → GeneralPropertyId` (Pass 8-4). Consumed by
+    /// the GPA reader to resolve `base_definition`. Temp; discarded after
+    /// Pass 8.
+    pub(crate) general_property_id_map: HashMap<u64, crate::ir::GeneralPropertyId>,
 
     /// `SHAPE_ASPECT` arena — Pass 8 's `SHAPE_ASPECT` convert pushes
     /// here. Empty when no PMI entities were seen.

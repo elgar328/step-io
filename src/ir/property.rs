@@ -12,8 +12,8 @@
 
 use super::arena::Arena;
 use super::id::{
-    AddressId, ApplicationContextId, DerivedUnitId, GroupId, NamedUnitId, PersonAndOrganizationId,
-    ProductId, ShapeAspectId, UnitContextId,
+    AddressId, ApplicationContextId, DerivedUnitId, GeneralPropertyId, GroupId, NamedUnitId,
+    PersonAndOrganizationId, ProductId, PropertyId, ShapeAspectId, UnitContextId,
 };
 use super::shape_rep::DescriptiveItem;
 
@@ -23,8 +23,15 @@ use super::shape_rep::DescriptiveItem;
 /// without one).
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct PropertyPool {
-    /// Top-level property records — emit order preserved.
-    pub properties: Vec<Property>,
+    /// Property records (PD + REPRESENTATION + PDR collapsed) — an arena so
+    /// `GENERAL_PROPERTY_ASSOCIATION.derived_definition` can reference one
+    /// by [`PropertyId`]. Arena (not `Vec`) order = source `#N` order.
+    pub properties: Arena<Property>,
+    /// `GENERAL_PROPERTY` arena — AP242 user-defined attribute definitions.
+    pub general_properties: Arena<GeneralProperty>,
+    /// `GENERAL_PROPERTY_ASSOCIATION` arena — links each `GeneralProperty`
+    /// to the [`Property`] carrying its value.
+    pub general_property_associations: Arena<GeneralPropertyAssociation>,
     /// `NAME_ATTRIBUTE` arena. Initial SELECT coverage:
     /// [`NameAttributeItem::ProductDefinition`] + [`NameAttributeItem::DerivedUnit`].
     pub name_attributes: Arena<NameAttribute>,
@@ -169,4 +176,41 @@ pub enum MeasureKind {
     Mass,
     Area,
     Volume,
+}
+
+/// `GENERAL_PROPERTY(id, name, description)` — AP242 user-defined attribute
+/// *definition* (e.g. a part-number or material attribute). Referenced
+/// only by [`GeneralPropertyAssociation::base_definition`].
+#[derive(Debug, Clone, PartialEq)]
+pub struct GeneralProperty {
+    /// `GENERAL_PROPERTY.id` — often `''`.
+    pub id: String,
+    /// `GENERAL_PROPERTY.name` — the attribute label (e.g. `"SACHNUMMER"`).
+    pub name: String,
+    /// `GENERAL_PROPERTY.description` — empty / `$` both round-trip as `None`.
+    pub description: Option<String>,
+}
+
+/// `GENERAL_PROPERTY_ASSOCIATION(name, description, base_definition,
+/// derived_definition)` — links a [`GeneralProperty`] to the property
+/// occurrence that carries the attribute's value.
+#[derive(Debug, Clone, PartialEq)]
+pub struct GeneralPropertyAssociation {
+    pub name: String,
+    pub description: Option<String>,
+    /// The associated attribute definition.
+    pub base_definition: GeneralPropertyId,
+    /// The property occurrence the attribute is bound to.
+    pub derived_definition: DerivedDefinitionItem,
+}
+
+/// SELECT target for [`GeneralPropertyAssociation::derived_definition`].
+/// Initial coverage of the schema's `derived_property_select`:
+/// `property_definition`, resolved to the [`Property`] record that
+/// collapses the PD + PDR + REPRESENTATION chain. Unsupported SELECT
+/// members are dropped at read time with a warning — same expansion
+/// policy as [`NameAttributeItem`] / [`IdAttributeItem`].
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum DerivedDefinitionItem {
+    PropertyDefinition(PropertyId),
 }
