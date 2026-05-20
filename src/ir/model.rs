@@ -160,9 +160,9 @@ pub struct StepModel {
     /// kernel-built IR with units unset).
     pub units: Arena<UnitContext>,
     /// Assembly tree. `None` when the STEP file contains no `PRODUCT`
-    /// entities (single-part files). Phase A populates `products` but
-    /// leaves `AssemblyTree.root` as `None`; Phase B resolves the root
-    /// and wires instances.
+    /// entities (single-part files). `AssemblyTree.roots` lists every
+    /// top-level product (a forest for multi-part files); instances are
+    /// wired into each product's `Group` content.
     pub assembly: Option<AssemblyTree>,
     /// AP schema this model targets, including the raw `FILE_SCHEMA` text
     /// when preserved from a source file. `StepSchema::Known { raw: None }`

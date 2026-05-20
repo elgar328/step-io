@@ -15,15 +15,16 @@ use super::id::{
 
 /// Assembly graph. Conventionally called a "tree" but shared instances
 /// make it a DAG in general (the same product can be reached through
-/// multiple [`Instance`]s).
-///
-/// Phase A leaves `root` as `None`; Phase B resolves the top-level
-/// product by walking the NAUO graph.
+/// multiple [`Instance`]s). A single STEP file may also carry several
+/// independent top-level products (no NAUO between them), so the graph is
+/// a forest in general — hence `roots` is a list.
 #[derive(Debug, Clone, Default)]
 pub struct AssemblyTree {
     pub products: Arena<Product>,
-    /// Phase A: always `None`. Phase B fills this in.
-    pub root: Option<ProductId>,
+    /// Every top-level product — one not referenced as any
+    /// [`Instance::child`]. One entry for a single assembly, several for a
+    /// multi-part file; empty only for a (malformed) fully cyclic graph.
+    pub roots: Vec<ProductId>,
     /// `PRODUCT_CONTEXT` / `MECHANICAL_CONTEXT` arena. The writer
     /// currently emits the first entry; additional entries drop
     /// (single-context emit pattern shared with the AC chain).

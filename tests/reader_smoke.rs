@@ -1217,7 +1217,7 @@ fn assembly_fixtures_have_seven_products() {
             .as_ref()
             .unwrap_or_else(|| panic!("fixture {name}: assembly should be Some"));
         assert_eq!(tree.products.len(), 7, "fixture {name}: product count");
-        assert!(tree.root.is_some(), "fixture {name}: root resolved");
+        assert!(!tree.roots.is_empty(), "fixture {name}: root resolved");
     }
 }
 
@@ -1316,9 +1316,9 @@ fn single_part_fixtures_have_one_product() {
             // The sole product — having never appeared as an Instance child
             // — is the automatic root.
             assert_eq!(
-                tree.root,
-                Some(step_io::ProductId(0)),
-                "fixture {name}: root should resolve to the only product"
+                tree.roots,
+                vec![step_io::ProductId(0)],
+                "fixture {name}: the only product is the sole root"
             );
             let product = tree.products.iter().next().unwrap();
             assert!(
@@ -1397,7 +1397,11 @@ fn assembly_fixtures_tree_root_is_assembly_product() {
             .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
         let result = ReaderContext::convert(&graph);
         let tree = result.model.assembly.as_ref().unwrap();
-        let root = tree.root.expect("root should be resolved");
+        let root = tree
+            .roots
+            .first()
+            .copied()
+            .expect("root should be resolved");
         let root_product = &tree.products[root];
         assert_eq!(
             root_product.name, "Assembly",
@@ -1414,7 +1418,11 @@ fn assembly_fixtures_root_has_four_instances() {
             .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
         let result = ReaderContext::convert(&graph);
         let tree = result.model.assembly.as_ref().unwrap();
-        let root = tree.root.unwrap();
+        let root = tree
+            .roots
+            .first()
+            .copied()
+            .expect("root should be resolved");
         match &tree.products[root].content {
             ProductContent::Group(group) => {
                 assert_eq!(
@@ -1449,7 +1457,11 @@ fn assembly_fixtures_cube_wrapper_is_shared() {
         };
         let cube_wrapper = step_io::ProductId(u32::try_from(idx).unwrap());
 
-        let root = tree.root.unwrap();
+        let root = tree
+            .roots
+            .first()
+            .copied()
+            .expect("root should be resolved");
         let ProductContent::Group(root_group) = &tree.products[root].content else {
             panic!("fixture {name}: root not Group");
         };

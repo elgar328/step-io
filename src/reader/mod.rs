@@ -518,7 +518,8 @@ impl ReaderContext {
     }
 
     /// Wrap the collected products into an `AssemblyTree` if any PRODUCT
-    /// entities were seen. `root` stays `None` in Phase A; Phase B fills it.
+    /// entities were seen. `roots` lists every top-level product (a forest
+    /// for multi-part files).
     fn finalize_assembly(&mut self) {
         if self.product_arena_map.is_empty() {
             return;
@@ -538,29 +539,17 @@ impl ReaderContext {
             .iter_ids()
             .filter(|pid| !is_child.contains(pid))
             .collect();
-        let root = match roots.as_slice() {
-            [single] => Some(*single),
-            [] => {
-                self.warnings.push(ConvertError::UnexpectedEntityForm {
-                    entity_id: 0,
-                    detail: String::from(
-                        "assembly has no root candidate (every product appears as an instance child)",
-                    ),
-                });
-                // Fallback: first product.
-                Some(ProductId(0))
-            }
-            [first, ..] => {
-                self.warnings.push(ConvertError::UnexpectedEntityForm {
-                    entity_id: 0,
-                    detail: format!(
-                        "assembly has {} root candidates, using the first",
-                        roots.len()
-                    ),
-                });
-                Some(*first)
-            }
-        };
+        // A multi-part file legitimately holds several independent
+        // top-level products — a normal forest, not an anomaly. Only a
+        // fully cyclic graph (no product free of a parent) is malformed.
+        if roots.is_empty() {
+            self.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id: 0,
+                detail: String::from(
+                    "assembly has no root candidate (every product appears as an instance child)",
+                ),
+            });
+        }
         let products = std::mem::take(&mut self.assembly_products);
         let product_contexts = std::mem::take(&mut self.product_contexts);
         let product_definition_contexts = std::mem::take(&mut self.product_definition_contexts);
@@ -572,7 +561,7 @@ impl ReaderContext {
             std::mem::take(&mut self.product_definition_relationships);
         self.assembly = Some(AssemblyTree {
             products,
-            root,
+            roots,
             product_contexts,
             product_definition_contexts,
             product_definition_context_roles,

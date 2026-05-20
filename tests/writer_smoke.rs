@@ -904,14 +904,14 @@ fn simple_assembly_round_trips() {
         representation_id: None,
         outer_representation_id: None,
     });
-    tree.root = Some(root_pid);
+    tree.roots = vec![root_pid];
     model.assembly = Some(tree);
 
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
     let r_asm = re.assembly.as_ref().expect("round-tripped has assembly");
     assert_eq!(r_asm.products.len(), 2);
-    assert!(r_asm.root.is_some());
+    assert_eq!(r_asm.roots.len(), 1, "single-root assembly");
     let root_prod = r_asm
         .products
         .iter()
@@ -996,7 +996,7 @@ fn shared_child_assembly_round_trips() {
         representation_id: None,
         outer_representation_id: None,
     });
-    tree.root = Some(root_pid);
+    tree.roots = vec![root_pid];
     model.assembly = Some(tree);
 
     let text = model.write_to_string().expect("write");
@@ -1068,7 +1068,7 @@ fn multi_body_solid_round_trips() {
         representation_id: None,
         outer_representation_id: None,
     });
-    tree.root = Some(pid);
+    tree.roots = vec![pid];
     model.assembly = Some(tree);
 
     let text = model.write_to_string().expect("write");
@@ -1298,7 +1298,7 @@ fn general_property_and_association_round_trip() {
         representation_id: None,
         outer_representation_id: None,
     });
-    tree.root = Some(part_pid);
+    tree.roots = vec![part_pid];
     model.assembly = Some(tree);
 
     let mut pool = PropertyPool::default();
@@ -1345,4 +1345,48 @@ fn general_property_and_association_round_trip() {
         gpa.derived_definition,
         DerivedDefinitionItem::PropertyDefinition(PropertyId(0))
     );
+}
+
+#[test]
+fn multi_root_independent_products_round_trip() {
+    // A STEP file may hold several independent top-level products with no
+    // NAUO between them. `AssemblyTree.roots` lists all of them; the reader
+    // must not warn (the old "N root candidates" warning was a spurious
+    // LOSS trigger). `reconvert` asserts the reader produced no warnings.
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let mut pids = Vec::new();
+    for name in ["PartA", "PartB"] {
+        let solid_id = push_minimal_solid(&mut model);
+        let pid = tree.products.push(Product {
+            id: name.into(),
+            name: name.into(),
+            description: None,
+            content: ProductContent::Solid(SolidContent {
+                ids: vec![solid_id],
+            }),
+            shape_ref_frame: identity_frame,
+            outer_sr_frame: None,
+            category: None,
+            formation_with_source: false,
+            geometry_context: Some(UnitContextId(0)),
+            product_context: None,
+            pdef_context: None,
+            representation_id: None,
+            outer_representation_id: None,
+        });
+        pids.push(pid);
+    }
+    tree.roots = pids.clone();
+    model.assembly = Some(tree);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let r_asm = re.assembly.as_ref().expect("round-tripped has assembly");
+    assert_eq!(r_asm.products.len(), 2);
+    assert_eq!(r_asm.roots, pids, "both independent products are roots");
 }

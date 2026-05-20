@@ -212,7 +212,7 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
         r_asm.products.len(),
         "{name}: products count"
     );
-    assert_eq!(o_asm.root, r_asm.root, "{name}: root");
+    assert_eq!(o_asm.roots, r_asm.roots, "{name}: roots");
     for (pidx, (op, rp)) in o_asm.products.iter().zip(r_asm.products.iter()).enumerate() {
         assert_eq!(op.id, rp.id, "{name}: product[{pidx}] id");
         assert_eq!(op.name, rp.name, "{name}: product[{pidx}] name");
