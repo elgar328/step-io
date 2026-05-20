@@ -11,15 +11,13 @@
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::{
-    OverRidingStyledItem, StyledItem, StyledItemTarget, VisualizationPool,
-};
+use crate::ir::visualization::{OverRidingStyledItem, StyledItem, VisualizationPool};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
-use super::styled_item::resolve_styled_item_target;
+use super::styled_item::resolve_representation_item_ref;
 use step_io_macros::step_entity;
 
 pub(crate) struct OverRidingStyledItemHandler;
@@ -46,7 +44,7 @@ impl SimpleEntityHandler for OverRidingStyledItemHandler {
                 styles.push(psa_id);
             }
         }
-        let Some(item) = resolve_styled_item_target(ctx, item_ref) else {
+        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
             return Ok(());
         };
         let Some(&over_ridden_style) = ctx.viz_styled_item_id_map.get(&over_ridden_ref) else {
@@ -69,16 +67,7 @@ impl SimpleEntityHandler for OverRidingStyledItemHandler {
     }
 
     fn write(buf: &mut WriteBuffer, osi: OverRidingStyledItem) -> Result<u64, WriteError> {
-        let item_id = match osi.item {
-            StyledItemTarget::Solid(sid) => buf.emit_solid(sid)?,
-            StyledItemTarget::Face(fid) => buf.emit_face(fid)?,
-            StyledItemTarget::Edge(eid) => buf.emit_edge(eid)?,
-            StyledItemTarget::Curve(cid) => buf.emit_curve(cid)?,
-            StyledItemTarget::Point(pid) => buf.emit_point(pid)?,
-            StyledItemTarget::Surface(sid) => buf.emit_surface(sid)?,
-            StyledItemTarget::Vertex(vid) => buf.emit_vertex(vid)?,
-            StyledItemTarget::Shell(shid) => buf.emit_shell(shid)?,
-        };
+        let item_id = buf.emit_representation_item_ref(osi.item)?;
         let mut style_refs = Vec::with_capacity(osi.styles.len());
         for psa_id in osi.styles {
             style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));

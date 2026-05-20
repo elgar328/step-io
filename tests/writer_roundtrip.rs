@@ -611,7 +611,8 @@ fn box_ap203_preserves_product_category_chain() {
 /// triple.
 #[test]
 fn box_ap214_is_preserves_visualization() {
-    use step_io::ir::visualization::{StyledItemTarget, SurfaceSideStyleEntry};
+    use step_io::ir::RepresentationItemRef;
+    use step_io::ir::visualization::SurfaceSideStyleEntry;
     let model =
         ReaderContext::convert(&parse(include_str!("fixtures/box_ap214_is.step")).expect("parse"))
             .model;
@@ -624,7 +625,7 @@ fn box_ap214_is_preserves_visualization() {
         panic!("expected Plain StyledItem variant");
     };
     assert!(
-        matches!(si.item, StyledItemTarget::Solid(_)),
+        matches!(si.item, RepresentationItemRef::Solid(_)),
         "STYLED_ITEM should bind to a Solid, got {:?}",
         si.item
     );

@@ -1,27 +1,23 @@
 //! `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` (CDOSI) handler — Pass 7-10c.
 //!
 //! Extends [`super::over_riding_styled_item::OverRidingStyledItemHandler`]
-//! with the additional `style_context` SELECT list. Initial scope covers
-//! the `representation_item` variant only (via [`resolve_styled_item_target`]
-//! reuse); `representation` / `shape_representation` / `shape_aspect` refs
-//! are silently dropped with a warning. `ShapeAspect` support is deferred
-//! pending pass-ordering work (its `id_map` is populated by Pass 8, which
-//! runs after this pass — placing CDOSI later would break `Pass7Mdgpr`'s
-//! visibility into the new arena entries).
+//! with the additional `style_context` SELECT list. Each context resolves
+//! through [`resolve_representation_item_ref`] into a `RepresentationItemRef`
+//! (geometry, topology, geometry representation, or 3D placement); `shape`
+//! and `shape_aspect` SELECT members are silently dropped with a warning.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::{
-    ContextDependentOverRidingStyledItem, StyleContextRef, StyledItem, StyledItemTarget,
-    VisualizationPool,
+    ContextDependentOverRidingStyledItem, StyleContextRef, StyledItem, VisualizationPool,
 };
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
-use super::styled_item::resolve_styled_item_target;
+use super::styled_item::resolve_representation_item_ref;
 use step_io_macros::step_entity;
 
 pub(crate) struct ContextDependentOverRidingStyledItemHandler;
@@ -54,7 +50,7 @@ impl SimpleEntityHandler for ContextDependentOverRidingStyledItemHandler {
                 styles.push(psa_id);
             }
         }
-        let Some(item) = resolve_styled_item_target(ctx, item_ref) else {
+        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
             return Ok(());
         };
         let Some(&over_ridden_style) = ctx.viz_styled_item_id_map.get(&over_ridden_ref) else {
@@ -63,7 +59,7 @@ impl SimpleEntityHandler for ContextDependentOverRidingStyledItemHandler {
 
         let mut style_context = Vec::with_capacity(context_refs.len());
         for r in &context_refs {
-            if let Some(target) = resolve_styled_item_target(ctx, *r) {
+            if let Some(target) = resolve_representation_item_ref(ctx, *r) {
                 style_context.push(StyleContextRef::RepresentationItem(target));
             } else {
                 ctx.warnings.push(ConvertError::UnexpectedEntityForm {
@@ -95,7 +91,7 @@ impl SimpleEntityHandler for ContextDependentOverRidingStyledItemHandler {
         buf: &mut WriteBuffer,
         cd: ContextDependentOverRidingStyledItem,
     ) -> Result<u64, WriteError> {
-        let item_id = emit_target(buf, cd.item)?;
+        let item_id = buf.emit_representation_item_ref(cd.item)?;
         let mut style_refs = Vec::with_capacity(cd.styles.len());
         for psa_id in cd.styles {
             style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
@@ -105,7 +101,7 @@ impl SimpleEntityHandler for ContextDependentOverRidingStyledItemHandler {
         for ctx_ref in cd.style_context {
             match ctx_ref {
                 StyleContextRef::RepresentationItem(target) => {
-                    let step_id = emit_target(buf, target)?;
+                    let step_id = buf.emit_representation_item_ref(target)?;
                     context_refs.push(Attribute::EntityRef(step_id));
                 }
             }
@@ -120,18 +116,5 @@ impl SimpleEntityHandler for ContextDependentOverRidingStyledItemHandler {
                 Attribute::List(context_refs),
             ],
         ))
-    }
-}
-
-fn emit_target(buf: &mut WriteBuffer, target: StyledItemTarget) -> Result<u64, WriteError> {
-    match target {
-        StyledItemTarget::Solid(sid) => buf.emit_solid(sid),
-        StyledItemTarget::Face(fid) => buf.emit_face(fid),
-        StyledItemTarget::Edge(eid) => buf.emit_edge(eid),
-        StyledItemTarget::Curve(cid) => buf.emit_curve(cid),
-        StyledItemTarget::Point(pid) => buf.emit_point(pid),
-        StyledItemTarget::Surface(sid) => buf.emit_surface(sid),
-        StyledItemTarget::Vertex(vid) => buf.emit_vertex(vid),
-        StyledItemTarget::Shell(shid) => buf.emit_shell(shid),
     }
 }

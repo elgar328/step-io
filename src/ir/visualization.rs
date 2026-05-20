@@ -7,10 +7,10 @@
 
 use super::arena::Arena;
 use super::id::{
-    ColourId, CurveFontId, CurveId, CurveStyleId, EdgeId, FaceId, FoundedItemId, PointId,
-    PresentationStyleAssignmentId, ShellId, SolidId, StyledItemId, SurfaceId,
-    SurfaceStyleRenderingId, VertexId,
+    ColourId, CurveFontId, CurveStyleId, FoundedItemId, PresentationStyleAssignmentId,
+    StyledItemId, SurfaceStyleRenderingId,
 };
+use super::representation_item::RepresentationItemRef;
 use super::shape_rep::Mdgpr;
 
 /// Top-level container for visualization data extracted from
@@ -170,7 +170,7 @@ pub enum StyledItem {
 pub struct PlainStyledItem {
     pub name: String,
     pub styles: Vec<PresentationStyleAssignmentId>,
-    pub item: StyledItemTarget,
+    pub item: RepresentationItemRef,
 }
 
 /// `OVER_RIDING_STYLED_ITEM(name, styles, item, over_ridden_style)` —
@@ -180,7 +180,7 @@ pub struct PlainStyledItem {
 pub struct OverRidingStyledItem {
     pub name: String,
     pub styles: Vec<PresentationStyleAssignmentId>,
-    pub item: StyledItemTarget,
+    pub item: RepresentationItemRef,
     pub over_ridden_style: StyledItemId,
 }
 
@@ -193,37 +193,20 @@ pub struct OverRidingStyledItem {
 pub struct ContextDependentOverRidingStyledItem {
     pub name: String,
     pub styles: Vec<PresentationStyleAssignmentId>,
-    pub item: StyledItemTarget,
+    pub item: RepresentationItemRef,
     pub over_ridden_style: StyledItemId,
     pub style_context: Vec<StyleContextRef>,
 }
 
 /// SELECT target for [`ContextDependentOverRidingStyledItem::style_context`].
-/// Initial coverage: `RepresentationItem` (geometry / topology via
-/// [`StyledItemTarget`]). Other variants (`representation`,
-/// `shape_representation`, `shape_aspect`) silently dropped at read time
-/// with a warning; future phases expand the enum once representation IR
-/// and `ShapeAspect` pass-ordering are addressed.
+/// Each context is a `representation_item` reference — geometry, topology, a
+/// geometry representation, or a 3D placement via [`RepresentationItemRef`].
+/// Other `style_context` SELECT members (`shape`, `shape_aspect`) are
+/// silently dropped at read time with a warning; future phases expand the
+/// enum once those are modelled.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum StyleContextRef {
-    RepresentationItem(StyledItemTarget),
-}
-
-/// What the `STYLED_ITEM.item` ref resolved to in step-io's IR. The STEP
-/// `representation_item` SELECT is broad; this enum lists the variants
-/// step-io currently round-trips. Fusion 360 commonly styles individual
-/// `ADVANCED_FACE` entities (per-face colouring); ABC-corpus files
-/// frequently style `EDGE_CURVE` entities for line decoration.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum StyledItemTarget {
-    Solid(SolidId),
-    Face(FaceId),
-    Edge(EdgeId),
-    Curve(CurveId),
-    Point(PointId),
-    Surface(SurfaceId),
-    Vertex(VertexId),
-    Shell(ShellId),
+    RepresentationItem(RepresentationItemRef),
 }
 
 /// `PRESENTATION_STYLE_ASSIGNMENT` enum per the ir.toml blueprint

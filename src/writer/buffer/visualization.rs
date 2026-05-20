@@ -5,12 +5,40 @@
 //! / `emit_face` wrappers in units / topology.
 
 use super::WriteBuffer;
+use crate::ir::representation_item::RepresentationItemRef;
 use crate::ir::visualization::{
     Colour, CurveFont, FoundedItem, PresentationStyleAssignment, StyledItem, SurfaceStyleRendering,
 };
 use crate::writer::WriteError;
 
 impl WriteBuffer<'_> {
+    /// Emit the entity behind a [`RepresentationItemRef`] and return its STEP
+    /// id. Geometry / topology / placement variants delegate to the existing
+    /// idempotent emitters; `Representation` resolves through the
+    /// `representation_step_ids` cache, which `emit_representations_pre_pass`
+    /// fills for every geometry representation before the visualization pass
+    /// runs. The resolver's MDGPR guard guarantees `id` is never an MDGPR
+    /// (whose cache slot is appended only later, during this pass).
+    pub(crate) fn emit_representation_item_ref(
+        &mut self,
+        item: RepresentationItemRef,
+    ) -> Result<u64, WriteError> {
+        match item {
+            RepresentationItemRef::Solid(id) => self.emit_solid(id),
+            RepresentationItemRef::Face(id) => self.emit_face(id),
+            RepresentationItemRef::Edge(id) => self.emit_edge(id),
+            RepresentationItemRef::Curve(id) => self.emit_curve(id),
+            RepresentationItemRef::Point(id) => self.emit_point(id),
+            RepresentationItemRef::Surface(id) => self.emit_surface(id),
+            RepresentationItemRef::Vertex(id) => self.emit_vertex(id),
+            RepresentationItemRef::Shell(id) => self.emit_shell(id),
+            RepresentationItemRef::Placement3d(id) => self.emit_axis2_placement_3d(id),
+            RepresentationItemRef::Representation(id) => {
+                Ok(self.representation_step_ids[id.0 as usize])
+            }
+        }
+    }
+
     pub(in crate::writer::buffer) fn emit_visualization_if_set(
         &mut self,
     ) -> Result<(), WriteError> {

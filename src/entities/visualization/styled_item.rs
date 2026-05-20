@@ -8,18 +8,18 @@
 //! cached STEP id from `WriteBuffer::styled_item_step_ids` and emits the
 //! body fresh per call.
 //!
-//! `representation_item` is a broad SELECT in the schema. step-io models
-//! Solid / Face / Edge / Curve / Point — covering the variants observed
-//! in the reference-check corpus (Fusion-style per-face colour,
-//! ABC-style per-edge curve decoration, plus solid / curve / point
-//! styling seen elsewhere). Targets resolving to other variants are
-//! silently dropped to preserve round-trip equality on the supported
-//! subset.
+//! `STYLED_ITEM.item` is a `representation_item` ref, resolved through the
+//! shared [`resolve_representation_item_ref`] into a [`RepresentationItemRef`]
+//! (geometry, topology, geometry representation, or 3D placement). Targets
+//! that resolve to an unmodelled kind are silently dropped to preserve
+//! round-trip equality on the supported subset.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::{PlainStyledItem, StyledItem, StyledItemTarget, VisualizationPool};
+use crate::ir::representation_item::RepresentationItemRef;
+use crate::ir::shape_rep::Representation;
+use crate::ir::visualization::{PlainStyledItem, StyledItem, VisualizationPool};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -51,7 +51,7 @@ impl SimpleEntityHandler for StyledItemHandler {
             }
         }
 
-        let Some(item) = resolve_styled_item_target(ctx, item_ref) else {
+        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
             return Ok(());
         };
 
@@ -66,16 +66,7 @@ impl SimpleEntityHandler for StyledItemHandler {
     }
 
     fn write(buf: &mut WriteBuffer, si: PlainStyledItem) -> Result<u64, WriteError> {
-        let item_id = match si.item {
-            StyledItemTarget::Solid(sid) => buf.emit_solid(sid)?,
-            StyledItemTarget::Face(fid) => buf.emit_face(fid)?,
-            StyledItemTarget::Edge(eid) => buf.emit_edge(eid)?,
-            StyledItemTarget::Curve(cid) => buf.emit_curve(cid)?,
-            StyledItemTarget::Point(pid) => buf.emit_point(pid)?,
-            StyledItemTarget::Surface(sid) => buf.emit_surface(sid)?,
-            StyledItemTarget::Vertex(vid) => buf.emit_vertex(vid)?,
-            StyledItemTarget::Shell(shid) => buf.emit_shell(shid)?,
-        };
+        let item_id = buf.emit_representation_item_ref(si.item)?;
         let mut style_refs = Vec::with_capacity(si.styles.len());
         for psa_id in si.styles {
             style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
@@ -91,38 +82,53 @@ impl SimpleEntityHandler for StyledItemHandler {
     }
 }
 
-/// Resolve a `representation_item` ref against the geometry/topology
-/// reader maps, returning the matching [`StyledItemTarget`] variant. The
-/// lookup order mirrors the variant declaration order in
-/// `StyledItemTarget`. Returns `None` when the ref points at an
-/// unsupported representation-item kind.
-pub(crate) fn resolve_styled_item_target(
+/// Resolve a `representation_item` ref against the geometry / topology /
+/// placement / representation reader maps, returning the matching
+/// [`RepresentationItemRef`] variant. Each STEP `#N` is exactly one entity,
+/// so at most one map matches; the lookup order is for readability only.
+/// Returns `None` when the ref points at a representation-item kind step-io
+/// does not model as a `RepresentationItemRef` variant.
+///
+/// MDGPR guard: `repr_id_map` also holds `MDGPR` entries, but their
+/// `representation_step_ids` writer slots are appended late (during
+/// styled-item emission), whereas a geometry representation's slot is filled
+/// by the writer pre-pass up front. Only non-`Mdgpr` representations become
+/// a `Representation` ref; an MDGPR target falls through to `None`.
+pub(crate) fn resolve_representation_item_ref(
     ctx: &ReaderContext,
     item_ref: u64,
-) -> Option<StyledItemTarget> {
+) -> Option<RepresentationItemRef> {
     if let Some(&sid) = ctx.solid_map.get(&item_ref) {
-        return Some(StyledItemTarget::Solid(sid));
+        return Some(RepresentationItemRef::Solid(sid));
     }
     if let Some(&fid) = ctx.face_map.get(&item_ref) {
-        return Some(StyledItemTarget::Face(fid));
+        return Some(RepresentationItemRef::Face(fid));
     }
     if let Some(&eid) = ctx.edge_map.get(&item_ref) {
-        return Some(StyledItemTarget::Edge(eid));
+        return Some(RepresentationItemRef::Edge(eid));
     }
     if let Some(&cid) = ctx.curve_map.get(&item_ref) {
-        return Some(StyledItemTarget::Curve(cid));
+        return Some(RepresentationItemRef::Curve(cid));
     }
     if let Some(&pid) = ctx.point_map.get(&item_ref) {
-        return Some(StyledItemTarget::Point(pid));
+        return Some(RepresentationItemRef::Point(pid));
     }
     if let Some(&sid) = ctx.surface_map.get(&item_ref) {
-        return Some(StyledItemTarget::Surface(sid));
+        return Some(RepresentationItemRef::Surface(sid));
     }
     if let Some(&vid) = ctx.vertex_map.get(&item_ref) {
-        return Some(StyledItemTarget::Vertex(vid));
+        return Some(RepresentationItemRef::Vertex(vid));
     }
     if let Some(&shid) = ctx.shell_map.get(&item_ref) {
-        return Some(StyledItemTarget::Shell(shid));
+        return Some(RepresentationItemRef::Shell(shid));
+    }
+    if let Some(&plid) = ctx.placement_map.get(&item_ref) {
+        return Some(RepresentationItemRef::Placement3d(plid));
+    }
+    if let Some(&rid) = ctx.repr_id_map.get(&item_ref) {
+        if !matches!(ctx.representations[rid], Representation::Mdgpr(_)) {
+            return Some(RepresentationItemRef::Representation(rid));
+        }
     }
     None
 }

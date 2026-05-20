@@ -9,6 +9,7 @@ pub mod model;
 pub mod plm;
 pub mod pmi;
 pub mod property;
+pub mod representation_item;
 pub mod shape_rep;
 pub mod topology;
 pub mod units;
@@ -81,6 +82,7 @@ pub use property::{
     GeneralPropertyAssociation, IdAttribute, IdAttributeItem, MeasureKind, NameAttribute,
     NameAttributeItem, Property, PropertyItem, PropertyMeasure, PropertyMeasureUnit, PropertyPool,
 };
+pub use representation_item::RepresentationItemRef;
 pub use shape_rep::{
     AdvancedBrepRepr, AllAroundShapeAspect, AngleUnit, CentreOfSymmetry, CompositeGroupShapeAspect,
     DescriptiveItem, LengthUncertainty, LengthUnit, ManifoldSurfaceRepr, Mdgpr, PlainRepr,
@@ -96,7 +98,7 @@ pub use visualization::{
     DraughtingPreDefinedColour, DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour,
     FoundedItem, OverRidingStyledItem, PlainStyledItem, PresentationLayerAssignment,
     PresentationLayerAssignmentItem, PresentationStyleAssignment, PsaStyle, RenderingProperty,
-    ShadingMethod, StyleContextRef, StyledItem, StyledItemTarget, SurfaceSide, SurfaceSideStyle,
+    ShadingMethod, StyleContextRef, StyledItem, SurfaceSide, SurfaceSideStyle,
     SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleRendering, SurfaceStyleRenderingData,
     SurfaceStyleRenderingWithProperties, SurfaceStyleUsage, VisualizationPool,
 };
