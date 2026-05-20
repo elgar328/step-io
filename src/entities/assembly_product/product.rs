@@ -77,6 +77,8 @@ impl SimpleEntityHandler for ProductHandler {
             geometry_context: None,
             product_context: None,
             pdef_context: None,
+            representation_id: None,
+            outer_representation_id: None,
         };
         let pid = ctx.assembly_products.push(product);
         ctx.product_arena_map.insert(entity_id, pid);

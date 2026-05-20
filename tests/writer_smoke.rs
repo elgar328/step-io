@@ -874,6 +874,8 @@ fn simple_assembly_round_trips() {
         geometry_context: Some(UnitContextId(0)),
         product_context: None,
         pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
     });
     let root_pid = tree.products.push(Product {
         id: "Root".into(),
@@ -894,6 +896,8 @@ fn simple_assembly_round_trips() {
         geometry_context: Some(UnitContextId(0)),
         product_context: None,
         pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
     });
     tree.root = Some(root_pid);
     model.assembly = Some(tree);
@@ -954,6 +958,8 @@ fn shared_child_assembly_round_trips() {
         geometry_context: Some(UnitContextId(0)),
         product_context: None,
         pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
     });
     let root_pid = tree.products.push(Product {
         id: "Root".into(),
@@ -982,6 +988,8 @@ fn shared_child_assembly_round_trips() {
         geometry_context: Some(UnitContextId(0)),
         product_context: None,
         pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
     });
     tree.root = Some(root_pid);
     model.assembly = Some(tree);
@@ -1052,6 +1060,8 @@ fn multi_body_solid_round_trips() {
         geometry_context: Some(UnitContextId(0)),
         product_context: None,
         pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
     });
     tree.root = Some(pid);
     model.assembly = Some(tree);
@@ -1107,6 +1117,8 @@ fn metadata_only_product_round_trips_with_none_geometry_context() {
         geometry_context: Some(UnitContextId(0)),
         product_context: None,
         pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
     });
     tree.products.push(Product {
         id: "MetadataDoc".into(),
@@ -1120,6 +1132,8 @@ fn metadata_only_product_round_trips_with_none_geometry_context() {
         geometry_context: None,
         product_context: None,
         pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
     });
     model.assembly = Some(tree);
 
@@ -1187,6 +1201,8 @@ fn empty_group_product_preserves_non_identity_shape_ref_frame() {
         geometry_context: Some(UnitContextId(0)),
         product_context: None,
         pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
     });
     tree.products.push(Product {
         id: "Placeholder".into(),
@@ -1200,6 +1216,8 @@ fn empty_group_product_preserves_non_identity_shape_ref_frame() {
         geometry_context: Some(UnitContextId(0)),
         product_context: None,
         pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
     });
     model.assembly = Some(tree);
 

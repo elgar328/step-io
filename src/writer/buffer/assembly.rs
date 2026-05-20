@@ -16,8 +16,10 @@ use std::collections::HashMap;
 
 use super::WriteBuffer;
 use crate::ir::arena::Arena;
+use crate::ir::shape_rep::Representation;
 use crate::ir::{
-    Instance, Product, ProductContent, ProductId, Transform3d, WireframeContent, WireframeReprKind,
+    Instance, Product, ProductContent, ProductId, Transform3d, UnitContextId, WireframeContent,
+    WireframeReprKind,
 };
 use crate::parser::entity::Attribute;
 use crate::parser::schema::{SchemaClass, StepSchema};
@@ -243,26 +245,48 @@ impl WriteBuffer<'_> {
             let Some(unit_ctx) = self.resolve_product_ctx(product) else {
                 continue;
             };
-            let sr = match &product.content {
-                ProductContent::Solid(solid) => {
-                    let solid_refs: Vec<u64> = solid
-                        .ids
-                        .iter()
-                        .map(|sid| self.emit_solid(*sid))
-                        .collect::<Result<_, _>>()?;
-                    let absr = self.emit_absr(product, solid_refs, unit_ctx)?;
-                    self.wrap_indirect_sr_if_set(product, absr, unit_ctx)?
+            let sr = if let Some(rep_id) = product.representation_id {
+                // Reader-built IR: the representation was pre-emitted in
+                // arena order by `emit_representations_pre_pass`. Reuse the
+                // cached step id rather than re-emitting inline.
+                let geo_sr = self.representation_step_ids[rep_id.0 as usize];
+                match product.outer_representation_id {
+                    // Fusion 360 / CATIA indirect form: the outer plain SR
+                    // wrapper is a separate pre-emitted arena entry. Link it
+                    // to the geometry SR via SHAPE_REPRESENTATION_RELATIONSHIP
+                    // and point the SDR at the outer SR.
+                    Some(outer_id) => {
+                        let outer_sr = self.representation_step_ids[outer_id.0 as usize];
+                        let _ = self.emit_simple_srr(outer_sr, geo_sr);
+                        outer_sr
+                    }
+                    None => geo_sr,
                 }
-                ProductContent::SurfaceBody(sbody) => {
-                    let mssr = self.emit_mssr(product, &sbody.ids, unit_ctx)?;
-                    self.wrap_indirect_sr_if_set(product, mssr, unit_ctx)?
-                }
-                ProductContent::Wireframe(wf) => {
-                    let gb_sr = self.emit_wireframe_representation(product, wf, unit_ctx)?;
-                    self.wrap_indirect_sr_if_set(product, gb_sr, unit_ctx)?
-                }
-                ProductContent::Group(_) => {
-                    self.emit_group_shape_representation(product, unit_ctx)?
+            } else {
+                // Hand/kernel-built IR: the `representations` arena is
+                // unpopulated, so emit the representation inline from
+                // `ProductContent` as before.
+                match &product.content {
+                    ProductContent::Solid(solid) => {
+                        let solid_refs: Vec<u64> = solid
+                            .ids
+                            .iter()
+                            .map(|sid| self.emit_solid(*sid))
+                            .collect::<Result<_, _>>()?;
+                        let absr = self.emit_absr(product, solid_refs, unit_ctx)?;
+                        self.wrap_indirect_sr_if_set(product, absr, unit_ctx)?
+                    }
+                    ProductContent::SurfaceBody(sbody) => {
+                        let mssr = self.emit_mssr(product, &sbody.ids, unit_ctx)?;
+                        self.wrap_indirect_sr_if_set(product, mssr, unit_ctx)?
+                    }
+                    ProductContent::Wireframe(wf) => {
+                        let gb_sr = self.emit_wireframe_representation(product, wf, unit_ctx)?;
+                        self.wrap_indirect_sr_if_set(product, gb_sr, unit_ctx)?
+                    }
+                    ProductContent::Group(_) => {
+                        self.emit_group_shape_representation(product, unit_ctx)?
+                    }
                 }
             };
             product_sr.insert(pid, sr);
@@ -307,6 +331,141 @@ impl WriteBuffer<'_> {
         }
 
         Ok(())
+    }
+
+    // ----------------------------------------------------------------
+    // Representation pre-emit
+    // ----------------------------------------------------------------
+
+    /// Emit every geometry representation in `representations` arena order,
+    /// filling `representation_step_ids` so the product chain can resolve
+    /// each `RepresentationId` to a cached step id. `MDGPR` entries are
+    /// skipped — they depend on `STYLED_ITEM`s and are emitted later by
+    /// `emit_visualization_if_set`, which appends their slots. The arena is
+    /// `[geometry reprs (Pass 6), MDGPR (Pass 7)]`, so the geometry reprs
+    /// form a contiguous prefix and the appended `MDGPR` slots stay aligned
+    /// with their `RepresentationId`s.
+    pub(in crate::writer::buffer) fn emit_representations_pre_pass(
+        &mut self,
+    ) -> Result<(), WriteError> {
+        let reprs = self.model.representations.clone();
+        for repr in reprs.iter() {
+            if let Representation::Mdgpr(_) = repr {
+                continue;
+            }
+            let step_id = self.emit_representation(repr)?;
+            self.representation_step_ids.push(step_id);
+        }
+        Ok(())
+    }
+
+    /// Emit one geometry representation purely from its arena data — the
+    /// `name`, `context`, coordinate frame and geometry are taken from the
+    /// `Representation` variant, with no `Product` dependency. Sub-entities
+    /// (solids, SBSM, geometric curve sets) are cache-hit or freshly
+    /// emitted as needed.
+    fn emit_representation(&mut self, repr: &Representation) -> Result<u64, WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::geometry::geometric_curve_set::{
+            CurveSetWriteInput, GeometricCurveSetHandler,
+        };
+        use crate::entities::geometry::geometric_set::GeometricSetHandler;
+        use crate::entities::geometry::shell_based_surface_model::ShellBasedSurfaceModelHandler;
+
+        match repr {
+            Representation::AdvancedBrep(r) => {
+                let mut items = Vec::with_capacity(1 + r.solids.len());
+                if let Some(frame) = r.ref_frame {
+                    items.push(Attribute::EntityRef(self.emit_axis2_placement_3d(frame)?));
+                }
+                for sid in &r.solids {
+                    items.push(Attribute::EntityRef(self.emit_solid(*sid)?));
+                }
+                Ok(self.push_simple(
+                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                    vec![
+                        Attribute::String(r.name.clone()),
+                        Attribute::List(items),
+                        self.repr_context_attr(r.context),
+                    ],
+                ))
+            }
+            Representation::ManifoldSurface(r) => {
+                let mut items = Vec::with_capacity(2);
+                if let Some(frame) = r.ref_frame {
+                    items.push(Attribute::EntityRef(self.emit_axis2_placement_3d(frame)?));
+                }
+                let sbsm = ShellBasedSurfaceModelHandler::write(self, r.shells.clone())?;
+                items.push(Attribute::EntityRef(sbsm));
+                Ok(self.push_simple(
+                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
+                    vec![
+                        Attribute::String(r.name.clone()),
+                        Attribute::List(items),
+                        self.repr_context_attr(r.context),
+                    ],
+                ))
+            }
+            Representation::Plain(r) => {
+                let mut items = Vec::with_capacity(1);
+                if let Some(frame) = r.frame {
+                    items.push(Attribute::EntityRef(self.emit_axis2_placement_3d(frame)?));
+                }
+                Ok(self.push_simple(
+                    "SHAPE_REPRESENTATION",
+                    vec![
+                        Attribute::String(r.name.clone()),
+                        Attribute::List(items),
+                        self.repr_context_attr(r.context),
+                    ],
+                ))
+            }
+            Representation::Wireframe(r) => {
+                let mut items = Vec::with_capacity(2);
+                if let Some(frame) = r.ref_frame {
+                    items.push(Attribute::EntityRef(self.emit_axis2_placement_3d(frame)?));
+                }
+                let set_input = CurveSetWriteInput {
+                    curves: r.content.curves.clone(),
+                    points: r.content.points.clone(),
+                };
+                let set_ref = if r.content.points.is_empty() {
+                    GeometricCurveSetHandler::write(self, set_input)?
+                } else {
+                    GeometricSetHandler::write(self, set_input)?
+                };
+                items.push(Attribute::EntityRef(set_ref));
+                let name = match r.content.repr_kind {
+                    WireframeReprKind::Surface => {
+                        "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION"
+                    }
+                    WireframeReprKind::Wireframe => {
+                        "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION"
+                    }
+                };
+                Ok(self.push_simple(
+                    name,
+                    vec![
+                        Attribute::String(r.name.clone()),
+                        Attribute::List(items),
+                        self.repr_context_attr(r.context),
+                    ],
+                ))
+            }
+            Representation::Mdgpr(_) => {
+                unreachable!("MDGPR is emitted by the visualization pass, not the pre-emit pass")
+            }
+        }
+    }
+
+    /// Resolve a representation's `Option<UnitContextId>` to its
+    /// `context_of_items` attribute. `Some` indexes the cached
+    /// `REPRESENTATION_CONTEXT` step ids; `None` emits `Unset`.
+    fn repr_context_attr(&self, context: Option<UnitContextId>) -> Attribute {
+        match context {
+            Some(id) => Attribute::EntityRef(self.unit_context_ids[id.0 as usize]),
+            None => Attribute::Unset,
+        }
     }
 
     // ----------------------------------------------------------------

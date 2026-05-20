@@ -150,6 +150,16 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
         if let Some(&ctx_id) = ctx.repr_context_map.get(&effective_ref) {
             ctx.assembly_products[pid].geometry_context = Some(ctx_id);
         }
+        // representation-refactor: link the product to its unified Representation
+        // arena entry. `representation_id` is the resolved geometry rep
+        // (ABSR/MSSR/wireframe/plain). `outer_representation_id` is the outer
+        // plain SR wrapper when the indirect pattern was taken — the writer
+        // re-uses both cached step ids instead of re-emitting.
+        ctx.assembly_products[pid].representation_id = ctx.repr_id_map.get(&effective_ref).copied();
+        if effective_ref != shape_rep_ref {
+            ctx.assembly_products[pid].outer_representation_id =
+                ctx.repr_id_map.get(&shape_rep_ref).copied();
+        }
         Ok(())
     }
 

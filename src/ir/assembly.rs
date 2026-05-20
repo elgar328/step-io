@@ -9,8 +9,8 @@
 use super::arena::Arena;
 use super::id::{
     ApplicationContextId, CurveId, MeasureWithUnitId, Placement3dId, PointId, ProductContextId,
-    ProductDefinitionContextId, ProductDefinitionContextRoleId, ProductId, ShellId, SolidId,
-    UnitContextId,
+    ProductDefinitionContextId, ProductDefinitionContextRoleId, ProductId, RepresentationId,
+    ShellId, SolidId, UnitContextId,
 };
 
 /// Assembly graph. Conventionally called a "tree" but shared instances
@@ -135,6 +135,16 @@ pub struct Product {
     /// referenced by this product's `PRODUCT_DEFINITION.frame_of_reference`.
     /// Same fallback semantics as `product_context`.
     pub pdef_context: Option<ProductDefinitionContextId>,
+    /// Unified `Representation` arena index for this product's geometry
+    /// (the resolved `ABSR` / `MSSR` / wireframe / plain `SHAPE_REPRESENTATION`).
+    /// `None` for metadata-only products or kernel-built IR that only sets
+    /// `content`. representation-refactor: the writer pre-emits the arena and
+    /// dispatches geometry off this id.
+    pub representation_id: Option<RepresentationId>,
+    /// When the source used the indirect `SDR → plain SR → SRR → ABSR/MSSR`
+    /// pattern, the arena index of the outer plain `SHAPE_REPRESENTATION`
+    /// wrapper. `None` for the direct form. Pairs with `outer_sr_frame`.
+    pub outer_representation_id: Option<RepresentationId>,
 }
 
 /// `PRODUCT_CATEGORY` chain attached to a [`Product`] — preserves the source

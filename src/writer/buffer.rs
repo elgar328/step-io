@@ -53,6 +53,16 @@ pub(crate) struct WriteBuffer<'m> {
     /// so every representation emitter can resolve its `Option<UnitContextId>`
     /// to a cached id.
     pub(crate) unit_context_ids: Vec<u64>,
+    /// STEP entity id of every emitted representation (`ABSR` / `MSSR` /
+    /// plain `SR` / `GBWSR` / `GBSSR` / `MDGPR`), indexed by
+    /// `RepresentationId.0`. Geometry representations are filled by
+    /// `emit_representations_pre_pass` in `representations` arena order
+    /// before the product chain runs; `MDGPR` slots are appended by
+    /// `emit_visualization_if_set`. The product chain resolves each
+    /// product's `representation_id` / `outer_representation_id` to a
+    /// cached id instead of re-emitting the representation inline. Empty
+    /// for hand/kernel-built IR (the arena is reader-populated only).
+    pub(crate) representation_step_ids: Vec<u64>,
     /// STEP entity id of every emitted `NAMED_UNIT` complex from
     /// [`crate::ir::UnitsPool::named_units`], indexed by `NamedUnitId.0`.
     /// Populated by `emit_units_pool_if_set` before GUAC + MWU + DUE emit,
@@ -242,6 +252,7 @@ impl<'m> WriteBuffer<'m> {
             direction_2d_ids: HashMap::new(),
             curve_2d_ids: HashMap::new(),
             unit_context_ids: Vec::new(),
+            representation_step_ids: Vec::new(),
             unit_leaf_ids: Vec::new(),
             named_unit_step_ids: Vec::new(),
             mwu_step_ids: Vec::new(),
@@ -370,6 +381,13 @@ impl<'m> WriteBuffer<'m> {
             let id = self.emit_unit_context(ctx.clone())?;
             self.unit_context_ids.push(id);
         }
+        // Pre-emit every geometry representation (ABSR / MSSR / plain SR /
+        // GBWSR / GBSSR) in `representations` arena order so re-read assigns
+        // identical `RepresentationId`s — the same round-trip-stability
+        // mechanism the curve / surface / solid arenas rely on. MDGPR is
+        // skipped here and emitted by the visualization pass (it depends on
+        // STYLED_ITEMs). No-op for hand/kernel-built IR (arena unpopulated).
+        self.emit_representations_pre_pass()?;
         self.emit_product_chain_if_eligible()?;
         self.emit_pmi_if_set();
         self.emit_visualization_if_set()?;

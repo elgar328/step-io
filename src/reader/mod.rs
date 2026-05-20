@@ -349,9 +349,9 @@ pub struct ReaderContext {
     /// Unified `REPRESENTATION` arena (representation-refactor expand phase).
     /// 6 representation handlers dual-write here alongside the legacy maps.
     pub(crate) representations: crate::ir::Arena<crate::ir::shape_rep::Representation>,
-    /// `REPRESENTATION` `#N → RepresentationId`. Phase A-1 populates this;
-    /// the A-2 SDR-classifier migration is the first consumer.
-    #[allow(dead_code)]
+    /// `REPRESENTATION` `#N → RepresentationId`. Populated by the six
+    /// representation handlers; consumed by the SDR reader to link each
+    /// product to its `representation_id` / `outer_representation_id`.
     pub(crate) repr_id_map: HashMap<u64, crate::ir::RepresentationId>,
 
     /// Lazily-built plm pool — populated by the Pass 9 plm reader chain
