@@ -197,16 +197,20 @@ pub struct DocumentData {
     pub kind: DocumentTypeId,
 }
 
-/// `DOCUMENT_FILE(id, name, description, kind, ...)`. Currently carries
-/// only the inherited `document` fields; `AP214e3` multi-supertype
-/// trailing fields (`characterized_object.name`, `description`) drop on
-/// read.
+/// `DOCUMENT_FILE(id, name, description, kind, name, description)` —
+/// `SUBTYPE OF (document, characterized_object)`. The first four fields
+/// come from the `document` supertype, the last two from
+/// `characterized_object` (STEP P21 encodes all six in inheritance order).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DocumentFile {
     pub id: String,
     pub name: String,
     pub description: String,
     pub kind: DocumentTypeId,
+    /// `characterized_object.name` — the second supertype's name.
+    pub characterized_object_name: String,
+    /// `characterized_object.description` — optional.
+    pub characterized_object_description: Option<String>,
 }
 
 /// `DOCUMENT_REPRESENTATION_TYPE(name, represented_document)`.

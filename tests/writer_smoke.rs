@@ -1800,3 +1800,38 @@ fn draughting_pre_defined_text_font_round_trip() {
         "standard"
     );
 }
+
+#[test]
+fn document_file_six_attributes_round_trip() {
+    // DOCUMENT_FILE is SUBTYPE OF (document, characterized_object) — STEP P21
+    // encodes 6 attributes. Regression guard for the check_count(4)->6 fix.
+    use step_io::ir::plm::{Document, DocumentFile, DocumentType, PlmPool};
+    let mut model = empty_model();
+    let mut plm = PlmPool::default();
+    let kind = plm.document_types.push(DocumentType {
+        product_data_type: "step file".into(),
+    });
+    plm.documents.push(Document::DocumentFile(DocumentFile {
+        id: "shell_prt.stp".into(),
+        name: "SHELL".into(),
+        description: String::new(),
+        kind,
+        characterized_object_name: "carrier".into(),
+        characterized_object_description: Some("desc".into()),
+    }));
+    model.plm = Some(plm);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_plm = re.plm.as_ref().expect("plm pool");
+    assert_eq!(re_plm.documents.len(), 1);
+    let Document::DocumentFile(df) = re_plm.documents.iter().next().unwrap() else {
+        panic!("expected DocumentFile variant");
+    };
+    assert_eq!(df.id, "shell_prt.stp");
+    assert_eq!(df.characterized_object_name, "carrier");
+    assert_eq!(
+        df.characterized_object_description,
+        Some("desc".to_string())
+    );
+}
