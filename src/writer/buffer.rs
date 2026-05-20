@@ -22,6 +22,7 @@ pub(crate) mod assembly;
 pub(crate) mod form_features;
 pub(crate) mod geometry;
 pub(crate) mod mapped_item;
+pub(crate) mod numeric_representation_item;
 pub(crate) mod plm;
 pub(crate) mod pmi;
 pub(crate) mod property;
@@ -419,6 +420,8 @@ impl<'m> WriteBuffer<'m> {
         self.emit_mapped_items()?;
         // ANNOTATION_PLANE — after visualization so `psa_step_ids` is filled.
         self.emit_annotation_occurrences();
+        // INTEGER/REAL_REPRESENTATION_ITEM — orphan value-items, no refs.
+        self.emit_numeric_representation_items()?;
         self.emit_plm_if_set()?;
         self.emit_properties_if_set();
         self.emit_form_features_if_set()?;

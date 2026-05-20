@@ -230,6 +230,10 @@ pub struct StepModel {
     /// `MAPPED_ITEM` arena (phase mapped-item). Orphan round-trip — see
     /// [`Self::representation_maps`].
     pub mapped_items: crate::ir::Arena<crate::ir::shape_rep::MappedItem>,
+    /// `INTEGER_REPRESENTATION_ITEM` / `REAL_REPRESENTATION_ITEM` value-item
+    /// arena (phase numeric-representation-item). Orphan round-trip.
+    pub numeric_representation_items:
+        crate::ir::Arena<crate::ir::shape_rep::NumericRepresentationItem>,
 }
 
 /// Arena-based storage for all topology objects.

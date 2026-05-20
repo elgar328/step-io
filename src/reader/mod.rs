@@ -378,6 +378,10 @@ pub struct ReaderContext {
     pub(crate) representation_map_id_map: HashMap<u64, crate::ir::RepresentationMapId>,
     /// `MAPPED_ITEM` arena (phase mapped-item) — orphan round-trip.
     pub(crate) mapped_items: crate::ir::Arena<crate::ir::shape_rep::MappedItem>,
+    /// `INTEGER`/`REAL_REPRESENTATION_ITEM` value-item arena (phase
+    /// numeric-representation-item) — orphan round-trip.
+    pub(crate) numeric_representation_items:
+        crate::ir::Arena<crate::ir::shape_rep::NumericRepresentationItem>,
 
     /// Lazily-built plm pool — populated by the Pass 9 plm reader chain
     /// (`CalendarDate` / `LocalTime` / UTC / `DateAndTime` / `DateTimeRole`
@@ -516,6 +520,7 @@ impl ReaderContext {
                 representations: ctx.representations,
                 representation_maps: ctx.representation_maps,
                 mapped_items: ctx.mapped_items,
+                numeric_representation_items: ctx.numeric_representation_items,
             },
             warnings: ctx.warnings,
             parse_warnings: graph.warnings.clone(),

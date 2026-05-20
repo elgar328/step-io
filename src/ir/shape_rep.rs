@@ -191,6 +191,33 @@ pub struct MappedItemData {
     pub mapping_target: RepresentationItemRef,
 }
 
+/// `representation_item` value-item — `INTEGER_REPRESENTATION_ITEM` or
+/// `REAL_REPRESENTATION_ITEM`. Both are `SUBTYPE OF (representation_item,
+/// literal_number)`; `name` comes from `representation_item`, `the_value`
+/// from `literal_number`. step-io has no unified `representation_item`
+/// arena, so these standalone value items get their own arena.
+#[derive(Debug, Clone, PartialEq)]
+pub enum NumericRepresentationItem {
+    Integer(IntegerRepresentationItem),
+    Real(RealRepresentationItem),
+}
+
+/// `INTEGER_REPRESENTATION_ITEM(name, the_value)`. Fixtures encode
+/// `the_value` as a real literal (`8.`) even though the schema types it
+/// `INTEGER`; the reader accepts both forms and stores a standard `i64`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct IntegerRepresentationItem {
+    pub name: String,
+    pub the_value: i64,
+}
+
+/// `REAL_REPRESENTATION_ITEM(name, the_value)`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct RealRepresentationItem {
+    pub name: String,
+    pub the_value: f64,
+}
+
 /// `SHAPE_ASPECT(name, description, of_shape, product_definitional)`.
 ///
 /// `of_shape` is a `PRODUCT_DEFINITION_SHAPE` reference resolved to a

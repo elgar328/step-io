@@ -1835,3 +1835,44 @@ fn document_file_six_attributes_round_trip() {
         Some("desc".to_string())
     );
 }
+
+#[test]
+fn numeric_representation_item_round_trip() {
+    // INTEGER_REPRESENTATION_ITEM / REAL_REPRESENTATION_ITEM — representation_item
+    // value-items, orphan round-trip in one interleaved arena.
+    use step_io::ir::shape_rep::{
+        IntegerRepresentationItem, NumericRepresentationItem, RealRepresentationItem,
+    };
+    let mut model = empty_model();
+    model
+        .numeric_representation_items
+        .push(NumericRepresentationItem::Integer(
+            IntegerRepresentationItem {
+                name: "number of segments".into(),
+                the_value: 19,
+            },
+        ));
+    model
+        .numeric_representation_items
+        .push(NumericRepresentationItem::Real(RealRepresentationItem {
+            name: "saved view scale".into(),
+            the_value: 2.5,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.numeric_representation_items.len(), 2);
+    let NumericRepresentationItem::Integer(i) =
+        re.numeric_representation_items.iter().next().unwrap()
+    else {
+        panic!("expected Integer variant first");
+    };
+    assert_eq!(i.name, "number of segments");
+    assert_eq!(i.the_value, 19);
+    let NumericRepresentationItem::Real(r) = re.numeric_representation_items.iter().nth(1).unwrap()
+    else {
+        panic!("expected Real variant second");
+    };
+    assert_eq!(r.name, "saved view scale");
+    assert!((r.the_value - 2.5).abs() < f64::EPSILON);
+}

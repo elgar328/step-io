@@ -27,8 +27,8 @@ use super::property::{
     Property,
 };
 use super::shape_rep::{
-    AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, MappedItem, Representation,
-    RepresentationMap, ShapeAspect, UnitContext,
+    AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, MappedItem,
+    NumericRepresentationItem, Representation, RepresentationMap, ShapeAspect, UnitContext,
 };
 use super::topology::{Edge, Face, Shell, Solid, Wire};
 use super::units::{DerivedUnit, DerivedUnitElement, MeasureWithUnit, NamedUnit};
@@ -116,6 +116,9 @@ define_id!(RepresentationId, Representation);
 // REPRESENTATION_MAP + MAPPED_ITEM arenas (phase mapped-item).
 define_id!(RepresentationMapId, RepresentationMap);
 define_id!(MappedItemId, MappedItem);
+
+// representation_item value-items (phase numeric-representation-item).
+define_id!(NumericRepresentationItemId, NumericRepresentationItem);
 
 // Visualization Ids — Colour enum arena (ColourRgb + DraughtingPreDefinedColour).
 define_id!(ColourId, Colour);

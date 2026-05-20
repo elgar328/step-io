@@ -44,14 +44,15 @@ pub use id::{
     DocumentRepresentationTypeId, DocumentTypeId, EdgeId, ExternalSourceId, FaceId,
     FeatureDefinitionId, FoundedItemId, GeneralPropertyAssociationId, GeneralPropertyId,
     GroupAssignmentId, GroupId, IdAttributeId, IdentificationAssignmentId, IdentificationRoleId,
-    LocalTimeId, MappedItemId, MeasureWithUnitId, NameAttributeId, NamedUnitId, ObjectRoleId,
-    OrganizationId, PersonAndOrganizationAssignmentId, PersonAndOrganizationId,
-    PersonAndOrganizationRoleId, PersonId, Placement1dId, Placement2dId, Placement3dId,
-    PlanarExtentId, Point2dId, PointId, ProductContextId, ProductDefinitionContextAssociationId,
-    ProductDefinitionContextId, ProductDefinitionContextRoleId, ProductDefinitionRelationshipId,
-    ProductId, PropertyId, RepresentationId, RepresentationMapId, RoleAssociationId,
-    SecurityClassificationAssignmentId, SecurityClassificationId, SecurityClassificationLevelId,
-    ShapeAspectId, ShellId, SolidId, SurfaceId, UnitContextId, VertexId, WireId,
+    LocalTimeId, MappedItemId, MeasureWithUnitId, NameAttributeId, NamedUnitId,
+    NumericRepresentationItemId, ObjectRoleId, OrganizationId, PersonAndOrganizationAssignmentId,
+    PersonAndOrganizationId, PersonAndOrganizationRoleId, PersonId, Placement1dId, Placement2dId,
+    Placement3dId, PlanarExtentId, Point2dId, PointId, ProductContextId,
+    ProductDefinitionContextAssociationId, ProductDefinitionContextId,
+    ProductDefinitionContextRoleId, ProductDefinitionRelationshipId, ProductId, PropertyId,
+    RepresentationId, RepresentationMapId, RoleAssociationId, SecurityClassificationAssignmentId,
+    SecurityClassificationId, SecurityClassificationLevelId, ShapeAspectId, ShellId, SolidId,
+    SurfaceId, UnitContextId, VertexId, WireId,
     {
         AnnotationOccurrenceId, CompositeShapeAspectId, ContinuousShapeAspectId, DatumId,
         DerivedShapeAspectId, DraughtingPreDefinedTextFontId, ToleranceZoneFormId, TypeQualifierId,
@@ -89,9 +90,10 @@ pub use property::{
 pub use representation_item::RepresentationItemRef;
 pub use shape_rep::{
     AdvancedBrepRepr, AllAroundShapeAspect, AngleUnit, CentreOfSymmetry, CompositeGroupShapeAspect,
-    DescriptiveItem, LengthUncertainty, LengthUnit, ManifoldSurfaceRepr, MappedItem,
-    MappedItemData, Mdgpr, PlainRepr, Representation, RepresentationMap, RepresentationMapData,
-    ShapeAspect, SolidAngleUnit, UnitContext, WireframeRepr,
+    DescriptiveItem, IntegerRepresentationItem, LengthUncertainty, LengthUnit, ManifoldSurfaceRepr,
+    MappedItem, MappedItemData, Mdgpr, NumericRepresentationItem, PlainRepr,
+    RealRepresentationItem, Representation, RepresentationMap, RepresentationMapData, ShapeAspect,
+    SolidAngleUnit, UnitContext, WireframeRepr,
 };
 pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Wire};
 pub use units::{
