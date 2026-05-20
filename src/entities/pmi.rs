@@ -13,8 +13,8 @@ use crate::ir::attr::{
 };
 use crate::ir::error::ConvertError;
 use crate::ir::pmi::{
-    AnnotationOccurrence, AnnotationPlane, Datum, ToleranceZoneForm, TypeQualifier,
-    ValueFormatTypeQualifier,
+    AnnotationOccurrence, AnnotationPlane, Datum, DraughtingPreDefinedTextFont, ToleranceZoneForm,
+    TypeQualifier, ValueFormatTypeQualifier,
 };
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -99,6 +99,35 @@ impl SimpleEntityHandler for ValueFormatTypeQualifierHandler {
         Ok(buf.push_simple(
             "VALUE_FORMAT_TYPE_QUALIFIER",
             vec![Attribute::String(vftq.format_type)],
+        ))
+    }
+}
+
+pub(crate) struct DraughtingPreDefinedTextFontHandler;
+
+#[step_entity(name = "DRAUGHTING_PRE_DEFINED_TEXT_FONT", pass = Pass8ShapeAspect)]
+impl SimpleEntityHandler for DraughtingPreDefinedTextFontHandler {
+    type WriteInput = DraughtingPreDefinedTextFont;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 1, entity_id, "DRAUGHTING_PRE_DEFINED_TEXT_FONT")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .draughting_pre_defined_text_fonts
+            .push(DraughtingPreDefinedTextFont { name });
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, font: DraughtingPreDefinedTextFont) -> Result<u64, WriteError> {
+        Ok(buf.push_simple(
+            "DRAUGHTING_PRE_DEFINED_TEXT_FONT",
+            vec![Attribute::String(font.name)],
         ))
     }
 }

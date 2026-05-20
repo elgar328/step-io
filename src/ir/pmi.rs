@@ -25,6 +25,15 @@ pub struct PmiPool {
     pub annotation_occurrences: Arena<AnnotationOccurrence>,
     /// `DATUM` arena. Phase datum.
     pub datums: Arena<Datum>,
+    /// `DRAUGHTING_PRE_DEFINED_TEXT_FONT` arena. Phase text-font.
+    pub draughting_pre_defined_text_fonts: Arena<DraughtingPreDefinedTextFont>,
+}
+
+/// `DRAUGHTING_PRE_DEFINED_TEXT_FONT(name)` — a stock text-font reference
+/// (a `pre_defined_item`). Common names: `'standard'`, etc.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DraughtingPreDefinedTextFont {
+    pub name: String,
 }
 
 /// `DATUM(name, description, of_shape, product_definitional, identification)`

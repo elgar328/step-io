@@ -1773,3 +1773,30 @@ fn datum_round_trip() {
     assert_eq!(datum.target, step_io::ProductId(0));
     assert!(!datum.product_definitional);
 }
+
+#[test]
+fn draughting_pre_defined_text_font_round_trip() {
+    // DRAUGHTING_PRE_DEFINED_TEXT_FONT — a pmi-pool 1-string leaf primitive.
+    use step_io::ir::pmi::DraughtingPreDefinedTextFont;
+    let mut model = empty_model();
+    let mut pmi = PmiPool::default();
+    pmi.draughting_pre_defined_text_fonts
+        .push(DraughtingPreDefinedTextFont {
+            name: "standard".into(),
+        });
+    model.pmi = Some(pmi);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    assert_eq!(re_pmi.draughting_pre_defined_text_fonts.len(), 1);
+    assert_eq!(
+        re_pmi
+            .draughting_pre_defined_text_fonts
+            .iter()
+            .next()
+            .unwrap()
+            .name,
+        "standard"
+    );
+}

@@ -70,11 +70,13 @@ impl WriteBuffer<'_> {
     }
 
     /// Emit the `pmi` pool's leaf primitives (`TOLERANCE_ZONE_FORM` /
-    /// `TYPE_QUALIFIER` / `VALUE_FORMAT_TYPE_QUALIFIER`). No cross-refs —
-    /// each is a standalone 1-attr entity.
+    /// `TYPE_QUALIFIER` / `VALUE_FORMAT_TYPE_QUALIFIER` /
+    /// `DRAUGHTING_PRE_DEFINED_TEXT_FONT`). No cross-refs — each is a
+    /// standalone 1-attr entity.
     fn emit_pmi_pool(&mut self) {
         use crate::entities::pmi::{
-            ToleranceZoneFormHandler, TypeQualifierHandler, ValueFormatTypeQualifierHandler,
+            DraughtingPreDefinedTextFontHandler, ToleranceZoneFormHandler, TypeQualifierHandler,
+            ValueFormatTypeQualifierHandler,
         };
         let Some(pmi) = self.model.pmi.clone() else {
             return;
@@ -87,6 +89,9 @@ impl WriteBuffer<'_> {
         }
         for vftq in pmi.value_format_type_qualifiers.iter() {
             let _ = ValueFormatTypeQualifierHandler::write(self, vftq.clone());
+        }
+        for font in pmi.draughting_pre_defined_text_fonts.iter() {
+            let _ = DraughtingPreDefinedTextFontHandler::write(self, font.clone());
         }
     }
 

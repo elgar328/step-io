@@ -54,7 +54,8 @@ pub use id::{
     ShapeAspectId, ShellId, SolidId, SurfaceId, UnitContextId, VertexId, WireId,
     {
         AnnotationOccurrenceId, CompositeShapeAspectId, ContinuousShapeAspectId, DatumId,
-        DerivedShapeAspectId, ToleranceZoneFormId, TypeQualifierId, ValueFormatTypeQualifierId,
+        DerivedShapeAspectId, DraughtingPreDefinedTextFontId, ToleranceZoneFormId, TypeQualifierId,
+        ValueFormatTypeQualifierId,
     },
 };
 pub use model::{
@@ -77,8 +78,8 @@ pub use plm::{
     SecurityClassificationItem, SecurityClassificationLevel,
 };
 pub use pmi::{
-    AnnotationOccurrence, AnnotationPlane, Datum, PmiPool, ToleranceZoneForm, TypeQualifier,
-    ValueFormatTypeQualifier,
+    AnnotationOccurrence, AnnotationPlane, Datum, DraughtingPreDefinedTextFont, PmiPool,
+    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
 pub use property::{
     DerivedDefinitionItem, DescriptionAttribute, DescriptionAttributeItem, GeneralProperty,
