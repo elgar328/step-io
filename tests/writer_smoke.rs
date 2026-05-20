@@ -1674,3 +1674,50 @@ fn mapped_item_round_trip() {
         RepresentationItemRef::Placement3d(_)
     ));
 }
+
+#[test]
+fn annotation_plane_round_trip() {
+    // ANNOTATION_PLANE — a styled_item PMI subtype. orphan round-trip:
+    // name + styles + item(a PLANE surface); `elements` is not modelled.
+    use step_io::ir::pmi::{AnnotationOccurrence, AnnotationPlane};
+    use step_io::ir::representation_item::RepresentationItemRef;
+    let mut model = empty_model();
+    let loc = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let axis = model.geometry.directions.push(Direction3 {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+    });
+    let refd = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let position = push_placement(&mut model, loc, Some(axis), Some(refd));
+    let surf = model
+        .geometry
+        .surfaces
+        .push(Surface::Plane(Plane3 { position }));
+    let mut pmi = PmiPool::default();
+    pmi.annotation_occurrences
+        .push(AnnotationOccurrence::AnnotationPlane(AnnotationPlane {
+            name: "Linear Size.1".into(),
+            styles: vec![],
+            item: RepresentationItemRef::Surface(surf),
+        }));
+    model.pmi = Some(pmi);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    assert_eq!(re_pmi.annotation_occurrences.len(), 1);
+    let AnnotationOccurrence::AnnotationPlane(ap) =
+        re_pmi.annotation_occurrences.iter().next().unwrap();
+    assert_eq!(ap.name, "Linear Size.1");
+    assert!(ap.styles.is_empty());
+    assert!(matches!(ap.item, RepresentationItemRef::Surface(_)));
+}

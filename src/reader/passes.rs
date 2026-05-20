@@ -287,6 +287,9 @@ impl ReaderContext {
         // arena is populated by Pass7OverRiding so `assigned_items` refs
         // resolve to existing arena ids.
         self.dispatch_registry(graph, PassLevel::Pass7Pla);
+        // ANNOTATION_PLANE (phase annotation-plane) — after Pass7Assignment
+        // so `styles` refs resolve through `viz_psa_id_map`.
+        self.dispatch_registry(graph, PassLevel::Pass7AnnotationPlane);
         // plm Date/Time chain — leaves (Pass9PlmDateLeaves: CALENDAR_DATE,
         // COORDINATED_UNIVERSAL_TIME_OFFSET, DATE_TIME_ROLE) → LOCAL_TIME
         // (Pass9PlmLocalTime, UTC dep) → DATE_AND_TIME (Pass9PlmDateAndTime,

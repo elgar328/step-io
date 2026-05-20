@@ -18,7 +18,9 @@ use super::plm::{
     PersonAndOrganizationAssignment, PersonAndOrganizationRole, RoleAssociation,
     SecurityClassification, SecurityClassificationAssignment, SecurityClassificationLevel,
 };
-use super::pmi::{ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier};
+use super::pmi::{
+    AnnotationOccurrence, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
+};
 use super::property::{
     DescriptionAttribute, GeneralProperty, GeneralPropertyAssociation, IdAttribute, NameAttribute,
     Property,
@@ -97,6 +99,9 @@ define_id!(ContinuousShapeAspectId, AllAroundShapeAspect);
 define_id!(ToleranceZoneFormId, ToleranceZoneForm);
 define_id!(TypeQualifierId, TypeQualifier);
 define_id!(ValueFormatTypeQualifierId, ValueFormatTypeQualifier);
+
+// annotation_occurrence enum_base arena (Phase annotation-plane).
+define_id!(AnnotationOccurrenceId, AnnotationOccurrence);
 
 // REPRESENTATION arena — unified subtype storage (representation-refactor).
 define_id!(RepresentationId, Representation);

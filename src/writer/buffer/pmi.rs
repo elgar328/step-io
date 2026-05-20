@@ -63,6 +63,26 @@ impl WriteBuffer<'_> {
         }
     }
 
+    /// Emit the `annotation_occurrence` arena (`ANNOTATION_PLANE` only).
+    /// Called after `emit_visualization_if_set` — `AnnotationPlane.styles`
+    /// resolves through `psa_step_ids`, which the visualization pass fills.
+    /// Separate from [`Self::emit_pmi_if_set`] (which runs before
+    /// visualization) for that ordering reason.
+    pub(in crate::writer::buffer) fn emit_annotation_occurrences(&mut self) {
+        use crate::entities::pmi::AnnotationPlaneHandler;
+        use crate::ir::pmi::AnnotationOccurrence;
+        let Some(pmi) = self.model.pmi.clone() else {
+            return;
+        };
+        for ao in pmi.annotation_occurrences.iter() {
+            match ao {
+                AnnotationOccurrence::AnnotationPlane(ap) => {
+                    let _ = AnnotationPlaneHandler::write(self, ap.clone());
+                }
+            }
+        }
+    }
+
     /// Emit the `SHAPE_ASPECT` subtype arenas (`COMPOSITE_GROUP_SHAPE_ASPECT`
     /// / `CENTRE_OF_SYMMETRY` / `ALL_AROUND_SHAPE_ASPECT`). Same `target` →
     /// `PRODUCT_DEFINITION_SHAPE` resolution as `SHAPE_ASPECT`; no step-id

@@ -417,6 +417,8 @@ impl<'m> WriteBuffer<'m> {
         // REPRESENTATION_MAP + MAPPED_ITEM — after visualization so the
         // `representation_step_ids` cache covers MDGPR slots too.
         self.emit_mapped_items()?;
+        // ANNOTATION_PLANE — after visualization so `psa_step_ids` is filled.
+        self.emit_annotation_occurrences();
         self.emit_plm_if_set()?;
         self.emit_properties_if_set();
         self.emit_form_features_if_set()?;

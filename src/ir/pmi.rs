@@ -7,6 +7,8 @@
 //! ir.toml blueprint puts them in the `shape_rep` pool.
 
 use super::arena::Arena;
+use super::id::PresentationStyleAssignmentId;
+use super::representation_item::RepresentationItemRef;
 
 /// Top-level container for `pmi`-pool entities. `None` when the source
 /// file carried no PMI content.
@@ -18,6 +20,29 @@ pub struct PmiPool {
     pub type_qualifiers: Arena<TypeQualifier>,
     /// `VALUE_FORMAT_TYPE_QUALIFIER` arena.
     pub value_format_type_qualifiers: Arena<ValueFormatTypeQualifier>,
+    /// `annotation_occurrence` `enum_base` arena. Phase annotation-plane
+    /// fills the `AnnotationPlane` variant only.
+    pub annotation_occurrences: Arena<AnnotationOccurrence>,
+}
+
+/// `annotation_occurrence` `enum_base` — STEP `styled_item` PMI subtypes that
+/// carry presentation annotations. Only [`AnnotationPlane`] is modelled;
+/// the symbol / text / draughting / tessellated siblings are deferred
+/// (added as variants when fixtures or modelling support arrive).
+#[derive(Debug, Clone, PartialEq)]
+pub enum AnnotationOccurrence {
+    AnnotationPlane(AnnotationPlane),
+}
+
+/// `ANNOTATION_PLANE(name, styles, item, elements)` — a `styled_item`
+/// subtype locating the plane that PMI annotations are drawn on. `elements`
+/// (a list of `DRAUGHTING_CALLOUT`) is dropped — that entity is not
+/// modelled; the field is optional so the writer emits `$`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnnotationPlane {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentId>,
+    pub item: RepresentationItemRef,
 }
 
 /// `TOLERANCE_ZONE_FORM(name)` — names a tolerance zone's geometric form
