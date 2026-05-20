@@ -353,6 +353,12 @@ pub struct ReaderContext {
     /// consumed by `id_attribute` (`Pass9PlmAttributes`) and future PMI
     /// handlers that resolve shape-aspect refs.
     pub(crate) shape_aspect_id_map: HashMap<u64, crate::ir::ShapeAspectId>,
+    /// `SHAPE_ASPECT` subtype arenas — Pass 8. No STEP-id map (no consumer
+    /// yet; the entities round-trip as standalone arena entries).
+    pub(crate) composite_group_shape_aspects:
+        crate::ir::Arena<crate::ir::CompositeGroupShapeAspect>,
+    pub(crate) centre_of_symmetries: crate::ir::Arena<crate::ir::CentreOfSymmetry>,
+    pub(crate) all_around_shape_aspects: crate::ir::Arena<crate::ir::AllAroundShapeAspect>,
 
     /// Unified `REPRESENTATION` arena (representation-refactor expand phase).
     /// 6 representation handlers dual-write here alongside the legacy maps.
@@ -484,6 +490,9 @@ impl ReaderContext {
                 visualization: ctx.visualization,
                 properties: ctx.properties,
                 shape_aspects: ctx.shape_aspects,
+                composite_group_shape_aspects: ctx.composite_group_shape_aspects,
+                centre_of_symmetries: ctx.centre_of_symmetries,
+                all_around_shape_aspects: ctx.all_around_shape_aspects,
                 plm: ctx.plm,
                 units_pool: build_units_pool(
                     ctx.named_units_arena,

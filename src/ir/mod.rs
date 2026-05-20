@@ -49,6 +49,7 @@ pub use id::{
     RepresentationId, RoleAssociationId, SecurityClassificationAssignmentId,
     SecurityClassificationId, SecurityClassificationLevelId, ShapeAspectId, ShellId, SolidId,
     SurfaceId, UnitContextId, VertexId, WireId,
+    {CompositeShapeAspectId, ContinuousShapeAspectId, DerivedShapeAspectId},
 };
 pub use model::{
     FileHeader, GeometryPool, ImplementationLevel, NonEmptyStringList, StepModel, TopologyPool,
@@ -75,9 +76,9 @@ pub use property::{
     NameAttributeItem, Property, PropertyItem, PropertyMeasure, PropertyMeasureUnit, PropertyPool,
 };
 pub use shape_rep::{
-    AdvancedBrepRepr, AngleUnit, DescriptiveItem, LengthUncertainty, LengthUnit,
-    ManifoldSurfaceRepr, Mdgpr, PlainRepr, Representation, ShapeAspect, SolidAngleUnit,
-    UnitContext, WireframeRepr,
+    AdvancedBrepRepr, AllAroundShapeAspect, AngleUnit, CentreOfSymmetry, CompositeGroupShapeAspect,
+    DescriptiveItem, LengthUncertainty, LengthUnit, ManifoldSurfaceRepr, Mdgpr, PlainRepr,
+    Representation, ShapeAspect, SolidAngleUnit, UnitContext, WireframeRepr,
 };
 pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Wire};
 pub use units::{

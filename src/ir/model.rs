@@ -6,7 +6,9 @@ use super::geometry::{
 };
 use super::id::Placement3dId;
 use super::plm::PlmPool;
-use super::shape_rep::{ShapeAspect, UnitContext};
+use super::shape_rep::{
+    AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, ShapeAspect, UnitContext,
+};
 use super::topology::{Edge, Face, Shell, Solid, Wire};
 use super::units::UnitsPool;
 use super::visualization::VisualizationPool;
@@ -193,6 +195,12 @@ pub struct StepModel {
     /// alongside this one — all under the `shape_rep` pool per the
     /// ir.toml blueprint.
     pub shape_aspects: Arena<ShapeAspect>,
+    /// `COMPOSITE_GROUP_SHAPE_ASPECT` arena — `SHAPE_ASPECT` subtype.
+    pub composite_group_shape_aspects: Arena<CompositeGroupShapeAspect>,
+    /// `CENTRE_OF_SYMMETRY` arena — `SHAPE_ASPECT` subtype.
+    pub centre_of_symmetries: Arena<CentreOfSymmetry>,
+    /// `ALL_AROUND_SHAPE_ASPECT` arena — `SHAPE_ASPECT` subtype.
+    pub all_around_shape_aspects: Arena<AllAroundShapeAspect>,
     /// Product-lifecycle metadata (Person/Org/Date/Approval/Security).
     /// `None` for files without plm content. Phase plm-1a populates the
     /// Date/Time primitives; later phases add Person/Approval/Security

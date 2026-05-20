@@ -190,3 +190,35 @@ pub struct ShapeAspect {
     /// mostly `.F.` in observed NIST fixtures.
     pub product_definitional: bool,
 }
+
+/// `COMPOSITE_GROUP_SHAPE_ASPECT` — a `SHAPE_ASPECT` subtype. Same 4-attr
+/// shape as [`ShapeAspect`]; the distinct STEP entity name (and so the
+/// distinct arena per the ir.toml blueprint) is what round-trips.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CompositeGroupShapeAspect {
+    pub name: String,
+    pub description: String,
+    /// `of_shape` resolved to a `ProductId` — see [`ShapeAspect::target`].
+    pub target: ProductId,
+    pub product_definitional: bool,
+}
+
+/// `CENTRE_OF_SYMMETRY` — a `SHAPE_ASPECT` subtype. See
+/// [`CompositeGroupShapeAspect`].
+#[derive(Debug, Clone, PartialEq)]
+pub struct CentreOfSymmetry {
+    pub name: String,
+    pub description: String,
+    pub target: ProductId,
+    pub product_definitional: bool,
+}
+
+/// `ALL_AROUND_SHAPE_ASPECT` — a `SHAPE_ASPECT` subtype. See
+/// [`CompositeGroupShapeAspect`].
+#[derive(Debug, Clone, PartialEq)]
+pub struct AllAroundShapeAspect {
+    pub name: String,
+    pub description: String,
+    pub target: ProductId,
+    pub product_definitional: bool,
+}

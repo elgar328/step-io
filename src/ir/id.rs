@@ -22,7 +22,10 @@ use super::property::{
     DescriptionAttribute, GeneralProperty, GeneralPropertyAssociation, IdAttribute, NameAttribute,
     Property,
 };
-use super::shape_rep::{Representation, ShapeAspect, UnitContext};
+use super::shape_rep::{
+    AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, Representation, ShapeAspect,
+    UnitContext,
+};
 use super::topology::{Edge, Face, Shell, Solid, Wire};
 use super::units::{DerivedUnit, DerivedUnitElement, MeasureWithUnit, NamedUnit};
 use super::visualization::{
@@ -82,6 +85,11 @@ define_id!(UnitContextId, UnitContext);
 
 // PMI Ids — anchor for future Tolerance / Datum / GD&T work.
 define_id!(ShapeAspectId, ShapeAspect);
+
+// SHAPE_ASPECT subtype Ids — distinct arena per ir.toml blueprint.
+define_id!(CompositeShapeAspectId, CompositeGroupShapeAspect);
+define_id!(DerivedShapeAspectId, CentreOfSymmetry);
+define_id!(ContinuousShapeAspectId, AllAroundShapeAspect);
 
 // REPRESENTATION arena — unified subtype storage (representation-refactor).
 define_id!(RepresentationId, Representation);

@@ -22,7 +22,10 @@ use step_io::ir::model::StepModel;
 use step_io::ir::property::{
     DerivedDefinitionItem, GeneralProperty, GeneralPropertyAssociation, Property, PropertyPool,
 };
-use step_io::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit, UnitContext};
+use step_io::ir::shape_rep::{
+    AllAroundShapeAspect, AngleUnit, CentreOfSymmetry, CompositeGroupShapeAspect, LengthUnit,
+    SolidAngleUnit, UnitContext,
+};
 use step_io::ir::topology::{Face, FaceKind, Orientation, Shell, Solid, Wire};
 use step_io::ir::units::{MassFlavor, MassUnit, NamedUnit, UnitsPool};
 use step_io::parser::schema::{SchemaClass, StepSchema};
@@ -1424,4 +1427,75 @@ fn gram_conversion_based_unit_round_trips() {
         gram.cbu_base.is_some(),
         "gram round-trips as a CBU-wrapped unit"
     );
+}
+
+#[test]
+fn shape_aspect_subtypes_round_trip() {
+    // COMPOSITE_GROUP_SHAPE_ASPECT / CENTRE_OF_SYMMETRY /
+    // ALL_AROUND_SHAPE_ASPECT — SHAPE_ASPECT subtypes, each its own arena.
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        content: ProductContent::Solid(SolidContent {
+            ids: vec![solid_id],
+        }),
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    model
+        .composite_group_shape_aspects
+        .push(CompositeGroupShapeAspect {
+            name: "cg".into(),
+            description: String::new(),
+            target: part_pid,
+            product_definitional: false,
+        });
+    model.centre_of_symmetries.push(CentreOfSymmetry {
+        name: "cs".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: true,
+    });
+    model.all_around_shape_aspects.push(AllAroundShapeAspect {
+        name: "aa".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.composite_group_shape_aspects.len(), 1);
+    assert_eq!(re.centre_of_symmetries.len(), 1);
+    assert_eq!(re.all_around_shape_aspects.len(), 1);
+
+    let cg = re.composite_group_shape_aspects.iter().next().unwrap();
+    assert_eq!(cg.name, "cg");
+    assert_eq!(cg.target, step_io::ProductId(0));
+    let cs = re.centre_of_symmetries.iter().next().unwrap();
+    assert_eq!(cs.name, "cs");
+    assert!(
+        cs.product_definitional,
+        "centre_of_symmetry .T. round-trips"
+    );
+    let aa = re.all_around_shape_aspects.iter().next().unwrap();
+    assert_eq!(aa.name, "aa");
 }

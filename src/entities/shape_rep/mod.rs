@@ -19,5 +19,6 @@ pub mod item_defined_transformation;
 pub mod manifold_surface_shape_representation;
 pub mod mdgpr;
 pub mod shape_aspect;
+pub mod shape_aspect_subtypes;
 pub mod shape_representation;
 pub mod shape_representation_relationship;
