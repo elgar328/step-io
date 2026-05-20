@@ -6,7 +6,7 @@ use super::assembly::{
 use super::form_features::Step;
 use super::geometry::{
     Axis1Placement, Axis2Placement2d, Axis2Placement3d, Curve, Curve2d, Direction2, Direction3,
-    Point2, Point3, Surface, Vertex,
+    PlanarExtent, Point2, Point3, Surface, Vertex,
 };
 use super::plm::{
     Address, ApplicationContext, ApplicationProtocolDefinition, AppliedDocumentReference,
@@ -40,6 +40,7 @@ define_id!(SurfaceId, Surface);
 define_id!(CurveId, Curve);
 define_id!(Placement3dId, Axis2Placement3d);
 define_id!(Placement1dId, Axis1Placement);
+define_id!(PlanarExtentId, PlanarExtent);
 
 // Geometry Ids (2D — PCURVE parametric space)
 define_id!(Point2dId, Point2);

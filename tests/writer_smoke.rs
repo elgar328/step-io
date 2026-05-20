@@ -10,10 +10,11 @@ use step_io::ir::assembly::{
 };
 use step_io::ir::geometry::Vertex;
 use step_io::ir::geometry::{
-    Axis1Placement, Axis2Placement3d, Circle3, ConicalSurface, Curve, CurveForm,
+    Axis1Placement, Axis2Placement2d, Axis2Placement3d, Circle3, ConicalSurface, Curve, CurveForm,
     CylindricalSurface, Direction3, Ellipse3, Line3, Logical, NurbsCurve, NurbsKind, NurbsSurface,
-    NurbsSurfaceKind, Plane3, Point3, SphericalSurface, Surface, SurfaceForm,
-    SurfaceOfLinearExtrusion, SurfaceOfRevolution, ToroidalSurface,
+    NurbsSurfaceKind, PlanarBox, PlanarBoxPlacement, PlanarExtent, PlanarExtentData, Plane3,
+    Point2, Point3, SphericalSurface, Surface, SurfaceForm, SurfaceOfLinearExtrusion,
+    SurfaceOfRevolution, ToroidalSurface,
 };
 use step_io::ir::id::{
     DirectionId, GeneralPropertyId, Placement3dId, PointId, PropertyId, SolidId, UnitContextId,
@@ -1498,4 +1499,71 @@ fn shape_aspect_subtypes_round_trip() {
     );
     let aa = re.all_around_shape_aspects.iter().next().unwrap();
     assert_eq!(aa.name, "aa");
+}
+
+#[test]
+fn planar_extent_and_box_round_trip() {
+    // PLANAR_EXTENT (base) + PLANAR_BOX with a 3D placement and another
+    // with a 2D placement — one concrete_supertype arena.
+    let mut model = empty_model();
+    let frame3d = model.geometry.identity_placement();
+    let p2 = model.geometry.points_2d.push(Point2 { x: 0.0, y: 0.0 });
+    let frame2d = model.geometry.placements_2d.push(Axis2Placement2d {
+        location: p2,
+        ref_direction: None,
+    });
+
+    model
+        .geometry
+        .planar_extents
+        .push(PlanarExtent::Itself(PlanarExtentData {
+            name: "pe".into(),
+            size_in_x: 10.0,
+            size_in_y: 20.0,
+        }));
+    model
+        .geometry
+        .planar_extents
+        .push(PlanarExtent::PlanarBox(PlanarBox {
+            name: "pb3d".into(),
+            size_in_x: 1.0,
+            size_in_y: 2.0,
+            placement: PlanarBoxPlacement::Placement3d(frame3d),
+        }));
+    model
+        .geometry
+        .planar_extents
+        .push(PlanarExtent::PlanarBox(PlanarBox {
+            name: "pb2d".into(),
+            size_in_x: 3.0,
+            size_in_y: 4.0,
+            placement: PlanarBoxPlacement::Placement2d(frame2d),
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.geometry.planar_extents.len(), 3);
+    let mut it = re.geometry.planar_extents.iter();
+    match it.next().unwrap() {
+        PlanarExtent::Itself(d) => {
+            assert_eq!(d.name, "pe");
+            assert!((d.size_in_x - 10.0).abs() < f64::EPSILON);
+            assert!((d.size_in_y - 20.0).abs() < f64::EPSILON);
+        }
+        PlanarExtent::PlanarBox(pb) => panic!("expected Itself, got {pb:?}"),
+    }
+    match it.next().unwrap() {
+        PlanarExtent::PlanarBox(pb) => {
+            assert_eq!(pb.name, "pb3d");
+            assert!(matches!(pb.placement, PlanarBoxPlacement::Placement3d(_)));
+        }
+        PlanarExtent::Itself(d) => panic!("expected PlanarBox, got {d:?}"),
+    }
+    match it.next().unwrap() {
+        PlanarExtent::PlanarBox(pb) => {
+            assert_eq!(pb.name, "pb2d");
+            assert!(matches!(pb.placement, PlanarBoxPlacement::Placement2d(_)));
+        }
+        PlanarExtent::Itself(d) => panic!("expected PlanarBox, got {d:?}"),
+    }
 }

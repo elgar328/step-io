@@ -630,3 +630,38 @@ pub struct Pcurve {
     pub basis_surface: SurfaceId,
     pub curve_2d: Curve2dId,
 }
+
+/// `PLANAR_EXTENT` / `PLANAR_BOX` — a rectangular planar region. The
+/// ir.toml blueprint models them as a `concrete_supertype`: one arena, an
+/// enum with the base `Itself` variant plus the `PlanarBox` subtype.
+#[derive(Debug, Clone, PartialEq)]
+pub enum PlanarExtent {
+    Itself(PlanarExtentData),
+    PlanarBox(PlanarBox),
+}
+
+/// `PLANAR_EXTENT(name, size_in_x, size_in_y)` — the base form.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlanarExtentData {
+    pub name: String,
+    pub size_in_x: f64,
+    pub size_in_y: f64,
+}
+
+/// `PLANAR_BOX(name, size_in_x, size_in_y, placement)` — a planar extent
+/// anchored by a coordinate placement.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlanarBox {
+    pub name: String,
+    pub size_in_x: f64,
+    pub size_in_y: f64,
+    pub placement: PlanarBoxPlacement,
+}
+
+/// `PLANAR_BOX.placement` — the STEP `axis2_placement` SELECT
+/// (`AXIS2_PLACEMENT_2D` | `AXIS2_PLACEMENT_3D`).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum PlanarBoxPlacement {
+    Placement2d(Placement2dId),
+    Placement3d(Placement3dId),
+}

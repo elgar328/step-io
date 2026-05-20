@@ -356,6 +356,12 @@ impl<'m> WriteBuffer<'m> {
         for id in self.model.geometry.placements_2d.iter_ids() {
             self.emit_axis2_placement_2d(id)?;
         }
+        // PLANAR_EXTENT / PLANAR_BOX — after the placement loops so a
+        // PLANAR_BOX's `emit_axis2_placement_*` only cache-hits (emitting a
+        // placement out of arena order would desync the placement arenas).
+        for id in self.model.geometry.planar_extents.iter_ids() {
+            self.emit_planar_extent(id)?;
+        }
         for id in self.model.geometry.curves_2d.iter_ids() {
             self.emit_curve_2d(id)?;
         }

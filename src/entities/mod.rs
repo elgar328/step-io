@@ -80,6 +80,10 @@ pub(crate) enum PassLevel {
     /// living inside a PCURVE `DEFINITIONAL_REPRESENTATION`. Mirrors the
     /// 3D `Pass4Rational` but dispatched through `dispatch_registry_2d`.
     Pass4aRational,
+    /// `PLANAR_EXTENT` / `PLANAR_BOX` (Pass 4-pe) — runs after the Pass 4a
+    /// 2D block so a `PLANAR_BOX` placement resolves against either
+    /// `placement_map` (3D) or `placement_2d_map` (2D).
+    Pass4PlanarExtent,
 
     // ----- Plan 5.6 (units, Pass 0 — runs before geometry passes) -----
     /// 3 unit leaf complex entities (`LENGTH_UNIT` / `PLANE_ANGLE_UNIT`

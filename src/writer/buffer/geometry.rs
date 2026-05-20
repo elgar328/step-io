@@ -286,6 +286,22 @@ impl WriteBuffer<'_> {
         crate::entities::geometry::axis2_placement_2d::Axis2Placement2dHandler::write(self, id)
     }
 
+    /// Emit one `planar_extents` arena entry — dispatches on the
+    /// `PlanarExtent` enum variant to the `PLANAR_EXTENT` / `PLANAR_BOX`
+    /// handler.
+    pub(crate) fn emit_planar_extent(
+        &mut self,
+        id: crate::ir::PlanarExtentId,
+    ) -> Result<u64, WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::geometry::planar_extent::{PlanarBoxHandler, PlanarExtentHandler};
+        use crate::ir::PlanarExtent;
+        match self.model.geometry.planar_extents[id].clone() {
+            PlanarExtent::Itself(data) => PlanarExtentHandler::write(self, data),
+            PlanarExtent::PlanarBox(pb) => PlanarBoxHandler::write(self, pb),
+        }
+    }
+
     pub(crate) fn emit_curve_2d(&mut self, id: Curve2dId) -> Result<u64, WriteError> {
         if let Some(&n) = self.curve_2d_ids.get(&id) {
             return Ok(n);

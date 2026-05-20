@@ -30,6 +30,7 @@ pub(crate) mod nurbs_shared;
 pub mod offset_curve_3d;
 pub mod offset_surface;
 pub mod parabola;
+pub mod planar_extent;
 pub mod plane;
 pub mod polyline;
 pub mod polyline_2d;

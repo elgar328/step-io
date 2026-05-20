@@ -105,6 +105,9 @@ impl ReaderContext {
         self.dispatch_registry_2d(graph, PassLevel::Pass4aCurve);
         // 4a-4: 2D rational B-spline curves (complex entities).
         self.dispatch_registry_2d(graph, PassLevel::Pass4aRational);
+        // 4-pe: PLANAR_EXTENT / PLANAR_BOX — after the 2D block so a
+        // PLANAR_BOX placement resolves against either placement map.
+        self.dispatch_registry(graph, PassLevel::Pass4PlanarExtent);
 
         // Pass 4-3: SURFACE_CURVE / SEAM_CURVE — alias to curve_3d so edges
         // that reference these see the underlying 3D curve. Must come after
