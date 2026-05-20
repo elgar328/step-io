@@ -16,6 +16,7 @@ pub mod assembly_product;
 pub mod form_features;
 pub mod geometry;
 pub mod plm;
+pub mod pmi;
 pub mod property;
 pub mod shape_rep;
 pub mod topology;

@@ -20,6 +20,7 @@ use step_io::ir::id::{
     DirectionId, GeneralPropertyId, Placement3dId, PointId, PropertyId, SolidId, UnitContextId,
 };
 use step_io::ir::model::StepModel;
+use step_io::ir::pmi::{PmiPool, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier};
 use step_io::ir::property::{
     DerivedDefinitionItem, GeneralProperty, GeneralPropertyAssociation, Property, PropertyPool,
 };
@@ -1566,4 +1567,47 @@ fn planar_extent_and_box_round_trip() {
         }
         PlanarExtent::Itself(d) => panic!("expected PlanarBox, got {d:?}"),
     }
+}
+
+#[test]
+fn pmi_primitives_round_trip() {
+    // TOLERANCE_ZONE_FORM / TYPE_QUALIFIER / VALUE_FORMAT_TYPE_QUALIFIER —
+    // the first pmi-pool entities, each a 1-attr string primitive.
+    let mut model = empty_model();
+    let mut pmi = PmiPool::default();
+    pmi.tolerance_zone_forms.push(ToleranceZoneForm {
+        name: "cylindrical".into(),
+    });
+    pmi.type_qualifiers.push(TypeQualifier {
+        name: "maximum".into(),
+    });
+    pmi.value_format_type_qualifiers
+        .push(ValueFormatTypeQualifier {
+            format_type: "NR2 1.3".into(),
+        });
+    model.pmi = Some(pmi);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("round-tripped pmi pool");
+    assert_eq!(re_pmi.tolerance_zone_forms.len(), 1);
+    assert_eq!(re_pmi.type_qualifiers.len(), 1);
+    assert_eq!(re_pmi.value_format_type_qualifiers.len(), 1);
+    assert_eq!(
+        re_pmi.tolerance_zone_forms.iter().next().unwrap().name,
+        "cylindrical"
+    );
+    assert_eq!(
+        re_pmi.type_qualifiers.iter().next().unwrap().name,
+        "maximum"
+    );
+    assert_eq!(
+        re_pmi
+            .value_format_type_qualifiers
+            .iter()
+            .next()
+            .unwrap()
+            .format_type,
+        "NR2 1.3"
+    );
 }

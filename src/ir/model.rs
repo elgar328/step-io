@@ -189,6 +189,9 @@ pub struct StepModel {
     /// IR — see [`crate::ir::property`] for design notes. Geometric
     /// validation properties (target = `SHAPE_ASPECT`) are dropped at read.
     pub properties: Option<crate::ir::property::PropertyPool>,
+    /// `pmi` pool — GD&T / tolerance entities. `None` when the source had
+    /// no PMI content. See [`crate::ir::pmi`].
+    pub pmi: Option<crate::ir::pmi::PmiPool>,
     /// `SHAPE_ASPECT` entries — empty for fixtures without PMI (most
     /// non-NIST / non-stepcode files). Future PMI work (Tolerance /
     /// Datum / GD&T per ROADMAP Phase 2) lands as additional arenas

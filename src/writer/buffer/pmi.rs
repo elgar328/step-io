@@ -39,6 +39,28 @@ impl WriteBuffer<'_> {
             }
         }
         self.emit_shape_aspect_subtypes();
+        self.emit_pmi_pool();
+    }
+
+    /// Emit the `pmi` pool's leaf primitives (`TOLERANCE_ZONE_FORM` /
+    /// `TYPE_QUALIFIER` / `VALUE_FORMAT_TYPE_QUALIFIER`). No cross-refs —
+    /// each is a standalone 1-attr entity.
+    fn emit_pmi_pool(&mut self) {
+        use crate::entities::pmi::{
+            ToleranceZoneFormHandler, TypeQualifierHandler, ValueFormatTypeQualifierHandler,
+        };
+        let Some(pmi) = self.model.pmi.clone() else {
+            return;
+        };
+        for tzf in pmi.tolerance_zone_forms.iter() {
+            let _ = ToleranceZoneFormHandler::write(self, tzf.clone());
+        }
+        for tq in pmi.type_qualifiers.iter() {
+            let _ = TypeQualifierHandler::write(self, tq.clone());
+        }
+        for vftq in pmi.value_format_type_qualifiers.iter() {
+            let _ = ValueFormatTypeQualifierHandler::write(self, vftq.clone());
+        }
     }
 
     /// Emit the `SHAPE_ASPECT` subtype arenas (`COMPOSITE_GROUP_SHAPE_ASPECT`

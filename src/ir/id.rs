@@ -18,6 +18,7 @@ use super::plm::{
     PersonAndOrganizationAssignment, PersonAndOrganizationRole, RoleAssociation,
     SecurityClassification, SecurityClassificationAssignment, SecurityClassificationLevel,
 };
+use super::pmi::{ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier};
 use super::property::{
     DescriptionAttribute, GeneralProperty, GeneralPropertyAssociation, IdAttribute, NameAttribute,
     Property,
@@ -91,6 +92,11 @@ define_id!(ShapeAspectId, ShapeAspect);
 define_id!(CompositeShapeAspectId, CompositeGroupShapeAspect);
 define_id!(DerivedShapeAspectId, CentreOfSymmetry);
 define_id!(ContinuousShapeAspectId, AllAroundShapeAspect);
+
+// pmi pool Ids — tolerance / qualifier primitives (Phase pmi-primitives).
+define_id!(ToleranceZoneFormId, ToleranceZoneForm);
+define_id!(TypeQualifierId, TypeQualifier);
+define_id!(ValueFormatTypeQualifierId, ValueFormatTypeQualifier);
 
 // REPRESENTATION arena — unified subtype storage (representation-refactor).
 define_id!(RepresentationId, Representation);

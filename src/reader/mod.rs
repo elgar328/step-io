@@ -346,6 +346,10 @@ pub struct ReaderContext {
     /// Pass 8.
     pub(crate) general_property_id_map: HashMap<u64, crate::ir::GeneralPropertyId>,
 
+    /// `pmi` pool — populated by the Pass 8 PMI handlers. `None` until the
+    /// first PMI entity is seen.
+    pub(crate) pmi: Option<crate::ir::pmi::PmiPool>,
+
     /// `SHAPE_ASPECT` arena — Pass 8 's `SHAPE_ASPECT` convert pushes
     /// here. Empty when no PMI entities were seen.
     pub(crate) shape_aspects: crate::ir::Arena<crate::ir::ShapeAspect>,
@@ -489,6 +493,7 @@ impl ReaderContext {
                 header,
                 visualization: ctx.visualization,
                 properties: ctx.properties,
+                pmi: ctx.pmi,
                 shape_aspects: ctx.shape_aspects,
                 composite_group_shape_aspects: ctx.composite_group_shape_aspects,
                 centre_of_symmetries: ctx.centre_of_symmetries,

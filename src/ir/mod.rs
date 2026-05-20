@@ -7,6 +7,7 @@ pub mod geometry;
 pub mod id;
 pub mod model;
 pub mod plm;
+pub mod pmi;
 pub mod property;
 pub mod shape_rep;
 pub mod topology;
@@ -50,7 +51,10 @@ pub use id::{
     RepresentationId, RoleAssociationId, SecurityClassificationAssignmentId,
     SecurityClassificationId, SecurityClassificationLevelId, ShapeAspectId, ShellId, SolidId,
     SurfaceId, UnitContextId, VertexId, WireId,
-    {CompositeShapeAspectId, ContinuousShapeAspectId, DerivedShapeAspectId},
+    {
+        CompositeShapeAspectId, ContinuousShapeAspectId, DerivedShapeAspectId, ToleranceZoneFormId,
+        TypeQualifierId, ValueFormatTypeQualifierId,
+    },
 };
 pub use model::{
     FileHeader, GeometryPool, ImplementationLevel, NonEmptyStringList, StepModel, TopologyPool,
@@ -71,6 +75,7 @@ pub use plm::{
     PlmPool, RoleAssociation, RoleSelect, SecurityClassification, SecurityClassificationAssignment,
     SecurityClassificationItem, SecurityClassificationLevel,
 };
+pub use pmi::{PmiPool, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier};
 pub use property::{
     DerivedDefinitionItem, DescriptionAttribute, DescriptionAttributeItem, GeneralProperty,
     GeneralPropertyAssociation, IdAttribute, IdAttributeItem, MeasureKind, NameAttribute,
