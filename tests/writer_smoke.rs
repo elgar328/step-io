@@ -1721,3 +1721,55 @@ fn annotation_plane_round_trip() {
     assert!(ap.styles.is_empty());
     assert!(matches!(ap.item, RepresentationItemRef::Surface(_)));
 }
+
+#[test]
+fn datum_round_trip() {
+    // DATUM — a shape_aspect subtype + identification, resolving of_shape
+    // to a ProductId through the PRODUCT_DEFINITION_SHAPE chain.
+    use step_io::ir::pmi::Datum;
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        content: ProductContent::Solid(SolidContent {
+            ids: vec![solid_id],
+        }),
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let mut pmi = PmiPool::default();
+    pmi.datums.push(Datum {
+        name: String::new(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        identification: "A".into(),
+    });
+    model.pmi = Some(pmi);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    assert_eq!(re_pmi.datums.len(), 1);
+    let datum = re_pmi.datums.iter().next().unwrap();
+    assert_eq!(datum.identification, "A");
+    assert_eq!(datum.target, step_io::ProductId(0));
+    assert!(!datum.product_definitional);
+}

@@ -39,7 +39,34 @@ impl WriteBuffer<'_> {
             }
         }
         self.emit_shape_aspect_subtypes();
+        self.emit_datums();
         self.emit_pmi_pool();
+    }
+
+    /// Emit the `pmi` pool's `DATUM` arena. Each datum resolves its
+    /// `target` (`ProductId`) to a `PRODUCT_DEFINITION_SHAPE` step id via
+    /// `product_def_shape_ids` — the same chain as `SHAPE_ASPECT`. Silent
+    /// skip when the product chain was not emitted (reader symmetry).
+    fn emit_datums(&mut self) {
+        use crate::entities::pmi::{DatumHandler, DatumWriteInput};
+        let Some(pmi) = self.model.pmi.clone() else {
+            return;
+        };
+        for datum in pmi.datums.iter() {
+            let Some(&pds_step_id) = self.product_def_shape_ids.get(&datum.target) else {
+                continue;
+            };
+            let _ = DatumHandler::write(
+                self,
+                DatumWriteInput {
+                    name: datum.name.clone(),
+                    description: datum.description.clone(),
+                    pds_step_id,
+                    product_definitional: datum.product_definitional,
+                    identification: datum.identification.clone(),
+                },
+            );
+        }
     }
 
     /// Emit the `pmi` pool's leaf primitives (`TOLERANCE_ZONE_FORM` /

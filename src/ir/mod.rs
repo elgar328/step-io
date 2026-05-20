@@ -53,7 +53,7 @@ pub use id::{
     SecurityClassificationAssignmentId, SecurityClassificationId, SecurityClassificationLevelId,
     ShapeAspectId, ShellId, SolidId, SurfaceId, UnitContextId, VertexId, WireId,
     {
-        AnnotationOccurrenceId, CompositeShapeAspectId, ContinuousShapeAspectId,
+        AnnotationOccurrenceId, CompositeShapeAspectId, ContinuousShapeAspectId, DatumId,
         DerivedShapeAspectId, ToleranceZoneFormId, TypeQualifierId, ValueFormatTypeQualifierId,
     },
 };
@@ -77,7 +77,7 @@ pub use plm::{
     SecurityClassificationItem, SecurityClassificationLevel,
 };
 pub use pmi::{
-    AnnotationOccurrence, AnnotationPlane, PmiPool, ToleranceZoneForm, TypeQualifier,
+    AnnotationOccurrence, AnnotationPlane, Datum, PmiPool, ToleranceZoneForm, TypeQualifier,
     ValueFormatTypeQualifier,
 };
 pub use property::{

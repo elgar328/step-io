@@ -8,10 +8,12 @@
 use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::PmiPool;
-use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
+use crate::ir::attr::{
+    check_count, read_bool, read_entity_ref, read_entity_ref_list, read_string_or_unset,
+};
 use crate::ir::error::ConvertError;
 use crate::ir::pmi::{
-    AnnotationOccurrence, AnnotationPlane, ToleranceZoneForm, TypeQualifier,
+    AnnotationOccurrence, AnnotationPlane, Datum, ToleranceZoneForm, TypeQualifier,
     ValueFormatTypeQualifier,
 };
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -159,6 +161,81 @@ impl SimpleEntityHandler for AnnotationPlaneHandler {
                 Attribute::List(style_refs),
                 Attribute::EntityRef(item_id),
                 Attribute::Unset,
+            ],
+        ))
+    }
+}
+
+/// Resolved write input for [`DatumHandler`] — the caller resolves
+/// `of_shape` (a `ProductId`) to a `PRODUCT_DEFINITION_SHAPE` step id.
+pub(crate) struct DatumWriteInput {
+    pub(crate) name: String,
+    pub(crate) description: String,
+    pub(crate) pds_step_id: u64,
+    pub(crate) product_definitional: bool,
+    pub(crate) identification: String,
+}
+
+pub(crate) struct DatumHandler;
+
+/// `DATUM(name, description, of_shape, product_definitional, identification)`
+/// — a `shape_aspect` subtype. `of_shape` resolves to a `ProductId` through
+/// the same `PRODUCT_DEFINITION_SHAPE` → `PRODUCT_DEFINITION` chain as
+/// `SHAPE_ASPECT`; an unresolved `of_shape` drops the datum, symmetric on
+/// re-read. `product_definitional` is the inherited `shape_aspect` BOOLEAN
+/// (read as `bool`, like every other shape-aspect-family entity).
+#[step_entity(name = "DATUM", pass = Pass8ShapeAspect)]
+impl SimpleEntityHandler for DatumHandler {
+    type WriteInput = DatumWriteInput;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 5, entity_id, "DATUM")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
+        let of_shape_ref = read_entity_ref(attrs, 2, entity_id, "of_shape")?;
+        let product_definitional = read_bool(attrs, 3, entity_id, "product_definitional")?;
+        let identification =
+            read_string_or_unset(attrs, 4, entity_id, "identification")?.to_owned();
+
+        // of_shape → PRODUCT_DEFINITION_SHAPE → PRODUCT_DEFINITION → ProductId.
+        let Some(&pdef_step_id) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) else {
+            return Ok(());
+        };
+        let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_step_id) else {
+            return Ok(());
+        };
+        let Some(&target) = ctx.product_arena_map.get(&product_step_id) else {
+            return Ok(());
+        };
+
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .datums
+            .push(Datum {
+                name,
+                description,
+                target,
+                product_definitional,
+                identification,
+            });
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, input: DatumWriteInput) -> Result<u64, WriteError> {
+        let bool_attr = if input.product_definitional { "T" } else { "F" };
+        Ok(buf.push_simple(
+            "DATUM",
+            vec![
+                Attribute::String(input.name),
+                Attribute::String(input.description),
+                Attribute::EntityRef(input.pds_step_id),
+                Attribute::Enum(bool_attr.into()),
+                Attribute::String(input.identification),
             ],
         ))
     }

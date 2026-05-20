@@ -19,7 +19,7 @@ use super::plm::{
     SecurityClassification, SecurityClassificationAssignment, SecurityClassificationLevel,
 };
 use super::pmi::{
-    AnnotationOccurrence, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
+    AnnotationOccurrence, Datum, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
 use super::property::{
     DescriptionAttribute, GeneralProperty, GeneralPropertyAssociation, IdAttribute, NameAttribute,
@@ -102,6 +102,9 @@ define_id!(ValueFormatTypeQualifierId, ValueFormatTypeQualifier);
 
 // annotation_occurrence enum_base arena (Phase annotation-plane).
 define_id!(AnnotationOccurrenceId, AnnotationOccurrence);
+
+// datum arena (Phase datum).
+define_id!(DatumId, Datum);
 
 // REPRESENTATION arena — unified subtype storage (representation-refactor).
 define_id!(RepresentationId, Representation);

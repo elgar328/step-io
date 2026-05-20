@@ -7,7 +7,7 @@
 //! ir.toml blueprint puts them in the `shape_rep` pool.
 
 use super::arena::Arena;
-use super::id::PresentationStyleAssignmentId;
+use super::id::{PresentationStyleAssignmentId, ProductId};
 use super::representation_item::RepresentationItemRef;
 
 /// Top-level container for `pmi`-pool entities. `None` when the source
@@ -23,6 +23,23 @@ pub struct PmiPool {
     /// `annotation_occurrence` `enum_base` arena. Phase annotation-plane
     /// fills the `AnnotationPlane` variant only.
     pub annotation_occurrences: Arena<AnnotationOccurrence>,
+    /// `DATUM` arena. Phase datum.
+    pub datums: Arena<Datum>,
+}
+
+/// `DATUM(name, description, of_shape, product_definitional, identification)`
+/// — a `shape_aspect` subtype naming a datum feature for GD&T. `of_shape`
+/// resolves through `PRODUCT_DEFINITION_SHAPE` to a [`ProductId`], exactly
+/// as `SHAPE_ASPECT` does. A `DATUM` whose `of_shape` does not resolve is
+/// silently dropped, symmetric on re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Datum {
+    pub name: String,
+    pub description: String,
+    /// `of_shape` resolved to the owning product.
+    pub target: ProductId,
+    pub product_definitional: bool,
+    pub identification: String,
 }
 
 /// `annotation_occurrence` `enum_base` — STEP `styled_item` PMI subtypes that
