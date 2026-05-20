@@ -8,7 +8,11 @@
 
 use super::assembly::WireframeContent;
 use super::id::StyledItemId;
-use super::id::{NamedUnitId, Placement3dId, ProductId, ShellId, SolidId, UnitContextId};
+use super::id::{
+    NamedUnitId, Placement3dId, ProductId, RepresentationId, RepresentationMapId, ShellId, SolidId,
+    UnitContextId,
+};
+use super::representation_item::RepresentationItemRef;
 
 /// Units declared in the STEP file's HEADER section.
 ///
@@ -149,6 +153,42 @@ pub struct WireframeRepr {
     pub context: Option<UnitContextId>,
     pub ref_frame: Option<Placement3dId>,
     pub content: WireframeContent,
+}
+
+/// `REPRESENTATION_MAP(mapping_origin, mapped_representation)` — a reusable
+/// mapping target that a [`MappedItem`] instantiates. ir.toml models it as a
+/// `concrete_supertype` enum; the `camera_usage` subtype (18 instances) is
+/// deferred, so only the `Itself` carrier is modelled for now.
+#[derive(Debug, Clone, PartialEq)]
+pub enum RepresentationMap {
+    Itself(RepresentationMapData),
+}
+
+/// Carrier for the base `REPRESENTATION_MAP` entity.
+#[derive(Debug, Clone, PartialEq)]
+pub struct RepresentationMapData {
+    /// The `representation_item` that consumers of this map place.
+    pub mapping_origin: RepresentationItemRef,
+    /// The representation this map points into.
+    pub mapped_representation: RepresentationId,
+}
+
+/// `MAPPED_ITEM(name, mapping_source, mapping_target)` — an instance of a
+/// [`RepresentationMap`] placed through a `representation_item` transform.
+/// Itself a `representation_item` in STEP. ir.toml models it as a
+/// `concrete_supertype` enum; the `camera_image` / `camera_image_3d_with_scale`
+/// subtypes are deferred, so only the `Itself` carrier is modelled for now.
+#[derive(Debug, Clone, PartialEq)]
+pub enum MappedItem {
+    Itself(MappedItemData),
+}
+
+/// Carrier for the base `MAPPED_ITEM` entity.
+#[derive(Debug, Clone, PartialEq)]
+pub struct MappedItemData {
+    pub name: String,
+    pub mapping_source: RepresentationMapId,
+    pub mapping_target: RepresentationItemRef,
 }
 
 /// `SHAPE_ASPECT(name, description, of_shape, product_definitional)`.

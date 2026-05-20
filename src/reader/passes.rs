@@ -247,6 +247,12 @@ impl ReaderContext {
         // NAUO to a Transform3d via the RR-complex sub-entity.
         self.dispatch_registry(graph, PassLevel::Pass6Cdsr);
 
+        // REPRESENTATION_MAP then MAPPED_ITEM (phase mapped-item). Two
+        // passes: a MAPPED_ITEM's `#N` may precede its REPRESENTATION_MAP,
+        // so `mapping_source` only resolves once every map is in the arena.
+        self.dispatch_registry(graph, PassLevel::Pass6RepresentationMap);
+        self.dispatch_registry(graph, PassLevel::Pass6MappedItem);
+
         // Pass 6-8: NEXT_ASSEMBLY_USAGE_OCCURRENCE — push Instances into
         // parent products' Group content.
         self.dispatch_registry(graph, PassLevel::Pass6Nauo);

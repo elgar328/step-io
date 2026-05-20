@@ -222,6 +222,14 @@ pub struct StepModel {
     /// wireframe / `MDGPR` representation. Phase A-1 dual-writes here
     /// alongside the legacy scattered storage.
     pub representations: crate::ir::Arena<crate::ir::shape_rep::Representation>,
+    /// `REPRESENTATION_MAP` arena (phase mapped-item). One entry per source
+    /// `REPRESENTATION_MAP` whose `mapping_origin` / `mapped_representation`
+    /// both resolve. Emitted standalone — the `MAPPED_ITEM` containers
+    /// (`DRAUGHTING_MODEL` / plain `REPRESENTATION`) are not modelled yet.
+    pub representation_maps: crate::ir::Arena<crate::ir::shape_rep::RepresentationMap>,
+    /// `MAPPED_ITEM` arena (phase mapped-item). Orphan round-trip — see
+    /// [`Self::representation_maps`].
+    pub mapped_items: crate::ir::Arena<crate::ir::shape_rep::MappedItem>,
 }
 
 /// Arena-based storage for all topology objects.

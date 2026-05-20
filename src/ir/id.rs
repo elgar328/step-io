@@ -24,8 +24,8 @@ use super::property::{
     Property,
 };
 use super::shape_rep::{
-    AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, Representation, ShapeAspect,
-    UnitContext,
+    AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, MappedItem, Representation,
+    RepresentationMap, ShapeAspect, UnitContext,
 };
 use super::topology::{Edge, Face, Shell, Solid, Wire};
 use super::units::{DerivedUnit, DerivedUnitElement, MeasureWithUnit, NamedUnit};
@@ -100,6 +100,10 @@ define_id!(ValueFormatTypeQualifierId, ValueFormatTypeQualifier);
 
 // REPRESENTATION arena — unified subtype storage (representation-refactor).
 define_id!(RepresentationId, Representation);
+
+// REPRESENTATION_MAP + MAPPED_ITEM arenas (phase mapped-item).
+define_id!(RepresentationMapId, RepresentationMap);
+define_id!(MappedItemId, MappedItem);
 
 // Visualization Ids — Colour enum arena (ColourRgb + DraughtingPreDefinedColour).
 define_id!(ColourId, Colour);

@@ -21,6 +21,7 @@ use crate::ir::{
 pub(crate) mod assembly;
 pub(crate) mod form_features;
 pub(crate) mod geometry;
+pub(crate) mod mapped_item;
 pub(crate) mod plm;
 pub(crate) mod pmi;
 pub(crate) mod property;
@@ -63,6 +64,10 @@ pub(crate) struct WriteBuffer<'m> {
     /// cached id instead of re-emitting the representation inline. Empty
     /// for hand/kernel-built IR (the arena is reader-populated only).
     pub(crate) representation_step_ids: Vec<u64>,
+    /// STEP entity id of every emitted `REPRESENTATION_MAP`, indexed by
+    /// `RepresentationMapId.0`. Populated by `emit_mapped_items` before the
+    /// `MAPPED_ITEM` loop so each item resolves its `mapping_source` ref.
+    pub(crate) representation_map_step_ids: Vec<u64>,
     /// STEP entity id of every emitted `NAMED_UNIT` complex from
     /// [`crate::ir::UnitsPool::named_units`], indexed by `NamedUnitId.0`.
     /// Populated by `emit_units_pool_if_set` before GUAC + MWU + DUE emit,
@@ -262,6 +267,7 @@ impl<'m> WriteBuffer<'m> {
             curve_2d_ids: HashMap::new(),
             unit_context_ids: Vec::new(),
             representation_step_ids: Vec::new(),
+            representation_map_step_ids: Vec::new(),
             unit_leaf_ids: Vec::new(),
             named_unit_step_ids: Vec::new(),
             mwu_step_ids: Vec::new(),
@@ -408,6 +414,9 @@ impl<'m> WriteBuffer<'m> {
         self.emit_product_chain_if_eligible()?;
         self.emit_pmi_if_set();
         self.emit_visualization_if_set()?;
+        // REPRESENTATION_MAP + MAPPED_ITEM — after visualization so the
+        // `representation_step_ids` cache covers MDGPR slots too.
+        self.emit_mapped_items()?;
         self.emit_plm_if_set()?;
         self.emit_properties_if_set();
         self.emit_form_features_if_set()?;

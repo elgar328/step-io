@@ -17,6 +17,7 @@ pub mod gbwsr;
 pub mod global_unit_assigned_context;
 pub mod item_defined_transformation;
 pub mod manifold_surface_shape_representation;
+pub mod mapped_item;
 pub mod mdgpr;
 pub mod shape_aspect;
 pub mod shape_aspect_subtypes;

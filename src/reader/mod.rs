@@ -371,6 +371,13 @@ pub struct ReaderContext {
     /// representation handlers; consumed by the SDR reader to link each
     /// product to its `representation_id` / `outer_representation_id`.
     pub(crate) repr_id_map: HashMap<u64, crate::ir::RepresentationId>,
+    /// `REPRESENTATION_MAP` arena + `#N → RepresentationMapId` (phase
+    /// mapped-item). The map lets the `MAPPED_ITEM` handler resolve its
+    /// `mapping_source` ref.
+    pub(crate) representation_maps: crate::ir::Arena<crate::ir::shape_rep::RepresentationMap>,
+    pub(crate) representation_map_id_map: HashMap<u64, crate::ir::RepresentationMapId>,
+    /// `MAPPED_ITEM` arena (phase mapped-item) — orphan round-trip.
+    pub(crate) mapped_items: crate::ir::Arena<crate::ir::shape_rep::MappedItem>,
 
     /// Lazily-built plm pool — populated by the Pass 9 plm reader chain
     /// (`CalendarDate` / `LocalTime` / UTC / `DateAndTime` / `DateTimeRole`
@@ -507,6 +514,8 @@ impl ReaderContext {
                 ),
                 form_features: ctx.form_features,
                 representations: ctx.representations,
+                representation_maps: ctx.representation_maps,
+                mapped_items: ctx.mapped_items,
             },
             warnings: ctx.warnings,
             parse_warnings: graph.warnings.clone(),

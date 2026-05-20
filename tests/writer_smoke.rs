@@ -1611,3 +1611,66 @@ fn pmi_primitives_round_trip() {
         "NR2 1.3"
     );
 }
+
+#[test]
+fn mapped_item_round_trip() {
+    // REPRESENTATION_MAP + MAPPED_ITEM — orphan round-trip: a reusable map
+    // into a representation, instantiated by a mapped item. Both emit
+    // standalone (no container modelled yet).
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{
+        MappedItem, MappedItemData, PlainRepr, Representation, RepresentationMap,
+        RepresentationMapData,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+    let loc = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let axis = model.geometry.directions.push(Direction3 {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+    });
+    let refd = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let placement = push_placement(&mut model, loc, Some(axis), Some(refd));
+    let rep = model.representations.push(Representation::Plain(PlainRepr {
+        name: "mapped".into(),
+        context: Some(uc),
+        frame: None,
+    }));
+    let rmap = model
+        .representation_maps
+        .push(RepresentationMap::Itself(RepresentationMapData {
+            mapping_origin: RepresentationItemRef::Placement3d(placement),
+            mapped_representation: rep,
+        }));
+    model.mapped_items.push(MappedItem::Itself(MappedItemData {
+        name: "inst".into(),
+        mapping_source: rmap,
+        mapping_target: RepresentationItemRef::Placement3d(placement),
+    }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.representation_maps.len(), 1);
+    assert_eq!(re.mapped_items.len(), 1);
+    let MappedItem::Itself(mi) = re.mapped_items.iter().next().unwrap();
+    assert_eq!(mi.name, "inst");
+    assert!(matches!(
+        mi.mapping_target,
+        RepresentationItemRef::Placement3d(_)
+    ));
+    let RepresentationMap::Itself(rm) = re.representation_maps.iter().next().unwrap();
+    assert!(matches!(
+        rm.mapping_origin,
+        RepresentationItemRef::Placement3d(_)
+    ));
+}

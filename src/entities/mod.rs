@@ -190,6 +190,14 @@ pub(crate) enum PassLevel {
     /// NAUO to a Transform3d. Needs `graph` to resolve the RR-complex
     /// sub-entity.
     Pass6Cdsr,
+    /// `REPRESENTATION_MAP` (phase mapped-item) — depends on the Pass 6
+    /// representations (`repr_id_map`) and Pass 1-5 geometry. Runs before
+    /// `Pass6MappedItem` so a `MAPPED_ITEM` whose `#N` precedes its
+    /// `REPRESENTATION_MAP` still resolves `mapping_source`.
+    Pass6RepresentationMap,
+    /// `MAPPED_ITEM` (phase mapped-item) — depends on
+    /// `Pass6RepresentationMap` (`representation_map_id_map`).
+    Pass6MappedItem,
 
     // ----- Plan 7 (Pass 4-4B + Pass 7 visualization + Pass 8 property/PMI) -----
     /// `OFFSET_SURFACE` (Pass 4-4B) — fixpoint dispatch. Dispatched via
