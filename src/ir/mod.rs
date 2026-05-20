@@ -45,9 +45,9 @@ pub use id::{
     PersonAndOrganizationId, PersonAndOrganizationRoleId, PersonId, Placement1dId, Placement2dId,
     Placement3dId, Point2dId, PointId, ProductContextId, ProductDefinitionContextAssociationId,
     ProductDefinitionContextId, ProductDefinitionContextRoleId, ProductDefinitionRelationshipId,
-    ProductId, RoleAssociationId, SecurityClassificationAssignmentId, SecurityClassificationId,
-    SecurityClassificationLevelId, ShapeAspectId, ShellId, SolidId, SurfaceId, UnitContextId,
-    VertexId, WireId,
+    ProductId, RepresentationId, RoleAssociationId, SecurityClassificationAssignmentId,
+    SecurityClassificationId, SecurityClassificationLevelId, ShapeAspectId, ShellId, SolidId,
+    SurfaceId, UnitContextId, VertexId, WireId,
 };
 pub use model::{
     FileHeader, GeometryPool, ImplementationLevel, NonEmptyStringList, StepModel, TopologyPool,
@@ -74,8 +74,9 @@ pub use property::{
     PropertyPool,
 };
 pub use shape_rep::{
-    AngleUnit, DescriptiveItem, LengthUncertainty, LengthUnit, Mdgpr, ShapeAspect, SolidAngleUnit,
-    UnitContext,
+    AdvancedBrepRepr, AngleUnit, DescriptiveItem, LengthUncertainty, LengthUnit,
+    ManifoldSurfaceRepr, Mdgpr, PlainRepr, Representation, ShapeAspect, SolidAngleUnit,
+    UnitContext, WireframeRepr,
 };
 pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Wire};
 pub use units::{

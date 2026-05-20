@@ -43,14 +43,16 @@ pub(crate) fn read_wireframe_representation_body(
         entity_id,
         "GEOMETRICALLY_BOUNDED_*_SHAPE_REPRESENTATION",
     )?;
-    let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
+    let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
     let items = read_entity_ref_list(attrs, 1, entity_id, "items")?;
     let ctx_ref = read_entity_ref(attrs, 2, entity_id, "context_of_items")?;
-    if let Some(&ctx_id) = ctx.context_id_map.get(&ctx_ref) {
+    let context = ctx.context_id_map.get(&ctx_ref).copied();
+    if let Some(ctx_id) = context {
         ctx.repr_context_map.insert(entity_id, ctx_id);
     }
 
-    if let Some(&placement_id) = items.iter().find_map(|r| ctx.placement_map.get(r)) {
+    let ref_frame = items.iter().find_map(|r| ctx.placement_map.get(r).copied());
+    if let Some(placement_id) = ref_frame {
         ctx.wireframe_ref_frame_map.insert(entity_id, placement_id);
     }
     let mut curves = Vec::new();
@@ -65,14 +67,25 @@ pub(crate) fn read_wireframe_representation_body(
             curves.push(cid);
         }
     }
-    ctx.wireframe_data_map.insert(
-        entity_id,
-        WireframeContent {
-            curves,
-            points,
-            repr_kind,
-        },
-    );
+    let wireframe = WireframeContent {
+        curves,
+        points,
+        repr_kind,
+    };
+    ctx.wireframe_data_map.insert(entity_id, wireframe.clone());
+
+    // representation-refactor A-1: dual-write into the unified arena.
+    let repr_id = ctx
+        .representations
+        .push(crate::ir::shape_rep::Representation::Wireframe(
+            crate::ir::shape_rep::WireframeRepr {
+                name,
+                context,
+                ref_frame,
+                content: wireframe,
+            },
+        ));
+    ctx.repr_id_map.insert(entity_id, repr_id);
     Ok(())
 }
 

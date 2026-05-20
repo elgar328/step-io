@@ -346,6 +346,14 @@ pub struct ReaderContext {
     /// handlers that resolve shape-aspect refs.
     pub(crate) shape_aspect_id_map: HashMap<u64, crate::ir::ShapeAspectId>,
 
+    /// Unified `REPRESENTATION` arena (representation-refactor expand phase).
+    /// 6 representation handlers dual-write here alongside the legacy maps.
+    pub(crate) representations: crate::ir::Arena<crate::ir::shape_rep::Representation>,
+    /// `REPRESENTATION` `#N → RepresentationId`. Phase A-1 populates this;
+    /// the A-2 SDR-classifier migration is the first consumer.
+    #[allow(dead_code)]
+    pub(crate) repr_id_map: HashMap<u64, crate::ir::RepresentationId>,
+
     /// Lazily-built plm pool — populated by the Pass 9 plm reader chain
     /// (`CalendarDate` / `LocalTime` / UTC / `DateAndTime` / `DateTimeRole`
     /// in Phase plm-1a; Person/Approval/Security clusters later).
@@ -476,6 +484,7 @@ impl ReaderContext {
                     ctx.derived_unit_arena,
                 ),
                 form_features: ctx.form_features,
+                representations: ctx.representations,
             },
             warnings: ctx.warnings,
             parse_warnings: graph.warnings.clone(),

@@ -19,7 +19,7 @@ use super::plm::{
     SecurityClassification, SecurityClassificationAssignment, SecurityClassificationLevel,
 };
 use super::property::{DescriptionAttribute, IdAttribute, NameAttribute};
-use super::shape_rep::{ShapeAspect, UnitContext};
+use super::shape_rep::{Representation, ShapeAspect, UnitContext};
 use super::topology::{Edge, Face, Shell, Solid, Wire};
 use super::units::{DerivedUnit, DerivedUnitElement, MeasureWithUnit, NamedUnit};
 use super::visualization::{
@@ -73,6 +73,9 @@ define_id!(UnitContextId, UnitContext);
 
 // PMI Ids — anchor for future Tolerance / Datum / GD&T work.
 define_id!(ShapeAspectId, ShapeAspect);
+
+// REPRESENTATION arena — unified subtype storage (representation-refactor).
+define_id!(RepresentationId, Representation);
 
 // Visualization Ids — Colour enum arena (ColourRgb + DraughtingPreDefinedColour).
 define_id!(ColourId, Colour);

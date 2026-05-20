@@ -38,14 +38,16 @@ impl SimpleEntityHandler for ManifoldSurfaceShapeRepresentationHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 3, entity_id, "MANIFOLD_SURFACE_SHAPE_REPRESENTATION")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let name = read_string(attrs, 0, entity_id, "name")?.to_owned();
         let items = read_entity_ref_list(attrs, 1, entity_id, "items")?;
         let ctx_ref = read_entity_ref(attrs, 2, entity_id, "context_of_items")?;
-        if let Some(&ctx_id) = ctx.context_id_map.get(&ctx_ref) {
+        let context = ctx.context_id_map.get(&ctx_ref).copied();
+        if let Some(ctx_id) = context {
             ctx.repr_context_map.insert(entity_id, ctx_id);
         }
 
-        if let Some(&placement_id) = items.iter().find_map(|r| ctx.placement_map.get(r)) {
+        let ref_frame = items.iter().find_map(|r| ctx.placement_map.get(r).copied());
+        if let Some(placement_id) = ref_frame {
             ctx.mssr_ref_frame_map.insert(entity_id, placement_id);
         }
 
@@ -54,7 +56,20 @@ impl SimpleEntityHandler for ManifoldSurfaceShapeRepresentationHandler {
             .filter_map(|r| ctx.sbsm_shells_map.get(r))
             .flat_map(|shells| shells.iter().copied())
             .collect();
-        ctx.mssr_shells_map.insert(entity_id, flattened);
+        ctx.mssr_shells_map.insert(entity_id, flattened.clone());
+
+        // representation-refactor A-1: dual-write into the unified arena.
+        let repr_id =
+            ctx.representations
+                .push(crate::ir::shape_rep::Representation::ManifoldSurface(
+                    crate::ir::shape_rep::ManifoldSurfaceRepr {
+                        name,
+                        context,
+                        ref_frame,
+                        shells: flattened,
+                    },
+                ));
+        ctx.repr_id_map.insert(entity_id, repr_id);
         Ok(())
     }
 

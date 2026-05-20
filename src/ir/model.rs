@@ -206,6 +206,11 @@ pub struct StepModel {
     /// Manufacturing feature definitions (currently `STEP` only). `None`
     /// when the source file carries no `feature_definition` entries.
     pub form_features: Option<crate::ir::form_features::FormFeaturesPool>,
+    /// Unified `REPRESENTATION` arena (representation-refactor expand phase).
+    /// One entry per `ADVANCED_BREP` / `MANIFOLD_SURFACE` / plain `SHAPE` /
+    /// wireframe / `MDGPR` representation. Phase A-1 dual-writes here
+    /// alongside the legacy scattered storage.
+    pub representations: crate::ir::Arena<crate::ir::shape_rep::Representation>,
 }
 
 /// Arena-based storage for all topology objects.

@@ -44,14 +44,21 @@ impl SimpleEntityHandler for MdgprHandler {
             }
         }
 
+        let mdgpr = Mdgpr {
+            name,
+            items,
+            context,
+        };
         ctx.visualization
             .get_or_insert_with(VisualizationPool::default)
             .mdgprs
-            .push(Mdgpr {
-                name,
-                items,
-                context,
-            });
+            .push(mdgpr.clone());
+
+        // representation-refactor A-1: dual-write into the unified arena.
+        let repr_id = ctx
+            .representations
+            .push(crate::ir::shape_rep::Representation::Mdgpr(mdgpr));
+        ctx.repr_id_map.insert(entity_id, repr_id);
         Ok(())
     }
 

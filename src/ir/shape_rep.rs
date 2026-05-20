@@ -6,8 +6,9 @@
 //! `crate::entities::shape_rep`; this module holds the corresponding data
 //! struct definitions.
 
+use super::assembly::WireframeContent;
 use super::id::StyledItemId;
-use super::id::{NamedUnitId, ProductId, UnitContextId};
+use super::id::{NamedUnitId, Placement3dId, ProductId, ShellId, SolidId, UnitContextId};
 
 /// Units declared in the STEP file's HEADER section.
 ///
@@ -93,6 +94,61 @@ pub struct Mdgpr {
     /// `None` → writer emits `Attribute::Unset` for `context_of_items`
     /// (allowed by the spec for kernel-built IR with no context info).
     pub context: Option<UnitContextId>,
+}
+
+/// Unified `REPRESENTATION` arena entry — one variant per concrete
+/// subtype. The representation-refactor (expand-migrate-contract) replaces
+/// the legacy scattered storage (`absr_solid_map`, `mssr_shells_map`,
+/// `ProductContent` geometry variants, …) with this single arena so that
+/// `MAPPED_ITEM` / `REPRESENTATION_MAP` and other typed REPRESENTATION
+/// references resolve uniformly. Phase A-1 dual-writes here while the
+/// legacy maps still exist; later sub-phases migrate consumers.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Representation {
+    AdvancedBrep(AdvancedBrepRepr),
+    ManifoldSurface(ManifoldSurfaceRepr),
+    Plain(PlainRepr),
+    /// Covers both `GBWSR` and `GBSSR` — the `content.repr_kind` field
+    /// discriminates wireframe vs surface-bounded.
+    Wireframe(WireframeRepr),
+    Mdgpr(Mdgpr),
+}
+
+/// `ADVANCED_BREP_SHAPE_REPRESENTATION(name, items, context)`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AdvancedBrepRepr {
+    pub name: String,
+    pub context: Option<UnitContextId>,
+    pub ref_frame: Option<Placement3dId>,
+    pub solids: Vec<SolidId>,
+}
+
+/// `MANIFOLD_SURFACE_SHAPE_REPRESENTATION(name, items, context)`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ManifoldSurfaceRepr {
+    pub name: String,
+    pub context: Option<UnitContextId>,
+    pub ref_frame: Option<Placement3dId>,
+    pub shells: Vec<ShellId>,
+}
+
+/// Plain `SHAPE_REPRESENTATION(name, items, context)` — geometry-free
+/// wrapper carrying only the coordinate frame placement.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlainRepr {
+    pub name: String,
+    pub context: Option<UnitContextId>,
+    pub frame: Option<Placement3dId>,
+}
+
+/// `GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION` /
+/// `GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct WireframeRepr {
+    pub name: String,
+    pub context: Option<UnitContextId>,
+    pub ref_frame: Option<Placement3dId>,
+    pub content: WireframeContent,
 }
 
 /// `SHAPE_ASPECT(name, description, of_shape, product_definitional)`.

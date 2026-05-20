@@ -35,10 +35,11 @@ impl SimpleEntityHandler for AdvancedBrepShapeRepresentationHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 3, entity_id, "ADVANCED_BREP_SHAPE_REPRESENTATION")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let name = read_string(attrs, 0, entity_id, "name")?.to_owned();
         let items = read_entity_ref_list(attrs, 1, entity_id, "items")?;
         let ctx_ref = read_entity_ref(attrs, 2, entity_id, "context_of_items")?;
-        if let Some(&ctx_id) = ctx.context_id_map.get(&ctx_ref) {
+        let context = ctx.context_id_map.get(&ctx_ref).copied();
+        if let Some(ctx_id) = context {
             ctx.repr_context_map.insert(entity_id, ctx_id);
         }
 
@@ -48,7 +49,8 @@ impl SimpleEntityHandler for AdvancedBrepShapeRepresentationHandler {
             .collect();
         // Pick the first AXIS2_PLACEMENT_3D in the items list as the coordinate
         // reference frame. In practice commercial CAD output places it first.
-        if let Some(&placement_id) = items.iter().find_map(|r| ctx.placement_map.get(r)) {
+        let ref_frame = items.iter().find_map(|r| ctx.placement_map.get(r).copied());
+        if let Some(placement_id) = ref_frame {
             ctx.absr_ref_frame_map.insert(entity_id, placement_id);
         }
         if solid_ids.is_empty() {
@@ -59,8 +61,21 @@ impl SimpleEntityHandler for AdvancedBrepShapeRepresentationHandler {
                 ),
             });
         } else {
-            ctx.absr_solid_map.insert(entity_id, solid_ids);
+            ctx.absr_solid_map.insert(entity_id, solid_ids.clone());
         }
+
+        // representation-refactor A-1: dual-write into the unified arena.
+        let repr_id = ctx
+            .representations
+            .push(crate::ir::shape_rep::Representation::AdvancedBrep(
+                crate::ir::shape_rep::AdvancedBrepRepr {
+                    name,
+                    context,
+                    ref_frame,
+                    solids: solid_ids,
+                },
+            ));
+        ctx.repr_id_map.insert(entity_id, repr_id);
         Ok(())
     }
 
