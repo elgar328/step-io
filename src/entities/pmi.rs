@@ -16,7 +16,8 @@ use crate::ir::error::ConvertError;
 use crate::ir::pmi::{
     AngleSelection, AngularLocationData, AnnotationOccurrence, AnnotationPlane, Datum,
     DimensionalLocation, DimensionalLocationData, DimensionalSize, DimensionalSizeKind,
-    DraughtingPreDefinedTextFont, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
+    DraughtingPreDefinedTextFont, TessellatedAnnotationOccurrence, ToleranceZoneForm,
+    TypeQualifier, ValueFormatTypeQualifier,
 };
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -192,6 +193,67 @@ impl SimpleEntityHandler for AnnotationPlaneHandler {
                 Attribute::List(style_refs),
                 Attribute::EntityRef(item_id),
                 Attribute::Unset,
+            ],
+        ))
+    }
+}
+
+pub(crate) struct TessellatedAnnotationOccurrenceHandler;
+
+/// `TESSELLATED_ANNOTATION_OCCURRENCE(name, styles, item)` — an
+/// `annotation_occurrence` subtype. `styles` resolves through
+/// `viz_psa_id_map` (like `ANNOTATION_PLANE`); `item` is a
+/// `TESSELLATED_GEOMETRIC_SET` resolved through `tessellated_item_id_map`.
+/// An occurrence whose `item` does not resolve is silently dropped.
+#[step_entity(name = "TESSELLATED_ANNOTATION_OCCURRENCE", pass = Pass7AnnotationPlane)]
+impl SimpleEntityHandler for TessellatedAnnotationOccurrenceHandler {
+    type WriteInput = TessellatedAnnotationOccurrence;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 3, entity_id, "TESSELLATED_ANNOTATION_OCCURRENCE")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
+        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
+
+        let mut styles = Vec::with_capacity(style_refs.len());
+        for r in style_refs {
+            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+                styles.push(psa_id);
+            }
+        }
+        let Some(&item) = ctx.tessellated_item_id_map.get(&item_ref) else {
+            return Ok(()); // item unresolved — drop the occurrence
+        };
+
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .annotation_occurrences
+            .push(AnnotationOccurrence::TessellatedAnnotationOccurrence(
+                TessellatedAnnotationOccurrence { name, styles, item },
+            ));
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        tao: TessellatedAnnotationOccurrence,
+    ) -> Result<u64, WriteError> {
+        let item = buf.tessellated_item_step_ids[tao.item.0 as usize];
+        let mut style_refs = Vec::with_capacity(tao.styles.len());
+        for psa_id in tao.styles {
+            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+        }
+        Ok(buf.push_simple(
+            "TESSELLATED_ANNOTATION_OCCURRENCE",
+            vec![
+                Attribute::String(tao.name),
+                Attribute::List(style_refs),
+                Attribute::EntityRef(item),
             ],
         ))
     }

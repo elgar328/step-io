@@ -453,12 +453,14 @@ impl<'m> WriteBuffer<'m> {
         // REPRESENTATION_MAP + MAPPED_ITEM — after visualization so the
         // `representation_step_ids` cache covers MDGPR slots too.
         self.emit_mapped_items()?;
-        // ANNOTATION_PLANE — after visualization so `psa_step_ids` is filled.
-        self.emit_annotation_occurrences();
         // INTEGER/REAL_REPRESENTATION_ITEM — orphan value-items, no refs.
         self.emit_numeric_representation_items()?;
         // COORDINATES_LIST + COMPLEX_TRIANGULATED_FACE — orphan tessellation.
         self.emit_tessellation()?;
+        // annotation_occurrence — after visualization (`psa_step_ids`) and
+        // after tessellation (`tessellated_item_step_ids` for a
+        // `TESSELLATED_ANNOTATION_OCCURRENCE`'s `item`).
+        self.emit_annotation_occurrences();
         self.emit_plm_if_set()?;
         self.emit_properties_if_set();
         self.emit_form_features_if_set()?;

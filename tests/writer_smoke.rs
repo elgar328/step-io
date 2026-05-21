@@ -2047,10 +2047,53 @@ fn annotation_plane_round_trip() {
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
     assert_eq!(re_pmi.annotation_occurrences.len(), 1);
     let AnnotationOccurrence::AnnotationPlane(ap) =
-        re_pmi.annotation_occurrences.iter().next().unwrap();
+        re_pmi.annotation_occurrences.iter().next().unwrap()
+    else {
+        panic!("expected AnnotationPlane");
+    };
     assert_eq!(ap.name, "Linear Size.1");
     assert!(ap.styles.is_empty());
     assert!(matches!(ap.item, RepresentationItemRef::Surface(_)));
+}
+
+#[test]
+fn tessellated_annotation_occurrence_round_trip() {
+    // TESSELLATED_ANNOTATION_OCCURRENCE — `item` points at a tessellated
+    // geometric set.
+    use step_io::ir::pmi::{AnnotationOccurrence, PmiPool, TessellatedAnnotationOccurrence};
+    use step_io::ir::tessellation::{TessellatedGeometricSet, TessellatedItem};
+    let mut model = empty_model();
+    let gset = model
+        .tessellated_items
+        .push(TessellatedItem::TessellatedGeometricSet(
+            TessellatedGeometricSet {
+                name: "gset".into(),
+                children: vec![],
+            },
+        ));
+    model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_occurrences
+        .push(AnnotationOccurrence::TessellatedAnnotationOccurrence(
+            TessellatedAnnotationOccurrence {
+                name: "anno".into(),
+                styles: vec![],
+                item: gset,
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.annotation_occurrences.len(), 1);
+    let AnnotationOccurrence::TessellatedAnnotationOccurrence(tao) =
+        re_pmi.annotation_occurrences.iter().next().unwrap()
+    else {
+        panic!("expected TessellatedAnnotationOccurrence");
+    };
+    assert_eq!(tao.name, "anno");
+    assert!(tao.styles.is_empty());
 }
 
 #[test]

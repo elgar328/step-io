@@ -7,7 +7,7 @@
 //! ir.toml blueprint puts them in the `shape_rep` pool.
 
 use super::arena::Arena;
-use super::id::{PresentationStyleAssignmentId, ProductId};
+use super::id::{PresentationStyleAssignmentId, ProductId, TessellatedItemId};
 use super::representation_item::RepresentationItemRef;
 use super::shape_aspect_ref::ShapeAspectRef;
 
@@ -126,12 +126,13 @@ pub struct Datum {
 }
 
 /// `annotation_occurrence` `enum_base` — STEP `styled_item` PMI subtypes that
-/// carry presentation annotations. Only [`AnnotationPlane`] is modelled;
-/// the symbol / text / draughting / tessellated siblings are deferred
-/// (added as variants when fixtures or modelling support arrive).
+/// carry presentation annotations. `AnnotationPlane` and
+/// `TessellatedAnnotationOccurrence` are modelled; the symbol / text /
+/// draughting siblings are deferred.
 #[derive(Debug, Clone, PartialEq)]
 pub enum AnnotationOccurrence {
     AnnotationPlane(AnnotationPlane),
+    TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrence),
 }
 
 /// `ANNOTATION_PLANE(name, styles, item, elements)` — a `styled_item`
@@ -143,6 +144,19 @@ pub struct AnnotationPlane {
     pub name: String,
     pub styles: Vec<PresentationStyleAssignmentId>,
     pub item: RepresentationItemRef,
+}
+
+/// `TESSELLATED_ANNOTATION_OCCURRENCE(name, styles, item)` — an
+/// `annotation_occurrence` subtype whose `item` is a tessellated geometric
+/// set. A `TESSELLATED_ANNOTATION_OCCURRENCE` whose `item` does not resolve
+/// is silently dropped, symmetric on re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TessellatedAnnotationOccurrence {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentId>,
+    /// `ref_tessellated_geometric_set` — resolved to the `tessellated_item`
+    /// arena.
+    pub item: TessellatedItemId,
 }
 
 /// `TOLERANCE_ZONE_FORM(name)` — names a tolerance zone's geometric form

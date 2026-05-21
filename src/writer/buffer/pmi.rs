@@ -97,13 +97,15 @@ impl WriteBuffer<'_> {
         }
     }
 
-    /// Emit the `annotation_occurrence` arena (`ANNOTATION_PLANE` only).
-    /// Called after `emit_visualization_if_set` — `AnnotationPlane.styles`
-    /// resolves through `psa_step_ids`, which the visualization pass fills.
-    /// Separate from [`Self::emit_pmi_if_set`] (which runs before
-    /// visualization) for that ordering reason.
+    /// Emit the `annotation_occurrence` arena (`ANNOTATION_PLANE` /
+    /// `TESSELLATED_ANNOTATION_OCCURRENCE`). Called after
+    /// `emit_visualization_if_set` (`styles` → `psa_step_ids`) and after
+    /// `emit_tessellation` (`TessellatedAnnotationOccurrence.item` →
+    /// `tessellated_item_step_ids`).
     pub(in crate::writer::buffer) fn emit_annotation_occurrences(&mut self) {
-        use crate::entities::pmi::AnnotationPlaneHandler;
+        use crate::entities::pmi::{
+            AnnotationPlaneHandler, TessellatedAnnotationOccurrenceHandler,
+        };
         use crate::ir::pmi::AnnotationOccurrence;
         let Some(pmi) = self.model.pmi.clone() else {
             return;
@@ -112,6 +114,9 @@ impl WriteBuffer<'_> {
             match ao {
                 AnnotationOccurrence::AnnotationPlane(ap) => {
                     let _ = AnnotationPlaneHandler::write(self, ap.clone());
+                }
+                AnnotationOccurrence::TessellatedAnnotationOccurrence(tao) => {
+                    let _ = TessellatedAnnotationOccurrenceHandler::write(self, tao.clone());
                 }
             }
         }

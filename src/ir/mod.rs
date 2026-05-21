@@ -85,8 +85,8 @@ pub use plm::{
 pub use pmi::{
     AngleSelection, AngularLocationData, AnnotationOccurrence, AnnotationPlane, Datum,
     DimensionalLocation, DimensionalLocationData, DimensionalSize, DimensionalSizeKind,
-    DraughtingPreDefinedTextFont, PmiPool, ToleranceZoneForm, TypeQualifier,
-    ValueFormatTypeQualifier,
+    DraughtingPreDefinedTextFont, PmiPool, TessellatedAnnotationOccurrence, ToleranceZoneForm,
+    TypeQualifier, ValueFormatTypeQualifier,
 };
 pub use property::{
     DerivedDefinitionItem, DescriptionAttribute, DescriptionAttributeItem, GeneralProperty,
