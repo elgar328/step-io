@@ -23,3 +23,4 @@ pub mod surface_style_rendering;
 pub mod surface_style_rendering_with_properties;
 pub mod surface_style_transparent;
 pub mod surface_style_usage;
+pub mod view_volume;

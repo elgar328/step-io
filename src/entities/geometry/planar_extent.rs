@@ -31,13 +31,15 @@ impl SimpleEntityHandler for PlanarExtentHandler {
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let size_in_x = read_real(attrs, 1, entity_id, "size_in_x")?;
         let size_in_y = read_real(attrs, 2, entity_id, "size_in_y")?;
-        ctx.geometry
+        let id = ctx
+            .geometry
             .planar_extents
             .push(PlanarExtent::Itself(PlanarExtentData {
                 name,
                 size_in_x,
                 size_in_y,
             }));
+        ctx.planar_extent_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -86,7 +88,8 @@ impl SimpleEntityHandler for PlanarBoxHandler {
             });
             return Ok(());
         };
-        ctx.geometry
+        let id = ctx
+            .geometry
             .planar_extents
             .push(PlanarExtent::PlanarBox(PlanarBox {
                 name,
@@ -94,6 +97,7 @@ impl SimpleEntityHandler for PlanarBoxHandler {
                 size_in_y,
                 placement,
             }));
+        ctx.planar_extent_id_map.insert(entity_id, id);
         Ok(())
     }
 

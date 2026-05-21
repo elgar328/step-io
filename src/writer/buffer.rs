@@ -51,6 +51,11 @@ pub(crate) struct WriteBuffer<'m> {
     pub(crate) point_2d_ids: HashMap<Point2dId, u64>,
     pub(crate) direction_2d_ids: HashMap<Direction2dId, u64>,
     pub(crate) curve_2d_ids: HashMap<Curve2dId, u64>,
+    /// Emitted `PLANAR_EXTENT` / `PLANAR_BOX` step ids, indexed by
+    /// `PlanarExtentId` — keeps `emit_planar_extent` idempotent so the
+    /// standalone arena loop and a `VIEW_VOLUME`'s `view_window` ref emit
+    /// the entity exactly once.
+    pub(crate) planar_extent_ids: HashMap<crate::ir::PlanarExtentId, u64>,
     /// STEP entity ids of every emitted `REPRESENTATION_CONTEXT` complex
     /// entity, indexed by `UnitContextId.0`. Populated up-front in `emit_all`
     /// so every representation emitter can resolve its `Option<UnitContextId>`
@@ -278,6 +283,7 @@ impl<'m> WriteBuffer<'m> {
             point_2d_ids: HashMap::new(),
             direction_2d_ids: HashMap::new(),
             curve_2d_ids: HashMap::new(),
+            planar_extent_ids: HashMap::new(),
             unit_context_ids: Vec::new(),
             representation_step_ids: Vec::new(),
             representation_map_step_ids: Vec::new(),

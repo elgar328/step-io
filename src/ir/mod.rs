@@ -116,8 +116,8 @@ pub use visualization::{
     Colour, ColourRgb, ContextDependentOverRidingStyledItem, CurveFont, CurveStyle, CurveWidth,
     DraughtingPreDefinedColour, DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour,
     FoundedItem, OverRidingStyledItem, PlainStyledItem, PresentationLayerAssignment,
-    PresentationLayerAssignmentItem, PresentationStyleAssignment, PsaStyle, RenderingProperty,
-    ShadingMethod, StyleContextRef, StyledItem, SurfaceSide, SurfaceSideStyle,
+    PresentationLayerAssignmentItem, PresentationStyleAssignment, Projection, PsaStyle,
+    RenderingProperty, ShadingMethod, StyleContextRef, StyledItem, SurfaceSide, SurfaceSideStyle,
     SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleRendering, SurfaceStyleRenderingData,
-    SurfaceStyleRenderingWithProperties, SurfaceStyleUsage, VisualizationPool,
+    SurfaceStyleRenderingWithProperties, SurfaceStyleUsage, ViewVolume, VisualizationPool,
 };

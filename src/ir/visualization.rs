@@ -7,8 +7,8 @@
 
 use super::arena::Arena;
 use super::id::{
-    ColourId, CurveFontId, CurveStyleId, FoundedItemId, PresentationStyleAssignmentId,
-    StyledItemId, SurfaceStyleRenderingId,
+    ColourId, CurveFontId, CurveStyleId, FoundedItemId, PlanarExtentId, PointId,
+    PresentationStyleAssignmentId, StyledItemId, SurfaceStyleRenderingId,
 };
 use super::representation_item::RepresentationItemRef;
 use super::shape_rep::Mdgpr;
@@ -101,6 +101,36 @@ pub enum FoundedItem {
     SurfaceStyleFillArea(SurfaceStyleFillArea),
     SurfaceSideStyle(SurfaceSideStyle),
     SurfaceStyleUsage(SurfaceStyleUsage),
+    /// `VIEW_VOLUME` — a `founded_item` subtype referenced by `CAMERA_MODEL_D3`.
+    ViewVolume(ViewVolume),
+}
+
+/// EXPRESS `central_or_parallel` — a `VIEW_VOLUME`'s projection mode.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Projection {
+    Central,
+    Parallel,
+}
+
+/// `VIEW_VOLUME(projection_type, projection_point, view_plane_distance,
+/// front_plane_distance, front_plane_clipping, back_plane_distance,
+/// back_plane_clipping, view_volume_sides_clipping, view_window)` — the
+/// truncated pyramid / box a `CAMERA_MODEL_D3` projects through. A
+/// `VIEW_VOLUME` whose `projection_point` / `view_window` does not resolve
+/// is silently dropped, symmetric on re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ViewVolume {
+    pub projection_type: Projection,
+    /// `projection_point` — a `ref_cartesian_point`.
+    pub projection_point: PointId,
+    pub view_plane_distance: f64,
+    pub front_plane_distance: f64,
+    pub front_plane_clipping: bool,
+    pub back_plane_distance: f64,
+    pub back_plane_clipping: bool,
+    pub view_volume_sides_clipping: bool,
+    /// `view_window` — a `ref_planar_box`.
+    pub view_window: PlanarExtentId,
 }
 
 /// `CURVE_STYLE(name, curve_font, curve_width, curve_colour)` —

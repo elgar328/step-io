@@ -36,6 +36,7 @@ use step_io::ir::shape_rep::{
 };
 use step_io::ir::topology::{Face, FaceKind, Orientation, Shell, Solid, Wire};
 use step_io::ir::units::{MassFlavor, MassUnit, NamedUnit, UnitsPool};
+use step_io::ir::visualization::{FoundedItem, Projection, ViewVolume, VisualizationPool};
 use step_io::parser::schema::{SchemaClass, StepSchema};
 use step_io::reader::ReaderContext;
 use step_io::{WriteError, parse};
@@ -1728,6 +1729,58 @@ fn dimensional_location_round_trip() {
         panic!("expected Angular");
     };
     assert_eq!(d2.angle_selection, AngleSelection::Small);
+}
+
+#[test]
+fn view_volume_round_trip() {
+    // VIEW_VOLUME — a founded_item referencing a cartesian point + planar box.
+    let mut model = empty_model();
+    let frame = model.geometry.identity_placement();
+    let pt = model.geometry.points.push(Point3 {
+        x: 1.0,
+        y: 2.0,
+        z: 3.0,
+    });
+    let pb = model
+        .geometry
+        .planar_extents
+        .push(PlanarExtent::PlanarBox(PlanarBox {
+            name: "win".into(),
+            size_in_x: 10.0,
+            size_in_y: 20.0,
+            placement: PlanarBoxPlacement::Placement3d(frame),
+        }));
+    model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .founded_items
+        .push(FoundedItem::ViewVolume(ViewVolume {
+            projection_type: Projection::Parallel,
+            projection_point: pt,
+            view_plane_distance: 1645.0,
+            front_plane_distance: 0.0,
+            front_plane_clipping: false,
+            back_plane_distance: 0.0,
+            back_plane_clipping: true,
+            view_volume_sides_clipping: false,
+            view_window: pb,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let viz = re.visualization.expect("viz pool");
+    let vv = viz
+        .founded_items
+        .iter()
+        .find_map(|f| match f {
+            FoundedItem::ViewVolume(v) => Some(v),
+            _ => None,
+        })
+        .expect("view volume round-trips");
+    assert_eq!(vv.projection_type, Projection::Parallel);
+    assert!((vv.view_plane_distance - 1645.0).abs() < f64::EPSILON);
+    assert!(!vv.front_plane_clipping);
+    assert!(vv.back_plane_clipping);
 }
 
 #[test]

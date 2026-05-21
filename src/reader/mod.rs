@@ -142,6 +142,9 @@ pub struct ReaderContext {
     pub(crate) placement_map: HashMap<u64, Placement3dId>,
     pub(crate) vector_map: HashMap<u64, (DirectionId, f64)>,
     pub(crate) axis1_map: HashMap<u64, Placement1dId>,
+    /// `PLANAR_EXTENT` / `PLANAR_BOX` `#N → PlanarExtentId` (phase view-volume).
+    /// Lets `VIEW_VOLUME` resolve its `view_window` ref.
+    pub(crate) planar_extent_id_map: HashMap<u64, crate::ir::PlanarExtentId>,
 
     // 2D geometry (PCURVE parametric space) maps.
     pub(crate) point_2d_map: HashMap<u64, Point2dId>,

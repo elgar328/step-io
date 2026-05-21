@@ -288,7 +288,9 @@ impl WriteBuffer<'_> {
 
     /// Emit one `planar_extents` arena entry — dispatches on the
     /// `PlanarExtent` enum variant to the `PLANAR_EXTENT` / `PLANAR_BOX`
-    /// handler.
+    /// handler. Idempotent: repeat calls for the same id cache-hit, so the
+    /// standalone arena loop and a `VIEW_VOLUME.view_window` ref each emit
+    /// the entity once.
     pub(crate) fn emit_planar_extent(
         &mut self,
         id: crate::ir::PlanarExtentId,
@@ -296,10 +298,15 @@ impl WriteBuffer<'_> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::geometry::planar_extent::{PlanarBoxHandler, PlanarExtentHandler};
         use crate::ir::PlanarExtent;
-        match self.model.geometry.planar_extents[id].clone() {
-            PlanarExtent::Itself(data) => PlanarExtentHandler::write(self, data),
-            PlanarExtent::PlanarBox(pb) => PlanarBoxHandler::write(self, pb),
+        if let Some(&n) = self.planar_extent_ids.get(&id) {
+            return Ok(n);
         }
+        let n = match self.model.geometry.planar_extents[id].clone() {
+            PlanarExtent::Itself(data) => PlanarExtentHandler::write(self, data)?,
+            PlanarExtent::PlanarBox(pb) => PlanarBoxHandler::write(self, pb)?,
+        };
+        self.planar_extent_ids.insert(id, n);
+        Ok(n)
     }
 
     pub(crate) fn emit_curve_2d(&mut self, id: Curve2dId) -> Result<u64, WriteError> {

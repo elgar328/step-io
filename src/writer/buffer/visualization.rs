@@ -173,6 +173,7 @@ impl WriteBuffer<'_> {
         use crate::entities::visualization::surface_side_style::SurfaceSideStyleHandler;
         use crate::entities::visualization::surface_style_fill_area::SurfaceStyleFillAreaHandler;
         use crate::entities::visualization::surface_style_usage::SurfaceStyleUsageHandler;
+        use crate::entities::visualization::view_volume::ViewVolumeHandler;
         self.founded_item_step_ids = vec![0; founded_items.len()];
         for (idx, item) in founded_items.iter().enumerate() {
             if let FoundedItem::FillAreaStyle(fas) = item {
@@ -195,6 +196,11 @@ impl WriteBuffer<'_> {
             if let FoundedItem::SurfaceStyleUsage(ssu) = item {
                 self.founded_item_step_ids[idx] =
                     SurfaceStyleUsageHandler::write(self, ssu.clone())?;
+            }
+        }
+        for (idx, item) in founded_items.iter().enumerate() {
+            if let FoundedItem::ViewVolume(vv) = item {
+                self.founded_item_step_ids[idx] = ViewVolumeHandler::write(self, vv.clone())?;
             }
         }
         Ok(())

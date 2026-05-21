@@ -370,6 +370,9 @@ pub(crate) enum PassLevel {
     /// for the `shape_aspect` (+ subtype) id maps `resolve_shape_aspect_ref`
     /// walks for `applies_to`.
     Pass8Dimensional,
+    /// `VIEW_VOLUME` (Pass 8-pre-d) — depends on `Pass1` (`CARTESIAN_POINT`)
+    /// and `Pass4PlanarExtent` (`PLANAR_BOX`) for its two refs.
+    Pass8ViewVolume,
     /// `MEASURE_REPRESENTATION_ITEM` (Pass 8-1) — depends on Pass 0
     /// (unit ctx).
     Pass8Measure,
