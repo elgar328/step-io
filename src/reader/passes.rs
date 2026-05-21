@@ -358,6 +358,8 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass8Dimensional);
         // VIEW_VOLUME — resolves CARTESIAN_POINT / PLANAR_BOX refs.
         self.dispatch_registry(graph, PassLevel::Pass8ViewVolume);
+        // CAMERA_MODEL_D3 — resolves VIEW_VOLUME / AXIS2_PLACEMENT_3D refs.
+        self.dispatch_registry(graph, PassLevel::Pass8CameraModel);
 
         // Pass 8: properties — user-defined attribute chain
         // (PROPERTY_DEFINITION + REPRESENTATION + PROPERTY_DEFINITION_REPRESENTATION).

@@ -80,7 +80,8 @@ impl SimpleEntityHandler for ViewVolumeHandler {
             return Ok(());
         };
 
-        ctx.visualization
+        let id = ctx
+            .visualization
             .get_or_insert_with(VisualizationPool::default)
             .founded_items
             .push(FoundedItem::ViewVolume(ViewVolume {
@@ -94,6 +95,7 @@ impl SimpleEntityHandler for ViewVolumeHandler {
                 view_volume_sides_clipping,
                 view_window,
             }));
+        ctx.viz_view_volume_id_map.insert(entity_id, id);
         Ok(())
     }
 

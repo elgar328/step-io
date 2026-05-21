@@ -7,7 +7,7 @@
 
 use super::arena::Arena;
 use super::id::{
-    ColourId, CurveFontId, CurveStyleId, FoundedItemId, PlanarExtentId, PointId,
+    ColourId, CurveFontId, CurveStyleId, FoundedItemId, Placement3dId, PlanarExtentId, PointId,
     PresentationStyleAssignmentId, StyledItemId, SurfaceStyleRenderingId,
 };
 use super::representation_item::RepresentationItemRef;
@@ -68,6 +68,9 @@ pub struct VisualizationPool {
     /// no other entity references this arena, so the id newtype exists
     /// only for blueprint symmetry.
     pub presentation_layer_assignments: Arena<PresentationLayerAssignment>,
+    /// `camera_model` `enum_base` arena. Phase camera-model-d3 fills the
+    /// `CameraModelD3` variant only.
+    pub camera_models: Arena<CameraModel>,
 }
 
 /// `PRESENTATION_LAYER_ASSIGNMENT(name, description, assigned_items)`.
@@ -131,6 +134,28 @@ pub struct ViewVolume {
     pub view_volume_sides_clipping: bool,
     /// `view_window` — a `ref_planar_box`.
     pub view_window: PlanarExtentId,
+}
+
+/// `camera_model` `enum_base` — a camera projection model referenced by
+/// presentation views. Only the `CameraModelD3` subtype is modelled; the
+/// `_with_hlhsr` / `_multi_clipping` siblings are added as variants later.
+#[derive(Debug, Clone, PartialEq)]
+pub enum CameraModel {
+    CameraModelD3(CameraModelD3),
+}
+
+/// `CAMERA_MODEL_D3(name, view_reference_system, perspective_of_volume)` —
+/// a 3D camera model. A `CAMERA_MODEL_D3` whose `view_reference_system` /
+/// `perspective_of_volume` ref does not resolve is silently dropped,
+/// symmetric on re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CameraModelD3 {
+    pub name: String,
+    /// `view_reference_system` — a `ref_axis2_placement_3d`.
+    pub view_reference_system: Placement3dId,
+    /// `perspective_of_volume` — a `ref_view_volume`, resolved to the
+    /// `founded_item` arena's [`FoundedItem::ViewVolume`] entry.
+    pub perspective_of_volume: FoundedItemId,
 }
 
 /// `CURVE_STYLE(name, curve_font, curve_width, curve_colour)` —

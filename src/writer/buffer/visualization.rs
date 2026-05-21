@@ -44,6 +44,7 @@ impl WriteBuffer<'_> {
     ) -> Result<(), WriteError> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::shape_rep::mdgpr::MdgprHandler;
+        use crate::entities::visualization::camera_model_d3::CameraModelD3Handler;
         use crate::entities::visualization::colour_rgb::ColourRgbHandler;
         use crate::entities::visualization::context_dependent_over_riding_styled_item::ContextDependentOverRidingStyledItemHandler;
         use crate::entities::visualization::curve_style::CurveStyleHandler;
@@ -104,6 +105,15 @@ impl WriteBuffer<'_> {
             self.ssr_step_ids.push(id);
         }
         self.emit_founded_item_arena(&viz.founded_items)?;
+        // CAMERA_MODEL_D3 — after emit_founded_item_arena so
+        // `perspective_of_volume` resolves through `founded_item_step_ids`.
+        for cm in viz.camera_models.iter() {
+            match cm {
+                crate::ir::visualization::CameraModel::CameraModelD3(d3) => {
+                    CameraModelD3Handler::write(self, d3.clone())?;
+                }
+            }
+        }
         // PRESENTATION_STYLE_ASSIGNMENT arena — emit every PSA up-front so
         // STYLED_ITEM / OVER_RIDING_STYLED_ITEM writers can resolve their
         // styles refs through psa_step_ids[id.0]. `ByContext` variant is

@@ -373,6 +373,9 @@ pub(crate) enum PassLevel {
     /// `VIEW_VOLUME` (Pass 8-pre-d) — depends on `Pass1` (`CARTESIAN_POINT`)
     /// and `Pass4PlanarExtent` (`PLANAR_BOX`) for its two refs.
     Pass8ViewVolume,
+    /// `CAMERA_MODEL_D3` (Pass 8-pre-e) — depends on `Pass8ViewVolume`
+    /// (`perspective_of_volume`) and placements (`view_reference_system`).
+    Pass8CameraModel,
     /// `MEASURE_REPRESENTATION_ITEM` (Pass 8-1) — depends on Pass 0
     /// (unit ctx).
     Pass8Measure,

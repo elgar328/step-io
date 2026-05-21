@@ -37,7 +37,7 @@ use super::tessellation::{
 use super::topology::{Edge, Face, Shell, Solid, Wire};
 use super::units::{DerivedUnit, DerivedUnitElement, MeasureWithUnit, NamedUnit};
 use super::visualization::{
-    Colour, CurveFont, CurveStyle, FoundedItem, PresentationLayerAssignment,
+    CameraModel, Colour, CurveFont, CurveStyle, FoundedItem, PresentationLayerAssignment,
     PresentationStyleAssignment, StyledItem, SurfaceStyleRendering,
 };
 
@@ -159,6 +159,9 @@ define_id!(SurfaceStyleRenderingId, SurfaceStyleRendering);
 // Visualization Ids — founded_item enum arena (AP214 founded-item
 // supertype; E1 covers FillAreaStyle + SurfaceStyleFillArea).
 define_id!(FoundedItemId, FoundedItem);
+
+// Visualization Ids — camera_model enum arena (phase camera-model-d3).
+define_id!(CameraModelId, CameraModel);
 
 // Visualization Ids — PRESENTATION_LAYER_ASSIGNMENT arena (top-level;
 // no other entity refs it, the id exists for blueprint symmetry).
