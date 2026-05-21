@@ -9,6 +9,7 @@
 use super::arena::Arena;
 use super::id::{PresentationStyleAssignmentId, ProductId};
 use super::representation_item::RepresentationItemRef;
+use super::shape_aspect_ref::ShapeAspectRef;
 
 /// Top-level container for `pmi`-pool entities. `None` when the source
 /// file carried no PMI content.
@@ -27,6 +28,29 @@ pub struct PmiPool {
     pub datums: Arena<Datum>,
     /// `DRAUGHTING_PRE_DEFINED_TEXT_FONT` arena. Phase text-font.
     pub draughting_pre_defined_text_fonts: Arena<DraughtingPreDefinedTextFont>,
+    /// `DIMENSIONAL_SIZE` arena. Phase dimensional-size.
+    pub dimensional_sizes: Arena<DimensionalSize>,
+}
+
+/// Which `DIMENSIONAL_SIZE` flavour an entry round-trips as.
+/// `dimensional_size` is a `concrete_supertype`; the subtype `ANGULAR_SIZE`
+/// adds an `angle_selection` attribute and is added as a variant later.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum DimensionalSizeKind {
+    /// Plain `DIMENSIONAL_SIZE`.
+    Plain,
+}
+
+/// `DIMENSIONAL_SIZE(applies_to, name)` — names a size dimension applied to
+/// a shape aspect. `applies_to` is a `shape_aspect`-typed reference; a
+/// `DIMENSIONAL_SIZE` whose `applies_to` does not resolve is silently
+/// dropped, symmetric on re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DimensionalSize {
+    /// `applies_to` — a `ref_shape_aspect`.
+    pub applies_to: ShapeAspectRef,
+    pub name: String,
+    pub kind: DimensionalSizeKind,
 }
 
 /// `DRAUGHTING_PRE_DEFINED_TEXT_FONT(name)` — a stock text-font reference

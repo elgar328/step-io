@@ -354,6 +354,8 @@ impl ReaderContext {
         // SHAPE_ASPECT_RELATIONSHIP — resolves both endpoints through the
         // shape_aspect (+ subtype) id maps Pass8ShapeAspect just filled.
         self.dispatch_registry(graph, PassLevel::Pass8ShapeAspectRel);
+        // DIMENSIONAL_SIZE — resolves `applies_to` through the same maps.
+        self.dispatch_registry(graph, PassLevel::Pass8Dimensional);
 
         // Pass 8: properties — user-defined attribute chain
         // (PROPERTY_DEFINITION + REPRESENTATION + PROPERTY_DEFINITION_REPRESENTATION).

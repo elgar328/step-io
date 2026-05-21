@@ -366,6 +366,10 @@ pub(crate) enum PassLevel {
     /// `Pass8ShapeAspect` for the `shape_aspect` (+ subtype) id maps that
     /// `resolve_shape_aspect_ref` walks for both endpoints.
     Pass8ShapeAspectRel,
+    /// `DIMENSIONAL_SIZE` (Pass 8-pre-c) — depends on `Pass8ShapeAspect`
+    /// for the `shape_aspect` (+ subtype) id maps `resolve_shape_aspect_ref`
+    /// walks for `applies_to`.
+    Pass8Dimensional,
     /// `MEASURE_REPRESENTATION_ITEM` (Pass 8-1) — depends on Pass 0
     /// (unit ctx).
     Pass8Measure,

@@ -6,6 +6,7 @@
 //! GD&T entities that consume them arrive in later phases.
 
 use crate::entities::SimpleEntityHandler;
+use crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_ref;
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::PmiPool;
 use crate::ir::attr::{
@@ -13,8 +14,8 @@ use crate::ir::attr::{
 };
 use crate::ir::error::ConvertError;
 use crate::ir::pmi::{
-    AnnotationOccurrence, AnnotationPlane, Datum, DraughtingPreDefinedTextFont, ToleranceZoneForm,
-    TypeQualifier, ValueFormatTypeQualifier,
+    AnnotationOccurrence, AnnotationPlane, Datum, DimensionalSize, DimensionalSizeKind,
+    DraughtingPreDefinedTextFont, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -266,6 +267,49 @@ impl SimpleEntityHandler for DatumHandler {
                 Attribute::Enum(bool_attr.into()),
                 Attribute::String(input.identification),
             ],
+        ))
+    }
+}
+
+pub(crate) struct DimensionalSizeHandler;
+
+#[step_entity(name = "DIMENSIONAL_SIZE", pass = Pass8Dimensional)]
+impl SimpleEntityHandler for DimensionalSizeHandler {
+    type WriteInput = DimensionalSize;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 2, entity_id, "DIMENSIONAL_SIZE")?;
+        let applies_to_ref = read_entity_ref(attrs, 0, entity_id, "applies_to")?;
+        let name = read_string_or_unset(attrs, 1, entity_id, "name")?.to_owned();
+
+        let Some(applies_to) = resolve_shape_aspect_ref(ctx, applies_to_ref) else {
+            return Ok(()); // applies_to unresolved — drop the dimension
+        };
+
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .dimensional_sizes
+            .push(DimensionalSize {
+                applies_to,
+                name,
+                kind: DimensionalSizeKind::Plain,
+            });
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, ds: DimensionalSize) -> Result<u64, WriteError> {
+        let applies_to = buf.emit_shape_aspect_ref(ds.applies_to);
+        let name = match ds.kind {
+            DimensionalSizeKind::Plain => "DIMENSIONAL_SIZE",
+        };
+        Ok(buf.push_simple(
+            name,
+            vec![Attribute::EntityRef(applies_to), Attribute::String(ds.name)],
         ))
     }
 }

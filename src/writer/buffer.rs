@@ -433,6 +433,7 @@ impl<'m> WriteBuffer<'m> {
         // SHAPE_ASPECT_RELATIONSHIP — after emit_pmi_if_set so every
         // shape-aspect-family step-id cache is filled.
         self.emit_shape_aspect_relationships()?;
+        self.emit_dimensional_sizes()?;
         self.emit_visualization_if_set()?;
         // REPRESENTATION_MAP + MAPPED_ITEM — after visualization so the
         // `representation_step_ids` cache covers MDGPR slots too.

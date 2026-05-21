@@ -21,7 +21,10 @@ use step_io::ir::id::{
     GeneralPropertyId, Placement3dId, PointId, PropertyId, ShapeAspectId, SolidId, UnitContextId,
 };
 use step_io::ir::model::StepModel;
-use step_io::ir::pmi::{PmiPool, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier};
+use step_io::ir::pmi::{
+    DimensionalSize, DimensionalSizeKind, PmiPool, ToleranceZoneForm, TypeQualifier,
+    ValueFormatTypeQualifier,
+};
 use step_io::ir::property::{
     DerivedDefinitionItem, GeneralProperty, GeneralPropertyAssociation, Property, PropertyPool,
 };
@@ -1649,6 +1652,29 @@ fn shape_aspect_relationship_subtypes_round_trip() {
         rels[1].kind,
         ShapeAspectRelationshipKind::DerivingRelationship
     );
+}
+
+#[test]
+fn dimensional_size_round_trip() {
+    // DIMENSIONAL_SIZE — `applies_to` a shape aspect through ShapeAspectRef.
+    let (mut model, sa, ..) = shape_aspect_relationship_fixture();
+    model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .dimensional_sizes
+        .push(DimensionalSize {
+            applies_to: ShapeAspectRef::ShapeAspect(sa),
+            name: "diameter".into(),
+            kind: DimensionalSizeKind::Plain,
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let pmi = re.pmi.expect("pmi pool");
+    assert_eq!(pmi.dimensional_sizes.len(), 1);
+    let ds = pmi.dimensional_sizes.iter().next().unwrap();
+    assert_eq!(ds.name, "diameter");
+    assert!(matches!(ds.applies_to, ShapeAspectRef::ShapeAspect(_)));
 }
 
 #[test]

@@ -231,4 +231,18 @@ impl WriteBuffer<'_> {
         }
         Ok(())
     }
+
+    /// Emit the `pmi` pool's `DIMENSIONAL_SIZE` arena. Runs after
+    /// `emit_pmi_if_set` so `applies_to` resolves through the filled
+    /// shape-aspect-family step-id caches.
+    pub(in crate::writer::buffer) fn emit_dimensional_sizes(&mut self) -> Result<(), WriteError> {
+        use crate::entities::pmi::DimensionalSizeHandler;
+        let Some(pmi) = self.model.pmi.clone() else {
+            return Ok(());
+        };
+        for ds in pmi.dimensional_sizes.iter() {
+            DimensionalSizeHandler::write(self, ds.clone())?;
+        }
+        Ok(())
+    }
 }
