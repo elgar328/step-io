@@ -14,7 +14,10 @@ use crate::ir::attr::{
     read_optional_entity_ref, read_real_grid, read_string_or_unset,
 };
 use crate::ir::error::ConvertError;
-use crate::ir::tessellation::{ComplexTriangulatedFace, CoordinatesList, TessellatedItem};
+use crate::ir::tessellation::{
+    ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, CoordinatesList, TessellatedCurveSet,
+    TessellatedItem,
+};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -119,6 +122,106 @@ impl SimpleEntityHandler for ComplexTriangulatedFaceHandler {
                 integer_list_attr(&face.pnindex),
                 integer_grid_attr(&face.triangle_strips),
                 integer_grid_attr(&face.triangle_fans),
+            ],
+        ))
+    }
+}
+
+pub(crate) struct TessellatedCurveSetHandler;
+
+#[step_entity(name = "TESSELLATED_CURVE_SET", pass = Pass6ComplexTriangulatedFace)]
+impl SimpleEntityHandler for TessellatedCurveSetHandler {
+    type WriteInput = TessellatedCurveSet;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 3, entity_id, "TESSELLATED_CURVE_SET")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let coordinates_ref = read_entity_ref(attrs, 1, entity_id, "coordinates")?;
+        let line_strips = read_integer_grid(attrs, 2, entity_id, "line_strips")?;
+
+        let Some(&coordinates) = ctx.tessellated_item_id_map.get(&coordinates_ref) else {
+            return Ok(()); // coordinates_list dropped — drop the curve set too
+        };
+
+        let id = ctx
+            .tessellated_items
+            .push(TessellatedItem::TessellatedCurveSet(TessellatedCurveSet {
+                name,
+                coordinates,
+                line_strips,
+            }));
+        ctx.tessellated_item_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, item: TessellatedCurveSet) -> Result<u64, WriteError> {
+        let coordinates_step = buf.tessellated_item_step_ids[item.coordinates.0 as usize];
+        Ok(buf.push_simple(
+            "TESSELLATED_CURVE_SET",
+            vec![
+                Attribute::String(item.name),
+                Attribute::EntityRef(coordinates_step),
+                integer_grid_attr(&item.line_strips),
+            ],
+        ))
+    }
+}
+
+pub(crate) struct ComplexTriangulatedSurfaceSetHandler;
+
+#[step_entity(name = "COMPLEX_TRIANGULATED_SURFACE_SET", pass = Pass6ComplexTriangulatedFace)]
+impl SimpleEntityHandler for ComplexTriangulatedSurfaceSetHandler {
+    type WriteInput = ComplexTriangulatedSurfaceSet;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 7, entity_id, "COMPLEX_TRIANGULATED_SURFACE_SET")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let coordinates_ref = read_entity_ref(attrs, 1, entity_id, "coordinates")?;
+        let pnmax = read_integer(attrs, 2, entity_id, "pnmax")?;
+        let normals = read_real_grid(attrs, 3, entity_id, "normals")?;
+        let pnindex = read_integer_list(attrs, 4, entity_id, "pnindex")?;
+        let triangle_strips = read_integer_grid(attrs, 5, entity_id, "triangle_strips")?;
+        let triangle_fans = read_integer_grid(attrs, 6, entity_id, "triangle_fans")?;
+
+        let Some(&coordinates) = ctx.tessellated_item_id_map.get(&coordinates_ref) else {
+            return Ok(()); // coordinates_list dropped — drop the surface set too
+        };
+
+        ctx.tessellated_surface_sets
+            .push(ComplexTriangulatedSurfaceSet {
+                name,
+                coordinates,
+                pnmax,
+                normals,
+                pnindex,
+                triangle_strips,
+                triangle_fans,
+            });
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, set: ComplexTriangulatedSurfaceSet) -> Result<u64, WriteError> {
+        let coordinates_step = buf.tessellated_item_step_ids[set.coordinates.0 as usize];
+        Ok(buf.push_simple(
+            "COMPLEX_TRIANGULATED_SURFACE_SET",
+            vec![
+                Attribute::String(set.name),
+                Attribute::EntityRef(coordinates_step),
+                Attribute::Integer(set.pnmax),
+                real_grid_attr(&set.normals),
+                integer_list_attr(&set.pnindex),
+                integer_grid_attr(&set.triangle_strips),
+                integer_grid_attr(&set.triangle_fans),
             ],
         ))
     }

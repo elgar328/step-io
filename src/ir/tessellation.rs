@@ -8,11 +8,12 @@
 use super::id::TessellatedItemId;
 use super::representation_item::RepresentationItemRef;
 
-/// `tessellated_item` `enum_base`. Only `CoordinatesList` is modelled; the
-/// tessellated solid / shell / surface-set siblings are deferred.
+/// `tessellated_item` `enum_base`. `CoordinatesList` and `TessellatedCurveSet`
+/// are modelled; the tessellated solid / shell siblings are deferred.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TessellatedItem {
     CoordinatesList(CoordinatesList),
+    TessellatedCurveSet(TessellatedCurveSet),
 }
 
 /// `COORDINATES_LIST(name, npoints, position_coords)` — a shared pool of
@@ -23,6 +24,37 @@ pub struct CoordinatesList {
     pub npoints: i64,
     /// `N×3` grid of point coordinates.
     pub position_coords: Vec<Vec<f64>>,
+}
+
+/// `TESSELLATED_CURVE_SET(name, coordinates, line_strips)` — a set of
+/// polylines referencing a [`CoordinatesList`] for its points. A
+/// `tessellated_item` enum member.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TessellatedCurveSet {
+    pub name: String,
+    /// `ref_coordinates_list` — resolved to the `tessellated_item` arena.
+    pub coordinates: TessellatedItemId,
+    /// Ragged — line strips vary in length.
+    pub line_strips: Vec<Vec<i64>>,
+}
+
+/// `COMPLEX_TRIANGULATED_SURFACE_SET(name, coordinates, pnmax, normals,
+/// pnindex, triangle_strips, triangle_fans)` — a triangulated surface set
+/// referencing a [`CoordinatesList`] for its points. Identical to
+/// [`ComplexTriangulatedFace`] minus the optional `geometric_link`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ComplexTriangulatedSurfaceSet {
+    pub name: String,
+    /// `ref_coordinates_list` — resolved to the `tessellated_item` arena.
+    pub coordinates: TessellatedItemId,
+    pub pnmax: i64,
+    /// `M×3` grid of normal vectors.
+    pub normals: Vec<Vec<f64>>,
+    pub pnindex: Vec<i64>,
+    /// Ragged — triangle strips vary in length.
+    pub triangle_strips: Vec<Vec<i64>>,
+    /// Ragged — triangle fans vary in length.
+    pub triangle_fans: Vec<Vec<i64>>,
 }
 
 /// `COMPLEX_TRIANGULATED_FACE(name, coordinates, pnmax, normals,

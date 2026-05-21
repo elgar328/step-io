@@ -30,7 +30,9 @@ use super::shape_rep::{
     AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, MappedItem,
     NumericRepresentationItem, Representation, RepresentationMap, ShapeAspect, UnitContext,
 };
-use super::tessellation::{ComplexTriangulatedFace, TessellatedItem};
+use super::tessellation::{
+    ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, TessellatedItem,
+};
 use super::topology::{Edge, Face, Shell, Solid, Wire};
 use super::units::{DerivedUnit, DerivedUnitElement, MeasureWithUnit, NamedUnit};
 use super::visualization::{
@@ -121,9 +123,10 @@ define_id!(MappedItemId, MappedItem);
 // representation_item value-items (phase numeric-representation-item).
 define_id!(NumericRepresentationItemId, NumericRepresentationItem);
 
-// tessellation arenas (phase tessellation).
+// tessellation arenas (phase tessellation / tessellation-2).
 define_id!(TessellatedItemId, TessellatedItem);
 define_id!(TessellatedFaceId, ComplexTriangulatedFace);
+define_id!(TessellatedSurfaceSetId, ComplexTriangulatedSurfaceSet);
 
 // Visualization Ids — Colour enum arena (ColourRgb + DraughtingPreDefinedColour).
 define_id!(ColourId, Colour);

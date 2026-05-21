@@ -390,6 +390,9 @@ pub struct ReaderContext {
     /// `COMPLEX_TRIANGULATED_FACE` arena (phase tessellation) — orphan.
     pub(crate) tessellated_faces:
         crate::ir::Arena<crate::ir::tessellation::ComplexTriangulatedFace>,
+    /// `COMPLEX_TRIANGULATED_SURFACE_SET` arena (phase tessellation-2) — orphan.
+    pub(crate) tessellated_surface_sets:
+        crate::ir::Arena<crate::ir::tessellation::ComplexTriangulatedSurfaceSet>,
 
     /// Lazily-built plm pool — populated by the Pass 9 plm reader chain
     /// (`CalendarDate` / `LocalTime` / UTC / `DateAndTime` / `DateTimeRole`
@@ -531,6 +534,7 @@ impl ReaderContext {
                 numeric_representation_items: ctx.numeric_representation_items,
                 tessellated_items: ctx.tessellated_items,
                 tessellated_faces: ctx.tessellated_faces,
+                tessellated_surface_sets: ctx.tessellated_surface_sets,
             },
             warnings: ctx.warnings,
             parse_warnings: graph.warnings.clone(),

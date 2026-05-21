@@ -53,7 +53,8 @@ pub use id::{
     ProductDefinitionContextRoleId, ProductDefinitionRelationshipId, ProductId, PropertyId,
     RepresentationId, RepresentationMapId, RoleAssociationId, SecurityClassificationAssignmentId,
     SecurityClassificationId, SecurityClassificationLevelId, ShapeAspectId, ShellId, SolidId,
-    SurfaceId, TessellatedFaceId, TessellatedItemId, UnitContextId, VertexId, WireId,
+    SurfaceId, TessellatedFaceId, TessellatedItemId, TessellatedSurfaceSetId, UnitContextId,
+    VertexId, WireId,
     {
         AnnotationOccurrenceId, CompositeShapeAspectId, ContinuousShapeAspectId, DatumId,
         DerivedShapeAspectId, DraughtingPreDefinedTextFontId, ToleranceZoneFormId, TypeQualifierId,
@@ -96,7 +97,10 @@ pub use shape_rep::{
     RealRepresentationItem, Representation, RepresentationMap, RepresentationMapData, ShapeAspect,
     SolidAngleUnit, UnitContext, WireframeRepr,
 };
-pub use tessellation::{ComplexTriangulatedFace, CoordinatesList, TessellatedItem};
+pub use tessellation::{
+    ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, CoordinatesList, TessellatedCurveSet,
+    TessellatedItem,
+};
 pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Wire};
 pub use units::{
     DerivedUnit, DerivedUnitElement, DerivedUnitKind, MassUnit, MeasureWithUnit, NamedUnit,

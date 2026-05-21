@@ -1909,7 +1909,9 @@ fn tessellation_round_trip() {
     let re = reconvert(&text);
     assert_eq!(re.tessellated_items.len(), 1);
     assert_eq!(re.tessellated_faces.len(), 1);
-    let TessellatedItem::CoordinatesList(c) = re.tessellated_items.iter().next().unwrap();
+    let Some(TessellatedItem::CoordinatesList(c)) = re.tessellated_items.iter().next() else {
+        panic!("expected CoordinatesList");
+    };
     assert_eq!(c.npoints, 3);
     assert_eq!(c.position_coords.len(), 3);
     assert!((c.position_coords[1][0] - 1.0).abs() < f64::EPSILON);
@@ -1920,4 +1922,68 @@ fn tessellation_round_trip() {
     assert_eq!(f.triangle_strips, vec![vec![1, 2, 3]]);
     assert!(f.triangle_fans.is_empty());
     assert!(f.geometric_link.is_none());
+}
+
+#[test]
+fn tessellation_2_round_trip() {
+    // COORDINATES_LIST + TESSELLATED_CURVE_SET + COMPLEX_TRIANGULATED_SURFACE_SET
+    // — both new entities reference the shared coordinates list.
+    use step_io::ir::tessellation::{
+        ComplexTriangulatedSurfaceSet, CoordinatesList, TessellatedCurveSet, TessellatedItem,
+    };
+    let mut model = empty_model();
+    let coords = model
+        .tessellated_items
+        .push(TessellatedItem::CoordinatesList(CoordinatesList {
+            name: "pts".into(),
+            npoints: 4,
+            position_coords: vec![
+                vec![0.0, 0.0, 0.0],
+                vec![1.0, 0.0, 0.0],
+                vec![0.0, 1.0, 0.0],
+                vec![1.0, 1.0, 0.0],
+            ],
+        }));
+    model
+        .tessellated_items
+        .push(TessellatedItem::TessellatedCurveSet(TessellatedCurveSet {
+            name: "curves".into(),
+            coordinates: coords,
+            line_strips: vec![vec![1, 2], vec![3, 4, 1]],
+        }));
+    model
+        .tessellated_surface_sets
+        .push(ComplexTriangulatedSurfaceSet {
+            name: "surf".into(),
+            coordinates: coords,
+            pnmax: 4,
+            normals: vec![vec![0.0, 0.0, 1.0]],
+            pnindex: vec![1, 2, 3, 4],
+            triangle_strips: vec![vec![1, 2, 3]],
+            triangle_fans: vec![],
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.tessellated_items.len(), 2);
+    assert_eq!(re.tessellated_surface_sets.len(), 1);
+
+    let curve_set = re
+        .tessellated_items
+        .iter()
+        .find_map(|item| match item {
+            TessellatedItem::TessellatedCurveSet(t) => Some(t),
+            TessellatedItem::CoordinatesList(_) => None,
+        })
+        .expect("curve set");
+    assert_eq!(curve_set.name, "curves");
+    assert_eq!(curve_set.line_strips, vec![vec![1, 2], vec![3, 4, 1]]);
+
+    let s = re.tessellated_surface_sets.iter().next().unwrap();
+    assert_eq!(s.name, "surf");
+    assert_eq!(s.pnmax, 4);
+    assert_eq!(s.pnindex, vec![1, 2, 3, 4]);
+    assert_eq!(s.triangle_strips, vec![vec![1, 2, 3]]);
+    assert!(s.triangle_fans.is_empty());
+    assert!((s.normals[0][2] - 1.0).abs() < f64::EPSILON);
 }

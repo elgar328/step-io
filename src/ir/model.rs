@@ -240,6 +240,11 @@ pub struct StepModel {
     /// `COMPLEX_TRIANGULATED_FACE` arena (phase tessellation). Orphan
     /// round-trip — references [`Self::tessellated_items`] for coordinates.
     pub tessellated_faces: crate::ir::Arena<crate::ir::tessellation::ComplexTriangulatedFace>,
+    /// `COMPLEX_TRIANGULATED_SURFACE_SET` arena (phase tessellation-2).
+    /// Orphan round-trip — references [`Self::tessellated_items`] for
+    /// coordinates.
+    pub tessellated_surface_sets:
+        crate::ir::Arena<crate::ir::tessellation::ComplexTriangulatedSurfaceSet>,
 }
 
 /// Arena-based storage for all topology objects.
