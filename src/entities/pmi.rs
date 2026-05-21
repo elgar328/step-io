@@ -14,8 +14,9 @@ use crate::ir::attr::{
 };
 use crate::ir::error::ConvertError;
 use crate::ir::pmi::{
-    AnnotationOccurrence, AnnotationPlane, Datum, DimensionalSize, DimensionalSizeKind,
-    DraughtingPreDefinedTextFont, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
+    AnnotationOccurrence, AnnotationPlane, Datum, DimensionalLocation, DimensionalLocationData,
+    DimensionalSize, DimensionalSizeKind, DraughtingPreDefinedTextFont, ToleranceZoneForm,
+    TypeQualifier, ValueFormatTypeQualifier,
 };
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -311,5 +312,112 @@ impl SimpleEntityHandler for DimensionalSizeHandler {
             name,
             vec![Attribute::EntityRef(applies_to), Attribute::String(ds.name)],
         ))
+    }
+}
+
+/// Read the shared `DIMENSIONAL_LOCATION` 4-attr body. `Ok(None)` when
+/// either endpoint does not resolve — the location is dropped, symmetric
+/// on re-read.
+fn read_dimensional_location_data(
+    ctx: &ReaderContext,
+    entity_id: u64,
+    attrs: &[Attribute],
+    entity_name: &'static str,
+) -> Result<Option<DimensionalLocationData>, ConvertError> {
+    check_count(attrs, 4, entity_id, entity_name)?;
+    let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
+    let relating_ref = read_entity_ref(attrs, 2, entity_id, "relating_shape_aspect")?;
+    let related_ref = read_entity_ref(attrs, 3, entity_id, "related_shape_aspect")?;
+
+    let Some(relating_shape_aspect) = resolve_shape_aspect_ref(ctx, relating_ref) else {
+        return Ok(None);
+    };
+    let Some(related_shape_aspect) = resolve_shape_aspect_ref(ctx, related_ref) else {
+        return Ok(None);
+    };
+    Ok(Some(DimensionalLocationData {
+        name,
+        description,
+        relating_shape_aspect,
+        related_shape_aspect,
+    }))
+}
+
+/// Emit a `DimensionalLocation` under the STEP entity name its variant
+/// selects, returning the STEP id. Shared by both family handlers.
+fn write_dimensional_location(buf: &mut WriteBuffer, dl: DimensionalLocation) -> u64 {
+    let (name, data) = match dl {
+        DimensionalLocation::Plain(d) => ("DIMENSIONAL_LOCATION", d),
+        DimensionalLocation::Directed(d) => ("DIRECTED_DIMENSIONAL_LOCATION", d),
+    };
+    let relating = buf.emit_shape_aspect_ref(data.relating_shape_aspect);
+    let related = buf.emit_shape_aspect_ref(data.related_shape_aspect);
+    buf.push_simple(
+        name,
+        vec![
+            Attribute::String(data.name),
+            Attribute::String(data.description),
+            Attribute::EntityRef(relating),
+            Attribute::EntityRef(related),
+        ],
+    )
+}
+
+pub(crate) struct DimensionalLocationHandler;
+
+#[step_entity(name = "DIMENSIONAL_LOCATION", pass = Pass8Dimensional)]
+impl SimpleEntityHandler for DimensionalLocationHandler {
+    type WriteInput = DimensionalLocation;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let Some(data) =
+            read_dimensional_location_data(ctx, entity_id, attrs, "DIMENSIONAL_LOCATION")?
+        else {
+            return Ok(());
+        };
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .dimensional_locations
+            .push(DimensionalLocation::Plain(data));
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, dl: DimensionalLocation) -> Result<u64, WriteError> {
+        Ok(write_dimensional_location(buf, dl))
+    }
+}
+
+pub(crate) struct DirectedDimensionalLocationHandler;
+
+#[step_entity(name = "DIRECTED_DIMENSIONAL_LOCATION", pass = Pass8Dimensional)]
+impl SimpleEntityHandler for DirectedDimensionalLocationHandler {
+    type WriteInput = DimensionalLocation;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let Some(data) =
+            read_dimensional_location_data(ctx, entity_id, attrs, "DIRECTED_DIMENSIONAL_LOCATION")?
+        else {
+            return Ok(());
+        };
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .dimensional_locations
+            .push(DimensionalLocation::Directed(data));
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, dl: DimensionalLocation) -> Result<u64, WriteError> {
+        Ok(write_dimensional_location(buf, dl))
     }
 }

@@ -19,8 +19,8 @@ use super::plm::{
     SecurityClassification, SecurityClassificationAssignment, SecurityClassificationLevel,
 };
 use super::pmi::{
-    AnnotationOccurrence, Datum, DimensionalSize, DraughtingPreDefinedTextFont, ToleranceZoneForm,
-    TypeQualifier, ValueFormatTypeQualifier,
+    AnnotationOccurrence, Datum, DimensionalLocation, DimensionalSize,
+    DraughtingPreDefinedTextFont, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
 use super::property::{
     DescriptionAttribute, GeneralProperty, GeneralPropertyAssociation, IdAttribute, NameAttribute,
@@ -116,6 +116,9 @@ define_id!(DatumId, Datum);
 
 // dimensional_size arena (Phase dimensional-size).
 define_id!(DimensionalSizeId, DimensionalSize);
+
+// dimensional_location arena (Phase dimensional-location).
+define_id!(DimensionalLocationId, DimensionalLocation);
 
 // draughting_pre_defined_text_font arena (Phase text-font).
 define_id!(DraughtingPreDefinedTextFontId, DraughtingPreDefinedTextFont);

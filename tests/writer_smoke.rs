@@ -22,8 +22,8 @@ use step_io::ir::id::{
 };
 use step_io::ir::model::StepModel;
 use step_io::ir::pmi::{
-    DimensionalSize, DimensionalSizeKind, PmiPool, ToleranceZoneForm, TypeQualifier,
-    ValueFormatTypeQualifier,
+    DimensionalLocation, DimensionalLocationData, DimensionalSize, DimensionalSizeKind, PmiPool,
+    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
 use step_io::ir::property::{
     DerivedDefinitionItem, GeneralProperty, GeneralPropertyAssociation, Property, PropertyPool,
@@ -1675,6 +1675,43 @@ fn dimensional_size_round_trip() {
     let ds = pmi.dimensional_sizes.iter().next().unwrap();
     assert_eq!(ds.name, "diameter");
     assert!(matches!(ds.applies_to, ShapeAspectRef::ShapeAspect(_)));
+}
+
+#[test]
+fn dimensional_location_round_trip() {
+    // DIMENSIONAL_LOCATION + DIRECTED_DIMENSIONAL_LOCATION — both endpoints
+    // through ShapeAspectRef, distinguished by enum variant.
+    let (mut model, sa, cg, cs, aa) = shape_aspect_relationship_fixture();
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    pmi.dimensional_locations
+        .push(DimensionalLocation::Plain(DimensionalLocationData {
+            name: "linear distance".into(),
+            description: String::new(),
+            relating_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            related_shape_aspect: ShapeAspectRef::CompositeGroupShapeAspect(cg),
+        }));
+    pmi.dimensional_locations
+        .push(DimensionalLocation::Directed(DimensionalLocationData {
+            name: "directed".into(),
+            description: String::new(),
+            relating_shape_aspect: ShapeAspectRef::CentreOfSymmetry(cs),
+            related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(aa),
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let pmi = re.pmi.expect("pmi pool");
+    assert_eq!(pmi.dimensional_locations.len(), 2);
+    let dls: Vec<_> = pmi.dimensional_locations.iter().collect();
+    let DimensionalLocation::Plain(d0) = dls[0] else {
+        panic!("expected Plain");
+    };
+    assert_eq!(d0.name, "linear distance");
+    assert!(matches!(
+        d0.relating_shape_aspect,
+        ShapeAspectRef::ShapeAspect(_)
+    ));
+    assert!(matches!(dls[1], DimensionalLocation::Directed(_)));
 }
 
 #[test]

@@ -58,8 +58,9 @@ pub use id::{
     TessellatedSurfaceSetId, UnitContextId, VertexId, WireId,
     {
         AnnotationOccurrenceId, CompositeShapeAspectId, ContinuousShapeAspectId, DatumId,
-        DerivedShapeAspectId, DimensionalSizeId, DraughtingPreDefinedTextFontId,
-        ToleranceZoneFormId, TypeQualifierId, ValueFormatTypeQualifierId,
+        DerivedShapeAspectId, DimensionalLocationId, DimensionalSizeId,
+        DraughtingPreDefinedTextFontId, ToleranceZoneFormId, TypeQualifierId,
+        ValueFormatTypeQualifierId,
     },
 };
 pub use model::{
@@ -82,9 +83,9 @@ pub use plm::{
     SecurityClassificationItem, SecurityClassificationLevel,
 };
 pub use pmi::{
-    AnnotationOccurrence, AnnotationPlane, Datum, DimensionalSize, DimensionalSizeKind,
-    DraughtingPreDefinedTextFont, PmiPool, ToleranceZoneForm, TypeQualifier,
-    ValueFormatTypeQualifier,
+    AnnotationOccurrence, AnnotationPlane, Datum, DimensionalLocation, DimensionalLocationData,
+    DimensionalSize, DimensionalSizeKind, DraughtingPreDefinedTextFont, PmiPool, ToleranceZoneForm,
+    TypeQualifier, ValueFormatTypeQualifier,
 };
 pub use property::{
     DerivedDefinitionItem, DescriptionAttribute, DescriptionAttributeItem, GeneralProperty,

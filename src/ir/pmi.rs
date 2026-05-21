@@ -30,6 +30,32 @@ pub struct PmiPool {
     pub draughting_pre_defined_text_fonts: Arena<DraughtingPreDefinedTextFont>,
     /// `DIMENSIONAL_SIZE` arena. Phase dimensional-size.
     pub dimensional_sizes: Arena<DimensionalSize>,
+    /// `dimensional_location` `enum_base` arena. Phase dimensional-location.
+    pub dimensional_locations: Arena<DimensionalLocation>,
+}
+
+/// `dimensional_location` `enum_base` — a located dimension between two
+/// shape aspects. Plain `DIMENSIONAL_LOCATION` and the
+/// `DIRECTED_DIMENSIONAL_LOCATION` subtype share the identical 4-attr body;
+/// the `ANGULAR_LOCATION` subtype (which adds `angle_selection`) is added
+/// as an `Angular` variant in a later phase.
+#[derive(Debug, Clone, PartialEq)]
+pub enum DimensionalLocation {
+    /// Plain `DIMENSIONAL_LOCATION`.
+    Plain(DimensionalLocationData),
+    /// `DIRECTED_DIMENSIONAL_LOCATION`.
+    Directed(DimensionalLocationData),
+}
+
+/// Shared 4-attr body of `DIMENSIONAL_LOCATION` / `DIRECTED_DIMENSIONAL_LOCATION`
+/// — inherited from `shape_aspect_relationship`. A location whose either
+/// endpoint does not resolve is silently dropped, symmetric on re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DimensionalLocationData {
+    pub name: String,
+    pub description: String,
+    pub relating_shape_aspect: ShapeAspectRef,
+    pub related_shape_aspect: ShapeAspectRef,
 }
 
 /// Which `DIMENSIONAL_SIZE` flavour an entry round-trips as.

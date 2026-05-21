@@ -245,4 +245,21 @@ impl WriteBuffer<'_> {
         }
         Ok(())
     }
+
+    /// Emit the `pmi` pool's `dimensional_location` arena
+    /// (`DIMENSIONAL_LOCATION` / `DIRECTED_DIMENSIONAL_LOCATION`). Runs
+    /// after `emit_pmi_if_set` so both endpoints resolve through the filled
+    /// shape-aspect-family step-id caches.
+    pub(in crate::writer::buffer) fn emit_dimensional_locations(
+        &mut self,
+    ) -> Result<(), WriteError> {
+        use crate::entities::pmi::DimensionalLocationHandler;
+        let Some(pmi) = self.model.pmi.clone() else {
+            return Ok(());
+        };
+        for dl in pmi.dimensional_locations.iter() {
+            DimensionalLocationHandler::write(self, dl.clone())?;
+        }
+        Ok(())
+    }
 }
