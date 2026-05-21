@@ -10,13 +10,13 @@ use crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::PmiPool;
 use crate::ir::attr::{
-    check_count, read_bool, read_entity_ref, read_entity_ref_list, read_string_or_unset,
+    check_count, read_bool, read_entity_ref, read_entity_ref_list, read_enum, read_string_or_unset,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::pmi::{
-    AnnotationOccurrence, AnnotationPlane, Datum, DimensionalLocation, DimensionalLocationData,
-    DimensionalSize, DimensionalSizeKind, DraughtingPreDefinedTextFont, ToleranceZoneForm,
-    TypeQualifier, ValueFormatTypeQualifier,
+    AngleSelection, AngularLocationData, AnnotationOccurrence, AnnotationPlane, Datum,
+    DimensionalLocation, DimensionalLocationData, DimensionalSize, DimensionalSizeKind,
+    DraughtingPreDefinedTextFont, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -272,6 +272,50 @@ impl SimpleEntityHandler for DatumHandler {
     }
 }
 
+/// Map a STEP `angle_relator` enum value to [`AngleSelection`].
+fn read_angle_selection(
+    attrs: &[Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<AngleSelection, ConvertError> {
+    match read_enum(attrs, index, entity_id, field_name)? {
+        "EQUAL" => Ok(AngleSelection::Equal),
+        "LARGE" => Ok(AngleSelection::Large),
+        "SMALL" => Ok(AngleSelection::Small),
+        other => Err(ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: format!("{field_name}: unknown angle_relator '.{other}.'"),
+        }),
+    }
+}
+
+/// [`AngleSelection`] → a STEP enum `Attribute`.
+fn angle_selection_attr(sel: AngleSelection) -> Attribute {
+    Attribute::Enum(
+        match sel {
+            AngleSelection::Equal => "EQUAL",
+            AngleSelection::Large => "LARGE",
+            AngleSelection::Small => "SMALL",
+        }
+        .into(),
+    )
+}
+
+/// Emit a `DimensionalSize` under the STEP entity name its `kind` selects.
+fn write_dimensional_size(buf: &mut WriteBuffer, ds: DimensionalSize) -> u64 {
+    let applies_to = buf.emit_shape_aspect_ref(ds.applies_to);
+    let mut fields = vec![Attribute::EntityRef(applies_to), Attribute::String(ds.name)];
+    let name = match ds.kind {
+        DimensionalSizeKind::Plain => "DIMENSIONAL_SIZE",
+        DimensionalSizeKind::Angular(sel) => {
+            fields.push(angle_selection_attr(sel));
+            "ANGULAR_SIZE"
+        }
+    };
+    buf.push_simple(name, fields)
+}
+
 pub(crate) struct DimensionalSizeHandler;
 
 #[step_entity(name = "DIMENSIONAL_SIZE", pass = Pass8Dimensional)]
@@ -304,14 +348,44 @@ impl SimpleEntityHandler for DimensionalSizeHandler {
     }
 
     fn write(buf: &mut WriteBuffer, ds: DimensionalSize) -> Result<u64, WriteError> {
-        let applies_to = buf.emit_shape_aspect_ref(ds.applies_to);
-        let name = match ds.kind {
-            DimensionalSizeKind::Plain => "DIMENSIONAL_SIZE",
+        Ok(write_dimensional_size(buf, ds))
+    }
+}
+
+pub(crate) struct AngularSizeHandler;
+
+#[step_entity(name = "ANGULAR_SIZE", pass = Pass8Dimensional)]
+impl SimpleEntityHandler for AngularSizeHandler {
+    type WriteInput = DimensionalSize;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 3, entity_id, "ANGULAR_SIZE")?;
+        let applies_to_ref = read_entity_ref(attrs, 0, entity_id, "applies_to")?;
+        let name = read_string_or_unset(attrs, 1, entity_id, "name")?.to_owned();
+        let angle_selection = read_angle_selection(attrs, 2, entity_id, "angle_selection")?;
+
+        let Some(applies_to) = resolve_shape_aspect_ref(ctx, applies_to_ref) else {
+            return Ok(());
         };
-        Ok(buf.push_simple(
-            name,
-            vec![Attribute::EntityRef(applies_to), Attribute::String(ds.name)],
-        ))
+
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .dimensional_sizes
+            .push(DimensionalSize {
+                applies_to,
+                name,
+                kind: DimensionalSizeKind::Angular(angle_selection),
+            });
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, ds: DimensionalSize) -> Result<u64, WriteError> {
+        Ok(write_dimensional_size(buf, ds))
     }
 }
 
@@ -344,13 +418,12 @@ fn read_dimensional_location_data(
     }))
 }
 
-/// Emit a `DimensionalLocation` under the STEP entity name its variant
-/// selects, returning the STEP id. Shared by both family handlers.
-fn write_dimensional_location(buf: &mut WriteBuffer, dl: DimensionalLocation) -> u64 {
-    let (name, data) = match dl {
-        DimensionalLocation::Plain(d) => ("DIMENSIONAL_LOCATION", d),
-        DimensionalLocation::Directed(d) => ("DIRECTED_DIMENSIONAL_LOCATION", d),
-    };
+/// Emit the shared 4-attr `DIMENSIONAL_LOCATION`-shaped body under `name`.
+fn write_dimensional_location_4attr(
+    buf: &mut WriteBuffer,
+    name: &str,
+    data: DimensionalLocationData,
+) -> u64 {
     let relating = buf.emit_shape_aspect_ref(data.relating_shape_aspect);
     let related = buf.emit_shape_aspect_ref(data.related_shape_aspect);
     buf.push_simple(
@@ -362,6 +435,33 @@ fn write_dimensional_location(buf: &mut WriteBuffer, dl: DimensionalLocation) ->
             Attribute::EntityRef(related),
         ],
     )
+}
+
+/// Emit a `DimensionalLocation` under the STEP entity name its variant
+/// selects, returning the STEP id. Shared by all three family handlers.
+fn write_dimensional_location(buf: &mut WriteBuffer, dl: DimensionalLocation) -> u64 {
+    match dl {
+        DimensionalLocation::Plain(d) => {
+            write_dimensional_location_4attr(buf, "DIMENSIONAL_LOCATION", d)
+        }
+        DimensionalLocation::Directed(d) => {
+            write_dimensional_location_4attr(buf, "DIRECTED_DIMENSIONAL_LOCATION", d)
+        }
+        DimensionalLocation::Angular(d) => {
+            let relating = buf.emit_shape_aspect_ref(d.relating_shape_aspect);
+            let related = buf.emit_shape_aspect_ref(d.related_shape_aspect);
+            buf.push_simple(
+                "ANGULAR_LOCATION",
+                vec![
+                    Attribute::String(d.name),
+                    Attribute::String(d.description),
+                    Attribute::EntityRef(relating),
+                    Attribute::EntityRef(related),
+                    angle_selection_attr(d.angle_selection),
+                ],
+            )
+        }
+    }
 }
 
 pub(crate) struct DimensionalLocationHandler;
@@ -414,6 +514,50 @@ impl SimpleEntityHandler for DirectedDimensionalLocationHandler {
             .get_or_insert_with(PmiPool::default)
             .dimensional_locations
             .push(DimensionalLocation::Directed(data));
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, dl: DimensionalLocation) -> Result<u64, WriteError> {
+        Ok(write_dimensional_location(buf, dl))
+    }
+}
+
+pub(crate) struct AngularLocationHandler;
+
+#[step_entity(name = "ANGULAR_LOCATION", pass = Pass8Dimensional)]
+impl SimpleEntityHandler for AngularLocationHandler {
+    type WriteInput = DimensionalLocation;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 5, entity_id, "ANGULAR_LOCATION")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
+        let relating_ref = read_entity_ref(attrs, 2, entity_id, "relating_shape_aspect")?;
+        let related_ref = read_entity_ref(attrs, 3, entity_id, "related_shape_aspect")?;
+        let angle_selection = read_angle_selection(attrs, 4, entity_id, "angle_selection")?;
+
+        let Some(relating_shape_aspect) = resolve_shape_aspect_ref(ctx, relating_ref) else {
+            return Ok(());
+        };
+        let Some(related_shape_aspect) = resolve_shape_aspect_ref(ctx, related_ref) else {
+            return Ok(());
+        };
+
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .dimensional_locations
+            .push(DimensionalLocation::Angular(AngularLocationData {
+                name,
+                description,
+                relating_shape_aspect,
+                related_shape_aspect,
+                angle_selection,
+            }));
         Ok(())
     }
 

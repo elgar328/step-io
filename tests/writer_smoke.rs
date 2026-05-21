@@ -22,8 +22,9 @@ use step_io::ir::id::{
 };
 use step_io::ir::model::StepModel;
 use step_io::ir::pmi::{
-    DimensionalLocation, DimensionalLocationData, DimensionalSize, DimensionalSizeKind, PmiPool,
-    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
+    AngleSelection, AngularLocationData, DimensionalLocation, DimensionalLocationData,
+    DimensionalSize, DimensionalSizeKind, PmiPool, ToleranceZoneForm, TypeQualifier,
+    ValueFormatTypeQualifier,
 };
 use step_io::ir::property::{
     DerivedDefinitionItem, GeneralProperty, GeneralPropertyAssociation, Property, PropertyPool,
@@ -1656,25 +1657,32 @@ fn shape_aspect_relationship_subtypes_round_trip() {
 
 #[test]
 fn dimensional_size_round_trip() {
-    // DIMENSIONAL_SIZE — `applies_to` a shape aspect through ShapeAspectRef.
+    // DIMENSIONAL_SIZE (plain) + ANGULAR_SIZE — `applies_to` through
+    // ShapeAspectRef, distinguished by the kind discriminant.
     let (mut model, sa, ..) = shape_aspect_relationship_fixture();
-    model
-        .pmi
-        .get_or_insert_with(PmiPool::default)
-        .dimensional_sizes
-        .push(DimensionalSize {
-            applies_to: ShapeAspectRef::ShapeAspect(sa),
-            name: "diameter".into(),
-            kind: DimensionalSizeKind::Plain,
-        });
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    pmi.dimensional_sizes.push(DimensionalSize {
+        applies_to: ShapeAspectRef::ShapeAspect(sa),
+        name: "diameter".into(),
+        kind: DimensionalSizeKind::Plain,
+    });
+    pmi.dimensional_sizes.push(DimensionalSize {
+        applies_to: ShapeAspectRef::ShapeAspect(sa),
+        name: "angle".into(),
+        kind: DimensionalSizeKind::Angular(AngleSelection::Equal),
+    });
 
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
     let pmi = re.pmi.expect("pmi pool");
-    assert_eq!(pmi.dimensional_sizes.len(), 1);
-    let ds = pmi.dimensional_sizes.iter().next().unwrap();
-    assert_eq!(ds.name, "diameter");
-    assert!(matches!(ds.applies_to, ShapeAspectRef::ShapeAspect(_)));
+    assert_eq!(pmi.dimensional_sizes.len(), 2);
+    let dss: Vec<_> = pmi.dimensional_sizes.iter().collect();
+    assert_eq!(dss[0].name, "diameter");
+    assert_eq!(dss[0].kind, DimensionalSizeKind::Plain);
+    assert_eq!(
+        dss[1].kind,
+        DimensionalSizeKind::Angular(AngleSelection::Equal)
+    );
 }
 
 #[test]
@@ -1697,21 +1705,29 @@ fn dimensional_location_round_trip() {
             relating_shape_aspect: ShapeAspectRef::CentreOfSymmetry(cs),
             related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(aa),
         }));
+    pmi.dimensional_locations
+        .push(DimensionalLocation::Angular(AngularLocationData {
+            name: "angle".into(),
+            description: String::new(),
+            relating_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            related_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            angle_selection: AngleSelection::Small,
+        }));
 
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
     let pmi = re.pmi.expect("pmi pool");
-    assert_eq!(pmi.dimensional_locations.len(), 2);
+    assert_eq!(pmi.dimensional_locations.len(), 3);
     let dls: Vec<_> = pmi.dimensional_locations.iter().collect();
     let DimensionalLocation::Plain(d0) = dls[0] else {
         panic!("expected Plain");
     };
     assert_eq!(d0.name, "linear distance");
-    assert!(matches!(
-        d0.relating_shape_aspect,
-        ShapeAspectRef::ShapeAspect(_)
-    ));
     assert!(matches!(dls[1], DimensionalLocation::Directed(_)));
+    let DimensionalLocation::Angular(d2) = dls[2] else {
+        panic!("expected Angular");
+    };
+    assert_eq!(d2.angle_selection, AngleSelection::Small);
 }
 
 #[test]

@@ -83,9 +83,10 @@ pub use plm::{
     SecurityClassificationItem, SecurityClassificationLevel,
 };
 pub use pmi::{
-    AnnotationOccurrence, AnnotationPlane, Datum, DimensionalLocation, DimensionalLocationData,
-    DimensionalSize, DimensionalSizeKind, DraughtingPreDefinedTextFont, PmiPool, ToleranceZoneForm,
-    TypeQualifier, ValueFormatTypeQualifier,
+    AngleSelection, AngularLocationData, AnnotationOccurrence, AnnotationPlane, Datum,
+    DimensionalLocation, DimensionalLocationData, DimensionalSize, DimensionalSizeKind,
+    DraughtingPreDefinedTextFont, PmiPool, ToleranceZoneForm, TypeQualifier,
+    ValueFormatTypeQualifier,
 };
 pub use property::{
     DerivedDefinitionItem, DescriptionAttribute, DescriptionAttributeItem, GeneralProperty,

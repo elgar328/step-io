@@ -37,14 +37,15 @@ pub struct PmiPool {
 /// `dimensional_location` `enum_base` — a located dimension between two
 /// shape aspects. Plain `DIMENSIONAL_LOCATION` and the
 /// `DIRECTED_DIMENSIONAL_LOCATION` subtype share the identical 4-attr body;
-/// the `ANGULAR_LOCATION` subtype (which adds `angle_selection`) is added
-/// as an `Angular` variant in a later phase.
+/// the `ANGULAR_LOCATION` subtype adds an `angle_selection` attribute.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DimensionalLocation {
     /// Plain `DIMENSIONAL_LOCATION`.
     Plain(DimensionalLocationData),
     /// `DIRECTED_DIMENSIONAL_LOCATION`.
     Directed(DimensionalLocationData),
+    /// `ANGULAR_LOCATION`.
+    Angular(AngularLocationData),
 }
 
 /// Shared 4-attr body of `DIMENSIONAL_LOCATION` / `DIRECTED_DIMENSIONAL_LOCATION`
@@ -58,13 +59,36 @@ pub struct DimensionalLocationData {
     pub related_shape_aspect: ShapeAspectRef,
 }
 
+/// `ANGULAR_LOCATION` body — [`DimensionalLocationData`] plus the
+/// `angle_selection` attribute the subtype adds.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AngularLocationData {
+    pub name: String,
+    pub description: String,
+    pub relating_shape_aspect: ShapeAspectRef,
+    pub related_shape_aspect: ShapeAspectRef,
+    pub angle_selection: AngleSelection,
+}
+
 /// Which `DIMENSIONAL_SIZE` flavour an entry round-trips as.
-/// `dimensional_size` is a `concrete_supertype`; the subtype `ANGULAR_SIZE`
-/// adds an `angle_selection` attribute and is added as a variant later.
+/// EXPRESS `angle_relator` — selects which angle an `ANGULAR_SIZE` /
+/// `ANGULAR_LOCATION` denotes.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum AngleSelection {
+    Equal,
+    Large,
+    Small,
+}
+
+/// Which `DIMENSIONAL_SIZE` flavour an entry round-trips as.
+/// `dimensional_size` is a `concrete_supertype`; the `ANGULAR_SIZE` subtype
+/// adds an `angle_selection` attribute, carried by the `Angular` variant.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DimensionalSizeKind {
     /// Plain `DIMENSIONAL_SIZE`.
     Plain,
+    /// `ANGULAR_SIZE` — carries the `angle_selection`.
+    Angular(AngleSelection),
 }
 
 /// `DIMENSIONAL_SIZE(applies_to, name)` — names a size dimension applied to
