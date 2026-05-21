@@ -362,6 +362,10 @@ pub(crate) enum PassLevel {
     /// property converters so a future Pattern B PD pass can resolve its
     /// target ref through the `SHAPE_ASPECT` id map.
     Pass8ShapeAspect,
+    /// `SHAPE_ASPECT_RELATIONSHIP` (Pass 8-pre-b) — depends on
+    /// `Pass8ShapeAspect` for the `shape_aspect` (+ subtype) id maps that
+    /// `resolve_shape_aspect_ref` walks for both endpoints.
+    Pass8ShapeAspectRel,
     /// `MEASURE_REPRESENTATION_ITEM` (Pass 8-1) — depends on Pass 0
     /// (unit ctx).
     Pass8Measure,

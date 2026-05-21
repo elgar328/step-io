@@ -201,6 +201,12 @@ pub(crate) struct WriteBuffer<'m> {
     /// IR `ShapeAspectId.0` index → emitted `SHAPE_ASPECT` step id.
     /// Populated by `emit_pmi_if_set`; consumed by `id_attribute` writer.
     pub(crate) shape_aspect_step_ids: Vec<u64>,
+    /// `SHAPE_ASPECT` subtype index → emitted step id (phase shape-aspect-ref).
+    /// Populated by `emit_shape_aspect_subtypes`; consumed by
+    /// `emit_shape_aspect_ref`.
+    pub(crate) composite_shape_aspect_step_ids: Vec<u64>,
+    pub(crate) centre_of_symmetry_step_ids: Vec<u64>,
+    pub(crate) all_around_shape_aspect_step_ids: Vec<u64>,
     /// IR `ApplicationProtocolDefinition` index → emitted
     /// `APPLICATION_PROTOCOL_DEFINITION` step id.
     pub(crate) apd_step_ids: Vec<u64>,
@@ -319,6 +325,9 @@ impl<'m> WriteBuffer<'m> {
             plm_address_step_ids: Vec::new(),
             ac_step_ids: Vec::new(),
             shape_aspect_step_ids: Vec::new(),
+            composite_shape_aspect_step_ids: Vec::new(),
+            centre_of_symmetry_step_ids: Vec::new(),
+            all_around_shape_aspect_step_ids: Vec::new(),
             apd_step_ids: Vec::new(),
             pc_step_ids: Vec::new(),
             pdc_step_ids: Vec::new(),
@@ -421,6 +430,9 @@ impl<'m> WriteBuffer<'m> {
         self.emit_representations_pre_pass()?;
         self.emit_product_chain_if_eligible()?;
         self.emit_pmi_if_set();
+        // SHAPE_ASPECT_RELATIONSHIP — after emit_pmi_if_set so every
+        // shape-aspect-family step-id cache is filled.
+        self.emit_shape_aspect_relationships()?;
         self.emit_visualization_if_set()?;
         // REPRESENTATION_MAP + MAPPED_ITEM — after visualization so the
         // `representation_step_ids` cache covers MDGPR slots too.

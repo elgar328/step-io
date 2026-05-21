@@ -351,6 +351,9 @@ impl ReaderContext {
         // converters so that a future Pattern B PD pass can look up
         // SHAPE_ASPECT ids when resolving its target ref.
         self.dispatch_registry(graph, PassLevel::Pass8ShapeAspect);
+        // SHAPE_ASPECT_RELATIONSHIP — resolves both endpoints through the
+        // shape_aspect (+ subtype) id maps Pass8ShapeAspect just filled.
+        self.dispatch_registry(graph, PassLevel::Pass8ShapeAspectRel);
 
         // Pass 8: properties — user-defined attribute chain
         // (PROPERTY_DEFINITION + REPRESENTATION + PROPERTY_DEFINITION_REPRESENTATION).

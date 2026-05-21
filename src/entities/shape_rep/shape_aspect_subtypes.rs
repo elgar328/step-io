@@ -89,13 +89,15 @@ impl SimpleEntityHandler for CompositeGroupShapeAspectHandler {
         else {
             return Ok(());
         };
-        ctx.composite_group_shape_aspects
+        let id = ctx
+            .composite_group_shape_aspects
             .push(CompositeGroupShapeAspect {
                 name,
                 description,
                 target,
                 product_definitional,
             });
+        ctx.composite_shape_aspect_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -128,12 +130,13 @@ impl SimpleEntityHandler for CentreOfSymmetryHandler {
         else {
             return Ok(());
         };
-        ctx.centre_of_symmetries.push(CentreOfSymmetry {
+        let id = ctx.centre_of_symmetries.push(CentreOfSymmetry {
             name,
             description,
             target,
             product_definitional,
         });
+        ctx.centre_of_symmetry_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -162,12 +165,13 @@ impl SimpleEntityHandler for AllAroundShapeAspectHandler {
         else {
             return Ok(());
         };
-        ctx.all_around_shape_aspects.push(AllAroundShapeAspect {
+        let id = ctx.all_around_shape_aspects.push(AllAroundShapeAspect {
             name,
             description,
             target,
             product_definitional,
         });
+        ctx.all_around_shape_aspect_id_map.insert(entity_id, id);
         Ok(())
     }
 

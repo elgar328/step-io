@@ -21,6 +21,7 @@ pub mod mapped_item;
 pub mod mdgpr;
 pub mod numeric_representation_item;
 pub mod shape_aspect;
+pub mod shape_aspect_relationship;
 pub mod shape_aspect_subtypes;
 pub mod shape_representation;
 pub mod shape_representation_relationship;

@@ -13,6 +13,7 @@ use super::id::{
     UnitContextId,
 };
 use super::representation_item::RepresentationItemRef;
+use super::shape_aspect_ref::ShapeAspectRef;
 
 /// Units declared in the STEP file's HEADER section.
 ///
@@ -288,4 +289,27 @@ pub struct AllAroundShapeAspect {
     pub description: String,
     pub target: ProductId,
     pub product_definitional: bool,
+}
+
+/// Which `SHAPE_ASPECT_RELATIONSHIP` flavour an entry round-trips as.
+/// `shape_aspect_relationship` is a `concrete_supertype` — the plain entity
+/// and its subtypes (`SHAPE_ASPECT_DERIVING_RELATIONSHIP` /
+/// `SHAPE_ASPECT_ASSOCIATIVITY`) share the identical 4-attr shape and
+/// differ only by STEP entity name. That name is captured here so one
+/// arena covers the whole family; subtype variants are added additively.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ShapeAspectRelationshipKind {
+    /// Plain `SHAPE_ASPECT_RELATIONSHIP`.
+    Plain,
+}
+
+/// `SHAPE_ASPECT_RELATIONSHIP(name, description, relating_shape_aspect,
+/// related_shape_aspect)` — a directed relation between two shape aspects.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ShapeAspectRelationship {
+    pub name: String,
+    pub description: String,
+    pub relating_shape_aspect: ShapeAspectRef,
+    pub related_shape_aspect: ShapeAspectRef,
+    pub kind: ShapeAspectRelationshipKind,
 }

@@ -28,7 +28,8 @@ use super::property::{
 };
 use super::shape_rep::{
     AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, MappedItem,
-    NumericRepresentationItem, Representation, RepresentationMap, ShapeAspect, UnitContext,
+    NumericRepresentationItem, Representation, RepresentationMap, ShapeAspect,
+    ShapeAspectRelationship, UnitContext,
 };
 use super::tessellation::{
     ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, TessellatedItem,
@@ -98,6 +99,9 @@ define_id!(ShapeAspectId, ShapeAspect);
 define_id!(CompositeShapeAspectId, CompositeGroupShapeAspect);
 define_id!(DerivedShapeAspectId, CentreOfSymmetry);
 define_id!(ContinuousShapeAspectId, AllAroundShapeAspect);
+
+// SHAPE_ASPECT_RELATIONSHIP arena (phase shape-aspect-ref).
+define_id!(ShapeAspectRelationshipId, ShapeAspectRelationship);
 
 // pmi pool Ids — tolerance / qualifier primitives (Phase pmi-primitives).
 define_id!(ToleranceZoneFormId, ToleranceZoneForm);

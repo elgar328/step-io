@@ -363,6 +363,15 @@ pub struct ReaderContext {
         crate::ir::Arena<crate::ir::CompositeGroupShapeAspect>,
     pub(crate) centre_of_symmetries: crate::ir::Arena<crate::ir::CentreOfSymmetry>,
     pub(crate) all_around_shape_aspects: crate::ir::Arena<crate::ir::AllAroundShapeAspect>,
+    /// `SHAPE_ASPECT` subtype `#N → …Id` maps (phase shape-aspect-ref).
+    /// Populated by the subtype handlers in `Pass8ShapeAspect`; consumed by
+    /// `resolve_shape_aspect_ref` for `ShapeAspectRef` resolution.
+    pub(crate) composite_shape_aspect_id_map: HashMap<u64, crate::ir::CompositeShapeAspectId>,
+    pub(crate) centre_of_symmetry_id_map: HashMap<u64, crate::ir::DerivedShapeAspectId>,
+    pub(crate) all_around_shape_aspect_id_map: HashMap<u64, crate::ir::ContinuousShapeAspectId>,
+    /// `SHAPE_ASPECT_RELATIONSHIP` arena (phase shape-aspect-ref) — orphan.
+    pub(crate) shape_aspect_relationships:
+        crate::ir::Arena<crate::ir::shape_rep::ShapeAspectRelationship>,
 
     /// Unified `REPRESENTATION` arena (representation-refactor expand phase).
     /// 6 representation handlers dual-write here alongside the legacy maps.
@@ -520,6 +529,7 @@ impl ReaderContext {
                 composite_group_shape_aspects: ctx.composite_group_shape_aspects,
                 centre_of_symmetries: ctx.centre_of_symmetries,
                 all_around_shape_aspects: ctx.all_around_shape_aspects,
+                shape_aspect_relationships: ctx.shape_aspect_relationships,
                 plm: ctx.plm,
                 units_pool: build_units_pool(
                     ctx.named_units_arena,

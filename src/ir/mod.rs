@@ -10,6 +10,7 @@ pub mod plm;
 pub mod pmi;
 pub mod property;
 pub mod representation_item;
+pub mod shape_aspect_ref;
 pub mod shape_rep;
 pub mod tessellation;
 pub mod topology;
@@ -52,9 +53,9 @@ pub use id::{
     ProductDefinitionContextAssociationId, ProductDefinitionContextId,
     ProductDefinitionContextRoleId, ProductDefinitionRelationshipId, ProductId, PropertyId,
     RepresentationId, RepresentationMapId, RoleAssociationId, SecurityClassificationAssignmentId,
-    SecurityClassificationId, SecurityClassificationLevelId, ShapeAspectId, ShellId, SolidId,
-    SurfaceId, TessellatedFaceId, TessellatedItemId, TessellatedSurfaceSetId, UnitContextId,
-    VertexId, WireId,
+    SecurityClassificationId, SecurityClassificationLevelId, ShapeAspectId,
+    ShapeAspectRelationshipId, ShellId, SolidId, SurfaceId, TessellatedFaceId, TessellatedItemId,
+    TessellatedSurfaceSetId, UnitContextId, VertexId, WireId,
     {
         AnnotationOccurrenceId, CompositeShapeAspectId, ContinuousShapeAspectId, DatumId,
         DerivedShapeAspectId, DraughtingPreDefinedTextFontId, ToleranceZoneFormId, TypeQualifierId,
@@ -90,12 +91,14 @@ pub use property::{
     NameAttributeItem, Property, PropertyItem, PropertyMeasure, PropertyMeasureUnit, PropertyPool,
 };
 pub use representation_item::RepresentationItemRef;
+pub use shape_aspect_ref::ShapeAspectRef;
 pub use shape_rep::{
     AdvancedBrepRepr, AllAroundShapeAspect, AngleUnit, CentreOfSymmetry, CompositeGroupShapeAspect,
     DescriptiveItem, IntegerRepresentationItem, LengthUncertainty, LengthUnit, ManifoldSurfaceRepr,
     MappedItem, MappedItemData, Mdgpr, NumericRepresentationItem, PlainRepr,
     RealRepresentationItem, Representation, RepresentationMap, RepresentationMapData, ShapeAspect,
-    SolidAngleUnit, UnitContext, WireframeRepr,
+    ShapeAspectRelationship, ShapeAspectRelationshipKind, SolidAngleUnit, UnitContext,
+    WireframeRepr,
 };
 pub use tessellation::{
     ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, CoordinatesList, TessellatedCurveSet,

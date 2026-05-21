@@ -10,7 +10,9 @@ use crate::entities::shape_rep::shape_aspect_subtypes::{
     AllAroundShapeAspectHandler, CentreOfSymmetryHandler, CompositeGroupShapeAspectHandler,
     ShapeAspectSubtypeWriteInput,
 };
+use crate::ir::shape_aspect_ref::ShapeAspectRef;
 use crate::ir::shape_rep::ShapeAspect;
+use crate::writer::WriteError;
 
 impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_pmi_if_set(&mut self) {
@@ -121,18 +123,22 @@ impl WriteBuffer<'_> {
     /// cache is kept since nothing references these entities yet.
     fn emit_shape_aspect_subtypes(&mut self) {
         // Snapshot each arena to release the &model borrow before emitting
-        // (handler.write mutates self via push_simple).
+        // (handler.write mutates self via push_simple). Each subtype keeps a
+        // step-id cache (index-assigned, dropped entries stay 0) so
+        // `emit_shape_aspect_ref` can resolve a `ShapeAspectRef`.
         let composite: Vec<_> = self
             .model
             .composite_group_shape_aspects
             .iter()
             .cloned()
             .collect();
-        for sa in composite {
+        self.composite_shape_aspect_step_ids
+            .resize(composite.len(), 0);
+        for (index, sa) in composite.into_iter().enumerate() {
             let Some(&pds_step_id) = self.product_def_shape_ids.get(&sa.target) else {
                 continue;
             };
-            let _ = CompositeGroupShapeAspectHandler::write(
+            if let Ok(step_id) = CompositeGroupShapeAspectHandler::write(
                 self,
                 ShapeAspectSubtypeWriteInput {
                     name: sa.name,
@@ -140,14 +146,17 @@ impl WriteBuffer<'_> {
                     pds_step_id,
                     product_definitional: sa.product_definitional,
                 },
-            );
+            ) {
+                self.composite_shape_aspect_step_ids[index] = step_id;
+            }
         }
         let centre: Vec<_> = self.model.centre_of_symmetries.iter().cloned().collect();
-        for sa in centre {
+        self.centre_of_symmetry_step_ids.resize(centre.len(), 0);
+        for (index, sa) in centre.into_iter().enumerate() {
             let Some(&pds_step_id) = self.product_def_shape_ids.get(&sa.target) else {
                 continue;
             };
-            let _ = CentreOfSymmetryHandler::write(
+            if let Ok(step_id) = CentreOfSymmetryHandler::write(
                 self,
                 ShapeAspectSubtypeWriteInput {
                     name: sa.name,
@@ -155,7 +164,9 @@ impl WriteBuffer<'_> {
                     pds_step_id,
                     product_definitional: sa.product_definitional,
                 },
-            );
+            ) {
+                self.centre_of_symmetry_step_ids[index] = step_id;
+            }
         }
         let all_around: Vec<_> = self
             .model
@@ -163,11 +174,13 @@ impl WriteBuffer<'_> {
             .iter()
             .cloned()
             .collect();
-        for sa in all_around {
+        self.all_around_shape_aspect_step_ids
+            .resize(all_around.len(), 0);
+        for (index, sa) in all_around.into_iter().enumerate() {
             let Some(&pds_step_id) = self.product_def_shape_ids.get(&sa.target) else {
                 continue;
             };
-            let _ = AllAroundShapeAspectHandler::write(
+            if let Ok(step_id) = AllAroundShapeAspectHandler::write(
                 self,
                 ShapeAspectSubtypeWriteInput {
                     name: sa.name,
@@ -175,7 +188,47 @@ impl WriteBuffer<'_> {
                     pds_step_id,
                     product_definitional: sa.product_definitional,
                 },
-            );
+            ) {
+                self.all_around_shape_aspect_step_ids[index] = step_id;
+            }
         }
+    }
+
+    /// Resolve a [`ShapeAspectRef`] to its emitted STEP id — a pure cache
+    /// lookup, since every shape-aspect-family arena is emitted up-front by
+    /// `emit_pmi_if_set` / `emit_shape_aspect_subtypes`. A `0` slot means
+    /// the target was dropped at emit (product chain unresolved); in
+    /// practice unreachable because a `shape_aspect` that read successfully
+    /// also writes successfully (symmetric product-chain resolution).
+    pub(crate) fn emit_shape_aspect_ref(&self, item: ShapeAspectRef) -> u64 {
+        match item {
+            ShapeAspectRef::ShapeAspect(id) => self.shape_aspect_step_ids[id.0 as usize],
+            ShapeAspectRef::CompositeGroupShapeAspect(id) => {
+                self.composite_shape_aspect_step_ids[id.0 as usize]
+            }
+            ShapeAspectRef::CentreOfSymmetry(id) => self.centre_of_symmetry_step_ids[id.0 as usize],
+            ShapeAspectRef::AllAroundShapeAspect(id) => {
+                self.all_around_shape_aspect_step_ids[id.0 as usize]
+            }
+        }
+    }
+
+    /// Emit the `SHAPE_ASPECT_RELATIONSHIP` arena. Runs after
+    /// `emit_pmi_if_set` so every shape-aspect-family step-id cache is
+    /// filled and both endpoints resolve through `emit_shape_aspect_ref`.
+    pub(in crate::writer::buffer) fn emit_shape_aspect_relationships(
+        &mut self,
+    ) -> Result<(), WriteError> {
+        use crate::entities::shape_rep::shape_aspect_relationship::ShapeAspectRelationshipHandler;
+        let rels: Vec<_> = self
+            .model
+            .shape_aspect_relationships
+            .iter()
+            .cloned()
+            .collect();
+        for rel in rels {
+            ShapeAspectRelationshipHandler::write(self, rel)?;
+        }
+        Ok(())
     }
 }

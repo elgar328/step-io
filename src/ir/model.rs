@@ -204,6 +204,9 @@ pub struct StepModel {
     pub centre_of_symmetries: Arena<CentreOfSymmetry>,
     /// `ALL_AROUND_SHAPE_ASPECT` arena — `SHAPE_ASPECT` subtype.
     pub all_around_shape_aspects: Arena<AllAroundShapeAspect>,
+    /// `SHAPE_ASPECT_RELATIONSHIP` arena (phase shape-aspect-ref). Orphan
+    /// round-trip — each endpoint is a [`crate::ir::ShapeAspectRef`].
+    pub shape_aspect_relationships: Arena<crate::ir::shape_rep::ShapeAspectRelationship>,
     /// Product-lifecycle metadata (Person/Org/Date/Approval/Security).
     /// `None` for files without plm content. Phase plm-1a populates the
     /// Date/Time primitives; later phases add Person/Approval/Security

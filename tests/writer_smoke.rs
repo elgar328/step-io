@@ -24,9 +24,10 @@ use step_io::ir::pmi::{PmiPool, ToleranceZoneForm, TypeQualifier, ValueFormatTyp
 use step_io::ir::property::{
     DerivedDefinitionItem, GeneralProperty, GeneralPropertyAssociation, Property, PropertyPool,
 };
+use step_io::ir::shape_aspect_ref::ShapeAspectRef;
 use step_io::ir::shape_rep::{
     AllAroundShapeAspect, AngleUnit, CentreOfSymmetry, CompositeGroupShapeAspect, LengthUnit,
-    SolidAngleUnit, UnitContext,
+    ShapeAspect, ShapeAspectRelationship, ShapeAspectRelationshipKind, SolidAngleUnit, UnitContext,
 };
 use step_io::ir::topology::{Face, FaceKind, Orientation, Shell, Solid, Wire};
 use step_io::ir::units::{MassFlavor, MassUnit, NamedUnit, UnitsPool};
@@ -1500,6 +1501,107 @@ fn shape_aspect_subtypes_round_trip() {
     );
     let aa = re.all_around_shape_aspects.iter().next().unwrap();
     assert_eq!(aa.name, "aa");
+}
+
+#[test]
+fn shape_aspect_relationship_round_trip() {
+    // SHAPE_ASPECT_RELATIONSHIP — exercises all four ShapeAspectRef
+    // variants (plain shape_aspect + 3 subtypes) as relation endpoints.
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        content: ProductContent::Solid(SolidContent {
+            ids: vec![solid_id],
+        }),
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let sa = model.shape_aspects.push(ShapeAspect {
+        name: "sa".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+    let cg = model
+        .composite_group_shape_aspects
+        .push(CompositeGroupShapeAspect {
+            name: "cg".into(),
+            description: String::new(),
+            target: part_pid,
+            product_definitional: false,
+        });
+    let cs = model.centre_of_symmetries.push(CentreOfSymmetry {
+        name: "cs".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+    let aa = model.all_around_shape_aspects.push(AllAroundShapeAspect {
+        name: "aa".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+
+    model
+        .shape_aspect_relationships
+        .push(ShapeAspectRelationship {
+            name: "r1".into(),
+            description: String::new(),
+            relating_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            related_shape_aspect: ShapeAspectRef::CompositeGroupShapeAspect(cg),
+            kind: ShapeAspectRelationshipKind::Plain,
+        });
+    model
+        .shape_aspect_relationships
+        .push(ShapeAspectRelationship {
+            name: "r2".into(),
+            description: String::new(),
+            relating_shape_aspect: ShapeAspectRef::CentreOfSymmetry(cs),
+            related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(aa),
+            kind: ShapeAspectRelationshipKind::Plain,
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.shape_aspect_relationships.len(), 2);
+    let rels: Vec<_> = re.shape_aspect_relationships.iter().collect();
+    assert_eq!(rels[0].name, "r1");
+    assert!(matches!(
+        rels[0].relating_shape_aspect,
+        ShapeAspectRef::ShapeAspect(_)
+    ));
+    assert!(matches!(
+        rels[0].related_shape_aspect,
+        ShapeAspectRef::CompositeGroupShapeAspect(_)
+    ));
+    assert_eq!(rels[1].name, "r2");
+    assert!(matches!(
+        rels[1].relating_shape_aspect,
+        ShapeAspectRef::CentreOfSymmetry(_)
+    ));
+    assert!(matches!(
+        rels[1].related_shape_aspect,
+        ShapeAspectRef::AllAroundShapeAspect(_)
+    ));
 }
 
 #[test]
