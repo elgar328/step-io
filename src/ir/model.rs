@@ -234,6 +234,12 @@ pub struct StepModel {
     /// arena (phase numeric-representation-item). Orphan round-trip.
     pub numeric_representation_items:
         crate::ir::Arena<crate::ir::shape_rep::NumericRepresentationItem>,
+    /// `tessellated_item` arena — `COORDINATES_LIST` (phase tessellation).
+    /// Orphan round-trip.
+    pub tessellated_items: crate::ir::Arena<crate::ir::tessellation::TessellatedItem>,
+    /// `COMPLEX_TRIANGULATED_FACE` arena (phase tessellation). Orphan
+    /// round-trip — references [`Self::tessellated_items`] for coordinates.
+    pub tessellated_faces: crate::ir::Arena<crate::ir::tessellation::ComplexTriangulatedFace>,
 }
 
 /// Arena-based storage for all topology objects.

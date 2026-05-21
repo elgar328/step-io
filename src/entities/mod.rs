@@ -19,6 +19,7 @@ pub mod plm;
 pub mod pmi;
 pub mod property;
 pub mod shape_rep;
+pub mod tessellation;
 pub mod topology;
 pub mod units;
 pub mod visualization;
@@ -198,6 +199,14 @@ pub(crate) enum PassLevel {
     /// `MAPPED_ITEM` (phase mapped-item) — depends on
     /// `Pass6RepresentationMap` (`representation_map_id_map`).
     Pass6MappedItem,
+    /// `COORDINATES_LIST` (phase tessellation) — pure scalar/grid leaf.
+    /// Runs before `Pass6ComplexTriangulatedFace` so a CTF whose `#N`
+    /// precedes its `COORDINATES_LIST` still resolves `coordinates`.
+    Pass6CoordinatesList,
+    /// `COMPLEX_TRIANGULATED_FACE` (phase tessellation) — depends on
+    /// `Pass6CoordinatesList` (`tessellated_item_id_map`) and Pass 1-5
+    /// geometry (`geometric_link`).
+    Pass6ComplexTriangulatedFace,
 
     // ----- Plan 7 (Pass 4-4B + Pass 7 visualization + Pass 8 property/PMI) -----
     /// `OFFSET_SURFACE` (Pass 4-4B) — fixpoint dispatch. Dispatched via

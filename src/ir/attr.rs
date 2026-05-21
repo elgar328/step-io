@@ -668,6 +668,63 @@ pub fn read_real_grid(
     Ok(grid)
 }
 
+/// Extract a ragged list-of-integer-lists from `attrs[index]` —
+/// `Vec<Vec<i64>>`. Unlike [`read_real_grid`] the inner rows may differ in
+/// length (e.g. triangle strips / fans of varying size).
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeIndex`] or [`ConvertError::AttributeType`].
+pub fn read_integer_grid(
+    attrs: &[Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<Vec<Vec<i64>>, ConvertError> {
+    let attr = get_attr(attrs, index, entity_id, field_name)?;
+    let rows = match attr {
+        Attribute::List(rows) => rows,
+        other => {
+            return Err(ConvertError::AttributeType {
+                entity_id,
+                field_name,
+                expected: "List (list of integer lists)",
+                actual: AttributeKindTag::from_attribute(other),
+            });
+        }
+    };
+    let mut grid = Vec::with_capacity(rows.len());
+    for row in rows {
+        let cols = match row {
+            Attribute::List(cols) => cols,
+            other => {
+                return Err(ConvertError::AttributeType {
+                    entity_id,
+                    field_name,
+                    expected: "List (inner integer row)",
+                    actual: AttributeKindTag::from_attribute(other),
+                });
+            }
+        };
+        let mut row_values = Vec::with_capacity(cols.len());
+        for col in cols {
+            match col {
+                Attribute::Integer(v) => row_values.push(*v),
+                other => {
+                    return Err(ConvertError::AttributeType {
+                        entity_id,
+                        field_name,
+                        expected: "Integer (inside integer grid)",
+                        actual: AttributeKindTag::from_attribute(other),
+                    });
+                }
+            }
+        }
+        grid.push(row_values);
+    }
+    Ok(grid)
+}
+
 // ---------------------------------------------------------------------------
 // Boolean extractor
 // ---------------------------------------------------------------------------

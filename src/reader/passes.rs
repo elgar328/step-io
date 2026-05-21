@@ -253,6 +253,11 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass6RepresentationMap);
         self.dispatch_registry(graph, PassLevel::Pass6MappedItem);
 
+        // COORDINATES_LIST then COMPLEX_TRIANGULATED_FACE (phase tessellation).
+        // Two passes: a CTF's `#N` may precede its COORDINATES_LIST.
+        self.dispatch_registry(graph, PassLevel::Pass6CoordinatesList);
+        self.dispatch_registry(graph, PassLevel::Pass6ComplexTriangulatedFace);
+
         // Pass 6-8: NEXT_ASSEMBLY_USAGE_OCCURRENCE — push Instances into
         // parent products' Group content.
         self.dispatch_registry(graph, PassLevel::Pass6Nauo);

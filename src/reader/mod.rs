@@ -382,6 +382,14 @@ pub struct ReaderContext {
     /// numeric-representation-item) — orphan round-trip.
     pub(crate) numeric_representation_items:
         crate::ir::Arena<crate::ir::shape_rep::NumericRepresentationItem>,
+    /// `tessellated_item` arena (`COORDINATES_LIST`) + `#N → TessellatedItemId`
+    /// (phase tessellation). The map lets the `COMPLEX_TRIANGULATED_FACE`
+    /// handler resolve its `coordinates` ref.
+    pub(crate) tessellated_items: crate::ir::Arena<crate::ir::tessellation::TessellatedItem>,
+    pub(crate) tessellated_item_id_map: HashMap<u64, crate::ir::TessellatedItemId>,
+    /// `COMPLEX_TRIANGULATED_FACE` arena (phase tessellation) — orphan.
+    pub(crate) tessellated_faces:
+        crate::ir::Arena<crate::ir::tessellation::ComplexTriangulatedFace>,
 
     /// Lazily-built plm pool — populated by the Pass 9 plm reader chain
     /// (`CalendarDate` / `LocalTime` / UTC / `DateAndTime` / `DateTimeRole`
@@ -521,6 +529,8 @@ impl ReaderContext {
                 representation_maps: ctx.representation_maps,
                 mapped_items: ctx.mapped_items,
                 numeric_representation_items: ctx.numeric_representation_items,
+                tessellated_items: ctx.tessellated_items,
+                tessellated_faces: ctx.tessellated_faces,
             },
             warnings: ctx.warnings,
             parse_warnings: graph.warnings.clone(),

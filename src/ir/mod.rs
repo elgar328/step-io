@@ -11,6 +11,7 @@ pub mod pmi;
 pub mod property;
 pub mod representation_item;
 pub mod shape_rep;
+pub mod tessellation;
 pub mod topology;
 pub mod units;
 pub mod visualization;
@@ -52,7 +53,7 @@ pub use id::{
     ProductDefinitionContextRoleId, ProductDefinitionRelationshipId, ProductId, PropertyId,
     RepresentationId, RepresentationMapId, RoleAssociationId, SecurityClassificationAssignmentId,
     SecurityClassificationId, SecurityClassificationLevelId, ShapeAspectId, ShellId, SolidId,
-    SurfaceId, UnitContextId, VertexId, WireId,
+    SurfaceId, TessellatedFaceId, TessellatedItemId, UnitContextId, VertexId, WireId,
     {
         AnnotationOccurrenceId, CompositeShapeAspectId, ContinuousShapeAspectId, DatumId,
         DerivedShapeAspectId, DraughtingPreDefinedTextFontId, ToleranceZoneFormId, TypeQualifierId,
@@ -95,6 +96,7 @@ pub use shape_rep::{
     RealRepresentationItem, Representation, RepresentationMap, RepresentationMapData, ShapeAspect,
     SolidAngleUnit, UnitContext, WireframeRepr,
 };
+pub use tessellation::{ComplexTriangulatedFace, CoordinatesList, TessellatedItem};
 pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Wire};
 pub use units::{
     DerivedUnit, DerivedUnitElement, DerivedUnitKind, MassUnit, MeasureWithUnit, NamedUnit,

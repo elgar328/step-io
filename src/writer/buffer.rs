@@ -26,6 +26,7 @@ pub(crate) mod numeric_representation_item;
 pub(crate) mod plm;
 pub(crate) mod pmi;
 pub(crate) mod property;
+pub(crate) mod tessellation;
 pub(crate) mod topology;
 pub(crate) mod units;
 pub(crate) mod visualization;
@@ -69,6 +70,11 @@ pub(crate) struct WriteBuffer<'m> {
     /// `RepresentationMapId.0`. Populated by `emit_mapped_items` before the
     /// `MAPPED_ITEM` loop so each item resolves its `mapping_source` ref.
     pub(crate) representation_map_step_ids: Vec<u64>,
+    /// STEP entity id of every emitted `COORDINATES_LIST`, indexed by
+    /// `TessellatedItemId.0`. Populated by `emit_tessellation` before the
+    /// `COMPLEX_TRIANGULATED_FACE` loop so each face resolves its
+    /// `coordinates` ref.
+    pub(crate) tessellated_item_step_ids: Vec<u64>,
     /// STEP entity id of every emitted `NAMED_UNIT` complex from
     /// [`crate::ir::UnitsPool::named_units`], indexed by `NamedUnitId.0`.
     /// Populated by `emit_units_pool_if_set` before GUAC + MWU + DUE emit,
@@ -269,6 +275,7 @@ impl<'m> WriteBuffer<'m> {
             unit_context_ids: Vec::new(),
             representation_step_ids: Vec::new(),
             representation_map_step_ids: Vec::new(),
+            tessellated_item_step_ids: Vec::new(),
             unit_leaf_ids: Vec::new(),
             named_unit_step_ids: Vec::new(),
             mwu_step_ids: Vec::new(),
@@ -422,6 +429,8 @@ impl<'m> WriteBuffer<'m> {
         self.emit_annotation_occurrences();
         // INTEGER/REAL_REPRESENTATION_ITEM — orphan value-items, no refs.
         self.emit_numeric_representation_items()?;
+        // COORDINATES_LIST + COMPLEX_TRIANGULATED_FACE — orphan tessellation.
+        self.emit_tessellation()?;
         self.emit_plm_if_set()?;
         self.emit_properties_if_set();
         self.emit_form_features_if_set()?;

@@ -1876,3 +1876,48 @@ fn numeric_representation_item_round_trip() {
     assert_eq!(r.name, "saved view scale");
     assert!((r.the_value - 2.5).abs() < f64::EPSILON);
 }
+
+#[test]
+fn tessellation_round_trip() {
+    // COORDINATES_LIST + COMPLEX_TRIANGULATED_FACE — orphan tessellation
+    // cluster; the face references the coordinates list.
+    use step_io::ir::tessellation::{ComplexTriangulatedFace, CoordinatesList, TessellatedItem};
+    let mut model = empty_model();
+    let coords = model
+        .tessellated_items
+        .push(TessellatedItem::CoordinatesList(CoordinatesList {
+            name: "pts".into(),
+            npoints: 3,
+            position_coords: vec![
+                vec![0.0, 0.0, 0.0],
+                vec![1.0, 0.0, 0.0],
+                vec![0.0, 1.0, 0.0],
+            ],
+        }));
+    model.tessellated_faces.push(ComplexTriangulatedFace {
+        name: "face".into(),
+        coordinates: coords,
+        pnmax: 3,
+        normals: vec![vec![0.0, 0.0, 1.0]],
+        geometric_link: None,
+        pnindex: vec![1, 2, 3],
+        triangle_strips: vec![vec![1, 2, 3]],
+        triangle_fans: vec![],
+    });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.tessellated_items.len(), 1);
+    assert_eq!(re.tessellated_faces.len(), 1);
+    let TessellatedItem::CoordinatesList(c) = re.tessellated_items.iter().next().unwrap();
+    assert_eq!(c.npoints, 3);
+    assert_eq!(c.position_coords.len(), 3);
+    assert!((c.position_coords[1][0] - 1.0).abs() < f64::EPSILON);
+    let f = re.tessellated_faces.iter().next().unwrap();
+    assert_eq!(f.name, "face");
+    assert_eq!(f.pnmax, 3);
+    assert_eq!(f.pnindex, vec![1, 2, 3]);
+    assert_eq!(f.triangle_strips, vec![vec![1, 2, 3]]);
+    assert!(f.triangle_fans.is_empty());
+    assert!(f.geometric_link.is_none());
+}
