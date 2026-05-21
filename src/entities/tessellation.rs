@@ -10,13 +10,13 @@
 use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::attr::{
-    check_count, read_entity_ref, read_integer, read_integer_grid, read_integer_list,
-    read_optional_entity_ref, read_real_grid, read_string_or_unset,
+    check_count, read_entity_ref, read_entity_ref_list, read_integer, read_integer_grid,
+    read_integer_list, read_optional_entity_ref, read_real_grid, read_string_or_unset,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::tessellation::{
     ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, CoordinatesList, TessellatedCurveSet,
-    TessellatedItem,
+    TessellatedGeometricSet, TessellatedItem, TessellatedItemRef,
 };
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -92,7 +92,7 @@ impl SimpleEntityHandler for ComplexTriangulatedFaceHandler {
         let geometric_link =
             geometric_link_ref.and_then(|r| resolve_representation_item_ref(ctx, r));
 
-        ctx.tessellated_faces.push(ComplexTriangulatedFace {
+        let id = ctx.tessellated_faces.push(ComplexTriangulatedFace {
             name,
             coordinates,
             pnmax,
@@ -102,6 +102,7 @@ impl SimpleEntityHandler for ComplexTriangulatedFaceHandler {
             triangle_strips,
             triangle_fans,
         });
+        ctx.tessellated_face_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -197,7 +198,8 @@ impl SimpleEntityHandler for ComplexTriangulatedSurfaceSetHandler {
             return Ok(()); // coordinates_list dropped — drop the surface set too
         };
 
-        ctx.tessellated_surface_sets
+        let id = ctx
+            .tessellated_surface_sets
             .push(ComplexTriangulatedSurfaceSet {
                 name,
                 coordinates,
@@ -207,6 +209,7 @@ impl SimpleEntityHandler for ComplexTriangulatedSurfaceSetHandler {
                 triangle_strips,
                 triangle_fans,
             });
+        ctx.tessellated_surface_set_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -223,6 +226,69 @@ impl SimpleEntityHandler for ComplexTriangulatedSurfaceSetHandler {
                 integer_grid_attr(&set.triangle_strips),
                 integer_grid_attr(&set.triangle_fans),
             ],
+        ))
+    }
+}
+
+/// Resolve a STEP `tessellated_item` reference into a [`TessellatedItemRef`]
+/// by probing the three tessellation arena id maps. Returns `None` for a
+/// target step-io does not model.
+pub(crate) fn resolve_tessellated_item_ref(
+    ctx: &ReaderContext,
+    item_ref: u64,
+) -> Option<TessellatedItemRef> {
+    if let Some(&id) = ctx.tessellated_item_id_map.get(&item_ref) {
+        return Some(TessellatedItemRef::Item(id));
+    }
+    if let Some(&id) = ctx.tessellated_face_id_map.get(&item_ref) {
+        return Some(TessellatedItemRef::Face(id));
+    }
+    if let Some(&id) = ctx.tessellated_surface_set_id_map.get(&item_ref) {
+        return Some(TessellatedItemRef::SurfaceSet(id));
+    }
+    None
+}
+
+pub(crate) struct TessellatedGeometricSetHandler;
+
+#[step_entity(name = "TESSELLATED_GEOMETRIC_SET", pass = Pass6TessellatedGeometricSet)]
+impl SimpleEntityHandler for TessellatedGeometricSetHandler {
+    type WriteInput = TessellatedGeometricSet;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 2, entity_id, "TESSELLATED_GEOMETRIC_SET")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let child_refs = read_entity_ref_list(attrs, 1, entity_id, "children")?;
+        // Unresolved children (targets step-io does not model) are dropped
+        // from the set — symmetric on re-read.
+        let children: Vec<TessellatedItemRef> = child_refs
+            .iter()
+            .filter_map(|&r| resolve_tessellated_item_ref(ctx, r))
+            .collect();
+
+        let id = ctx
+            .tessellated_items
+            .push(TessellatedItem::TessellatedGeometricSet(
+                TessellatedGeometricSet { name, children },
+            ));
+        ctx.tessellated_item_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, tgs: TessellatedGeometricSet) -> Result<u64, WriteError> {
+        let children: Vec<Attribute> = tgs
+            .children
+            .iter()
+            .map(|&r| Attribute::EntityRef(buf.emit_tessellated_item_ref(r)))
+            .collect();
+        Ok(buf.push_simple(
+            "TESSELLATED_GEOMETRIC_SET",
+            vec![Attribute::String(tgs.name), Attribute::List(children)],
         ))
     }
 }

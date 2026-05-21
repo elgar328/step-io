@@ -1,36 +1,48 @@
 //! Tessellation emission — `COORDINATES_LIST` + `TESSELLATED_CURVE_SET` +
-//! `COMPLEX_TRIANGULATED_FACE` + `COMPLEX_TRIANGULATED_SURFACE_SET`. The
-//! `tessellated_item` arena emits first (reader fills `COORDINATES_LIST`
-//! ahead of `TESSELLATED_CURVE_SET`), populating the
-//! `tessellated_item_step_ids` cache so every face / surface-set / curve-set
-//! resolves its `coordinates` ref through it. Standalone orphan emit.
+//! `COMPLEX_TRIANGULATED_FACE` + `COMPLEX_TRIANGULATED_SURFACE_SET` +
+//! `TESSELLATED_GEOMETRIC_SET`.
+//!
+//! Three-pass emit so each entity's refs resolve through a filled cache:
+//! 1. base `tessellated_item`s (`COORDINATES_LIST` / `TESSELLATED_CURVE_SET`)
+//!    — faces resolve their `coordinates` ref through `tessellated_item_step_ids`;
+//! 2. faces + surface-sets — a geometric set resolves its `children` through
+//!    `tessellated_face_step_ids` / `tessellated_surface_set_step_ids`;
+//! 3. composite `tessellated_item`s (`TESSELLATED_GEOMETRIC_SET`).
 
 use super::WriteBuffer;
 use crate::entities::SimpleEntityHandler;
 use crate::entities::tessellation::{
     ComplexTriangulatedFaceHandler, ComplexTriangulatedSurfaceSetHandler, CoordinatesListHandler,
-    TessellatedCurveSetHandler,
+    TessellatedCurveSetHandler, TessellatedGeometricSetHandler,
 };
-use crate::ir::tessellation::TessellatedItem;
+use crate::ir::tessellation::{TessellatedItem, TessellatedItemRef};
 use crate::writer::WriteError;
 
 impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_tessellation(&mut self) -> Result<(), WriteError> {
         // Snapshot to release the &model borrow before per-entity emission.
         let items: Vec<_> = self.model.tessellated_items.iter().cloned().collect();
-        self.tessellated_item_step_ids = Vec::with_capacity(items.len());
-        for item in items {
-            let step_id = match item {
-                TessellatedItem::CoordinatesList(c) => CoordinatesListHandler::write(self, c)?,
-                TessellatedItem::TessellatedCurveSet(t) => {
-                    TessellatedCurveSetHandler::write(self, t)?
+        self.tessellated_item_step_ids = vec![0; items.len()];
+        // Pass 1: base items — faces depend on their `coordinates`.
+        for (idx, item) in items.iter().enumerate() {
+            match item {
+                TessellatedItem::CoordinatesList(c) => {
+                    self.tessellated_item_step_ids[idx] =
+                        CoordinatesListHandler::write(self, c.clone())?;
                 }
-            };
-            self.tessellated_item_step_ids.push(step_id);
+                TessellatedItem::TessellatedCurveSet(t) => {
+                    self.tessellated_item_step_ids[idx] =
+                        TessellatedCurveSetHandler::write(self, t.clone())?;
+                }
+                TessellatedItem::TessellatedGeometricSet(_) => {}
+            }
         }
+        // Pass 2: faces + surface-sets — geometric sets reference these.
         let faces: Vec<_> = self.model.tessellated_faces.iter().cloned().collect();
-        for face in faces {
-            ComplexTriangulatedFaceHandler::write(self, face)?;
+        self.tessellated_face_step_ids = vec![0; faces.len()];
+        for (idx, face) in faces.into_iter().enumerate() {
+            self.tessellated_face_step_ids[idx] =
+                ComplexTriangulatedFaceHandler::write(self, face)?;
         }
         let surface_sets: Vec<_> = self
             .model
@@ -38,9 +50,31 @@ impl WriteBuffer<'_> {
             .iter()
             .cloned()
             .collect();
-        for set in surface_sets {
-            ComplexTriangulatedSurfaceSetHandler::write(self, set)?;
+        self.tessellated_surface_set_step_ids = vec![0; surface_sets.len()];
+        for (idx, set) in surface_sets.into_iter().enumerate() {
+            self.tessellated_surface_set_step_ids[idx] =
+                ComplexTriangulatedSurfaceSetHandler::write(self, set)?;
+        }
+        // Pass 3: composite items — `children` resolve through passes 1-2.
+        for (idx, item) in items.iter().enumerate() {
+            if let TessellatedItem::TessellatedGeometricSet(g) = item {
+                self.tessellated_item_step_ids[idx] =
+                    TessellatedGeometricSetHandler::write(self, g.clone())?;
+            }
         }
         Ok(())
+    }
+
+    /// Resolve a [`TessellatedItemRef`] to its emitted STEP id — a cache
+    /// lookup; `emit_tessellation` fills all three caches before any
+    /// `TESSELLATED_GEOMETRIC_SET` (pass 3) emits.
+    pub(crate) fn emit_tessellated_item_ref(&self, item: TessellatedItemRef) -> u64 {
+        match item {
+            TessellatedItemRef::Item(id) => self.tessellated_item_step_ids[id.0 as usize],
+            TessellatedItemRef::Face(id) => self.tessellated_face_step_ids[id.0 as usize],
+            TessellatedItemRef::SurfaceSet(id) => {
+                self.tessellated_surface_set_step_ids[id.0 as usize]
+            }
+        }
     }
 }

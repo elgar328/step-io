@@ -207,6 +207,10 @@ pub(crate) enum PassLevel {
     /// `Pass6CoordinatesList` (`tessellated_item_id_map`) and Pass 1-5
     /// geometry (`geometric_link`).
     Pass6ComplexTriangulatedFace,
+    /// `TESSELLATED_GEOMETRIC_SET` (phase tessellated-item-ref) — depends on
+    /// `Pass6ComplexTriangulatedFace` for the face / surface-set / curve-set
+    /// id maps `resolve_tessellated_item_ref` walks for `children`.
+    Pass6TessellatedGeometricSet,
 
     // ----- Plan 7 (Pass 4-4B + Pass 7 visualization + Pass 8 property/PMI) -----
     /// `OFFSET_SURFACE` (Pass 4-4B) — fixpoint dispatch. Dispatched via

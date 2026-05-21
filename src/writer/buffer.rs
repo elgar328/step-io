@@ -80,6 +80,12 @@ pub(crate) struct WriteBuffer<'m> {
     /// `COMPLEX_TRIANGULATED_FACE` loop so each face resolves its
     /// `coordinates` ref.
     pub(crate) tessellated_item_step_ids: Vec<u64>,
+    /// Emitted `COMPLEX_TRIANGULATED_FACE` / `COMPLEX_TRIANGULATED_SURFACE_SET`
+    /// step ids, indexed by `TessellatedFaceId.0` / `TessellatedSurfaceSetId.0`.
+    /// Populated by `emit_tessellation` so a `TESSELLATED_GEOMETRIC_SET`
+    /// child resolves through `emit_tessellated_item_ref`.
+    pub(crate) tessellated_face_step_ids: Vec<u64>,
+    pub(crate) tessellated_surface_set_step_ids: Vec<u64>,
     /// STEP entity id of every emitted `NAMED_UNIT` complex from
     /// [`crate::ir::UnitsPool::named_units`], indexed by `NamedUnitId.0`.
     /// Populated by `emit_units_pool_if_set` before GUAC + MWU + DUE emit,
@@ -288,6 +294,8 @@ impl<'m> WriteBuffer<'m> {
             representation_step_ids: Vec::new(),
             representation_map_step_ids: Vec::new(),
             tessellated_item_step_ids: Vec::new(),
+            tessellated_face_step_ids: Vec::new(),
+            tessellated_surface_set_step_ids: Vec::new(),
             unit_leaf_ids: Vec::new(),
             named_unit_step_ids: Vec::new(),
             mwu_step_ids: Vec::new(),

@@ -257,6 +257,7 @@ impl ReaderContext {
         // Two passes: a CTF's `#N` may precede its COORDINATES_LIST.
         self.dispatch_registry(graph, PassLevel::Pass6CoordinatesList);
         self.dispatch_registry(graph, PassLevel::Pass6ComplexTriangulatedFace);
+        self.dispatch_registry(graph, PassLevel::Pass6TessellatedGeometricSet);
 
         // Pass 6-8: NEXT_ASSEMBLY_USAGE_OCCURRENCE — push Instances into
         // parent products' Group content.

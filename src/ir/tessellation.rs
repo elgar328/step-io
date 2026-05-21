@@ -5,15 +5,42 @@
 //! domain; later tessellation entities (tessellated solid / shell /
 //! surface-set, ...) extend this module.
 
-use super::id::TessellatedItemId;
+use super::id::{TessellatedFaceId, TessellatedItemId, TessellatedSurfaceSetId};
 use super::representation_item::RepresentationItemRef;
 
-/// `tessellated_item` `enum_base`. `CoordinatesList` and `TessellatedCurveSet`
-/// are modelled; the tessellated solid / shell siblings are deferred.
+/// `tessellated_item` `enum_base`. `CoordinatesList`, `TessellatedCurveSet`
+/// and `TessellatedGeometricSet` are modelled; the tessellated solid / shell
+/// siblings are deferred.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TessellatedItem {
     CoordinatesList(CoordinatesList),
     TessellatedCurveSet(TessellatedCurveSet),
+    TessellatedGeometricSet(TessellatedGeometricSet),
+}
+
+/// Unified reference to a STEP `tessellated_item` — an abstract supertype
+/// step-io splits across three arenas. Each variant wraps the id of an
+/// existing tessellation arena entry. New variants are added additively as
+/// consumers require them.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum TessellatedItemRef {
+    /// `tessellated_items` arena (`COORDINATES_LIST` / `TESSELLATED_CURVE_SET`
+    /// / `TESSELLATED_GEOMETRIC_SET`).
+    Item(TessellatedItemId),
+    /// `tessellated_faces` arena (`COMPLEX_TRIANGULATED_FACE`).
+    Face(TessellatedFaceId),
+    /// `tessellated_surface_sets` arena (`COMPLEX_TRIANGULATED_SURFACE_SET`).
+    SurfaceSet(TessellatedSurfaceSetId),
+}
+
+/// `TESSELLATED_GEOMETRIC_SET(name, children)` — an aggregate of
+/// tessellated items. A `tessellated_item` enum member. Children that do
+/// not resolve are dropped from the set, symmetric on re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TessellatedGeometricSet {
+    pub name: String,
+    /// `set_ref_tessellated_item`.
+    pub children: Vec<TessellatedItemRef>,
 }
 
 /// `COORDINATES_LIST(name, npoints, position_coords)` — a shared pool of

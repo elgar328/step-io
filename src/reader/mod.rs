@@ -403,12 +403,17 @@ pub struct ReaderContext {
     /// handler resolve its `coordinates` ref.
     pub(crate) tessellated_items: crate::ir::Arena<crate::ir::tessellation::TessellatedItem>,
     pub(crate) tessellated_item_id_map: HashMap<u64, crate::ir::TessellatedItemId>,
-    /// `COMPLEX_TRIANGULATED_FACE` arena (phase tessellation) — orphan.
+    /// `COMPLEX_TRIANGULATED_FACE` arena (phase tessellation).
     pub(crate) tessellated_faces:
         crate::ir::Arena<crate::ir::tessellation::ComplexTriangulatedFace>,
-    /// `COMPLEX_TRIANGULATED_SURFACE_SET` arena (phase tessellation-2) — orphan.
+    /// `COMPLEX_TRIANGULATED_SURFACE_SET` arena (phase tessellation-2).
     pub(crate) tessellated_surface_sets:
         crate::ir::Arena<crate::ir::tessellation::ComplexTriangulatedSurfaceSet>,
+    /// `#N → TessellatedFaceId` / `#N → TessellatedSurfaceSetId` (phase
+    /// tessellated-item-ref). Let `resolve_tessellated_item_ref` resolve a
+    /// `set_ref_tessellated_item` member into a [`crate::ir::TessellatedItemRef`].
+    pub(crate) tessellated_face_id_map: HashMap<u64, crate::ir::TessellatedFaceId>,
+    pub(crate) tessellated_surface_set_id_map: HashMap<u64, crate::ir::TessellatedSurfaceSetId>,
 
     /// Lazily-built plm pool — populated by the Pass 9 plm reader chain
     /// (`CalendarDate` / `LocalTime` / UTC / `DateAndTime` / `DateTimeRole`
