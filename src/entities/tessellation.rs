@@ -16,7 +16,8 @@ use crate::ir::attr::{
 use crate::ir::error::ConvertError;
 use crate::ir::tessellation::{
     ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, CoordinatesList, TessellatedCurveSet,
-    TessellatedGeometricSet, TessellatedItem, TessellatedItemRef,
+    TessellatedGeometricSet, TessellatedItem, TessellatedItemRef, TessellatedShell,
+    TessellatedSolid,
 };
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -289,6 +290,117 @@ impl SimpleEntityHandler for TessellatedGeometricSetHandler {
         Ok(buf.push_simple(
             "TESSELLATED_GEOMETRIC_SET",
             vec![Attribute::String(tgs.name), Attribute::List(children)],
+        ))
+    }
+}
+
+pub(crate) struct TessellatedSolidHandler;
+
+#[step_entity(name = "TESSELLATED_SOLID", pass = Pass6TessellatedGeometricSet)]
+impl SimpleEntityHandler for TessellatedSolidHandler {
+    type WriteInput = TessellatedSolid;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 3, entity_id, "TESSELLATED_SOLID")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let item_refs = read_entity_ref_list(attrs, 1, entity_id, "items")?;
+        let geometric_link_ref = read_optional_entity_ref(attrs, 2, entity_id, "geometric_link")?;
+
+        let items: Vec<TessellatedItemRef> = item_refs
+            .iter()
+            .filter_map(|&r| resolve_tessellated_item_ref(ctx, r))
+            .collect();
+        let geometric_link = geometric_link_ref.and_then(|r| ctx.solid_map.get(&r).copied());
+
+        let id = ctx
+            .tessellated_items
+            .push(TessellatedItem::TessellatedSolid(TessellatedSolid {
+                name,
+                items,
+                geometric_link,
+            }));
+        ctx.tessellated_item_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, ts: TessellatedSolid) -> Result<u64, WriteError> {
+        let items: Vec<Attribute> = ts
+            .items
+            .iter()
+            .map(|&r| Attribute::EntityRef(buf.emit_tessellated_item_ref(r)))
+            .collect();
+        let geometric_link = match ts.geometric_link {
+            Some(id) => Attribute::EntityRef(buf.emit_solid(id)?),
+            None => Attribute::Unset,
+        };
+        Ok(buf.push_simple(
+            "TESSELLATED_SOLID",
+            vec![
+                Attribute::String(ts.name),
+                Attribute::List(items),
+                geometric_link,
+            ],
+        ))
+    }
+}
+
+pub(crate) struct TessellatedShellHandler;
+
+#[step_entity(name = "TESSELLATED_SHELL", pass = Pass6TessellatedGeometricSet)]
+impl SimpleEntityHandler for TessellatedShellHandler {
+    type WriteInput = TessellatedShell;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 3, entity_id, "TESSELLATED_SHELL")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let item_refs = read_entity_ref_list(attrs, 1, entity_id, "items")?;
+        let topological_link_ref =
+            read_optional_entity_ref(attrs, 2, entity_id, "topological_link")?;
+
+        let items: Vec<TessellatedItemRef> = item_refs
+            .iter()
+            .filter_map(|&r| resolve_tessellated_item_ref(ctx, r))
+            .collect();
+        let topological_link = topological_link_ref.and_then(|r| ctx.shell_map.get(&r).copied());
+
+        let id = ctx
+            .tessellated_items
+            .push(TessellatedItem::TessellatedShell(TessellatedShell {
+                name,
+                items,
+                topological_link,
+            }));
+        ctx.tessellated_item_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, ts: TessellatedShell) -> Result<u64, WriteError> {
+        let items: Vec<Attribute> = ts
+            .items
+            .iter()
+            .map(|&r| Attribute::EntityRef(buf.emit_tessellated_item_ref(r)))
+            .collect();
+        let topological_link = match ts.topological_link {
+            Some(id) => Attribute::EntityRef(buf.emit_shell(id)?),
+            None => Attribute::Unset,
+        };
+        Ok(buf.push_simple(
+            "TESSELLATED_SHELL",
+            vec![
+                Attribute::String(ts.name),
+                Attribute::List(items),
+                topological_link,
+            ],
         ))
     }
 }

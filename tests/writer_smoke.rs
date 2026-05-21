@@ -2299,15 +2299,17 @@ fn tessellation_2_round_trip() {
     assert_eq!(re.tessellated_items.len(), 2);
     assert_eq!(re.tessellated_surface_sets.len(), 1);
 
-    let curve_set =
-        re.tessellated_items
-            .iter()
-            .find_map(|item| match item {
-                TessellatedItem::TessellatedCurveSet(t) => Some(t),
-                TessellatedItem::CoordinatesList(_)
-                | TessellatedItem::TessellatedGeometricSet(_) => None,
-            })
-            .expect("curve set");
+    let curve_set = re
+        .tessellated_items
+        .iter()
+        .find_map(|item| match item {
+            TessellatedItem::TessellatedCurveSet(t) => Some(t),
+            TessellatedItem::CoordinatesList(_)
+            | TessellatedItem::TessellatedGeometricSet(_)
+            | TessellatedItem::TessellatedSolid(_)
+            | TessellatedItem::TessellatedShell(_) => None,
+        })
+        .expect("curve set");
     assert_eq!(curve_set.name, "curves");
     assert_eq!(curve_set.line_strips, vec![vec![1, 2], vec![3, 4, 1]]);
 
@@ -2399,4 +2401,87 @@ fn tessellated_geometric_set_round_trip() {
         gset.children[2],
         TessellatedItemRef::SurfaceSet(_)
     ));
+}
+
+#[test]
+fn tessellated_solid_shell_round_trip() {
+    // TESSELLATED_SOLID + TESSELLATED_SHELL — items reference structured
+    // tessellated items (face / surface set) via TessellatedItemRef.
+    use step_io::ir::tessellation::{
+        ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, CoordinatesList, TessellatedItem,
+        TessellatedItemRef, TessellatedShell, TessellatedSolid,
+    };
+    let mut model = empty_model();
+    let coords = model
+        .tessellated_items
+        .push(TessellatedItem::CoordinatesList(CoordinatesList {
+            name: "pts".into(),
+            npoints: 3,
+            position_coords: vec![
+                vec![0.0, 0.0, 0.0],
+                vec![1.0, 0.0, 0.0],
+                vec![0.0, 1.0, 0.0],
+            ],
+        }));
+    let face = model.tessellated_faces.push(ComplexTriangulatedFace {
+        name: "f".into(),
+        coordinates: coords,
+        pnmax: 3,
+        normals: vec![vec![0.0, 0.0, 1.0]],
+        geometric_link: None,
+        pnindex: vec![1, 2, 3],
+        triangle_strips: vec![vec![1, 2, 3]],
+        triangle_fans: vec![],
+    });
+    let ss = model
+        .tessellated_surface_sets
+        .push(ComplexTriangulatedSurfaceSet {
+            name: "ss".into(),
+            coordinates: coords,
+            pnmax: 3,
+            normals: vec![vec![0.0, 0.0, 1.0]],
+            pnindex: vec![1, 2, 3],
+            triangle_strips: vec![vec![1, 2, 3]],
+            triangle_fans: vec![],
+        });
+    model
+        .tessellated_items
+        .push(TessellatedItem::TessellatedSolid(TessellatedSolid {
+            name: "solid".into(),
+            items: vec![
+                TessellatedItemRef::Face(face),
+                TessellatedItemRef::SurfaceSet(ss),
+            ],
+            geometric_link: None,
+        }));
+    model
+        .tessellated_items
+        .push(TessellatedItem::TessellatedShell(TessellatedShell {
+            name: "shell".into(),
+            items: vec![TessellatedItemRef::Face(face)],
+            topological_link: None,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let solid = re
+        .tessellated_items
+        .iter()
+        .find_map(|i| match i {
+            TessellatedItem::TessellatedSolid(s) => Some(s),
+            _ => None,
+        })
+        .expect("solid round-trips");
+    assert_eq!(solid.name, "solid");
+    assert_eq!(solid.items.len(), 2);
+    let shell = re
+        .tessellated_items
+        .iter()
+        .find_map(|i| match i {
+            TessellatedItem::TessellatedShell(s) => Some(s),
+            _ => None,
+        })
+        .expect("shell round-trips");
+    assert_eq!(shell.name, "shell");
+    assert_eq!(shell.items.len(), 1);
 }

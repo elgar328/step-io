@@ -13,7 +13,8 @@ use super::WriteBuffer;
 use crate::entities::SimpleEntityHandler;
 use crate::entities::tessellation::{
     ComplexTriangulatedFaceHandler, ComplexTriangulatedSurfaceSetHandler, CoordinatesListHandler,
-    TessellatedCurveSetHandler, TessellatedGeometricSetHandler,
+    TessellatedCurveSetHandler, TessellatedGeometricSetHandler, TessellatedShellHandler,
+    TessellatedSolidHandler,
 };
 use crate::ir::tessellation::{TessellatedItem, TessellatedItemRef};
 use crate::writer::WriteError;
@@ -34,7 +35,9 @@ impl WriteBuffer<'_> {
                     self.tessellated_item_step_ids[idx] =
                         TessellatedCurveSetHandler::write(self, t.clone())?;
                 }
-                TessellatedItem::TessellatedGeometricSet(_) => {}
+                TessellatedItem::TessellatedGeometricSet(_)
+                | TessellatedItem::TessellatedSolid(_)
+                | TessellatedItem::TessellatedShell(_) => {}
             }
         }
         // Pass 2: faces + surface-sets — geometric sets reference these.
@@ -55,11 +58,22 @@ impl WriteBuffer<'_> {
             self.tessellated_surface_set_step_ids[idx] =
                 ComplexTriangulatedSurfaceSetHandler::write(self, set)?;
         }
-        // Pass 3: composite items — `children` resolve through passes 1-2.
+        // Pass 3: composite items — their refs resolve through passes 1-2.
         for (idx, item) in items.iter().enumerate() {
-            if let TessellatedItem::TessellatedGeometricSet(g) = item {
-                self.tessellated_item_step_ids[idx] =
-                    TessellatedGeometricSetHandler::write(self, g.clone())?;
+            match item {
+                TessellatedItem::TessellatedGeometricSet(g) => {
+                    self.tessellated_item_step_ids[idx] =
+                        TessellatedGeometricSetHandler::write(self, g.clone())?;
+                }
+                TessellatedItem::TessellatedSolid(s) => {
+                    self.tessellated_item_step_ids[idx] =
+                        TessellatedSolidHandler::write(self, s.clone())?;
+                }
+                TessellatedItem::TessellatedShell(s) => {
+                    self.tessellated_item_step_ids[idx] =
+                        TessellatedShellHandler::write(self, s.clone())?;
+                }
+                TessellatedItem::CoordinatesList(_) | TessellatedItem::TessellatedCurveSet(_) => {}
             }
         }
         Ok(())

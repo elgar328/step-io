@@ -105,7 +105,8 @@ pub use shape_rep::{
 };
 pub use tessellation::{
     ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, CoordinatesList, TessellatedCurveSet,
-    TessellatedGeometricSet, TessellatedItem, TessellatedItemRef,
+    TessellatedGeometricSet, TessellatedItem, TessellatedItemRef, TessellatedShell,
+    TessellatedSolid,
 };
 pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Wire};
 pub use units::{

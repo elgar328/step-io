@@ -5,17 +5,18 @@
 //! domain; later tessellation entities (tessellated solid / shell /
 //! surface-set, ...) extend this module.
 
-use super::id::{TessellatedFaceId, TessellatedItemId, TessellatedSurfaceSetId};
+use super::id::{ShellId, SolidId, TessellatedFaceId, TessellatedItemId, TessellatedSurfaceSetId};
 use super::representation_item::RepresentationItemRef;
 
-/// `tessellated_item` `enum_base`. `CoordinatesList`, `TessellatedCurveSet`
-/// and `TessellatedGeometricSet` are modelled; the tessellated solid / shell
-/// siblings are deferred.
+/// `tessellated_item` `enum_base`. All AP242 tessellated-geometry subtypes
+/// step-io models are variants here.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TessellatedItem {
     CoordinatesList(CoordinatesList),
     TessellatedCurveSet(TessellatedCurveSet),
     TessellatedGeometricSet(TessellatedGeometricSet),
+    TessellatedSolid(TessellatedSolid),
+    TessellatedShell(TessellatedShell),
 }
 
 /// Unified reference to a STEP `tessellated_item` — an abstract supertype
@@ -41,6 +42,30 @@ pub struct TessellatedGeometricSet {
     pub name: String,
     /// `set_ref_tessellated_item`.
     pub children: Vec<TessellatedItemRef>,
+}
+
+/// `TESSELLATED_SOLID(name, items, geometric_link)` — a tessellated solid
+/// volume. `items` are tessellated structured items (faces / surface sets);
+/// `geometric_link` optionally points at the exact `MANIFOLD_SOLID_BREP`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TessellatedSolid {
+    pub name: String,
+    /// `set_ref_tessellated_structured_item`.
+    pub items: Vec<TessellatedItemRef>,
+    /// `opt_ref_manifold_solid_brep` — resolved to a solid.
+    pub geometric_link: Option<SolidId>,
+}
+
+/// `TESSELLATED_SHELL(name, items, topological_link)` — a tessellated
+/// shell. `topological_link` optionally points at the exact
+/// `CONNECTED_FACE_SET`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TessellatedShell {
+    pub name: String,
+    /// `set_ref_tessellated_structured_item`.
+    pub items: Vec<TessellatedItemRef>,
+    /// `opt_ref_connected_face_set` — resolved to a shell.
+    pub topological_link: Option<ShellId>,
 }
 
 /// `COORDINATES_LIST(name, npoints, position_coords)` — a shared pool of
