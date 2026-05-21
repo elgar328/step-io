@@ -301,6 +301,10 @@ pub struct AllAroundShapeAspect {
 pub enum ShapeAspectRelationshipKind {
     /// Plain `SHAPE_ASPECT_RELATIONSHIP`.
     Plain,
+    /// `SHAPE_ASPECT_ASSOCIATIVITY`.
+    Associativity,
+    /// `SHAPE_ASPECT_DERIVING_RELATIONSHIP`.
+    DerivingRelationship,
 }
 
 /// `SHAPE_ASPECT_RELATIONSHIP(name, description, relating_shape_aspect,

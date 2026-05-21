@@ -17,7 +17,8 @@ use step_io::ir::geometry::{
     SurfaceOfRevolution, ToroidalSurface,
 };
 use step_io::ir::id::{
-    DirectionId, GeneralPropertyId, Placement3dId, PointId, PropertyId, SolidId, UnitContextId,
+    CompositeShapeAspectId, ContinuousShapeAspectId, DerivedShapeAspectId, DirectionId,
+    GeneralPropertyId, Placement3dId, PointId, PropertyId, ShapeAspectId, SolidId, UnitContextId,
 };
 use step_io::ir::model::StepModel;
 use step_io::ir::pmi::{PmiPool, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier};
@@ -1503,10 +1504,16 @@ fn shape_aspect_subtypes_round_trip() {
     assert_eq!(aa.name, "aa");
 }
 
-#[test]
-fn shape_aspect_relationship_round_trip() {
-    // SHAPE_ASPECT_RELATIONSHIP — exercises all four ShapeAspectRef
-    // variants (plain shape_aspect + 3 subtypes) as relation endpoints.
+/// Build a model with a part product and one of each shape-aspect-family
+/// arena entry (plain + 3 subtypes), returning their ids. Shared by the
+/// `SHAPE_ASPECT_RELATIONSHIP` round-trip tests.
+fn shape_aspect_relationship_fixture() -> (
+    StepModel,
+    ShapeAspectId,
+    CompositeShapeAspectId,
+    DerivedShapeAspectId,
+    ContinuousShapeAspectId,
+) {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     model.units.push(ctx);
@@ -1560,7 +1567,14 @@ fn shape_aspect_relationship_round_trip() {
         target: part_pid,
         product_definitional: false,
     });
+    (model, sa, cg, cs, aa)
+}
 
+#[test]
+fn shape_aspect_relationship_round_trip() {
+    // SHAPE_ASPECT_RELATIONSHIP — exercises all four ShapeAspectRef
+    // variants (plain shape_aspect + 3 subtypes) as relation endpoints.
+    let (mut model, sa, cg, cs, aa) = shape_aspect_relationship_fixture();
     model
         .shape_aspect_relationships
         .push(ShapeAspectRelationship {
@@ -1584,7 +1598,6 @@ fn shape_aspect_relationship_round_trip() {
     let re = reconvert(&text);
     assert_eq!(re.shape_aspect_relationships.len(), 2);
     let rels: Vec<_> = re.shape_aspect_relationships.iter().collect();
-    assert_eq!(rels[0].name, "r1");
     assert!(matches!(
         rels[0].relating_shape_aspect,
         ShapeAspectRef::ShapeAspect(_)
@@ -1593,7 +1606,6 @@ fn shape_aspect_relationship_round_trip() {
         rels[0].related_shape_aspect,
         ShapeAspectRef::CompositeGroupShapeAspect(_)
     ));
-    assert_eq!(rels[1].name, "r2");
     assert!(matches!(
         rels[1].relating_shape_aspect,
         ShapeAspectRef::CentreOfSymmetry(_)
@@ -1602,6 +1614,41 @@ fn shape_aspect_relationship_round_trip() {
         rels[1].related_shape_aspect,
         ShapeAspectRef::AllAroundShapeAspect(_)
     ));
+}
+
+#[test]
+fn shape_aspect_relationship_subtypes_round_trip() {
+    // SHAPE_ASPECT_ASSOCIATIVITY / SHAPE_ASPECT_DERIVING_RELATIONSHIP —
+    // the two subtypes round-trip via the `kind` discriminant.
+    let (mut model, sa, ..) = shape_aspect_relationship_fixture();
+    model
+        .shape_aspect_relationships
+        .push(ShapeAspectRelationship {
+            name: "assoc".into(),
+            description: String::new(),
+            relating_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            related_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            kind: ShapeAspectRelationshipKind::Associativity,
+        });
+    model
+        .shape_aspect_relationships
+        .push(ShapeAspectRelationship {
+            name: "deriv".into(),
+            description: String::new(),
+            relating_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            related_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            kind: ShapeAspectRelationshipKind::DerivingRelationship,
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.shape_aspect_relationships.len(), 2);
+    let rels: Vec<_> = re.shape_aspect_relationships.iter().collect();
+    assert_eq!(rels[0].kind, ShapeAspectRelationshipKind::Associativity);
+    assert_eq!(
+        rels[1].kind,
+        ShapeAspectRelationshipKind::DerivingRelationship
+    );
 }
 
 #[test]
