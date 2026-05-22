@@ -2227,6 +2227,117 @@ fn datum_feature_round_trip() {
 }
 
 #[test]
+fn geometric_tolerance_form_tolerances_round_trip() {
+    // FLATNESS / STRAIGHTNESS / ROUNDNESS / CYLINDRICITY_TOLERANCE — the four
+    // datum-free form tolerances, covering both ToleranceMagnitude variants:
+    // a units-pool MEASURE_WITH_UNIT ref and an inline MEASURE_REPRESENTATION_ITEM.
+    use step_io::ir::pmi::{GeometricTolerance, GeometricToleranceData, ToleranceMagnitude};
+    use step_io::ir::property::{MeasureKind, PropertyMeasure, PropertyMeasureUnit};
+    use step_io::ir::units::MeasureWithUnit;
+
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length_unit = ctx.length;
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        content: ProductContent::Solid(SolidContent {
+            ids: vec![solid_id],
+        }),
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let sa = model.shape_aspects.push(ShapeAspect {
+        name: "sa".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+
+    // A units-pool MEASURE_WITH_UNIT for the `MeasureWithUnit` magnitude.
+    let mwu = model
+        .units_pool
+        .as_mut()
+        .expect("units pool seeded by mm_radian_steradian")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
+            value: 0.05,
+            unit: length_unit,
+        });
+
+    let data = |magnitude| GeometricToleranceData {
+        name: "t".into(),
+        description: String::new(),
+        magnitude,
+        toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+    };
+    let measure = || {
+        ToleranceMagnitude::Measure(PropertyMeasure {
+            name: String::new(),
+            kind: MeasureKind::Length,
+            value: 0.1,
+            unit_ref: Some(PropertyMeasureUnit::Named(length_unit)),
+        })
+    };
+
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    pmi.geometric_tolerances
+        .push(GeometricTolerance::Flatness(data(
+            ToleranceMagnitude::MeasureWithUnit(mwu),
+        )));
+    pmi.geometric_tolerances
+        .push(GeometricTolerance::Straightness(data(measure())));
+    pmi.geometric_tolerances
+        .push(GeometricTolerance::Roundness(data(
+            ToleranceMagnitude::MeasureWithUnit(mwu),
+        )));
+    pmi.geometric_tolerances
+        .push(GeometricTolerance::Cylindricity(data(measure())));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    let gts: Vec<_> = re_pmi.geometric_tolerances.iter().collect();
+    assert_eq!(gts.len(), 4);
+    assert!(matches!(gts[0], GeometricTolerance::Flatness(_)));
+    assert!(matches!(gts[1], GeometricTolerance::Straightness(_)));
+    assert!(matches!(gts[2], GeometricTolerance::Roundness(_)));
+    assert!(matches!(gts[3], GeometricTolerance::Cylindricity(_)));
+
+    let GeometricTolerance::Flatness(d0) = gts[0] else {
+        unreachable!()
+    };
+    assert!(matches!(
+        d0.magnitude,
+        ToleranceMagnitude::MeasureWithUnit(_)
+    ));
+    assert!(matches!(
+        d0.toleranced_shape_aspect,
+        ShapeAspectRef::ShapeAspect(_)
+    ));
+    let GeometricTolerance::Straightness(d1) = gts[1] else {
+        unreachable!()
+    };
+    assert!(matches!(d1.magnitude, ToleranceMagnitude::Measure(_)));
+}
+
+#[test]
 fn draughting_pre_defined_text_font_round_trip() {
     // DRAUGHTING_PRE_DEFINED_TEXT_FONT — a pmi-pool 1-string leaf primitive.
     use step_io::ir::pmi::DraughtingPreDefinedTextFont;

@@ -383,6 +383,11 @@ pub(crate) enum PassLevel {
     /// `MEASURE_REPRESENTATION_ITEM` (Pass 8-1) — depends on Pass 0
     /// (unit ctx).
     Pass8Measure,
+    /// `geometric_tolerance` form tolerances (Pass 8-1b) — depend on
+    /// `Pass8Measure` (`measure_item_map`), `Pass0MwuDue` (`mwu_id_map`)
+    /// and `Pass8ShapeAspect` (shape-aspect id maps) for resolving
+    /// `magnitude` and `toleranced_shape_aspect`.
+    Pass8GeometricTolerance,
     /// `PROPERTY_DEFINITION` (Pass 8-2) — depends on Pass 6 (`pdef_to_product`)
     /// for resolving the PD's target.
     Pass8PropertyDef,

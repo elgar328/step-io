@@ -17,8 +17,9 @@ use crate::ir::error::ConvertError;
 use crate::ir::pmi::{
     AngleSelection, AngularLocationData, AnnotationOccurrence, AnnotationPlane, Datum,
     DatumFeature, DimensionalLocation, DimensionalLocationData, DimensionalSize,
-    DimensionalSizeKind, DraughtingPreDefinedTextFont, TessellatedAnnotationOccurrence,
-    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
+    DimensionalSizeKind, DraughtingPreDefinedTextFont, GeometricTolerance, GeometricToleranceData,
+    TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceZoneForm, TypeQualifier,
+    ValueFormatTypeQualifier,
 };
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -692,5 +693,193 @@ impl SimpleEntityHandler for AngularLocationHandler {
 
     fn write(buf: &mut WriteBuffer, dl: DimensionalLocation) -> Result<u64, WriteError> {
         Ok(write_dimensional_location(buf, dl))
+    }
+}
+
+/// Resolve a `geometric_tolerance.magnitude` ref (`ref_measure_with_unit`).
+/// A plain `*_MEASURE_WITH_UNIT` resolves through `mwu_id_map` (units pool);
+/// a `MEASURE_REPRESENTATION_ITEM` (simple or complex) through
+/// `measure_item_map`. `None` when the ref resolves to neither.
+fn resolve_tolerance_magnitude(ctx: &ReaderContext, item_ref: u64) -> Option<ToleranceMagnitude> {
+    if let Some(&id) = ctx.mwu_id_map.get(&item_ref) {
+        return Some(ToleranceMagnitude::MeasureWithUnit(id));
+    }
+    ctx.measure_item_map
+        .get(&item_ref)
+        .cloned()
+        .map(ToleranceMagnitude::Measure)
+}
+
+/// Read the shared `geometric_tolerance` 4-attr form-tolerance body.
+/// `Ok(None)` when `magnitude` or `toleranced_shape_aspect` does not
+/// resolve — the tolerance is dropped, symmetric on re-read.
+fn read_geometric_tolerance_data(
+    ctx: &ReaderContext,
+    entity_id: u64,
+    attrs: &[Attribute],
+    entity_name: &'static str,
+) -> Result<Option<GeometricToleranceData>, ConvertError> {
+    check_count(attrs, 4, entity_id, entity_name)?;
+    let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
+    let magnitude_ref = read_entity_ref(attrs, 2, entity_id, "magnitude")?;
+    let shape_aspect_ref = read_entity_ref(attrs, 3, entity_id, "toleranced_shape_aspect")?;
+
+    let Some(magnitude) = resolve_tolerance_magnitude(ctx, magnitude_ref) else {
+        return Ok(None);
+    };
+    let Some(toleranced_shape_aspect) = resolve_shape_aspect_ref(ctx, shape_aspect_ref) else {
+        return Ok(None);
+    };
+    Ok(Some(GeometricToleranceData {
+        name,
+        description,
+        magnitude,
+        toleranced_shape_aspect,
+    }))
+}
+
+/// Emit a `GeometricTolerance` under the STEP entity name its variant
+/// selects, returning the STEP id. Shared by all four form-tolerance
+/// handlers and by `emit_geometric_tolerances`.
+pub(crate) fn write_geometric_tolerance(buf: &mut WriteBuffer, gt: GeometricTolerance) -> u64 {
+    let (entity_name, data) = match gt {
+        GeometricTolerance::Flatness(d) => ("FLATNESS_TOLERANCE", d),
+        GeometricTolerance::Straightness(d) => ("STRAIGHTNESS_TOLERANCE", d),
+        GeometricTolerance::Roundness(d) => ("ROUNDNESS_TOLERANCE", d),
+        GeometricTolerance::Cylindricity(d) => ("CYLINDRICITY_TOLERANCE", d),
+    };
+    // A `MeasureWithUnit` magnitude is already emitted by the units pass —
+    // reference its cached step id. A `Measure` magnitude has no arena entry;
+    // emit the (simple) MRI inline here.
+    let magnitude = match data.magnitude {
+        ToleranceMagnitude::MeasureWithUnit(id) => buf.mwu_step_ids[id.0 as usize],
+        ToleranceMagnitude::Measure(m) => buf.emit_property_measure(&m, None),
+    };
+    let shape_aspect = buf.emit_shape_aspect_ref(data.toleranced_shape_aspect);
+    buf.push_simple(
+        entity_name,
+        vec![
+            Attribute::String(data.name),
+            Attribute::String(data.description),
+            Attribute::EntityRef(magnitude),
+            Attribute::EntityRef(shape_aspect),
+        ],
+    )
+}
+
+pub(crate) struct FlatnessToleranceHandler;
+
+#[step_entity(name = "FLATNESS_TOLERANCE", pass = Pass8GeometricTolerance)]
+impl SimpleEntityHandler for FlatnessToleranceHandler {
+    type WriteInput = GeometricTolerance;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let Some(data) =
+            read_geometric_tolerance_data(ctx, entity_id, attrs, "FLATNESS_TOLERANCE")?
+        else {
+            return Ok(());
+        };
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .geometric_tolerances
+            .push(GeometricTolerance::Flatness(data));
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, gt: GeometricTolerance) -> Result<u64, WriteError> {
+        Ok(write_geometric_tolerance(buf, gt))
+    }
+}
+
+pub(crate) struct StraightnessToleranceHandler;
+
+#[step_entity(name = "STRAIGHTNESS_TOLERANCE", pass = Pass8GeometricTolerance)]
+impl SimpleEntityHandler for StraightnessToleranceHandler {
+    type WriteInput = GeometricTolerance;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let Some(data) =
+            read_geometric_tolerance_data(ctx, entity_id, attrs, "STRAIGHTNESS_TOLERANCE")?
+        else {
+            return Ok(());
+        };
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .geometric_tolerances
+            .push(GeometricTolerance::Straightness(data));
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, gt: GeometricTolerance) -> Result<u64, WriteError> {
+        Ok(write_geometric_tolerance(buf, gt))
+    }
+}
+
+pub(crate) struct RoundnessToleranceHandler;
+
+#[step_entity(name = "ROUNDNESS_TOLERANCE", pass = Pass8GeometricTolerance)]
+impl SimpleEntityHandler for RoundnessToleranceHandler {
+    type WriteInput = GeometricTolerance;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let Some(data) =
+            read_geometric_tolerance_data(ctx, entity_id, attrs, "ROUNDNESS_TOLERANCE")?
+        else {
+            return Ok(());
+        };
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .geometric_tolerances
+            .push(GeometricTolerance::Roundness(data));
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, gt: GeometricTolerance) -> Result<u64, WriteError> {
+        Ok(write_geometric_tolerance(buf, gt))
+    }
+}
+
+pub(crate) struct CylindricityToleranceHandler;
+
+#[step_entity(name = "CYLINDRICITY_TOLERANCE", pass = Pass8GeometricTolerance)]
+impl SimpleEntityHandler for CylindricityToleranceHandler {
+    type WriteInput = GeometricTolerance;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let Some(data) =
+            read_geometric_tolerance_data(ctx, entity_id, attrs, "CYLINDRICITY_TOLERANCE")?
+        else {
+            return Ok(());
+        };
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .geometric_tolerances
+            .push(GeometricTolerance::Cylindricity(data));
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, gt: GeometricTolerance) -> Result<u64, WriteError> {
+        Ok(write_geometric_tolerance(buf, gt))
     }
 }

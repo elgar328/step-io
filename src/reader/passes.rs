@@ -367,6 +367,10 @@ impl ReaderContext {
         // Depends on Pass 0 (unit ctx) and Pass 6 (`pdef_to_product` for
         // resolving the PD's target).
         self.dispatch_registry(graph, PassLevel::Pass8Measure);
+        // geometric_tolerance form tolerances — resolve `magnitude` through
+        // `mwu_id_map` / `measure_item_map` and `toleranced_shape_aspect`
+        // through the shape-aspect id maps Pass8ShapeAspect filled.
+        self.dispatch_registry(graph, PassLevel::Pass8GeometricTolerance);
         self.dispatch_registry(graph, PassLevel::Pass8PropertyDef);
         // PDR walks the bound REPRESENTATION through `graph` because the
         // generic REPRESENTATION name conflicts with MDGPR / SR.

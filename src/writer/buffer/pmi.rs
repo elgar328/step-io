@@ -305,4 +305,18 @@ impl WriteBuffer<'_> {
         }
         Ok(())
     }
+
+    /// Emit the `pmi` pool's `geometric_tolerance` arena (form tolerances).
+    /// Runs after `emit_pmi_if_set` (shape-aspect step-id caches) and the
+    /// units pass (`mwu_step_ids`) so `write_geometric_tolerance` resolves
+    /// both `magnitude` and `toleranced_shape_aspect`.
+    pub(in crate::writer::buffer) fn emit_geometric_tolerances(&mut self) {
+        use crate::entities::pmi::write_geometric_tolerance;
+        let Some(pmi) = self.model.pmi.clone() else {
+            return;
+        };
+        for gt in pmi.geometric_tolerances.iter() {
+            write_geometric_tolerance(self, gt.clone());
+        }
+    }
 }

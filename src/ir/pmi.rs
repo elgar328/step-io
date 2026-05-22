@@ -7,7 +7,8 @@
 //! ir.toml blueprint puts them in the `shape_rep` pool.
 
 use super::arena::Arena;
-use super::id::{PresentationStyleAssignmentId, ProductId, TessellatedItemId};
+use super::id::{MeasureWithUnitId, PresentationStyleAssignmentId, ProductId, TessellatedItemId};
+use super::property::PropertyMeasure;
 use super::representation_item::RepresentationItemRef;
 use super::shape_aspect_ref::ShapeAspectRef;
 
@@ -34,6 +35,57 @@ pub struct PmiPool {
     pub dimensional_sizes: Arena<DimensionalSize>,
     /// `dimensional_location` `enum_base` arena. Phase dimensional-location.
     pub dimensional_locations: Arena<DimensionalLocation>,
+    /// `geometric_tolerance` `enum_base` arena. Phase geometric-tolerance
+    /// fills the datum-free form-tolerance variants.
+    pub geometric_tolerances: Arena<GeometricTolerance>,
+}
+
+/// `geometric_tolerance` `enum_base` — a GD&T tolerance applied to a shape
+/// aspect. This phase covers the four datum-free *form* tolerances
+/// (`FLATNESS` / `STRAIGHTNESS` / `ROUNDNESS` / `CYLINDRICITY`); they share
+/// the identical 4-attr body, so one [`GeometricToleranceData`] payload
+/// serves every variant. Datum-referencing tolerances arrive in a later
+/// phase as additional variants.
+#[derive(Debug, Clone, PartialEq)]
+pub enum GeometricTolerance {
+    /// `FLATNESS_TOLERANCE`.
+    Flatness(GeometricToleranceData),
+    /// `STRAIGHTNESS_TOLERANCE`.
+    Straightness(GeometricToleranceData),
+    /// `ROUNDNESS_TOLERANCE`.
+    Roundness(GeometricToleranceData),
+    /// `CYLINDRICITY_TOLERANCE`.
+    Cylindricity(GeometricToleranceData),
+}
+
+/// Shared 4-attr body of the form tolerances — inherited from
+/// `geometric_tolerance`. A tolerance whose `magnitude` or
+/// `toleranced_shape_aspect` does not resolve is silently dropped, symmetric
+/// on re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct GeometricToleranceData {
+    pub name: String,
+    pub description: String,
+    /// `magnitude` — a `ref_measure_with_unit`.
+    pub magnitude: ToleranceMagnitude,
+    /// `toleranced_shape_aspect` — a `ref_shape_aspect`.
+    pub toleranced_shape_aspect: ShapeAspectRef,
+}
+
+/// Resolved target of a `geometric_tolerance.magnitude` (`ref_measure_with_unit`).
+/// The reference is polymorphic in real files: a plain `*_MEASURE_WITH_UNIT`
+/// lives in the `units` pool and is emitted once there ([`MeasureWithUnit`]
+/// variant — the writer references its cached step id); a
+/// `MEASURE_REPRESENTATION_ITEM` (simple or complex) carries no arena entry
+/// of its own and is held inline as a [`PropertyMeasure`], re-emitted by the
+/// GD&T writer. Keeping the two cases distinct avoids double-emitting a
+/// units-pool `MEASURE_WITH_UNIT`.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ToleranceMagnitude {
+    /// A plain `*_MEASURE_WITH_UNIT` already held in the `units` pool.
+    MeasureWithUnit(MeasureWithUnitId),
+    /// A `MEASURE_REPRESENTATION_ITEM` value carried inline.
+    Measure(PropertyMeasure),
 }
 
 /// `dimensional_location` `enum_base` — a located dimension between two

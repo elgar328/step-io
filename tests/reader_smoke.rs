@@ -1693,3 +1693,34 @@ fn nist_property_def_datum_feature_pool() {
     assert_eq!(pmi.datum_features.len(), 4, "DATUM_FEATURE count");
     assert_eq!(pmi.datums.len(), 6, "DATUM count");
 }
+
+/// `geometric_tolerance` form tolerances read into the `pmi` pool. The NIST
+/// property fixture carries 3 `FLATNESS_TOLERANCE`, each with a plain
+/// `LENGTH_MEASURE_WITH_UNIT` magnitude and a `DATUM_FEATURE` target — both
+/// resolvable, so all three round-trip into the arena.
+#[test]
+fn nist_property_def_geometric_tolerances() {
+    use step_io::ir::pmi::{GeometricTolerance, ToleranceMagnitude};
+    let source = include_str!("fixtures/external_temp_nist_property_def.stp");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    let pmi = result
+        .model
+        .pmi
+        .as_ref()
+        .expect("fixture carries PMI content");
+    assert_eq!(
+        pmi.geometric_tolerances.len(),
+        3,
+        "FLATNESS_TOLERANCE count"
+    );
+    for gt in pmi.geometric_tolerances.iter() {
+        let GeometricTolerance::Flatness(data) = gt else {
+            panic!("expected Flatness variant, got {gt:?}");
+        };
+        assert!(
+            matches!(data.magnitude, ToleranceMagnitude::MeasureWithUnit(_)),
+            "NIST flatness magnitude is a plain LENGTH_MEASURE_WITH_UNIT"
+        );
+    }
+}
