@@ -380,6 +380,9 @@ impl ReaderContext {
         // geometric_tolerance_with_datum_reference — also needs the
         // datum_system id map Pass8DatumSystem filled.
         self.dispatch_registry(graph, PassLevel::Pass8GtWithDatumReference);
+        // TOLERANCE_ZONE — shape_aspect subtype resolving `defining_tolerance`
+        // through the two geometric_tolerance id maps just filled.
+        self.dispatch_registry(graph, PassLevel::Pass8ToleranceZone);
         // TOLERANCE_VALUE / LIMITS_AND_FITS, then PLUS_MINUS_TOLERANCE which
         // resolves `range` through the former and `toleranced_dimension`
         // through the Pass8Dimensional id maps.

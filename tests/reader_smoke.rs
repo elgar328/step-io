@@ -1768,6 +1768,30 @@ fn nist_property_def_datum_systems() {
     }
 }
 
+/// `TOLERANCE_ZONE` reads into its arena with `defining_tolerance` resolved
+/// across the two `geometric_tolerance` arenas and `form` to a
+/// `TOLERANCE_ZONE_FORM`. The NIST property fixture carries 7; one zone's
+/// sole defining tolerance points at a tolerance step-io drops, leaving its
+/// `defining_tolerance` empty (symmetric on re-read).
+#[test]
+fn nist_property_def_tolerance_zones() {
+    let source = include_str!("fixtures/external_temp_nist_property_def.stp");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    assert_eq!(
+        result.model.tolerance_zones.len(),
+        7,
+        "TOLERANCE_ZONE count"
+    );
+    let resolved = result
+        .model
+        .tolerance_zones
+        .iter()
+        .filter(|tz| !tz.defining_tolerance.is_empty())
+        .count();
+    assert_eq!(resolved, 6, "zones with resolved defining_tolerance");
+}
+
 /// `geometric_tolerance_with_datum_reference` simple tolerances read into the
 /// `pmi` pool. The NIST property fixture has two `PERPENDICULARITY_TOLERANCE`;
 /// one (`#10307`) points at a simple `DATUM_FEATURE` and round-trips, the

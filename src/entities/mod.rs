@@ -401,6 +401,11 @@ pub(crate) enum PassLevel {
     /// `Pass8ShapeAspect` (shape-aspect id maps) and `Pass8DatumSystem`
     /// (`datum_system_id_map`) for the `datum_system` set.
     Pass8GtWithDatumReference,
+    /// `TOLERANCE_ZONE` (Pass 8-1c2) — `shape_aspect` subtype. Depends on
+    /// `Pass8GeometricTolerance` + `Pass8GtWithDatumReference` (the two
+    /// `geometric_tolerance` id maps `defining_tolerance` walks) and
+    /// `Pass8ShapeAspect` (`tolerance_zone_form_id_map` for `form`).
+    Pass8ToleranceZone,
     /// `TOLERANCE_VALUE` + `LIMITS_AND_FITS` (Pass 8-1d) — the
     /// `tolerance_method_definition` SELECT members. `TOLERANCE_VALUE` depends
     /// on `Pass8Measure` (`measure_item_map`) / `Pass0MwuDue` (`mwu_id_map`)

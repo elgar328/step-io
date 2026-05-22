@@ -10,8 +10,9 @@ use super::assembly::WireframeContent;
 use super::id::StyledItemId;
 use super::id::{
     GeneralDatumReferenceId, NamedUnitId, Placement3dId, ProductId, RepresentationId,
-    RepresentationMapId, ShellId, SolidId, UnitContextId,
+    RepresentationMapId, ShellId, SolidId, ToleranceZoneFormId, UnitContextId,
 };
+use super::pmi::GeometricToleranceRef;
 use super::representation_item::RepresentationItemRef;
 use super::shape_aspect_ref::ShapeAspectRef;
 
@@ -306,6 +307,25 @@ pub struct DatumSystem {
     pub product_definitional: bool,
     /// `constituents` — `DATUM_REFERENCE_COMPARTMENT` refs in source order.
     pub constituents: Vec<GeneralDatumReferenceId>,
+}
+
+/// `TOLERANCE_ZONE` — a `SHAPE_ASPECT` subtype naming a GD&T tolerance zone.
+/// The first four attrs are the shared `shape_aspect` body (see
+/// [`CompositeGroupShapeAspect`]); `defining_tolerance` is the set of
+/// geometric tolerances that establish the zone and `form` references a
+/// `TOLERANCE_ZONE_FORM`. A `TOLERANCE_ZONE` whose `of_shape` or `form` does
+/// not resolve is silently dropped; individual `defining_tolerance` refs that
+/// do not resolve are skipped — both symmetric on re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ToleranceZone {
+    pub name: String,
+    pub description: String,
+    pub target: ProductId,
+    pub product_definitional: bool,
+    /// `defining_tolerance` — geometric tolerances in source order.
+    pub defining_tolerance: Vec<GeometricToleranceRef>,
+    /// `form` — the `TOLERANCE_ZONE_FORM` describing the zone's shape.
+    pub form: ToleranceZoneFormId,
 }
 
 /// Which `SHAPE_ASPECT_RELATIONSHIP` flavour an entry round-trips as.

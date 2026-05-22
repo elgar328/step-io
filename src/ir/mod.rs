@@ -61,7 +61,8 @@ pub use id::{
         DatumId, DatumSystemId, DerivedShapeAspectId, DimensionalLocationId, DimensionalSizeId,
         DraughtingPreDefinedTextFontId, GeneralDatumReferenceId, GeometricToleranceId,
         GeometricToleranceWithDatumReferenceId, LimitsAndFitsId, PlusMinusToleranceId,
-        ToleranceValueId, ToleranceZoneFormId, TypeQualifierId, ValueFormatTypeQualifierId,
+        ToleranceValueId, ToleranceZoneFormId, ToleranceZoneId, TypeQualifierId,
+        ValueFormatTypeQualifierId,
     },
 };
 pub use model::{
@@ -88,10 +89,10 @@ pub use pmi::{
     DatumFeature, DimensionalCharacteristic, DimensionalLocation, DimensionalLocationData,
     DimensionalSize, DimensionalSizeKind, DraughtingPreDefinedTextFont, GeneralDatumBase,
     GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
-    GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData, LimitsAndFits,
-    PlusMinusTolerance, PmiPool, TessellatedAnnotationOccurrence, ToleranceMagnitude,
-    ToleranceMethodDefinition, ToleranceValue, ToleranceZoneForm, TypeQualifier,
-    ValueFormatTypeQualifier,
+    GeometricToleranceRef, GeometricToleranceWithDatumReference,
+    GeometricToleranceWithDatumReferenceData, LimitsAndFits, PlusMinusTolerance, PmiPool,
+    TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue,
+    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
 pub use property::{
     DerivedDefinitionItem, DescriptionAttribute, DescriptionAttributeItem, GeneralProperty,
@@ -105,8 +106,8 @@ pub use shape_rep::{
     DatumSystem, DescriptiveItem, IntegerRepresentationItem, LengthUncertainty, LengthUnit,
     ManifoldSurfaceRepr, MappedItem, MappedItemData, Mdgpr, NumericRepresentationItem, PlainRepr,
     RealRepresentationItem, Representation, RepresentationMap, RepresentationMapData, ShapeAspect,
-    ShapeAspectRelationship, ShapeAspectRelationshipKind, SolidAngleUnit, UnitContext,
-    WireframeRepr,
+    ShapeAspectRelationship, ShapeAspectRelationshipKind, SolidAngleUnit, ToleranceZone,
+    UnitContext, WireframeRepr,
 };
 pub use tessellation::{
     ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, CoordinatesList, TessellatedCurveSet,

@@ -240,6 +240,14 @@ pub(crate) struct WriteBuffer<'m> {
     pub(crate) limits_and_fits_step_ids: Vec<u64>,
     pub(crate) dimensional_location_step_ids: Vec<u64>,
     pub(crate) dimensional_size_step_ids: Vec<u64>,
+    /// Step-id caches for the tolerance-zone phase. The two
+    /// `geometric_tolerance` caches feed `TOLERANCE_ZONE.defining_tolerance`
+    /// (`emit_geometric_tolerances` / `emit_geometric_tolerance_with_datum_references`
+    /// index-fill them); `tolerance_zone_form_step_ids` feeds its `form`
+    /// (`emit_pmi_pool`'s `tolerance_zone_forms` loop fills it).
+    pub(crate) geometric_tolerance_step_ids: Vec<u64>,
+    pub(crate) geometric_tolerance_with_datum_reference_step_ids: Vec<u64>,
+    pub(crate) tolerance_zone_form_step_ids: Vec<u64>,
     /// IR `ApplicationProtocolDefinition` index → emitted
     /// `APPLICATION_PROTOCOL_DEFINITION` step id.
     pub(crate) apd_step_ids: Vec<u64>,
@@ -369,6 +377,9 @@ impl<'m> WriteBuffer<'m> {
             general_datum_reference_step_ids: Vec::new(),
             datum_system_step_ids: Vec::new(),
             tolerance_value_step_ids: Vec::new(),
+            geometric_tolerance_step_ids: Vec::new(),
+            geometric_tolerance_with_datum_reference_step_ids: Vec::new(),
+            tolerance_zone_form_step_ids: Vec::new(),
             limits_and_fits_step_ids: Vec::new(),
             dimensional_location_step_ids: Vec::new(),
             dimensional_size_step_ids: Vec::new(),
@@ -492,6 +503,10 @@ impl<'m> WriteBuffer<'m> {
         // geometric_tolerance_with_datum_reference — also after
         // emit_datum_systems (`datum_system_step_ids`).
         self.emit_geometric_tolerance_with_datum_references();
+        // TOLERANCE_ZONE — after both geometric_tolerance emits (its
+        // `defining_tolerance` caches) and emit_pmi_if_set (the
+        // `tolerance_zone_form_step_ids` cache).
+        self.emit_tolerance_zones();
         // plus-minus-tolerance cluster — TOLERANCE_VALUE / LIMITS_AND_FITS
         // first (PLUS_MINUS_TOLERANCE's `range`), then PLUS_MINUS_TOLERANCE
         // which also needs the dimensional caches filled above.

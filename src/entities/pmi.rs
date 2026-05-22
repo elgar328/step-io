@@ -19,10 +19,10 @@ use crate::ir::pmi::{
     DatumFeature, DimensionalCharacteristic, DimensionalLocation, DimensionalLocationData,
     DimensionalSize, DimensionalSizeKind, DraughtingPreDefinedTextFont, GeneralDatumBase,
     GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
-    GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData, LimitsAndFits,
-    PlusMinusTolerance, TessellatedAnnotationOccurrence, ToleranceMagnitude,
-    ToleranceMethodDefinition, ToleranceValue, ToleranceZoneForm, TypeQualifier,
-    ValueFormatTypeQualifier,
+    GeometricToleranceRef, GeometricToleranceWithDatumReference,
+    GeometricToleranceWithDatumReferenceData, LimitsAndFits, PlusMinusTolerance,
+    TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue,
+    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::{ReaderContext, require_part_attrs};
@@ -45,10 +45,12 @@ impl SimpleEntityHandler for ToleranceZoneFormHandler {
     ) -> Result<(), ConvertError> {
         check_count(attrs, 1, entity_id, "TOLERANCE_ZONE_FORM")?;
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        ctx.pmi
+        let id = ctx
+            .pmi
             .get_or_insert_with(PmiPool::default)
             .tolerance_zone_forms
             .push(ToleranceZoneForm { name });
+        ctx.tolerance_zone_form_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -724,6 +726,51 @@ fn resolve_tolerance_magnitude(ctx: &ReaderContext, item_ref: u64) -> Option<Tol
         .map(ToleranceMagnitude::Measure)
 }
 
+/// Push a `GeometricTolerance` into the `pmi` pool and register its
+/// `#N → GeometricToleranceId` so `TOLERANCE_ZONE.defining_tolerance` can
+/// resolve a `ref_geometric_tolerance` onto it.
+fn push_geometric_tolerance(ctx: &mut ReaderContext, entity_id: u64, gt: GeometricTolerance) {
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .geometric_tolerances
+        .push(gt);
+    ctx.geometric_tolerance_id_map.insert(entity_id, id);
+}
+
+/// Push a `GeometricToleranceWithDatumReference` into the `pmi` pool and
+/// register its `#N → GeometricToleranceWithDatumReferenceId` — see
+/// [`push_geometric_tolerance`].
+fn push_gt_with_datum_reference(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    gt: GeometricToleranceWithDatumReference,
+) {
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .geometric_tolerance_with_datum_references
+        .push(gt);
+    ctx.geometric_tolerance_with_datum_reference_id_map
+        .insert(entity_id, id);
+}
+
+/// Resolve a `ref_geometric_tolerance` (`TOLERANCE_ZONE.defining_tolerance`)
+/// to a [`GeometricToleranceRef`] — step-io splits geometric tolerances
+/// across the form-tolerance and datum-referencing arenas.
+pub(crate) fn resolve_geometric_tolerance_ref(
+    ctx: &ReaderContext,
+    item_ref: u64,
+) -> Option<GeometricToleranceRef> {
+    if let Some(&id) = ctx.geometric_tolerance_id_map.get(&item_ref) {
+        return Some(GeometricToleranceRef::Plain(id));
+    }
+    ctx.geometric_tolerance_with_datum_reference_id_map
+        .get(&item_ref)
+        .copied()
+        .map(GeometricToleranceRef::WithDatumReference)
+}
+
 /// Read the shared `geometric_tolerance` 4-attr form-tolerance body.
 /// `Ok(None)` when `magnitude` or `toleranced_shape_aspect` does not
 /// resolve — the tolerance is dropped, symmetric on re-read.
@@ -799,10 +846,7 @@ impl SimpleEntityHandler for FlatnessToleranceHandler {
         else {
             return Ok(());
         };
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .geometric_tolerances
-            .push(GeometricTolerance::Flatness(data));
+        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::Flatness(data));
         Ok(())
     }
 
@@ -828,10 +872,7 @@ impl SimpleEntityHandler for StraightnessToleranceHandler {
         else {
             return Ok(());
         };
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .geometric_tolerances
-            .push(GeometricTolerance::Straightness(data));
+        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::Straightness(data));
         Ok(())
     }
 
@@ -857,10 +898,7 @@ impl SimpleEntityHandler for RoundnessToleranceHandler {
         else {
             return Ok(());
         };
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .geometric_tolerances
-            .push(GeometricTolerance::Roundness(data));
+        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::Roundness(data));
         Ok(())
     }
 
@@ -886,10 +924,7 @@ impl SimpleEntityHandler for CylindricityToleranceHandler {
         else {
             return Ok(());
         };
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .geometric_tolerances
-            .push(GeometricTolerance::Cylindricity(data));
+        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::Cylindricity(data));
         Ok(())
     }
 
@@ -1232,10 +1267,11 @@ impl SimpleEntityHandler for AngularityToleranceHandler {
         else {
             return Ok(());
         };
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .geometric_tolerance_with_datum_references
-            .push(GeometricToleranceWithDatumReference::Angularity(data));
+        push_gt_with_datum_reference(
+            ctx,
+            entity_id,
+            GeometricToleranceWithDatumReference::Angularity(data),
+        );
         Ok(())
     }
 
@@ -1268,10 +1304,11 @@ impl SimpleEntityHandler for CircularRunoutToleranceHandler {
         else {
             return Ok(());
         };
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .geometric_tolerance_with_datum_references
-            .push(GeometricToleranceWithDatumReference::CircularRunout(data));
+        push_gt_with_datum_reference(
+            ctx,
+            entity_id,
+            GeometricToleranceWithDatumReference::CircularRunout(data),
+        );
         Ok(())
     }
 
@@ -1304,10 +1341,11 @@ impl SimpleEntityHandler for ConcentricityToleranceHandler {
         else {
             return Ok(());
         };
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .geometric_tolerance_with_datum_references
-            .push(GeometricToleranceWithDatumReference::Concentricity(data));
+        push_gt_with_datum_reference(
+            ctx,
+            entity_id,
+            GeometricToleranceWithDatumReference::Concentricity(data),
+        );
         Ok(())
     }
 
@@ -1340,10 +1378,11 @@ impl SimpleEntityHandler for ParallelismToleranceHandler {
         else {
             return Ok(());
         };
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .geometric_tolerance_with_datum_references
-            .push(GeometricToleranceWithDatumReference::Parallelism(data));
+        push_gt_with_datum_reference(
+            ctx,
+            entity_id,
+            GeometricToleranceWithDatumReference::Parallelism(data),
+        );
         Ok(())
     }
 
@@ -1376,10 +1415,11 @@ impl SimpleEntityHandler for PerpendicularityToleranceHandler {
         else {
             return Ok(());
         };
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .geometric_tolerance_with_datum_references
-            .push(GeometricToleranceWithDatumReference::Perpendicularity(data));
+        push_gt_with_datum_reference(
+            ctx,
+            entity_id,
+            GeometricToleranceWithDatumReference::Perpendicularity(data),
+        );
         Ok(())
     }
 
@@ -1412,10 +1452,11 @@ impl SimpleEntityHandler for SymmetryToleranceHandler {
         else {
             return Ok(());
         };
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .geometric_tolerance_with_datum_references
-            .push(GeometricToleranceWithDatumReference::Symmetry(data));
+        push_gt_with_datum_reference(
+            ctx,
+            entity_id,
+            GeometricToleranceWithDatumReference::Symmetry(data),
+        );
         Ok(())
     }
 
@@ -1448,10 +1489,11 @@ impl SimpleEntityHandler for TotalRunoutToleranceHandler {
         else {
             return Ok(());
         };
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .geometric_tolerance_with_datum_references
-            .push(GeometricToleranceWithDatumReference::TotalRunout(data));
+        push_gt_with_datum_reference(
+            ctx,
+            entity_id,
+            GeometricToleranceWithDatumReference::TotalRunout(data),
+        );
         Ok(())
     }
 
@@ -1486,10 +1528,11 @@ impl ComplexEntityHandler for PositionToleranceHandler {
         let Some(data) = read_gt_with_datum_reference_complex(ctx, entity_id, parts)? else {
             return Ok(());
         };
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .geometric_tolerance_with_datum_references
-            .push(GeometricToleranceWithDatumReference::Position(data));
+        push_gt_with_datum_reference(
+            ctx,
+            entity_id,
+            GeometricToleranceWithDatumReference::Position(data),
+        );
         Ok(())
     }
 
@@ -1524,10 +1567,11 @@ impl ComplexEntityHandler for SurfaceProfileToleranceHandler {
         let Some(data) = read_gt_with_datum_reference_complex(ctx, entity_id, parts)? else {
             return Ok(());
         };
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .geometric_tolerance_with_datum_references
-            .push(GeometricToleranceWithDatumReference::SurfaceProfile(data));
+        push_gt_with_datum_reference(
+            ctx,
+            entity_id,
+            GeometricToleranceWithDatumReference::SurfaceProfile(data),
+        );
         Ok(())
     }
 
@@ -1562,10 +1606,11 @@ impl ComplexEntityHandler for LineProfileToleranceHandler {
         let Some(data) = read_gt_with_datum_reference_complex(ctx, entity_id, parts)? else {
             return Ok(());
         };
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .geometric_tolerance_with_datum_references
-            .push(GeometricToleranceWithDatumReference::LineProfile(data));
+        push_gt_with_datum_reference(
+            ctx,
+            entity_id,
+            GeometricToleranceWithDatumReference::LineProfile(data),
+        );
         Ok(())
     }
 

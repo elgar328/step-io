@@ -398,6 +398,15 @@ pub struct ReaderContext {
     pub(crate) limits_and_fits_id_map: HashMap<u64, crate::ir::LimitsAndFitsId>,
     pub(crate) dimensional_location_id_map: HashMap<u64, crate::ir::DimensionalLocationId>,
     pub(crate) dimensional_size_id_map: HashMap<u64, crate::ir::DimensionalSizeId>,
+    /// `TOLERANCE_ZONE` arena + `#N → …Id` maps it depends on (phase
+    /// tolerance-zone). The two geometric-tolerance maps feed
+    /// `TOLERANCE_ZONE.defining_tolerance`, `tolerance_zone_form_id_map` its
+    /// `form`. The handlers for those entities populate the maps this phase.
+    pub(crate) geometric_tolerance_id_map: HashMap<u64, crate::ir::GeometricToleranceId>,
+    pub(crate) geometric_tolerance_with_datum_reference_id_map:
+        HashMap<u64, crate::ir::GeometricToleranceWithDatumReferenceId>,
+    pub(crate) tolerance_zone_form_id_map: HashMap<u64, crate::ir::ToleranceZoneFormId>,
+    pub(crate) tolerance_zones: crate::ir::Arena<crate::ir::ToleranceZone>,
     /// `SHAPE_ASPECT_RELATIONSHIP` arena (phase shape-aspect-ref) — orphan.
     pub(crate) shape_aspect_relationships:
         crate::ir::Arena<crate::ir::shape_rep::ShapeAspectRelationship>,
@@ -564,6 +573,7 @@ impl ReaderContext {
                 centre_of_symmetries: ctx.centre_of_symmetries,
                 all_around_shape_aspects: ctx.all_around_shape_aspects,
                 datum_systems: ctx.datum_systems,
+                tolerance_zones: ctx.tolerance_zones,
                 shape_aspect_relationships: ctx.shape_aspect_relationships,
                 plm: ctx.plm,
                 units_pool: build_units_pool(

@@ -119,8 +119,12 @@ impl WriteBuffer<'_> {
         let Some(pmi) = self.model.pmi.clone() else {
             return;
         };
-        for tzf in pmi.tolerance_zone_forms.iter() {
-            let _ = ToleranceZoneFormHandler::write(self, tzf.clone());
+        self.tolerance_zone_form_step_ids
+            .resize(pmi.tolerance_zone_forms.len(), 0);
+        for (index, tzf) in pmi.tolerance_zone_forms.iter().enumerate() {
+            if let Ok(step_id) = ToleranceZoneFormHandler::write(self, tzf.clone()) {
+                self.tolerance_zone_form_step_ids[index] = step_id;
+            }
         }
         for tq in pmi.type_qualifiers.iter() {
             let _ = TypeQualifierHandler::write(self, tq.clone());
@@ -322,8 +326,11 @@ impl WriteBuffer<'_> {
         let Some(pmi) = self.model.pmi.clone() else {
             return;
         };
-        for gt in pmi.geometric_tolerances.iter() {
-            write_geometric_tolerance(self, gt.clone());
+        self.geometric_tolerance_step_ids
+            .resize(pmi.geometric_tolerances.len(), 0);
+        for (index, gt) in pmi.geometric_tolerances.iter().enumerate() {
+            let step_id = write_geometric_tolerance(self, gt.clone());
+            self.geometric_tolerance_step_ids[index] = step_id;
         }
     }
 
@@ -362,6 +369,19 @@ impl WriteBuffer<'_> {
         }
     }
 
+    /// Emit the `tolerance_zones` arena (`TOLERANCE_ZONE`). Runs after both
+    /// `emit_geometric_tolerances` / `emit_geometric_tolerance_with_datum_references`
+    /// (the `defining_tolerance` caches) and `emit_pmi_if_set`
+    /// (`tolerance_zone_form_step_ids`). No step-id cache — nothing
+    /// references a `TOLERANCE_ZONE`.
+    pub(in crate::writer::buffer) fn emit_tolerance_zones(&mut self) {
+        use crate::entities::shape_rep::tolerance_zone::ToleranceZoneHandler;
+        let zones: Vec<_> = self.model.tolerance_zones.iter().cloned().collect();
+        for tz in zones {
+            let _ = ToleranceZoneHandler::write(self, tz);
+        }
+    }
+
     /// Emit the `pmi` pool's `geometric_tolerance_with_datum_reference`
     /// arena. Runs after `emit_datum_systems` (`datum_system_step_ids`), the
     /// units pass (`mwu_step_ids`) and `emit_pmi_if_set` (shape-aspect
@@ -372,8 +392,15 @@ impl WriteBuffer<'_> {
         let Some(pmi) = self.model.pmi.clone() else {
             return;
         };
-        for gt in pmi.geometric_tolerance_with_datum_references.iter() {
-            write_geometric_tolerance_with_datum_reference(self, gt.clone());
+        self.geometric_tolerance_with_datum_reference_step_ids
+            .resize(pmi.geometric_tolerance_with_datum_references.len(), 0);
+        for (index, gt) in pmi
+            .geometric_tolerance_with_datum_references
+            .iter()
+            .enumerate()
+        {
+            let step_id = write_geometric_tolerance_with_datum_reference(self, gt.clone());
+            self.geometric_tolerance_with_datum_reference_step_ids[index] = step_id;
         }
     }
 

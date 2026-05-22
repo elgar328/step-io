@@ -8,9 +8,9 @@
 
 use super::arena::Arena;
 use super::id::{
-    DatumId, DatumSystemId, DimensionalLocationId, DimensionalSizeId, LimitsAndFitsId,
-    MeasureWithUnitId, PresentationStyleAssignmentId, ProductId, TessellatedItemId,
-    ToleranceValueId,
+    DatumId, DatumSystemId, DimensionalLocationId, DimensionalSizeId, GeometricToleranceId,
+    GeometricToleranceWithDatumReferenceId, LimitsAndFitsId, MeasureWithUnitId,
+    PresentationStyleAssignmentId, ProductId, TessellatedItemId, ToleranceValueId,
 };
 use super::property::PropertyMeasure;
 use super::representation_item::RepresentationItemRef;
@@ -141,6 +141,19 @@ pub enum GeometricToleranceWithDatumReference {
     SurfaceProfile(GeometricToleranceWithDatumReferenceData),
     /// `LINE_PROFILE_TOLERANCE` — complex MI form, see [`Self::Position`].
     LineProfile(GeometricToleranceWithDatumReferenceData),
+}
+
+/// A reference to any concrete `geometric_tolerance` — used by
+/// `TOLERANCE_ZONE.defining_tolerance`. `geometric_tolerance` is an abstract
+/// supertype; step-io splits its concrete subtypes across two arenas (the
+/// datum-free form tolerances and the datum-referencing ones), so a
+/// `ref_geometric_tolerance` resolves into one of those.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum GeometricToleranceRef {
+    /// An entry in the `geometric_tolerances` arena (form tolerance).
+    Plain(GeometricToleranceId),
+    /// An entry in the `geometric_tolerance_with_datum_references` arena.
+    WithDatumReference(GeometricToleranceWithDatumReferenceId),
 }
 
 /// Shared 5-attr body of the datum-referencing tolerances — the four

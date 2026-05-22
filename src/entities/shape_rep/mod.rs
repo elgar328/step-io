@@ -26,3 +26,4 @@ pub mod shape_aspect_relationship;
 pub mod shape_aspect_subtypes;
 pub mod shape_representation;
 pub mod shape_representation_relationship;
+pub mod tolerance_zone;

@@ -31,7 +31,7 @@ use super::property::{
 use super::shape_rep::{
     AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, DatumSystem, MappedItem,
     NumericRepresentationItem, Representation, RepresentationMap, ShapeAspect,
-    ShapeAspectRelationship, UnitContext,
+    ShapeAspectRelationship, ToleranceZone, UnitContext,
 };
 use super::tessellation::{
     ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, TessellatedItem,
@@ -104,6 +104,9 @@ define_id!(ContinuousShapeAspectId, AllAroundShapeAspect);
 
 // datum_system arena — SHAPE_ASPECT subtype (Phase datum-system).
 define_id!(DatumSystemId, DatumSystem);
+
+// tolerance_zone arena — SHAPE_ASPECT subtype (Phase tolerance-zone).
+define_id!(ToleranceZoneId, ToleranceZone);
 
 // SHAPE_ASPECT_RELATIONSHIP arena (phase shape-aspect-ref).
 define_id!(ShapeAspectRelationshipId, ShapeAspectRelationship);
