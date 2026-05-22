@@ -253,6 +253,7 @@ impl WriteBuffer<'_> {
             }
             ShapeAspectRef::Datum(id) => self.datum_step_ids[id.0 as usize],
             ShapeAspectRef::DatumFeature(id) => self.datum_feature_step_ids[id.0 as usize],
+            ShapeAspectRef::DatumSystem(id) => self.datum_system_step_ids[id.0 as usize],
         }
     }
 
@@ -323,14 +324,35 @@ impl WriteBuffer<'_> {
     /// Emit the `pmi` pool's `general_datum_reference` arena
     /// (`DATUM_REFERENCE_COMPARTMENT` / `DATUM_REFERENCE_ELEMENT`). Runs
     /// after `emit_pmi_if_set` so `datum_step_ids` (for `base`) and
-    /// `product_def_shape_ids` (for `of_shape`) are filled.
+    /// `product_def_shape_ids` (for `of_shape`) are filled. The emitted
+    /// step id is index-cached in `general_datum_reference_step_ids` so
+    /// `emit_datum_systems` can resolve a `DATUM_SYSTEM`'s `constituents`.
     pub(in crate::writer::buffer) fn emit_general_datum_references(&mut self) {
         use crate::entities::pmi::write_general_datum_reference;
         let Some(pmi) = self.model.pmi.clone() else {
             return;
         };
-        for gdr in pmi.general_datum_references.iter() {
-            write_general_datum_reference(self, gdr.clone());
+        self.general_datum_reference_step_ids
+            .resize(pmi.general_datum_references.len(), 0);
+        for (index, gdr) in pmi.general_datum_references.iter().enumerate() {
+            let step_id = write_general_datum_reference(self, gdr.clone());
+            self.general_datum_reference_step_ids[index] = step_id;
+        }
+    }
+
+    /// Emit the `datum_systems` arena (`DATUM_SYSTEM`). Runs after
+    /// `emit_general_datum_references` so `constituents` resolve through
+    /// `general_datum_reference_step_ids`, and before the `ShapeAspectRef`
+    /// consumers so `datum_system_step_ids` is filled when
+    /// `emit_shape_aspect_ref` runs.
+    pub(in crate::writer::buffer) fn emit_datum_systems(&mut self) {
+        use crate::entities::shape_rep::datum_system::DatumSystemHandler;
+        let systems: Vec<_> = self.model.datum_systems.iter().cloned().collect();
+        self.datum_system_step_ids.resize(systems.len(), 0);
+        for (index, ds) in systems.into_iter().enumerate() {
+            if let Ok(step_id) = DatumSystemHandler::write(self, ds) {
+                self.datum_system_step_ids[index] = step_id;
+            }
         }
     }
 }

@@ -48,6 +48,9 @@ pub(crate) fn resolve_shape_aspect_ref(
     if let Some(&id) = ctx.datum_feature_id_map.get(&item_ref) {
         return Some(ShapeAspectRef::DatumFeature(id));
     }
+    if let Some(&id) = ctx.datum_system_id_map.get(&item_ref) {
+        return Some(ShapeAspectRef::DatumSystem(id));
+    }
     None
 }
 

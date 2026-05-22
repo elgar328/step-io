@@ -360,6 +360,9 @@ impl ReaderContext {
         // general_datum_reference — resolves `base` through `datum_id_map`
         // (filled by Pass8ShapeAspect) and `of_shape` through the product chain.
         self.dispatch_registry(graph, PassLevel::Pass8GeneralDatumReference);
+        // DATUM_SYSTEM — resolves `constituents` through the
+        // general_datum_reference id map Pass8GeneralDatumReference filled.
+        self.dispatch_registry(graph, PassLevel::Pass8DatumSystem);
         // VIEW_VOLUME — resolves CARTESIAN_POINT / PLANAR_BOX refs.
         self.dispatch_registry(graph, PassLevel::Pass8ViewVolume);
         // CAMERA_MODEL_D3 — resolves VIEW_VOLUME / AXIS2_PLACEMENT_3D refs.

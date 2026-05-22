@@ -13,8 +13,8 @@
 //! remaining subtypes (`DATUM_SYSTEM`, `DATUM_TARGET`, ...) are deferred.
 
 use super::id::{
-    CompositeShapeAspectId, ContinuousShapeAspectId, DatumFeatureId, DatumId, DerivedShapeAspectId,
-    ShapeAspectId,
+    CompositeShapeAspectId, ContinuousShapeAspectId, DatumFeatureId, DatumId, DatumSystemId,
+    DerivedShapeAspectId, ShapeAspectId,
 };
 
 /// What a STEP `shape_aspect` reference resolved to in step-io's IR. Each
@@ -33,4 +33,6 @@ pub enum ShapeAspectRef {
     Datum(DatumId),
     /// `DATUM_FEATURE`.
     DatumFeature(DatumFeatureId),
+    /// `DATUM_SYSTEM`.
+    DatumSystem(DatumSystemId),
 }

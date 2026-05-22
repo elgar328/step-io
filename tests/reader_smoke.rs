@@ -1751,3 +1751,19 @@ fn nist_property_def_general_datum_references() {
         let GeneralDatumBase::Datum(_) = data.base;
     }
 }
+
+/// `DATUM_SYSTEM` reads into its arena with `constituents` resolved to the
+/// `general_datum_reference` arena. The NIST property fixture carries 9.
+#[test]
+fn nist_property_def_datum_systems() {
+    let source = include_str!("fixtures/external_temp_nist_property_def.stp");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    assert_eq!(result.model.datum_systems.len(), 9, "DATUM_SYSTEM count");
+    for ds in result.model.datum_systems.iter() {
+        assert!(
+            !ds.constituents.is_empty(),
+            "DATUM_SYSTEM constituents should resolve"
+        );
+    }
+}

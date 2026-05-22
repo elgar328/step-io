@@ -223,6 +223,14 @@ pub(crate) struct WriteBuffer<'m> {
     /// consumed by `emit_shape_aspect_ref`.
     pub(crate) datum_step_ids: Vec<u64>,
     pub(crate) datum_feature_step_ids: Vec<u64>,
+    /// IR `GeneralDatumReferenceId.0` index → emitted step id (phase
+    /// datum-system). Populated by `emit_general_datum_references`; consumed
+    /// by `emit_datum_systems` to resolve a `DATUM_SYSTEM`'s `constituents`.
+    pub(crate) general_datum_reference_step_ids: Vec<u64>,
+    /// IR `DatumSystemId.0` index → emitted `DATUM_SYSTEM` step id (phase
+    /// datum-system). Populated by `emit_datum_systems`; consumed by
+    /// `emit_shape_aspect_ref`.
+    pub(crate) datum_system_step_ids: Vec<u64>,
     /// IR `ApplicationProtocolDefinition` index → emitted
     /// `APPLICATION_PROTOCOL_DEFINITION` step id.
     pub(crate) apd_step_ids: Vec<u64>,
@@ -349,6 +357,8 @@ impl<'m> WriteBuffer<'m> {
             all_around_shape_aspect_step_ids: Vec::new(),
             datum_step_ids: Vec::new(),
             datum_feature_step_ids: Vec::new(),
+            general_datum_reference_step_ids: Vec::new(),
+            datum_system_step_ids: Vec::new(),
             apd_step_ids: Vec::new(),
             pc_step_ids: Vec::new(),
             pdc_step_ids: Vec::new(),
@@ -451,6 +461,13 @@ impl<'m> WriteBuffer<'m> {
         self.emit_representations_pre_pass()?;
         self.emit_product_chain_if_eligible()?;
         self.emit_pmi_if_set();
+        // general_datum_reference + DATUM_SYSTEM — emitted before the
+        // ShapeAspectRef consumers below so `datum_system_step_ids` is
+        // filled when `emit_shape_aspect_ref` runs. `emit_datum_systems`
+        // also needs `general_datum_reference_step_ids`, so the order is
+        // general_datum_reference → datum_system → consumers.
+        self.emit_general_datum_references();
+        self.emit_datum_systems();
         // SHAPE_ASPECT_RELATIONSHIP — after emit_pmi_if_set so every
         // shape-aspect-family step-id cache is filled.
         self.emit_shape_aspect_relationships()?;
@@ -459,8 +476,6 @@ impl<'m> WriteBuffer<'m> {
         // geometric_tolerance form tolerances — after the units pass
         // (`mwu_step_ids`) and emit_pmi_if_set (shape-aspect caches).
         self.emit_geometric_tolerances();
-        // general_datum_reference — after emit_pmi_if_set (`datum_step_ids`).
-        self.emit_general_datum_references();
         self.emit_visualization_if_set()?;
         // REPRESENTATION_MAP + MAPPED_ITEM — after visualization so the
         // `representation_step_ids` cache covers MDGPR slots too.

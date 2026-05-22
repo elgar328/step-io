@@ -984,10 +984,12 @@ impl SimpleEntityHandler for DatumReferenceCompartmentHandler {
         else {
             return Ok(());
         };
-        ctx.pmi
+        let id = ctx
+            .pmi
             .get_or_insert_with(PmiPool::default)
             .general_datum_references
             .push(GeneralDatumReference::Compartment(data));
+        ctx.general_datum_reference_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -1013,10 +1015,12 @@ impl SimpleEntityHandler for DatumReferenceElementHandler {
         else {
             return Ok(());
         };
-        ctx.pmi
+        let id = ctx
+            .pmi
             .get_or_insert_with(PmiPool::default)
             .general_datum_references
             .push(GeneralDatumReference::Element(data));
+        ctx.general_datum_reference_id_map.insert(entity_id, id);
         Ok(())
     }
 

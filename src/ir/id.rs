@@ -28,7 +28,7 @@ use super::property::{
     Property,
 };
 use super::shape_rep::{
-    AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, MappedItem,
+    AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, DatumSystem, MappedItem,
     NumericRepresentationItem, Representation, RepresentationMap, ShapeAspect,
     ShapeAspectRelationship, UnitContext,
 };
@@ -100,6 +100,9 @@ define_id!(ShapeAspectId, ShapeAspect);
 define_id!(CompositeShapeAspectId, CompositeGroupShapeAspect);
 define_id!(DerivedShapeAspectId, CentreOfSymmetry);
 define_id!(ContinuousShapeAspectId, AllAroundShapeAspect);
+
+// datum_system arena — SHAPE_ASPECT subtype (Phase datum-system).
+define_id!(DatumSystemId, DatumSystem);
 
 // SHAPE_ASPECT_RELATIONSHIP arena (phase shape-aspect-ref).
 define_id!(ShapeAspectRelationshipId, ShapeAspectRelationship);

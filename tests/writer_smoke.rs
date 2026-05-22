@@ -2407,6 +2407,79 @@ fn general_datum_reference_round_trip() {
 }
 
 #[test]
+fn datum_system_round_trip() {
+    // DATUM_SYSTEM — a shape_aspect subtype whose `constituents` reference
+    // the general_datum_reference arena.
+    use step_io::ir::pmi::{
+        Datum, GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData,
+    };
+    use step_io::ir::shape_rep::DatumSystem;
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        content: ProductContent::Solid(SolidContent {
+            ids: vec![solid_id],
+        }),
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let mut pmi = PmiPool::default();
+    let datum = pmi.datums.push(Datum {
+        name: String::new(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        identification: "A".into(),
+    });
+    let gdr = pmi
+        .general_datum_references
+        .push(GeneralDatumReference::Compartment(
+            GeneralDatumReferenceData {
+                name: String::new(),
+                description: String::new(),
+                target: part_pid,
+                product_definitional: false,
+                base: GeneralDatumBase::Datum(datum),
+            },
+        ));
+    model.pmi = Some(pmi);
+
+    model.datum_systems.push(DatumSystem {
+        name: "DS".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        constituents: vec![gdr],
+    });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.datum_systems.len(), 1);
+    let ds = re.datum_systems.iter().next().unwrap();
+    assert_eq!(ds.name, "DS");
+    assert_eq!(ds.constituents.len(), 1, "constituent round-trips");
+    assert_eq!(ds.target, step_io::ProductId(0));
+}
+
+#[test]
 fn draughting_pre_defined_text_font_round_trip() {
     // DRAUGHTING_PRE_DEFINED_TEXT_FONT — a pmi-pool 1-string leaf primitive.
     use step_io::ir::pmi::DraughtingPreDefinedTextFont;

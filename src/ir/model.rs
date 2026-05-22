@@ -7,7 +7,8 @@ use super::geometry::{
 use super::id::Placement3dId;
 use super::plm::PlmPool;
 use super::shape_rep::{
-    AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, ShapeAspect, UnitContext,
+    AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, DatumSystem, ShapeAspect,
+    UnitContext,
 };
 use super::topology::{Edge, Face, Shell, Solid, Wire};
 use super::units::UnitsPool;
@@ -204,6 +205,8 @@ pub struct StepModel {
     pub centre_of_symmetries: Arena<CentreOfSymmetry>,
     /// `ALL_AROUND_SHAPE_ASPECT` arena — `SHAPE_ASPECT` subtype.
     pub all_around_shape_aspects: Arena<AllAroundShapeAspect>,
+    /// `DATUM_SYSTEM` arena — `SHAPE_ASPECT` subtype. Phase datum-system.
+    pub datum_systems: Arena<DatumSystem>,
     /// `SHAPE_ASPECT_RELATIONSHIP` arena (phase shape-aspect-ref). Orphan
     /// round-trip — each endpoint is a [`crate::ir::ShapeAspectRef`].
     pub shape_aspect_relationships: Arena<crate::ir::shape_rep::ShapeAspectRelationship>,

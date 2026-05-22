@@ -381,6 +381,15 @@ pub struct ReaderContext {
     /// `resolve_shape_aspect_ref` resolve a `shape_aspect` ref onto them.
     pub(crate) datum_id_map: HashMap<u64, crate::ir::DatumId>,
     pub(crate) datum_feature_id_map: HashMap<u64, crate::ir::DatumFeatureId>,
+    /// `DATUM_SYSTEM` arena + `#N → DatumSystemId` map (phase datum-system).
+    /// Populated by `Pass8DatumSystem`; the map lets `resolve_shape_aspect_ref`
+    /// resolve a `shape_aspect` ref onto a datum system.
+    pub(crate) datum_systems: crate::ir::Arena<crate::ir::DatumSystem>,
+    pub(crate) datum_system_id_map: HashMap<u64, crate::ir::DatumSystemId>,
+    /// `general_datum_reference` `#N → GeneralDatumReferenceId` map (phase
+    /// datum-system). Populated by the `DATUM_REFERENCE_*` handlers; consumed
+    /// by `DATUM_SYSTEM`'s `constituents` resolution.
+    pub(crate) general_datum_reference_id_map: HashMap<u64, crate::ir::GeneralDatumReferenceId>,
     /// `SHAPE_ASPECT_RELATIONSHIP` arena (phase shape-aspect-ref) — orphan.
     pub(crate) shape_aspect_relationships:
         crate::ir::Arena<crate::ir::shape_rep::ShapeAspectRelationship>,
@@ -546,6 +555,7 @@ impl ReaderContext {
                 composite_group_shape_aspects: ctx.composite_group_shape_aspects,
                 centre_of_symmetries: ctx.centre_of_symmetries,
                 all_around_shape_aspects: ctx.all_around_shape_aspects,
+                datum_systems: ctx.datum_systems,
                 shape_aspect_relationships: ctx.shape_aspect_relationships,
                 plm: ctx.plm,
                 units_pool: build_units_pool(

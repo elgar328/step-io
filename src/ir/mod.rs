@@ -58,7 +58,7 @@ pub use id::{
     TessellatedSurfaceSetId, UnitContextId, VertexId, WireId,
     {
         AnnotationOccurrenceId, CompositeShapeAspectId, ContinuousShapeAspectId, DatumFeatureId,
-        DatumId, DerivedShapeAspectId, DimensionalLocationId, DimensionalSizeId,
+        DatumId, DatumSystemId, DerivedShapeAspectId, DimensionalLocationId, DimensionalSizeId,
         DraughtingPreDefinedTextFontId, GeneralDatumReferenceId, GeometricToleranceId,
         ToleranceZoneFormId, TypeQualifierId, ValueFormatTypeQualifierId,
     },
@@ -99,8 +99,8 @@ pub use representation_item::RepresentationItemRef;
 pub use shape_aspect_ref::ShapeAspectRef;
 pub use shape_rep::{
     AdvancedBrepRepr, AllAroundShapeAspect, AngleUnit, CentreOfSymmetry, CompositeGroupShapeAspect,
-    DescriptiveItem, IntegerRepresentationItem, LengthUncertainty, LengthUnit, ManifoldSurfaceRepr,
-    MappedItem, MappedItemData, Mdgpr, NumericRepresentationItem, PlainRepr,
+    DatumSystem, DescriptiveItem, IntegerRepresentationItem, LengthUncertainty, LengthUnit,
+    ManifoldSurfaceRepr, MappedItem, MappedItemData, Mdgpr, NumericRepresentationItem, PlainRepr,
     RealRepresentationItem, Representation, RepresentationMap, RepresentationMapData, ShapeAspect,
     ShapeAspectRelationship, ShapeAspectRelationshipKind, SolidAngleUnit, UnitContext,
     WireframeRepr,

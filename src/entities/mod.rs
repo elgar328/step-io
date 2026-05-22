@@ -378,6 +378,10 @@ pub(crate) enum PassLevel {
     /// `Pass8ShapeAspect` (`datum_id_map` for `base`) and Pass 6 (the
     /// product chain for `of_shape`).
     Pass8GeneralDatumReference,
+    /// `DATUM_SYSTEM` (Pass 8-pre-c3) — depends on `Pass8GeneralDatumReference`
+    /// (`general_datum_reference_id_map` for `constituents`) and Pass 6 (the
+    /// product chain for `of_shape`).
+    Pass8DatumSystem,
     /// `VIEW_VOLUME` (Pass 8-pre-d) — depends on `Pass1` (`CARTESIAN_POINT`)
     /// and `Pass4PlanarExtent` (`PLANAR_BOX`) for its two refs.
     Pass8ViewVolume,

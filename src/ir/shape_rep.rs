@@ -9,8 +9,8 @@
 use super::assembly::WireframeContent;
 use super::id::StyledItemId;
 use super::id::{
-    NamedUnitId, Placement3dId, ProductId, RepresentationId, RepresentationMapId, ShellId, SolidId,
-    UnitContextId,
+    GeneralDatumReferenceId, NamedUnitId, Placement3dId, ProductId, RepresentationId,
+    RepresentationMapId, ShellId, SolidId, UnitContextId,
 };
 use super::representation_item::RepresentationItemRef;
 use super::shape_aspect_ref::ShapeAspectRef;
@@ -289,6 +289,23 @@ pub struct AllAroundShapeAspect {
     pub description: String,
     pub target: ProductId,
     pub product_definitional: bool,
+}
+
+/// `DATUM_SYSTEM` — a `SHAPE_ASPECT` subtype carrying an ordered set of
+/// datum references. The first four attrs are the shared `shape_aspect`
+/// body (see [`CompositeGroupShapeAspect`]); `constituents` is the
+/// `DATUM_REFERENCE_COMPARTMENT` list resolved to the
+/// `general_datum_reference` arena. A `DATUM_SYSTEM` whose `of_shape` does
+/// not resolve is silently dropped; individual `constituents` refs that do
+/// not resolve are skipped — both symmetric on re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DatumSystem {
+    pub name: String,
+    pub description: String,
+    pub target: ProductId,
+    pub product_definitional: bool,
+    /// `constituents` — `DATUM_REFERENCE_COMPARTMENT` refs in source order.
+    pub constituents: Vec<GeneralDatumReferenceId>,
 }
 
 /// Which `SHAPE_ASPECT_RELATIONSHIP` flavour an entry round-trips as.
