@@ -374,6 +374,10 @@ pub(crate) enum PassLevel {
     /// for the `shape_aspect` (+ subtype) id maps `resolve_shape_aspect_ref`
     /// walks for `applies_to`.
     Pass8Dimensional,
+    /// `general_datum_reference` form entities (Pass 8-pre-c2) — depend on
+    /// `Pass8ShapeAspect` (`datum_id_map` for `base`) and Pass 6 (the
+    /// product chain for `of_shape`).
+    Pass8GeneralDatumReference,
     /// `VIEW_VOLUME` (Pass 8-pre-d) — depends on `Pass1` (`CARTESIAN_POINT`)
     /// and `Pass4PlanarExtent` (`PLANAR_BOX`) for its two refs.
     Pass8ViewVolume,

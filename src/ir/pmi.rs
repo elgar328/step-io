@@ -7,7 +7,9 @@
 //! ir.toml blueprint puts them in the `shape_rep` pool.
 
 use super::arena::Arena;
-use super::id::{MeasureWithUnitId, PresentationStyleAssignmentId, ProductId, TessellatedItemId};
+use super::id::{
+    DatumId, MeasureWithUnitId, PresentationStyleAssignmentId, ProductId, TessellatedItemId,
+};
 use super::property::PropertyMeasure;
 use super::representation_item::RepresentationItemRef;
 use super::shape_aspect_ref::ShapeAspectRef;
@@ -38,6 +40,52 @@ pub struct PmiPool {
     /// `geometric_tolerance` `enum_base` arena. Phase geometric-tolerance
     /// fills the datum-free form-tolerance variants.
     pub geometric_tolerances: Arena<GeometricTolerance>,
+    /// `general_datum_reference` `enum_base` arena. Phase
+    /// general-datum-reference fills both variants.
+    pub general_datum_references: Arena<GeneralDatumReference>,
+}
+
+/// `general_datum_reference` `enum_base` — a GD&T datum reference in the
+/// `pmi` pool. `general_datum_reference` is an abstract supertype; its two
+/// concrete subtypes `DATUM_REFERENCE_COMPARTMENT` and
+/// `DATUM_REFERENCE_ELEMENT` share the identical 6-attr body, so one
+/// [`GeneralDatumReferenceData`] payload serves both.
+#[derive(Debug, Clone, PartialEq)]
+pub enum GeneralDatumReference {
+    /// `DATUM_REFERENCE_COMPARTMENT`.
+    Compartment(GeneralDatumReferenceData),
+    /// `DATUM_REFERENCE_ELEMENT`.
+    Element(GeneralDatumReferenceData),
+}
+
+/// Shared 6-attr body of `general_datum_reference`. The first four attrs are
+/// the inherited `shape_aspect` body (`of_shape` resolved to the owning
+/// product); `base` is the `datum_or_common_datum` SELECT. The 6th attr
+/// `modifiers` (an optional `datum_reference_modifier` set) is not modelled —
+/// the reader ignores it and the writer emits `$`, so a source instance
+/// carrying modifiers loses them (a textual loss, not a round-trip break).
+/// A `general_datum_reference` whose `of_shape` or `base` does not resolve
+/// is silently dropped, symmetric on re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct GeneralDatumReferenceData {
+    pub name: String,
+    pub description: String,
+    /// `of_shape` resolved to the owning product.
+    pub target: ProductId,
+    pub product_definitional: bool,
+    /// `base` — the `datum_or_common_datum` SELECT.
+    pub base: GeneralDatumBase,
+}
+
+/// `datum_or_common_datum` SELECT target for [`GeneralDatumReferenceData::base`].
+/// Initial coverage models the `datum` member only; `common_datum` has no
+/// step-io arena and is deferred. A `base` ref outside this set drops the
+/// owning `general_datum_reference` at read time — same expansion policy as
+/// [`ShapeAspectRef`](crate::ir::ShapeAspectRef).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum GeneralDatumBase {
+    /// `DATUM`.
+    Datum(DatumId),
 }
 
 /// `geometric_tolerance` `enum_base` — a GD&T tolerance applied to a shape

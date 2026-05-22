@@ -1724,3 +1724,30 @@ fn nist_property_def_geometric_tolerances() {
         );
     }
 }
+
+/// `general_datum_reference` form entities read into the `pmi` pool. The
+/// NIST property fixture carries 19 `DATUM_REFERENCE_COMPARTMENT`, each with
+/// a `base` pointing at a `DATUM` and an empty `modifiers` set.
+#[test]
+fn nist_property_def_general_datum_references() {
+    use step_io::ir::pmi::{GeneralDatumBase, GeneralDatumReference};
+    let source = include_str!("fixtures/external_temp_nist_property_def.stp");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    let pmi = result
+        .model
+        .pmi
+        .as_ref()
+        .expect("fixture carries PMI content");
+    assert_eq!(
+        pmi.general_datum_references.len(),
+        19,
+        "DATUM_REFERENCE_COMPARTMENT count"
+    );
+    for gdr in pmi.general_datum_references.iter() {
+        let GeneralDatumReference::Compartment(data) = gdr else {
+            panic!("expected Compartment variant, got {gdr:?}");
+        };
+        let GeneralDatumBase::Datum(_) = data.base;
+    }
+}

@@ -59,8 +59,8 @@ pub use id::{
     {
         AnnotationOccurrenceId, CompositeShapeAspectId, ContinuousShapeAspectId, DatumFeatureId,
         DatumId, DerivedShapeAspectId, DimensionalLocationId, DimensionalSizeId,
-        DraughtingPreDefinedTextFontId, GeometricToleranceId, ToleranceZoneFormId, TypeQualifierId,
-        ValueFormatTypeQualifierId,
+        DraughtingPreDefinedTextFontId, GeneralDatumReferenceId, GeometricToleranceId,
+        ToleranceZoneFormId, TypeQualifierId, ValueFormatTypeQualifierId,
     },
 };
 pub use model::{
@@ -85,8 +85,9 @@ pub use plm::{
 pub use pmi::{
     AngleSelection, AngularLocationData, AnnotationOccurrence, AnnotationPlane, Datum,
     DatumFeature, DimensionalLocation, DimensionalLocationData, DimensionalSize,
-    DimensionalSizeKind, DraughtingPreDefinedTextFont, GeometricTolerance, GeometricToleranceData,
-    PmiPool, TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceZoneForm, TypeQualifier,
+    DimensionalSizeKind, DraughtingPreDefinedTextFont, GeneralDatumBase, GeneralDatumReference,
+    GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData, PmiPool,
+    TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceZoneForm, TypeQualifier,
     ValueFormatTypeQualifier,
 };
 pub use property::{

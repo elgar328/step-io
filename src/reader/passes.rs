@@ -357,6 +357,9 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass8ShapeAspectRel);
         // DIMENSIONAL_SIZE — resolves `applies_to` through the same maps.
         self.dispatch_registry(graph, PassLevel::Pass8Dimensional);
+        // general_datum_reference — resolves `base` through `datum_id_map`
+        // (filled by Pass8ShapeAspect) and `of_shape` through the product chain.
+        self.dispatch_registry(graph, PassLevel::Pass8GeneralDatumReference);
         // VIEW_VOLUME — resolves CARTESIAN_POINT / PLANAR_BOX refs.
         self.dispatch_registry(graph, PassLevel::Pass8ViewVolume);
         // CAMERA_MODEL_D3 — resolves VIEW_VOLUME / AXIS2_PLACEMENT_3D refs.

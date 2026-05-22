@@ -17,7 +17,8 @@ use crate::ir::error::ConvertError;
 use crate::ir::pmi::{
     AngleSelection, AngularLocationData, AnnotationOccurrence, AnnotationPlane, Datum,
     DatumFeature, DimensionalLocation, DimensionalLocationData, DimensionalSize,
-    DimensionalSizeKind, DraughtingPreDefinedTextFont, GeometricTolerance, GeometricToleranceData,
+    DimensionalSizeKind, DraughtingPreDefinedTextFont, GeneralDatumBase, GeneralDatumReference,
+    GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
     TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceZoneForm, TypeQualifier,
     ValueFormatTypeQualifier,
 };
@@ -881,5 +882,145 @@ impl SimpleEntityHandler for CylindricityToleranceHandler {
 
     fn write(buf: &mut WriteBuffer, gt: GeometricTolerance) -> Result<u64, WriteError> {
         Ok(write_geometric_tolerance(buf, gt))
+    }
+}
+
+/// Read the shared `general_datum_reference` 6-attr body. `Ok(None)` when
+/// `of_shape` or `base` does not resolve — the entry is dropped, symmetric
+/// on re-read. The 6th attr `modifiers` is not modelled and is ignored.
+fn read_general_datum_reference_data(
+    ctx: &ReaderContext,
+    entity_id: u64,
+    attrs: &[Attribute],
+    entity_name: &'static str,
+) -> Result<Option<GeneralDatumReferenceData>, ConvertError> {
+    check_count(attrs, 6, entity_id, entity_name)?;
+    let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
+    let of_shape_ref = read_entity_ref(attrs, 2, entity_id, "of_shape")?;
+    let product_definitional = read_bool(attrs, 3, entity_id, "product_definitional")?;
+    let base_ref = read_entity_ref(attrs, 4, entity_id, "base")?;
+    // attr 5 (`modifiers`) — datum_reference_modifier set, not modelled.
+
+    // of_shape → PRODUCT_DEFINITION_SHAPE → PRODUCT_DEFINITION → ProductId.
+    let Some(&pdef_step_id) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) else {
+        return Ok(None);
+    };
+    let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_step_id) else {
+        return Ok(None);
+    };
+    let Some(&target) = ctx.product_arena_map.get(&product_step_id) else {
+        return Ok(None);
+    };
+    // base — `datum_or_common_datum`; only the `datum` member is modelled.
+    let Some(&datum_id) = ctx.datum_id_map.get(&base_ref) else {
+        return Ok(None);
+    };
+
+    Ok(Some(GeneralDatumReferenceData {
+        name,
+        description,
+        target,
+        product_definitional,
+        base: GeneralDatumBase::Datum(datum_id),
+    }))
+}
+
+/// Emit a `GeneralDatumReference` under the STEP entity name its variant
+/// selects, returning the STEP id. Shared by both handlers and by
+/// `emit_general_datum_references`.
+pub(crate) fn write_general_datum_reference(
+    buf: &mut WriteBuffer,
+    gdr: GeneralDatumReference,
+) -> u64 {
+    let (entity_name, data) = match gdr {
+        GeneralDatumReference::Compartment(d) => ("DATUM_REFERENCE_COMPARTMENT", d),
+        GeneralDatumReference::Element(d) => ("DATUM_REFERENCE_ELEMENT", d),
+    };
+    // `target` → PRODUCT_DEFINITION_SHAPE step id. A miss is the kernel-built
+    // IR defensive case (no product chain) — in practice unreachable, since a
+    // general_datum_reference only enters the arena once `of_shape` resolved.
+    let pds_step_id = buf
+        .product_def_shape_ids
+        .get(&data.target)
+        .copied()
+        .unwrap_or(0);
+    let base_step_id = match data.base {
+        GeneralDatumBase::Datum(id) => buf.datum_step_ids[id.0 as usize],
+    };
+    let bool_attr = if data.product_definitional { "T" } else { "F" };
+    buf.push_simple(
+        entity_name,
+        vec![
+            Attribute::String(data.name),
+            Attribute::String(data.description),
+            Attribute::EntityRef(pds_step_id),
+            Attribute::Enum(bool_attr.into()),
+            Attribute::EntityRef(base_step_id),
+            // modifiers — not modelled, always emitted as `$`.
+            Attribute::Unset,
+        ],
+    )
+}
+
+pub(crate) struct DatumReferenceCompartmentHandler;
+
+#[step_entity(name = "DATUM_REFERENCE_COMPARTMENT", pass = Pass8GeneralDatumReference)]
+impl SimpleEntityHandler for DatumReferenceCompartmentHandler {
+    type WriteInput = GeneralDatumReference;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let Some(data) = read_general_datum_reference_data(
+            ctx,
+            entity_id,
+            attrs,
+            "DATUM_REFERENCE_COMPARTMENT",
+        )?
+        else {
+            return Ok(());
+        };
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .general_datum_references
+            .push(GeneralDatumReference::Compartment(data));
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, gdr: GeneralDatumReference) -> Result<u64, WriteError> {
+        Ok(write_general_datum_reference(buf, gdr))
+    }
+}
+
+pub(crate) struct DatumReferenceElementHandler;
+
+#[step_entity(name = "DATUM_REFERENCE_ELEMENT", pass = Pass8GeneralDatumReference)]
+impl SimpleEntityHandler for DatumReferenceElementHandler {
+    type WriteInput = GeneralDatumReference;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let Some(data) =
+            read_general_datum_reference_data(ctx, entity_id, attrs, "DATUM_REFERENCE_ELEMENT")?
+        else {
+            return Ok(());
+        };
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .general_datum_references
+            .push(GeneralDatumReference::Element(data));
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, gdr: GeneralDatumReference) -> Result<u64, WriteError> {
+        Ok(write_general_datum_reference(buf, gdr))
     }
 }

@@ -319,4 +319,18 @@ impl WriteBuffer<'_> {
             write_geometric_tolerance(self, gt.clone());
         }
     }
+
+    /// Emit the `pmi` pool's `general_datum_reference` arena
+    /// (`DATUM_REFERENCE_COMPARTMENT` / `DATUM_REFERENCE_ELEMENT`). Runs
+    /// after `emit_pmi_if_set` so `datum_step_ids` (for `base`) and
+    /// `product_def_shape_ids` (for `of_shape`) are filled.
+    pub(in crate::writer::buffer) fn emit_general_datum_references(&mut self) {
+        use crate::entities::pmi::write_general_datum_reference;
+        let Some(pmi) = self.model.pmi.clone() else {
+            return;
+        };
+        for gdr in pmi.general_datum_references.iter() {
+            write_general_datum_reference(self, gdr.clone());
+        }
+    }
 }
