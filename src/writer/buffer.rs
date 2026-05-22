@@ -231,6 +231,15 @@ pub(crate) struct WriteBuffer<'m> {
     /// datum-system). Populated by `emit_datum_systems`; consumed by
     /// `emit_shape_aspect_ref`.
     pub(crate) datum_system_step_ids: Vec<u64>,
+    /// Step-id caches for the plus-minus-tolerance cluster (phase
+    /// plus-minus-tolerance). The `tolerance_value` / `limits_and_fits`
+    /// caches feed `PLUS_MINUS_TOLERANCE.range`; the dimensional caches feed
+    /// its `toleranced_dimension` (`emit_dimensional_locations` /
+    /// `emit_dimensional_sizes` fill those — index-cached this phase).
+    pub(crate) tolerance_value_step_ids: Vec<u64>,
+    pub(crate) limits_and_fits_step_ids: Vec<u64>,
+    pub(crate) dimensional_location_step_ids: Vec<u64>,
+    pub(crate) dimensional_size_step_ids: Vec<u64>,
     /// IR `ApplicationProtocolDefinition` index → emitted
     /// `APPLICATION_PROTOCOL_DEFINITION` step id.
     pub(crate) apd_step_ids: Vec<u64>,
@@ -359,6 +368,10 @@ impl<'m> WriteBuffer<'m> {
             datum_feature_step_ids: Vec::new(),
             general_datum_reference_step_ids: Vec::new(),
             datum_system_step_ids: Vec::new(),
+            tolerance_value_step_ids: Vec::new(),
+            limits_and_fits_step_ids: Vec::new(),
+            dimensional_location_step_ids: Vec::new(),
+            dimensional_size_step_ids: Vec::new(),
             apd_step_ids: Vec::new(),
             pc_step_ids: Vec::new(),
             pdc_step_ids: Vec::new(),
@@ -479,6 +492,12 @@ impl<'m> WriteBuffer<'m> {
         // geometric_tolerance_with_datum_reference — also after
         // emit_datum_systems (`datum_system_step_ids`).
         self.emit_geometric_tolerance_with_datum_references();
+        // plus-minus-tolerance cluster — TOLERANCE_VALUE / LIMITS_AND_FITS
+        // first (PLUS_MINUS_TOLERANCE's `range`), then PLUS_MINUS_TOLERANCE
+        // which also needs the dimensional caches filled above.
+        self.emit_tolerance_values();
+        self.emit_limits_and_fits();
+        self.emit_plus_minus_tolerances();
         self.emit_visualization_if_set()?;
         // REPRESENTATION_MAP + MAPPED_ITEM — after visualization so the
         // `representation_step_ids` cache covers MDGPR slots too.

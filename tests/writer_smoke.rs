@@ -2662,6 +2662,87 @@ fn complex_datum_ref_tolerance_round_trip() {
 }
 
 #[test]
+fn plus_minus_tolerance_round_trip() {
+    // PLUS_MINUS_TOLERANCE — range = TOLERANCE_VALUE, toleranced_dimension =
+    // DIMENSIONAL_SIZE. Exercises both SELECT reference enums.
+    use step_io::ir::pmi::{
+        DimensionalCharacteristic, DimensionalSize, DimensionalSizeKind, PlusMinusTolerance,
+        ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue,
+    };
+    use step_io::ir::property::{MeasureKind, PropertyMeasure, PropertyMeasureUnit};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length_unit = ctx.length;
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        content: ProductContent::Solid(SolidContent {
+            ids: vec![solid_id],
+        }),
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let sa = model.shape_aspects.push(ShapeAspect {
+        name: "sa".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+
+    let bound = || {
+        ToleranceMagnitude::Measure(PropertyMeasure {
+            name: String::new(),
+            kind: MeasureKind::Length,
+            value: 0.02,
+            unit_ref: Some(PropertyMeasureUnit::Named(length_unit)),
+        })
+    };
+    let mut pmi = PmiPool::default();
+    let ds = pmi.dimensional_sizes.push(DimensionalSize {
+        applies_to: ShapeAspectRef::ShapeAspect(sa),
+        name: "diameter".into(),
+        kind: DimensionalSizeKind::Plain,
+    });
+    let tv = pmi.tolerance_values.push(ToleranceValue {
+        lower_bound: bound(),
+        upper_bound: bound(),
+    });
+    pmi.plus_minus_tolerances.push(PlusMinusTolerance {
+        range: ToleranceMethodDefinition::Value(tv),
+        toleranced_dimension: DimensionalCharacteristic::Size(ds),
+    });
+    model.pmi = Some(pmi);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    assert_eq!(re_pmi.tolerance_values.len(), 1);
+    assert_eq!(re_pmi.plus_minus_tolerances.len(), 1);
+    let pmt = re_pmi.plus_minus_tolerances.iter().next().unwrap();
+    assert!(matches!(pmt.range, ToleranceMethodDefinition::Value(_)));
+    assert!(matches!(
+        pmt.toleranced_dimension,
+        DimensionalCharacteristic::Size(_)
+    ));
+}
+
+#[test]
 fn draughting_pre_defined_text_font_round_trip() {
     // DRAUGHTING_PRE_DEFINED_TEXT_FONT — a pmi-pool 1-string leaf primitive.
     use step_io::ir::pmi::DraughtingPreDefinedTextFont;

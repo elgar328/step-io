@@ -16,11 +16,12 @@ use crate::ir::attr::{
 use crate::ir::error::ConvertError;
 use crate::ir::pmi::{
     AngleSelection, AngularLocationData, AnnotationOccurrence, AnnotationPlane, Datum,
-    DatumFeature, DimensionalLocation, DimensionalLocationData, DimensionalSize,
-    DimensionalSizeKind, DraughtingPreDefinedTextFont, GeneralDatumBase, GeneralDatumReference,
-    GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
-    GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData,
-    TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceZoneForm, TypeQualifier,
+    DatumFeature, DimensionalCharacteristic, DimensionalLocation, DimensionalLocationData,
+    DimensionalSize, DimensionalSizeKind, DraughtingPreDefinedTextFont, GeneralDatumBase,
+    GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
+    GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData, LimitsAndFits,
+    PlusMinusTolerance, TessellatedAnnotationOccurrence, ToleranceMagnitude,
+    ToleranceMethodDefinition, ToleranceValue, ToleranceZoneForm, TypeQualifier,
     ValueFormatTypeQualifier,
 };
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
@@ -469,7 +470,8 @@ impl SimpleEntityHandler for DimensionalSizeHandler {
             return Ok(()); // applies_to unresolved — drop the dimension
         };
 
-        ctx.pmi
+        let id = ctx
+            .pmi
             .get_or_insert_with(PmiPool::default)
             .dimensional_sizes
             .push(DimensionalSize {
@@ -477,6 +479,7 @@ impl SimpleEntityHandler for DimensionalSizeHandler {
                 name,
                 kind: DimensionalSizeKind::Plain,
             });
+        ctx.dimensional_size_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -506,7 +509,8 @@ impl SimpleEntityHandler for AngularSizeHandler {
             return Ok(());
         };
 
-        ctx.pmi
+        let id = ctx
+            .pmi
             .get_or_insert_with(PmiPool::default)
             .dimensional_sizes
             .push(DimensionalSize {
@@ -514,6 +518,7 @@ impl SimpleEntityHandler for AngularSizeHandler {
                 name,
                 kind: DimensionalSizeKind::Angular(angle_selection),
             });
+        ctx.dimensional_size_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -614,10 +619,12 @@ impl SimpleEntityHandler for DimensionalLocationHandler {
         else {
             return Ok(());
         };
-        ctx.pmi
+        let id = ctx
+            .pmi
             .get_or_insert_with(PmiPool::default)
             .dimensional_locations
             .push(DimensionalLocation::Plain(data));
+        ctx.dimensional_location_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -643,10 +650,12 @@ impl SimpleEntityHandler for DirectedDimensionalLocationHandler {
         else {
             return Ok(());
         };
-        ctx.pmi
+        let id = ctx
+            .pmi
             .get_or_insert_with(PmiPool::default)
             .dimensional_locations
             .push(DimensionalLocation::Directed(data));
+        ctx.dimensional_location_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -681,7 +690,8 @@ impl SimpleEntityHandler for AngularLocationHandler {
             return Ok(());
         };
 
-        ctx.pmi
+        let id = ctx
+            .pmi
             .get_or_insert_with(PmiPool::default)
             .dimensional_locations
             .push(DimensionalLocation::Angular(AngularLocationData {
@@ -691,6 +701,7 @@ impl SimpleEntityHandler for AngularLocationHandler {
                 related_shape_aspect,
                 angle_selection,
             }));
+        ctx.dimensional_location_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -1564,4 +1575,194 @@ impl ComplexEntityHandler for LineProfileToleranceHandler {
     ) -> Result<u64, WriteError> {
         Ok(write_geometric_tolerance_with_datum_reference(buf, gt))
     }
+}
+
+/// Emit a [`ToleranceMagnitude`] (`ref_measure_with_unit`) and return its
+/// STEP id — a `MeasureWithUnit` references the units-pool step id, a
+/// `Measure` is emitted inline as a `MEASURE_REPRESENTATION_ITEM`.
+fn emit_tolerance_magnitude(buf: &mut WriteBuffer, m: &ToleranceMagnitude) -> u64 {
+    match m {
+        ToleranceMagnitude::MeasureWithUnit(id) => buf.mwu_step_ids[id.0 as usize],
+        ToleranceMagnitude::Measure(pm) => buf.emit_property_measure(pm, None),
+    }
+}
+
+pub(crate) struct ToleranceValueHandler;
+
+#[step_entity(name = "TOLERANCE_VALUE", pass = Pass8ToleranceValue)]
+impl SimpleEntityHandler for ToleranceValueHandler {
+    type WriteInput = ToleranceValue;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 2, entity_id, "TOLERANCE_VALUE")?;
+        let lower_ref = read_entity_ref(attrs, 0, entity_id, "lower_bound")?;
+        let upper_ref = read_entity_ref(attrs, 1, entity_id, "upper_bound")?;
+        let Some(lower_bound) = resolve_tolerance_magnitude(ctx, lower_ref) else {
+            return Ok(());
+        };
+        let Some(upper_bound) = resolve_tolerance_magnitude(ctx, upper_ref) else {
+            return Ok(());
+        };
+        let id = ctx
+            .pmi
+            .get_or_insert_with(PmiPool::default)
+            .tolerance_values
+            .push(ToleranceValue {
+                lower_bound,
+                upper_bound,
+            });
+        ctx.tolerance_value_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, tv: ToleranceValue) -> Result<u64, WriteError> {
+        Ok(write_tolerance_value(buf, &tv))
+    }
+}
+
+/// Emit a `TOLERANCE_VALUE`, returning the STEP id.
+pub(crate) fn write_tolerance_value(buf: &mut WriteBuffer, tv: &ToleranceValue) -> u64 {
+    let lower = emit_tolerance_magnitude(buf, &tv.lower_bound);
+    let upper = emit_tolerance_magnitude(buf, &tv.upper_bound);
+    buf.push_simple(
+        "TOLERANCE_VALUE",
+        vec![Attribute::EntityRef(lower), Attribute::EntityRef(upper)],
+    )
+}
+
+pub(crate) struct LimitsAndFitsHandler;
+
+#[step_entity(name = "LIMITS_AND_FITS", pass = Pass8ToleranceValue)]
+impl SimpleEntityHandler for LimitsAndFitsHandler {
+    type WriteInput = LimitsAndFits;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 4, entity_id, "LIMITS_AND_FITS")?;
+        let form_variance = read_string_or_unset(attrs, 0, entity_id, "form_variance")?.to_owned();
+        let zone_variance = read_string_or_unset(attrs, 1, entity_id, "zone_variance")?.to_owned();
+        let grade = read_string_or_unset(attrs, 2, entity_id, "grade")?.to_owned();
+        let source = read_string_or_unset(attrs, 3, entity_id, "source")?.to_owned();
+        let id = ctx
+            .pmi
+            .get_or_insert_with(PmiPool::default)
+            .limits_and_fits
+            .push(LimitsAndFits {
+                form_variance,
+                zone_variance,
+                grade,
+                source,
+            });
+        ctx.limits_and_fits_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, lf: LimitsAndFits) -> Result<u64, WriteError> {
+        Ok(write_limits_and_fits(buf, lf))
+    }
+}
+
+/// Emit a `LIMITS_AND_FITS`, returning the STEP id.
+pub(crate) fn write_limits_and_fits(buf: &mut WriteBuffer, lf: LimitsAndFits) -> u64 {
+    buf.push_simple(
+        "LIMITS_AND_FITS",
+        vec![
+            Attribute::String(lf.form_variance),
+            Attribute::String(lf.zone_variance),
+            Attribute::String(lf.grade),
+            Attribute::String(lf.source),
+        ],
+    )
+}
+
+/// Resolve a `tolerance_method_definition` SELECT ref (`PLUS_MINUS_TOLERANCE`'s
+/// `range`) — a `TOLERANCE_VALUE` or a `LIMITS_AND_FITS`.
+fn resolve_tolerance_method_definition(
+    ctx: &ReaderContext,
+    item_ref: u64,
+) -> Option<ToleranceMethodDefinition> {
+    if let Some(&id) = ctx.tolerance_value_id_map.get(&item_ref) {
+        return Some(ToleranceMethodDefinition::Value(id));
+    }
+    ctx.limits_and_fits_id_map
+        .get(&item_ref)
+        .copied()
+        .map(ToleranceMethodDefinition::LimitsAndFits)
+}
+
+/// Resolve a `dimensional_characteristic` SELECT ref (`PLUS_MINUS_TOLERANCE`'s
+/// `toleranced_dimension`) — a `dimensional_location` or `dimensional_size`.
+fn resolve_dimensional_characteristic(
+    ctx: &ReaderContext,
+    item_ref: u64,
+) -> Option<DimensionalCharacteristic> {
+    if let Some(&id) = ctx.dimensional_location_id_map.get(&item_ref) {
+        return Some(DimensionalCharacteristic::Location(id));
+    }
+    ctx.dimensional_size_id_map
+        .get(&item_ref)
+        .copied()
+        .map(DimensionalCharacteristic::Size)
+}
+
+pub(crate) struct PlusMinusToleranceHandler;
+
+#[step_entity(name = "PLUS_MINUS_TOLERANCE", pass = Pass8PlusMinusTolerance)]
+impl SimpleEntityHandler for PlusMinusToleranceHandler {
+    type WriteInput = PlusMinusTolerance;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 2, entity_id, "PLUS_MINUS_TOLERANCE")?;
+        let range_ref = read_entity_ref(attrs, 0, entity_id, "range")?;
+        let dimension_ref = read_entity_ref(attrs, 1, entity_id, "toleranced_dimension")?;
+        let Some(range) = resolve_tolerance_method_definition(ctx, range_ref) else {
+            return Ok(());
+        };
+        let Some(toleranced_dimension) = resolve_dimensional_characteristic(ctx, dimension_ref)
+        else {
+            return Ok(());
+        };
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .plus_minus_tolerances
+            .push(PlusMinusTolerance {
+                range,
+                toleranced_dimension,
+            });
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, pmt: PlusMinusTolerance) -> Result<u64, WriteError> {
+        Ok(write_plus_minus_tolerance(buf, &pmt))
+    }
+}
+
+/// Emit a `PLUS_MINUS_TOLERANCE`, returning the STEP id.
+pub(crate) fn write_plus_minus_tolerance(buf: &mut WriteBuffer, pmt: &PlusMinusTolerance) -> u64 {
+    let range = match pmt.range {
+        ToleranceMethodDefinition::Value(id) => buf.tolerance_value_step_ids[id.0 as usize],
+        ToleranceMethodDefinition::LimitsAndFits(id) => buf.limits_and_fits_step_ids[id.0 as usize],
+    };
+    let dimension = match pmt.toleranced_dimension {
+        DimensionalCharacteristic::Location(id) => buf.dimensional_location_step_ids[id.0 as usize],
+        DimensionalCharacteristic::Size(id) => buf.dimensional_size_step_ids[id.0 as usize],
+    };
+    buf.push_simple(
+        "PLUS_MINUS_TOLERANCE",
+        vec![Attribute::EntityRef(range), Attribute::EntityRef(dimension)],
+    )
 }

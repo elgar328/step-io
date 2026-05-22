@@ -1839,3 +1839,29 @@ fn nist_property_def_complex_datum_ref_tolerances() {
         "SURFACE_PROFILE_TOLERANCE complex form read"
     );
 }
+
+/// `TOLERANCE_VALUE` + `PLUS_MINUS_TOLERANCE` read into the `pmi` pool. The
+/// NIST property fixture carries 16 of each (no `LIMITS_AND_FITS`).
+#[test]
+fn nist_property_def_plus_minus_tolerances() {
+    use step_io::ir::pmi::ToleranceMethodDefinition;
+    let source = include_str!("fixtures/external_temp_nist_property_def.stp");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    let pmi = result
+        .model
+        .pmi
+        .as_ref()
+        .expect("fixture carries PMI content");
+    assert!(!pmi.tolerance_values.is_empty(), "TOLERANCE_VALUE read");
+    assert!(
+        !pmi.plus_minus_tolerances.is_empty(),
+        "PLUS_MINUS_TOLERANCE read"
+    );
+    for pmt in pmi.plus_minus_tolerances.iter() {
+        assert!(
+            matches!(pmt.range, ToleranceMethodDefinition::Value(_)),
+            "NIST plus-minus range is a TOLERANCE_VALUE"
+        );
+    }
+}

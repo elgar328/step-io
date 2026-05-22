@@ -284,8 +284,11 @@ impl WriteBuffer<'_> {
         let Some(pmi) = self.model.pmi.clone() else {
             return Ok(());
         };
-        for ds in pmi.dimensional_sizes.iter() {
-            DimensionalSizeHandler::write(self, ds.clone())?;
+        self.dimensional_size_step_ids
+            .resize(pmi.dimensional_sizes.len(), 0);
+        for (index, ds) in pmi.dimensional_sizes.iter().enumerate() {
+            let step_id = DimensionalSizeHandler::write(self, ds.clone())?;
+            self.dimensional_size_step_ids[index] = step_id;
         }
         Ok(())
     }
@@ -301,8 +304,11 @@ impl WriteBuffer<'_> {
         let Some(pmi) = self.model.pmi.clone() else {
             return Ok(());
         };
-        for dl in pmi.dimensional_locations.iter() {
-            DimensionalLocationHandler::write(self, dl.clone())?;
+        self.dimensional_location_step_ids
+            .resize(pmi.dimensional_locations.len(), 0);
+        for (index, dl) in pmi.dimensional_locations.iter().enumerate() {
+            let step_id = DimensionalLocationHandler::write(self, dl.clone())?;
+            self.dimensional_location_step_ids[index] = step_id;
         }
         Ok(())
     }
@@ -368,6 +374,49 @@ impl WriteBuffer<'_> {
         };
         for gt in pmi.geometric_tolerance_with_datum_references.iter() {
             write_geometric_tolerance_with_datum_reference(self, gt.clone());
+        }
+    }
+
+    /// Emit the `pmi` pool's `TOLERANCE_VALUE` arena, index-caching the step
+    /// ids in `tolerance_value_step_ids` for `emit_plus_minus_tolerances`.
+    pub(in crate::writer::buffer) fn emit_tolerance_values(&mut self) {
+        use crate::entities::pmi::write_tolerance_value;
+        let Some(pmi) = self.model.pmi.clone() else {
+            return;
+        };
+        self.tolerance_value_step_ids
+            .resize(pmi.tolerance_values.len(), 0);
+        for (index, tv) in pmi.tolerance_values.iter().enumerate() {
+            let step_id = write_tolerance_value(self, tv);
+            self.tolerance_value_step_ids[index] = step_id;
+        }
+    }
+
+    /// Emit the `pmi` pool's `LIMITS_AND_FITS` arena, index-caching the step
+    /// ids in `limits_and_fits_step_ids` for `emit_plus_minus_tolerances`.
+    pub(in crate::writer::buffer) fn emit_limits_and_fits(&mut self) {
+        use crate::entities::pmi::write_limits_and_fits;
+        let Some(pmi) = self.model.pmi.clone() else {
+            return;
+        };
+        self.limits_and_fits_step_ids
+            .resize(pmi.limits_and_fits.len(), 0);
+        for (index, lf) in pmi.limits_and_fits.iter().enumerate() {
+            let step_id = write_limits_and_fits(self, lf.clone());
+            self.limits_and_fits_step_ids[index] = step_id;
+        }
+    }
+
+    /// Emit the `pmi` pool's `PLUS_MINUS_TOLERANCE` arena. Runs after
+    /// `emit_tolerance_values` / `emit_limits_and_fits` (`range`) and
+    /// `emit_dimensional_*` (`toleranced_dimension`).
+    pub(in crate::writer::buffer) fn emit_plus_minus_tolerances(&mut self) {
+        use crate::entities::pmi::write_plus_minus_tolerance;
+        let Some(pmi) = self.model.pmi.clone() else {
+            return;
+        };
+        for pmt in pmi.plus_minus_tolerances.iter() {
+            write_plus_minus_tolerance(self, pmt);
         }
     }
 }

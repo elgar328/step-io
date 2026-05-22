@@ -8,8 +8,9 @@
 
 use super::arena::Arena;
 use super::id::{
-    DatumId, DatumSystemId, MeasureWithUnitId, PresentationStyleAssignmentId, ProductId,
-    TessellatedItemId,
+    DatumId, DatumSystemId, DimensionalLocationId, DimensionalSizeId, LimitsAndFitsId,
+    MeasureWithUnitId, PresentationStyleAssignmentId, ProductId, TessellatedItemId,
+    ToleranceValueId,
 };
 use super::property::PropertyMeasure;
 use super::representation_item::RepresentationItemRef;
@@ -47,6 +48,65 @@ pub struct PmiPool {
     /// `geometric_tolerance_with_datum_reference` `enum_base` arena. Phase
     /// gt-datum-ref fills the seven simple-form datum-referencing tolerances.
     pub geometric_tolerance_with_datum_references: Arena<GeometricToleranceWithDatumReference>,
+    /// `TOLERANCE_VALUE` arena. Phase plus-minus-tolerance.
+    pub tolerance_values: Arena<ToleranceValue>,
+    /// `LIMITS_AND_FITS` arena. Phase plus-minus-tolerance.
+    pub limits_and_fits: Arena<LimitsAndFits>,
+    /// `PLUS_MINUS_TOLERANCE` arena. Phase plus-minus-tolerance.
+    pub plus_minus_tolerances: Arena<PlusMinusTolerance>,
+}
+
+/// `TOLERANCE_VALUE(lower_bound, upper_bound)` — the value range of a
+/// `PLUS_MINUS_TOLERANCE`. Both bounds are `ref_measure_with_unit`, the same
+/// polymorphic reference as `geometric_tolerance.magnitude`, so each is a
+/// [`ToleranceMagnitude`]. A `TOLERANCE_VALUE` whose either bound does not
+/// resolve is silently dropped, symmetric on re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ToleranceValue {
+    pub lower_bound: ToleranceMagnitude,
+    pub upper_bound: ToleranceMagnitude,
+}
+
+/// `LIMITS_AND_FITS(form_variance, zone_variance, grade, source)` — an
+/// ISO 286 limits-and-fits designation, the other `tolerance_method_definition`
+/// SELECT member besides [`ToleranceValue`].
+#[derive(Debug, Clone, PartialEq)]
+pub struct LimitsAndFits {
+    pub form_variance: String,
+    pub zone_variance: String,
+    pub grade: String,
+    pub source: String,
+}
+
+/// `tolerance_method_definition` SELECT — the `range` of a
+/// [`PlusMinusTolerance`].
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ToleranceMethodDefinition {
+    /// `TOLERANCE_VALUE`.
+    Value(ToleranceValueId),
+    /// `LIMITS_AND_FITS`.
+    LimitsAndFits(LimitsAndFitsId),
+}
+
+/// `dimensional_characteristic` SELECT — the `toleranced_dimension` of a
+/// [`PlusMinusTolerance`]: either a `DIMENSIONAL_LOCATION` or a
+/// `DIMENSIONAL_SIZE` (each id covers all of that entity's variants).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum DimensionalCharacteristic {
+    /// A `dimensional_location` family entry.
+    Location(DimensionalLocationId),
+    /// A `dimensional_size` family entry.
+    Size(DimensionalSizeId),
+}
+
+/// `PLUS_MINUS_TOLERANCE(range, toleranced_dimension)` — a ± value tolerance
+/// applied to a dimensional characteristic. A `PLUS_MINUS_TOLERANCE` whose
+/// `range` or `toleranced_dimension` does not resolve is silently dropped,
+/// symmetric on re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlusMinusTolerance {
+    pub range: ToleranceMethodDefinition,
+    pub toleranced_dimension: DimensionalCharacteristic,
 }
 
 /// `geometric_tolerance_with_datum_reference` `enum_base` — a GD&T tolerance

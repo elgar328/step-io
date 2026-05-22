@@ -60,8 +60,8 @@ pub use id::{
         AnnotationOccurrenceId, CompositeShapeAspectId, ContinuousShapeAspectId, DatumFeatureId,
         DatumId, DatumSystemId, DerivedShapeAspectId, DimensionalLocationId, DimensionalSizeId,
         DraughtingPreDefinedTextFontId, GeneralDatumReferenceId, GeometricToleranceId,
-        GeometricToleranceWithDatumReferenceId, ToleranceZoneFormId, TypeQualifierId,
-        ValueFormatTypeQualifierId,
+        GeometricToleranceWithDatumReferenceId, LimitsAndFitsId, PlusMinusToleranceId,
+        ToleranceValueId, ToleranceZoneFormId, TypeQualifierId, ValueFormatTypeQualifierId,
     },
 };
 pub use model::{
@@ -85,11 +85,12 @@ pub use plm::{
 };
 pub use pmi::{
     AngleSelection, AngularLocationData, AnnotationOccurrence, AnnotationPlane, Datum,
-    DatumFeature, DimensionalLocation, DimensionalLocationData, DimensionalSize,
-    DimensionalSizeKind, DraughtingPreDefinedTextFont, GeneralDatumBase, GeneralDatumReference,
-    GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
-    GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData, PmiPool,
-    TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceZoneForm, TypeQualifier,
+    DatumFeature, DimensionalCharacteristic, DimensionalLocation, DimensionalLocationData,
+    DimensionalSize, DimensionalSizeKind, DraughtingPreDefinedTextFont, GeneralDatumBase,
+    GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
+    GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData, LimitsAndFits,
+    PlusMinusTolerance, PmiPool, TessellatedAnnotationOccurrence, ToleranceMagnitude,
+    ToleranceMethodDefinition, ToleranceValue, ToleranceZoneForm, TypeQualifier,
     ValueFormatTypeQualifier,
 };
 pub use property::{

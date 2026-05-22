@@ -401,6 +401,14 @@ pub(crate) enum PassLevel {
     /// `Pass8ShapeAspect` (shape-aspect id maps) and `Pass8DatumSystem`
     /// (`datum_system_id_map`) for the `datum_system` set.
     Pass8GtWithDatumReference,
+    /// `TOLERANCE_VALUE` + `LIMITS_AND_FITS` (Pass 8-1d) — the
+    /// `tolerance_method_definition` SELECT members. `TOLERANCE_VALUE` depends
+    /// on `Pass8Measure` (`measure_item_map`) / `Pass0MwuDue` (`mwu_id_map`)
+    /// for its bounds.
+    Pass8ToleranceValue,
+    /// `PLUS_MINUS_TOLERANCE` (Pass 8-1e) — depends on `Pass8ToleranceValue`
+    /// (`range`) and `Pass8Dimensional` (`toleranced_dimension`).
+    Pass8PlusMinusTolerance,
     /// `PROPERTY_DEFINITION` (Pass 8-2) — depends on Pass 6 (`pdef_to_product`)
     /// for resolving the PD's target.
     Pass8PropertyDef,

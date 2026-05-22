@@ -390,6 +390,14 @@ pub struct ReaderContext {
     /// datum-system). Populated by the `DATUM_REFERENCE_*` handlers; consumed
     /// by `DATUM_SYSTEM`'s `constituents` resolution.
     pub(crate) general_datum_reference_id_map: HashMap<u64, crate::ir::GeneralDatumReferenceId>,
+    /// `#N → …Id` maps for the plus-minus-tolerance cluster. `tolerance_value`
+    /// / `limits_and_fits` feed `PLUS_MINUS_TOLERANCE.range`; the dimensional
+    /// maps feed its `toleranced_dimension` (the `dimensional_location` /
+    /// `dimensional_size` handlers populate those — added this phase).
+    pub(crate) tolerance_value_id_map: HashMap<u64, crate::ir::ToleranceValueId>,
+    pub(crate) limits_and_fits_id_map: HashMap<u64, crate::ir::LimitsAndFitsId>,
+    pub(crate) dimensional_location_id_map: HashMap<u64, crate::ir::DimensionalLocationId>,
+    pub(crate) dimensional_size_id_map: HashMap<u64, crate::ir::DimensionalSizeId>,
     /// `SHAPE_ASPECT_RELATIONSHIP` arena (phase shape-aspect-ref) — orphan.
     pub(crate) shape_aspect_relationships:
         crate::ir::Arena<crate::ir::shape_rep::ShapeAspectRelationship>,
