@@ -476,6 +476,9 @@ impl<'m> WriteBuffer<'m> {
         // geometric_tolerance form tolerances — after the units pass
         // (`mwu_step_ids`) and emit_pmi_if_set (shape-aspect caches).
         self.emit_geometric_tolerances();
+        // geometric_tolerance_with_datum_reference — also after
+        // emit_datum_systems (`datum_system_step_ids`).
+        self.emit_geometric_tolerance_with_datum_references();
         self.emit_visualization_if_set()?;
         // REPRESENTATION_MAP + MAPPED_ITEM — after visualization so the
         // `representation_step_ids` cache covers MDGPR slots too.

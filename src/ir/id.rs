@@ -20,8 +20,9 @@ use super::plm::{
 };
 use super::pmi::{
     AnnotationOccurrence, Datum, DatumFeature, DimensionalLocation, DimensionalSize,
-    DraughtingPreDefinedTextFont, GeneralDatumReference, GeometricTolerance, ToleranceZoneForm,
-    TypeQualifier, ValueFormatTypeQualifier,
+    DraughtingPreDefinedTextFont, GeneralDatumReference, GeometricTolerance,
+    GeometricToleranceWithDatumReference, ToleranceZoneForm, TypeQualifier,
+    ValueFormatTypeQualifier,
 };
 use super::property::{
     DescriptionAttribute, GeneralProperty, GeneralPropertyAssociation, IdAttribute, NameAttribute,
@@ -132,6 +133,12 @@ define_id!(GeometricToleranceId, GeometricTolerance);
 
 // general_datum_reference enum_base arena (Phase general-datum-reference).
 define_id!(GeneralDatumReferenceId, GeneralDatumReference);
+
+// geometric_tolerance_with_datum_reference enum_base arena (Phase gt-datum-ref).
+define_id!(
+    GeometricToleranceWithDatumReferenceId,
+    GeometricToleranceWithDatumReference
+);
 
 // draughting_pre_defined_text_font arena (Phase text-font).
 define_id!(DraughtingPreDefinedTextFontId, DraughtingPreDefinedTextFont);

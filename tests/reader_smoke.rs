@@ -1767,3 +1767,38 @@ fn nist_property_def_datum_systems() {
         );
     }
 }
+
+/// `geometric_tolerance_with_datum_reference` simple tolerances read into the
+/// `pmi` pool. The NIST property fixture has two `PERPENDICULARITY_TOLERANCE`;
+/// one (`#10307`) points at a simple `DATUM_FEATURE` and round-trips, the
+/// other (`#10246`) at a complex multi-inheritance shape aspect step-io does
+/// not model and is dropped.
+#[test]
+fn nist_property_def_gt_with_datum_reference() {
+    use step_io::ir::pmi::GeometricToleranceWithDatumReference;
+    let source = include_str!("fixtures/external_temp_nist_property_def.stp");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    let pmi = result
+        .model
+        .pmi
+        .as_ref()
+        .expect("fixture carries PMI content");
+    let perpendicularity: Vec<_> = pmi
+        .geometric_tolerance_with_datum_references
+        .iter()
+        .filter_map(|gt| match gt {
+            GeometricToleranceWithDatumReference::Perpendicularity(d) => Some(d),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        perpendicularity.len(),
+        1,
+        "resolvable PERPENDICULARITY_TOLERANCE"
+    );
+    assert!(
+        !perpendicularity[0].datum_system.is_empty(),
+        "datum_system should resolve"
+    );
+}

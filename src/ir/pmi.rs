@@ -8,7 +8,8 @@
 
 use super::arena::Arena;
 use super::id::{
-    DatumId, MeasureWithUnitId, PresentationStyleAssignmentId, ProductId, TessellatedItemId,
+    DatumId, DatumSystemId, MeasureWithUnitId, PresentationStyleAssignmentId, ProductId,
+    TessellatedItemId,
 };
 use super::property::PropertyMeasure;
 use super::representation_item::RepresentationItemRef;
@@ -43,6 +44,52 @@ pub struct PmiPool {
     /// `general_datum_reference` `enum_base` arena. Phase
     /// general-datum-reference fills both variants.
     pub general_datum_references: Arena<GeneralDatumReference>,
+    /// `geometric_tolerance_with_datum_reference` `enum_base` arena. Phase
+    /// gt-datum-ref fills the seven simple-form datum-referencing tolerances.
+    pub geometric_tolerance_with_datum_references: Arena<GeometricToleranceWithDatumReference>,
+}
+
+/// `geometric_tolerance_with_datum_reference` `enum_base` — a GD&T tolerance
+/// that references one or more datum systems. The seven concrete subtypes
+/// (`ANGULARITY` / `CIRCULAR_RUNOUT` / `CONCENTRICITY` / `PARALLELISM` /
+/// `PERPENDICULARITY` / `SYMMETRY` / `TOTAL_RUNOUT`) share the identical
+/// 5-attr body, so one [`GeometricToleranceWithDatumReferenceData`] payload
+/// serves every variant. `POSITION` / `SURFACE_PROFILE` / `LINE_PROFILE`
+/// datum-referencing tolerances take a different (multiple-inheritance
+/// complex) encoding and arrive in a later phase.
+#[derive(Debug, Clone, PartialEq)]
+pub enum GeometricToleranceWithDatumReference {
+    /// `ANGULARITY_TOLERANCE`.
+    Angularity(GeometricToleranceWithDatumReferenceData),
+    /// `CIRCULAR_RUNOUT_TOLERANCE`.
+    CircularRunout(GeometricToleranceWithDatumReferenceData),
+    /// `CONCENTRICITY_TOLERANCE`.
+    Concentricity(GeometricToleranceWithDatumReferenceData),
+    /// `PARALLELISM_TOLERANCE`.
+    Parallelism(GeometricToleranceWithDatumReferenceData),
+    /// `PERPENDICULARITY_TOLERANCE`.
+    Perpendicularity(GeometricToleranceWithDatumReferenceData),
+    /// `SYMMETRY_TOLERANCE`.
+    Symmetry(GeometricToleranceWithDatumReferenceData),
+    /// `TOTAL_RUNOUT_TOLERANCE`.
+    TotalRunout(GeometricToleranceWithDatumReferenceData),
+}
+
+/// Shared 5-attr body of the datum-referencing tolerances — the four
+/// `geometric_tolerance` attrs plus the `datum_system` set. A tolerance
+/// whose `magnitude` or `toleranced_shape_aspect` does not resolve is
+/// silently dropped; individual `datum_system` refs that do not resolve are
+/// skipped — both symmetric on re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct GeometricToleranceWithDatumReferenceData {
+    pub name: String,
+    pub description: String,
+    /// `magnitude` — a `ref_measure_with_unit`.
+    pub magnitude: ToleranceMagnitude,
+    /// `toleranced_shape_aspect` — a `ref_shape_aspect`.
+    pub toleranced_shape_aspect: ShapeAspectRef,
+    /// `datum_system` — `DATUM_SYSTEM` refs in source order.
+    pub datum_system: Vec<DatumSystemId>,
 }
 
 /// `general_datum_reference` `enum_base` — a GD&T datum reference in the

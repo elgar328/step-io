@@ -396,6 +396,11 @@ pub(crate) enum PassLevel {
     /// and `Pass8ShapeAspect` (shape-aspect id maps) for resolving
     /// `magnitude` and `toleranced_shape_aspect`.
     Pass8GeometricTolerance,
+    /// `geometric_tolerance_with_datum_reference` simple tolerances
+    /// (Pass 8-1c) — depend on `Pass8Measure` (`measure_item_map`),
+    /// `Pass8ShapeAspect` (shape-aspect id maps) and `Pass8DatumSystem`
+    /// (`datum_system_id_map`) for the `datum_system` set.
+    Pass8GtWithDatumReference,
     /// `PROPERTY_DEFINITION` (Pass 8-2) — depends on Pass 6 (`pdef_to_product`)
     /// for resolving the PD's target.
     Pass8PropertyDef,

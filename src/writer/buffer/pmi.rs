@@ -355,4 +355,19 @@ impl WriteBuffer<'_> {
             }
         }
     }
+
+    /// Emit the `pmi` pool's `geometric_tolerance_with_datum_reference`
+    /// arena. Runs after `emit_datum_systems` (`datum_system_step_ids`), the
+    /// units pass (`mwu_step_ids`) and `emit_pmi_if_set` (shape-aspect
+    /// caches) so `write_geometric_tolerance_with_datum_reference` resolves
+    /// every ref.
+    pub(in crate::writer::buffer) fn emit_geometric_tolerance_with_datum_references(&mut self) {
+        use crate::entities::pmi::write_geometric_tolerance_with_datum_reference;
+        let Some(pmi) = self.model.pmi.clone() else {
+            return;
+        };
+        for gt in pmi.geometric_tolerance_with_datum_references.iter() {
+            write_geometric_tolerance_with_datum_reference(self, gt.clone());
+        }
+    }
 }

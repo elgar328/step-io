@@ -377,6 +377,9 @@ impl ReaderContext {
         // `mwu_id_map` / `measure_item_map` and `toleranced_shape_aspect`
         // through the shape-aspect id maps Pass8ShapeAspect filled.
         self.dispatch_registry(graph, PassLevel::Pass8GeometricTolerance);
+        // geometric_tolerance_with_datum_reference — also needs the
+        // datum_system id map Pass8DatumSystem filled.
+        self.dispatch_registry(graph, PassLevel::Pass8GtWithDatumReference);
         self.dispatch_registry(graph, PassLevel::Pass8PropertyDef);
         // PDR walks the bound REPRESENTATION through `graph` because the
         // generic REPRESENTATION name conflicts with MDGPR / SR.

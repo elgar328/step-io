@@ -19,6 +19,7 @@ use crate::ir::pmi::{
     DatumFeature, DimensionalLocation, DimensionalLocationData, DimensionalSize,
     DimensionalSizeKind, DraughtingPreDefinedTextFont, GeneralDatumBase, GeneralDatumReference,
     GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
+    GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData,
     TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceZoneForm, TypeQualifier,
     ValueFormatTypeQualifier,
 };
@@ -1026,5 +1027,337 @@ impl SimpleEntityHandler for DatumReferenceElementHandler {
 
     fn write(buf: &mut WriteBuffer, gdr: GeneralDatumReference) -> Result<u64, WriteError> {
         Ok(write_general_datum_reference(buf, gdr))
+    }
+}
+
+/// Read the shared `geometric_tolerance_with_datum_reference` 5-attr body.
+/// `Ok(None)` when `magnitude` or `toleranced_shape_aspect` does not
+/// resolve — the tolerance is dropped, symmetric on re-read. Individual
+/// `datum_system` refs that do not resolve are skipped.
+fn read_geometric_tolerance_with_datum_reference_data(
+    ctx: &ReaderContext,
+    entity_id: u64,
+    attrs: &[Attribute],
+    entity_name: &'static str,
+) -> Result<Option<GeometricToleranceWithDatumReferenceData>, ConvertError> {
+    check_count(attrs, 5, entity_id, entity_name)?;
+    let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
+    let magnitude_ref = read_entity_ref(attrs, 2, entity_id, "magnitude")?;
+    let shape_aspect_ref = read_entity_ref(attrs, 3, entity_id, "toleranced_shape_aspect")?;
+    let datum_system_refs = read_entity_ref_list(attrs, 4, entity_id, "datum_system")?;
+
+    let Some(magnitude) = resolve_tolerance_magnitude(ctx, magnitude_ref) else {
+        return Ok(None);
+    };
+    let Some(toleranced_shape_aspect) = resolve_shape_aspect_ref(ctx, shape_aspect_ref) else {
+        return Ok(None);
+    };
+    let mut datum_system = Vec::with_capacity(datum_system_refs.len());
+    for r in datum_system_refs {
+        if let Some(&id) = ctx.datum_system_id_map.get(&r) {
+            datum_system.push(id);
+        }
+    }
+
+    Ok(Some(GeometricToleranceWithDatumReferenceData {
+        name,
+        description,
+        magnitude,
+        toleranced_shape_aspect,
+        datum_system,
+    }))
+}
+
+/// Emit a `GeometricToleranceWithDatumReference` under the STEP entity name
+/// its variant selects, returning the STEP id. Shared by all seven handlers
+/// and by `emit_geometric_tolerance_with_datum_references`.
+pub(crate) fn write_geometric_tolerance_with_datum_reference(
+    buf: &mut WriteBuffer,
+    gt: GeometricToleranceWithDatumReference,
+) -> u64 {
+    let (entity_name, data) = match gt {
+        GeometricToleranceWithDatumReference::Angularity(d) => ("ANGULARITY_TOLERANCE", d),
+        GeometricToleranceWithDatumReference::CircularRunout(d) => ("CIRCULAR_RUNOUT_TOLERANCE", d),
+        GeometricToleranceWithDatumReference::Concentricity(d) => ("CONCENTRICITY_TOLERANCE", d),
+        GeometricToleranceWithDatumReference::Parallelism(d) => ("PARALLELISM_TOLERANCE", d),
+        GeometricToleranceWithDatumReference::Perpendicularity(d) => {
+            ("PERPENDICULARITY_TOLERANCE", d)
+        }
+        GeometricToleranceWithDatumReference::Symmetry(d) => ("SYMMETRY_TOLERANCE", d),
+        GeometricToleranceWithDatumReference::TotalRunout(d) => ("TOTAL_RUNOUT_TOLERANCE", d),
+    };
+    let magnitude = match data.magnitude {
+        ToleranceMagnitude::MeasureWithUnit(id) => buf.mwu_step_ids[id.0 as usize],
+        ToleranceMagnitude::Measure(m) => buf.emit_property_measure(&m, None),
+    };
+    let shape_aspect = buf.emit_shape_aspect_ref(data.toleranced_shape_aspect);
+    let mut datum_system_refs = Vec::with_capacity(data.datum_system.len());
+    for ds_id in &data.datum_system {
+        datum_system_refs.push(Attribute::EntityRef(
+            buf.datum_system_step_ids[ds_id.0 as usize],
+        ));
+    }
+    buf.push_simple(
+        entity_name,
+        vec![
+            Attribute::String(data.name),
+            Attribute::String(data.description),
+            Attribute::EntityRef(magnitude),
+            Attribute::EntityRef(shape_aspect),
+            Attribute::List(datum_system_refs),
+        ],
+    )
+}
+
+pub(crate) struct AngularityToleranceHandler;
+
+#[step_entity(name = "ANGULARITY_TOLERANCE", pass = Pass8GtWithDatumReference)]
+impl SimpleEntityHandler for AngularityToleranceHandler {
+    type WriteInput = GeometricToleranceWithDatumReference;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let Some(data) = read_geometric_tolerance_with_datum_reference_data(
+            ctx,
+            entity_id,
+            attrs,
+            "ANGULARITY_TOLERANCE",
+        )?
+        else {
+            return Ok(());
+        };
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .geometric_tolerance_with_datum_references
+            .push(GeometricToleranceWithDatumReference::Angularity(data));
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        gt: GeometricToleranceWithDatumReference,
+    ) -> Result<u64, WriteError> {
+        Ok(write_geometric_tolerance_with_datum_reference(buf, gt))
+    }
+}
+
+pub(crate) struct CircularRunoutToleranceHandler;
+
+#[step_entity(name = "CIRCULAR_RUNOUT_TOLERANCE", pass = Pass8GtWithDatumReference)]
+impl SimpleEntityHandler for CircularRunoutToleranceHandler {
+    type WriteInput = GeometricToleranceWithDatumReference;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let Some(data) = read_geometric_tolerance_with_datum_reference_data(
+            ctx,
+            entity_id,
+            attrs,
+            "CIRCULAR_RUNOUT_TOLERANCE",
+        )?
+        else {
+            return Ok(());
+        };
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .geometric_tolerance_with_datum_references
+            .push(GeometricToleranceWithDatumReference::CircularRunout(data));
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        gt: GeometricToleranceWithDatumReference,
+    ) -> Result<u64, WriteError> {
+        Ok(write_geometric_tolerance_with_datum_reference(buf, gt))
+    }
+}
+
+pub(crate) struct ConcentricityToleranceHandler;
+
+#[step_entity(name = "CONCENTRICITY_TOLERANCE", pass = Pass8GtWithDatumReference)]
+impl SimpleEntityHandler for ConcentricityToleranceHandler {
+    type WriteInput = GeometricToleranceWithDatumReference;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let Some(data) = read_geometric_tolerance_with_datum_reference_data(
+            ctx,
+            entity_id,
+            attrs,
+            "CONCENTRICITY_TOLERANCE",
+        )?
+        else {
+            return Ok(());
+        };
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .geometric_tolerance_with_datum_references
+            .push(GeometricToleranceWithDatumReference::Concentricity(data));
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        gt: GeometricToleranceWithDatumReference,
+    ) -> Result<u64, WriteError> {
+        Ok(write_geometric_tolerance_with_datum_reference(buf, gt))
+    }
+}
+
+pub(crate) struct ParallelismToleranceHandler;
+
+#[step_entity(name = "PARALLELISM_TOLERANCE", pass = Pass8GtWithDatumReference)]
+impl SimpleEntityHandler for ParallelismToleranceHandler {
+    type WriteInput = GeometricToleranceWithDatumReference;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let Some(data) = read_geometric_tolerance_with_datum_reference_data(
+            ctx,
+            entity_id,
+            attrs,
+            "PARALLELISM_TOLERANCE",
+        )?
+        else {
+            return Ok(());
+        };
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .geometric_tolerance_with_datum_references
+            .push(GeometricToleranceWithDatumReference::Parallelism(data));
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        gt: GeometricToleranceWithDatumReference,
+    ) -> Result<u64, WriteError> {
+        Ok(write_geometric_tolerance_with_datum_reference(buf, gt))
+    }
+}
+
+pub(crate) struct PerpendicularityToleranceHandler;
+
+#[step_entity(name = "PERPENDICULARITY_TOLERANCE", pass = Pass8GtWithDatumReference)]
+impl SimpleEntityHandler for PerpendicularityToleranceHandler {
+    type WriteInput = GeometricToleranceWithDatumReference;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let Some(data) = read_geometric_tolerance_with_datum_reference_data(
+            ctx,
+            entity_id,
+            attrs,
+            "PERPENDICULARITY_TOLERANCE",
+        )?
+        else {
+            return Ok(());
+        };
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .geometric_tolerance_with_datum_references
+            .push(GeometricToleranceWithDatumReference::Perpendicularity(data));
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        gt: GeometricToleranceWithDatumReference,
+    ) -> Result<u64, WriteError> {
+        Ok(write_geometric_tolerance_with_datum_reference(buf, gt))
+    }
+}
+
+pub(crate) struct SymmetryToleranceHandler;
+
+#[step_entity(name = "SYMMETRY_TOLERANCE", pass = Pass8GtWithDatumReference)]
+impl SimpleEntityHandler for SymmetryToleranceHandler {
+    type WriteInput = GeometricToleranceWithDatumReference;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let Some(data) = read_geometric_tolerance_with_datum_reference_data(
+            ctx,
+            entity_id,
+            attrs,
+            "SYMMETRY_TOLERANCE",
+        )?
+        else {
+            return Ok(());
+        };
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .geometric_tolerance_with_datum_references
+            .push(GeometricToleranceWithDatumReference::Symmetry(data));
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        gt: GeometricToleranceWithDatumReference,
+    ) -> Result<u64, WriteError> {
+        Ok(write_geometric_tolerance_with_datum_reference(buf, gt))
+    }
+}
+
+pub(crate) struct TotalRunoutToleranceHandler;
+
+#[step_entity(name = "TOTAL_RUNOUT_TOLERANCE", pass = Pass8GtWithDatumReference)]
+impl SimpleEntityHandler for TotalRunoutToleranceHandler {
+    type WriteInput = GeometricToleranceWithDatumReference;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let Some(data) = read_geometric_tolerance_with_datum_reference_data(
+            ctx,
+            entity_id,
+            attrs,
+            "TOTAL_RUNOUT_TOLERANCE",
+        )?
+        else {
+            return Ok(());
+        };
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .geometric_tolerance_with_datum_references
+            .push(GeometricToleranceWithDatumReference::TotalRunout(data));
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        gt: GeometricToleranceWithDatumReference,
+    ) -> Result<u64, WriteError> {
+        Ok(write_geometric_tolerance_with_datum_reference(buf, gt))
     }
 }
