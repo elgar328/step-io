@@ -9,10 +9,12 @@
 //! (`SHAPE_ASPECT_RELATIONSHIP.relating_shape_aspect`, a future
 //! `GEOMETRIC_TOLERANCE.toleranced_shape_aspect`, ...) holds one
 //! `ShapeAspectRef`. New variants are added additively as real consumers
-//! and fixtures require them — `DATUM` and other subtypes are deferred.
+//! and fixtures require them — `DATUM` and `DATUM_FEATURE` are covered; the
+//! remaining subtypes (`DATUM_SYSTEM`, `DATUM_TARGET`, ...) are deferred.
 
 use super::id::{
-    CompositeShapeAspectId, ContinuousShapeAspectId, DerivedShapeAspectId, ShapeAspectId,
+    CompositeShapeAspectId, ContinuousShapeAspectId, DatumFeatureId, DatumId, DerivedShapeAspectId,
+    ShapeAspectId,
 };
 
 /// What a STEP `shape_aspect` reference resolved to in step-io's IR. Each
@@ -27,4 +29,8 @@ pub enum ShapeAspectRef {
     CentreOfSymmetry(DerivedShapeAspectId),
     /// `ALL_AROUND_SHAPE_ASPECT`.
     AllAroundShapeAspect(ContinuousShapeAspectId),
+    /// `DATUM`.
+    Datum(DatumId),
+    /// `DATUM_FEATURE`.
+    DatumFeature(DatumFeatureId),
 }

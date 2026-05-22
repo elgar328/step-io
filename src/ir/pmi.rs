@@ -26,6 +26,8 @@ pub struct PmiPool {
     pub annotation_occurrences: Arena<AnnotationOccurrence>,
     /// `DATUM` arena. Phase datum.
     pub datums: Arena<Datum>,
+    /// `DATUM_FEATURE` arena. Phase datum-feature.
+    pub datum_features: Arena<DatumFeature>,
     /// `DRAUGHTING_PRE_DEFINED_TEXT_FONT` arena. Phase text-font.
     pub draughting_pre_defined_text_fonts: Arena<DraughtingPreDefinedTextFont>,
     /// `DIMENSIONAL_SIZE` arena. Phase dimensional-size.
@@ -123,6 +125,27 @@ pub struct Datum {
     pub target: ProductId,
     pub product_definitional: bool,
     pub identification: String,
+}
+
+/// `DATUM_FEATURE(name, description, of_shape, product_definitional)` — a
+/// `shape_aspect` subtype naming a physical feature that realises a datum.
+/// Same 4-attr `shape_aspect` body as [`ShapeAspect`](crate::ir::ShapeAspect);
+/// `of_shape` resolves through `PRODUCT_DEFINITION_SHAPE` to a [`ProductId`].
+/// A `DATUM_FEATURE` whose `of_shape` does not resolve is silently dropped,
+/// symmetric on re-read.
+///
+/// The ir.toml blueprint classifies `datum_feature` as a `concrete_supertype`
+/// (its only subtype, `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`, is deferred).
+/// step-io models every `shape_aspect`-family member as a plain per-subtype
+/// struct joined through [`ShapeAspectRef`](crate::ir::ShapeAspectRef), so
+/// `DatumFeature` is a plain struct like its siblings.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DatumFeature {
+    pub name: String,
+    pub description: String,
+    /// `of_shape` resolved to the owning product.
+    pub target: ProductId,
+    pub product_definitional: bool,
 }
 
 /// `annotation_occurrence` `enum_base` — STEP `styled_item` PMI subtypes that

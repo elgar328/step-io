@@ -57,8 +57,8 @@ pub use id::{
     ShapeAspectRelationshipId, ShellId, SolidId, SurfaceId, TessellatedFaceId, TessellatedItemId,
     TessellatedSurfaceSetId, UnitContextId, VertexId, WireId,
     {
-        AnnotationOccurrenceId, CompositeShapeAspectId, ContinuousShapeAspectId, DatumId,
-        DerivedShapeAspectId, DimensionalLocationId, DimensionalSizeId,
+        AnnotationOccurrenceId, CompositeShapeAspectId, ContinuousShapeAspectId, DatumFeatureId,
+        DatumId, DerivedShapeAspectId, DimensionalLocationId, DimensionalSizeId,
         DraughtingPreDefinedTextFontId, ToleranceZoneFormId, TypeQualifierId,
         ValueFormatTypeQualifierId,
     },
@@ -84,9 +84,9 @@ pub use plm::{
 };
 pub use pmi::{
     AngleSelection, AngularLocationData, AnnotationOccurrence, AnnotationPlane, Datum,
-    DimensionalLocation, DimensionalLocationData, DimensionalSize, DimensionalSizeKind,
-    DraughtingPreDefinedTextFont, PmiPool, TessellatedAnnotationOccurrence, ToleranceZoneForm,
-    TypeQualifier, ValueFormatTypeQualifier,
+    DatumFeature, DimensionalLocation, DimensionalLocationData, DimensionalSize,
+    DimensionalSizeKind, DraughtingPreDefinedTextFont, PmiPool, TessellatedAnnotationOccurrence,
+    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
 pub use property::{
     DerivedDefinitionItem, DescriptionAttribute, DescriptionAttributeItem, GeneralProperty,

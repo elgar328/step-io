@@ -218,6 +218,11 @@ pub(crate) struct WriteBuffer<'m> {
     pub(crate) composite_shape_aspect_step_ids: Vec<u64>,
     pub(crate) centre_of_symmetry_step_ids: Vec<u64>,
     pub(crate) all_around_shape_aspect_step_ids: Vec<u64>,
+    /// IR `DatumId.0` / `DatumFeatureId.0` index → emitted step id (phase
+    /// datum-feature). Populated by `emit_datums` / `emit_datum_features`;
+    /// consumed by `emit_shape_aspect_ref`.
+    pub(crate) datum_step_ids: Vec<u64>,
+    pub(crate) datum_feature_step_ids: Vec<u64>,
     /// IR `ApplicationProtocolDefinition` index → emitted
     /// `APPLICATION_PROTOCOL_DEFINITION` step id.
     pub(crate) apd_step_ids: Vec<u64>,
@@ -342,6 +347,8 @@ impl<'m> WriteBuffer<'m> {
             composite_shape_aspect_step_ids: Vec::new(),
             centre_of_symmetry_step_ids: Vec::new(),
             all_around_shape_aspect_step_ids: Vec::new(),
+            datum_step_ids: Vec::new(),
+            datum_feature_step_ids: Vec::new(),
             apd_step_ids: Vec::new(),
             pc_step_ids: Vec::new(),
             pdc_step_ids: Vec::new(),

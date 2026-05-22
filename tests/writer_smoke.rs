@@ -2149,6 +2149,84 @@ fn datum_round_trip() {
 }
 
 #[test]
+fn datum_feature_round_trip() {
+    // DATUM_FEATURE — a shape_aspect subtype reading into the pmi pool.
+    // DATUM / DATUM_FEATURE resolve as ShapeAspectRef endpoints of a
+    // SHAPE_ASPECT_RELATIONSHIP, exercising the new resolver + emitter arms.
+    use step_io::ir::pmi::{Datum, DatumFeature};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        content: ProductContent::Solid(SolidContent {
+            ids: vec![solid_id],
+        }),
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let mut pmi = PmiPool::default();
+    let datum = pmi.datums.push(Datum {
+        name: String::new(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        identification: "A".into(),
+    });
+    let df = pmi.datum_features.push(DatumFeature {
+        name: "Datum Feature A".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: true,
+    });
+    model.pmi = Some(pmi);
+
+    model
+        .shape_aspect_relationships
+        .push(ShapeAspectRelationship {
+            name: "r".into(),
+            description: String::new(),
+            relating_shape_aspect: ShapeAspectRef::DatumFeature(df),
+            related_shape_aspect: ShapeAspectRef::Datum(datum),
+            kind: ShapeAspectRelationshipKind::Plain,
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    assert_eq!(re_pmi.datum_features.len(), 1);
+    let re_df = re_pmi.datum_features.iter().next().unwrap();
+    assert_eq!(re_df.name, "Datum Feature A");
+    assert!(re_df.product_definitional);
+    assert_eq!(re_df.target, step_io::ProductId(0));
+
+    assert_eq!(re.shape_aspect_relationships.len(), 1);
+    let rel = re.shape_aspect_relationships.iter().next().unwrap();
+    assert!(matches!(
+        rel.relating_shape_aspect,
+        ShapeAspectRef::DatumFeature(_)
+    ));
+    assert!(matches!(rel.related_shape_aspect, ShapeAspectRef::Datum(_)));
+}
+
+#[test]
 fn draughting_pre_defined_text_font_round_trip() {
     // DRAUGHTING_PRE_DEFINED_TEXT_FONT — a pmi-pool 1-string leaf primitive.
     use step_io::ir::pmi::DraughtingPreDefinedTextFont;

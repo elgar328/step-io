@@ -25,7 +25,7 @@ use step_io_macros::step_entity;
 
 /// Resolve a STEP `shape_aspect` reference into a [`ShapeAspectRef`] by
 /// probing each shape-aspect-family id map. Returns `None` for a target
-/// step-io does not model (e.g. `DATUM_FEATURE`, `COMPOSITE_SHAPE_ASPECT`).
+/// step-io does not model (e.g. `DATUM_SYSTEM`, `DATUM_TARGET`).
 pub(crate) fn resolve_shape_aspect_ref(
     ctx: &ReaderContext,
     item_ref: u64,
@@ -41,6 +41,12 @@ pub(crate) fn resolve_shape_aspect_ref(
     }
     if let Some(&id) = ctx.all_around_shape_aspect_id_map.get(&item_ref) {
         return Some(ShapeAspectRef::AllAroundShapeAspect(id));
+    }
+    if let Some(&id) = ctx.datum_id_map.get(&item_ref) {
+        return Some(ShapeAspectRef::Datum(id));
+    }
+    if let Some(&id) = ctx.datum_feature_id_map.get(&item_ref) {
+        return Some(ShapeAspectRef::DatumFeature(id));
     }
     None
 }

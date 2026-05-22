@@ -6,6 +6,7 @@
 //! GD&T entities that consume them arrive in later phases.
 
 use crate::entities::SimpleEntityHandler;
+use crate::entities::shape_rep::shape_aspect::ShapeAspectWriteInput;
 use crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_ref;
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::PmiPool;
@@ -15,9 +16,9 @@ use crate::ir::attr::{
 use crate::ir::error::ConvertError;
 use crate::ir::pmi::{
     AngleSelection, AngularLocationData, AnnotationOccurrence, AnnotationPlane, Datum,
-    DimensionalLocation, DimensionalLocationData, DimensionalSize, DimensionalSizeKind,
-    DraughtingPreDefinedTextFont, TessellatedAnnotationOccurrence, ToleranceZoneForm,
-    TypeQualifier, ValueFormatTypeQualifier,
+    DatumFeature, DimensionalLocation, DimensionalLocationData, DimensionalSize,
+    DimensionalSizeKind, DraughtingPreDefinedTextFont, TessellatedAnnotationOccurrence,
+    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -306,7 +307,8 @@ impl SimpleEntityHandler for DatumHandler {
             return Ok(());
         };
 
-        ctx.pmi
+        let id = ctx
+            .pmi
             .get_or_insert_with(PmiPool::default)
             .datums
             .push(Datum {
@@ -316,6 +318,7 @@ impl SimpleEntityHandler for DatumHandler {
                 product_definitional,
                 identification,
             });
+        ctx.datum_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -329,6 +332,70 @@ impl SimpleEntityHandler for DatumHandler {
                 Attribute::EntityRef(input.pds_step_id),
                 Attribute::Enum(bool_attr.into()),
                 Attribute::String(input.identification),
+            ],
+        ))
+    }
+}
+
+pub(crate) struct DatumFeatureHandler;
+
+/// `DATUM_FEATURE(name, description, of_shape, product_definitional)` — a
+/// `shape_aspect` subtype naming the physical feature realising a datum.
+/// Same 4-attr `shape_aspect` body and `of_shape → ProductId` resolution as
+/// `SHAPE_ASPECT`; an unresolved `of_shape` drops the datum feature,
+/// symmetric on re-read. Registered into `datum_feature_id_map` so a
+/// `shape_aspect` ref (e.g. `geometric_tolerance.toleranced_shape_aspect`)
+/// resolves onto it through `resolve_shape_aspect_ref`.
+#[step_entity(name = "DATUM_FEATURE", pass = Pass8ShapeAspect)]
+impl SimpleEntityHandler for DatumFeatureHandler {
+    type WriteInput = ShapeAspectWriteInput;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 4, entity_id, "DATUM_FEATURE")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
+        let of_shape_ref = read_entity_ref(attrs, 2, entity_id, "of_shape")?;
+        let product_definitional = read_bool(attrs, 3, entity_id, "product_definitional")?;
+
+        // of_shape → PRODUCT_DEFINITION_SHAPE → PRODUCT_DEFINITION → ProductId.
+        let Some(&pdef_step_id) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) else {
+            return Ok(());
+        };
+        let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_step_id) else {
+            return Ok(());
+        };
+        let Some(&target) = ctx.product_arena_map.get(&product_step_id) else {
+            return Ok(());
+        };
+
+        let id = ctx
+            .pmi
+            .get_or_insert_with(PmiPool::default)
+            .datum_features
+            .push(DatumFeature {
+                name,
+                description,
+                target,
+                product_definitional,
+            });
+        ctx.datum_feature_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, input: ShapeAspectWriteInput) -> Result<u64, WriteError> {
+        let bool_attr = if input.product_definitional { "T" } else { "F" };
+        Ok(buf.push_simple(
+            "DATUM_FEATURE",
+            vec![
+                Attribute::String(input.name),
+                Attribute::String(input.description),
+                Attribute::EntityRef(input.pds_step_id),
+                Attribute::Enum(bool_attr.into()),
             ],
         ))
     }

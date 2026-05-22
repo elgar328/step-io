@@ -1676,3 +1676,20 @@ fn pcurve_fixtures_convert_without_warnings() {
         );
     }
 }
+
+/// `DATUM_FEATURE` reads into the `pmi` pool as a `shape_aspect` subtype.
+/// The NIST property fixture carries 4 `DATUM_FEATURE` and 6 `DATUM`, all
+/// with an `of_shape` that resolves through the product chain.
+#[test]
+fn nist_property_def_datum_feature_pool() {
+    let source = include_str!("fixtures/external_temp_nist_property_def.stp");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    let pmi = result
+        .model
+        .pmi
+        .as_ref()
+        .expect("fixture carries PMI content");
+    assert_eq!(pmi.datum_features.len(), 4, "DATUM_FEATURE count");
+    assert_eq!(pmi.datums.len(), 6, "DATUM count");
+}

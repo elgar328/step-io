@@ -376,6 +376,11 @@ pub struct ReaderContext {
     pub(crate) composite_shape_aspect_id_map: HashMap<u64, crate::ir::CompositeShapeAspectId>,
     pub(crate) centre_of_symmetry_id_map: HashMap<u64, crate::ir::DerivedShapeAspectId>,
     pub(crate) all_around_shape_aspect_id_map: HashMap<u64, crate::ir::ContinuousShapeAspectId>,
+    /// `DATUM` / `DATUM_FEATURE` `#N → …Id` maps (phase datum-feature). The
+    /// `Datum` / `DatumFeature` arenas live in [`PmiPool`]; these maps let
+    /// `resolve_shape_aspect_ref` resolve a `shape_aspect` ref onto them.
+    pub(crate) datum_id_map: HashMap<u64, crate::ir::DatumId>,
+    pub(crate) datum_feature_id_map: HashMap<u64, crate::ir::DatumFeatureId>,
     /// `SHAPE_ASPECT_RELATIONSHIP` arena (phase shape-aspect-ref) — orphan.
     pub(crate) shape_aspect_relationships:
         crate::ir::Arena<crate::ir::shape_rep::ShapeAspectRelationship>,

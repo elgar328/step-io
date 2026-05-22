@@ -19,7 +19,7 @@ use super::plm::{
     SecurityClassification, SecurityClassificationAssignment, SecurityClassificationLevel,
 };
 use super::pmi::{
-    AnnotationOccurrence, Datum, DimensionalLocation, DimensionalSize,
+    AnnotationOccurrence, Datum, DatumFeature, DimensionalLocation, DimensionalSize,
     DraughtingPreDefinedTextFont, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
 use super::property::{
@@ -113,6 +113,9 @@ define_id!(AnnotationOccurrenceId, AnnotationOccurrence);
 
 // datum arena (Phase datum).
 define_id!(DatumId, Datum);
+
+// datum_feature arena (Phase datum-feature).
+define_id!(DatumFeatureId, DatumFeature);
 
 // dimensional_size arena (Phase dimensional-size).
 define_id!(DimensionalSizeId, DimensionalSize);
