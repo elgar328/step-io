@@ -73,6 +73,14 @@ pub enum GeometricToleranceWithDatumReference {
     Symmetry(GeometricToleranceWithDatumReferenceData),
     /// `TOTAL_RUNOUT_TOLERANCE`.
     TotalRunout(GeometricToleranceWithDatumReferenceData),
+    /// `POSITION_TOLERANCE` — read/written as the multiple-inheritance
+    /// complex `(GEOMETRIC_TOLERANCE GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE
+    /// POSITION_TOLERANCE)`.
+    Position(GeometricToleranceWithDatumReferenceData),
+    /// `SURFACE_PROFILE_TOLERANCE` — complex MI form, see [`Self::Position`].
+    SurfaceProfile(GeometricToleranceWithDatumReferenceData),
+    /// `LINE_PROFILE_TOLERANCE` — complex MI form, see [`Self::Position`].
+    LineProfile(GeometricToleranceWithDatumReferenceData),
 }
 
 /// Shared 5-attr body of the datum-referencing tolerances — the four

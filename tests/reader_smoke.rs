@@ -1802,3 +1802,40 @@ fn nist_property_def_gt_with_datum_reference() {
         "datum_system should resolve"
     );
 }
+
+/// The multiple-inheritance complex datum-ref tolerances —
+/// `(GEOMETRIC_TOLERANCE GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE <leaf>)`.
+/// The NIST property fixture carries 9 `POSITION_TOLERANCE` and 11
+/// `SURFACE_PROFILE_TOLERANCE` in this complex form.
+#[test]
+fn nist_property_def_complex_datum_ref_tolerances() {
+    use step_io::ir::pmi::GeometricToleranceWithDatumReference;
+    let source = include_str!("fixtures/external_temp_nist_property_def.stp");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    let pmi = result
+        .model
+        .pmi
+        .as_ref()
+        .expect("fixture carries PMI content");
+    let mut position = 0;
+    let mut surface_profile = 0;
+    for gt in pmi.geometric_tolerance_with_datum_references.iter() {
+        match gt {
+            GeometricToleranceWithDatumReference::Position(d) => {
+                position += 1;
+                assert!(!d.datum_system.is_empty(), "position datum_system resolves");
+            }
+            GeometricToleranceWithDatumReference::SurfaceProfile(d) => {
+                surface_profile += 1;
+                assert!(!d.datum_system.is_empty(), "surface datum_system resolves");
+            }
+            _ => {}
+        }
+    }
+    assert!(position > 0, "POSITION_TOLERANCE complex form read");
+    assert!(
+        surface_profile > 0,
+        "SURFACE_PROFILE_TOLERANCE complex form read"
+    );
+}

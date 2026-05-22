@@ -2573,6 +2573,95 @@ fn geometric_tolerance_with_datum_reference_round_trip() {
 }
 
 #[test]
+fn complex_datum_ref_tolerance_round_trip() {
+    // POSITION_TOLERANCE — emitted as the multiple-inheritance complex
+    // (GEOMETRIC_TOLERANCE GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE
+    // POSITION_TOLERANCE) and read back through the complex handler.
+    use step_io::ir::pmi::{
+        GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData,
+        ToleranceMagnitude,
+    };
+    use step_io::ir::property::{MeasureKind, PropertyMeasure, PropertyMeasureUnit};
+    use step_io::ir::shape_rep::DatumSystem;
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length_unit = ctx.length;
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        content: ProductContent::Solid(SolidContent {
+            ids: vec![solid_id],
+        }),
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let sa = model.shape_aspects.push(ShapeAspect {
+        name: "sa".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+    let ds = model.datum_systems.push(DatumSystem {
+        name: "DS".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        constituents: Vec::new(),
+    });
+
+    let mut pmi = PmiPool::default();
+    pmi.geometric_tolerance_with_datum_references.push(
+        GeometricToleranceWithDatumReference::Position(GeometricToleranceWithDatumReferenceData {
+            name: "t".into(),
+            description: String::new(),
+            magnitude: ToleranceMagnitude::Measure(PropertyMeasure {
+                name: String::new(),
+                kind: MeasureKind::Length,
+                value: 0.1,
+                unit_ref: Some(PropertyMeasureUnit::Named(length_unit)),
+            }),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            datum_system: vec![ds],
+        }),
+    );
+    model.pmi = Some(pmi);
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE"),
+        "POSITION_TOLERANCE emits as the complex MI form"
+    );
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    assert_eq!(re_pmi.geometric_tolerance_with_datum_references.len(), 1);
+    let gt = re_pmi
+        .geometric_tolerance_with_datum_references
+        .iter()
+        .next()
+        .unwrap();
+    let GeometricToleranceWithDatumReference::Position(d) = gt else {
+        panic!("expected Position, got {gt:?}");
+    };
+    assert_eq!(d.datum_system.len(), 1, "datum_system round-trips");
+}
+
+#[test]
 fn draughting_pre_defined_text_font_round_trip() {
     // DRAUGHTING_PRE_DEFINED_TEXT_FONT — a pmi-pool 1-string leaf primitive.
     use step_io::ir::pmi::DraughtingPreDefinedTextFont;
