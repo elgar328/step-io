@@ -9,7 +9,12 @@
 //! Writer emits the standard three-attr form pointing at the PDEF.
 
 use crate::entities::SimpleEntityHandler;
+use crate::ir::attr::check_count;
 use crate::ir::error::ConvertError;
+use crate::ir::property::{
+    CharacterizedDefinition, ProductDefinitionShape, PropertyDefinition, PropertyDefinitionData,
+    PropertyPool,
+};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -38,15 +43,20 @@ impl SimpleEntityHandler for ProductDefinitionShapeHandler {
     fn read(
         ctx: &mut ReaderContext,
         entity_id: u64,
-        _attrs: &[Attribute],
+        attrs: &[Attribute],
         graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         if let Some(pdef_ref) = pdef_shape_target(graph, entity_id, PDEF_TARGET_NAMES) {
             ctx.pdef_shape_to_pdef.insert(entity_id, pdef_ref);
+            push_product_definition_shape(ctx, entity_id, attrs, pdef_ref)?;
         } else if let Some(nauo_ref) =
             pdef_shape_target(graph, entity_id, &["NEXT_ASSEMBLY_USAGE_OCCURRENCE"])
         {
             ctx.pdef_shape_to_nauo.insert(entity_id, nauo_ref);
+            // NAUO-targeted PDS is left out of the `property_definitions`
+            // arena — `CharacterizedDefinition` has no NAUO variant yet.
+            // The legacy `pdef_shape_to_nauo` map keeps the CDSR pass
+            // working unchanged.
         }
         Ok(())
     }
@@ -64,6 +74,46 @@ impl SimpleEntityHandler for ProductDefinitionShapeHandler {
             ],
         ))
     }
+}
+
+/// Mirror a product-targeted PDS into the schema-faithful
+/// `property_definitions` arena. PDEF step id resolved against
+/// `pdef_to_product` + `product_arena_map` to obtain the `ProductId`
+/// payload; an unresolved chain (rare — kernel-built IR) silently
+/// skips the arena push and leaves the legacy `pdef_shape_to_pdef`
+/// classification intact.
+fn push_product_definition_shape(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    attrs: &[Attribute],
+    pdef_ref: u64,
+) -> Result<(), ConvertError> {
+    check_count(attrs, 3, entity_id, "PRODUCT_DEFINITION_SHAPE")?;
+    let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_ref) else {
+        return Ok(());
+    };
+    let Some(&product_id) = ctx.product_arena_map.get(&product_step_id) else {
+        return Ok(());
+    };
+    // The schema-faithful PDS variant pairs with the existing writer, which
+    // hard-codes empty strings for `name` / `description` (PDS attr 0/1 are
+    // semantically vestigial placeholders in observed AP242 files). Reader
+    // mirrors that policy so the round-trip assertion against the full
+    // PropertyPool succeeds — see plan phase property-definition.
+    let _ = ctx
+        .properties
+        .get_or_insert_with(PropertyPool::default)
+        .property_definitions
+        .push(PropertyDefinition::ProductDefinitionShape(
+            ProductDefinitionShape {
+                inherited: PropertyDefinitionData {
+                    name: String::new(),
+                    description: String::new(),
+                    definition: CharacterizedDefinition::ProductDefinition(product_id),
+                },
+            },
+        ));
+    Ok(())
 }
 
 /// Resolve a `PRODUCT_DEFINITION_SHAPE`'s `definition` ref if it points at

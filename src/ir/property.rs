@@ -23,6 +23,20 @@ use super::shape_rep::DescriptiveItem;
 /// without one).
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct PropertyPool {
+    /// `property_definition` arena per the ir.toml blueprint
+    /// (`concrete_supertype`, `shape = "carrier"`). Holds the abstract
+    /// supertype body (`Itself`, corpus 13,696) alongside its
+    /// `PRODUCT_DEFINITION_SHAPE` subtype variant (corpus 253,440).
+    ///
+    /// **Read-only schema-faithful surface for this phase**: reader pushes
+    /// from PD / PDS handlers; writer does **not** emit from this arena —
+    /// the existing assembly chain + `Property` collapse emit PD/PDS the
+    /// way they always have. IR users that build models from scratch
+    /// must still populate the assembly + property arenas to round-trip
+    /// PD/PDS through the writer. A future phase wires the writer through
+    /// this arena and migrates the 11+ `of_shape` consumers to
+    /// [`PropertyDefinitionId`].
+    pub property_definitions: Arena<PropertyDefinition>,
     /// Property records (PD + REPRESENTATION + PDR collapsed) — an arena so
     /// `GENERAL_PROPERTY_ASSOCIATION.derived_definition` can reference one
     /// by [`PropertyId`]. Arena (not `Vec`) order = source `#N` order.
@@ -97,6 +111,53 @@ pub enum IdAttributeItem {
     Group(GroupId),
     Address(AddressId),
     ApplicationContext(ApplicationContextId),
+}
+
+/// `property_definition` arena enum per the ir.toml blueprint
+/// (`concrete_supertype`, `shape = "carrier"`). The `Itself` variant carries
+/// the abstract supertype body; `ProductDefinitionShape` wraps the only
+/// concrete subtype step-io currently models. AP242's other declared
+/// subtypes (`product_definition_kinematics`,
+/// `product_definition_relationship_kinematics`) are not in the ir.toml
+/// blueprint yet — to be added when kinematics support lands.
+#[derive(Debug, Clone, PartialEq)]
+pub enum PropertyDefinition {
+    Itself(PropertyDefinitionData),
+    ProductDefinitionShape(ProductDefinitionShape),
+}
+
+/// `PROPERTY_DEFINITION(name, description, definition)` carrier body —
+/// shared by every [`PropertyDefinition`] variant per the blueprint's
+/// `shape = "carrier"` rule.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PropertyDefinitionData {
+    pub name: String,
+    pub description: String,
+    pub definition: CharacterizedDefinition,
+}
+
+/// `PRODUCT_DEFINITION_SHAPE` subtype body. AP242 declares no additional
+/// own attributes — the wrapper exists for variant identity and future
+/// subtype extension (e.g. a hypothetical `ProductDefinitionShapeWithFoo`
+/// would land here).
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductDefinitionShape {
+    pub inherited: PropertyDefinitionData,
+}
+
+/// SELECT target for [`PropertyDefinitionData::definition`]. step-io
+/// flattens the nested `characterized_definition →
+/// characterized_product_definition → product_definition` chain to keep
+/// the enum shallow (matches the existing `ShapeAspectRef` / `NameAttributeItem`
+/// style). Initial coverage: the `product_definition` member only — PDs
+/// whose target is a `PRODUCT_DEFINITION` (or `_WITH_ASSOCIATED_DOCUMENTS`)
+/// resolve to a [`ProductId`] via `pdef_to_product` + `product_arena_map`.
+/// PDS instances whose target is a `NEXT_ASSEMBLY_USAGE_OCCURRENCE` (the
+/// `product_definition_relationship` SELECT member) are dropped at read
+/// time; a future phase introduces a `NauoRef` variant.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum CharacterizedDefinition {
+    ProductDefinition(ProductId),
 }
 
 /// `PROPERTY_DEFINITION` + bound `REPRESENTATION` collapsed into a single

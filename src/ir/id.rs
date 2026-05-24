@@ -26,7 +26,7 @@ use super::pmi::{
 };
 use super::property::{
     DescriptionAttribute, GeneralProperty, GeneralPropertyAssociation, IdAttribute, NameAttribute,
-    Property,
+    Property, PropertyDefinition,
 };
 use super::shape_rep::{
     AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, DatumSystem, MappedItem,
@@ -89,6 +89,11 @@ define_id!(IdAttributeId, IdAttribute);
 define_id!(PropertyId, Property);
 define_id!(GeneralPropertyId, GeneralProperty);
 define_id!(GeneralPropertyAssociationId, GeneralPropertyAssociation);
+
+// `property_definition` arena (Phase property-definition) — schema-faithful
+// surface for PROPERTY_DEFINITION + PRODUCT_DEFINITION_SHAPE. Distinct from
+// `PropertyId` (collapsed PD+PDR+REP) — both arenas coexist.
+define_id!(PropertyDefinitionId, PropertyDefinition);
 
 // Unit context Ids — multi-context support (one entry per
 // REPRESENTATION_CONTEXT in the source file).
