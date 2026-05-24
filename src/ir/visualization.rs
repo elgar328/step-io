@@ -7,8 +7,8 @@
 
 use super::arena::Arena;
 use super::id::{
-    ColourId, CurveFontId, CurveStyleId, FoundedItemId, Placement3dId, PlanarExtentId, PointId,
-    PresentationStyleAssignmentId, StyledItemId, SurfaceStyleRenderingId,
+    ColourId, CurveStyleId, FoundedItemId, Placement3dId, PlanarExtentId, PointId,
+    PreDefinedCurveFontId, PresentationStyleAssignmentId, StyledItemId, SurfaceStyleRenderingId,
 };
 use super::representation_item::RepresentationItemRef;
 use super::shape_rep::Mdgpr;
@@ -28,10 +28,17 @@ pub struct VisualizationPool {
     /// `COLOUR` arena — one entry per source `COLOUR_RGB` or
     /// `DRAUGHTING_PRE_DEFINED_COLOUR`. Consumers reference by [`ColourId`].
     pub colours: Arena<Colour>,
-    /// `curve_font` SELECT arena — one entry per source curve-font entity
-    /// (currently only `DRAUGHTING_PRE_DEFINED_CURVE_FONT`). Referenced by
-    /// [`CurveStyle::curve_font`] via [`CurveFontId`].
-    pub curve_fonts: Arena<CurveFont>,
+    /// `pre_defined_curve_font` arena per ir.toml — holds both the
+    /// abstract self variant (`Plain`, corpus 0) and the
+    /// `DRAUGHTING_PRE_DEFINED_CURVE_FONT` subtype. Referenced by
+    /// [`CurveStyle::curve_font`] via [`PreDefinedCurveFontId`].
+    pub pre_defined_curve_fonts: Arena<PreDefinedCurveFont>,
+    /// `pre_defined_symbol` arena per ir.toml — holds the abstract self
+    /// variant (`Plain`, corpus 0) and the `PRE_DEFINED_TERMINATOR_SYMBOL`
+    /// subtype. No step-io consumer references this arena directly yet;
+    /// the id newtype exists for blueprint symmetry and future leader /
+    /// terminator handlers.
+    pub pre_defined_symbols: Arena<PreDefinedSymbol>,
     /// `CURVE_STYLE` arena — referenced from `PresentationStyleAssignment`
     /// when a PSA carries curve styling alongside surface styling.
     pub curve_styles: Arena<CurveStyle>,
@@ -164,23 +171,58 @@ pub struct CameraModelD3 {
 #[derive(Debug, Clone, PartialEq)]
 pub struct CurveStyle {
     pub name: String,
-    pub curve_font: CurveFontId,
+    pub curve_font: PreDefinedCurveFontId,
     pub curve_width: CurveWidth,
     pub curve_colour: ColourId,
 }
 
-/// `curve_font_select` SELECT supertype. Only the variants step-io
-/// currently round-trips are listed; unsupported forms (composite
-/// `CURVE_STYLE_FONT`, etc.) are silently dropped at read.
+/// `pre_defined_curve_font` arena enum (`concrete_supertype`-style). Holds
+/// the abstract self variant (`Plain`, corpus 0 in observed AP242 files)
+/// and the concrete `DRAUGHTING_PRE_DEFINED_CURVE_FONT` subtype. Other
+/// `curve_font_select` SELECT members (`CURVE_STYLE_FONT`,
+/// `EXTERNALLY_DEFINED_CURVE_FONT`) are not modelled and are silently
+/// dropped at read.
 #[derive(Debug, Clone, PartialEq)]
-pub enum CurveFont {
-    PreDefined(DraughtingPreDefinedCurveFont),
+pub enum PreDefinedCurveFont {
+    Plain(PreDefinedCurveFontData),
+    Draughting(DraughtingPreDefinedCurveFont),
+}
+
+/// `PRE_DEFINED_CURVE_FONT(name)` — abstract supertype body. Currently
+/// unreachable from corpus instances; populated only by hand-built IR.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PreDefinedCurveFontData {
+    pub name: String,
 }
 
 /// `DRAUGHTING_PRE_DEFINED_CURVE_FONT(name)` — stock font reference.
 /// Common names: `"continuous"`, `"dashed"`, etc.
 #[derive(Debug, Clone, PartialEq)]
 pub struct DraughtingPreDefinedCurveFont {
+    pub name: String,
+}
+
+/// `pre_defined_symbol` arena enum. Mirrors the curve-font family —
+/// abstract self variant (`Plain`, corpus 0) plus the concrete
+/// `PRE_DEFINED_TERMINATOR_SYMBOL` subtype.
+#[derive(Debug, Clone, PartialEq)]
+pub enum PreDefinedSymbol {
+    Plain(PreDefinedSymbolData),
+    Terminator(PreDefinedTerminatorSymbol),
+}
+
+/// `PRE_DEFINED_SYMBOL(name)` — abstract supertype body.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PreDefinedSymbolData {
+    pub name: String,
+}
+
+/// `PRE_DEFINED_TERMINATOR_SYMBOL(name)` — stock terminator symbol
+/// (arrow heads, slashes, etc.) referenced from leader / dimension
+/// annotation chains. step-io does not yet have a consumer arena, but
+/// the leaf is round-tripped so corpus instances are preserved.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PreDefinedTerminatorSymbol {
     pub name: String,
 }
 

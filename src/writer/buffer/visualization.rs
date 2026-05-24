@@ -7,7 +7,8 @@
 use super::WriteBuffer;
 use crate::ir::representation_item::RepresentationItemRef;
 use crate::ir::visualization::{
-    Colour, CurveFont, FoundedItem, PresentationStyleAssignment, StyledItem, SurfaceStyleRendering,
+    Colour, FoundedItem, PreDefinedCurveFont, PreDefinedSymbol, PresentationStyleAssignment,
+    StyledItem, SurfaceStyleRendering,
 };
 use crate::writer::WriteError;
 
@@ -39,6 +40,49 @@ impl WriteBuffer<'_> {
         }
     }
 
+    fn emit_pre_defined_curve_fonts(
+        &mut self,
+        viz: &crate::ir::visualization::VisualizationPool,
+    ) -> Result<(), WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::visualization::draughting_pre_defined_curve_font::DraughtingPreDefinedCurveFontHandler;
+        use crate::entities::visualization::pre_defined_curve_font::PreDefinedCurveFontHandler;
+        self.pre_defined_curve_font_step_ids =
+            Vec::with_capacity(viz.pre_defined_curve_fonts.len());
+        for font in viz.pre_defined_curve_fonts.iter() {
+            let id = match font {
+                PreDefinedCurveFont::Plain(f) => {
+                    PreDefinedCurveFontHandler::write(self, f.clone())?
+                }
+                PreDefinedCurveFont::Draughting(f) => {
+                    DraughtingPreDefinedCurveFontHandler::write(self, f.clone())?
+                }
+            };
+            self.pre_defined_curve_font_step_ids.push(id);
+        }
+        Ok(())
+    }
+
+    fn emit_pre_defined_symbols(
+        &mut self,
+        viz: &crate::ir::visualization::VisualizationPool,
+    ) -> Result<(), WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::visualization::pre_defined_symbol::PreDefinedSymbolHandler;
+        use crate::entities::visualization::pre_defined_terminator_symbol::PreDefinedTerminatorSymbolHandler;
+        self.pre_defined_symbol_step_ids = Vec::with_capacity(viz.pre_defined_symbols.len());
+        for sym in viz.pre_defined_symbols.iter() {
+            let id = match sym {
+                PreDefinedSymbol::Plain(s) => PreDefinedSymbolHandler::write(self, s.clone())?,
+                PreDefinedSymbol::Terminator(s) => {
+                    PreDefinedTerminatorSymbolHandler::write(self, s.clone())?
+                }
+            };
+            self.pre_defined_symbol_step_ids.push(id);
+        }
+        Ok(())
+    }
+
     pub(in crate::writer::buffer) fn emit_visualization_if_set(
         &mut self,
     ) -> Result<(), WriteError> {
@@ -49,7 +93,6 @@ impl WriteBuffer<'_> {
         use crate::entities::visualization::context_dependent_over_riding_styled_item::ContextDependentOverRidingStyledItemHandler;
         use crate::entities::visualization::curve_style::CurveStyleHandler;
         use crate::entities::visualization::draughting_pre_defined_colour::DraughtingPreDefinedColourHandler;
-        use crate::entities::visualization::draughting_pre_defined_curve_font::DraughtingPreDefinedCurveFontHandler;
         use crate::entities::visualization::over_riding_styled_item::OverRidingStyledItemHandler;
         use crate::entities::visualization::presentation_layer_assignment::PresentationLayerAssignmentHandler;
         use crate::entities::visualization::presentation_style_assignment::PresentationStyleAssignmentHandler;
@@ -72,15 +115,8 @@ impl WriteBuffer<'_> {
             };
             self.colour_step_ids.push(id);
         }
-        self.curve_font_step_ids = Vec::with_capacity(viz.curve_fonts.len());
-        for font in viz.curve_fonts.iter() {
-            let id = match font {
-                CurveFont::PreDefined(f) => {
-                    DraughtingPreDefinedCurveFontHandler::write(self, f.clone())?
-                }
-            };
-            self.curve_font_step_ids.push(id);
-        }
+        self.emit_pre_defined_curve_fonts(&viz)?;
+        self.emit_pre_defined_symbols(&viz)?;
         self.curve_style_step_ids = Vec::with_capacity(viz.curve_styles.len());
         for cs in viz.curve_styles.iter() {
             let id = CurveStyleHandler::write(self, cs.clone())?;

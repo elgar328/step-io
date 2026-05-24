@@ -120,12 +120,13 @@ pub use units::{
     UnitsPool,
 };
 pub use visualization::{
-    CameraModel, CameraModelD3, Colour, ColourRgb, ContextDependentOverRidingStyledItem, CurveFont,
+    CameraModel, CameraModelD3, Colour, ColourRgb, ContextDependentOverRidingStyledItem,
     CurveStyle, CurveWidth, DraughtingPreDefinedColour, DraughtingPreDefinedCurveFont,
     FillAreaStyle, FillAreaStyleColour, FoundedItem, OverRidingStyledItem, PlainStyledItem,
-    PresentationLayerAssignment, PresentationLayerAssignmentItem, PresentationStyleAssignment,
-    Projection, PsaStyle, RenderingProperty, ShadingMethod, StyleContextRef, StyledItem,
-    SurfaceSide, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea,
-    SurfaceStyleRendering, SurfaceStyleRenderingData, SurfaceStyleRenderingWithProperties,
-    SurfaceStyleUsage, ViewVolume, VisualizationPool,
+    PreDefinedCurveFont, PreDefinedCurveFontData, PreDefinedSymbol, PreDefinedSymbolData,
+    PreDefinedTerminatorSymbol, PresentationLayerAssignment, PresentationLayerAssignmentItem,
+    PresentationStyleAssignment, Projection, PsaStyle, RenderingProperty, ShadingMethod,
+    StyleContextRef, StyledItem, SurfaceSide, SurfaceSideStyle, SurfaceSideStyleEntry,
+    SurfaceStyleFillArea, SurfaceStyleRendering, SurfaceStyleRenderingData,
+    SurfaceStyleRenderingWithProperties, SurfaceStyleUsage, ViewVolume, VisualizationPool,
 };

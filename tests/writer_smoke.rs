@@ -2859,6 +2859,78 @@ fn draughting_pre_defined_text_font_round_trip() {
 }
 
 #[test]
+fn pre_defined_curve_font_family_round_trip() {
+    // Both PreDefinedCurveFont variants — Plain (corpus 0 self variant) and
+    // Draughting (corpus 104k) — share the visualization::pre_defined_curve_fonts
+    // arena per the ir.toml blueprint.
+    use step_io::ir::visualization::{
+        DraughtingPreDefinedCurveFont, PreDefinedCurveFont, PreDefinedCurveFontData,
+        VisualizationPool,
+    };
+    let mut model = empty_model();
+    let mut viz = VisualizationPool::default();
+    viz.pre_defined_curve_fonts
+        .push(PreDefinedCurveFont::Plain(PreDefinedCurveFontData {
+            name: "continuous".into(),
+        }));
+    viz.pre_defined_curve_fonts
+        .push(PreDefinedCurveFont::Draughting(
+            DraughtingPreDefinedCurveFont {
+                name: "dashed".into(),
+            },
+        ));
+    model.visualization = Some(viz);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.as_ref().expect("visualization pool");
+    assert_eq!(re_viz.pre_defined_curve_fonts.len(), 2);
+    let mut iter = re_viz.pre_defined_curve_fonts.iter();
+    match iter.next().unwrap() {
+        PreDefinedCurveFont::Plain(d) => assert_eq!(d.name, "continuous"),
+        PreDefinedCurveFont::Draughting(_) => panic!("expected Plain first"),
+    }
+    match iter.next().unwrap() {
+        PreDefinedCurveFont::Draughting(d) => assert_eq!(d.name, "dashed"),
+        PreDefinedCurveFont::Plain(_) => panic!("expected Draughting second"),
+    }
+}
+
+#[test]
+fn pre_defined_symbol_family_round_trip() {
+    // PreDefinedSymbol Plain (corpus 0) + Terminator (PRE_DEFINED_TERMINATOR_SYMBOL,
+    // corpus 116) share the visualization::pre_defined_symbols arena.
+    use step_io::ir::visualization::{
+        PreDefinedSymbol, PreDefinedSymbolData, PreDefinedTerminatorSymbol, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let mut viz = VisualizationPool::default();
+    viz.pre_defined_symbols
+        .push(PreDefinedSymbol::Plain(PreDefinedSymbolData {
+            name: "symbol".into(),
+        }));
+    viz.pre_defined_symbols
+        .push(PreDefinedSymbol::Terminator(PreDefinedTerminatorSymbol {
+            name: "filled arrow".into(),
+        }));
+    model.visualization = Some(viz);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.as_ref().expect("visualization pool");
+    assert_eq!(re_viz.pre_defined_symbols.len(), 2);
+    let mut iter = re_viz.pre_defined_symbols.iter();
+    match iter.next().unwrap() {
+        PreDefinedSymbol::Plain(s) => assert_eq!(s.name, "symbol"),
+        PreDefinedSymbol::Terminator(_) => panic!("expected Plain first"),
+    }
+    match iter.next().unwrap() {
+        PreDefinedSymbol::Terminator(s) => assert_eq!(s.name, "filled arrow"),
+        PreDefinedSymbol::Plain(_) => panic!("expected Terminator second"),
+    }
+}
+
+#[test]
 fn document_file_six_attributes_round_trip() {
     // DOCUMENT_FILE is SUBTYPE OF (document, characterized_object) — STEP P21
     // encodes 6 attributes. Regression guard for the check_count(4)->6 fix.

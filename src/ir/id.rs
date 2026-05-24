@@ -39,8 +39,8 @@ use super::tessellation::{
 use super::topology::{Edge, Face, Shell, Solid, Wire};
 use super::units::{DerivedUnit, DerivedUnitElement, MeasureWithUnit, NamedUnit};
 use super::visualization::{
-    CameraModel, Colour, CurveFont, CurveStyle, FoundedItem, PresentationLayerAssignment,
-    PresentationStyleAssignment, StyledItem, SurfaceStyleRendering,
+    CameraModel, Colour, CurveStyle, FoundedItem, PreDefinedCurveFont, PreDefinedSymbol,
+    PresentationLayerAssignment, PresentationStyleAssignment, StyledItem, SurfaceStyleRendering,
 };
 
 // Geometry Ids (3D)
@@ -170,8 +170,9 @@ define_id!(TessellatedSurfaceSetId, ComplexTriangulatedSurfaceSet);
 define_id!(ColourId, Colour);
 
 // Visualization Ids — CURVE_STYLE chain.
-define_id!(CurveFontId, CurveFont);
+define_id!(PreDefinedCurveFontId, PreDefinedCurveFont);
 define_id!(CurveStyleId, CurveStyle);
+define_id!(PreDefinedSymbolId, PreDefinedSymbol);
 
 // Visualization Ids — STYLED_ITEM enum arena (Plain + future variants).
 define_id!(StyledItemId, StyledItem);

@@ -11,17 +11,17 @@ use crate::ir::assembly::{AssemblyTree, Product, Transform3d, WireframeContent};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Pcurve, TransitionCode};
 use crate::ir::id::{
-    ColourId, Curve2dId, CurveFontId, CurveId, CurveStyleId, Direction2dId, DirectionId, EdgeId,
-    FaceId, FoundedItemId, Placement1dId, Placement2dId, Placement3dId, Point2dId, PointId,
-    PresentationStyleAssignmentId, ProductId, ShellId, SolidId, StyledItemId, SurfaceId,
-    SurfaceStyleRenderingId, UnitContextId, VertexId, WireId,
+    ColourId, Curve2dId, CurveId, CurveStyleId, Direction2dId, DirectionId, EdgeId, FaceId,
+    FoundedItemId, Placement1dId, Placement2dId, Placement3dId, Point2dId, PointId,
+    PreDefinedCurveFontId, PreDefinedSymbolId, PresentationStyleAssignmentId, ProductId, ShellId,
+    SolidId, StyledItemId, SurfaceId, SurfaceStyleRenderingId, UnitContextId, VertexId, WireId,
 };
 use crate::ir::model::{GeometryPool, StepModel, TopologyPool};
 use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit, SolidAngleUnit, UnitContext};
 use crate::ir::topology::{Orientation, OrientedEdge};
 use crate::ir::units::{DerivedUnit, DerivedUnitElement, MeasureWithUnit, NamedUnit, UnitsPool};
 use crate::ir::visualization::{FillAreaStyleColour, VisualizationPool};
-// CurveFontId / CurveStyleId / StyledItemId imported above; the map types reference them directly.
+// PreDefinedCurveFontId / CurveStyleId / StyledItemId imported above; the map types reference them directly.
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
 
 mod geometry;
@@ -275,10 +275,16 @@ pub struct ReaderContext {
     /// `SURFACE_STYLE_RENDERING_WITH_PROPERTIES`) can resolve a colour ref
     /// to an arena index without copying the colour data.
     pub(crate) viz_colour_id_map: HashMap<u64, ColourId>,
-    /// `DRAUGHTING_PRE_DEFINED_CURVE_FONT` step entity id → `CurveFontId`.
-    /// Populated by the font leaf reader during Pass 7-1; consumed by the
-    /// `CURVE_STYLE` reader to resolve a font ref to an arena index.
-    pub(crate) viz_curve_font_id_map: HashMap<u64, CurveFontId>,
+    /// `PRE_DEFINED_CURVE_FONT` / `DRAUGHTING_PRE_DEFINED_CURVE_FONT` step
+    /// entity id → `PreDefinedCurveFontId`. Populated by the curve-font
+    /// leaf readers during Pass 7-1; consumed by the `CURVE_STYLE` reader
+    /// to resolve a font ref to an arena index.
+    pub(crate) viz_pre_defined_curve_font_id_map: HashMap<u64, PreDefinedCurveFontId>,
+    /// `PRE_DEFINED_SYMBOL` / `PRE_DEFINED_TERMINATOR_SYMBOL` step entity id
+    /// → `PreDefinedSymbolId`. Populated by the symbol leaf readers during
+    /// Pass 7-1. No step-io consumer reads this map yet; entries exist so
+    /// the writer round-trips the source symbols unchanged.
+    pub(crate) viz_pre_defined_symbol_id_map: HashMap<u64, PreDefinedSymbolId>,
     /// `CURVE_STYLE` step entity id → `CurveStyleId`. Populated during
     /// `Pass7CurveStyle`; consumed by the PSA reader to dispatch styling
     /// list entries to the `PsaStyle::Curve(...)` variant.

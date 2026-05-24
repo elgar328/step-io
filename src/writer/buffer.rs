@@ -127,10 +127,16 @@ pub(crate) struct WriteBuffer<'m> {
     /// (`FILL_AREA_STYLE_COLOUR`, `SURFACE_STYLE_RENDERING_WITH_PROPERTIES`)
     /// needs to resolve a colour ref.
     pub(crate) colour_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted curve-font entity (currently
-    /// `DRAUGHTING_PRE_DEFINED_CURVE_FONT`), indexed by `CurveFontId.0`.
-    /// Consumed by the `CURVE_STYLE` writer.
-    pub(crate) curve_font_step_ids: Vec<u64>,
+    /// STEP entity id of every emitted curve-font entity
+    /// (`PRE_DEFINED_CURVE_FONT` / `DRAUGHTING_PRE_DEFINED_CURVE_FONT`),
+    /// indexed by `PreDefinedCurveFontId.0`. Consumed by the `CURVE_STYLE`
+    /// writer.
+    pub(crate) pre_defined_curve_font_step_ids: Vec<u64>,
+    /// STEP entity id of every emitted pre-defined-symbol entity
+    /// (`PRE_DEFINED_SYMBOL` / `PRE_DEFINED_TERMINATOR_SYMBOL`), indexed by
+    /// `PreDefinedSymbolId.0`. No step-io consumer reads this cache yet —
+    /// it exists for round-trip symmetry with the arena.
+    pub(crate) pre_defined_symbol_step_ids: Vec<u64>,
     /// STEP entity id of every emitted `CURVE_STYLE` entity, indexed by
     /// `CurveStyleId.0`. Consumed by the PSA writer when dispatching a
     /// `PsaStyle::Curve(...)` entry.
@@ -335,7 +341,8 @@ impl<'m> WriteBuffer<'m> {
             dimensionless_dim_exp_step: None,
             mass_dim_exp_step: None,
             colour_step_ids: Vec::new(),
-            curve_font_step_ids: Vec::new(),
+            pre_defined_curve_font_step_ids: Vec::new(),
+            pre_defined_symbol_step_ids: Vec::new(),
             curve_style_step_ids: Vec::new(),
             styled_item_step_ids: Vec::new(),
             psa_step_ids: Vec::new(),

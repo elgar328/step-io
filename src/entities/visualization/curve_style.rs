@@ -1,9 +1,10 @@
 //! `CURVE_STYLE` handler — Pass 7-8b. Combines a curve-font reference, a
 //! width measure, and a colour reference. Reader resolves the font/colour
-//! refs through `viz_curve_font_id_map` / `viz_colour_id_map` and pushes
-//! the assembled `CurveStyle` into `VisualizationPool::curve_styles`;
-//! writer looks up cached STEP ids for the arena entries through
-//! `WriteBuffer::curve_font_step_ids` / `colour_step_ids`.
+//! refs through `viz_pre_defined_curve_font_id_map` / `viz_colour_id_map`
+//! and pushes the assembled `CurveStyle` into
+//! `VisualizationPool::curve_styles`; writer looks up cached STEP ids for
+//! the arena entries through `WriteBuffer::pre_defined_curve_font_step_ids`
+//! / `colour_step_ids`.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
@@ -30,7 +31,7 @@ impl SimpleEntityHandler for CurveStyleHandler {
         check_count(attrs, 4, entity_id, "CURVE_STYLE")?;
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let font_ref = read_entity_ref(attrs, 1, entity_id, "curve_font")?;
-        let Some(&curve_font) = ctx.viz_curve_font_id_map.get(&font_ref) else {
+        let Some(&curve_font) = ctx.viz_pre_defined_curve_font_id_map.get(&font_ref) else {
             return Ok(()); // unsupported curve_font SELECT variant — drop
         };
         let curve_width = read_positive_length_measure(attrs, 2, entity_id)?;
@@ -52,7 +53,7 @@ impl SimpleEntityHandler for CurveStyleHandler {
     }
 
     fn write(buf: &mut WriteBuffer, cs: CurveStyle) -> Result<u64, WriteError> {
-        let font_step_id = buf.curve_font_step_ids[cs.curve_font.0 as usize];
+        let font_step_id = buf.pre_defined_curve_font_step_ids[cs.curve_font.0 as usize];
         let width_attr = match cs.curve_width {
             CurveWidth::PositiveLengthMeasure(v) => Attribute::Typed {
                 type_name: "POSITIVE_LENGTH_MEASURE".into(),

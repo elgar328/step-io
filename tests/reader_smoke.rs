@@ -1889,3 +1889,25 @@ fn nist_property_def_plus_minus_tolerances() {
         );
     }
 }
+
+#[test]
+fn external_temp_polyline_pre_defined_terminator_symbol() {
+    // external_temp_polyline.step carries 3 PRE_DEFINED_TERMINATOR_SYMBOL
+    // instances — exercise the new pre_defined_symbols arena reader path.
+    use step_io::ir::visualization::PreDefinedSymbol;
+    let source = include_str!("fixtures/external_temp_polyline.step");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    let viz = result
+        .model
+        .visualization
+        .as_ref()
+        .expect("fixture carries visualization content");
+    assert_eq!(viz.pre_defined_symbols.len(), 3);
+    for sym in viz.pre_defined_symbols.iter() {
+        assert!(
+            matches!(sym, PreDefinedSymbol::Terminator(_)),
+            "every fixture instance is a PRE_DEFINED_TERMINATOR_SYMBOL"
+        );
+    }
+}
