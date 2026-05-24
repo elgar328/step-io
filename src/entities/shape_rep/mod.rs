@@ -12,6 +12,7 @@
 
 pub mod advanced_brep_shape_representation;
 pub mod datum_system;
+pub mod datum_target;
 pub mod descriptive_representation_item;
 pub mod gbssr;
 pub mod gbwsr;
@@ -21,6 +22,7 @@ pub mod manifold_surface_shape_representation;
 pub mod mapped_item;
 pub mod mdgpr;
 pub mod numeric_representation_item;
+pub mod placed_datum_target_feature;
 pub mod shape_aspect;
 pub mod shape_aspect_relationship;
 pub mod shape_aspect_subtypes;

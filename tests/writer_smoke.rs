@@ -2569,6 +2569,104 @@ fn datum_system_round_trip() {
 }
 
 #[test]
+fn datum_target_cluster_round_trip() {
+    // DATUM_TARGET + PLACED_DATUM_TARGET_FEATURE + FEATURE_FOR_DATUM_TARGET_RELATIONSHIP.
+    // Three new shape_aspect-family entities sharing the same product chain.
+    use step_io::ir::shape_aspect_ref::ShapeAspectRef;
+    use step_io::ir::shape_rep::{
+        DatumTarget, PlacedDatumTargetFeature, ShapeAspect, ShapeAspectRelationship,
+        ShapeAspectRelationshipKind,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        content: ProductContent::Solid(SolidContent {
+            ids: vec![solid_id],
+        }),
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let sa_id = model.shape_aspects.push(ShapeAspect {
+        name: "feature".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+    let dt_id = model.datum_targets.push(DatumTarget {
+        name: "datum target".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        target_id: "A1".into(),
+    });
+    let _pdtf_id = model
+        .placed_datum_target_features
+        .push(PlacedDatumTargetFeature {
+            name: "placed target".into(),
+            description: String::new(),
+            target: part_pid,
+            product_definitional: false,
+            target_id: "B2".into(),
+        });
+    model
+        .shape_aspect_relationships
+        .push(ShapeAspectRelationship {
+            name: String::new(),
+            description: String::new(),
+            relating_shape_aspect: ShapeAspectRef::ShapeAspect(sa_id),
+            related_shape_aspect: ShapeAspectRef::DatumTarget(dt_id),
+            kind: ShapeAspectRelationshipKind::FeatureForDatumTarget,
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.datum_targets.len(), 1, "DATUM_TARGET round-trips");
+    assert_eq!(
+        re.datum_targets.iter().next().unwrap().target_id,
+        "A1",
+        "target_id preserved"
+    );
+    assert_eq!(
+        re.placed_datum_target_features.len(),
+        1,
+        "PLACED_DATUM_TARGET_FEATURE round-trips"
+    );
+    assert_eq!(
+        re.placed_datum_target_features
+            .iter()
+            .next()
+            .unwrap()
+            .target_id,
+        "B2"
+    );
+    assert_eq!(re.shape_aspect_relationships.len(), 1);
+    let rel = re.shape_aspect_relationships.iter().next().unwrap();
+    assert_eq!(rel.kind, ShapeAspectRelationshipKind::FeatureForDatumTarget);
+    assert!(matches!(
+        rel.related_shape_aspect,
+        ShapeAspectRef::DatumTarget(_)
+    ));
+}
+
+#[test]
 fn geometric_tolerance_with_datum_reference_round_trip() {
     // PERPENDICULARITY_TOLERANCE — a geometric_tolerance_with_datum_reference
     // simple variant: magnitude + toleranced_shape_aspect + datum_system list.

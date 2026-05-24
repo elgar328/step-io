@@ -58,11 +58,11 @@ pub use id::{
     TessellatedSurfaceSetId, UnitContextId, VertexId, WireId,
     {
         AnnotationOccurrenceId, CompositeShapeAspectId, ContinuousShapeAspectId, DatumFeatureId,
-        DatumId, DatumSystemId, DerivedShapeAspectId, DimensionalLocationId, DimensionalSizeId,
-        DraughtingPreDefinedTextFontId, GeneralDatumReferenceId, GeometricToleranceId,
-        GeometricToleranceWithDatumReferenceId, LimitsAndFitsId, PlusMinusToleranceId,
-        ToleranceValueId, ToleranceZoneFormId, ToleranceZoneId, TypeQualifierId,
-        ValueFormatTypeQualifierId,
+        DatumId, DatumSystemId, DatumTargetId, DerivedShapeAspectId, DimensionalLocationId,
+        DimensionalSizeId, DraughtingPreDefinedTextFontId, GeneralDatumReferenceId,
+        GeometricToleranceId, GeometricToleranceWithDatumReferenceId, LimitsAndFitsId,
+        PlacedDatumTargetFeatureId, PlusMinusToleranceId, ToleranceValueId, ToleranceZoneFormId,
+        ToleranceZoneId, TypeQualifierId, ValueFormatTypeQualifierId,
     },
 };
 pub use model::{
@@ -104,11 +104,11 @@ pub use representation_item::RepresentationItemRef;
 pub use shape_aspect_ref::ShapeAspectRef;
 pub use shape_rep::{
     AdvancedBrepRepr, AllAroundShapeAspect, AngleUnit, CentreOfSymmetry, CompositeGroupShapeAspect,
-    DatumSystem, DescriptiveItem, IntegerRepresentationItem, LengthUncertainty, LengthUnit,
-    ManifoldSurfaceRepr, MappedItem, MappedItemData, Mdgpr, NumericRepresentationItem, PlainRepr,
-    RealRepresentationItem, Representation, RepresentationMap, RepresentationMapData, ShapeAspect,
-    ShapeAspectRelationship, ShapeAspectRelationshipKind, SolidAngleUnit, ToleranceZone,
-    UnitContext, WireframeRepr,
+    DatumSystem, DatumTarget, DescriptiveItem, IntegerRepresentationItem, LengthUncertainty,
+    LengthUnit, ManifoldSurfaceRepr, MappedItem, MappedItemData, Mdgpr, NumericRepresentationItem,
+    PlacedDatumTargetFeature, PlainRepr, RealRepresentationItem, Representation, RepresentationMap,
+    RepresentationMapData, ShapeAspect, ShapeAspectRelationship, ShapeAspectRelationshipKind,
+    SolidAngleUnit, ToleranceZone, UnitContext, WireframeRepr,
 };
 pub use tessellation::{
     ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, CoordinatesList, TessellatedCurveSet,

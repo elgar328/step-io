@@ -209,6 +209,11 @@ pub struct StepModel {
     pub datum_systems: Arena<DatumSystem>,
     /// `TOLERANCE_ZONE` arena — `SHAPE_ASPECT` subtype. Phase tolerance-zone.
     pub tolerance_zones: Arena<ToleranceZone>,
+    /// `DATUM_TARGET` arena — `SHAPE_ASPECT` subtype. Phase datum-target.
+    pub datum_targets: Arena<crate::ir::shape_rep::DatumTarget>,
+    /// `PLACED_DATUM_TARGET_FEATURE` arena — `SHAPE_ASPECT` subtype.
+    /// Phase datum-target.
+    pub placed_datum_target_features: Arena<crate::ir::shape_rep::PlacedDatumTargetFeature>,
     /// `SHAPE_ASPECT_RELATIONSHIP` arena (phase shape-aspect-ref). Orphan
     /// round-trip — each endpoint is a [`crate::ir::ShapeAspectRef`].
     pub shape_aspect_relationships: Arena<crate::ir::shape_rep::ShapeAspectRelationship>,

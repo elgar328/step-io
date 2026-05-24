@@ -51,6 +51,12 @@ pub(crate) fn resolve_shape_aspect_ref(
     if let Some(&id) = ctx.datum_system_id_map.get(&item_ref) {
         return Some(ShapeAspectRef::DatumSystem(id));
     }
+    if let Some(&id) = ctx.datum_target_id_map.get(&item_ref) {
+        return Some(ShapeAspectRef::DatumTarget(id));
+    }
+    if let Some(&id) = ctx.placed_datum_target_feature_id_map.get(&item_ref) {
+        return Some(ShapeAspectRef::PlacedDatumTargetFeature(id));
+    }
     None
 }
 
@@ -97,6 +103,9 @@ fn write_shape_aspect_relationship(buf: &mut WriteBuffer, rel: ShapeAspectRelati
         ShapeAspectRelationshipKind::Plain => "SHAPE_ASPECT_RELATIONSHIP",
         ShapeAspectRelationshipKind::Associativity => "SHAPE_ASPECT_ASSOCIATIVITY",
         ShapeAspectRelationshipKind::DerivingRelationship => "SHAPE_ASPECT_DERIVING_RELATIONSHIP",
+        ShapeAspectRelationshipKind::FeatureForDatumTarget => {
+            "FEATURE_FOR_DATUM_TARGET_RELATIONSHIP"
+        }
     };
     buf.push_simple(
         name,
@@ -179,6 +188,37 @@ impl SimpleEntityHandler for ShapeAspectDerivingRelationshipHandler {
             attrs,
             "SHAPE_ASPECT_DERIVING_RELATIONSHIP",
             ShapeAspectRelationshipKind::DerivingRelationship,
+        )
+    }
+
+    fn write(buf: &mut WriteBuffer, rel: ShapeAspectRelationship) -> Result<u64, WriteError> {
+        Ok(write_shape_aspect_relationship(buf, rel))
+    }
+}
+
+pub(crate) struct FeatureForDatumTargetRelationshipHandler;
+
+#[step_entity(name = "FEATURE_FOR_DATUM_TARGET_RELATIONSHIP", pass = Pass8ShapeAspectRel)]
+impl SimpleEntityHandler for FeatureForDatumTargetRelationshipHandler {
+    type WriteInput = ShapeAspectRelationship;
+
+    /// Mirrors the plain relationship reader but tags the entry with the
+    /// `FeatureForDatumTarget` kind so the writer round-trips the right
+    /// STEP entity name. The blueprint narrows `related_shape_aspect` to
+    /// `ref_datum_target`, but step-io stores it as the unified
+    /// [`ShapeAspectRef`]; the writer guards the variant before emitting.
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        read_shape_aspect_relationship(
+            ctx,
+            entity_id,
+            attrs,
+            "FEATURE_FOR_DATUM_TARGET_RELATIONSHIP",
+            ShapeAspectRelationshipKind::FeatureForDatumTarget,
         )
     }
 

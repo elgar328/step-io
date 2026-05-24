@@ -237,6 +237,14 @@ pub(crate) struct WriteBuffer<'m> {
     /// datum-system). Populated by `emit_datum_systems`; consumed by
     /// `emit_shape_aspect_ref`.
     pub(crate) datum_system_step_ids: Vec<u64>,
+    /// Step-id cache for `datum_targets` (phase datum-target). Indexed by
+    /// `DatumTargetId.0`. Consumed by `emit_shape_aspect_ref` when a
+    /// `ShapeAspectRef::DatumTarget(_)` reaches the writer
+    /// (e.g. `feature_for_datum_target_relationship.related_shape_aspect`).
+    pub(crate) datum_target_step_ids: Vec<u64>,
+    /// Step-id cache for `placed_datum_target_features` (phase
+    /// datum-target). Indexed by `PlacedDatumTargetFeatureId.0`.
+    pub(crate) placed_datum_target_feature_step_ids: Vec<u64>,
     /// Step-id caches for the plus-minus-tolerance cluster (phase
     /// plus-minus-tolerance). The `tolerance_value` / `limits_and_fits`
     /// caches feed `PLUS_MINUS_TOLERANCE.range`; the dimensional caches feed
@@ -383,6 +391,8 @@ impl<'m> WriteBuffer<'m> {
             datum_feature_step_ids: Vec::new(),
             general_datum_reference_step_ids: Vec::new(),
             datum_system_step_ids: Vec::new(),
+            datum_target_step_ids: Vec::new(),
+            placed_datum_target_feature_step_ids: Vec::new(),
             tolerance_value_step_ids: Vec::new(),
             geometric_tolerance_step_ids: Vec::new(),
             geometric_tolerance_with_datum_reference_step_ids: Vec::new(),
@@ -499,6 +509,12 @@ impl<'m> WriteBuffer<'m> {
         // general_datum_reference → datum_system → consumers.
         self.emit_general_datum_references();
         self.emit_datum_systems();
+        // DATUM_TARGET / PLACED_DATUM_TARGET_FEATURE — same wave as
+        // datum_systems. Fills the two new `*_step_ids` caches so
+        // `emit_shape_aspect_ref` resolves their `ShapeAspectRef` variants
+        // (e.g. `feature_for_datum_target_relationship.related_shape_aspect`).
+        self.emit_datum_targets();
+        self.emit_placed_datum_target_features();
         // SHAPE_ASPECT_RELATIONSHIP — after emit_pmi_if_set so every
         // shape-aspect-family step-id cache is filled.
         self.emit_shape_aspect_relationships()?;

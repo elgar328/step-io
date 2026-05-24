@@ -258,6 +258,10 @@ impl WriteBuffer<'_> {
             ShapeAspectRef::Datum(id) => self.datum_step_ids[id.0 as usize],
             ShapeAspectRef::DatumFeature(id) => self.datum_feature_step_ids[id.0 as usize],
             ShapeAspectRef::DatumSystem(id) => self.datum_system_step_ids[id.0 as usize],
+            ShapeAspectRef::DatumTarget(id) => self.datum_target_step_ids[id.0 as usize],
+            ShapeAspectRef::PlacedDatumTargetFeature(id) => {
+                self.placed_datum_target_feature_step_ids[id.0 as usize]
+            }
         }
     }
 
@@ -365,6 +369,39 @@ impl WriteBuffer<'_> {
         for (index, ds) in systems.into_iter().enumerate() {
             if let Ok(step_id) = DatumSystemHandler::write(self, ds) {
                 self.datum_system_step_ids[index] = step_id;
+            }
+        }
+    }
+
+    /// Emit the `datum_targets` arena (`DATUM_TARGET`). Same surrounding
+    /// constraints as `emit_datum_systems` — product-chain refs resolved
+    /// through `product_def_shape_ids`, downstream `ShapeAspectRef`
+    /// consumers see a filled `datum_target_step_ids` cache.
+    pub(in crate::writer::buffer) fn emit_datum_targets(&mut self) {
+        use crate::entities::shape_rep::datum_target::DatumTargetHandler;
+        let targets: Vec<_> = self.model.datum_targets.iter().cloned().collect();
+        self.datum_target_step_ids.resize(targets.len(), 0);
+        for (index, dt) in targets.into_iter().enumerate() {
+            if let Ok(step_id) = DatumTargetHandler::write(self, dt) {
+                self.datum_target_step_ids[index] = step_id;
+            }
+        }
+    }
+
+    /// Emit the `placed_datum_target_features` arena.
+    pub(in crate::writer::buffer) fn emit_placed_datum_target_features(&mut self) {
+        use crate::entities::shape_rep::placed_datum_target_feature::PlacedDatumTargetFeatureHandler;
+        let entries: Vec<_> = self
+            .model
+            .placed_datum_target_features
+            .iter()
+            .cloned()
+            .collect();
+        self.placed_datum_target_feature_step_ids
+            .resize(entries.len(), 0);
+        for (index, p) in entries.into_iter().enumerate() {
+            if let Ok(step_id) = PlacedDatumTargetFeatureHandler::write(self, p) {
+                self.placed_datum_target_feature_step_ids[index] = step_id;
             }
         }
     }

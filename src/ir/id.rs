@@ -29,9 +29,9 @@ use super::property::{
     Property, PropertyDefinition,
 };
 use super::shape_rep::{
-    AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, DatumSystem, MappedItem,
-    NumericRepresentationItem, Representation, RepresentationMap, ShapeAspect,
-    ShapeAspectRelationship, ToleranceZone, UnitContext,
+    AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, DatumSystem, DatumTarget,
+    MappedItem, NumericRepresentationItem, PlacedDatumTargetFeature, Representation,
+    RepresentationMap, ShapeAspect, ShapeAspectRelationship, ToleranceZone, UnitContext,
 };
 use super::tessellation::{
     ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, TessellatedItem,
@@ -112,6 +112,12 @@ define_id!(DatumSystemId, DatumSystem);
 
 // tolerance_zone arena — SHAPE_ASPECT subtype (Phase tolerance-zone).
 define_id!(ToleranceZoneId, ToleranceZone);
+
+// datum_target / placed_datum_target_feature arenas — SHAPE_ASPECT subtypes
+// (Phase datum-target). Both share the `ShapeAspectRef` enum as their
+// reference-type entry alongside DATUM / DATUM_FEATURE / DATUM_SYSTEM.
+define_id!(DatumTargetId, DatumTarget);
+define_id!(PlacedDatumTargetFeatureId, PlacedDatumTargetFeature);
 
 // SHAPE_ASPECT_RELATIONSHIP arena (phase shape-aspect-ref).
 define_id!(ShapeAspectRelationshipId, ShapeAspectRelationship);

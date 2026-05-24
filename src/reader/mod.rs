@@ -413,6 +413,15 @@ pub struct ReaderContext {
         HashMap<u64, crate::ir::GeometricToleranceWithDatumReferenceId>,
     pub(crate) tolerance_zone_form_id_map: HashMap<u64, crate::ir::ToleranceZoneFormId>,
     pub(crate) tolerance_zones: crate::ir::Arena<crate::ir::ToleranceZone>,
+    /// `DATUM_TARGET` arena + step entity id → `DatumTargetId` map.
+    /// Phase datum-target.
+    pub(crate) datum_targets: crate::ir::Arena<crate::ir::shape_rep::DatumTarget>,
+    pub(crate) datum_target_id_map: HashMap<u64, crate::ir::DatumTargetId>,
+    /// `PLACED_DATUM_TARGET_FEATURE` arena + id map.
+    pub(crate) placed_datum_target_features:
+        crate::ir::Arena<crate::ir::shape_rep::PlacedDatumTargetFeature>,
+    pub(crate) placed_datum_target_feature_id_map:
+        HashMap<u64, crate::ir::PlacedDatumTargetFeatureId>,
     /// `SHAPE_ASPECT_RELATIONSHIP` arena (phase shape-aspect-ref) — orphan.
     pub(crate) shape_aspect_relationships:
         crate::ir::Arena<crate::ir::shape_rep::ShapeAspectRelationship>,
@@ -580,6 +589,8 @@ impl ReaderContext {
                 all_around_shape_aspects: ctx.all_around_shape_aspects,
                 datum_systems: ctx.datum_systems,
                 tolerance_zones: ctx.tolerance_zones,
+                datum_targets: ctx.datum_targets,
+                placed_datum_target_features: ctx.placed_datum_target_features,
                 shape_aspect_relationships: ctx.shape_aspect_relationships,
                 plm: ctx.plm,
                 units_pool: build_units_pool(

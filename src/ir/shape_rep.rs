@@ -328,12 +328,43 @@ pub struct ToleranceZone {
     pub form: ToleranceZoneFormId,
 }
 
+/// `DATUM_TARGET` — a `SHAPE_ASPECT` subtype identifying a single datum
+/// target on a part. The first four attrs are the shared `shape_aspect`
+/// body (see [`CompositeGroupShapeAspect`]); `target_id` is the alphabetic
+/// label given to the target (e.g. `"A1"`, `"B2"`). A `DATUM_TARGET`
+/// whose `of_shape` does not resolve is silently dropped, symmetric on
+/// re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DatumTarget {
+    pub name: String,
+    pub description: String,
+    pub target: ProductId,
+    pub product_definitional: bool,
+    /// `target_id` — alphabetic label (`from = datum_target`).
+    pub target_id: String,
+}
+
+/// `PLACED_DATUM_TARGET_FEATURE` — a `SHAPE_ASPECT` subtype tagging a
+/// placed instance of a datum target on the feature it locates. Same
+/// shape as [`DatumTarget`] (inherits the `target_id` field from
+/// `datum_target`); ir.toml fields are identical.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlacedDatumTargetFeature {
+    pub name: String,
+    pub description: String,
+    pub target: ProductId,
+    pub product_definitional: bool,
+    /// `target_id` — alphabetic label (`from = datum_target`).
+    pub target_id: String,
+}
+
 /// Which `SHAPE_ASPECT_RELATIONSHIP` flavour an entry round-trips as.
 /// `shape_aspect_relationship` is a `concrete_supertype` — the plain entity
 /// and its subtypes (`SHAPE_ASPECT_DERIVING_RELATIONSHIP` /
-/// `SHAPE_ASPECT_ASSOCIATIVITY`) share the identical 4-attr shape and
-/// differ only by STEP entity name. That name is captured here so one
-/// arena covers the whole family; subtype variants are added additively.
+/// `SHAPE_ASPECT_ASSOCIATIVITY` / `FEATURE_FOR_DATUM_TARGET_RELATIONSHIP`)
+/// share the identical 4-attr shape and differ only by STEP entity name.
+/// That name is captured here so one arena covers the whole family;
+/// subtype variants are added additively.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ShapeAspectRelationshipKind {
     /// Plain `SHAPE_ASPECT_RELATIONSHIP`.
@@ -342,6 +373,11 @@ pub enum ShapeAspectRelationshipKind {
     Associativity,
     /// `SHAPE_ASPECT_DERIVING_RELATIONSHIP`.
     DerivingRelationship,
+    /// `FEATURE_FOR_DATUM_TARGET_RELATIONSHIP` — `related_shape_aspect` is
+    /// narrowed to a `DATUM_TARGET` per the ir.toml blueprint
+    /// (`ty = ref_datum_target`); a relationship whose `related_shape_aspect`
+    /// resolves to anything else is dropped at read time and at write time.
+    FeatureForDatumTarget,
 }
 
 /// `SHAPE_ASPECT_RELATIONSHIP(name, description, relating_shape_aspect,
