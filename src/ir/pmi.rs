@@ -38,6 +38,8 @@ pub struct PmiPool {
     pub draughting_callouts: Arena<DraughtingCallout>,
     /// `draughting_callout_relationship` arena (phase draughting-callout).
     pub draughting_callout_relationships: Arena<DraughtingCalloutRelationship>,
+    /// `geometric_tolerance_relationship` arena (phase gt-relationship).
+    pub geometric_tolerance_relationships: Arena<GeometricToleranceRelationship>,
     /// `DATUM` arena. Phase datum.
     pub datums: Arena<Datum>,
     /// `DATUM_FEATURE` arena. Phase datum-feature.
@@ -576,6 +578,19 @@ pub struct DraughtingAnnotationOccurrence {
     pub name: String,
     pub styles: Vec<PresentationStyleAssignmentId>,
     pub item: RepresentationItemRef,
+}
+
+/// `GEOMETRIC_TOLERANCE_RELATIONSHIP(name, description, relating, related)`
+/// — pairs two `geometric_tolerance` arena entries (each one can be a
+/// `Plain` GT or a `WithDatumReference` GT, hence
+/// [`GeometricToleranceRef`]).
+/// Either side unresolved drops the relationship, symmetric on re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct GeometricToleranceRelationship {
+    pub name: String,
+    pub description: String,
+    pub relating: GeometricToleranceRef,
+    pub related: GeometricToleranceRef,
 }
 
 /// `draughting_callout` `complex_supertype` enum. The `Plain` variant

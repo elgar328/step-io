@@ -21,9 +21,9 @@ use super::plm::{
 use super::pmi::{
     AnnotationOccurrence, Datum, DatumFeature, DimensionalLocation, DimensionalSize,
     DraughtingCallout, DraughtingCalloutRelationship, DraughtingPreDefinedTextFont,
-    GeneralDatumReference, GeometricTolerance, GeometricToleranceWithDatumReference, LeaderCurve,
-    LimitsAndFits, PlusMinusTolerance, ToleranceValue, ToleranceZoneForm, TypeQualifier,
-    ValueFormatTypeQualifier,
+    GeneralDatumReference, GeometricTolerance, GeometricToleranceRelationship,
+    GeometricToleranceWithDatumReference, LeaderCurve, LimitsAndFits, PlusMinusTolerance,
+    ToleranceValue, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
 use super::property::{
     DescriptionAttribute, GeneralProperty, GeneralPropertyAssociation, IdAttribute, NameAttribute,
@@ -143,6 +143,12 @@ define_id!(DraughtingCalloutId, DraughtingCallout);
 define_id!(
     DraughtingCalloutRelationshipId,
     DraughtingCalloutRelationship
+);
+
+// geometric_tolerance_relationship arena (Phase gt-relationship).
+define_id!(
+    GeometricToleranceRelationshipId,
+    GeometricToleranceRelationship
 );
 
 // datum arena (Phase datum).

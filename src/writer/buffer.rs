@@ -555,6 +555,9 @@ impl<'m> WriteBuffer<'m> {
         // geometric_tolerance_with_datum_reference — also after
         // emit_datum_systems (`datum_system_step_ids`).
         self.emit_geometric_tolerance_with_datum_references();
+        // GEOMETRIC_TOLERANCE_RELATIONSHIP — pairs two GT entries; both
+        // GT step-id caches must be filled by the two emits above.
+        self.emit_geometric_tolerance_relationships();
         // TOLERANCE_ZONE — after both geometric_tolerance emits (its
         // `defining_tolerance` caches) and emit_pmi_if_set (the
         // `tolerance_zone_form_step_ids` cache).

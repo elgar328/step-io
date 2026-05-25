@@ -282,6 +282,11 @@ pub(crate) enum PassLevel {
     /// Depends on `Pass7DraughtingCallout` so `draughting_callout_id_map`
     /// resolves `relating` / `related`.
     Pass8DraughtingCalloutRelationship,
+    /// `GEOMETRIC_TOLERANCE_RELATIONSHIP` (phase gt-relationship). Depends
+    /// on `Pass8GeometricTolerance` + `Pass8GtWithDatumReference` so both
+    /// GT enum id maps are populated for the `relating` / `related`
+    /// `GeometricToleranceRef` resolution.
+    Pass8GtRelationship,
     /// plm Date/Time leaves (Pass 9-1) — `CALENDAR_DATE`,
     /// `COORDINATED_UNIVERSAL_TIME_OFFSET`, `DATE_TIME_ROLE`. No external deps.
     Pass9PlmDateLeaves,

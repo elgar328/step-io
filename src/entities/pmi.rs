@@ -20,11 +20,11 @@ use crate::ir::pmi::{
     DimensionalSizeKind, DraughtingAnnotationOccurrence, DraughtingCallout, DraughtingCalloutData,
     DraughtingCalloutElement, DraughtingCalloutRelationship, DraughtingPreDefinedTextFont,
     GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance,
-    GeometricToleranceData, GeometricToleranceRef, GeometricToleranceWithDatumReference,
-    GeometricToleranceWithDatumReferenceData, LeaderCurve, LeaderTerminator, LimitsAndFits,
-    PlusMinusTolerance, TerminatorSymbol, TessellatedAnnotationOccurrence, ToleranceMagnitude,
-    ToleranceMethodDefinition, ToleranceValue, ToleranceZoneForm, TypeQualifier,
-    ValueFormatTypeQualifier,
+    GeometricToleranceData, GeometricToleranceRef, GeometricToleranceRelationship,
+    GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData, LeaderCurve,
+    LeaderTerminator, LimitsAndFits, PlusMinusTolerance, TerminatorSymbol,
+    TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue,
+    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
@@ -825,6 +825,73 @@ impl SimpleEntityHandler for DraughtingCalloutRelationshipHandler {
                 Attribute::String(rel.description),
                 Attribute::EntityRef(relating),
                 Attribute::EntityRef(related),
+            ],
+        ))
+    }
+}
+
+pub(crate) struct GeometricToleranceRelationshipHandler;
+
+/// `GEOMETRIC_TOLERANCE_RELATIONSHIP(name, description, relating, related)`
+/// — pairs two `geometric_tolerance` entries. Each ref resolves via
+/// `resolve_geometric_tolerance_ref` (`Plain` vs `WithDatumReference` branch).
+/// Either side unresolved drops the relationship, symmetric on re-read.
+#[step_entity(name = "GEOMETRIC_TOLERANCE_RELATIONSHIP", pass = Pass8GtRelationship)]
+impl SimpleEntityHandler for GeometricToleranceRelationshipHandler {
+    type WriteInput = GeometricToleranceRelationship;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 4, entity_id, "GEOMETRIC_TOLERANCE_RELATIONSHIP")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
+        let relating_ref = read_entity_ref(attrs, 2, entity_id, "relating_geometric_tolerance")?;
+        let related_ref = read_entity_ref(attrs, 3, entity_id, "related_geometric_tolerance")?;
+        let Some(relating) = resolve_geometric_tolerance_ref(ctx, relating_ref) else {
+            return Ok(());
+        };
+        let Some(related) = resolve_geometric_tolerance_ref(ctx, related_ref) else {
+            return Ok(());
+        };
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .geometric_tolerance_relationships
+            .push(GeometricToleranceRelationship {
+                name,
+                description,
+                relating,
+                related,
+            });
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        rel: GeometricToleranceRelationship,
+    ) -> Result<u64, WriteError> {
+        let relating_step = match rel.relating {
+            GeometricToleranceRef::Plain(id) => buf.geometric_tolerance_step_ids[id.0 as usize],
+            GeometricToleranceRef::WithDatumReference(id) => {
+                buf.geometric_tolerance_with_datum_reference_step_ids[id.0 as usize]
+            }
+        };
+        let related_step = match rel.related {
+            GeometricToleranceRef::Plain(id) => buf.geometric_tolerance_step_ids[id.0 as usize],
+            GeometricToleranceRef::WithDatumReference(id) => {
+                buf.geometric_tolerance_with_datum_reference_step_ids[id.0 as usize]
+            }
+        };
+        Ok(buf.push_simple(
+            "GEOMETRIC_TOLERANCE_RELATIONSHIP",
+            vec![
+                Attribute::String(rel.name),
+                Attribute::String(rel.description),
+                Attribute::EntityRef(relating_step),
+                Attribute::EntityRef(related_step),
             ],
         ))
     }

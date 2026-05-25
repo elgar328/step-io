@@ -209,6 +209,20 @@ impl WriteBuffer<'_> {
         }
     }
 
+    /// Emit the `geometric_tolerance_relationship` arena (phase
+    /// gt-relationship). Both GT step-id caches must be filled by the
+    /// preceding GT / `GT_with_datum_reference` emits.
+    pub(in crate::writer::buffer) fn emit_geometric_tolerance_relationships(&mut self) {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::pmi::GeometricToleranceRelationshipHandler;
+        let Some(pmi) = self.model.pmi.clone() else {
+            return;
+        };
+        for rel in pmi.geometric_tolerance_relationships.iter() {
+            let _ = GeometricToleranceRelationshipHandler::write(self, rel.clone());
+        }
+    }
+
     /// Emit the `draughting_callout_relationship` arena.
     pub(in crate::writer::buffer) fn emit_draughting_callout_relationships(&mut self) {
         use crate::entities::SimpleEntityHandler;

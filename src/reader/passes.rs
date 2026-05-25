@@ -393,6 +393,10 @@ impl ReaderContext {
         // geometric_tolerance_with_datum_reference — also needs the
         // datum_system id map Pass8DatumSystem filled.
         self.dispatch_registry(graph, PassLevel::Pass8GtWithDatumReference);
+        // GEOMETRIC_TOLERANCE_RELATIONSHIP — depends on both GT enum id
+        // maps (Pass8GeometricTolerance + Pass8GtWithDatumReference)
+        // populated above.
+        self.dispatch_registry(graph, PassLevel::Pass8GtRelationship);
         // TOLERANCE_ZONE — shape_aspect subtype resolving `defining_tolerance`
         // through the two geometric_tolerance id maps just filled.
         self.dispatch_registry(graph, PassLevel::Pass8ToleranceZone);

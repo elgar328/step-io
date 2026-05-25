@@ -2408,6 +2408,94 @@ fn draughting_callout_round_trip() {
 }
 
 #[test]
+fn gt_relationship_round_trip() {
+    // GEOMETRIC_TOLERANCE_RELATIONSHIP — pairs two geometric_tolerance arena
+    // entries via GeometricToleranceRef (Plain / WithDatumReference branches).
+    use step_io::ir::pmi::{
+        GeometricTolerance, GeometricToleranceData, GeometricToleranceRef,
+        GeometricToleranceRelationship, ToleranceMagnitude,
+    };
+    use step_io::ir::property::{MeasureKind, PropertyMeasure, PropertyMeasureUnit};
+
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length_unit = ctx.length;
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        content: ProductContent::Solid(SolidContent {
+            ids: vec![solid_id],
+        }),
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+    let sa = model.shape_aspects.push(ShapeAspect {
+        name: "sa".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+    let measure = || {
+        ToleranceMagnitude::Measure(PropertyMeasure {
+            name: String::new(),
+            kind: MeasureKind::Length,
+            value: 0.1,
+            unit_ref: Some(PropertyMeasureUnit::Named(length_unit)),
+        })
+    };
+    let data = || GeometricToleranceData {
+        name: "t".into(),
+        description: String::new(),
+        magnitude: measure(),
+        toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+        modifiers: Vec::new(),
+        unit_size: None,
+        defined_area_unit: None,
+    };
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    let gt1 = pmi
+        .geometric_tolerances
+        .push(GeometricTolerance::Flatness(data()));
+    let gt2 = pmi
+        .geometric_tolerances
+        .push(GeometricTolerance::Straightness(data()));
+    pmi.geometric_tolerance_relationships
+        .push(GeometricToleranceRelationship {
+            name: "rel".into(),
+            description: String::new(),
+            relating: GeometricToleranceRef::Plain(gt1),
+            related: GeometricToleranceRef::Plain(gt2),
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.geometric_tolerance_relationships.len(), 1);
+    let rel = re_pmi
+        .geometric_tolerance_relationships
+        .iter()
+        .next()
+        .unwrap();
+    assert_eq!(rel.name, "rel");
+    assert!(matches!(rel.relating, GeometricToleranceRef::Plain(_)));
+    assert!(matches!(rel.related, GeometricToleranceRef::Plain(_)));
+}
+
+#[test]
 fn datum_round_trip() {
     // DATUM — a shape_aspect subtype + identification, resolving of_shape
     // to a ProductId through the PRODUCT_DEFINITION_SHAPE chain.
