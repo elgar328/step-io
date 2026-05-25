@@ -82,8 +82,7 @@ impl WriteBuffer<'_> {
     /// is index-cached in `datum_feature_step_ids` (by `DatumFeatureId.0`)
     /// for `emit_shape_aspect_ref`.
     fn emit_datum_features(&mut self) {
-        use crate::entities::pmi::DatumFeatureHandler;
-        use crate::entities::shape_rep::shape_aspect::ShapeAspectWriteInput;
+        use crate::entities::pmi::{DatumFeatureHandler, DatumFeatureWriteInput};
         let Some(pmi) = self.model.pmi.clone() else {
             return;
         };
@@ -93,13 +92,16 @@ impl WriteBuffer<'_> {
             let Some(&pds_step_id) = self.product_def_shape_ids.get(&df.target) else {
                 continue;
             };
+            // Shared writer dispatches the STEP entity name on `df.kind`
+            // (`DATUM_FEATURE` vs `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`).
             if let Ok(step_id) = DatumFeatureHandler::write(
                 self,
-                ShapeAspectWriteInput {
+                DatumFeatureWriteInput {
                     name: df.name.clone(),
                     description: df.description.clone(),
                     pds_step_id,
                     product_definitional: df.product_definitional,
+                    kind: df.kind,
                 },
             ) {
                 self.datum_feature_step_ids[index] = step_id;

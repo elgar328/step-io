@@ -86,10 +86,10 @@ pub use plm::{
 };
 pub use pmi::{
     AngleSelection, AngularLocationData, AnnotationOccurrence, AnnotationPlane, Datum,
-    DatumFeature, DimensionalCharacteristic, DimensionalLocation, DimensionalLocationData,
-    DimensionalSize, DimensionalSizeKind, DraughtingPreDefinedTextFont, GeneralDatumBase,
-    GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
-    GeometricToleranceRef, GeometricToleranceWithDatumReference,
+    DatumFeature, DatumFeatureKind, DimensionalCharacteristic, DimensionalLocation,
+    DimensionalLocationData, DimensionalSize, DimensionalSizeKind, DraughtingPreDefinedTextFont,
+    GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance,
+    GeometricToleranceData, GeometricToleranceRef, GeometricToleranceWithDatumReference,
     GeometricToleranceWithDatumReferenceData, LimitsAndFits, PlusMinusTolerance, PmiPool,
     TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue,
     ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
