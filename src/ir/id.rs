@@ -22,8 +22,8 @@ use super::pmi::{
     AnnotationOccurrence, Datum, DatumFeature, DimensionalLocation, DimensionalSize,
     DraughtingCallout, DraughtingCalloutRelationship, DraughtingPreDefinedTextFont,
     GeneralDatumReference, GeometricTolerance, GeometricToleranceRelationship,
-    GeometricToleranceWithDatumReference, LeaderCurve, LimitsAndFits, PlusMinusTolerance,
-    ProjectedZoneDefinition, ToleranceValue, ToleranceZoneForm, TypeQualifier,
+    GeometricToleranceWithDatumReference, LeaderCurve, LimitsAndFits, MeasureQualification,
+    PlusMinusTolerance, ProjectedZoneDefinition, ToleranceValue, ToleranceZoneForm, TypeQualifier,
     ValueFormatTypeQualifier,
 };
 use super::property::{
@@ -156,6 +156,9 @@ define_id!(
 // uses `single_struct` (no enum). Currently holds ProjectedZoneDefinition;
 // non_uniform / runout variants may join in a future phase.
 define_id!(ToleranceZoneDefinitionId, ProjectedZoneDefinition);
+
+// measure_qualification arena (Phase measure-qualification).
+define_id!(MeasureQualificationId, MeasureQualification);
 
 // datum arena (Phase datum).
 define_id!(DatumId, Datum);

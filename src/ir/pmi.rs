@@ -12,6 +12,7 @@ use super::id::{
     DimensionalLocationId, DimensionalSizeId, DraughtingCalloutId, GeometricToleranceId,
     GeometricToleranceWithDatumReferenceId, LimitsAndFitsId, MeasureWithUnitId,
     PresentationStyleAssignmentId, ProductId, TessellatedItemId, ToleranceValueId, ToleranceZoneId,
+    TypeQualifierId, ValueFormatTypeQualifierId,
 };
 use super::property::PropertyMeasure;
 use super::representation_item::RepresentationItemRef;
@@ -43,6 +44,8 @@ pub struct PmiPool {
     /// `tolerance_zone_definition` arena — currently holds
     /// `ProjectedZoneDefinition` only (phase projected-zone).
     pub tolerance_zone_definitions: Arena<ProjectedZoneDefinition>,
+    /// `measure_qualification` arena (phase measure-qualification).
+    pub measure_qualifications: Arena<MeasureQualification>,
     /// `DATUM` arena. Phase datum.
     pub datums: Arena<Datum>,
     /// `DATUM_FEATURE` arena. Phase datum-feature.
@@ -581,6 +584,33 @@ pub struct DraughtingAnnotationOccurrence {
     pub name: String,
     pub styles: Vec<PresentationStyleAssignmentId>,
     pub item: RepresentationItemRef,
+}
+
+/// `value_qualifier` SELECT — step-io models only the two SELECT members
+/// that appear in the NIST 53,000-fixture corpus
+/// (`type_qualifier` and `value_format_type_qualifier`). The other two —
+/// `precision_qualifier` / `uncertainty_qualifier` — have corpus count 0
+/// and are intentionally pruned from `ir.toml`; references to them are
+/// silently dropped on read, mirroring the [`ApprovalItem`] precedent.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ValueQualifier {
+    TypeQualifier(TypeQualifierId),
+    ValueFormatTypeQualifier(ValueFormatTypeQualifierId),
+}
+
+/// `MEASURE_QUALIFICATION(name, description, qualified_measure, qualifiers)`
+/// — attaches a SET of `value_qualifier` SELECT entries to a measure.
+/// `qualified_measure` unresolved drops the occurrence; individual
+/// `qualifiers` members not in the modelled SELECT subset (e.g.
+/// `precision_qualifier`) skip silently. EXPRESS WHERE requires
+/// `SET[1:?]`, but step-io tolerates empty IR Vecs (round-trip safe
+/// even if the write produces an empty SET literal).
+#[derive(Debug, Clone, PartialEq)]
+pub struct MeasureQualification {
+    pub name: String,
+    pub description: String,
+    pub qualified_measure: MeasureWithUnitId,
+    pub qualifiers: Vec<ValueQualifier>,
 }
 
 /// `PROJECTED_ZONE_DEFINITION(zone, boundaries, projection_end, projected_length)`

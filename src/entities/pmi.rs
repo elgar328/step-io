@@ -22,9 +22,10 @@ use crate::ir::pmi::{
     GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance,
     GeometricToleranceData, GeometricToleranceRef, GeometricToleranceRelationship,
     GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData, LeaderCurve,
-    LeaderTerminator, LimitsAndFits, PlusMinusTolerance, ProjectedZoneDefinition, TerminatorSymbol,
-    TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue,
-    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
+    LeaderTerminator, LimitsAndFits, MeasureQualification, PlusMinusTolerance,
+    ProjectedZoneDefinition, TerminatorSymbol, TessellatedAnnotationOccurrence, ToleranceMagnitude,
+    ToleranceMethodDefinition, ToleranceValue, ToleranceZoneForm, TypeQualifier,
+    ValueFormatTypeQualifier, ValueQualifier,
 };
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
@@ -75,10 +76,12 @@ impl SimpleEntityHandler for TypeQualifierHandler {
     ) -> Result<(), ConvertError> {
         check_count(attrs, 1, entity_id, "TYPE_QUALIFIER")?;
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        ctx.pmi
+        let id = ctx
+            .pmi
             .get_or_insert_with(PmiPool::default)
             .type_qualifiers
             .push(TypeQualifier { name });
+        ctx.type_qualifier_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -101,10 +104,12 @@ impl SimpleEntityHandler for ValueFormatTypeQualifierHandler {
     ) -> Result<(), ConvertError> {
         check_count(attrs, 1, entity_id, "VALUE_FORMAT_TYPE_QUALIFIER")?;
         let format_type = read_string_or_unset(attrs, 0, entity_id, "format_type")?.to_owned();
-        ctx.pmi
+        let id = ctx
+            .pmi
             .get_or_insert_with(PmiPool::default)
             .value_format_type_qualifiers
             .push(ValueFormatTypeQualifier { format_type });
+        ctx.value_format_type_qualifier_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -825,6 +830,78 @@ impl SimpleEntityHandler for DraughtingCalloutRelationshipHandler {
                 Attribute::String(rel.description),
                 Attribute::EntityRef(relating),
                 Attribute::EntityRef(related),
+            ],
+        ))
+    }
+}
+
+pub(crate) struct MeasureQualificationHandler;
+
+/// `MEASURE_QUALIFICATION(name, description, qualified_measure, qualifiers)`
+/// — `qualified_measure` resolves via `mwu_id_map`; `qualifiers` SET
+/// members resolve through `type_qualifier_id_map` /
+/// `value_format_type_qualifier_id_map`. The other two `value_qualifier`
+/// SELECT members (`precision_qualifier` / `uncertainty_qualifier`)
+/// have corpus 0 and are silently dropped (`ApprovalItem` precedent).
+#[step_entity(name = "MEASURE_QUALIFICATION", pass = Pass8MeasureQualification)]
+impl SimpleEntityHandler for MeasureQualificationHandler {
+    type WriteInput = MeasureQualification;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 4, entity_id, "MEASURE_QUALIFICATION")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
+        let qm_ref = read_entity_ref(attrs, 2, entity_id, "qualified_measure")?;
+        let qualifier_refs = read_entity_ref_list(attrs, 3, entity_id, "qualifiers")?;
+        let Some(&qualified_measure) = ctx.mwu_id_map.get(&qm_ref) else {
+            return Ok(());
+        };
+        let mut qualifiers = Vec::with_capacity(qualifier_refs.len());
+        for r in qualifier_refs {
+            if let Some(&id) = ctx.type_qualifier_id_map.get(&r) {
+                qualifiers.push(ValueQualifier::TypeQualifier(id));
+            } else if let Some(&id) = ctx.value_format_type_qualifier_id_map.get(&r) {
+                qualifiers.push(ValueQualifier::ValueFormatTypeQualifier(id));
+            }
+            // else: precision_qualifier / uncertainty_qualifier (corpus 0,
+            // not modelled) — silently drop the SELECT member.
+        }
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .measure_qualifications
+            .push(MeasureQualification {
+                name,
+                description,
+                qualified_measure,
+                qualifiers,
+            });
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, mq: MeasureQualification) -> Result<u64, WriteError> {
+        let qm_step = buf.mwu_step_ids[mq.qualified_measure.0 as usize];
+        let mut qualifier_refs = Vec::with_capacity(mq.qualifiers.len());
+        for q in mq.qualifiers {
+            let step = match q {
+                ValueQualifier::TypeQualifier(id) => buf.type_qualifier_step_ids[id.0 as usize],
+                ValueQualifier::ValueFormatTypeQualifier(id) => {
+                    buf.value_format_type_qualifier_step_ids[id.0 as usize]
+                }
+            };
+            qualifier_refs.push(Attribute::EntityRef(step));
+        }
+        Ok(buf.push_simple(
+            "MEASURE_QUALIFICATION",
+            vec![
+                Attribute::String(mq.name),
+                Attribute::String(mq.description),
+                Attribute::EntityRef(qm_step),
+                Attribute::List(qualifier_refs),
             ],
         ))
     }

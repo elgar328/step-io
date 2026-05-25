@@ -482,6 +482,15 @@ pub struct ReaderContext {
     /// projected-zone). Populated by `ToleranceZoneHandler`; consumed by
     /// `ProjectedZoneDefinitionHandler` for the `zone` ref.
     pub(crate) tolerance_zone_id_map: HashMap<u64, crate::ir::id::ToleranceZoneId>,
+    /// `TYPE_QUALIFIER` step entity id → `TypeQualifierId` (phase
+    /// measure-qualification). Consumed by `MeasureQualificationHandler`
+    /// to resolve a `qualifiers` SET member.
+    pub(crate) type_qualifier_id_map: HashMap<u64, crate::ir::id::TypeQualifierId>,
+    /// `VALUE_FORMAT_TYPE_QUALIFIER` step entity id →
+    /// `ValueFormatTypeQualifierId` (phase measure-qualification). Same
+    /// role as `type_qualifier_id_map`.
+    pub(crate) value_format_type_qualifier_id_map:
+        HashMap<u64, crate::ir::id::ValueFormatTypeQualifierId>,
     /// `COMPLEX_TRIANGULATED_FACE` arena (phase tessellation).
     pub(crate) tessellated_faces:
         crate::ir::Arena<crate::ir::tessellation::ComplexTriangulatedFace>,

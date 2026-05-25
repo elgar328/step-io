@@ -106,6 +106,14 @@ pub(crate) struct WriteBuffer<'m> {
     /// Populated by `emit_tolerance_zones` so
     /// `ProjectedZoneDefinitionHandler::write` can resolve `zone`.
     pub(crate) tolerance_zone_step_ids: Vec<u64>,
+    /// Emitted `TYPE_QUALIFIER` step ids, indexed by `TypeQualifierId.0`.
+    /// Populated by `emit_pmi_if_set` so `MeasureQualificationHandler::write`
+    /// can resolve a `qualifiers` SET member.
+    pub(crate) type_qualifier_step_ids: Vec<u64>,
+    /// Emitted `VALUE_FORMAT_TYPE_QUALIFIER` step ids, indexed by
+    /// `ValueFormatTypeQualifierId.0`. Same role as
+    /// `type_qualifier_step_ids`.
+    pub(crate) value_format_type_qualifier_step_ids: Vec<u64>,
     /// STEP entity id of every emitted `NAMED_UNIT` complex from
     /// [`crate::ir::UnitsPool::named_units`], indexed by `NamedUnitId.0`.
     /// Populated by `emit_units_pool_if_set` before GUAC + MWU + DUE emit,
@@ -341,6 +349,7 @@ pub(crate) struct WriteBuffer<'m> {
 }
 
 impl<'m> WriteBuffer<'m> {
+    #[allow(clippy::too_many_lines)]
     pub(crate) fn new(model: &'m StepModel) -> Self {
         Self {
             model,
@@ -373,6 +382,8 @@ impl<'m> WriteBuffer<'m> {
             ao_step_ids: Vec::new(),
             draughting_callout_step_ids: Vec::new(),
             tolerance_zone_step_ids: Vec::new(),
+            type_qualifier_step_ids: Vec::new(),
+            value_format_type_qualifier_step_ids: Vec::new(),
             unit_leaf_ids: Vec::new(),
             named_unit_step_ids: Vec::new(),
             mwu_step_ids: Vec::new(),
@@ -576,6 +587,10 @@ impl<'m> WriteBuffer<'m> {
         self.emit_tolerance_values();
         self.emit_limits_and_fits();
         self.emit_plus_minus_tolerances();
+        // MEASURE_QUALIFICATION — depends on type_qualifier_step_ids /
+        // value_format_type_qualifier_step_ids (filled by emit_pmi_pool)
+        // and mwu_step_ids.
+        self.emit_measure_qualifications();
         self.emit_visualization_if_set()?;
         // REPRESENTATION_MAP + MAPPED_ITEM — after visualization so the
         // `representation_step_ids` cache covers MDGPR slots too.

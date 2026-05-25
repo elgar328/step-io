@@ -129,10 +129,12 @@ impl WriteBuffer<'_> {
             }
         }
         for tq in pmi.type_qualifiers.iter() {
-            let _ = TypeQualifierHandler::write(self, tq.clone());
+            let step = TypeQualifierHandler::write(self, tq.clone()).unwrap_or(0);
+            self.type_qualifier_step_ids.push(step);
         }
         for vftq in pmi.value_format_type_qualifiers.iter() {
-            let _ = ValueFormatTypeQualifierHandler::write(self, vftq.clone());
+            let step = ValueFormatTypeQualifierHandler::write(self, vftq.clone()).unwrap_or(0);
+            self.value_format_type_qualifier_step_ids.push(step);
         }
         for font in pmi.draughting_pre_defined_text_fonts.iter() {
             let _ = DraughtingPreDefinedTextFontHandler::write(self, font.clone());
@@ -509,6 +511,22 @@ impl WriteBuffer<'_> {
         for tz in zones {
             let step = ToleranceZoneHandler::write(self, tz).unwrap_or(0);
             self.tolerance_zone_step_ids.push(step);
+        }
+    }
+
+    /// Emit the `measure_qualification` arena (phase
+    /// measure-qualification). Runs after the qualifier emits in
+    /// `emit_pmi_pool` (`type_qualifier_step_ids` /
+    /// `value_format_type_qualifier_step_ids`) and the units pass
+    /// (`mwu_step_ids`).
+    pub(in crate::writer::buffer) fn emit_measure_qualifications(&mut self) {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::pmi::MeasureQualificationHandler;
+        let Some(pmi) = self.model.pmi.clone() else {
+            return;
+        };
+        for mq in pmi.measure_qualifications.iter() {
+            let _ = MeasureQualificationHandler::write(self, mq.clone());
         }
     }
 

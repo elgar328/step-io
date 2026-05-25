@@ -292,6 +292,11 @@ pub(crate) enum PassLevel {
     /// plus subtypes (`resolve_shape_aspect_ref`), and the units pass
     /// (`mwu_id_map`).
     Pass8ProjectedZoneDefinition,
+    /// `MEASURE_QUALIFICATION` (phase measure-qualification). Depends on
+    /// `Pass8ShapeAspect` (`type_qualifier_id_map` /
+    /// `value_format_type_qualifier_id_map`) and the units pass
+    /// (`mwu_id_map`).
+    Pass8MeasureQualification,
     /// plm Date/Time leaves (Pass 9-1) — `CALENDAR_DATE`,
     /// `COORDINATED_UNIVERSAL_TIME_OFFSET`, `DATE_TIME_ROLE`. No external deps.
     Pass9PlmDateLeaves,

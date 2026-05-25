@@ -2969,6 +2969,62 @@ fn tolerance_zone_round_trip() {
 }
 
 #[test]
+fn measure_qualification_round_trip() {
+    // MEASURE_QUALIFICATION — qualifiers SET covers the two corpus-modelled
+    // value_qualifier variants (TypeQualifier, ValueFormatTypeQualifier).
+    use step_io::ir::pmi::{
+        MeasureQualification, TypeQualifier, ValueFormatTypeQualifier, ValueQualifier,
+    };
+    use step_io::ir::units::MeasureWithUnit;
+
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length_unit = ctx.length;
+    model.units.push(ctx);
+
+    let mwu_id = model
+        .units_pool
+        .as_mut()
+        .expect("units pool seeded")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
+            value: 1.0,
+            unit: length_unit,
+        });
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    let tq = pmi.type_qualifiers.push(TypeQualifier {
+        name: "maximum".into(),
+    });
+    let vftq = pmi
+        .value_format_type_qualifiers
+        .push(ValueFormatTypeQualifier {
+            format_type: "NR2 1.3".into(),
+        });
+    pmi.measure_qualifications.push(MeasureQualification {
+        name: "mq".into(),
+        description: String::new(),
+        qualified_measure: mwu_id,
+        qualifiers: vec![
+            ValueQualifier::TypeQualifier(tq),
+            ValueQualifier::ValueFormatTypeQualifier(vftq),
+        ],
+    });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.measure_qualifications.len(), 1);
+    let mq = re_pmi.measure_qualifications.iter().next().unwrap();
+    assert_eq!(mq.name, "mq");
+    assert_eq!(mq.qualifiers.len(), 2);
+    assert!(matches!(mq.qualifiers[0], ValueQualifier::TypeQualifier(_)));
+    assert!(matches!(
+        mq.qualifiers[1],
+        ValueQualifier::ValueFormatTypeQualifier(_)
+    ));
+}
+
+#[test]
 fn projected_zone_definition_round_trip() {
     // PROJECTED_ZONE_DEFINITION — single_struct in the tolerance_zone_definition
     // arena. Refs ToleranceZone + ShapeAspect (projection_end) +
