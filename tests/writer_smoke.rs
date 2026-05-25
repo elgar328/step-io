@@ -18,7 +18,7 @@ use step_io::ir::geometry::{
 };
 use step_io::ir::id::{
     CompositeShapeAspectId, ContinuousShapeAspectId, DerivedShapeAspectId, DirectionId,
-    GeneralPropertyId, Placement3dId, PointId, PropertyId, ShapeAspectId, SolidId, UnitContextId,
+    GeneralPropertyId, Placement3dId, PointId, ShapeAspectId, SolidId, UnitContextId,
 };
 use step_io::ir::model::StepModel;
 use step_io::ir::pmi::{
@@ -1288,6 +1288,10 @@ fn general_property_and_association_round_trip() {
     // AP242 user-defined attribute: a GENERAL_PROPERTY defines the
     // attribute, a GENERAL_PROPERTY_ASSOCIATION binds it to a product's
     // PROPERTY_DEFINITION.
+    use step_io::ir::PropertyDefinitionId;
+    use step_io::ir::property::{
+        CharacterizedDefinition, ProductDefinitionShape, PropertyDefinition, PropertyDefinitionData,
+    };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     model.units.push(ctx);
@@ -1316,10 +1320,34 @@ fn general_property_and_association_round_trip() {
     model.assembly = Some(tree);
 
     let mut pool = PropertyPool::default();
+    // The product chain auto-mirrors PDS into property_definitions during
+    // assembly emit setup at reader time, but for a hand-built IR we have
+    // to push both the PDS variant (matching the assembly chain's PDS for
+    // this product) and the Itself variant (the property's own PD) in
+    // source-#N order: PDS first (assembly chain emits PDS during product
+    // emit, before user-defined property emit), Itself second.
+    pool.property_definitions
+        .push(PropertyDefinition::ProductDefinitionShape(
+            ProductDefinitionShape {
+                inherited: PropertyDefinitionData {
+                    name: String::new(),
+                    description: String::new(),
+                    definition: CharacterizedDefinition::ProductDefinition(part_pid),
+                },
+            },
+        ));
+    let pd_id =
+        pool.property_definitions
+            .push(PropertyDefinition::Itself(PropertyDefinitionData {
+                name: "p1".into(),
+                description: "user defined attribute".into(),
+                definition: CharacterizedDefinition::ProductDefinition(part_pid),
+            }));
     pool.properties.push(Property {
         name: "p1".into(),
         description: Some("user defined attribute".into()),
         target: part_pid,
+        definition: pd_id,
         representation_name: String::new(),
         context: Some(UnitContextId(0)),
         items: Vec::new(),
@@ -1334,7 +1362,7 @@ fn general_property_and_association_round_trip() {
             name: "user defined attribute".into(),
             description: None,
             base_definition: GeneralPropertyId(0),
-            derived_definition: DerivedDefinitionItem::PropertyDefinition(PropertyId(0)),
+            derived_definition: DerivedDefinitionItem::PropertyDefinition(pd_id),
         });
     model.properties = Some(pool);
 
@@ -1355,9 +1383,11 @@ fn general_property_and_association_round_trip() {
     assert_eq!(gpa.name, "user defined attribute");
     assert_eq!(gpa.description, None);
     assert_eq!(gpa.base_definition, GeneralPropertyId(0));
+    // The re-read fills property_definitions with PDS first (assembly
+    // chain) then Itself (PD handler), so the Itself index is 1.
     assert_eq!(
         gpa.derived_definition,
-        DerivedDefinitionItem::PropertyDefinition(PropertyId(0))
+        DerivedDefinitionItem::PropertyDefinition(PropertyDefinitionId(1))
     );
 }
 

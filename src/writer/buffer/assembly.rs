@@ -223,25 +223,27 @@ impl WriteBuffer<'_> {
             }
             let formation = self.emit_formation(prod_entity, product);
             let pdef = self.emit_pdef(formation, per_product_ctx.pdef_ctx);
-            let pdef_shape = {
-                use crate::entities::SimpleEntityHandler;
-                use crate::entities::assembly_product::product_definition_shape::{
-                    ProductDefinitionShapeHandler, ProductDefinitionShapeWriteInput,
-                };
-                ProductDefinitionShapeHandler::write(
-                    self,
-                    ProductDefinitionShapeWriteInput { pdef },
-                )?
-            };
             self.product_def_ids.insert(pid, pdef);
-            self.product_def_shape_ids.insert(pid, pdef_shape);
             self.emit_product_category_chain(product, prod_entity);
+        }
+        // Now that every product's PDEF step id is cached in
+        // `product_def_ids`, emit the `property_definitions` arena —
+        // arena-driven PD/PDS emit fills `product_def_shape_ids` for the
+        // second loop's SR/SDR emit (and the PMI consumer cluster runs
+        // even later in `emit_all`, so its SHAPE_ASPECT.of_shape refs
+        // also see filled slots). The arena's source-#N order is
+        // preserved across the two loops because the writer never
+        // interleaves user property emits between PDS arena entries.
+        self.emit_property_definitions_if_set();
 
-            // Metadata-only products (no SDR in source IR) carry
-            // `geometry_context: None`. Skip SR + SDR emission for
-            // them so the output mirrors the source absence; otherwise
-            // the writer would attach a default context that re-reads
-            // as `Some(UnitContextId(0))` and breaks IR equality.
+        // Second loop: SR + SDR for every geometry-bearing product.
+        // Document-style products (`pdef_context = None && geometry_context
+        // = None`) already short-circuited above; metadata-only products
+        // (`geometry_context = None`) skip SR/SDR here for source-mirror.
+        for (pid, product) in products.iter_with_ids() {
+            if product.pdef_context.is_none() && product.geometry_context.is_none() {
+                continue;
+            }
             let Some(unit_ctx) = self.resolve_product_ctx(product) else {
                 continue;
             };
@@ -290,6 +292,13 @@ impl WriteBuffer<'_> {
                 }
             };
             product_sr.insert(pid, sr);
+            // PDS was emitted by `emit_property_definitions_if_set`; fetch
+            // its cached step id (every geometry-bearing product has one
+            // mirrored from the assembly chain — see
+            // `product_definition_shape::read`).
+            let Some(&pdef_shape) = self.product_def_shape_ids.get(&pid) else {
+                continue;
+            };
             self.emit_sdr(pdef_shape, sr);
         }
 

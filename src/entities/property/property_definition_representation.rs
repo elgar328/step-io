@@ -72,6 +72,15 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
             })
             .collect();
 
+        // Resolve the source PD step ref to the new PropertyDefinition
+        // arena id so the writer can fetch the cached PD step id during
+        // PDR emit (no longer re-emits PD inline). PD handler always
+        // pushes when its target resolves to a Product, matching the
+        // gate above, so this lookup never misses in practice — but stay
+        // defensive on kernel-built IR.
+        let Some(&definition) = ctx.property_def_step_to_id.get(&pd_ref) else {
+            return Ok(());
+        };
         let prop_id = ctx
             .properties
             .get_or_insert_with(PropertyPool::default)
@@ -80,6 +89,7 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
                 name: pd_name,
                 description: pd_desc,
                 target: pd_target,
+                definition,
                 representation_name,
                 context,
                 items,

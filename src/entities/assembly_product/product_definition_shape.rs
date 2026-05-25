@@ -10,6 +10,10 @@
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
+use crate::ir::property::{
+    CharacterizedDefinition, ProductDefinitionShape, PropertyDefinition, PropertyDefinitionData,
+    PropertyPool,
+};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -43,6 +47,31 @@ impl SimpleEntityHandler for ProductDefinitionShapeHandler {
     ) -> Result<(), ConvertError> {
         if let Some(pdef_ref) = pdef_shape_target(graph, entity_id, PDEF_TARGET_NAMES) {
             ctx.pdef_shape_to_pdef.insert(entity_id, pdef_ref);
+            // Mirror the product-targeted PDS into the schema-faithful
+            // `property_definitions` arena so the writer's arena-driven
+            // emit sees it. NAUO-targeted PDS stays out of the arena
+            // (`CharacterizedDefinition` has no NAUO variant yet) and is
+            // emitted by the existing assembly chain's `emit_nauo_owned_pds`.
+            if let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_ref) {
+                if let Some(&product_id) = ctx.product_arena_map.get(&product_step_id) {
+                    let pd_id = ctx
+                        .properties
+                        .get_or_insert_with(PropertyPool::default)
+                        .property_definitions
+                        .push(PropertyDefinition::ProductDefinitionShape(
+                            ProductDefinitionShape {
+                                inherited: PropertyDefinitionData {
+                                    name: String::new(),
+                                    description: String::new(),
+                                    definition: CharacterizedDefinition::ProductDefinition(
+                                        product_id,
+                                    ),
+                                },
+                            },
+                        ));
+                    ctx.property_def_step_to_id.insert(entity_id, pd_id);
+                }
+            }
         } else if let Some(nauo_ref) =
             pdef_shape_target(graph, entity_id, &["NEXT_ASSEMBLY_USAGE_OCCURRENCE"])
         {

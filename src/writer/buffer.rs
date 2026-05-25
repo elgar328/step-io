@@ -306,6 +306,15 @@ pub(crate) struct WriteBuffer<'m> {
     /// A slot stays 0 when that property's emit early-returned (no product
     /// chain) — the GPA emitter skips a 0 slot.
     pub(crate) property_step_ids: Vec<u64>,
+    /// STEP entity id of every emitted `property_definitions` arena entry
+    /// (`PROPERTY_DEFINITION` Itself or `PRODUCT_DEFINITION_SHAPE`),
+    /// indexed by `PropertyDefinitionId.0`. Filled by
+    /// `emit_property_definitions_if_set` immediately after the assembly
+    /// chain so subsequent passes (`emit_pmi_if_set` consuming
+    /// `product_def_shape_ids`, `emit_properties_if_set` resolving
+    /// `Property.definition`, `emit_general_property_associations` for
+    /// `derived_definition`) all see filled slots.
+    pub(crate) property_definition_step_ids: Vec<u64>,
     /// STEP entity id of every emitted `GENERAL_PROPERTY`, indexed by
     /// `GeneralPropertyId.0`. Consumed by the GPA emitter for `base_definition`.
     pub(crate) general_property_step_ids: Vec<u64>,
@@ -406,6 +415,7 @@ impl<'m> WriteBuffer<'m> {
             product_def_ids: std::collections::HashMap::new(),
             product_def_shape_ids: std::collections::HashMap::new(),
             property_step_ids: Vec::new(),
+            property_definition_step_ids: Vec::new(),
             general_property_step_ids: Vec::new(),
         }
     }

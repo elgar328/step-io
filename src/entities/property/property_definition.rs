@@ -9,6 +9,9 @@
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
+use crate::ir::property::{
+    CharacterizedDefinition, PropertyDefinition, PropertyDefinitionData, PropertyPool,
+};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -52,7 +55,21 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
             return Ok(());
         };
         ctx.property_def_map
-            .insert(entity_id, (name, description, product_id));
+            .insert(entity_id, (name.clone(), description.clone(), product_id));
+        // Schema-faithful `property_definitions` arena push (the writer's
+        // sole PD emit source). `description` flattens Option → empty
+        // string so the carrier struct uses raw `String`.
+        let arena_description = description.unwrap_or_default();
+        let pd_id = ctx
+            .properties
+            .get_or_insert_with(PropertyPool::default)
+            .property_definitions
+            .push(PropertyDefinition::Itself(PropertyDefinitionData {
+                name,
+                description: arena_description,
+                definition: CharacterizedDefinition::ProductDefinition(product_id),
+            }));
+        ctx.property_def_step_to_id.insert(entity_id, pd_id);
         Ok(())
     }
 

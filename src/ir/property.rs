@@ -13,7 +13,7 @@
 use super::arena::Arena;
 use super::id::{
     AddressId, ApplicationContextId, DerivedUnitId, GeneralPropertyId, GroupId, NamedUnitId,
-    PersonAndOrganizationId, ProductId, PropertyId, ShapeAspectId, UnitContextId,
+    PersonAndOrganizationId, ProductId, PropertyDefinitionId, ShapeAspectId, UnitContextId,
 };
 use super::shape_rep::DescriptiveItem;
 
@@ -23,6 +23,13 @@ use super::shape_rep::DescriptiveItem;
 /// without one).
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct PropertyPool {
+    /// `property_definition` arena per the ir.toml blueprint
+    /// (`concrete_supertype`, `shape = "carrier"`). Holds the abstract
+    /// supertype body (`Itself`) and its `PRODUCT_DEFINITION_SHAPE` subtype
+    /// as one arena, ordered by source `#N` (BTreeMap-driven dispatch).
+    /// Writer emits PD/PDS by iterating this arena — arena order ==
+    /// STEP output order, so re-read populates an identical arena.
+    pub property_definitions: Arena<PropertyDefinition>,
     /// Property records (PD + REPRESENTATION + PDR collapsed) — an arena so
     /// `GENERAL_PROPERTY_ASSOCIATION.derived_definition` can reference one
     /// by [`PropertyId`]. Arena (not `Vec`) order = source `#N` order.
@@ -99,6 +106,48 @@ pub enum IdAttributeItem {
     ApplicationContext(ApplicationContextId),
 }
 
+/// `property_definition` arena enum per the ir.toml blueprint
+/// (`concrete_supertype`, `shape = "carrier"`). The `Itself` variant carries
+/// the abstract supertype body; `ProductDefinitionShape` wraps the
+/// blueprint-narrowed concrete subtype step-io currently models.
+#[derive(Debug, Clone, PartialEq)]
+pub enum PropertyDefinition {
+    Itself(PropertyDefinitionData),
+    ProductDefinitionShape(ProductDefinitionShape),
+}
+
+/// `PROPERTY_DEFINITION(name, description, definition)` carrier body —
+/// shared by every [`PropertyDefinition`] variant per the blueprint's
+/// `shape = "carrier"` rule.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PropertyDefinitionData {
+    pub name: String,
+    pub description: String,
+    pub definition: CharacterizedDefinition,
+}
+
+/// `PRODUCT_DEFINITION_SHAPE` subtype body. AP242 declares no additional
+/// own attributes — the wrapper exists for variant identity and future
+/// subtype extension.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductDefinitionShape {
+    pub inherited: PropertyDefinitionData,
+}
+
+/// SELECT target for [`PropertyDefinitionData::definition`]. step-io
+/// flattens the nested `characterized_definition →
+/// characterized_product_definition → product_definition` chain to keep
+/// the enum shallow. Initial coverage: the `product_definition` member
+/// only — PDs whose target is a `PRODUCT_DEFINITION` (or
+/// `_WITH_ASSOCIATED_DOCUMENTS`) resolve to a [`ProductId`]. PDS instances
+/// whose target is a `NEXT_ASSEMBLY_USAGE_OCCURRENCE` are dropped from
+/// this arena (their classification still feeds the assembly chain's
+/// NAUO-owned PDS emit path).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum CharacterizedDefinition {
+    ProductDefinition(ProductId),
+}
+
 /// `PROPERTY_DEFINITION` + bound `REPRESENTATION` collapsed into a single
 /// IR record. Each `PROPERTY_DEFINITION_REPRESENTATION` produces one entry.
 #[derive(Debug, Clone, PartialEq)]
@@ -113,6 +162,13 @@ pub struct Property {
     /// target ref does not resolve to a `PRODUCT_DEFINITION` (e.g.
     /// `SHAPE_ASPECT`) are dropped at read time.
     pub target: ProductId,
+    /// Index into the [`PropertyPool::property_definitions`] arena for the
+    /// PD entry that pairs with this Property. Reader's PDR handler fills
+    /// it by resolving the source PD step ref through `property_def_step_to_id`;
+    /// writer's `emit_property` uses it to fetch the cached PD step id
+    /// (`property_definition_step_ids[definition.0]`) and emit the PDR
+    /// linking REPR ↔ PD without re-emitting the PD.
+    pub definition: PropertyDefinitionId,
     /// `REPRESENTATION.name` (often `''`).
     pub representation_name: String,
     /// `REPRESENTATION.context_of_items` — links to a [`UnitContext`] entry.
@@ -206,11 +262,12 @@ pub struct GeneralPropertyAssociation {
 
 /// SELECT target for [`GeneralPropertyAssociation::derived_definition`].
 /// Initial coverage of the schema's `derived_property_select`:
-/// `property_definition`, resolved to the [`Property`] record that
-/// collapses the PD + PDR + REPRESENTATION chain. Unsupported SELECT
-/// members are dropped at read time with a warning — same expansion
-/// policy as [`NameAttributeItem`] / [`IdAttributeItem`].
+/// `property_definition`, resolved to the [`PropertyDefinition`] arena
+/// entry (the schema-faithful surface — not the collapsed [`Property`]
+/// record). Unsupported SELECT members are dropped at read time with a
+/// warning — same expansion policy as [`NameAttributeItem`] /
+/// [`IdAttributeItem`].
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DerivedDefinitionItem {
-    PropertyDefinition(PropertyId),
+    PropertyDefinition(PropertyDefinitionId),
 }

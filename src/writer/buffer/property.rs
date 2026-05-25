@@ -59,9 +59,11 @@ impl WriteBuffer<'_> {
         for gpa in pool.general_property_associations.iter() {
             let base_step = self.general_property_step_ids[gpa.base_definition.0 as usize];
             let derived_step = match gpa.derived_definition {
-                DerivedDefinitionItem::PropertyDefinition(pid) => {
-                    self.property_step_ids[pid.0 as usize]
-                }
+                DerivedDefinitionItem::PropertyDefinition(pd_id) => self
+                    .property_definition_step_ids
+                    .get(pd_id.0 as usize)
+                    .copied()
+                    .unwrap_or(0),
             };
             if base_step == 0 || derived_step == 0 {
                 continue;
@@ -181,13 +183,19 @@ impl WriteBuffer<'_> {
     /// `PROPERTY_DEFINITION` step id, or 0 when the product chain was not
     /// emitted (the caller leaves a 0 slot in `property_step_ids`).
     fn emit_property(&mut self, prop: &Property) -> u64 {
-        // Defensive: silent skip when product chain wasn't emitted (e.g.,
-        // kernel-built IR with `properties` populated but no assembly).
-        // Reader symmetry — reader silent skips PDs whose target wasn't a
-        // resolvable Product.
-        let Some(&pdef_id) = self.product_def_ids.get(&prop.target) else {
+        // PD is emitted by `emit_property_definitions_if_set` (arena-driven)
+        // — here we only fetch its cached step id, then emit the items, the
+        // wrapping REPRESENTATION, and the PDR that ties them together. A
+        // 0 slot means the PD's product chain wasn't emitted (defensive
+        // for kernel-built IR); the GPA emitter skips 0 slots downstream.
+        let pd = self
+            .property_definition_step_ids
+            .get(prop.definition.0 as usize)
+            .copied()
+            .unwrap_or(0);
+        if pd == 0 {
             return 0;
-        };
+        }
 
         // 1. Emit items (mixed MEASURE / DESCRIPTIVE in source order).
         let item_refs: Vec<u64> = prop
@@ -213,26 +221,94 @@ impl WriteBuffer<'_> {
             ],
         );
 
-        // 3. PROPERTY_DEFINITION itself.
-        let desc_attr = match &prop.description {
-            Some(s) => Attribute::String(s.clone()),
-            None => Attribute::Unset,
-        };
-        let pd = self.push_simple(
-            "PROPERTY_DEFINITION",
-            vec![
-                Attribute::String(prop.name.clone()),
-                desc_attr,
-                Attribute::EntityRef(pdef_id),
-            ],
-        );
-
-        // 4. PROPERTY_DEFINITION_REPRESENTATION binding the two.
+        // 3. PROPERTY_DEFINITION_REPRESENTATION binding the (already
+        // emitted) PD and the new REPRESENTATION.
         let _ = PropertyDefinitionRepresentationHandler::write(
             self,
             PropertyDefinitionRepresentationWriteInput { pd, repr },
         );
         pd
+    }
+
+    /// Emit the schema-faithful `property_definitions` arena — the writer's
+    /// sole source for `PROPERTY_DEFINITION` and `PRODUCT_DEFINITION_SHAPE`
+    /// entities. Arena order matches source `#N` (reader pushes in
+    /// BTreeMap-driven dispatch order) so re-reading the output populates
+    /// an identical arena. Also fills the `product_def_shape_ids` cache for
+    /// PMI consumers (`SHAPE_ASPECT.of_shape` etc.) — replaces the legacy
+    /// assembly-chain inline PDS emit. Runs after `emit_product_chain` (so
+    /// `product_def_ids` is filled) and before `emit_pmi_if_set` (which
+    /// consumes `product_def_shape_ids`).
+    pub(in crate::writer::buffer) fn emit_property_definitions_if_set(&mut self) {
+        use crate::ir::property::{CharacterizedDefinition, PropertyDefinition};
+        let pool_owned = self.model.properties.clone();
+        let pool = match pool_owned.as_ref() {
+            Some(p) if !p.property_definitions.is_empty() => p,
+            _ => {
+                // Hand/kernel-built IR with no `property_definitions` arena
+                // — fall back to one PDS per geometry-bearing product so
+                // the SDR / PMI consumers still see a populated
+                // `product_def_shape_ids` cache. Re-read fills the arena
+                // (reader's PDS handler unconditionally mirrors into it);
+                // this fallback only affects the *first* write of a hand-
+                // built IR, where the user did not pre-populate the arena.
+                self.emit_pds_fallback_from_product_chain();
+                return;
+            }
+        };
+        self.property_definition_step_ids = vec![0; pool.property_definitions.len()];
+        for (idx, pd) in pool.property_definitions.iter_with_ids() {
+            let (entity_name, data) = match pd {
+                PropertyDefinition::Itself(data) => ("PROPERTY_DEFINITION", data),
+                PropertyDefinition::ProductDefinitionShape(pds) => {
+                    ("PRODUCT_DEFINITION_SHAPE", &pds.inherited)
+                }
+            };
+            let CharacterizedDefinition::ProductDefinition(product_id) = data.definition;
+            let Some(&pdef_step) = self.product_def_ids.get(&product_id) else {
+                continue; // product chain not emitted — leave slot 0
+            };
+            let step = self.push_simple(
+                entity_name,
+                vec![
+                    Attribute::String(data.name.clone()),
+                    Attribute::String(data.description.clone()),
+                    Attribute::EntityRef(pdef_step),
+                ],
+            );
+            self.property_definition_step_ids[idx.0 as usize] = step;
+            if matches!(pd, PropertyDefinition::ProductDefinitionShape(_)) {
+                // Mirror into the legacy PMI consumer cache. Multiple PDS
+                // per product would overwrite — observed corpora carry one
+                // product-targeted PDS per product, so this matches the
+                // existing assembly-chain behaviour.
+                self.product_def_shape_ids.insert(product_id, step);
+            }
+        }
+    }
+
+    /// Emit one `PRODUCT_DEFINITION_SHAPE` per product whose PDEF was
+    /// already cached in `product_def_ids`, mirroring the pre-phase-E'
+    /// assembly chain behaviour. Used only when the IR carries no
+    /// `property_definitions` arena (hand/kernel-built IR).
+    fn emit_pds_fallback_from_product_chain(&mut self) {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::assembly_product::product_definition_shape::{
+            ProductDefinitionShapeHandler, ProductDefinitionShapeWriteInput,
+        };
+        let pdef_entries: Vec<(crate::ir::id::ProductId, u64)> = self
+            .product_def_ids
+            .iter()
+            .map(|(pid, pdef)| (*pid, *pdef))
+            .collect();
+        for (pid, pdef) in pdef_entries {
+            if let Ok(step) = ProductDefinitionShapeHandler::write(
+                self,
+                ProductDefinitionShapeWriteInput { pdef },
+            ) {
+                self.product_def_shape_ids.insert(pid, step);
+            }
+        }
     }
 
     /// Emit a `DESCRIPTIVE_REPRESENTATION_ITEM` for a property's

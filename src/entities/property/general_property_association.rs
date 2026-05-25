@@ -55,8 +55,10 @@ impl SimpleEntityHandler for GeneralPropertyAssociationHandler {
             return Ok(());
         };
         // `derived_definition` is a SELECT; step-io covers the
-        // `property_definition` member, resolved through the property arena.
-        let Some(&prop_id) = ctx.property_step_to_id.get(&derived_ref) else {
+        // `property_definition` member, resolved through the
+        // schema-faithful `property_definitions` arena (writer's PD step-id
+        // cache shares that index space).
+        let Some(&pd_id) = ctx.property_def_step_to_id.get(&derived_ref) else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                 entity_id,
                 detail: format!(
@@ -73,7 +75,7 @@ impl SimpleEntityHandler for GeneralPropertyAssociationHandler {
                 name,
                 description,
                 base_definition,
-                derived_definition: DerivedDefinitionItem::PropertyDefinition(prop_id),
+                derived_definition: DerivedDefinitionItem::PropertyDefinition(pd_id),
             });
         Ok(())
     }

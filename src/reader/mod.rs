@@ -354,6 +354,15 @@ pub struct ReaderContext {
     /// PDR reader when it pushes a `Property`; consumed by the GPA reader
     /// to resolve `derived_definition`. Temp; discarded after Pass 8.
     pub(crate) property_step_to_id: HashMap<u64, crate::ir::PropertyId>,
+    /// `PROPERTY_DEFINITION` / `PRODUCT_DEFINITION_SHAPE` #N →
+    /// `PropertyDefinitionId` (Pass 6 + Pass 8). Recorded by the PD /
+    /// PDS handlers when they push into the schema-faithful
+    /// `property_definitions` arena. Consumed by:
+    /// - the PDR handler — fills the new `Property.definition` field;
+    /// - the GPA handler — resolves `derived_definition` to a
+    ///   `PropertyDefinitionId` (replacing the legacy `property_step_to_id`
+    ///   lookup for that purpose). Phase property-definition-2.
+    pub(crate) property_def_step_to_id: HashMap<u64, crate::ir::PropertyDefinitionId>,
     /// `GENERAL_PROPERTY #N → GeneralPropertyId` (Pass 8-4). Consumed by
     /// the GPA reader to resolve `base_definition`. Temp; discarded after
     /// Pass 8.

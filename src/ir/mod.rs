@@ -61,8 +61,8 @@ pub use id::{
         DatumId, DatumSystemId, DatumTargetId, DerivedShapeAspectId, DimensionalLocationId,
         DimensionalSizeId, DraughtingPreDefinedTextFontId, GeneralDatumReferenceId,
         GeometricToleranceId, GeometricToleranceWithDatumReferenceId, LimitsAndFitsId,
-        PlacedDatumTargetFeatureId, PlusMinusToleranceId, ToleranceValueId, ToleranceZoneFormId,
-        ToleranceZoneId, TypeQualifierId, ValueFormatTypeQualifierId,
+        PlacedDatumTargetFeatureId, PlusMinusToleranceId, PropertyDefinitionId, ToleranceValueId,
+        ToleranceZoneFormId, ToleranceZoneId, TypeQualifierId, ValueFormatTypeQualifierId,
     },
 };
 pub use model::{
@@ -95,9 +95,10 @@ pub use pmi::{
     ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
 pub use property::{
-    DerivedDefinitionItem, DescriptionAttribute, DescriptionAttributeItem, GeneralProperty,
-    GeneralPropertyAssociation, IdAttribute, IdAttributeItem, MeasureKind, NameAttribute,
-    NameAttributeItem, Property, PropertyItem, PropertyMeasure, PropertyMeasureUnit, PropertyPool,
+    CharacterizedDefinition, DerivedDefinitionItem, DescriptionAttribute, DescriptionAttributeItem,
+    GeneralProperty, GeneralPropertyAssociation, IdAttribute, IdAttributeItem, MeasureKind,
+    NameAttribute, NameAttributeItem, ProductDefinitionShape, Property, PropertyDefinition,
+    PropertyDefinitionData, PropertyItem, PropertyMeasure, PropertyMeasureUnit, PropertyPool,
 };
 pub use representation_item::RepresentationItemRef;
 pub use shape_aspect_ref::ShapeAspectRef;

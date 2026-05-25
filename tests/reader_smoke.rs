@@ -1891,6 +1891,36 @@ fn nist_property_def_plus_minus_tolerances() {
 }
 
 #[test]
+fn nist_property_def_property_definition_arena() {
+    // Schema-faithful `property_definitions` arena (phase property-definition-2):
+    // reader mirrors PD into Itself, PDS into ProductDefinitionShape. The NIST
+    // fixture carries many of each; assert the arena is non-empty and contains
+    // both variant kinds.
+    use step_io::ir::property::PropertyDefinition;
+    let source = include_str!("fixtures/external_temp_nist_property_def.stp");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    let pool = result
+        .model
+        .properties
+        .as_ref()
+        .expect("fixture carries property content");
+    assert!(
+        !pool.property_definitions.is_empty(),
+        "property_definitions arena populated"
+    );
+    let (mut itself, mut pds) = (0_usize, 0_usize);
+    for pd in pool.property_definitions.iter() {
+        match pd {
+            PropertyDefinition::Itself(_) => itself += 1,
+            PropertyDefinition::ProductDefinitionShape(_) => pds += 1,
+        }
+    }
+    assert!(itself > 0, "Itself variant present");
+    assert!(pds > 0, "ProductDefinitionShape variant present");
+}
+
+#[test]
 fn external_temp_polyline_pre_defined_terminator_symbol() {
     // external_temp_polyline.step carries 3 PRE_DEFINED_TERMINATOR_SYMBOL
     // instances — exercise the new pre_defined_symbols arena reader path.
