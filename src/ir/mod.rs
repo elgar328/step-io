@@ -95,10 +95,9 @@ pub use pmi::{
     ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
 pub use property::{
-    CharacterizedDefinition, DerivedDefinitionItem, DescriptionAttribute, DescriptionAttributeItem,
-    GeneralProperty, GeneralPropertyAssociation, IdAttribute, IdAttributeItem, MeasureKind,
-    NameAttribute, NameAttributeItem, ProductDefinitionShape, Property, PropertyDefinition,
-    PropertyDefinitionData, PropertyItem, PropertyMeasure, PropertyMeasureUnit, PropertyPool,
+    DerivedDefinitionItem, DescriptionAttribute, DescriptionAttributeItem, GeneralProperty,
+    GeneralPropertyAssociation, IdAttribute, IdAttributeItem, MeasureKind, NameAttribute,
+    NameAttributeItem, Property, PropertyItem, PropertyMeasure, PropertyMeasureUnit, PropertyPool,
 };
 pub use representation_item::RepresentationItemRef;
 pub use shape_aspect_ref::ShapeAspectRef;
