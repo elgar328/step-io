@@ -156,29 +156,68 @@ impl WriteBuffer<'_> {
             return;
         };
         for ao in pmi.annotation_occurrences.iter() {
-            match ao {
+            let step = match ao {
                 AnnotationOccurrence::AnnotationPlane(ap) => {
-                    let _ = AnnotationPlaneHandler::write(self, ap.clone());
+                    AnnotationPlaneHandler::write(self, ap.clone())
                 }
                 AnnotationOccurrence::TessellatedAnnotationOccurrence(tao) => {
-                    let _ = TessellatedAnnotationOccurrenceHandler::write(self, tao.clone());
+                    TessellatedAnnotationOccurrenceHandler::write(self, tao.clone())
                 }
                 AnnotationOccurrence::AnnotationSymbolOccurrence(aso) => {
-                    let _ = AnnotationSymbolOccurrenceHandler::write(self, aso.clone());
+                    AnnotationSymbolOccurrenceHandler::write(self, aso.clone())
                 }
                 AnnotationOccurrence::AnnotationTextOccurrence(ato) => {
-                    let _ = AnnotationTextOccurrenceHandler::write(self, ato.clone());
+                    AnnotationTextOccurrenceHandler::write(self, ato.clone())
                 }
                 AnnotationOccurrence::DraughtingAnnotationOccurrence(dao) => {
-                    let _ = DraughtingAnnotationOccurrenceHandler::write(self, dao.clone());
+                    DraughtingAnnotationOccurrenceHandler::write(self, dao.clone())
                 }
                 AnnotationOccurrence::TerminatorSymbol(ts) => {
-                    let _ = TerminatorSymbolHandler::write(self, ts.clone());
+                    TerminatorSymbolHandler::write(self, ts.clone())
                 }
                 AnnotationOccurrence::LeaderTerminator(lt) => {
-                    let _ = LeaderTerminatorHandler::write(self, lt.clone());
+                    LeaderTerminatorHandler::write(self, lt.clone())
                 }
-            }
+            };
+            // Index by AnnotationOccurrenceId.0 — arena order matches enum
+            // iteration order. Drop errors (push 0) to keep the index aligned.
+            self.ao_step_ids.push(step.unwrap_or(0));
+        }
+    }
+
+    /// Emit the `draughting_callout` arena (phase draughting-callout).
+    /// Fills `draughting_callout_step_ids` so
+    /// `emit_draughting_callout_relationships` can resolve relating /
+    /// related refs.
+    pub(in crate::writer::buffer) fn emit_draughting_callouts(&mut self) {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::pmi::{DraughtingCalloutHandler, LeaderDirectedCalloutHandler};
+        use crate::ir::pmi::DraughtingCallout;
+        let Some(pmi) = self.model.pmi.clone() else {
+            return;
+        };
+        for dc in pmi.draughting_callouts.iter() {
+            let step = match dc {
+                DraughtingCallout::Plain(data) => {
+                    DraughtingCalloutHandler::write(self, data.clone())
+                }
+                DraughtingCallout::LeaderDirected(data) => {
+                    LeaderDirectedCalloutHandler::write(self, data.clone())
+                }
+            };
+            self.draughting_callout_step_ids.push(step.unwrap_or(0));
+        }
+    }
+
+    /// Emit the `draughting_callout_relationship` arena.
+    pub(in crate::writer::buffer) fn emit_draughting_callout_relationships(&mut self) {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::pmi::DraughtingCalloutRelationshipHandler;
+        let Some(pmi) = self.model.pmi.clone() else {
+            return;
+        };
+        for rel in pmi.draughting_callout_relationships.iter() {
+            let _ = DraughtingCalloutRelationshipHandler::write(self, rel.clone());
         }
     }
 

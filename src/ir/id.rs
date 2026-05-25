@@ -20,9 +20,10 @@ use super::plm::{
 };
 use super::pmi::{
     AnnotationOccurrence, Datum, DatumFeature, DimensionalLocation, DimensionalSize,
-    DraughtingPreDefinedTextFont, GeneralDatumReference, GeometricTolerance,
-    GeometricToleranceWithDatumReference, LeaderCurve, LimitsAndFits, PlusMinusTolerance,
-    ToleranceValue, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
+    DraughtingCallout, DraughtingCalloutRelationship, DraughtingPreDefinedTextFont,
+    GeneralDatumReference, GeometricTolerance, GeometricToleranceWithDatumReference, LeaderCurve,
+    LimitsAndFits, PlusMinusTolerance, ToleranceValue, ToleranceZoneForm, TypeQualifier,
+    ValueFormatTypeQualifier,
 };
 use super::property::{
     DescriptionAttribute, GeneralProperty, GeneralPropertyAssociation, IdAttribute, NameAttribute,
@@ -135,6 +136,14 @@ define_id!(AnnotationOccurrenceId, AnnotationOccurrence);
 // blueprint uses `single_struct` (no enum). Currently holds LeaderCurve;
 // dimension_curve / projection_curve variants may join in a future phase.
 define_id!(AnnotationCurveOccurrenceId, LeaderCurve);
+
+// draughting_callout complex_supertype arena (Phase draughting-callout).
+define_id!(DraughtingCalloutId, DraughtingCallout);
+// draughting_callout_relationship arena (Phase draughting-callout).
+define_id!(
+    DraughtingCalloutRelationshipId,
+    DraughtingCalloutRelationship
+);
 
 // datum arena (Phase datum).
 define_id!(DatumId, Datum);

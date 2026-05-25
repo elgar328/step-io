@@ -59,11 +59,11 @@ pub use id::{
     {
         AnnotationCurveOccurrenceId, AnnotationOccurrenceId, CompositeShapeAspectId,
         ContinuousShapeAspectId, DatumFeatureId, DatumId, DatumSystemId, DatumTargetId,
-        DerivedShapeAspectId, DimensionalLocationId, DimensionalSizeId,
-        DraughtingPreDefinedTextFontId, GeneralDatumReferenceId, GeometricToleranceId,
-        GeometricToleranceWithDatumReferenceId, LimitsAndFitsId, PlacedDatumTargetFeatureId,
-        PlusMinusToleranceId, PropertyDefinitionId, ToleranceValueId, ToleranceZoneFormId,
-        ToleranceZoneId, TypeQualifierId, ValueFormatTypeQualifierId,
+        DerivedShapeAspectId, DimensionalLocationId, DimensionalSizeId, DraughtingCalloutId,
+        DraughtingCalloutRelationshipId, DraughtingPreDefinedTextFontId, GeneralDatumReferenceId,
+        GeometricToleranceId, GeometricToleranceWithDatumReferenceId, LimitsAndFitsId,
+        PlacedDatumTargetFeatureId, PlusMinusToleranceId, PropertyDefinitionId, ToleranceValueId,
+        ToleranceZoneFormId, ToleranceZoneId, TypeQualifierId, ValueFormatTypeQualifierId,
     },
 };
 pub use model::{
@@ -90,8 +90,9 @@ pub use pmi::{
     AnnotationSymbolOccurrence, AnnotationTextOccurrence, AreaUnitType, Datum, DatumFeature,
     DatumFeatureKind, DefinedAreaUnit, DimensionalCharacteristic, DimensionalLocation,
     DimensionalLocationData, DimensionalSize, DimensionalSizeKind, DraughtingAnnotationOccurrence,
-    DraughtingPreDefinedTextFont, GeneralDatumBase, GeneralDatumReference,
-    GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
+    DraughtingCallout, DraughtingCalloutData, DraughtingCalloutElement,
+    DraughtingCalloutRelationship, DraughtingPreDefinedTextFont, GeneralDatumBase,
+    GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
     GeometricToleranceModifier, GeometricToleranceRef, GeometricToleranceWithDatumReference,
     GeometricToleranceWithDatumReferenceData, LeaderCurve, LeaderTerminator, LimitsAndFits,
     PlusMinusTolerance, PmiPool, TerminatorSymbol, TessellatedAnnotationOccurrence,

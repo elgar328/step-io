@@ -2291,6 +2291,123 @@ fn leader_curve_terminator_round_trip() {
 }
 
 #[test]
+#[allow(clippy::too_many_lines)]
+fn draughting_callout_round_trip() {
+    // Plain DraughtingCallout + LeaderDirected variant + Relationship —
+    // phase draughting-callout. contents references both kinds of
+    // element (AnnotationOccurrence and AnnotationCurveOccurrence).
+    use step_io::ir::RepresentationItemRef;
+    use step_io::ir::pmi::{
+        AnnotationOccurrence, DraughtingCallout, DraughtingCalloutData, DraughtingCalloutElement,
+        DraughtingCalloutRelationship, LeaderCurve, LeaderTerminator, PmiPool, TerminatorSymbol,
+    };
+    let mut model = empty_model();
+    let p0 = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let dir = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let line = model
+        .geometry
+        .curves
+        .push(step_io::ir::geometry::Curve::Line(
+            step_io::ir::geometry::Line3 {
+                point: p0,
+                direction: dir,
+                magnitude: 1.0,
+            },
+        ));
+    let axis = model.geometry.directions.push(Direction3 {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+    });
+    let position = push_placement(&mut model, p0, Some(axis), Some(dir));
+    let surf = model
+        .geometry
+        .surfaces
+        .push(step_io::ir::geometry::Surface::Plane(
+            step_io::ir::geometry::Plane3 { position },
+        ));
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    let lc_id = pmi.annotation_curve_occurrences.push(LeaderCurve {
+        name: "lc".into(),
+        styles: vec![],
+        item: line,
+    });
+    let ts_id = pmi
+        .annotation_occurrences
+        .push(AnnotationOccurrence::TerminatorSymbol(TerminatorSymbol {
+            name: "ts".into(),
+            styles: vec![],
+            item: RepresentationItemRef::Surface(surf),
+            annotated_curve: lc_id,
+        }));
+    let _ = pmi
+        .annotation_occurrences
+        .push(AnnotationOccurrence::LeaderTerminator(LeaderTerminator {
+            name: "lt".into(),
+            styles: vec![],
+            item: RepresentationItemRef::Surface(surf),
+            annotated_curve: lc_id,
+        }));
+    let plain_id = pmi
+        .draughting_callouts
+        .push(DraughtingCallout::Plain(DraughtingCalloutData {
+            name: "plain".into(),
+            contents: vec![DraughtingCalloutElement::AnnotationOccurrence(ts_id)],
+        }));
+    let leader_id = pmi
+        .draughting_callouts
+        .push(DraughtingCallout::LeaderDirected(DraughtingCalloutData {
+            name: "leader".into(),
+            contents: vec![DraughtingCalloutElement::AnnotationCurveOccurrence(lc_id)],
+        }));
+    pmi.draughting_callout_relationships
+        .push(DraughtingCalloutRelationship {
+            name: "rel".into(),
+            description: String::new(),
+            relating: plain_id,
+            related: leader_id,
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.draughting_callouts.len(), 2);
+    assert_eq!(re_pmi.draughting_callout_relationships.len(), 1);
+    let mut iter = re_pmi.draughting_callouts.iter();
+    let DraughtingCallout::Plain(plain) = iter.next().unwrap() else {
+        panic!("expected Plain");
+    };
+    assert_eq!(plain.name, "plain");
+    assert_eq!(plain.contents.len(), 1);
+    assert!(matches!(
+        plain.contents[0],
+        DraughtingCalloutElement::AnnotationOccurrence(_)
+    ));
+    let DraughtingCallout::LeaderDirected(leader) = iter.next().unwrap() else {
+        panic!("expected LeaderDirected");
+    };
+    assert_eq!(leader.name, "leader");
+    assert!(matches!(
+        leader.contents[0],
+        DraughtingCalloutElement::AnnotationCurveOccurrence(_)
+    ));
+    let rel = re_pmi
+        .draughting_callout_relationships
+        .iter()
+        .next()
+        .unwrap();
+    assert_eq!(rel.name, "rel");
+}
+
+#[test]
 fn datum_round_trip() {
     // DATUM — a shape_aspect subtype + identification, resolving of_shape
     // to a ProductId through the PRODUCT_DEFINITION_SHAPE chain.

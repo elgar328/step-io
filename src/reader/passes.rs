@@ -301,6 +301,14 @@ impl ReaderContext {
         // ANNOTATION_PLANE (phase annotation-plane) — after Pass7Assignment
         // so `styles` refs resolve through `viz_psa_id_map`.
         self.dispatch_registry(graph, PassLevel::Pass7AnnotationPlane);
+        // DRAUGHTING_CALLOUT + LEADER_DIRECTED_CALLOUT (phase
+        // draughting-callout) — depends on the annotation-occurrence /
+        // annotation-curve-occurrence id maps for `contents` SELECT
+        // resolution.
+        self.dispatch_registry(graph, PassLevel::Pass7DraughtingCallout);
+        // DRAUGHTING_CALLOUT_RELATIONSHIP — depends on the
+        // draughting_callout id map filled in the previous pass.
+        self.dispatch_registry(graph, PassLevel::Pass8DraughtingCalloutRelationship);
         // plm Date/Time chain — leaves (Pass9PlmDateLeaves: CALENDAR_DATE,
         // COORDINATED_UNIVERSAL_TIME_OFFSET, DATE_TIME_ROLE) → LOCAL_TIME
         // (Pass9PlmLocalTime, UTC dep) → DATE_AND_TIME (Pass9PlmDateAndTime,

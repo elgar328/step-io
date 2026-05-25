@@ -465,6 +465,19 @@ pub struct ReaderContext {
     /// resolve `annotated_curve`.
     pub(crate) annotation_curve_occurrence_id_map:
         HashMap<u64, crate::ir::id::AnnotationCurveOccurrenceId>,
+    /// `annotation_occurrence` step entity id → `AnnotationOccurrenceId`
+    /// (phase draughting-callout). Populated by every
+    /// `annotation_occurrence` enum handler after pushing into the
+    /// `annotation_occurrences` arena; consumed by `DraughtingCalloutHandler`
+    /// / `LeaderDirectedCalloutHandler` to resolve `contents` SELECT
+    /// members.
+    pub(crate) annotation_occurrence_id_map: HashMap<u64, crate::ir::id::AnnotationOccurrenceId>,
+    /// `DRAUGHTING_CALLOUT` step entity id → `DraughtingCalloutId` (phase
+    /// draughting-callout). Populated by `DraughtingCalloutHandler` /
+    /// `LeaderDirectedCalloutHandler`; consumed by
+    /// `DraughtingCalloutRelationshipHandler` to resolve relating / related
+    /// refs.
+    pub(crate) draughting_callout_id_map: HashMap<u64, crate::ir::id::DraughtingCalloutId>,
     /// `COMPLEX_TRIANGULATED_FACE` arena (phase tessellation).
     pub(crate) tessellated_faces:
         crate::ir::Arena<crate::ir::tessellation::ComplexTriangulatedFace>,

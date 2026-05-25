@@ -92,6 +92,16 @@ pub(crate) struct WriteBuffer<'m> {
     /// so `TERMINATOR_SYMBOL` / `LEADER_TERMINATOR` can resolve their
     /// `annotated_curve` back-reference.
     pub(crate) acoc_step_ids: Vec<u64>,
+    /// Emitted `annotation_occurrence` enum step ids, indexed by
+    /// `AnnotationOccurrenceId.0`. Populated by
+    /// `emit_annotation_occurrences` (one push per enum entry, in arena
+    /// order) before `emit_draughting_callouts` so its `contents` SELECT
+    /// members resolve.
+    pub(crate) ao_step_ids: Vec<u64>,
+    /// Emitted `draughting_callout` step ids, indexed by
+    /// `DraughtingCalloutId.0`. Populated by `emit_draughting_callouts`
+    /// before `emit_draughting_callout_relationships`.
+    pub(crate) draughting_callout_step_ids: Vec<u64>,
     /// STEP entity id of every emitted `NAMED_UNIT` complex from
     /// [`crate::ir::UnitsPool::named_units`], indexed by `NamedUnitId.0`.
     /// Populated by `emit_units_pool_if_set` before GUAC + MWU + DUE emit,
@@ -356,6 +366,8 @@ impl<'m> WriteBuffer<'m> {
             tessellated_face_step_ids: Vec::new(),
             tessellated_surface_set_step_ids: Vec::new(),
             acoc_step_ids: Vec::new(),
+            ao_step_ids: Vec::new(),
+            draughting_callout_step_ids: Vec::new(),
             unit_leaf_ids: Vec::new(),
             named_unit_step_ids: Vec::new(),
             mwu_step_ids: Vec::new(),
@@ -569,6 +581,11 @@ impl<'m> WriteBuffer<'m> {
         // `emit_annotation_occurrences`.
         self.emit_annotation_curve_occurrences();
         self.emit_annotation_occurrences();
+        // DRAUGHTING_CALLOUT — after annotation_occurrences (`ao_step_ids`)
+        // and after `acoc_step_ids` so `contents` SELECT resolves.
+        self.emit_draughting_callouts();
+        // DRAUGHTING_CALLOUT_RELATIONSHIP — after draughting_callouts.
+        self.emit_draughting_callout_relationships();
         self.emit_plm_if_set()?;
         self.emit_properties_if_set();
         self.emit_form_features_if_set()?;

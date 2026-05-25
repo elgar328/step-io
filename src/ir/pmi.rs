@@ -8,10 +8,10 @@
 
 use super::arena::Arena;
 use super::id::{
-    AnnotationCurveOccurrenceId, CurveId, DatumId, DatumSystemId, DimensionalLocationId,
-    DimensionalSizeId, GeometricToleranceId, GeometricToleranceWithDatumReferenceId,
-    LimitsAndFitsId, MeasureWithUnitId, PresentationStyleAssignmentId, ProductId,
-    TessellatedItemId, ToleranceValueId,
+    AnnotationCurveOccurrenceId, AnnotationOccurrenceId, CurveId, DatumId, DatumSystemId,
+    DimensionalLocationId, DimensionalSizeId, DraughtingCalloutId, GeometricToleranceId,
+    GeometricToleranceWithDatumReferenceId, LimitsAndFitsId, MeasureWithUnitId,
+    PresentationStyleAssignmentId, ProductId, TessellatedItemId, ToleranceValueId,
 };
 use super::property::PropertyMeasure;
 use super::representation_item::RepresentationItemRef;
@@ -33,6 +33,11 @@ pub struct PmiPool {
     /// `annotation_curve_occurrence` arena (phase annotation-curve-leader)
     /// — currently holds `LeaderCurve` only.
     pub annotation_curve_occurrences: Arena<LeaderCurve>,
+    /// `draughting_callout` `complex_supertype` arena (phase
+    /// draughting-callout).
+    pub draughting_callouts: Arena<DraughtingCallout>,
+    /// `draughting_callout_relationship` arena (phase draughting-callout).
+    pub draughting_callout_relationships: Arena<DraughtingCalloutRelationship>,
     /// `DATUM` arena. Phase datum.
     pub datums: Arena<Datum>,
     /// `DATUM_FEATURE` arena. Phase datum-feature.
@@ -571,6 +576,47 @@ pub struct DraughtingAnnotationOccurrence {
     pub name: String,
     pub styles: Vec<PresentationStyleAssignmentId>,
     pub item: RepresentationItemRef,
+}
+
+/// `draughting_callout` `complex_supertype` enum. The `Plain` variant
+/// covers direct `DRAUGHTING_CALLOUT` instances (the blueprint marks the
+/// supertype non-abstract, and fixtures carry many such base instances);
+/// `LeaderDirected` covers the sole `in_enum` leaf currently introduced
+/// (`LEADER_DIRECTED_CALLOUT`). Future phases may add more leaf
+/// variants — the EXPRESS schema lists 10.
+#[derive(Debug, Clone, PartialEq)]
+pub enum DraughtingCallout {
+    Plain(DraughtingCalloutData),
+    LeaderDirected(DraughtingCalloutData),
+}
+
+/// Shared shape for every `DraughtingCallout` variant: a name plus a
+/// `contents` SET of `draughting_callout_element` SELECT members.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DraughtingCalloutData {
+    pub name: String,
+    pub contents: Vec<DraughtingCalloutElement>,
+}
+
+/// `draughting_callout_element` SELECT member, narrowed to the kinds
+/// step-io currently models. `annotation_fill_area_occurrence` is not
+/// represented and is silently dropped on read.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum DraughtingCalloutElement {
+    AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+    AnnotationOccurrence(AnnotationOccurrenceId),
+}
+
+/// `DRAUGHTING_CALLOUT_RELATIONSHIP(name, description, relating, related)`
+/// — pairs two `draughting_callout` instances. Resolved through
+/// `draughting_callout_id_map`; if either ref does not resolve, the
+/// relationship is dropped (symmetric on re-read).
+#[derive(Debug, Clone, PartialEq)]
+pub struct DraughtingCalloutRelationship {
+    pub name: String,
+    pub description: String,
+    pub relating: DraughtingCalloutId,
+    pub related: DraughtingCalloutId,
 }
 
 /// `TOLERANCE_ZONE_FORM(name)` — names a tolerance zone's geometric form

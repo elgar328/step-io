@@ -17,7 +17,8 @@ use crate::ir::pmi::{
     AngleSelection, AngularLocationData, AnnotationOccurrence, AnnotationPlane,
     AnnotationSymbolOccurrence, AnnotationTextOccurrence, Datum, DatumFeature,
     DimensionalCharacteristic, DimensionalLocation, DimensionalLocationData, DimensionalSize,
-    DimensionalSizeKind, DraughtingAnnotationOccurrence, DraughtingPreDefinedTextFont,
+    DimensionalSizeKind, DraughtingAnnotationOccurrence, DraughtingCallout, DraughtingCalloutData,
+    DraughtingCalloutElement, DraughtingCalloutRelationship, DraughtingPreDefinedTextFont,
     GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance,
     GeometricToleranceData, GeometricToleranceRef, GeometricToleranceWithDatumReference,
     GeometricToleranceWithDatumReferenceData, LeaderCurve, LeaderTerminator, LimitsAndFits,
@@ -178,7 +179,8 @@ impl SimpleEntityHandler for AnnotationPlaneHandler {
             return Ok(());
         };
 
-        ctx.pmi
+        let id = ctx
+            .pmi
             .get_or_insert_with(PmiPool::default)
             .annotation_occurrences
             .push(AnnotationOccurrence::AnnotationPlane(AnnotationPlane {
@@ -186,6 +188,7 @@ impl SimpleEntityHandler for AnnotationPlaneHandler {
                 styles,
                 item,
             }));
+        ctx.annotation_occurrence_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -239,12 +242,14 @@ impl SimpleEntityHandler for TessellatedAnnotationOccurrenceHandler {
             return Ok(()); // item unresolved — drop the occurrence
         };
 
-        ctx.pmi
+        let id = ctx
+            .pmi
             .get_or_insert_with(PmiPool::default)
             .annotation_occurrences
             .push(AnnotationOccurrence::TessellatedAnnotationOccurrence(
                 TessellatedAnnotationOccurrence { name, styles, item },
             ));
+        ctx.annotation_occurrence_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -301,12 +306,14 @@ impl SimpleEntityHandler for AnnotationSymbolOccurrenceHandler {
             return Ok(());
         };
 
-        ctx.pmi
+        let id = ctx
+            .pmi
             .get_or_insert_with(PmiPool::default)
             .annotation_occurrences
             .push(AnnotationOccurrence::AnnotationSymbolOccurrence(
                 AnnotationSymbolOccurrence { name, styles, item },
             ));
+        ctx.annotation_occurrence_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -358,12 +365,14 @@ impl SimpleEntityHandler for AnnotationTextOccurrenceHandler {
             return Ok(());
         };
 
-        ctx.pmi
+        let id = ctx
+            .pmi
             .get_or_insert_with(PmiPool::default)
             .annotation_occurrences
             .push(AnnotationOccurrence::AnnotationTextOccurrence(
                 AnnotationTextOccurrence { name, styles, item },
             ));
+        ctx.annotation_occurrence_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -416,12 +425,14 @@ impl SimpleEntityHandler for DraughtingAnnotationOccurrenceHandler {
             return Ok(());
         };
 
-        ctx.pmi
+        let id = ctx
+            .pmi
             .get_or_insert_with(PmiPool::default)
             .annotation_occurrences
             .push(AnnotationOccurrence::DraughtingAnnotationOccurrence(
                 DraughtingAnnotationOccurrence { name, styles, item },
             ));
+        ctx.annotation_occurrence_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -542,7 +553,8 @@ impl SimpleEntityHandler for TerminatorSymbolHandler {
             return Ok(());
         };
 
-        ctx.pmi
+        let id = ctx
+            .pmi
             .get_or_insert_with(PmiPool::default)
             .annotation_occurrences
             .push(AnnotationOccurrence::TerminatorSymbol(TerminatorSymbol {
@@ -551,6 +563,7 @@ impl SimpleEntityHandler for TerminatorSymbolHandler {
                 item,
                 annotated_curve,
             }));
+        ctx.annotation_occurrence_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -608,7 +621,8 @@ impl SimpleEntityHandler for LeaderTerminatorHandler {
             return Ok(());
         };
 
-        ctx.pmi
+        let id = ctx
+            .pmi
             .get_or_insert_with(PmiPool::default)
             .annotation_occurrences
             .push(AnnotationOccurrence::LeaderTerminator(LeaderTerminator {
@@ -617,6 +631,7 @@ impl SimpleEntityHandler for LeaderTerminatorHandler {
                 item,
                 annotated_curve,
             }));
+        ctx.annotation_occurrence_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -634,6 +649,182 @@ impl SimpleEntityHandler for LeaderTerminatorHandler {
                 Attribute::List(style_refs),
                 Attribute::EntityRef(item_id),
                 Attribute::EntityRef(ac_step),
+            ],
+        ))
+    }
+}
+
+/// Read `contents` SET — each ref resolves either to an
+/// `annotation_curve_occurrence` (`acoc_id_map`) or to an
+/// `annotation_occurrence` enum entry (`ao_id_map`). Unresolved refs are
+/// silently dropped (per-element drop, the occurrence itself is kept).
+fn read_draughting_callout_contents(
+    ctx: &ReaderContext,
+    content_refs: &[u64],
+) -> Vec<DraughtingCalloutElement> {
+    let mut contents = Vec::with_capacity(content_refs.len());
+    for r in content_refs {
+        if let Some(&id) = ctx.annotation_curve_occurrence_id_map.get(r) {
+            contents.push(DraughtingCalloutElement::AnnotationCurveOccurrence(id));
+        } else if let Some(&id) = ctx.annotation_occurrence_id_map.get(r) {
+            contents.push(DraughtingCalloutElement::AnnotationOccurrence(id));
+        }
+        // else: unmodelled select member (e.g. annotation_fill_area_occurrence)
+        // — drop the element.
+    }
+    contents
+}
+
+/// Emit `contents` SET attribute — each `DraughtingCalloutElement`
+/// becomes an `EntityRef` into the matching step-id cache.
+fn emit_draughting_callout_contents(
+    buf: &WriteBuffer,
+    contents: &[DraughtingCalloutElement],
+) -> Vec<Attribute> {
+    let mut refs = Vec::with_capacity(contents.len());
+    for elem in contents {
+        let step = match elem {
+            DraughtingCalloutElement::AnnotationCurveOccurrence(id) => {
+                buf.acoc_step_ids[id.0 as usize]
+            }
+            DraughtingCalloutElement::AnnotationOccurrence(id) => buf.ao_step_ids[id.0 as usize],
+        };
+        refs.push(Attribute::EntityRef(step));
+    }
+    refs
+}
+
+pub(crate) struct DraughtingCalloutHandler;
+
+/// `DRAUGHTING_CALLOUT(name, contents)` — base variant. The supertype is
+/// not abstract in EXPRESS, and fixtures contain many direct
+/// instances. Read into `DraughtingCallout::Plain`.
+#[step_entity(name = "DRAUGHTING_CALLOUT", pass = Pass7DraughtingCallout)]
+impl SimpleEntityHandler for DraughtingCalloutHandler {
+    type WriteInput = DraughtingCalloutData;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 2, entity_id, "DRAUGHTING_CALLOUT")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let content_refs = read_entity_ref_list(attrs, 1, entity_id, "contents")?;
+        let contents = read_draughting_callout_contents(ctx, &content_refs);
+        let id = ctx
+            .pmi
+            .get_or_insert_with(PmiPool::default)
+            .draughting_callouts
+            .push(DraughtingCallout::Plain(DraughtingCalloutData {
+                name,
+                contents,
+            }));
+        ctx.draughting_callout_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, data: DraughtingCalloutData) -> Result<u64, WriteError> {
+        let contents = emit_draughting_callout_contents(buf, &data.contents);
+        Ok(buf.push_simple(
+            "DRAUGHTING_CALLOUT",
+            vec![Attribute::String(data.name), Attribute::List(contents)],
+        ))
+    }
+}
+
+pub(crate) struct LeaderDirectedCalloutHandler;
+
+/// `LEADER_DIRECTED_CALLOUT(name, contents)` — same shape as the base
+/// supertype. EXPRESS WHERE narrows `contents` to include a
+/// `LEADER_CURVE`; the IR carries the same shape without enforcement.
+#[step_entity(name = "LEADER_DIRECTED_CALLOUT", pass = Pass7DraughtingCallout)]
+impl SimpleEntityHandler for LeaderDirectedCalloutHandler {
+    type WriteInput = DraughtingCalloutData;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 2, entity_id, "LEADER_DIRECTED_CALLOUT")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let content_refs = read_entity_ref_list(attrs, 1, entity_id, "contents")?;
+        let contents = read_draughting_callout_contents(ctx, &content_refs);
+        let id = ctx
+            .pmi
+            .get_or_insert_with(PmiPool::default)
+            .draughting_callouts
+            .push(DraughtingCallout::LeaderDirected(DraughtingCalloutData {
+                name,
+                contents,
+            }));
+        ctx.draughting_callout_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, data: DraughtingCalloutData) -> Result<u64, WriteError> {
+        let contents = emit_draughting_callout_contents(buf, &data.contents);
+        Ok(buf.push_simple(
+            "LEADER_DIRECTED_CALLOUT",
+            vec![Attribute::String(data.name), Attribute::List(contents)],
+        ))
+    }
+}
+
+pub(crate) struct DraughtingCalloutRelationshipHandler;
+
+/// `DRAUGHTING_CALLOUT_RELATIONSHIP(name, description, relating, related)`
+/// — pairs two `draughting_callout` instances. Either ref unresolved drops
+/// the relationship.
+#[step_entity(
+    name = "DRAUGHTING_CALLOUT_RELATIONSHIP",
+    pass = Pass8DraughtingCalloutRelationship
+)]
+impl SimpleEntityHandler for DraughtingCalloutRelationshipHandler {
+    type WriteInput = DraughtingCalloutRelationship;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 4, entity_id, "DRAUGHTING_CALLOUT_RELATIONSHIP")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
+        let relating_ref = read_entity_ref(attrs, 2, entity_id, "relating_draughting_callout")?;
+        let related_ref = read_entity_ref(attrs, 3, entity_id, "related_draughting_callout")?;
+        let Some(&relating) = ctx.draughting_callout_id_map.get(&relating_ref) else {
+            return Ok(());
+        };
+        let Some(&related) = ctx.draughting_callout_id_map.get(&related_ref) else {
+            return Ok(());
+        };
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .draughting_callout_relationships
+            .push(DraughtingCalloutRelationship {
+                name,
+                description,
+                relating,
+                related,
+            });
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, rel: DraughtingCalloutRelationship) -> Result<u64, WriteError> {
+        let relating = buf.draughting_callout_step_ids[rel.relating.0 as usize];
+        let related = buf.draughting_callout_step_ids[rel.related.0 as usize];
+        Ok(buf.push_simple(
+            "DRAUGHTING_CALLOUT_RELATIONSHIP",
+            vec![
+                Attribute::String(rel.name),
+                Attribute::String(rel.description),
+                Attribute::EntityRef(relating),
+                Attribute::EntityRef(related),
             ],
         ))
     }

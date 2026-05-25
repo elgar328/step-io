@@ -273,6 +273,15 @@ pub(crate) enum PassLevel {
     /// subtype. Depends on `Pass7Assignment` (`viz_psa_id_map` for its
     /// `styles`) and Pass 1-5 geometry (`item`).
     Pass7AnnotationPlane,
+    /// `DRAUGHTING_CALLOUT` + `LEADER_DIRECTED_CALLOUT` (phase
+    /// draughting-callout). Depends on `Pass7AnnotationCurve` +
+    /// `Pass7AnnotationPlane` so `acoc_id_map` /
+    /// `annotation_occurrence_id_map` resolve `contents` members.
+    Pass7DraughtingCallout,
+    /// `DRAUGHTING_CALLOUT_RELATIONSHIP` (phase draughting-callout).
+    /// Depends on `Pass7DraughtingCallout` so `draughting_callout_id_map`
+    /// resolves `relating` / `related`.
+    Pass8DraughtingCalloutRelationship,
     /// plm Date/Time leaves (Pass 9-1) — `CALENDAR_DATE`,
     /// `COORDINATED_UNIVERSAL_TIME_OFFSET`, `DATE_TIME_ROLE`. No external deps.
     Pass9PlmDateLeaves,
