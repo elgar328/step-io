@@ -37,6 +37,31 @@ impl WriteBuffer<'_> {
             RepresentationItemRef::Representation(id) => {
                 Ok(self.representation_step_ids[id.0 as usize])
             }
+            RepresentationItemRef::RepresentationItem(id) => {
+                Ok(self.representation_item_step_ids[id.0 as usize])
+            }
+        }
+    }
+
+    /// Emit the `representation_item` arena (phase repr-item-arena-1).
+    /// Fills `representation_item_step_ids` so other entities referencing
+    /// QRI / VRI can resolve through `emit_representation_item_ref`.
+    pub(in crate::writer::buffer) fn emit_representation_items(&mut self) {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::shape_rep::qualified_representation_item::QualifiedRepresentationItemHandler;
+        use crate::entities::shape_rep::value_representation_item::ValueRepresentationItemHandler;
+        use crate::ir::representation_item::RepresentationItem;
+        let items: Vec<_> = self.model.representation_items.iter().cloned().collect();
+        for item in items {
+            let step = match item {
+                RepresentationItem::QualifiedRepresentationItem(qri) => {
+                    QualifiedRepresentationItemHandler::write(self, qri)
+                }
+                RepresentationItem::ValueRepresentationItem(vri) => {
+                    ValueRepresentationItemHandler::write(self, vri)
+                }
+            };
+            self.representation_item_step_ids.push(step.unwrap_or(0));
         }
     }
 

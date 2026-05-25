@@ -11,14 +11,15 @@
 //! consumers and fixtures require them.
 
 use super::id::{
-    CurveId, EdgeId, FaceId, Placement3dId, PointId, RepresentationId, ShellId, SolidId, SurfaceId,
-    VertexId,
+    CurveId, EdgeId, FaceId, Placement3dId, PointId, RepresentationId, RepresentationItemId,
+    ShellId, SolidId, SurfaceId, TypeQualifierId, ValueFormatTypeQualifierId, VertexId,
 };
 
 /// What a STEP `representation_item` reference resolved to in step-io's IR.
 /// Each variant wraps the id of an existing typed arena entry. The geometry
 /// and topology variants are carried over verbatim from the former
-/// `StyledItemTarget`; `Representation` and `Placement3d` extend the set.
+/// `StyledItemTarget`; `Representation`, `Placement3d`, and the
+/// `RepresentationItem` enum arena extend the set.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum RepresentationItemRef {
     Solid(SolidId),
@@ -31,4 +32,65 @@ pub enum RepresentationItemRef {
     Shell(ShellId),
     Representation(RepresentationId),
     Placement3d(Placement3dId),
+    /// `representation_item` enum arena entry (phase repr-item-arena-1) —
+    /// covers `qualified_representation_item` / `value_representation_item`
+    /// variants. Future sub-phases extend to MRI / `NumericRepresentationItem`.
+    RepresentationItem(RepresentationItemId),
+}
+
+/// `representation_item` enum arena per the ir.toml blueprint (phase
+/// repr-item-arena-1). Currently holds `QualifiedRepresentationItem` and
+/// `ValueRepresentationItem`. MRI ([`crate::ir::property::PropertyMeasure`]
+/// inline) migration is a
+/// follow-up sub-phase.
+#[derive(Debug, Clone, PartialEq)]
+pub enum RepresentationItem {
+    QualifiedRepresentationItem(QualifiedRepresentationItem),
+    ValueRepresentationItem(ValueRepresentationItem),
+}
+
+/// `QUALIFIED_REPRESENTATION_ITEM(name, qualifiers)` — wraps a
+/// `representation_item` with a SET of `value_qualifier` SELECT entries.
+/// step-io's `ValueQualifier` enum covers the two corpus-modelled SELECT
+/// members (`TypeQualifier` / `ValueFormatTypeQualifier`); other SELECT
+/// members (`precision_qualifier` / `uncertainty_qualifier`) are corpus 0
+/// and silently dropped on read (`ApprovalItem` precedent).
+#[derive(Debug, Clone, PartialEq)]
+pub struct QualifiedRepresentationItem {
+    pub name: String,
+    pub qualifiers: Vec<QualifierRef>,
+}
+
+/// `value_qualifier` SELECT — duplicated here from
+/// [`crate::ir::pmi::ValueQualifier`] because `QualifiedRepresentationItem`
+/// lives in `shape_rep` while `MeasureQualification` lives in `pmi`. Same
+/// 2-variant corpus subset.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum QualifierRef {
+    TypeQualifier(TypeQualifierId),
+    ValueFormatTypeQualifier(ValueFormatTypeQualifierId),
+}
+
+/// `VALUE_REPRESENTATION_ITEM(name, value_component)` — wraps a
+/// `representation_item` with a typed `measure_value` SELECT primitive.
+/// The 40+ SELECT members (e.g. `POSITIVE_LENGTH_MEASURE`,
+/// `COUNT_MEASURE`) all carry a primitive Real / Integer / Text payload,
+/// so step-io models the SELECT as a 3-variant enum that preserves the
+/// type-name verbatim — STEP round-trips reproduce
+/// `POSITIVE_LENGTH_MEASURE(0.05)` literally.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ValueRepresentationItem {
+    pub name: String,
+    pub value_component: MeasureValue,
+}
+
+/// `measure_value` SELECT — the typed primitive payload of a
+/// `VALUE_REPRESENTATION_ITEM`. `type_name` preserves the SELECT member
+/// (e.g. `"POSITIVE_LENGTH_MEASURE"`) so round-trips reproduce the typed
+/// STEP literal.
+#[derive(Debug, Clone, PartialEq)]
+pub enum MeasureValue {
+    Real { type_name: String, value: f64 },
+    Integer { type_name: String, value: i64 },
+    Text { type_name: String, value: String },
 }

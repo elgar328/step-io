@@ -301,6 +301,11 @@ pub(crate) enum PassLevel {
     /// on `Pass6ShapeRep` (`repr_id_map` 의 SDR entry) + `Pass8Dimensional`
     /// (`dimensional_size_id_map` / `dimensional_location_id_map`).
     Pass8DimensionalCharacteristicRepresentation,
+    /// `QUALIFIED_REPRESENTATION_ITEM` / `VALUE_REPRESENTATION_ITEM`
+    /// (phase repr-item-arena-1). QRI depends on `Pass8ShapeAspect`
+    /// (`type_qualifier_id_map` / `value_format_type_qualifier_id_map`);
+    /// VRI is self-contained (typed primitive `value_component`).
+    Pass8RepresentationItem,
     /// plm Date/Time leaves (Pass 9-1) — `CALENDAR_DATE`,
     /// `COORDINATED_UNIVERSAL_TIME_OFFSET`, `DATE_TIME_ROLE`. No external deps.
     Pass9PlmDateLeaves,

@@ -3052,6 +3052,67 @@ fn shape_dimension_repr_and_dim_char_repr_round_trip() {
 }
 
 #[test]
+fn qri_vri_round_trip() {
+    // QUALIFIED_REPRESENTATION_ITEM + VALUE_REPRESENTATION_ITEM in the new
+    // representation_item arena (phase repr-item-arena-1).
+    use step_io::ir::pmi::{TypeQualifier, ValueFormatTypeQualifier};
+    use step_io::ir::representation_item::{
+        MeasureValue, QualifiedRepresentationItem, QualifierRef, RepresentationItem,
+        ValueRepresentationItem,
+    };
+
+    let mut model = empty_model();
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    let tq = pmi.type_qualifiers.push(TypeQualifier {
+        name: "maximum".into(),
+    });
+    let vftq = pmi
+        .value_format_type_qualifiers
+        .push(ValueFormatTypeQualifier {
+            format_type: "NR2 1.3".into(),
+        });
+    model
+        .representation_items
+        .push(RepresentationItem::QualifiedRepresentationItem(
+            QualifiedRepresentationItem {
+                name: "q".into(),
+                qualifiers: vec![
+                    QualifierRef::TypeQualifier(tq),
+                    QualifierRef::ValueFormatTypeQualifier(vftq),
+                ],
+            },
+        ));
+    model
+        .representation_items
+        .push(RepresentationItem::ValueRepresentationItem(
+            ValueRepresentationItem {
+                name: "v".into(),
+                value_component: MeasureValue::Real {
+                    type_name: "POSITIVE_LENGTH_MEASURE".into(),
+                    value: 0.05,
+                },
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.representation_items.len(), 2);
+    let mut iter = re.representation_items.iter();
+    let RepresentationItem::QualifiedRepresentationItem(qri) = iter.next().unwrap() else {
+        panic!("expected QRI");
+    };
+    assert_eq!(qri.qualifiers.len(), 2);
+    let RepresentationItem::ValueRepresentationItem(vri) = iter.next().unwrap() else {
+        panic!("expected VRI");
+    };
+    let MeasureValue::Real { type_name, value } = &vri.value_component else {
+        panic!("expected Real");
+    };
+    assert_eq!(type_name, "POSITIVE_LENGTH_MEASURE");
+    assert!((value - 0.05).abs() < 1e-9);
+}
+
+#[test]
 fn measure_qualification_round_trip() {
     // MEASURE_QUALIFICATION — qualifiers SET covers the two corpus-modelled
     // value_qualifier variants (TypeQualifier, ValueFormatTypeQualifier).

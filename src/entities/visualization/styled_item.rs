@@ -130,5 +130,10 @@ pub(crate) fn resolve_representation_item_ref(
             return Some(RepresentationItemRef::Representation(rid));
         }
     }
+    // representation_item arena (phase repr-item-arena-1) — last-resort
+    // fallback after the typed per-type arenas above.
+    if let Some(&rid) = ctx.repr_item_id_map.get(&item_ref) {
+        return Some(RepresentationItemRef::RepresentationItem(rid));
+    }
     None
 }

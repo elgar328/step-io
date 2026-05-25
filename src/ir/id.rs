@@ -30,6 +30,7 @@ use super::property::{
     DescriptionAttribute, DimensionalCharacteristicRepresentation, GeneralProperty,
     GeneralPropertyAssociation, IdAttribute, NameAttribute, Property, PropertyDefinition,
 };
+use super::representation_item::RepresentationItem;
 use super::shape_rep::{
     AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, DatumSystem, DatumTarget,
     MappedItem, NumericRepresentationItem, PlacedDatumTargetFeature, Representation,
@@ -165,6 +166,9 @@ define_id!(
     DimensionalCharacteristicRepresentationId,
     DimensionalCharacteristicRepresentation
 );
+
+// representation_item enum arena (Phase repr-item-arena-1).
+define_id!(RepresentationItemId, RepresentationItem);
 
 // datum arena (Phase datum).
 define_id!(DatumId, Datum);

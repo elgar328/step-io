@@ -438,6 +438,16 @@ pub struct ReaderContext {
     /// Unified `REPRESENTATION` arena (representation-refactor expand phase).
     /// 6 representation handlers dual-write here alongside the legacy maps.
     pub(crate) representations: crate::ir::Arena<crate::ir::shape_rep::Representation>,
+    /// `representation_item` arena (phase repr-item-arena-1). QRI / VRI
+    /// handlers push entries; consumers ref via
+    /// `RepresentationItemRef::RepresentationItem(_)`.
+    pub(crate) representation_items:
+        crate::ir::Arena<crate::ir::representation_item::RepresentationItem>,
+    /// `REPRESENTATION_ITEM` step entity id → `RepresentationItemId`
+    /// (phase repr-item-arena-1). Populated by QRI / VRI handlers;
+    /// consumed by `resolve_representation_item_ref` as last-resort
+    /// fallback (per-type arena lookups take priority).
+    pub(crate) repr_item_id_map: HashMap<u64, crate::ir::id::RepresentationItemId>,
     /// `REPRESENTATION` `#N → RepresentationId`. Populated by the six
     /// representation handlers; consumed by the SDR reader to link each
     /// product to its `representation_id` / `outer_representation_id`.
@@ -649,6 +659,7 @@ impl ReaderContext {
                 ),
                 form_features: ctx.form_features,
                 representations: ctx.representations,
+                representation_items: ctx.representation_items,
                 representation_maps: ctx.representation_maps,
                 mapped_items: ctx.mapped_items,
                 numeric_representation_items: ctx.numeric_representation_items,

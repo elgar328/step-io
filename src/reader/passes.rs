@@ -412,6 +412,10 @@ impl ReaderContext {
             graph,
             PassLevel::Pass8DimensionalCharacteristicRepresentation,
         );
+        // QUALIFIED_REPRESENTATION_ITEM / VALUE_REPRESENTATION_ITEM —
+        // QRI depends on type_qualifier / value_format_type_qualifier id
+        // maps (Pass8ShapeAspect). VRI is self-contained.
+        self.dispatch_registry(graph, PassLevel::Pass8RepresentationItem);
         // TOLERANCE_VALUE / LIMITS_AND_FITS, then PLUS_MINUS_TOLERANCE which
         // resolves `range` through the former and `toleranced_dimension`
         // through the Pass8Dimensional id maps.

@@ -64,8 +64,8 @@ pub use id::{
         DraughtingPreDefinedTextFontId, GeneralDatumReferenceId, GeometricToleranceId,
         GeometricToleranceRelationshipId, GeometricToleranceWithDatumReferenceId, LimitsAndFitsId,
         MeasureQualificationId, PlacedDatumTargetFeatureId, PlusMinusToleranceId,
-        PropertyDefinitionId, ToleranceValueId, ToleranceZoneDefinitionId, ToleranceZoneFormId,
-        ToleranceZoneId, TypeQualifierId, ValueFormatTypeQualifierId,
+        PropertyDefinitionId, RepresentationItemId, ToleranceValueId, ToleranceZoneDefinitionId,
+        ToleranceZoneFormId, ToleranceZoneId, TypeQualifierId, ValueFormatTypeQualifierId,
     },
 };
 pub use model::{
@@ -109,7 +109,10 @@ pub use property::{
     ProductDefinitionShape, Property, PropertyDefinition, PropertyDefinitionData, PropertyItem,
     PropertyMeasure, PropertyMeasureUnit, PropertyPool,
 };
-pub use representation_item::RepresentationItemRef;
+pub use representation_item::{
+    MeasureValue, QualifiedRepresentationItem, QualifierRef, RepresentationItem,
+    RepresentationItemRef, ValueRepresentationItem,
+};
 pub use shape_aspect_ref::ShapeAspectRef;
 pub use shape_rep::{
     AdvancedBrepRepr, AllAroundShapeAspect, AngleUnit, CentreOfSymmetry, CompositeGroupShapeAspect,

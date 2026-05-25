@@ -114,6 +114,10 @@ pub(crate) struct WriteBuffer<'m> {
     /// `ValueFormatTypeQualifierId.0`. Same role as
     /// `type_qualifier_step_ids`.
     pub(crate) value_format_type_qualifier_step_ids: Vec<u64>,
+    /// Emitted `representation_item` arena step ids (phase
+    /// repr-item-arena-1), indexed by `RepresentationItemId.0`. Consumed
+    /// by `emit_representation_item_ref` 의 11번째 variant.
+    pub(crate) representation_item_step_ids: Vec<u64>,
     /// STEP entity id of every emitted `NAMED_UNIT` complex from
     /// [`crate::ir::UnitsPool::named_units`], indexed by `NamedUnitId.0`.
     /// Populated by `emit_units_pool_if_set` before GUAC + MWU + DUE emit,
@@ -384,6 +388,7 @@ impl<'m> WriteBuffer<'m> {
             tolerance_zone_step_ids: Vec::new(),
             type_qualifier_step_ids: Vec::new(),
             value_format_type_qualifier_step_ids: Vec::new(),
+            representation_item_step_ids: Vec::new(),
             unit_leaf_ids: Vec::new(),
             named_unit_step_ids: Vec::new(),
             mwu_step_ids: Vec::new(),
@@ -591,6 +596,9 @@ impl<'m> WriteBuffer<'m> {
         // value_format_type_qualifier_step_ids (filled by emit_pmi_pool)
         // and mwu_step_ids.
         self.emit_measure_qualifications();
+        // QUALIFIED / VALUE REPRESENTATION_ITEM — depends on type_qualifier
+        // / value_format_type_qualifier step ids (emit_pmi_pool).
+        self.emit_representation_items();
         self.emit_visualization_if_set()?;
         // REPRESENTATION_MAP + MAPPED_ITEM — after visualization so the
         // `representation_step_ids` cache covers MDGPR slots too.
