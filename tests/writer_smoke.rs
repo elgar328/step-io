@@ -2969,6 +2969,89 @@ fn tolerance_zone_round_trip() {
 }
 
 #[test]
+fn shape_dimension_repr_and_dim_char_repr_round_trip() {
+    // SHAPE_DIMENSION_REPRESENTATION (Representation enum variant) +
+    // DIMENSIONAL_CHARACTERISTIC_REPRESENTATION (PropertyPool single_struct).
+    use step_io::ir::pmi::{DimensionalCharacteristic, DimensionalSize, DimensionalSizeKind};
+    use step_io::ir::property::{DimensionalCharacteristicRepresentation, PropertyPool};
+    use step_io::ir::shape_rep::{Representation, ShapeDimensionRepresentation};
+
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        content: ProductContent::Solid(SolidContent {
+            ids: vec![solid_id],
+        }),
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+    let sa = model.shape_aspects.push(ShapeAspect {
+        name: "sa".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+    let sdr_id = model
+        .representations
+        .push(Representation::ShapeDimensionRepresentation(
+            ShapeDimensionRepresentation {
+                name: "sdr".into(),
+                context: Some(UnitContextId(0)),
+                items: vec![],
+            },
+        ));
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    let size_id = pmi.dimensional_sizes.push(DimensionalSize {
+        applies_to: ShapeAspectRef::ShapeAspect(sa),
+        name: String::new(),
+        kind: DimensionalSizeKind::Plain,
+    });
+    let property = model.properties.get_or_insert_with(PropertyPool::default);
+    property.dimensional_characteristic_representations.push(
+        DimensionalCharacteristicRepresentation {
+            dimension: DimensionalCharacteristic::Size(size_id),
+            representation: sdr_id,
+        },
+    );
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_property = re.properties.expect("property pool");
+    assert_eq!(
+        re_property.dimensional_characteristic_representations.len(),
+        1
+    );
+    let dcr = re_property
+        .dimensional_characteristic_representations
+        .iter()
+        .next()
+        .unwrap();
+    assert!(matches!(dcr.dimension, DimensionalCharacteristic::Size(_)));
+    let sdr_count = re
+        .representations
+        .iter()
+        .filter(|r| matches!(r, Representation::ShapeDimensionRepresentation(_)))
+        .count();
+    assert_eq!(sdr_count, 1);
+}
+
+#[test]
 fn measure_qualification_round_trip() {
     // MEASURE_QUALIFICATION — qualifiers SET covers the two corpus-modelled
     // value_qualifier variants (TypeQualifier, ValueFormatTypeQualifier).

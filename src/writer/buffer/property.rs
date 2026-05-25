@@ -33,6 +33,23 @@ impl WriteBuffer<'_> {
         self.emit_id_attributes(&pool);
         self.emit_general_properties(&pool);
         self.emit_general_property_associations(&pool);
+        self.emit_dimensional_characteristic_representations(&pool);
+    }
+
+    /// Emit `DIMENSIONAL_CHARACTERISTIC_REPRESENTATION` entries (phase
+    /// sdr-dcr). Depends on `dimensional_size_step_ids` /
+    /// `dimensional_location_step_ids` (filled by the dimensional emits)
+    /// and `representation_step_ids` (filled by
+    /// `emit_representations_pre_pass`).
+    fn emit_dimensional_characteristic_representations(
+        &mut self,
+        pool: &crate::ir::property::PropertyPool,
+    ) {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::property::dimensional_characteristic_representation::DimensionalCharacteristicRepresentationHandler;
+        for dcr in pool.dimensional_characteristic_representations.iter() {
+            let _ = DimensionalCharacteristicRepresentationHandler::write(self, dcr.clone());
+        }
     }
 
     /// Emit every `GENERAL_PROPERTY` in arena order, caching step ids in

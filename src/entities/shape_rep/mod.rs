@@ -26,6 +26,7 @@ pub mod placed_datum_target_feature;
 pub mod shape_aspect;
 pub mod shape_aspect_relationship;
 pub mod shape_aspect_subtypes;
+pub mod shape_dimension_representation;
 pub mod shape_representation;
 pub mod shape_representation_relationship;
 pub mod tolerance_zone;

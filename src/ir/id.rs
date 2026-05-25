@@ -27,8 +27,8 @@ use super::pmi::{
     ValueFormatTypeQualifier,
 };
 use super::property::{
-    DescriptionAttribute, GeneralProperty, GeneralPropertyAssociation, IdAttribute, NameAttribute,
-    Property, PropertyDefinition,
+    DescriptionAttribute, DimensionalCharacteristicRepresentation, GeneralProperty,
+    GeneralPropertyAssociation, IdAttribute, NameAttribute, Property, PropertyDefinition,
 };
 use super::shape_rep::{
     AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, DatumSystem, DatumTarget,
@@ -159,6 +159,12 @@ define_id!(ToleranceZoneDefinitionId, ProjectedZoneDefinition);
 
 // measure_qualification arena (Phase measure-qualification).
 define_id!(MeasureQualificationId, MeasureQualification);
+
+// dimensional_characteristic_representation arena (Phase sdr-dcr).
+define_id!(
+    DimensionalCharacteristicRepresentationId,
+    DimensionalCharacteristicRepresentation
+);
 
 // datum arena (Phase datum).
 define_id!(DatumId, Datum);

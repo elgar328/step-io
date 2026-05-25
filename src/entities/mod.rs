@@ -297,6 +297,10 @@ pub(crate) enum PassLevel {
     /// `value_format_type_qualifier_id_map`) and the units pass
     /// (`mwu_id_map`).
     Pass8MeasureQualification,
+    /// `DIMENSIONAL_CHARACTERISTIC_REPRESENTATION` (phase sdr-dcr). Depends
+    /// on `Pass6ShapeRep` (`repr_id_map` 의 SDR entry) + `Pass8Dimensional`
+    /// (`dimensional_size_id_map` / `dimensional_location_id_map`).
+    Pass8DimensionalCharacteristicRepresentation,
     /// plm Date/Time leaves (Pass 9-1) — `CALENDAR_DATE`,
     /// `COORDINATED_UNIVERSAL_TIME_OFFSET`, `DATE_TIME_ROLE`. No external deps.
     Pass9PlmDateLeaves,

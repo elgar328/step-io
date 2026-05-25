@@ -491,6 +491,12 @@ pub struct ReaderContext {
     /// role as `type_qualifier_id_map`.
     pub(crate) value_format_type_qualifier_id_map:
         HashMap<u64, crate::ir::id::ValueFormatTypeQualifierId>,
+    /// `DIMENSIONAL_CHARACTERISTIC_REPRESENTATION` step entity id →
+    /// `DimensionalCharacteristicRepresentationId` (phase sdr-dcr).
+    /// Populated by `DimensionalCharacteristicRepresentationHandler`;
+    /// currently no consumer.
+    pub(crate) dimensional_characteristic_representation_id_map:
+        HashMap<u64, crate::ir::id::DimensionalCharacteristicRepresentationId>,
     /// `COMPLEX_TRIANGULATED_FACE` arena (phase tessellation).
     pub(crate) tessellated_faces:
         crate::ir::Arena<crate::ir::tessellation::ComplexTriangulatedFace>,

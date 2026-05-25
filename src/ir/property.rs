@@ -49,6 +49,22 @@ pub struct PropertyPool {
     /// [`IdAttributeItem::ShapeAspect`] / [`IdAttributeItem::Group`] /
     /// [`IdAttributeItem::Address`] / [`IdAttributeItem::ApplicationContext`].
     pub id_attributes: Arena<IdAttribute>,
+    /// `dimensional_characteristic_representation` arena (phase sdr-dcr).
+    /// Pairs a `dimensional_characteristic` SELECT (Location | Size) with
+    /// a `RepresentationId` (narrowed by EXPRESS to a
+    /// `SHAPE_DIMENSION_REPRESENTATION`; step-io carries the generic
+    /// `RepresentationId`).
+    pub dimensional_characteristic_representations: Arena<DimensionalCharacteristicRepresentation>,
+}
+
+/// `DIMENSIONAL_CHARACTERISTIC_REPRESENTATION(dimension, representation)`.
+/// `dimension` resolves to a [`DimensionalCharacteristic`] variant;
+/// `representation` to a [`RepresentationId`]. Either ref unresolved drops
+/// the occurrence, symmetric on re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DimensionalCharacteristicRepresentation {
+    pub dimension: super::pmi::DimensionalCharacteristic,
+    pub representation: super::id::RepresentationId,
 }
 
 /// `NAME_ATTRIBUTE(attribute_value, named_item)` — AP242 metadata

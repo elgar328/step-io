@@ -118,6 +118,23 @@ pub enum Representation {
     /// discriminates wireframe vs surface-bounded.
     Wireframe(WireframeRepr),
     Mdgpr(Mdgpr),
+    /// `SHAPE_DIMENSION_REPRESENTATION` (phase sdr-dcr). Unlike
+    /// `PlainRepr` (which narrows `items` to a single placement frame),
+    /// SDR preserves the full `items` SET — its blueprint members are
+    /// `dimension_representation_item` SELECT entries (placement is not
+    /// the typical case).
+    ShapeDimensionRepresentation(ShapeDimensionRepresentation),
+}
+
+/// `SHAPE_DIMENSION_REPRESENTATION(name, items, context_of_items)` —
+/// SUBTYPE OF `SHAPE_REPRESENTATION` SUBTYPE OF `REPRESENTATION`. `items`
+/// preserved as a generic SET of [`RepresentationItemRef`]; unresolved
+/// members skip silently.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ShapeDimensionRepresentation {
+    pub name: String,
+    pub context: Option<UnitContextId>,
+    pub items: Vec<RepresentationItemRef>,
 }
 
 /// `ADVANCED_BREP_SHAPE_REPRESENTATION(name, items, context)`.

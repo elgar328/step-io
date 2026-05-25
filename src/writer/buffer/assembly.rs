@@ -464,13 +464,17 @@ impl WriteBuffer<'_> {
             Representation::Mdgpr(_) => {
                 unreachable!("MDGPR is emitted by the visualization pass, not the pre-emit pass")
             }
+            Representation::ShapeDimensionRepresentation(r) => {
+                use crate::entities::shape_rep::shape_dimension_representation::ShapeDimensionRepresentationHandler;
+                ShapeDimensionRepresentationHandler::write(self, r.clone())
+            }
         }
     }
 
     /// Resolve a representation's `Option<UnitContextId>` to its
     /// `context_of_items` attribute. `Some` indexes the cached
     /// `REPRESENTATION_CONTEXT` step ids; `None` emits `Unset`.
-    fn repr_context_attr(&self, context: Option<UnitContextId>) -> Attribute {
+    pub(crate) fn repr_context_attr(&self, context: Option<UnitContextId>) -> Attribute {
         match context {
             Some(id) => Attribute::EntityRef(self.unit_context_ids[id.0 as usize]),
             None => Attribute::Unset,

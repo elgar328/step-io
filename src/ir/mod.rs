@@ -59,13 +59,13 @@ pub use id::{
     {
         AnnotationCurveOccurrenceId, AnnotationOccurrenceId, CompositeShapeAspectId,
         ContinuousShapeAspectId, DatumFeatureId, DatumId, DatumSystemId, DatumTargetId,
-        DerivedShapeAspectId, DimensionalLocationId, DimensionalSizeId, DraughtingCalloutId,
-        DraughtingCalloutRelationshipId, DraughtingPreDefinedTextFontId, GeneralDatumReferenceId,
-        GeometricToleranceId, GeometricToleranceRelationshipId,
-        GeometricToleranceWithDatumReferenceId, LimitsAndFitsId, MeasureQualificationId,
-        PlacedDatumTargetFeatureId, PlusMinusToleranceId, PropertyDefinitionId, ToleranceValueId,
-        ToleranceZoneDefinitionId, ToleranceZoneFormId, ToleranceZoneId, TypeQualifierId,
-        ValueFormatTypeQualifierId,
+        DerivedShapeAspectId, DimensionalCharacteristicRepresentationId, DimensionalLocationId,
+        DimensionalSizeId, DraughtingCalloutId, DraughtingCalloutRelationshipId,
+        DraughtingPreDefinedTextFontId, GeneralDatumReferenceId, GeometricToleranceId,
+        GeometricToleranceRelationshipId, GeometricToleranceWithDatumReferenceId, LimitsAndFitsId,
+        MeasureQualificationId, PlacedDatumTargetFeatureId, PlusMinusToleranceId,
+        PropertyDefinitionId, ToleranceValueId, ToleranceZoneDefinitionId, ToleranceZoneFormId,
+        ToleranceZoneId, TypeQualifierId, ValueFormatTypeQualifierId,
     },
 };
 pub use model::{
@@ -104,9 +104,10 @@ pub use pmi::{
 };
 pub use property::{
     CharacterizedDefinition, DerivedDefinitionItem, DescriptionAttribute, DescriptionAttributeItem,
-    GeneralProperty, GeneralPropertyAssociation, IdAttribute, IdAttributeItem, MeasureKind,
-    NameAttribute, NameAttributeItem, ProductDefinitionShape, Property, PropertyDefinition,
-    PropertyDefinitionData, PropertyItem, PropertyMeasure, PropertyMeasureUnit, PropertyPool,
+    DimensionalCharacteristicRepresentation, GeneralProperty, GeneralPropertyAssociation,
+    IdAttribute, IdAttributeItem, MeasureKind, NameAttribute, NameAttributeItem,
+    ProductDefinitionShape, Property, PropertyDefinition, PropertyDefinitionData, PropertyItem,
+    PropertyMeasure, PropertyMeasureUnit, PropertyPool,
 };
 pub use representation_item::RepresentationItemRef;
 pub use shape_aspect_ref::ShapeAspectRef;
@@ -116,7 +117,7 @@ pub use shape_rep::{
     LengthUnit, ManifoldSurfaceRepr, MappedItem, MappedItemData, Mdgpr, NumericRepresentationItem,
     PlacedDatumTargetFeature, PlainRepr, RealRepresentationItem, Representation, RepresentationMap,
     RepresentationMapData, ShapeAspect, ShapeAspectRelationship, ShapeAspectRelationshipKind,
-    SolidAngleUnit, ToleranceZone, UnitContext, WireframeRepr,
+    ShapeDimensionRepresentation, SolidAngleUnit, ToleranceZone, UnitContext, WireframeRepr,
 };
 pub use tessellation::{
     ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, CoordinatesList, TessellatedCurveSet,

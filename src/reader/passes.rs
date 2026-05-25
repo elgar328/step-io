@@ -406,6 +406,12 @@ impl ReaderContext {
         // MEASURE_QUALIFICATION — depends on qualifier id maps
         // (Pass8ShapeAspect) + mwu_id_map.
         self.dispatch_registry(graph, PassLevel::Pass8MeasureQualification);
+        // DIMENSIONAL_CHARACTERISTIC_REPRESENTATION — depends on the
+        // dimensional id maps (Pass8Dimensional) + repr_id_map (Pass6).
+        self.dispatch_registry(
+            graph,
+            PassLevel::Pass8DimensionalCharacteristicRepresentation,
+        );
         // TOLERANCE_VALUE / LIMITS_AND_FITS, then PLUS_MINUS_TOLERANCE which
         // resolves `range` through the former and `toleranced_dimension`
         // through the Pass8Dimensional id maps.

@@ -1,6 +1,7 @@
 //! Property entity handlers (Pass 8-1 ~ 8-3).
 
 pub mod description_attribute;
+pub mod dimensional_characteristic_representation;
 pub mod general_property;
 pub mod general_property_association;
 pub mod id_attribute;
