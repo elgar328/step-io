@@ -109,6 +109,20 @@ impl WriteBuffer<'_> {
         Ok(())
     }
 
+    fn emit_pre_defined_markers(
+        &mut self,
+        viz: &crate::ir::visualization::VisualizationPool,
+    ) -> Result<(), WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::visualization::pre_defined_marker::PreDefinedMarkerHandler;
+        self.pre_defined_marker_step_ids = Vec::with_capacity(viz.pre_defined_markers.len());
+        for m in viz.pre_defined_markers.iter() {
+            let id = PreDefinedMarkerHandler::write(self, m.clone())?;
+            self.pre_defined_marker_step_ids.push(id);
+        }
+        Ok(())
+    }
+
     fn emit_pre_defined_symbols(
         &mut self,
         viz: &crate::ir::visualization::VisualizationPool,
@@ -180,6 +194,7 @@ impl WriteBuffer<'_> {
         }
         self.emit_pre_defined_curve_fonts(&viz)?;
         self.emit_pre_defined_symbols(&viz)?;
+        self.emit_pre_defined_markers(&viz)?;
         self.curve_style_step_ids = Vec::with_capacity(viz.curve_styles.len());
         for cs in viz.curve_styles.iter() {
             let id = CurveStyleHandler::write(self, cs.clone())?;

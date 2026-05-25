@@ -451,6 +451,9 @@ pub struct ReaderContext {
     /// `TextStyleForDefinedFontId` (phase text-style-font).
     pub(crate) text_style_for_defined_font_id_map:
         HashMap<u64, crate::ir::id::TextStyleForDefinedFontId>,
+    /// `PRE_DEFINED_MARKER` step entity id → `PreDefinedMarkerId` (phase
+    /// pre-defined-marker).
+    pub(crate) viz_pre_defined_marker_id_map: HashMap<u64, crate::ir::id::PreDefinedMarkerId>,
     /// `REPRESENTATION_ITEM` step entity id → `RepresentationItemId`
     /// (phase repr-item-arena-1). Populated by QRI / VRI handlers;
     /// consumed by `resolve_representation_item_ref` as last-resort

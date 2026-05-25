@@ -35,6 +35,8 @@ pub struct VisualizationPool {
     /// `TEXT_STYLE_FOR_DEFINED_FONT` arena (phase text-style-font). Wraps
     /// a `Colour` ref for `character_style_select` SELECT use.
     pub text_styles_for_defined_font: Arena<TextStyleForDefinedFont>,
+    /// `pre_defined_marker` enum arena (phase pre-defined-marker).
+    pub pre_defined_markers: Arena<PreDefinedMarker>,
     /// `pre_defined_curve_font` arena per ir.toml — holds both the
     /// abstract self variant (`Plain`, corpus 0) and the
     /// `DRAUGHTING_PRE_DEFINED_CURVE_FONT` subtype. Referenced by
@@ -460,6 +462,28 @@ pub struct FillAreaStyle {
 pub struct FillAreaStyleColour {
     pub name: String,
     pub colour: ColourId,
+}
+
+/// `pre_defined_marker` enum arena (phase pre-defined-marker).
+/// [`PreDefinedCurveFont`] / [`PreDefinedSymbol`] 동형. `Plain` covers direct
+/// `PRE_DEFINED_MARKER`
+/// instances (corpus 64). `PointMarkerSymbol` is reserved for the future
+/// complex-MI sub-phase (6 corpus instances, not handled yet — drop on
+/// read).
+#[derive(Debug, Clone, PartialEq)]
+pub enum PreDefinedMarker {
+    Plain(PreDefinedMarkerData),
+    PointMarkerSymbol(PreDefinedPointMarkerSymbol),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PreDefinedMarkerData {
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PreDefinedPointMarkerSymbol {
+    pub name: String,
 }
 
 /// `TEXT_STYLE_FOR_DEFINED_FONT(text_colour)` — phase text-style-font.

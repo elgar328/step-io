@@ -43,9 +43,9 @@ use super::tessellation::{
 use super::topology::{Edge, Face, Shell, Solid, Wire};
 use super::units::{DerivedUnit, DerivedUnitElement, MeasureWithUnit, NamedUnit};
 use super::visualization::{
-    CameraModel, Colour, CurveStyle, FoundedItem, PreDefinedCurveFont, PreDefinedSymbol,
-    PresentationLayerAssignment, PresentationStyleAssignment, StyledItem, SurfaceStyleRendering,
-    SymbolColour, TextStyleForDefinedFont,
+    CameraModel, Colour, CurveStyle, FoundedItem, PreDefinedCurveFont, PreDefinedMarker,
+    PreDefinedSymbol, PresentationLayerAssignment, PresentationStyleAssignment, StyledItem,
+    SurfaceStyleRendering, SymbolColour, TextStyleForDefinedFont,
 };
 
 // Geometry Ids (3D)
@@ -180,6 +180,9 @@ define_id!(SymbolColourId, SymbolColour);
 
 // text_style_for_defined_font arena (Phase text-style-font).
 define_id!(TextStyleForDefinedFontId, TextStyleForDefinedFont);
+
+// pre_defined_marker enum arena (Phase pre-defined-marker).
+define_id!(PreDefinedMarkerId, PreDefinedMarker);
 
 // datum arena (Phase datum).
 define_id!(DatumId, Datum);

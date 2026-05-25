@@ -3052,6 +3052,28 @@ fn shape_dimension_repr_and_dim_char_repr_round_trip() {
 }
 
 #[test]
+fn pre_defined_marker_round_trip() {
+    use step_io::ir::visualization::{PreDefinedMarker, PreDefinedMarkerData, VisualizationPool};
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    viz.pre_defined_markers
+        .push(PreDefinedMarker::Plain(PreDefinedMarkerData {
+            name: "x".into(),
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    assert_eq!(re_viz.pre_defined_markers.len(), 1);
+    let PreDefinedMarker::Plain(d) = re_viz.pre_defined_markers.iter().next().unwrap() else {
+        panic!("expected Plain");
+    };
+    assert_eq!(d.name, "x");
+}
+
+#[test]
 fn text_style_for_defined_font_round_trip() {
     use step_io::ir::visualization::{
         Colour, ColourRgb, TextStyleForDefinedFont, VisualizationPool,

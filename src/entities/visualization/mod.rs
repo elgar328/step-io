@@ -16,6 +16,7 @@ pub mod fill_area_style;
 pub mod fill_area_style_colour;
 pub mod over_riding_styled_item;
 pub mod pre_defined_curve_font;
+pub mod pre_defined_marker;
 pub mod pre_defined_symbol;
 pub mod pre_defined_terminator_symbol;
 pub mod presentation_layer_assignment;
