@@ -14,11 +14,12 @@ use crate::ir::attr::{
 };
 use crate::ir::error::ConvertError;
 use crate::ir::pmi::{
-    AngleSelection, AngularLocationData, AnnotationOccurrence, AnnotationPlane, Datum,
-    DatumFeature, DimensionalCharacteristic, DimensionalLocation, DimensionalLocationData,
-    DimensionalSize, DimensionalSizeKind, DraughtingPreDefinedTextFont, GeneralDatumBase,
-    GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
-    GeometricToleranceRef, GeometricToleranceWithDatumReference,
+    AngleSelection, AngularLocationData, AnnotationOccurrence, AnnotationPlane,
+    AnnotationSymbolOccurrence, AnnotationTextOccurrence, Datum, DatumFeature,
+    DimensionalCharacteristic, DimensionalLocation, DimensionalLocationData, DimensionalSize,
+    DimensionalSizeKind, DraughtingAnnotationOccurrence, DraughtingPreDefinedTextFont,
+    GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance,
+    GeometricToleranceData, GeometricToleranceRef, GeometricToleranceWithDatumReference,
     GeometricToleranceWithDatumReferenceData, LimitsAndFits, PlusMinusTolerance,
     TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue,
     ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
@@ -261,6 +262,183 @@ impl SimpleEntityHandler for TessellatedAnnotationOccurrenceHandler {
                 Attribute::String(tao.name),
                 Attribute::List(style_refs),
                 Attribute::EntityRef(item),
+            ],
+        ))
+    }
+}
+
+pub(crate) struct AnnotationSymbolOccurrenceHandler;
+
+/// `ANNOTATION_SYMBOL_OCCURRENCE(name, styles, item)` — an
+/// `annotation_occurrence` subtype whose `item` is the
+/// `annotation_symbol_occurrence_item` SELECT. step-io resolves `item`
+/// through the generic `representation_item` resolver
+/// (`resolve_representation_item_ref`); occurrences whose `item` does not
+/// resolve are silently dropped, symmetric on re-read.
+#[step_entity(name = "ANNOTATION_SYMBOL_OCCURRENCE", pass = Pass7AnnotationPlane)]
+impl SimpleEntityHandler for AnnotationSymbolOccurrenceHandler {
+    type WriteInput = AnnotationSymbolOccurrence;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 3, entity_id, "ANNOTATION_SYMBOL_OCCURRENCE")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
+        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
+
+        let mut styles = Vec::with_capacity(style_refs.len());
+        for r in style_refs {
+            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+                styles.push(psa_id);
+            }
+        }
+        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
+            return Ok(());
+        };
+
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .annotation_occurrences
+            .push(AnnotationOccurrence::AnnotationSymbolOccurrence(
+                AnnotationSymbolOccurrence { name, styles, item },
+            ));
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, aso: AnnotationSymbolOccurrence) -> Result<u64, WriteError> {
+        let item_id = buf.emit_representation_item_ref(aso.item)?;
+        let mut style_refs = Vec::with_capacity(aso.styles.len());
+        for psa_id in aso.styles {
+            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+        }
+        Ok(buf.push_simple(
+            "ANNOTATION_SYMBOL_OCCURRENCE",
+            vec![
+                Attribute::String(aso.name),
+                Attribute::List(style_refs),
+                Attribute::EntityRef(item_id),
+            ],
+        ))
+    }
+}
+
+pub(crate) struct AnnotationTextOccurrenceHandler;
+
+/// `ANNOTATION_TEXT_OCCURRENCE(name, styles, item)` — an
+/// `annotation_occurrence` subtype whose `item` is the
+/// `annotation_text_occurrence_item` SELECT. Same resolve / drop policy
+/// as `ANNOTATION_SYMBOL_OCCURRENCE`.
+#[step_entity(name = "ANNOTATION_TEXT_OCCURRENCE", pass = Pass7AnnotationPlane)]
+impl SimpleEntityHandler for AnnotationTextOccurrenceHandler {
+    type WriteInput = AnnotationTextOccurrence;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 3, entity_id, "ANNOTATION_TEXT_OCCURRENCE")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
+        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
+
+        let mut styles = Vec::with_capacity(style_refs.len());
+        for r in style_refs {
+            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+                styles.push(psa_id);
+            }
+        }
+        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
+            return Ok(());
+        };
+
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .annotation_occurrences
+            .push(AnnotationOccurrence::AnnotationTextOccurrence(
+                AnnotationTextOccurrence { name, styles, item },
+            ));
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, ato: AnnotationTextOccurrence) -> Result<u64, WriteError> {
+        let item_id = buf.emit_representation_item_ref(ato.item)?;
+        let mut style_refs = Vec::with_capacity(ato.styles.len());
+        for psa_id in ato.styles {
+            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+        }
+        Ok(buf.push_simple(
+            "ANNOTATION_TEXT_OCCURRENCE",
+            vec![
+                Attribute::String(ato.name),
+                Attribute::List(style_refs),
+                Attribute::EntityRef(item_id),
+            ],
+        ))
+    }
+}
+
+pub(crate) struct DraughtingAnnotationOccurrenceHandler;
+
+/// `DRAUGHTING_ANNOTATION_OCCURRENCE(name, styles, item)` — an
+/// `annotation_occurrence` subtype whose `item` is narrowed (via WHERE
+/// constraints) to `ref_representation_item`. step-io resolves `item`
+/// through `resolve_representation_item_ref`; unresolved items are
+/// silently dropped.
+#[step_entity(name = "DRAUGHTING_ANNOTATION_OCCURRENCE", pass = Pass7AnnotationPlane)]
+impl SimpleEntityHandler for DraughtingAnnotationOccurrenceHandler {
+    type WriteInput = DraughtingAnnotationOccurrence;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 3, entity_id, "DRAUGHTING_ANNOTATION_OCCURRENCE")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
+        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
+
+        let mut styles = Vec::with_capacity(style_refs.len());
+        for r in style_refs {
+            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+                styles.push(psa_id);
+            }
+        }
+        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
+            return Ok(());
+        };
+
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .annotation_occurrences
+            .push(AnnotationOccurrence::DraughtingAnnotationOccurrence(
+                DraughtingAnnotationOccurrence { name, styles, item },
+            ));
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        dao: DraughtingAnnotationOccurrence,
+    ) -> Result<u64, WriteError> {
+        let item_id = buf.emit_representation_item_ref(dao.item)?;
+        let mut style_refs = Vec::with_capacity(dao.styles.len());
+        for psa_id in dao.styles {
+            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+        }
+        Ok(buf.push_simple(
+            "DRAUGHTING_ANNOTATION_OCCURRENCE",
+            vec![
+                Attribute::String(dao.name),
+                Attribute::List(style_refs),
+                Attribute::EntityRef(item_id),
             ],
         ))
     }

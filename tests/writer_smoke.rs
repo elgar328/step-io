@@ -2127,6 +2127,87 @@ fn tessellated_annotation_occurrence_round_trip() {
 }
 
 #[test]
+fn annotation_occurrence_subtypes_round_trip() {
+    // ANNOTATION_SYMBOL_OCCURRENCE / ANNOTATION_TEXT_OCCURRENCE /
+    // DRAUGHTING_ANNOTATION_OCCURRENCE — same shape as ANNOTATION_PLANE
+    // (name + styles + item), `item` resolved through the generic
+    // `representation_item` resolver.
+    use step_io::ir::RepresentationItemRef;
+    use step_io::ir::pmi::{
+        AnnotationOccurrence, AnnotationSymbolOccurrence, AnnotationTextOccurrence,
+        DraughtingAnnotationOccurrence, PmiPool,
+    };
+    let mut model = empty_model();
+    // Build a minimal Surface to serve as the `item` of each occurrence.
+    let loc = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let axis = model.geometry.directions.push(Direction3 {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+    });
+    let refd = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let position = push_placement(&mut model, loc, Some(axis), Some(refd));
+    let surf = model
+        .geometry
+        .surfaces
+        .push(Surface::Plane(Plane3 { position }));
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    pmi.annotation_occurrences
+        .push(AnnotationOccurrence::AnnotationSymbolOccurrence(
+            AnnotationSymbolOccurrence {
+                name: "sym".into(),
+                styles: vec![],
+                item: RepresentationItemRef::Surface(surf),
+            },
+        ));
+    pmi.annotation_occurrences
+        .push(AnnotationOccurrence::AnnotationTextOccurrence(
+            AnnotationTextOccurrence {
+                name: "txt".into(),
+                styles: vec![],
+                item: RepresentationItemRef::Surface(surf),
+            },
+        ));
+    pmi.annotation_occurrences
+        .push(AnnotationOccurrence::DraughtingAnnotationOccurrence(
+            DraughtingAnnotationOccurrence {
+                name: "drft".into(),
+                styles: vec![],
+                item: RepresentationItemRef::Surface(surf),
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.annotation_occurrences.len(), 3);
+    let mut iter = re_pmi.annotation_occurrences.iter();
+    let AnnotationOccurrence::AnnotationSymbolOccurrence(aso) = iter.next().unwrap() else {
+        panic!("expected AnnotationSymbolOccurrence");
+    };
+    assert_eq!(aso.name, "sym");
+    assert!(matches!(aso.item, RepresentationItemRef::Surface(_)));
+    let AnnotationOccurrence::AnnotationTextOccurrence(ato) = iter.next().unwrap() else {
+        panic!("expected AnnotationTextOccurrence");
+    };
+    assert_eq!(ato.name, "txt");
+    assert!(matches!(ato.item, RepresentationItemRef::Surface(_)));
+    let AnnotationOccurrence::DraughtingAnnotationOccurrence(dao) = iter.next().unwrap() else {
+        panic!("expected DraughtingAnnotationOccurrence");
+    };
+    assert_eq!(dao.name, "drft");
+    assert!(matches!(dao.item, RepresentationItemRef::Surface(_)));
+}
+
+#[test]
 fn datum_round_trip() {
     // DATUM — a shape_aspect subtype + identification, resolving of_shape
     // to a ProductId through the PRODUCT_DEFINITION_SHAPE chain.

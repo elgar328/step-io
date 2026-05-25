@@ -450,13 +450,14 @@ pub enum DatumFeatureKind {
 }
 
 /// `annotation_occurrence` `enum_base` — STEP `styled_item` PMI subtypes that
-/// carry presentation annotations. `AnnotationPlane` and
-/// `TessellatedAnnotationOccurrence` are modelled; the symbol / text /
-/// draughting siblings are deferred.
+/// carry presentation annotations.
 #[derive(Debug, Clone, PartialEq)]
 pub enum AnnotationOccurrence {
     AnnotationPlane(AnnotationPlane),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrence),
+    AnnotationSymbolOccurrence(AnnotationSymbolOccurrence),
+    AnnotationTextOccurrence(AnnotationTextOccurrence),
+    DraughtingAnnotationOccurrence(DraughtingAnnotationOccurrence),
 }
 
 /// `ANNOTATION_PLANE(name, styles, item, elements)` — a `styled_item`
@@ -481,6 +482,46 @@ pub struct TessellatedAnnotationOccurrence {
     /// `ref_tessellated_geometric_set` — resolved to the `tessellated_item`
     /// arena.
     pub item: TessellatedItemId,
+}
+
+/// `ANNOTATION_SYMBOL_OCCURRENCE(name, styles, item)` — an
+/// `annotation_occurrence` subtype whose `item` is the
+/// `annotation_symbol_occurrence_item` SELECT (`annotation_symbol` |
+/// `defined_symbol`). step-io does not model those select members as
+/// dedicated arenas yet; `item` resolves through the generic
+/// `RepresentationItemRef` fallback (`resolve_representation_item_ref`),
+/// and an occurrence whose `item` does not resolve is silently dropped,
+/// symmetric on re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnnotationSymbolOccurrence {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentId>,
+    pub item: RepresentationItemRef,
+}
+
+/// `ANNOTATION_TEXT_OCCURRENCE(name, styles, item)` — an
+/// `annotation_occurrence` subtype whose `item` is the
+/// `annotation_text_occurrence_item` SELECT (`text_literal` |
+/// `annotation_text` | `annotation_text_character` |
+/// `defined_character_glyph` | `composite_text`).
+/// Same fallback / drop policy as `AnnotationSymbolOccurrence`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnnotationTextOccurrence {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentId>,
+    pub item: RepresentationItemRef,
+}
+
+/// `DRAUGHTING_ANNOTATION_OCCURRENCE(name, styles, item)` — an
+/// `annotation_occurrence` subtype whose `item` is narrowed (via WHERE
+/// constraints) to `ref_representation_item`. Carried as
+/// `RepresentationItemRef` directly. Unresolved items are silently
+/// dropped, symmetric on re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DraughtingAnnotationOccurrence {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentId>,
+    pub item: RepresentationItemRef,
 }
 
 /// `TOLERANCE_ZONE_FORM(name)` — names a tolerance zone's geometric form

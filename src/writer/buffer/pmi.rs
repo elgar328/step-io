@@ -146,7 +146,9 @@ impl WriteBuffer<'_> {
     /// `tessellated_item_step_ids`).
     pub(in crate::writer::buffer) fn emit_annotation_occurrences(&mut self) {
         use crate::entities::pmi::{
-            AnnotationPlaneHandler, TessellatedAnnotationOccurrenceHandler,
+            AnnotationPlaneHandler, AnnotationSymbolOccurrenceHandler,
+            AnnotationTextOccurrenceHandler, DraughtingAnnotationOccurrenceHandler,
+            TessellatedAnnotationOccurrenceHandler,
         };
         use crate::ir::pmi::AnnotationOccurrence;
         let Some(pmi) = self.model.pmi.clone() else {
@@ -159,6 +161,15 @@ impl WriteBuffer<'_> {
                 }
                 AnnotationOccurrence::TessellatedAnnotationOccurrence(tao) => {
                     let _ = TessellatedAnnotationOccurrenceHandler::write(self, tao.clone());
+                }
+                AnnotationOccurrence::AnnotationSymbolOccurrence(aso) => {
+                    let _ = AnnotationSymbolOccurrenceHandler::write(self, aso.clone());
+                }
+                AnnotationOccurrence::AnnotationTextOccurrence(ato) => {
+                    let _ = AnnotationTextOccurrenceHandler::write(self, ato.clone());
+                }
+                AnnotationOccurrence::DraughtingAnnotationOccurrence(dao) => {
+                    let _ = DraughtingAnnotationOccurrenceHandler::write(self, dao.clone());
                 }
             }
         }

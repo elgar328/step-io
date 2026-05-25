@@ -85,9 +85,10 @@ pub use plm::{
     SecurityClassificationItem, SecurityClassificationLevel,
 };
 pub use pmi::{
-    AngleSelection, AngularLocationData, AnnotationOccurrence, AnnotationPlane, AreaUnitType,
-    Datum, DatumFeature, DatumFeatureKind, DefinedAreaUnit, DimensionalCharacteristic,
-    DimensionalLocation, DimensionalLocationData, DimensionalSize, DimensionalSizeKind,
+    AngleSelection, AngularLocationData, AnnotationOccurrence, AnnotationPlane,
+    AnnotationSymbolOccurrence, AnnotationTextOccurrence, AreaUnitType, Datum, DatumFeature,
+    DatumFeatureKind, DefinedAreaUnit, DimensionalCharacteristic, DimensionalLocation,
+    DimensionalLocationData, DimensionalSize, DimensionalSizeKind, DraughtingAnnotationOccurrence,
     DraughtingPreDefinedTextFont, GeneralDatumBase, GeneralDatumReference,
     GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
     GeometricToleranceModifier, GeometricToleranceRef, GeometricToleranceWithDatumReference,
