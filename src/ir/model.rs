@@ -239,6 +239,10 @@ pub struct StepModel {
     /// `QualifiedRepresentationItem` / `ValueRepresentationItem`; MRI
     /// migration is a follow-up sub-phase.
     pub representation_items: crate::ir::Arena<crate::ir::representation_item::RepresentationItem>,
+    /// `characterized_object` arena (phase characterized-object-ciwr).
+    /// Holds `CharacterizedItemWithinRepresentation` simple instances;
+    /// `Itself` complex-MI instances are dropped on read in this phase.
+    pub characterized_objects: crate::ir::Arena<crate::ir::shape_rep::CharacterizedObject>,
     /// `REPRESENTATION_MAP` arena (phase mapped-item). One entry per source
     /// `REPRESENTATION_MAP` whose `mapping_origin` / `mapped_representation`
     /// both resolve. Emitted standalone — the `MAPPED_ITEM` containers

@@ -11,6 +11,7 @@
 //! `shape_rep` per the ir.toml blueprint.
 
 pub mod advanced_brep_shape_representation;
+pub mod characterized_item_within_representation;
 pub mod datum_system;
 pub mod datum_target;
 pub mod descriptive_representation_item;

@@ -126,6 +126,42 @@ pub enum Representation {
     ShapeDimensionRepresentation(ShapeDimensionRepresentation),
 }
 
+/// `characterized_object` `concrete_supertype` enum (phase
+/// characterized-object-ciwr). The blueprint shapes the supertype as a
+/// "carrier" — the abstract body shared by every variant. The `Itself`
+/// variant exists for future complex-MI sub-phases; this phase emits
+/// only `CharacterizedItemWithinRepresentation` simple instances.
+#[derive(Debug, Clone, PartialEq)]
+pub enum CharacterizedObject {
+    /// Carrier body for direct `CHARACTERIZED_OBJECT` instances. Corpus
+    /// has 0 standalone instances (48 always appear as
+    /// `(CHARACTERIZED_OBJECT REPRESENTATION ...)` complex MI). Reserved
+    /// for a future complex-MI sub-phase.
+    Itself(CharacterizedObjectData),
+    /// `CHARACTERIZED_ITEM_WITHIN_REPRESENTATION` simple instance (513 of
+    /// 561 corpus instances — the other 48 are complex MI parts and are
+    /// dropped on read in this phase).
+    CharacterizedItemWithinRepresentation(CharacterizedItemWithinRepresentation),
+}
+
+/// Carrier body shared by every [`CharacterizedObject`] variant.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CharacterizedObjectData {
+    pub name: String,
+    pub description: Option<String>,
+}
+
+/// `CHARACTERIZED_ITEM_WITHIN_REPRESENTATION(name, description, item, rep)`
+/// — pairs a `representation_item` with the `representation` that
+/// contains it. Either ref unresolved drops the occurrence, symmetric on
+/// re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CharacterizedItemWithinRepresentation {
+    pub inherited: CharacterizedObjectData,
+    pub item: RepresentationItemRef,
+    pub rep: RepresentationId,
+}
+
 /// `SHAPE_DIMENSION_REPRESENTATION(name, items, context_of_items)` —
 /// SUBTYPE OF `SHAPE_REPRESENTATION` SUBTYPE OF `REPRESENTATION`. `items`
 /// preserved as a generic SET of [`RepresentationItemRef`]; unresolved

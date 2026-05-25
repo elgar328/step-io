@@ -57,15 +57,16 @@ pub use id::{
     ShapeAspectRelationshipId, ShellId, SolidId, SurfaceId, TessellatedFaceId, TessellatedItemId,
     TessellatedSurfaceSetId, UnitContextId, VertexId, WireId,
     {
-        AnnotationCurveOccurrenceId, AnnotationOccurrenceId, CompositeShapeAspectId,
-        ContinuousShapeAspectId, DatumFeatureId, DatumId, DatumSystemId, DatumTargetId,
-        DerivedShapeAspectId, DimensionalCharacteristicRepresentationId, DimensionalLocationId,
-        DimensionalSizeId, DraughtingCalloutId, DraughtingCalloutRelationshipId,
-        DraughtingPreDefinedTextFontId, GeneralDatumReferenceId, GeometricToleranceId,
-        GeometricToleranceRelationshipId, GeometricToleranceWithDatumReferenceId, LimitsAndFitsId,
-        MeasureQualificationId, PlacedDatumTargetFeatureId, PlusMinusToleranceId,
-        PropertyDefinitionId, RepresentationItemId, ToleranceValueId, ToleranceZoneDefinitionId,
-        ToleranceZoneFormId, ToleranceZoneId, TypeQualifierId, ValueFormatTypeQualifierId,
+        AnnotationCurveOccurrenceId, AnnotationOccurrenceId, CharacterizedObjectId,
+        CompositeShapeAspectId, ContinuousShapeAspectId, DatumFeatureId, DatumId, DatumSystemId,
+        DatumTargetId, DerivedShapeAspectId, DimensionalCharacteristicRepresentationId,
+        DimensionalLocationId, DimensionalSizeId, DraughtingCalloutId,
+        DraughtingCalloutRelationshipId, DraughtingPreDefinedTextFontId, GeneralDatumReferenceId,
+        GeometricToleranceId, GeometricToleranceRelationshipId,
+        GeometricToleranceWithDatumReferenceId, LimitsAndFitsId, MeasureQualificationId,
+        PlacedDatumTargetFeatureId, PlusMinusToleranceId, PropertyDefinitionId,
+        RepresentationItemId, ToleranceValueId, ToleranceZoneDefinitionId, ToleranceZoneFormId,
+        ToleranceZoneId, TypeQualifierId, ValueFormatTypeQualifierId,
     },
 };
 pub use model::{
@@ -115,12 +116,14 @@ pub use representation_item::{
 };
 pub use shape_aspect_ref::ShapeAspectRef;
 pub use shape_rep::{
-    AdvancedBrepRepr, AllAroundShapeAspect, AngleUnit, CentreOfSymmetry, CompositeGroupShapeAspect,
-    DatumSystem, DatumTarget, DescriptiveItem, IntegerRepresentationItem, LengthUncertainty,
-    LengthUnit, ManifoldSurfaceRepr, MappedItem, MappedItemData, Mdgpr, NumericRepresentationItem,
-    PlacedDatumTargetFeature, PlainRepr, RealRepresentationItem, Representation, RepresentationMap,
-    RepresentationMapData, ShapeAspect, ShapeAspectRelationship, ShapeAspectRelationshipKind,
-    ShapeDimensionRepresentation, SolidAngleUnit, ToleranceZone, UnitContext, WireframeRepr,
+    AdvancedBrepRepr, AllAroundShapeAspect, AngleUnit, CentreOfSymmetry,
+    CharacterizedItemWithinRepresentation, CharacterizedObject, CharacterizedObjectData,
+    CompositeGroupShapeAspect, DatumSystem, DatumTarget, DescriptiveItem,
+    IntegerRepresentationItem, LengthUncertainty, LengthUnit, ManifoldSurfaceRepr, MappedItem,
+    MappedItemData, Mdgpr, NumericRepresentationItem, PlacedDatumTargetFeature, PlainRepr,
+    RealRepresentationItem, Representation, RepresentationMap, RepresentationMapData, ShapeAspect,
+    ShapeAspectRelationship, ShapeAspectRelationshipKind, ShapeDimensionRepresentation,
+    SolidAngleUnit, ToleranceZone, UnitContext, WireframeRepr,
 };
 pub use tessellation::{
     ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, CoordinatesList, TessellatedCurveSet,

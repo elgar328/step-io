@@ -599,6 +599,9 @@ impl<'m> WriteBuffer<'m> {
         // QUALIFIED / VALUE REPRESENTATION_ITEM — depends on type_qualifier
         // / value_format_type_qualifier step ids (emit_pmi_pool).
         self.emit_representation_items();
+        // CHARACTERIZED_ITEM_WITHIN_REPRESENTATION — depends on
+        // representation_step_ids + per-type arena step ids.
+        self.emit_characterized_objects();
         self.emit_visualization_if_set()?;
         // REPRESENTATION_MAP + MAPPED_ITEM — after visualization so the
         // `representation_step_ids` cache covers MDGPR slots too.

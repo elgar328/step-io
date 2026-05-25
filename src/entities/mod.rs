@@ -306,6 +306,10 @@ pub(crate) enum PassLevel {
     /// (`type_qualifier_id_map` / `value_format_type_qualifier_id_map`);
     /// VRI is self-contained (typed primitive `value_component`).
     Pass8RepresentationItem,
+    /// `CHARACTERIZED_ITEM_WITHIN_REPRESENTATION` (phase
+    /// characterized-object-ciwr). Depends on `Pass6ShapeRep`
+    /// (`repr_id_map`) and per-type arena id maps (for `item` resolve).
+    Pass8CharacterizedItemWithinRepresentation,
     /// plm Date/Time leaves (Pass 9-1) — `CALENDAR_DATE`,
     /// `COORDINATED_UNIVERSAL_TIME_OFFSET`, `DATE_TIME_ROLE`. No external deps.
     Pass9PlmDateLeaves,

@@ -416,6 +416,9 @@ impl ReaderContext {
         // QRI depends on type_qualifier / value_format_type_qualifier id
         // maps (Pass8ShapeAspect). VRI is self-contained.
         self.dispatch_registry(graph, PassLevel::Pass8RepresentationItem);
+        // CHARACTERIZED_ITEM_WITHIN_REPRESENTATION — depends on repr_id_map
+        // (Pass6) + per-type arena id maps.
+        self.dispatch_registry(graph, PassLevel::Pass8CharacterizedItemWithinRepresentation);
         // TOLERANCE_VALUE / LIMITS_AND_FITS, then PLUS_MINUS_TOLERANCE which
         // resolves `range` through the former and `toleranced_dimension`
         // through the Pass8Dimensional id maps.

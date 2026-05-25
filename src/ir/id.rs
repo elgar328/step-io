@@ -32,9 +32,10 @@ use super::property::{
 };
 use super::representation_item::RepresentationItem;
 use super::shape_rep::{
-    AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, DatumSystem, DatumTarget,
-    MappedItem, NumericRepresentationItem, PlacedDatumTargetFeature, Representation,
-    RepresentationMap, ShapeAspect, ShapeAspectRelationship, ToleranceZone, UnitContext,
+    AllAroundShapeAspect, CentreOfSymmetry, CharacterizedObject, CompositeGroupShapeAspect,
+    DatumSystem, DatumTarget, MappedItem, NumericRepresentationItem, PlacedDatumTargetFeature,
+    Representation, RepresentationMap, ShapeAspect, ShapeAspectRelationship, ToleranceZone,
+    UnitContext,
 };
 use super::tessellation::{
     ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, TessellatedItem,
@@ -169,6 +170,9 @@ define_id!(
 
 // representation_item enum arena (Phase repr-item-arena-1).
 define_id!(RepresentationItemId, RepresentationItem);
+
+// characterized_object enum arena (Phase characterized-object-ciwr).
+define_id!(CharacterizedObjectId, CharacterizedObject);
 
 // datum arena (Phase datum).
 define_id!(DatumId, Datum);

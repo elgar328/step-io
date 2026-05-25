@@ -443,6 +443,8 @@ pub struct ReaderContext {
     /// `RepresentationItemRef::RepresentationItem(_)`.
     pub(crate) representation_items:
         crate::ir::Arena<crate::ir::representation_item::RepresentationItem>,
+    /// `characterized_object` arena (phase characterized-object-ciwr).
+    pub(crate) characterized_objects: crate::ir::Arena<crate::ir::shape_rep::CharacterizedObject>,
     /// `REPRESENTATION_ITEM` step entity id → `RepresentationItemId`
     /// (phase repr-item-arena-1). Populated by QRI / VRI handlers;
     /// consumed by `resolve_representation_item_ref` as last-resort
@@ -660,6 +662,7 @@ impl ReaderContext {
                 form_features: ctx.form_features,
                 representations: ctx.representations,
                 representation_items: ctx.representation_items,
+                characterized_objects: ctx.characterized_objects,
                 representation_maps: ctx.representation_maps,
                 mapped_items: ctx.mapped_items,
                 numeric_representation_items: ctx.numeric_representation_items,

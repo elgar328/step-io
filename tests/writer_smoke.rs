@@ -3052,6 +3052,69 @@ fn shape_dimension_repr_and_dim_char_repr_round_trip() {
 }
 
 #[test]
+fn ciwr_round_trip() {
+    // CHARACTERIZED_ITEM_WITHIN_REPRESENTATION (phase characterized-object-ciwr).
+    use step_io::ir::RepresentationItemRef;
+    use step_io::ir::shape_rep::{
+        CharacterizedItemWithinRepresentation, CharacterizedObject, CharacterizedObjectData,
+        PlainRepr, Representation,
+    };
+
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let p0 = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let axis = model.geometry.directions.push(Direction3 {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+    });
+    let refd = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let position = push_placement(&mut model, p0, Some(axis), Some(refd));
+    let surf = model
+        .geometry
+        .surfaces
+        .push(Surface::Plane(Plane3 { position }));
+    let rep_id = model.representations.push(Representation::Plain(PlainRepr {
+        name: "rep".into(),
+        context: Some(UnitContextId(0)),
+        frame: None,
+    }));
+    model
+        .characterized_objects
+        .push(CharacterizedObject::CharacterizedItemWithinRepresentation(
+            CharacterizedItemWithinRepresentation {
+                inherited: CharacterizedObjectData {
+                    name: "ciwr".into(),
+                    description: Some("d".into()),
+                },
+                item: RepresentationItemRef::Surface(surf),
+                rep: rep_id,
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.characterized_objects.len(), 1);
+    let CharacterizedObject::CharacterizedItemWithinRepresentation(ciwr) =
+        re.characterized_objects.iter().next().unwrap()
+    else {
+        panic!("expected CIWR");
+    };
+    assert_eq!(ciwr.inherited.name, "ciwr");
+    assert_eq!(ciwr.inherited.description.as_deref(), Some("d"));
+    assert!(matches!(ciwr.item, RepresentationItemRef::Surface(_)));
+}
+
+#[test]
 fn qri_vri_round_trip() {
     // QUALIFIED_REPRESENTATION_ITEM + VALUE_REPRESENTATION_ITEM in the new
     // representation_item arena (phase repr-item-arena-1).

@@ -43,6 +43,27 @@ impl WriteBuffer<'_> {
         }
     }
 
+    /// Emit the `characterized_object` arena (phase
+    /// characterized-object-ciwr). Only `CharacterizedItemWithinRepresentation`
+    /// variants are emitted in this phase; `Itself` (complex MI) is
+    /// skipped — handled by a future sub-phase.
+    pub(in crate::writer::buffer) fn emit_characterized_objects(&mut self) {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::shape_rep::characterized_item_within_representation::CharacterizedItemWithinRepresentationHandler;
+        use crate::ir::shape_rep::CharacterizedObject;
+        let items: Vec<_> = self.model.characterized_objects.iter().cloned().collect();
+        for obj in items {
+            match obj {
+                CharacterizedObject::CharacterizedItemWithinRepresentation(ciwr) => {
+                    let _ = CharacterizedItemWithinRepresentationHandler::write(self, ciwr);
+                }
+                CharacterizedObject::Itself(_) => {
+                    // complex-MI Itself variant — future sub-phase
+                }
+            }
+        }
+    }
+
     /// Emit the `representation_item` arena (phase repr-item-arena-1).
     /// Fills `representation_item_step_ids` so other entities referencing
     /// QRI / VRI can resolve through `emit_representation_item_ref`.
