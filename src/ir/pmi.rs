@@ -11,7 +11,7 @@ use super::id::{
     AnnotationCurveOccurrenceId, AnnotationOccurrenceId, CurveId, DatumId, DatumSystemId,
     DimensionalLocationId, DimensionalSizeId, DraughtingCalloutId, GeometricToleranceId,
     GeometricToleranceWithDatumReferenceId, LimitsAndFitsId, MeasureWithUnitId,
-    PresentationStyleAssignmentId, ProductId, TessellatedItemId, ToleranceValueId,
+    PresentationStyleAssignmentId, ProductId, TessellatedItemId, ToleranceValueId, ToleranceZoneId,
 };
 use super::property::PropertyMeasure;
 use super::representation_item::RepresentationItemRef;
@@ -40,6 +40,9 @@ pub struct PmiPool {
     pub draughting_callout_relationships: Arena<DraughtingCalloutRelationship>,
     /// `geometric_tolerance_relationship` arena (phase gt-relationship).
     pub geometric_tolerance_relationships: Arena<GeometricToleranceRelationship>,
+    /// `tolerance_zone_definition` arena — currently holds
+    /// `ProjectedZoneDefinition` only (phase projected-zone).
+    pub tolerance_zone_definitions: Arena<ProjectedZoneDefinition>,
     /// `DATUM` arena. Phase datum.
     pub datums: Arena<Datum>,
     /// `DATUM_FEATURE` arena. Phase datum-feature.
@@ -578,6 +581,22 @@ pub struct DraughtingAnnotationOccurrence {
     pub name: String,
     pub styles: Vec<PresentationStyleAssignmentId>,
     pub item: RepresentationItemRef,
+}
+
+/// `PROJECTED_ZONE_DEFINITION(zone, boundaries, projection_end, projected_length)`
+/// — sole occupant of the `tolerance_zone_definition` arena. The
+/// blueprint's `tolerance_zone_definition` SUPERTYPE is abstract in the
+/// ir.toml (no entity entry); step-io uses `Arena<ProjectedZoneDefinition>`
+/// directly, mirroring the `annotation_curve_occurrence` / `LeaderCurve`
+/// pattern. Future phases may promote to an enum if other variants
+/// (`non_uniform_zone_definition` / `runout_zone_definition`) are
+/// introduced.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProjectedZoneDefinition {
+    pub zone: ToleranceZoneId,
+    pub boundaries: Vec<ShapeAspectRef>,
+    pub projection_end: ShapeAspectRef,
+    pub projected_length: MeasureWithUnitId,
 }
 
 /// `GEOMETRIC_TOLERANCE_RELATIONSHIP(name, description, relating, related)`

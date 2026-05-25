@@ -22,7 +22,7 @@ use crate::ir::pmi::{
     GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance,
     GeometricToleranceData, GeometricToleranceRef, GeometricToleranceRelationship,
     GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData, LeaderCurve,
-    LeaderTerminator, LimitsAndFits, PlusMinusTolerance, TerminatorSymbol,
+    LeaderTerminator, LimitsAndFits, PlusMinusTolerance, ProjectedZoneDefinition, TerminatorSymbol,
     TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue,
     ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
@@ -825,6 +825,76 @@ impl SimpleEntityHandler for DraughtingCalloutRelationshipHandler {
                 Attribute::String(rel.description),
                 Attribute::EntityRef(relating),
                 Attribute::EntityRef(related),
+            ],
+        ))
+    }
+}
+
+pub(crate) struct ProjectedZoneDefinitionHandler;
+
+/// `PROJECTED_ZONE_DEFINITION(zone, boundaries, projection_end, projected_length)`
+/// — `zone` resolves via `tolerance_zone_id_map`, `boundaries` /
+/// `projection_end` via `resolve_shape_aspect_ref`, `projected_length` via
+/// `mwu_id_map`. Required refs (`zone` / `projection_end` / `projected_length`)
+/// unresolved drop the occurrence; individual boundary refs skip
+/// silently.
+#[step_entity(name = "PROJECTED_ZONE_DEFINITION", pass = Pass8ProjectedZoneDefinition)]
+impl SimpleEntityHandler for ProjectedZoneDefinitionHandler {
+    type WriteInput = ProjectedZoneDefinition;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 4, entity_id, "PROJECTED_ZONE_DEFINITION")?;
+        let zone_ref = read_entity_ref(attrs, 0, entity_id, "zone")?;
+        let boundary_refs = read_entity_ref_list(attrs, 1, entity_id, "boundaries")?;
+        let projection_end_ref = read_entity_ref(attrs, 2, entity_id, "projection_end")?;
+        let projected_length_ref = read_entity_ref(attrs, 3, entity_id, "projected_length")?;
+        let Some(&zone) = ctx.tolerance_zone_id_map.get(&zone_ref) else {
+            return Ok(());
+        };
+        let Some(projection_end) = resolve_shape_aspect_ref(ctx, projection_end_ref) else {
+            return Ok(());
+        };
+        let Some(&projected_length) = ctx.mwu_id_map.get(&projected_length_ref) else {
+            return Ok(());
+        };
+        let mut boundaries = Vec::with_capacity(boundary_refs.len());
+        for r in boundary_refs {
+            if let Some(sar) = resolve_shape_aspect_ref(ctx, r) {
+                boundaries.push(sar);
+            }
+        }
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .tolerance_zone_definitions
+            .push(ProjectedZoneDefinition {
+                zone,
+                boundaries,
+                projection_end,
+                projected_length,
+            });
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, pzd: ProjectedZoneDefinition) -> Result<u64, WriteError> {
+        let zone_step = buf.tolerance_zone_step_ids[pzd.zone.0 as usize];
+        let projection_end_step = buf.emit_shape_aspect_ref(pzd.projection_end);
+        let projected_length_step = buf.mwu_step_ids[pzd.projected_length.0 as usize];
+        let mut boundary_refs = Vec::with_capacity(pzd.boundaries.len());
+        for sar in pzd.boundaries {
+            boundary_refs.push(Attribute::EntityRef(buf.emit_shape_aspect_ref(sar)));
+        }
+        Ok(buf.push_simple(
+            "PROJECTED_ZONE_DEFINITION",
+            vec![
+                Attribute::EntityRef(zone_step),
+                Attribute::List(boundary_refs),
+                Attribute::EntityRef(projection_end_step),
+                Attribute::EntityRef(projected_length_step),
             ],
         ))
     }

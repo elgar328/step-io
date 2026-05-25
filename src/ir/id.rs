@@ -23,7 +23,8 @@ use super::pmi::{
     DraughtingCallout, DraughtingCalloutRelationship, DraughtingPreDefinedTextFont,
     GeneralDatumReference, GeometricTolerance, GeometricToleranceRelationship,
     GeometricToleranceWithDatumReference, LeaderCurve, LimitsAndFits, PlusMinusTolerance,
-    ToleranceValue, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
+    ProjectedZoneDefinition, ToleranceValue, ToleranceZoneForm, TypeQualifier,
+    ValueFormatTypeQualifier,
 };
 use super::property::{
     DescriptionAttribute, GeneralProperty, GeneralPropertyAssociation, IdAttribute, NameAttribute,
@@ -150,6 +151,11 @@ define_id!(
     GeometricToleranceRelationshipId,
     GeometricToleranceRelationship
 );
+
+// tolerance_zone_definition arena (Phase projected-zone) — blueprint
+// uses `single_struct` (no enum). Currently holds ProjectedZoneDefinition;
+// non_uniform / runout variants may join in a future phase.
+define_id!(ToleranceZoneDefinitionId, ProjectedZoneDefinition);
 
 // datum arena (Phase datum).
 define_id!(DatumId, Datum);

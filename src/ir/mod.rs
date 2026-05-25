@@ -63,8 +63,8 @@ pub use id::{
         DraughtingCalloutRelationshipId, DraughtingPreDefinedTextFontId, GeneralDatumReferenceId,
         GeometricToleranceId, GeometricToleranceRelationshipId,
         GeometricToleranceWithDatumReferenceId, LimitsAndFitsId, PlacedDatumTargetFeatureId,
-        PlusMinusToleranceId, PropertyDefinitionId, ToleranceValueId, ToleranceZoneFormId,
-        ToleranceZoneId, TypeQualifierId, ValueFormatTypeQualifierId,
+        PlusMinusToleranceId, PropertyDefinitionId, ToleranceValueId, ToleranceZoneDefinitionId,
+        ToleranceZoneFormId, ToleranceZoneId, TypeQualifierId, ValueFormatTypeQualifierId,
     },
 };
 pub use model::{
@@ -96,9 +96,10 @@ pub use pmi::{
     GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
     GeometricToleranceModifier, GeometricToleranceRef, GeometricToleranceRelationship,
     GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData, LeaderCurve,
-    LeaderTerminator, LimitsAndFits, PlusMinusTolerance, PmiPool, TerminatorSymbol,
-    TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue,
-    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
+    LeaderTerminator, LimitsAndFits, PlusMinusTolerance, PmiPool, ProjectedZoneDefinition,
+    TerminatorSymbol, TessellatedAnnotationOccurrence, ToleranceMagnitude,
+    ToleranceMethodDefinition, ToleranceValue, ToleranceZoneForm, TypeQualifier,
+    ValueFormatTypeQualifier,
 };
 pub use property::{
     CharacterizedDefinition, DerivedDefinitionItem, DescriptionAttribute, DescriptionAttributeItem,

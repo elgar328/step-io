@@ -287,6 +287,11 @@ pub(crate) enum PassLevel {
     /// GT enum id maps are populated for the `relating` / `related`
     /// `GeometricToleranceRef` resolution.
     Pass8GtRelationship,
+    /// `PROJECTED_ZONE_DEFINITION` (phase projected-zone). Depends on
+    /// `Pass8ToleranceZone` (`tolerance_zone_id_map`), `Pass8ShapeAspect`
+    /// plus subtypes (`resolve_shape_aspect_ref`), and the units pass
+    /// (`mwu_id_map`).
+    Pass8ProjectedZoneDefinition,
     /// plm Date/Time leaves (Pass 9-1) — `CALENDAR_DATE`,
     /// `COORDINATED_UNIVERSAL_TIME_OFFSET`, `DATE_TIME_ROLE`. No external deps.
     Pass9PlmDateLeaves,

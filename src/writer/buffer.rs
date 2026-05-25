@@ -102,6 +102,10 @@ pub(crate) struct WriteBuffer<'m> {
     /// `DraughtingCalloutId.0`. Populated by `emit_draughting_callouts`
     /// before `emit_draughting_callout_relationships`.
     pub(crate) draughting_callout_step_ids: Vec<u64>,
+    /// Emitted `TOLERANCE_ZONE` step ids, indexed by `ToleranceZoneId.0`.
+    /// Populated by `emit_tolerance_zones` so
+    /// `ProjectedZoneDefinitionHandler::write` can resolve `zone`.
+    pub(crate) tolerance_zone_step_ids: Vec<u64>,
     /// STEP entity id of every emitted `NAMED_UNIT` complex from
     /// [`crate::ir::UnitsPool::named_units`], indexed by `NamedUnitId.0`.
     /// Populated by `emit_units_pool_if_set` before GUAC + MWU + DUE emit,
@@ -368,6 +372,7 @@ impl<'m> WriteBuffer<'m> {
             acoc_step_ids: Vec::new(),
             ao_step_ids: Vec::new(),
             draughting_callout_step_ids: Vec::new(),
+            tolerance_zone_step_ids: Vec::new(),
             unit_leaf_ids: Vec::new(),
             named_unit_step_ids: Vec::new(),
             mwu_step_ids: Vec::new(),
@@ -562,6 +567,9 @@ impl<'m> WriteBuffer<'m> {
         // `defining_tolerance` caches) and emit_pmi_if_set (the
         // `tolerance_zone_form_step_ids` cache).
         self.emit_tolerance_zones();
+        // PROJECTED_ZONE_DEFINITION — needs the `tolerance_zone_step_ids`
+        // cache filled above, plus shape-aspect caches and `mwu_step_ids`.
+        self.emit_tolerance_zone_definitions();
         // plus-minus-tolerance cluster — TOLERANCE_VALUE / LIMITS_AND_FITS
         // first (PLUS_MINUS_TOLERANCE's `range`), then PLUS_MINUS_TOLERANCE
         // which also needs the dimensional caches filled above.

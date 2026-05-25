@@ -478,6 +478,10 @@ pub struct ReaderContext {
     /// `DraughtingCalloutRelationshipHandler` to resolve relating / related
     /// refs.
     pub(crate) draughting_callout_id_map: HashMap<u64, crate::ir::id::DraughtingCalloutId>,
+    /// `TOLERANCE_ZONE` step entity id → `ToleranceZoneId` (phase
+    /// projected-zone). Populated by `ToleranceZoneHandler`; consumed by
+    /// `ProjectedZoneDefinitionHandler` for the `zone` ref.
+    pub(crate) tolerance_zone_id_map: HashMap<u64, crate::ir::id::ToleranceZoneId>,
     /// `COMPLEX_TRIANGULATED_FACE` arena (phase tessellation).
     pub(crate) tessellated_faces:
         crate::ir::Arena<crate::ir::tessellation::ComplexTriangulatedFace>,

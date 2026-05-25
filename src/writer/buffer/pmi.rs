@@ -503,10 +503,27 @@ impl WriteBuffer<'_> {
     /// (`tolerance_zone_form_step_ids`). No step-id cache — nothing
     /// references a `TOLERANCE_ZONE`.
     pub(in crate::writer::buffer) fn emit_tolerance_zones(&mut self) {
+        use crate::entities::SimpleEntityHandler;
         use crate::entities::shape_rep::tolerance_zone::ToleranceZoneHandler;
         let zones: Vec<_> = self.model.tolerance_zones.iter().cloned().collect();
         for tz in zones {
-            let _ = ToleranceZoneHandler::write(self, tz);
+            let step = ToleranceZoneHandler::write(self, tz).unwrap_or(0);
+            self.tolerance_zone_step_ids.push(step);
+        }
+    }
+
+    /// Emit the `tolerance_zone_definition` arena (phase projected-zone).
+    /// Runs after `emit_tolerance_zones` (`tolerance_zone_step_ids`),
+    /// `emit_pmi_if_set` (shape-aspect caches consumed by
+    /// `emit_shape_aspect_ref`), and the units pass (`mwu_step_ids`).
+    pub(in crate::writer::buffer) fn emit_tolerance_zone_definitions(&mut self) {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::pmi::ProjectedZoneDefinitionHandler;
+        let Some(pmi) = self.model.pmi.clone() else {
+            return;
+        };
+        for pzd in pmi.tolerance_zone_definitions.iter() {
+            let _ = ProjectedZoneDefinitionHandler::write(self, pzd.clone());
         }
     }
 

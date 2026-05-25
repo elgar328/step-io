@@ -400,6 +400,9 @@ impl ReaderContext {
         // TOLERANCE_ZONE — shape_aspect subtype resolving `defining_tolerance`
         // through the two geometric_tolerance id maps just filled.
         self.dispatch_registry(graph, PassLevel::Pass8ToleranceZone);
+        // PROJECTED_ZONE_DEFINITION — depends on the tolerance_zone id
+        // map (Pass8ToleranceZone) + shape-aspect id maps + mwu_id_map.
+        self.dispatch_registry(graph, PassLevel::Pass8ProjectedZoneDefinition);
         // TOLERANCE_VALUE / LIMITS_AND_FITS, then PLUS_MINUS_TOLERANCE which
         // resolves `range` through the former and `toleranced_dimension`
         // through the Pass8Dimensional id maps.

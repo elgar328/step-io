@@ -64,7 +64,7 @@ impl SimpleEntityHandler for ToleranceZoneHandler {
             }
         }
 
-        ctx.tolerance_zones.push(ToleranceZone {
+        let id = ctx.tolerance_zones.push(ToleranceZone {
             name,
             description,
             target,
@@ -72,6 +72,7 @@ impl SimpleEntityHandler for ToleranceZoneHandler {
             defining_tolerance,
             form,
         });
+        ctx.tolerance_zone_id_map.insert(entity_id, id);
         Ok(())
     }
 

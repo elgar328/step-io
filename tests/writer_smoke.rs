@@ -2969,6 +2969,115 @@ fn tolerance_zone_round_trip() {
 }
 
 #[test]
+fn projected_zone_definition_round_trip() {
+    // PROJECTED_ZONE_DEFINITION — single_struct in the tolerance_zone_definition
+    // arena. Refs ToleranceZone + ShapeAspect (projection_end) +
+    // MeasureWithUnit (projected_length).
+    use step_io::ir::pmi::{
+        GeometricTolerance, GeometricToleranceData, GeometricToleranceRef, ProjectedZoneDefinition,
+        ToleranceMagnitude, ToleranceZoneForm,
+    };
+    use step_io::ir::property::{MeasureKind, PropertyMeasure, PropertyMeasureUnit};
+    use step_io::ir::shape_rep::ToleranceZone;
+    use step_io::ir::units::MeasureWithUnit;
+
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length_unit = ctx.length;
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        content: ProductContent::Solid(SolidContent {
+            ids: vec![solid_id],
+        }),
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+    let sa = model.shape_aspects.push(ShapeAspect {
+        name: "sa".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+    let sa_end = model.shape_aspects.push(ShapeAspect {
+        name: "end".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+    let mwu_id = model
+        .units_pool
+        .as_mut()
+        .expect("units pool seeded")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
+            value: 5.0,
+            unit: length_unit,
+        });
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    let gt = pmi
+        .geometric_tolerances
+        .push(GeometricTolerance::Flatness(GeometricToleranceData {
+            name: "t".into(),
+            description: String::new(),
+            magnitude: ToleranceMagnitude::Measure(PropertyMeasure {
+                name: String::new(),
+                kind: MeasureKind::Length,
+                value: 0.1,
+                unit_ref: Some(PropertyMeasureUnit::Named(length_unit)),
+            }),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            modifiers: Vec::new(),
+            unit_size: None,
+            defined_area_unit: None,
+        }));
+    let form = pmi.tolerance_zone_forms.push(ToleranceZoneForm {
+        name: "cylindrical".into(),
+    });
+    let tz_id = model.tolerance_zones.push(ToleranceZone {
+        name: "tz".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        defining_tolerance: vec![GeometricToleranceRef::Plain(gt)],
+        form,
+    });
+    model
+        .pmi
+        .as_mut()
+        .unwrap()
+        .tolerance_zone_definitions
+        .push(ProjectedZoneDefinition {
+            zone: tz_id,
+            boundaries: vec![ShapeAspectRef::ShapeAspect(sa)],
+            projection_end: ShapeAspectRef::ShapeAspect(sa_end),
+            projected_length: mwu_id,
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.tolerance_zone_definitions.len(), 1);
+    let pzd = re_pmi.tolerance_zone_definitions.iter().next().unwrap();
+    assert_eq!(pzd.boundaries.len(), 1);
+    assert!(matches!(pzd.projection_end, ShapeAspectRef::ShapeAspect(_)));
+}
+
+#[test]
 fn datum_system_round_trip() {
     // DATUM_SYSTEM — a shape_aspect subtype whose `constituents` reference
     // the general_datum_reference arena.
