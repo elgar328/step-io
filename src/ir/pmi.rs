@@ -175,6 +175,10 @@ pub struct GeometricToleranceWithDatumReferenceData {
     /// the source instance carries no modifier part; non-empty values
     /// trigger 4-part complex MI emit (GT + WDR + WM + LEAF).
     pub modifiers: Vec<GeometricToleranceModifier>,
+    /// `UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE.displacement` part — when
+    /// `Some`, the writer emits an additional `UD` part between WM and
+    /// the leaf. Corpus pairs UD with `SURFACE_PROFILE_TOLERANCE` only.
+    pub displacement: Option<MeasureWithUnitId>,
 }
 
 /// `general_datum_reference` `enum_base` — a GD&T datum reference in the
@@ -254,6 +258,36 @@ pub struct GeometricToleranceData {
     /// the source instance is a plain form tolerance; non-empty values
     /// trigger 3-part complex MI emit (GT + WM + LEAF).
     pub modifiers: Vec<GeometricToleranceModifier>,
+    /// `GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.unit_size` part — when
+    /// `Some`, the writer emits the WDU part after GT. Corpus pairs WDU
+    /// with `FLATNESS` / `STRAIGHTNESS` form tolerances.
+    pub unit_size: Option<MeasureWithUnitId>,
+    /// `GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT` part — cascades from
+    /// WDU per EXPRESS schema (always `Some` only when `unit_size` is
+    /// also `Some`).
+    pub defined_area_unit: Option<DefinedAreaUnit>,
+}
+
+/// `GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT` body — `area_type` plus an
+/// optional `second_unit_size` whose presence is constrained by the
+/// EXPRESS WHERE clause `EXISTS(second_unit_size) XOR (area_type =
+/// rectangular)` (rectangular requires it, others omit it).
+#[derive(Debug, Clone, PartialEq)]
+pub struct DefinedAreaUnit {
+    pub area_type: AreaUnitType,
+    /// `second_unit_size` — `length_measure_with_unit`. `Some` only when
+    /// `area_type == Rectangular` per the schema's WHERE clause.
+    pub second_unit_size: Option<MeasureWithUnitId>,
+}
+
+/// AP242 `area_unit_type` ENUMERATION — `circular`, `rectangular`,
+/// `square`. Unknown tokens land in `Other(raw)` for verbatim round-trip.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum AreaUnitType {
+    Circular,
+    Rectangular,
+    Square,
+    Other(String),
 }
 
 /// Subset of AP242's `limit_condition` (and adjacent modifier enums)

@@ -85,15 +85,15 @@ pub use plm::{
     SecurityClassificationItem, SecurityClassificationLevel,
 };
 pub use pmi::{
-    AngleSelection, AngularLocationData, AnnotationOccurrence, AnnotationPlane, Datum,
-    DatumFeature, DatumFeatureKind, DimensionalCharacteristic, DimensionalLocation,
-    DimensionalLocationData, DimensionalSize, DimensionalSizeKind, DraughtingPreDefinedTextFont,
-    GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance,
-    GeometricToleranceData, GeometricToleranceModifier, GeometricToleranceRef,
-    GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData, LimitsAndFits,
-    PlusMinusTolerance, PmiPool, TessellatedAnnotationOccurrence, ToleranceMagnitude,
-    ToleranceMethodDefinition, ToleranceValue, ToleranceZoneForm, TypeQualifier,
-    ValueFormatTypeQualifier,
+    AngleSelection, AngularLocationData, AnnotationOccurrence, AnnotationPlane, AreaUnitType,
+    Datum, DatumFeature, DatumFeatureKind, DefinedAreaUnit, DimensionalCharacteristic,
+    DimensionalLocation, DimensionalLocationData, DimensionalSize, DimensionalSizeKind,
+    DraughtingPreDefinedTextFont, GeneralDatumBase, GeneralDatumReference,
+    GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
+    GeometricToleranceModifier, GeometricToleranceRef, GeometricToleranceWithDatumReference,
+    GeometricToleranceWithDatumReferenceData, LimitsAndFits, PlusMinusTolerance, PmiPool,
+    TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue,
+    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
 pub use property::{
     CharacterizedDefinition, DerivedDefinitionItem, DescriptionAttribute, DescriptionAttributeItem,

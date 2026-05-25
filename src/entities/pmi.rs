@@ -870,6 +870,8 @@ fn read_geometric_tolerance_data(
         magnitude,
         toleranced_shape_aspect,
         modifiers: Vec::new(),
+        unit_size: None,
+        defined_area_unit: None,
     }))
 }
 
@@ -891,7 +893,10 @@ pub(crate) fn write_geometric_tolerance(buf: &mut WriteBuffer, gt: GeometricTole
         ToleranceMagnitude::Measure(m) => buf.emit_property_measure(&m, None),
     };
     let shape_aspect = buf.emit_shape_aspect_ref(data.toleranced_shape_aspect);
-    if data.modifiers.is_empty() {
+    let has_unit_size = data.unit_size.is_some();
+    let has_area_unit = data.defined_area_unit.is_some();
+    let has_modifiers = !data.modifiers.is_empty();
+    if !has_unit_size && !has_area_unit && !has_modifiers {
         return buf.push_simple(
             entity_name,
             vec![
@@ -902,31 +907,65 @@ pub(crate) fn write_geometric_tolerance(buf: &mut WriteBuffer, gt: GeometricTole
             ],
         );
     }
-    // Form tolerance + modifier — emit 3-part complex (GT + WM + LEAF).
-    let modifier_list = emit_modifier_set(&data.modifiers);
+    // Complex MI emit. Part order follows EXPRESS supertype order:
+    // GT → [WDU] → [WDAU] → [WM] → LEAF.
+    let mut parts: Vec<(String, Vec<Attribute>)> = Vec::with_capacity(5);
+    parts.push((
+        "GEOMETRIC_TOLERANCE".into(),
+        vec![
+            Attribute::String(data.name),
+            Attribute::String(data.description),
+            Attribute::EntityRef(magnitude),
+            Attribute::EntityRef(shape_aspect),
+        ],
+    ));
+    if let Some(unit_size_id) = data.unit_size {
+        let unit_size_step = buf.mwu_step_ids[unit_size_id.0 as usize];
+        parts.push((
+            "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT".into(),
+            vec![Attribute::EntityRef(unit_size_step)],
+        ));
+        if let Some(area_unit) = &data.defined_area_unit {
+            parts.push((
+                "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT".into(),
+                emit_defined_area_unit(buf, area_unit),
+            ));
+        }
+    }
+    if has_modifiers {
+        parts.push((
+            "GEOMETRIC_TOLERANCE_WITH_MODIFIERS".into(),
+            vec![Attribute::List(emit_modifier_set(&data.modifiers))],
+        ));
+    }
+    parts.push((entity_name.into(), vec![]));
     let n = buf.fresh();
     buf.entities.push(crate::writer::entity::WriterEntity {
         id: n,
-        body: crate::writer::entity::WriterBody::Complex {
-            parts: vec![
-                (
-                    "GEOMETRIC_TOLERANCE".into(),
-                    vec![
-                        Attribute::String(data.name),
-                        Attribute::String(data.description),
-                        Attribute::EntityRef(magnitude),
-                        Attribute::EntityRef(shape_aspect),
-                    ],
-                ),
-                (
-                    "GEOMETRIC_TOLERANCE_WITH_MODIFIERS".into(),
-                    vec![Attribute::List(modifier_list)],
-                ),
-                (entity_name.into(), vec![]),
-            ],
-        },
+        body: crate::writer::entity::WriterBody::Complex { parts },
     });
     n
+}
+
+/// Encode `DefinedAreaUnit` as the two-attr body of
+/// `GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT`. `second_unit_size`
+/// resolves through the writer's `mwu_step_ids` cache (None → `$`).
+fn emit_defined_area_unit(
+    buf: &WriteBuffer,
+    area_unit: &crate::ir::DefinedAreaUnit,
+) -> Vec<Attribute> {
+    use crate::ir::AreaUnitType;
+    let area_token = match &area_unit.area_type {
+        AreaUnitType::Circular => "CIRCULAR",
+        AreaUnitType::Rectangular => "RECTANGULAR",
+        AreaUnitType::Square => "SQUARE",
+        AreaUnitType::Other(s) => s.as_str(),
+    };
+    let second = match area_unit.second_unit_size {
+        Some(id) => Attribute::EntityRef(buf.mwu_step_ids[id.0 as usize]),
+        None => Attribute::Unset,
+    };
+    vec![Attribute::Enum(area_token.into()), second]
 }
 
 /// Encode a `GeometricToleranceModifier` Vec as the `Attribute::List` that
@@ -1209,6 +1248,7 @@ impl SimpleEntityHandler for DatumReferenceElementHandler {
 /// already-read raw refs. `None` when `magnitude` or `toleranced_shape_aspect`
 /// does not resolve; individual `datum_system` refs that do not resolve are
 /// skipped. Shared by the simple-form and complex-form readers.
+#[allow(clippy::too_many_arguments)]
 fn build_gt_with_datum_reference_data(
     ctx: &ReaderContext,
     name: String,
@@ -1217,6 +1257,7 @@ fn build_gt_with_datum_reference_data(
     shape_aspect_ref: u64,
     datum_system_refs: &[u64],
     modifiers: Vec<crate::ir::GeometricToleranceModifier>,
+    displacement: Option<crate::ir::id::MeasureWithUnitId>,
 ) -> Option<GeometricToleranceWithDatumReferenceData> {
     let magnitude = resolve_tolerance_magnitude(ctx, magnitude_ref)?;
     let toleranced_shape_aspect = resolve_shape_aspect_ref(ctx, shape_aspect_ref)?;
@@ -1233,6 +1274,7 @@ fn build_gt_with_datum_reference_data(
         toleranced_shape_aspect,
         datum_system,
         modifiers,
+        displacement,
     })
 }
 
@@ -1259,6 +1301,7 @@ fn read_geometric_tolerance_with_datum_reference_data(
         shape_aspect_ref,
         &datum_system_refs,
         Vec::new(),
+        None,
     ))
 }
 
@@ -1283,6 +1326,7 @@ fn read_gt_with_datum_reference_complex(
         require_part_attrs(parts, "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", entity_id)?;
     let datum_system_refs = read_entity_ref_list(gtwdr_attrs, 0, entity_id, "datum_system")?;
     let modifiers = read_optional_modifiers(parts, entity_id)?;
+    let displacement = read_optional_displacement(ctx, parts, entity_id)?;
     Ok(build_gt_with_datum_reference_data(
         ctx,
         name,
@@ -1291,6 +1335,7 @@ fn read_gt_with_datum_reference_complex(
         shape_aspect_ref,
         &datum_system_refs,
         modifiers,
+        displacement,
     ))
 }
 
@@ -1329,6 +1374,82 @@ fn read_optional_modifiers(
     Ok(modifiers)
 }
 
+/// Read the `GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.unit_size` part —
+/// `ref_measure_with_unit`. Returns `None` when the part is absent or
+/// the ref does not resolve through `mwu_id_map`.
+fn read_optional_unit_size(
+    ctx: &ReaderContext,
+    parts: &[RawEntityPart],
+    entity_id: u64,
+) -> Result<Option<crate::ir::id::MeasureWithUnitId>, ConvertError> {
+    let Some(attrs) = find_part_attrs(parts, "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT") else {
+        return Ok(None);
+    };
+    check_count(attrs, 1, entity_id, "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT")?;
+    let unit_ref = read_entity_ref(attrs, 0, entity_id, "unit_size")?;
+    Ok(ctx.mwu_id_map.get(&unit_ref).copied())
+}
+
+/// Read the `GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT` part —
+/// `area_type` enum + optional `second_unit_size` (`length_measure_with_unit`).
+/// The EXPRESS WHERE clause makes `second_unit_size` mandatory iff
+/// `area_type == rectangular`; reader preserves whatever the source
+/// emitted (warn on mismatch is left to future schema validation).
+fn read_optional_defined_area_unit(
+    ctx: &ReaderContext,
+    parts: &[RawEntityPart],
+    entity_id: u64,
+) -> Result<Option<crate::ir::DefinedAreaUnit>, ConvertError> {
+    use crate::ir::AreaUnitType;
+    let Some(attrs) = find_part_attrs(parts, "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT") else {
+        return Ok(None);
+    };
+    check_count(
+        attrs,
+        2,
+        entity_id,
+        "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT",
+    )?;
+    let area_type = match attrs.first() {
+        Some(Attribute::Enum(s)) => match s.as_str() {
+            "CIRCULAR" => AreaUnitType::Circular,
+            "RECTANGULAR" => AreaUnitType::Rectangular,
+            "SQUARE" => AreaUnitType::Square,
+            other => AreaUnitType::Other(other.to_owned()),
+        },
+        _ => return Ok(None),
+    };
+    let second_unit_size = match attrs.get(1) {
+        Some(Attribute::EntityRef(n)) => ctx.mwu_id_map.get(n).copied(),
+        _ => None,
+    };
+    Ok(Some(crate::ir::DefinedAreaUnit {
+        area_type,
+        second_unit_size,
+    }))
+}
+
+/// Read the `UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE.displacement` part —
+/// `ref_length_measure_with_unit`. Returns `None` when the part is
+/// absent or the ref does not resolve through `mwu_id_map`.
+fn read_optional_displacement(
+    ctx: &ReaderContext,
+    parts: &[RawEntityPart],
+    entity_id: u64,
+) -> Result<Option<crate::ir::id::MeasureWithUnitId>, ConvertError> {
+    let Some(attrs) = find_part_attrs(parts, "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE") else {
+        return Ok(None);
+    };
+    check_count(
+        attrs,
+        1,
+        entity_id,
+        "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE",
+    )?;
+    let unit_ref = read_entity_ref(attrs, 0, entity_id, "displacement")?;
+    Ok(ctx.mwu_id_map.get(&unit_ref).copied())
+}
+
 /// Read the form-tolerance complex form `(GEOMETRIC_TOLERANCE
 /// [GEOMETRIC_TOLERANCE_WITH_MODIFIERS] <leaf>)` — used by the new
 /// FLATNESS / ROUNDNESS complex handlers (form-tolerance + modifier).
@@ -1350,12 +1471,25 @@ fn read_gt_data_complex(
         return Ok(None);
     };
     let modifiers = read_optional_modifiers(parts, entity_id)?;
+    let unit_size = read_optional_unit_size(ctx, parts, entity_id)?;
+    // WDAU cascades from WDU per EXPRESS — drop WDAU when WDU's ref did
+    // not resolve. Mirrors the writer's nested emit (WDAU only inside
+    // the WDU branch). Without this guard, an IR with (unit_size: None,
+    // defined_area_unit: Some(_)) would write as simple form and re-read
+    // as (None, None) — IR mismatch (round-trip FAIL).
+    let defined_area_unit = if unit_size.is_some() {
+        read_optional_defined_area_unit(ctx, parts, entity_id)?
+    } else {
+        None
+    };
     Ok(Some(GeometricToleranceData {
         name,
         description,
         magnitude,
         toleranced_shape_aspect,
         modifiers,
+        unit_size,
+        defined_area_unit,
     }))
 }
 
@@ -1403,9 +1537,9 @@ pub(crate) fn write_geometric_tolerance_with_datum_reference(
             buf.datum_system_step_ids[ds_id.0 as usize],
         ));
     }
-    let force_complex = is_complex || !data.modifiers.is_empty();
+    let force_complex = is_complex || !data.modifiers.is_empty() || data.displacement.is_some();
     if force_complex {
-        let mut parts = Vec::with_capacity(4);
+        let mut parts = Vec::with_capacity(5);
         parts.push((
             "GEOMETRIC_TOLERANCE".into(),
             vec![
@@ -1423,6 +1557,13 @@ pub(crate) fn write_geometric_tolerance_with_datum_reference(
             parts.push((
                 "GEOMETRIC_TOLERANCE_WITH_MODIFIERS".into(),
                 vec![Attribute::List(emit_modifier_set(&data.modifiers))],
+            ));
+        }
+        if let Some(disp_id) = data.displacement {
+            let disp_step = buf.mwu_step_ids[disp_id.0 as usize];
+            parts.push((
+                "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE".into(),
+                vec![Attribute::EntityRef(disp_step)],
             ));
         }
         parts.push((type_name.into(), vec![]));
@@ -2076,6 +2217,34 @@ impl ComplexEntityHandler for RoundnessToleranceComplexHandler {
     }
 }
 
+pub(crate) struct StraightnessToleranceComplexHandler;
+
+#[step_entity_complex(
+    name = "STRAIGHTNESS_TOLERANCE",
+    pass = Pass8GtWithDatumReference,
+    required = ["STRAIGHTNESS_TOLERANCE"]
+)]
+impl ComplexEntityHandler for StraightnessToleranceComplexHandler {
+    type WriteInput = GeometricTolerance;
+
+    fn read_complex(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        parts: &[RawEntityPart],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let Some(data) = read_gt_data_complex(ctx, entity_id, parts)? else {
+            return Ok(());
+        };
+        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::Straightness(data));
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, gt: GeometricTolerance) -> Result<u64, WriteError> {
+        Ok(write_geometric_tolerance(buf, gt))
+    }
+}
+
 /// Read a `geometric_tolerance_with_datum_reference` simple-leaf in
 /// complex form: GT (required) + WDR (required) + optional WM. Used by
 /// `PARALLELISM` / `PERPENDICULARITY` / `CIRCULAR_RUNOUT` complex handlers.
@@ -2105,6 +2274,7 @@ fn read_gtwdr_simple_leaf_complex(
     };
     let datum_system_refs = read_entity_ref_list(gtwdr_attrs, 0, entity_id, "datum_system")?;
     let modifiers = read_optional_modifiers(parts, entity_id)?;
+    let displacement = read_optional_displacement(ctx, parts, entity_id)?;
     Ok(build_gt_with_datum_reference_data(
         ctx,
         name,
@@ -2113,6 +2283,7 @@ fn read_gtwdr_simple_leaf_complex(
         shape_aspect_ref,
         &datum_system_refs,
         modifiers,
+        displacement,
     ))
 }
 

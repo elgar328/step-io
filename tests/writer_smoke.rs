@@ -2385,6 +2385,8 @@ fn geometric_tolerance_form_tolerances_round_trip() {
         magnitude,
         toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
         modifiers: Vec::new(),
+        unit_size: None,
+        defined_area_unit: None,
     };
     let measure = || {
         ToleranceMagnitude::Measure(PropertyMeasure {
@@ -2565,6 +2567,8 @@ fn tolerance_zone_round_trip() {
             }),
             toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
             modifiers: Vec::new(),
+            unit_size: None,
+            defined_area_unit: None,
         }));
     let form = pmi.tolerance_zone_forms.push(ToleranceZoneForm {
         name: "cylindrical".into(),
@@ -2836,6 +2840,7 @@ fn geometric_tolerance_with_datum_reference_round_trip() {
                 toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
                 datum_system: vec![ds],
                 modifiers: Vec::new(),
+                displacement: None,
             },
         ),
     );
@@ -2927,6 +2932,7 @@ fn complex_datum_ref_tolerance_round_trip() {
             toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
             datum_system: vec![ds],
             modifiers: Vec::new(),
+            displacement: None,
         }),
     );
     model.pmi = Some(pmi);
@@ -3041,6 +3047,7 @@ fn geometric_tolerance_with_modifiers_round_trip() {
             toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
             datum_system: vec![ds],
             modifiers: vec![GeometricToleranceModifier::MaximumMaterialRequirement],
+            displacement: None,
         }),
     );
     pmi.geometric_tolerances
@@ -3050,6 +3057,8 @@ fn geometric_tolerance_with_modifiers_round_trip() {
             magnitude: magnitude(),
             toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
             modifiers: vec![GeometricToleranceModifier::LeastMaterialRequirement],
+            unit_size: None,
+            defined_area_unit: None,
         }));
     model.pmi = Some(pmi);
 
@@ -3088,6 +3097,189 @@ fn geometric_tolerance_with_modifiers_round_trip() {
         vec![GeometricToleranceModifier::LeastMaterialRequirement],
         "Roundness modifier preserved"
     );
+}
+
+#[test]
+#[allow(clippy::too_many_lines)]
+fn gt_defined_unit_area_unit_displacement_round_trip() {
+    // Phase gt-defined-disposed — three new complex MI parts share the
+    // GT base struct:
+    // - WDU only (Flatness + unit_size)
+    // - WDU + WDAU (Flatness + unit_size + rectangular area + second_unit_size)
+    // - WDR + UD (SurfaceProfile + datum_system + displacement)
+    use step_io::ir::pmi::{
+        AreaUnitType, Datum, DefinedAreaUnit, GeneralDatumBase, GeneralDatumReference,
+        GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
+        GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData,
+        ToleranceMagnitude,
+    };
+    use step_io::ir::property::{MeasureKind, PropertyMeasure, PropertyMeasureUnit};
+    use step_io::ir::shape_rep::{DatumSystem, ShapeAspect};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length_unit = ctx.length;
+    // Push an MWU into the units pool so unit_size / displacement refs
+    // have a valid step id after emit (mwu_step_ids[0]).
+    let mwu_id = {
+        let pool = model.units_pool.as_mut().expect("units pool exists");
+        pool.measure_with_units
+            .push(step_io::ir::units::MeasureWithUnit::Length {
+                value: 1.0,
+                unit: length_unit,
+            })
+    };
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        content: ProductContent::Solid(SolidContent {
+            ids: vec![solid_id],
+        }),
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+    let sa = model.shape_aspects.push(ShapeAspect {
+        name: "feature".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+    let ds = model.datum_systems.push(DatumSystem {
+        name: "DS".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        constituents: Vec::new(),
+    });
+    let mut pmi = PmiPool::default();
+    let _datum = pmi.datums.push(Datum {
+        name: String::new(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        identification: "A".into(),
+    });
+    let _gdr = pmi
+        .general_datum_references
+        .push(GeneralDatumReference::Compartment(
+            GeneralDatumReferenceData {
+                name: String::new(),
+                description: String::new(),
+                target: part_pid,
+                product_definitional: false,
+                base: GeneralDatumBase::Datum(step_io::ir::DatumId(0)),
+            },
+        ));
+    let magnitude = || {
+        ToleranceMagnitude::Measure(PropertyMeasure {
+            name: String::new(),
+            kind: MeasureKind::Length,
+            value: 0.1,
+            unit_ref: Some(PropertyMeasureUnit::Named(length_unit)),
+        })
+    };
+    // Flatness + unit_size only
+    pmi.geometric_tolerances
+        .push(GeometricTolerance::Flatness(GeometricToleranceData {
+            name: "F1".into(),
+            description: String::new(),
+            magnitude: magnitude(),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            modifiers: Vec::new(),
+            unit_size: Some(mwu_id),
+            defined_area_unit: None,
+        }));
+    // Flatness + unit_size + rectangular area + second_unit_size
+    pmi.geometric_tolerances
+        .push(GeometricTolerance::Flatness(GeometricToleranceData {
+            name: "F2".into(),
+            description: String::new(),
+            magnitude: magnitude(),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            modifiers: Vec::new(),
+            unit_size: Some(mwu_id),
+            defined_area_unit: Some(DefinedAreaUnit {
+                area_type: AreaUnitType::Rectangular,
+                second_unit_size: Some(mwu_id),
+            }),
+        }));
+    // SurfaceProfile + datum_system + displacement
+    pmi.geometric_tolerance_with_datum_references.push(
+        GeometricToleranceWithDatumReference::SurfaceProfile(
+            GeometricToleranceWithDatumReferenceData {
+                name: "SP".into(),
+                description: String::new(),
+                magnitude: magnitude(),
+                toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+                datum_system: vec![ds],
+                modifiers: Vec::new(),
+                displacement: Some(mwu_id),
+            },
+        ),
+    );
+    model.pmi = Some(pmi);
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT"),
+        "expected WDU part"
+    );
+    assert!(
+        text.contains("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT"),
+        "expected WDAU part"
+    );
+    assert!(
+        text.contains("UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE"),
+        "expected UD part"
+    );
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    // Two Flatness variants — first WDU-only, second WDU+WDAU.
+    let flats: Vec<_> = re_pmi
+        .geometric_tolerances
+        .iter()
+        .filter_map(|gt| match gt {
+            GeometricTolerance::Flatness(d) => Some(d),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(flats.len(), 2);
+    assert!(flats[0].unit_size.is_some(), "F1 unit_size preserved");
+    assert!(flats[0].defined_area_unit.is_none(), "F1 has no area unit");
+    assert!(flats[1].unit_size.is_some(), "F2 unit_size preserved");
+    let area = flats[1]
+        .defined_area_unit
+        .as_ref()
+        .expect("F2 area unit preserved");
+    assert_eq!(area.area_type, AreaUnitType::Rectangular);
+    assert!(
+        area.second_unit_size.is_some(),
+        "F2 second_unit_size preserved"
+    );
+    // SurfaceProfile with displacement.
+    let sp = re_pmi
+        .geometric_tolerance_with_datum_references
+        .iter()
+        .find_map(|gt| match gt {
+            GeometricToleranceWithDatumReference::SurfaceProfile(d) => Some(d),
+            _ => None,
+        })
+        .expect("SurfaceProfile present after round-trip");
+    assert!(sp.displacement.is_some(), "SP displacement preserved");
 }
 
 #[test]
