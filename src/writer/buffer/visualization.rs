@@ -161,6 +161,14 @@ impl WriteBuffer<'_> {
             };
             self.colour_step_ids.push(id);
         }
+        // SYMBOL_COLOUR — after colour cache, before symbol_style (future
+        // phase) emits.
+        self.symbol_colour_step_ids = Vec::with_capacity(viz.symbol_colours.len());
+        for sc in viz.symbol_colours.iter() {
+            use crate::entities::visualization::symbol_colour::SymbolColourHandler;
+            let id = SymbolColourHandler::write(self, sc.clone())?;
+            self.symbol_colour_step_ids.push(id);
+        }
         self.emit_pre_defined_curve_fonts(&viz)?;
         self.emit_pre_defined_symbols(&viz)?;
         self.curve_style_step_ids = Vec::with_capacity(viz.curve_styles.len());

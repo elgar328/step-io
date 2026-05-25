@@ -268,6 +268,8 @@ impl ReaderContext {
         // to be populated. Each sub-pass clones from the prior sub-pass's
         // map so the final IR is a fully inlined tree.
         self.dispatch_registry(graph, PassLevel::Pass7Colour);
+        // SYMBOL_COLOUR — depends on Pass7Colour viz_colour_id_map.
+        self.dispatch_registry(graph, PassLevel::Pass7SymbolColour);
         self.dispatch_registry(graph, PassLevel::Pass7FillColour);
         self.dispatch_registry(graph, PassLevel::Pass7FillArea);
         // SSFA + SSRWP both populate viz_sss_entry_map so a SURFACE_SIDE_STYLE

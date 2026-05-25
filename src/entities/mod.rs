@@ -310,6 +310,9 @@ pub(crate) enum PassLevel {
     /// characterized-object-ciwr). Depends on `Pass6ShapeRep`
     /// (`repr_id_map`) and per-type arena id maps (for `item` resolve).
     Pass8CharacterizedItemWithinRepresentation,
+    /// `SYMBOL_COLOUR` (phase symbol-colour). Depends on `Pass7Colour`
+    /// (`viz_colour_id_map`).
+    Pass7SymbolColour,
     /// plm Date/Time leaves (Pass 9-1) — `CALENDAR_DATE`,
     /// `COORDINATED_UNIVERSAL_TIME_OFFSET`, `DATE_TIME_ROLE`. No external deps.
     Pass9PlmDateLeaves,

@@ -28,6 +28,10 @@ pub struct VisualizationPool {
     /// `COLOUR` arena — one entry per source `COLOUR_RGB` or
     /// `DRAUGHTING_PRE_DEFINED_COLOUR`. Consumers reference by [`ColourId`].
     pub colours: Arena<Colour>,
+    /// `SYMBOL_COLOUR` arena (phase symbol-colour). Wraps a `Colour`
+    /// reference for use as a `symbol_style_select` SELECT member.
+    /// Referenced by `SymbolStyle` in a future sub-phase.
+    pub symbol_colours: Arena<SymbolColour>,
     /// `pre_defined_curve_font` arena per ir.toml — holds both the
     /// abstract self variant (`Plain`, corpus 0) and the
     /// `DRAUGHTING_PRE_DEFINED_CURVE_FONT` subtype. Referenced by
@@ -453,6 +457,15 @@ pub struct FillAreaStyle {
 pub struct FillAreaStyleColour {
     pub name: String,
     pub colour: ColourId,
+}
+
+/// `SYMBOL_COLOUR(colour_of_symbol)` — phase symbol-colour.
+/// Wraps a `Colour` reference for use as a `symbol_style_select` SELECT
+/// member. `colour_of_symbol` unresolved drops the occurrence, symmetric
+/// on re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SymbolColour {
+    pub colour_of_symbol: ColourId,
 }
 
 /// `COLOUR_RGB(name, red, green, blue)` — RGB triple in `[0.0, 1.0]`.

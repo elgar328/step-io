@@ -45,6 +45,7 @@ use super::units::{DerivedUnit, DerivedUnitElement, MeasureWithUnit, NamedUnit};
 use super::visualization::{
     CameraModel, Colour, CurveStyle, FoundedItem, PreDefinedCurveFont, PreDefinedSymbol,
     PresentationLayerAssignment, PresentationStyleAssignment, StyledItem, SurfaceStyleRendering,
+    SymbolColour,
 };
 
 // Geometry Ids (3D)
@@ -173,6 +174,9 @@ define_id!(RepresentationItemId, RepresentationItem);
 
 // characterized_object enum arena (Phase characterized-object-ciwr).
 define_id!(CharacterizedObjectId, CharacterizedObject);
+
+// symbol_colour arena (Phase symbol-colour).
+define_id!(SymbolColourId, SymbolColour);
 
 // datum arena (Phase datum).
 define_id!(DatumId, Datum);
