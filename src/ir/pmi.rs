@@ -8,9 +8,10 @@
 
 use super::arena::Arena;
 use super::id::{
-    DatumId, DatumSystemId, DimensionalLocationId, DimensionalSizeId, GeometricToleranceId,
-    GeometricToleranceWithDatumReferenceId, LimitsAndFitsId, MeasureWithUnitId,
-    PresentationStyleAssignmentId, ProductId, TessellatedItemId, ToleranceValueId,
+    AnnotationCurveOccurrenceId, CurveId, DatumId, DatumSystemId, DimensionalLocationId,
+    DimensionalSizeId, GeometricToleranceId, GeometricToleranceWithDatumReferenceId,
+    LimitsAndFitsId, MeasureWithUnitId, PresentationStyleAssignmentId, ProductId,
+    TessellatedItemId, ToleranceValueId,
 };
 use super::property::PropertyMeasure;
 use super::representation_item::RepresentationItemRef;
@@ -29,6 +30,9 @@ pub struct PmiPool {
     /// `annotation_occurrence` `enum_base` arena. Phase annotation-plane
     /// fills the `AnnotationPlane` variant only.
     pub annotation_occurrences: Arena<AnnotationOccurrence>,
+    /// `annotation_curve_occurrence` arena (phase annotation-curve-leader)
+    /// — currently holds `LeaderCurve` only.
+    pub annotation_curve_occurrences: Arena<LeaderCurve>,
     /// `DATUM` arena. Phase datum.
     pub datums: Arena<Datum>,
     /// `DATUM_FEATURE` arena. Phase datum-feature.
@@ -458,6 +462,51 @@ pub enum AnnotationOccurrence {
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrence),
     AnnotationTextOccurrence(AnnotationTextOccurrence),
     DraughtingAnnotationOccurrence(DraughtingAnnotationOccurrence),
+    TerminatorSymbol(TerminatorSymbol),
+    LeaderTerminator(LeaderTerminator),
+}
+
+/// `LEADER_CURVE(name, styles, item)` — sole occupant of the
+/// `annotation_curve_occurrence` arena (phase annotation-curve-leader). The
+/// EXPRESS supertype `annotation_curve_occurrence` is abstract (ONEOF of
+/// `dimension_curve` / `leader_curve` / `projection_curve`); the blueprint
+/// (ir.toml) currently lists only `leader_curve`, so step-io uses
+/// `Arena<LeaderCurve>` directly. Future phases may promote to an enum
+/// if other variants are added.
+#[derive(Debug, Clone, PartialEq)]
+pub struct LeaderCurve {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentId>,
+    /// `styled_item.item` narrowed (per `annotation_curve_occurrence`) to
+    /// `ref_curve` — a `Curve` arena id.
+    pub item: CurveId,
+}
+
+/// `TERMINATOR_SYMBOL(name, styles, item, annotated_curve)` — an
+/// `annotation_symbol_occurrence` subtype whose `annotated_curve` points
+/// at an `annotation_curve_occurrence` entry. `item` is the inherited
+/// `styled_item` SELECT, carried as `RepresentationItemRef`. Unresolved
+/// `item` or `annotated_curve` drops the occurrence, symmetric on
+/// re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TerminatorSymbol {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentId>,
+    pub item: RepresentationItemRef,
+    pub annotated_curve: AnnotationCurveOccurrenceId,
+}
+
+/// `LEADER_TERMINATOR(name, styles, item, annotated_curve)` — a
+/// `terminator_symbol` subtype. WHERE narrows `annotated_curve` to a
+/// `LEADER_CURVE` instance; the IR carries the same shape as
+/// `TerminatorSymbol` (the WHERE narrowing is not encoded in the IR
+/// type — fixture data is assumed to satisfy it).
+#[derive(Debug, Clone, PartialEq)]
+pub struct LeaderTerminator {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentId>,
+    pub item: RepresentationItemRef,
+    pub annotated_curve: AnnotationCurveOccurrenceId,
 }
 
 /// `ANNOTATION_PLANE(name, styles, item, elements)` — a `styled_item`

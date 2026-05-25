@@ -21,8 +21,8 @@ use super::plm::{
 use super::pmi::{
     AnnotationOccurrence, Datum, DatumFeature, DimensionalLocation, DimensionalSize,
     DraughtingPreDefinedTextFont, GeneralDatumReference, GeometricTolerance,
-    GeometricToleranceWithDatumReference, LimitsAndFits, PlusMinusTolerance, ToleranceValue,
-    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
+    GeometricToleranceWithDatumReference, LeaderCurve, LimitsAndFits, PlusMinusTolerance,
+    ToleranceValue, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
 use super::property::{
     DescriptionAttribute, GeneralProperty, GeneralPropertyAssociation, IdAttribute, NameAttribute,
@@ -130,6 +130,11 @@ define_id!(ValueFormatTypeQualifierId, ValueFormatTypeQualifier);
 
 // annotation_occurrence enum_base arena (Phase annotation-plane).
 define_id!(AnnotationOccurrenceId, AnnotationOccurrence);
+
+// annotation_curve_occurrence arena (Phase annotation-curve-leader) —
+// blueprint uses `single_struct` (no enum). Currently holds LeaderCurve;
+// dimension_curve / projection_curve variants may join in a future phase.
+define_id!(AnnotationCurveOccurrenceId, LeaderCurve);
 
 // datum arena (Phase datum).
 define_id!(DatumId, Datum);

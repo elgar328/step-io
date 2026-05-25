@@ -86,6 +86,12 @@ pub(crate) struct WriteBuffer<'m> {
     /// child resolves through `emit_tessellated_item_ref`.
     pub(crate) tessellated_face_step_ids: Vec<u64>,
     pub(crate) tessellated_surface_set_step_ids: Vec<u64>,
+    /// Emitted `LEADER_CURVE` step ids, indexed by
+    /// `AnnotationCurveOccurrenceId.0`. Populated by
+    /// `emit_annotation_curve_occurrences` before `emit_annotation_occurrences`
+    /// so `TERMINATOR_SYMBOL` / `LEADER_TERMINATOR` can resolve their
+    /// `annotated_curve` back-reference.
+    pub(crate) acoc_step_ids: Vec<u64>,
     /// STEP entity id of every emitted `NAMED_UNIT` complex from
     /// [`crate::ir::UnitsPool::named_units`], indexed by `NamedUnitId.0`.
     /// Populated by `emit_units_pool_if_set` before GUAC + MWU + DUE emit,
@@ -349,6 +355,7 @@ impl<'m> WriteBuffer<'m> {
             tessellated_item_step_ids: Vec::new(),
             tessellated_face_step_ids: Vec::new(),
             tessellated_surface_set_step_ids: Vec::new(),
+            acoc_step_ids: Vec::new(),
             unit_leaf_ids: Vec::new(),
             named_unit_step_ids: Vec::new(),
             mwu_step_ids: Vec::new(),
@@ -557,6 +564,10 @@ impl<'m> WriteBuffer<'m> {
         // annotation_occurrence — after visualization (`psa_step_ids`) and
         // after tessellation (`tessellated_item_step_ids` for a
         // `TESSELLATED_ANNOTATION_OCCURRENCE`'s `item`).
+        // LEADER_CURVE first — fills `acoc_step_ids` consumed by
+        // `TERMINATOR_SYMBOL` / `LEADER_TERMINATOR` in
+        // `emit_annotation_occurrences`.
+        self.emit_annotation_curve_occurrences();
         self.emit_annotation_occurrences();
         self.emit_plm_if_set()?;
         self.emit_properties_if_set();

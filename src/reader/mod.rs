@@ -458,6 +458,13 @@ pub struct ReaderContext {
     /// handler resolve its `coordinates` ref.
     pub(crate) tessellated_items: crate::ir::Arena<crate::ir::tessellation::TessellatedItem>,
     pub(crate) tessellated_item_id_map: HashMap<u64, crate::ir::TessellatedItemId>,
+    /// `LEADER_CURVE` step entity id → `AnnotationCurveOccurrenceId`
+    /// (phase annotation-curve-leader). Populated by `LeaderCurveHandler`
+    /// during `Pass7AnnotationCurve`; consumed by `TerminatorSymbolHandler`
+    /// / `LeaderTerminatorHandler` during `Pass7AnnotationPlane` to
+    /// resolve `annotated_curve`.
+    pub(crate) annotation_curve_occurrence_id_map:
+        HashMap<u64, crate::ir::id::AnnotationCurveOccurrenceId>,
     /// `COMPLEX_TRIANGULATED_FACE` arena (phase tessellation).
     pub(crate) tessellated_faces:
         crate::ir::Arena<crate::ir::tessellation::ComplexTriangulatedFace>,

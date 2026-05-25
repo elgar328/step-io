@@ -57,12 +57,13 @@ pub use id::{
     ShapeAspectRelationshipId, ShellId, SolidId, SurfaceId, TessellatedFaceId, TessellatedItemId,
     TessellatedSurfaceSetId, UnitContextId, VertexId, WireId,
     {
-        AnnotationOccurrenceId, CompositeShapeAspectId, ContinuousShapeAspectId, DatumFeatureId,
-        DatumId, DatumSystemId, DatumTargetId, DerivedShapeAspectId, DimensionalLocationId,
-        DimensionalSizeId, DraughtingPreDefinedTextFontId, GeneralDatumReferenceId,
-        GeometricToleranceId, GeometricToleranceWithDatumReferenceId, LimitsAndFitsId,
-        PlacedDatumTargetFeatureId, PlusMinusToleranceId, PropertyDefinitionId, ToleranceValueId,
-        ToleranceZoneFormId, ToleranceZoneId, TypeQualifierId, ValueFormatTypeQualifierId,
+        AnnotationCurveOccurrenceId, AnnotationOccurrenceId, CompositeShapeAspectId,
+        ContinuousShapeAspectId, DatumFeatureId, DatumId, DatumSystemId, DatumTargetId,
+        DerivedShapeAspectId, DimensionalLocationId, DimensionalSizeId,
+        DraughtingPreDefinedTextFontId, GeneralDatumReferenceId, GeometricToleranceId,
+        GeometricToleranceWithDatumReferenceId, LimitsAndFitsId, PlacedDatumTargetFeatureId,
+        PlusMinusToleranceId, PropertyDefinitionId, ToleranceValueId, ToleranceZoneFormId,
+        ToleranceZoneId, TypeQualifierId, ValueFormatTypeQualifierId,
     },
 };
 pub use model::{
@@ -92,9 +93,10 @@ pub use pmi::{
     DraughtingPreDefinedTextFont, GeneralDatumBase, GeneralDatumReference,
     GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
     GeometricToleranceModifier, GeometricToleranceRef, GeometricToleranceWithDatumReference,
-    GeometricToleranceWithDatumReferenceData, LimitsAndFits, PlusMinusTolerance, PmiPool,
-    TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue,
-    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
+    GeometricToleranceWithDatumReferenceData, LeaderCurve, LeaderTerminator, LimitsAndFits,
+    PlusMinusTolerance, PmiPool, TerminatorSymbol, TessellatedAnnotationOccurrence,
+    ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue, ToleranceZoneForm,
+    TypeQualifier, ValueFormatTypeQualifier,
 };
 pub use property::{
     CharacterizedDefinition, DerivedDefinitionItem, DescriptionAttribute, DescriptionAttributeItem,

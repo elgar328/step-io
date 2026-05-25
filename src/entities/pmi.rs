@@ -20,9 +20,10 @@ use crate::ir::pmi::{
     DimensionalSizeKind, DraughtingAnnotationOccurrence, DraughtingPreDefinedTextFont,
     GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance,
     GeometricToleranceData, GeometricToleranceRef, GeometricToleranceWithDatumReference,
-    GeometricToleranceWithDatumReferenceData, LimitsAndFits, PlusMinusTolerance,
-    TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue,
-    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
+    GeometricToleranceWithDatumReferenceData, LeaderCurve, LeaderTerminator, LimitsAndFits,
+    PlusMinusTolerance, TerminatorSymbol, TessellatedAnnotationOccurrence, ToleranceMagnitude,
+    ToleranceMethodDefinition, ToleranceValue, ToleranceZoneForm, TypeQualifier,
+    ValueFormatTypeQualifier,
 };
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
@@ -439,6 +440,200 @@ impl SimpleEntityHandler for DraughtingAnnotationOccurrenceHandler {
                 Attribute::String(dao.name),
                 Attribute::List(style_refs),
                 Attribute::EntityRef(item_id),
+            ],
+        ))
+    }
+}
+
+pub(crate) struct LeaderCurveHandler;
+
+/// `LEADER_CURVE(name, styles, item)` — sole occupant of the
+/// `annotation_curve_occurrence` arena. `item` resolves through
+/// `ctx.curve_map`; unresolved items drop the occurrence, symmetric on
+/// re-read. The arena id is recorded in
+/// `ctx.annotation_curve_occurrence_id_map` so the `Pass7AnnotationPlane`
+/// `TERMINATOR_SYMBOL` / `LEADER_TERMINATOR` handlers can resolve their
+/// `annotated_curve` back-reference.
+#[step_entity(name = "LEADER_CURVE", pass = Pass7AnnotationCurve)]
+impl SimpleEntityHandler for LeaderCurveHandler {
+    type WriteInput = LeaderCurve;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 3, entity_id, "LEADER_CURVE")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
+        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
+
+        let mut styles = Vec::with_capacity(style_refs.len());
+        for r in style_refs {
+            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+                styles.push(psa_id);
+            }
+        }
+        let Some(&item) = ctx.curve_map.get(&item_ref) else {
+            return Ok(()); // item unresolved — drop the occurrence
+        };
+
+        let id = ctx
+            .pmi
+            .get_or_insert_with(PmiPool::default)
+            .annotation_curve_occurrences
+            .push(LeaderCurve { name, styles, item });
+        ctx.annotation_curve_occurrence_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, lc: LeaderCurve) -> Result<u64, WriteError> {
+        let curve_step = buf.emit_curve(lc.item)?;
+        let mut style_refs = Vec::with_capacity(lc.styles.len());
+        for psa_id in lc.styles {
+            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+        }
+        Ok(buf.push_simple(
+            "LEADER_CURVE",
+            vec![
+                Attribute::String(lc.name),
+                Attribute::List(style_refs),
+                Attribute::EntityRef(curve_step),
+            ],
+        ))
+    }
+}
+
+pub(crate) struct TerminatorSymbolHandler;
+
+/// `TERMINATOR_SYMBOL(name, styles, item, annotated_curve)` — an
+/// `annotation_symbol_occurrence` subtype with an `annotated_curve`
+/// back-reference into the `annotation_curve_occurrence` arena.
+/// Unresolved `item` (via `resolve_representation_item_ref`) or
+/// `annotated_curve` (via `annotation_curve_occurrence_id_map`) drops
+/// the occurrence, symmetric on re-read.
+#[step_entity(name = "TERMINATOR_SYMBOL", pass = Pass7AnnotationPlane)]
+impl SimpleEntityHandler for TerminatorSymbolHandler {
+    type WriteInput = TerminatorSymbol;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 4, entity_id, "TERMINATOR_SYMBOL")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
+        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
+        let ac_ref = read_entity_ref(attrs, 3, entity_id, "annotated_curve")?;
+
+        let mut styles = Vec::with_capacity(style_refs.len());
+        for r in style_refs {
+            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+                styles.push(psa_id);
+            }
+        }
+        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
+            return Ok(());
+        };
+        let Some(&annotated_curve) = ctx.annotation_curve_occurrence_id_map.get(&ac_ref) else {
+            return Ok(());
+        };
+
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .annotation_occurrences
+            .push(AnnotationOccurrence::TerminatorSymbol(TerminatorSymbol {
+                name,
+                styles,
+                item,
+                annotated_curve,
+            }));
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, ts: TerminatorSymbol) -> Result<u64, WriteError> {
+        let item_id = buf.emit_representation_item_ref(ts.item)?;
+        let ac_step = buf.acoc_step_ids[ts.annotated_curve.0 as usize];
+        let mut style_refs = Vec::with_capacity(ts.styles.len());
+        for psa_id in ts.styles {
+            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+        }
+        Ok(buf.push_simple(
+            "TERMINATOR_SYMBOL",
+            vec![
+                Attribute::String(ts.name),
+                Attribute::List(style_refs),
+                Attribute::EntityRef(item_id),
+                Attribute::EntityRef(ac_step),
+            ],
+        ))
+    }
+}
+
+pub(crate) struct LeaderTerminatorHandler;
+
+/// `LEADER_TERMINATOR(name, styles, item, annotated_curve)` — a
+/// `terminator_symbol` subtype. Same shape and resolve / drop policy as
+/// `TerminatorSymbol`; the EXPRESS WHERE narrowing `annotated_curve` to
+/// `LEADER_CURVE` is not enforced at IR level.
+#[step_entity(name = "LEADER_TERMINATOR", pass = Pass7AnnotationPlane)]
+impl SimpleEntityHandler for LeaderTerminatorHandler {
+    type WriteInput = LeaderTerminator;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 4, entity_id, "LEADER_TERMINATOR")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
+        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
+        let ac_ref = read_entity_ref(attrs, 3, entity_id, "annotated_curve")?;
+
+        let mut styles = Vec::with_capacity(style_refs.len());
+        for r in style_refs {
+            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+                styles.push(psa_id);
+            }
+        }
+        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
+            return Ok(());
+        };
+        let Some(&annotated_curve) = ctx.annotation_curve_occurrence_id_map.get(&ac_ref) else {
+            return Ok(());
+        };
+
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .annotation_occurrences
+            .push(AnnotationOccurrence::LeaderTerminator(LeaderTerminator {
+                name,
+                styles,
+                item,
+                annotated_curve,
+            }));
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, lt: LeaderTerminator) -> Result<u64, WriteError> {
+        let item_id = buf.emit_representation_item_ref(lt.item)?;
+        let ac_step = buf.acoc_step_ids[lt.annotated_curve.0 as usize];
+        let mut style_refs = Vec::with_capacity(lt.styles.len());
+        for psa_id in lt.styles {
+            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+        }
+        Ok(buf.push_simple(
+            "LEADER_TERMINATOR",
+            vec![
+                Attribute::String(lt.name),
+                Attribute::List(style_refs),
+                Attribute::EntityRef(item_id),
+                Attribute::EntityRef(ac_step),
             ],
         ))
     }

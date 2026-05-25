@@ -293,6 +293,11 @@ impl ReaderContext {
         // arena is populated by Pass7OverRiding so `assigned_items` refs
         // resolve to existing arena ids.
         self.dispatch_registry(graph, PassLevel::Pass7Pla);
+        // LEADER_CURVE (phase annotation-curve-leader) — fills
+        // `annotation_curve_occurrence_id_map` consumed by
+        // `Pass7AnnotationPlane` for TERMINATOR_SYMBOL / LEADER_TERMINATOR
+        // `annotated_curve` resolution.
+        self.dispatch_registry(graph, PassLevel::Pass7AnnotationCurve);
         // ANNOTATION_PLANE (phase annotation-plane) — after Pass7Assignment
         // so `styles` refs resolve through `viz_psa_id_map`.
         self.dispatch_registry(graph, PassLevel::Pass7AnnotationPlane);

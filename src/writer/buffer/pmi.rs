@@ -148,6 +148,7 @@ impl WriteBuffer<'_> {
         use crate::entities::pmi::{
             AnnotationPlaneHandler, AnnotationSymbolOccurrenceHandler,
             AnnotationTextOccurrenceHandler, DraughtingAnnotationOccurrenceHandler,
+            LeaderTerminatorHandler, TerminatorSymbolHandler,
             TessellatedAnnotationOccurrenceHandler,
         };
         use crate::ir::pmi::AnnotationOccurrence;
@@ -171,6 +172,30 @@ impl WriteBuffer<'_> {
                 AnnotationOccurrence::DraughtingAnnotationOccurrence(dao) => {
                     let _ = DraughtingAnnotationOccurrenceHandler::write(self, dao.clone());
                 }
+                AnnotationOccurrence::TerminatorSymbol(ts) => {
+                    let _ = TerminatorSymbolHandler::write(self, ts.clone());
+                }
+                AnnotationOccurrence::LeaderTerminator(lt) => {
+                    let _ = LeaderTerminatorHandler::write(self, lt.clone());
+                }
+            }
+        }
+    }
+
+    /// Emit the `annotation_curve_occurrence` arena (currently
+    /// `LEADER_CURVE` only). Fills `acoc_step_ids` so
+    /// `TERMINATOR_SYMBOL` / `LEADER_TERMINATOR` in
+    /// `emit_annotation_occurrences` can resolve `annotated_curve`.
+    pub(in crate::writer::buffer) fn emit_annotation_curve_occurrences(&mut self) {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::pmi::LeaderCurveHandler;
+        let Some(pmi) = self.model.pmi.clone() else {
+            return;
+        };
+        for lc in pmi.annotation_curve_occurrences.iter() {
+            match LeaderCurveHandler::write(self, lc.clone()) {
+                Ok(n) => self.acoc_step_ids.push(n),
+                Err(_) => self.acoc_step_ids.push(0),
             }
         }
     }

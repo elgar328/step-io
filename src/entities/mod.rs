@@ -263,6 +263,12 @@ pub(crate) enum PassLevel {
     /// `Pass7StyledItem` / `Pass7OverRiding` so each `assigned_items` ref
     /// resolves to an existing `StyledItemId`.
     Pass7Pla,
+    /// `LEADER_CURVE` (phase annotation-curve-leader) — populates the
+    /// `annotation_curve_occurrences` arena and the
+    /// `annotation_curve_occurrence_id_map` consumed by
+    /// `Pass7AnnotationPlane` for `TERMINATOR_SYMBOL` / `LEADER_TERMINATOR`
+    /// `annotated_curve` resolution.
+    Pass7AnnotationCurve,
     /// `ANNOTATION_PLANE` (phase annotation-plane) — `styled_item` PMI
     /// subtype. Depends on `Pass7Assignment` (`viz_psa_id_map` for its
     /// `styles`) and Pass 1-5 geometry (`item`).
