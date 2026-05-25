@@ -32,6 +32,9 @@ pub struct VisualizationPool {
     /// reference for use as a `symbol_style_select` SELECT member.
     /// Referenced by `SymbolStyle` in a future sub-phase.
     pub symbol_colours: Arena<SymbolColour>,
+    /// `TEXT_STYLE_FOR_DEFINED_FONT` arena (phase text-style-font). Wraps
+    /// a `Colour` ref for `character_style_select` SELECT use.
+    pub text_styles_for_defined_font: Arena<TextStyleForDefinedFont>,
     /// `pre_defined_curve_font` arena per ir.toml — holds both the
     /// abstract self variant (`Plain`, corpus 0) and the
     /// `DRAUGHTING_PRE_DEFINED_CURVE_FONT` subtype. Referenced by
@@ -457,6 +460,15 @@ pub struct FillAreaStyle {
 pub struct FillAreaStyleColour {
     pub name: String,
     pub colour: ColourId,
+}
+
+/// `TEXT_STYLE_FOR_DEFINED_FONT(text_colour)` — phase text-style-font.
+/// Wraps a `Colour` reference for use as a `character_style_select`
+/// SELECT member. `text_colour` unresolved drops the occurrence,
+/// symmetric on re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TextStyleForDefinedFont {
+    pub text_colour: ColourId,
 }
 
 /// `SYMBOL_COLOUR(colour_of_symbol)` — phase symbol-colour.

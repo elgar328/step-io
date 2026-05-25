@@ -447,6 +447,10 @@ pub struct ReaderContext {
     pub(crate) characterized_objects: crate::ir::Arena<crate::ir::shape_rep::CharacterizedObject>,
     /// `SYMBOL_COLOUR` step entity id → `SymbolColourId` (phase symbol-colour).
     pub(crate) symbol_colour_id_map: HashMap<u64, crate::ir::id::SymbolColourId>,
+    /// `TEXT_STYLE_FOR_DEFINED_FONT` step entity id →
+    /// `TextStyleForDefinedFontId` (phase text-style-font).
+    pub(crate) text_style_for_defined_font_id_map:
+        HashMap<u64, crate::ir::id::TextStyleForDefinedFontId>,
     /// `REPRESENTATION_ITEM` step entity id → `RepresentationItemId`
     /// (phase repr-item-arena-1). Populated by QRI / VRI handlers;
     /// consumed by `resolve_representation_item_ref` as last-resort

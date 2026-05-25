@@ -3052,6 +3052,32 @@ fn shape_dimension_repr_and_dim_char_repr_round_trip() {
 }
 
 #[test]
+fn text_style_for_defined_font_round_trip() {
+    use step_io::ir::visualization::{
+        Colour, ColourRgb, TextStyleForDefinedFont, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let colour_id = viz.colours.push(Colour::Rgb(ColourRgb {
+        name: String::new(),
+        red: 0.0,
+        green: 0.0,
+        blue: 1.0,
+    }));
+    viz.text_styles_for_defined_font
+        .push(TextStyleForDefinedFont {
+            text_colour: colour_id,
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    assert_eq!(re_viz.text_styles_for_defined_font.len(), 1);
+}
+
+#[test]
 fn symbol_colour_round_trip() {
     // SYMBOL_COLOUR (phase symbol-colour).
     use step_io::ir::visualization::{Colour, ColourRgb, SymbolColour, VisualizationPool};

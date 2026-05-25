@@ -45,7 +45,7 @@ use super::units::{DerivedUnit, DerivedUnitElement, MeasureWithUnit, NamedUnit};
 use super::visualization::{
     CameraModel, Colour, CurveStyle, FoundedItem, PreDefinedCurveFont, PreDefinedSymbol,
     PresentationLayerAssignment, PresentationStyleAssignment, StyledItem, SurfaceStyleRendering,
-    SymbolColour,
+    SymbolColour, TextStyleForDefinedFont,
 };
 
 // Geometry Ids (3D)
@@ -177,6 +177,9 @@ define_id!(CharacterizedObjectId, CharacterizedObject);
 
 // symbol_colour arena (Phase symbol-colour).
 define_id!(SymbolColourId, SymbolColour);
+
+// text_style_for_defined_font arena (Phase text-style-font).
+define_id!(TextStyleForDefinedFontId, TextStyleForDefinedFont);
 
 // datum arena (Phase datum).
 define_id!(DatumId, Datum);

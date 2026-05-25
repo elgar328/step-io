@@ -162,6 +162,10 @@ pub(crate) struct WriteBuffer<'m> {
     /// Emitted `SYMBOL_COLOUR` step ids, indexed by `SymbolColourId.0`
     /// (phase symbol-colour). Future `SYMBOL_STYLE` writers consume this.
     pub(crate) symbol_colour_step_ids: Vec<u64>,
+    /// Emitted `TEXT_STYLE_FOR_DEFINED_FONT` step ids, indexed by
+    /// `TextStyleForDefinedFontId.0` (phase text-style-font). Future
+    /// `text_style.character_appearance` SELECT writers consume this.
+    pub(crate) text_style_for_defined_font_step_ids: Vec<u64>,
     /// STEP entity id of every emitted curve-font entity
     /// (`PRE_DEFINED_CURVE_FONT` / `DRAUGHTING_PRE_DEFINED_CURVE_FONT`),
     /// indexed by `PreDefinedCurveFontId.0`. Consumed by the `CURVE_STYLE`
@@ -402,6 +406,7 @@ impl<'m> WriteBuffer<'m> {
             mass_dim_exp_step: None,
             colour_step_ids: Vec::new(),
             symbol_colour_step_ids: Vec::new(),
+            text_style_for_defined_font_step_ids: Vec::new(),
             pre_defined_curve_font_step_ids: Vec::new(),
             pre_defined_symbol_step_ids: Vec::new(),
             curve_style_step_ids: Vec::new(),

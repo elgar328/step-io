@@ -129,6 +129,7 @@ impl WriteBuffer<'_> {
         Ok(())
     }
 
+    #[allow(clippy::too_many_lines)]
     pub(in crate::writer::buffer) fn emit_visualization_if_set(
         &mut self,
     ) -> Result<(), WriteError> {
@@ -168,6 +169,14 @@ impl WriteBuffer<'_> {
             use crate::entities::visualization::symbol_colour::SymbolColourHandler;
             let id = SymbolColourHandler::write(self, sc.clone())?;
             self.symbol_colour_step_ids.push(id);
+        }
+        // TEXT_STYLE_FOR_DEFINED_FONT — same timing.
+        self.text_style_for_defined_font_step_ids =
+            Vec::with_capacity(viz.text_styles_for_defined_font.len());
+        for t in viz.text_styles_for_defined_font.iter() {
+            use crate::entities::visualization::text_style_for_defined_font::TextStyleForDefinedFontHandler;
+            let id = TextStyleForDefinedFontHandler::write(self, t.clone())?;
+            self.text_style_for_defined_font_step_ids.push(id);
         }
         self.emit_pre_defined_curve_fonts(&viz)?;
         self.emit_pre_defined_symbols(&viz)?;

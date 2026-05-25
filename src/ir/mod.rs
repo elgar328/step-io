@@ -65,8 +65,9 @@ pub use id::{
         GeometricToleranceId, GeometricToleranceRelationshipId,
         GeometricToleranceWithDatumReferenceId, LimitsAndFitsId, MeasureQualificationId,
         PlacedDatumTargetFeatureId, PlusMinusToleranceId, PropertyDefinitionId,
-        RepresentationItemId, SymbolColourId, ToleranceValueId, ToleranceZoneDefinitionId,
-        ToleranceZoneFormId, ToleranceZoneId, TypeQualifierId, ValueFormatTypeQualifierId,
+        RepresentationItemId, SymbolColourId, TextStyleForDefinedFontId, ToleranceValueId,
+        ToleranceZoneDefinitionId, ToleranceZoneFormId, ToleranceZoneId, TypeQualifierId,
+        ValueFormatTypeQualifierId,
     },
 };
 pub use model::{
@@ -144,6 +145,6 @@ pub use visualization::{
     PresentationStyleAssignment, Projection, PsaStyle, RenderingProperty, ShadingMethod,
     StyleContextRef, StyledItem, SurfaceSide, SurfaceSideStyle, SurfaceSideStyleEntry,
     SurfaceStyleFillArea, SurfaceStyleRendering, SurfaceStyleRenderingData,
-    SurfaceStyleRenderingWithProperties, SurfaceStyleUsage, SymbolColour, ViewVolume,
-    VisualizationPool,
+    SurfaceStyleRenderingWithProperties, SurfaceStyleUsage, SymbolColour, TextStyleForDefinedFont,
+    ViewVolume, VisualizationPool,
 };
