@@ -171,6 +171,10 @@ pub struct GeometricToleranceWithDatumReferenceData {
     pub toleranced_shape_aspect: ShapeAspectRef,
     /// `datum_system` — `DATUM_SYSTEM` refs in source order.
     pub datum_system: Vec<DatumSystemId>,
+    /// `GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers` part — empty when
+    /// the source instance carries no modifier part; non-empty values
+    /// trigger 4-part complex MI emit (GT + WDR + WM + LEAF).
+    pub modifiers: Vec<GeometricToleranceModifier>,
 }
 
 /// `general_datum_reference` `enum_base` — a GD&T datum reference in the
@@ -246,6 +250,24 @@ pub struct GeometricToleranceData {
     pub magnitude: ToleranceMagnitude,
     /// `toleranced_shape_aspect` — a `ref_shape_aspect`.
     pub toleranced_shape_aspect: ShapeAspectRef,
+    /// `GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers` part — empty when
+    /// the source instance is a plain form tolerance; non-empty values
+    /// trigger 3-part complex MI emit (GT + WM + LEAF).
+    pub modifiers: Vec<GeometricToleranceModifier>,
+}
+
+/// Subset of AP242's `limit_condition` (and adjacent modifier enums)
+/// observed in corpus `GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers`
+/// SETs. Unknown raw enum tokens land in [`Other`] verbatim so round-trip
+/// is lossless even before a fixture forces a named variant.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum GeometricToleranceModifier {
+    MaximumMaterialRequirement,
+    LeastMaterialRequirement,
+    ReciprocityRequirement,
+    /// Verbatim source token (uppercase, no leading/trailing `.`) for any
+    /// modifier value step-io does not yet name.
+    Other(String),
 }
 
 /// Resolved target of a `geometric_tolerance.magnitude` (`ref_measure_with_unit`).

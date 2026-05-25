@@ -89,10 +89,11 @@ pub use pmi::{
     DatumFeature, DatumFeatureKind, DimensionalCharacteristic, DimensionalLocation,
     DimensionalLocationData, DimensionalSize, DimensionalSizeKind, DraughtingPreDefinedTextFont,
     GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance,
-    GeometricToleranceData, GeometricToleranceRef, GeometricToleranceWithDatumReference,
-    GeometricToleranceWithDatumReferenceData, LimitsAndFits, PlusMinusTolerance, PmiPool,
-    TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue,
-    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
+    GeometricToleranceData, GeometricToleranceModifier, GeometricToleranceRef,
+    GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData, LimitsAndFits,
+    PlusMinusTolerance, PmiPool, TessellatedAnnotationOccurrence, ToleranceMagnitude,
+    ToleranceMethodDefinition, ToleranceValue, ToleranceZoneForm, TypeQualifier,
+    ValueFormatTypeQualifier,
 };
 pub use property::{
     CharacterizedDefinition, DerivedDefinitionItem, DescriptionAttribute, DescriptionAttributeItem,

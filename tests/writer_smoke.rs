@@ -2384,6 +2384,7 @@ fn geometric_tolerance_form_tolerances_round_trip() {
         description: String::new(),
         magnitude,
         toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+        modifiers: Vec::new(),
     };
     let measure = || {
         ToleranceMagnitude::Measure(PropertyMeasure {
@@ -2563,6 +2564,7 @@ fn tolerance_zone_round_trip() {
                 unit_ref: Some(PropertyMeasureUnit::Named(length_unit)),
             }),
             toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            modifiers: Vec::new(),
         }));
     let form = pmi.tolerance_zone_forms.push(ToleranceZoneForm {
         name: "cylindrical".into(),
@@ -2833,6 +2835,7 @@ fn geometric_tolerance_with_datum_reference_round_trip() {
                 }),
                 toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
                 datum_system: vec![ds],
+                modifiers: Vec::new(),
             },
         ),
     );
@@ -2923,6 +2926,7 @@ fn complex_datum_ref_tolerance_round_trip() {
             }),
             toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
             datum_system: vec![ds],
+            modifiers: Vec::new(),
         }),
     );
     model.pmi = Some(pmi);
@@ -2944,6 +2948,146 @@ fn complex_datum_ref_tolerance_round_trip() {
         panic!("expected Position, got {gt:?}");
     };
     assert_eq!(d.datum_system.len(), 1, "datum_system round-trips");
+}
+
+#[test]
+#[allow(clippy::too_many_lines)]
+fn geometric_tolerance_with_modifiers_round_trip() {
+    // Phase gt-modifiers — GEOMETRIC_TOLERANCE_WITH_MODIFIERS part round-trip.
+    // Tests both:
+    // - datum-ref Position with modifier (4-part complex MI)
+    // - form-tolerance Roundness with modifier (3-part complex MI; the
+    //   simple form would be a standalone FLATNESS/ROUNDNESS).
+    use step_io::ir::pmi::{
+        Datum, GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData,
+        GeometricTolerance, GeometricToleranceData, GeometricToleranceModifier,
+        GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData,
+        ToleranceMagnitude,
+    };
+    use step_io::ir::property::{MeasureKind, PropertyMeasure, PropertyMeasureUnit};
+    use step_io::ir::shape_rep::{DatumSystem, ShapeAspect};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length_unit = ctx.length;
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        content: ProductContent::Solid(SolidContent {
+            ids: vec![solid_id],
+        }),
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+    let sa = model.shape_aspects.push(ShapeAspect {
+        name: "feature".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+    let ds = model.datum_systems.push(DatumSystem {
+        name: "DS".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        constituents: Vec::new(),
+    });
+    let mut pmi = PmiPool::default();
+    let _datum = pmi.datums.push(Datum {
+        name: String::new(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        identification: "A".into(),
+    });
+    let _gdr = pmi
+        .general_datum_references
+        .push(GeneralDatumReference::Compartment(
+            GeneralDatumReferenceData {
+                name: String::new(),
+                description: String::new(),
+                target: part_pid,
+                product_definitional: false,
+                base: GeneralDatumBase::Datum(step_io::ir::DatumId(0)),
+            },
+        ));
+    let magnitude = || {
+        ToleranceMagnitude::Measure(PropertyMeasure {
+            name: String::new(),
+            kind: MeasureKind::Length,
+            value: 0.1,
+            unit_ref: Some(PropertyMeasureUnit::Named(length_unit)),
+        })
+    };
+    pmi.geometric_tolerance_with_datum_references.push(
+        GeometricToleranceWithDatumReference::Position(GeometricToleranceWithDatumReferenceData {
+            name: "P".into(),
+            description: String::new(),
+            magnitude: magnitude(),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            datum_system: vec![ds],
+            modifiers: vec![GeometricToleranceModifier::MaximumMaterialRequirement],
+        }),
+    );
+    pmi.geometric_tolerances
+        .push(GeometricTolerance::Roundness(GeometricToleranceData {
+            name: "R".into(),
+            description: String::new(),
+            magnitude: magnitude(),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            modifiers: vec![GeometricToleranceModifier::LeastMaterialRequirement],
+        }));
+    model.pmi = Some(pmi);
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("GEOMETRIC_TOLERANCE_WITH_MODIFIERS"),
+        "expected WM part in complex MI output"
+    );
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    // datum-ref Position with modifier survives the round-trip.
+    let pos = re_pmi
+        .geometric_tolerance_with_datum_references
+        .iter()
+        .find_map(|gt| match gt {
+            GeometricToleranceWithDatumReference::Position(d) => Some(d),
+            _ => None,
+        })
+        .expect("Position variant present after round-trip");
+    assert_eq!(
+        pos.modifiers,
+        vec![GeometricToleranceModifier::MaximumMaterialRequirement],
+        "Position modifier preserved"
+    );
+    // Form-tolerance Roundness with modifier survives.
+    let round = re_pmi
+        .geometric_tolerances
+        .iter()
+        .find_map(|gt| match gt {
+            GeometricTolerance::Roundness(d) => Some(d),
+            _ => None,
+        })
+        .expect("Roundness variant present after round-trip");
+    assert_eq!(
+        round.modifiers,
+        vec![GeometricToleranceModifier::LeastMaterialRequirement],
+        "Roundness modifier preserved"
+    );
 }
 
 #[test]

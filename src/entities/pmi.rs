@@ -24,7 +24,7 @@ use crate::ir::pmi::{
     ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
-use crate::reader::{ReaderContext, require_part_attrs};
+use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
@@ -869,6 +869,7 @@ fn read_geometric_tolerance_data(
         description,
         magnitude,
         toleranced_shape_aspect,
+        modifiers: Vec::new(),
     }))
 }
 
@@ -890,15 +891,66 @@ pub(crate) fn write_geometric_tolerance(buf: &mut WriteBuffer, gt: GeometricTole
         ToleranceMagnitude::Measure(m) => buf.emit_property_measure(&m, None),
     };
     let shape_aspect = buf.emit_shape_aspect_ref(data.toleranced_shape_aspect);
-    buf.push_simple(
-        entity_name,
-        vec![
-            Attribute::String(data.name),
-            Attribute::String(data.description),
-            Attribute::EntityRef(magnitude),
-            Attribute::EntityRef(shape_aspect),
-        ],
-    )
+    if data.modifiers.is_empty() {
+        return buf.push_simple(
+            entity_name,
+            vec![
+                Attribute::String(data.name),
+                Attribute::String(data.description),
+                Attribute::EntityRef(magnitude),
+                Attribute::EntityRef(shape_aspect),
+            ],
+        );
+    }
+    // Form tolerance + modifier — emit 3-part complex (GT + WM + LEAF).
+    let modifier_list = emit_modifier_set(&data.modifiers);
+    let n = buf.fresh();
+    buf.entities.push(crate::writer::entity::WriterEntity {
+        id: n,
+        body: crate::writer::entity::WriterBody::Complex {
+            parts: vec![
+                (
+                    "GEOMETRIC_TOLERANCE".into(),
+                    vec![
+                        Attribute::String(data.name),
+                        Attribute::String(data.description),
+                        Attribute::EntityRef(magnitude),
+                        Attribute::EntityRef(shape_aspect),
+                    ],
+                ),
+                (
+                    "GEOMETRIC_TOLERANCE_WITH_MODIFIERS".into(),
+                    vec![Attribute::List(modifier_list)],
+                ),
+                (entity_name.into(), vec![]),
+            ],
+        },
+    });
+    n
+}
+
+/// Encode a `GeometricToleranceModifier` Vec as the `Attribute::List` that
+/// occupies attr[0] of `GEOMETRIC_TOLERANCE_WITH_MODIFIERS`. Mirrors the
+/// reader's `read_optional_modifiers` token decoding so round-trip is
+/// lossless (Other variants preserve the source token verbatim).
+fn emit_modifier_set(modifiers: &[crate::ir::GeometricToleranceModifier]) -> Vec<Attribute> {
+    use crate::ir::GeometricToleranceModifier;
+    modifiers
+        .iter()
+        .map(|m| {
+            let token = match m {
+                GeometricToleranceModifier::MaximumMaterialRequirement => {
+                    "MAXIMUM_MATERIAL_REQUIREMENT"
+                }
+                GeometricToleranceModifier::LeastMaterialRequirement => {
+                    "LEAST_MATERIAL_REQUIREMENT"
+                }
+                GeometricToleranceModifier::ReciprocityRequirement => "RECIPROCITY_REQUIREMENT",
+                GeometricToleranceModifier::Other(s) => s.as_str(),
+            };
+            Attribute::Enum(token.into())
+        })
+        .collect()
 }
 
 pub(crate) struct FlatnessToleranceHandler;
@@ -1164,6 +1216,7 @@ fn build_gt_with_datum_reference_data(
     magnitude_ref: u64,
     shape_aspect_ref: u64,
     datum_system_refs: &[u64],
+    modifiers: Vec<crate::ir::GeometricToleranceModifier>,
 ) -> Option<GeometricToleranceWithDatumReferenceData> {
     let magnitude = resolve_tolerance_magnitude(ctx, magnitude_ref)?;
     let toleranced_shape_aspect = resolve_shape_aspect_ref(ctx, shape_aspect_ref)?;
@@ -1179,6 +1232,7 @@ fn build_gt_with_datum_reference_data(
         magnitude,
         toleranced_shape_aspect,
         datum_system,
+        modifiers,
     })
 }
 
@@ -1204,14 +1258,16 @@ fn read_geometric_tolerance_with_datum_reference_data(
         magnitude_ref,
         shape_aspect_ref,
         &datum_system_refs,
+        Vec::new(),
     ))
 }
 
 /// Read the multiple-inheritance complex form `(GEOMETRIC_TOLERANCE
 /// GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE <leaf>)` — the encoding
 /// `POSITION` / `SURFACE_PROFILE` / `LINE_PROFILE` tolerances take. `Ok(None)`
-/// when a ref does not resolve. A `GEOMETRIC_TOLERANCE_WITH_MODIFIERS` part
-/// (present in some instances) is not modelled and is ignored.
+/// when a ref does not resolve. An optional
+/// `GEOMETRIC_TOLERANCE_WITH_MODIFIERS` part populates the `modifiers` Vec
+/// when present (phase gt-modifiers).
 fn read_gt_with_datum_reference_complex(
     ctx: &ReaderContext,
     entity_id: u64,
@@ -1226,6 +1282,7 @@ fn read_gt_with_datum_reference_complex(
     let gtwdr_attrs =
         require_part_attrs(parts, "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", entity_id)?;
     let datum_system_refs = read_entity_ref_list(gtwdr_attrs, 0, entity_id, "datum_system")?;
+    let modifiers = read_optional_modifiers(parts, entity_id)?;
     Ok(build_gt_with_datum_reference_data(
         ctx,
         name,
@@ -1233,7 +1290,73 @@ fn read_gt_with_datum_reference_complex(
         magnitude_ref,
         shape_aspect_ref,
         &datum_system_refs,
+        modifiers,
     ))
+}
+
+/// Read the `GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers` set from a
+/// complex MI's parts. Empty Vec when the part is absent (silent —
+/// modifier presence is optional per the ir.toml blueprint /
+/// EXPRESS ANDOR group 3). Unknown modifier tokens land in
+/// `Other(raw)` so the round-trip preserves the source text verbatim.
+fn read_optional_modifiers(
+    parts: &[RawEntityPart],
+    entity_id: u64,
+) -> Result<Vec<crate::ir::GeometricToleranceModifier>, ConvertError> {
+    use crate::ir::GeometricToleranceModifier;
+    let Some(attrs) = find_part_attrs(parts, "GEOMETRIC_TOLERANCE_WITH_MODIFIERS") else {
+        return Ok(Vec::new());
+    };
+    check_count(attrs, 1, entity_id, "GEOMETRIC_TOLERANCE_WITH_MODIFIERS")?;
+    let Some(Attribute::List(raw)) = attrs.first() else {
+        return Ok(Vec::new());
+    };
+    let mut modifiers = Vec::with_capacity(raw.len());
+    for item in raw {
+        let token = match item {
+            Attribute::Enum(s) => s.as_str(),
+            _ => continue,
+        };
+        modifiers.push(match token {
+            "MAXIMUM_MATERIAL_REQUIREMENT" => {
+                GeometricToleranceModifier::MaximumMaterialRequirement
+            }
+            "LEAST_MATERIAL_REQUIREMENT" => GeometricToleranceModifier::LeastMaterialRequirement,
+            "RECIPROCITY_REQUIREMENT" => GeometricToleranceModifier::ReciprocityRequirement,
+            other => GeometricToleranceModifier::Other(other.to_owned()),
+        });
+    }
+    Ok(modifiers)
+}
+
+/// Read the form-tolerance complex form `(GEOMETRIC_TOLERANCE
+/// [GEOMETRIC_TOLERANCE_WITH_MODIFIERS] <leaf>)` — used by the new
+/// FLATNESS / ROUNDNESS complex handlers (form-tolerance + modifier).
+fn read_gt_data_complex(
+    ctx: &ReaderContext,
+    entity_id: u64,
+    parts: &[RawEntityPart],
+) -> Result<Option<GeometricToleranceData>, ConvertError> {
+    let gt_attrs = require_part_attrs(parts, "GEOMETRIC_TOLERANCE", entity_id)?;
+    check_count(gt_attrs, 4, entity_id, "GEOMETRIC_TOLERANCE")?;
+    let name = read_string_or_unset(gt_attrs, 0, entity_id, "name")?.to_owned();
+    let description = read_string_or_unset(gt_attrs, 1, entity_id, "description")?.to_owned();
+    let magnitude_ref = read_entity_ref(gt_attrs, 2, entity_id, "magnitude")?;
+    let shape_aspect_ref = read_entity_ref(gt_attrs, 3, entity_id, "toleranced_shape_aspect")?;
+    let Some(magnitude) = resolve_tolerance_magnitude(ctx, magnitude_ref) else {
+        return Ok(None);
+    };
+    let Some(toleranced_shape_aspect) = resolve_shape_aspect_ref(ctx, shape_aspect_ref) else {
+        return Ok(None);
+    };
+    let modifiers = read_optional_modifiers(parts, entity_id)?;
+    Ok(Some(GeometricToleranceData {
+        name,
+        description,
+        magnitude,
+        toleranced_shape_aspect,
+        modifiers,
+    }))
 }
 
 /// Emit a `GeometricToleranceWithDatumReference`, returning the STEP id.
@@ -1280,28 +1403,33 @@ pub(crate) fn write_geometric_tolerance_with_datum_reference(
             buf.datum_system_step_ids[ds_id.0 as usize],
         ));
     }
-    if is_complex {
+    let force_complex = is_complex || !data.modifiers.is_empty();
+    if force_complex {
+        let mut parts = Vec::with_capacity(4);
+        parts.push((
+            "GEOMETRIC_TOLERANCE".into(),
+            vec![
+                Attribute::String(data.name),
+                Attribute::String(data.description),
+                Attribute::EntityRef(magnitude),
+                Attribute::EntityRef(shape_aspect),
+            ],
+        ));
+        parts.push((
+            "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE".into(),
+            vec![Attribute::List(datum_system_refs)],
+        ));
+        if !data.modifiers.is_empty() {
+            parts.push((
+                "GEOMETRIC_TOLERANCE_WITH_MODIFIERS".into(),
+                vec![Attribute::List(emit_modifier_set(&data.modifiers))],
+            ));
+        }
+        parts.push((type_name.into(), vec![]));
         let n = buf.fresh();
         buf.entities.push(WriterEntity {
             id: n,
-            body: WriterBody::Complex {
-                parts: vec![
-                    (
-                        "GEOMETRIC_TOLERANCE".into(),
-                        vec![
-                            Attribute::String(data.name),
-                            Attribute::String(data.description),
-                            Attribute::EntityRef(magnitude),
-                            Attribute::EntityRef(shape_aspect),
-                        ],
-                    ),
-                    (
-                        "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE".into(),
-                        vec![Attribute::List(datum_system_refs)],
-                    ),
-                    (type_name.into(), vec![]),
-                ],
-            },
+            body: WriterBody::Complex { parts },
         });
         n
     } else {
@@ -1882,4 +2010,219 @@ pub(crate) fn write_plus_minus_tolerance(buf: &mut WriteBuffer, pmt: &PlusMinusT
         "PLUS_MINUS_TOLERANCE",
         vec![Attribute::EntityRef(range), Attribute::EntityRef(dimension)],
     )
+}
+
+// =================================================================
+// Phase gt-modifiers — 5 신규 complex handler.
+// modifier 가 함께 있는 simple-leaf 인스턴스를 complex MI 로 dispatch.
+// required = [LEAF_NAME] (1-part) → 기존 3-part complex (Position/SP/LP)
+// 와 disjoint, subset 충돌 없음. dispatch 분기: simple instance 는
+// 기존 SimpleEntityHandler, complex 는 신규 ComplexEntityHandler.
+// =================================================================
+
+pub(crate) struct FlatnessToleranceComplexHandler;
+
+#[step_entity_complex(
+    name = "FLATNESS_TOLERANCE",
+    pass = Pass8GtWithDatumReference,
+    required = ["FLATNESS_TOLERANCE"]
+)]
+impl ComplexEntityHandler for FlatnessToleranceComplexHandler {
+    type WriteInput = GeometricTolerance;
+
+    fn read_complex(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        parts: &[RawEntityPart],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let Some(data) = read_gt_data_complex(ctx, entity_id, parts)? else {
+            return Ok(());
+        };
+        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::Flatness(data));
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, gt: GeometricTolerance) -> Result<u64, WriteError> {
+        Ok(write_geometric_tolerance(buf, gt))
+    }
+}
+
+pub(crate) struct RoundnessToleranceComplexHandler;
+
+#[step_entity_complex(
+    name = "ROUNDNESS_TOLERANCE",
+    pass = Pass8GtWithDatumReference,
+    required = ["ROUNDNESS_TOLERANCE"]
+)]
+impl ComplexEntityHandler for RoundnessToleranceComplexHandler {
+    type WriteInput = GeometricTolerance;
+
+    fn read_complex(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        parts: &[RawEntityPart],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let Some(data) = read_gt_data_complex(ctx, entity_id, parts)? else {
+            return Ok(());
+        };
+        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::Roundness(data));
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, gt: GeometricTolerance) -> Result<u64, WriteError> {
+        Ok(write_geometric_tolerance(buf, gt))
+    }
+}
+
+/// Read a `geometric_tolerance_with_datum_reference` simple-leaf in
+/// complex form: GT (required) + WDR (required) + optional WM. Used by
+/// `PARALLELISM` / `PERPENDICULARITY` / `CIRCULAR_RUNOUT` complex handlers.
+/// WDR absence drops the entry with a warning — `datum_ref` simple leaves
+/// have no meaningful datum-less complex form.
+fn read_gtwdr_simple_leaf_complex(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    parts: &[RawEntityPart],
+    entity_name: &'static str,
+) -> Result<Option<GeometricToleranceWithDatumReferenceData>, ConvertError> {
+    let gt_attrs = require_part_attrs(parts, "GEOMETRIC_TOLERANCE", entity_id)?;
+    check_count(gt_attrs, 4, entity_id, "GEOMETRIC_TOLERANCE")?;
+    let name = read_string_or_unset(gt_attrs, 0, entity_id, "name")?.to_owned();
+    let description = read_string_or_unset(gt_attrs, 1, entity_id, "description")?.to_owned();
+    let magnitude_ref = read_entity_ref(gt_attrs, 2, entity_id, "magnitude")?;
+    let shape_aspect_ref = read_entity_ref(gt_attrs, 3, entity_id, "toleranced_shape_aspect")?;
+    let Some(gtwdr_attrs) = find_part_attrs(parts, "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE")
+    else {
+        ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: format!(
+                "complex {entity_name} missing GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE part"
+            ),
+        });
+        return Ok(None);
+    };
+    let datum_system_refs = read_entity_ref_list(gtwdr_attrs, 0, entity_id, "datum_system")?;
+    let modifiers = read_optional_modifiers(parts, entity_id)?;
+    Ok(build_gt_with_datum_reference_data(
+        ctx,
+        name,
+        description,
+        magnitude_ref,
+        shape_aspect_ref,
+        &datum_system_refs,
+        modifiers,
+    ))
+}
+
+pub(crate) struct ParallelismToleranceComplexHandler;
+
+#[step_entity_complex(
+    name = "PARALLELISM_TOLERANCE",
+    pass = Pass8GtWithDatumReference,
+    required = ["PARALLELISM_TOLERANCE"]
+)]
+impl ComplexEntityHandler for ParallelismToleranceComplexHandler {
+    type WriteInput = GeometricToleranceWithDatumReference;
+
+    fn read_complex(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        parts: &[RawEntityPart],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let Some(data) =
+            read_gtwdr_simple_leaf_complex(ctx, entity_id, parts, "PARALLELISM_TOLERANCE")?
+        else {
+            return Ok(());
+        };
+        push_gt_with_datum_reference(
+            ctx,
+            entity_id,
+            GeometricToleranceWithDatumReference::Parallelism(data),
+        );
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        gt: GeometricToleranceWithDatumReference,
+    ) -> Result<u64, WriteError> {
+        Ok(write_geometric_tolerance_with_datum_reference(buf, gt))
+    }
+}
+
+pub(crate) struct PerpendicularityToleranceComplexHandler;
+
+#[step_entity_complex(
+    name = "PERPENDICULARITY_TOLERANCE",
+    pass = Pass8GtWithDatumReference,
+    required = ["PERPENDICULARITY_TOLERANCE"]
+)]
+impl ComplexEntityHandler for PerpendicularityToleranceComplexHandler {
+    type WriteInput = GeometricToleranceWithDatumReference;
+
+    fn read_complex(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        parts: &[RawEntityPart],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let Some(data) =
+            read_gtwdr_simple_leaf_complex(ctx, entity_id, parts, "PERPENDICULARITY_TOLERANCE")?
+        else {
+            return Ok(());
+        };
+        push_gt_with_datum_reference(
+            ctx,
+            entity_id,
+            GeometricToleranceWithDatumReference::Perpendicularity(data),
+        );
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        gt: GeometricToleranceWithDatumReference,
+    ) -> Result<u64, WriteError> {
+        Ok(write_geometric_tolerance_with_datum_reference(buf, gt))
+    }
+}
+
+pub(crate) struct CircularRunoutToleranceComplexHandler;
+
+#[step_entity_complex(
+    name = "CIRCULAR_RUNOUT_TOLERANCE",
+    pass = Pass8GtWithDatumReference,
+    required = ["CIRCULAR_RUNOUT_TOLERANCE"]
+)]
+impl ComplexEntityHandler for CircularRunoutToleranceComplexHandler {
+    type WriteInput = GeometricToleranceWithDatumReference;
+
+    fn read_complex(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        parts: &[RawEntityPart],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let Some(data) =
+            read_gtwdr_simple_leaf_complex(ctx, entity_id, parts, "CIRCULAR_RUNOUT_TOLERANCE")?
+        else {
+            return Ok(());
+        };
+        push_gt_with_datum_reference(
+            ctx,
+            entity_id,
+            GeometricToleranceWithDatumReference::CircularRunout(data),
+        );
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        gt: GeometricToleranceWithDatumReference,
+    ) -> Result<u64, WriteError> {
+        Ok(write_geometric_tolerance_with_datum_reference(buf, gt))
+    }
 }
