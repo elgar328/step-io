@@ -162,6 +162,25 @@ impl WriteBuffer<'_> {
         }
     }
 
+    /// Emit the `invisibilities` arena (phase invisibility). Called from
+    /// `emit_pools` after `emit_draughting_callouts` and
+    /// `emit_draughting_models` so every `invisible_item` cache
+    /// (`styled_item_step_ids`, `representation_step_ids`,
+    /// `draughting_callout_step_ids`) is populated.
+    pub(in crate::writer::buffer) fn emit_invisibilities(&mut self) -> Result<(), WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::visualization::invisibility::InvisibilityHandler;
+        let Some(viz) = self.model.visualization.clone() else {
+            return Ok(());
+        };
+        self.invisibility_step_ids = Vec::with_capacity(viz.invisibilities.len());
+        for inv in viz.invisibilities.iter() {
+            let step = InvisibilityHandler::write(self, inv.clone())?;
+            self.invisibility_step_ids.push(step);
+        }
+        Ok(())
+    }
+
     /// Emit the `geometric_item_specific_usages` arena (phase gisu).
     /// Sibling of `emit_dmia` — same dependencies (shape-aspect family
     /// step ids, representation step ids, `representation_item` step ids).

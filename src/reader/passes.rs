@@ -460,6 +460,9 @@ impl ReaderContext {
         // GEOMETRIC_ITEM_SPECIFIC_USAGE — depends on shape_aspect family
         // id maps + repr_id_map + representation_item arenas.
         self.dispatch_registry(graph, PassLevel::Pass8Gisu);
+        // INVISIBILITY — depends on styled_item / repr / draughting_callout
+        // id maps.
+        self.dispatch_registry(graph, PassLevel::Pass8Invisibility);
     }
 
     /// Walk every entity in `graph` (id-sorted via `BTreeMap`) and dispatch

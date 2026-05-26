@@ -76,6 +76,8 @@ pub struct ReaderContext {
     /// No step-io entity references GISU today; the map is retained for
     /// symmetry with sibling handlers.
     pub(crate) gisu_id_map: HashMap<u64, crate::ir::id::GeometricItemSpecificUsageId>,
+    /// `INVISIBILITY` step id → arena id (phase invisibility).
+    pub(crate) invisibility_id_map: HashMap<u64, crate::ir::id::InvisibilityId>,
     /// `REPRESENTATION_CONTEXT #N → UnitContextId` populated by Pass 0-2.
     /// Used by representation converters (ABSR, MSSR, plain SR, GBWSR, GBSSR,
     /// MDGPR) to translate their `context_of_items` ref into an `UnitContextId`.

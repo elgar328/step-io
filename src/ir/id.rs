@@ -43,7 +43,7 @@ use super::tessellation::{
 use super::topology::{Edge, Face, Shell, Solid, Wire};
 use super::units::{DerivedUnit, DerivedUnitElement, MeasureWithUnit, NamedUnit};
 use super::visualization::{
-    CameraModel, Colour, CompositeText, CurveStyle, FoundedItem, PreDefinedCurveFont,
+    CameraModel, Colour, CompositeText, CurveStyle, FoundedItem, Invisibility, PreDefinedCurveFont,
     PreDefinedMarker, PreDefinedSymbol, PresentationLayerAssignment, PresentationStyleAssignment,
     StyledItem, SurfaceStyleRendering, SymbolColour, TextLiteral, TextStyle,
     TextStyleForDefinedFont,
@@ -202,6 +202,9 @@ define_id!(
 
 // geometric_item_specific_usage arena (Phase gisu).
 define_id!(GeometricItemSpecificUsageId, GeometricItemSpecificUsage);
+
+// invisibility arena (Phase invisibility).
+define_id!(InvisibilityId, Invisibility);
 
 // pre_defined_marker enum arena (Phase pre-defined-marker).
 define_id!(PreDefinedMarkerId, PreDefinedMarker);

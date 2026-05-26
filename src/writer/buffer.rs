@@ -195,6 +195,10 @@ pub(crate) struct WriteBuffer<'m> {
     /// indexed by `GeometricItemSpecificUsageId.0`. No other entity
     /// currently references the cache; retained for symmetry with DMIA.
     pub(crate) gisu_step_ids: Vec<u64>,
+    /// Emitted `INVISIBILITY` step ids (phase invisibility), indexed by
+    /// `InvisibilityId.0`. Retained for symmetry — no other entity
+    /// references this cache.
+    pub(crate) invisibility_step_ids: Vec<u64>,
     /// STEP entity id of every emitted curve-font entity
     /// (`PRE_DEFINED_CURVE_FONT` / `DRAUGHTING_PRE_DEFINED_CURVE_FONT`),
     /// indexed by `PreDefinedCurveFontId.0`. Consumed by the `CURVE_STYLE`
@@ -443,6 +447,7 @@ impl<'m> WriteBuffer<'m> {
             dmia_step_ids: Vec::new(),
             unitless_context_step_ids: Vec::new(),
             gisu_step_ids: Vec::new(),
+            invisibility_step_ids: Vec::new(),
             pre_defined_curve_font_step_ids: Vec::new(),
             pre_defined_symbol_step_ids: Vec::new(),
             curve_style_step_ids: Vec::new(),
@@ -683,6 +688,12 @@ impl<'m> WriteBuffer<'m> {
         self.emit_dmia();
         // GEOMETRIC_ITEM_SPECIFIC_USAGE — same dependencies as DMIA.
         self.emit_gisu();
+        // INVISIBILITY — depends on styled_item / representation /
+        // draughting_callout step ids (all populated above). Delayed
+        // emit (Mdgpr / DraughtingModel pattern) — placing this inside
+        // `emit_visualization_if_set` panics on corpora that reference
+        // `DRAUGHTING_CALLOUT` since that cache is filled later.
+        self.emit_invisibilities()?;
         self.emit_plm_if_set()?;
         self.emit_properties_if_set();
         self.emit_form_features_if_set()?;

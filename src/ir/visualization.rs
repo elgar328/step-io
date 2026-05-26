@@ -97,6 +97,11 @@ pub struct VisualizationPool {
     /// subtype carrying placement / font / alignment metadata for a
     /// drafting label.
     pub text_literals: Arena<TextLiteral>,
+    /// `INVISIBILITY` arena (phase invisibility). Each entry marks a set
+    /// of presentation entities (styled items, callouts, whole
+    /// representations) as not to render. `CONTEXT_DEPENDENT_INVISIBILITY`
+    /// subtype not modelled.
+    pub invisibilities: Arena<Invisibility>,
     /// `composite_text` arena (phase text-literal). Groups two or more
     /// `text_or_character` elements (currently narrowed to
     /// [`TextLiteral`] references) into a composite drafting label.
@@ -619,6 +624,32 @@ pub enum BoxCharacteristic {
     SlantAngle(f64),
     /// `BOX_ROTATE_ANGLE(plane_angle_measure)`.
     RotateAngle(f64),
+}
+
+/// `INVISIBILITY(invisible_items)` — phase invisibility. Marks a set of
+/// presentation entities as not to render. `presentation_context` is
+/// reserved for the `CONTEXT_DEPENDENT_INVISIBILITY` subtype (not yet
+/// modelled — always `None` in this phase).
+#[derive(Debug, Clone, PartialEq)]
+pub struct Invisibility {
+    pub invisible_items: Vec<InvisibleItem>,
+    pub presentation_context: Option<InvisibilityContext>,
+}
+
+/// `invisible_item` SELECT — 3 modelled members (no `PresentationLayerAssignment`
+/// today since step-io lacks a PLA `id_map`). Source refs to other members
+/// are silently skipped on read.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum InvisibleItem {
+    DraughtingCallout(crate::ir::id::DraughtingCalloutId),
+    Representation(crate::ir::id::RepresentationId),
+    StyledItem(StyledItemId),
+}
+
+/// `invisibility_context` SELECT — only `draughting_model` is modelled.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum InvisibilityContext {
+    DraughtingModel(crate::ir::id::RepresentationId),
 }
 
 /// `TEXT_LITERAL(name, literal, placement, alignment, path, font)` —

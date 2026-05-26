@@ -350,6 +350,10 @@ pub(crate) enum PassLevel {
     /// `shape_aspect_*_id_map`s, `repr_id_map`, and the typed
     /// `representation_item` arenas via `resolve_representation_item_ref`.
     Pass8Gisu,
+    /// `INVISIBILITY` (phase invisibility). Depends on
+    /// `draughting_callout_id_map`, `repr_id_map`, and
+    /// `viz_styled_item_id_map`.
+    Pass8Invisibility,
     /// plm Date/Time leaves (Pass 9-1) — `CALENDAR_DATE`,
     /// `COORDINATED_UNIVERSAL_TIME_OFFSET`, `DATE_TIME_ROLE`. No external deps.
     Pass9PlmDateLeaves,

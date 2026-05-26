@@ -3102,6 +3102,39 @@ fn text_style_for_defined_font_round_trip() {
 }
 
 #[test]
+fn invisibility_round_trip() {
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::visualization::{
+        Invisibility, InvisibleItem, PlainStyledItem, StyledItem, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let placement = xyz_placement(&mut model);
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let si = viz.styled_items.push(StyledItem::Plain(PlainStyledItem {
+        name: String::new(),
+        styles: vec![],
+        item: RepresentationItemRef::Placement3d(placement),
+    }));
+    viz.invisibilities.push(Invisibility {
+        invisible_items: vec![InvisibleItem::StyledItem(si)],
+        presentation_context: None,
+    });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    assert_eq!(re_viz.invisibilities.len(), 1);
+    let inv = re_viz.invisibilities.iter().next().unwrap();
+    assert_eq!(inv.invisible_items.len(), 1);
+    assert!(matches!(
+        inv.invisible_items[0],
+        InvisibleItem::StyledItem(_)
+    ));
+}
+
+#[test]
 fn unitless_context_round_trip() {
     use step_io::ir::shape_rep::{
         DraughtingModel, Representation, RepresentationContextRef, UnitlessContext,
