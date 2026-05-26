@@ -3100,6 +3100,60 @@ fn text_style_for_defined_font_round_trip() {
 }
 
 #[test]
+fn text_style_with_box_characteristics_round_trip() {
+    use step_io::ir::visualization::{
+        BoxCharacteristic, CharacterStyle, Colour, ColourRgb, TextStyle, TextStyleData,
+        TextStyleForDefinedFont, TextStyleWithBoxCharacteristics, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let colour_id = viz.colours.push(Colour::Rgb(ColourRgb {
+        name: String::new(),
+        red: 0.0,
+        green: 0.0,
+        blue: 0.0,
+    }));
+    let t4df_id = viz
+        .text_styles_for_defined_font
+        .push(TextStyleForDefinedFont {
+            text_colour: colour_id,
+        });
+    viz.text_styles.push(TextStyle::WithBoxCharacteristics(
+        TextStyleWithBoxCharacteristics {
+            inherited: TextStyleData {
+                name: String::new(),
+                character_appearance: CharacterStyle::TextStyleForDefinedFont(t4df_id),
+            },
+            characteristics: vec![
+                BoxCharacteristic::Height(3.0),
+                BoxCharacteristic::Width(2.001),
+                BoxCharacteristic::SlantAngle(0.0),
+                BoxCharacteristic::RotateAngle(0.0),
+            ],
+        },
+    ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    assert_eq!(re_viz.text_styles.len(), 1);
+    let TextStyle::WithBoxCharacteristics(re_t) = re_viz.text_styles.iter().next().unwrap() else {
+        panic!("expected WithBoxCharacteristics");
+    };
+    assert_eq!(re_t.characteristics.len(), 4);
+    assert!(matches!(
+        re_t.characteristics[0],
+        BoxCharacteristic::Height(v) if (v - 3.0).abs() < 1e-9
+    ));
+    assert!(matches!(
+        re_t.characteristics[1],
+        BoxCharacteristic::Width(v) if (v - 2.001).abs() < 1e-9
+    ));
+}
+
+#[test]
 fn point_style_round_trip() {
     use step_io::ir::visualization::{
         Colour, ColourRgb, FoundedItem, Marker, MarkerSize, PointStyle, PreDefinedMarker,

@@ -276,6 +276,9 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass7PointStyle);
         // TEXT_STYLE_FOR_DEFINED_FONT — same timing as SymbolColour.
         self.dispatch_registry(graph, PassLevel::Pass7TextStyleForDefinedFont);
+        // TEXT_STYLE_WITH_BOX_CHARACTERISTICS — depends on
+        // `text_style_for_defined_font_id_map` for the character_appearance ref.
+        self.dispatch_registry(graph, PassLevel::Pass7TextStyleBox);
         self.dispatch_registry(graph, PassLevel::Pass7FillColour);
         self.dispatch_registry(graph, PassLevel::Pass7FillArea);
         // SSFA + SSRWP both populate viz_sss_entry_map so a SURFACE_SIDE_STYLE

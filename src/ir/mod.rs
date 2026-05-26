@@ -65,9 +65,9 @@ pub use id::{
         GeometricToleranceId, GeometricToleranceRelationshipId,
         GeometricToleranceWithDatumReferenceId, LimitsAndFitsId, MeasureQualificationId,
         PlacedDatumTargetFeatureId, PlusMinusToleranceId, PreDefinedMarkerId, PropertyDefinitionId,
-        RepresentationItemId, SymbolColourId, TextStyleForDefinedFontId, ToleranceValueId,
-        ToleranceZoneDefinitionId, ToleranceZoneFormId, ToleranceZoneId, TypeQualifierId,
-        ValueFormatTypeQualifierId,
+        RepresentationItemId, SymbolColourId, TextStyleForDefinedFontId, TextStyleId,
+        ToleranceValueId, ToleranceZoneDefinitionId, ToleranceZoneFormId, ToleranceZoneId,
+        TypeQualifierId, ValueFormatTypeQualifierId,
     },
 };
 pub use model::{
@@ -137,16 +137,16 @@ pub use units::{
     UnitsPool,
 };
 pub use visualization::{
-    CameraModel, CameraModelD3, Colour, ColourRgb, ContextDependentOverRidingStyledItem,
-    CurveStyle, CurveWidth, DraughtingPreDefinedColour, DraughtingPreDefinedCurveFont,
-    FillAreaStyle, FillAreaStyleColour, FoundedItem, Marker, MarkerSize, MarkerType,
-    OverRidingStyledItem, PlainStyledItem, PointStyle, PreDefinedCurveFont,
+    BoxCharacteristic, CameraModel, CameraModelD3, CharacterStyle, Colour, ColourRgb,
+    ContextDependentOverRidingStyledItem, CurveStyle, CurveWidth, DraughtingPreDefinedColour,
+    DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour, FoundedItem, Marker,
+    MarkerSize, MarkerType, OverRidingStyledItem, PlainStyledItem, PointStyle, PreDefinedCurveFont,
     PreDefinedCurveFontData, PreDefinedMarker, PreDefinedMarkerData, PreDefinedPointMarkerSymbol,
     PreDefinedSymbol, PreDefinedSymbolData, PreDefinedTerminatorSymbol,
     PresentationLayerAssignment, PresentationLayerAssignmentItem, PresentationStyleAssignment,
     Projection, PsaStyle, RenderingProperty, ShadingMethod, StyleContextRef, StyledItem,
     SurfaceSide, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea,
     SurfaceStyleRendering, SurfaceStyleRenderingData, SurfaceStyleRenderingWithProperties,
-    SurfaceStyleUsage, SymbolColour, SymbolStyle, TextStyleForDefinedFont, ViewVolume,
-    VisualizationPool,
+    SurfaceStyleUsage, SymbolColour, SymbolStyle, TextStyle, TextStyleData,
+    TextStyleForDefinedFont, TextStyleWithBoxCharacteristics, ViewVolume, VisualizationPool,
 };

@@ -8,7 +8,7 @@ use super::WriteBuffer;
 use crate::ir::representation_item::RepresentationItemRef;
 use crate::ir::visualization::{
     Colour, FoundedItem, PreDefinedCurveFont, PreDefinedSymbol, PresentationStyleAssignment,
-    StyledItem, SurfaceStyleRendering,
+    StyledItem, SurfaceStyleRendering, TextStyle,
 };
 use crate::writer::WriteError;
 
@@ -191,6 +191,21 @@ impl WriteBuffer<'_> {
             use crate::entities::visualization::text_style_for_defined_font::TextStyleForDefinedFontHandler;
             let id = TextStyleForDefinedFontHandler::write(self, t.clone())?;
             self.text_style_for_defined_font_step_ids.push(id);
+        }
+        // TEXT_STYLE / TEXT_STYLE_WITH_BOX_CHARACTERISTICS — depends on
+        // text_style_for_defined_font_step_ids for `character_appearance`.
+        self.text_style_step_ids = Vec::with_capacity(viz.text_styles.len());
+        for ts in viz.text_styles.iter() {
+            use crate::entities::visualization::text_style_with_box_characteristics::TextStyleWithBoxCharacteristicsHandler;
+            let step = match ts {
+                TextStyle::WithBoxCharacteristics(t) => {
+                    TextStyleWithBoxCharacteristicsHandler::write(self, t.clone())?
+                }
+                // `Itself` variant is corpus 0 (abstract supertype) — never
+                // produced by the reader. Unreachable in practice.
+                TextStyle::Itself(_) => 0,
+            };
+            self.text_style_step_ids.push(step);
         }
         self.emit_pre_defined_curve_fonts(&viz)?;
         self.emit_pre_defined_symbols(&viz)?;

@@ -454,6 +454,9 @@ pub struct ReaderContext {
     /// `PRE_DEFINED_MARKER` step entity id → `PreDefinedMarkerId` (phase
     /// pre-defined-marker).
     pub(crate) viz_pre_defined_marker_id_map: HashMap<u64, crate::ir::id::PreDefinedMarkerId>,
+    /// `text_style` enum-arena step id → `TextStyleId` (phase text-style-box).
+    /// Populated by the `TEXT_STYLE_WITH_BOX_CHARACTERISTICS` handler.
+    pub(crate) text_style_id_map: HashMap<u64, crate::ir::id::TextStyleId>,
     /// `REPRESENTATION_ITEM` step entity id → `RepresentationItemId`
     /// (phase repr-item-arena-1). Populated by QRI / VRI handlers;
     /// consumed by `resolve_representation_item_ref` as last-resort

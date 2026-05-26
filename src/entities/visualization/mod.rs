@@ -32,4 +32,5 @@ pub mod surface_style_usage;
 pub mod symbol_colour;
 pub mod symbol_style;
 pub mod text_style_for_defined_font;
+pub mod text_style_with_box_characteristics;
 pub mod view_volume;

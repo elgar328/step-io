@@ -9,7 +9,7 @@ use super::arena::Arena;
 use super::id::{
     ColourId, CurveStyleId, FoundedItemId, MeasureWithUnitId, Placement3dId, PlanarExtentId,
     PointId, PreDefinedCurveFontId, PreDefinedMarkerId, PresentationStyleAssignmentId,
-    StyledItemId, SurfaceStyleRenderingId, SymbolColourId,
+    StyledItemId, SurfaceStyleRenderingId, SymbolColourId, TextStyleForDefinedFontId,
 };
 use super::representation_item::RepresentationItemRef;
 use super::shape_rep::Mdgpr;
@@ -88,6 +88,10 @@ pub struct VisualizationPool {
     /// `camera_model` `enum_base` arena. Phase camera-model-d3 fills the
     /// `CameraModelD3` variant only.
     pub camera_models: Arena<CameraModel>,
+    /// `text_style` enum arena (phase text-style-box). Holds the base
+    /// `TEXT_STYLE` (`Itself`, corpus 0) and its
+    /// `TEXT_STYLE_WITH_BOX_CHARACTERISTICS` subtype variant.
+    pub text_styles: Arena<TextStyle>,
 }
 
 /// `PRESENTATION_LAYER_ASSIGNMENT(name, description, assigned_items)`.
@@ -551,6 +555,61 @@ pub struct PreDefinedMarkerData {
 #[derive(Debug, Clone, PartialEq)]
 pub struct PreDefinedPointMarkerSymbol {
     pub name: String,
+}
+
+/// `text_style` enum arena (phase text-style-box). `Itself` covers the base
+/// abstract `TEXT_STYLE` (corpus 0 — reserved, never reached at read);
+/// `WithBoxCharacteristics` covers the `TEXT_STYLE_WITH_BOX_CHARACTERISTICS`
+/// subtype (corpus 116).
+#[derive(Debug, Clone, PartialEq)]
+pub enum TextStyle {
+    Itself(TextStyleData),
+    WithBoxCharacteristics(TextStyleWithBoxCharacteristics),
+}
+
+/// `TEXT_STYLE(name, character_appearance)` carrier body — shared by the
+/// base entity and the `_with_box_characteristics` subtype via the
+/// `concrete_supertype` + carrier shape in ir.toml.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TextStyleData {
+    pub name: String,
+    pub character_appearance: CharacterStyle,
+}
+
+/// `TEXT_STYLE_WITH_BOX_CHARACTERISTICS(name, character_appearance,
+/// characteristics)` — adds a `SET[1:4]` of typed box-characteristic
+/// primitives. The schema `WHERE` enforces typeof-uniqueness inside the
+/// set; corpus instances already comply, so step-io preserves whatever
+/// order the source provided.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TextStyleWithBoxCharacteristics {
+    pub inherited: TextStyleData,
+    pub characteristics: Vec<BoxCharacteristic>,
+}
+
+/// `character_style_select` SELECT — step-io models only the
+/// `text_style_for_defined_font` member; the two glyph-style members
+/// (`character_glyph_style_stroke`, `character_glyph_style_outline`) are
+/// not modelled and are silently dropped on read (`ApprovalItem` precedent).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum CharacterStyle {
+    TextStyleForDefinedFont(TextStyleForDefinedFontId),
+}
+
+/// `box_characteristic_select` SELECT — typed REAL primitives carried by
+/// `TEXT_STYLE_WITH_BOX_CHARACTERISTICS.characteristics`. Both Real and
+/// Integer source forms are accepted on read (Integer is cast to f64),
+/// mirroring the `POSITIVE_LENGTH_MEASURE` handling in `POINT_STYLE`.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum BoxCharacteristic {
+    /// `BOX_HEIGHT(positive_ratio_measure)`.
+    Height(f64),
+    /// `BOX_WIDTH(positive_ratio_measure)`.
+    Width(f64),
+    /// `BOX_SLANT_ANGLE(plane_angle_measure)`.
+    SlantAngle(f64),
+    /// `BOX_ROTATE_ANGLE(plane_angle_measure)`.
+    RotateAngle(f64),
 }
 
 /// `TEXT_STYLE_FOR_DEFINED_FONT(text_colour)` — phase text-style-font.

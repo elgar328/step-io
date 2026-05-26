@@ -322,6 +322,10 @@ pub(crate) enum PassLevel {
     /// `TEXT_STYLE_FOR_DEFINED_FONT` (phase text-style-font). Same
     /// timing as `Pass7SymbolColour` — depends on `Pass7Colour`.
     Pass7TextStyleForDefinedFont,
+    /// `TEXT_STYLE_WITH_BOX_CHARACTERISTICS` (phase text-style-box). Depends
+    /// on `Pass7TextStyleForDefinedFont` (`text_style_for_defined_font_id_map`
+    /// for the `character_appearance` SELECT).
+    Pass7TextStyleBox,
     /// plm Date/Time leaves (Pass 9-1) — `CALENDAR_DATE`,
     /// `COORDINATED_UNIVERSAL_TIME_OFFSET`, `DATE_TIME_ROLE`. No external deps.
     Pass9PlmDateLeaves,

@@ -45,7 +45,7 @@ use super::units::{DerivedUnit, DerivedUnitElement, MeasureWithUnit, NamedUnit};
 use super::visualization::{
     CameraModel, Colour, CurveStyle, FoundedItem, PreDefinedCurveFont, PreDefinedMarker,
     PreDefinedSymbol, PresentationLayerAssignment, PresentationStyleAssignment, StyledItem,
-    SurfaceStyleRendering, SymbolColour, TextStyleForDefinedFont,
+    SurfaceStyleRendering, SymbolColour, TextStyle, TextStyleForDefinedFont,
 };
 
 // Geometry Ids (3D)
@@ -180,6 +180,11 @@ define_id!(SymbolColourId, SymbolColour);
 
 // text_style_for_defined_font arena (Phase text-style-font).
 define_id!(TextStyleForDefinedFontId, TextStyleForDefinedFont);
+
+// text_style enum arena (Phase text-style-box). Holds the base
+// `TEXT_STYLE` (corpus 0, abstract) and its
+// `TEXT_STYLE_WITH_BOX_CHARACTERISTICS` subtype.
+define_id!(TextStyleId, TextStyle);
 
 // pre_defined_marker enum arena (Phase pre-defined-marker).
 define_id!(PreDefinedMarkerId, PreDefinedMarker);
