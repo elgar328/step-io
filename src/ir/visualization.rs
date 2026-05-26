@@ -7,9 +7,10 @@
 
 use super::arena::Arena;
 use super::id::{
-    ColourId, CurveStyleId, FoundedItemId, MeasureWithUnitId, Placement3dId, PlanarExtentId,
-    PointId, PreDefinedCurveFontId, PreDefinedMarkerId, PresentationStyleAssignmentId,
-    StyledItemId, SurfaceStyleRenderingId, SymbolColourId, TextStyleForDefinedFontId,
+    ColourId, CurveStyleId, DraughtingPreDefinedTextFontId, FoundedItemId, MeasureWithUnitId,
+    Placement2dId, Placement3dId, PlanarExtentId, PointId, PreDefinedCurveFontId,
+    PreDefinedMarkerId, PresentationStyleAssignmentId, StyledItemId, SurfaceStyleRenderingId,
+    SymbolColourId, TextLiteralId, TextStyleForDefinedFontId,
 };
 use super::representation_item::RepresentationItemRef;
 use super::shape_rep::Mdgpr;
@@ -92,6 +93,14 @@ pub struct VisualizationPool {
     /// `TEXT_STYLE` (`Itself`, corpus 0) and its
     /// `TEXT_STYLE_WITH_BOX_CHARACTERISTICS` subtype variant.
     pub text_styles: Arena<TextStyle>,
+    /// `text_literal` arena (phase text-literal). `representation_item`
+    /// subtype carrying placement / font / alignment metadata for a
+    /// drafting label.
+    pub text_literals: Arena<TextLiteral>,
+    /// `composite_text` arena (phase text-literal). Groups two or more
+    /// `text_or_character` elements (currently narrowed to
+    /// [`TextLiteral`] references) into a composite drafting label.
+    pub composite_texts: Arena<CompositeText>,
 }
 
 /// `PRESENTATION_LAYER_ASSIGNMENT(name, description, assigned_items)`.
@@ -610,6 +619,66 @@ pub enum BoxCharacteristic {
     SlantAngle(f64),
     /// `BOX_ROTATE_ANGLE(plane_angle_measure)`.
     RotateAngle(f64),
+}
+
+/// `TEXT_LITERAL(name, literal, placement, alignment, path, font)` —
+/// phase text-literal. `geometric_representation_item` subtype carrying a
+/// drafting label's content + 2D/3D placement + font.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TextLiteral {
+    pub name: String,
+    /// `presentable_text` body — free-form unicode text.
+    pub literal: String,
+    pub placement: Axis2Placement,
+    /// `text_alignment` label (free-form string like `"baseline left"`).
+    pub alignment: String,
+    pub path: TextPath,
+    pub font: FontSelect,
+}
+
+/// `axis2_placement` SELECT — either a 2D or 3D axis placement.
+/// Unresolved refs drop the carrier instance, symmetric on re-read.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Axis2Placement {
+    D2(Placement2dId),
+    D3(Placement3dId),
+}
+
+/// `font_select` SELECT — step-io models only the
+/// `draughting_pre_defined_text_font` member; the
+/// `externally_defined_text_font` member is silently dropped on read
+/// (`ApprovalItem` precedent, `feedback_partial_select_enum`).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum FontSelect {
+    DraughtingPreDefined(DraughtingPreDefinedTextFontId),
+}
+
+/// `text_path` ENUMERATION OF (left, right, up, down). `Other` preserves
+/// any extension token verbatim for round-trip safety.
+#[derive(Debug, Clone, PartialEq)]
+pub enum TextPath {
+    Left,
+    Right,
+    Up,
+    Down,
+    Other(String),
+}
+
+/// `COMPOSITE_TEXT(name, collected_text)` — phase text-literal. Groups
+/// `SET[2:?]` of `text_or_character` SELECT entries.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CompositeText {
+    pub name: String,
+    pub collected_text: Vec<TextOrCharacter>,
+}
+
+/// `text_or_character` SELECT — narrowed to the `text_literal` member.
+/// `annotation_text_character` / `composite_text` / `character_glyph` are
+/// not modelled in step-io (`feedback_partial_select_enum`); element
+/// references to those types are silently dropped on read.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum TextOrCharacter {
+    TextLiteral(TextLiteralId),
 }
 
 /// `TEXT_STYLE_FOR_DEFINED_FONT(text_colour)` — phase text-style-font.

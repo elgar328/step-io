@@ -8,6 +8,7 @@
 
 pub mod camera_model_d3;
 pub mod colour_rgb;
+pub mod composite_text;
 pub mod context_dependent_over_riding_styled_item;
 pub mod curve_style;
 pub mod draughting_pre_defined_colour;
@@ -31,6 +32,7 @@ pub mod surface_style_transparent;
 pub mod surface_style_usage;
 pub mod symbol_colour;
 pub mod symbol_style;
+pub mod text_literal;
 pub mod text_style_for_defined_font;
 pub mod text_style_with_box_characteristics;
 pub mod view_volume;

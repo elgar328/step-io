@@ -326,6 +326,16 @@ pub(crate) enum PassLevel {
     /// on `Pass7TextStyleForDefinedFont` (`text_style_for_defined_font_id_map`
     /// for the `character_appearance` SELECT).
     Pass7TextStyleBox,
+    /// `TEXT_LITERAL` (phase text-literal). Depends on placement arenas
+    /// (`placement_map` / `placement_2d_map`) and the
+    /// `draughting_pre_defined_text_font` arena (`dptf_id_map`, populated
+    /// at the same pass currently used for the font entity —
+    /// `Pass8ShapeAspect`). Scheduled in the late 7-block to ensure
+    /// `dptf_id_map` is ready.
+    Pass8TextLiteral,
+    /// `COMPOSITE_TEXT` (phase text-literal). Depends on
+    /// `Pass8TextLiteral` (`text_literal_id_map`).
+    Pass8CompositeText,
     /// plm Date/Time leaves (Pass 9-1) — `CALENDAR_DATE`,
     /// `COORDINATED_UNIVERSAL_TIME_OFFSET`, `DATE_TIME_ROLE`. No external deps.
     Pass9PlmDateLeaves,

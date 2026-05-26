@@ -457,6 +457,13 @@ pub struct ReaderContext {
     /// `text_style` enum-arena step id → `TextStyleId` (phase text-style-box).
     /// Populated by the `TEXT_STYLE_WITH_BOX_CHARACTERISTICS` handler.
     pub(crate) text_style_id_map: HashMap<u64, crate::ir::id::TextStyleId>,
+    /// `DRAUGHTING_PRE_DEFINED_TEXT_FONT` step id → arena id (phase
+    /// text-literal — `id_map` populated retroactively now that `TEXT_LITERAL`
+    /// references it through the `font_select` SELECT).
+    pub(crate) dptf_id_map: HashMap<u64, crate::ir::id::DraughtingPreDefinedTextFontId>,
+    /// `TEXT_LITERAL` step id → `TextLiteralId` (phase text-literal).
+    /// Consumed by `COMPOSITE_TEXT` for the `text_or_character` SELECT.
+    pub(crate) text_literal_id_map: HashMap<u64, crate::ir::id::TextLiteralId>,
     /// `REPRESENTATION_ITEM` step entity id → `RepresentationItemId`
     /// (phase repr-item-arena-1). Populated by QRI / VRI handlers;
     /// consumed by `resolve_representation_item_ref` as last-resort

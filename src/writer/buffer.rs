@@ -174,6 +174,14 @@ pub(crate) struct WriteBuffer<'m> {
     /// (`presentation_style_select` SELECT) — no step-io entity references
     /// this cache today.
     pub(crate) text_style_step_ids: Vec<u64>,
+    /// Emitted `DRAUGHTING_PRE_DEFINED_TEXT_FONT` step ids (phase
+    /// text-literal — cache added retroactively for the `text_literal.font`
+    /// SELECT). Indexed by `DraughtingPreDefinedTextFontId.0`.
+    pub(crate) dptf_step_ids: Vec<u64>,
+    /// Emitted `TEXT_LITERAL` step ids (phase text-literal), indexed by
+    /// `TextLiteralId.0`. Consumed by the `COMPOSITE_TEXT` emitter for the
+    /// `text_or_character` SELECT.
+    pub(crate) text_literal_step_ids: Vec<u64>,
     /// STEP entity id of every emitted curve-font entity
     /// (`PRE_DEFINED_CURVE_FONT` / `DRAUGHTING_PRE_DEFINED_CURVE_FONT`),
     /// indexed by `PreDefinedCurveFontId.0`. Consumed by the `CURVE_STYLE`
@@ -417,6 +425,8 @@ impl<'m> WriteBuffer<'m> {
             text_style_for_defined_font_step_ids: Vec::new(),
             pre_defined_marker_step_ids: Vec::new(),
             text_style_step_ids: Vec::new(),
+            dptf_step_ids: Vec::new(),
+            text_literal_step_ids: Vec::new(),
             pre_defined_curve_font_step_ids: Vec::new(),
             pre_defined_symbol_step_ids: Vec::new(),
             curve_style_step_ids: Vec::new(),

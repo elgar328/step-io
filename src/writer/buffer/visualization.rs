@@ -207,6 +207,20 @@ impl WriteBuffer<'_> {
             };
             self.text_style_step_ids.push(step);
         }
+        // TEXT_LITERAL — depends on placement caches (emit-on-demand) and
+        // dptf_step_ids (populated by `emit_pmi_if_set` which runs before
+        // this method via `WriteBuffer::emit_pools`).
+        self.text_literal_step_ids = Vec::with_capacity(viz.text_literals.len());
+        for tl in viz.text_literals.iter() {
+            use crate::entities::visualization::text_literal::TextLiteralHandler;
+            let step = TextLiteralHandler::write(self, tl.clone())?;
+            self.text_literal_step_ids.push(step);
+        }
+        // COMPOSITE_TEXT — depends on text_literal_step_ids just filled.
+        for ct in viz.composite_texts.iter() {
+            use crate::entities::visualization::composite_text::CompositeTextHandler;
+            CompositeTextHandler::write(self, ct.clone())?;
+        }
         self.emit_pre_defined_curve_fonts(&viz)?;
         self.emit_pre_defined_symbols(&viz)?;
         self.emit_pre_defined_markers(&viz)?;

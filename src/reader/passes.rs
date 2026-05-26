@@ -444,6 +444,11 @@ impl ReaderContext {
         // property arena built by Pass8Pdr, so it must run after it.
         self.dispatch_registry(graph, PassLevel::Pass8GeneralProperty);
         self.dispatch_registry(graph, PassLevel::Pass8Gpa);
+        // TEXT_LITERAL — depends on placement maps (Pass4) + dptf_id_map
+        // (Pass8ShapeAspect, already dispatched above).
+        self.dispatch_registry(graph, PassLevel::Pass8TextLiteral);
+        // COMPOSITE_TEXT — depends on text_literal_id_map just filled.
+        self.dispatch_registry(graph, PassLevel::Pass8CompositeText);
     }
 
     /// Walk every entity in `graph` (id-sorted via `BTreeMap`) and dispatch

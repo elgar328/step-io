@@ -136,8 +136,10 @@ impl WriteBuffer<'_> {
             let step = ValueFormatTypeQualifierHandler::write(self, vftq.clone()).unwrap_or(0);
             self.value_format_type_qualifier_step_ids.push(step);
         }
+        self.dptf_step_ids = Vec::with_capacity(pmi.draughting_pre_defined_text_fonts.len());
         for font in pmi.draughting_pre_defined_text_fonts.iter() {
-            let _ = DraughtingPreDefinedTextFontHandler::write(self, font.clone());
+            let step = DraughtingPreDefinedTextFontHandler::write(self, font.clone()).unwrap_or(0);
+            self.dptf_step_ids.push(step);
         }
     }
 

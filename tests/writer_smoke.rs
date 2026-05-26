@@ -3100,6 +3100,96 @@ fn text_style_for_defined_font_round_trip() {
 }
 
 #[test]
+fn text_literal_round_trip() {
+    use step_io::ir::pmi::{DraughtingPreDefinedTextFont, PmiPool};
+    use step_io::ir::visualization::{
+        Axis2Placement, FontSelect, TextLiteral, TextPath, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let placement = xyz_placement(&mut model);
+    let font_id = model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .draughting_pre_defined_text_fonts
+        .push(DraughtingPreDefinedTextFont {
+            name: "font_a".into(),
+        });
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    viz.text_literals.push(TextLiteral {
+        name: String::new(),
+        literal: "hello".into(),
+        placement: Axis2Placement::D3(placement),
+        alignment: "baseline left".into(),
+        path: TextPath::Right,
+        font: FontSelect::DraughtingPreDefined(font_id),
+    });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    assert_eq!(re_viz.text_literals.len(), 1);
+    let re_t = re_viz.text_literals.iter().next().unwrap();
+    assert_eq!(re_t.literal, "hello");
+    assert_eq!(re_t.alignment, "baseline left");
+    assert!(matches!(re_t.path, TextPath::Right));
+    assert!(matches!(re_t.placement, Axis2Placement::D3(_)));
+}
+
+#[test]
+fn composite_text_round_trip() {
+    use step_io::ir::pmi::{DraughtingPreDefinedTextFont, PmiPool};
+    use step_io::ir::visualization::{
+        Axis2Placement, CompositeText, FontSelect, TextLiteral, TextOrCharacter, TextPath,
+        VisualizationPool,
+    };
+    let mut model = empty_model();
+    let placement = xyz_placement(&mut model);
+    let font_id = model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .draughting_pre_defined_text_fonts
+        .push(DraughtingPreDefinedTextFont {
+            name: "font_a".into(),
+        });
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let tl1 = viz.text_literals.push(TextLiteral {
+        name: String::new(),
+        literal: "a".into(),
+        placement: Axis2Placement::D3(placement),
+        alignment: String::new(),
+        path: TextPath::Right,
+        font: FontSelect::DraughtingPreDefined(font_id),
+    });
+    let tl2 = viz.text_literals.push(TextLiteral {
+        name: String::new(),
+        literal: "b".into(),
+        placement: Axis2Placement::D3(placement),
+        alignment: String::new(),
+        path: TextPath::Right,
+        font: FontSelect::DraughtingPreDefined(font_id),
+    });
+    viz.composite_texts.push(CompositeText {
+        name: String::new(),
+        collected_text: vec![
+            TextOrCharacter::TextLiteral(tl1),
+            TextOrCharacter::TextLiteral(tl2),
+        ],
+    });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    assert_eq!(re_viz.text_literals.len(), 2);
+    assert_eq!(re_viz.composite_texts.len(), 1);
+    let re_ct = re_viz.composite_texts.iter().next().unwrap();
+    assert_eq!(re_ct.collected_text.len(), 2);
+}
+
+#[test]
 fn text_style_with_box_characteristics_round_trip() {
     use step_io::ir::visualization::{
         BoxCharacteristic, CharacterStyle, Colour, ColourRgb, TextStyle, TextStyleData,

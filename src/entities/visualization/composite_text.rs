@@ -1,0 +1,71 @@
+//! `COMPOSITE_TEXT` handler — phase text-literal.
+
+use crate::entities::SimpleEntityHandler;
+use crate::ir::attr::{check_count, read_string_or_unset};
+use crate::ir::error::ConvertError;
+use crate::ir::visualization::{CompositeText, TextOrCharacter, VisualizationPool};
+use crate::parser::entity::{Attribute, EntityGraph};
+use crate::reader::ReaderContext;
+use crate::writer::WriteError;
+use crate::writer::buffer::WriteBuffer;
+use step_io_macros::step_entity;
+
+pub(crate) struct CompositeTextHandler;
+
+#[step_entity(name = "COMPOSITE_TEXT", pass = Pass8CompositeText)]
+impl SimpleEntityHandler for CompositeTextHandler {
+    type WriteInput = CompositeText;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 2, entity_id, "COMPOSITE_TEXT")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let Attribute::List(items) = &attrs[1] else {
+            return Ok(());
+        };
+        let mut collected_text = Vec::with_capacity(items.len());
+        for item in items {
+            if let Attribute::EntityRef(n) = item {
+                if let Some(&id) = ctx.text_literal_id_map.get(n) {
+                    collected_text.push(TextOrCharacter::TextLiteral(id));
+                }
+                // non-text_literal SELECT members (annotation_text_character,
+                // character_glyph, nested composite_text) are not modelled —
+                // skip the element.
+            }
+        }
+        // EXPRESS SET[2:?] cardinality — drop the carrier if fewer than 2
+        // members survived (emit symmetry, avoid schema-violating output).
+        if collected_text.len() < 2 {
+            return Ok(());
+        }
+        ctx.visualization
+            .get_or_insert_with(VisualizationPool::default)
+            .composite_texts
+            .push(CompositeText {
+                name,
+                collected_text,
+            });
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, t: CompositeText) -> Result<u64, WriteError> {
+        let items = t
+            .collected_text
+            .into_iter()
+            .map(|tc| match tc {
+                TextOrCharacter::TextLiteral(id) => {
+                    Attribute::EntityRef(buf.text_literal_step_ids[id.0 as usize])
+                }
+            })
+            .collect();
+        Ok(buf.push_simple(
+            "COMPOSITE_TEXT",
+            vec![Attribute::String(t.name), Attribute::List(items)],
+        ))
+    }
+}

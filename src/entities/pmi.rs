@@ -135,10 +135,12 @@ impl SimpleEntityHandler for DraughtingPreDefinedTextFontHandler {
     ) -> Result<(), ConvertError> {
         check_count(attrs, 1, entity_id, "DRAUGHTING_PRE_DEFINED_TEXT_FONT")?;
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        ctx.pmi
+        let id = ctx
+            .pmi
             .get_or_insert_with(PmiPool::default)
             .draughting_pre_defined_text_fonts
             .push(DraughtingPreDefinedTextFont { name });
+        ctx.dptf_id_map.insert(entity_id, id);
         Ok(())
     }
 
