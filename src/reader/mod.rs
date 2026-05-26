@@ -65,10 +65,17 @@ pub struct ReaderContext {
     /// Unit / uncertainty contexts accumulated during Pass 0-2 — one entry
     /// per `REPRESENTATION_CONTEXT` complex entity in the source file.
     pub(crate) units: Arena<UnitContext>,
+    /// Unit-less `(GRC PRC REP_CONTEXT)` complex MI contexts (phase
+    /// unitless-context). Populated by `ParametricRepresentationContextHandler`.
+    pub(crate) unitless_contexts: Arena<crate::ir::shape_rep::UnitlessContext>,
     /// `REPRESENTATION_CONTEXT #N → UnitContextId` populated by Pass 0-2.
     /// Used by representation converters (ABSR, MSSR, plain SR, GBWSR, GBSSR,
     /// MDGPR) to translate their `context_of_items` ref into an `UnitContextId`.
     pub(crate) context_id_map: HashMap<u64, UnitContextId>,
+    /// `(GRC PRC REP_CONTEXT) #N → UnitlessContextId` populated by the
+    /// `ParametricRepresentationContextHandler`. Representation handlers
+    /// look up here after `context_id_map` misses.
+    pub(crate) unitless_context_id_map: HashMap<u64, crate::ir::id::UnitlessContextId>,
     /// `representation #N → UnitContextId` for the 5 product-bearing
     /// representation entities (ABSR / MSSR / plain SR / GBWSR / GBSSR).
     /// Single map suffices because STEP entity ids are globally unique within
@@ -660,6 +667,7 @@ impl ReaderContext {
                 geometry: ctx.geometry,
                 topology: ctx.topology,
                 units: ctx.units,
+                unitless_contexts: ctx.unitless_contexts,
                 assembly: ctx.assembly,
                 schema: graph.schema.clone(),
                 header,
@@ -774,6 +782,26 @@ impl ReaderContext {
     // maps and return the stored IR id (or a `MissingReference` error).
     // Each converter can collapse four lines of boilerplate into one call.
     // ---------------------------------------------------------------------
+
+    /// Resolve a `context_of_items` STEP id to a
+    /// `RepresentationContextRef`. Looks up the unit-bearing
+    /// `context_id_map` first, then falls back to the GRC+PRC
+    /// `unitless_context_id_map` (phase unitless-context). Returns
+    /// `None` when the id matches neither map (e.g. unmodelled context
+    /// complex such as GRC+GUNCAC without a GUAC part).
+    pub(crate) fn resolve_repr_context(
+        &self,
+        from: u64,
+    ) -> Option<crate::ir::shape_rep::RepresentationContextRef> {
+        use crate::ir::shape_rep::RepresentationContextRef;
+        if let Some(&id) = self.context_id_map.get(&from) {
+            return Some(RepresentationContextRef::Unitful(id));
+        }
+        if let Some(&id) = self.unitless_context_id_map.get(&from) {
+            return Some(RepresentationContextRef::Unitless(id));
+        }
+        None
+    }
 
     pub(crate) fn resolve_point(
         &self,

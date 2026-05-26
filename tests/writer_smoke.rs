@@ -2004,7 +2004,7 @@ fn mapped_item_round_trip() {
     let placement = push_placement(&mut model, loc, Some(axis), Some(refd));
     let rep = model.representations.push(Representation::Plain(PlainRepr {
         name: "mapped".into(),
-        context: Some(uc),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
         frame: None,
     }));
     let rmap = model
@@ -3012,7 +3012,9 @@ fn shape_dimension_repr_and_dim_char_repr_round_trip() {
         .push(Representation::ShapeDimensionRepresentation(
             ShapeDimensionRepresentation {
                 name: "sdr".into(),
-                context: Some(UnitContextId(0)),
+                context: Some(step_io::ir::RepresentationContextRef::Unitful(
+                    UnitContextId(0),
+                )),
                 items: vec![],
             },
         ));
@@ -3100,6 +3102,41 @@ fn text_style_for_defined_font_round_trip() {
 }
 
 #[test]
+fn unitless_context_round_trip() {
+    use step_io::ir::shape_rep::{
+        DraughtingModel, Representation, RepresentationContextRef, UnitlessContext,
+    };
+    let mut model = empty_model();
+    let uc_id = model.unitless_contexts.push(UnitlessContext {
+        identifier: "2D coordinate system context".into(),
+        context_type: "2".into(),
+        coordinate_space_dimension: 2,
+    });
+    model
+        .representations
+        .push(Representation::DraughtingModel(DraughtingModel {
+            name: "Default".into(),
+            items: vec![],
+            context: Some(RepresentationContextRef::Unitless(uc_id)),
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.unitless_contexts.len(), 1);
+    let dm_count = re
+        .representations
+        .iter()
+        .filter(|r| matches!(r, Representation::DraughtingModel(_)))
+        .count();
+    // DraughtingModel with empty items drops the carrier on read (existing
+    // policy). Only assert the unitless context survives the round-trip.
+    let _ = dm_count;
+    let uc = re.unitless_contexts.iter().next().unwrap();
+    assert_eq!(uc.identifier, "2D coordinate system context");
+    assert_eq!(uc.coordinate_space_dimension, 2);
+}
+
+#[test]
 fn draughting_model_round_trip() {
     use step_io::ir::PmiPool;
     use step_io::ir::geometry::{Plane3, Surface};
@@ -3127,7 +3164,7 @@ fn draughting_model_round_trip() {
         .push(Representation::DraughtingModel(DraughtingModel {
             name: "dm".into(),
             items: vec![RepresentationItemRef::Surface(surf)],
-            context: Some(ctx_id),
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
         }));
 
     let text = model.write_to_string().expect("write");
@@ -3168,12 +3205,12 @@ fn dmia_round_trip() {
         }));
     let used = model.representations.push(Representation::Plain(PlainRepr {
         name: "draughting_model".into(),
-        context: Some(ctx_id),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
         frame: None,
     }));
     let def = model.representations.push(Representation::Plain(PlainRepr {
         name: "definition".into(),
-        context: Some(ctx_id),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
         frame: None,
     }));
     model
@@ -3481,7 +3518,9 @@ fn ciwr_round_trip() {
         .push(Surface::Plane(Plane3 { position }));
     let rep_id = model.representations.push(Representation::Plain(PlainRepr {
         name: "rep".into(),
-        context: Some(UnitContextId(0)),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(
+            UnitContextId(0),
+        )),
         frame: None,
     }));
     model

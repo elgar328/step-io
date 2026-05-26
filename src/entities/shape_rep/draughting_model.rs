@@ -46,8 +46,8 @@ impl SimpleEntityHandler for DraughtingModelHandler {
         // wrapper without `global_unit_assigned_context`). Accept both
         // forms so round-trip is symmetric.
         let ctx_ref_opt = read_optional_entity_ref(attrs, 2, entity_id, "context_of_items")?;
-        let context = ctx_ref_opt.and_then(|r| ctx.context_id_map.get(&r).copied());
-        if let Some(ctx_id) = context {
+        let context = ctx_ref_opt.and_then(|r| ctx.resolve_repr_context(r));
+        if let Some(crate::ir::shape_rep::RepresentationContextRef::Unitful(ctx_id)) = context {
             ctx.repr_context_map.insert(entity_id, ctx_id);
         }
         let mut items = Vec::with_capacity(item_refs.len());

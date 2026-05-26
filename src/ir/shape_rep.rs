@@ -99,7 +99,27 @@ pub struct Mdgpr {
     /// a separate context here (different uncertainty than the geometry rep).
     /// `None` → writer emits `Attribute::Unset` for `context_of_items`
     /// (allowed by the spec for kernel-built IR with no context info).
-    pub context: Option<UnitContextId>,
+    pub context: Option<RepresentationContextRef>,
+}
+
+/// `(GEOMETRIC_REPRESENTATION_CONTEXT PARAMETRIC_REPRESENTATION_CONTEXT
+/// REPRESENTATION_CONTEXT)` complex MI — unit-less coordinate space used
+/// by 2D draughting models and pcurve parametric spaces. No
+/// `GLOBAL_UNIT_ASSIGNED_CONTEXT` part, so length / `plane_angle` /
+/// `solid_angle` are intentionally absent (the schema permits this).
+#[derive(Debug, Clone, PartialEq)]
+pub struct UnitlessContext {
+    pub identifier: String,
+    pub context_type: String,
+    pub coordinate_space_dimension: i64,
+}
+
+/// `context_of_items` SELECT discriminator — either a `UnitContext`
+/// (unit-bearing) or a `UnitlessContext` (GRC+PRC complex MI).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum RepresentationContextRef {
+    Unitful(UnitContextId),
+    Unitless(crate::ir::id::UnitlessContextId),
 }
 
 /// Unified `REPRESENTATION` arena entry — one variant per concrete
@@ -141,7 +161,7 @@ pub enum Representation {
 pub struct DraughtingModel {
     pub name: String,
     pub items: Vec<crate::ir::representation_item::RepresentationItemRef>,
-    pub context: Option<UnitContextId>,
+    pub context: Option<RepresentationContextRef>,
 }
 
 /// `characterized_object` `concrete_supertype` enum (phase
@@ -187,7 +207,7 @@ pub struct CharacterizedItemWithinRepresentation {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeDimensionRepresentation {
     pub name: String,
-    pub context: Option<UnitContextId>,
+    pub context: Option<RepresentationContextRef>,
     pub items: Vec<RepresentationItemRef>,
 }
 
@@ -195,7 +215,7 @@ pub struct ShapeDimensionRepresentation {
 #[derive(Debug, Clone, PartialEq)]
 pub struct AdvancedBrepRepr {
     pub name: String,
-    pub context: Option<UnitContextId>,
+    pub context: Option<RepresentationContextRef>,
     pub ref_frame: Option<Placement3dId>,
     pub solids: Vec<SolidId>,
 }
@@ -204,7 +224,7 @@ pub struct AdvancedBrepRepr {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ManifoldSurfaceRepr {
     pub name: String,
-    pub context: Option<UnitContextId>,
+    pub context: Option<RepresentationContextRef>,
     pub ref_frame: Option<Placement3dId>,
     pub shells: Vec<ShellId>,
 }
@@ -214,7 +234,7 @@ pub struct ManifoldSurfaceRepr {
 #[derive(Debug, Clone, PartialEq)]
 pub struct PlainRepr {
     pub name: String,
-    pub context: Option<UnitContextId>,
+    pub context: Option<RepresentationContextRef>,
     pub frame: Option<Placement3dId>,
 }
 
@@ -223,7 +243,7 @@ pub struct PlainRepr {
 #[derive(Debug, Clone, PartialEq)]
 pub struct WireframeRepr {
     pub name: String,
-    pub context: Option<UnitContextId>,
+    pub context: Option<RepresentationContextRef>,
     pub ref_frame: Option<Placement3dId>,
     pub content: WireframeContent,
 }

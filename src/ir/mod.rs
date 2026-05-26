@@ -124,9 +124,10 @@ pub use shape_rep::{
     CompositeGroupShapeAspect, DatumSystem, DatumTarget, DescriptiveItem, DraughtingModel,
     IntegerRepresentationItem, LengthUncertainty, LengthUnit, ManifoldSurfaceRepr, MappedItem,
     MappedItemData, Mdgpr, NumericRepresentationItem, PlacedDatumTargetFeature, PlainRepr,
-    RealRepresentationItem, Representation, RepresentationMap, RepresentationMapData, ShapeAspect,
-    ShapeAspectRelationship, ShapeAspectRelationshipKind, ShapeDimensionRepresentation,
-    SolidAngleUnit, ToleranceZone, UnitContext, WireframeRepr,
+    RealRepresentationItem, Representation, RepresentationContextRef, RepresentationMap,
+    RepresentationMapData, ShapeAspect, ShapeAspectRelationship, ShapeAspectRelationshipKind,
+    ShapeDimensionRepresentation, SolidAngleUnit, ToleranceZone, UnitContext, UnitlessContext,
+    WireframeRepr,
 };
 pub use tessellation::{
     ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, CoordinatesList, TessellatedCurveSet,

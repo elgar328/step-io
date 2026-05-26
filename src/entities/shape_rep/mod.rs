@@ -24,6 +24,7 @@ pub mod manifold_surface_shape_representation;
 pub mod mapped_item;
 pub mod mdgpr;
 pub mod numeric_representation_item;
+pub mod parametric_representation_context;
 pub mod placed_datum_target_feature;
 pub mod qualified_representation_item;
 pub mod shape_aspect;

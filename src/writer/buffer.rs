@@ -186,6 +186,11 @@ pub(crate) struct WriteBuffer<'m> {
     /// indexed by `DraughtingModelItemAssociationId.0`. No other entity
     /// currently references the cache; retained for symmetry.
     pub(crate) dmia_step_ids: Vec<u64>,
+    /// Emitted `(GRC PRC REP_CONTEXT)` complex step ids (phase
+    /// unitless-context), indexed by `UnitlessContextId.0`. Consumed by
+    /// `repr_context_attr` when a representation's `context_of_items`
+    /// resolves to a `RepresentationContextRef::Unitless`.
+    pub(crate) unitless_context_step_ids: Vec<u64>,
     /// STEP entity id of every emitted curve-font entity
     /// (`PRE_DEFINED_CURVE_FONT` / `DRAUGHTING_PRE_DEFINED_CURVE_FONT`),
     /// indexed by `PreDefinedCurveFontId.0`. Consumed by the `CURVE_STYLE`
@@ -432,6 +437,7 @@ impl<'m> WriteBuffer<'m> {
             dptf_step_ids: Vec::new(),
             text_literal_step_ids: Vec::new(),
             dmia_step_ids: Vec::new(),
+            unitless_context_step_ids: Vec::new(),
             pre_defined_curve_font_step_ids: Vec::new(),
             pre_defined_symbol_step_ids: Vec::new(),
             curve_style_step_ids: Vec::new(),
@@ -577,6 +583,10 @@ impl<'m> WriteBuffer<'m> {
             let id = self.emit_unit_context(ctx.clone())?;
             self.unit_context_ids.push(id);
         }
+        // Emit unitless (GRC PRC REP_CONTEXT) contexts after the unit-bearing
+        // contexts so referencing representations can look up their step ids
+        // via `unitless_context_step_ids`.
+        self.emit_unitless_contexts()?;
         // Pre-emit every geometry representation (ABSR / MSSR / plain SR /
         // GBWSR / GBSSR) in `representations` arena order so re-read assigns
         // identical `RepresentationId`s — the same round-trip-stability

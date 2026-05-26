@@ -35,7 +35,7 @@ impl SimpleEntityHandler for MdgprHandler {
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let item_refs = read_entity_ref_list(attrs, 1, entity_id, "items")?;
         let ctx_ref = read_entity_ref(attrs, 2, entity_id, "context_of_items")?;
-        let context = ctx.context_id_map.get(&ctx_ref).copied();
+        let context = ctx.resolve_repr_context(ctx_ref);
 
         let mut items = Vec::with_capacity(item_refs.len());
         for r in item_refs {
@@ -69,12 +69,8 @@ impl SimpleEntityHandler for MdgprHandler {
             item_refs.push(Attribute::EntityRef(step_id));
         }
         // MDGPR's `context_of_items` is required by the spec but the IR
-        // accepts `None` for kernel-built fragments. Some(id) → resolve via
-        // cached `unit_context_ids`; None → emit `Unset`.
-        let context = match mdgpr.context {
-            Some(id) => Attribute::EntityRef(buf.unit_context_ids[id.0 as usize]),
-            None => Attribute::Unset,
-        };
+        // accepts `None` for kernel-built fragments.
+        let context = buf.repr_context_attr(mdgpr.context);
         Ok(buf.push_simple(
             "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
             vec![

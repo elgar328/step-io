@@ -162,6 +162,11 @@ pub struct StepModel {
     /// single-product files have one. Empty arena means no unit context (or
     /// kernel-built IR with units unset).
     pub units: Arena<UnitContext>,
+    /// `(GEOMETRIC_REPRESENTATION_CONTEXT PARAMETRIC_REPRESENTATION_CONTEXT
+    /// REPRESENTATION_CONTEXT)` complex MI — unit-less 2D draughting /
+    /// pcurve coordinate spaces. Referenced by representation
+    /// `context_of_items` via [`RepresentationContextRef::Unitless`].
+    pub unitless_contexts: Arena<crate::ir::shape_rep::UnitlessContext>,
     /// Assembly tree. `None` when the STEP file contains no `PRODUCT`
     /// entities (single-part files). `AssemblyTree.roots` lists every
     /// top-level product (a forest for multi-part files); instances are

@@ -18,8 +18,7 @@ use super::WriteBuffer;
 use crate::ir::arena::Arena;
 use crate::ir::shape_rep::Representation;
 use crate::ir::{
-    Instance, Product, ProductContent, ProductId, Transform3d, UnitContextId, WireframeContent,
-    WireframeReprKind,
+    Instance, Product, ProductContent, ProductId, Transform3d, WireframeContent, WireframeReprKind,
 };
 use crate::parser::entity::Attribute;
 use crate::parser::schema::{SchemaClass, StepSchema};
@@ -354,6 +353,22 @@ impl WriteBuffer<'_> {
     /// `[geometry reprs (Pass 6), MDGPR (Pass 7)]`, so the geometry reprs
     /// form a contiguous prefix and the appended `MDGPR` slots stay aligned
     /// with their `RepresentationId`s.
+    /// Emit the `unitless_contexts` arena (phase unitless-context) as
+    /// `(GRC PRC REP_CONTEXT)` complex MI entities. Called from
+    /// `emit_pools` after `emit_units_pool_if_set` so the unit-bearing
+    /// GUAC entities are already emitted before the unitless variants.
+    pub(in crate::writer::buffer) fn emit_unitless_contexts(&mut self) -> Result<(), WriteError> {
+        use crate::entities::ComplexEntityHandler;
+        use crate::entities::shape_rep::parametric_representation_context::ParametricRepresentationContextHandler;
+        let entries: Vec<_> = self.model.unitless_contexts.iter().cloned().collect();
+        self.unitless_context_step_ids = Vec::with_capacity(entries.len());
+        for uc in entries {
+            let step_id = ParametricRepresentationContextHandler::write(self, uc)?;
+            self.unitless_context_step_ids.push(step_id);
+        }
+        Ok(())
+    }
+
     /// Emit the `Representation::DraughtingModel` arena entries (phase
     /// draughting-model). Called from `emit_pools` after the visualization
     /// / annotation / callout passes so every `items` ref cache
@@ -503,12 +518,21 @@ impl WriteBuffer<'_> {
         }
     }
 
-    /// Resolve a representation's `Option<UnitContextId>` to its
-    /// `context_of_items` attribute. `Some` indexes the cached
-    /// `REPRESENTATION_CONTEXT` step ids; `None` emits `Unset`.
-    pub(crate) fn repr_context_attr(&self, context: Option<UnitContextId>) -> Attribute {
+    /// Resolve a representation's `Option<RepresentationContextRef>` to
+    /// its `context_of_items` attribute. `Unitful` indexes the cached
+    /// `REPRESENTATION_CONTEXT` step ids populated by the unit pass;
+    /// `Unitless` indexes the GRC+PRC complex step ids populated by the
+    /// `emit_unitless_contexts` pass; `None` emits `Unset`.
+    pub(crate) fn repr_context_attr(
+        &self,
+        context: Option<crate::ir::shape_rep::RepresentationContextRef>,
+    ) -> Attribute {
+        use crate::ir::shape_rep::RepresentationContextRef as R;
         match context {
-            Some(id) => Attribute::EntityRef(self.unit_context_ids[id.0 as usize]),
+            Some(R::Unitful(id)) => Attribute::EntityRef(self.unit_context_ids[id.0 as usize]),
+            Some(R::Unitless(id)) => {
+                Attribute::EntityRef(self.unitless_context_step_ids[id.0 as usize])
+            }
             None => Attribute::Unset,
         }
     }

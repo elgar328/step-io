@@ -35,7 +35,7 @@ use super::shape_rep::{
     AllAroundShapeAspect, CentreOfSymmetry, CharacterizedObject, CompositeGroupShapeAspect,
     DatumSystem, DatumTarget, MappedItem, NumericRepresentationItem, PlacedDatumTargetFeature,
     Representation, RepresentationMap, ShapeAspect, ShapeAspectRelationship, ToleranceZone,
-    UnitContext,
+    UnitContext, UnitlessContext,
 };
 use super::tessellation::{
     ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, TessellatedItem,
@@ -105,6 +105,8 @@ define_id!(PropertyDefinitionId, PropertyDefinition);
 // Unit context Ids — multi-context support (one entry per
 // REPRESENTATION_CONTEXT in the source file).
 define_id!(UnitContextId, UnitContext);
+// Unit-less context arena (phase unitless-context) — GRC+PRC complex MI.
+define_id!(UnitlessContextId, UnitlessContext);
 
 // PMI Ids — anchor for future Tolerance / Datum / GD&T work.
 define_id!(ShapeAspectId, ShapeAspect);

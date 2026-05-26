@@ -41,8 +41,8 @@ impl SimpleEntityHandler for ManifoldSurfaceShapeRepresentationHandler {
         let name = read_string(attrs, 0, entity_id, "name")?.to_owned();
         let items = read_entity_ref_list(attrs, 1, entity_id, "items")?;
         let ctx_ref = read_entity_ref(attrs, 2, entity_id, "context_of_items")?;
-        let context = ctx.context_id_map.get(&ctx_ref).copied();
-        if let Some(ctx_id) = context {
+        let context = ctx.resolve_repr_context(ctx_ref);
+        if let Some(crate::ir::shape_rep::RepresentationContextRef::Unitful(ctx_id)) = context {
             ctx.repr_context_map.insert(entity_id, ctx_id);
         }
 
