@@ -3100,6 +3100,70 @@ fn text_style_for_defined_font_round_trip() {
 }
 
 #[test]
+fn dmia_round_trip() {
+    use step_io::ir::PmiPool;
+    use step_io::ir::geometry::{Plane3, Surface};
+    use step_io::ir::pmi::{
+        AnnotationOccurrence, AnnotationPlane, DraughtingModelIdentifiedItem,
+        DraughtingModelItemAssociation, DraughtingModelItemDefinition,
+    };
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{PlainRepr, Representation};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let ctx_id = model.units.push(ctx);
+    let placement = xyz_placement(&mut model);
+    let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
+        position: placement,
+    }));
+    let ap_id = model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_occurrences
+        .push(AnnotationOccurrence::AnnotationPlane(AnnotationPlane {
+            name: "anno".into(),
+            styles: vec![],
+            item: RepresentationItemRef::Surface(surf),
+        }));
+    let used = model.representations.push(Representation::Plain(PlainRepr {
+        name: "draughting_model".into(),
+        context: Some(ctx_id),
+        frame: None,
+    }));
+    let def = model.representations.push(Representation::Plain(PlainRepr {
+        name: "definition".into(),
+        context: Some(ctx_id),
+        frame: None,
+    }));
+    model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .draughting_model_item_associations
+        .push(DraughtingModelItemAssociation {
+            name: "link".into(),
+            description: None,
+            definition: DraughtingModelItemDefinition::Representation(def),
+            used_representation: used,
+            identified_item: DraughtingModelIdentifiedItem::AnnotationOccurrence(ap_id),
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.draughting_model_item_associations.len(), 1);
+    let dmia = re_pmi
+        .draughting_model_item_associations
+        .iter()
+        .next()
+        .unwrap();
+    assert_eq!(dmia.name, "link");
+    assert!(matches!(
+        dmia.identified_item,
+        DraughtingModelIdentifiedItem::AnnotationOccurrence(_)
+    ));
+}
+
+#[test]
 fn text_literal_round_trip() {
     use step_io::ir::pmi::{DraughtingPreDefinedTextFont, PmiPool};
     use step_io::ir::visualization::{

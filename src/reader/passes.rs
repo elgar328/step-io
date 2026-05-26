@@ -190,6 +190,7 @@ impl ReaderContext {
 
     /// Pass 6: assembly/product graph (Phase A — PRODUCT chain + shape
     /// classification; Phase B adds instances, transforms, tree root).
+    #[allow(clippy::too_many_lines)]
     pub(super) fn run_assembly_passes(&mut self, graph: &EntityGraph) {
         // Every Pass 6 / 7 / 8 sub-pass dispatches through
         // `dispatch_registry`. Graph-aware handlers (CDSR, PDS classify,
@@ -449,6 +450,9 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass8TextLiteral);
         // COMPOSITE_TEXT — depends on text_literal_id_map just filled.
         self.dispatch_registry(graph, PassLevel::Pass8CompositeText);
+        // DRAUGHTING_MODEL_ITEM_ASSOCIATION — depends on repr_id_map +
+        // annotation_occurrence_id_map + draughting_callout_id_map.
+        self.dispatch_registry(graph, PassLevel::Pass8Dmia);
     }
 
     /// Walk every entity in `graph` (id-sorted via `BTreeMap`) and dispatch

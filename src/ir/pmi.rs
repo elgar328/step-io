@@ -11,8 +11,8 @@ use super::id::{
     AnnotationCurveOccurrenceId, AnnotationOccurrenceId, CurveId, DatumId, DatumSystemId,
     DimensionalLocationId, DimensionalSizeId, DraughtingCalloutId, GeometricToleranceId,
     GeometricToleranceWithDatumReferenceId, LimitsAndFitsId, MeasureWithUnitId,
-    PresentationStyleAssignmentId, ProductId, TessellatedItemId, ToleranceValueId, ToleranceZoneId,
-    TypeQualifierId, ValueFormatTypeQualifierId,
+    PresentationStyleAssignmentId, ProductId, RepresentationId, TessellatedItemId,
+    ToleranceValueId, ToleranceZoneId, TypeQualifierId, ValueFormatTypeQualifierId,
 };
 use super::property::PropertyMeasure;
 use super::representation_item::RepresentationItemRef;
@@ -71,6 +71,41 @@ pub struct PmiPool {
     pub limits_and_fits: Arena<LimitsAndFits>,
     /// `PLUS_MINUS_TOLERANCE` arena. Phase plus-minus-tolerance.
     pub plus_minus_tolerances: Arena<PlusMinusTolerance>,
+    /// `DRAUGHTING_MODEL_ITEM_ASSOCIATION` arena (phase dmia). Binds an
+    /// annotation occurrence / callout to a draughting model representation
+    /// via the `item_identified_representation_usage` supertype attributes.
+    pub draughting_model_item_associations: Arena<DraughtingModelItemAssociation>,
+}
+
+/// `DRAUGHTING_MODEL_ITEM_ASSOCIATION(name, description, definition,
+/// used_representation, identified_item)` — phase dmia. Subtype of
+/// `item_identified_representation_usage` (abstract — not modelled).
+#[derive(Debug, Clone, PartialEq)]
+pub struct DraughtingModelItemAssociation {
+    pub name: String,
+    pub description: Option<String>,
+    pub definition: DraughtingModelItemDefinition,
+    /// `used_representation` — narrowed by ir.toml to `ref_draughting_model`;
+    /// step-io stores the unified `RepresentationId`.
+    pub used_representation: RepresentationId,
+    pub identified_item: DraughtingModelIdentifiedItem,
+}
+
+/// `draughting_model_item_definition` SELECT — step-io currently models
+/// only the representation-family members. SELECT entries pointing to
+/// non-representation members (assignment / classification / approval
+/// items) are silently dropped on read (`feedback_partial_select_enum`).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum DraughtingModelItemDefinition {
+    Representation(RepresentationId),
+}
+
+/// `draughting_model_item_association_select` SELECT — both members are
+/// modelled in step-io.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum DraughtingModelIdentifiedItem {
+    AnnotationOccurrence(AnnotationOccurrenceId),
+    DraughtingCallout(DraughtingCalloutId),
 }
 
 /// `TOLERANCE_VALUE(lower_bound, upper_bound)` — the value range of a

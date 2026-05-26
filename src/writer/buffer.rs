@@ -182,6 +182,10 @@ pub(crate) struct WriteBuffer<'m> {
     /// `TextLiteralId.0`. Consumed by the `COMPOSITE_TEXT` emitter for the
     /// `text_or_character` SELECT.
     pub(crate) text_literal_step_ids: Vec<u64>,
+    /// Emitted `DRAUGHTING_MODEL_ITEM_ASSOCIATION` step ids (phase dmia),
+    /// indexed by `DraughtingModelItemAssociationId.0`. No other entity
+    /// currently references the cache; retained for symmetry.
+    pub(crate) dmia_step_ids: Vec<u64>,
     /// STEP entity id of every emitted curve-font entity
     /// (`PRE_DEFINED_CURVE_FONT` / `DRAUGHTING_PRE_DEFINED_CURVE_FONT`),
     /// indexed by `PreDefinedCurveFontId.0`. Consumed by the `CURVE_STYLE`
@@ -427,6 +431,7 @@ impl<'m> WriteBuffer<'m> {
             text_style_step_ids: Vec::new(),
             dptf_step_ids: Vec::new(),
             text_literal_step_ids: Vec::new(),
+            dmia_step_ids: Vec::new(),
             pre_defined_curve_font_step_ids: Vec::new(),
             pre_defined_symbol_step_ids: Vec::new(),
             curve_style_step_ids: Vec::new(),
@@ -652,6 +657,10 @@ impl<'m> WriteBuffer<'m> {
         self.emit_draughting_callouts();
         // DRAUGHTING_CALLOUT_RELATIONSHIP — after draughting_callouts.
         self.emit_draughting_callout_relationships();
+        // DRAUGHTING_MODEL_ITEM_ASSOCIATION — after representation chain
+        // (`representation_step_ids`), `ao_step_ids`, and
+        // `draughting_callout_step_ids`.
+        self.emit_dmia();
         self.emit_plm_if_set()?;
         self.emit_properties_if_set();
         self.emit_form_features_if_set()?;

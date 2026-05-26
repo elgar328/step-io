@@ -464,6 +464,10 @@ pub struct ReaderContext {
     /// `TEXT_LITERAL` step id → `TextLiteralId` (phase text-literal).
     /// Consumed by `COMPOSITE_TEXT` for the `text_or_character` SELECT.
     pub(crate) text_literal_id_map: HashMap<u64, crate::ir::id::TextLiteralId>,
+    /// `DRAUGHTING_MODEL_ITEM_ASSOCIATION` step id → arena id (phase dmia).
+    /// No other entity references DMIA in the modelled corpus; cache kept
+    /// for symmetry / future ref-receiving entities.
+    pub(crate) dmia_id_map: HashMap<u64, crate::ir::id::DraughtingModelItemAssociationId>,
     /// `REPRESENTATION_ITEM` step entity id → `RepresentationItemId`
     /// (phase repr-item-arena-1). Populated by QRI / VRI handlers;
     /// consumed by `resolve_representation_item_ref` as last-resort

@@ -20,11 +20,11 @@ use super::plm::{
 };
 use super::pmi::{
     AnnotationOccurrence, Datum, DatumFeature, DimensionalLocation, DimensionalSize,
-    DraughtingCallout, DraughtingCalloutRelationship, DraughtingPreDefinedTextFont,
-    GeneralDatumReference, GeometricTolerance, GeometricToleranceRelationship,
-    GeometricToleranceWithDatumReference, LeaderCurve, LimitsAndFits, MeasureQualification,
-    PlusMinusTolerance, ProjectedZoneDefinition, ToleranceValue, ToleranceZoneForm, TypeQualifier,
-    ValueFormatTypeQualifier,
+    DraughtingCallout, DraughtingCalloutRelationship, DraughtingModelItemAssociation,
+    DraughtingPreDefinedTextFont, GeneralDatumReference, GeometricTolerance,
+    GeometricToleranceRelationship, GeometricToleranceWithDatumReference, LeaderCurve,
+    LimitsAndFits, MeasureQualification, PlusMinusTolerance, ProjectedZoneDefinition,
+    ToleranceValue, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
 use super::property::{
     DescriptionAttribute, DimensionalCharacteristicRepresentation, GeneralProperty,
@@ -191,6 +191,12 @@ define_id!(TextStyleId, TextStyle);
 define_id!(TextLiteralId, TextLiteral);
 // composite_text arena (Phase text-literal).
 define_id!(CompositeTextId, CompositeText);
+
+// draughting_model_item_association arena (Phase dmia).
+define_id!(
+    DraughtingModelItemAssociationId,
+    DraughtingModelItemAssociation
+);
 
 // pre_defined_marker enum arena (Phase pre-defined-marker).
 define_id!(PreDefinedMarkerId, PreDefinedMarker);

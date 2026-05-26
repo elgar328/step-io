@@ -18,7 +18,8 @@ use crate::ir::pmi::{
     AnnotationSymbolOccurrence, AnnotationTextOccurrence, Datum, DatumFeature,
     DimensionalCharacteristic, DimensionalLocation, DimensionalLocationData, DimensionalSize,
     DimensionalSizeKind, DraughtingAnnotationOccurrence, DraughtingCallout, DraughtingCalloutData,
-    DraughtingCalloutElement, DraughtingCalloutRelationship, DraughtingPreDefinedTextFont,
+    DraughtingCalloutElement, DraughtingCalloutRelationship, DraughtingModelIdentifiedItem,
+    DraughtingModelItemAssociation, DraughtingModelItemDefinition, DraughtingPreDefinedTextFont,
     GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance,
     GeometricToleranceData, GeometricToleranceRef, GeometricToleranceRelationship,
     GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData, LeaderCurve,
@@ -3175,5 +3176,90 @@ impl ComplexEntityHandler for CircularRunoutToleranceComplexHandler {
         gt: GeometricToleranceWithDatumReference,
     ) -> Result<u64, WriteError> {
         Ok(write_geometric_tolerance_with_datum_reference(buf, gt))
+    }
+}
+
+pub(crate) struct DraughtingModelItemAssociationHandler;
+
+#[step_entity(name = "DRAUGHTING_MODEL_ITEM_ASSOCIATION", pass = Pass8Dmia)]
+impl SimpleEntityHandler for DraughtingModelItemAssociationHandler {
+    type WriteInput = DraughtingModelItemAssociation;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 5, entity_id, "DRAUGHTING_MODEL_ITEM_ASSOCIATION")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let description = match &attrs[1] {
+            Attribute::Unset => None,
+            Attribute::String(s) => Some(s.clone()),
+            _ => return Ok(()),
+        };
+        let def_ref = read_entity_ref(attrs, 2, entity_id, "definition")?;
+        let Some(&def_repr) = ctx.repr_id_map.get(&def_ref) else {
+            // SELECT may target a non-representation member (assignment /
+            // classification family) — drop the carrier.
+            return Ok(());
+        };
+        let definition = DraughtingModelItemDefinition::Representation(def_repr);
+        let used_ref = read_entity_ref(attrs, 3, entity_id, "used_representation")?;
+        let Some(&used_representation) = ctx.repr_id_map.get(&used_ref) else {
+            return Ok(());
+        };
+        let item_ref = read_entity_ref(attrs, 4, entity_id, "identified_item")?;
+        let identified_item = if let Some(&id) = ctx.annotation_occurrence_id_map.get(&item_ref) {
+            DraughtingModelIdentifiedItem::AnnotationOccurrence(id)
+        } else if let Some(&id) = ctx.draughting_callout_id_map.get(&item_ref) {
+            DraughtingModelIdentifiedItem::DraughtingCallout(id)
+        } else {
+            return Ok(());
+        };
+        let id = ctx
+            .pmi
+            .get_or_insert_with(PmiPool::default)
+            .draughting_model_item_associations
+            .push(DraughtingModelItemAssociation {
+                name,
+                description,
+                definition,
+                used_representation,
+                identified_item,
+            });
+        ctx.dmia_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        dmia: DraughtingModelItemAssociation,
+    ) -> Result<u64, WriteError> {
+        let DraughtingModelItemDefinition::Representation(def_id) = dmia.definition;
+        let def_step = buf.representation_step_ids[def_id.0 as usize];
+        let used_step = buf.representation_step_ids[dmia.used_representation.0 as usize];
+        let item_step = match dmia.identified_item {
+            DraughtingModelIdentifiedItem::AnnotationOccurrence(id) => {
+                buf.ao_step_ids[id.0 as usize]
+            }
+            DraughtingModelIdentifiedItem::DraughtingCallout(id) => {
+                buf.draughting_callout_step_ids[id.0 as usize]
+            }
+        };
+        let description_attr = match dmia.description {
+            Some(s) => Attribute::String(s),
+            None => Attribute::Unset,
+        };
+        Ok(buf.push_simple(
+            "DRAUGHTING_MODEL_ITEM_ASSOCIATION",
+            vec![
+                Attribute::String(dmia.name),
+                description_attr,
+                Attribute::EntityRef(def_step),
+                Attribute::EntityRef(used_step),
+                Attribute::EntityRef(item_step),
+            ],
+        ))
     }
 }

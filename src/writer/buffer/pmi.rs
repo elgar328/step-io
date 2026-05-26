@@ -143,6 +143,25 @@ impl WriteBuffer<'_> {
         }
     }
 
+    /// Emit the `pmi` pool's `DRAUGHTING_MODEL_ITEM_ASSOCIATION` arena
+    /// (phase dmia). Called from `emit_pools` after
+    /// `emit_annotation_occurrences` + `emit_draughting_callouts` so that
+    /// `ao_step_ids` / `draughting_callout_step_ids` are populated, and
+    /// after the representation chain so `representation_step_ids` is
+    /// ready.
+    pub(in crate::writer::buffer) fn emit_dmia(&mut self) {
+        use crate::entities::pmi::DraughtingModelItemAssociationHandler;
+        let Some(pmi) = self.model.pmi.clone() else {
+            return;
+        };
+        self.dmia_step_ids = Vec::with_capacity(pmi.draughting_model_item_associations.len());
+        for dmia in pmi.draughting_model_item_associations.iter() {
+            let step =
+                DraughtingModelItemAssociationHandler::write(self, dmia.clone()).unwrap_or(0);
+            self.dmia_step_ids.push(step);
+        }
+    }
+
     /// Emit the `annotation_occurrence` arena (`ANNOTATION_PLANE` /
     /// `TESSELLATED_ANNOTATION_OCCURRENCE`). Called after
     /// `emit_visualization_if_set` (`styles` → `psa_step_ids`) and after
