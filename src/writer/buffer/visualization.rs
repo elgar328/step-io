@@ -327,6 +327,12 @@ impl WriteBuffer<'_> {
                 self.founded_item_step_ids[idx] = ViewVolumeHandler::write(self, vv.clone())?;
             }
         }
+        for (idx, item) in founded_items.iter().enumerate() {
+            if let FoundedItem::SymbolStyle(ss) = item {
+                use crate::entities::visualization::symbol_style::SymbolStyleHandler;
+                self.founded_item_step_ids[idx] = SymbolStyleHandler::write(self, ss.clone())?;
+            }
+        }
         Ok(())
     }
 }

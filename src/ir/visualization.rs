@@ -9,6 +9,7 @@ use super::arena::Arena;
 use super::id::{
     ColourId, CurveStyleId, FoundedItemId, Placement3dId, PlanarExtentId, PointId,
     PreDefinedCurveFontId, PresentationStyleAssignmentId, StyledItemId, SurfaceStyleRenderingId,
+    SymbolColourId,
 };
 use super::representation_item::RepresentationItemRef;
 use super::shape_rep::Mdgpr;
@@ -122,6 +123,19 @@ pub enum FoundedItem {
     SurfaceStyleUsage(SurfaceStyleUsage),
     /// `VIEW_VOLUME` — a `founded_item` subtype referenced by `CAMERA_MODEL_D3`.
     ViewVolume(ViewVolume),
+    /// `SYMBOL_STYLE` — a `founded_item` subtype carrying a
+    /// [`SymbolColour`] reference (phase symbol-style).
+    SymbolStyle(SymbolStyle),
+}
+
+/// `SYMBOL_STYLE(name, style_of_symbol)` — `founded_item` subtype
+/// (phase symbol-style). `style_of_symbol` is the
+/// `symbol_style_select` SELECT, narrowed to `SymbolColour` (the only
+/// modelled SELECT member). Unresolved ref drops the occurrence.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SymbolStyle {
+    pub name: String,
+    pub style_of_symbol: SymbolColourId,
 }
 
 /// EXPRESS `central_or_parallel` — a `VIEW_VOLUME`'s projection mode.

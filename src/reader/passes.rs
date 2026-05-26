@@ -270,6 +270,8 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass7Colour);
         // SYMBOL_COLOUR — depends on Pass7Colour viz_colour_id_map.
         self.dispatch_registry(graph, PassLevel::Pass7SymbolColour);
+        // SYMBOL_STYLE — depends on symbol_colour_id_map.
+        self.dispatch_registry(graph, PassLevel::Pass7SymbolStyle);
         // TEXT_STYLE_FOR_DEFINED_FONT — same timing as SymbolColour.
         self.dispatch_registry(graph, PassLevel::Pass7TextStyleForDefinedFont);
         self.dispatch_registry(graph, PassLevel::Pass7FillColour);

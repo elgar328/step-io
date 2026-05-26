@@ -146,6 +146,6 @@ pub use visualization::{
     PresentationStyleAssignment, Projection, PsaStyle, RenderingProperty, ShadingMethod,
     StyleContextRef, StyledItem, SurfaceSide, SurfaceSideStyle, SurfaceSideStyleEntry,
     SurfaceStyleFillArea, SurfaceStyleRendering, SurfaceStyleRenderingData,
-    SurfaceStyleRenderingWithProperties, SurfaceStyleUsage, SymbolColour, TextStyleForDefinedFont,
-    ViewVolume, VisualizationPool,
+    SurfaceStyleRenderingWithProperties, SurfaceStyleUsage, SymbolColour, SymbolStyle,
+    TextStyleForDefinedFont, ViewVolume, VisualizationPool,
 };

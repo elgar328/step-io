@@ -3100,6 +3100,41 @@ fn text_style_for_defined_font_round_trip() {
 }
 
 #[test]
+fn symbol_style_round_trip() {
+    use step_io::ir::visualization::{
+        Colour, ColourRgb, FoundedItem, SymbolColour, SymbolStyle, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let colour_id = viz.colours.push(Colour::Rgb(ColourRgb {
+        name: String::new(),
+        red: 0.5,
+        green: 0.5,
+        blue: 0.5,
+    }));
+    let sc_id = viz.symbol_colours.push(SymbolColour {
+        colour_of_symbol: colour_id,
+    });
+    viz.founded_items
+        .push(FoundedItem::SymbolStyle(SymbolStyle {
+            name: "ss".into(),
+            style_of_symbol: sc_id,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    let count = re_viz
+        .founded_items
+        .iter()
+        .filter(|f| matches!(f, FoundedItem::SymbolStyle(_)))
+        .count();
+    assert_eq!(count, 1);
+}
+
+#[test]
 fn symbol_colour_round_trip() {
     // SYMBOL_COLOUR (phase symbol-colour).
     use step_io::ir::visualization::{Colour, ColourRgb, SymbolColour, VisualizationPool};
