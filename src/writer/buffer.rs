@@ -657,9 +657,14 @@ impl<'m> WriteBuffer<'m> {
         self.emit_draughting_callouts();
         // DRAUGHTING_CALLOUT_RELATIONSHIP — after draughting_callouts.
         self.emit_draughting_callout_relationships();
+        // DRAUGHTING_MODEL — delayed emit (Mdgpr pattern). At this point
+        // every items ref cache (styled_item, ao, draughting_callout,
+        // representation_item, per-geometry placements) is populated, so
+        // the items refs serialise to valid step ids.
+        self.emit_draughting_models()?;
         // DRAUGHTING_MODEL_ITEM_ASSOCIATION — after representation chain
-        // (`representation_step_ids`), `ao_step_ids`, and
-        // `draughting_callout_step_ids`.
+        // (`representation_step_ids` now includes DraughtingModel slots),
+        // `ao_step_ids`, and `draughting_callout_step_ids`.
         self.emit_dmia();
         self.emit_plm_if_set()?;
         self.emit_properties_if_set();

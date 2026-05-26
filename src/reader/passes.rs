@@ -450,6 +450,10 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass8TextLiteral);
         // COMPOSITE_TEXT — depends on text_literal_id_map just filled.
         self.dispatch_registry(graph, PassLevel::Pass8CompositeText);
+        // DRAUGHTING_MODEL — depends on Pass7 ids for items (styled_item,
+        // annotation_occurrence, draughting_callout). Must run before
+        // Pass8Dmia so DMIA's `used_representation` resolves.
+        self.dispatch_registry(graph, PassLevel::Pass8DraughtingModel);
         // DRAUGHTING_MODEL_ITEM_ASSOCIATION — depends on repr_id_map +
         // annotation_occurrence_id_map + draughting_callout_id_map.
         self.dispatch_registry(graph, PassLevel::Pass8Dmia);

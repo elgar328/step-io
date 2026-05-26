@@ -354,12 +354,39 @@ impl WriteBuffer<'_> {
     /// `[geometry reprs (Pass 6), MDGPR (Pass 7)]`, so the geometry reprs
     /// form a contiguous prefix and the appended `MDGPR` slots stay aligned
     /// with their `RepresentationId`s.
+    /// Emit the `Representation::DraughtingModel` arena entries (phase
+    /// draughting-model). Called from `emit_pools` after the visualization
+    /// / annotation / callout passes so every `items` ref cache
+    /// (styled_item / ao / draughting_callout / representation_item /
+    /// per-geometry placement) is populated. Appends to
+    /// `representation_step_ids` in arena id order — Mdgpr (Pass7) entries
+    /// have already been pushed by the visualization pass and Pass8
+    /// DraughtingModel entries follow them.
+    pub(in crate::writer::buffer) fn emit_draughting_models(&mut self) -> Result<(), WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::shape_rep::draughting_model::DraughtingModelHandler;
+        let reprs = self.model.representations.clone();
+        for repr in reprs.iter() {
+            if let Representation::DraughtingModel(dm) = repr {
+                let step_id = DraughtingModelHandler::write(self, dm.clone())?;
+                self.representation_step_ids.push(step_id);
+            }
+        }
+        Ok(())
+    }
+
     pub(in crate::writer::buffer) fn emit_representations_pre_pass(
         &mut self,
     ) -> Result<(), WriteError> {
         let reprs = self.model.representations.clone();
         for repr in reprs.iter() {
-            if let Representation::Mdgpr(_) = repr {
+            // Mdgpr (visualization pass) and DraughtingModel (post-callout
+            // pass) are emitted later — their `items` refs depend on
+            // step-id caches that this pre-pass cannot populate.
+            if matches!(
+                repr,
+                Representation::Mdgpr(_) | Representation::DraughtingModel(_)
+            ) {
                 continue;
             }
             let step_id = self.emit_representation(repr)?;
@@ -463,6 +490,11 @@ impl WriteBuffer<'_> {
             }
             Representation::Mdgpr(_) => {
                 unreachable!("MDGPR is emitted by the visualization pass, not the pre-emit pass")
+            }
+            Representation::DraughtingModel(_) => {
+                unreachable!(
+                    "DRAUGHTING_MODEL is emitted by emit_draughting_models, not the pre-emit pass"
+                )
             }
             Representation::ShapeDimensionRepresentation(r) => {
                 use crate::entities::shape_rep::shape_dimension_representation::ShapeDimensionRepresentationHandler;

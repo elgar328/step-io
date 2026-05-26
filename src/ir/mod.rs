@@ -121,7 +121,7 @@ pub use shape_aspect_ref::ShapeAspectRef;
 pub use shape_rep::{
     AdvancedBrepRepr, AllAroundShapeAspect, AngleUnit, CentreOfSymmetry,
     CharacterizedItemWithinRepresentation, CharacterizedObject, CharacterizedObjectData,
-    CompositeGroupShapeAspect, DatumSystem, DatumTarget, DescriptiveItem,
+    CompositeGroupShapeAspect, DatumSystem, DatumTarget, DescriptiveItem, DraughtingModel,
     IntegerRepresentationItem, LengthUncertainty, LengthUnit, ManifoldSurfaceRepr, MappedItem,
     MappedItemData, Mdgpr, NumericRepresentationItem, PlacedDatumTargetFeature, PlainRepr,
     RealRepresentationItem, Representation, RepresentationMap, RepresentationMapData, ShapeAspect,

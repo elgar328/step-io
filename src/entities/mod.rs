@@ -336,6 +336,11 @@ pub(crate) enum PassLevel {
     /// `COMPOSITE_TEXT` (phase text-literal). Depends on
     /// `Pass8TextLiteral` (`text_literal_id_map`).
     Pass8CompositeText,
+    /// `DRAUGHTING_MODEL` (phase draughting-model). Depends on Pass7 ids
+    /// for `items` (`styled_item` / `annotation_occurrence` /
+    /// `draughting_callout` `id_maps`). Runs before `Pass8Dmia` so a DMIA's
+    /// `used_representation` can resolve via `repr_id_map`.
+    Pass8DraughtingModel,
     /// `DRAUGHTING_MODEL_ITEM_ASSOCIATION` (phase dmia). Depends on
     /// `repr_id_map`, `annotation_occurrence_id_map`, and
     /// `draughting_callout_id_map` — all populated by their respective

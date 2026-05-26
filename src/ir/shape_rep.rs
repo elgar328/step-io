@@ -124,6 +124,24 @@ pub enum Representation {
     /// `dimension_representation_item` SELECT entries (placement is not
     /// the typical case).
     ShapeDimensionRepresentation(ShapeDimensionRepresentation),
+    /// `DRAUGHTING_MODEL` (phase draughting-model). Carries a `set_select`
+    /// of `draughting_model_item_select` members (`STYLED_ITEM` /
+    /// `ANNOTATION_PLANE` / `DRAUGHTING_CALLOUT` etc.) inside a
+    /// representation wrapper. Emit is delayed (Mdgpr pattern) — skipped in
+    /// the pre-pass and written after the visualization / annotation /
+    /// callout passes so every `items` ref cache is populated. Complex-MI
+    /// multi-inheritance forms (`(CHARACTERIZED_OBJECT ... DRAUGHTING_MODEL ...)`)
+    /// are not modelled in this phase.
+    DraughtingModel(DraughtingModel),
+}
+
+/// `DRAUGHTING_MODEL(name, items, context_of_items)` — `representation`
+/// subtype carrying a heterogeneous `set_select` of drafting items.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DraughtingModel {
+    pub name: String,
+    pub items: Vec<crate::ir::representation_item::RepresentationItemRef>,
+    pub context: Option<UnitContextId>,
 }
 
 /// `characterized_object` `concrete_supertype` enum (phase

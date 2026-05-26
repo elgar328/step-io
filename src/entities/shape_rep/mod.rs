@@ -15,6 +15,7 @@ pub mod characterized_item_within_representation;
 pub mod datum_system;
 pub mod datum_target;
 pub mod descriptive_representation_item;
+pub mod draughting_model;
 pub mod gbssr;
 pub mod gbwsr;
 pub mod global_unit_assigned_context;
