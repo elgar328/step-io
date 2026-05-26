@@ -162,6 +162,42 @@ impl WriteBuffer<'_> {
         }
     }
 
+    /// Emit the `presentation_representations` + `presentation_sets`
+    /// arenas (phase pr-core). Delayed emit — depends on every item ref
+    /// cache (`styled_item` / `repr` / `repr_item` / per-geometry placements)
+    /// populated by earlier passes.
+    pub(in crate::writer::buffer) fn emit_presentation_repr_cluster(
+        &mut self,
+    ) -> Result<(), WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::visualization::presentation_representation::{
+            PresentationAreaHandler, PresentationSetHandler, PresentationViewHandler,
+        };
+        use crate::ir::visualization::PresentationRepresentation;
+        let Some(viz) = self.model.visualization.clone() else {
+            return Ok(());
+        };
+        self.presentation_representation_step_ids =
+            Vec::with_capacity(viz.presentation_representations.len());
+        for repr in viz.presentation_representations.iter() {
+            let step = match repr {
+                PresentationRepresentation::View(d) => {
+                    PresentationViewHandler::write(self, d.clone())?
+                }
+                PresentationRepresentation::Area(d) => {
+                    PresentationAreaHandler::write(self, d.clone())?
+                }
+            };
+            self.presentation_representation_step_ids.push(step);
+        }
+        self.presentation_set_step_ids = Vec::with_capacity(viz.presentation_sets.len());
+        for set in viz.presentation_sets.iter() {
+            let step = PresentationSetHandler::write(self, set.clone())?;
+            self.presentation_set_step_ids.push(step);
+        }
+        Ok(())
+    }
+
     /// Emit the `invisibilities` arena (phase invisibility). Called from
     /// `emit_pools` after `emit_draughting_callouts` and
     /// `emit_draughting_models` so every `invisible_item` cache

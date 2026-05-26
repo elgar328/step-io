@@ -78,6 +78,14 @@ pub struct ReaderContext {
     pub(crate) gisu_id_map: HashMap<u64, crate::ir::id::GeometricItemSpecificUsageId>,
     /// `INVISIBILITY` step id → arena id (phase invisibility).
     pub(crate) invisibility_id_map: HashMap<u64, crate::ir::id::InvisibilityId>,
+    /// `PRESENTATION_VIEW` / `PRESENTATION_AREA` step id → arena id
+    /// (phase pr-core). Both variants share the same `PresentationRepresentationId`
+    /// space — `area_in_set.area` / `presentation_size.unit` resolve here.
+    pub(crate) presentation_representation_id_map:
+        HashMap<u64, crate::ir::id::PresentationRepresentationId>,
+    /// `PRESENTATION_SET` step id → arena id (phase pr-core). Consumed by
+    /// `area_in_set.in_set`.
+    pub(crate) presentation_set_id_map: HashMap<u64, crate::ir::id::PresentationSetId>,
     /// `REPRESENTATION_CONTEXT #N → UnitContextId` populated by Pass 0-2.
     /// Used by representation converters (ABSR, MSSR, plain SR, GBWSR, GBSSR,
     /// MDGPR) to translate their `context_of_items` ref into an `UnitContextId`.

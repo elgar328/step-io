@@ -102,6 +102,16 @@ pub struct VisualizationPool {
     /// representations) as not to render. `CONTEXT_DEPENDENT_INVISIBILITY`
     /// subtype not modelled.
     pub invisibilities: Arena<Invisibility>,
+    /// `presentation_representation` enum arena (phase pr-core) — covers
+    /// `PRESENTATION_VIEW` + `PRESENTATION_AREA`. Stored on the
+    /// visualization pool for ergonomic colocation with other
+    /// presentation-domain entities even though the blueprint pool tag
+    /// is `shape_rep`.
+    pub presentation_representations: Arena<PresentationRepresentation>,
+    /// `PRESENTATION_SET` arena (phase pr-core). Blueprint omits this
+    /// entity; step-io carries a minimal `name`-only struct so
+    /// `AREA_IN_SET.in_set` references resolve.
+    pub presentation_sets: Arena<PresentationSet>,
     /// `composite_text` arena (phase text-literal). Groups two or more
     /// `text_or_character` elements (currently narrowed to
     /// [`TextLiteral`] references) into a composite drafting label.
@@ -624,6 +634,34 @@ pub enum BoxCharacteristic {
     SlantAngle(f64),
     /// `BOX_ROTATE_ANGLE(plane_angle_measure)`.
     RotateAngle(f64),
+}
+
+/// `presentation_representation` blueprint enum (phase pr-core) —
+/// abstract supertype with two `in_enum` variants. Both variants share
+/// the inherited `representation` body (name + items + context).
+#[derive(Debug, Clone, PartialEq)]
+pub enum PresentationRepresentation {
+    /// `PRESENTATION_VIEW(name, items, context_of_items)`.
+    View(PresentationReprData),
+    /// `PRESENTATION_AREA(name, items, context_of_items)`.
+    Area(PresentationReprData),
+}
+
+/// Shared body for `PRESENTATION_VIEW` / `PRESENTATION_AREA` simple
+/// instances.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PresentationReprData {
+    pub name: String,
+    pub items: Vec<crate::ir::representation_item::RepresentationItemRef>,
+    pub context: Option<crate::ir::shape_rep::RepresentationContextRef>,
+}
+
+/// `PRESENTATION_SET` — blueprint omits this entity; step-io carries a
+/// minimal struct (name only) so `AREA_IN_SET.in_set` references resolve
+/// during read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PresentationSet {
+    pub name: String,
 }
 
 /// `INVISIBILITY(invisible_items)` — phase invisibility. Marks a set of

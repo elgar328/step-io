@@ -463,6 +463,9 @@ impl ReaderContext {
         // INVISIBILITY — depends on styled_item / repr / draughting_callout
         // id maps.
         self.dispatch_registry(graph, PassLevel::Pass8Invisibility);
+        // PRESENTATION_VIEW / PRESENTATION_AREA / PRESENTATION_SET — needs
+        // placement / repr_item / context maps populated.
+        self.dispatch_registry(graph, PassLevel::Pass8PrCore);
     }
 
     /// Walk every entity in `graph` (id-sorted via `BTreeMap`) and dispatch

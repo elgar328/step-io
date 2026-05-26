@@ -199,6 +199,14 @@ pub(crate) struct WriteBuffer<'m> {
     /// `InvisibilityId.0`. Retained for symmetry — no other entity
     /// references this cache.
     pub(crate) invisibility_step_ids: Vec<u64>,
+    /// Emitted `PRESENTATION_VIEW` / `PRESENTATION_AREA` step ids (phase
+    /// pr-core), indexed by `PresentationRepresentationId.0`. Consumed by
+    /// `AREA_IN_SET` and `PRESENTATION_SIZE` emitters in subsequent
+    /// sub-phases.
+    pub(crate) presentation_representation_step_ids: Vec<u64>,
+    /// Emitted `PRESENTATION_SET` step ids (phase pr-core), indexed by
+    /// `PresentationSetId.0`. Consumed by `AREA_IN_SET.in_set`.
+    pub(crate) presentation_set_step_ids: Vec<u64>,
     /// STEP entity id of every emitted curve-font entity
     /// (`PRE_DEFINED_CURVE_FONT` / `DRAUGHTING_PRE_DEFINED_CURVE_FONT`),
     /// indexed by `PreDefinedCurveFontId.0`. Consumed by the `CURVE_STYLE`
@@ -448,6 +456,8 @@ impl<'m> WriteBuffer<'m> {
             unitless_context_step_ids: Vec::new(),
             gisu_step_ids: Vec::new(),
             invisibility_step_ids: Vec::new(),
+            presentation_representation_step_ids: Vec::new(),
+            presentation_set_step_ids: Vec::new(),
             pre_defined_curve_font_step_ids: Vec::new(),
             pre_defined_symbol_step_ids: Vec::new(),
             curve_style_step_ids: Vec::new(),
@@ -694,6 +704,9 @@ impl<'m> WriteBuffer<'m> {
         // `emit_visualization_if_set` panics on corpora that reference
         // `DRAUGHTING_CALLOUT` since that cache is filled later.
         self.emit_invisibilities()?;
+        // PRESENTATION_VIEW / AREA / SET — depends on repr_item and per-
+        // geometry placement caches (all populated above).
+        self.emit_presentation_repr_cluster()?;
         self.emit_plm_if_set()?;
         self.emit_properties_if_set();
         self.emit_form_features_if_set()?;
