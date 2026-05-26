@@ -15,6 +15,7 @@ pub mod draughting_pre_defined_curve_font;
 pub mod fill_area_style;
 pub mod fill_area_style_colour;
 pub mod over_riding_styled_item;
+pub mod point_style;
 pub mod pre_defined_curve_font;
 pub mod pre_defined_marker;
 pub mod pre_defined_symbol;

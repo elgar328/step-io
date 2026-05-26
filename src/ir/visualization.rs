@@ -7,9 +7,9 @@
 
 use super::arena::Arena;
 use super::id::{
-    ColourId, CurveStyleId, FoundedItemId, Placement3dId, PlanarExtentId, PointId,
-    PreDefinedCurveFontId, PresentationStyleAssignmentId, StyledItemId, SurfaceStyleRenderingId,
-    SymbolColourId,
+    ColourId, CurveStyleId, FoundedItemId, MeasureWithUnitId, Placement3dId, PlanarExtentId,
+    PointId, PreDefinedCurveFontId, PreDefinedMarkerId, PresentationStyleAssignmentId,
+    StyledItemId, SurfaceStyleRenderingId, SymbolColourId,
 };
 use super::representation_item::RepresentationItemRef;
 use super::shape_rep::Mdgpr;
@@ -126,6 +126,59 @@ pub enum FoundedItem {
     /// `SYMBOL_STYLE` — a `founded_item` subtype carrying a
     /// [`SymbolColour`] reference (phase symbol-style).
     SymbolStyle(SymbolStyle),
+    /// `POINT_STYLE` — a `founded_item` subtype carrying marker / size /
+    /// colour attributes (phase point-style).
+    PointStyle(PointStyle),
+}
+
+/// `POINT_STYLE(name, marker, marker_size, marker_colour)` —
+/// `founded_item` subtype. The `marker` SELECT covers either a
+/// `MarkerType` ENUM token or a `PreDefinedMarker` reference; the
+/// `marker_size` SELECT covers typed primitives
+/// (`POSITIVE_LENGTH_MEASURE` / `DESCRIPTIVE_MEASURE`) and a
+/// `MeasureWithUnit` reference. Any unresolved ref drops the occurrence
+/// (symmetric on re-read).
+#[derive(Debug, Clone, PartialEq)]
+pub struct PointStyle {
+    pub name: String,
+    pub marker: Marker,
+    pub marker_size: MarkerSize,
+    pub marker_colour: ColourId,
+}
+
+/// `marker_select` SELECT — either a `marker_type` ENUM or a
+/// `pre_defined_marker` reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Marker {
+    Predefined(PreDefinedMarkerId),
+    Type(MarkerType),
+}
+
+/// `marker_type` ENUMERATION OF (dot, x, plus, asterisk, ring, square,
+/// triangle). `Other` preserves any unmodelled token verbatim for
+/// round-trip safety.
+#[derive(Debug, Clone, PartialEq)]
+pub enum MarkerType {
+    Dot,
+    X,
+    Plus,
+    Asterisk,
+    Ring,
+    Square,
+    Triangle,
+    Other(String),
+}
+
+/// `size_select` SELECT — typed primitives or a `MeasureWithUnit`
+/// reference.
+#[derive(Debug, Clone, PartialEq)]
+pub enum MarkerSize {
+    /// `POSITIVE_LENGTH_MEASURE(real)`.
+    PositiveLength(f64),
+    /// `ref_measure_with_unit`.
+    MeasureWithUnit(MeasureWithUnitId),
+    /// `DESCRIPTIVE_MEASURE(text)`.
+    Descriptive(String),
 }
 
 /// `SYMBOL_STYLE(name, style_of_symbol)` — `founded_item` subtype

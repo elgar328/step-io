@@ -316,6 +316,9 @@ pub(crate) enum PassLevel {
     /// `SYMBOL_STYLE` (phase symbol-style). Depends on `Pass7SymbolColour`
     /// for the `style_of_symbol` ref.
     Pass7SymbolStyle,
+    /// `POINT_STYLE` (phase point-style). Depends on `Pass7Colour`
+    /// (`viz_colour_id_map`) + `viz_pre_defined_marker_id_map` + `mwu_id_map`.
+    Pass7PointStyle,
     /// `TEXT_STYLE_FOR_DEFINED_FONT` (phase text-style-font). Same
     /// timing as `Pass7SymbolColour` — depends on `Pass7Colour`.
     Pass7TextStyleForDefinedFont,

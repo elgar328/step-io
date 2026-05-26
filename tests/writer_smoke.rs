@@ -3100,6 +3100,45 @@ fn text_style_for_defined_font_round_trip() {
 }
 
 #[test]
+fn point_style_round_trip() {
+    use step_io::ir::visualization::{
+        Colour, ColourRgb, FoundedItem, Marker, MarkerSize, PointStyle, PreDefinedMarker,
+        PreDefinedMarkerData, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let colour_id = viz.colours.push(Colour::Rgb(ColourRgb {
+        name: String::new(),
+        red: 0.0,
+        green: 1.0,
+        blue: 0.0,
+    }));
+    let marker_id = viz
+        .pre_defined_markers
+        .push(PreDefinedMarker::Plain(PreDefinedMarkerData {
+            name: "x".into(),
+        }));
+    viz.founded_items.push(FoundedItem::PointStyle(PointStyle {
+        name: String::new(),
+        marker: Marker::Predefined(marker_id),
+        marker_size: MarkerSize::PositiveLength(0.7),
+        marker_colour: colour_id,
+    }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    let count = re_viz
+        .founded_items
+        .iter()
+        .filter(|f| matches!(f, FoundedItem::PointStyle(_)))
+        .count();
+    assert_eq!(count, 1);
+}
+
+#[test]
 fn symbol_style_round_trip() {
     use step_io::ir::visualization::{
         Colour, ColourRgb, FoundedItem, SymbolColour, SymbolStyle, VisualizationPool,

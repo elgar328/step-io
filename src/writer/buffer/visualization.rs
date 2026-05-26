@@ -333,6 +333,12 @@ impl WriteBuffer<'_> {
                 self.founded_item_step_ids[idx] = SymbolStyleHandler::write(self, ss.clone())?;
             }
         }
+        for (idx, item) in founded_items.iter().enumerate() {
+            if let FoundedItem::PointStyle(ps) = item {
+                use crate::entities::visualization::point_style::PointStyleHandler;
+                self.founded_item_step_ids[idx] = PointStyleHandler::write(self, ps.clone())?;
+            }
+        }
         Ok(())
     }
 }
