@@ -191,6 +191,10 @@ pub(crate) struct WriteBuffer<'m> {
     /// `repr_context_attr` when a representation's `context_of_items`
     /// resolves to a `RepresentationContextRef::Unitless`.
     pub(crate) unitless_context_step_ids: Vec<u64>,
+    /// Emitted `GEOMETRIC_ITEM_SPECIFIC_USAGE` step ids (phase gisu),
+    /// indexed by `GeometricItemSpecificUsageId.0`. No other entity
+    /// currently references the cache; retained for symmetry with DMIA.
+    pub(crate) gisu_step_ids: Vec<u64>,
     /// STEP entity id of every emitted curve-font entity
     /// (`PRE_DEFINED_CURVE_FONT` / `DRAUGHTING_PRE_DEFINED_CURVE_FONT`),
     /// indexed by `PreDefinedCurveFontId.0`. Consumed by the `CURVE_STYLE`
@@ -438,6 +442,7 @@ impl<'m> WriteBuffer<'m> {
             text_literal_step_ids: Vec::new(),
             dmia_step_ids: Vec::new(),
             unitless_context_step_ids: Vec::new(),
+            gisu_step_ids: Vec::new(),
             pre_defined_curve_font_step_ids: Vec::new(),
             pre_defined_symbol_step_ids: Vec::new(),
             curve_style_step_ids: Vec::new(),
@@ -676,6 +681,8 @@ impl<'m> WriteBuffer<'m> {
         // (`representation_step_ids` now includes DraughtingModel slots),
         // `ao_step_ids`, and `draughting_callout_step_ids`.
         self.emit_dmia();
+        // GEOMETRIC_ITEM_SPECIFIC_USAGE — same dependencies as DMIA.
+        self.emit_gisu();
         self.emit_plm_if_set()?;
         self.emit_properties_if_set();
         self.emit_form_features_if_set()?;

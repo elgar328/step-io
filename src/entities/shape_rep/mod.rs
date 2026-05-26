@@ -18,6 +18,7 @@ pub mod descriptive_representation_item;
 pub mod draughting_model;
 pub mod gbssr;
 pub mod gbwsr;
+pub mod geometric_item_specific_usage;
 pub mod global_unit_assigned_context;
 pub mod item_defined_transformation;
 pub mod manifold_surface_shape_representation;

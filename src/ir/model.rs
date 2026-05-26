@@ -167,6 +167,11 @@ pub struct StepModel {
     /// pcurve coordinate spaces. Referenced by representation
     /// `context_of_items` via [`RepresentationContextRef::Unitless`].
     pub unitless_contexts: Arena<crate::ir::shape_rep::UnitlessContext>,
+    /// `GEOMETRIC_ITEM_SPECIFIC_USAGE` arena (phase gisu). Binds a
+    /// shape-aspect-family `definition` and a `representation_item`
+    /// `identified_item` to a `SHAPE_REPRESENTATION` parent — sibling of
+    /// `DRAUGHTING_MODEL_ITEM_ASSOCIATION` (pmi pool).
+    pub geometric_item_specific_usages: Arena<crate::ir::shape_rep::GeometricItemSpecificUsage>,
     /// Assembly tree. `None` when the STEP file contains no `PRODUCT`
     /// entities (single-part files). `AssemblyTree.roots` lists every
     /// top-level product (a forest for multi-part files); instances are

@@ -68,6 +68,14 @@ pub struct ReaderContext {
     /// Unit-less `(GRC PRC REP_CONTEXT)` complex MI contexts (phase
     /// unitless-context). Populated by `ParametricRepresentationContextHandler`.
     pub(crate) unitless_contexts: Arena<crate::ir::shape_rep::UnitlessContext>,
+    /// `GEOMETRIC_ITEM_SPECIFIC_USAGE` arena (phase gisu). Populated by
+    /// `GeometricItemSpecificUsageHandler`.
+    pub(crate) geometric_item_specific_usages:
+        Arena<crate::ir::shape_rep::GeometricItemSpecificUsage>,
+    /// `GEOMETRIC_ITEM_SPECIFIC_USAGE` step id → arena id (phase gisu).
+    /// No step-io entity references GISU today; the map is retained for
+    /// symmetry with sibling handlers.
+    pub(crate) gisu_id_map: HashMap<u64, crate::ir::id::GeometricItemSpecificUsageId>,
     /// `REPRESENTATION_CONTEXT #N → UnitContextId` populated by Pass 0-2.
     /// Used by representation converters (ABSR, MSSR, plain SR, GBWSR, GBSSR,
     /// MDGPR) to translate their `context_of_items` ref into an `UnitContextId`.
@@ -668,6 +676,7 @@ impl ReaderContext {
                 topology: ctx.topology,
                 units: ctx.units,
                 unitless_contexts: ctx.unitless_contexts,
+                geometric_item_specific_usages: ctx.geometric_item_specific_usages,
                 assembly: ctx.assembly,
                 schema: graph.schema.clone(),
                 header,

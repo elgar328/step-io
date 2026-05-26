@@ -33,9 +33,9 @@ use super::property::{
 use super::representation_item::RepresentationItem;
 use super::shape_rep::{
     AllAroundShapeAspect, CentreOfSymmetry, CharacterizedObject, CompositeGroupShapeAspect,
-    DatumSystem, DatumTarget, MappedItem, NumericRepresentationItem, PlacedDatumTargetFeature,
-    Representation, RepresentationMap, ShapeAspect, ShapeAspectRelationship, ToleranceZone,
-    UnitContext, UnitlessContext,
+    DatumSystem, DatumTarget, GeometricItemSpecificUsage, MappedItem, NumericRepresentationItem,
+    PlacedDatumTargetFeature, Representation, RepresentationMap, ShapeAspect,
+    ShapeAspectRelationship, ToleranceZone, UnitContext, UnitlessContext,
 };
 use super::tessellation::{
     ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, TessellatedItem,
@@ -199,6 +199,9 @@ define_id!(
     DraughtingModelItemAssociationId,
     DraughtingModelItemAssociation
 );
+
+// geometric_item_specific_usage arena (Phase gisu).
+define_id!(GeometricItemSpecificUsageId, GeometricItemSpecificUsage);
 
 // pre_defined_marker enum arena (Phase pre-defined-marker).
 define_id!(PreDefinedMarkerId, PreDefinedMarker);

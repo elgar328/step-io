@@ -457,6 +457,9 @@ impl ReaderContext {
         // DRAUGHTING_MODEL_ITEM_ASSOCIATION — depends on repr_id_map +
         // annotation_occurrence_id_map + draughting_callout_id_map.
         self.dispatch_registry(graph, PassLevel::Pass8Dmia);
+        // GEOMETRIC_ITEM_SPECIFIC_USAGE — depends on shape_aspect family
+        // id maps + repr_id_map + representation_item arenas.
+        self.dispatch_registry(graph, PassLevel::Pass8Gisu);
     }
 
     /// Walk every entity in `graph` (id-sorted via `BTreeMap`) and dispatch

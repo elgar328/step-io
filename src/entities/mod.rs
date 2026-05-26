@@ -346,6 +346,10 @@ pub(crate) enum PassLevel {
     /// `draughting_callout_id_map` — all populated by their respective
     /// earlier passes. Scheduled last in the Pass8 block.
     Pass8Dmia,
+    /// `GEOMETRIC_ITEM_SPECIFIC_USAGE` (phase gisu). Depends on
+    /// `shape_aspect_*_id_map`s, `repr_id_map`, and the typed
+    /// `representation_item` arenas via `resolve_representation_item_ref`.
+    Pass8Gisu,
     /// plm Date/Time leaves (Pass 9-1) — `CALENDAR_DATE`,
     /// `COORDINATED_UNIVERSAL_TIME_OFFSET`, `DATE_TIME_ROLE`. No external deps.
     Pass9PlmDateLeaves,

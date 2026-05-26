@@ -155,6 +155,21 @@ pub enum Representation {
     DraughtingModel(DraughtingModel),
 }
 
+/// `GEOMETRIC_ITEM_SPECIFIC_USAGE(name, description, definition,
+/// used_representation, identified_item)` — phase gisu. Sibling of
+/// `DRAUGHTING_MODEL_ITEM_ASSOCIATION` (both subtype
+/// `item_identified_representation_usage`) but with shape-aspect-flavoured
+/// `definition` and `representation_item`-flavoured `identified_item`
+/// narrowing.
+#[derive(Debug, Clone, PartialEq)]
+pub struct GeometricItemSpecificUsage {
+    pub name: String,
+    pub description: Option<String>,
+    pub definition: ShapeAspectRef,
+    pub used_representation: RepresentationId,
+    pub identified_item: crate::ir::representation_item::RepresentationItemRef,
+}
+
 /// `DRAUGHTING_MODEL(name, items, context_of_items)` — `representation`
 /// subtype carrying a heterogeneous `set_select` of drafting items.
 #[derive(Debug, Clone, PartialEq)]

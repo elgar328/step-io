@@ -162,6 +162,25 @@ impl WriteBuffer<'_> {
         }
     }
 
+    /// Emit the `geometric_item_specific_usages` arena (phase gisu).
+    /// Sibling of `emit_dmia` — same dependencies (shape-aspect family
+    /// step ids, representation step ids, `representation_item` step ids).
+    pub(in crate::writer::buffer) fn emit_gisu(&mut self) {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::shape_rep::geometric_item_specific_usage::GeometricItemSpecificUsageHandler;
+        let entries: Vec<_> = self
+            .model
+            .geometric_item_specific_usages
+            .iter()
+            .cloned()
+            .collect();
+        self.gisu_step_ids = Vec::with_capacity(entries.len());
+        for gisu in entries {
+            let step = GeometricItemSpecificUsageHandler::write(self, gisu).unwrap_or(0);
+            self.gisu_step_ids.push(step);
+        }
+    }
+
     /// Emit the `annotation_occurrence` arena (`ANNOTATION_PLANE` /
     /// `TESSELLATED_ANNOTATION_OCCURRENCE`). Called after
     /// `emit_visualization_if_set` (`styles` → `psa_step_ids`) and after
