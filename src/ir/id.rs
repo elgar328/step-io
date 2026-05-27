@@ -43,10 +43,11 @@ use super::tessellation::{
 use super::topology::{Edge, Face, Shell, Solid, Wire};
 use super::units::{DerivedUnit, DerivedUnitElement, MeasureWithUnit, NamedUnit};
 use super::visualization::{
-    CameraModel, Colour, CompositeText, CurveStyle, FoundedItem, Invisibility, PreDefinedCurveFont,
-    PreDefinedMarker, PreDefinedSymbol, PresentationLayerAssignment, PresentationRepresentation,
-    PresentationSet, PresentationStyleAssignment, StyledItem, SurfaceStyleRendering, SymbolColour,
-    TextLiteral, TextStyle, TextStyleForDefinedFont,
+    AreaInSet, CameraModel, Colour, CompositeText, CurveStyle, FoundedItem, Invisibility,
+    PreDefinedCurveFont, PreDefinedMarker, PreDefinedSymbol, PresentationLayerAssignment,
+    PresentationRepresentation, PresentationSet, PresentationSize, PresentationStyleAssignment,
+    StyledItem, SurfaceStyleRendering, SymbolColour, TextLiteral, TextStyle,
+    TextStyleForDefinedFont,
 };
 
 // Geometry Ids (3D)
@@ -211,6 +212,11 @@ define_id!(PresentationRepresentationId, PresentationRepresentation);
 // presentation_set arena (Phase pr-core). 청사진 미정의 — minimal carrier
 // for area_in_set INVERSE reference resolution.
 define_id!(PresentationSetId, PresentationSet);
+
+// area_in_set arena (Phase pr-size).
+define_id!(AreaInSetId, AreaInSet);
+// presentation_size arena (Phase pr-size).
+define_id!(PresentationSizeId, PresentationSize);
 
 // pre_defined_marker enum arena (Phase pre-defined-marker).
 define_id!(PreDefinedMarkerId, PreDefinedMarker);

@@ -112,6 +112,13 @@ pub struct VisualizationPool {
     /// entity; step-io carries a minimal `name`-only struct so
     /// `AREA_IN_SET.in_set` references resolve.
     pub presentation_sets: Arena<PresentationSet>,
+    /// `AREA_IN_SET` arena (phase pr-size). Binds a `PresentationArea`
+    /// representation to a `PresentationSet`.
+    pub area_in_sets: Arena<AreaInSet>,
+    /// `PRESENTATION_SIZE` arena (phase pr-size). 2D extent box paired
+    /// with a `presentation_size_assignment_select` (`PresentationView` /
+    /// `PresentationArea` / `AreaInSet`).
+    pub presentation_sizes: Arena<PresentationSize>,
     /// `composite_text` arena (phase text-literal). Groups two or more
     /// `text_or_character` elements (currently narrowed to
     /// [`TextLiteral`] references) into a composite drafting label.
@@ -662,6 +669,37 @@ pub struct PresentationReprData {
 #[derive(Debug, Clone, PartialEq)]
 pub struct PresentationSet {
     pub name: String,
+}
+
+/// `AREA_IN_SET(area, in_set)` — phase pr-size. Both refs must resolve
+/// at read time (otherwise the carrier is dropped). `area` narrows to a
+/// `PresentationRepresentation::Area` variant.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct AreaInSet {
+    pub area: crate::ir::id::PresentationRepresentationId,
+    pub in_set: crate::ir::id::PresentationSetId,
+}
+
+/// `PRESENTATION_SIZE(unit, size)` — phase pr-size. `size` references a
+/// `planar_box` (`PlanarExtent` arena's `PlanarBox` variant); `unit` is
+/// a 3-member SELECT classified into a `PresentationView` /
+/// `PresentationArea` / `AreaInSet` ref.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PresentationSize {
+    pub unit: PresentationSizeAssignment,
+    pub size: PlanarExtentId,
+}
+
+/// `presentation_size_assignment_select` SELECT — 3 members.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum PresentationSizeAssignment {
+    /// `presentation_view` member (narrow View variant of
+    /// `PresentationRepresentation`).
+    View(crate::ir::id::PresentationRepresentationId),
+    /// `presentation_area` member.
+    Area(crate::ir::id::PresentationRepresentationId),
+    /// `area_in_set` member.
+    AreaInSet(crate::ir::id::AreaInSetId),
 }
 
 /// `INVISIBILITY(invisible_items)` — phase invisibility. Marks a set of

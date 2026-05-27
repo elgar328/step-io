@@ -359,6 +359,10 @@ pub(crate) enum PassLevel {
     /// arenas, `repr_item_id_map` (for items list resolution), and
     /// `context_id_map` / `unitless_context_id_map` (for `context_of_items`).
     Pass8PrCore,
+    /// `AREA_IN_SET` + `PRESENTATION_SIZE` (phase pr-size). Depends on
+    /// `presentation_representation_id_map`, `presentation_set_id_map`,
+    /// and the `planar_extent` arena.
+    Pass8PrSize,
     /// plm Date/Time leaves (Pass 9-1) — `CALENDAR_DATE`,
     /// `COORDINATED_UNIVERSAL_TIME_OFFSET`, `DATE_TIME_ROLE`. No external deps.
     Pass9PlmDateLeaves,

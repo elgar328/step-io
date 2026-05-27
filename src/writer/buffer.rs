@@ -207,6 +207,9 @@ pub(crate) struct WriteBuffer<'m> {
     /// Emitted `PRESENTATION_SET` step ids (phase pr-core), indexed by
     /// `PresentationSetId.0`. Consumed by `AREA_IN_SET.in_set`.
     pub(crate) presentation_set_step_ids: Vec<u64>,
+    /// Emitted `AREA_IN_SET` step ids (phase pr-size), indexed by
+    /// `AreaInSetId.0`. Consumed by `PRESENTATION_SIZE.unit` SELECT.
+    pub(crate) area_in_set_step_ids: Vec<u64>,
     /// STEP entity id of every emitted curve-font entity
     /// (`PRE_DEFINED_CURVE_FONT` / `DRAUGHTING_PRE_DEFINED_CURVE_FONT`),
     /// indexed by `PreDefinedCurveFontId.0`. Consumed by the `CURVE_STYLE`
@@ -458,6 +461,7 @@ impl<'m> WriteBuffer<'m> {
             invisibility_step_ids: Vec::new(),
             presentation_representation_step_ids: Vec::new(),
             presentation_set_step_ids: Vec::new(),
+            area_in_set_step_ids: Vec::new(),
             pre_defined_curve_font_step_ids: Vec::new(),
             pre_defined_symbol_step_ids: Vec::new(),
             curve_style_step_ids: Vec::new(),
@@ -707,6 +711,8 @@ impl<'m> WriteBuffer<'m> {
         // PRESENTATION_VIEW / AREA / SET — depends on repr_item and per-
         // geometry placement caches (all populated above).
         self.emit_presentation_repr_cluster()?;
+        // AREA_IN_SET + PRESENTATION_SIZE — depends on pr-core step ids.
+        self.emit_pr_size()?;
         self.emit_plm_if_set()?;
         self.emit_properties_if_set();
         self.emit_form_features_if_set()?;

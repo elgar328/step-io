@@ -24,6 +24,7 @@ pub mod pre_defined_symbol;
 pub mod pre_defined_terminator_symbol;
 pub mod presentation_layer_assignment;
 pub mod presentation_representation;
+pub mod presentation_size;
 pub mod presentation_style_assignment;
 pub mod styled_item;
 pub mod surface_side_style;

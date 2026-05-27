@@ -466,6 +466,8 @@ impl ReaderContext {
         // PRESENTATION_VIEW / PRESENTATION_AREA / PRESENTATION_SET — needs
         // placement / repr_item / context maps populated.
         self.dispatch_registry(graph, PassLevel::Pass8PrCore);
+        // AREA_IN_SET + PRESENTATION_SIZE — depends on the pr-core id maps.
+        self.dispatch_registry(graph, PassLevel::Pass8PrSize);
     }
 
     /// Walk every entity in `graph` (id-sorted via `BTreeMap`) and dispatch

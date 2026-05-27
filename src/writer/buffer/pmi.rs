@@ -198,6 +198,28 @@ impl WriteBuffer<'_> {
         Ok(())
     }
 
+    /// Emit `area_in_set` + `presentation_size` arenas (phase pr-size).
+    /// Depends on `presentation_representation_step_ids`,
+    /// `presentation_set_step_ids`, and the planar-extent cache.
+    pub(in crate::writer::buffer) fn emit_pr_size(&mut self) -> Result<(), WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::visualization::presentation_size::{
+            AreaInSetHandler, PresentationSizeHandler,
+        };
+        let Some(viz) = self.model.visualization.clone() else {
+            return Ok(());
+        };
+        self.area_in_set_step_ids = Vec::with_capacity(viz.area_in_sets.len());
+        for ais in viz.area_in_sets.iter() {
+            let step = AreaInSetHandler::write(self, *ais)?;
+            self.area_in_set_step_ids.push(step);
+        }
+        for ps in viz.presentation_sizes.iter() {
+            let _ = PresentationSizeHandler::write(self, *ps)?;
+        }
+        Ok(())
+    }
+
     /// Emit the `invisibilities` arena (phase invisibility). Called from
     /// `emit_pools` after `emit_draughting_callouts` and
     /// `emit_draughting_models` so every `invisible_item` cache

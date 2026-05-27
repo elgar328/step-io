@@ -86,6 +86,9 @@ pub struct ReaderContext {
     /// `PRESENTATION_SET` step id → arena id (phase pr-core). Consumed by
     /// `area_in_set.in_set`.
     pub(crate) presentation_set_id_map: HashMap<u64, crate::ir::id::PresentationSetId>,
+    /// `AREA_IN_SET` step id → arena id (phase pr-size). Consumed by
+    /// `presentation_size.unit` SELECT.
+    pub(crate) area_in_set_id_map: HashMap<u64, crate::ir::id::AreaInSetId>,
     /// `REPRESENTATION_CONTEXT #N → UnitContextId` populated by Pass 0-2.
     /// Used by representation converters (ABSR, MSSR, plain SR, GBWSR, GBSSR,
     /// MDGPR) to translate their `context_of_items` ref into an `UnitContextId`.
