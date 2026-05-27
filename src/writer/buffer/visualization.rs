@@ -251,9 +251,18 @@ impl WriteBuffer<'_> {
         // CAMERA_MODEL_D3 — after emit_founded_item_arena so
         // `perspective_of_volume` resolves through `founded_item_step_ids`.
         for cm in viz.camera_models.iter() {
+            use crate::ir::visualization::CameraModel as CM;
             match cm {
-                crate::ir::visualization::CameraModel::CameraModelD3(d3) => {
+                CM::CameraModelD3(d3) => {
                     CameraModelD3Handler::write(self, d3.clone())?;
+                }
+                CM::CameraModelD3WithHlhsr(c) => {
+                    use crate::entities::visualization::camera_model_variants::CameraModelD3WithHlhsrHandler;
+                    CameraModelD3WithHlhsrHandler::write(self, c.clone())?;
+                }
+                CM::CameraModelD3MultiClipping(c) => {
+                    use crate::entities::visualization::camera_model_variants::CameraModelD3MultiClippingHandler;
+                    CameraModelD3MultiClippingHandler::write(self, c.clone())?;
                 }
             }
         }

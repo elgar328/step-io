@@ -1859,7 +1859,9 @@ fn camera_model_d3_round_trip() {
     let re = reconvert(&text);
     let viz = re.visualization.expect("viz pool");
     assert_eq!(viz.camera_models.len(), 1);
-    let CameraModel::CameraModelD3(cm) = viz.camera_models.iter().next().unwrap();
+    let CameraModel::CameraModelD3(cm) = viz.camera_models.iter().next().unwrap() else {
+        panic!("expected CameraModelD3");
+    };
     assert_eq!(cm.name, "cam");
 }
 

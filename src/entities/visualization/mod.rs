@@ -7,6 +7,7 @@
 //! because its dispatch boundary is `representation`.
 
 pub mod camera_model_d3;
+pub mod camera_model_variants;
 pub mod colour_rgb;
 pub mod composite_text;
 pub mod context_dependent_over_riding_styled_item;

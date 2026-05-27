@@ -263,11 +263,41 @@ pub struct ViewVolume {
 }
 
 /// `camera_model` `enum_base` — a camera projection model referenced by
-/// presentation views. Only the `CameraModelD3` subtype is modelled; the
-/// `_with_hlhsr` / `_multi_clipping` siblings are added as variants later.
+/// presentation views. Variants cover `CAMERA_MODEL_D3` (the dominant
+/// form) plus its `_with_hlhsr` / `_multi_clipping` subtypes.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CameraModel {
     CameraModelD3(CameraModelD3),
+    CameraModelD3WithHlhsr(CameraModelD3WithHlhsr),
+    CameraModelD3MultiClipping(CameraModelD3MultiClipping),
+}
+
+/// `CAMERA_MODEL_D3_WITH_HLHSR` — `camera_model_d3` SUBTYPE with one
+/// boolean attribute. Phase cm-variants.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CameraModelD3WithHlhsr {
+    pub inherited: CameraModelD3,
+    pub hidden_line_surface_removal: bool,
+}
+
+/// `CAMERA_MODEL_D3_MULTI_CLIPPING` — `camera_model_d3` SUBTYPE with a
+/// SET of `shape_clipping` SELECT entries (`camera_model_d3_multi_clipping_intersection`
+/// — modelled via the `Plane` surface narrow; the
+/// `camera_model_d3_multi_clipping_union` recursive variant is not
+/// modelled and source refs to it are silently dropped on read).
+#[derive(Debug, Clone, PartialEq)]
+pub struct CameraModelD3MultiClipping {
+    pub inherited: CameraModelD3,
+    pub shape_clipping: Vec<ShapeClipping>,
+}
+
+/// `camera_model_d3_multi_clipping_interection_select` SELECT — partial
+/// modelling: only the `plane` member is preserved.
+/// Source refs to `camera_model_d3_multi_clipping_union` are silently
+/// dropped on read.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ShapeClipping {
+    Plane(crate::ir::id::SurfaceId),
 }
 
 /// `CAMERA_MODEL_D3(name, view_reference_system, perspective_of_volume)` —
