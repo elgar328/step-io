@@ -8,6 +8,7 @@ pub mod axis2_placement_3d;
 pub mod b_spline_curve_2d_with_knots;
 pub mod b_spline_curve_with_knots;
 pub mod b_spline_surface_with_knots;
+pub mod bounded_pcurve;
 pub mod cartesian_point;
 pub mod cartesian_point_2d;
 pub mod circle;

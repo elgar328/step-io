@@ -585,19 +585,6 @@ impl<'m> WriteBuffer<'m> {
         for id in self.model.geometry.planar_extents.iter_ids() {
             self.emit_planar_extent(id)?;
         }
-        // CIRCULAR_AREA — orphan, after Point arena is emitted.
-        for ca in self
-            .model
-            .geometry
-            .circular_areas
-            .iter()
-            .cloned()
-            .collect::<Vec<_>>()
-        {
-            use crate::entities::SimpleEntityHandler;
-            use crate::entities::geometry::circular_area::CircularAreaHandler;
-            CircularAreaHandler::write(self, ca)?;
-        }
         for id in self.model.geometry.curves_2d.iter_ids() {
             self.emit_curve_2d(id)?;
         }
@@ -706,6 +693,37 @@ impl<'m> WriteBuffer<'m> {
         // representation_item arenas are emitted (DRI is re-emitted
         // inline by the handler).
         self.emit_compound_representation_items()?;
+        // CIRCULAR_AREA — orphan, no ref to representations or items.
+        for ca in self
+            .model
+            .geometry
+            .circular_areas
+            .iter()
+            .cloned()
+            .collect::<Vec<_>>()
+        {
+            use crate::entities::SimpleEntityHandler;
+            use crate::entities::geometry::circular_area::CircularAreaHandler;
+            CircularAreaHandler::write(self, ca)?;
+        }
+        // BOUNDED_PCURVE — orphan, references surface + representation.
+        for psc in self
+            .model
+            .geometry
+            .parameter_space_curves
+            .iter()
+            .cloned()
+            .collect::<Vec<_>>()
+        {
+            use crate::entities::SimpleEntityHandler;
+            use crate::entities::geometry::bounded_pcurve::BoundedPCurveHandler;
+            use crate::ir::geometry::ParameterSpaceCurve;
+            match psc {
+                ParameterSpaceCurve::BoundedPCurve(b) => {
+                    BoundedPCurveHandler::write(self, b)?;
+                }
+            }
+        }
         // REPRESENTATION_MAP + MAPPED_ITEM — after visualization so the
         // `representation_step_ids` cache covers MDGPR slots too.
         self.emit_mapped_items()?;

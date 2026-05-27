@@ -383,6 +383,10 @@ pub(crate) enum PassLevel {
     /// `resolve_representation_item_ref`. Scheduled at the tail of the
     /// Pass8 block so all sibling `representation_item` arenas are filled.
     Pass8CompoundRepItem,
+    /// `BOUNDED_PCURVE` (phase bpc) — `parameter_space_curve` SUBTYPE.
+    /// Depends on `surface_map` + `repr_id_map`. Scheduled at the tail
+    /// of the Pass8 block.
+    Pass8BoundedPCurve,
     /// `SYMBOL_TARGET` (phase ds-st) — `geometric_representation_item`
     /// SUBTYPE that resolves `placement` through `placement_map` (3D only).
     /// Scheduled in the Pass6 block after placement maps are filled.

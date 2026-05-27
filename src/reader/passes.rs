@@ -484,6 +484,9 @@ impl ReaderContext {
         // descriptive_item_map (Pass8Measure) + per-arena representation
         // item id maps. Scheduled last in the Pass8 block.
         self.dispatch_registry(graph, PassLevel::Pass8CompoundRepItem);
+        // BOUNDED_PCURVE — `parameter_space_curve` SUBTYPE (orphan).
+        // Surface + repr_id_map populated by earlier passes.
+        self.dispatch_registry(graph, PassLevel::Pass8BoundedPCurve);
         // DEFINED_SYMBOL — depends on `symbol_target_id_map` (Pass6SymbolTarget)
         // and `viz_pre_defined_symbol_id_map` (Pass7Colour-block).
         self.dispatch_registry(graph, PassLevel::Pass8DefinedSymbol);

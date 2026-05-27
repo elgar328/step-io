@@ -674,3 +674,20 @@ pub struct CircularArea {
     pub centre: PointId,
     pub radius: f64,
 }
+
+/// `parameter_space_curve` `enum_base` — phase bpc. Currently models the
+/// `BOUNDED_PCURVE` SUBTYPE only; corpus 0 inst (round-trip test only).
+#[derive(Debug, Clone, PartialEq)]
+pub enum ParameterSpaceCurve {
+    BoundedPCurve(BoundedPCurve),
+}
+
+/// `BOUNDED_PCURVE(name, basis_surface, reference_to_curve)` — `pcurve`
+/// SUBTYPE that narrows `reference_to_curve` to a
+/// `definitional_representation` (stored as `RepresentationId`).
+#[derive(Debug, Clone, PartialEq)]
+pub struct BoundedPCurve {
+    pub name: String,
+    pub basis_surface: SurfaceId,
+    pub reference_to_curve: crate::ir::id::RepresentationId,
+}

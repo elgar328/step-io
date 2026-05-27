@@ -266,6 +266,12 @@ define_id!(RepresentationId, Representation);
 // CIRCULAR_AREA arena (phase ca). Orphan.
 define_id!(CircularAreaId, crate::ir::geometry::CircularArea);
 
+// parameter_space_curve enum arena (phase bpc). Orphan.
+define_id!(
+    ParameterSpaceCurveId,
+    crate::ir::geometry::ParameterSpaceCurve
+);
+
 // REPRESENTATION_MAP + MAPPED_ITEM arenas (phase mapped-item).
 define_id!(RepresentationMapId, RepresentationMap);
 define_id!(MappedItemId, MappedItem);

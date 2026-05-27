@@ -5283,6 +5283,48 @@ fn tessellated_geometric_set_round_trip() {
 }
 
 #[test]
+fn bounded_pcurve_round_trip() {
+    // BOUNDED_PCURVE — pcurve SUBTYPE. Orphan. corpus 0 inst — synthetic
+    // IR only. references a surface + a (definitional_)representation.
+    use step_io::ir::geometry::{BoundedPCurve, ParameterSpaceCurve};
+    use step_io::ir::shape_rep::{PlainRepr, Representation};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+    let frame = model.geometry.identity_placement();
+    let plane = model
+        .geometry
+        .surfaces
+        .push(step_io::ir::geometry::Surface::Plane(
+            step_io::ir::geometry::Plane3 { position: frame },
+        ));
+    let rep = model.representations.push(Representation::Plain(PlainRepr {
+        name: "defrepr".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+        frame: None,
+    }));
+    model
+        .geometry
+        .parameter_space_curves
+        .push(ParameterSpaceCurve::BoundedPCurve(BoundedPCurve {
+            name: "bpc".into(),
+            basis_surface: plane,
+            reference_to_curve: rep,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let psc = re
+        .geometry
+        .parameter_space_curves
+        .iter()
+        .next()
+        .expect("bpc round-trips");
+    let ParameterSpaceCurve::BoundedPCurve(b) = psc;
+    assert_eq!(b.name, "bpc");
+}
+
+#[test]
 fn circular_area_round_trip() {
     // CIRCULAR_AREA — primitive_2d SUBTYPE. Orphan in step-io.
     use step_io::ir::geometry::CircularArea;
