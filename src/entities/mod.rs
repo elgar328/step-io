@@ -246,6 +246,11 @@ pub(crate) enum PassLevel {
     /// `viz_ssr_id_map`. Scheduled after `Pass7CurveStyle` and
     /// `Pass7Rendering`.
     Pass7SurfaceStyleBoundary,
+    /// `SURFACE_STYLE_PARAMETER_LINE` (phase sspl) — `founded_item`
+    /// SUBTYPE that reuses the `curve_or_render` SELECT plus a SET of
+    /// `direction_count_select`. Same dependencies as
+    /// `Pass7SurfaceStyleBoundary`.
+    Pass7SurfaceStyleParameterLine,
     /// `PRESENTATION_STYLE_ASSIGNMENT` (Pass 7-9) — depends on `Pass7Usage`
     /// and `Pass7CurveStyle`.
     Pass7Assignment,

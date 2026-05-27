@@ -386,6 +386,13 @@ impl WriteBuffer<'_> {
                     SurfaceStyleBoundaryHandler::write(self, ssb.clone())?;
             }
         }
+        for (idx, item) in founded_items.iter().enumerate() {
+            if let FoundedItem::SurfaceStyleParameterLine(sspl) = item {
+                use crate::entities::visualization::surface_style_parameter_line::SurfaceStyleParameterLineHandler;
+                self.founded_item_step_ids[idx] =
+                    SurfaceStyleParameterLineHandler::write(self, sspl.clone())?;
+            }
+        }
         Ok(())
     }
 }

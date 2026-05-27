@@ -3658,6 +3658,55 @@ fn surface_style_boundary_round_trip() {
 }
 
 #[test]
+fn surface_style_parameter_line_round_trip() {
+    // SURFACE_STYLE_PARAMETER_LINE — founded_item subtype with a
+    // curve_or_render SELECT plus a SET[1:2] of direction_count_select.
+    use step_io::ir::visualization::{
+        Colour, ColourRgb, CurveOrRender, DirectionCount, FoundedItem, ShadingMethod,
+        SurfaceStyleParameterLine, SurfaceStyleRendering, SurfaceStyleRenderingData,
+        VisualizationPool,
+    };
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let colour_id = viz.colours.push(Colour::Rgb(ColourRgb {
+        name: String::new(),
+        red: 0.1,
+        green: 0.2,
+        blue: 0.3,
+    }));
+    let ssr_id = viz
+        .surface_style_renderings
+        .push(SurfaceStyleRendering::Itself(SurfaceStyleRenderingData {
+            rendering_method: Some(ShadingMethod::Constant),
+            surface_colour: colour_id,
+        }));
+    viz.founded_items
+        .push(FoundedItem::SurfaceStyleParameterLine(
+            SurfaceStyleParameterLine {
+                style_of_parameter_lines: CurveOrRender::SurfaceStyleRendering(ssr_id),
+                direction_counts: vec![DirectionCount::U(4), DirectionCount::V(7)],
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    let sspl = re_viz
+        .founded_items
+        .iter()
+        .find_map(|f| match f {
+            FoundedItem::SurfaceStyleParameterLine(s) => Some(s),
+            _ => None,
+        })
+        .expect("expected SurfaceStyleParameterLine");
+    assert_eq!(sspl.direction_counts.len(), 2);
+    assert_eq!(sspl.direction_counts[0], DirectionCount::U(4));
+    assert_eq!(sspl.direction_counts[1], DirectionCount::V(7));
+}
+
+#[test]
 fn symbol_style_round_trip() {
     use step_io::ir::visualization::{
         Colour, ColourRgb, FoundedItem, SymbolColour, SymbolStyle, VisualizationPool,

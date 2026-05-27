@@ -175,6 +175,28 @@ pub enum FoundedItem {
     /// `SURFACE_STYLE_BOUNDARY` — `founded_item` subtype with one
     /// `curve_or_render` SELECT (phase ssb).
     SurfaceStyleBoundary(SurfaceStyleBoundary),
+    /// `SURFACE_STYLE_PARAMETER_LINE` — `founded_item` subtype carrying
+    /// a `curve_or_render` SELECT plus a SET[1:2] of `direction_count_select`
+    /// (phase sspl).
+    SurfaceStyleParameterLine(SurfaceStyleParameterLine),
+}
+
+/// `SURFACE_STYLE_PARAMETER_LINE(style_of_parameter_lines, direction_counts)`.
+/// Phase sspl. EXPRESS WHERE rule: HIINDEX = 1 or the two members have
+/// different types. Not enforced on read (lenient); empty SETs drop the
+/// entity on round-trip.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceStyleParameterLine {
+    pub style_of_parameter_lines: CurveOrRender,
+    pub direction_counts: Vec<DirectionCount>,
+}
+
+/// `direction_count_select` SELECT — typed integer wrapper for the U / V
+/// parameter line counts on `SURFACE_STYLE_PARAMETER_LINE`. Phase sspl.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DirectionCount {
+    U(i64),
+    V(i64),
 }
 
 /// `SURFACE_STYLE_BOUNDARY(style_of_boundary)` — `founded_item` subtype.

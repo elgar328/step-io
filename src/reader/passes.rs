@@ -297,6 +297,8 @@ impl ReaderContext {
         // `style_of_boundary` SELECT resolves through curve_style /
         // surface_style_rendering id maps just filled.
         self.dispatch_registry(graph, PassLevel::Pass7SurfaceStyleBoundary);
+        // SURFACE_STYLE_PARAMETER_LINE — same dependencies as SSB.
+        self.dispatch_registry(graph, PassLevel::Pass7SurfaceStyleParameterLine);
         self.dispatch_registry(graph, PassLevel::Pass7Assignment);
         self.dispatch_registry(graph, PassLevel::Pass7StyledItem);
         // OVER_RIDING_STYLED_ITEM — depends on the styled_item arena
