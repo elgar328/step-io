@@ -198,6 +198,25 @@ impl WriteBuffer<'_> {
         Ok(())
     }
 
+    /// Emit `presented_item_representation` + `applied_presented_item`
+    /// arenas (phase pr-item).
+    pub(in crate::writer::buffer) fn emit_pr_item(&mut self) -> Result<(), WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::visualization::presented_item::{
+            AppliedPresentedItemHandler, PresentedItemRepresentationHandler,
+        };
+        let Some(viz) = self.model.visualization.clone() else {
+            return Ok(());
+        };
+        for pir in viz.presented_item_representations.iter() {
+            let _ = PresentedItemRepresentationHandler::write(self, *pir)?;
+        }
+        for api in viz.applied_presented_items.iter() {
+            let _ = AppliedPresentedItemHandler::write(self, api.clone())?;
+        }
+        Ok(())
+    }
+
     /// Emit `area_in_set` + `presentation_size` arenas (phase pr-size).
     /// Depends on `presentation_representation_step_ids`,
     /// `presentation_set_step_ids`, and the planar-extent cache.

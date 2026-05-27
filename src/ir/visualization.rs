@@ -119,6 +119,14 @@ pub struct VisualizationPool {
     /// with a `presentation_size_assignment_select` (`PresentationView` /
     /// `PresentationArea` / `AreaInSet`).
     pub presentation_sizes: Arena<PresentationSize>,
+    /// `PRESENTED_ITEM_REPRESENTATION` arena (phase pr-item). Binds a
+    /// presentation representation (or set) to a `presented_item` SELECT
+    /// member.
+    pub presented_item_representations: Arena<PresentedItemRepresentation>,
+    /// `APPLIED_PRESENTED_ITEM` arena (phase pr-item). SET of
+    /// `presented_item` SELECT members (step-io models only
+    /// `ProductDefinition`).
+    pub applied_presented_items: Arena<AppliedPresentedItem>,
     /// `composite_text` arena (phase text-literal). Groups two or more
     /// `text_or_character` elements (currently narrowed to
     /// [`TextLiteral`] references) into a composite drafting label.
@@ -700,6 +708,38 @@ pub enum PresentationSizeAssignment {
     Area(crate::ir::id::PresentationRepresentationId),
     /// `area_in_set` member.
     AreaInSet(crate::ir::id::AreaInSetId),
+}
+
+/// `PRESENTED_ITEM_REPRESENTATION(presentation, item)` — phase pr-item.
+/// `presentation` is a `presentation_representation_select` (modelled
+/// `PresentationRepresentationId` / `PresentationSetId`); `item` is a
+/// `presented_item` SELECT (only `ProductDefinition` modelled today).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PresentedItemRepresentation {
+    pub presentation: PresentationReprSelect,
+    pub item: PresentedItem,
+}
+
+/// `presentation_representation_select` SELECT — modelled members.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum PresentationReprSelect {
+    Representation(crate::ir::id::PresentationRepresentationId),
+    Set(crate::ir::id::PresentationSetId),
+}
+
+/// `presented_item_select` SELECT — only the `ProductDefinition` member
+/// is modelled. Other 8 PLM members (`action` / `product_concept` / ...) are
+/// silently dropped on read.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum PresentedItem {
+    ProductDefinition(crate::ir::id::ProductId),
+}
+
+/// `APPLIED_PRESENTED_ITEM(items)` — phase pr-item. `items` is a SET of
+/// `presented_item` SELECT members.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AppliedPresentedItem {
+    pub items: Vec<PresentedItem>,
 }
 
 /// `INVISIBILITY(invisible_items)` — phase invisibility. Marks a set of

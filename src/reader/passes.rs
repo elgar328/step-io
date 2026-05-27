@@ -468,6 +468,9 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass8PrCore);
         // AREA_IN_SET + PRESENTATION_SIZE — depends on the pr-core id maps.
         self.dispatch_registry(graph, PassLevel::Pass8PrSize);
+        // PRESENTED_ITEM_REPRESENTATION + APPLIED_PRESENTED_ITEM — depends on
+        // pr-core id maps + product chain.
+        self.dispatch_registry(graph, PassLevel::Pass8PrItem);
     }
 
     /// Walk every entity in `graph` (id-sorted via `BTreeMap`) and dispatch

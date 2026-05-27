@@ -43,11 +43,11 @@ use super::tessellation::{
 use super::topology::{Edge, Face, Shell, Solid, Wire};
 use super::units::{DerivedUnit, DerivedUnitElement, MeasureWithUnit, NamedUnit};
 use super::visualization::{
-    AreaInSet, CameraModel, Colour, CompositeText, CurveStyle, FoundedItem, Invisibility,
-    PreDefinedCurveFont, PreDefinedMarker, PreDefinedSymbol, PresentationLayerAssignment,
-    PresentationRepresentation, PresentationSet, PresentationSize, PresentationStyleAssignment,
-    StyledItem, SurfaceStyleRendering, SymbolColour, TextLiteral, TextStyle,
-    TextStyleForDefinedFont,
+    AppliedPresentedItem, AreaInSet, CameraModel, Colour, CompositeText, CurveStyle, FoundedItem,
+    Invisibility, PreDefinedCurveFont, PreDefinedMarker, PreDefinedSymbol,
+    PresentationLayerAssignment, PresentationRepresentation, PresentationSet, PresentationSize,
+    PresentationStyleAssignment, PresentedItemRepresentation, StyledItem, SurfaceStyleRendering,
+    SymbolColour, TextLiteral, TextStyle, TextStyleForDefinedFont,
 };
 
 // Geometry Ids (3D)
@@ -217,6 +217,11 @@ define_id!(PresentationSetId, PresentationSet);
 define_id!(AreaInSetId, AreaInSet);
 // presentation_size arena (Phase pr-size).
 define_id!(PresentationSizeId, PresentationSize);
+
+// presented_item_representation arena (Phase pr-item).
+define_id!(PresentedItemRepresentationId, PresentedItemRepresentation);
+// applied_presented_item arena (Phase pr-item).
+define_id!(AppliedPresentedItemId, AppliedPresentedItem);
 
 // pre_defined_marker enum arena (Phase pre-defined-marker).
 define_id!(PreDefinedMarkerId, PreDefinedMarker);

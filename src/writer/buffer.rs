@@ -713,6 +713,9 @@ impl<'m> WriteBuffer<'m> {
         self.emit_presentation_repr_cluster()?;
         // AREA_IN_SET + PRESENTATION_SIZE — depends on pr-core step ids.
         self.emit_pr_size()?;
+        // PRESENTED_ITEM_REPRESENTATION + APPLIED_PRESENTED_ITEM — depends
+        // on pr-core caches + product chain (`product_def_ids`).
+        self.emit_pr_item()?;
         self.emit_plm_if_set()?;
         self.emit_properties_if_set();
         self.emit_form_features_if_set()?;
