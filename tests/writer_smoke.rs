@@ -3617,6 +3617,65 @@ fn point_style_round_trip() {
 }
 
 #[test]
+fn defined_symbol_round_trip() {
+    // SYMBOL_TARGET + DEFINED_SYMBOL via the GeometricRepresentationItem
+    // arena. Definition is a PreDefinedSymbol, target is a SymbolTarget
+    // sharing the same arena.
+    use step_io::ir::visualization::{
+        DefinedSymbol, DefinedSymbolDefinition, GeometricRepresentationItem, PreDefinedSymbol,
+        PreDefinedSymbolData, SymbolPlacement, SymbolTarget, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let frame = model.geometry.identity_placement();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let pds_id = viz
+        .pre_defined_symbols
+        .push(PreDefinedSymbol::Plain(PreDefinedSymbolData {
+            name: "filled arrow".into(),
+        }));
+    let target_id =
+        model
+            .geometric_representation_items
+            .push(GeometricRepresentationItem::SymbolTarget(SymbolTarget {
+                name: "tgt".into(),
+                placement: SymbolPlacement::Placement3d(frame),
+                x_scale: 3.5,
+                y_scale: 3.5,
+            }));
+    model
+        .geometric_representation_items
+        .push(GeometricRepresentationItem::DefinedSymbol(DefinedSymbol {
+            name: "sym".into(),
+            definition: DefinedSymbolDefinition::PreDefinedSymbol(pds_id),
+            target: target_id,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let ds = re
+        .geometric_representation_items
+        .iter()
+        .find_map(|i| match i {
+            GeometricRepresentationItem::DefinedSymbol(d) => Some(d),
+            GeometricRepresentationItem::SymbolTarget(_) => None,
+        })
+        .expect("defined_symbol round-trips");
+    assert_eq!(ds.name, "sym");
+    let st = re
+        .geometric_representation_items
+        .iter()
+        .find_map(|i| match i {
+            GeometricRepresentationItem::SymbolTarget(t) => Some(t),
+            GeometricRepresentationItem::DefinedSymbol(_) => None,
+        })
+        .expect("symbol_target round-trips");
+    assert!((st.x_scale - 3.5).abs() < f64::EPSILON);
+    assert!((st.y_scale - 3.5).abs() < f64::EPSILON);
+}
+
+#[test]
 fn pre_defined_point_marker_symbol_round_trip() {
     // PRE_DEFINED_POINT_MARKER_SYMBOL — pre_defined_marker subtype that
     // appears as a simple instance in the corpus (`PRE_DEFINED_POINT_MARKER_SYMBOL('x')`),

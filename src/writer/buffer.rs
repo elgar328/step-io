@@ -220,6 +220,12 @@ pub(crate) struct WriteBuffer<'m> {
     /// `PreDefinedSymbolId.0`. No step-io consumer reads this cache yet —
     /// it exists for round-trip symmetry with the arena.
     pub(crate) pre_defined_symbol_step_ids: Vec<u64>,
+    /// STEP entity id of every emitted `GeometricRepresentationItem`
+    /// arena entry, indexed by `GeometricRepresentationItemId.0`.
+    /// Populated by `emit_geometric_representation_items` (phase ds-st)
+    /// in two passes — `SymbolTarget` first so `DefinedSymbol` can resolve
+    /// its `target` ref through this cache.
+    pub(crate) geometric_representation_item_step_ids: Vec<u64>,
     /// STEP entity id of every emitted `CURVE_STYLE` entity, indexed by
     /// `CurveStyleId.0`. Consumed by the PSA writer when dispatching a
     /// `PsaStyle::Curve(...)` entry.
@@ -469,6 +475,7 @@ impl<'m> WriteBuffer<'m> {
             area_in_set_step_ids: Vec::new(),
             pre_defined_curve_font_step_ids: Vec::new(),
             pre_defined_symbol_step_ids: Vec::new(),
+            geometric_representation_item_step_ids: Vec::new(),
             curve_style_step_ids: Vec::new(),
             styled_item_step_ids: Vec::new(),
             psa_step_ids: Vec::new(),
@@ -678,6 +685,10 @@ impl<'m> WriteBuffer<'m> {
         // representation_step_ids + per-type arena step ids.
         self.emit_characterized_objects();
         self.emit_visualization_if_set()?;
+        // GEOMETRIC_REPRESENTATION_ITEM (phase ds-st) — emitted after
+        // visualization so `pre_defined_symbol_step_ids` is populated
+        // before `DefinedSymbol.definition` resolves through it.
+        self.emit_geometric_representation_items()?;
         // REPRESENTATION_MAP + MAPPED_ITEM — after visualization so the
         // `representation_step_ids` cache covers MDGPR slots too.
         self.emit_mapped_items()?;

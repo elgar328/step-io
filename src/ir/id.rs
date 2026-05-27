@@ -42,6 +42,7 @@ use super::tessellation::{
 };
 use super::topology::{Edge, Face, Shell, Solid, Wire};
 use super::units::{DerivedUnit, DerivedUnitElement, MeasureWithUnit, NamedUnit};
+use super::visualization::GeometricRepresentationItem;
 use super::visualization::{
     AppliedPresentedItem, AreaInSet, CameraModel, Colour, CompositeText, CurveStyle, FoundedItem,
     Invisibility, PreDefinedCurveFont, PreDefinedMarker, PreDefinedSymbol,
@@ -298,6 +299,11 @@ define_id!(FoundedItemId, FoundedItem);
 
 // Visualization Ids — camera_model enum arena (phase camera-model-d3).
 define_id!(CameraModelId, CameraModel);
+
+// geometric_representation_item enum arena (phase ds-st). Currently holds
+// `DefinedSymbol` + `SymbolTarget` variants; the other 6 corpus in_enum
+// members of `geometric_representation_item` keep their dedicated arenas.
+define_id!(GeometricRepresentationItemId, GeometricRepresentationItem);
 
 // Visualization Ids — PRESENTATION_LAYER_ASSIGNMENT arena (top-level;
 // no other entity refs it, the id exists for blueprint symmetry).

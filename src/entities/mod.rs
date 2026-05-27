@@ -368,6 +368,15 @@ pub(crate) enum PassLevel {
     /// contiguous at the tail (writer `representation_step_ids` is
     /// push-built — Mdgpr → DM → TSR sequence required).
     Pass8TsrRead,
+    /// `SYMBOL_TARGET` (phase ds-st) — `geometric_representation_item`
+    /// SUBTYPE that resolves `placement` through `placement_map` (3D only).
+    /// Scheduled in the Pass6 block after placement maps are filled.
+    Pass6SymbolTarget,
+    /// `DEFINED_SYMBOL` (phase ds-st) — `geometric_representation_item`
+    /// SUBTYPE whose `definition` resolves through `viz_pre_defined_symbol_id_map`
+    /// and `target` through `symbol_target_id_map`. Must run after
+    /// `Pass6SymbolTarget` and after the `pre_defined_symbol` passes (`Pass7Colour`-block).
+    Pass8DefinedSymbol,
     /// `DRAUGHTING_MODEL_ITEM_ASSOCIATION` (phase dmia). Depends on
     /// `repr_id_map`, `annotation_occurrence_id_map`, and
     /// `draughting_callout_id_map` — all populated by their respective

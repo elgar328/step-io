@@ -403,4 +403,35 @@ impl WriteBuffer<'_> {
         }
         Ok(())
     }
+
+    /// Emit the `GeometricRepresentationItem` arena (phase ds-st) in
+    /// two passes — `SymbolTarget` first so `DefinedSymbol.target` resolves
+    /// through the populated `geometric_representation_item_step_ids` cache.
+    pub(in crate::writer::buffer) fn emit_geometric_representation_items(
+        &mut self,
+    ) -> Result<(), WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::visualization::symbol::{DefinedSymbolHandler, SymbolTargetHandler};
+        use crate::ir::visualization::GeometricRepresentationItem as GRI;
+        let items: Vec<_> = self
+            .model
+            .geometric_representation_items
+            .iter()
+            .cloned()
+            .collect();
+        self.geometric_representation_item_step_ids = vec![0; items.len()];
+        for (idx, item) in items.iter().enumerate() {
+            if let GRI::SymbolTarget(t) = item {
+                self.geometric_representation_item_step_ids[idx] =
+                    SymbolTargetHandler::write(self, t.clone())?;
+            }
+        }
+        for (idx, item) in items.iter().enumerate() {
+            if let GRI::DefinedSymbol(d) = item {
+                self.geometric_representation_item_step_ids[idx] =
+                    DefinedSymbolHandler::write(self, d.clone())?;
+            }
+        }
+        Ok(())
+    }
 }

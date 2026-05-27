@@ -259,6 +259,10 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass6CoordinatesList);
         self.dispatch_registry(graph, PassLevel::Pass6ComplexTriangulatedFace);
         self.dispatch_registry(graph, PassLevel::Pass6TessellatedGeometricSet);
+        // SYMBOL_TARGET — geometric_representation_item SUBTYPE resolving
+        // `placement` through `placement_map`. DEFINED_SYMBOL (Pass8) runs
+        // later so its `target` can resolve through `symbol_target_id_map`.
+        self.dispatch_registry(graph, PassLevel::Pass6SymbolTarget);
 
         // Pass 6-8: NEXT_ASSEMBLY_USAGE_OCCURRENCE — push Instances into
         // parent products' Group content.
@@ -469,6 +473,9 @@ impl ReaderContext {
         // (Mdgpr/DM/TSR) contiguous at the tail; writer's push-built
         // `representation_step_ids` then aligns with arena ids.
         self.dispatch_registry(graph, PassLevel::Pass8TsrRead);
+        // DEFINED_SYMBOL — depends on `symbol_target_id_map` (Pass6SymbolTarget)
+        // and `viz_pre_defined_symbol_id_map` (Pass7Colour-block).
+        self.dispatch_registry(graph, PassLevel::Pass8DefinedSymbol);
         // CAMERA_IMAGE + CAMERA_IMAGE_3D_WITH_SCALE — `mapped_item` SUBTYPE
         // resolving `mapping_source` through `representation_map_id_map`
         // (whose CameraUsage slots Pass8CameraUsage just filled).

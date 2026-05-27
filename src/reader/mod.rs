@@ -578,6 +578,14 @@ pub struct ReaderContext {
     pub(crate) tessellated_face_id_map: HashMap<u64, crate::ir::TessellatedFaceId>,
     pub(crate) tessellated_surface_set_id_map: HashMap<u64, crate::ir::TessellatedSurfaceSetId>,
 
+    /// `geometric_representation_item` enum arena (phase ds-st).
+    pub(crate) geometric_representation_items:
+        crate::ir::Arena<crate::ir::visualization::GeometricRepresentationItem>,
+    /// `SYMBOL_TARGET` step entity id → `GeometricRepresentationItemId`.
+    /// Populated by the `SymbolTarget` reader so `DEFINED_SYMBOL.target`
+    /// can resolve.
+    pub(crate) symbol_target_id_map: HashMap<u64, crate::ir::id::GeometricRepresentationItemId>,
+
     /// Lazily-built plm pool — populated by the Pass 9 plm reader chain
     /// (`CalendarDate` / `LocalTime` / UTC / `DateAndTime` / `DateTimeRole`
     /// in Phase plm-1a; Person/Approval/Security clusters later).
@@ -728,6 +736,7 @@ impl ReaderContext {
                 tessellated_items: ctx.tessellated_items,
                 tessellated_faces: ctx.tessellated_faces,
                 tessellated_surface_sets: ctx.tessellated_surface_sets,
+                geometric_representation_items: ctx.geometric_representation_items,
             },
             warnings: ctx.warnings,
             parse_warnings: graph.warnings.clone(),

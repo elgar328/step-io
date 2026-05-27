@@ -276,6 +276,12 @@ pub struct StepModel {
     /// coordinates.
     pub tessellated_surface_sets:
         crate::ir::Arena<crate::ir::tessellation::ComplexTriangulatedSurfaceSet>,
+    /// `geometric_representation_item` enum arena (phase ds-st). Holds
+    /// `DefinedSymbol` + `SymbolTarget` variants; other corpus `in_enum`
+    /// members of `geometric_representation_item` keep their dedicated
+    /// arenas. Orphan round-trip — no modelled external consumer.
+    pub geometric_representation_items:
+        crate::ir::Arena<crate::ir::visualization::GeometricRepresentationItem>,
 }
 
 /// Arena-based storage for all topology objects.

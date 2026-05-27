@@ -666,6 +666,56 @@ pub struct PreDefinedPointMarkerSymbol {
     pub name: String,
 }
 
+/// `geometric_representation_item` `enum_base` — abstract supertype that
+/// step-io currently models with a unified arena holding only the
+/// symbol-domain `in_enum` members (phase ds-st). The other 6 corpus
+/// `in_enum` members (`direction`, `vector`, `vertex_point`,
+/// `geometric_curve_set`, `geometric_set`, `shell_based_surface_model`)
+/// keep their dedicated arenas and are not migrated here yet.
+#[derive(Debug, Clone, PartialEq)]
+pub enum GeometricRepresentationItem {
+    DefinedSymbol(DefinedSymbol),
+    SymbolTarget(SymbolTarget),
+}
+
+/// `DEFINED_SYMBOL(name, definition, target)` — `geometric_representation_item`
+/// SUBTYPE pairing a `defined_symbol_select` payload with a
+/// `symbol_target` placement frame. Phase ds-st.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DefinedSymbol {
+    pub name: String,
+    pub definition: DefinedSymbolDefinition,
+    /// Narrows to a `SymbolTarget` variant of the same arena.
+    pub target: crate::ir::id::GeometricRepresentationItemId,
+}
+
+/// `defined_symbol_select` SELECT — `pre_defined_symbol` only.
+/// `externally_defined_symbol` is corpus 0 (no `ir.toml` entry) and
+/// silently dropped on read.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum DefinedSymbolDefinition {
+    PreDefinedSymbol(crate::ir::id::PreDefinedSymbolId),
+}
+
+/// `SYMBOL_TARGET(name, placement, x_scale, y_scale)` —
+/// `geometric_representation_item` SUBTYPE that supplies the placement
+/// + uniform scale for a `defined_symbol`. Phase ds-st.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SymbolTarget {
+    pub name: String,
+    pub placement: SymbolPlacement,
+    pub x_scale: f64,
+    pub y_scale: f64,
+}
+
+/// `axis2_placement` SELECT — 3D only in step-io.
+/// 2D `AXIS2_PLACEMENT_2D` inputs are dropped on read because step-io
+/// has no 2D placement id map.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum SymbolPlacement {
+    Placement3d(crate::ir::id::Placement3dId),
+}
+
 /// `text_style` enum arena (phase text-style-box). `Itself` covers the base
 /// abstract `TEXT_STYLE` (corpus 0 — reserved, never reached at read);
 /// `WithBoxCharacteristics` covers the `TEXT_STYLE_WITH_BOX_CHARACTERISTICS`
