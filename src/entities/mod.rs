@@ -241,6 +241,11 @@ pub(crate) enum PassLevel {
     /// Runs before `Pass7Assignment` so a PSA can dispatch curve-styling
     /// refs.
     Pass7CurveStyle,
+    /// `SURFACE_STYLE_BOUNDARY` (phase ssb) — `founded_item` SUBTYPE
+    /// resolving `style_of_boundary` through `viz_curve_style_id_map` or
+    /// `viz_ssr_id_map`. Scheduled after `Pass7CurveStyle` and
+    /// `Pass7Rendering`.
+    Pass7SurfaceStyleBoundary,
     /// `PRESENTATION_STYLE_ASSIGNMENT` (Pass 7-9) — depends on `Pass7Usage`
     /// and `Pass7CurveStyle`.
     Pass7Assignment,

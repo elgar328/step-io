@@ -350,6 +350,8 @@ pub struct ReaderContext {
     /// Populated by the `VIEW_VOLUME` handler; consumed by `CAMERA_MODEL_D3`
     /// for its `perspective_of_volume` ref.
     pub(crate) viz_view_volume_id_map: HashMap<u64, FoundedItemId>,
+    /// `SURFACE_STYLE_BOUNDARY` step entity id → `FoundedItemId` (phase ssb).
+    pub(crate) viz_ssb_id_map: HashMap<u64, FoundedItemId>,
     /// `CAMERA_MODEL*` step entity id → `CameraModelId`. Populated by the
     /// `Pass8CameraModel` handlers; consumed by `Pass8CameraUsage` to
     /// resolve `mapping_origin`.

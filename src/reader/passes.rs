@@ -293,6 +293,10 @@ impl ReaderContext {
         // CURVE_STYLE chain — must run before PSA so the assignment reader
         // can dispatch curve-style refs to PsaStyle::Curve(...).
         self.dispatch_registry(graph, PassLevel::Pass7CurveStyle);
+        // SURFACE_STYLE_BOUNDARY — `founded_item` SUBTYPE whose
+        // `style_of_boundary` SELECT resolves through curve_style /
+        // surface_style_rendering id maps just filled.
+        self.dispatch_registry(graph, PassLevel::Pass7SurfaceStyleBoundary);
         self.dispatch_registry(graph, PassLevel::Pass7Assignment);
         self.dispatch_registry(graph, PassLevel::Pass7StyledItem);
         // OVER_RIDING_STYLED_ITEM — depends on the styled_item arena

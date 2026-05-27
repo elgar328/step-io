@@ -3617,6 +3617,47 @@ fn point_style_round_trip() {
 }
 
 #[test]
+fn surface_style_boundary_round_trip() {
+    // SURFACE_STYLE_BOUNDARY — founded_item subtype with a curve_or_render
+    // SELECT. Uses the SurfaceStyleRendering branch to keep fixture
+    // setup minimal.
+    use step_io::ir::visualization::{
+        Colour, ColourRgb, CurveOrRender, FoundedItem, ShadingMethod, SurfaceStyleBoundary,
+        SurfaceStyleRendering, SurfaceStyleRenderingData, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let colour_id = viz.colours.push(Colour::Rgb(ColourRgb {
+        name: String::new(),
+        red: 0.2,
+        green: 0.3,
+        blue: 0.4,
+    }));
+    let ssr_id = viz
+        .surface_style_renderings
+        .push(SurfaceStyleRendering::Itself(SurfaceStyleRenderingData {
+            rendering_method: Some(ShadingMethod::Constant),
+            surface_colour: colour_id,
+        }));
+    viz.founded_items
+        .push(FoundedItem::SurfaceStyleBoundary(SurfaceStyleBoundary {
+            style_of_boundary: CurveOrRender::SurfaceStyleRendering(ssr_id),
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    let count = re_viz
+        .founded_items
+        .iter()
+        .filter(|f| matches!(f, FoundedItem::SurfaceStyleBoundary(_)))
+        .count();
+    assert_eq!(count, 1);
+}
+
+#[test]
 fn symbol_style_round_trip() {
     use step_io::ir::visualization::{
         Colour, ColourRgb, FoundedItem, SymbolColour, SymbolStyle, VisualizationPool,

@@ -32,6 +32,7 @@ pub mod presentation_style_assignment;
 pub mod presented_item;
 pub mod styled_item;
 pub mod surface_side_style;
+pub mod surface_style_boundary;
 pub mod surface_style_fill_area;
 pub mod surface_style_rendering;
 pub mod surface_style_rendering_with_properties;

@@ -379,6 +379,13 @@ impl WriteBuffer<'_> {
                 self.founded_item_step_ids[idx] = PointStyleHandler::write(self, ps.clone())?;
             }
         }
+        for (idx, item) in founded_items.iter().enumerate() {
+            if let FoundedItem::SurfaceStyleBoundary(ssb) = item {
+                use crate::entities::visualization::surface_style_boundary::SurfaceStyleBoundaryHandler;
+                self.founded_item_step_ids[idx] =
+                    SurfaceStyleBoundaryHandler::write(self, ssb.clone())?;
+            }
+        }
         Ok(())
     }
 }

@@ -172,6 +172,24 @@ pub enum FoundedItem {
     /// `POINT_STYLE` — a `founded_item` subtype carrying marker / size /
     /// colour attributes (phase point-style).
     PointStyle(PointStyle),
+    /// `SURFACE_STYLE_BOUNDARY` — `founded_item` subtype with one
+    /// `curve_or_render` SELECT (phase ssb).
+    SurfaceStyleBoundary(SurfaceStyleBoundary),
+}
+
+/// `SURFACE_STYLE_BOUNDARY(style_of_boundary)` — `founded_item` subtype.
+/// Phase ssb. The SELECT body lives in [`CurveOrRender`].
+#[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceStyleBoundary {
+    pub style_of_boundary: CurveOrRender,
+}
+
+/// `curve_or_render` SELECT — picks between a `curve_style` and a
+/// `curve_style_rendering` (a `SurfaceStyleRendering` variant). Phase ssb.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum CurveOrRender {
+    CurveStyle(CurveStyleId),
+    SurfaceStyleRendering(SurfaceStyleRenderingId),
 }
 
 /// `POINT_STYLE(name, marker, marker_size, marker_colour)` —
