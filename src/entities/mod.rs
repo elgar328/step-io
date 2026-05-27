@@ -378,6 +378,11 @@ pub(crate) enum PassLevel {
     /// `representation_relationship` SUBTYPE. Must run after
     /// `Pass8CgrRead` so `rep_1` / `rep_2` resolve through `repr_id_map`.
     Pass8CgrrRead,
+    /// `COMPOUND_REPRESENTATION_ITEM` (phase cri) — resolves child
+    /// `item_element` refs through `descriptive_item_map` +
+    /// `resolve_representation_item_ref`. Scheduled at the tail of the
+    /// Pass8 block so all sibling `representation_item` arenas are filled.
+    Pass8CompoundRepItem,
     /// `SYMBOL_TARGET` (phase ds-st) — `geometric_representation_item`
     /// SUBTYPE that resolves `placement` through `placement_map` (3D only).
     /// Scheduled in the Pass6 block after placement maps are filled.

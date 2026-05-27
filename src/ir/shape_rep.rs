@@ -453,6 +453,45 @@ pub struct DescriptiveItem {
     pub description: String,
 }
 
+/// `COMPOUND_REPRESENTATION_ITEM(name, item_element)` — phase cri.
+/// `representation_item` SUBTYPE whose `item_element` is a typed
+/// SET / LIST wrapper over child representation items. Orphan in step-io
+/// (no inbound refs).
+#[derive(Debug, Clone, PartialEq)]
+pub struct CompoundRepresentationItem {
+    pub name: String,
+    pub item_element: CompoundItemElement,
+}
+
+/// `compound_item_definition` SELECT — typed parameter wrapper.
+/// `kind` preserves the SELECT member (`Set` / `List`) so round-trip
+/// reproduces the exact `typed_name`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CompoundItemElement {
+    pub kind: CompoundItemKind,
+    pub items: Vec<CompoundItem>,
+}
+
+/// SELECT discriminator for [`CompoundItemElement::kind`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CompoundItemKind {
+    /// `SET_REPRESENTATION_ITEM` typed wrapper.
+    Set,
+    /// `LIST_REPRESENTATION_ITEM` typed wrapper.
+    List,
+}
+
+/// Item of a CRI's `item_element` list. Most refs go through
+/// `RepresentationItemRef` (`Item`); `DescriptiveRepresentationItem`
+/// is inline because step-io's DRI has no dedicated arena
+/// (only `descriptive_item_map`). Same DRI ref appearing in multiple
+/// CRIs would re-emit on write — acceptable given the corpus inst of 7.
+#[derive(Debug, Clone, PartialEq)]
+pub enum CompoundItem {
+    Item(RepresentationItemRef),
+    Descriptive(DescriptiveItem),
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeAspect {
     /// `SHAPE_ASPECT.name` — typically `''`.

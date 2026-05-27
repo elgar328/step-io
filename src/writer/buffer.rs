@@ -689,6 +689,10 @@ impl<'m> WriteBuffer<'m> {
         // visualization so `pre_defined_symbol_step_ids` is populated
         // before `DefinedSymbol.definition` resolves through it.
         self.emit_geometric_representation_items()?;
+        // COMPOUND_REPRESENTATION_ITEM — orphan, runs after all
+        // representation_item arenas are emitted (DRI is re-emitted
+        // inline by the handler).
+        self.emit_compound_representation_items()?;
         // REPRESENTATION_MAP + MAPPED_ITEM — after visualization so the
         // `representation_step_ids` cache covers MDGPR slots too.
         self.emit_mapped_items()?;

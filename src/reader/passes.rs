@@ -480,6 +480,10 @@ impl ReaderContext {
         // CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP — depends on
         // `repr_id_map` covering CGR (filled by Pass8CgrRead).
         self.dispatch_registry(graph, PassLevel::Pass8CgrrRead);
+        // COMPOUND_REPRESENTATION_ITEM — resolves child refs through
+        // descriptive_item_map (Pass8Measure) + per-arena representation
+        // item id maps. Scheduled last in the Pass8 block.
+        self.dispatch_registry(graph, PassLevel::Pass8CompoundRepItem);
         // DEFINED_SYMBOL — depends on `symbol_target_id_map` (Pass6SymbolTarget)
         // and `viz_pre_defined_symbol_id_map` (Pass7Colour-block).
         self.dispatch_registry(graph, PassLevel::Pass8DefinedSymbol);

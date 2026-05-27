@@ -404,6 +404,27 @@ impl WriteBuffer<'_> {
         Ok(())
     }
 
+    /// Emit the `CompoundRepresentationItem` arena (phase cri). Orphan —
+    /// no inbound refs. Each child is either an inline
+    /// `DescriptiveRepresentationItem` (re-emitted in place) or any
+    /// resolvable `RepresentationItemRef`.
+    pub(in crate::writer::buffer) fn emit_compound_representation_items(
+        &mut self,
+    ) -> Result<(), WriteError> {
+        let items: Vec<_> = self
+            .model
+            .compound_representation_items
+            .iter()
+            .cloned()
+            .collect();
+        for cri in items {
+            use crate::entities::SimpleEntityHandler;
+            use crate::entities::shape_rep::compound_representation_item::CompoundRepresentationItemHandler;
+            CompoundRepresentationItemHandler::write(self, cri)?;
+        }
+        Ok(())
+    }
+
     /// Emit the `GeometricRepresentationItem` arena (phase ds-st) in
     /// two passes — `SymbolTarget` first so `DefinedSymbol.target` resolves
     /// through the populated `geometric_representation_item_step_ids` cache.

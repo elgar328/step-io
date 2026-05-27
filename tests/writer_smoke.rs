@@ -5283,6 +5283,44 @@ fn tessellated_geometric_set_round_trip() {
 }
 
 #[test]
+fn compound_representation_item_round_trip() {
+    // COMPOUND_REPRESENTATION_ITEM — typed wrapper carrying a child
+    // DESCRIPTIVE_REPRESENTATION_ITEM (the dominant fixture pattern).
+    use step_io::ir::shape_rep::{
+        CompoundItem, CompoundItemElement, CompoundItemKind, CompoundRepresentationItem,
+        DescriptiveItem,
+    };
+    let mut model = empty_model();
+    model
+        .compound_representation_items
+        .push(CompoundRepresentationItem {
+            name: "dimensional note".into(),
+            item_element: CompoundItemElement {
+                kind: CompoundItemKind::Set,
+                items: vec![CompoundItem::Descriptive(DescriptiveItem {
+                    name: "dimensional note".into(),
+                    description: "controlled radius".into(),
+                })],
+            },
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let cri = re
+        .compound_representation_items
+        .iter()
+        .next()
+        .expect("cri round-trips");
+    assert_eq!(cri.name, "dimensional note");
+    assert_eq!(cri.item_element.kind, CompoundItemKind::Set);
+    assert_eq!(cri.item_element.items.len(), 1);
+    let CompoundItem::Descriptive(d) = &cri.item_element.items[0] else {
+        panic!("expected Descriptive variant");
+    };
+    assert_eq!(d.description, "controlled radius");
+}
+
+#[test]
 fn cgr_relationship_round_trip() {
     // CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP — pairs an SR
     // (rep_1) with a CGR (rep_2). Exercises the new

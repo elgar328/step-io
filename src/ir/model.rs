@@ -286,6 +286,9 @@ pub struct StepModel {
     /// round-trip — no modelled external consumer.
     pub representation_relationships:
         crate::ir::Arena<crate::ir::shape_rep::RepresentationRelationship>,
+    /// `compound_representation_item` arena (phase cri). Orphan round-trip.
+    pub compound_representation_items:
+        crate::ir::Arena<crate::ir::shape_rep::CompoundRepresentationItem>,
 }
 
 /// Arena-based storage for all topology objects.
