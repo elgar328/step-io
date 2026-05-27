@@ -114,10 +114,18 @@ impl WriteBuffer<'_> {
         viz: &crate::ir::visualization::VisualizationPool,
     ) -> Result<(), WriteError> {
         use crate::entities::SimpleEntityHandler;
-        use crate::entities::visualization::pre_defined_marker::PreDefinedMarkerHandler;
+        use crate::entities::visualization::pre_defined_marker::{
+            PreDefinedMarkerHandler, PreDefinedPointMarkerSymbolHandler,
+        };
+        use crate::ir::visualization::PreDefinedMarker;
         self.pre_defined_marker_step_ids = Vec::with_capacity(viz.pre_defined_markers.len());
         for m in viz.pre_defined_markers.iter() {
-            let id = PreDefinedMarkerHandler::write(self, m.clone())?;
+            let id = match m {
+                PreDefinedMarker::Plain(d) => PreDefinedMarkerHandler::write(self, d.clone())?,
+                PreDefinedMarker::PointMarkerSymbol(p) => {
+                    PreDefinedPointMarkerSymbolHandler::write(self, p.clone())?
+                }
+            };
             self.pre_defined_marker_step_ids.push(id);
         }
         Ok(())

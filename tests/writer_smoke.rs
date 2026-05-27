@@ -3617,6 +3617,37 @@ fn point_style_round_trip() {
 }
 
 #[test]
+fn pre_defined_point_marker_symbol_round_trip() {
+    // PRE_DEFINED_POINT_MARKER_SYMBOL — pre_defined_marker subtype that
+    // appears as a simple instance in the corpus (`PRE_DEFINED_POINT_MARKER_SYMBOL('x')`),
+    // not as a complex MI.
+    use step_io::ir::visualization::{
+        PreDefinedMarker, PreDefinedPointMarkerSymbol, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    viz.pre_defined_markers
+        .push(PreDefinedMarker::PointMarkerSymbol(
+            PreDefinedPointMarkerSymbol { name: "x".into() },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    let p = re_viz
+        .pre_defined_markers
+        .iter()
+        .find_map(|m| match m {
+            PreDefinedMarker::PointMarkerSymbol(p) => Some(p),
+            PreDefinedMarker::Plain(_) => None,
+        })
+        .expect("PointMarkerSymbol round-trips");
+    assert_eq!(p.name, "x");
+}
+
+#[test]
 fn surface_style_boundary_round_trip() {
     // SURFACE_STYLE_BOUNDARY — founded_item subtype with a curve_or_render
     // SELECT. Uses the SurfaceStyleRendering branch to keep fixture
