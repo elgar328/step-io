@@ -250,21 +250,23 @@ impl WriteBuffer<'_> {
         self.emit_founded_item_arena(&viz.founded_items)?;
         // CAMERA_MODEL_D3 — after emit_founded_item_arena so
         // `perspective_of_volume` resolves through `founded_item_step_ids`.
+        // Populates `viz_camera_model_step_ids` so `CAMERA_USAGE` can
+        // resolve `mapping_origin` through one index lookup later.
+        self.viz_camera_model_step_ids = Vec::with_capacity(viz.camera_models.len());
         for cm in viz.camera_models.iter() {
             use crate::ir::visualization::CameraModel as CM;
-            match cm {
-                CM::CameraModelD3(d3) => {
-                    CameraModelD3Handler::write(self, d3.clone())?;
-                }
+            let step = match cm {
+                CM::CameraModelD3(d3) => CameraModelD3Handler::write(self, d3.clone())?,
                 CM::CameraModelD3WithHlhsr(c) => {
                     use crate::entities::visualization::camera_model_variants::CameraModelD3WithHlhsrHandler;
-                    CameraModelD3WithHlhsrHandler::write(self, c.clone())?;
+                    CameraModelD3WithHlhsrHandler::write(self, c.clone())?
                 }
                 CM::CameraModelD3MultiClipping(c) => {
                     use crate::entities::visualization::camera_model_variants::CameraModelD3MultiClippingHandler;
-                    CameraModelD3MultiClippingHandler::write(self, c.clone())?;
+                    CameraModelD3MultiClippingHandler::write(self, c.clone())?
                 }
-            }
+            };
+            self.viz_camera_model_step_ids.push(step);
         }
         // PRESENTATION_STYLE_ASSIGNMENT arena — emit every PSA up-front so
         // STYLED_ITEM / OVER_RIDING_STYLED_ITEM writers can resolve their

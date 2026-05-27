@@ -247,6 +247,11 @@ pub(crate) struct WriteBuffer<'m> {
     /// resolve its `fill_area` ref); consumed by
     /// `SurfaceStyleFillAreaHandler` and downstream styled-side writers.
     pub(crate) founded_item_step_ids: Vec<u64>,
+    /// STEP entity id of every emitted `CameraModel` arena entry, indexed
+    /// by `CameraModelId.0`. Populated by `emit_visualization_if_set`
+    /// after `founded_item_step_ids`; consumed by `emit_camera_usage_arena`
+    /// to resolve `CameraUsage.mapping_origin`.
+    pub(crate) viz_camera_model_step_ids: Vec<u64>,
     /// plm Date/Time caches — populated by `emit_plm_if_set` in
     /// dependency order so downstream entities (`LocalTime`, `DateAndTime`)
     /// resolve refs through one index lookup.
@@ -469,6 +474,7 @@ impl<'m> WriteBuffer<'m> {
             psa_step_ids: Vec::new(),
             ssr_step_ids: Vec::new(),
             founded_item_step_ids: Vec::new(),
+            viz_camera_model_step_ids: Vec::new(),
             plm_utc_step_ids: Vec::new(),
             plm_date_step_ids: Vec::new(),
             plm_date_time_role_step_ids: Vec::new(),
@@ -696,6 +702,12 @@ impl<'m> WriteBuffer<'m> {
         // representation_item, per-geometry placements) is populated, so
         // the items refs serialise to valid step ids.
         self.emit_draughting_models()?;
+        // CAMERA_USAGE — delayed emit (mirrors Mdgpr / DraughtingModel
+        // pattern). `mapped_representation` may target a DM, so this runs
+        // after `emit_draughting_models` populates the DM slot of
+        // `representation_step_ids`. Overwrites the 0 placeholder slot
+        // that `emit_mapped_items` reserved for each CameraUsage entry.
+        self.emit_camera_usage_arena()?;
         // DRAUGHTING_MODEL_ITEM_ASSOCIATION — after representation chain
         // (`representation_step_ids` now includes DraughtingModel slots),
         // `ao_step_ids`, and `draughting_callout_step_ids`.

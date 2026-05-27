@@ -40,7 +40,8 @@ impl SimpleEntityHandler for CameraModelD3WithHlhsrHandler {
         };
         let hidden_line_surface_removal =
             read_bool(attrs, 3, entity_id, "hidden_line_surface_removal")?;
-        ctx.visualization
+        let id = ctx
+            .visualization
             .get_or_insert_with(VisualizationPool::default)
             .camera_models
             .push(CameraModel::CameraModelD3WithHlhsr(
@@ -49,6 +50,7 @@ impl SimpleEntityHandler for CameraModelD3WithHlhsrHandler {
                     hidden_line_surface_removal,
                 },
             ));
+        ctx.viz_camera_model_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -101,7 +103,8 @@ impl SimpleEntityHandler for CameraModelD3MultiClippingHandler {
         if shape_clipping.is_empty() {
             return Ok(());
         }
-        ctx.visualization
+        let id = ctx
+            .visualization
             .get_or_insert_with(VisualizationPool::default)
             .camera_models
             .push(CameraModel::CameraModelD3MultiClipping(
@@ -110,6 +113,7 @@ impl SimpleEntityHandler for CameraModelD3MultiClippingHandler {
                     shape_clipping,
                 },
             ));
+        ctx.viz_camera_model_id_map.insert(entity_id, id);
         Ok(())
     }
 

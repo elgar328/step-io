@@ -265,11 +265,24 @@ pub struct WireframeRepr {
 
 /// `REPRESENTATION_MAP(mapping_origin, mapped_representation)` — a reusable
 /// mapping target that a [`MappedItem`] instantiates. ir.toml models it as a
-/// `concrete_supertype` enum; the `camera_usage` subtype (18 instances) is
-/// deferred, so only the `Itself` carrier is modelled for now.
+/// `concrete_supertype` enum. `Itself` carries the base
+/// `REPRESENTATION_MAP`; `CameraUsage` covers the `CAMERA_USAGE` subtype
+/// (phase cm-usage) which narrows `mapping_origin` to a `camera_model`.
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationMap {
     Itself(RepresentationMapData),
+    CameraUsage(CameraUsage),
+}
+
+/// `CAMERA_USAGE` — `representation_map` SUBTYPE with `mapping_origin`
+/// narrowed to a `camera_model`. Phase cm-usage. Emitted via the delayed
+/// `emit_camera_usage_arena` pass (after `emit_draughting_models`) so
+/// `representation_step_ids` is fully populated before the carrier's
+/// `mapped_representation` resolves.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CameraUsage {
+    pub mapping_origin: crate::ir::id::CameraModelId,
+    pub mapped_representation: RepresentationId,
 }
 
 /// Carrier for the base `REPRESENTATION_MAP` entity.

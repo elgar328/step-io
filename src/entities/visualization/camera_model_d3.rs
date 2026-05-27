@@ -40,7 +40,8 @@ impl SimpleEntityHandler for CameraModelD3Handler {
             return Ok(());
         };
 
-        ctx.visualization
+        let id = ctx
+            .visualization
             .get_or_insert_with(VisualizationPool::default)
             .camera_models
             .push(CameraModel::CameraModelD3(CameraModelD3 {
@@ -48,6 +49,7 @@ impl SimpleEntityHandler for CameraModelD3Handler {
                 view_reference_system,
                 perspective_of_volume,
             }));
+        ctx.viz_camera_model_id_map.insert(entity_id, id);
         Ok(())
     }
 

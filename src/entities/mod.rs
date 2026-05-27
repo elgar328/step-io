@@ -341,6 +341,12 @@ pub(crate) enum PassLevel {
     /// `draughting_callout` `id_maps`). Runs before `Pass8Dmia` so a DMIA's
     /// `used_representation` can resolve via `repr_id_map`.
     Pass8DraughtingModel,
+    /// `CAMERA_USAGE` (phase cm-usage). `representation_map` SUBTYPE
+    /// whose `mapped_representation` may point at a `DRAUGHTING_MODEL`,
+    /// so it must run after `Pass8DraughtingModel` populates `repr_id_map`
+    /// for DM slots. `mapping_origin` resolves through
+    /// `viz_camera_model_id_map` filled by `Pass8CameraModel`.
+    Pass8CameraUsage,
     /// `DRAUGHTING_MODEL_ITEM_ASSOCIATION` (phase dmia). Depends on
     /// `repr_id_map`, `annotation_occurrence_id_map`, and
     /// `draughting_callout_id_map` — all populated by their respective

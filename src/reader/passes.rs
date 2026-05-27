@@ -454,6 +454,10 @@ impl ReaderContext {
         // annotation_occurrence, draughting_callout). Must run before
         // Pass8Dmia so DMIA's `used_representation` resolves.
         self.dispatch_registry(graph, PassLevel::Pass8DraughtingModel);
+        // CAMERA_USAGE — `representation_map` SUBTYPE whose
+        // `mapped_representation` may target a DRAUGHTING_MODEL, so runs
+        // after Pass8DraughtingModel populates the DM slot of repr_id_map.
+        self.dispatch_registry(graph, PassLevel::Pass8CameraUsage);
         // DRAUGHTING_MODEL_ITEM_ASSOCIATION — depends on repr_id_map +
         // annotation_occurrence_id_map + draughting_callout_id_map.
         self.dispatch_registry(graph, PassLevel::Pass8Dmia);

@@ -56,7 +56,13 @@ impl SimpleEntityHandler for RepresentationMapHandler {
     }
 
     fn write(buf: &mut WriteBuffer, rmap: RepresentationMap) -> Result<u64, WriteError> {
-        let RepresentationMap::Itself(d) = rmap;
+        // Only `Itself` is emitted here; `CameraUsage` is handled by the
+        // delayed `emit_camera_usage_arena` so its `mapped_representation`
+        // (which may point at a DRAUGHTING_MODEL) resolves through a fully
+        // populated `representation_step_ids` cache.
+        let RepresentationMap::Itself(d) = rmap else {
+            return Ok(0);
+        };
         let origin = buf.emit_representation_item_ref(d.mapping_origin)?;
         let mapped = buf.representation_step_ids[d.mapped_representation.0 as usize];
         Ok(buf.push_simple(
