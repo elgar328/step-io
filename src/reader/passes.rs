@@ -477,6 +477,9 @@ impl ReaderContext {
         // so the representations arena keeps delayed-emit variants
         // contiguous at the tail (Mdgpr → DM → TSR → CGR).
         self.dispatch_registry(graph, PassLevel::Pass8CgrRead);
+        // CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP — depends on
+        // `repr_id_map` covering CGR (filled by Pass8CgrRead).
+        self.dispatch_registry(graph, PassLevel::Pass8CgrrRead);
         // DEFINED_SYMBOL — depends on `symbol_target_id_map` (Pass6SymbolTarget)
         // and `viz_pre_defined_symbol_id_map` (Pass7Colour-block).
         self.dispatch_registry(graph, PassLevel::Pass8DefinedSymbol);

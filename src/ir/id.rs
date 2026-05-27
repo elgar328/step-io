@@ -34,8 +34,8 @@ use super::representation_item::RepresentationItem;
 use super::shape_rep::{
     AllAroundShapeAspect, CentreOfSymmetry, CharacterizedObject, CompositeGroupShapeAspect,
     DatumSystem, DatumTarget, GeometricItemSpecificUsage, MappedItem, NumericRepresentationItem,
-    PlacedDatumTargetFeature, Representation, RepresentationMap, ShapeAspect,
-    ShapeAspectRelationship, ToleranceZone, UnitContext, UnitlessContext,
+    PlacedDatumTargetFeature, Representation, RepresentationMap, RepresentationRelationship,
+    ShapeAspect, ShapeAspectRelationship, ToleranceZone, UnitContext, UnitlessContext,
 };
 use super::tessellation::{
     ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, TessellatedItem,
@@ -265,6 +265,11 @@ define_id!(RepresentationId, Representation);
 // REPRESENTATION_MAP + MAPPED_ITEM arenas (phase mapped-item).
 define_id!(RepresentationMapId, RepresentationMap);
 define_id!(MappedItemId, MappedItem);
+
+// representation_relationship enum arena (phase cgrr). Currently holds
+// `ConstructiveGeometryRepresentationRelationship`. Future SUBTYPEs
+// (SHAPE_REPRESENTATION_RELATIONSHIP, MDDR, ...) may migrate here.
+define_id!(RepresentationRelationshipId, RepresentationRelationship);
 
 // representation_item value-items (phase numeric-representation-item).
 define_id!(NumericRepresentationItemId, NumericRepresentationItem);

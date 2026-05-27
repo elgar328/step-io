@@ -5283,6 +5283,58 @@ fn tessellated_geometric_set_round_trip() {
 }
 
 #[test]
+fn cgr_relationship_round_trip() {
+    // CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP — pairs an SR
+    // (rep_1) with a CGR (rep_2). Exercises the new
+    // representation_relationships arena + delayed emit.
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{
+        ConstructiveGeometryRepr, ConstructiveGeometryRepresentationRelationship, PlainRepr,
+        Representation, RepresentationRelationship,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+    let frame = model.geometry.identity_placement();
+    let sr = model.representations.push(Representation::Plain(PlainRepr {
+        name: "sr".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+        frame: None,
+    }));
+    let cgr = model
+        .representations
+        .push(Representation::ConstructiveGeometry(
+            ConstructiveGeometryRepr {
+                name: "cgr".into(),
+                items: vec![RepresentationItemRef::Placement3d(frame)],
+                context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            },
+        ));
+    model.representation_relationships.push(
+        RepresentationRelationship::ConstructiveGeometryRepresentationRelationship(
+            ConstructiveGeometryRepresentationRelationship {
+                name: "supplemental geometry".into(),
+                description: String::new(),
+                rep_1: sr,
+                rep_2: cgr,
+            },
+        ),
+    );
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let cgrr = re
+        .representation_relationships
+        .iter()
+        .map(|r| match r {
+            RepresentationRelationship::ConstructiveGeometryRepresentationRelationship(c) => c,
+        })
+        .next()
+        .expect("cgrr round-trips");
+    assert_eq!(cgrr.name, "supplemental geometry");
+}
+
+#[test]
 fn constructive_geometry_representation_round_trip() {
     // CONSTRUCTIVE_GEOMETRY_REPRESENTATION — representation SUBTYPE with
     // a SET of geometry items. Exercises the delayed-emit pathway

@@ -374,6 +374,10 @@ pub(crate) enum PassLevel {
     /// (Mdgpr / DM / TSR / CGR) contiguous at the tail; writer's
     /// push-built `representation_step_ids` then aligns with arena ids.
     Pass8CgrRead,
+    /// `CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP` (phase cgrr) —
+    /// `representation_relationship` SUBTYPE. Must run after
+    /// `Pass8CgrRead` so `rep_1` / `rep_2` resolve through `repr_id_map`.
+    Pass8CgrrRead,
     /// `SYMBOL_TARGET` (phase ds-st) — `geometric_representation_item`
     /// SUBTYPE that resolves `placement` through `placement_map` (3D only).
     /// Scheduled in the Pass6 block after placement maps are filled.

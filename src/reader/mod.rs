@@ -581,6 +581,9 @@ pub struct ReaderContext {
     /// `geometric_representation_item` enum arena (phase ds-st).
     pub(crate) geometric_representation_items:
         crate::ir::Arena<crate::ir::visualization::GeometricRepresentationItem>,
+    /// `representation_relationship` enum arena (phase cgrr).
+    pub(crate) representation_relationships:
+        crate::ir::Arena<crate::ir::shape_rep::RepresentationRelationship>,
     /// `SYMBOL_TARGET` step entity id → `GeometricRepresentationItemId`.
     /// Populated by the `SymbolTarget` reader so `DEFINED_SYMBOL.target`
     /// can resolve.
@@ -737,6 +740,7 @@ impl ReaderContext {
                 tessellated_faces: ctx.tessellated_faces,
                 tessellated_surface_sets: ctx.tessellated_surface_sets,
                 geometric_representation_items: ctx.geometric_representation_items,
+                representation_relationships: ctx.representation_relationships,
             },
             warnings: ctx.warnings,
             parse_warnings: graph.warnings.clone(),

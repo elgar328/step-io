@@ -435,6 +435,34 @@ impl WriteBuffer<'_> {
         Ok(())
     }
 
+    /// Emit the `RepresentationRelationship` arena (phase cgrr). Called
+    /// from `emit_pools` after every delayed-emit Representation pass
+    /// (Mdgpr / DM / TSR / CGR) so `rep_1` / `rep_2` resolve through a
+    /// fully populated `representation_step_ids` cache.
+    pub(in crate::writer::buffer) fn emit_representation_relationships(
+        &mut self,
+    ) -> Result<(), WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::shape_rep::cgr_relationship::ConstructiveGeometryRepresentationRelationshipHandler;
+        use crate::ir::shape_rep::RepresentationRelationship;
+        let rrs: Vec<_> = self
+            .model
+            .representation_relationships
+            .iter()
+            .cloned()
+            .collect();
+        for rr in rrs {
+            match rr {
+                RepresentationRelationship::ConstructiveGeometryRepresentationRelationship(
+                    cgrr,
+                ) => {
+                    ConstructiveGeometryRepresentationRelationshipHandler::write(self, cgrr)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
     pub(in crate::writer::buffer) fn emit_representations_pre_pass(
         &mut self,
     ) -> Result<(), WriteError> {

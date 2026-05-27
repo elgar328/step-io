@@ -282,6 +282,10 @@ pub struct StepModel {
     /// arenas. Orphan round-trip — no modelled external consumer.
     pub geometric_representation_items:
         crate::ir::Arena<crate::ir::visualization::GeometricRepresentationItem>,
+    /// `representation_relationship` enum arena (phase cgrr). Orphan
+    /// round-trip — no modelled external consumer.
+    pub representation_relationships:
+        crate::ir::Arena<crate::ir::shape_rep::RepresentationRelationship>,
 }
 
 /// Arena-based storage for all topology objects.

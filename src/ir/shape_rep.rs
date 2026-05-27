@@ -172,6 +172,30 @@ pub enum Representation {
     ConstructiveGeometry(ConstructiveGeometryRepr),
 }
 
+/// `representation_relationship` `enum_base` — abstract supertype. step-io
+/// currently models only the `CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP`
+/// subtype (phase cgrr). Other family members (`SHAPE_REPRESENTATION_RELATIONSHIP`,
+/// `MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP`, ...) are handled via
+/// dedicated paths (`srr_equiv_map`, per-handler emit) and are not migrated
+/// here yet.
+#[derive(Debug, Clone, PartialEq)]
+pub enum RepresentationRelationship {
+    ConstructiveGeometryRepresentationRelationship(ConstructiveGeometryRepresentationRelationship),
+}
+
+/// `CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP(name, description,
+/// rep_1, rep_2)` — `representation_relationship` SUBTYPE. EXPRESS
+/// narrows `rep_1` to `cgr_or_sr` and `rep_2` to a `CGR`; step-io stores
+/// both as plain `RepresentationId` and trusts the source to enforce
+/// the narrow (unresolved refs drop the carrier).
+#[derive(Debug, Clone, PartialEq)]
+pub struct ConstructiveGeometryRepresentationRelationship {
+    pub name: String,
+    pub description: String,
+    pub rep_1: RepresentationId,
+    pub rep_2: RepresentationId,
+}
+
 /// `CONSTRUCTIVE_GEOMETRY_REPRESENTATION(name, items, context_of_items)`.
 /// Phase cgr. EXPRESS WHERE wr1 requires `GEOMETRIC_REPRESENTATION_CONTEXT`,
 /// but step-io's `RepresentationContextRef` already represents that family

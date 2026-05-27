@@ -725,6 +725,10 @@ impl<'m> WriteBuffer<'m> {
         // representation_step_ids is appended in arena order
         // (Mdgpr → DM → TSR → CGR).
         self.emit_constructive_geometry_representations()?;
+        // CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP — runs after
+        // every Representation delayed emit so rep_1 / rep_2 resolve
+        // through the fully populated representation_step_ids cache.
+        self.emit_representation_relationships()?;
         // CAMERA_USAGE — delayed emit (mirrors Mdgpr / DraughtingModel
         // pattern). `mapped_representation` may target a DM, so this runs
         // after `emit_draughting_models` populates the DM slot of
