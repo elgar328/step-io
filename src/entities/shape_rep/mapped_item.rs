@@ -105,7 +105,12 @@ impl SimpleEntityHandler for MappedItemHandler {
     }
 
     fn write(buf: &mut WriteBuffer, mi: MappedItem) -> Result<u64, WriteError> {
-        let MappedItem::Itself(d) = mi;
+        // Only `Itself` emits as a plain MAPPED_ITEM. CameraImage variants
+        // emit as their own STEP types via dedicated handlers invoked from
+        // `emit_mapped_items`.
+        let MappedItem::Itself(d) = mi else {
+            return Ok(0);
+        };
         let source = buf.representation_map_step_ids[d.mapping_source.0 as usize];
         let target = buf.emit_representation_item_ref(d.mapping_target)?;
         Ok(buf.push_simple(

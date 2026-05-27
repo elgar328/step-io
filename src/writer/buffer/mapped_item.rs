@@ -10,8 +10,11 @@
 use super::WriteBuffer;
 use crate::entities::SimpleEntityHandler;
 use crate::entities::shape_rep::mapped_item::{MappedItemHandler, RepresentationMapHandler};
+use crate::entities::visualization::camera_image::{
+    CameraImage3dWithScaleHandler, CameraImageHandler,
+};
 use crate::entities::visualization::camera_usage::CameraUsageHandler;
-use crate::ir::shape_rep::RepresentationMap;
+use crate::ir::shape_rep::{MappedItem, RepresentationMap};
 use crate::writer::WriteError;
 
 impl WriteBuffer<'_> {
@@ -30,9 +33,15 @@ impl WriteBuffer<'_> {
                 self.representation_map_step_ids[idx] = step_id;
             }
         }
+        // Only `Itself` MAPPED_ITEM emits here; CameraImage variants
+        // forward-reference CameraUsage, so they emit later via
+        // `emit_camera_image_arena` after the CameraUsage slot of
+        // `representation_map_step_ids` is populated.
         let mitems: Vec<_> = self.model.mapped_items.iter().cloned().collect();
         for mi in mitems {
-            MappedItemHandler::write(self, mi)?;
+            if matches!(mi, MappedItem::Itself(_)) {
+                MappedItemHandler::write(self, mi)?;
+            }
         }
         Ok(())
     }
@@ -47,6 +56,25 @@ impl WriteBuffer<'_> {
             if let RepresentationMap::CameraUsage(cu) = rmap {
                 let step_id = CameraUsageHandler::write(self, cu)?;
                 self.representation_map_step_ids[idx] = step_id;
+            }
+        }
+        Ok(())
+    }
+
+    /// Delayed emission of `CAMERA_IMAGE` / `CAMERA_IMAGE_3D_WITH_SCALE` —
+    /// runs after `emit_camera_usage_arena` so each entity's
+    /// `mapping_source` (a `CameraUsage` slot) resolves to a non-zero STEP id.
+    pub(in crate::writer::buffer) fn emit_camera_image_arena(&mut self) -> Result<(), WriteError> {
+        let mitems: Vec<_> = self.model.mapped_items.iter().cloned().collect();
+        for mi in mitems {
+            match mi {
+                MappedItem::Itself(_) => {}
+                MappedItem::CameraImage(ci) => {
+                    CameraImageHandler::write(self, ci)?;
+                }
+                MappedItem::CameraImage3dWithScale(ci) => {
+                    CameraImage3dWithScaleHandler::write(self, ci)?;
+                }
             }
         }
         Ok(())

@@ -297,11 +297,20 @@ pub struct RepresentationMapData {
 /// `MAPPED_ITEM(name, mapping_source, mapping_target)` — an instance of a
 /// [`RepresentationMap`] placed through a `representation_item` transform.
 /// Itself a `representation_item` in STEP. ir.toml models it as a
-/// `concrete_supertype` enum; the `camera_image` / `camera_image_3d_with_scale`
-/// subtypes are deferred, so only the `Itself` carrier is modelled for now.
+/// `concrete_supertype` enum. The `camera_image_2d_with_scale` subtype is
+/// not modelled (2D camera models are out of scope) — source refs are
+/// silently dropped on read.
 #[derive(Debug, Clone, PartialEq)]
 pub enum MappedItem {
     Itself(MappedItemData),
+    /// `CAMERA_IMAGE` — SUBTYPE OF `mapped_item` with `mapping_source`
+    /// narrowed to a `camera_usage` and `mapping_target` narrowed to a
+    /// `planar_box`. Phase cm-image.
+    CameraImage(CameraImage),
+    /// `CAMERA_IMAGE_3D_WITH_SCALE` — SUBTYPE OF `camera_image` with no
+    /// additional explicit attrs (`scale` is DERIVE, encoded as `*` in
+    /// P21). Phase cm-image.
+    CameraImage3dWithScale(CameraImage),
 }
 
 /// Carrier for the base `MAPPED_ITEM` entity.
@@ -310,6 +319,18 @@ pub struct MappedItemData {
     pub name: String,
     pub mapping_source: RepresentationMapId,
     pub mapping_target: RepresentationItemRef,
+}
+
+/// `CAMERA_IMAGE` body — shared by `camera_image` and its
+/// `camera_image_3d_with_scale` subtype (the latter adds only a DERIVE
+/// `scale`, no explicit attrs).
+#[derive(Debug, Clone, PartialEq)]
+pub struct CameraImage {
+    pub name: String,
+    /// Narrowed to a `camera_usage` variant of `representation_map`.
+    pub mapping_source: RepresentationMapId,
+    /// Narrowed to a `planar_box` (a `PlanarExtent` variant).
+    pub mapping_target: crate::ir::id::PlanarExtentId,
 }
 
 /// `representation_item` value-item — `INTEGER_REPRESENTATION_ITEM` or

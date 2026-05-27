@@ -347,6 +347,11 @@ pub(crate) enum PassLevel {
     /// for DM slots. `mapping_origin` resolves through
     /// `viz_camera_model_id_map` filled by `Pass8CameraModel`.
     Pass8CameraUsage,
+    /// `CAMERA_IMAGE` + `CAMERA_IMAGE_3D_WITH_SCALE` (phase cm-image).
+    /// `mapped_item` SUBTYPE whose `mapping_source` resolves through
+    /// `representation_map_id_map` — must run after `Pass8CameraUsage`
+    /// populates that map's `CameraUsage` slots.
+    Pass8CameraImage,
     /// `DRAUGHTING_MODEL_ITEM_ASSOCIATION` (phase dmia). Depends on
     /// `repr_id_map`, `annotation_occurrence_id_map`, and
     /// `draughting_callout_id_map` — all populated by their respective

@@ -458,6 +458,10 @@ impl ReaderContext {
         // `mapped_representation` may target a DRAUGHTING_MODEL, so runs
         // after Pass8DraughtingModel populates the DM slot of repr_id_map.
         self.dispatch_registry(graph, PassLevel::Pass8CameraUsage);
+        // CAMERA_IMAGE + CAMERA_IMAGE_3D_WITH_SCALE — `mapped_item` SUBTYPE
+        // resolving `mapping_source` through `representation_map_id_map`
+        // (whose CameraUsage slots Pass8CameraUsage just filled).
+        self.dispatch_registry(graph, PassLevel::Pass8CameraImage);
         // DRAUGHTING_MODEL_ITEM_ASSOCIATION — depends on repr_id_map +
         // annotation_occurrence_id_map + draughting_callout_id_map.
         self.dispatch_registry(graph, PassLevel::Pass8Dmia);

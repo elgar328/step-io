@@ -1933,6 +1933,92 @@ fn camera_usage_round_trip() {
 }
 
 #[test]
+fn camera_image_round_trip() {
+    // CAMERA_IMAGE + CAMERA_IMAGE_3D_WITH_SCALE — mapped_item SUBTYPEs
+    // referencing a camera_usage source and a planar_box target.
+    use step_io::ir::shape_rep::{
+        CameraImage, CameraUsage, MappedItem, PlainRepr, Representation, RepresentationMap,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+    let frame = model.geometry.identity_placement();
+    let pt = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let pb = model
+        .geometry
+        .planar_extents
+        .push(PlanarExtent::PlanarBox(PlanarBox {
+            name: "win".into(),
+            size_in_x: 1.0,
+            size_in_y: 2.0,
+            placement: PlanarBoxPlacement::Placement3d(frame),
+        }));
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let vv = viz.founded_items.push(FoundedItem::ViewVolume(ViewVolume {
+        projection_type: Projection::Central,
+        projection_point: pt,
+        view_plane_distance: 100.0,
+        front_plane_distance: 0.0,
+        front_plane_clipping: false,
+        back_plane_distance: 0.0,
+        back_plane_clipping: false,
+        view_volume_sides_clipping: false,
+        view_window: pb,
+    }));
+    let cam = viz
+        .camera_models
+        .push(CameraModel::CameraModelD3(CameraModelD3 {
+            name: "cam".into(),
+            view_reference_system: frame,
+            perspective_of_volume: vv,
+        }));
+    let rep = model.representations.push(Representation::Plain(PlainRepr {
+        name: "target".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+        frame: None,
+    }));
+    let cu = model
+        .representation_maps
+        .push(RepresentationMap::CameraUsage(CameraUsage {
+            mapping_origin: cam,
+            mapped_representation: rep,
+        }));
+    model
+        .mapped_items
+        .push(MappedItem::CameraImage(CameraImage {
+            name: "img".into(),
+            mapping_source: cu,
+            mapping_target: pb,
+        }));
+    model
+        .mapped_items
+        .push(MappedItem::CameraImage3dWithScale(CameraImage {
+            name: "img3d".into(),
+            mapping_source: cu,
+            mapping_target: pb,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.mapped_items.len(), 2);
+    let mut iter = re.mapped_items.iter();
+    let MappedItem::CameraImage(ci) = iter.next().unwrap() else {
+        panic!("expected CameraImage");
+    };
+    assert_eq!(ci.name, "img");
+    let MappedItem::CameraImage3dWithScale(ci3) = iter.next().unwrap() else {
+        panic!("expected CameraImage3dWithScale");
+    };
+    assert_eq!(ci3.name, "img3d");
+}
+
+#[test]
 fn planar_extent_and_box_round_trip() {
     // PLANAR_EXTENT (base) + PLANAR_BOX with a 3D placement and another
     // with a 2D placement — one concrete_supertype arena.
@@ -2092,7 +2178,9 @@ fn mapped_item_round_trip() {
     let re = reconvert(&text);
     assert_eq!(re.representation_maps.len(), 1);
     assert_eq!(re.mapped_items.len(), 1);
-    let MappedItem::Itself(mi) = re.mapped_items.iter().next().unwrap();
+    let MappedItem::Itself(mi) = re.mapped_items.iter().next().unwrap() else {
+        panic!("expected Itself variant");
+    };
     assert_eq!(mi.name, "inst");
     assert!(matches!(
         mi.mapping_target,

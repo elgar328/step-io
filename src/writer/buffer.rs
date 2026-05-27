@@ -534,6 +534,7 @@ impl<'m> WriteBuffer<'m> {
         self.entities
     }
 
+    #[allow(clippy::too_many_lines)]
     pub(crate) fn emit_all(&mut self) -> Result<(), WriteError> {
         // Order: geometry -> topology -> units -> assembly. Mirrors the
         // OCCT-flavoured fixture layout (topology before units) and keeps
@@ -708,6 +709,10 @@ impl<'m> WriteBuffer<'m> {
         // `representation_step_ids`. Overwrites the 0 placeholder slot
         // that `emit_mapped_items` reserved for each CameraUsage entry.
         self.emit_camera_usage_arena()?;
+        // CAMERA_IMAGE / CAMERA_IMAGE_3D_WITH_SCALE — depends on the
+        // CameraUsage slot of `representation_map_step_ids` populated by
+        // `emit_camera_usage_arena`.
+        self.emit_camera_image_arena()?;
         // DRAUGHTING_MODEL_ITEM_ASSOCIATION — after representation chain
         // (`representation_step_ids` now includes DraughtingModel slots),
         // `ao_step_ids`, and `draughting_callout_step_ids`.

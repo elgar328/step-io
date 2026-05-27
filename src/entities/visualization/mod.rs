@@ -6,6 +6,7 @@
 //! The MDGPR top-level wrapper (Pass 7-11) sits in `entities/shape_rep/`
 //! because its dispatch boundary is `representation`.
 
+pub mod camera_image;
 pub mod camera_model_d3;
 pub mod camera_model_variants;
 pub mod camera_usage;
