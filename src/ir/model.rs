@@ -324,6 +324,8 @@ pub struct GeometryPool {
     pub placements_2d: Arena<Axis2Placement2d>,
     /// `PLANAR_EXTENT` / `PLANAR_BOX` arena — rectangular planar regions.
     pub planar_extents: Arena<PlanarExtent>,
+    /// `CIRCULAR_AREA` arena (phase ca). Orphan round-trip.
+    pub circular_areas: Arena<crate::ir::geometry::CircularArea>,
     /// Caches the arena id of a single identity `AXIS2_PLACEMENT_3D` for kernel
     /// callers that repeatedly request one via [`GeometryPool::identity_placement`].
     /// The reader never touches this cache — it pushes every on-disk placement

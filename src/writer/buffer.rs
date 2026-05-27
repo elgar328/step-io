@@ -585,6 +585,19 @@ impl<'m> WriteBuffer<'m> {
         for id in self.model.geometry.planar_extents.iter_ids() {
             self.emit_planar_extent(id)?;
         }
+        // CIRCULAR_AREA — orphan, after Point arena is emitted.
+        for ca in self
+            .model
+            .geometry
+            .circular_areas
+            .iter()
+            .cloned()
+            .collect::<Vec<_>>()
+        {
+            use crate::entities::SimpleEntityHandler;
+            use crate::entities::geometry::circular_area::CircularAreaHandler;
+            CircularAreaHandler::write(self, ca)?;
+        }
         for id in self.model.geometry.curves_2d.iter_ids() {
             self.emit_curve_2d(id)?;
         }

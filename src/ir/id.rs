@@ -263,6 +263,9 @@ define_id!(DraughtingPreDefinedTextFontId, DraughtingPreDefinedTextFont);
 // REPRESENTATION arena — unified subtype storage (representation-refactor).
 define_id!(RepresentationId, Representation);
 
+// CIRCULAR_AREA arena (phase ca). Orphan.
+define_id!(CircularAreaId, crate::ir::geometry::CircularArea);
+
 // REPRESENTATION_MAP + MAPPED_ITEM arenas (phase mapped-item).
 define_id!(RepresentationMapId, RepresentationMap);
 define_id!(MappedItemId, MappedItem);

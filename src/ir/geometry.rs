@@ -665,3 +665,12 @@ pub enum PlanarBoxPlacement {
     Placement2d(Placement2dId),
     Placement3d(Placement3dId),
 }
+
+/// `CIRCULAR_AREA(name, centre, radius)` — `primitive_2d` SUBTYPE.
+/// Orphan in step-io; corpus 1 instance.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CircularArea {
+    pub name: String,
+    pub centre: PointId,
+    pub radius: f64,
+}

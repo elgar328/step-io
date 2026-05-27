@@ -12,6 +12,7 @@ pub mod cartesian_point;
 pub mod cartesian_point_2d;
 pub mod circle;
 pub mod circle_2d;
+pub mod circular_area;
 pub mod composite_curve;
 pub mod composite_curve_segment;
 pub mod conical_surface;

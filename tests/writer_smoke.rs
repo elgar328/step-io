@@ -5283,6 +5283,34 @@ fn tessellated_geometric_set_round_trip() {
 }
 
 #[test]
+fn circular_area_round_trip() {
+    // CIRCULAR_AREA — primitive_2d SUBTYPE. Orphan in step-io.
+    use step_io::ir::geometry::CircularArea;
+    let mut model = empty_model();
+    let centre = model.geometry.points.push(Point3 {
+        x: 1.0,
+        y: 2.0,
+        z: 0.0,
+    });
+    model.geometry.circular_areas.push(CircularArea {
+        name: "testarea".into(),
+        centre,
+        radius: 2.0,
+    });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let ca = re
+        .geometry
+        .circular_areas
+        .iter()
+        .next()
+        .expect("cri round-trips");
+    assert_eq!(ca.name, "testarea");
+    assert!((ca.radius - 2.0).abs() < f64::EPSILON);
+}
+
+#[test]
 fn compound_representation_item_round_trip() {
     // COMPOUND_REPRESENTATION_ITEM — typed wrapper carrying a child
     // DESCRIPTIVE_REPRESENTATION_ITEM (the dominant fixture pattern).
