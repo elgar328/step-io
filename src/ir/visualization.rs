@@ -519,14 +519,21 @@ pub struct PresentationStyleAssignmentData {
     pub styles: Vec<PsaStyle>,
 }
 
-/// `PRESENTATION_STYLE_BY_CONTEXT(styles, style_context)` body. The
-/// `style_context` field maps to `presentation_style_context_select`
-/// (`REPRESENTATION` / `REPRESENTATION_ITEM`); step-io does not model
-/// representations yet, so this struct is a placeholder pending that
-/// phase. No reader handler is currently registered.
+/// `PRESENTATION_STYLE_BY_CONTEXT(styles, style_context)` body. Phase psbc.
+/// `style_context` is partial: only `Representation` and `Item` SELECT
+/// members are modelled; other members (`Group`, `PresentationLayerAssignment`,
+/// `PresentationSet`) drop the carrier on read.
 #[derive(Debug, Clone, PartialEq)]
 pub struct PresentationStyleByContext {
     pub styles: Vec<PsaStyle>,
+    pub style_context: StyleContext,
+}
+
+/// `style_context_select` SELECT — partial enum (Representation + Item only).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum StyleContext {
+    Representation(crate::ir::id::RepresentationId),
+    Item(crate::ir::representation_item::RepresentationItemRef),
 }
 
 /// One element of [`PresentationStyleAssignmentData::styles`]. Both

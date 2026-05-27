@@ -5283,6 +5283,48 @@ fn tessellated_geometric_set_round_trip() {
 }
 
 #[test]
+fn presentation_style_by_context_round_trip() {
+    // PRESENTATION_STYLE_BY_CONTEXT — PSA SUBTYPE with style_context.
+    use step_io::ir::shape_rep::{PlainRepr, Representation};
+    use step_io::ir::visualization::{
+        PresentationStyleAssignment, PresentationStyleByContext, StyleContext, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+    let rep = model.representations.push(Representation::Plain(PlainRepr {
+        name: "ctx".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+        frame: None,
+    }));
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    viz.presentation_style_assignments.push(
+        PresentationStyleAssignment::PresentationStyleByContext(PresentationStyleByContext {
+            styles: vec![],
+            style_context: StyleContext::Representation(rep),
+        }),
+    );
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz");
+    let psbc = re_viz
+        .presentation_style_assignments
+        .iter()
+        .find_map(|p| match p {
+            PresentationStyleAssignment::PresentationStyleByContext(c) => Some(c),
+            PresentationStyleAssignment::Itself(_) => None,
+        })
+        .expect("psbc round-trips");
+    assert!(matches!(
+        psbc.style_context,
+        StyleContext::Representation(_)
+    ));
+}
+
+#[test]
 fn surface_curve_subtypes_round_trip() {
     // BOUNDED_SURFACE_CURVE + INTERSECTION_CURVE — corpus 0 inst.
     // synthetic IR with surface + curve + associated_geometry → Surface.

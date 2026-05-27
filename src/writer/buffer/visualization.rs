@@ -288,7 +288,10 @@ impl WriteBuffer<'_> {
                 PresentationStyleAssignment::Itself(data) => {
                     PresentationStyleAssignmentHandler::write(self, data.clone())?
                 }
-                PresentationStyleAssignment::PresentationStyleByContext(_) => 0,
+                PresentationStyleAssignment::PresentationStyleByContext(psbc) => {
+                    use crate::entities::visualization::presentation_style_by_context::PresentationStyleByContextHandler;
+                    PresentationStyleByContextHandler::write(self, psbc.clone())?
+                }
             };
             self.psa_step_ids.push(id);
         }
