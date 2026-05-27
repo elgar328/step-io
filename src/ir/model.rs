@@ -289,6 +289,9 @@ pub struct StepModel {
     /// `compound_representation_item` arena (phase cri). Orphan round-trip.
     pub compound_representation_items:
         crate::ir::Arena<crate::ir::shape_rep::CompoundRepresentationItem>,
+    /// `item_identified_representation_usage` arena (phase iiru). Orphan.
+    pub item_identified_representation_usages:
+        crate::ir::Arena<crate::ir::shape_rep::ItemIdentifiedRepresentationUsage>,
 }
 
 /// Arena-based storage for all topology objects.

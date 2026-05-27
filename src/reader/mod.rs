@@ -587,6 +587,9 @@ pub struct ReaderContext {
     /// `compound_representation_item` arena (phase cri).
     pub(crate) compound_representation_items:
         crate::ir::Arena<crate::ir::shape_rep::CompoundRepresentationItem>,
+    /// `item_identified_representation_usage` arena (phase iiru).
+    pub(crate) item_identified_representation_usages:
+        crate::ir::Arena<crate::ir::shape_rep::ItemIdentifiedRepresentationUsage>,
     /// `SYMBOL_TARGET` step entity id → `GeometricRepresentationItemId`.
     /// Populated by the `SymbolTarget` reader so `DEFINED_SYMBOL.target`
     /// can resolve.
@@ -745,6 +748,7 @@ impl ReaderContext {
                 geometric_representation_items: ctx.geometric_representation_items,
                 representation_relationships: ctx.representation_relationships,
                 compound_representation_items: ctx.compound_representation_items,
+                item_identified_representation_usages: ctx.item_identified_representation_usages,
             },
             warnings: ctx.warnings,
             parse_warnings: graph.warnings.clone(),

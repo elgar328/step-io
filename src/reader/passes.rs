@@ -483,6 +483,9 @@ impl ReaderContext {
         // MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP — RepresentationRelationship
         // SUBTYPE. rep_1/rep_2 resolve through repr_id_map.
         self.dispatch_registry(graph, PassLevel::Pass8MddrRead);
+        // ITEM_IDENTIFIED_REPRESENTATION_USAGE — depends on repr_id_map
+        // + PMI id maps (shape_aspect / datum / dimensional_size / etc.).
+        self.dispatch_registry(graph, PassLevel::Pass8IiruRead);
         // COMPOUND_REPRESENTATION_ITEM — resolves child refs through
         // descriptive_item_map (Pass8Measure) + per-arena representation
         // item id maps. Scheduled last in the Pass8 block.

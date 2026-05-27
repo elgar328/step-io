@@ -5552,6 +5552,50 @@ fn compound_representation_item_round_trip() {
 }
 
 #[test]
+fn iiru_round_trip() {
+    // ITEM_IDENTIFIED_REPRESENTATION_USAGE — concrete base entity with
+    // 5 attrs. definition resolves to ShapeAspect; identified_item to
+    // a typed SET_REPRESENTATION_ITEM wrapper.
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{
+        CompoundItemKind, IiruDefinition, IiruIdentifiedItem, ItemIdentifiedRepresentationUsage,
+        PlainRepr, Representation,
+    };
+    let (mut model, sa, _, _, _) = shape_aspect_relationship_fixture();
+    let frame = model.geometry.identity_placement();
+    let rep = model.representations.push(Representation::Plain(PlainRepr {
+        name: "used".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(
+            step_io::ir::UnitContextId(0),
+        )),
+        frame: None,
+    }));
+    model
+        .item_identified_representation_usages
+        .push(ItemIdentifiedRepresentationUsage {
+            name: "iiru".into(),
+            description: Some("GDT".into()),
+            definition: IiruDefinition::ShapeAspect(sa),
+            used_representation: rep,
+            identified_item: IiruIdentifiedItem::Compound {
+                kind: CompoundItemKind::Set,
+                items: vec![RepresentationItemRef::Placement3d(frame)],
+            },
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let iiru = re
+        .item_identified_representation_usages
+        .iter()
+        .next()
+        .expect("iiru round-trips");
+    assert_eq!(iiru.name, "iiru");
+    assert_eq!(iiru.description.as_deref(), Some("GDT"));
+    assert!(matches!(iiru.definition, IiruDefinition::ShapeAspect(_)));
+}
+
+#[test]
 fn mddr_round_trip() {
     // MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP — pairs two
     // representations (DM | MDGPR | SR per mddr_select).

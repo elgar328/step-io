@@ -693,6 +693,19 @@ impl<'m> WriteBuffer<'m> {
         // representation_item arenas are emitted (DRI is re-emitted
         // inline by the handler).
         self.emit_compound_representation_items()?;
+        // ITEM_IDENTIFIED_REPRESENTATION_USAGE — orphan, after all
+        // PMI / shape_aspect / representation step-id caches populated.
+        for iiru in self
+            .model
+            .item_identified_representation_usages
+            .iter()
+            .cloned()
+            .collect::<Vec<_>>()
+        {
+            use crate::entities::SimpleEntityHandler;
+            use crate::entities::shape_rep::iiru::ItemIdentifiedRepresentationUsageHandler;
+            ItemIdentifiedRepresentationUsageHandler::write(self, iiru)?;
+        }
         // CIRCULAR_AREA — orphan, no ref to representations or items.
         for ca in self
             .model

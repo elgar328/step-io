@@ -212,6 +212,40 @@ pub struct MechanicalDesignAndDraughtingRelationship {
     pub rep_2: RepresentationId,
 }
 
+/// `ITEM_IDENTIFIED_REPRESENTATION_USAGE(name, description, definition,
+/// used_representation, identified_item)` — concrete supertype of GISU /
+/// DMIA but corpus also carries direct IIRU instances (54 inst). Phase iiru.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ItemIdentifiedRepresentationUsage {
+    pub name: String,
+    pub description: Option<String>,
+    pub definition: IiruDefinition,
+    pub used_representation: RepresentationId,
+    pub identified_item: IiruIdentifiedItem,
+}
+
+/// `iiru_definition` SELECT — partial enum covering the corpus-common
+/// PMI / shape-aspect members. Other members drop the carrier on read.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum IiruDefinition {
+    ShapeAspect(crate::ir::id::ShapeAspectId),
+    Datum(crate::ir::id::DatumId),
+    DatumFeature(crate::ir::id::DatumFeatureId),
+    DimensionalSize(crate::ir::id::DimensionalSizeId),
+    GeometricTolerance(crate::ir::id::GeometricToleranceId),
+}
+
+/// `iiru_select` — either a single `representation_item` ref or a typed
+/// SET / LIST wrapper (CRI precedent).
+#[derive(Debug, Clone, PartialEq)]
+pub enum IiruIdentifiedItem {
+    Item(crate::ir::representation_item::RepresentationItemRef),
+    Compound {
+        kind: CompoundItemKind,
+        items: Vec<crate::ir::representation_item::RepresentationItemRef>,
+    },
+}
+
 /// `CONSTRUCTIVE_GEOMETRY_REPRESENTATION(name, items, context_of_items)`.
 /// Phase cgr. EXPRESS WHERE wr1 requires `GEOMETRIC_REPRESENTATION_CONTEXT`,
 /// but step-io's `RepresentationContextRef` already represents that family

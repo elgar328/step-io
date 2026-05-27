@@ -284,6 +284,12 @@ define_id!(MappedItemId, MappedItem);
 // (SHAPE_REPRESENTATION_RELATIONSHIP, MDDR, ...) may migrate here.
 define_id!(RepresentationRelationshipId, RepresentationRelationship);
 
+// item_identified_representation_usage arena (phase iiru). Orphan.
+define_id!(
+    ItemIdentifiedRepresentationUsageId,
+    crate::ir::shape_rep::ItemIdentifiedRepresentationUsage
+);
+
 // compound_representation_item arena (phase cri). Orphan round-trip.
 define_id!(CompoundRepresentationItemId, CompoundRepresentationItem);
 

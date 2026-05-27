@@ -395,6 +395,10 @@ pub(crate) enum PassLevel {
     /// `representation_relationship` SUBTYPE. After `Pass8CgrrRead` so
     /// the arena tail stays contiguous.
     Pass8MddrRead,
+    /// `ITEM_IDENTIFIED_REPRESENTATION_USAGE` (phase iiru) — concrete
+    /// IIRU base (separate from GISU/DMIA subtypes). Depends on
+    /// `repr_id_map` + PMI id maps (`shape_aspect` / `datum` / etc.).
+    Pass8IiruRead,
     /// `SYMBOL_TARGET` (phase ds-st) — `geometric_representation_item`
     /// SUBTYPE that resolves `placement` through `placement_map` (3D only).
     /// Scheduled in the Pass6 block after placement maps are filled.
