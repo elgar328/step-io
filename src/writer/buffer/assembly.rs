@@ -435,6 +435,25 @@ impl WriteBuffer<'_> {
         Ok(())
     }
 
+    /// Emit the `Representation::ShapeRepresentationWithParameters` arena
+    /// entries (phase srwp). Called after every other delayed-emit
+    /// Representation pass so `representation_step_ids` keeps arena order
+    /// (Mdgpr → DM → TSR → CGR → SRWP).
+    pub(in crate::writer::buffer) fn emit_shape_representation_with_parameters(
+        &mut self,
+    ) -> Result<(), WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::shape_rep::srwp::ShapeRepresentationWithParametersHandler;
+        let reprs = self.model.representations.clone();
+        for repr in reprs.iter() {
+            if let Representation::ShapeRepresentationWithParameters(srwp) = repr {
+                let step_id = ShapeRepresentationWithParametersHandler::write(self, srwp.clone())?;
+                self.representation_step_ids.push(step_id);
+            }
+        }
+        Ok(())
+    }
+
     /// Emit the `RepresentationRelationship` arena (phase cgrr). Called
     /// from `emit_pools` after every delayed-emit Representation pass
     /// (Mdgpr / DM / TSR / CGR) so `rep_1` / `rep_2` resolve through a
@@ -481,6 +500,7 @@ impl WriteBuffer<'_> {
                     | Representation::DraughtingModel(_)
                     | Representation::TessellatedShapeRepresentation(_)
                     | Representation::ConstructiveGeometry(_)
+                    | Representation::ShapeRepresentationWithParameters(_)
             ) {
                 continue;
             }
@@ -600,6 +620,11 @@ impl WriteBuffer<'_> {
             Representation::ConstructiveGeometry(_) => {
                 unreachable!(
                     "CONSTRUCTIVE_GEOMETRY_REPRESENTATION is emitted by emit_constructive_geometry_representations, not the pre-emit pass"
+                )
+            }
+            Representation::ShapeRepresentationWithParameters(_) => {
+                unreachable!(
+                    "SHAPE_REPRESENTATION_WITH_PARAMETERS is emitted by emit_shape_representation_with_parameters, not the pre-emit pass"
                 )
             }
             Representation::ShapeDimensionRepresentation(r) => {

@@ -39,6 +39,7 @@ pub mod shape_aspect_subtypes;
 pub mod shape_dimension_representation;
 pub mod shape_representation;
 pub mod shape_representation_relationship;
+pub mod srwp;
 pub mod tessellated_shape_representation;
 pub mod tolerance_zone;
 pub mod value_representation_item;

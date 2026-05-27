@@ -399,6 +399,10 @@ pub(crate) enum PassLevel {
     /// IIRU base (separate from GISU/DMIA subtypes). Depends on
     /// `repr_id_map` + PMI id maps (`shape_aspect` / `datum` / etc.).
     Pass8IiruRead,
+    /// `SHAPE_REPRESENTATION_WITH_PARAMETERS` (phase srwp) —
+    /// `representation` SUBTYPE. Pass8 후반 (CGR/CGRR/MDDR 이후, arena
+    /// tail 일관성).
+    Pass8SrwpRead,
     /// `SYMBOL_TARGET` (phase ds-st) — `geometric_representation_item`
     /// SUBTYPE that resolves `placement` through `placement_map` (3D only).
     /// Scheduled in the Pass6 block after placement maps are filled.

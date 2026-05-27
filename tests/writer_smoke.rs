@@ -5552,6 +5552,54 @@ fn compound_representation_item_round_trip() {
 }
 
 #[test]
+fn srwp_round_trip() {
+    // SHAPE_REPRESENTATION_WITH_PARAMETERS — representation SUBTYPE
+    // with partial-narrow items SELECT (Direction / Placement /
+    // Descriptive only).
+    use step_io::ir::shape_rep::{
+        DescriptiveItem, Representation, ShapeRepresentationWithParameters, SrwpItem,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+    let frame = model.geometry.identity_placement();
+    let dir = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    model
+        .representations
+        .push(Representation::ShapeRepresentationWithParameters(
+            ShapeRepresentationWithParameters {
+                name: "srwp".into(),
+                items: vec![
+                    SrwpItem::Placement(frame),
+                    SrwpItem::Direction(dir),
+                    SrwpItem::Descriptive(DescriptiveItem {
+                        name: "param".into(),
+                        description: "v".into(),
+                    }),
+                ],
+                context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let srwp = re
+        .representations
+        .iter()
+        .find_map(|r| match r {
+            Representation::ShapeRepresentationWithParameters(s) => Some(s),
+            _ => None,
+        })
+        .expect("srwp round-trips");
+    assert_eq!(srwp.name, "srwp");
+    assert_eq!(srwp.items.len(), 3);
+}
+
+#[test]
 fn iiru_round_trip() {
     // ITEM_IDENTIFIED_REPRESENTATION_USAGE — concrete base entity with
     // 5 attrs. definition resolves to ShapeAspect; identified_item to

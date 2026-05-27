@@ -486,6 +486,8 @@ impl ReaderContext {
         // ITEM_IDENTIFIED_REPRESENTATION_USAGE — depends on repr_id_map
         // + PMI id maps (shape_aspect / datum / dimensional_size / etc.).
         self.dispatch_registry(graph, PassLevel::Pass8IiruRead);
+        // SHAPE_REPRESENTATION_WITH_PARAMETERS — Representation subtype.
+        self.dispatch_registry(graph, PassLevel::Pass8SrwpRead);
         // COMPOUND_REPRESENTATION_ITEM — resolves child refs through
         // descriptive_item_map (Pass8Measure) + per-arena representation
         // item id maps. Scheduled last in the Pass8 block.

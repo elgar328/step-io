@@ -797,6 +797,9 @@ impl<'m> WriteBuffer<'m> {
         // representation_step_ids is appended in arena order
         // (Mdgpr → DM → TSR → CGR).
         self.emit_constructive_geometry_representations()?;
+        // SHAPE_REPRESENTATION_WITH_PARAMETERS — delayed emit. After
+        // CGR so representation_step_ids keeps arena order.
+        self.emit_shape_representation_with_parameters()?;
         // CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP — runs after
         // every Representation delayed emit so rep_1 / rep_2 resolve
         // through the fully populated representation_step_ids cache.

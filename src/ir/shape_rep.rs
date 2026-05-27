@@ -170,6 +170,31 @@ pub enum Representation {
     /// `emit_tessellated_shape_representations` so the per-geometry caches
     /// are populated before items resolve.
     ConstructiveGeometry(ConstructiveGeometryRepr),
+    /// `SHAPE_REPRESENTATION_WITH_PARAMETERS` (phase srwp). `shape_representation`
+    /// SUBTYPE that narrows `items` to `shape_representation_with_parameters_items`
+    /// SELECT. Emit delayed (Mdgpr / DM / TSR / CGR pattern).
+    ShapeRepresentationWithParameters(ShapeRepresentationWithParameters),
+}
+
+/// `SHAPE_REPRESENTATION_WITH_PARAMETERS(name, items, context_of_items)` —
+/// phase srwp. `items` SET is narrowed by EXPRESS to a partial SELECT;
+/// step-io models the corpus-common members (Direction / Placement /
+/// Descriptive); other members drop the entry.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ShapeRepresentationWithParameters {
+    pub name: String,
+    pub items: Vec<SrwpItem>,
+    pub context: Option<RepresentationContextRef>,
+}
+
+/// `shape_representation_with_parameters_items` SELECT — partial enum.
+/// `measure_representation_item` member is dropped (step-io's measure
+/// types live in `PropertyMeasure` not a `RepresentationItem` arena).
+#[derive(Debug, Clone, PartialEq)]
+pub enum SrwpItem {
+    Direction(crate::ir::id::DirectionId),
+    Placement(Placement3dId),
+    Descriptive(DescriptiveItem),
 }
 
 /// `representation_relationship` `enum_base` — abstract supertype. step-io
