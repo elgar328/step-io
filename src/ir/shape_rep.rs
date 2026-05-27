@@ -181,6 +181,10 @@ pub enum Representation {
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationRelationship {
     ConstructiveGeometryRepresentationRelationship(ConstructiveGeometryRepresentationRelationship),
+    /// `MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP` (phase mddr) —
+    /// pairs `DM` / `MDGPR` / `SR` representations. `rep_1` / `rep_2` narrowed
+    /// to `mddr_select` but step-io stores both as `RepresentationId`.
+    MechanicalDesignAndDraughtingRelationship(MechanicalDesignAndDraughtingRelationship),
 }
 
 /// `CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP(name, description,
@@ -190,6 +194,18 @@ pub enum RepresentationRelationship {
 /// the narrow (unresolved refs drop the carrier).
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConstructiveGeometryRepresentationRelationship {
+    pub name: String,
+    pub description: String,
+    pub rep_1: RepresentationId,
+    pub rep_2: RepresentationId,
+}
+
+/// `MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP(name, description, rep_1,
+/// rep_2)` — `representation_relationship` SUBTYPE that narrows both
+/// reps to `mddr_select` (DM | MDGPR | SR). step-io stores both as
+/// `RepresentationId` and trusts the source's narrow.
+#[derive(Debug, Clone, PartialEq)]
+pub struct MechanicalDesignAndDraughtingRelationship {
     pub name: String,
     pub description: String,
     pub rep_1: RepresentationId,

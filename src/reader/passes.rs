@@ -480,6 +480,9 @@ impl ReaderContext {
         // CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP — depends on
         // `repr_id_map` covering CGR (filled by Pass8CgrRead).
         self.dispatch_registry(graph, PassLevel::Pass8CgrrRead);
+        // MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP — RepresentationRelationship
+        // SUBTYPE. rep_1/rep_2 resolve through repr_id_map.
+        self.dispatch_registry(graph, PassLevel::Pass8MddrRead);
         // COMPOUND_REPRESENTATION_ITEM — resolves child refs through
         // descriptive_item_map (Pass8Measure) + per-arena representation
         // item id maps. Scheduled last in the Pass8 block.

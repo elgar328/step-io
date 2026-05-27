@@ -5552,6 +5552,52 @@ fn compound_representation_item_round_trip() {
 }
 
 #[test]
+fn mddr_round_trip() {
+    // MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP — pairs two
+    // representations (DM | MDGPR | SR per mddr_select).
+    use step_io::ir::shape_rep::{
+        MechanicalDesignAndDraughtingRelationship, PlainRepr, Representation,
+        RepresentationRelationship,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+    let sr1 = model.representations.push(Representation::Plain(PlainRepr {
+        name: "sr1".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+        frame: None,
+    }));
+    let sr2 = model.representations.push(Representation::Plain(PlainRepr {
+        name: "sr2".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+        frame: None,
+    }));
+    model.representation_relationships.push(
+        RepresentationRelationship::MechanicalDesignAndDraughtingRelationship(
+            MechanicalDesignAndDraughtingRelationship {
+                name: "mddr".into(),
+                description: "test".into(),
+                rep_1: sr1,
+                rep_2: sr2,
+            },
+        ),
+    );
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let mddr = re
+        .representation_relationships
+        .iter()
+        .find_map(|r| match r {
+            RepresentationRelationship::MechanicalDesignAndDraughtingRelationship(m) => Some(m),
+            RepresentationRelationship::ConstructiveGeometryRepresentationRelationship(_) => None,
+        })
+        .expect("mddr round-trips");
+    assert_eq!(mddr.name, "mddr");
+    assert_eq!(mddr.description, "test");
+}
+
+#[test]
 fn cgr_relationship_round_trip() {
     // CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP — pairs an SR
     // (rep_1) with a CGR (rep_2). Exercises the new
@@ -5595,10 +5641,12 @@ fn cgr_relationship_round_trip() {
     let cgrr = re
         .representation_relationships
         .iter()
-        .map(|r| match r {
-            RepresentationRelationship::ConstructiveGeometryRepresentationRelationship(c) => c,
+        .find_map(|r| match r {
+            RepresentationRelationship::ConstructiveGeometryRepresentationRelationship(c) => {
+                Some(c)
+            }
+            RepresentationRelationship::MechanicalDesignAndDraughtingRelationship(_) => None,
         })
-        .next()
         .expect("cgrr round-trips");
     assert_eq!(cgrr.name, "supplemental geometry");
 }

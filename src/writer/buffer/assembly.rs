@@ -458,6 +458,10 @@ impl WriteBuffer<'_> {
                 ) => {
                     ConstructiveGeometryRepresentationRelationshipHandler::write(self, cgrr)?;
                 }
+                RepresentationRelationship::MechanicalDesignAndDraughtingRelationship(mddr) => {
+                    use crate::entities::shape_rep::mddr::MechanicalDesignAndDraughtingRelationshipHandler;
+                    MechanicalDesignAndDraughtingRelationshipHandler::write(self, mddr)?;
+                }
             }
         }
         Ok(())

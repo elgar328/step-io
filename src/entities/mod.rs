@@ -391,6 +391,10 @@ pub(crate) enum PassLevel {
     /// `surface_curve` SUBTYPEs (orphans, corpus 0). Surfaces +
     /// curves arenas must be populated before this pass.
     Pass8SurfaceCurveSubtypes,
+    /// `MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP` (phase mddr) —
+    /// `representation_relationship` SUBTYPE. After `Pass8CgrrRead` so
+    /// the arena tail stays contiguous.
+    Pass8MddrRead,
     /// `SYMBOL_TARGET` (phase ds-st) — `geometric_representation_item`
     /// SUBTYPE that resolves `placement` through `placement_map` (3D only).
     /// Scheduled in the Pass6 block after placement maps are filled.
