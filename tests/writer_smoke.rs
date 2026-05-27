@@ -5283,6 +5283,62 @@ fn tessellated_geometric_set_round_trip() {
 }
 
 #[test]
+fn curve_bounded_surface_round_trip() {
+    // CURVE_BOUNDED_SURFACE — bounded_surface SUBTYPE. corpus 0 inst —
+    // synthetic IR only. references a basis surface + a generic Curve
+    // (boundary_curve is not yet modelled in step-io).
+    use step_io::ir::geometry::{CurveBoundedSurface, Line3, Plane3, Surface};
+    let mut model = empty_model();
+    let frame = model.geometry.identity_placement();
+    let plane = model
+        .geometry
+        .surfaces
+        .push(Surface::Plane(Plane3 { position: frame }));
+    let p1 = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let d1 = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let boundary = model
+        .geometry
+        .curves
+        .push(step_io::ir::geometry::Curve::Line(Line3 {
+            point: p1,
+            direction: d1,
+            magnitude: 1.0,
+        }));
+    model
+        .geometry
+        .surfaces
+        .push(Surface::CurveBounded(CurveBoundedSurface {
+            name: "cbs".into(),
+            basis_surface: plane,
+            boundaries: vec![boundary],
+            implicit_outer: true,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let cbs = re
+        .geometry
+        .surfaces
+        .iter()
+        .find_map(|s| match s {
+            Surface::CurveBounded(c) => Some(c),
+            _ => None,
+        })
+        .expect("cbs round-trips");
+    assert_eq!(cbs.name, "cbs");
+    assert!(cbs.implicit_outer);
+    assert_eq!(cbs.boundaries.len(), 1);
+}
+
+#[test]
 fn bounded_pcurve_round_trip() {
     // BOUNDED_PCURVE — pcurve SUBTYPE. Orphan. corpus 0 inst — synthetic
     // IR only. references a surface + a (definitional_)representation.

@@ -17,6 +17,7 @@ pub mod circular_area;
 pub mod composite_curve;
 pub mod composite_curve_segment;
 pub mod conical_surface;
+pub mod curve_bounded_surface;
 pub mod cylindrical_surface;
 pub mod degenerate_toroidal_surface;
 pub mod direction;

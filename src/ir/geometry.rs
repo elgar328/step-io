@@ -78,6 +78,23 @@ pub enum Surface {
     Nurbs(NurbsSurface),
     RectangularTrimmed(RectangularTrimmedSurface),
     DegenerateToroidal(DegenerateToroidalSurface),
+    /// `CURVE_BOUNDED_SURFACE` (phase cbs) — `bounded_surface` SUBTYPE.
+    /// `boundaries` narrowed to generic `CurveId` because step-io has no
+    /// `boundary_curve` / `composite_curve_on_surface` arena yet.
+    CurveBounded(CurveBoundedSurface),
+}
+
+/// `CURVE_BOUNDED_SURFACE(name, basis_surface, boundaries, implicit_outer)` —
+/// `bounded_surface` SUBTYPE. Corpus 0 instances per ir.toml; round-trip
+/// test only. `boundaries` SET narrows the EXPRESS `boundary_curve` to
+/// generic `CurveId` for now — proper narrow awaits a
+/// `composite_curve_on_surface` cluster.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CurveBoundedSurface {
+    pub name: String,
+    pub basis_surface: SurfaceId,
+    pub boundaries: Vec<CurveId>,
+    pub implicit_outer: bool,
 }
 
 /// `DEGENERATE_TOROIDAL_SURFACE(name, position, major_radius, minor_radius,

@@ -127,6 +127,11 @@ impl WriteBuffer<'_> {
             Surface::Nurbs(nurbs) => self.emit_nurbs_surface(nurbs)?,
             Surface::RectangularTrimmed(rts) => self.emit_rectangular_trimmed_surface(rts)?,
             Surface::DegenerateToroidal(dts) => self.emit_degenerate_toroidal_surface(dts)?,
+            Surface::CurveBounded(cbs) => {
+                use crate::entities::SimpleEntityHandler;
+                use crate::entities::geometry::curve_bounded_surface::CurveBoundedSurfaceHandler;
+                CurveBoundedSurfaceHandler::write(self, cbs)?
+            }
         };
         self.surface_ids.insert(id, n);
         Ok(n)
