@@ -473,6 +473,10 @@ impl ReaderContext {
         // (Mdgpr/DM/TSR) contiguous at the tail; writer's push-built
         // `representation_step_ids` then aligns with arena ids.
         self.dispatch_registry(graph, PassLevel::Pass8TsrRead);
+        // CONSTRUCTIVE_GEOMETRY_REPRESENTATION — runs after Pass8TsrRead
+        // so the representations arena keeps delayed-emit variants
+        // contiguous at the tail (Mdgpr → DM → TSR → CGR).
+        self.dispatch_registry(graph, PassLevel::Pass8CgrRead);
         // DEFINED_SYMBOL — depends on `symbol_target_id_map` (Pass6SymbolTarget)
         // and `viz_pre_defined_symbol_id_map` (Pass7Colour-block).
         self.dispatch_registry(graph, PassLevel::Pass8DefinedSymbol);

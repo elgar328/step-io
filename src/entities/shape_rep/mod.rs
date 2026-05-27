@@ -12,6 +12,7 @@
 
 pub mod advanced_brep_shape_representation;
 pub mod characterized_item_within_representation;
+pub mod constructive_geometry_representation;
 pub mod datum_system;
 pub mod datum_target;
 pub mod descriptive_representation_item;

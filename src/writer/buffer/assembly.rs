@@ -413,6 +413,28 @@ impl WriteBuffer<'_> {
         Ok(())
     }
 
+    /// Emit the `Representation::ConstructiveGeometry` arena entries
+    /// (phase cgr). Called from `emit_pools` after
+    /// `emit_tessellated_shape_representations` so
+    /// `representation_step_ids` is appended in arena order
+    /// (Mdgpr → DM → TSR → CGR). CGR `items` resolve through
+    /// `emit_representation_item_ref` (geometry / topology / placement
+    /// caches all populated by earlier emit passes).
+    pub(in crate::writer::buffer) fn emit_constructive_geometry_representations(
+        &mut self,
+    ) -> Result<(), WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::shape_rep::constructive_geometry_representation::ConstructiveGeometryRepresentationHandler;
+        let reprs = self.model.representations.clone();
+        for repr in reprs.iter() {
+            if let Representation::ConstructiveGeometry(cgr) = repr {
+                let step_id = ConstructiveGeometryRepresentationHandler::write(self, cgr.clone())?;
+                self.representation_step_ids.push(step_id);
+            }
+        }
+        Ok(())
+    }
+
     pub(in crate::writer::buffer) fn emit_representations_pre_pass(
         &mut self,
     ) -> Result<(), WriteError> {
@@ -426,6 +448,7 @@ impl WriteBuffer<'_> {
                 Representation::Mdgpr(_)
                     | Representation::DraughtingModel(_)
                     | Representation::TessellatedShapeRepresentation(_)
+                    | Representation::ConstructiveGeometry(_)
             ) {
                 continue;
             }
@@ -540,6 +563,11 @@ impl WriteBuffer<'_> {
             Representation::TessellatedShapeRepresentation(_) => {
                 unreachable!(
                     "TESSELLATED_SHAPE_REPRESENTATION is emitted by emit_tessellated_shape_representations, not the pre-emit pass"
+                )
+            }
+            Representation::ConstructiveGeometry(_) => {
+                unreachable!(
+                    "CONSTRUCTIVE_GEOMETRY_REPRESENTATION is emitted by emit_constructive_geometry_representations, not the pre-emit pass"
                 )
             }
             Representation::ShapeDimensionRepresentation(r) => {

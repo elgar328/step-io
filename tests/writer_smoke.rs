@@ -5283,6 +5283,45 @@ fn tessellated_geometric_set_round_trip() {
 }
 
 #[test]
+fn constructive_geometry_representation_round_trip() {
+    // CONSTRUCTIVE_GEOMETRY_REPRESENTATION — representation SUBTYPE with
+    // a SET of geometry items. Exercises the delayed-emit pathway
+    // through emit_constructive_geometry_representations.
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{ConstructiveGeometryRepr, Representation};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+    let frame = model.geometry.identity_placement();
+    model
+        .representations
+        .push(Representation::ConstructiveGeometry(
+            ConstructiveGeometryRepr {
+                name: "supplemental geometry".into(),
+                items: vec![RepresentationItemRef::Placement3d(frame)],
+                context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let cgr = re
+        .representations
+        .iter()
+        .find_map(|r| match r {
+            Representation::ConstructiveGeometry(c) => Some(c),
+            _ => None,
+        })
+        .expect("cgr round-trips");
+    assert_eq!(cgr.name, "supplemental geometry");
+    assert_eq!(cgr.items.len(), 1);
+    assert!(matches!(
+        cgr.items[0],
+        RepresentationItemRef::Placement3d(_)
+    ));
+}
+
+#[test]
 fn tessellated_shape_representation_round_trip() {
     // TESSELLATED_SHAPE_REPRESENTATION — representation SUBTYPE whose
     // items are tessellated_item refs. Exercises the delayed-emit pathway

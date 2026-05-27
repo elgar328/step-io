@@ -720,6 +720,11 @@ impl<'m> WriteBuffer<'m> {
         // `emit_draughting_models` so `representation_step_ids` is
         // appended in arena tail order (Mdgpr → DM → TSR).
         self.emit_tessellated_shape_representations()?;
+        // CONSTRUCTIVE_GEOMETRY_REPRESENTATION — delayed emit (Mdgpr / DM /
+        // TSR pattern). Runs after the prior delayed emits so
+        // representation_step_ids is appended in arena order
+        // (Mdgpr → DM → TSR → CGR).
+        self.emit_constructive_geometry_representations()?;
         // CAMERA_USAGE — delayed emit (mirrors Mdgpr / DraughtingModel
         // pattern). `mapped_representation` may target a DM, so this runs
         // after `emit_draughting_models` populates the DM slot of

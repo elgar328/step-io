@@ -160,6 +160,27 @@ pub enum Representation {
     /// `emit_tessellation` so the items refs resolve through fully
     /// populated `tessellated_*_step_ids` caches.
     TessellatedShapeRepresentation(TessellatedShapeRepresentation),
+    /// `CONSTRUCTIVE_GEOMETRY_REPRESENTATION` (phase cgr). `representation`
+    /// SUBTYPE carrying a SET of geometry items (`placement` / `curve` /
+    /// `edge` / `face` / `point` / `surface` / `face_surface` /
+    /// `vertex_point` per EXPRESS WHERE wr2). Emit is delayed
+    /// (`Mdgpr` / `DraughtingModel` / `TSR` pattern)
+    /// — `emit_representations_pre_pass` skips this variant, and
+    /// `emit_constructive_geometry_representations` runs after
+    /// `emit_tessellated_shape_representations` so the per-geometry caches
+    /// are populated before items resolve.
+    ConstructiveGeometry(ConstructiveGeometryRepr),
+}
+
+/// `CONSTRUCTIVE_GEOMETRY_REPRESENTATION(name, items, context_of_items)`.
+/// Phase cgr. EXPRESS WHERE wr1 requires `GEOMETRIC_REPRESENTATION_CONTEXT`,
+/// but step-io's `RepresentationContextRef` already represents that family
+/// — lenient on read (`DraughtingModel` pattern).
+#[derive(Debug, Clone, PartialEq)]
+pub struct ConstructiveGeometryRepr {
+    pub name: String,
+    pub items: Vec<RepresentationItemRef>,
+    pub context: Option<RepresentationContextRef>,
 }
 
 /// `TESSELLATED_SHAPE_REPRESENTATION(name, items, context_of_items)` —
