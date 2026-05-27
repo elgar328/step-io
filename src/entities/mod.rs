@@ -387,6 +387,10 @@ pub(crate) enum PassLevel {
     /// Depends on `surface_map` + `repr_id_map`. Scheduled at the tail
     /// of the Pass8 block.
     Pass8BoundedPCurve,
+    /// `BOUNDED_SURFACE_CURVE` + `INTERSECTION_CURVE` (phase scs) —
+    /// `surface_curve` SUBTYPEs (orphans, corpus 0). Surfaces +
+    /// curves arenas must be populated before this pass.
+    Pass8SurfaceCurveSubtypes,
     /// `SYMBOL_TARGET` (phase ds-st) — `geometric_representation_item`
     /// SUBTYPE that resolves `placement` through `placement_map` (3D only).
     /// Scheduled in the Pass6 block after placement maps are filled.

@@ -487,6 +487,9 @@ impl ReaderContext {
         // BOUNDED_PCURVE — `parameter_space_curve` SUBTYPE (orphan).
         // Surface + repr_id_map populated by earlier passes.
         self.dispatch_registry(graph, PassLevel::Pass8BoundedPCurve);
+        // BOUNDED_SURFACE_CURVE + INTERSECTION_CURVE — surface_curve
+        // SUBTYPEs (corpus 0; round-trip only).
+        self.dispatch_registry(graph, PassLevel::Pass8SurfaceCurveSubtypes);
         // DEFINED_SYMBOL — depends on `symbol_target_id_map` (Pass6SymbolTarget)
         // and `viz_pre_defined_symbol_id_map` (Pass7Colour-block).
         self.dispatch_registry(graph, PassLevel::Pass8DefinedSymbol);

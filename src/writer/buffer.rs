@@ -724,6 +724,30 @@ impl<'m> WriteBuffer<'m> {
                 }
             }
         }
+        // BOUNDED_SURFACE_CURVE + INTERSECTION_CURVE — orphan, after curves
+        // + surfaces emitted.
+        for sc in self
+            .model
+            .geometry
+            .surface_curves
+            .iter()
+            .cloned()
+            .collect::<Vec<_>>()
+        {
+            use crate::entities::SimpleEntityHandler;
+            use crate::entities::geometry::surface_curve_subtypes::{
+                BoundedSurfaceCurveHandler, IntersectionCurveHandler,
+            };
+            use crate::ir::geometry::SurfaceCurve;
+            match sc {
+                SurfaceCurve::BoundedSurfaceCurve(b) => {
+                    BoundedSurfaceCurveHandler::write(self, b)?;
+                }
+                SurfaceCurve::IntersectionCurve(i) => {
+                    IntersectionCurveHandler::write(self, i)?;
+                }
+            }
+        }
         // REPRESENTATION_MAP + MAPPED_ITEM — after visualization so the
         // `representation_step_ids` cache covers MDGPR slots too.
         self.emit_mapped_items()?;

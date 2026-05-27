@@ -5283,6 +5283,69 @@ fn tessellated_geometric_set_round_trip() {
 }
 
 #[test]
+fn surface_curve_subtypes_round_trip() {
+    // BOUNDED_SURFACE_CURVE + INTERSECTION_CURVE — corpus 0 inst.
+    // synthetic IR with surface + curve + associated_geometry → Surface.
+    use step_io::ir::geometry::{
+        Line3, PCurveOrSurface, Plane3, PreferredSurfaceCurveRepresentation, Surface, SurfaceCurve,
+        SurfaceCurveData,
+    };
+    let mut model = empty_model();
+    let frame = model.geometry.identity_placement();
+    let p1 = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let d1 = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let curve = model
+        .geometry
+        .curves
+        .push(step_io::ir::geometry::Curve::Line(Line3 {
+            point: p1,
+            direction: d1,
+            magnitude: 1.0,
+        }));
+    let plane = model
+        .geometry
+        .surfaces
+        .push(Surface::Plane(Plane3 { position: frame }));
+    let body = SurfaceCurveData {
+        name: "sc".into(),
+        curve_3d: curve,
+        associated_geometry: vec![PCurveOrSurface::Surface(plane)],
+        master_representation: PreferredSurfaceCurveRepresentation::Curve3d,
+    };
+    model
+        .geometry
+        .surface_curves
+        .push(SurfaceCurve::BoundedSurfaceCurve(body.clone()));
+    model
+        .geometry
+        .surface_curves
+        .push(SurfaceCurve::IntersectionCurve(SurfaceCurveData {
+            name: "ic".into(),
+            ..body
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let mut iter = re.geometry.surface_curves.iter();
+    let SurfaceCurve::BoundedSurfaceCurve(bsc) = iter.next().expect("bsc") else {
+        panic!("expected BoundedSurfaceCurve first");
+    };
+    assert_eq!(bsc.name, "sc");
+    let SurfaceCurve::IntersectionCurve(ic) = iter.next().expect("ic") else {
+        panic!("expected IntersectionCurve second");
+    };
+    assert_eq!(ic.name, "ic");
+}
+
+#[test]
 fn curve_bounded_surface_round_trip() {
     // CURVE_BOUNDED_SURFACE — bounded_surface SUBTYPE. corpus 0 inst —
     // synthetic IR only. references a basis surface + a generic Curve

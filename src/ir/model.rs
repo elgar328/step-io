@@ -328,6 +328,9 @@ pub struct GeometryPool {
     pub circular_areas: Arena<crate::ir::geometry::CircularArea>,
     /// `parameter_space_curve` enum arena (phase bpc). Orphan round-trip.
     pub parameter_space_curves: Arena<crate::ir::geometry::ParameterSpaceCurve>,
+    /// `surface_curve` subtypes arena (phase scs). Orphan round-trip.
+    /// Base `surface_curve` itself uses the alias path (`surface_curve.rs`).
+    pub surface_curves: Arena<crate::ir::geometry::SurfaceCurve>,
     /// Caches the arena id of a single identity `AXIS2_PLACEMENT_3D` for kernel
     /// callers that repeatedly request one via [`GeometryPool::identity_placement`].
     /// The reader never touches this cache — it pushes every on-disk placement

@@ -692,6 +692,41 @@ pub struct CircularArea {
     pub radius: f64,
 }
 
+/// `surface_curve` enum — phase scs. Currently models the two SUBTYPE
+/// variants (`bounded_surface_curve` / `intersection_curve`). The base
+/// `SURFACE_CURVE` itself stays in the existing alias path (unwrap to
+/// `curve_3d` via `surface_curve.rs`); both subtypes are corpus 0 so
+/// the alias and this arena never overlap.
+#[derive(Debug, Clone, PartialEq)]
+pub enum SurfaceCurve {
+    BoundedSurfaceCurve(SurfaceCurveData),
+    IntersectionCurve(SurfaceCurveData),
+}
+
+/// Body shared by every [`SurfaceCurve`] variant.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceCurveData {
+    pub name: String,
+    pub curve_3d: CurveId,
+    pub associated_geometry: Vec<PCurveOrSurface>,
+    pub master_representation: PreferredSurfaceCurveRepresentation,
+}
+
+/// `pcurve_or_surface` SELECT — partial: only `surface` modelled.
+/// `pcurve` branch deferred until BPC handler exposes an id map.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum PCurveOrSurface {
+    Surface(SurfaceId),
+}
+
+/// `preferred_surface_curve_representation` ENUMERATION.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PreferredSurfaceCurveRepresentation {
+    Curve3d,
+    PcurveS1,
+    PcurveS2,
+}
+
 /// `parameter_space_curve` `enum_base` — phase bpc. Currently models the
 /// `BOUNDED_PCURVE` SUBTYPE only; corpus 0 inst (round-trip test only).
 #[derive(Debug, Clone, PartialEq)]

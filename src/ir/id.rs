@@ -272,6 +272,9 @@ define_id!(
     crate::ir::geometry::ParameterSpaceCurve
 );
 
+// surface_curve subtypes enum arena (phase scs). Orphan.
+define_id!(SurfaceCurveSubtypeId, crate::ir::geometry::SurfaceCurve);
+
 // REPRESENTATION_MAP + MAPPED_ITEM arenas (phase mapped-item).
 define_id!(RepresentationMapId, RepresentationMap);
 define_id!(MappedItemId, MappedItem);
