@@ -6,7 +6,7 @@
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::ShellId;
-use crate::ir::attr::{check_count, read_entity_ref_list, read_string};
+use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::topology::{Orientation, Shell};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -26,7 +26,7 @@ pub(super) fn read_shell_body(
     is_open: bool,
 ) -> Result<(), ConvertError> {
     check_count(attrs, 2, entity_id, entity_name)?;
-    let _name = read_string(attrs, 0, entity_id, "name")?;
+    let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
     let face_refs = read_entity_ref_list(attrs, 1, entity_id, "cfs_faces")?;
 
     let mut faces = Vec::with_capacity(face_refs.len());

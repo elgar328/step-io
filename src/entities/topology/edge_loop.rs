@@ -8,7 +8,7 @@
 use crate::entities::SimpleEntityHandler;
 use crate::entities::topology::oriented_edge::OrientedEdgeHandler;
 use crate::ir::OrientedEdge;
-use crate::ir::attr::{check_count, read_entity_ref_list, read_string};
+use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -30,7 +30,7 @@ impl SimpleEntityHandler for EdgeLoopHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "EDGE_LOOP")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let edge_refs = read_entity_ref_list(attrs, 1, entity_id, "edge_list")?;
 
         let mut edges = Vec::with_capacity(edge_refs.len());

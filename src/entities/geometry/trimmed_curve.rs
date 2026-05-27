@@ -5,7 +5,7 @@
 
 use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::cartesian_point::CartesianPointHandler;
-use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_enum, read_string};
+use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_enum, read_string_or_unset};
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{Curve, TrimMaster, TrimSelect, TrimmedCurve};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -28,7 +28,7 @@ impl SimpleEntityHandler for TrimmedCurveHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 6, entity_id, "TRIMMED_CURVE")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let basis_ref = read_entity_ref(attrs, 1, entity_id, "basis_curve")?;
         let basis = ctx.resolve_curve(entity_id, basis_ref, "basis_curve")?;
         let trim_1 = read_trim_select(ctx, attrs, 2, entity_id, "trim_1")?;

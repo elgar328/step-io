@@ -7,7 +7,9 @@ use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::cartesian_point::CartesianPointHandler;
 use crate::entities::geometry::direction::DirectionHandler;
 use crate::ir::Placement3dId;
-use crate::ir::attr::{check_count, read_entity_ref, read_optional_entity_ref, read_string};
+use crate::ir::attr::{
+    check_count, read_entity_ref, read_optional_entity_ref, read_string_or_unset,
+};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::Axis2Placement3d;
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -30,7 +32,7 @@ impl SimpleEntityHandler for Axis2Placement3dHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 4, entity_id, "AXIS2_PLACEMENT_3D")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let loc_ref = read_entity_ref(attrs, 1, entity_id, "location")?;
         let axis_ref = read_optional_entity_ref(attrs, 2, entity_id, "axis")?;
         let ref_dir_ref = read_optional_entity_ref(attrs, 3, entity_id, "ref_direction")?;

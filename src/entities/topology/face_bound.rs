@@ -6,7 +6,7 @@
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::Orientation;
-use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_string};
+use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::topology::Wire;
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -31,7 +31,7 @@ pub(super) fn read_face_bound_body(
         "FACE_BOUND"
     };
     check_count(attrs, 3, entity_id, entity_name)?;
-    let _name = read_string(attrs, 0, entity_id, "name")?;
+    let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
     let loop_ref = read_entity_ref(attrs, 1, entity_id, "bound")?;
     let orientation = read_bool(attrs, 2, entity_id, "orientation")?;
 

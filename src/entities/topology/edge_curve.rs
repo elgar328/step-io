@@ -6,7 +6,7 @@
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::EdgeId;
-use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_string};
+use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::topology::Edge;
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -30,7 +30,7 @@ impl SimpleEntityHandler for EdgeCurveHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 5, entity_id, "EDGE_CURVE")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let start_ref = read_entity_ref(attrs, 1, entity_id, "edge_start")?;
         let end_ref = read_entity_ref(attrs, 2, entity_id, "edge_end")?;
         let curve_ref = read_entity_ref(attrs, 3, entity_id, "edge_geometry")?;

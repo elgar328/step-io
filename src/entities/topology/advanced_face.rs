@@ -7,7 +7,9 @@
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::FaceId;
-use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_entity_ref_list, read_string};
+use crate::ir::attr::{
+    check_count, read_bool, read_entity_ref, read_entity_ref_list, read_string_or_unset,
+};
 use crate::ir::error::ConvertError;
 use crate::ir::topology::{Face, FaceKind};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -31,7 +33,7 @@ pub(super) fn read_face_body(
         FaceKind::General => "FACE_SURFACE",
     };
     check_count(attrs, 4, entity_id, step_name)?;
-    let _name = read_string(attrs, 0, entity_id, "name")?;
+    let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
     let bound_refs = read_entity_ref_list(attrs, 1, entity_id, "bounds")?;
     let surface_ref = read_entity_ref(attrs, 2, entity_id, "face_geometry")?;
     let same_sense = read_bool(attrs, 3, entity_id, "same_sense")?;

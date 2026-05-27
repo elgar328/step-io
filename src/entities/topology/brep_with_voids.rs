@@ -15,7 +15,7 @@
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::SolidId;
-use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string};
+use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::topology::{Orientation, Shell, Solid};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -38,7 +38,7 @@ impl SimpleEntityHandler for BrepWithVoidsHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 3, entity_id, "BREP_WITH_VOIDS")?;
-        let name_str = read_string(attrs, 0, entity_id, "name")?;
+        let name_str = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let outer_ref = read_entity_ref(attrs, 1, entity_id, "outer")?;
         let void_refs = read_entity_ref_list(attrs, 2, entity_id, "voids")?;
 
