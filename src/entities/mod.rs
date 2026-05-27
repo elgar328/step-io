@@ -403,6 +403,11 @@ pub(crate) enum PassLevel {
     /// `representation` SUBTYPE. Pass8 후반 (CGR/CGRR/MDDR 이후, arena
     /// tail 일관성).
     Pass8SrwpRead,
+    /// `(CHARACTERIZED_OBJECT CHARACTERIZED_REPRESENTATION ...)` complex
+    /// MI (phase characterized-min). Detects the corpus 100%-complex-MI
+    /// form and pushes a `CharacterizedObject::Itself` carrier — other
+    /// parts (DM/TSR/SR/REPRESENTATION) discarded.
+    Pass8CharacterizedComplex,
     /// `SYMBOL_TARGET` (phase ds-st) — `geometric_representation_item`
     /// SUBTYPE that resolves `placement` through `placement_map` (3D only).
     /// Scheduled in the Pass6 block after placement maps are filled.

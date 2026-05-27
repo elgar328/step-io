@@ -57,8 +57,14 @@ impl WriteBuffer<'_> {
                 CharacterizedObject::CharacterizedItemWithinRepresentation(ciwr) => {
                     let _ = CharacterizedItemWithinRepresentationHandler::write(self, ciwr);
                 }
-                CharacterizedObject::Itself(_) => {
-                    // complex-MI Itself variant — future sub-phase
+                CharacterizedObject::Itself(data) => {
+                    // Phase characterized-min: simple form
+                    // `CHARACTERIZED_OBJECT(name, $)`. Original corpus
+                    // complex MI parts (DM/TSR/SR/REPRESENTATION) are
+                    // discarded (minimal scope).
+                    use crate::entities::ComplexEntityHandler;
+                    use crate::entities::shape_rep::characterized_object_complex::CharacterizedObjectComplexHandler;
+                    let _ = CharacterizedObjectComplexHandler::write(self, data);
                 }
             }
         }

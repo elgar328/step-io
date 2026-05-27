@@ -5552,6 +5552,25 @@ fn compound_representation_item_round_trip() {
 }
 
 #[test]
+fn characterized_object_simple_emit() {
+    // CharacterizedObject::Itself writes as simple
+    // `CHARACTERIZED_OBJECT(name, $)`. Reader rejects this form (it
+    // only accepts the complex MI form) — this test checks one-way
+    // write only.
+    use step_io::ir::shape_rep::{CharacterizedObject, CharacterizedObjectData};
+    let mut model = empty_model();
+    model
+        .characterized_objects
+        .push(CharacterizedObject::Itself(CharacterizedObjectData {
+            name: "Back".into(),
+            description: None,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    assert!(text.contains("CHARACTERIZED_OBJECT('Back',$)"));
+}
+
+#[test]
 fn srwp_round_trip() {
     // SHAPE_REPRESENTATION_WITH_PARAMETERS — representation SUBTYPE
     // with partial-narrow items SELECT (Direction / Placement /

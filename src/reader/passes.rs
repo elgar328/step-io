@@ -488,6 +488,8 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass8IiruRead);
         // SHAPE_REPRESENTATION_WITH_PARAMETERS — Representation subtype.
         self.dispatch_registry(graph, PassLevel::Pass8SrwpRead);
+        // (CHARACTERIZED_OBJECT CHARACTERIZED_REPRESENTATION ...) complex MI.
+        self.dispatch_registry(graph, PassLevel::Pass8CharacterizedComplex);
         // COMPOUND_REPRESENTATION_ITEM — resolves child refs through
         // descriptive_item_map (Pass8Measure) + per-arena representation
         // item id maps. Scheduled last in the Pass8 block.

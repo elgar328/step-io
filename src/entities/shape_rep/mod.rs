@@ -13,6 +13,7 @@
 pub mod advanced_brep_shape_representation;
 pub mod cgr_relationship;
 pub mod characterized_item_within_representation;
+pub mod characterized_object_complex;
 pub mod compound_representation_item;
 pub mod constructive_geometry_representation;
 pub mod datum_system;
