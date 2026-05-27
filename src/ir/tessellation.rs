@@ -5,7 +5,9 @@
 //! domain; later tessellation entities (tessellated solid / shell /
 //! surface-set, ...) extend this module.
 
-use super::id::{ShellId, SolidId, TessellatedFaceId, TessellatedItemId, TessellatedSurfaceSetId};
+use super::id::{
+    Placement3dId, ShellId, SolidId, TessellatedFaceId, TessellatedItemId, TessellatedSurfaceSetId,
+};
 use super::representation_item::RepresentationItemRef;
 
 /// `tessellated_item` `enum_base`. All AP242 tessellated-geometry subtypes
@@ -17,6 +19,23 @@ pub enum TessellatedItem {
     TessellatedGeometricSet(TessellatedGeometricSet),
     TessellatedSolid(TessellatedSolid),
     TessellatedShell(TessellatedShell),
+    /// `REPOSITIONED_TESSELLATED_ITEM` — wraps another tessellated item
+    /// indirectly through a per-instance `AXIS2_PLACEMENT_3D` reference
+    /// frame. Phase rti.
+    RepositionedTessellatedItem(RepositionedTessellatedItem),
+}
+
+/// `REPOSITIONED_TESSELLATED_ITEM(name, location)` — a `tessellated_item`
+/// SUBTYPE that supplies a local coordinate frame for downstream
+/// tessellation consumers. EXPRESS WHERE rule forbids co-instantiation
+/// with the seven other concrete `tessellated_item` subtypes (`curve_set`,
+/// `geometric_set`, `point_set`, `surface_set`, `shell`, `solid`, `wire`);
+/// the corpus carries every instance as a complex-MI part — same dispatch
+/// pattern as `TESSELLATED_GEOMETRIC_SET`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct RepositionedTessellatedItem {
+    pub name: String,
+    pub location: Placement3dId,
 }
 
 /// Unified reference to a STEP `tessellated_item` — an abstract supertype

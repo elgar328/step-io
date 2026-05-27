@@ -5095,7 +5095,8 @@ fn tessellation_2_round_trip() {
             TessellatedItem::CoordinatesList(_)
             | TessellatedItem::TessellatedGeometricSet(_)
             | TessellatedItem::TessellatedSolid(_)
-            | TessellatedItem::TessellatedShell(_) => None,
+            | TessellatedItem::TessellatedShell(_)
+            | TessellatedItem::RepositionedTessellatedItem(_) => None,
         })
         .expect("curve set");
     assert_eq!(curve_set.name, "curves");
@@ -5189,6 +5190,35 @@ fn tessellated_geometric_set_round_trip() {
         gset.children[2],
         TessellatedItemRef::SurfaceSet(_)
     ));
+}
+
+#[test]
+fn repositioned_tessellated_item_round_trip() {
+    // REPOSITIONED_TESSELLATED_ITEM — tessellated_item subtype carrying
+    // a per-instance axis2_placement_3d frame.
+    use step_io::ir::tessellation::{RepositionedTessellatedItem, TessellatedItem};
+    let mut model = empty_model();
+    let frame = model.geometry.identity_placement();
+    model
+        .tessellated_items
+        .push(TessellatedItem::RepositionedTessellatedItem(
+            RepositionedTessellatedItem {
+                name: "rti".into(),
+                location: frame,
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let rti = re
+        .tessellated_items
+        .iter()
+        .find_map(|item| match item {
+            TessellatedItem::RepositionedTessellatedItem(r) => Some(r),
+            _ => None,
+        })
+        .expect("repositioned tessellated item round-trips");
+    assert_eq!(rti.name, "rti");
 }
 
 #[test]

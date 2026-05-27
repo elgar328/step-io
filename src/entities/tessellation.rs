@@ -15,9 +15,9 @@ use crate::ir::attr::{
 };
 use crate::ir::error::ConvertError;
 use crate::ir::tessellation::{
-    ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, CoordinatesList, TessellatedCurveSet,
-    TessellatedGeometricSet, TessellatedItem, TessellatedItemRef, TessellatedShell,
-    TessellatedSolid,
+    ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, CoordinatesList,
+    RepositionedTessellatedItem, TessellatedCurveSet, TessellatedGeometricSet, TessellatedItem,
+    TessellatedItemRef, TessellatedShell, TessellatedSolid,
 };
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -426,4 +426,46 @@ fn integer_grid_attr(grid: &[Vec<i64>]) -> Attribute {
 /// `&[i64]` → a flat-list `Attribute`.
 fn integer_list_attr(list: &[i64]) -> Attribute {
     Attribute::List(list.iter().map(|&v| Attribute::Integer(v)).collect())
+}
+
+pub(crate) struct RepositionedTessellatedItemHandler;
+
+#[step_entity(name = "REPOSITIONED_TESSELLATED_ITEM", pass = Pass6TessellatedGeometricSet)]
+impl SimpleEntityHandler for RepositionedTessellatedItemHandler {
+    type WriteInput = RepositionedTessellatedItem;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        // 2 attrs: `name` inherited from `representation_item` (flattened
+        // into the part), `location` ref to AXIS2_PLACEMENT_3D. Same
+        // pattern as TESSELLATED_GEOMETRIC_SET above.
+        check_count(attrs, 2, entity_id, "REPOSITIONED_TESSELLATED_ITEM")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let location_ref = read_entity_ref(attrs, 1, entity_id, "location")?;
+        let Some(&location) = ctx.placement_map.get(&location_ref) else {
+            return Ok(());
+        };
+        let id = ctx
+            .tessellated_items
+            .push(TessellatedItem::RepositionedTessellatedItem(
+                RepositionedTessellatedItem { name, location },
+            ));
+        ctx.tessellated_item_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, r: RepositionedTessellatedItem) -> Result<u64, WriteError> {
+        let placement_ref = buf.emit_axis2_placement_3d(r.location)?;
+        Ok(buf.push_simple(
+            "REPOSITIONED_TESSELLATED_ITEM",
+            vec![
+                Attribute::String(r.name),
+                Attribute::EntityRef(placement_ref),
+            ],
+        ))
+    }
 }

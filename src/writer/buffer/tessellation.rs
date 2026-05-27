@@ -35,6 +35,11 @@ impl WriteBuffer<'_> {
                     self.tessellated_item_step_ids[idx] =
                         TessellatedCurveSetHandler::write(self, t.clone())?;
                 }
+                TessellatedItem::RepositionedTessellatedItem(r) => {
+                    use crate::entities::tessellation::RepositionedTessellatedItemHandler;
+                    self.tessellated_item_step_ids[idx] =
+                        RepositionedTessellatedItemHandler::write(self, r.clone())?;
+                }
                 TessellatedItem::TessellatedGeometricSet(_)
                 | TessellatedItem::TessellatedSolid(_)
                 | TessellatedItem::TessellatedShell(_) => {}
@@ -73,7 +78,9 @@ impl WriteBuffer<'_> {
                     self.tessellated_item_step_ids[idx] =
                         TessellatedShellHandler::write(self, s.clone())?;
                 }
-                TessellatedItem::CoordinatesList(_) | TessellatedItem::TessellatedCurveSet(_) => {}
+                TessellatedItem::CoordinatesList(_)
+                | TessellatedItem::TessellatedCurveSet(_)
+                | TessellatedItem::RepositionedTessellatedItem(_) => {}
             }
         }
         Ok(())
