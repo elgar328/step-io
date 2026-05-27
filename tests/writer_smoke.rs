@@ -5283,6 +5283,39 @@ fn tessellated_geometric_set_round_trip() {
 }
 
 #[test]
+fn psa_null_style_round_trip() {
+    // PRESENTATION_STYLE_ASSIGNMENT((NULL_STYLE(.NULL.))) — corpus NIST AP242.
+    use step_io::ir::visualization::{
+        PresentationStyleAssignment, PresentationStyleAssignmentData, PsaStyle, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    viz.presentation_style_assignments
+        .push(PresentationStyleAssignment::Itself(
+            PresentationStyleAssignmentData {
+                styles: vec![PsaStyle::Null],
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    assert!(text.contains("NULL_STYLE(.NULL.)"));
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz");
+    let psa = re_viz
+        .presentation_style_assignments
+        .iter()
+        .next()
+        .expect("psa");
+    let PresentationStyleAssignment::Itself(data) = psa else {
+        panic!("expected Itself");
+    };
+    assert_eq!(data.styles.len(), 1);
+    assert!(matches!(data.styles[0], PsaStyle::Null));
+}
+
+#[test]
 fn presentation_style_by_context_round_trip() {
     // PRESENTATION_STYLE_BY_CONTEXT — PSA SUBTYPE with style_context.
     use step_io::ir::shape_rep::{PlainRepr, Representation};

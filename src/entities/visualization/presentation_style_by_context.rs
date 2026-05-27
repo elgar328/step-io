@@ -9,11 +9,10 @@
 
 use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
-use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list};
+use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::{
-    PresentationStyleAssignment, PresentationStyleByContext, PsaStyle, StyleContext,
-    VisualizationPool,
+    PresentationStyleAssignment, PresentationStyleByContext, StyleContext, VisualizationPool,
 };
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -34,7 +33,6 @@ impl SimpleEntityHandler for PresentationStyleByContextHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "PRESENTATION_STYLE_BY_CONTEXT")?;
-        let style_refs = read_entity_ref_list(attrs, 0, entity_id, "styles")?;
         let ctx_ref = read_entity_ref(attrs, 1, entity_id, "style_context")?;
         let style_context = if let Some(&rid) = ctx.repr_id_map.get(&ctx_ref) {
             StyleContext::Representation(rid)
@@ -43,14 +41,10 @@ impl SimpleEntityHandler for PresentationStyleByContextHandler {
         } else {
             return Ok(());
         };
-        let mut styles = Vec::new();
-        for r in style_refs {
-            if let Some(&ssu_id) = ctx.viz_ssu_id_map.get(&r) {
-                styles.push(PsaStyle::Surface(ssu_id));
-            } else if let Some(&cs_id) = ctx.viz_curve_style_id_map.get(&r) {
-                styles.push(PsaStyle::Curve(cs_id));
-            }
-        }
+        let styles =
+            crate::entities::visualization::presentation_style_assignment::parse_psa_styles(
+                ctx, entity_id, &attrs[0],
+            );
         let pool = ctx
             .visualization
             .get_or_insert_with(VisualizationPool::default);
@@ -65,21 +59,18 @@ impl SimpleEntityHandler for PresentationStyleByContextHandler {
     }
 
     fn write(buf: &mut WriteBuffer, psbc: PresentationStyleByContext) -> Result<u64, WriteError> {
-        let mut style_refs = Vec::with_capacity(psbc.styles.len());
-        for style in psbc.styles {
-            let ref_id = match style {
-                PsaStyle::Surface(ssu_id) => buf.founded_item_step_ids[ssu_id.0 as usize],
-                PsaStyle::Curve(cs_id) => buf.curve_style_step_ids[cs_id.0 as usize],
-            };
-            style_refs.push(Attribute::EntityRef(ref_id));
-        }
+        let style_attrs =
+            crate::entities::visualization::presentation_style_assignment::emit_psa_styles(
+                buf,
+                psbc.styles,
+            );
         let ctx_step = match psbc.style_context {
             StyleContext::Representation(rid) => buf.representation_step_ids[rid.0 as usize],
             StyleContext::Item(item) => buf.emit_representation_item_ref(item)?,
         };
         Ok(buf.push_simple(
             "PRESENTATION_STYLE_BY_CONTEXT",
-            vec![Attribute::List(style_refs), Attribute::EntityRef(ctx_step)],
+            vec![Attribute::List(style_attrs), Attribute::EntityRef(ctx_step)],
         ))
     }
 }

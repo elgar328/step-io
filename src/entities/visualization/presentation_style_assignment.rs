@@ -7,7 +7,7 @@
 //! equality on the supported subset.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref_list};
+use crate::ir::attr::check_count;
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::{
     PresentationStyleAssignment, PresentationStyleAssignmentData, PsaStyle, VisualizationPool,
@@ -32,15 +32,7 @@ impl SimpleEntityHandler for PresentationStyleAssignmentHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 1, entity_id, "PRESENTATION_STYLE_ASSIGNMENT")?;
-        let style_refs = read_entity_ref_list(attrs, 0, entity_id, "styles")?;
-        let mut styles = Vec::new();
-        for r in style_refs {
-            if let Some(&ssu_id) = ctx.viz_ssu_id_map.get(&r) {
-                styles.push(PsaStyle::Surface(ssu_id));
-            } else if let Some(&cs_id) = ctx.viz_curve_style_id_map.get(&r) {
-                styles.push(PsaStyle::Curve(cs_id));
-            }
-        }
+        let styles = parse_psa_styles(ctx, entity_id, &attrs[0]);
         let pool = ctx
             .visualization
             .get_or_insert_with(VisualizationPool::default);
@@ -57,17 +49,79 @@ impl SimpleEntityHandler for PresentationStyleAssignmentHandler {
         buf: &mut WriteBuffer,
         data: PresentationStyleAssignmentData,
     ) -> Result<u64, WriteError> {
-        let mut style_refs = Vec::with_capacity(data.styles.len());
-        for style in data.styles {
-            let ref_id = match style {
-                PsaStyle::Surface(ssu_id) => buf.founded_item_step_ids[ssu_id.0 as usize],
-                PsaStyle::Curve(cs_id) => buf.curve_style_step_ids[cs_id.0 as usize],
-            };
-            style_refs.push(Attribute::EntityRef(ref_id));
-        }
+        let style_attrs = emit_psa_styles(buf, data.styles);
         Ok(buf.push_simple(
             "PRESENTATION_STYLE_ASSIGNMENT",
-            vec![Attribute::List(style_refs)],
+            vec![Attribute::List(style_attrs)],
         ))
     }
+}
+
+/// Parse the `styles` SET attribute of `PRESENTATION_STYLE_ASSIGNMENT` /
+/// `PRESENTATION_STYLE_BY_CONTEXT`. Each member is either an
+/// `EntityRef` (resolved via SSU / `CurveStyle` id maps) or a typed
+/// `NULL_STYLE(.NULL.)` placeholder. Unknown variants emit a warning
+/// and are skipped (visibility for future corpus variants).
+pub(crate) fn parse_psa_styles(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    attr: &Attribute,
+) -> Vec<PsaStyle> {
+    let Attribute::List(items) = attr else {
+        ctx.warnings
+            .push(crate::ir::error::ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!("PSA styles: expected List, got {attr:?}"),
+            });
+        return Vec::new();
+    };
+    let mut styles = Vec::with_capacity(items.len());
+    for item in items {
+        match item {
+            Attribute::EntityRef(r) => {
+                if let Some(&ssu_id) = ctx.viz_ssu_id_map.get(r) {
+                    styles.push(PsaStyle::Surface(ssu_id));
+                } else if let Some(&cs_id) = ctx.viz_curve_style_id_map.get(r) {
+                    styles.push(PsaStyle::Curve(cs_id));
+                }
+                // Other style flavours (POINT_STYLE, etc.) silently skipped —
+                // matches the pre-existing behaviour. Add explicit handling
+                // here if a flavour becomes corpus-relevant.
+            }
+            Attribute::Typed { type_name, value }
+                if type_name == "NULL_STYLE"
+                    && matches!(value.as_ref(), Attribute::Enum(t) if t == "NULL") =>
+            {
+                styles.push(PsaStyle::Null);
+            }
+            other => {
+                ctx.warnings
+                    .push(crate::ir::error::ConvertError::UnexpectedEntityForm {
+                        entity_id,
+                        detail: format!("PSA styles member: unknown variant {other:?}"),
+                    });
+            }
+        }
+    }
+    styles
+}
+
+/// Emit the `styles` SET — inverse of [`parse_psa_styles`]. `PsaStyle::Null`
+/// produces the typed `NULL_STYLE(.NULL.)` placeholder.
+pub(crate) fn emit_psa_styles(buf: &WriteBuffer, styles: Vec<PsaStyle>) -> Vec<Attribute> {
+    styles
+        .into_iter()
+        .map(|style| match style {
+            PsaStyle::Surface(ssu_id) => {
+                Attribute::EntityRef(buf.founded_item_step_ids[ssu_id.0 as usize])
+            }
+            PsaStyle::Curve(cs_id) => {
+                Attribute::EntityRef(buf.curve_style_step_ids[cs_id.0 as usize])
+            }
+            PsaStyle::Null => Attribute::Typed {
+                type_name: "NULL_STYLE".into(),
+                value: Box::new(Attribute::Enum("NULL".into())),
+            },
+        })
+        .collect()
 }

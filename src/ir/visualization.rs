@@ -544,6 +544,9 @@ pub enum StyleContext {
 pub enum PsaStyle {
     Surface(FoundedItemId),
     Curve(CurveStyleId),
+    /// `null_style` ENUMERATION placeholder — emitted by NIST AP242
+    /// fixtures as `NULL_STYLE(.NULL.)` typed parameter. Phase psa-typed.
+    Null,
 }
 
 /// `SURFACE_STYLE_USAGE(side, style)`. The `style` field references a
