@@ -390,6 +390,29 @@ impl WriteBuffer<'_> {
         Ok(())
     }
 
+    /// Emit the `Representation::TessellatedShapeRepresentation` arena
+    /// entries (phase tsr). Called from `emit_pools` after
+    /// `emit_draughting_models` so `representation_step_ids` is appended
+    /// in arena order (Mdgpr → DM → TSR — all three delayed-emit
+    /// variants sit at the arena tail by reader pass scheduling).
+    /// TSR `items` resolve through `emit_tessellated_item_ref`, which
+    /// reads the tessellation step-id caches that `emit_tessellation`
+    /// (called earlier in `emit_pools`) populated.
+    pub(in crate::writer::buffer) fn emit_tessellated_shape_representations(
+        &mut self,
+    ) -> Result<(), WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::shape_rep::tessellated_shape_representation::TessellatedShapeRepresentationHandler;
+        let reprs = self.model.representations.clone();
+        for repr in reprs.iter() {
+            if let Representation::TessellatedShapeRepresentation(tsr) = repr {
+                let step_id = TessellatedShapeRepresentationHandler::write(self, tsr.clone())?;
+                self.representation_step_ids.push(step_id);
+            }
+        }
+        Ok(())
+    }
+
     pub(in crate::writer::buffer) fn emit_representations_pre_pass(
         &mut self,
     ) -> Result<(), WriteError> {
@@ -400,7 +423,9 @@ impl WriteBuffer<'_> {
             // step-id caches that this pre-pass cannot populate.
             if matches!(
                 repr,
-                Representation::Mdgpr(_) | Representation::DraughtingModel(_)
+                Representation::Mdgpr(_)
+                    | Representation::DraughtingModel(_)
+                    | Representation::TessellatedShapeRepresentation(_)
             ) {
                 continue;
             }
@@ -415,6 +440,7 @@ impl WriteBuffer<'_> {
     /// `Representation` variant, with no `Product` dependency. Sub-entities
     /// (solids, SBSM, geometric curve sets) are cache-hit or freshly
     /// emitted as needed.
+    #[allow(clippy::too_many_lines)]
     fn emit_representation(&mut self, repr: &Representation) -> Result<u64, WriteError> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::geometry::geometric_curve_set::{
@@ -509,6 +535,11 @@ impl WriteBuffer<'_> {
             Representation::DraughtingModel(_) => {
                 unreachable!(
                     "DRAUGHTING_MODEL is emitted by emit_draughting_models, not the pre-emit pass"
+                )
+            }
+            Representation::TessellatedShapeRepresentation(_) => {
+                unreachable!(
+                    "TESSELLATED_SHAPE_REPRESENTATION is emitted by emit_tessellated_shape_representations, not the pre-emit pass"
                 )
             }
             Representation::ShapeDimensionRepresentation(r) => {

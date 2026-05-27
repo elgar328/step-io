@@ -464,6 +464,11 @@ impl ReaderContext {
         // `mapped_representation` may target a DRAUGHTING_MODEL, so runs
         // after Pass8DraughtingModel populates the DM slot of repr_id_map.
         self.dispatch_registry(graph, PassLevel::Pass8CameraUsage);
+        // TESSELLATED_SHAPE_REPRESENTATION — runs after Pass8DraughtingModel
+        // so the `representations` arena keeps all delayed-emit variants
+        // (Mdgpr/DM/TSR) contiguous at the tail; writer's push-built
+        // `representation_step_ids` then aligns with arena ids.
+        self.dispatch_registry(graph, PassLevel::Pass8TsrRead);
         // CAMERA_IMAGE + CAMERA_IMAGE_3D_WITH_SCALE — `mapped_item` SUBTYPE
         // resolving `mapping_source` through `representation_map_id_map`
         // (whose CameraUsage slots Pass8CameraUsage just filled).

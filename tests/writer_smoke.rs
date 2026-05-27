@@ -5193,6 +5193,52 @@ fn tessellated_geometric_set_round_trip() {
 }
 
 #[test]
+fn tessellated_shape_representation_round_trip() {
+    // TESSELLATED_SHAPE_REPRESENTATION — representation SUBTYPE whose
+    // items are tessellated_item refs. Exercises the delayed-emit pathway
+    // through emit_tessellated_shape_representations.
+    use step_io::ir::shape_rep::{Representation, TessellatedShapeRepresentation};
+    use step_io::ir::tessellation::{CoordinatesList, TessellatedItem, TessellatedItemRef};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+    let coords = model
+        .tessellated_items
+        .push(TessellatedItem::CoordinatesList(CoordinatesList {
+            name: "pts".into(),
+            npoints: 3,
+            position_coords: vec![
+                vec![0.0, 0.0, 0.0],
+                vec![1.0, 0.0, 0.0],
+                vec![0.0, 1.0, 0.0],
+            ],
+        }));
+    model
+        .representations
+        .push(Representation::TessellatedShapeRepresentation(
+            TessellatedShapeRepresentation {
+                name: "tsr".into(),
+                items: vec![TessellatedItemRef::Item(coords)],
+                context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let tsr = re
+        .representations
+        .iter()
+        .find_map(|r| match r {
+            Representation::TessellatedShapeRepresentation(t) => Some(t),
+            _ => None,
+        })
+        .expect("tsr round-trips");
+    assert_eq!(tsr.name, "tsr");
+    assert_eq!(tsr.items.len(), 1);
+    assert!(matches!(tsr.items[0], TessellatedItemRef::Item(_)));
+}
+
+#[test]
 fn repositioned_tessellated_item_round_trip() {
     // REPOSITIONED_TESSELLATED_ITEM — tessellated_item subtype carrying
     // a per-instance axis2_placement_3d frame.

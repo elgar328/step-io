@@ -153,6 +153,28 @@ pub enum Representation {
     /// multi-inheritance forms (`(CHARACTERIZED_OBJECT ... DRAUGHTING_MODEL ...)`)
     /// are not modelled in this phase.
     DraughtingModel(DraughtingModel),
+    /// `TESSELLATED_SHAPE_REPRESENTATION` (phase tsr). `shape_representation`
+    /// SUBTYPE whose `items` is narrowed to `tessellated_item`. Emit is
+    /// delayed (`Mdgpr` / `DraughtingModel` pattern) — the pre-pass skips it,
+    /// and `emit_tessellated_shape_representations` runs after
+    /// `emit_tessellation` so the items refs resolve through fully
+    /// populated `tessellated_*_step_ids` caches.
+    TessellatedShapeRepresentation(TessellatedShapeRepresentation),
+}
+
+/// `TESSELLATED_SHAPE_REPRESENTATION(name, items, context_of_items)` —
+/// `representation` subtype carrying a `SET[1:?] OF tessellated_item`.
+/// EXPRESS WHERE rule requires `context_of_items` to be a
+/// `GLOBAL_UNIT_ASSIGNED_CONTEXT`; non-unitful contexts are dropped on
+/// read (symmetric on re-read).
+#[derive(Debug, Clone, PartialEq)]
+pub struct TessellatedShapeRepresentation {
+    pub name: String,
+    /// Narrowed to `tessellated_item` — reuses the unified
+    /// [`crate::ir::tessellation::TessellatedItemRef`] enum so `items`
+    /// can point at any tessellated arena (item / face / surface set).
+    pub items: Vec<crate::ir::tessellation::TessellatedItemRef>,
+    pub context: Option<RepresentationContextRef>,
 }
 
 /// `GEOMETRIC_ITEM_SPECIFIC_USAGE(name, description, definition,

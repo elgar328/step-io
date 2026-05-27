@@ -703,6 +703,12 @@ impl<'m> WriteBuffer<'m> {
         // representation_item, per-geometry placements) is populated, so
         // the items refs serialise to valid step ids.
         self.emit_draughting_models()?;
+        // TESSELLATED_SHAPE_REPRESENTATION — delayed emit (Mdgpr / DM
+        // pattern). Runs after `emit_tessellation` (line 687) so the
+        // tessellated step-id caches are populated, and after
+        // `emit_draughting_models` so `representation_step_ids` is
+        // appended in arena tail order (Mdgpr → DM → TSR).
+        self.emit_tessellated_shape_representations()?;
         // CAMERA_USAGE — delayed emit (mirrors Mdgpr / DraughtingModel
         // pattern). `mapped_representation` may target a DM, so this runs
         // after `emit_draughting_models` populates the DM slot of

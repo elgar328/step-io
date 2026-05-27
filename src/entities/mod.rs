@@ -362,6 +362,12 @@ pub(crate) enum PassLevel {
     /// `representation_map_id_map` — must run after `Pass8CameraUsage`
     /// populates that map's `CameraUsage` slots.
     Pass8CameraImage,
+    /// `TESSELLATED_SHAPE_REPRESENTATION` (phase tsr) — `shape_representation`
+    /// SUBTYPE. Must run AFTER `Pass8DraughtingModel` so the
+    /// `representations` arena order keeps all delayed-emit variants
+    /// contiguous at the tail (writer `representation_step_ids` is
+    /// push-built — Mdgpr → DM → TSR sequence required).
+    Pass8TsrRead,
     /// `DRAUGHTING_MODEL_ITEM_ASSOCIATION` (phase dmia). Depends on
     /// `repr_id_map`, `annotation_occurrence_id_map`, and
     /// `draughting_callout_id_map` — all populated by their respective
