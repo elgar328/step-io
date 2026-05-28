@@ -12,8 +12,8 @@
 
 use super::id::{
     CurveId, EdgeId, FaceId, GeometricRepresentationItemId, Placement3dId, PointId,
-    RepresentationId, RepresentationItemId, ShellId, SolidId, SurfaceId, TypeQualifierId,
-    ValueFormatTypeQualifierId, VertexId,
+    RepresentationId, RepresentationItemId, ShellId, SolidId, SurfaceId, TessellatedItemId,
+    TypeQualifierId, ValueFormatTypeQualifierId, VertexId,
 };
 
 /// What a STEP `representation_item` reference resolved to in step-io's IR.
@@ -41,6 +41,10 @@ pub enum RepresentationItemRef {
     /// the symbol-domain variants (`DefinedSymbol`, `SymbolTarget`). Brought
     /// in so `STYLED_ITEM` can target a standalone SBSM (phase sbsm-repr-item).
     GeometricRepresentationItem(GeometricRepresentationItemId),
+    /// `tessellated_item` arena entry — covers `TessellatedSolid`,
+    /// `TessellatedShell`, `CoordinatesList`, and friends. `STYLED_ITEM` can
+    /// target these directly (phase tessellation-repr-item).
+    TessellatedItem(TessellatedItemId),
 }
 
 /// `representation_item` enum arena per the ir.toml blueprint (phase

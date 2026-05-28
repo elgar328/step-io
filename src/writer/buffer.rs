@@ -690,6 +690,12 @@ impl<'m> WriteBuffer<'m> {
         // CHARACTERIZED_ITEM_WITHIN_REPRESENTATION — depends on
         // representation_step_ids + per-type arena step ids.
         self.emit_characterized_objects();
+        // tessellation arena emit moved earlier (phase tessellation-repr-item)
+        // so STYLED_ITEM can resolve a TESSELLATED_SOLID target through
+        // `tessellated_item_step_ids` during visualization. Only the
+        // `tessellated_items` arena is filled here; annotation_occurrence
+        // and related orphans still emit after visualization.
+        self.emit_tessellation()?;
         self.emit_visualization_if_set()?;
         // GEOMETRIC_REPRESENTATION_ITEM (phase ds-st) — emitted after
         // visualization so `pre_defined_symbol_step_ids` is populated
@@ -772,8 +778,9 @@ impl<'m> WriteBuffer<'m> {
         self.emit_mapped_items()?;
         // INTEGER/REAL_REPRESENTATION_ITEM — orphan value-items, no refs.
         self.emit_numeric_representation_items()?;
-        // COORDINATES_LIST + COMPLEX_TRIANGULATED_FACE — orphan tessellation.
-        self.emit_tessellation()?;
+        // COORDINATES_LIST + COMPLEX_TRIANGULATED_FACE — tessellation moved
+        // earlier (before `emit_visualization_if_set`) to let STYLED_ITEM
+        // resolve TESSELLATED_SOLID targets through `tessellated_item_step_ids`.
         // annotation_occurrence — after visualization (`psa_step_ids`) and
         // after tessellation (`tessellated_item_step_ids` for a
         // `TESSELLATED_ANNOTATION_OCCURRENCE`'s `item`).

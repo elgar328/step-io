@@ -154,5 +154,10 @@ pub(crate) fn resolve_representation_item_ref(
     if let Some(&gri_id) = ctx.curve_set_id_map.get(&item_ref) {
         return Some(RepresentationItemRef::GeometricRepresentationItem(gri_id));
     }
+    // tessellated_item arena — STYLED_ITEM can target a TESSELLATED_SOLID
+    // (or any tessellation item) directly (phase tessellation-repr-item).
+    if let Some(&tid) = ctx.tessellated_item_id_map.get(&item_ref) {
+        return Some(RepresentationItemRef::TessellatedItem(tid));
+    }
     None
 }
