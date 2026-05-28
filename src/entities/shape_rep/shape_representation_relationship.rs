@@ -7,8 +7,9 @@
 //! `_WITH_TRANSFORMATION` variants belong to the CDSR / RRWT path.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref};
+use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
+use crate::ir::shape_rep::{RepresentationRelationship, ShapeRepresentationRelationshipIr};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -33,10 +34,15 @@ impl SimpleEntityHandler for ShapeRepresentationRelationshipHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 4, entity_id, "SHAPE_REPRESENTATION_RELATIONSHIP")?;
-        // attrs[0] = name, attrs[1] = description — ignored.
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
         let rep_1 = read_entity_ref(attrs, 2, entity_id, "rep_1")?;
         let rep_2 = read_entity_ref(attrs, 3, entity_id, "rep_2")?;
 
+        // Keep the SDR indirection cache populated so the Fusion 360 /
+        // CATIA `SDR → plain SR → SRR → ABSR/MSSR` chain still resolves
+        // through `srr_equiv_map`. Arena push runs alongside so all SRRs
+        // (1-to-many fan-out, multi-hop, ABSR↔MSSR direct) round-trip.
         let r1_target = ctx.absr_solid_map.contains_key(&rep_1)
             || ctx.mssr_shells_map.contains_key(&rep_1)
             || ctx.wireframe_data_map.contains_key(&rep_1);
@@ -50,20 +56,30 @@ impl SimpleEntityHandler for ShapeRepresentationRelationshipHandler {
             (false, true) => {
                 ctx.srr_equiv_map.insert(rep_1, rep_2);
             }
-            (true, true) => {
-                // Both sides are geometry-carrying reps (e.g. ABSR↔MSSR
-                // direct relation). SDR can reach either directly — no
-                // indirection needed. Silently skip.
-            }
-            (false, false) => {
-                ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                    entity_id,
-                    detail: format!(
-                        "SHAPE_REPRESENTATION_RELATIONSHIP #{entity_id} connects two non-target representations — multi-hop SRR chains are not supported"
-                    ),
-                });
-            }
+            _ => {}
         }
+
+        let (Some(&r1_id), Some(&r2_id)) =
+            (ctx.repr_id_map.get(&rep_1), ctx.repr_id_map.get(&rep_2))
+        else {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "SHAPE_REPRESENTATION_RELATIONSHIP #{entity_id} references unmodelled representation(s) (#{rep_1} or #{rep_2})"
+                ),
+            });
+            return Ok(());
+        };
+        ctx.representation_relationships.push(
+            RepresentationRelationship::ShapeRepresentationRelationship(
+                ShapeRepresentationRelationshipIr {
+                    name,
+                    description,
+                    rep_1: r1_id,
+                    rep_2: r2_id,
+                },
+            ),
+        );
         Ok(())
     }
 

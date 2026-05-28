@@ -197,12 +197,9 @@ pub enum SrwpItem {
     Descriptive(DescriptiveItem),
 }
 
-/// `representation_relationship` `enum_base` — abstract supertype. step-io
-/// currently models only the `CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP`
-/// subtype (phase cgrr). Other family members (`SHAPE_REPRESENTATION_RELATIONSHIP`,
-/// `MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP`, ...) are handled via
-/// dedicated paths (`srr_equiv_map`, per-handler emit) and are not migrated
-/// here yet.
+/// `representation_relationship` `enum_base` — abstract supertype.
+/// Concrete subtypes modelled here: CGRR (phase cgrr), MDDR (phase mddr),
+/// SRR (phase srr-unify).
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationRelationship {
     ConstructiveGeometryRepresentationRelationship(ConstructiveGeometryRepresentationRelationship),
@@ -210,6 +207,11 @@ pub enum RepresentationRelationship {
     /// pairs `DM` / `MDGPR` / `SR` representations. `rep_1` / `rep_2` narrowed
     /// to `mddr_select` but step-io stores both as `RepresentationId`.
     MechanicalDesignAndDraughtingRelationship(MechanicalDesignAndDraughtingRelationship),
+    /// `SHAPE_REPRESENTATION_RELATIONSHIP(name, description, rep_1, rep_2)`
+    /// — `representation_relationship` SUBTYPE narrowing both reps to a
+    /// `SHAPE_REPRESENTATION` subtype. Reader pushes every SRR seen in the
+    /// source (including 1-to-many fan-out + multi-hop chains).
+    ShapeRepresentationRelationship(ShapeRepresentationRelationshipIr),
 }
 
 /// `CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP(name, description,
@@ -231,6 +233,19 @@ pub struct ConstructiveGeometryRepresentationRelationship {
 /// `RepresentationId` and trusts the source's narrow.
 #[derive(Debug, Clone, PartialEq)]
 pub struct MechanicalDesignAndDraughtingRelationship {
+    pub name: String,
+    pub description: String,
+    pub rep_1: RepresentationId,
+    pub rep_2: RepresentationId,
+}
+
+/// `SHAPE_REPRESENTATION_RELATIONSHIP(name, description, rep_1, rep_2)` —
+/// `representation_relationship` SUBTYPE. EXPRESS narrows both reps to a
+/// `SHAPE_REPRESENTATION` subtype; step-io stores both as
+/// `RepresentationId` and trusts the source's narrow. Suffix `Ir` to
+/// disambiguate from the writer's `ShapeRepresentationRelationshipWriteInput`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ShapeRepresentationRelationshipIr {
     pub name: String,
     pub description: String,
     pub rep_1: RepresentationId,

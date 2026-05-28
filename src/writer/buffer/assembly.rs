@@ -479,6 +479,22 @@ impl WriteBuffer<'_> {
                     use crate::entities::shape_rep::mddr::MechanicalDesignAndDraughtingRelationshipHandler;
                     MechanicalDesignAndDraughtingRelationshipHandler::write(self, mddr)?;
                 }
+                RepresentationRelationship::ShapeRepresentationRelationship(srr) => {
+                    let r1 = self
+                        .representation_step_ids
+                        .get(srr.rep_1.0 as usize)
+                        .copied()
+                        .unwrap_or(0);
+                    let r2 = self
+                        .representation_step_ids
+                        .get(srr.rep_2.0 as usize)
+                        .copied()
+                        .unwrap_or(0);
+                    if r1 == 0 || r2 == 0 {
+                        continue;
+                    }
+                    let _ = self.emit_simple_srr(r1, r2);
+                }
             }
         }
         Ok(())

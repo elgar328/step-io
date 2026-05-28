@@ -5758,7 +5758,8 @@ fn mddr_round_trip() {
         .iter()
         .find_map(|r| match r {
             RepresentationRelationship::MechanicalDesignAndDraughtingRelationship(m) => Some(m),
-            RepresentationRelationship::ConstructiveGeometryRepresentationRelationship(_) => None,
+            RepresentationRelationship::ConstructiveGeometryRepresentationRelationship(_)
+            | RepresentationRelationship::ShapeRepresentationRelationship(_) => None,
         })
         .expect("mddr round-trips");
     assert_eq!(mddr.name, "mddr");
@@ -5813,7 +5814,8 @@ fn cgr_relationship_round_trip() {
             RepresentationRelationship::ConstructiveGeometryRepresentationRelationship(c) => {
                 Some(c)
             }
-            RepresentationRelationship::MechanicalDesignAndDraughtingRelationship(_) => None,
+            RepresentationRelationship::MechanicalDesignAndDraughtingRelationship(_)
+            | RepresentationRelationship::ShapeRepresentationRelationship(_) => None,
         })
         .expect("cgrr round-trips");
     assert_eq!(cgrr.name, "supplemental geometry");
