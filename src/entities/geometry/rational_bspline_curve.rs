@@ -12,7 +12,7 @@ use crate::entities::ComplexEntityHandler;
 use crate::entities::geometry::nurbs_shared::build_curve_common;
 use crate::ir::attr::{
     read_bool, read_entity_ref_list, read_enum, read_integer, read_integer_list, read_logical,
-    read_real_list, read_string,
+    read_real_list, read_string_or_unset,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::NurbsKind;
@@ -42,7 +42,7 @@ impl ComplexEntityHandler for RationalBsplineCurveHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         let repr_attrs = require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
-        let _name = read_string(repr_attrs, 0, entity_id, "name")?;
+        let _name = read_string_or_unset(repr_attrs, 0, entity_id, "name")?;
 
         let bsc_attrs = require_part_attrs(parts, "B_SPLINE_CURVE", entity_id)?;
         let degree_i = read_integer(bsc_attrs, 0, entity_id, "degree")?;

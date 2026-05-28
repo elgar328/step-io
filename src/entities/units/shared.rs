@@ -11,7 +11,7 @@
 //! (ABC-tier loyalty) — the cache fields live on `WriteBuffer`, so the
 //! helpers take `&mut WriteBuffer`.
 
-use crate::ir::attr::{check_count, read_entity_ref, read_enum, read_string};
+use crate::ir::attr::{check_count, read_entity_ref, read_enum, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit};
 use crate::ir::units::MassUnit;
@@ -125,7 +125,7 @@ pub(super) fn read_conversion_based_unit_body(
 ) -> Result<(), ConvertError> {
     let cbu_attrs = require_part_attrs(parts, "CONVERSION_BASED_UNIT", entity_id)?;
     check_count(cbu_attrs, 2, entity_id, "CONVERSION_BASED_UNIT")?;
-    let name = read_string(cbu_attrs, 0, entity_id, "name")?;
+    let name = read_string_or_unset(cbu_attrs, 0, entity_id, "name")?;
     let upper = name.to_uppercase();
     let mwu_ref = match cbu_attrs.get(1) {
         Some(Attribute::EntityRef(r)) => Some(*r),

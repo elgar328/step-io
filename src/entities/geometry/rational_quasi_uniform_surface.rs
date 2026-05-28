@@ -9,7 +9,7 @@ use crate::entities::ComplexEntityHandler;
 use crate::entities::geometry::nurbs_shared::{build_surface_common, quasi_uniform_knots};
 use crate::ir::attr::{
     read_bool, read_entity_ref_grid, read_enum, read_integer, read_logical, read_real_grid,
-    read_string,
+    read_string_or_unset,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{NurbsSurface, NurbsSurfaceKind, Surface, SurfaceForm};
@@ -38,7 +38,7 @@ impl ComplexEntityHandler for RationalQuasiUniformSurfaceHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         let repr_attrs = require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
-        let _name = read_string(repr_attrs, 0, entity_id, "name")?;
+        let _name = read_string_or_unset(repr_attrs, 0, entity_id, "name")?;
 
         let bss_attrs = require_part_attrs(parts, "B_SPLINE_SURFACE", entity_id)?;
         let u_degree_i = read_integer(bss_attrs, 0, entity_id, "u_degree")?;
