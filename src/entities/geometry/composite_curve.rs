@@ -8,7 +8,7 @@
 use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::composite_curve_segment::CompositeCurveSegmentHandler;
 use crate::ir::attr::{
-    check_count, logical_to_step, read_entity_ref_list, read_logical, read_string,
+    check_count, logical_to_step, read_entity_ref_list, read_logical, read_string_or_unset,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{CompositeCurve, CompositeSegment, Curve};
@@ -32,7 +32,7 @@ impl SimpleEntityHandler for CompositeCurveHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 3, entity_id, "COMPOSITE_CURVE")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let segment_refs = read_entity_ref_list(attrs, 1, entity_id, "segments")?;
         let self_intersect = read_logical(attrs, 2, entity_id, "self_intersect")?;
 

@@ -9,7 +9,7 @@
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::Point2dId;
-use crate::ir::attr::{check_count, read_real_list, read_string};
+use crate::ir::attr::{check_count, read_real_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::Point2;
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -32,7 +32,7 @@ impl SimpleEntityHandler for CartesianPoint2dHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "CARTESIAN_POINT")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let coords = read_real_list(attrs, 1, entity_id, "coordinates")?;
         if coords.len() != 2 {
             // Wrong dimension for the 2D arena. The 3D sister handler

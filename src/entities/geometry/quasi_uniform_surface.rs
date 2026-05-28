@@ -9,7 +9,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::nurbs_shared::quasi_uniform_knots;
 use crate::ir::attr::{
     check_count, logical_to_step, read_bool, read_entity_ref_grid, read_enum, read_integer,
-    read_logical, read_string,
+    read_logical, read_string_or_unset,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{NurbsSurface, NurbsSurfaceKind, Surface, SurfaceForm};
@@ -33,7 +33,7 @@ impl SimpleEntityHandler for QuasiUniformSurfaceHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 8, entity_id, "QUASI_UNIFORM_SURFACE")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let u_degree_i = read_integer(attrs, 1, entity_id, "u_degree")?;
         let v_degree_i = read_integer(attrs, 2, entity_id, "v_degree")?;
         let cp_grid = read_entity_ref_grid(attrs, 3, entity_id, "control_points_list")?;

@@ -5,7 +5,7 @@
 
 use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::vector::VectorHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_string};
+use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Surface, SurfaceOfLinearExtrusion};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -28,7 +28,7 @@ impl SimpleEntityHandler for SurfaceOfLinearExtrusionHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 3, entity_id, "SURFACE_OF_LINEAR_EXTRUSION")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let curve_ref = read_entity_ref(attrs, 1, entity_id, "swept_curve")?;
         let vector_ref = read_entity_ref(attrs, 2, entity_id, "extrusion_axis")?;
 

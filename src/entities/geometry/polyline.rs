@@ -5,7 +5,7 @@
 //! by the first point ref's coordinate count.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref_list, read_string};
+use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Curve, Polyline};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -28,7 +28,7 @@ impl SimpleEntityHandler for PolylineHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "POLYLINE")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let pt_refs = read_entity_ref_list(attrs, 1, entity_id, "points")?;
 
         // If the first referenced point is a known 2D point, this POLYLINE

@@ -7,7 +7,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::cartesian_point::CartesianPointHandler;
 use crate::entities::geometry::direction::DirectionHandler;
 use crate::ir::Placement1dId;
-use crate::ir::attr::{check_count, read_entity_ref, read_string};
+use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::Axis1Placement;
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -30,7 +30,7 @@ impl SimpleEntityHandler for Axis1PlacementHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 3, entity_id, "AXIS1_PLACEMENT")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let loc_ref = read_entity_ref(attrs, 1, entity_id, "location")?;
         let axis_ref = read_entity_ref(attrs, 2, entity_id, "axis")?;
 

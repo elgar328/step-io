@@ -5,7 +5,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::nurbs_shared::build_surface_common;
 use crate::ir::attr::{
     check_count, read_bool, read_entity_ref_grid, read_enum, read_integer, read_integer_list,
-    read_logical, read_real_list, read_string,
+    read_logical, read_real_list, read_string_or_unset,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{NurbsSurface, NurbsSurfaceKind, Surface, SurfaceForm};
@@ -30,7 +30,7 @@ impl SimpleEntityHandler for BSplineSurfaceWithKnotsHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 13, entity_id, "B_SPLINE_SURFACE_WITH_KNOTS")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let u_degree_i = read_integer(attrs, 1, entity_id, "u_degree")?;
         let v_degree_i = read_integer(attrs, 2, entity_id, "v_degree")?;
         let cp_grid = read_entity_ref_grid(attrs, 3, entity_id, "control_points_list")?;

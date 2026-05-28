@@ -3,7 +3,7 @@
 use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::cartesian_point_2d::CartesianPoint2dHandler;
 use crate::entities::geometry::vector_2d::Vector2dHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_string};
+use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Curve2d, Line2};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -26,7 +26,7 @@ impl SimpleEntityHandler for Line2dHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 3, entity_id, "LINE")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let pnt_ref = read_entity_ref(attrs, 1, entity_id, "pnt")?;
         let vec_ref = read_entity_ref(attrs, 2, entity_id, "dir")?;
         // First cross-ref discriminates 2D vs 3D: if the referenced

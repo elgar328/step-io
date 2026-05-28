@@ -10,7 +10,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::nurbs_shared::quasi_uniform_knots;
 use crate::ir::attr::{
     check_count, logical_to_step, read_bool, read_entity_ref_list, read_enum, read_integer,
-    read_logical, read_string,
+    read_logical, read_string_or_unset,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{Curve, CurveForm, NurbsCurve, NurbsKind};
@@ -34,7 +34,7 @@ impl SimpleEntityHandler for QuasiUniformCurveHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 6, entity_id, "QUASI_UNIFORM_CURVE")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let degree_i = read_integer(attrs, 1, entity_id, "degree")?;
         let cp_refs = read_entity_ref_list(attrs, 2, entity_id, "control_points_list")?;
         let form = CurveForm::from_step_enum(read_enum(attrs, 3, entity_id, "curve_form")?);

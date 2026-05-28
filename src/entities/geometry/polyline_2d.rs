@@ -4,7 +4,7 @@
 //! discriminates: 2D points dispatch here, 3D fall through to the 3D handler.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref_list, read_string};
+use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Curve2d, Polyline2d};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -27,7 +27,7 @@ impl SimpleEntityHandler for Polyline2dHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "POLYLINE")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let pt_refs = read_entity_ref_list(attrs, 1, entity_id, "points")?;
 
         // First cross-ref discriminates: if absent from the 2D arena,

@@ -10,7 +10,7 @@
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::Pcurve;
-use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string};
+use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -29,7 +29,7 @@ pub(super) fn read_surface_or_seam_curve_body(
     tag: &'static str,
 ) -> Result<(), ConvertError> {
     check_count(attrs, 4, entity_id, tag)?;
-    let _name = read_string(attrs, 0, entity_id, "name")?;
+    let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
     let curve_3d_ref = read_entity_ref(attrs, 1, entity_id, "curve_3d")?;
     // attrs[2] = associated_geometry (pcurves) — resolved separately by
     // `collect_surface_curve_pcurves` once the 2D arenas are populated.

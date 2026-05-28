@@ -5,7 +5,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::nurbs_shared::build_curve_common;
 use crate::ir::attr::{
     check_count, read_bool, read_entity_ref_list, read_enum, read_integer, read_integer_list,
-    read_logical, read_real_list, read_string,
+    read_logical, read_real_list, read_string_or_unset,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{Curve, CurveForm, NurbsCurve, NurbsKind};
@@ -29,7 +29,7 @@ impl SimpleEntityHandler for BSplineCurveWithKnotsHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 9, entity_id, "B_SPLINE_CURVE_WITH_KNOTS")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let degree_i = read_integer(attrs, 1, entity_id, "degree")?;
         let cp_refs = read_entity_ref_list(attrs, 2, entity_id, "control_points_list")?;
         let form = CurveForm::from_step_enum(read_enum(attrs, 3, entity_id, "curve_form")?);

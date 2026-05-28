@@ -9,7 +9,7 @@
 //! re-runs while the surface arena keeps growing.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_real, read_string};
+use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_real, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{RectangularTrimmedSurface, Surface};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -35,7 +35,7 @@ impl SimpleEntityHandler for RectangularTrimmedSurfaceHandler {
             return Ok(());
         }
         check_count(attrs, 8, entity_id, "RECTANGULAR_TRIMMED_SURFACE")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let basis_ref = read_entity_ref(attrs, 1, entity_id, "basis_surface")?;
         let u1 = read_real(attrs, 2, entity_id, "u1")?;
         let u2 = read_real(attrs, 3, entity_id, "u2")?;

@@ -7,7 +7,7 @@
 //! `emit_shell` upstream.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref_list, read_string};
+use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::id::ShellId;
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -29,7 +29,7 @@ impl SimpleEntityHandler for ShellBasedSurfaceModelHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "SHELL_BASED_SURFACE_MODEL")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let shell_refs = read_entity_ref_list(attrs, 1, entity_id, "sbsm_boundary")?;
         let shells: Vec<ShellId> = shell_refs
             .iter()

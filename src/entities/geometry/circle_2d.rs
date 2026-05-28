@@ -2,7 +2,7 @@
 
 use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::axis2_placement_2d::Axis2Placement2dHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_real, read_string};
+use crate::ir::attr::{check_count, read_entity_ref, read_real, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Circle2, Curve2d};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -25,7 +25,7 @@ impl SimpleEntityHandler for Circle2dHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 3, entity_id, "CIRCLE")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let pos_ref = read_entity_ref(attrs, 1, entity_id, "position")?;
         let radius = read_real(attrs, 2, entity_id, "radius")?;
         // First cross-ref discriminates 2D vs 3D: if the placement is

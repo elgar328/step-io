@@ -2,7 +2,7 @@
 
 use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::axis2_placement_3d::Axis2Placement3dHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_real, read_string};
+use crate::ir::attr::{check_count, read_entity_ref, read_real, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Surface, ToroidalSurface};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -25,7 +25,7 @@ impl SimpleEntityHandler for ToroidalSurfaceHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 4, entity_id, "TOROIDAL_SURFACE")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let pos_ref = read_entity_ref(attrs, 1, entity_id, "position")?;
         let major_radius = read_real(attrs, 2, entity_id, "major_radius")?;
         let minor_radius = read_real(attrs, 3, entity_id, "minor_radius")?;

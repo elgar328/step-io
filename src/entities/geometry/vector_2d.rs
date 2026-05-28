@@ -8,7 +8,7 @@
 use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::direction_2d::Direction2dHandler;
 use crate::ir::Direction2dId;
-use crate::ir::attr::{check_count, read_entity_ref, read_real, read_string};
+use crate::ir::attr::{check_count, read_entity_ref, read_real, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -30,7 +30,7 @@ impl SimpleEntityHandler for Vector2dHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 3, entity_id, "VECTOR")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let dir_ref = read_entity_ref(attrs, 1, entity_id, "orientation")?;
         let magnitude = read_real(attrs, 2, entity_id, "magnitude")?;
         // First cross-ref is the 2D-vs-3D discriminator: if the

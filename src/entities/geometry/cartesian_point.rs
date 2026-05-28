@@ -7,7 +7,7 @@
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::PointId;
-use crate::ir::attr::{check_count, read_real_list, read_string};
+use crate::ir::attr::{check_count, read_real_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::Point3;
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -30,7 +30,7 @@ impl SimpleEntityHandler for CartesianPointHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "CARTESIAN_POINT")?;
-        let _name = read_string(attrs, 0, entity_id, "name")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let coords = read_real_list(attrs, 1, entity_id, "coordinates")?;
         match coords.len() {
             3 => {}             // proceed
