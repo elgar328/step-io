@@ -74,12 +74,15 @@ pub(crate) fn read_wireframe_representation_body(
     };
     ctx.wireframe_data_map.insert(entity_id, wireframe.clone());
 
-    // Preserve the child GCS/GS's unified GRI id so the writer can route
-    // emit through the GRI cache (phase gcs-cluster). GBWSR/GBSSR carry
-    // at most one GCS in the corpus — take the first matching item.
-    let gcs_id = items
+    // Preserve every child GCS/GS's unified GRI id so the writer can route
+    // emits through the GRI cache (phase gcs-cluster). Multiple GCSs per
+    // wireframe are common (some NIST AP242 fixtures split curves and
+    // points across separate sets) — collect them all to keep round-trip
+    // identity stable.
+    let gcs_ids: Vec<crate::ir::id::GeometricRepresentationItemId> = items
         .iter()
-        .find_map(|r| ctx.curve_set_id_map.get(r).copied());
+        .filter_map(|r| ctx.curve_set_id_map.get(r).copied())
+        .collect();
 
     // representation-refactor A-1: dual-write into the unified arena.
     let repr_id = ctx
@@ -90,7 +93,7 @@ pub(crate) fn read_wireframe_representation_body(
                 context,
                 ref_frame,
                 content: wireframe,
-                gcs_id,
+                gcs_ids,
             },
         ));
     ctx.repr_id_map.insert(entity_id, repr_id);

@@ -149,5 +149,10 @@ pub(crate) fn resolve_representation_item_ref(
     if let Some(&gri_id) = ctx.sbsm_id_map.get(&item_ref) {
         return Some(RepresentationItemRef::GeometricRepresentationItem(gri_id));
     }
+    // Same role for GEOMETRIC_(CURVE_)SET — GBWSR / GBSSR writer also
+    // routes through the GRI cache (phase gcs-cluster).
+    if let Some(&gri_id) = ctx.curve_set_id_map.get(&item_ref) {
+        return Some(RepresentationItemRef::GeometricRepresentationItem(gri_id));
+    }
     None
 }

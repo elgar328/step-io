@@ -592,16 +592,33 @@ impl WriteBuffer<'_> {
                 if let Some(frame) = r.ref_frame {
                     items.push(Attribute::EntityRef(self.emit_axis2_placement_3d(frame)?));
                 }
-                let set_input = CurveSetWriteInput {
-                    curves: r.content.curves.clone(),
-                    points: r.content.points.clone(),
-                };
-                let set_ref = if r.content.points.is_empty() {
-                    GeometricCurveSetHandler::write(self, set_input)?
+                // Route GCS/GS emits through the unified GRI arena cache
+                // so a curve set also referenced from a STYLED_ITEM
+                // doesn't emit twice. `gcs_ids` is populated when the
+                // source file came through the reader; kernel-built IR
+                // can leave it empty, in which case we fall back to a
+                // single inline emit from the flattened content.
+                if r.gcs_ids.is_empty() {
+                    let set_input = CurveSetWriteInput {
+                        curves: r.content.curves.clone(),
+                        points: r.content.points.clone(),
+                    };
+                    let set_ref = if r.content.points.is_empty() {
+                        GeometricCurveSetHandler::write(self, set_input)?
+                    } else {
+                        GeometricSetHandler::write(self, set_input)?
+                    };
+                    items.push(Attribute::EntityRef(set_ref));
                 } else {
-                    GeometricSetHandler::write(self, set_input)?
-                };
-                items.push(Attribute::EntityRef(set_ref));
+                    for gcs_id in &r.gcs_ids {
+                        let set_ref = self.emit_representation_item_ref(
+                            crate::ir::representation_item::RepresentationItemRef::GeometricRepresentationItem(
+                                *gcs_id,
+                            ),
+                        )?;
+                        items.push(Attribute::EntityRef(set_ref));
+                    }
+                }
                 let name = match r.content.repr_kind {
                     WireframeReprKind::Surface => {
                         "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION"

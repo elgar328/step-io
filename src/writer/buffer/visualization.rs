@@ -480,6 +480,10 @@ impl WriteBuffer<'_> {
     /// it without touching SBSM slots.
     pub(in crate::writer::buffer) fn emit_sbsm_in_gri_arena(&mut self) -> Result<(), WriteError> {
         use crate::entities::SimpleEntityHandler;
+        use crate::entities::geometry::geometric_curve_set::{
+            CurveSetWriteInput, GeometricCurveSetHandler,
+        };
+        use crate::entities::geometry::geometric_set::GeometricSetHandler;
         use crate::entities::geometry::shell_based_surface_model::ShellBasedSurfaceModelHandler;
         use crate::ir::visualization::GeometricRepresentationItem as GRI;
         let items: Vec<_> = self
@@ -490,9 +494,36 @@ impl WriteBuffer<'_> {
             .collect();
         self.geometric_representation_item_step_ids = vec![0; items.len()];
         for (idx, item) in items.iter().enumerate() {
-            if let GRI::ShellBasedSurfaceModel(sbsm) = item {
-                self.geometric_representation_item_step_ids[idx] =
-                    ShellBasedSurfaceModelHandler::write(self, sbsm.shells.clone())?;
+            match item {
+                GRI::ShellBasedSurfaceModel(sbsm) => {
+                    self.geometric_representation_item_step_ids[idx] =
+                        ShellBasedSurfaceModelHandler::write(self, sbsm.shells.clone())?;
+                }
+                GRI::GeometricCurveSet(gcs) => {
+                    self.geometric_representation_item_step_ids[idx] =
+                        GeometricCurveSetHandler::write(
+                            self,
+                            CurveSetWriteInput {
+                                curves: gcs.curves.clone(),
+                                points: gcs.points.clone(),
+                            },
+                        )?;
+                }
+                GRI::GeometricSet(gs) => {
+                    self.geometric_representation_item_step_ids[idx] = GeometricSetHandler::write(
+                        self,
+                        CurveSetWriteInput {
+                            curves: gs.curves.clone(),
+                            points: gs.points.clone(),
+                        },
+                    )?;
+                }
+                GRI::DefinedSymbol(_) | GRI::SymbolTarget(_) => {
+                    // Symbol-domain entries are emitted after the
+                    // visualization pass by
+                    // `emit_geometric_representation_items` because they
+                    // depend on caches that pass fills.
+                }
             }
         }
         Ok(())
