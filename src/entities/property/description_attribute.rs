@@ -8,7 +8,7 @@
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::PropertyPool;
-use crate::ir::attr::{check_count, read_entity_ref, read_string};
+use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::property::{DescriptionAttribute, DescriptionAttributeItem};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -35,7 +35,8 @@ impl SimpleEntityHandler for DescriptionAttributeHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "DESCRIPTION_ATTRIBUTE")?;
-        let attribute_value = read_string(attrs, 0, entity_id, "attribute_value")?.to_owned();
+        let attribute_value =
+            read_string_or_unset(attrs, 0, entity_id, "attribute_value")?.to_owned();
         let item_ref = read_entity_ref(attrs, 1, entity_id, "described_item")?;
 
         let described_item = if let Some(&pao_id) = ctx.plm_p_and_o_id_map.get(&item_ref) {

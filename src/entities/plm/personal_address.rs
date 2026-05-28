@@ -7,7 +7,7 @@
 use crate::entities::SimpleEntityHandler;
 use crate::entities::plm::{read_address_data, write_address_data};
 use crate::ir::PersonId;
-use crate::ir::attr::{check_count, read_entity_ref_list, read_string};
+use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::plm::{Address, PersonalAddress, PlmPool};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -31,7 +31,7 @@ impl SimpleEntityHandler for PersonalAddressHandler {
         check_count(attrs, 14, entity_id, "PERSONAL_ADDRESS")?;
         let inherited = read_address_data(attrs, 0, entity_id, "PERSONAL_ADDRESS")?;
         let people_refs = read_entity_ref_list(attrs, 12, entity_id, "people")?;
-        let description = read_string(attrs, 13, entity_id, "description")?.to_owned();
+        let description = read_string_or_unset(attrs, 13, entity_id, "description")?.to_owned();
         let people: Vec<PersonId> = people_refs
             .iter()
             .filter_map(|r| ctx.plm_person_id_map.get(r).copied())

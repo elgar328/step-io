@@ -2,7 +2,7 @@
 //! for the status ref.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_string};
+use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::plm::{Approval, PlmPool};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -25,7 +25,7 @@ impl SimpleEntityHandler for ApprovalHandler {
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "APPROVAL")?;
         let status_ref = read_entity_ref(attrs, 0, entity_id, "status")?;
-        let level = read_string(attrs, 1, entity_id, "level")?.to_owned();
+        let level = read_string_or_unset(attrs, 1, entity_id, "level")?.to_owned();
         let Some(&status) = ctx.plm_approval_status_id_map.get(&status_ref) else {
             return Ok(());
         };

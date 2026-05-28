@@ -2,7 +2,7 @@
 //! `Pass9PlmSecLevel` for the `security_level` ref.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_string};
+use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::plm::{PlmPool, SecurityClassification};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -24,8 +24,8 @@ impl SimpleEntityHandler for SecurityClassificationHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 3, entity_id, "SECURITY_CLASSIFICATION")?;
-        let name = read_string(attrs, 0, entity_id, "name")?.to_owned();
-        let purpose = read_string(attrs, 1, entity_id, "purpose")?.to_owned();
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let purpose = read_string_or_unset(attrs, 1, entity_id, "purpose")?.to_owned();
         let level_ref = read_entity_ref(attrs, 2, entity_id, "security_level")?;
         let Some(&security_level) = ctx.plm_security_level_id_map.get(&level_ref) else {
             return Ok(());

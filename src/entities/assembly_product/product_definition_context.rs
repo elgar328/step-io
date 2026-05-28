@@ -5,7 +5,7 @@
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::assembly::{ProductDefinitionContext, ProductDefinitionContextKind};
-use crate::ir::attr::{check_count, read_entity_ref, read_string};
+use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -47,9 +47,10 @@ pub(crate) fn read_product_definition_context(
     kind: ProductDefinitionContextKind,
 ) -> Result<(), ConvertError> {
     check_count(attrs, 3, entity_id, entity_name)?;
-    let name = read_string(attrs, 0, entity_id, "name")?.to_owned();
+    let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
     let frame_ref = read_entity_ref(attrs, 1, entity_id, "frame_of_reference")?;
-    let life_cycle_stage = read_string(attrs, 2, entity_id, "life_cycle_stage")?.to_owned();
+    let life_cycle_stage =
+        read_string_or_unset(attrs, 2, entity_id, "life_cycle_stage")?.to_owned();
     let Some(&frame_of_reference) = ctx.plm_application_context_id_map.get(&frame_ref) else {
         return Ok(());
     };

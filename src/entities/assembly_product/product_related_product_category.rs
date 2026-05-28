@@ -8,7 +8,7 @@
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::assembly::ProductCategoryChain;
-use crate::ir::attr::{check_count, read_entity_ref_list, read_string};
+use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -37,7 +37,7 @@ impl SimpleEntityHandler for ProductRelatedProductCategoryHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 3, entity_id, "PRODUCT_RELATED_PRODUCT_CATEGORY")?;
-        let name = read_string(attrs, 0, entity_id, "name")?.to_owned();
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let description = optional_text(attrs, 1, entity_id, "description")?;
         let product_refs = read_entity_ref_list(attrs, 2, entity_id, "products")?;
 

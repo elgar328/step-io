@@ -1,7 +1,7 @@
 //! `PERSON_AND_ORGANIZATION_ROLE` handler — Pass 9-5 plm leaf.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_string};
+use crate::ir::attr::{check_count, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::plm::{PersonAndOrganizationRole, PlmPool};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -23,7 +23,7 @@ impl SimpleEntityHandler for PersonAndOrganizationRoleHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 1, entity_id, "PERSON_AND_ORGANIZATION_ROLE")?;
-        let name = read_string(attrs, 0, entity_id, "name")?.to_owned();
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
         let r_id = pool.p_and_o_roles.push(PersonAndOrganizationRole { name });
         ctx.plm_p_and_o_role_id_map.insert(entity_id, r_id);

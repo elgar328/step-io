@@ -1,7 +1,7 @@
 //! `APPROVAL_STATUS` handler — Pass 9-8 plm Approval leaf.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_string};
+use crate::ir::attr::{check_count, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::plm::{ApprovalStatus, PlmPool};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -23,7 +23,7 @@ impl SimpleEntityHandler for ApprovalStatusHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 1, entity_id, "APPROVAL_STATUS")?;
-        let name = read_string(attrs, 0, entity_id, "name")?.to_owned();
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
         let id = pool.approval_statuses.push(ApprovalStatus { name });
         ctx.plm_approval_status_id_map.insert(entity_id, id);

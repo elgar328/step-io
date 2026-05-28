@@ -10,7 +10,7 @@ use crate::entities::assembly_product::product_definition_relationship::{
     description_attr, read_optional_description,
 };
 use crate::ir::FormFeaturesPool;
-use crate::ir::attr::{check_count, read_string};
+use crate::ir::attr::{check_count, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::form_features::Step;
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -32,7 +32,7 @@ impl SimpleEntityHandler for StepHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "STEP")?;
-        let name = read_string(attrs, 0, entity_id, "name")?.to_owned();
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let description = read_optional_description(attrs, 1, entity_id)?;
         let pool = ctx
             .form_features

@@ -8,7 +8,7 @@
 //! [`read_product_definition_body`].
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{read_entity_ref, read_string, read_string_or_unset};
+use crate::ir::attr::{read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -36,7 +36,7 @@ pub(crate) fn read_product_definition_body(
     }
     // PRODUCT_DEFINITION.id is a fixed-value enum-like string ("design" /
     // "implementation"); keep strict. description is informal — accept `$`.
-    let _id = read_string(attrs, 0, entity_id, "id")?;
+    let _id = read_string_or_unset(attrs, 0, entity_id, "id")?;
     let _description = read_string_or_unset(attrs, 1, entity_id, "description")?;
     let formation_ref = read_entity_ref(attrs, 2, entity_id, "formation")?;
     // attrs[3] = frame_of_reference (PRODUCT_DEFINITION_CONTEXT).

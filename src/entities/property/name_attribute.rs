@@ -8,7 +8,7 @@
 //! [`NameAttributeItem`](crate::ir::NameAttributeItem).
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_string};
+use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::property::{NameAttribute, NameAttributeItem};
 use crate::ir::{ProductId, PropertyPool};
@@ -36,7 +36,8 @@ impl SimpleEntityHandler for NameAttributeHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "NAME_ATTRIBUTE")?;
-        let attribute_value = read_string(attrs, 0, entity_id, "attribute_value")?.to_owned();
+        let attribute_value =
+            read_string_or_unset(attrs, 0, entity_id, "attribute_value")?.to_owned();
         let item_ref = read_entity_ref(attrs, 1, entity_id, "named_item")?;
 
         let named_item = if let Some(product_id) = resolve_product_definition(ctx, item_ref) {

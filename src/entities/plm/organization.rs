@@ -1,7 +1,7 @@
 //! `ORGANIZATION` handler — Pass 9-5 plm leaf.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_optional_string, read_string};
+use crate::ir::attr::{check_count, read_optional_string, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::plm::{Organization, PlmPool};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -24,8 +24,8 @@ impl SimpleEntityHandler for OrganizationHandler {
     ) -> Result<(), ConvertError> {
         check_count(attrs, 3, entity_id, "ORGANIZATION")?;
         let id = read_optional_string(attrs, 0, entity_id, "id")?;
-        let name = read_string(attrs, 1, entity_id, "name")?.to_owned();
-        let description = read_string(attrs, 2, entity_id, "description")?.to_owned();
+        let name = read_string_or_unset(attrs, 1, entity_id, "name")?.to_owned();
+        let description = read_string_or_unset(attrs, 2, entity_id, "description")?.to_owned();
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
         let o_id = pool.organizations.push(Organization {
             id,

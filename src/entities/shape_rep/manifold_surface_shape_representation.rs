@@ -8,7 +8,7 @@
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::assembly::Product;
-use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string};
+use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::id::ShellId;
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -38,7 +38,7 @@ impl SimpleEntityHandler for ManifoldSurfaceShapeRepresentationHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 3, entity_id, "MANIFOLD_SURFACE_SHAPE_REPRESENTATION")?;
-        let name = read_string(attrs, 0, entity_id, "name")?.to_owned();
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let items = read_entity_ref_list(attrs, 1, entity_id, "items")?;
         let ctx_ref = read_entity_ref(attrs, 2, entity_id, "context_of_items")?;
         let context = ctx.resolve_repr_context(ctx_ref);

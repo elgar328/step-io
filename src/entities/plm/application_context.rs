@@ -2,7 +2,7 @@
 //! shape `(application)` per `AP214e3` schema. Leaf entity; refs nothing.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_string};
+use crate::ir::attr::{check_count, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::plm::{ApplicationContext, PlmPool};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -24,7 +24,7 @@ impl SimpleEntityHandler for ApplicationContextHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 1, entity_id, "APPLICATION_CONTEXT")?;
-        let application = read_string(attrs, 0, entity_id, "application")?.to_owned();
+        let application = read_string_or_unset(attrs, 0, entity_id, "application")?.to_owned();
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
         let id = pool
             .application_contexts

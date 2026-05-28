@@ -3,7 +3,7 @@
 //! `source` ref distinguishes it from the Applied sibling.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string};
+use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::plm::{AppliedExternalIdentificationAssignment, IdentificationItem, PlmPool};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -32,7 +32,7 @@ impl SimpleEntityHandler for AppliedExternalIdentificationAssignmentHandler {
             entity_id,
             "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT",
         )?;
-        let assigned_id = read_string(attrs, 0, entity_id, "assigned_id")?.to_owned();
+        let assigned_id = read_string_or_unset(attrs, 0, entity_id, "assigned_id")?.to_owned();
         let role_ref = read_entity_ref(attrs, 1, entity_id, "role")?;
         let source_ref = read_entity_ref(attrs, 2, entity_id, "source")?;
         let item_refs = read_entity_ref_list(attrs, 3, entity_id, "items")?;

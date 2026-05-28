@@ -4,7 +4,7 @@
 //! `characterized_object`).
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_optional_string, read_string};
+use crate::ir::attr::{check_count, read_entity_ref, read_optional_string, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::plm::{Document, DocumentFile, PlmPool};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -26,13 +26,13 @@ impl SimpleEntityHandler for DocumentFileHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 6, entity_id, "DOCUMENT_FILE")?;
-        let id_field = read_string(attrs, 0, entity_id, "id")?.to_owned();
-        let name = read_string(attrs, 1, entity_id, "name")?.to_owned();
-        let description = read_string(attrs, 2, entity_id, "description")?.to_owned();
+        let id_field = read_string_or_unset(attrs, 0, entity_id, "id")?.to_owned();
+        let name = read_string_or_unset(attrs, 1, entity_id, "name")?.to_owned();
+        let description = read_string_or_unset(attrs, 2, entity_id, "description")?.to_owned();
         let kind_ref = read_entity_ref(attrs, 3, entity_id, "kind")?;
         // characterized_object supertype — STEP P21 trailing slots.
         let characterized_object_name =
-            read_string(attrs, 4, entity_id, "characterized_object.name")?.to_owned();
+            read_string_or_unset(attrs, 4, entity_id, "characterized_object.name")?.to_owned();
         let characterized_object_description =
             read_optional_string(attrs, 5, entity_id, "characterized_object.description")?;
         let Some(&kind) = ctx.plm_document_type_id_map.get(&kind_ref) else {

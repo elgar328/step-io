@@ -10,7 +10,7 @@
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::PropertyPool;
-use crate::ir::attr::{check_count, read_entity_ref, read_string};
+use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::property::{IdAttribute, IdAttributeItem};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -37,7 +37,8 @@ impl SimpleEntityHandler for IdAttributeHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "ID_ATTRIBUTE")?;
-        let attribute_value = read_string(attrs, 0, entity_id, "attribute_value")?.to_owned();
+        let attribute_value =
+            read_string_or_unset(attrs, 0, entity_id, "attribute_value")?.to_owned();
         let item_ref = read_entity_ref(attrs, 1, entity_id, "identified_item")?;
 
         let identified_item = if let Some(&sa_id) = ctx.shape_aspect_id_map.get(&item_ref) {

@@ -1,7 +1,7 @@
 //! `OBJECT_ROLE` handler — Pass 9-22 plm Role leaf.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_optional_string, read_string};
+use crate::ir::attr::{check_count, read_optional_string, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::plm::{ObjectRole, PlmPool};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -23,7 +23,7 @@ impl SimpleEntityHandler for ObjectRoleHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "OBJECT_ROLE")?;
-        let name = read_string(attrs, 0, entity_id, "name")?.to_owned();
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let description = read_optional_string(attrs, 1, entity_id, "description")?;
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
         let id = pool.object_roles.push(ObjectRole { name, description });

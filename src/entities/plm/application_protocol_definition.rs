@@ -5,7 +5,7 @@
 //! earlier Pass 9-25.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_integer, read_string};
+use crate::ir::attr::{check_count, read_entity_ref, read_integer, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::plm::{ApplicationProtocolDefinition, PlmPool};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -27,8 +27,8 @@ impl SimpleEntityHandler for ApplicationProtocolDefinitionHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 4, entity_id, "APPLICATION_PROTOCOL_DEFINITION")?;
-        let status = read_string(attrs, 0, entity_id, "status")?.to_owned();
-        let name = read_string(
+        let status = read_string_or_unset(attrs, 0, entity_id, "status")?.to_owned();
+        let name = read_string_or_unset(
             attrs,
             1,
             entity_id,

@@ -1,7 +1,9 @@
 //! `PERSON` handler — Pass 9-5 plm leaf.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_optional_string, read_optional_string_list, read_string};
+use crate::ir::attr::{
+    check_count, read_optional_string, read_optional_string_list, read_string_or_unset,
+};
 use crate::ir::error::ConvertError;
 use crate::ir::plm::{Person, PlmPool};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -23,7 +25,7 @@ impl SimpleEntityHandler for PersonHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 6, entity_id, "PERSON")?;
-        let id = read_string(attrs, 0, entity_id, "id")?.to_owned();
+        let id = read_string_or_unset(attrs, 0, entity_id, "id")?.to_owned();
         let last_name = read_optional_string(attrs, 1, entity_id, "last_name")?;
         let first_name = read_optional_string(attrs, 2, entity_id, "first_name")?;
         let middle_names = read_optional_string_list(attrs, 3, entity_id, "middle_names")?;

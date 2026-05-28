@@ -3,7 +3,7 @@
 //! shared `resolve_date_time_item` helper.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_optional_string, read_string};
+use crate::ir::attr::{check_count, read_entity_ref, read_optional_string, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::plm::{DocumentProductEquivalence, DocumentProductItem, PlmPool};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -27,7 +27,7 @@ impl SimpleEntityHandler for DocumentProductEquivalenceHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 4, entity_id, "DOCUMENT_PRODUCT_EQUIVALENCE")?;
-        let name = read_string(attrs, 0, entity_id, "name")?.to_owned();
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let description = read_optional_string(attrs, 1, entity_id, "description")?;
         let doc_ref = read_entity_ref(attrs, 2, entity_id, "relating_document")?;
         let product_ref = read_entity_ref(attrs, 3, entity_id, "related_product")?;
