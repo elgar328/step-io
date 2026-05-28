@@ -54,22 +54,12 @@ impl SimpleEntityHandler for NextAssemblyUsageOccurrenceHandler {
             return Ok(());
         };
 
-        let parent = &mut ctx.assembly_products[parent_pid];
-        if parent.geometry.is_some() {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: String::from(
-                    "NEXT_ASSEMBLY_USAGE_OCCURRENCE parent is a geometry leaf, not a Group",
-                ),
-            });
-        } else {
-            parent.instances.push(Instance {
-                child: child_pid,
-                transform,
-                occurrence_id,
-                occurrence_name,
-            });
-        }
+        ctx.assembly_products[parent_pid].instances.push(Instance {
+            child: child_pid,
+            transform,
+            occurrence_id,
+            occurrence_name,
+        });
         Ok(())
     }
 
