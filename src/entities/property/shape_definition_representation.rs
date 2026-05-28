@@ -7,7 +7,7 @@
 //! and the inner shape representation.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::assembly::{ProductContent, SolidContent, SurfaceBodyContent};
+use crate::ir::assembly::{GeometryLeaf, SolidContent, SurfaceBodyContent};
 use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -58,29 +58,18 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
         };
 
         // Guard against a second SDR pinning the same product: keep the
-        // first classification and warn on the duplicate.
-        match &ctx.assembly_products[pid].content {
-            ProductContent::Solid(_)
-            | ProductContent::SurfaceBody(_)
-            | ProductContent::Wireframe(_) => {
-                ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                    entity_id,
-                    detail: format!(
-                        "duplicate SHAPE_DEFINITION_REPRESENTATION for product #{product_step_id}"
-                    ),
-                });
-                return Ok(());
-            }
-            ProductContent::Group(group) if !group.instances.is_empty() => {
-                ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                    entity_id,
-                    detail: format!(
-                        "duplicate SHAPE_DEFINITION_REPRESENTATION for product #{product_step_id}"
-                    ),
-                });
-                return Ok(());
-            }
-            ProductContent::Group(_) => {}
+        // first classification and warn on the duplicate. A product that
+        // already has geometry assigned, or that has accumulated child
+        // instances, has been "claimed" — a second SDR is a no-op + warning.
+        let product = &ctx.assembly_products[pid];
+        if product.geometry.is_some() || !product.instances.is_empty() {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "duplicate SHAPE_DEFINITION_REPRESENTATION for product #{product_step_id}"
+                ),
+            });
+            return Ok(());
         }
 
         // Follow the Fusion 360 / CATIA indirection:
@@ -113,8 +102,8 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
             });
         }
         if let Some(solid_ids) = ctx.absr_solid_map.get(&effective_ref).cloned() {
-            ctx.assembly_products[pid].content =
-                ProductContent::Solid(SolidContent { ids: solid_ids });
+            ctx.assembly_products[pid].geometry =
+                Some(GeometryLeaf::Solid(SolidContent { ids: solid_ids }));
         } else if let Some(shells) = ctx.mssr_shells_map.get(&effective_ref).cloned() {
             if shells.is_empty() {
                 ctx.warnings.push(ConvertError::UnexpectedEntityForm {
@@ -124,11 +113,13 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
                     ),
                 });
             } else {
-                ctx.assembly_products[pid].content =
-                    ProductContent::SurfaceBody(SurfaceBodyContent { ids: shells });
+                ctx.assembly_products[pid].geometry =
+                    Some(GeometryLeaf::SurfaceBody(SurfaceBodyContent {
+                        ids: shells,
+                    }));
             }
         } else if let Some(wf) = ctx.wireframe_data_map.get(&effective_ref).cloned() {
-            ctx.assembly_products[pid].content = ProductContent::Wireframe(wf);
+            ctx.assembly_products[pid].geometry = Some(GeometryLeaf::Wireframe(wf));
         }
         if let Some(&ref_frame) = ctx.absr_ref_frame_map.get(&effective_ref) {
             ctx.assembly_products[pid].shape_ref_frame = ref_frame;

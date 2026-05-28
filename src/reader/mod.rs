@@ -784,10 +784,8 @@ impl ReaderContext {
         // remaining products are root candidates.
         let mut is_child: HashSet<ProductId> = HashSet::new();
         for product in self.assembly_products.iter() {
-            if let crate::ir::assembly::ProductContent::Group(group) = &product.content {
-                for inst in &group.instances {
-                    is_child.insert(inst.child);
-                }
+            for inst in &product.instances {
+                is_child.insert(inst.child);
             }
         }
         let roots: Vec<ProductId> = self

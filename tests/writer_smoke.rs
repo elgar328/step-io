@@ -6,7 +6,7 @@
 
 use step_io::ir::arena::Arena;
 use step_io::ir::assembly::{
-    AssemblyTree, GroupContent, Instance, Product, ProductContent, SolidContent, Transform3d,
+    AssemblyTree, GeometryLeaf, Instance, Product, SolidContent, Transform3d,
 };
 use step_io::ir::geometry::Vertex;
 use step_io::ir::geometry::{
@@ -883,9 +883,10 @@ fn simple_assembly_round_trips() {
         id: "Leaf".into(),
         name: "Leaf".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent {
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
             ids: vec![solid_id],
-        }),
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -900,14 +901,13 @@ fn simple_assembly_round_trips() {
         id: "Root".into(),
         name: "Root".into(),
         description: None,
-        content: ProductContent::Group(GroupContent {
-            instances: vec![Instance {
-                child: leaf_pid,
-                transform,
-                occurrence_id: "1".into(),
-                occurrence_name: "LeafInst".into(),
-            }],
-        }),
+        geometry: None,
+        instances: vec![Instance {
+            child: leaf_pid,
+            transform,
+            occurrence_id: "1".into(),
+            occurrence_name: "LeafInst".into(),
+        }],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -931,24 +931,20 @@ fn simple_assembly_round_trips() {
         .iter()
         .find(|p| p.id == "Root")
         .expect("Root product survived");
-    match &root_prod.content {
-        ProductContent::Group(group) => {
-            assert_eq!(group.instances.len(), 1);
-            assert_eq!(group.instances[0].occurrence_id, "1");
-            assert_eq!(group.instances[0].occurrence_name, "LeafInst");
-        }
-        other @ (ProductContent::Solid(_)
-        | ProductContent::SurfaceBody(_)
-        | ProductContent::Wireframe(_)) => {
-            panic!("expected Root Group, got {other:?}")
-        }
-    }
+    assert!(
+        root_prod.geometry.is_none(),
+        "expected Root Group (no geometry), got {:?}",
+        root_prod.geometry
+    );
+    assert_eq!(root_prod.instances.len(), 1);
+    assert_eq!(root_prod.instances[0].occurrence_id, "1");
+    assert_eq!(root_prod.instances[0].occurrence_name, "LeafInst");
     let leaf_prod = r_asm
         .products
         .iter()
         .find(|p| p.id == "Leaf")
         .expect("Leaf product survived");
-    assert!(matches!(leaf_prod.content, ProductContent::Solid(_)));
+    assert!(matches!(leaf_prod.geometry, Some(GeometryLeaf::Solid(_))));
 }
 
 #[test]
@@ -967,9 +963,10 @@ fn shared_child_assembly_round_trips() {
         id: "Leaf".into(),
         name: "Leaf".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent {
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
             ids: vec![solid_id],
-        }),
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -984,22 +981,21 @@ fn shared_child_assembly_round_trips() {
         id: "Root".into(),
         name: "Root".into(),
         description: None,
-        content: ProductContent::Group(GroupContent {
-            instances: vec![
-                Instance {
-                    child: leaf_pid,
-                    transform,
-                    occurrence_id: "1".into(),
-                    occurrence_name: "A".into(),
-                },
-                Instance {
-                    child: leaf_pid,
-                    transform,
-                    occurrence_id: "2".into(),
-                    occurrence_name: "B".into(),
-                },
-            ],
-        }),
+        geometry: None,
+        instances: vec![
+            Instance {
+                child: leaf_pid,
+                transform,
+                occurrence_id: "1".into(),
+                occurrence_name: "A".into(),
+            },
+            Instance {
+                child: leaf_pid,
+                transform,
+                occurrence_id: "2".into(),
+                occurrence_name: "B".into(),
+            },
+        ],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -1017,22 +1013,18 @@ fn shared_child_assembly_round_trips() {
     let re = reconvert(&text);
     let r_asm = re.assembly.as_ref().unwrap();
     let root_prod = r_asm.products.iter().find(|p| p.id == "Root").unwrap();
-    match &root_prod.content {
-        ProductContent::Group(group) => {
-            assert_eq!(group.instances.len(), 2);
-            assert_eq!(
-                group.instances[0].child, group.instances[1].child,
-                "both point at the same Leaf"
-            );
-            assert_eq!(group.instances[0].occurrence_id, "1");
-            assert_eq!(group.instances[1].occurrence_id, "2");
-        }
-        other @ (ProductContent::Solid(_)
-        | ProductContent::SurfaceBody(_)
-        | ProductContent::Wireframe(_)) => {
-            panic!("expected Root Group, got {other:?}")
-        }
-    }
+    assert!(
+        root_prod.geometry.is_none(),
+        "expected Root Group (no geometry), got {:?}",
+        root_prod.geometry
+    );
+    assert_eq!(root_prod.instances.len(), 2);
+    assert_eq!(
+        root_prod.instances[0].child, root_prod.instances[1].child,
+        "both point at the same Leaf"
+    );
+    assert_eq!(root_prod.instances[0].occurrence_id, "1");
+    assert_eq!(root_prod.instances[1].occurrence_id, "2");
 }
 
 #[test]
@@ -1071,7 +1063,8 @@ fn multi_body_solid_round_trips() {
         id: "MultiBody".into(),
         name: "MultiBody".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent { ids: vec![s1, s2] }),
+        geometry: Some(GeometryLeaf::Solid(SolidContent { ids: vec![s1, s2] })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -1099,8 +1092,8 @@ fn multi_body_solid_round_trips() {
         .iter()
         .find(|p| p.id == "MultiBody")
         .expect("MultiBody product survived");
-    match &prod.content {
-        ProductContent::Solid(solid) => {
+    match &prod.geometry {
+        Some(GeometryLeaf::Solid(solid)) => {
             assert_eq!(solid.ids.len(), 2, "two solids should round-trip");
         }
         other => panic!("expected Solid with 2 ids, got {other:?}"),
@@ -1126,9 +1119,10 @@ fn metadata_only_product_round_trips_with_none_geometry_context() {
         id: "Main".into(),
         name: "Main".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent {
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
             ids: vec![solid_id],
-        }),
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -1143,7 +1137,8 @@ fn metadata_only_product_round_trips_with_none_geometry_context() {
         id: "MetadataDoc".into(),
         name: "MetadataDoc".into(),
         description: None,
-        content: ProductContent::Group(GroupContent { instances: vec![] }),
+        geometry: None,
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -1210,9 +1205,10 @@ fn empty_group_product_preserves_non_identity_shape_ref_frame() {
         id: "Main".into(),
         name: "Main".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent {
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
             ids: vec![solid_id],
-        }),
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -1227,7 +1223,8 @@ fn empty_group_product_preserves_non_identity_shape_ref_frame() {
         id: "Placeholder".into(),
         name: "Placeholder".into(),
         description: None,
-        content: ProductContent::Group(GroupContent { instances: vec![] }),
+        geometry: None,
+        instances: vec![],
         shape_ref_frame: offset_frame,
         outer_sr_frame: None,
         category: None,
@@ -1303,9 +1300,10 @@ fn general_property_and_association_round_trip() {
         id: "Part".into(),
         name: "Part".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent {
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
             ids: vec![solid_id],
-        }),
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -1410,9 +1408,10 @@ fn multi_root_independent_products_round_trip() {
             id: name.into(),
             name: name.into(),
             description: None,
-            content: ProductContent::Solid(SolidContent {
+            geometry: Some(GeometryLeaf::Solid(SolidContent {
                 ids: vec![solid_id],
-            }),
+            })),
+            instances: vec![],
             shape_ref_frame: identity_frame,
             outer_sr_frame: None,
             category: None,
@@ -1485,9 +1484,10 @@ fn shape_aspect_subtypes_round_trip() {
         id: "Part".into(),
         name: "Part".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent {
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
             ids: vec![solid_id],
-        }),
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -1562,9 +1562,10 @@ fn shape_aspect_relationship_fixture() -> (
         id: "Part".into(),
         name: "Part".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent {
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
             ids: vec![solid_id],
-        }),
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -2587,9 +2588,10 @@ fn gt_relationship_round_trip() {
         id: "Part".into(),
         name: "Part".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent {
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
             ids: vec![solid_id],
-        }),
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -2670,9 +2672,10 @@ fn datum_round_trip() {
         id: "Part".into(),
         name: "Part".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent {
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
             ids: vec![solid_id],
-        }),
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -2723,9 +2726,10 @@ fn datum_feature_round_trip() {
         id: "Part".into(),
         name: "Part".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent {
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
             ids: vec![solid_id],
-        }),
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -2803,9 +2807,10 @@ fn dimensional_size_with_datum_feature_round_trip() {
         id: "Part".into(),
         name: "Part".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent {
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
             ids: vec![solid_id],
-        }),
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -2873,9 +2878,10 @@ fn geometric_tolerance_form_tolerances_round_trip() {
         id: "Part".into(),
         name: "Part".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent {
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
             ids: vec![solid_id],
-        }),
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -2984,9 +2990,10 @@ fn general_datum_reference_round_trip() {
         id: "Part".into(),
         name: "Part".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent {
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
             ids: vec![solid_id],
-        }),
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -3058,9 +3065,10 @@ fn tolerance_zone_round_trip() {
         id: "Part".into(),
         name: "Part".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent {
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
             ids: vec![solid_id],
-        }),
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -3145,9 +3153,10 @@ fn shape_dimension_repr_and_dim_char_repr_round_trip() {
         id: "Part".into(),
         name: "Part".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent {
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
             ids: vec![solid_id],
-        }),
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -4039,6 +4048,7 @@ fn measure_qualification_round_trip() {
 }
 
 #[test]
+#[allow(clippy::too_many_lines)]
 fn projected_zone_definition_round_trip() {
     // PROJECTED_ZONE_DEFINITION — single_struct in the tolerance_zone_definition
     // arena. Refs ToleranceZone + ShapeAspect (projection_end) +
@@ -4062,9 +4072,10 @@ fn projected_zone_definition_round_trip() {
         id: "Part".into(),
         name: "Part".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent {
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
             ids: vec![solid_id],
-        }),
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -4166,9 +4177,10 @@ fn datum_system_round_trip() {
         id: "Part".into(),
         name: "Part".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent {
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
             ids: vec![solid_id],
-        }),
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -4240,9 +4252,10 @@ fn datum_target_cluster_round_trip() {
         id: "Part".into(),
         name: "Part".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent {
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
             ids: vec![solid_id],
-        }),
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -4340,9 +4353,10 @@ fn geometric_tolerance_with_datum_reference_round_trip() {
         id: "Part".into(),
         name: "Part".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent {
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
             ids: vec![solid_id],
-        }),
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -4436,9 +4450,10 @@ fn complex_datum_ref_tolerance_round_trip() {
         id: "Part".into(),
         name: "Part".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent {
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
             ids: vec![solid_id],
-        }),
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -4532,9 +4547,10 @@ fn geometric_tolerance_with_modifiers_round_trip() {
         id: "Part".into(),
         name: "Part".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent {
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
             ids: vec![solid_id],
-        }),
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -4685,9 +4701,10 @@ fn gt_defined_unit_area_unit_displacement_round_trip() {
         id: "Part".into(),
         name: "Part".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent {
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
             ids: vec![solid_id],
-        }),
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,
@@ -4851,9 +4868,10 @@ fn plus_minus_tolerance_round_trip() {
         id: "Part".into(),
         name: "Part".into(),
         description: None,
-        content: ProductContent::Solid(SolidContent {
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
             ids: vec![solid_id],
-        }),
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
         category: None,

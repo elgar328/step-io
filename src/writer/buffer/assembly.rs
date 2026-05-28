@@ -18,7 +18,7 @@ use super::WriteBuffer;
 use crate::ir::arena::Arena;
 use crate::ir::shape_rep::Representation;
 use crate::ir::{
-    Instance, Product, ProductContent, ProductId, Transform3d, WireframeContent, WireframeReprKind,
+    GeometryLeaf, Instance, Product, ProductId, Transform3d, WireframeContent, WireframeReprKind,
 };
 use crate::parser::entity::Attribute;
 use crate::parser::schema::{SchemaClass, StepSchema};
@@ -267,8 +267,8 @@ impl WriteBuffer<'_> {
                 // Hand/kernel-built IR: the `representations` arena is
                 // unpopulated, so emit the representation inline from
                 // `ProductContent` as before.
-                match &product.content {
-                    ProductContent::Solid(solid) => {
+                match &product.geometry {
+                    Some(GeometryLeaf::Solid(solid)) => {
                         let solid_refs: Vec<u64> = solid
                             .ids
                             .iter()
@@ -277,17 +277,15 @@ impl WriteBuffer<'_> {
                         let absr = self.emit_absr(product, solid_refs, unit_ctx)?;
                         self.wrap_indirect_sr_if_set(product, absr, unit_ctx)?
                     }
-                    ProductContent::SurfaceBody(sbody) => {
+                    Some(GeometryLeaf::SurfaceBody(sbody)) => {
                         let mssr = self.emit_mssr(product, &sbody.ids, unit_ctx)?;
                         self.wrap_indirect_sr_if_set(product, mssr, unit_ctx)?
                     }
-                    ProductContent::Wireframe(wf) => {
+                    Some(GeometryLeaf::Wireframe(wf)) => {
                         let gb_sr = self.emit_wireframe_representation(product, wf, unit_ctx)?;
                         self.wrap_indirect_sr_if_set(product, gb_sr, unit_ctx)?
                     }
-                    ProductContent::Group(_) => {
-                        self.emit_group_shape_representation(product, unit_ctx)?
-                    }
+                    None => self.emit_group_shape_representation(product, unit_ctx)?,
                 }
             };
             product_sr.insert(pid, sr);
@@ -303,9 +301,9 @@ impl WriteBuffer<'_> {
 
         // Emit per-instance bundles for every Group product.
         for (parent_pid, parent) in products.iter_with_ids() {
-            let ProductContent::Group(group) = &parent.content else {
+            if parent.instances.is_empty() {
                 continue;
-            };
+            }
             // Document-style Group products skip the PDEF chain above, so
             // their entry in `product_def_ids` is absent. Such products
             // never have instances; skip them here for symmetry.
@@ -321,7 +319,7 @@ impl WriteBuffer<'_> {
             // Clone product_def_ids for emit_instance_bundle so it can
             // borrow `&self` via emit_* methods without overlapping borrows.
             let product_def = self.product_def_ids.clone();
-            for inst in &group.instances {
+            for inst in &parent.instances {
                 if !product_sr.contains_key(&inst.child) {
                     // Child product has no SR (geometry_context: None
                     // — metadata-only). A CDSR/RRWT bundle can't point

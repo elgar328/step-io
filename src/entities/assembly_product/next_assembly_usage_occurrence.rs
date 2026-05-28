@@ -9,7 +9,7 @@
 //! `PRODUCT_DEFINITION_SHAPE` + `RR_complex` + CDSR group.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::assembly::{Instance, ProductContent};
+use crate::ir::assembly::Instance;
 use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -54,25 +54,21 @@ impl SimpleEntityHandler for NextAssemblyUsageOccurrenceHandler {
             return Ok(());
         };
 
-        match &mut ctx.assembly_products[parent_pid].content {
-            ProductContent::Group(group) => {
-                group.instances.push(Instance {
-                    child: child_pid,
-                    transform,
-                    occurrence_id,
-                    occurrence_name,
-                });
-            }
-            ProductContent::Solid(_)
-            | ProductContent::SurfaceBody(_)
-            | ProductContent::Wireframe(_) => {
-                ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                    entity_id,
-                    detail: String::from(
-                        "NEXT_ASSEMBLY_USAGE_OCCURRENCE parent is a geometry leaf, not a Group",
-                    ),
-                });
-            }
+        let parent = &mut ctx.assembly_products[parent_pid];
+        if parent.geometry.is_some() {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: String::from(
+                    "NEXT_ASSEMBLY_USAGE_OCCURRENCE parent is a geometry leaf, not a Group",
+                ),
+            });
+        } else {
+            parent.instances.push(Instance {
+                child: child_pid,
+                transform,
+                occurrence_id,
+                occurrence_name,
+            });
         }
         Ok(())
     }

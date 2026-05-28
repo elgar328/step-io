@@ -91,7 +91,15 @@ pub struct Product {
     /// normalised to `None` so the presence/absence of user-supplied
     /// description round-trips faithfully.
     pub description: Option<String>,
-    pub content: ProductContent,
+    /// Geometry leaf — `Some` when the product carries an `ABSR` / `MSSR` /
+    /// `GBWSR` representation. `None` for pure assembly groups (instances
+    /// only) and for metadata-only products.
+    pub geometry: Option<GeometryLeaf>,
+    /// Child instances attached to this product via `NEXT_ASSEMBLY_USAGE_OCCURRENCE`.
+    /// Empty for leaf products that aren't also assembly parents. A product can
+    /// hold both geometry and instances when the same `PRODUCT` is referenced
+    /// as both a part with its own shape and as the parent of further sub-parts.
+    pub instances: Vec<Instance>,
     /// Coordinate frame referenced by the `ADVANCED_BREP_SHAPE_REPRESENTATION`
     /// (or group `SHAPE_REPRESENTATION`) `items` list. Commercial CAD output
     /// uses an identity placement here almost universally; the reader still
@@ -180,15 +188,7 @@ pub struct ProductCategoryRoot {
     pub description: Option<String>,
 }
 
-/// Payload of a [`ProductContent::Group`] — instances referenced by an
-/// assembly or wrapper product. Phase A always leaves `instances` empty;
-/// Phase B populates it from `NEXT_ASSEMBLY_USAGE_OCCURRENCE` edges.
-#[derive(Debug, Clone, PartialEq, Default)]
-pub struct GroupContent {
-    pub instances: Vec<Instance>,
-}
-
-/// Payload of a [`ProductContent::Solid`] — one or more `MANIFOLD_SOLID_BREP`
+/// Payload of [`GeometryLeaf::Solid`] — one or more `MANIFOLD_SOLID_BREP`
 /// items wrapped in a single `ADVANCED_BREP_SHAPE_REPRESENTATION`. Almost
 /// always a single solid; multi-body STEP files (rare) carry more than one.
 /// Invariant: non-empty.
@@ -197,7 +197,7 @@ pub struct SolidContent {
     pub ids: Vec<SolidId>,
 }
 
-/// Payload of a [`ProductContent::SurfaceBody`] — the product is a
+/// Payload of [`GeometryLeaf::SurfaceBody`] — the product is a
 /// `MANIFOLD_SURFACE_SHAPE_REPRESENTATION`'s `SHELL_BASED_SURFACE_MODEL`
 /// with one or more shells. Unlike [`SolidContent`], no closed volume is
 /// implied; shells are typically `OPEN_SHELL`, occasionally `CLOSED_SHELL`.
@@ -206,10 +206,11 @@ pub struct SurfaceBodyContent {
     pub ids: Vec<ShellId>,
 }
 
-/// What a [`Product`] holds.
+/// Geometry payload attached to a [`Product`]. `None` on the product means
+/// the product is a pure assembly group (or metadata-only). The three
+/// variants mirror the three representation wrappers in STEP.
 #[derive(Debug, Clone, PartialEq)]
-pub enum ProductContent {
-    Group(GroupContent),
+pub enum GeometryLeaf {
     Solid(SolidContent),
     SurfaceBody(SurfaceBodyContent),
     /// Wireframe leaf — the product is a `GEOMETRIC_(CURVE_)SET` of curves
@@ -219,7 +220,7 @@ pub enum ProductContent {
     Wireframe(WireframeContent),
 }
 
-/// Payload of a [`ProductContent::Wireframe`].
+/// Payload of [`GeometryLeaf::Wireframe`].
 ///
 /// `curves` are the geometric items (lines, circles, trimmed curves, etc.).
 /// `points` are loose `CARTESIAN_POINT` items that some producers (notably

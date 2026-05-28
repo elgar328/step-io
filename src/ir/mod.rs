@@ -19,11 +19,11 @@ pub mod visualization;
 
 pub use arena::Arena;
 pub use assembly::{
-    AssemblyTree, Instance, MakeFromUsageOption, PlainProductDefinitionRelationship, Product,
-    ProductCategoryChain, ProductCategoryRoot, ProductContent, ProductContext, ProductContextKind,
+    AssemblyTree, GeometryLeaf, Instance, MakeFromUsageOption, PlainProductDefinitionRelationship,
+    Product, ProductCategoryChain, ProductCategoryRoot, ProductContext, ProductContextKind,
     ProductDefinitionContext, ProductDefinitionContextAssociation, ProductDefinitionContextKind,
-    ProductDefinitionContextRole, ProductDefinitionRelationship, Transform3d, WireframeContent,
-    WireframeReprKind,
+    ProductDefinitionContextRole, ProductDefinitionRelationship, SolidContent, SurfaceBodyContent,
+    Transform3d, WireframeContent, WireframeReprKind,
 };
 pub use error::{AttributeKindTag, ConvertError};
 pub use form_features::{FormFeaturesPool, Step};

@@ -1223,7 +1223,7 @@ fn assembly_fixtures_have_seven_products() {
 
 #[test]
 fn assembly_fixtures_content_variants_split_three_solids_four_groups() {
-    use step_io::ProductContent;
+    use step_io::GeometryLeaf;
     for (name, source) in ASSEMBLY_FIXTURES {
         let graph = step_io::parse(source)
             .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
@@ -1232,17 +1232,15 @@ fn assembly_fixtures_content_variants_split_three_solids_four_groups() {
         let (solid_count, group_count) =
             tree.products
                 .iter()
-                .fold((0_usize, 0_usize), |(sol, grp), p| match &p.content {
-                    ProductContent::Solid(_)
-                    | ProductContent::SurfaceBody(_)
-                    | ProductContent::Wireframe(_) => (sol + 1, grp),
-                    ProductContent::Group(_) => (sol, grp + 1),
+                .fold((0_usize, 0_usize), |(sol, grp), p| match &p.geometry {
+                    Some(_) => (sol + 1, grp),
+                    None => (sol, grp + 1),
                 });
         assert_eq!(solid_count, 3, "fixture {name}: leaf solids");
         assert_eq!(group_count, 4, "fixture {name}: groups");
         // Every Solid's SolidId must live in the topology pool.
         for product in tree.products.iter() {
-            if let ProductContent::Solid(solid) = &product.content {
+            if let Some(GeometryLeaf::Solid(solid)) = &product.geometry {
                 let total = u32::try_from(result.model.topology.solids.len()).unwrap();
                 for sid in &solid.ids {
                     assert!(
@@ -1290,7 +1288,7 @@ fn assembly_fixtures_preserve_sphere_vertex_loop() {
 
 #[test]
 fn single_part_fixtures_have_one_product() {
-    use step_io::ProductContent;
+    use step_io::GeometryLeaf;
     // Even single-part STEP files carry one PRODUCT; the assembly tree is
     // always Some(...) with `products.len() == 1` and the sole product
     // classified as a Solid leaf (root stays None until Phase B).
@@ -1322,7 +1320,7 @@ fn single_part_fixtures_have_one_product() {
             );
             let product = tree.products.iter().next().unwrap();
             assert!(
-                matches!(product.content, ProductContent::Solid(_)),
+                matches!(product.geometry, Some(GeometryLeaf::Solid(_))),
                 "fixture {name}: single-part product should be Solid(_)"
             );
         }
@@ -1412,7 +1410,6 @@ fn assembly_fixtures_tree_root_is_assembly_product() {
 
 #[test]
 fn assembly_fixtures_root_has_four_instances() {
-    use step_io::ProductContent;
     for (name, source) in ASSEMBLY_FIXTURES {
         let graph = step_io::parse(source)
             .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
@@ -1423,36 +1420,33 @@ fn assembly_fixtures_root_has_four_instances() {
             .first()
             .copied()
             .expect("root should be resolved");
-        match &tree.products[root].content {
-            ProductContent::Group(group) => {
-                assert_eq!(
-                    group.instances.len(),
-                    4,
-                    "fixture {name}: root should hold 4 instances"
-                );
-            }
-            ProductContent::Solid(_)
-            | ProductContent::SurfaceBody(_)
-            | ProductContent::Wireframe(_) => {
-                panic!("fixture {name}: root should be a Group")
-            }
-        }
+        let root_prod = &tree.products[root];
+        assert!(
+            root_prod.geometry.is_none(),
+            "fixture {name}: root should be a Group"
+        );
+        assert_eq!(
+            root_prod.instances.len(),
+            4,
+            "fixture {name}: root should hold 4 instances"
+        );
     }
 }
 
 #[test]
 fn assembly_fixtures_cube_wrapper_is_shared() {
-    use step_io::ProductContent;
     for (name, source) in ASSEMBLY_FIXTURES {
         let graph = step_io::parse(source)
             .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
         let result = ReaderContext::convert(&graph);
         let tree = result.model.assembly.as_ref().unwrap();
         // The Cube wrapper is a Group with a single inner Cube leaf.
-        let Some((idx, _)) = tree.products.iter().enumerate().find(|(_, p)| {
-            p.name == "Part"
-                && matches!(&p.content, ProductContent::Group(v) if v.instances.len() == 1)
-        }) else {
+        let Some((idx, _)) = tree
+            .products
+            .iter()
+            .enumerate()
+            .find(|(_, p)| p.name == "Part" && p.geometry.is_none() && p.instances.len() == 1)
+        else {
             panic!("fixture {name}: Cube wrapper 'Part' not found");
         };
         let cube_wrapper = step_io::ProductId(u32::try_from(idx).unwrap());
@@ -1462,10 +1456,12 @@ fn assembly_fixtures_cube_wrapper_is_shared() {
             .first()
             .copied()
             .expect("root should be resolved");
-        let ProductContent::Group(root_group) = &tree.products[root].content else {
-            panic!("fixture {name}: root not Group");
-        };
-        let shared_count = root_group
+        let root_prod = &tree.products[root];
+        assert!(
+            root_prod.geometry.is_none(),
+            "fixture {name}: root not Group"
+        );
+        let shared_count = root_prod
             .instances
             .iter()
             .filter(|inst| inst.child == cube_wrapper)
@@ -1476,7 +1472,7 @@ fn assembly_fixtures_cube_wrapper_is_shared() {
         );
 
         // The two shared instances must have different transforms.
-        let mut targets = root_group
+        let mut targets = root_prod
             .instances
             .iter()
             .filter(|inst| inst.child == cube_wrapper)
@@ -1492,7 +1488,6 @@ fn assembly_fixtures_cube_wrapper_is_shared() {
 
 #[test]
 fn assembly_fixtures_wrapper_holds_single_inner() {
-    use step_io::ProductContent;
     for (name, source) in ASSEMBLY_FIXTURES {
         let graph = step_io::parse(source)
             .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
@@ -1503,7 +1498,7 @@ fn assembly_fixtures_wrapper_holds_single_inner() {
         let wrapper_count = tree
             .products
             .iter()
-            .filter(|p| matches!(&p.content, ProductContent::Group(v) if v.instances.len() == 1))
+            .filter(|p| p.geometry.is_none() && p.instances.len() == 1)
             .count();
         assert_eq!(
             wrapper_count, 3,
@@ -1514,7 +1509,6 @@ fn assembly_fixtures_wrapper_holds_single_inner() {
 
 #[test]
 fn assembly_fixtures_transform_target_is_non_origin() {
-    use step_io::ProductContent;
     for (name, source) in ASSEMBLY_FIXTURES {
         let graph = step_io::parse(source)
             .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
@@ -1525,8 +1519,8 @@ fn assembly_fixtures_transform_target_is_non_origin() {
         // coordinates to exercise the transform path.
         let mut found_non_origin = false;
         for product in tree.products.iter() {
-            if let ProductContent::Group(group) = &product.content {
-                for inst in &group.instances {
+            if product.geometry.is_none() {
+                for inst in &product.instances {
                     let target = result.model.geometry.placements[inst.transform.target];
                     let pt = &result.model.geometry.points[target.location];
                     if pt.x.abs() + pt.y.abs() + pt.z.abs() > f64::EPSILON {

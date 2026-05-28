@@ -7,7 +7,7 @@
 
 #![allow(clippy::too_many_lines)]
 
-use step_io::ir::assembly::{ProductContent, WireframeReprKind};
+use step_io::ir::assembly::{GeometryLeaf, WireframeReprKind};
 use step_io::ir::units::NamedUnit;
 use step_io::parse;
 use step_io::reader::ReaderContext;
@@ -225,16 +225,16 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
             op.formation_with_source, rp.formation_with_source,
             "{name}: product[{pidx}] formation_with_source"
         );
-        match (&op.content, &rp.content) {
-            (ProductContent::Solid(_), ProductContent::Solid(_)) => {}
-            (ProductContent::SurfaceBody(o), ProductContent::SurfaceBody(r)) => {
+        match (&op.geometry, &rp.geometry) {
+            (Some(GeometryLeaf::Solid(_)), Some(GeometryLeaf::Solid(_))) => {}
+            (Some(GeometryLeaf::SurfaceBody(o)), Some(GeometryLeaf::SurfaceBody(r))) => {
                 assert_eq!(
                     o.ids.len(),
                     r.ids.len(),
                     "{name}: product[{pidx}] surface body shells"
                 );
             }
-            (ProductContent::Wireframe(o), ProductContent::Wireframe(r)) => {
+            (Some(GeometryLeaf::Wireframe(o)), Some(GeometryLeaf::Wireframe(r))) => {
                 assert_eq!(
                     o.repr_kind, r.repr_kind,
                     "{name}: product[{pidx}] wireframe repr_kind"
@@ -250,13 +250,13 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
                     "{name}: product[{pidx}] wireframe points count"
                 );
             }
-            (ProductContent::Group(oi), ProductContent::Group(ri)) => {
+            (None, None) => {
                 assert_eq!(
-                    oi.instances.len(),
-                    ri.instances.len(),
+                    op.instances.len(),
+                    rp.instances.len(),
                     "{name}: product[{pidx}] instance count"
                 );
-                for (iidx, (o, r)) in oi.instances.iter().zip(ri.instances.iter()).enumerate() {
+                for (iidx, (o, r)) in op.instances.iter().zip(rp.instances.iter()).enumerate() {
                     assert_eq!(
                         o.child, r.child,
                         "{name}: product[{pidx}].instance[{iidx}].child"
@@ -349,9 +349,9 @@ fn hemisphere_tube_emits_surface_body_chain() {
     let tree = model.assembly.as_ref().expect("assembly present");
     let product = tree.products.iter().next().expect("one product");
     assert!(
-        matches!(product.content, ProductContent::SurfaceBody(_)),
+        matches!(product.geometry, Some(GeometryLeaf::SurfaceBody(_))),
         "expected SurfaceBody, got {:?}",
-        product.content,
+        product.geometry,
     );
     assert!(
         product.outer_sr_frame.is_some(),
@@ -437,8 +437,8 @@ fn wire1_emits_geometric_set_and_gbssr() {
 
     let tree = model.assembly.as_ref().expect("assembly present");
     let product = tree.products.iter().next().expect("one product");
-    let ProductContent::Wireframe(wf) = &product.content else {
-        panic!("expected Wireframe, got {:?}", product.content);
+    let Some(GeometryLeaf::Wireframe(wf)) = &product.geometry else {
+        panic!("expected Wireframe, got {:?}", product.geometry);
     };
     assert_eq!(wf.repr_kind, WireframeReprKind::Surface);
     assert!(!wf.curves.is_empty(), "expected wireframe curves");
@@ -474,14 +474,14 @@ fn wire2_emits_gbwsr_in_assembly() {
     let mut surface_body_count = 0_usize;
     let mut group_count = 0_usize;
     for p in tree.products.iter() {
-        match &p.content {
-            ProductContent::Wireframe(wf) => {
+        match &p.geometry {
+            Some(GeometryLeaf::Wireframe(wf)) => {
                 assert_eq!(wf.repr_kind, WireframeReprKind::Wireframe);
                 wireframe_count += 1;
             }
-            ProductContent::SurfaceBody(_) => surface_body_count += 1,
-            ProductContent::Group(_) => group_count += 1,
-            ProductContent::Solid(_) => {}
+            Some(GeometryLeaf::SurfaceBody(_)) => surface_body_count += 1,
+            None => group_count += 1,
+            Some(GeometryLeaf::Solid(_)) => {}
         }
     }
     assert_eq!(wireframe_count, 2);
