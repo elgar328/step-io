@@ -452,7 +452,11 @@ impl WriteBuffer<'_> {
             .iter()
             .cloned()
             .collect();
-        self.geometric_representation_item_step_ids = vec![0; items.len()];
+        // SBSM entries are emitted earlier (phase sbsm-cluster-b) via
+        // `emit_sbsm_in_gri_arena` so `emit_representation` can resolve
+        // them through the GRI cache. The cache was sized + the SBSM
+        // slots filled there; the SymbolTarget / DefinedSymbol loops
+        // below only fill their own slots and leave SBSM slots intact.
         for (idx, item) in items.iter().enumerate() {
             if let GRI::SymbolTarget(t) = item {
                 self.geometric_representation_item_step_ids[idx] =
@@ -463,6 +467,32 @@ impl WriteBuffer<'_> {
             if let GRI::DefinedSymbol(d) = item {
                 self.geometric_representation_item_step_ids[idx] =
                     DefinedSymbolHandler::write(self, d.clone())?;
+            }
+        }
+        Ok(())
+    }
+
+    /// Emit the `ShellBasedSurfaceModel` slots of the
+    /// `geometric_representation_item` arena early, before the product chain
+    /// resolves `MANIFOLD_SURFACE_SHAPE_REPRESENTATION` children through the
+    /// GRI cache (phase sbsm-cluster). Sizes the cache so the later
+    /// `emit_geometric_representation_items` symbol passes can index into
+    /// it without touching SBSM slots.
+    pub(in crate::writer::buffer) fn emit_sbsm_in_gri_arena(&mut self) -> Result<(), WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::geometry::shell_based_surface_model::ShellBasedSurfaceModelHandler;
+        use crate::ir::visualization::GeometricRepresentationItem as GRI;
+        let items: Vec<_> = self
+            .model
+            .geometric_representation_items
+            .iter()
+            .cloned()
+            .collect();
+        self.geometric_representation_item_step_ids = vec![0; items.len()];
+        for (idx, item) in items.iter().enumerate() {
+            if let GRI::ShellBasedSurfaceModel(sbsm) = item {
+                self.geometric_representation_item_step_ids[idx] =
+                    ShellBasedSurfaceModelHandler::write(self, sbsm.shells.clone())?;
             }
         }
         Ok(())

@@ -545,8 +545,25 @@ impl WriteBuffer<'_> {
                 if let Some(frame) = r.ref_frame {
                     items.push(Attribute::EntityRef(self.emit_axis2_placement_3d(frame)?));
                 }
-                let sbsm = ShellBasedSurfaceModelHandler::write(self, r.shells.clone())?;
-                items.push(Attribute::EntityRef(sbsm));
+                // Route SBSM emit through the unified GRI arena cache so
+                // an SBSM also referenced from a STYLED_ITEM doesn't
+                // emit twice. `sbsm_ids` is populated when the source
+                // file came through the reader; kernel-built IR can
+                // leave it empty, in which case we fall back to inline
+                // emit from the flattened `shells`.
+                if r.sbsm_ids.is_empty() {
+                    let sbsm = ShellBasedSurfaceModelHandler::write(self, r.shells.clone())?;
+                    items.push(Attribute::EntityRef(sbsm));
+                } else {
+                    for sbsm_id in &r.sbsm_ids {
+                        let step_id = self.emit_representation_item_ref(
+                            crate::ir::representation_item::RepresentationItemRef::GeometricRepresentationItem(
+                                *sbsm_id,
+                            ),
+                        )?;
+                        items.push(Attribute::EntityRef(step_id));
+                    }
+                }
                 Ok(self.push_simple(
                     "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
                     vec![

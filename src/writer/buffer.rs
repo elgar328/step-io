@@ -631,6 +631,12 @@ impl<'m> WriteBuffer<'m> {
         // mechanism the curve / surface / solid arenas rely on. MDGPR is
         // skipped here and emitted by the visualization pass (it depends on
         // STYLED_ITEMs). No-op for hand/kernel-built IR (arena unpopulated).
+        // Pre-emit SBSM slots of the `geometric_representation_item` arena
+        // first so the upcoming `emit_representations_pre_pass` (MSSR) can
+        // resolve its child SBSMs through the GRI cache (phase
+        // sbsm-cluster). The symbol-domain GRI entries still emit after
+        // visualization (`emit_geometric_representation_items`).
+        self.emit_sbsm_in_gri_arena()?;
         self.emit_representations_pre_pass()?;
         self.emit_product_chain_if_eligible()?;
         self.emit_pmi_if_set();
