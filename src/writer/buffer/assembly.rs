@@ -233,7 +233,7 @@ impl WriteBuffer<'_> {
         // also see filled slots). The arena's source-#N order is
         // preserved across the two loops because the writer never
         // interleaves user property emits between PDS arena entries.
-        self.emit_property_definitions_if_set();
+        self.emit_property_definitions_pds_only();
 
         // Second loop: SR + SDR for every geometry-bearing product.
         // Document-style products (`pdef_context = None && geometry_context

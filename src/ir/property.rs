@@ -162,6 +162,10 @@ pub struct ProductDefinitionShape {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CharacterizedDefinition {
     ProductDefinition(ProductId),
+    /// Pattern B: `PROPERTY_DEFINITION` whose `definition` resolves to a
+    /// `SHAPE_ASPECT`. The Property target's actual `ProductId` is
+    /// reachable through the bound [`ShapeAspect::target`].
+    ShapeAspect(ShapeAspectId),
 }
 
 /// `PROPERTY_DEFINITION` + bound `REPRESENTATION` collapsed into a single

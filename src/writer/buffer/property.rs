@@ -256,37 +256,39 @@ impl WriteBuffer<'_> {
     /// assembly-chain inline PDS emit. Runs after `emit_product_chain` (so
     /// `product_def_ids` is filled) and before `emit_pmi_if_set` (which
     /// consumes `product_def_shape_ids`).
-    pub(in crate::writer::buffer) fn emit_property_definitions_if_set(&mut self) {
+    /// First half of the PD orchestrator. Emits only the
+    /// `PRODUCT_DEFINITION_SHAPE` arena slots; fills
+    /// `property_definition_step_ids` (zero-init) and mirrors each PDS
+    /// into `product_def_shape_ids`. The non-PDS slots are deferred to
+    /// [`emit_property_definitions_non_pds`] which must run after
+    /// `emit_pmi_if_set` (so `shape_aspect_step_ids` is populated for
+    /// Pattern B targets). Splitting the pass threads the dependency
+    /// needle: SR/SDR + SA emit read `product_def_shape_ids` between the
+    /// two halves.
+    pub(in crate::writer::buffer) fn emit_property_definitions_pds_only(&mut self) {
         use crate::ir::property::{CharacterizedDefinition, PropertyDefinition};
         let pool_owned = self.model.properties.clone();
         let pool = match pool_owned.as_ref() {
             Some(p) if !p.property_definitions.is_empty() => p,
             _ => {
-                // Hand/kernel-built IR with no `property_definitions` arena
-                // — fall back to one PDS per geometry-bearing product so
-                // the SDR / PMI consumers still see a populated
-                // `product_def_shape_ids` cache. Re-read fills the arena
-                // (reader's PDS handler unconditionally mirrors into it);
-                // this fallback only affects the *first* write of a hand-
-                // built IR, where the user did not pre-populate the arena.
                 self.emit_pds_fallback_from_product_chain();
                 return;
             }
         };
         self.property_definition_step_ids = vec![0; pool.property_definitions.len()];
         for (idx, pd) in pool.property_definitions.iter_with_ids() {
-            let (entity_name, data) = match pd {
-                PropertyDefinition::Itself(data) => ("PROPERTY_DEFINITION", data),
-                PropertyDefinition::ProductDefinitionShape(pds) => {
-                    ("PRODUCT_DEFINITION_SHAPE", &pds.inherited)
-                }
+            let PropertyDefinition::ProductDefinitionShape(pds) = pd else {
+                continue;
             };
-            let CharacterizedDefinition::ProductDefinition(product_id) = data.definition;
+            let data = &pds.inherited;
+            let CharacterizedDefinition::ProductDefinition(product_id) = data.definition else {
+                continue;
+            };
             let Some(&pdef_step) = self.product_def_ids.get(&product_id) else {
-                continue; // product chain not emitted — leave slot 0
+                continue;
             };
             let step = self.push_simple(
-                entity_name,
+                "PRODUCT_DEFINITION_SHAPE",
                 vec![
                     Attribute::String(data.name.clone()),
                     Attribute::String(data.description.clone()),
@@ -294,13 +296,59 @@ impl WriteBuffer<'_> {
                 ],
             );
             self.property_definition_step_ids[idx.0 as usize] = step;
-            if matches!(pd, PropertyDefinition::ProductDefinitionShape(_)) {
-                // Mirror into the legacy PMI consumer cache. Multiple PDS
-                // per product would overwrite — observed corpora carry one
-                // product-targeted PDS per product, so this matches the
-                // existing assembly-chain behaviour.
-                self.product_def_shape_ids.insert(product_id, step);
-            }
+            self.product_def_shape_ids.insert(product_id, step);
+        }
+    }
+
+    /// Second half of the PD orchestrator. Emits only the
+    /// `PROPERTY_DEFINITION` (Itself variant) arena slots; both
+    /// `ProductDefinition` and `ShapeAspect` targets resolve here.
+    /// Preserves slots filled by [`emit_property_definitions_pds_only`].
+    pub(in crate::writer::buffer) fn emit_property_definitions_non_pds(&mut self) {
+        use crate::ir::property::{CharacterizedDefinition, PropertyDefinition};
+        let pool_owned = self.model.properties.clone();
+        let Some(pool) = pool_owned.as_ref() else {
+            return;
+        };
+        if pool.property_definitions.is_empty() {
+            return;
+        }
+        if self.property_definition_step_ids.len() != pool.property_definitions.len() {
+            self.property_definition_step_ids
+                .resize(pool.property_definitions.len(), 0);
+        }
+        for (idx, pd) in pool.property_definitions.iter_with_ids() {
+            let PropertyDefinition::Itself(data) = pd else {
+                continue;
+            };
+            let target_step = match data.definition {
+                CharacterizedDefinition::ProductDefinition(product_id) => {
+                    let Some(&s) = self.product_def_ids.get(&product_id) else {
+                        continue;
+                    };
+                    s
+                }
+                CharacterizedDefinition::ShapeAspect(sa_id) => {
+                    let s = self
+                        .shape_aspect_step_ids
+                        .get(sa_id.0 as usize)
+                        .copied()
+                        .unwrap_or(0);
+                    if s == 0 {
+                        continue;
+                    }
+                    s
+                }
+            };
+            let step = self.push_simple(
+                "PROPERTY_DEFINITION",
+                vec![
+                    Attribute::String(data.name.clone()),
+                    Attribute::String(data.description.clone()),
+                    Attribute::EntityRef(target_step),
+                ],
+            );
+            self.property_definition_step_ids[idx.0 as usize] = step;
         }
     }
 

@@ -45,15 +45,28 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
             Some(desc_str.to_owned())
         };
         let target_ref = read_entity_ref(attrs, 2, entity_id, "definition")?;
-        // Resolve target via the assembly pass's pdef_to_product map. PDs
-        // whose target doesn't resolve to a Product (SHAPE_ASPECT etc.) are
-        // silently dropped — Pattern B per the property module docs.
-        let Some(&product_step_id) = ctx.pdef_to_product.get(&target_ref) else {
-            return Ok(());
-        };
-        let Some(&product_id) = ctx.product_arena_map.get(&product_step_id) else {
-            return Ok(());
-        };
+        // Two target patterns. Pattern A: PROPERTY_DEFINITION.definition →
+        // PRODUCT_DEFINITION (resolved via pdef_to_product). Pattern B:
+        // PROPERTY_DEFINITION.definition → SHAPE_ASPECT (resolved via
+        // shape_aspect_id_map — populated by Pass8ShapeAspect which runs
+        // before this pass). Both store an entry; PDR / GPA reuse the
+        // shared property_def_map.
+        let (definition, product_id) =
+            if let Some(&product_step_id) = ctx.pdef_to_product.get(&target_ref) {
+                let Some(&pid) = ctx.product_arena_map.get(&product_step_id) else {
+                    return Ok(());
+                };
+                (CharacterizedDefinition::ProductDefinition(pid), pid)
+            } else if let Some(&sa_id) = ctx.shape_aspect_id_map.get(&target_ref) {
+                let pid = ctx.shape_aspects[sa_id].target;
+                (CharacterizedDefinition::ShapeAspect(sa_id), pid)
+            } else {
+                eprintln!(
+                    "warning: PROPERTY_DEFINITION #{entity_id} target #{target_ref} \
+                     resolves to neither PRODUCT_DEFINITION nor SHAPE_ASPECT — skipping"
+                );
+                return Ok(());
+            };
         ctx.property_def_map
             .insert(entity_id, (name.clone(), description.clone(), product_id));
         // Schema-faithful `property_definitions` arena push (the writer's
@@ -67,7 +80,7 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
             .push(PropertyDefinition::Itself(PropertyDefinitionData {
                 name,
                 description: arena_description,
-                definition: CharacterizedDefinition::ProductDefinition(product_id),
+                definition,
             }));
         ctx.property_def_step_to_id.insert(entity_id, pd_id);
         Ok(())

@@ -640,6 +640,10 @@ impl<'m> WriteBuffer<'m> {
         self.emit_representations_pre_pass()?;
         self.emit_product_chain_if_eligible()?;
         self.emit_pmi_if_set();
+        // Second half of the PD orchestrator — runs after SA emit so
+        // `shape_aspect_step_ids` is populated for Pattern B targets
+        // (PROPERTY_DEFINITION whose definition is a SHAPE_ASPECT).
+        self.emit_property_definitions_non_pds();
         // general_datum_reference + DATUM_SYSTEM — emitted before the
         // ShapeAspectRef consumers below so `datum_system_step_ids` is
         // filled when `emit_shape_aspect_ref` runs. `emit_datum_systems`

@@ -8,6 +8,7 @@
 #![allow(clippy::too_many_lines)]
 
 use step_io::ir::assembly::{GeometryLeaf, WireframeReprKind};
+use step_io::ir::property::{CharacterizedDefinition, PropertyDefinition};
 use step_io::ir::units::NamedUnit;
 use step_io::parse;
 use step_io::reader::ReaderContext;
@@ -840,5 +841,24 @@ fn external_temp_nist_property_def_reader_only() {
     assert!(
         pool.properties.iter().any(|p| p.name == "p1"),
         "expected a property named 'p1' in the fixture"
+    );
+    // Pattern B coverage: at least one `PROPERTY_DEFINITION` in the
+    // fixture targets a `SHAPE_ASPECT` (geometric validation property).
+    // Reader must surface it as a `CharacterizedDefinition::ShapeAspect`
+    // arena entry rather than silently dropping it.
+    let sa_pd_count = pool
+        .property_definitions
+        .iter()
+        .filter(|pd| {
+            matches!(
+                pd,
+                PropertyDefinition::Itself(d)
+                    if matches!(d.definition, CharacterizedDefinition::ShapeAspect(_))
+            )
+        })
+        .count();
+    assert!(
+        sa_pd_count >= 1,
+        "expected at least one SHAPE_ASPECT-targeted PropertyDefinition"
     );
 }
