@@ -52,6 +52,13 @@ impl SimpleEntityHandler for StyledItemHandler {
         }
 
         let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "STYLED_ITEM target #{item_ref} did not resolve to a modelled \
+                     representation_item kind (likely cascade from a dropped dependency)"
+                ),
+            });
             return Ok(());
         };
 

@@ -45,9 +45,23 @@ impl SimpleEntityHandler for OverRidingStyledItemHandler {
             }
         }
         let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "OVER_RIDING_STYLED_ITEM target #{item_ref} did not resolve to a modelled \
+                     representation_item kind (likely cascade from a dropped dependency)"
+                ),
+            });
             return Ok(());
         };
         let Some(&over_ridden_style) = ctx.viz_styled_item_id_map.get(&over_ridden_ref) else {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "OVER_RIDING_STYLED_ITEM over_ridden_style #{over_ridden_ref} did not resolve \
+                     to a previously-loaded STYLED_ITEM"
+                ),
+            });
             return Ok(());
         };
 
