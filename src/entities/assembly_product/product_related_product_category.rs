@@ -7,7 +7,6 @@
 //! in `root` later, even when no PCR exists.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::assembly::ProductCategoryChain;
 use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -63,20 +62,7 @@ impl SimpleEntityHandler for ProductRelatedProductCategoryHandler {
         );
         ctx.prpc_arena_map.insert(entity_id, pc_id);
 
-        // Attach the PRPC half (kind / kind_description) to each referenced
-        // product immediately. The PCR pass will fill in `root` if a PCR
-        // entity links this PRPC to a PC.
-        for prod_ref in &product_refs {
-            if let Some(&pid) = ctx.product_arena_map.get(prod_ref) {
-                ctx.assembly_products[pid].category = Some(ProductCategoryChain {
-                    kind: name.clone(),
-                    kind_description: description.clone(),
-                    root: None,
-                });
-            }
-        }
-        ctx.prpc_meta_map
-            .insert(entity_id, (name, description, product_refs));
+        let _ = (name, description, product_refs);
         Ok(())
     }
 

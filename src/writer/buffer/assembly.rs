@@ -217,14 +217,12 @@ impl WriteBuffer<'_> {
             // sets it when constructing geometry) so it bypasses this branch
             // and gets the full chain as before.
             if product.pdef_context.is_none() && product.geometry_context.is_none() {
-                self.emit_product_category_chain(product, prod_entity);
                 self.product_def_ids.insert(pid, prod_entity);
                 continue;
             }
             let formation = self.emit_formation(prod_entity, product);
             let pdef = self.emit_pdef(formation, per_product_ctx.pdef_ctx);
             self.product_def_ids.insert(pid, pdef);
-            self.emit_product_category_chain(product, prod_entity);
         }
         // Now that every product's PDEF step id is cached in
         // `product_def_ids`, emit the `property_definitions` arena —
@@ -888,55 +886,6 @@ impl WriteBuffer<'_> {
         } else {
             ProductDefinitionFormationHandler::write(self, prod_entity)
                 .expect("PDF write only pushes one simple entity")
-        }
-    }
-
-    /// Emit the `PRODUCT_CATEGORY` chain for a product. No-op when the IR
-    /// has `category = None` (kernel-built IR or AP214 CD minimal). Always
-    /// emits `PRODUCT_RELATED_PRODUCT_CATEGORY`; emits `PRODUCT_CATEGORY` +
-    /// `PRODUCT_CATEGORY_RELATIONSHIP` only when the source file had them
-    /// (`category.root.is_some()`).
-    fn emit_product_category_chain(&mut self, product: &Product, prod_entity: u64) {
-        use crate::entities::SimpleEntityHandler;
-        use crate::entities::assembly_product::product_category::{
-            ProductCategoryHandler, ProductCategoryWriteInput,
-        };
-        use crate::entities::assembly_product::product_category_relationship::{
-            ProductCategoryRelationshipHandler, ProductCategoryRelationshipWriteInput,
-        };
-        use crate::entities::assembly_product::product_related_product_category::{
-            ProductRelatedProductCategoryHandler, ProductRelatedProductCategoryWriteInput,
-        };
-
-        let Some(category) = &product.category else {
-            return;
-        };
-        let prpc = ProductRelatedProductCategoryHandler::write(
-            self,
-            ProductRelatedProductCategoryWriteInput {
-                kind: category.kind.clone(),
-                kind_description: category.kind_description.clone(),
-                product_refs: vec![prod_entity],
-            },
-        )
-        .expect("PRPC write only pushes one simple entity");
-        if let Some(root) = &category.root {
-            let pc = ProductCategoryHandler::write(
-                self,
-                ProductCategoryWriteInput {
-                    name: root.name.clone(),
-                    description: root.description.clone(),
-                },
-            )
-            .expect("PRODUCT_CATEGORY write only pushes one simple entity");
-            let _pcr = ProductCategoryRelationshipHandler::write(
-                self,
-                ProductCategoryRelationshipWriteInput {
-                    pc_ref: pc,
-                    prpc_ref: prpc,
-                },
-            )
-            .expect("PCR write only pushes one simple entity");
         }
     }
 

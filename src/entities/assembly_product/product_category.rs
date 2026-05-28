@@ -40,18 +40,13 @@ impl SimpleEntityHandler for ProductCategoryHandler {
         let description = optional_text(attrs, 1, entity_id, "description")?;
         // Schema-faithful `product_categories` arena push — PC `Itself`
         // variant. Standalone PCs (no PCR connecting them to a PRPC)
-        // round-trip through this entry. `pc_meta_map` is kept for the
-        // PCR resolver until phase pc-unify-b.
+        // round-trip through this entry.
         let pc_id = ctx
             .product_categories
             .push(crate::ir::assembly::ProductCategory::Itself(
-                crate::ir::assembly::ProductCategoryData {
-                    name: name.clone(),
-                    description: description.clone(),
-                },
+                crate::ir::assembly::ProductCategoryData { name, description },
             ));
         ctx.pc_arena_map.insert(entity_id, pc_id);
-        ctx.pc_meta_map.insert(entity_id, (name, description));
         Ok(())
     }
 

@@ -588,18 +588,30 @@ fn hollow_box_ap214_is_preserves_void_orientation() {
 /// loyalty flag.
 #[test]
 fn box_ap203_preserves_product_category_chain() {
+    use step_io::ir::assembly::ProductCategory;
     let src = include_str!("fixtures/box_ap203.step");
     let model = ReaderContext::convert(&parse(src).expect("parse")).model;
     let tree = model.assembly.as_ref().expect("assembly present");
     let product = tree.products.iter().next().expect("one product");
-    let category = product
-        .category
-        .as_ref()
-        .expect("AP203 fixture must carry a PC chain");
-    assert_eq!(category.kind, "detail");
-    let root = category.root.as_ref().expect("AP203 fixture has PCR + PC");
-    assert_eq!(root.name, "part");
-    assert_eq!(root.description, None);
+    let prpc = tree
+        .product_categories
+        .iter()
+        .find_map(|pc| match pc {
+            ProductCategory::ProductRelatedProductCategory(d) => Some(d),
+            ProductCategory::Itself(_) => None,
+        })
+        .expect("AP203 fixture must carry a PRPC entry");
+    assert_eq!(prpc.name, "detail");
+    let pc = tree
+        .product_categories
+        .iter()
+        .find_map(|pc| match pc {
+            ProductCategory::Itself(d) => Some(d),
+            ProductCategory::ProductRelatedProductCategory(_) => None,
+        })
+        .expect("AP203 fixture has PCR + PC");
+    assert_eq!(pc.name, "part");
+    assert_eq!(pc.description, None);
     assert!(
         product.formation_with_source,
         "AP203 mandates _WITH_SPECIFIED_SOURCE"
@@ -774,17 +786,28 @@ fn external_temp_fusion360_two_context_round_trip() {
 /// `_WITH_SPECIFIED_SOURCE` flips the loyalty flag.
 #[test]
 fn wire1_preserves_pc_chain_with_specification() {
+    use step_io::ir::assembly::ProductCategory;
     let src = include_str!("fixtures/wire1_ap214_is.stp");
     let model = ReaderContext::convert(&parse(src).expect("parse")).model;
     let tree = model.assembly.as_ref().expect("assembly present");
     let product = tree.products.iter().next().expect("at least one product");
-    let category = product
-        .category
-        .as_ref()
-        .expect("CATIA fixture carries full PC chain");
-    assert_eq!(category.kind, "part");
-    let root = category.root.as_ref().expect("CATIA writes PCR + PC");
-    assert_eq!(root.description.as_deref(), Some("specification"));
+    let prpc = tree
+        .product_categories
+        .iter()
+        .find_map(|pc| match pc {
+            ProductCategory::ProductRelatedProductCategory(d) => Some(d),
+            ProductCategory::Itself(_) => None,
+        })
+        .expect("CATIA fixture carries a PRPC entry");
+    assert_eq!(prpc.name, "part");
+    let pc_with_spec = tree.product_categories.iter().find_map(|pc| match pc {
+        ProductCategory::Itself(d) if d.description.as_deref() == Some("specification") => Some(d),
+        _ => None,
+    });
+    assert!(
+        pc_with_spec.is_some(),
+        "CATIA fixture carries a PC with description='specification'"
+    );
     assert!(
         product.formation_with_source,
         "CATIA AP214 IS uses _WITH_SPECIFIED_SOURCE"
