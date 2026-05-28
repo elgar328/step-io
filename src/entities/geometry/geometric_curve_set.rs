@@ -11,6 +11,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::id::{CurveId, PointId};
+use crate::ir::visualization::{GeometricCurveSet, GeometricRepresentationItem, GeometricSet};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -33,7 +34,7 @@ pub(crate) fn read_geometric_curve_set_body(
     entity_name: &'static str,
 ) -> Result<(), ConvertError> {
     check_count(attrs, 2, entity_id, entity_name)?;
-    let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
+    let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
     let item_refs = read_entity_ref_list(attrs, 1, entity_id, "items")?;
     let mut curves = Vec::new();
     let mut points = Vec::new();
@@ -44,7 +45,26 @@ pub(crate) fn read_geometric_curve_set_body(
             points.push(pid);
         }
     }
-    ctx.curve_set_map.insert(entity_id, (curves, points));
+    ctx.curve_set_map
+        .insert(entity_id, (curves.clone(), points.clone()));
+    // Also push into the unified `geometric_representation_item` arena so
+    // STYLED_ITEM can resolve a standalone GCS/GS target. The wireframe
+    // flatten path keeps using `curve_set_map`.
+    let variant = if entity_name == "GEOMETRIC_CURVE_SET" {
+        GeometricRepresentationItem::GeometricCurveSet(GeometricCurveSet {
+            name,
+            curves,
+            points,
+        })
+    } else {
+        GeometricRepresentationItem::GeometricSet(GeometricSet {
+            name,
+            curves,
+            points,
+        })
+    };
+    let gri_id = ctx.geometric_representation_items.push(variant);
+    ctx.curve_set_id_map.insert(entity_id, gri_id);
     Ok(())
 }
 

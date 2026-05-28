@@ -687,6 +687,8 @@ pub enum GeometricRepresentationItem {
     DefinedSymbol(DefinedSymbol),
     SymbolTarget(SymbolTarget),
     ShellBasedSurfaceModel(ShellBasedSurfaceModel),
+    GeometricCurveSet(GeometricCurveSet),
+    GeometricSet(GeometricSet),
 }
 
 /// `SHELL_BASED_SURFACE_MODEL(name, sbsm_boundary)` — collects one or more
@@ -699,6 +701,28 @@ pub enum GeometricRepresentationItem {
 pub struct ShellBasedSurfaceModel {
     pub name: String,
     pub shells: Vec<crate::ir::id::ShellId>,
+}
+
+/// `GEOMETRIC_CURVE_SET(name, elements)` — bundles curves (and the few
+/// loose points some producers attach) into a single `representation_item`.
+/// `GBWSR` flattens these into a `WireframeContent`; `STYLED_ITEM` can also
+/// target a GCS directly (phase gcs-cluster).
+#[derive(Debug, Clone, PartialEq)]
+pub struct GeometricCurveSet {
+    pub name: String,
+    pub curves: Vec<crate::ir::id::CurveId>,
+    pub points: Vec<crate::ir::id::PointId>,
+}
+
+/// `GEOMETRIC_SET(name, elements)` — `GEOMETRIC_CURVE_SET`'s supertype that
+/// additionally allows surface refs. step-io currently only models curves
+/// and points (surfaces are not produced by the corpus in `GEOMETRIC_SET`
+/// form); the variant exists for round-trip name fidelity.
+#[derive(Debug, Clone, PartialEq)]
+pub struct GeometricSet {
+    pub name: String,
+    pub curves: Vec<crate::ir::id::CurveId>,
+    pub points: Vec<crate::ir::id::PointId>,
 }
 
 /// `DEFINED_SYMBOL(name, definition, target)` — `geometric_representation_item`

@@ -406,12 +406,21 @@ pub struct PlainRepr {
 
 /// `GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION` /
 /// `GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION`.
+///
+/// `content` flattens the source GCS/GS into curves + points for SDR /
+/// kernel consumers. `gcs_id` preserves the source's
+/// `geometric_representation_item` id so the writer can route emit
+/// through the unified GRI arena (phase gcs-cluster) and avoid duplicate
+/// emission if the same GCS is also referenced from a `STYLED_ITEM`.
+/// Kernel-built IR can leave `gcs_id` as `None` — the writer falls back
+/// to inline emit from `content`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct WireframeRepr {
     pub name: String,
     pub context: Option<RepresentationContextRef>,
     pub ref_frame: Option<Placement3dId>,
     pub content: WireframeContent,
+    pub gcs_id: Option<crate::ir::id::GeometricRepresentationItemId>,
 }
 
 /// `REPRESENTATION_MAP(mapping_origin, mapped_representation)` — a reusable

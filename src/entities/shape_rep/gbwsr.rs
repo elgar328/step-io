@@ -74,6 +74,13 @@ pub(crate) fn read_wireframe_representation_body(
     };
     ctx.wireframe_data_map.insert(entity_id, wireframe.clone());
 
+    // Preserve the child GCS/GS's unified GRI id so the writer can route
+    // emit through the GRI cache (phase gcs-cluster). GBWSR/GBSSR carry
+    // at most one GCS in the corpus — take the first matching item.
+    let gcs_id = items
+        .iter()
+        .find_map(|r| ctx.curve_set_id_map.get(r).copied());
+
     // representation-refactor A-1: dual-write into the unified arena.
     let repr_id = ctx
         .representations
@@ -83,6 +90,7 @@ pub(crate) fn read_wireframe_representation_body(
                 context,
                 ref_frame,
                 content: wireframe,
+                gcs_id,
             },
         ));
     ctx.repr_id_map.insert(entity_id, repr_id);

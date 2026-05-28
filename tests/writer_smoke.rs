@@ -3669,7 +3669,9 @@ fn defined_symbol_round_trip() {
         .find_map(|i| match i {
             GeometricRepresentationItem::DefinedSymbol(d) => Some(d),
             GeometricRepresentationItem::SymbolTarget(_)
-            | GeometricRepresentationItem::ShellBasedSurfaceModel(_) => None,
+            | GeometricRepresentationItem::ShellBasedSurfaceModel(_)
+            | GeometricRepresentationItem::GeometricCurveSet(_)
+            | GeometricRepresentationItem::GeometricSet(_) => None,
         })
         .expect("defined_symbol round-trips");
     assert_eq!(ds.name, "sym");
@@ -3679,7 +3681,9 @@ fn defined_symbol_round_trip() {
         .find_map(|i| match i {
             GeometricRepresentationItem::SymbolTarget(t) => Some(t),
             GeometricRepresentationItem::DefinedSymbol(_)
-            | GeometricRepresentationItem::ShellBasedSurfaceModel(_) => None,
+            | GeometricRepresentationItem::ShellBasedSurfaceModel(_)
+            | GeometricRepresentationItem::GeometricCurveSet(_)
+            | GeometricRepresentationItem::GeometricSet(_) => None,
         })
         .expect("symbol_target round-trips");
     assert!((st.x_scale - 3.5).abs() < f64::EPSILON);

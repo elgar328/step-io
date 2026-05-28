@@ -247,6 +247,11 @@ pub struct ReaderContext {
     /// SBSM target through `geometric_representation_items` (phase
     /// sbsm-repr-item) while MSSR keeps using `sbsm_shells_map`.
     pub(crate) sbsm_id_map: HashMap<u64, crate::ir::id::GeometricRepresentationItemId>,
+    /// `GEOMETRIC_CURVE_SET` / `GEOMETRIC_SET #N → GeometricRepresentationItemId`.
+    /// Same role as `sbsm_id_map`: `STYLED_ITEM` resolves a standalone
+    /// GCS/GS target through the unified GRI arena while `curve_set_map`
+    /// keeps feeding the wireframe flatten path (phase gcs-cluster).
+    pub(crate) curve_set_id_map: HashMap<u64, crate::ir::id::GeometricRepresentationItemId>,
     /// `MANIFOLD_SURFACE_SHAPE_REPRESENTATION #N → flattened shell ids`
     /// pulled from the MSSR's referenced SBSM. Consumed by SDR conversion
     /// to populate `Product.content = SurfaceBody(..)`.
