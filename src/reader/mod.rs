@@ -242,6 +242,11 @@ pub struct ReaderContext {
     /// `SHELL_BASED_SURFACE_MODEL #N → resolved shell ids`. Populated in
     /// Pass 5-8b and consumed by MSSR conversion to flatten shells.
     pub(crate) sbsm_shells_map: HashMap<u64, Vec<ShellId>>,
+    /// `SHELL_BASED_SURFACE_MODEL #N → GeometricRepresentationItemId`.
+    /// Same SBSM, dual-indexed so `STYLED_ITEM` can resolve a standalone
+    /// SBSM target through `geometric_representation_items` (phase
+    /// sbsm-repr-item) while MSSR keeps using `sbsm_shells_map`.
+    pub(crate) sbsm_id_map: HashMap<u64, crate::ir::id::GeometricRepresentationItemId>,
     /// `MANIFOLD_SURFACE_SHAPE_REPRESENTATION #N → flattened shell ids`
     /// pulled from the MSSR's referenced SBSM. Consumed by SDR conversion
     /// to populate `Product.content = SurfaceBody(..)`.

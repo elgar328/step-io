@@ -142,5 +142,14 @@ pub(crate) fn resolve_representation_item_ref(
     if let Some(&rid) = ctx.repr_item_id_map.get(&item_ref) {
         return Some(RepresentationItemRef::RepresentationItem(rid));
     }
+    // geometric_representation_item arena (phase sbsm-repr-item) — covers
+    // standalone SBSMs targeted directly by STYLED_ITEM. Wiring is deferred
+    // until the MSSR writer routes its child SBSM emit through the same
+    // arena's step-id cache, otherwise a SBSM referenced from both an MSSR
+    // and a STYLED_ITEM would emit twice.
+    //
+    // if let Some(&gri_id) = ctx.sbsm_id_map.get(&item_ref) {
+    //     return Some(RepresentationItemRef::GeometricRepresentationItem(gri_id));
+    // }
     None
 }

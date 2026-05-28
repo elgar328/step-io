@@ -58,6 +58,15 @@ impl SimpleEntityHandler for ManifoldSurfaceShapeRepresentationHandler {
             .collect();
         ctx.mssr_shells_map.insert(entity_id, flattened.clone());
 
+        // Preserve each child SBSM's unified `GeometricRepresentationItem`
+        // id so the writer can emit through the GRI cache (phase
+        // sbsm-cluster). An SBSM also referenced from a STYLED_ITEM stays a
+        // single STEP entity that way.
+        let sbsm_ids: Vec<crate::ir::id::GeometricRepresentationItemId> = items
+            .iter()
+            .filter_map(|r| ctx.sbsm_id_map.get(r).copied())
+            .collect();
+
         // representation-refactor A-1: dual-write into the unified arena.
         let repr_id =
             ctx.representations
@@ -67,6 +76,7 @@ impl SimpleEntityHandler for ManifoldSurfaceShapeRepresentationHandler {
                         context,
                         ref_frame,
                         shells: flattened,
+                        sbsm_ids,
                     },
                 ));
         ctx.repr_id_map.insert(entity_id, repr_id);

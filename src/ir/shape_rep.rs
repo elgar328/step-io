@@ -378,12 +378,21 @@ pub struct AdvancedBrepRepr {
 }
 
 /// `MANIFOLD_SURFACE_SHAPE_REPRESENTATION(name, items, context)`.
+///
+/// `shells` keeps the legacy flattened shell-id view that SDR / writer
+/// fallback consumers expect; `sbsm_ids` preserves the original SBSM
+/// identity so the writer can route emit through the unified
+/// `GeometricRepresentationItem` arena (phase sbsm-cluster-c) and avoid
+/// duplicating an SBSM that's also referenced from a `STYLED_ITEM`.
+/// Kernel-built IR can leave `sbsm_ids` empty — the writer falls back to
+/// inline emit from `shells`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ManifoldSurfaceRepr {
     pub name: String,
     pub context: Option<RepresentationContextRef>,
     pub ref_frame: Option<Placement3dId>,
     pub shells: Vec<ShellId>,
+    pub sbsm_ids: Vec<crate::ir::id::GeometricRepresentationItemId>,
 }
 
 /// Plain `SHAPE_REPRESENTATION(name, items, context)` — geometry-free

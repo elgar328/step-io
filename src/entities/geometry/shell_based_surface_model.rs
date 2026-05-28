@@ -10,6 +10,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::id::ShellId;
+use crate::ir::visualization::{GeometricRepresentationItem, ShellBasedSurfaceModel};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -29,13 +30,24 @@ impl SimpleEntityHandler for ShellBasedSurfaceModelHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "SHELL_BASED_SURFACE_MODEL")?;
-        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let shell_refs = read_entity_ref_list(attrs, 1, entity_id, "sbsm_boundary")?;
         let shells: Vec<ShellId> = shell_refs
             .iter()
             .filter_map(|r| ctx.shell_map.get(r).copied())
             .collect();
-        ctx.sbsm_shells_map.insert(entity_id, shells);
+        ctx.sbsm_shells_map.insert(entity_id, shells.clone());
+        // Also push into the unified `geometric_representation_item` arena so
+        // a `STYLED_ITEM` (or any other representation_item consumer) can
+        // resolve the SBSM as a single id. MSSR continues to flatten through
+        // `sbsm_shells_map` so the dual storage stays consistent.
+        let gri_id = ctx.geometric_representation_items.push(
+            GeometricRepresentationItem::ShellBasedSurfaceModel(ShellBasedSurfaceModel {
+                name,
+                shells,
+            }),
+        );
+        ctx.sbsm_id_map.insert(entity_id, gri_id);
         Ok(())
     }
 
