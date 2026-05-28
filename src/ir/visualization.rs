@@ -686,6 +686,19 @@ pub struct PreDefinedPointMarkerSymbol {
 pub enum GeometricRepresentationItem {
     DefinedSymbol(DefinedSymbol),
     SymbolTarget(SymbolTarget),
+    ShellBasedSurfaceModel(ShellBasedSurfaceModel),
+}
+
+/// `SHELL_BASED_SURFACE_MODEL(name, sbsm_boundary)` — collects one or more
+/// shells (open or closed) into a single `representation_item`. Most
+/// commercial fixtures fold their SBSMs into an MSSR's `items` list, but
+/// AP242 also allows SBSMs to be referenced directly from a `STYLED_ITEM`
+/// (standalone usage), which is what brings this variant into the
+/// `GeometricRepresentationItem` arena.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ShellBasedSurfaceModel {
+    pub name: String,
+    pub shells: Vec<crate::ir::id::ShellId>,
 }
 
 /// `DEFINED_SYMBOL(name, definition, target)` — `geometric_representation_item`

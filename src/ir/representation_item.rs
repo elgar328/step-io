@@ -11,8 +11,9 @@
 //! consumers and fixtures require them.
 
 use super::id::{
-    CurveId, EdgeId, FaceId, Placement3dId, PointId, RepresentationId, RepresentationItemId,
-    ShellId, SolidId, SurfaceId, TypeQualifierId, ValueFormatTypeQualifierId, VertexId,
+    CurveId, EdgeId, FaceId, GeometricRepresentationItemId, Placement3dId, PointId,
+    RepresentationId, RepresentationItemId, ShellId, SolidId, SurfaceId, TypeQualifierId,
+    ValueFormatTypeQualifierId, VertexId,
 };
 
 /// What a STEP `representation_item` reference resolved to in step-io's IR.
@@ -36,6 +37,10 @@ pub enum RepresentationItemRef {
     /// covers `qualified_representation_item` / `value_representation_item`
     /// variants. Future sub-phases extend to MRI / `NumericRepresentationItem`.
     RepresentationItem(RepresentationItemId),
+    /// `geometric_representation_item` enum arena entry — covers SBSM and
+    /// the symbol-domain variants (`DefinedSymbol`, `SymbolTarget`). Brought
+    /// in so `STYLED_ITEM` can target a standalone SBSM (phase sbsm-repr-item).
+    GeometricRepresentationItem(GeometricRepresentationItemId),
 }
 
 /// `representation_item` enum arena per the ir.toml blueprint (phase

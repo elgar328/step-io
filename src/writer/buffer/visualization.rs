@@ -40,6 +40,9 @@ impl WriteBuffer<'_> {
             RepresentationItemRef::RepresentationItem(id) => {
                 Ok(self.representation_item_step_ids[id.0 as usize])
             }
+            RepresentationItemRef::GeometricRepresentationItem(id) => {
+                Ok(self.geometric_representation_item_step_ids[id.0 as usize])
+            }
         }
     }
 
