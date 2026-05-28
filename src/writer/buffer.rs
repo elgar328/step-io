@@ -390,6 +390,15 @@ pub(crate) struct WriteBuffer<'m> {
     /// Empty when the model has no assembly (kernel-built IR with
     /// properties only — the property emitter silently skips in that case).
     pub(crate) product_def_ids: std::collections::HashMap<ProductId, u64>,
+    /// `ProductId → PRODUCT entity step id`. Phase pc-unify-a:
+    /// consumed by `emit_product_categories_arena` so PRPC.products
+    /// refs land on the right entity (PDEF doesn't match the schema
+    /// here — PRPC.products narrows to PRODUCT itself).
+    pub(crate) product_step_ids: std::collections::HashMap<ProductId, u64>,
+    /// `ProductCategoryId → step id` (PC or PRPC). Filled by
+    /// `emit_product_categories_arena`, consumed by
+    /// `emit_product_category_relationships_arena`.
+    pub(crate) product_category_step_ids: Vec<u64>,
     /// `ProductId → PRODUCT_DEFINITION_SHAPE step id`. Same role as
     /// `product_def_ids` but for the PDS sibling — consumed by the PMI
     /// emitter to resolve `ShapeAspect.target` (SAs reference PDS, not PD).
@@ -530,6 +539,8 @@ impl<'m> WriteBuffer<'m> {
             pc_step_ids: Vec::new(),
             pdc_step_ids: Vec::new(),
             product_def_ids: std::collections::HashMap::new(),
+            product_step_ids: std::collections::HashMap::new(),
+            product_category_step_ids: Vec::new(),
             product_def_shape_ids: std::collections::HashMap::new(),
             property_step_ids: Vec::new(),
             property_definition_step_ids: Vec::new(),
@@ -639,6 +650,11 @@ impl<'m> WriteBuffer<'m> {
         self.emit_sbsm_in_gri_arena()?;
         self.emit_representations_pre_pass()?;
         self.emit_product_chain_if_eligible()?;
+        // PC cluster (phase pc-unify-a) — arena-driven emit. Coexists with
+        // the legacy `emit_product_category_chain` inline path until phase
+        // pc-unify-b removes the latter.
+        self.emit_product_categories_arena();
+        self.emit_product_category_relationships_arena();
         self.emit_pmi_if_set();
         // Second half of the PD orchestrator — runs after SA emit so
         // `shape_aspect_step_ids` is populated for Pattern B targets

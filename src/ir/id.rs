@@ -1,7 +1,8 @@
 use super::arena::{Arena, define_id};
 use super::assembly::{
-    Product, ProductContext, ProductDefinitionContext, ProductDefinitionContextAssociation,
-    ProductDefinitionContextRole, ProductDefinitionRelationship,
+    Product, ProductCategory, ProductCategoryRelationship, ProductContext,
+    ProductDefinitionContext, ProductDefinitionContextAssociation, ProductDefinitionContextRole,
+    ProductDefinitionRelationship,
 };
 use super::form_features::Step;
 use super::geometry::{
@@ -77,6 +78,8 @@ define_id!(SolidId, Solid);
 
 // Assembly Ids
 define_id!(ProductId, Product);
+define_id!(ProductCategoryId, ProductCategory);
+define_id!(ProductCategoryRelationshipId, ProductCategoryRelationship);
 define_id!(ProductContextId, ProductContext);
 define_id!(ProductDefinitionContextId, ProductDefinitionContext);
 define_id!(ProductDefinitionContextRoleId, ProductDefinitionContextRole);

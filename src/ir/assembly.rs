@@ -8,9 +8,9 @@
 
 use super::arena::Arena;
 use super::id::{
-    ApplicationContextId, CurveId, MeasureWithUnitId, Placement3dId, PointId, ProductContextId,
-    ProductDefinitionContextId, ProductDefinitionContextRoleId, ProductId, RepresentationId,
-    ShellId, SolidId, UnitContextId,
+    ApplicationContextId, CurveId, MeasureWithUnitId, Placement3dId, PointId, ProductCategoryId,
+    ProductContextId, ProductDefinitionContextId, ProductDefinitionContextRoleId, ProductId,
+    RepresentationId, ShellId, SolidId, UnitContextId,
 };
 
 /// Assembly graph. Conventionally called a "tree" but shared instances
@@ -42,6 +42,14 @@ pub struct AssemblyTree {
     /// `PRODUCT_DEFINITION_RELATIONSHIP` arena, carrying both the plain
     /// supertype form and the `MAKE_FROM_USAGE_OPTION` in-enum subtype.
     pub product_definition_relationships: Arena<ProductDefinitionRelationship>,
+    /// `product_category` `enum_base` arena — `PC` `Itself` + `PRPC` variants.
+    /// Source-of-truth for the PC cluster (phase pc-unify); the per-product
+    /// `Product.category` field is a deprecated mirror kept for kernel API
+    /// compatibility.
+    pub product_categories: Arena<ProductCategory>,
+    /// `PRODUCT_CATEGORY_RELATIONSHIP` arena — pairs a PC `Itself` entry
+    /// with a PRPC entry (`sub_category`) per the AP203 / AP242 schema.
+    pub product_category_relationships: Arena<ProductCategoryRelationship>,
 }
 
 /// `PRODUCT_DEFINITION_RELATIONSHIP` arena entry. Carries the plain base
@@ -186,6 +194,47 @@ pub struct ProductCategoryRoot {
     /// `PC.description`. `Some("specification")` is the most common
     /// non-empty form; FreeCAD-style outputs use `None` (`$`).
     pub description: Option<String>,
+}
+
+/// `product_category` `enum_base` (blueprint `instance_count`: `PC` 18833 +
+/// `PRPC` 215544). `PC` itself (`Itself`) and `PRPC` are two variants of the
+/// same arena — schema-faithful counterpart of the SRR / CGRR / MDDR
+/// pattern in [`crate::ir::shape_rep::RepresentationRelationship`].
+#[derive(Debug, Clone, PartialEq)]
+pub enum ProductCategory {
+    Itself(ProductCategoryData),
+    ProductRelatedProductCategory(ProductRelatedProductCategoryData),
+}
+
+/// `PRODUCT_CATEGORY(name, description)` carrier — blueprint `shape =
+/// "carrier"`. Standalone PCs (those not connected to a PRPC via PCR)
+/// arrive only through this variant.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductCategoryData {
+    pub name: String,
+    pub description: Option<String>,
+}
+
+/// `PRODUCT_RELATED_PRODUCT_CATEGORY(name, description, products)` —
+/// EXPRESS SUBTYPE of `PRODUCT_CATEGORY` that adds the `products` field.
+/// `name` / `description` are inherited from the PC supertype.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductRelatedProductCategoryData {
+    pub name: String,
+    pub description: Option<String>,
+    pub products: Vec<ProductId>,
+}
+
+/// `PRODUCT_CATEGORY_RELATIONSHIP(name, description, category, sub_category)`
+/// — blueprint `single_struct`. Both `name` / `description` are `string`
+/// (NOT `opt_string` — different from the `PC` / `PRPC` description);
+/// empty strings normalise the source's `$` form.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductCategoryRelationship {
+    pub name: String,
+    pub description: String,
+    pub category: ProductCategoryId,
+    pub sub_category: ProductCategoryId,
 }
 
 /// Payload of [`GeometryLeaf::Solid`] — one or more `MANIFOLD_SOLID_BREP`

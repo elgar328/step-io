@@ -41,6 +41,28 @@ impl SimpleEntityHandler for ProductRelatedProductCategoryHandler {
         let description = optional_text(attrs, 1, entity_id, "description")?;
         let product_refs = read_entity_ref_list(attrs, 2, entity_id, "products")?;
 
+        // Schema-faithful `product_categories` arena push — PRPC variant.
+        // Resolve every product ref into a ProductId so the arena entry
+        // carries the typed reference. Unknown refs (cross-file or
+        // dropped) are silently filtered.
+        let mut resolved_products: Vec<crate::ir::ProductId> =
+            Vec::with_capacity(product_refs.len());
+        for prod_ref in &product_refs {
+            if let Some(&pid) = ctx.product_arena_map.get(prod_ref) {
+                resolved_products.push(pid);
+            }
+        }
+        let pc_id = ctx.product_categories.push(
+            crate::ir::assembly::ProductCategory::ProductRelatedProductCategory(
+                crate::ir::assembly::ProductRelatedProductCategoryData {
+                    name: name.clone(),
+                    description: description.clone(),
+                    products: resolved_products,
+                },
+            ),
+        );
+        ctx.prpc_arena_map.insert(entity_id, pc_id);
+
         // Attach the PRPC half (kind / kind_description) to each referenced
         // product immediately. The PCR pass will fill in `root` if a PCR
         // entity links this PRPC to a PC.

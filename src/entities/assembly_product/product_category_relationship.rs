@@ -6,8 +6,8 @@
 //! pair of entity refs.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::assembly::ProductCategoryRoot;
-use crate::ir::attr::{check_count, read_entity_ref};
+use crate::ir::assembly::{ProductCategoryRelationship, ProductCategoryRoot};
+use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -33,9 +33,26 @@ impl SimpleEntityHandler for ProductCategoryRelationshipHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 4, entity_id, "PRODUCT_CATEGORY_RELATIONSHIP")?;
-        // attrs[0] / attrs[1] = name / description — visual cosmetics, ignored.
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
         let pc_ref = read_entity_ref(attrs, 2, entity_id, "category")?;
         let prpc_ref = read_entity_ref(attrs, 3, entity_id, "sub_category")?;
+
+        // Schema-faithful `product_category_relationships` arena push.
+        // Both refs resolve through the new arena_maps populated by the
+        // PC / PRPC handlers earlier in the same pass.
+        if let (Some(&category_id), Some(&sub_category_id)) = (
+            ctx.pc_arena_map.get(&pc_ref),
+            ctx.prpc_arena_map.get(&prpc_ref),
+        ) {
+            ctx.product_category_relationships
+                .push(ProductCategoryRelationship {
+                    name,
+                    description,
+                    category: category_id,
+                    sub_category: sub_category_id,
+                });
+        }
 
         let Some((pc_name, pc_description)) = ctx.pc_meta_map.get(&pc_ref).cloned() else {
             ctx.warnings.push(ConvertError::MissingReference {

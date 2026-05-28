@@ -198,6 +198,7 @@ impl WriteBuffer<'_> {
                 pdef_ctx: pdef_ctx_step,
             };
             let prod_entity = self.emit_product(product, &per_product_ctx);
+            self.product_step_ids.insert(pid, prod_entity);
             // Document-style products — `pdef_context = None && geometry_context
             // = None`, typically `category.kind = "document"` observed in NIST
             // AP242 PMI fixtures. Source had only the bare PRODUCT entity (no
@@ -936,6 +937,97 @@ impl WriteBuffer<'_> {
                 },
             )
             .expect("PCR write only pushes one simple entity");
+        }
+    }
+
+    /// Emit the `product_categories` arena (phase pc-unify-a). Iterates
+    /// arena order, emitting PC `Itself` and PRPC variants in turn.
+    /// Slot id of every emit is cached in `product_category_step_ids`
+    /// for the PCR emitter to consume.
+    pub(in crate::writer::buffer) fn emit_product_categories_arena(&mut self) {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::assembly_product::product_category::{
+            ProductCategoryHandler, ProductCategoryWriteInput,
+        };
+        use crate::entities::assembly_product::product_related_product_category::{
+            ProductRelatedProductCategoryHandler, ProductRelatedProductCategoryWriteInput,
+        };
+        use crate::ir::assembly::ProductCategory;
+
+        let pool = self.model.assembly.as_ref();
+        let Some(pool) = pool else { return };
+        let pcs: Vec<ProductCategory> = pool.product_categories.iter().cloned().collect();
+        self.product_category_step_ids = vec![0; pcs.len()];
+        for (idx, pc) in pcs.iter().enumerate() {
+            let step = match pc {
+                ProductCategory::Itself(data) => ProductCategoryHandler::write(
+                    self,
+                    ProductCategoryWriteInput {
+                        name: data.name.clone(),
+                        description: data.description.clone(),
+                    },
+                )
+                .expect("PC write only pushes one simple entity"),
+                ProductCategory::ProductRelatedProductCategory(data) => {
+                    let product_refs: Vec<u64> = data
+                        .products
+                        .iter()
+                        .filter_map(|pid| self.product_step_ids.get(pid).copied())
+                        .collect();
+                    if product_refs.is_empty() {
+                        continue;
+                    }
+                    ProductRelatedProductCategoryHandler::write(
+                        self,
+                        ProductRelatedProductCategoryWriteInput {
+                            kind: data.name.clone(),
+                            kind_description: data.description.clone(),
+                            product_refs,
+                        },
+                    )
+                    .expect("PRPC write only pushes one simple entity")
+                }
+            };
+            self.product_category_step_ids[idx] = step;
+        }
+    }
+
+    /// Emit the `product_category_relationships` arena (phase pc-unify-a).
+    /// Runs after `emit_product_categories_arena` so the PC + PRPC step
+    /// ids are cached.
+    pub(in crate::writer::buffer) fn emit_product_category_relationships_arena(&mut self) {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::assembly_product::product_category_relationship::{
+            ProductCategoryRelationshipHandler, ProductCategoryRelationshipWriteInput,
+        };
+        let pool = self.model.assembly.as_ref();
+        let Some(pool) = pool else { return };
+        let pcrs: Vec<_> = pool
+            .product_category_relationships
+            .iter()
+            .cloned()
+            .collect();
+        for pcr in pcrs {
+            let pc = self
+                .product_category_step_ids
+                .get(pcr.category.0 as usize)
+                .copied()
+                .unwrap_or(0);
+            let prpc = self
+                .product_category_step_ids
+                .get(pcr.sub_category.0 as usize)
+                .copied()
+                .unwrap_or(0);
+            if pc == 0 || prpc == 0 {
+                continue;
+            }
+            let _ = ProductCategoryRelationshipHandler::write(
+                self,
+                ProductCategoryRelationshipWriteInput {
+                    pc_ref: pc,
+                    prpc_ref: prpc,
+                },
+            );
         }
     }
 
