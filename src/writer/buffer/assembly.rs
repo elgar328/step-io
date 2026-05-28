@@ -253,14 +253,12 @@ impl WriteBuffer<'_> {
                 let geo_sr = self.representation_step_ids[rep_id.0 as usize];
                 match product.outer_representation_id {
                     // Fusion 360 / CATIA indirect form: the outer plain SR
-                    // wrapper is a separate pre-emitted arena entry. Link it
-                    // to the geometry SR via SHAPE_REPRESENTATION_RELATIONSHIP
-                    // and point the SDR at the outer SR.
-                    Some(outer_id) => {
-                        let outer_sr = self.representation_step_ids[outer_id.0 as usize];
-                        let _ = self.emit_simple_srr(outer_sr, geo_sr);
-                        outer_sr
-                    }
+                    // wrapper is a separate pre-emitted arena entry. The
+                    // linking SHAPE_REPRESENTATION_RELATIONSHIP is now
+                    // emitted from the `representation_relationships`
+                    // arena (phase srr-unify-b), so we only need to point
+                    // the SDR at the outer SR here.
+                    Some(outer_id) => self.representation_step_ids[outer_id.0 as usize],
                     None => geo_sr,
                 }
             } else {
