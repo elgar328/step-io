@@ -390,6 +390,11 @@ pub(crate) struct WriteBuffer<'m> {
     /// Empty when the model has no assembly (kernel-built IR with
     /// properties only — the property emitter silently skips in that case).
     pub(crate) product_def_ids: std::collections::HashMap<ProductId, u64>,
+    /// `MappedItemId → MAPPED_ITEM` (or `CAMERA_IMAGE` /
+    /// `CAMERA_IMAGE_3D_WITH_SCALE`) step id. Filled by `emit_mapped_items`
+    /// (`Itself`) and `emit_camera_image_arena` (`CameraImage` variants);
+    /// consumed by `emit_representation_item_ref` for the `MappedItem` variant.
+    pub(crate) mapped_item_step_ids: Vec<u64>,
     /// `ProductId → PRODUCT entity step id`. Phase pc-unify-a:
     /// consumed by `emit_product_categories_arena` so PRPC.products
     /// refs land on the right entity (PDEF doesn't match the schema
@@ -539,6 +544,7 @@ impl<'m> WriteBuffer<'m> {
             pc_step_ids: Vec::new(),
             pdc_step_ids: Vec::new(),
             product_def_ids: std::collections::HashMap::new(),
+            mapped_item_step_ids: Vec::new(),
             product_step_ids: std::collections::HashMap::new(),
             product_category_step_ids: Vec::new(),
             product_def_shape_ids: std::collections::HashMap::new(),
@@ -716,6 +722,12 @@ impl<'m> WriteBuffer<'m> {
         // `tessellated_items` arena is filled here; annotation_occurrence
         // and related orphans still emit after visualization.
         self.emit_tessellation()?;
+        // REPRESENTATION_MAP + MAPPED_ITEM (phase si-mapped-item) — moved
+        // before visualization so STYLED_ITEM / CDORSI can resolve a
+        // MAPPED_ITEM target through `mapped_item_step_ids`. MDGPR /
+        // STYLED_ITEM-target MAPPED_ITEMs are reader-cascade-dropped, so
+        // the cache need not cover MDGPR slots.
+        self.emit_mapped_items()?;
         self.emit_visualization_if_set()?;
         // GEOMETRIC_REPRESENTATION_ITEM (phase ds-st) — emitted after
         // visualization so `pre_defined_symbol_step_ids` is populated
@@ -793,9 +805,6 @@ impl<'m> WriteBuffer<'m> {
                 }
             }
         }
-        // REPRESENTATION_MAP + MAPPED_ITEM — after visualization so the
-        // `representation_step_ids` cache covers MDGPR slots too.
-        self.emit_mapped_items()?;
         // INTEGER/REAL_REPRESENTATION_ITEM — orphan value-items, no refs.
         self.emit_numeric_representation_items()?;
         // COORDINATES_LIST + COMPLEX_TRIANGULATED_FACE — tessellation moved

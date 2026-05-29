@@ -96,11 +96,12 @@ impl SimpleEntityHandler for MappedItemHandler {
             return Ok(());
         };
 
-        ctx.mapped_items.push(MappedItem::Itself(MappedItemData {
+        let mi_id = ctx.mapped_items.push(MappedItem::Itself(MappedItemData {
             name,
             mapping_source,
             mapping_target,
         }));
+        ctx.mapped_item_id_map.insert(entity_id, mi_id);
         Ok(())
     }
 

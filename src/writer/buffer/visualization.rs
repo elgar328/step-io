@@ -46,6 +46,7 @@ impl WriteBuffer<'_> {
             RepresentationItemRef::TessellatedItem(id) => {
                 Ok(self.tessellated_item_step_ids[id.0 as usize])
             }
+            RepresentationItemRef::MappedItem(id) => Ok(self.mapped_item_step_ids[id.0 as usize]),
         }
     }
 

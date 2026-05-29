@@ -11,7 +11,7 @@
 //! consumers and fixtures require them.
 
 use super::id::{
-    CurveId, EdgeId, FaceId, GeometricRepresentationItemId, Placement3dId, PointId,
+    CurveId, EdgeId, FaceId, GeometricRepresentationItemId, MappedItemId, Placement3dId, PointId,
     RepresentationId, RepresentationItemId, ShellId, SolidId, SurfaceId, TessellatedItemId,
     TypeQualifierId, ValueFormatTypeQualifierId, VertexId,
 };
@@ -45,6 +45,10 @@ pub enum RepresentationItemRef {
     /// `TessellatedShell`, `CoordinatesList`, and friends. `STYLED_ITEM` can
     /// target these directly (phase tessellation-repr-item).
     TessellatedItem(TessellatedItemId),
+    /// `MAPPED_ITEM` arena entry (phase si-mapped-item) — `STYLED_ITEM` /
+    /// `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` can target a mapped
+    /// instance directly (PMI annotation instance entry point).
+    MappedItem(MappedItemId),
 }
 
 /// `representation_item` enum arena per the ir.toml blueprint (phase

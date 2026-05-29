@@ -36,7 +36,8 @@ impl SimpleEntityHandler for CameraImageHandler {
         let Some(body) = read_camera_image_body(ctx, entity_id, attrs, "CAMERA_IMAGE")? else {
             return Ok(());
         };
-        ctx.mapped_items.push(MappedItem::CameraImage(body));
+        let mi_id = ctx.mapped_items.push(MappedItem::CameraImage(body));
+        ctx.mapped_item_id_map.insert(entity_id, mi_id);
         Ok(())
     }
 
@@ -66,8 +67,10 @@ impl SimpleEntityHandler for CameraImage3dWithScaleHandler {
         else {
             return Ok(());
         };
-        ctx.mapped_items
+        let mi_id = ctx
+            .mapped_items
             .push(MappedItem::CameraImage3dWithScale(body));
+        ctx.mapped_item_id_map.insert(entity_id, mi_id);
         Ok(())
     }
 

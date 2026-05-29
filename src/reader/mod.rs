@@ -531,6 +531,10 @@ pub struct ReaderContext {
     pub(crate) representation_map_id_map: HashMap<u64, crate::ir::RepresentationMapId>,
     /// `MAPPED_ITEM` arena (phase mapped-item) — orphan round-trip.
     pub(crate) mapped_items: crate::ir::Arena<crate::ir::shape_rep::MappedItem>,
+    /// `MAPPED_ITEM` STEP `#N → MappedItemId`. Populated by the `MAPPED_ITEM`
+    /// and `CAMERA_IMAGE` handlers so `STYLED_ITEM` / `CDORSI` resolvers can
+    /// surface a `RepresentationItemRef::MappedItem` (phase si-mapped-item).
+    pub(crate) mapped_item_id_map: HashMap<u64, crate::ir::MappedItemId>,
     /// `INTEGER`/`REAL_REPRESENTATION_ITEM` value-item arena (phase
     /// numeric-representation-item) — orphan round-trip.
     pub(crate) numeric_representation_items:
