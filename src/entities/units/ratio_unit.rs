@@ -23,7 +23,7 @@ pub(crate) struct RatioUnitHandler;
 impl ComplexEntityHandler for RatioUnitHandler {
     /// `target_id`. Ratio has no flavour enum (zero-sized [`RatioFlavor`]),
     /// so the write input is just the pre-reserved step id.
-    type WriteInput = u64;
+    type WriteInput = (u64, u64);
 
     fn read_complex(
         ctx: &mut ReaderContext,
@@ -38,20 +38,25 @@ impl ComplexEntityHandler for RatioUnitHandler {
             });
             return Ok(());
         }
+        let dim_exp = super::shared::read_named_unit_dim_exp(ctx, parts);
         let id = ctx
             .named_units_arena
-            .push(NamedUnit::Ratio(RatioFlavor { dim_exp: None }));
+            .push(NamedUnit::Ratio(RatioFlavor { dim_exp }));
         ctx.named_unit_id_map.insert(entity_id, id);
         Ok(())
     }
 
-    fn write(buf: &mut WriteBuffer, target_id: u64) -> Result<u64, WriteError> {
-        // Plain emit: `NAMED_UNIT.dimensions = *` (Derived). Mirrors the
-        // length / plane_angle / solid_angle / mass plain SI paths — an
-        // explicit DE ref is reserved for CBU outers, which ratio does
-        // not have in the observed corpus.
+    fn write(
+        buf: &mut WriteBuffer,
+        (target_id, dim_exp_step): (u64, u64),
+    ) -> Result<u64, WriteError> {
+        let named_unit_attr = if dim_exp_step == 0 {
+            Attribute::Derived
+        } else {
+            Attribute::EntityRef(dim_exp_step)
+        };
         let parts = vec![
-            ("NAMED_UNIT".into(), vec![Attribute::Derived]),
+            ("NAMED_UNIT".into(), vec![named_unit_attr]),
             ("RATIO_UNIT".into(), vec![]),
         ];
         buf.entities.push(WriterEntity {

@@ -16,7 +16,7 @@ use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit};
 use crate::ir::units::MassUnit;
 use crate::parser::entity::{Attribute, RawEntityPart};
-use crate::reader::{ReaderContext, has_all_parts, require_part_attrs};
+use crate::reader::{ReaderContext, find_part_attrs, has_all_parts, require_part_attrs};
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
 
@@ -252,4 +252,19 @@ pub(super) fn emit_dimensionless_exponents(buf: &mut WriteBuffer) -> u64 {
     });
     buf.dimensionless_dim_exp_step = Some(n);
     n
+}
+
+/// Read `NAMED_UNIT.dimensions` field of a unit complex (phase
+/// dim-exp-arena-c). Returns `Some(id)` when the source emitted an
+/// explicit `DIMENSIONAL_EXPONENTS` ref, `None` for the `*` (Derived)
+/// form. Unknown refs (cross-cascade) silently degrade to `None`.
+pub(crate) fn read_named_unit_dim_exp(
+    ctx: &ReaderContext,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Option<crate::ir::DimensionalExponentsId> {
+    let attrs = find_part_attrs(parts, "NAMED_UNIT")?;
+    match attrs.first()? {
+        Attribute::EntityRef(n) => ctx.dim_exp_id_map.get(n).copied(),
+        _ => None,
+    }
 }

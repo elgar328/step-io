@@ -28,7 +28,7 @@ pub(crate) struct LengthUnitHandler;
 impl ComplexEntityHandler for LengthUnitHandler {
     /// `(unit, target_id)` — caller pre-reserves the `LENGTH_UNIT` complex's
     /// step id so arena order is preserved on round-trip.
-    type WriteInput = (LengthUnit, u64);
+    type WriteInput = (LengthUnit, u64, u64);
 
     fn read_complex(
         ctx: &mut ReaderContext,
@@ -41,7 +41,8 @@ impl ComplexEntityHandler for LengthUnitHandler {
         // CONVERSION_BASED_UNIT, and the CBU name is the authoritative identity.
         if has_part(parts, "CONVERSION_BASED_UNIT") {
             read_conversion_based_unit_body(ctx, entity_id, parts, CbuFlavor::Length)?;
-            register_named_length(ctx, entity_id, None);
+            let dim_exp = super::shared::read_named_unit_dim_exp(ctx, parts);
+            register_named_length(ctx, entity_id, None, dim_exp);
             return Ok(());
         }
 
@@ -61,7 +62,8 @@ impl ComplexEntityHandler for LengthUnitHandler {
 
         if let Some(unit) = match_length_unit(prefix, name) {
             ctx.length_unit_map.insert(entity_id, unit);
-            register_named_length(ctx, entity_id, None);
+            let dim_exp = super::shared::read_named_unit_dim_exp(ctx, parts);
+            register_named_length(ctx, entity_id, None, dim_exp);
         } else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                 entity_id,
@@ -75,10 +77,11 @@ impl ComplexEntityHandler for LengthUnitHandler {
     /// `target_id`. CBU outers (Inch / Foot / SI self-wrap) are emitted via
     /// [`emit_length_cbu_outer`]. Pre-reserving step ids in arena order lets
     /// the writer preserve the input file's `NAMED_UNIT` entity-id ordering
-    /// across round-trip.
+    /// across round-trip. `dim_exp_step` carries the explicit
+    /// `DIMENSIONAL_EXPONENTS` ref step id (0 = Derived / `*`).
     fn write(
         buf: &mut WriteBuffer,
-        (unit, target_id): (LengthUnit, u64),
+        (unit, target_id, dim_exp_step): (LengthUnit, u64, u64),
     ) -> Result<u64, WriteError> {
         // Non-SI (Inch / Foot) reaching the plain path is a kernel-built
         // IR misuse — fall back to MILLI METRE so the writer stays total.
@@ -87,7 +90,7 @@ impl ComplexEntityHandler for LengthUnitHandler {
             LengthUnit::Metre => None,
             LengthUnit::Millimetre | LengthUnit::Inch | LengthUnit::Foot => Some("MILLI"),
         };
-        emit_plain_si_length(buf, prefix, target_id);
+        emit_plain_si_length(buf, prefix, target_id, dim_exp_step);
         Ok(target_id)
     }
 }
@@ -116,12 +119,17 @@ pub(crate) fn emit_length_cbu_outer(
 /// `unit_component` / `units` refs through `named_unit_id_map`. CBU outers
 /// pass `cbu_base = None` here; the post-Pass0Leaf backfill patches in the
 /// actual base `NamedUnitId` once both ends of the chain are registered.
-fn register_named_length(ctx: &mut ReaderContext, entity_id: u64, cbu_base: Option<NamedUnitId>) {
+fn register_named_length(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    cbu_base: Option<NamedUnitId>,
+    dim_exp: Option<crate::ir::DimensionalExponentsId>,
+) {
     if let Some(&unit) = ctx.length_unit_map.get(&entity_id) {
         let flavor = LengthFlavor {
             unit,
             cbu_base,
-            dim_exp: None,
+            dim_exp,
         };
         let id = ctx.named_units_arena.push(NamedUnit::Length(flavor));
         ctx.named_unit_id_map.insert(entity_id, id);
@@ -132,17 +140,27 @@ fn register_named_length(ctx: &mut ReaderContext, entity_id: u64, cbu_base: Opti
 /// `*` Derived — units-3b dropped the input-preserving `dim_exp_explicit`
 /// flag, so plain SI never emits a `DIMENSIONAL_EXPONENTS` ref. CBU outers
 /// still carry the explicit DE per spec via [`emit_conversion_based_length`].
-fn emit_plain_si_length(buf: &mut WriteBuffer, prefix: Option<&'static str>, target_id: u64) {
+fn emit_plain_si_length(
+    buf: &mut WriteBuffer,
+    prefix: Option<&'static str>,
+    target_id: u64,
+    dim_exp_step: u64,
+) {
     let si_attrs = match prefix {
         Some(p) => vec![Attribute::Enum(p.into()), Attribute::Enum("METRE".into())],
         None => vec![Attribute::Unset, Attribute::Enum("METRE".into())],
+    };
+    let named_unit_attr = if dim_exp_step == 0 {
+        Attribute::Derived
+    } else {
+        Attribute::EntityRef(dim_exp_step)
     };
     buf.entities.push(WriterEntity {
         id: target_id,
         body: WriterBody::Complex {
             parts: vec![
                 ("LENGTH_UNIT".into(), vec![]),
-                ("NAMED_UNIT".into(), vec![Attribute::Derived]),
+                ("NAMED_UNIT".into(), vec![named_unit_attr]),
                 ("SI_UNIT".into(), si_attrs),
             ],
         },

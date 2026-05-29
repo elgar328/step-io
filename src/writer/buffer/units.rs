@@ -36,6 +36,17 @@ impl WriteBuffer<'_> {
         let Some(pool) = self.model.units_pool.as_ref() else {
             return Ok(());
         };
+        // DIMENSIONAL_EXPONENTS arena (phase dim-exp-arena-c) emits first
+        // so NAMED_UNIT subtype writers below can resolve flavor.dim_exp
+        // through `dimensional_exponents_step_ids`.
+        self.dimensional_exponents_step_ids
+            .resize(pool.dimensional_exponents.len(), 0);
+        for (id, de) in pool.dimensional_exponents.iter_with_ids() {
+            use crate::entities::SimpleEntityHandler;
+            use crate::entities::units::dimensional_exponents::DimensionalExponentsHandler;
+            let step = DimensionalExponentsHandler::write(self, *de)?;
+            self.dimensional_exponents_step_ids[id.0 as usize] = step;
+        }
         // units-2: pre-reserve step ids for all NamedUnit entries in arena
         // order. The emit then writes each entry at its reserved id. This
         // keeps NAMED_UNIT entity-id ordering matching the IR arena order
@@ -93,17 +104,6 @@ impl WriteBuffer<'_> {
             let step = emit_derived_unit_by_kind(self, du.kind, element_steps)?;
             self.derived_unit_step_ids[id.0 as usize] = step;
         }
-        // DIMENSIONAL_EXPONENTS arena (phase dim-exp-arena-a). Standalone
-        // emit fills `dimensional_exponents_step_ids`; per-NAMED_UNIT
-        // `dimensions` ref wiring is the next phase.
-        self.dimensional_exponents_step_ids
-            .resize(pool.dimensional_exponents.len(), 0);
-        for (id, de) in pool.dimensional_exponents.iter_with_ids() {
-            use crate::entities::SimpleEntityHandler;
-            use crate::entities::units::dimensional_exponents::DimensionalExponentsHandler;
-            let step = DimensionalExponentsHandler::write(self, *de)?;
-            self.dimensional_exponents_step_ids[id.0 as usize] = step;
-        }
         Ok(())
     }
 }
@@ -160,12 +160,23 @@ fn emit_named_unit_plain(
     use crate::entities::units::plane_angle_unit::PlaneAngleUnitHandler;
     use crate::entities::units::ratio_unit::RatioUnitHandler;
     use crate::entities::units::solid_angle_unit::SolidAngleUnitHandler;
+    let dim_exp_step = |de: Option<crate::ir::DimensionalExponentsId>| {
+        de.map_or(0, |id| buf.dimensional_exponents_step_ids[id.0 as usize])
+    };
     match named {
-        NamedUnit::Length(f) => LengthUnitHandler::write(buf, (f.unit, target_id)),
-        NamedUnit::PlaneAngle(f) => PlaneAngleUnitHandler::write(buf, (f.unit, target_id)),
-        NamedUnit::SolidAngle(f) => SolidAngleUnitHandler::write(buf, (f.unit, target_id)),
-        NamedUnit::Mass(f) => MassUnitHandler::write(buf, (f.unit, target_id)),
-        NamedUnit::Ratio(_) => RatioUnitHandler::write(buf, target_id),
+        NamedUnit::Length(f) => {
+            LengthUnitHandler::write(buf, (f.unit, target_id, dim_exp_step(f.dim_exp)))
+        }
+        NamedUnit::PlaneAngle(f) => {
+            PlaneAngleUnitHandler::write(buf, (f.unit, target_id, dim_exp_step(f.dim_exp)))
+        }
+        NamedUnit::SolidAngle(f) => {
+            SolidAngleUnitHandler::write(buf, (f.unit, target_id, dim_exp_step(f.dim_exp)))
+        }
+        NamedUnit::Mass(f) => {
+            MassUnitHandler::write(buf, (f.unit, target_id, dim_exp_step(f.dim_exp)))
+        }
+        NamedUnit::Ratio(f) => RatioUnitHandler::write(buf, (target_id, dim_exp_step(f.dim_exp))),
     }
 }
 

@@ -33,7 +33,7 @@ pub(crate) struct MassUnitHandler;
 
 #[step_entity_complex(name = "MASS_UNIT", pass = Pass0Leaf, required = ["MASS_UNIT"])]
 impl ComplexEntityHandler for MassUnitHandler {
-    type WriteInput = (MassUnit, u64);
+    type WriteInput = (MassUnit, u64, u64);
 
     fn read_complex(
         ctx: &mut ReaderContext,
@@ -43,7 +43,8 @@ impl ComplexEntityHandler for MassUnitHandler {
     ) -> Result<(), ConvertError> {
         if has_part(parts, "CONVERSION_BASED_UNIT") {
             read_conversion_based_unit_body(ctx, entity_id, parts, CbuFlavor::Mass)?;
-            register_named_mass(ctx, entity_id, None);
+            let dim_exp = super::shared::read_named_unit_dim_exp(ctx, parts);
+            register_named_mass(ctx, entity_id, None, dim_exp);
             return Ok(());
         }
         if !has_part(parts, "SI_UNIT") {
@@ -73,7 +74,8 @@ impl ComplexEntityHandler for MassUnitHandler {
             }
         };
         ctx.mass_unit_map.insert(entity_id, unit);
-        register_named_mass(ctx, entity_id, None);
+        let dim_exp = super::shared::read_named_unit_dim_exp(ctx, parts);
+        register_named_mass(ctx, entity_id, None, dim_exp);
         Ok(())
     }
 
@@ -81,13 +83,16 @@ impl ComplexEntityHandler for MassUnitHandler {
     /// [`emit_mass_cbu_outer`] which takes the pre-emitted base step id.
     /// Pound reaching this path is a kernel-built IR mistake — fall back
     /// to Kilogram emit.
-    fn write(buf: &mut WriteBuffer, (unit, target_id): (MassUnit, u64)) -> Result<u64, WriteError> {
+    fn write(
+        buf: &mut WriteBuffer,
+        (unit, target_id, dim_exp_step): (MassUnit, u64, u64),
+    ) -> Result<u64, WriteError> {
         let prefix = match unit {
             MassUnit::Gram => None,
             // Kilogram / Pound fallback both emit KILO-GRAM.
             MassUnit::Kilogram | MassUnit::Pound => Some("KILO"),
         };
-        emit_plain_si_mass(buf, prefix, target_id);
+        emit_plain_si_mass(buf, prefix, target_id, dim_exp_step);
         Ok(target_id)
     }
 }
@@ -100,12 +105,13 @@ fn register_named_mass(
     ctx: &mut ReaderContext,
     entity_id: u64,
     cbu_base: Option<crate::ir::id::NamedUnitId>,
+    dim_exp: Option<crate::ir::DimensionalExponentsId>,
 ) {
     if let Some(&unit) = ctx.mass_unit_map.get(&entity_id) {
         let flavor = MassFlavor {
             unit,
             cbu_base,
-            dim_exp: None,
+            dim_exp,
         };
         let id = ctx.named_units_arena.push(NamedUnit::Mass(flavor));
         ctx.named_unit_id_map.insert(entity_id, id);
@@ -163,17 +169,27 @@ pub(crate) fn emit_mass_cbu_outer(
     Ok(target_id)
 }
 
-fn emit_plain_si_mass(buf: &mut WriteBuffer, prefix: Option<&'static str>, target_id: u64) {
+fn emit_plain_si_mass(
+    buf: &mut WriteBuffer,
+    prefix: Option<&'static str>,
+    target_id: u64,
+    dim_exp_step: u64,
+) {
     let prefix_attr = match prefix {
         Some(p) => Attribute::Enum(p.into()),
         None => Attribute::Unset,
+    };
+    let named_unit_attr = if dim_exp_step == 0 {
+        Attribute::Derived
+    } else {
+        Attribute::EntityRef(dim_exp_step)
     };
     buf.entities.push(WriterEntity {
         id: target_id,
         body: WriterBody::Complex {
             parts: vec![
                 ("MASS_UNIT".into(), vec![]),
-                ("NAMED_UNIT".into(), vec![Attribute::Derived]),
+                ("NAMED_UNIT".into(), vec![named_unit_attr]),
                 (
                     "SI_UNIT".into(),
                     vec![prefix_attr, Attribute::Enum("GRAM".into())],
