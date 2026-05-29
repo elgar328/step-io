@@ -165,5 +165,16 @@ pub(crate) fn resolve_representation_item_ref(
     if let Some(&mi_id) = ctx.mapped_item_id_map.get(&item_ref) {
         return Some(RepresentationItemRef::MappedItem(mi_id));
     }
+    // PMI entries reachable from DRAUGHTING_MODEL.items (phase
+    // rir-pmi-variants): AP242 MBD pattern.
+    if let Some(&id) = ctx.annotation_occurrence_id_map.get(&item_ref) {
+        return Some(RepresentationItemRef::AnnotationOccurrence(id));
+    }
+    if let Some(&id) = ctx.draughting_callout_id_map.get(&item_ref) {
+        return Some(RepresentationItemRef::DraughtingCallout(id));
+    }
+    if let Some(&id) = ctx.viz_camera_model_id_map.get(&item_ref) {
+        return Some(RepresentationItemRef::CameraModel(id));
+    }
     None
 }

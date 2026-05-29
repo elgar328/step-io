@@ -11,9 +11,10 @@
 //! consumers and fixtures require them.
 
 use super::id::{
-    CurveId, EdgeId, FaceId, GeometricRepresentationItemId, MappedItemId, Placement3dId, PointId,
-    RepresentationId, RepresentationItemId, ShellId, SolidId, SurfaceId, TessellatedItemId,
-    TypeQualifierId, ValueFormatTypeQualifierId, VertexId,
+    AnnotationOccurrenceId, CameraModelId, CurveId, DraughtingCalloutId, EdgeId, FaceId,
+    GeometricRepresentationItemId, MappedItemId, Placement3dId, PointId, RepresentationId,
+    RepresentationItemId, ShellId, SolidId, SurfaceId, TessellatedItemId, TypeQualifierId,
+    ValueFormatTypeQualifierId, VertexId,
 };
 
 /// What a STEP `representation_item` reference resolved to in step-io's IR.
@@ -49,6 +50,20 @@ pub enum RepresentationItemRef {
     /// `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` can target a mapped
     /// instance directly (PMI annotation instance entry point).
     MappedItem(MappedItemId),
+    /// `annotation_occurrence` enum arena entry — covers
+    /// `ANNOTATION_PLANE`, `TESSELLATED_ANNOTATION_OCCURRENCE`,
+    /// `ANNOTATION_SYMBOL_OCCURRENCE`, `ANNOTATION_TEXT_OCCURRENCE`,
+    /// `DRAUGHTING_ANNOTATION_OCCURRENCE`, `TERMINATOR_SYMBOL`,
+    /// `LEADER_TERMINATOR`. AP242 MBD `DRAUGHTING_MODEL.items` routinely
+    /// references these (phase rir-pmi-variants).
+    AnnotationOccurrence(AnnotationOccurrenceId),
+    /// `DRAUGHTING_CALLOUT` arena entry — composite annotation grouping.
+    /// Same AP242 MBD context as `AnnotationOccurrence`.
+    DraughtingCallout(DraughtingCalloutId),
+    /// `CAMERA_MODEL` enum arena entry (`CameraModelD3` / `D3WithHlhsr`
+    /// / `D3MultiClipping`). Viewpoint definition routinely referenced by
+    /// `DRAUGHTING_MODEL.items` in the AP242 MBD corpus.
+    CameraModel(CameraModelId),
 }
 
 /// `representation_item` enum arena per the ir.toml blueprint (phase

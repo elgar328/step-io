@@ -47,6 +47,13 @@ impl WriteBuffer<'_> {
                 Ok(self.tessellated_item_step_ids[id.0 as usize])
             }
             RepresentationItemRef::MappedItem(id) => Ok(self.mapped_item_step_ids[id.0 as usize]),
+            RepresentationItemRef::AnnotationOccurrence(id) => Ok(self.ao_step_ids[id.0 as usize]),
+            RepresentationItemRef::DraughtingCallout(id) => {
+                Ok(self.draughting_callout_step_ids[id.0 as usize])
+            }
+            RepresentationItemRef::CameraModel(id) => {
+                Ok(self.viz_camera_model_step_ids[id.0 as usize])
+            }
         }
     }
 
