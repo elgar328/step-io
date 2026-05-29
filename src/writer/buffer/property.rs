@@ -339,6 +339,20 @@ impl WriteBuffer<'_> {
                     }
                     s
                 }
+                CharacterizedDefinition::ProductDefinitionShape(pds_pd_id) => {
+                    // PDS arena entry's step id was cached in Pass A
+                    // (emit_property_definitions_pds_only). Slot 0 means the
+                    // PDS itself failed to emit — skip this PD too.
+                    let s = self
+                        .property_definition_step_ids
+                        .get(pds_pd_id.0 as usize)
+                        .copied()
+                        .unwrap_or(0);
+                    if s == 0 {
+                        continue;
+                    }
+                    s
+                }
             };
             let step = self.push_simple(
                 "PROPERTY_DEFINITION",

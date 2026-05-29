@@ -166,6 +166,11 @@ pub enum CharacterizedDefinition {
     /// `SHAPE_ASPECT`. The Property target's actual `ProductId` is
     /// reachable through the bound [`ShapeAspect::target`].
     ShapeAspect(ShapeAspectId),
+    /// Pattern C: `PROPERTY_DEFINITION` whose `definition` resolves to a
+    /// `PRODUCT_DEFINITION_SHAPE` (the `shape_definition` member of the
+    /// `characterized_definition` SELECT). The target is itself another PD
+    /// arena entry of the `ProductDefinitionShape` variant.
+    ProductDefinitionShape(PropertyDefinitionId),
 }
 
 /// `PROPERTY_DEFINITION` + bound `REPRESENTATION` collapsed into a single

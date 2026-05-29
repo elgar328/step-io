@@ -45,12 +45,13 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
             Some(desc_str.to_owned())
         };
         let target_ref = read_entity_ref(attrs, 2, entity_id, "definition")?;
-        // Two target patterns. Pattern A: PROPERTY_DEFINITION.definition →
-        // PRODUCT_DEFINITION (resolved via pdef_to_product). Pattern B:
-        // PROPERTY_DEFINITION.definition → SHAPE_ASPECT (resolved via
-        // shape_aspect_id_map — populated by Pass8ShapeAspect which runs
-        // before this pass). Both store an entry; PDR / GPA reuse the
-        // shared property_def_map.
+        // characterized_definition SELECT (subset). Pattern A:
+        // PRODUCT_DEFINITION (pdef_to_product). Pattern B: SHAPE_ASPECT
+        // (shape_aspect_id_map). Pattern C: PRODUCT_DEFINITION_SHAPE — its
+        // arena entry is pushed by Pass6PdsClassify with the
+        // ProductDefinitionShape variant; resolve the parent product through
+        // pdef_shape_to_pdef → pdef_to_product so property_def_map's stored
+        // ProductId reaches the bound product. PDR / GPA reuse this entry.
         let (definition, product_id) =
             if let Some(&product_step_id) = ctx.pdef_to_product.get(&target_ref) {
                 let Some(&pid) = ctx.product_arena_map.get(&product_step_id) else {
@@ -60,10 +61,38 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
             } else if let Some(&sa_id) = ctx.shape_aspect_id_map.get(&target_ref) {
                 let pid = ctx.shape_aspects[sa_id].target;
                 (CharacterizedDefinition::ShapeAspect(sa_id), pid)
+            } else if let Some(&pds_pd_id) = ctx.property_def_step_to_id.get(&target_ref) {
+                let Some(pool) = ctx.properties.as_ref() else {
+                    return Ok(());
+                };
+                if !matches!(
+                    pool.property_definitions[pds_pd_id],
+                    PropertyDefinition::ProductDefinitionShape(_)
+                ) {
+                    eprintln!(
+                        "warning: PROPERTY_DEFINITION #{entity_id} target #{target_ref} \
+                         resolves to another PROPERTY_DEFINITION (Itself), which is \
+                         schema-illegal — skipping"
+                    );
+                    return Ok(());
+                }
+                let Some(pid) = ctx
+                    .pdef_shape_to_pdef
+                    .get(&target_ref)
+                    .and_then(|pdef_ref| ctx.pdef_to_product.get(pdef_ref).copied())
+                    .and_then(|prod_step| ctx.product_arena_map.get(&prod_step).copied())
+                else {
+                    return Ok(());
+                };
+                (
+                    CharacterizedDefinition::ProductDefinitionShape(pds_pd_id),
+                    pid,
+                )
             } else {
                 eprintln!(
                     "warning: PROPERTY_DEFINITION #{entity_id} target #{target_ref} \
-                     resolves to neither PRODUCT_DEFINITION nor SHAPE_ASPECT — skipping"
+                     resolves to neither PRODUCT_DEFINITION nor SHAPE_ASPECT \
+                     nor PRODUCT_DEFINITION_SHAPE — skipping"
                 );
                 return Ok(());
             };
