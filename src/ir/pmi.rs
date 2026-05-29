@@ -8,11 +8,12 @@
 
 use super::arena::Arena;
 use super::id::{
-    AnnotationCurveOccurrenceId, AnnotationOccurrenceId, CurveId, DatumId, DatumSystemId,
-    DimensionalLocationId, DimensionalSizeId, DraughtingCalloutId, GeometricToleranceId,
-    GeometricToleranceWithDatumReferenceId, LimitsAndFitsId, MeasureWithUnitId,
-    PresentationStyleAssignmentId, ProductId, RepresentationId, TessellatedItemId,
-    ToleranceValueId, ToleranceZoneId, TypeQualifierId, ValueFormatTypeQualifierId,
+    AnnotationCurveOccurrenceId, AnnotationOccurrenceId, CompositeShapeAspectId, CurveId,
+    DatumFeatureId, DatumId, DatumSystemId, DimensionalLocationId, DimensionalSizeId,
+    DraughtingCalloutId, GeometricToleranceId, GeometricToleranceWithDatumReferenceId,
+    LimitsAndFitsId, MeasureWithUnitId, PresentationStyleAssignmentId, ProductId,
+    PropertyDefinitionId, RepresentationId, ShapeAspectId, TessellatedItemId, ToleranceValueId,
+    ToleranceZoneId, TypeQualifierId, ValueFormatTypeQualifierId,
 };
 use super::property::PropertyMeasure;
 use super::representation_item::RepresentationItemRef;
@@ -91,13 +92,20 @@ pub struct DraughtingModelItemAssociation {
     pub identified_item: DraughtingModelIdentifiedItem,
 }
 
-/// `draughting_model_item_definition` SELECT — step-io currently models
-/// only the representation-family members. SELECT entries pointing to
-/// non-representation members (assignment / classification / approval
-/// items) are silently dropped on read (`feedback_partial_select_enum`).
+/// `draughting_model_item_definition` SELECT — step-io models the eight
+/// members below. SELECT entries pointing to other members (assignment /
+/// classification / approval items) are dropped on read with a warning
+/// (`feedback_partial_select_enum`, `feedback_no_silent_skip`).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DraughtingModelItemDefinition {
     Representation(RepresentationId),
+    CompositeShapeAspect(CompositeShapeAspectId),
+    DimensionalSize(DimensionalSizeId),
+    ShapeAspect(ShapeAspectId),
+    DatumFeature(DatumFeatureId),
+    PropertyDefinition(PropertyDefinitionId),
+    DimensionalLocation(DimensionalLocationId),
+    GeometricTolerance(GeometricToleranceId),
 }
 
 /// `draughting_model_item_association_select` SELECT — both members are

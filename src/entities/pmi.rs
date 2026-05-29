@@ -3199,12 +3199,32 @@ impl SimpleEntityHandler for DraughtingModelItemAssociationHandler {
             _ => return Ok(()),
         };
         let def_ref = read_entity_ref(attrs, 2, entity_id, "definition")?;
-        let Some(&def_repr) = ctx.repr_id_map.get(&def_ref) else {
-            // SELECT may target a non-representation member (assignment /
-            // classification family) — drop the carrier.
+        let definition = if let Some(&id) = ctx.repr_id_map.get(&def_ref) {
+            DraughtingModelItemDefinition::Representation(id)
+        } else if let Some(&id) = ctx.composite_shape_aspect_id_map.get(&def_ref) {
+            DraughtingModelItemDefinition::CompositeShapeAspect(id)
+        } else if let Some(&id) = ctx.dimensional_size_id_map.get(&def_ref) {
+            DraughtingModelItemDefinition::DimensionalSize(id)
+        } else if let Some(&id) = ctx.shape_aspect_id_map.get(&def_ref) {
+            DraughtingModelItemDefinition::ShapeAspect(id)
+        } else if let Some(&id) = ctx.datum_feature_id_map.get(&def_ref) {
+            DraughtingModelItemDefinition::DatumFeature(id)
+        } else if let Some(&id) = ctx.property_def_step_to_id.get(&def_ref) {
+            DraughtingModelItemDefinition::PropertyDefinition(id)
+        } else if let Some(&id) = ctx.dimensional_location_id_map.get(&def_ref) {
+            DraughtingModelItemDefinition::DimensionalLocation(id)
+        } else if let Some(&id) = ctx.geometric_tolerance_id_map.get(&def_ref) {
+            DraughtingModelItemDefinition::GeometricTolerance(id)
+        } else {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "DRAUGHTING_MODEL_ITEM_ASSOCIATION definition #{def_ref} \
+                     resolves to none of the 8 modelled SELECT members — skipping"
+                ),
+            });
             return Ok(());
         };
-        let definition = DraughtingModelItemDefinition::Representation(def_repr);
         let used_ref = read_entity_ref(attrs, 3, entity_id, "used_representation")?;
         let Some(&used_representation) = ctx.repr_id_map.get(&used_ref) else {
             return Ok(());
@@ -3236,8 +3256,32 @@ impl SimpleEntityHandler for DraughtingModelItemAssociationHandler {
         buf: &mut WriteBuffer,
         dmia: DraughtingModelItemAssociation,
     ) -> Result<u64, WriteError> {
-        let DraughtingModelItemDefinition::Representation(def_id) = dmia.definition;
-        let def_step = buf.representation_step_ids[def_id.0 as usize];
+        let def_step = match dmia.definition {
+            DraughtingModelItemDefinition::Representation(id) => {
+                buf.representation_step_ids[id.0 as usize]
+            }
+            DraughtingModelItemDefinition::CompositeShapeAspect(id) => {
+                buf.composite_shape_aspect_step_ids[id.0 as usize]
+            }
+            DraughtingModelItemDefinition::DimensionalSize(id) => {
+                buf.dimensional_size_step_ids[id.0 as usize]
+            }
+            DraughtingModelItemDefinition::ShapeAspect(id) => {
+                buf.shape_aspect_step_ids[id.0 as usize]
+            }
+            DraughtingModelItemDefinition::DatumFeature(id) => {
+                buf.datum_feature_step_ids[id.0 as usize]
+            }
+            DraughtingModelItemDefinition::PropertyDefinition(id) => {
+                buf.property_definition_step_ids[id.0 as usize]
+            }
+            DraughtingModelItemDefinition::DimensionalLocation(id) => {
+                buf.dimensional_location_step_ids[id.0 as usize]
+            }
+            DraughtingModelItemDefinition::GeometricTolerance(id) => {
+                buf.geometric_tolerance_step_ids[id.0 as usize]
+            }
+        };
         let used_step = buf.representation_step_ids[dmia.used_representation.0 as usize];
         let item_step = match dmia.identified_item {
             DraughtingModelIdentifiedItem::AnnotationOccurrence(id) => {
