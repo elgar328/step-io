@@ -65,6 +65,7 @@ impl SimpleEntityHandler for DraughtingModelHandler {
                 name,
                 items,
                 context,
+                characterized_object_id: None,
             }));
         ctx.repr_id_map.insert(entity_id, repr_id);
         Ok(())
@@ -77,6 +78,37 @@ impl SimpleEntityHandler for DraughtingModelHandler {
             item_refs.push(Attribute::EntityRef(step));
         }
         let ctx_attr = buf.repr_context_attr(dm.context);
+        if dm.characterized_object_id.is_some() {
+            // Complex MI form (phase dm-complex-mi): four-part entity
+            // wrapping CHARACTERIZED_OBJECT(*,*) + CHARACTERIZED_REPRESENTATION
+            // + DRAUGHTING_MODEL + REPRESENTATION. The CO part is emitted
+            // here inline; emit_characterized_objects skips the linked
+            // arena entry via dedup so it doesn't surface twice.
+            use crate::writer::entity::{WriterBody, WriterEntity};
+            let n = buf.fresh();
+            buf.entities.push(WriterEntity {
+                id: n,
+                body: WriterBody::Complex {
+                    parts: vec![
+                        (
+                            "CHARACTERIZED_OBJECT".into(),
+                            vec![Attribute::Derived, Attribute::Derived],
+                        ),
+                        ("CHARACTERIZED_REPRESENTATION".into(), vec![]),
+                        ("DRAUGHTING_MODEL".into(), vec![]),
+                        (
+                            "REPRESENTATION".into(),
+                            vec![
+                                Attribute::String(dm.name),
+                                Attribute::List(item_refs),
+                                ctx_attr,
+                            ],
+                        ),
+                    ],
+                },
+            });
+            return Ok(n);
+        }
         Ok(buf.push_simple(
             "DRAUGHTING_MODEL",
             vec![

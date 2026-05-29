@@ -3321,6 +3321,7 @@ fn unitless_context_round_trip() {
             name: "Default".into(),
             items: vec![],
             context: Some(RepresentationContextRef::Unitless(uc_id)),
+            characterized_object_id: None,
         }));
 
     let text = model.write_to_string().expect("write");
@@ -3368,6 +3369,7 @@ fn draughting_model_round_trip() {
             name: "dm".into(),
             items: vec![RepresentationItemRef::Surface(surf)],
             context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+            characterized_object_id: None,
         }));
 
     let text = model.write_to_string().expect("write");

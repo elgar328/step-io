@@ -57,9 +57,31 @@ impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_characterized_objects(&mut self) {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::shape_rep::characterized_item_within_representation::CharacterizedItemWithinRepresentationHandler;
-        use crate::ir::shape_rep::CharacterizedObject;
-        let items: Vec<_> = self.model.characterized_objects.iter().cloned().collect();
-        for obj in items {
+        use crate::ir::shape_rep::{CharacterizedObject, Representation};
+        use std::collections::HashSet;
+        // Phase dm-complex-mi: CharacterizedObject ids carried inline by a
+        // DraughtingModel's complex MI form are skipped here so they emit
+        // exactly once, inside the DM's `(CO + CR + DM + REPR)` complex
+        // entity.
+        let inline_co_ids: HashSet<_> = self
+            .model
+            .representations
+            .iter()
+            .filter_map(|r| match r {
+                Representation::DraughtingModel(dm) => dm.characterized_object_id,
+                _ => None,
+            })
+            .collect();
+        let entries: Vec<_> = self
+            .model
+            .characterized_objects
+            .iter_with_ids()
+            .map(|(id, obj)| (id, obj.clone()))
+            .collect();
+        for (id, obj) in entries {
+            if inline_co_ids.contains(&id) {
+                continue;
+            }
             match obj {
                 CharacterizedObject::CharacterizedItemWithinRepresentation(ciwr) => {
                     let _ = CharacterizedItemWithinRepresentationHandler::write(self, ciwr);

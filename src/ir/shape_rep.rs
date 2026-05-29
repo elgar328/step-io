@@ -334,6 +334,13 @@ pub struct DraughtingModel {
     pub name: String,
     pub items: Vec<crate::ir::representation_item::RepresentationItemRef>,
     pub context: Option<RepresentationContextRef>,
+    /// `Some(id)` when the source emitted the complex MI form
+    /// `(CHARACTERIZED_OBJECT(*,*) CHARACTERIZED_REPRESENTATION()
+    /// DRAUGHTING_MODEL() REPRESENTATION(...))`. The id points to the
+    /// `characterized_objects` arena entry that lives inside the same
+    /// complex MI entity — writer emits the CO inline and dedups it from
+    /// the standalone `emit_characterized_objects` pass.
+    pub characterized_object_id: Option<crate::ir::id::CharacterizedObjectId>,
 }
 
 /// `characterized_object` `concrete_supertype` enum (phase
