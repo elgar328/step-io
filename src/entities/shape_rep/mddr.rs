@@ -39,9 +39,23 @@ impl SimpleEntityHandler for MechanicalDesignAndDraughtingRelationshipHandler {
         let rep_1_ref = read_entity_ref(attrs, 2, entity_id, "rep_1")?;
         let rep_2_ref = read_entity_ref(attrs, 3, entity_id, "rep_2")?;
         let Some(&rep_1) = ctx.repr_id_map.get(&rep_1_ref) else {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "MDDR #{entity_id}.rep_1 #{rep_1_ref} did not resolve to a \
+                     modelled REPRESENTATION subtype — skipping"
+                ),
+            });
             return Ok(());
         };
         let Some(&rep_2) = ctx.repr_id_map.get(&rep_2_ref) else {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "MDDR #{entity_id}.rep_2 #{rep_2_ref} did not resolve to a \
+                     modelled REPRESENTATION subtype — skipping"
+                ),
+            });
             return Ok(());
         };
         ctx.representation_relationships.push(
