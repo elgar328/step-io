@@ -309,6 +309,11 @@ impl ReaderContext {
         // populated by Pass7StyledItem (its over_ridden_style ref must
         // resolve to an existing entry).
         self.dispatch_registry(graph, PassLevel::Pass7OverRiding);
+        // CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM — same dependencies as
+        // Pass7OverRiding (over_ridden_style requires the styled_item arena
+        // populated; item / style_context route through
+        // resolve_representation_item_ref).
+        self.dispatch_registry(graph, PassLevel::Pass7ContextDependent);
         self.dispatch_registry(graph, PassLevel::Pass7Mdgpr);
         // PRESENTATION_LAYER_ASSIGNMENT — top-level grouping of STYLED_ITEM
         // entries into named display layers. Runs after the styled-item
