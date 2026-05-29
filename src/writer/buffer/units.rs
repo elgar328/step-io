@@ -93,6 +93,17 @@ impl WriteBuffer<'_> {
             let step = emit_derived_unit_by_kind(self, du.kind, element_steps)?;
             self.derived_unit_step_ids[id.0 as usize] = step;
         }
+        // DIMENSIONAL_EXPONENTS arena (phase dim-exp-arena-a). Standalone
+        // emit fills `dimensional_exponents_step_ids`; per-NAMED_UNIT
+        // `dimensions` ref wiring is the next phase.
+        self.dimensional_exponents_step_ids
+            .resize(pool.dimensional_exponents.len(), 0);
+        for (id, de) in pool.dimensional_exponents.iter_with_ids() {
+            use crate::entities::SimpleEntityHandler;
+            use crate::entities::units::dimensional_exponents::DimensionalExponentsHandler;
+            let step = DimensionalExponentsHandler::write(self, *de)?;
+            self.dimensional_exponents_step_ids[id.0 as usize] = step;
+        }
         Ok(())
     }
 }

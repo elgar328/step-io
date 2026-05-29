@@ -16,6 +16,7 @@
 pub mod area_unit;
 pub mod derived_unit;
 pub mod derived_unit_element;
+pub mod dimensional_exponents;
 pub mod length_measure_with_unit;
 pub mod length_unit;
 pub mod mass_measure_with_unit;

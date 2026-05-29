@@ -134,6 +134,13 @@ pub struct ReaderContext {
     pub(crate) due_id_map: HashMap<u64, crate::ir::id::DerivedUnitElementId>,
     /// `DERIVED_UNIT` arena (units-1b). Populated by `Pass0Du`.
     pub(crate) derived_unit_arena: Arena<DerivedUnit>,
+    /// `DIMENSIONAL_EXPONENTS` arena (phase dim-exp-arena-a). Populated
+    /// by a dedicated handler at `Pass0DimExp` (before `Pass0Leaf` so
+    /// `NAMED_UNIT` subtypes can look up the ref in
+    /// [`Self::dim_exp_id_map`]).
+    pub(crate) dimensional_exponents: Arena<crate::ir::units::DimensionalExponents>,
+    /// `DIMENSIONAL_EXPONENTS` `#N → DimensionalExponentsId`.
+    pub(crate) dim_exp_id_map: HashMap<u64, crate::ir::DimensionalExponentsId>,
     /// `DERIVED_UNIT` `#N → DerivedUnitId` (units-1b). Reserved for future
     /// consumers (no entity references it in the current IR).
     pub(crate) derived_unit_id_map: HashMap<u64, crate::ir::id::DerivedUnitId>,
@@ -751,6 +758,7 @@ impl ReaderContext {
                     ctx.mwu_arena,
                     ctx.due_arena,
                     ctx.derived_unit_arena,
+                    ctx.dimensional_exponents,
                 ),
                 form_features: ctx.form_features,
                 representations: ctx.representations,
@@ -1068,11 +1076,13 @@ fn build_units_pool(
     measure_with_units: Arena<MeasureWithUnit>,
     derived_unit_elements: Arena<DerivedUnitElement>,
     derived_units: Arena<DerivedUnit>,
+    dimensional_exponents: Arena<crate::ir::units::DimensionalExponents>,
 ) -> Option<UnitsPool> {
     if named_units.is_empty()
         && measure_with_units.is_empty()
         && derived_unit_elements.is_empty()
         && derived_units.is_empty()
+        && dimensional_exponents.is_empty()
     {
         None
     } else {
@@ -1081,6 +1091,7 @@ fn build_units_pool(
             measure_with_units,
             derived_unit_elements,
             derived_units,
+            dimensional_exponents,
         })
     }
 }

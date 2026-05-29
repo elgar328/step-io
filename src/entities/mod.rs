@@ -88,6 +88,11 @@ pub(crate) enum PassLevel {
     Pass4PlanarExtent,
 
     // ----- Plan 5.6 (units, Pass 0 — runs before geometry passes) -----
+    /// `DIMENSIONAL_EXPONENTS` (phase dim-exp-arena-a) — leaf entity.
+    /// Runs before `Pass0Leaf` so `NAMED_UNIT` subtype handlers (added in
+    /// phase dim-exp-arena-b) can resolve their `dimensions` ref through
+    /// `dim_exp_id_map`.
+    Pass0DimExp,
     /// 3 unit leaf complex entities (`LENGTH_UNIT` / `PLANE_ANGLE_UNIT`
     /// / `SOLID_ANGLE_UNIT` bearings). Mutually independent.
     Pass0Leaf,

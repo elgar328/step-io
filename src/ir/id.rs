@@ -43,7 +43,9 @@ use super::tessellation::{
     ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, TessellatedItem,
 };
 use super::topology::{Edge, Face, Shell, Solid, Wire};
-use super::units::{DerivedUnit, DerivedUnitElement, MeasureWithUnit, NamedUnit};
+use super::units::{
+    DerivedUnit, DerivedUnitElement, DimensionalExponents, MeasureWithUnit, NamedUnit,
+};
 use super::visualization::GeometricRepresentationItem;
 use super::visualization::{
     AppliedPresentedItem, AreaInSet, CameraModel, Colour, CompositeText, CurveStyle, FoundedItem,
@@ -281,6 +283,7 @@ define_id!(SurfaceCurveSubtypeId, crate::ir::geometry::SurfaceCurve);
 // REPRESENTATION_MAP + MAPPED_ITEM arenas (phase mapped-item).
 define_id!(RepresentationMapId, RepresentationMap);
 define_id!(MappedItemId, MappedItem);
+define_id!(DimensionalExponentsId, DimensionalExponents);
 
 // representation_relationship enum arena (phase cgrr). Currently holds
 // `ConstructiveGeometryRepresentationRelationship`. Future SUBTYPEs

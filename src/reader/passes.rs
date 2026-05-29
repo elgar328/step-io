@@ -11,6 +11,10 @@ impl ReaderContext {
         // Pass 0-1: SI_UNIT- / CONVERSION_BASED_UNIT-bearing leaves
         // (LENGTH / PLANE_ANGLE / SOLID_ANGLE flavour). Each leaf is its
         // own ComplexEntityHandler keyed on the kind-specific part.
+        // DIMENSIONAL_EXPONENTS (phase dim-exp-arena-a) — leaf entity that
+        // NAMED_UNIT subtypes will eventually reference via `dimensions`.
+        // Runs before Pass0Leaf so dim_exp_id_map is populated.
+        self.dispatch_registry(graph, PassLevel::Pass0DimExp);
         self.dispatch_registry(graph, PassLevel::Pass0Leaf);
 
         // units-2: every CBU outer registered with `cbu_base = None` during

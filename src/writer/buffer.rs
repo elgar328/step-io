@@ -395,6 +395,10 @@ pub(crate) struct WriteBuffer<'m> {
     /// (`Itself`) and `emit_camera_image_arena` (`CameraImage` variants);
     /// consumed by `emit_representation_item_ref` for the `MappedItem` variant.
     pub(crate) mapped_item_step_ids: Vec<u64>,
+    /// `DimensionalExponentsId → DIMENSIONAL_EXPONENTS step id` (phase
+    /// dim-exp-arena-a). Filled by `emit_units_pool_if_set`; consumed by
+    /// `NAMED_UNIT` subtype writers in phase dim-exp-arena-b.
+    pub(crate) dimensional_exponents_step_ids: Vec<u64>,
     /// `ProductId → PRODUCT entity step id`. Phase pc-unify-a:
     /// consumed by `emit_product_categories_arena` so PRPC.products
     /// refs land on the right entity (PDEF doesn't match the schema
@@ -545,6 +549,7 @@ impl<'m> WriteBuffer<'m> {
             pdc_step_ids: Vec::new(),
             product_def_ids: std::collections::HashMap::new(),
             mapped_item_step_ids: Vec::new(),
+            dimensional_exponents_step_ids: Vec::new(),
             product_step_ids: std::collections::HashMap::new(),
             product_category_step_ids: Vec::new(),
             product_def_shape_ids: std::collections::HashMap::new(),

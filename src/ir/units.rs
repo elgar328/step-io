@@ -22,6 +22,25 @@ pub struct UnitsPool {
     pub measure_with_units: Arena<MeasureWithUnit>,
     pub derived_unit_elements: Arena<DerivedUnitElement>,
     pub derived_units: Arena<DerivedUnit>,
+    /// `DIMENSIONAL_EXPONENTS` arena (phase dim-exp-arena-a). Schema-
+    /// faithful standalone arena; per-`NAMED_UNIT` wiring lands in
+    /// phase dim-exp-arena-b.
+    pub dimensional_exponents: Arena<DimensionalExponents>,
+}
+
+/// `DIMENSIONAL_EXPONENTS(length, mass, time, electric_current,
+/// thermodynamic_temperature, amount_of_substance, luminous_intensity)`
+/// — schema `single_struct`. All seven SI base-quantity exponents as
+/// `REAL`.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct DimensionalExponents {
+    pub length_exponent: f64,
+    pub mass_exponent: f64,
+    pub time_exponent: f64,
+    pub electric_current_exponent: f64,
+    pub thermodynamic_temperature_exponent: f64,
+    pub amount_of_substance_exponent: f64,
+    pub luminous_intensity_exponent: f64,
 }
 
 impl UnitsPool {
