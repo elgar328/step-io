@@ -125,28 +125,6 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass4_3cTrimSeg);
         self.dispatch_registry(graph, PassLevel::Pass4_3cComp);
 
-        // Pass 4-3b: resolve pcurves on each SURFACE_CURVE / SEAM_CURVE.
-        // Requires access to `EntityGraph` (to traverse the PCURVE →
-        // DEFINITIONAL_REPRESENTATION → 2D curve chain), so this runs as a
-        // post-pass outside the dispatch macro. Pass 4a must have already
-        // populated `curve_2d_map` and `surface_map`.
-        for (&id, entity) in &graph.entities {
-            if self.pcurve_subtree_ids.contains(&id) {
-                continue;
-            }
-            let (name, attrs) = match entity {
-                RawEntity::Simple {
-                    name, attributes, ..
-                } => (name.as_str(), attributes.as_slice()),
-                RawEntity::Complex { .. } => continue,
-            };
-            if name == "SURFACE_CURVE" || name == "SEAM_CURVE" {
-                crate::entities::geometry::surface_curve::collect_surface_curve_pcurves(
-                    self, id, attrs, graph,
-                );
-            }
-        }
-
         // Pass 4-4A: derived surfaces that wrap a curve (swept curve / axis
         // of revolution / extrusion vector). Single sweep — no dependency
         // on other derived surfaces.
@@ -163,6 +141,30 @@ impl ReaderContext {
         self.dispatch_registry_until_fixpoint(graph, PassLevel::Pass4_4Offset, |ctx| {
             ctx.geometry.surfaces.len()
         });
+
+        // Pass 4-3b: resolve pcurves on each SURFACE_CURVE / SEAM_CURVE.
+        // Requires access to `EntityGraph` (to traverse the PCURVE →
+        // DEFINITIONAL_REPRESENTATION → 2D curve chain), so this runs as a
+        // post-pass outside the dispatch macro. Runs after every Pass 4
+        // surface stage so `surface_map` covers Pass4_4 entries
+        // (`SURFACE_OF_REVOLUTION` / `OFFSET_SURFACE` etc.) that PCURVE
+        // basis_surface refs may target.
+        for (&id, entity) in &graph.entities {
+            if self.pcurve_subtree_ids.contains(&id) {
+                continue;
+            }
+            let (name, attrs) = match entity {
+                RawEntity::Simple {
+                    name, attributes, ..
+                } => (name.as_str(), attributes.as_slice()),
+                RawEntity::Complex { .. } => continue,
+            };
+            if name == "SURFACE_CURVE" || name == "SEAM_CURVE" {
+                crate::entities::geometry::surface_curve::collect_surface_curve_pcurves(
+                    self, id, attrs, graph,
+                );
+            }
+        }
     }
 
     pub(super) fn run_topology_passes(&mut self, graph: &EntityGraph) {

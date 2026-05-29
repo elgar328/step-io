@@ -1151,7 +1151,15 @@ fn surface_curve_aliases_to_inner_curve_3d() {
          #15 = VERTEX_POINT('',#2);\n\
          #16 = EDGE_CURVE('',#14,#15,#13,.T.);",
     ));
-    assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
+    // The synthetic fixture uses a CARTESIAN_POINT as PCURVE.reference_to_curve
+    // for brevity, so `resolve_pcurve` legitimately reports it as unresolvable
+    // (phase pcurve-pass-order made the previously-silent drop into a warning).
+    assert_eq!(
+        result.warnings.len(),
+        1,
+        "expected exactly the PCURVE-unresolved warning, got {:#?}",
+        result.warnings
+    );
     // Only the 3D LINE should be in the curves pool.
     assert_eq!(result.model.geometry.curves.len(), 1);
     // The edge must point at that LINE via the SURFACE_CURVE alias.

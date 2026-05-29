@@ -52,13 +52,26 @@ pub(crate) fn collect_surface_curve_pcurves(
     attrs: &[Attribute],
     graph: &EntityGraph,
 ) {
-    let Ok(pcurve_refs) = read_entity_ref_list(attrs, 2, entity_id, "associated_geometry") else {
-        return;
+    let pcurve_refs = match read_entity_ref_list(attrs, 2, entity_id, "associated_geometry") {
+        Ok(refs) => refs,
+        Err(e) => {
+            ctx.warnings.push(e);
+            return;
+        }
     };
     let mut pcurves = Vec::with_capacity(pcurve_refs.len());
     for &pcurve_ref in &pcurve_refs {
-        if let Some(pc) = ctx.resolve_pcurve(pcurve_ref, graph) {
-            pcurves.push(pc);
+        match ctx.resolve_pcurve(pcurve_ref, graph) {
+            Some(pc) => pcurves.push(pc),
+            None => ctx
+                .warnings
+                .push(crate::ir::error::ConvertError::UnexpectedEntityForm {
+                    entity_id,
+                    detail: format!(
+                        "SURFACE_CURVE.associated_geometry #{pcurve_ref} unresolved \
+                     (basis_surface / curve_2d not in their respective maps)"
+                    ),
+                }),
         }
     }
     if !pcurves.is_empty() {

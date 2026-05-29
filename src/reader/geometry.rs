@@ -24,9 +24,9 @@ impl ReaderContext {
     //
     // DEFINITIONAL_REPRESENTATION itself isn't stored in IR; we just
     // traverse through it. Returns `None` when any link is missing or
-    // the referenced entity doesn't resolve — the caller treats `None`
-    // as "skip this pcurve" and emits no warning (the underlying missing
-    // reference would already surface in 3D pass errors).
+    // the referenced entity doesn't resolve — the caller
+    // (`collect_surface_curve_pcurves`) emits a warning so the dropped
+    // pcurve is visible in reader diagnostics.
     pub(crate) fn resolve_pcurve(
         &self,
         pcurve_ref: u64,
