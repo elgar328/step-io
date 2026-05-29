@@ -381,6 +381,11 @@ impl ReaderContext {
         // Application cluster — AC leaf -> APD (refs AC).
         self.dispatch_registry(graph, PassLevel::Pass9PlmAppContext);
         self.dispatch_registry(graph, PassLevel::Pass9PlmAppProtocol);
+        // ID_ATTRIBUTE / NAME_ATTRIBUTE / DESCRIPTION_ATTRIBUTE —
+        // identified_item / named_item SELECT resolves through
+        // shape_aspect / plm_group / plm_address / plm_application_context
+        // / derived_unit / product_definition id maps populated above.
+        self.dispatch_registry(graph, PassLevel::Pass9PlmAttributes);
         // Assembly-product context — PC/MC + PDC/DC (refs AC).
         self.dispatch_registry(graph, PassLevel::Pass9AssemblyContext);
         // PDCA cluster — PDCR leaf -> PDCA (refs PDC + PDEF + PDCR).
