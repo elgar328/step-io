@@ -12,6 +12,8 @@ use crate::ir::ProductId;
 use crate::ir::ShapeAspectRef;
 use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
+use crate::ir::id::DimensionalLocationId;
+use crate::ir::pmi::DimensionalLocation;
 use crate::ir::property::{
     CharacterizedDefinition, PropertyDefinition, PropertyDefinitionData, PropertyPool,
 };
@@ -20,6 +22,21 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use step_io_macros::step_entity;
+
+/// Resolve the owning product for a `dimensional_location` arena entry —
+/// a `shape_aspect_relationship` subtype, so the product is reached via
+/// its `relating_shape_aspect` endpoint.
+fn dimensional_location_target(
+    ctx: &ReaderContext,
+    id: DimensionalLocationId,
+) -> Option<ProductId> {
+    let pmi = ctx.pmi.as_ref()?;
+    let sa_ref = match &pmi.dimensional_locations[id] {
+        DimensionalLocation::Plain(d) | DimensionalLocation::Directed(d) => d.relating_shape_aspect,
+        DimensionalLocation::Angular(a) => a.relating_shape_aspect,
+    };
+    shape_aspect_ref_target(ctx, sa_ref)
+}
 
 fn shape_aspect_ref_target(ctx: &ReaderContext, sa_ref: ShapeAspectRef) -> Option<ProductId> {
     match sa_ref {
@@ -84,6 +101,11 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
                     return Ok(());
                 };
                 (CharacterizedDefinition::ShapeAspect(sa_ref), pid)
+            } else if let Some(&dl_id) = ctx.dimensional_location_id_map.get(&target_ref) {
+                let Some(pid) = dimensional_location_target(ctx, dl_id) else {
+                    return Ok(());
+                };
+                (CharacterizedDefinition::DimensionalLocation(dl_id), pid)
             } else if let Some(&pds_pd_id) = ctx.property_def_step_to_id.get(&target_ref) {
                 let Some(pool) = ctx.properties.as_ref() else {
                     return Ok(());

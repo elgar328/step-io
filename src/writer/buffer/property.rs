@@ -335,6 +335,17 @@ impl WriteBuffer<'_> {
                     }
                     s
                 }
+                CharacterizedDefinition::DimensionalLocation(dl_id) => {
+                    let s = self
+                        .dimensional_location_step_ids
+                        .get(dl_id.0 as usize)
+                        .copied()
+                        .unwrap_or(0);
+                    if s == 0 {
+                        continue;
+                    }
+                    s
+                }
                 CharacterizedDefinition::ProductDefinitionShape(pds_pd_id) => {
                     // PDS arena entry's step id was cached in Pass A
                     // (emit_property_definitions_pds_only). Slot 0 means the
