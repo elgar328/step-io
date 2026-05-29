@@ -49,6 +49,7 @@ impl UnitsPool {
         self.named_units.push(NamedUnit::Length(LengthFlavor {
             unit,
             cbu_base: None,
+            dim_exp: None,
         }))
     }
 
@@ -61,6 +62,7 @@ impl UnitsPool {
         self.named_units.push(NamedUnit::Length(LengthFlavor {
             unit: outer,
             cbu_base: Some(base_id),
+            dim_exp: None,
         }))
     }
 
@@ -69,6 +71,7 @@ impl UnitsPool {
             .push(NamedUnit::PlaneAngle(PlaneAngleFlavor {
                 unit,
                 cbu_base: None,
+                dim_exp: None,
             }))
     }
 
@@ -78,18 +81,23 @@ impl UnitsPool {
             .push(NamedUnit::PlaneAngle(PlaneAngleFlavor {
                 unit: outer,
                 cbu_base: Some(base_id),
+                dim_exp: None,
             }))
     }
 
     pub fn push_plain_solid_angle(&mut self, unit: SolidAngleUnit) -> NamedUnitId {
         self.named_units
-            .push(NamedUnit::SolidAngle(SolidAngleFlavor { unit }))
+            .push(NamedUnit::SolidAngle(SolidAngleFlavor {
+                unit,
+                dim_exp: None,
+            }))
     }
 
     pub fn push_plain_mass(&mut self, unit: MassUnit) -> NamedUnitId {
         self.named_units.push(NamedUnit::Mass(MassFlavor {
             unit,
             cbu_base: None,
+            dim_exp: None,
         }))
     }
 
@@ -98,6 +106,7 @@ impl UnitsPool {
         self.named_units.push(NamedUnit::Mass(MassFlavor {
             unit: outer,
             cbu_base: Some(base_id),
+            dim_exp: None,
         }))
     }
 }
@@ -124,7 +133,9 @@ pub enum NamedUnit {
 /// the observed corpus. Zero-sized marker; presence in [`NamedUnit`] signals
 /// "ratio" to downstream consumers.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-pub struct RatioFlavor;
+pub struct RatioFlavor {
+    pub dim_exp: Option<super::id::DimensionalExponentsId>,
+}
 
 /// `LENGTH_UNIT` complex flavour. `cbu_base` is `Some(id)` for
 /// `CONVERSION_BASED_UNIT` outers and `None` for plain SI complexes.
@@ -139,12 +150,18 @@ pub struct LengthFlavor {
     /// Self-wrap (`CBU('METRE', ..., base=METRE)`) is represented by
     /// `cbu_base = Some(<METRE id>)` with `unit == lookup(cbu_base).unit`.
     pub cbu_base: Option<NamedUnitId>,
+    /// `NAMED_UNIT.dimensions` explicit ref (phase dim-exp-arena-b).
+    /// `Some(id)` reproduces the source's `(#N)` reference; `None` emits
+    /// the `*` (Derived) form. The CBU outer path still uses its dedicated
+    /// `length_dim_exp_step` cache and ignores this field.
+    pub dim_exp: Option<super::id::DimensionalExponentsId>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PlaneAngleFlavor {
     pub unit: AngleUnit,
     pub cbu_base: Option<NamedUnitId>,
+    pub dim_exp: Option<super::id::DimensionalExponentsId>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -152,6 +169,7 @@ pub struct SolidAngleFlavor {
     pub unit: SolidAngleUnit,
     // No CBU variant observed in corpus — `SOLID_ANGLE_UNIT +
     // CONVERSION_BASED_UNIT` is silently dropped on read.
+    pub dim_exp: Option<super::id::DimensionalExponentsId>,
 }
 
 /// `MASS_UNIT` flavour. `AP214e3` constrains `dimensions` to
@@ -164,6 +182,7 @@ pub struct SolidAngleFlavor {
 pub struct MassFlavor {
     pub unit: MassUnit,
     pub cbu_base: Option<NamedUnitId>,
+    pub dim_exp: Option<super::id::DimensionalExponentsId>,
 }
 
 /// `MASS_UNIT` value variant. Corpus: kilogram (plain SI), gram (plain SI),

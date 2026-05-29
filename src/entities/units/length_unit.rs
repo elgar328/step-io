@@ -118,7 +118,11 @@ pub(crate) fn emit_length_cbu_outer(
 /// actual base `NamedUnitId` once both ends of the chain are registered.
 fn register_named_length(ctx: &mut ReaderContext, entity_id: u64, cbu_base: Option<NamedUnitId>) {
     if let Some(&unit) = ctx.length_unit_map.get(&entity_id) {
-        let flavor = LengthFlavor { unit, cbu_base };
+        let flavor = LengthFlavor {
+            unit,
+            cbu_base,
+            dim_exp: None,
+        };
         let id = ctx.named_units_arena.push(NamedUnit::Length(flavor));
         ctx.named_unit_id_map.insert(entity_id, id);
     }

@@ -1444,10 +1444,12 @@ fn gram_conversion_based_unit_round_trips() {
     let kg = pool.named_units.push(NamedUnit::Mass(MassFlavor {
         unit: MassUnit::Kilogram,
         cbu_base: None,
+        dim_exp: None,
     }));
     pool.named_units.push(NamedUnit::Mass(MassFlavor {
         unit: MassUnit::Gram,
         cbu_base: Some(kg),
+        dim_exp: None,
     }));
     model.units_pool = Some(pool);
 

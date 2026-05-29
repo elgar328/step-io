@@ -38,7 +38,9 @@ impl ComplexEntityHandler for RatioUnitHandler {
             });
             return Ok(());
         }
-        let id = ctx.named_units_arena.push(NamedUnit::Ratio(RatioFlavor));
+        let id = ctx
+            .named_units_arena
+            .push(NamedUnit::Ratio(RatioFlavor { dim_exp: None }));
         ctx.named_unit_id_map.insert(entity_id, id);
         Ok(())
     }

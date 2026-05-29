@@ -102,7 +102,11 @@ fn register_named_mass(
     cbu_base: Option<crate::ir::id::NamedUnitId>,
 ) {
     if let Some(&unit) = ctx.mass_unit_map.get(&entity_id) {
-        let flavor = MassFlavor { unit, cbu_base };
+        let flavor = MassFlavor {
+            unit,
+            cbu_base,
+            dim_exp: None,
+        };
         let id = ctx.named_units_arena.push(NamedUnit::Mass(flavor));
         ctx.named_unit_id_map.insert(entity_id, id);
     }

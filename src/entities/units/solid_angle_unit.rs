@@ -61,7 +61,10 @@ impl ComplexEntityHandler for SolidAngleUnitHandler {
 
         if let Some(unit) = match_solid_angle_unit(prefix, name) {
             ctx.solid_angle_unit_map.insert(entity_id, unit);
-            let flavor = SolidAngleFlavor { unit };
+            let flavor = SolidAngleFlavor {
+                unit,
+                dim_exp: None,
+            };
             let id = ctx.named_units_arena.push(NamedUnit::SolidAngle(flavor));
             ctx.named_unit_id_map.insert(entity_id, id);
         } else {

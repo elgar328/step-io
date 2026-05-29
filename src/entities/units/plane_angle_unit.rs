@@ -104,7 +104,11 @@ fn register_named_plane_angle(
     cbu_base: Option<NamedUnitId>,
 ) {
     if let Some(&unit) = ctx.angle_unit_map.get(&entity_id) {
-        let flavor = PlaneAngleFlavor { unit, cbu_base };
+        let flavor = PlaneAngleFlavor {
+            unit,
+            cbu_base,
+            dim_exp: None,
+        };
         let id = ctx.named_units_arena.push(NamedUnit::PlaneAngle(flavor));
         ctx.named_unit_id_map.insert(entity_id, id);
     }
