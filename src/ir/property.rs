@@ -15,6 +15,7 @@ use super::id::{
     AddressId, ApplicationContextId, DerivedUnitId, GeneralPropertyId, GroupId, NamedUnitId,
     PersonAndOrganizationId, ProductId, PropertyDefinitionId, ShapeAspectId, UnitContextId,
 };
+use super::shape_aspect_ref::ShapeAspectRef;
 use super::shape_rep::DescriptiveItem;
 
 /// Top-level container for property data extracted from
@@ -163,9 +164,9 @@ pub struct ProductDefinitionShape {
 pub enum CharacterizedDefinition {
     ProductDefinition(ProductId),
     /// Pattern B: `PROPERTY_DEFINITION` whose `definition` resolves to a
-    /// `SHAPE_ASPECT`. The Property target's actual `ProductId` is
-    /// reachable through the bound [`ShapeAspect::target`].
-    ShapeAspect(ShapeAspectId),
+    /// `SHAPE_ASPECT` or any of its subtypes. The unified
+    /// [`ShapeAspectRef`] enum carries the resolved subtype.
+    ShapeAspect(ShapeAspectRef),
     /// Pattern C: `PROPERTY_DEFINITION` whose `definition` resolves to a
     /// `PRODUCT_DEFINITION_SHAPE` (the `shape_definition` member of the
     /// `characterized_definition` SELECT). The target is itself another PD

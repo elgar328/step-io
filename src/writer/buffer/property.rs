@@ -328,12 +328,8 @@ impl WriteBuffer<'_> {
                     };
                     s
                 }
-                CharacterizedDefinition::ShapeAspect(sa_id) => {
-                    let s = self
-                        .shape_aspect_step_ids
-                        .get(sa_id.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                CharacterizedDefinition::ShapeAspect(sa_ref) => {
+                    let s = self.emit_shape_aspect_ref(sa_ref);
                     if s == 0 {
                         continue;
                     }

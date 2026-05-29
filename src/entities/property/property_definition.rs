@@ -7,6 +7,9 @@
 //! handled in `buffer/property.rs::emit_property` (the orchestrator).
 
 use crate::entities::SimpleEntityHandler;
+use crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_ref;
+use crate::ir::ProductId;
+use crate::ir::ShapeAspectRef;
 use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::property::{
@@ -17,6 +20,24 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use step_io_macros::step_entity;
+
+fn shape_aspect_ref_target(ctx: &ReaderContext, sa_ref: ShapeAspectRef) -> Option<ProductId> {
+    match sa_ref {
+        ShapeAspectRef::ShapeAspect(id) => Some(ctx.shape_aspects[id].target),
+        ShapeAspectRef::CompositeGroupShapeAspect(id) => {
+            Some(ctx.composite_group_shape_aspects[id].target)
+        }
+        ShapeAspectRef::CentreOfSymmetry(id) => Some(ctx.centre_of_symmetries[id].target),
+        ShapeAspectRef::AllAroundShapeAspect(id) => Some(ctx.all_around_shape_aspects[id].target),
+        ShapeAspectRef::Datum(id) => ctx.pmi.as_ref().map(|p| p.datums[id].target),
+        ShapeAspectRef::DatumFeature(id) => ctx.pmi.as_ref().map(|p| p.datum_features[id].target),
+        ShapeAspectRef::DatumSystem(id) => Some(ctx.datum_systems[id].target),
+        ShapeAspectRef::DatumTarget(id) => Some(ctx.datum_targets[id].target),
+        ShapeAspectRef::PlacedDatumTargetFeature(id) => {
+            Some(ctx.placed_datum_target_features[id].target)
+        }
+    }
+}
 
 pub(crate) struct PropertyDefinitionWriteInput {
     pub(crate) name: String,
@@ -58,9 +79,11 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
                     return Ok(());
                 };
                 (CharacterizedDefinition::ProductDefinition(pid), pid)
-            } else if let Some(&sa_id) = ctx.shape_aspect_id_map.get(&target_ref) {
-                let pid = ctx.shape_aspects[sa_id].target;
-                (CharacterizedDefinition::ShapeAspect(sa_id), pid)
+            } else if let Some(sa_ref) = resolve_shape_aspect_ref(ctx, target_ref) {
+                let Some(pid) = shape_aspect_ref_target(ctx, sa_ref) else {
+                    return Ok(());
+                };
+                (CharacterizedDefinition::ShapeAspect(sa_ref), pid)
             } else if let Some(&pds_pd_id) = ctx.property_def_step_to_id.get(&target_ref) {
                 let Some(pool) = ctx.properties.as_ref() else {
                     return Ok(());
