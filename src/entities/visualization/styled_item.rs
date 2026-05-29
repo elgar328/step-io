@@ -96,11 +96,9 @@ impl SimpleEntityHandler for StyledItemHandler {
 /// Returns `None` when the ref points at a representation-item kind step-io
 /// does not model as a `RepresentationItemRef` variant.
 ///
-/// MDGPR guard: `repr_id_map` also holds `MDGPR` entries, but their
-/// `representation_step_ids` writer slots are appended late (during
-/// styled-item emission), whereas a geometry representation's slot is filled
-/// by the writer pre-pass up front. Only non-`Mdgpr` representations become
-/// a `Representation` ref; an MDGPR target falls through to `None`.
+/// MDGPR guard: `repr_id_map` also holds `MDGPR` entries, but only
+/// non-`Mdgpr` representations become a `Representation` ref; an MDGPR
+/// target falls through to `None`.
 pub(crate) fn resolve_representation_item_ref(
     ctx: &ReaderContext,
     item_ref: u64,

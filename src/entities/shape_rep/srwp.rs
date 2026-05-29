@@ -4,9 +4,8 @@
 //! SELECT (`direction` / `placement` / `descriptive_representation_item`
 //! modelled; `measure_representation_item` dropped). Emit delayed
 //! (Mdgpr / DM / TSR / CGR pattern) — the pre-pass skips this variant
-//! and `emit_shape_representation_with_parameters` runs after every
-//! other delayed-emit Representation so `representation_step_ids` is
-//! appended in arena order.
+//! and `emit_shape_representation_with_parameters` writes into the
+//! `representation_step_ids` slot by `RepresentationId`.
 
 use crate::entities::SimpleEntityHandler;
 use crate::entities::shape_rep::descriptive_representation_item::DescriptiveRepresentationItemHandler;

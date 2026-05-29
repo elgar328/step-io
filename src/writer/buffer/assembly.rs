@@ -376,10 +376,10 @@ impl WriteBuffer<'_> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::shape_rep::draughting_model::DraughtingModelHandler;
         let reprs = self.model.representations.clone();
-        for repr in reprs.iter() {
+        for (id, repr) in reprs.iter_with_ids() {
             if let Representation::DraughtingModel(dm) = repr {
                 let step_id = DraughtingModelHandler::write(self, dm.clone())?;
-                self.representation_step_ids.push(step_id);
+                self.representation_step_ids[id.0 as usize] = step_id;
             }
         }
         Ok(())
@@ -399,10 +399,10 @@ impl WriteBuffer<'_> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::shape_rep::tessellated_shape_representation::TessellatedShapeRepresentationHandler;
         let reprs = self.model.representations.clone();
-        for repr in reprs.iter() {
+        for (id, repr) in reprs.iter_with_ids() {
             if let Representation::TessellatedShapeRepresentation(tsr) = repr {
                 let step_id = TessellatedShapeRepresentationHandler::write(self, tsr.clone())?;
-                self.representation_step_ids.push(step_id);
+                self.representation_step_ids[id.0 as usize] = step_id;
             }
         }
         Ok(())
@@ -421,10 +421,10 @@ impl WriteBuffer<'_> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::shape_rep::constructive_geometry_representation::ConstructiveGeometryRepresentationHandler;
         let reprs = self.model.representations.clone();
-        for repr in reprs.iter() {
+        for (id, repr) in reprs.iter_with_ids() {
             if let Representation::ConstructiveGeometry(cgr) = repr {
                 let step_id = ConstructiveGeometryRepresentationHandler::write(self, cgr.clone())?;
-                self.representation_step_ids.push(step_id);
+                self.representation_step_ids[id.0 as usize] = step_id;
             }
         }
         Ok(())
@@ -440,10 +440,10 @@ impl WriteBuffer<'_> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::shape_rep::srwp::ShapeRepresentationWithParametersHandler;
         let reprs = self.model.representations.clone();
-        for repr in reprs.iter() {
+        for (id, repr) in reprs.iter_with_ids() {
             if let Representation::ShapeRepresentationWithParameters(srwp) = repr {
                 let step_id = ShapeRepresentationWithParametersHandler::write(self, srwp.clone())?;
-                self.representation_step_ids.push(step_id);
+                self.representation_step_ids[id.0 as usize] = step_id;
             }
         }
         Ok(())
@@ -514,7 +514,7 @@ impl WriteBuffer<'_> {
         &mut self,
     ) -> Result<(), WriteError> {
         let reprs = self.model.representations.clone();
-        for repr in reprs.iter() {
+        for (id, repr) in reprs.iter_with_ids() {
             // Mdgpr (visualization pass) and DraughtingModel (post-callout
             // pass) are emitted later — their `items` refs depend on
             // step-id caches that this pre-pass cannot populate.
@@ -529,7 +529,7 @@ impl WriteBuffer<'_> {
                 continue;
             }
             let step_id = self.emit_representation(repr)?;
-            self.representation_step_ids.push(step_id);
+            self.representation_step_ids[id.0 as usize] = step_id;
         }
         Ok(())
     }

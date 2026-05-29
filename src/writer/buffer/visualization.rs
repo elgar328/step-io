@@ -361,13 +361,15 @@ impl WriteBuffer<'_> {
                 self.styled_item_step_ids[idx] = id;
             }
         }
-        // MDGPR is the trailing segment of the `representations` arena
-        // (Pass 7, after every geometry representation). `viz.mdgprs` is in
-        // the same order, so appending each step id keeps
-        // `representation_step_ids` aligned with `RepresentationId`.
-        for mdgpr in viz.mdgprs {
-            let step_id = MdgprHandler::write(self, mdgpr)?;
-            self.representation_step_ids.push(step_id);
+        // MDGPR — iterate the unified `representations` arena so each
+        // step id lands in its `RepresentationId` slot. `viz.mdgprs` is a
+        // dual-write of the same data and is intentionally ignored here.
+        let reprs = self.model.representations.clone();
+        for (id, repr) in reprs.iter_with_ids() {
+            if let crate::ir::shape_rep::Representation::Mdgpr(mdgpr) = repr {
+                let step_id = MdgprHandler::write(self, mdgpr.clone())?;
+                self.representation_step_ids[id.0 as usize] = step_id;
+            }
         }
         for pla in viz.presentation_layer_assignments.iter() {
             PresentationLayerAssignmentHandler::write(self, pla.clone())?;

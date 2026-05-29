@@ -368,16 +368,10 @@ pub(crate) enum PassLevel {
     /// populates that map's `CameraUsage` slots.
     Pass8CameraImage,
     /// `TESSELLATED_SHAPE_REPRESENTATION` (phase tsr) — `shape_representation`
-    /// SUBTYPE. Must run AFTER `Pass8DraughtingModel` so the
-    /// `representations` arena order keeps all delayed-emit variants
-    /// contiguous at the tail (writer `representation_step_ids` is
-    /// push-built — Mdgpr → DM → TSR sequence required).
+    /// SUBTYPE.
     Pass8TsrRead,
     /// `CONSTRUCTIVE_GEOMETRY_REPRESENTATION` (phase cgr) —
-    /// `representation` SUBTYPE. Must run after `Pass8TsrRead` so the
-    /// `representations` arena keeps all delayed-emit variants
-    /// (Mdgpr / DM / TSR / CGR) contiguous at the tail; writer's
-    /// push-built `representation_step_ids` then aligns with arena ids.
+    /// `representation` SUBTYPE.
     Pass8CgrRead,
     /// `CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP` (phase cgrr) —
     /// `representation_relationship` SUBTYPE. Must run after

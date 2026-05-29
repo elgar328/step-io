@@ -9,9 +9,8 @@
 //!
 //! Emit is delayed (`Mdgpr` / `DraughtingModel` / `TSR` pattern) —
 //! `emit_representations_pre_pass` skips this variant, and
-//! `emit_constructive_geometry_representations` runs after the other
-//! delayed-emit functions so `representation_step_ids` is appended in
-//! arena order (Mdgpr → DM → TSR → CGR).
+//! `emit_constructive_geometry_representations` writes into the
+//! `representation_step_ids` slot by `RepresentationId`.
 
 use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;

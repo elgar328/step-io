@@ -570,6 +570,7 @@ impl<'m> WriteBuffer<'m> {
         // all cross-pool references backward (parent after children).
         // Arena iteration yields the original Id order, so dedup maps set
         // in one pass are reused in the next.
+        self.representation_step_ids = vec![0u64; self.model.representations.len()];
         for id in self.model.geometry.points.iter_ids() {
             self.emit_point(id)?;
         }
