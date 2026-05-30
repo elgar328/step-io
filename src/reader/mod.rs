@@ -403,7 +403,7 @@ pub struct ReaderContext {
     /// `PROPERTY_DEFINITION #N → (name, description, target ProductId)`
     /// (Pass 8-3). PDs whose target ref does not resolve to a Product
     /// (e.g. `SHAPE_ASPECT`) are silently dropped — no map entry.
-    pub(crate) property_def_map: HashMap<u64, (String, Option<String>, ProductId)>,
+    pub(crate) property_def_map: HashMap<u64, (String, Option<String>)>,
     /// `PROPERTY_DEFINITION #N → PropertyId` (Pass 8-3). Recorded by the
     /// PDR reader when it pushes a `Property`; consumed by the GPA reader
     /// to resolve `derived_definition`. Temp; discarded after Pass 8.

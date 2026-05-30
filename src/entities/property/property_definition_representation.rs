@@ -36,8 +36,8 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
         let pd_ref = read_entity_ref(attrs, 0, entity_id, "definition")?;
         let repr_ref = read_entity_ref(attrs, 1, entity_id, "used_representation")?;
 
-        let Some((pd_name, pd_desc, pd_target)) = ctx.property_def_map.get(&pd_ref).cloned() else {
-            return Ok(()); // PD silently skipped (Pattern B / unresolved target)
+        let Some((pd_name, pd_desc)) = ctx.property_def_map.get(&pd_ref).cloned() else {
+            return Ok(()); // PD silently skipped (unresolved / unsupported target)
         };
 
         // Walk the graph for the bound REPRESENTATION. Direct read — REPR
@@ -88,7 +88,6 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
             .push(Property {
                 name: pd_name,
                 description: pd_desc,
-                target: pd_target,
                 definition,
                 representation_name,
                 context,

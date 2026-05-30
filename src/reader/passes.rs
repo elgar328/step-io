@@ -462,14 +462,18 @@ impl ReaderContext {
         // through the Pass8Dimensional id maps.
         self.dispatch_registry(graph, PassLevel::Pass8ToleranceValue);
         self.dispatch_registry(graph, PassLevel::Pass8PlusMinusTolerance);
+        // GENERAL_PROPERTY before PROPERTY_DEFINITION: a PD's `definition`
+        // can be a GENERAL_PROPERTY (general_property member of
+        // characterized_definition), so general_property_id_map must be
+        // filled first. GENERAL_PROPERTY itself reads only scalars, no PD
+        // dependency. GPA (below) still runs after Pass8Pdr.
+        self.dispatch_registry(graph, PassLevel::Pass8GeneralProperty);
         self.dispatch_registry(graph, PassLevel::Pass8PropertyDef);
         // PDR walks the bound REPRESENTATION through `graph` because the
         // generic REPRESENTATION name conflicts with MDGPR / SR.
         self.dispatch_registry(graph, PassLevel::Pass8Pdr);
-        // GENERAL_PROPERTY / GPA (Pass 8-4/8-5) — AP242 user-defined
-        // attribute pair. GPA resolves `derived_definition` through the
-        // property arena built by Pass8Pdr, so it must run after it.
-        self.dispatch_registry(graph, PassLevel::Pass8GeneralProperty);
+        // GPA (Pass 8-5) resolves `derived_definition` through the property
+        // arena built by Pass8Pdr, so it must run after it.
         self.dispatch_registry(graph, PassLevel::Pass8Gpa);
         // TEXT_LITERAL — depends on placement maps (Pass4) + dptf_id_map
         // (Pass8ShapeAspect, already dispatched above).

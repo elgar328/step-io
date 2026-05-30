@@ -31,7 +31,8 @@ impl WriteBuffer<'_> {
         self.emit_name_attributes(&pool);
         self.emit_description_attributes(&pool);
         self.emit_id_attributes(&pool);
-        self.emit_general_properties(&pool);
+        // emit_general_properties already ran before
+        // emit_property_definitions_non_pds (general_property_step_ids filled).
         self.emit_general_property_associations(&pool);
         self.emit_dimensional_characteristic_representations(&pool);
     }
@@ -54,7 +55,10 @@ impl WriteBuffer<'_> {
 
     /// Emit every `GENERAL_PROPERTY` in arena order, caching step ids in
     /// `general_property_step_ids` for the GPA emitter.
-    fn emit_general_properties(&mut self, pool: &crate::ir::PropertyPool) {
+    pub(in crate::writer::buffer) fn emit_general_properties(
+        &mut self,
+        pool: &crate::ir::PropertyPool,
+    ) {
         use crate::entities::property::general_property::GeneralPropertyHandler;
         self.general_property_step_ids = vec![0; pool.general_properties.len()];
         for (id, gp) in pool.general_properties.iter_with_ids() {
@@ -353,6 +357,19 @@ impl WriteBuffer<'_> {
                     let s = self
                         .property_definition_step_ids
                         .get(pds_pd_id.0 as usize)
+                        .copied()
+                        .unwrap_or(0);
+                    if s == 0 {
+                        continue;
+                    }
+                    s
+                }
+                CharacterizedDefinition::GeneralProperty(gp_id) => {
+                    // GENERAL_PROPERTY step ids are filled by
+                    // emit_general_properties, which must run before this pass.
+                    let s = self
+                        .general_property_step_ids
+                        .get(gp_id.0 as usize)
                         .copied()
                         .unwrap_or(0);
                     if s == 0 {

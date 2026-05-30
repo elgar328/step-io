@@ -177,6 +177,9 @@ pub enum CharacterizedDefinition {
     /// `characterized_definition` SELECT). The target is itself another PD
     /// arena entry of the `ProductDefinitionShape` variant.
     ProductDefinitionShape(PropertyDefinitionId),
+    /// `general_property` member of `characterized_definition` — a
+    /// standalone `GENERAL_PROPERTY` with no product binding.
+    GeneralProperty(GeneralPropertyId),
 }
 
 /// `PROPERTY_DEFINITION` + bound `REPRESENTATION` collapsed into a single
@@ -189,10 +192,6 @@ pub struct Property {
     /// occasionally empty. Empty / `$` source values both round-trip as
     /// `None`; non-empty strings as `Some(s)`.
     pub description: Option<String>,
-    /// `PROPERTY_DEFINITION.definition` resolved to a Product. PDs whose
-    /// target ref does not resolve to a `PRODUCT_DEFINITION` (e.g.
-    /// `SHAPE_ASPECT`) are dropped at read time.
-    pub target: ProductId,
     /// Index into the [`PropertyPool::property_definitions`] arena for the
     /// PD entry that pairs with this Property. Reader's PDR handler fills
     /// it by resolving the source PD step ref through `property_def_step_to_id`;

@@ -1344,7 +1344,6 @@ fn general_property_and_association_round_trip() {
     pool.properties.push(Property {
         name: "p1".into(),
         description: Some("user defined attribute".into()),
-        target: part_pid,
         definition: pd_id,
         representation_name: String::new(),
         context: Some(UnitContextId(0)),
@@ -1386,6 +1385,54 @@ fn general_property_and_association_round_trip() {
     assert_eq!(
         gpa.derived_definition,
         DerivedDefinitionItem::PropertyDefinition(PropertyDefinitionId(1))
+    );
+}
+
+#[test]
+fn property_definition_with_general_property_target_round_trips() {
+    use step_io::ir::property::{
+        CharacterizedDefinition, GeneralProperty, PropertyDefinition, PropertyDefinitionData,
+        PropertyPool,
+    };
+    // A PROPERTY_DEFINITION whose `definition` is a GENERAL_PROPERTY (the
+    // general_property member of characterized_definition) — no product
+    // binding. Must survive both write (PD → #gp ref) and read (resolve
+    // #gp back to a GeneralProperty variant).
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+
+    let mut pool = PropertyPool::default();
+    let gp_id = pool.general_properties.push(GeneralProperty {
+        id: "GP1".into(),
+        name: "material".into(),
+        description: Some("user defined attribute".into()),
+    });
+    pool.property_definitions
+        .push(PropertyDefinition::Itself(PropertyDefinitionData {
+            name: "p_mat".into(),
+            description: "user defined attribute".into(),
+            definition: CharacterizedDefinition::GeneralProperty(gp_id),
+        }));
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pool = re
+        .properties
+        .as_ref()
+        .expect("round-tripped has properties");
+    assert_eq!(re_pool.general_properties.len(), 1);
+    let has_gp_pd = re_pool.property_definitions.iter().any(|pd| {
+        matches!(
+            pd,
+            PropertyDefinition::Itself(d)
+                if matches!(d.definition, CharacterizedDefinition::GeneralProperty(_))
+        )
+    });
+    assert!(
+        has_gp_pd,
+        "PROPERTY_DEFINITION with a GENERAL_PROPERTY definition should round-trip"
     );
 }
 

@@ -694,6 +694,12 @@ impl<'m> WriteBuffer<'m> {
         // ALL_AROUND_SHAPE_ASPECT) and the dimensional_location family
         // (`dimensional_location_step_ids`, the shape_aspect_relationship
         // SELECT branch).
+        // GENERAL_PROPERTY step ids first — a PD.definition may target a
+        // GeneralProperty, so general_property_step_ids must be filled before
+        // emit_property_definitions_non_pds resolves that branch.
+        if let Some(pool) = self.model.properties.clone() {
+            self.emit_general_properties(&pool);
+        }
         self.emit_property_definitions_non_pds();
         // geometric_tolerance form tolerances — after the units pass
         // (`mwu_step_ids`) and emit_pmi_if_set (shape-aspect caches).

@@ -1,9 +1,10 @@
 //! `PROPERTY_DEFINITION` handler — Pass 8-2.
 //!
-//! Reader stores `(name, description, ProductId)` in `property_def_map`
-//! keyed by STEP entity id. Pattern B (target = `SHAPE_ASPECT`) is dropped
-//! at read time so only Product-targeting PDs reach the PDR pass. Writer
-//! emits the bare PD line; the surrounding `REPRESENTATION` + PDR are
+//! Reader stores `(name, description)` in `property_def_map` keyed by STEP
+//! entity id. Targets that don't resolve to a product context (e.g. an
+//! unresolved `SHAPE_ASPECT`) are still dropped at read time; a
+//! `GENERAL_PROPERTY` target has no product binding and is always kept.
+//! Writer emits the bare PD line; the surrounding `REPRESENTATION` + PDR are
 //! handled in `buffer/property.rs::emit_property` (the orchestrator).
 
 use crate::entities::SimpleEntityHandler;
@@ -87,62 +88,62 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
         // PRODUCT_DEFINITION (pdef_to_product). Pattern B: SHAPE_ASPECT
         // (shape_aspect_id_map). Pattern C: PRODUCT_DEFINITION_SHAPE — its
         // arena entry is pushed by Pass6PdsClassify with the
-        // ProductDefinitionShape variant; resolve the parent product through
-        // pdef_shape_to_pdef → pdef_to_product so property_def_map's stored
-        // ProductId reaches the bound product. PDR / GPA reuse this entry.
-        let (definition, product_id) =
-            if let Some(&product_step_id) = ctx.pdef_to_product.get(&target_ref) {
-                let Some(&pid) = ctx.product_arena_map.get(&product_step_id) else {
-                    return Ok(());
-                };
-                (CharacterizedDefinition::ProductDefinition(pid), pid)
-            } else if let Some(sa_ref) = resolve_shape_aspect_ref(ctx, target_ref) {
-                let Some(pid) = shape_aspect_ref_target(ctx, sa_ref) else {
-                    return Ok(());
-                };
-                (CharacterizedDefinition::ShapeAspect(sa_ref), pid)
-            } else if let Some(&dl_id) = ctx.dimensional_location_id_map.get(&target_ref) {
-                let Some(pid) = dimensional_location_target(ctx, dl_id) else {
-                    return Ok(());
-                };
-                (CharacterizedDefinition::DimensionalLocation(dl_id), pid)
-            } else if let Some(&pds_pd_id) = ctx.property_def_step_to_id.get(&target_ref) {
-                let Some(pool) = ctx.properties.as_ref() else {
-                    return Ok(());
-                };
-                if !matches!(
-                    pool.property_definitions[pds_pd_id],
-                    PropertyDefinition::ProductDefinitionShape(_)
-                ) {
-                    eprintln!(
-                        "warning: PROPERTY_DEFINITION #{entity_id} target #{target_ref} \
-                         resolves to another PROPERTY_DEFINITION (Itself), which is \
-                         schema-illegal — skipping"
-                    );
-                    return Ok(());
-                }
-                let Some(pid) = ctx
-                    .pdef_shape_to_pdef
-                    .get(&target_ref)
-                    .and_then(|pdef_ref| ctx.pdef_to_product.get(pdef_ref).copied())
-                    .and_then(|prod_step| ctx.product_arena_map.get(&prod_step).copied())
-                else {
-                    return Ok(());
-                };
-                (
-                    CharacterizedDefinition::ProductDefinitionShape(pds_pd_id),
-                    pid,
-                )
-            } else {
-                eprintln!(
-                    "warning: PROPERTY_DEFINITION #{entity_id} target #{target_ref} \
-                     resolves to neither PRODUCT_DEFINITION nor SHAPE_ASPECT \
-                     nor PRODUCT_DEFINITION_SHAPE — skipping"
-                );
+        // ProductDefinitionShape variant; resolved through pdef_shape_to_pdef
+        // → pdef_to_product. Pattern D: GENERAL_PROPERTY — standalone, no
+        // product binding. Product-bound patterns still gate on a resolvable
+        // product (drop when unresolved); the resolved id is not stored.
+        let definition = if let Some(&product_step_id) = ctx.pdef_to_product.get(&target_ref) {
+            let Some(&pid) = ctx.product_arena_map.get(&product_step_id) else {
                 return Ok(());
             };
+            CharacterizedDefinition::ProductDefinition(pid)
+        } else if let Some(sa_ref) = resolve_shape_aspect_ref(ctx, target_ref) {
+            if shape_aspect_ref_target(ctx, sa_ref).is_none() {
+                return Ok(());
+            }
+            CharacterizedDefinition::ShapeAspect(sa_ref)
+        } else if let Some(&dl_id) = ctx.dimensional_location_id_map.get(&target_ref) {
+            if dimensional_location_target(ctx, dl_id).is_none() {
+                return Ok(());
+            }
+            CharacterizedDefinition::DimensionalLocation(dl_id)
+        } else if let Some(&pds_pd_id) = ctx.property_def_step_to_id.get(&target_ref) {
+            let Some(pool) = ctx.properties.as_ref() else {
+                return Ok(());
+            };
+            if !matches!(
+                pool.property_definitions[pds_pd_id],
+                PropertyDefinition::ProductDefinitionShape(_)
+            ) {
+                eprintln!(
+                    "warning: PROPERTY_DEFINITION #{entity_id} target #{target_ref} \
+                         resolves to another PROPERTY_DEFINITION (Itself), which is \
+                         schema-illegal — skipping"
+                );
+                return Ok(());
+            }
+            let resolved = ctx
+                .pdef_shape_to_pdef
+                .get(&target_ref)
+                .and_then(|pdef_ref| ctx.pdef_to_product.get(pdef_ref).copied())
+                .and_then(|prod_step| ctx.product_arena_map.get(&prod_step).copied());
+            if resolved.is_none() {
+                return Ok(());
+            }
+            CharacterizedDefinition::ProductDefinitionShape(pds_pd_id)
+        } else if let Some(&gp_id) = ctx.general_property_id_map.get(&target_ref) {
+            CharacterizedDefinition::GeneralProperty(gp_id)
+        } else {
+            eprintln!(
+                "warning: PROPERTY_DEFINITION #{entity_id} target #{target_ref} \
+                     resolves to no supported characterized_definition member \
+                     (PRODUCT_DEFINITION / SHAPE_ASPECT / PRODUCT_DEFINITION_SHAPE / \
+                     GENERAL_PROPERTY) — skipping"
+            );
+            return Ok(());
+        };
         ctx.property_def_map
-            .insert(entity_id, (name.clone(), description.clone(), product_id));
+            .insert(entity_id, (name.clone(), description.clone()));
         // Schema-faithful `property_definitions` arena push (the writer's
         // sole PD emit source). `description` flattens Option → empty
         // string so the carrier struct uses raw `String`.
