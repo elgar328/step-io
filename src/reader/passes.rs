@@ -387,11 +387,10 @@ impl ReaderContext {
         // Application cluster — AC leaf -> APD (refs AC).
         self.dispatch_registry(graph, PassLevel::Pass9PlmAppContext);
         self.dispatch_registry(graph, PassLevel::Pass9PlmAppProtocol);
-        // ID_ATTRIBUTE / NAME_ATTRIBUTE / DESCRIPTION_ATTRIBUTE —
-        // identified_item / named_item SELECT resolves through
-        // shape_aspect / plm_group / plm_address / plm_application_context
-        // / derived_unit / product_definition id maps populated above.
-        self.dispatch_registry(graph, PassLevel::Pass9PlmAttributes);
+        // ID_ATTRIBUTE / NAME_ATTRIBUTE / DESCRIPTION_ATTRIBUTE are dispatched
+        // later (Pass9PlmAttributes, after the Pass 8 PMI + property block):
+        // ID_ATTRIBUTE.identified_item can target a SHAPE_ASPECT, whose id map
+        // is only filled by Pass8ShapeAspect below.
         // Assembly-product context — PC/MC + PDC/DC (refs AC).
         self.dispatch_registry(graph, PassLevel::Pass9AssemblyContext);
         // PDCA cluster — PDCR leaf -> PDCA (refs PDC + PDEF + PDCR).
@@ -482,6 +481,15 @@ impl ReaderContext {
         // GPA (Pass 8-5) resolves `derived_definition` through the property
         // arena built by Pass8Pdr, so it must run after it.
         self.dispatch_registry(graph, PassLevel::Pass8Gpa);
+        // ID_ATTRIBUTE / NAME_ATTRIBUTE / DESCRIPTION_ATTRIBUTE —
+        // identified_item / named_item / described_item SELECT resolves through
+        // shape_aspect (Pass8ShapeAspect) / datum / tolerance_zone /
+        // property_definition (Pass8PropertyDef) / plm_group / plm_address /
+        // plm_application_context / derived_unit / product_definition id maps,
+        // all populated above. Must run after the PMI + property block so a
+        // SHAPE_ASPECT-targeting identified_item resolves (previously this ran
+        // before Pass8ShapeAspect and every such ID_ATTRIBUTE was dropped).
+        self.dispatch_registry(graph, PassLevel::Pass9PlmAttributes);
         // TEXT_LITERAL — depends on placement maps (Pass4) + dptf_id_map
         // (Pass8ShapeAspect, already dispatched above).
         self.dispatch_registry(graph, PassLevel::Pass8TextLiteral);
