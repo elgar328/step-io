@@ -56,6 +56,12 @@ pub enum ConvertError {
     /// Unset (or carried an unrecognized value) on `count` entities; the
     /// reader normalized each to a standard default. Aggregated per file.
     /// This is an INPUT defect, not a step-io defect.
+    ///
+    /// CONTRACT: emit this variant *only* when the source file is
+    /// non-standard and the reader recovered it by normalizing to a standard
+    /// default — never for a step-io-side defect or an unmodelled entity.
+    /// It marks a category that round-trip analysis must not count as data
+    /// loss (the entity is preserved, just normalized).
     NonStandardInput {
         field: String,
         count: usize,
