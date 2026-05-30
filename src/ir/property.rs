@@ -12,8 +12,9 @@
 
 use super::arena::Arena;
 use super::id::{
-    AddressId, ApplicationContextId, DerivedUnitId, DimensionalLocationId, GeneralPropertyId,
-    GroupId, NamedUnitId, PersonAndOrganizationId, ProductId, PropertyDefinitionId, ShapeAspectId,
+    AddressId, ApplicationContextId, DerivedUnitId, DimensionalLocationId, DocumentId,
+    GeneralPropertyId, GroupId, NamedUnitId, PersonAndOrganizationId, ProductId,
+    PropertyDefinitionId, ShapeAspectId,
 };
 use super::shape_aspect_ref::ShapeAspectRef;
 use super::shape_rep::{DescriptiveItem, RepresentationContextRef};
@@ -179,6 +180,11 @@ pub enum CharacterizedDefinition {
     /// `general_property` member of `characterized_definition` — a
     /// standalone `GENERAL_PROPERTY` with no product binding.
     GeneralProperty(GeneralPropertyId),
+    /// `characterized_object` member of `characterized_definition`, resolved
+    /// to a `DOCUMENT_FILE` (a `characterized_object` subtype). No product
+    /// binding. Plain `DOCUMENT` is not a `characterized_object` and is not
+    /// accepted here.
+    Document(DocumentId),
 }
 
 /// `PROPERTY_DEFINITION` + bound `REPRESENTATION` collapsed into a single

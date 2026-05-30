@@ -2,8 +2,9 @@
 //!
 //! Reader stores `(name, description)` in `property_def_map` keyed by STEP
 //! entity id. Targets that don't resolve to a product context (e.g. an
-//! unresolved `SHAPE_ASPECT`) are still dropped at read time; a
-//! `GENERAL_PROPERTY` target has no product binding and is always kept.
+//! unresolved `SHAPE_ASPECT`) are still dropped at read time; product-free
+//! targets (`GENERAL_PROPERTY`, `DOCUMENT_FILE`) have no product binding and
+//! are kept.
 //! Writer emits the bare PD line; the surrounding `REPRESENTATION` + PDR are
 //! handled in `buffer/property.rs::emit_property` (the orchestrator).
 
@@ -14,6 +15,7 @@ use crate::ir::ShapeAspectRef;
 use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::id::DimensionalLocationId;
+use crate::ir::plm::Document;
 use crate::ir::pmi::DimensionalLocation;
 use crate::ir::property::{
     CharacterizedDefinition, PropertyDefinition, PropertyDefinitionData, PropertyPool,
@@ -133,12 +135,27 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
             CharacterizedDefinition::ProductDefinitionShape(pds_pd_id)
         } else if let Some(&gp_id) = ctx.general_property_id_map.get(&target_ref) {
             CharacterizedDefinition::GeneralProperty(gp_id)
+        } else if let Some(&doc_id) = ctx.plm_document_id_map.get(&target_ref) {
+            // DOCUMENT_FILE is a characterized_object subtype (a valid
+            // characterized_definition member); plain DOCUMENT is not.
+            let is_file = ctx
+                .plm
+                .as_ref()
+                .is_some_and(|p| matches!(p.documents[doc_id], Document::DocumentFile(_)));
+            if !is_file {
+                eprintln!(
+                    "warning: PROPERTY_DEFINITION #{entity_id} target #{target_ref} \
+                     resolves to a plain DOCUMENT (not a characterized_object) — skipping"
+                );
+                return Ok(());
+            }
+            CharacterizedDefinition::Document(doc_id)
         } else {
             eprintln!(
                 "warning: PROPERTY_DEFINITION #{entity_id} target #{target_ref} \
                      resolves to no supported characterized_definition member \
                      (PRODUCT_DEFINITION / SHAPE_ASPECT / PRODUCT_DEFINITION_SHAPE / \
-                     GENERAL_PROPERTY) — skipping"
+                     GENERAL_PROPERTY / DOCUMENT_FILE) — skipping"
             );
             return Ok(());
         };

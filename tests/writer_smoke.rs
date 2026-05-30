@@ -1439,6 +1439,62 @@ fn property_definition_with_general_property_target_round_trips() {
 }
 
 #[test]
+fn property_definition_with_document_file_target_round_trips() {
+    use step_io::ir::plm::{Document, DocumentFile, DocumentType, PlmPool};
+    use step_io::ir::property::{
+        CharacterizedDefinition, PropertyDefinition, PropertyDefinitionData, PropertyPool,
+    };
+    // A PROPERTY_DEFINITION whose `definition` is a DOCUMENT_FILE (a
+    // characterized_object subtype, hence a valid characterized_definition
+    // member) — no product binding. Must survive write (PD -> #doc ref) and
+    // read (resolve #doc back to a Document variant).
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+
+    let mut plm = PlmPool::default();
+    let dtype_id = plm.document_types.push(DocumentType {
+        product_data_type: "configuration controlled document".into(),
+    });
+    let doc_id = plm.documents.push(Document::DocumentFile(DocumentFile {
+        id: "DF1".into(),
+        name: "spec.pdf".into(),
+        description: String::new(),
+        kind: dtype_id,
+        characterized_object_name: String::new(),
+        characterized_object_description: None,
+    }));
+    model.plm = Some(plm);
+
+    let mut pool = PropertyPool::default();
+    pool.property_definitions
+        .push(PropertyDefinition::Itself(PropertyDefinitionData {
+            name: "doc_prop".into(),
+            description: String::new(),
+            definition: CharacterizedDefinition::Document(doc_id),
+        }));
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pool = re
+        .properties
+        .as_ref()
+        .expect("round-tripped has properties");
+    let has_doc_pd = re_pool.property_definitions.iter().any(|pd| {
+        matches!(
+            pd,
+            PropertyDefinition::Itself(d)
+                if matches!(d.definition, CharacterizedDefinition::Document(_))
+        )
+    });
+    assert!(
+        has_doc_pd,
+        "PROPERTY_DEFINITION with a DOCUMENT_FILE definition should round-trip"
+    );
+}
+
+#[test]
 fn multi_root_independent_products_round_trip() {
     // A STEP file may hold several independent top-level products with no
     // NAUO between them. `AssemblyTree.roots` lists all of them; the reader

@@ -382,6 +382,19 @@ impl WriteBuffer<'_> {
                     }
                     s
                 }
+                CharacterizedDefinition::Document(doc_id) => {
+                    // DOCUMENT_FILE step ids are filled by emit_documents_prepass,
+                    // which must run before this pass.
+                    let s = self
+                        .plm_document_step_ids
+                        .get(doc_id.0 as usize)
+                        .copied()
+                        .unwrap_or(0);
+                    if s == 0 {
+                        continue;
+                    }
+                    s
+                }
             };
             let step = self.push_simple(
                 "PROPERTY_DEFINITION",

@@ -153,13 +153,17 @@ impl WriteBuffer<'_> {
     /// Emit the Document cluster (type leaf → document arena → linkers).
     /// `DOCUMENT` instances emit as `DOCUMENT` or `DOCUMENT_FILE` per
     /// the arena enum variant. Split for line-budget reasons.
-    fn emit_document_cluster(&mut self, plm: &crate::ir::PlmPool) -> Result<(), WriteError> {
+    /// Emit `DOCUMENT_TYPE` + `DOCUMENT` / `DOCUMENT_FILE` and cache their
+    /// step ids. Split out of [`emit_document_cluster`] so it can run before
+    /// `emit_property_definitions_non_pds` — a PD.definition may target a
+    /// `DOCUMENT_FILE`, so `plm_document_step_ids` must be filled first.
+    pub(in crate::writer::buffer) fn emit_documents_prepass(
+        &mut self,
+        plm: &crate::ir::PlmPool,
+    ) -> Result<(), WriteError> {
         use crate::entities::SimpleEntityHandler;
-        use crate::entities::plm::applied_document_reference::AppliedDocumentReferenceHandler;
         use crate::entities::plm::document::DocumentHandler;
         use crate::entities::plm::document_file::DocumentFileHandler;
-        use crate::entities::plm::document_product_equivalence::DocumentProductEquivalenceHandler;
-        use crate::entities::plm::document_representation_type::DocumentRepresentationTypeHandler;
         use crate::entities::plm::document_type::DocumentTypeHandler;
         use crate::ir::plm::Document;
         self.plm_document_type_step_ids = Vec::with_capacity(plm.document_types.len());
@@ -175,6 +179,16 @@ impl WriteBuffer<'_> {
             };
             self.plm_document_step_ids.push(id);
         }
+        Ok(())
+    }
+
+    /// Emit the document linkers. `DOCUMENT_TYPE` / `DOCUMENT` / `DOCUMENT_FILE`
+    /// step ids are filled earlier by [`emit_documents_prepass`].
+    fn emit_document_cluster(&mut self, plm: &crate::ir::PlmPool) -> Result<(), WriteError> {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::plm::applied_document_reference::AppliedDocumentReferenceHandler;
+        use crate::entities::plm::document_product_equivalence::DocumentProductEquivalenceHandler;
+        use crate::entities::plm::document_representation_type::DocumentRepresentationTypeHandler;
         self.plm_document_representation_type_step_ids =
             Vec::with_capacity(plm.document_representation_types.len());
         for d in plm.document_representation_types.iter() {
