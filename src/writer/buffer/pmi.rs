@@ -8,10 +8,10 @@ use crate::entities::SimpleEntityHandler;
 use crate::entities::shape_rep::shape_aspect::{ShapeAspectHandler, ShapeAspectWriteInput};
 use crate::entities::shape_rep::shape_aspect_subtypes::{
     AllAroundShapeAspectHandler, CentreOfSymmetryHandler, CompositeGroupShapeAspectHandler,
-    ShapeAspectSubtypeWriteInput,
+    CompositeShapeAspectHandler, ShapeAspectSubtypeWriteInput,
 };
 use crate::ir::shape_aspect_ref::ShapeAspectRef;
-use crate::ir::shape_rep::ShapeAspect;
+use crate::ir::shape_rep::{CompositeShapeAspectKind, ShapeAspect};
 use crate::writer::WriteError;
 
 impl WriteBuffer<'_> {
@@ -412,15 +412,23 @@ impl WriteBuffer<'_> {
             let Some(&pds_step_id) = self.product_def_shape_ids.get(&sa.target) else {
                 continue;
             };
-            if let Ok(step_id) = CompositeGroupShapeAspectHandler::write(
-                self,
-                ShapeAspectSubtypeWriteInput {
-                    name: sa.name,
-                    description: sa.description,
-                    pds_step_id,
-                    product_definitional: sa.product_definitional,
-                },
-            ) {
+            let kind = sa.kind;
+            let input = ShapeAspectSubtypeWriteInput {
+                name: sa.name,
+                description: sa.description,
+                pds_step_id,
+                product_definitional: sa.product_definitional,
+            };
+            // Re-emit the original STEP entity name per kind.
+            let written = match kind {
+                CompositeShapeAspectKind::Composite => {
+                    CompositeShapeAspectHandler::write(self, input)
+                }
+                CompositeShapeAspectKind::Group => {
+                    CompositeGroupShapeAspectHandler::write(self, input)
+                }
+            };
+            if let Ok(step_id) = written {
                 self.composite_shape_aspect_step_ids[index] = step_id;
             }
         }

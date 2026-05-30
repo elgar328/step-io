@@ -31,8 +31,9 @@ use step_io::ir::property::{
 };
 use step_io::ir::shape_aspect_ref::ShapeAspectRef;
 use step_io::ir::shape_rep::{
-    AllAroundShapeAspect, AngleUnit, CentreOfSymmetry, CompositeGroupShapeAspect, LengthUnit,
-    ShapeAspect, ShapeAspectRelationship, ShapeAspectRelationshipKind, SolidAngleUnit, UnitContext,
+    AllAroundShapeAspect, AngleUnit, CentreOfSymmetry, CompositeGroupShapeAspect,
+    CompositeShapeAspectKind, LengthUnit, ShapeAspect, ShapeAspectRelationship,
+    ShapeAspectRelationshipKind, SolidAngleUnit, UnitContext,
 };
 use step_io::ir::topology::{Face, FaceKind, Orientation, Shell, Solid, Wire};
 use step_io::ir::units::{MassFlavor, MassUnit, NamedUnit, UnitsPool};
@@ -1669,6 +1670,7 @@ fn shape_aspect_subtypes_round_trip() {
             description: String::new(),
             target: part_pid,
             product_definitional: false,
+            kind: CompositeShapeAspectKind::Group,
         });
     model.centre_of_symmetries.push(CentreOfSymmetry {
         name: "cs".into(),
@@ -1753,6 +1755,7 @@ fn shape_aspect_relationship_fixture() -> (
             description: String::new(),
             target: part_pid,
             product_definitional: false,
+            kind: CompositeShapeAspectKind::Group,
         });
     let cs = model.centre_of_symmetries.push(CentreOfSymmetry {
         name: "cs".into(),
@@ -1767,6 +1770,45 @@ fn shape_aspect_relationship_fixture() -> (
         product_definitional: false,
     });
     (model, sa, cg, cs, aa)
+}
+
+#[test]
+fn composite_shape_aspect_round_trips_under_its_own_name() {
+    // plain COMPOSITE_SHAPE_ASPECT (kind=Composite) shares the
+    // composite_group_shape_aspects arena with COMPOSITE_GROUP_SHAPE_ASPECT
+    // (kind=Group); the writer must re-emit each under its own STEP name and
+    // the round-trip must preserve the kind.
+    let (mut model, _sa, cg, _cs, _aa) = shape_aspect_relationship_fixture();
+    let target = model.composite_group_shape_aspects[cg].target;
+    model
+        .composite_group_shape_aspects
+        .push(CompositeGroupShapeAspect {
+            name: "plain".into(),
+            description: String::new(),
+            target,
+            product_definitional: false,
+            kind: CompositeShapeAspectKind::Composite,
+        });
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("COMPOSITE_SHAPE_ASPECT("),
+        "emits the plain COMPOSITE_SHAPE_ASPECT name: {text}"
+    );
+    let re = reconvert(&text);
+    let kinds: Vec<_> = re
+        .composite_group_shape_aspects
+        .iter()
+        .map(|c| c.kind)
+        .collect();
+    assert!(
+        kinds.contains(&CompositeShapeAspectKind::Composite),
+        "Composite kind preserved across round-trip"
+    );
+    assert!(
+        kinds.contains(&CompositeShapeAspectKind::Group),
+        "Group kind preserved across round-trip"
+    );
 }
 
 #[test]

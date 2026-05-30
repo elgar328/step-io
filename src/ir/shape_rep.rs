@@ -640,9 +640,23 @@ pub struct ShapeAspect {
     pub product_definitional: bool,
 }
 
-/// `COMPOSITE_GROUP_SHAPE_ASPECT` — a `SHAPE_ASPECT` subtype. Same 4-attr
-/// shape as [`ShapeAspect`]; the distinct STEP entity name (and so the
-/// distinct arena per the ir.toml blueprint) is what round-trips.
+/// Which STEP entity a [`CompositeGroupShapeAspect`] arena entry was read
+/// from — the plain `composite_shape_aspect` supertype or the
+/// `composite_group_shape_aspect` subtype. Both share the same 4-attr shape
+/// and the ir.toml `composite_shape_aspect` arena; the writer re-emits the
+/// original entity name per this discriminator.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum CompositeShapeAspectKind {
+    /// `COMPOSITE_SHAPE_ASPECT` (supertype).
+    Composite,
+    /// `COMPOSITE_GROUP_SHAPE_ASPECT` (subtype).
+    Group,
+}
+
+/// `COMPOSITE_SHAPE_ASPECT` / `COMPOSITE_GROUP_SHAPE_ASPECT` — `SHAPE_ASPECT`
+/// subtypes sharing the same 4-attr shape as [`ShapeAspect`] and the ir.toml
+/// `composite_shape_aspect` arena. [`CompositeShapeAspectKind`] records which
+/// entity name to round-trip.
 #[derive(Debug, Clone, PartialEq)]
 pub struct CompositeGroupShapeAspect {
     pub name: String,
@@ -650,6 +664,7 @@ pub struct CompositeGroupShapeAspect {
     /// `of_shape` resolved to a `ProductId` — see [`ShapeAspect::target`].
     pub target: ProductId,
     pub product_definitional: bool,
+    pub kind: CompositeShapeAspectKind,
 }
 
 /// `CENTRE_OF_SYMMETRY` — a `SHAPE_ASPECT` subtype. See

@@ -11,7 +11,9 @@ use crate::entities::SimpleEntityHandler;
 use crate::ir::ProductId;
 use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::shape_rep::{AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect};
+use crate::ir::shape_rep::{
+    AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, CompositeShapeAspectKind,
+};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -96,6 +98,7 @@ impl SimpleEntityHandler for CompositeGroupShapeAspectHandler {
                 description,
                 target,
                 product_definitional,
+                kind: CompositeShapeAspectKind::Group,
             });
         ctx.composite_shape_aspect_id_map.insert(entity_id, id);
         Ok(())
@@ -108,6 +111,55 @@ impl SimpleEntityHandler for CompositeGroupShapeAspectHandler {
         Ok(write_shape_aspect_subtype(
             buf,
             "COMPOSITE_GROUP_SHAPE_ASPECT",
+            input,
+        ))
+    }
+}
+
+pub(crate) struct CompositeShapeAspectHandler;
+
+/// `COMPOSITE_SHAPE_ASPECT` — the supertype of `COMPOSITE_GROUP_SHAPE_ASPECT`,
+/// sharing the same 4-attr `SHAPE_ASPECT` body. Stored in the shared
+/// `composite_group_shape_aspects` arena (the ir.toml `composite_shape_aspect`
+/// family arena) with `CompositeShapeAspectKind::Composite`, so every
+/// `composite_shape_aspect_id_map` consumer (`resolve_shape_aspect_ref`,
+/// `DRAUGHTING_MODEL_ITEM_ASSOCIATION`, `ID_ATTRIBUTE`,
+/// `SHAPE_ASPECT_RELATIONSHIP`, …) resolves it.
+#[step_entity(name = "COMPOSITE_SHAPE_ASPECT", pass = Pass8ShapeAspect)]
+impl SimpleEntityHandler for CompositeShapeAspectHandler {
+    type WriteInput = ShapeAspectSubtypeWriteInput;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let Some((name, description, target, product_definitional)) =
+            read_shape_aspect_subtype(ctx, entity_id, attrs, "COMPOSITE_SHAPE_ASPECT")?
+        else {
+            return Ok(());
+        };
+        let id = ctx
+            .composite_group_shape_aspects
+            .push(CompositeGroupShapeAspect {
+                name,
+                description,
+                target,
+                product_definitional,
+                kind: CompositeShapeAspectKind::Composite,
+            });
+        ctx.composite_shape_aspect_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        input: ShapeAspectSubtypeWriteInput,
+    ) -> Result<u64, WriteError> {
+        Ok(write_shape_aspect_subtype(
+            buf,
+            "COMPOSITE_SHAPE_ASPECT",
             input,
         ))
     }
