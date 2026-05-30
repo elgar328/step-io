@@ -867,6 +867,12 @@ impl<'m> WriteBuffer<'m> {
         // every Representation delayed emit so rep_1 / rep_2 resolve
         // through the fully populated representation_step_ids cache.
         self.emit_representation_relationships()?;
+        // PD-based SHAPE_DEFINITION_REPRESENTATIONs — after BOTH
+        // emit_property_definitions_non_pds (definition PD step id) AND every
+        // representation delayed emit (used_representation step id). PD-based
+        // SDRs don't fold into Product, so step-id order is irrelevant; the
+        // re-read stashes + resolves them regardless.
+        self.emit_sdr_links();
         // CAMERA_USAGE — delayed emit (mirrors Mdgpr / DraughtingModel
         // pattern). `mapped_representation` may target a DM, so this runs
         // after `emit_draughting_models` populates the DM slot of

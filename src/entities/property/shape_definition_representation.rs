@@ -38,8 +38,13 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
         let shape_rep_ref = read_entity_ref(attrs, 1, entity_id, "used_representation")?;
 
         // Only consider SDRs where `pdef_shape.definition` is a
-        // PRODUCT_DEFINITION. NAUO-tagged SDRs fall through to Phase B.
+        // PRODUCT_DEFINITION. Others (definition = a PROPERTY_DEFINITION, e.g.
+        // geometric-validation / CATIA geometric-set PMI shapes) are stashed
+        // raw and resolved after Pass8 (the PD is read at Pass8PropertyDef,
+        // later than this Pass6Sdr). NAUO-tagged PDS resolve to neither and
+        // stay dropped (assembly-instance shape — a later phase).
         let Some(pdef_ref) = ctx.pdef_shape_to_pdef.get(&pdef_shape_ref).copied() else {
+            ctx.sdr_link_refs.push((pdef_shape_ref, shape_rep_ref));
             return Ok(());
         };
         let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_ref) else {

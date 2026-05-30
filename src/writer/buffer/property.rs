@@ -19,6 +19,32 @@ use crate::ir::shape_rep::{DescriptiveItem, RepresentationContextRef};
 use crate::parser::entity::Attribute;
 
 impl WriteBuffer<'_> {
+    /// Emit PD-based `SHAPE_DEFINITION_REPRESENTATION`s from the
+    /// `shape_definition_representations` arena (phase sdr-arena-1). Must run
+    /// after `emit_property_definitions_non_pds` (the `definition` PD's step
+    /// id) and `emit_representations_pre_pass` (the `used_representation`).
+    pub(in crate::writer::buffer) fn emit_sdr_links(&mut self) {
+        let Some(pool) = self.model.properties.clone() else {
+            return;
+        };
+        for link in pool.shape_definition_representations.iter() {
+            let def_step = self
+                .property_definition_step_ids
+                .get(link.definition.0 as usize)
+                .copied()
+                .unwrap_or(0);
+            let sr_step = self
+                .representation_step_ids
+                .get(link.used_representation.0 as usize)
+                .copied()
+                .unwrap_or(0);
+            if def_step == 0 || sr_step == 0 {
+                continue;
+            }
+            self.emit_sdr(def_step, sr_step);
+        }
+    }
+
     pub(in crate::writer::buffer) fn emit_properties_if_set(&mut self) {
         let Some(pool) = self.model.properties.clone() else {
             return;

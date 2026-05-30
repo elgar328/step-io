@@ -30,6 +30,7 @@ use super::pmi::{
 use super::property::{
     DescriptionAttribute, DimensionalCharacteristicRepresentation, GeneralProperty,
     GeneralPropertyAssociation, IdAttribute, NameAttribute, Property, PropertyDefinition,
+    ShapeDefinitionRepresentationLink,
 };
 use super::representation_item::RepresentationItem;
 use super::shape_rep::{
@@ -178,6 +179,12 @@ define_id!(MeasureQualificationId, MeasureQualification);
 define_id!(
     DimensionalCharacteristicRepresentationId,
     DimensionalCharacteristicRepresentation
+);
+
+// PROPERTY_DEFINITION-based shape_definition_representation arena (phase sdr-arena-1).
+define_id!(
+    ShapeDefinitionRepresentationId,
+    ShapeDefinitionRepresentationLink
 );
 
 // representation_item enum arena (Phase repr-item-arena-1).

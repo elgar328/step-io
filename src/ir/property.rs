@@ -57,6 +57,23 @@ pub struct PropertyPool {
     /// `SHAPE_DIMENSION_REPRESENTATION`; step-io carries the generic
     /// `RepresentationId`).
     pub dimensional_characteristic_representations: Arena<DimensionalCharacteristicRepresentation>,
+    /// PROPERTY_DEFINITION-based `SHAPE_DEFINITION_REPRESENTATION`s — those
+    /// whose `definition` is a `PROPERTY_DEFINITION` (geometric-validation /
+    /// CATIA geometric-set PMI shapes), not the product-geometry PDS that
+    /// folds into `Product.representation_id`. Phase 1 of the SDR-arena
+    /// refactor; later phases fold these (and PDR) into the blueprint
+    /// `property_definition_representation` arena.
+    pub shape_definition_representations: Arena<ShapeDefinitionRepresentationLink>,
+}
+
+/// A `SHAPE_DEFINITION_REPRESENTATION(definition, used_representation)` whose
+/// `definition` resolves to a [`PropertyDefinition`] (not the product PDS).
+#[derive(Debug, Clone, PartialEq)]
+pub struct ShapeDefinitionRepresentationLink {
+    /// `definition` — a [`PropertyPool::property_definitions`] arena slot.
+    pub definition: PropertyDefinitionId,
+    /// `used_representation` — a `representations` arena entry.
+    pub used_representation: crate::ir::id::RepresentationId,
 }
 
 /// `DIMENSIONAL_CHARACTERISTIC_REPRESENTATION(dimension, representation)`.

@@ -1495,6 +1495,60 @@ fn property_definition_with_document_file_target_round_trips() {
 }
 
 #[test]
+fn pd_based_shape_definition_representation_round_trips() {
+    use step_io::ir::property::{
+        CharacterizedDefinition, GeneralProperty, PropertyDefinition, PropertyDefinitionData,
+        PropertyPool, ShapeDefinitionRepresentationLink,
+    };
+    use step_io::ir::shape_rep::{PlainRepr, Representation, RepresentationContextRef};
+    // A SHAPE_DEFINITION_REPRESENTATION whose `definition` is a
+    // PROPERTY_DEFINITION (the geometric-validation / CATIA-geometric-set PMI
+    // pattern), not a product PDS — captured in the new arena and emitted.
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let rep = model.representations.push(Representation::Plain(PlainRepr {
+        name: "validation shape".into(),
+        context: Some(RepresentationContextRef::Unitful(
+            step_io::ir::UnitContextId(0),
+        )),
+        frame: None,
+    }));
+
+    let mut pool = PropertyPool::default();
+    let gp_id = pool.general_properties.push(GeneralProperty {
+        id: "GP1".into(),
+        name: "gvp".into(),
+        description: None,
+    });
+    let pd_id =
+        pool.property_definitions
+            .push(PropertyDefinition::Itself(PropertyDefinitionData {
+                name: "shape for solid data".into(),
+                description: String::new(),
+                definition: CharacterizedDefinition::GeneralProperty(gp_id),
+            }));
+    pool.shape_definition_representations
+        .push(ShapeDefinitionRepresentationLink {
+            definition: pd_id,
+            used_representation: rep,
+        });
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pool = re
+        .properties
+        .as_ref()
+        .expect("round-tripped has properties");
+    assert_eq!(
+        re_pool.shape_definition_representations.len(),
+        1,
+        "the PD-based SDR link survives round-trip"
+    );
+}
+
+#[test]
 fn multi_root_independent_products_round_trip() {
     // A STEP file may hold several independent top-level products with no
     // NAUO between them. `AssemblyTree.roots` lists all of them; the reader
