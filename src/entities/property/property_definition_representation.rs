@@ -56,7 +56,7 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
         let representation_name = read_string_or_unset(repr_attrs, 0, repr_ref, "name")?.to_owned();
         let item_refs = read_entity_ref_list(repr_attrs, 1, repr_ref, "items")?;
         let ctx_ref = read_entity_ref(repr_attrs, 2, repr_ref, "context_of_items")?;
-        let context = ctx.context_id_map.get(&ctx_ref).copied();
+        let context = ctx.resolve_repr_context(ctx_ref);
 
         let items: Vec<PropertyItem> = item_refs
             .into_iter()

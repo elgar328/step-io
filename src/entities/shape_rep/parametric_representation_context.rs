@@ -53,7 +53,7 @@ impl ComplexEntityHandler for ParametricRepresentationContextHandler {
         let id = ctx.unitless_contexts.push(UnitlessContext {
             identifier,
             context_type,
-            coordinate_space_dimension,
+            coordinate_space_dimension: Some(coordinate_space_dimension),
         });
         ctx.unitless_context_id_map.insert(entity_id, id);
         Ok(())
@@ -64,10 +64,15 @@ impl ComplexEntityHandler for ParametricRepresentationContextHandler {
         //   GEOMETRIC_REPRESENTATION_CONTEXT
         //   PARAMETRIC_REPRESENTATION_CONTEXT
         //   REPRESENTATION_CONTEXT
+        // Only invoked for the complex form (dimension present); the plain
+        // simple form is emitted by `RepresentationContextHandler`.
+        let dimension = uc
+            .coordinate_space_dimension
+            .expect("parametric context carries a coordinate_space_dimension");
         let parts = vec![
             (
                 "GEOMETRIC_REPRESENTATION_CONTEXT".into(),
-                vec![Attribute::Integer(uc.coordinate_space_dimension)],
+                vec![Attribute::Integer(dimension)],
             ),
             ("PARAMETRIC_REPRESENTATION_CONTEXT".into(), vec![]),
             (

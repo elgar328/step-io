@@ -102,16 +102,20 @@ pub struct Mdgpr {
     pub context: Option<RepresentationContextRef>,
 }
 
+/// A unit-less representation context — either the
 /// `(GEOMETRIC_REPRESENTATION_CONTEXT PARAMETRIC_REPRESENTATION_CONTEXT
-/// REPRESENTATION_CONTEXT)` complex MI — unit-less coordinate space used
-/// by 2D draughting models and pcurve parametric spaces. No
+/// REPRESENTATION_CONTEXT)` complex MI (2D draughting / pcurve parametric
+/// spaces) or a plain simple `REPRESENTATION_CONTEXT`. Neither has a
 /// `GLOBAL_UNIT_ASSIGNED_CONTEXT` part, so length / `plane_angle` /
-/// `solid_angle` are intentionally absent (the schema permits this).
+/// `solid_angle` are absent (the schema permits this).
 #[derive(Debug, Clone, PartialEq)]
 pub struct UnitlessContext {
     pub identifier: String,
     pub context_type: String,
-    pub coordinate_space_dimension: i64,
+    /// `Some(d)` for the GRC+PRC complex form (carries the GRC's
+    /// `coordinate_space_dimension`); `None` for a plain simple
+    /// `REPRESENTATION_CONTEXT(identifier, context_type)`.
+    pub coordinate_space_dimension: Option<i64>,
 }
 
 /// `context_of_items` SELECT discriminator — either a `UnitContext`

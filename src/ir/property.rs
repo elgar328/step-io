@@ -14,10 +14,9 @@ use super::arena::Arena;
 use super::id::{
     AddressId, ApplicationContextId, DerivedUnitId, DimensionalLocationId, GeneralPropertyId,
     GroupId, NamedUnitId, PersonAndOrganizationId, ProductId, PropertyDefinitionId, ShapeAspectId,
-    UnitContextId,
 };
 use super::shape_aspect_ref::ShapeAspectRef;
-use super::shape_rep::DescriptiveItem;
+use super::shape_rep::{DescriptiveItem, RepresentationContextRef};
 
 /// Top-level container for property data extracted from
 /// `PROPERTY_DEFINITION_REPRESENTATION` chains. Empty when the source file
@@ -201,9 +200,9 @@ pub struct Property {
     pub definition: PropertyDefinitionId,
     /// `REPRESENTATION.name` (often `''`).
     pub representation_name: String,
-    /// `REPRESENTATION.context_of_items` — links to a [`UnitContext`] entry.
-    /// `None` when the source omitted it (rare).
-    pub context: Option<UnitContextId>,
+    /// `REPRESENTATION.context_of_items` — a unit-bearing or unit-less
+    /// representation context. `None` when the source omitted it (rare).
+    pub context: Option<RepresentationContextRef>,
     /// `REPRESENTATION.items` — polymorphic items in source order.
     pub items: Vec<PropertyItem>,
 }

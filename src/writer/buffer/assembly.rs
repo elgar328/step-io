@@ -353,12 +353,19 @@ impl WriteBuffer<'_> {
     /// `emit_pools` after `emit_units_pool_if_set` so the unit-bearing
     /// GUAC entities are already emitted before the unitless variants.
     pub(in crate::writer::buffer) fn emit_unitless_contexts(&mut self) -> Result<(), WriteError> {
-        use crate::entities::ComplexEntityHandler;
         use crate::entities::shape_rep::parametric_representation_context::ParametricRepresentationContextHandler;
+        use crate::entities::shape_rep::representation_context::RepresentationContextHandler;
+        use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
         let entries: Vec<_> = self.model.unitless_contexts.iter().cloned().collect();
         self.unitless_context_step_ids = Vec::with_capacity(entries.len());
         for uc in entries {
-            let step_id = ParametricRepresentationContextHandler::write(self, uc)?;
+            // `Some(dim)` → GRC+PRC+RC complex; `None` → plain simple
+            // REPRESENTATION_CONTEXT.
+            let step_id = if uc.coordinate_space_dimension.is_some() {
+                ParametricRepresentationContextHandler::write(self, uc)?
+            } else {
+                RepresentationContextHandler::write(self, uc)?
+            };
             self.unitless_context_step_ids.push(step_id);
         }
         Ok(())

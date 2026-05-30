@@ -1346,7 +1346,9 @@ fn general_property_and_association_round_trip() {
         description: Some("user defined attribute".into()),
         definition: pd_id,
         representation_name: String::new(),
-        context: Some(UnitContextId(0)),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(
+            UnitContextId(0),
+        )),
         items: Vec::new(),
     });
     pool.general_properties.push(GeneralProperty {
@@ -3360,7 +3362,7 @@ fn unitless_context_round_trip() {
     let uc_id = model.unitless_contexts.push(UnitlessContext {
         identifier: "2D coordinate system context".into(),
         context_type: "2".into(),
-        coordinate_space_dimension: 2,
+        coordinate_space_dimension: Some(2),
     });
     model
         .representations
@@ -3384,7 +3386,104 @@ fn unitless_context_round_trip() {
     let _ = dm_count;
     let uc = re.unitless_contexts.iter().next().unwrap();
     assert_eq!(uc.identifier, "2D coordinate system context");
-    assert_eq!(uc.coordinate_space_dimension, 2);
+    assert_eq!(uc.coordinate_space_dimension, Some(2));
+}
+
+#[test]
+fn plain_representation_context_round_trips() {
+    use step_io::ir::shape_rep::{
+        DraughtingModel, Representation, RepresentationContextRef, UnitlessContext,
+    };
+    // A plain simple REPRESENTATION_CONTEXT (no coordinate_space_dimension) —
+    // written as a simple entity, not the GRC+PRC complex.
+    let mut model = empty_model();
+    let uc_id = model.unitless_contexts.push(UnitlessContext {
+        identifier: String::new(),
+        context_type: "document parameters".into(),
+        coordinate_space_dimension: None,
+    });
+    model
+        .representations
+        .push(Representation::DraughtingModel(DraughtingModel {
+            name: "Default".into(),
+            items: vec![],
+            context: Some(RepresentationContextRef::Unitless(uc_id)),
+            characterized_object_id: None,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("REPRESENTATION_CONTEXT(''"),
+        "plain context emits as a simple REPRESENTATION_CONTEXT: {text}"
+    );
+    let re = reconvert(&text);
+    assert_eq!(re.unitless_contexts.len(), 1);
+    let uc = re.unitless_contexts.iter().next().unwrap();
+    assert_eq!(uc.context_type, "document parameters");
+    // `None` proves it round-tripped through the simple form (the complex
+    // form would carry `Some(dim)`).
+    assert_eq!(uc.coordinate_space_dimension, None);
+}
+
+#[test]
+fn property_with_plain_context_round_trips() {
+    use step_io::ir::property::{
+        CharacterizedDefinition, GeneralProperty, Property, PropertyDefinition,
+        PropertyDefinitionData, PropertyItem, PropertyPool,
+    };
+    use step_io::ir::shape_rep::{DescriptiveItem, RepresentationContextRef, UnitlessContext};
+    // A property whose REPRESENTATION uses a plain (unit-less)
+    // REPRESENTATION_CONTEXT and carries only a descriptive item — the shape
+    // of the document-property that previously FAILed round-trip. Now the
+    // context is modelled, so it survives both ways.
+    let mut model = empty_model();
+    let uc_id = model.unitless_contexts.push(UnitlessContext {
+        identifier: String::new(),
+        context_type: "document parameters".into(),
+        coordinate_space_dimension: None,
+    });
+
+    let mut pool = PropertyPool::default();
+    let gp_id = pool.general_properties.push(GeneralProperty {
+        id: "GP1".into(),
+        name: "doc".into(),
+        description: None,
+    });
+    let pd_id =
+        pool.property_definitions
+            .push(PropertyDefinition::Itself(PropertyDefinitionData {
+                name: "document property".into(),
+                description: String::new(),
+                definition: CharacterizedDefinition::GeneralProperty(gp_id),
+            }));
+    pool.properties.push(Property {
+        name: "document property".into(),
+        description: None,
+        definition: pd_id,
+        representation_name: "document format".into(),
+        context: Some(RepresentationContextRef::Unitless(uc_id)),
+        items: vec![PropertyItem::Descriptive(DescriptiveItem {
+            name: "data format".into(),
+            description: "STEP AP214".into(),
+        })],
+    });
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pool = re
+        .properties
+        .as_ref()
+        .expect("round-tripped has properties");
+    let prop = re_pool
+        .properties
+        .iter()
+        .find(|p| p.representation_name == "document format")
+        .expect("the document property survives round-trip");
+    assert!(
+        matches!(prop.context, Some(RepresentationContextRef::Unitless(_))),
+        "the plain context is preserved as Unitless, not dropped to None"
+    );
 }
 
 #[test]

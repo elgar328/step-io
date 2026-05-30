@@ -15,7 +15,7 @@ use crate::ir::id::UnitContextId;
 use crate::ir::property::{
     MeasureKind, Property, PropertyItem, PropertyMeasure, PropertyMeasureUnit,
 };
-use crate::ir::shape_rep::DescriptiveItem;
+use crate::ir::shape_rep::{DescriptiveItem, RepresentationContextRef};
 use crate::parser::entity::Attribute;
 
 impl WriteBuffer<'_> {
@@ -218,21 +218,26 @@ impl WriteBuffer<'_> {
             return 0;
         }
 
+        // A MEASURE item derives its unit from the unit-bearing context;
+        // a unit-less (plain / parametric) context yields None, falling back
+        // to the default in `resolve_property_unit_ref`.
+        let unit_ctx = match prop.context {
+            Some(RepresentationContextRef::Unitful(id)) => Some(id),
+            _ => None,
+        };
+
         // 1. Emit items (mixed MEASURE / DESCRIPTIVE in source order).
         let item_refs: Vec<u64> = prop
             .items
             .iter()
             .map(|item| match item {
-                PropertyItem::Measure(m) => self.emit_property_measure(m, prop.context),
+                PropertyItem::Measure(m) => self.emit_property_measure(m, unit_ctx),
                 PropertyItem::Descriptive(d) => self.emit_descriptive_item(d.clone()),
             })
             .collect();
 
         // 2. REPRESENTATION wrapping the items.
-        let ctx_attr = match prop.context {
-            Some(id) => Attribute::EntityRef(self.unit_context_ids[id.0 as usize]),
-            None => Attribute::Unset,
-        };
+        let ctx_attr = self.repr_context_attr(prop.context);
         let repr = self.push_simple(
             "REPRESENTATION",
             vec![
