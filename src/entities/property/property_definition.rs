@@ -20,6 +20,7 @@ use crate::ir::pmi::DimensionalLocation;
 use crate::ir::property::{
     CharacterizedDefinition, PropertyDefinition, PropertyDefinitionData, PropertyPool,
 };
+use crate::ir::shape_rep::CharacterizedObject;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -150,12 +151,23 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
                 return Ok(());
             }
             CharacterizedDefinition::Document(doc_id)
+        } else if let Some(&co_id) = ctx.characterized_object_id_map.get(&target_ref) {
+            // CIWR is a characterized_object subtype (a valid
+            // characterized_definition member) — geometric-validation shapes.
+            if !matches!(
+                ctx.characterized_objects[co_id],
+                CharacterizedObject::CharacterizedItemWithinRepresentation(_)
+            ) {
+                return Ok(());
+            }
+            CharacterizedDefinition::CharacterizedItemWithinRepresentation(co_id)
         } else {
             eprintln!(
                 "warning: PROPERTY_DEFINITION #{entity_id} target #{target_ref} \
                      resolves to no supported characterized_definition member \
                      (PRODUCT_DEFINITION / SHAPE_ASPECT / PRODUCT_DEFINITION_SHAPE / \
-                     GENERAL_PROPERTY / DOCUMENT_FILE) — skipping"
+                     GENERAL_PROPERTY / DOCUMENT_FILE / CHARACTERIZED_ITEM_WITHIN_REPRESENTATION) \
+                     — skipping"
             );
             return Ok(());
         };

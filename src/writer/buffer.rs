@@ -292,6 +292,12 @@ pub(crate) struct WriteBuffer<'m> {
     /// `DocumentReference` is top-level (no consumer) and not cached.
     pub(crate) plm_document_type_step_ids: Vec<u64>,
     pub(crate) plm_document_step_ids: Vec<u64>,
+    /// Reserved STEP ids for `characterized_objects`, indexed by
+    /// `CharacterizedObjectId.0`. Filled by `emit_characterized_objects_prepass`
+    /// before the PD-definition pass so a `PROPERTY_DEFINITION` targeting a
+    /// CIWR resolves the forward ref; the CO bodies emit later under these ids.
+    /// 0 = no reserved id (inline-DM CO or absent).
+    pub(crate) characterized_object_step_ids: Vec<u64>,
     pub(crate) plm_document_representation_type_step_ids: Vec<u64>,
     pub(crate) plm_document_product_equivalence_step_ids: Vec<u64>,
     /// plm Group cache — `AppliedGroupAssignment` is top-level (no
@@ -520,6 +526,7 @@ impl<'m> WriteBuffer<'m> {
             plm_external_source_step_ids: Vec::new(),
             plm_document_type_step_ids: Vec::new(),
             plm_document_step_ids: Vec::new(),
+            characterized_object_step_ids: Vec::new(),
             plm_document_representation_type_step_ids: Vec::new(),
             plm_document_product_equivalence_step_ids: Vec::new(),
             plm_group_step_ids: Vec::new(),
@@ -704,6 +711,10 @@ impl<'m> WriteBuffer<'m> {
         if let Some(plm) = self.model.plm.clone() {
             self.emit_documents_prepass(&plm)?;
         }
+        // Reserve CIWR step ids so a PD.definition targeting one resolves the
+        // forward ref at emit_property_definitions_non_pds (CO bodies emit
+        // later in emit_characterized_objects).
+        self.emit_characterized_objects_prepass();
         self.emit_property_definitions_non_pds();
         // geometric_tolerance form tolerances — after the units pass
         // (`mwu_step_ids`) and emit_pmi_if_set (shape-aspect caches).

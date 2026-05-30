@@ -421,6 +421,20 @@ impl WriteBuffer<'_> {
                     }
                     s
                 }
+                CharacterizedDefinition::CharacterizedItemWithinRepresentation(co_id) => {
+                    // CIWR step ids are reserved by emit_characterized_objects_prepass
+                    // before this pass; the CO body emits later under the reserved id.
+                    // 0 = inline-DM CO (out of scope) → skip symmetrically.
+                    let s = self
+                        .characterized_object_step_ids
+                        .get(co_id.0 as usize)
+                        .copied()
+                        .unwrap_or(0);
+                    if s == 0 {
+                        continue;
+                    }
+                    s
+                }
             };
             let step = self.push_simple(
                 "PROPERTY_DEFINITION",

@@ -51,14 +51,17 @@ impl SimpleEntityHandler for CharacterizedItemWithinRepresentationHandler {
         let Some(&rep) = ctx.repr_id_map.get(&rep_ref) else {
             return Ok(());
         };
-        ctx.characterized_objects
-            .push(CharacterizedObject::CharacterizedItemWithinRepresentation(
+        let co_id = ctx.characterized_objects.push(
+            CharacterizedObject::CharacterizedItemWithinRepresentation(
                 CharacterizedItemWithinRepresentation {
                     inherited: CharacterizedObjectData { name, description },
                     item,
                     rep,
                 },
-            ));
+            ),
+        );
+        // Let PROPERTY_DEFINITION.definition resolve a CIWR target.
+        ctx.characterized_object_id_map.insert(entity_id, co_id);
         Ok(())
     }
 

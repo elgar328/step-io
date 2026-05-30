@@ -4197,6 +4197,94 @@ fn ciwr_round_trip() {
 }
 
 #[test]
+fn property_definition_with_ciwr_target_round_trips() {
+    use step_io::ir::RepresentationItemRef;
+    use step_io::ir::property::{
+        CharacterizedDefinition, PropertyDefinition, PropertyDefinitionData, PropertyPool,
+    };
+    use step_io::ir::shape_rep::{
+        CharacterizedItemWithinRepresentation, CharacterizedObject, CharacterizedObjectData,
+        PlainRepr, Representation,
+    };
+    // A geometric-validation-property PROPERTY_DEFINITION whose `definition`
+    // is a CHARACTERIZED_ITEM_WITHIN_REPRESENTATION (a characterized_object
+    // subtype). Must round-trip: write PD -> #ciwr (forward ref, CIWR body
+    // emits later under the reserved id) and read it back as the variant.
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let p0 = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let axis = model.geometry.directions.push(Direction3 {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+    });
+    let refd = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let position = push_placement(&mut model, p0, Some(axis), Some(refd));
+    let surf = model
+        .geometry
+        .surfaces
+        .push(Surface::Plane(Plane3 { position }));
+    let rep_id = model.representations.push(Representation::Plain(PlainRepr {
+        name: "validation".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(
+            UnitContextId(0),
+        )),
+        frame: None,
+    }));
+    let co_id = model.characterized_objects.push(
+        CharacterizedObject::CharacterizedItemWithinRepresentation(
+            CharacterizedItemWithinRepresentation {
+                inherited: CharacterizedObjectData {
+                    name: String::new(),
+                    description: None,
+                },
+                item: RepresentationItemRef::Surface(surf),
+                rep: rep_id,
+            },
+        ),
+    );
+
+    let mut pool = PropertyPool::default();
+    pool.property_definitions
+        .push(PropertyDefinition::Itself(PropertyDefinitionData {
+            name: "geometric validation property".into(),
+            description: String::new(),
+            definition: CharacterizedDefinition::CharacterizedItemWithinRepresentation(co_id),
+        }));
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pool = re
+        .properties
+        .as_ref()
+        .expect("round-tripped has properties");
+    let has_ciwr_pd = re_pool.property_definitions.iter().any(|pd| {
+        matches!(
+            pd,
+            PropertyDefinition::Itself(d)
+                if matches!(
+                    d.definition,
+                    CharacterizedDefinition::CharacterizedItemWithinRepresentation(_)
+                )
+        )
+    });
+    assert!(
+        has_ciwr_pd,
+        "PROPERTY_DEFINITION with a CIWR definition should round-trip"
+    );
+}
+
+#[test]
 fn qri_vri_round_trip() {
     // QUALIFIED_REPRESENTATION_ITEM + VALUE_REPRESENTATION_ITEM in the new
     // representation_item arena (phase repr-item-arena-1).

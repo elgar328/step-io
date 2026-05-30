@@ -536,6 +536,10 @@ pub struct ReaderContext {
     /// representation handlers; consumed by the SDR reader to link each
     /// product to its `representation_id` / `outer_representation_id`.
     pub(crate) repr_id_map: HashMap<u64, crate::ir::RepresentationId>,
+    /// `CHARACTERIZED_ITEM_WITHIN_REPRESENTATION` `#N → CharacterizedObjectId`
+    /// for standalone CIWRs. Lets `PROPERTY_DEFINITION.definition` resolve a
+    /// CIWR target (geometric-validation property shapes).
+    pub(crate) characterized_object_id_map: HashMap<u64, crate::ir::CharacterizedObjectId>,
     /// `REPRESENTATION_MAP` arena + `#N → RepresentationMapId` (phase
     /// mapped-item). The map lets the `MAPPED_ITEM` handler resolve its
     /// `mapping_source` ref.

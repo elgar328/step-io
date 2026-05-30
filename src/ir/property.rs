@@ -12,8 +12,8 @@
 
 use super::arena::Arena;
 use super::id::{
-    AddressId, ApplicationContextId, DerivedUnitId, DimensionalLocationId, DocumentId,
-    GeneralPropertyId, GroupId, NamedUnitId, PersonAndOrganizationId, ProductId,
+    AddressId, ApplicationContextId, CharacterizedObjectId, DerivedUnitId, DimensionalLocationId,
+    DocumentId, GeneralPropertyId, GroupId, NamedUnitId, PersonAndOrganizationId, ProductId,
     PropertyDefinitionId, ShapeAspectId,
 };
 use super::shape_aspect_ref::ShapeAspectRef;
@@ -202,6 +202,10 @@ pub enum CharacterizedDefinition {
     /// binding. Plain `DOCUMENT` is not a `characterized_object` and is not
     /// accepted here.
     Document(DocumentId),
+    /// `characterized_object` member resolved to a
+    /// `CHARACTERIZED_ITEM_WITHIN_REPRESENTATION` (a `characterized_object`
+    /// subtype) — geometric-validation property shapes. No product binding.
+    CharacterizedItemWithinRepresentation(CharacterizedObjectId),
 }
 
 /// `PROPERTY_DEFINITION` + bound `REPRESENTATION` collapsed into a single

@@ -57,28 +57,57 @@ impl WriteBuffer<'_> {
         }
     }
 
-    /// Emit the `characterized_object` arena (phase
-    /// characterized-object-ciwr). Only `CharacterizedItemWithinRepresentation`
-    /// variants are emitted in this phase; `Itself` (complex MI) is
-    /// skipped — handled by a future sub-phase.
-    pub(in crate::writer::buffer) fn emit_characterized_objects(&mut self) {
-        use crate::entities::SimpleEntityHandler;
-        use crate::entities::shape_rep::characterized_item_within_representation::CharacterizedItemWithinRepresentationHandler;
-        use crate::ir::shape_rep::{CharacterizedObject, Representation};
-        use std::collections::HashSet;
-        // Phase dm-complex-mi: CharacterizedObject ids carried inline by a
-        // DraughtingModel's complex MI form are skipped here so they emit
-        // exactly once, inside the DM's `(CO + CR + DM + REPR)` complex
-        // entity.
-        let inline_co_ids: HashSet<_> = self
+    /// Reserve a STEP id for every standalone
+    /// `CHARACTERIZED_ITEM_WITHIN_REPRESENTATION` (filling
+    /// `characterized_object_step_ids`) before the PD-definition pass, so a
+    /// `PROPERTY_DEFINITION` targeting a CIWR can emit the forward ref. The CO
+    /// bodies emit later in `emit_characterized_objects` under these reserved
+    /// ids. Inline-DM and non-CIWR COs keep slot 0 (a PD can only target a
+    /// standalone CIWR — the reader's subtype gate).
+    pub(in crate::writer::buffer) fn emit_characterized_objects_prepass(&mut self) {
+        use crate::ir::shape_rep::CharacterizedObject;
+        let inline = self.inline_characterized_object_ids();
+        let n = self.model.characterized_objects.len();
+        self.characterized_object_step_ids = vec![0; n];
+        let ciwr_ids: Vec<_> = self
             .model
+            .characterized_objects
+            .iter_with_ids()
+            .filter(|(id, obj)| {
+                !inline.contains(id)
+                    && matches!(
+                        obj,
+                        CharacterizedObject::CharacterizedItemWithinRepresentation(_)
+                    )
+            })
+            .map(|(id, _)| id)
+            .collect();
+        for id in ciwr_ids {
+            let step = self.fresh();
+            self.characterized_object_step_ids[id.0 as usize] = step;
+        }
+    }
+
+    /// `CharacterizedObject` ids carried inline by a `DraughtingModel`'s
+    /// complex MI form (`(CO + CR + DM + REPR)`) — emitted inside the DM, not standalone.
+    fn inline_characterized_object_ids(
+        &self,
+    ) -> std::collections::HashSet<crate::ir::CharacterizedObjectId> {
+        use crate::ir::shape_rep::Representation;
+        self.model
             .representations
             .iter()
             .filter_map(|r| match r {
                 Representation::DraughtingModel(dm) => dm.characterized_object_id,
                 _ => None,
             })
-            .collect();
+            .collect()
+    }
+
+    pub(in crate::writer::buffer) fn emit_characterized_objects(&mut self) {
+        use crate::ir::shape_rep::CharacterizedObject;
+        use crate::parser::entity::Attribute;
+        let inline_co_ids = self.inline_characterized_object_ids();
         let entries: Vec<_> = self
             .model
             .characterized_objects
@@ -91,7 +120,27 @@ impl WriteBuffer<'_> {
             }
             match obj {
                 CharacterizedObject::CharacterizedItemWithinRepresentation(ciwr) => {
-                    let _ = CharacterizedItemWithinRepresentationHandler::write(self, ciwr);
+                    // Emit under the reserved id (forward-ref by any PD that
+                    // targeted this CIWR). item/rep step caches are now filled.
+                    let reserved = self.characterized_object_step_ids[id.0 as usize];
+                    let Ok(item_step) = self.emit_representation_item_ref(ciwr.item) else {
+                        continue;
+                    };
+                    let rep_step = self.representation_step_ids[ciwr.rep.0 as usize];
+                    let desc_attr = match ciwr.inherited.description {
+                        Some(d) => Attribute::String(d),
+                        None => Attribute::Unset,
+                    };
+                    self.push_simple_with_id(
+                        reserved,
+                        "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
+                        vec![
+                            Attribute::String(ciwr.inherited.name),
+                            desc_attr,
+                            Attribute::EntityRef(item_step),
+                            Attribute::EntityRef(rep_step),
+                        ],
+                    );
                 }
                 CharacterizedObject::Itself(data) => {
                     // Phase characterized-min: simple form

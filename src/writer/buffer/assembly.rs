@@ -1272,6 +1272,19 @@ impl WriteBuffer<'_> {
         });
         n
     }
+
+    /// Push a simple entity under a previously-reserved id (from `fresh()`),
+    /// rather than minting a new one. Lets a body emit after the referrers
+    /// that already used its reserved id (STEP forward references).
+    pub(crate) fn push_simple_with_id(&mut self, id: u64, name: &str, attrs: Vec<Attribute>) {
+        self.entities.push(WriterEntity {
+            id,
+            body: WriterBody::Simple {
+                name: name.into(),
+                attrs,
+            },
+        });
+    }
 }
 
 /// Per-AP `APPLICATION_CONTEXT` description and
