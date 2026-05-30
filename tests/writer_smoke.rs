@@ -3747,7 +3747,7 @@ fn surface_style_boundary_round_trip() {
     let ssr_id = viz
         .surface_style_renderings
         .push(SurfaceStyleRendering::Itself(SurfaceStyleRenderingData {
-            rendering_method: Some(ShadingMethod::Constant),
+            rendering_method: ShadingMethod::Constant,
             surface_colour: colour_id,
         }));
     viz.founded_items
@@ -3788,7 +3788,7 @@ fn surface_style_parameter_line_round_trip() {
     let ssr_id = viz
         .surface_style_renderings
         .push(SurfaceStyleRendering::Itself(SurfaceStyleRenderingData {
-            rendering_method: Some(ShadingMethod::Constant),
+            rendering_method: ShadingMethod::Constant,
             surface_colour: colour_id,
         }));
     viz.founded_items

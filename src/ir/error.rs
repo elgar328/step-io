@@ -52,6 +52,15 @@ pub enum ConvertError {
         expected: usize,
         actual: usize,
     },
+    /// The input file violated the ISO 10303 schema — a required field was
+    /// Unset (or carried an unrecognized value) on `count` entities; the
+    /// reader normalized each to a standard default. Aggregated per file.
+    /// This is an INPUT defect, not a step-io defect.
+    NonStandardInput {
+        field: String,
+        count: usize,
+        normalized_to: String,
+    },
 }
 
 /// Lightweight tag identifying the `Attribute` variant without carrying its
@@ -173,6 +182,16 @@ impl std::fmt::Display for ConvertError {
                 f,
                 "entity #{entity_id}: field '{field_name}' \
                  expected {expected}D, got {actual}D"
+            ),
+            Self::NonStandardInput {
+                field,
+                count,
+                normalized_to,
+            } => write!(
+                f,
+                "non-standard input: {count}× {field} violates ISO 10303 \
+                 (required field); reader normalized to {normalized_to}. \
+                 The source file is non-standard; this is not a step-io defect."
             ),
         }
     }

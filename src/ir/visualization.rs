@@ -600,13 +600,13 @@ pub enum SurfaceStyleRendering {
     SurfaceStyleRenderingWithProperties(SurfaceStyleRenderingWithProperties),
 }
 
-/// `SURFACE_STYLE_RENDERING(rendering_method, surface_colour)` body. The
-/// `rendering_method` field is non-optional in the schema, but Fusion 360
-/// commonly emits `$` (Unset); the `Option<ShadingMethod>` preserves that
-/// distinction.
+/// `SURFACE_STYLE_RENDERING(rendering_method, surface_colour)` body. Both
+/// fields are non-optional in the schema; the reader normalizes any
+/// non-standard `$` (Unset) input to a standard default, so the IR always
+/// holds a schema-valid value.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SurfaceStyleRenderingData {
-    pub rendering_method: Option<ShadingMethod>,
+    pub rendering_method: ShadingMethod,
     pub surface_colour: ColourId,
 }
 
@@ -617,7 +617,7 @@ pub struct SurfaceStyleRenderingData {
 /// are silently dropped on read.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SurfaceStyleRenderingWithProperties {
-    pub rendering_method: Option<ShadingMethod>,
+    pub rendering_method: ShadingMethod,
     pub surface_colour: ColourId,
     pub properties: Vec<RenderingProperty>,
 }

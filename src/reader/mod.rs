@@ -4,7 +4,7 @@
 //! It uses multi-pass eager conversion: entities are processed in dependency
 //! order so that referenced objects are always available when needed.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use crate::ir::arena::Arena;
 use crate::ir::assembly::{AssemblyTree, Product, Transform3d, WireframeContent};
@@ -708,10 +708,26 @@ pub struct ReaderContext {
     pub(crate) plm_application_protocol_definition_id_map:
         HashMap<u64, crate::ir::ApplicationProtocolDefinitionId>,
 
+    /// Per-file tally of non-standard required fields the reader normalized
+    /// to a standard default. Key = (type-qualified field description,
+    /// normalized-to description), value = count. Flushed into `warnings` as
+    /// one [`ConvertError::NonStandardInput`] per key at the end of `convert`.
+    pub(crate) nonstandard_normalizations: BTreeMap<(String, &'static str), usize>,
+
     pub(crate) warnings: Vec<ConvertError>,
 }
 
 impl ReaderContext {
+    /// Record that a required field was non-standard (Unset / unrecognized)
+    /// and the reader normalized it to `normalized_to`. Aggregated per file
+    /// so a 980k-instance defect surfaces as a single summary warning.
+    pub(crate) fn record_nonstandard(&mut self, field: String, normalized_to: &'static str) {
+        *self
+            .nonstandard_normalizations
+            .entry((field, normalized_to))
+            .or_default() += 1;
+    }
+
     /// Convert an entire [`EntityGraph`] into a [`StepModel`].
     ///
     /// Entities are processed in dependency order across multiple passes.
@@ -730,6 +746,13 @@ impl ReaderContext {
         ctx.resolve_product_contexts();
         ctx.finalize_assembly();
         let header = header::extract_file_header(&graph.header, &mut ctx.warnings);
+        for ((field, normalized_to), count) in std::mem::take(&mut ctx.nonstandard_normalizations) {
+            ctx.warnings.push(ConvertError::NonStandardInput {
+                field,
+                count,
+                normalized_to: normalized_to.to_string(),
+            });
+        }
         ConvertResult {
             model: StepModel {
                 geometry: ctx.geometry,

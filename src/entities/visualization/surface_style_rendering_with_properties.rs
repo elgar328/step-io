@@ -1,17 +1,18 @@
 //! `SURFACE_STYLE_RENDERING_WITH_PROPERTIES` handler — Pass 7-6.
 //!
-//! Combines a `COLOUR_RGB` reference with optional rendering-method enum
-//! and `SURFACE_STYLE_TRANSPARENT` property refs. The schema declares
-//! `rendering_method` as non-optional, but Fusion 360 emits `$` — accept
-//! Unset as `None` so the writer round-trips whichever form the source
-//! used. Other property entities (`REFLECTANCE_AMBIENT` etc.) are silently
-//! dropped to preserve round-trip equality on supported subset.
+//! Combines a `COLOUR_RGB` reference with a rendering-method enum and
+//! `SURFACE_STYLE_TRANSPARENT` property refs. The schema declares both
+//! `rendering_method` and `surface_colour` as required, but some CAD writers
+//! emit `$`; the reader normalizes those to standard defaults
+//! (`NORMAL_SHADING`, matching OCCT / neutral grey) so the IR stays
+//! schema-valid. Other property entities (`REFLECTANCE_AMBIENT` etc.) are
+//! silently dropped to preserve round-trip equality on the supported subset.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_enum};
+use crate::ir::attr::{check_count, read_entity_ref_list};
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::{
-    RenderingProperty, ShadingMethod, SurfaceStyleRendering, SurfaceStyleRenderingWithProperties,
+    RenderingProperty, SurfaceStyleRendering, SurfaceStyleRenderingWithProperties,
     VisualizationPool,
 };
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -19,7 +20,9 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
-use super::surface_style_rendering::shading_method_attr;
+use super::surface_style_rendering::{
+    read_rendering_method, read_surface_colour, shading_method_attr,
+};
 use super::surface_style_transparent::SurfaceStyleTransparentHandler;
 use step_io_macros::step_entity;
 
@@ -41,19 +44,19 @@ impl SimpleEntityHandler for SurfaceStyleRenderingWithPropertiesHandler {
             entity_id,
             "SURFACE_STYLE_RENDERING_WITH_PROPERTIES",
         )?;
-        let rendering_method = if matches!(attrs.first(), Some(Attribute::Enum(_))) {
-            match read_enum(attrs, 0, entity_id, "rendering_method")? {
-                "CONSTANT_SHADING" => Some(ShadingMethod::Constant),
-                "COLOUR_SHADING" => Some(ShadingMethod::Colour),
-                "DOT_SHADING" => Some(ShadingMethod::Dot),
-                "NORMAL_SHADING" => Some(ShadingMethod::Normal),
-                _ => None,
-            }
-        } else {
-            None
-        };
-        let colour_ref = read_entity_ref(attrs, 1, entity_id, "surface_colour")?;
-        let Some(&surface_colour) = ctx.viz_colour_id_map.get(&colour_ref) else {
+        let rendering_method = read_rendering_method(
+            ctx,
+            attrs,
+            entity_id,
+            "SURFACE_STYLE_RENDERING_WITH_PROPERTIES",
+        )?;
+        let Some(surface_colour) = read_surface_colour(
+            ctx,
+            attrs,
+            entity_id,
+            "SURFACE_STYLE_RENDERING_WITH_PROPERTIES",
+        )?
+        else {
             return Ok(());
         };
         let prop_refs = read_entity_ref_list(attrs, 2, entity_id, "properties")?;
