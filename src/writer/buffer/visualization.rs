@@ -93,12 +93,15 @@ impl WriteBuffer<'_> {
     fn inline_characterized_object_ids(
         &self,
     ) -> std::collections::HashSet<crate::ir::CharacterizedObjectId> {
-        use crate::ir::shape_rep::Representation;
+        use crate::ir::shape_rep::{DraughtingModelForm, Representation};
         self.model
             .representations
             .iter()
             .filter_map(|r| match r {
-                Representation::DraughtingModel(dm) => dm.characterized_object_id,
+                Representation::DraughtingModel(dm) => match dm.form {
+                    DraughtingModelForm::Characterized(id) => Some(id),
+                    _ => None,
+                },
                 _ => None,
             })
             .collect()

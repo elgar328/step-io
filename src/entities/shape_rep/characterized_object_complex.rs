@@ -14,7 +14,8 @@ use crate::entities::visualization::styled_item::resolve_representation_item_ref
 use crate::ir::attr::{read_entity_ref_list, read_optional_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::{
-    CharacterizedObject, CharacterizedObjectData, DraughtingModel, Representation,
+    CharacterizedObject, CharacterizedObjectData, DraughtingModel, DraughtingModelForm,
+    Representation,
 };
 use crate::parser::entity::{EntityGraph, RawEntityPart};
 use crate::reader::{ReaderContext, has_all_parts, require_part_attrs};
@@ -69,7 +70,7 @@ impl ComplexEntityHandler for CharacterizedObjectComplexHandler {
                             name,
                             items,
                             context,
-                            characterized_object_id: Some(co_id),
+                            form: DraughtingModelForm::Characterized(co_id),
                         }));
                 ctx.repr_id_map.insert(entity_id, repr_id);
             }

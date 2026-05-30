@@ -3466,7 +3466,8 @@ fn invisibility_round_trip() {
 #[test]
 fn unitless_context_round_trip() {
     use step_io::ir::shape_rep::{
-        DraughtingModel, Representation, RepresentationContextRef, UnitlessContext,
+        DraughtingModel, DraughtingModelForm, Representation, RepresentationContextRef,
+        UnitlessContext,
     };
     let mut model = empty_model();
     let uc_id = model.unitless_contexts.push(UnitlessContext {
@@ -3480,7 +3481,7 @@ fn unitless_context_round_trip() {
             name: "Default".into(),
             items: vec![],
             context: Some(RepresentationContextRef::Unitless(uc_id)),
-            characterized_object_id: None,
+            form: DraughtingModelForm::Simple,
         }));
 
     let text = model.write_to_string().expect("write");
@@ -3502,7 +3503,8 @@ fn unitless_context_round_trip() {
 #[test]
 fn plain_representation_context_round_trips() {
     use step_io::ir::shape_rep::{
-        DraughtingModel, Representation, RepresentationContextRef, UnitlessContext,
+        DraughtingModel, DraughtingModelForm, Representation, RepresentationContextRef,
+        UnitlessContext,
     };
     // A plain simple REPRESENTATION_CONTEXT (no coordinate_space_dimension) —
     // written as a simple entity, not the GRC+PRC complex.
@@ -3518,7 +3520,7 @@ fn plain_representation_context_round_trips() {
             name: "Default".into(),
             items: vec![],
             context: Some(RepresentationContextRef::Unitless(uc_id)),
-            characterized_object_id: None,
+            form: DraughtingModelForm::Simple,
         }));
 
     let text = model.write_to_string().expect("write");
@@ -3602,7 +3604,7 @@ fn draughting_model_round_trip() {
     use step_io::ir::geometry::{Plane3, Surface};
     use step_io::ir::pmi::{AnnotationOccurrence, AnnotationPlane};
     use step_io::ir::representation_item::RepresentationItemRef;
-    use step_io::ir::shape_rep::{DraughtingModel, Representation};
+    use step_io::ir::shape_rep::{DraughtingModel, DraughtingModelForm, Representation};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let ctx_id = model.units.push(ctx);
@@ -3625,7 +3627,7 @@ fn draughting_model_round_trip() {
             name: "dm".into(),
             items: vec![RepresentationItemRef::Surface(surf)],
             context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
-            characterized_object_id: None,
+            form: DraughtingModelForm::Simple,
         }));
 
     let text = model.write_to_string().expect("write");
@@ -3636,6 +3638,53 @@ fn draughting_model_round_trip() {
         .filter(|r| matches!(r, Representation::DraughtingModel(_)))
         .count();
     assert_eq!(dm_count, 1);
+}
+
+#[test]
+fn draughting_model_shape_tessellated_complex_round_trips() {
+    // The geometric-validation draughting model is emitted as a four-part
+    // complex MI `(DRAUGHTING_MODEL REPRESENTATION SHAPE_REPRESENTATION
+    // TESSELLATED_SHAPE_REPRESENTATION)`. A PMI CIWR references it as `rep`,
+    // so it must read back into a DraughtingModel and survive the round-trip.
+    use step_io::ir::geometry::{Plane3, Surface};
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{
+        DraughtingModel, DraughtingModelForm, Representation, RepresentationContextRef,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let ctx_id = model.units.push(ctx);
+    let placement = xyz_placement(&mut model);
+    let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
+        position: placement,
+    }));
+    model
+        .representations
+        .push(Representation::DraughtingModel(DraughtingModel {
+            name: "gvp".into(),
+            items: vec![RepresentationItemRef::Surface(surf)],
+            context: Some(RepresentationContextRef::Unitful(ctx_id)),
+            form: DraughtingModelForm::ShapeTessellated,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("DRAUGHTING_MODEL()")
+            && text.contains("SHAPE_REPRESENTATION()")
+            && text.contains("TESSELLATED_SHAPE_REPRESENTATION()"),
+        "emits the four-part complex MI form: {text}"
+    );
+    let re = reconvert(&text);
+    let dm = re
+        .representations
+        .iter()
+        .find_map(|r| match r {
+            Representation::DraughtingModel(dm) => Some(dm),
+            _ => None,
+        })
+        .expect("draughting model survives round-trip");
+    assert_eq!(dm.form, DraughtingModelForm::ShapeTessellated);
+    assert_eq!(dm.items.len(), 1);
 }
 
 #[test]

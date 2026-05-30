@@ -454,8 +454,15 @@ impl ReaderContext {
         // QRI depends on type_qualifier / value_format_type_qualifier id
         // maps (Pass8ShapeAspect). VRI is self-contained.
         self.dispatch_registry(graph, PassLevel::Pass8RepresentationItem);
+        // (DRAUGHTING_MODEL REPRESENTATION SHAPE_REPRESENTATION
+        // TESSELLATED_SHAPE_REPRESENTATION) complex MI — the PMI
+        // geometric-validation draughting model. Must run before the CIWR
+        // pass so a CIWR whose `rep` is this draughting model resolves
+        // through repr_id_map. Its `items` (annotations / geometry) are
+        // already populated by Pass6/Pass7.
+        self.dispatch_registry(graph, PassLevel::Pass8DraughtingModelStComplex);
         // CHARACTERIZED_ITEM_WITHIN_REPRESENTATION — depends on repr_id_map
-        // (Pass6) + per-type arena id maps.
+        // (Pass6 + Pass8DraughtingModelStComplex) + per-type arena id maps.
         self.dispatch_registry(graph, PassLevel::Pass8CharacterizedItemWithinRepresentation);
         // TOLERANCE_VALUE / LIMITS_AND_FITS, then PLUS_MINUS_TOLERANCE which
         // resolves `range` through the former and `toleranced_dimension`

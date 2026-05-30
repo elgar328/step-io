@@ -745,9 +745,11 @@ impl<'m> WriteBuffer<'m> {
         // QUALIFIED / VALUE REPRESENTATION_ITEM — depends on type_qualifier
         // / value_format_type_qualifier step ids (emit_pmi_pool).
         self.emit_representation_items();
-        // CHARACTERIZED_ITEM_WITHIN_REPRESENTATION — depends on
-        // representation_step_ids + per-type arena step ids.
-        self.emit_characterized_objects();
+        // NOTE: emit_characterized_objects() is deferred to after the
+        // delayed-emit Representation block below — a CIWR body resolves its
+        // `rep` (a DraughtingModel, stepped by emit_draughting_models) and its
+        // `item` (a DRAUGHTING_CALLOUT, stepped by emit_draughting_callouts),
+        // neither of which is populated at this point.
         // tessellation arena emit moved earlier (phase tessellation-repr-item)
         // so STYLED_ITEM can resolve a TESSELLATED_SOLID target through
         // `tessellated_item_step_ids` during visualization. Only the
@@ -874,6 +876,13 @@ impl<'m> WriteBuffer<'m> {
         // SHAPE_REPRESENTATION_WITH_PARAMETERS — delayed emit. After
         // CGR so representation_step_ids keeps arena order.
         self.emit_shape_representation_with_parameters()?;
+        // CHARACTERIZED_ITEM_WITHIN_REPRESENTATION bodies — deferred here
+        // (from before emit_property_definitions_non_pds) so a CIWR resolves
+        // its `rep` (DraughtingModel, stepped by emit_draughting_models above)
+        // and `item` (DRAUGHTING_CALLOUT, stepped by emit_draughting_callouts
+        // above). The step ids were reserved by emit_characterized_objects_prepass
+        // so the PD-definition forward refs already point at them.
+        self.emit_characterized_objects();
         // CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP — runs after
         // every Representation delayed emit so rep_1 / rep_2 resolve
         // through the fully populated representation_step_ids cache.

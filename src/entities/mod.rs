@@ -407,6 +407,13 @@ pub(crate) enum PassLevel {
     /// form and pushes a `CharacterizedObject::Itself` carrier — other
     /// parts (DM/TSR/SR/REPRESENTATION) discarded.
     Pass8CharacterizedComplex,
+    /// `(DRAUGHTING_MODEL REPRESENTATION SHAPE_REPRESENTATION
+    /// TESSELLATED_SHAPE_REPRESENTATION)` complex MI (phase
+    /// dm-rep-tsr-complex). Reads the REPRESENTATION part into a
+    /// `Representation::DraughtingModel` and registers `repr_id_map`. Must
+    /// run **before** `Pass8CharacterizedItemWithinRepresentation` so a CIWR
+    /// whose `rep` is this draughting model resolves.
+    Pass8DraughtingModelStComplex,
     /// `SYMBOL_TARGET` (phase ds-st) — `geometric_representation_item`
     /// SUBTYPE that resolves `placement` through `placement_map` (3D only).
     /// Scheduled in the Pass6 block after placement maps are filled.

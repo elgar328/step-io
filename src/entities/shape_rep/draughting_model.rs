@@ -18,7 +18,7 @@ use crate::ir::attr::{
     check_count, read_entity_ref_list, read_optional_entity_ref, read_string_or_unset,
 };
 use crate::ir::error::ConvertError;
-use crate::ir::shape_rep::{DraughtingModel, Representation};
+use crate::ir::shape_rep::{DraughtingModel, DraughtingModelForm, Representation};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -65,7 +65,7 @@ impl SimpleEntityHandler for DraughtingModelHandler {
                 name,
                 items,
                 context,
-                characterized_object_id: None,
+                form: DraughtingModelForm::Simple,
             }));
         ctx.repr_id_map.insert(entity_id, repr_id);
         Ok(())
@@ -78,44 +78,74 @@ impl SimpleEntityHandler for DraughtingModelHandler {
             item_refs.push(Attribute::EntityRef(step));
         }
         let ctx_attr = buf.repr_context_attr(dm.context);
-        if dm.characterized_object_id.is_some() {
-            // Complex MI form (phase dm-complex-mi): four-part entity
-            // wrapping CHARACTERIZED_OBJECT(*,*) + CHARACTERIZED_REPRESENTATION
-            // + DRAUGHTING_MODEL + REPRESENTATION. The CO part is emitted
-            // here inline; emit_characterized_objects skips the linked
-            // arena entry via dedup so it doesn't surface twice.
-            use crate::writer::entity::{WriterBody, WriterEntity};
-            let n = buf.fresh();
-            buf.entities.push(WriterEntity {
-                id: n,
-                body: WriterBody::Complex {
-                    parts: vec![
-                        (
-                            "CHARACTERIZED_OBJECT".into(),
-                            vec![Attribute::Derived, Attribute::Derived],
-                        ),
-                        ("CHARACTERIZED_REPRESENTATION".into(), vec![]),
-                        ("DRAUGHTING_MODEL".into(), vec![]),
-                        (
-                            "REPRESENTATION".into(),
-                            vec![
-                                Attribute::String(dm.name),
-                                Attribute::List(item_refs),
-                                ctx_attr,
-                            ],
-                        ),
-                    ],
-                },
-            });
-            return Ok(n);
+        match dm.form {
+            DraughtingModelForm::Characterized(_) => {
+                // Complex MI form (phase dm-complex-mi): four-part entity
+                // wrapping CHARACTERIZED_OBJECT(*,*) + CHARACTERIZED_REPRESENTATION
+                // + DRAUGHTING_MODEL + REPRESENTATION. The CO part is emitted
+                // here inline; emit_characterized_objects skips the linked
+                // arena entry via dedup so it doesn't surface twice.
+                use crate::writer::entity::{WriterBody, WriterEntity};
+                let n = buf.fresh();
+                buf.entities.push(WriterEntity {
+                    id: n,
+                    body: WriterBody::Complex {
+                        parts: vec![
+                            (
+                                "CHARACTERIZED_OBJECT".into(),
+                                vec![Attribute::Derived, Attribute::Derived],
+                            ),
+                            ("CHARACTERIZED_REPRESENTATION".into(), vec![]),
+                            ("DRAUGHTING_MODEL".into(), vec![]),
+                            (
+                                "REPRESENTATION".into(),
+                                vec![
+                                    Attribute::String(dm.name),
+                                    Attribute::List(item_refs),
+                                    ctx_attr,
+                                ],
+                            ),
+                        ],
+                    },
+                });
+                Ok(n)
+            }
+            DraughtingModelForm::ShapeTessellated => {
+                // Complex MI form (phase dm-rep-tsr-complex): four-part entity
+                // `(DRAUGHTING_MODEL() REPRESENTATION(...) SHAPE_REPRESENTATION()
+                // TESSELLATED_SHAPE_REPRESENTATION())`. Parts in alphabetical
+                // order, matching the reader's `required` set so re-read
+                // re-dispatches to the same handler.
+                use crate::writer::entity::{WriterBody, WriterEntity};
+                let n = buf.fresh();
+                buf.entities.push(WriterEntity {
+                    id: n,
+                    body: WriterBody::Complex {
+                        parts: vec![
+                            ("DRAUGHTING_MODEL".into(), vec![]),
+                            (
+                                "REPRESENTATION".into(),
+                                vec![
+                                    Attribute::String(dm.name),
+                                    Attribute::List(item_refs),
+                                    ctx_attr,
+                                ],
+                            ),
+                            ("SHAPE_REPRESENTATION".into(), vec![]),
+                            ("TESSELLATED_SHAPE_REPRESENTATION".into(), vec![]),
+                        ],
+                    },
+                });
+                Ok(n)
+            }
+            DraughtingModelForm::Simple => Ok(buf.push_simple(
+                "DRAUGHTING_MODEL",
+                vec![
+                    Attribute::String(dm.name),
+                    Attribute::List(item_refs),
+                    ctx_attr,
+                ],
+            )),
         }
-        Ok(buf.push_simple(
-            "DRAUGHTING_MODEL",
-            vec![
-                Attribute::String(dm.name),
-                Attribute::List(item_refs),
-                ctx_attr,
-            ],
-        ))
     }
 }

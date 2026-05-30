@@ -338,13 +338,27 @@ pub struct DraughtingModel {
     pub name: String,
     pub items: Vec<crate::ir::representation_item::RepresentationItemRef>,
     pub context: Option<RepresentationContextRef>,
-    /// `Some(id)` when the source emitted the complex MI form
-    /// `(CHARACTERIZED_OBJECT(*,*) CHARACTERIZED_REPRESENTATION()
+    /// Which on-disk entity form this draughting model was read from /
+    /// must be written back as.
+    pub form: DraughtingModelForm,
+}
+
+/// The concrete entity form a [`DraughtingModel`] was read from, selecting
+/// how the writer re-emits it.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum DraughtingModelForm {
+    /// Plain `DRAUGHTING_MODEL(name, items, context)`.
+    Simple,
+    /// Complex MI form `(CHARACTERIZED_OBJECT(*,*) CHARACTERIZED_REPRESENTATION()
     /// DRAUGHTING_MODEL() REPRESENTATION(...))`. The id points to the
     /// `characterized_objects` arena entry that lives inside the same
     /// complex MI entity — writer emits the CO inline and dedups it from
     /// the standalone `emit_characterized_objects` pass.
-    pub characterized_object_id: Option<crate::ir::id::CharacterizedObjectId>,
+    Characterized(crate::ir::id::CharacterizedObjectId),
+    /// Complex MI form `(DRAUGHTING_MODEL() REPRESENTATION(...)
+    /// SHAPE_REPRESENTATION() TESSELLATED_SHAPE_REPRESENTATION())` — the
+    /// geometric-validation draughting model that PMI CIWRs reference.
+    ShapeTessellated,
 }
 
 /// `characterized_object` `concrete_supertype` enum (phase
