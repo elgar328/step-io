@@ -132,12 +132,21 @@ impl WriteBuffer<'_> {
         use crate::ir::IdAttributeItem;
         for attr in pool.id_attributes.iter() {
             let item_step = match attr.identified_item {
-                IdAttributeItem::ShapeAspect(sa_id) => {
-                    let Some(&step) = self.shape_aspect_step_ids.get(sa_id.0 as usize) else {
-                        continue;
-                    };
+                IdAttributeItem::ShapeAspect(sa_ref) => {
+                    let step = self.emit_shape_aspect_ref(sa_ref);
                     if step == 0 {
-                        continue; // SA emit skipped — its target didn't resolve.
+                        continue; // shape-aspect emit skipped — target didn't resolve.
+                    }
+                    step
+                }
+                IdAttributeItem::PropertyDefinition(pd_id) => {
+                    let step = self
+                        .property_definition_step_ids
+                        .get(pd_id.0 as usize)
+                        .copied()
+                        .unwrap_or(0);
+                    if step == 0 {
+                        continue;
                     }
                     step
                 }

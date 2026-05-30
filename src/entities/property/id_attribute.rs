@@ -1,14 +1,17 @@
 //! `ID_ATTRIBUTE` handler — Pass 9-25b.
 //!
-//! `(attribute_value, identified_item)` — SELECT target. Initial coverage:
-//! `ShapeAspect` (PMI-bearing common case), `Group` / `Address` /
-//! `ApplicationContext` (plm metadata). Other SELECT variants (`action`,
-//! `dimensional_size`, `geometric_tolerance`, `representation`,
-//! `product_category`, `property_definition`, `shape_aspect_relationship`,
-//! `organizational_project`) are silently dropped with a warning; future
-//! phases expand [`IdAttributeItem`](crate::ir::IdAttributeItem).
+//! `(attribute_value, identified_item)` — SELECT target. Coverage: the
+//! round-trip-diffed `shape_aspect` family (plain `shape_aspect` /
+//! `composite_group_shape_aspect` / `centre_of_symmetry` / `all_around` /
+//! `datum` / `datum_feature`, via `resolve_shape_aspect_ref`),
+//! `property_definition`, and the plm-metadata targets (`Group` / `Address` /
+//! `ApplicationContext`). The non-diffed `shape_aspect` subtypes
+//! (`datum_system` / `datum_target` / `placed_datum_target_feature`),
+//! `tolerance_zone`, `datum_reference_compartment`, and other SELECT members
+//! are dropped at read time with a warning.
 
 use crate::entities::SimpleEntityHandler;
+use crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_ref;
 use crate::ir::PropertyPool;
 use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
@@ -41,8 +44,33 @@ impl SimpleEntityHandler for IdAttributeHandler {
             read_string_or_unset(attrs, 0, entity_id, "attribute_value")?.to_owned();
         let item_ref = read_entity_ref(attrs, 1, entity_id, "identified_item")?;
 
-        let identified_item = if let Some(&sa_id) = ctx.shape_aspect_id_map.get(&item_ref) {
-            IdAttributeItem::ShapeAspect(sa_id)
+        let identified_item = if let Some(sa_ref) = resolve_shape_aspect_ref(ctx, item_ref) {
+            use crate::ir::ShapeAspectRef as R;
+            match sa_ref {
+                R::ShapeAspect(_)
+                | R::CompositeGroupShapeAspect(_)
+                | R::CentreOfSymmetry(_)
+                | R::AllAroundShapeAspect(_)
+                | R::Datum(_)
+                | R::DatumFeature(_) => IdAttributeItem::ShapeAspect(sa_ref),
+                // datum_system / datum_target / placed_datum_target_feature arenas
+                // are not compared by the round-trip diff, so a writer skip there
+                // would desync id_attributes without surfacing as a target FAIL.
+                // Keep them dropping until the diff covers them.
+                R::DatumSystem(_) | R::DatumTarget(_) | R::PlacedDatumTargetFeature(_) => {
+                    ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                        entity_id,
+                        detail: format!(
+                            "ID_ATTRIBUTE.identified_item #{item_ref} target \
+                             (datum_system / datum_target / placed_datum_target_feature) \
+                             not round-trip-verified — skipping"
+                        ),
+                    });
+                    return Ok(());
+                }
+            }
+        } else if let Some(&pd_id) = ctx.property_def_step_to_id.get(&item_ref) {
+            IdAttributeItem::PropertyDefinition(pd_id)
         } else if let Some(&g_id) = ctx.plm_group_id_map.get(&item_ref) {
             IdAttributeItem::Group(g_id)
         } else if let Some(&a_id) = ctx.plm_address_id_map.get(&item_ref) {

@@ -14,7 +14,7 @@ use super::arena::Arena;
 use super::id::{
     AddressId, ApplicationContextId, CharacterizedObjectId, DerivedUnitId, DimensionalLocationId,
     DocumentId, GeneralPropertyId, GroupId, NamedUnitId, PersonAndOrganizationId, ProductId,
-    PropertyDefinitionId, ShapeAspectId,
+    PropertyDefinitionId,
 };
 use super::shape_aspect_ref::ShapeAspectRef;
 use super::shape_rep::{DescriptiveItem, RepresentationContextRef};
@@ -127,15 +127,19 @@ pub struct IdAttribute {
     pub identified_item: IdAttributeItem,
 }
 
-/// SELECT target for [`IdAttribute::identified_item`]. Initial coverage
-/// (`ShapeAspect` / `Group` / `Address` / `ApplicationContext`) covers
-/// PMI-bearing and plm-metadata reference patterns. Other variants
-/// (`action`, `dimensional_size`, `geometric_tolerance`, `representation`,
-/// `product_category`, `property_definition`, `shape_aspect_relationship`,
-/// `organizational_project`) are dropped at read time with a warning.
+/// SELECT target for [`IdAttribute::identified_item`]. `ShapeAspect` carries a
+/// [`ShapeAspectRef`] but the reader only constructs the variants whose arenas
+/// the round-trip diff compares (plain `shape_aspect` / `composite_group` /
+/// `centre_of_symmetry` / `all_around` / `datum` / `datum_feature`); the other
+/// `ShapeAspectRef` members (`datum_system` / `datum_target` /
+/// `placed_datum_target_feature`) and `tolerance_zone` /
+/// `datum_reference_compartment` are dropped at read time with a warning.
+/// `Group` / `Address` / `ApplicationContext` are plm-metadata targets;
+/// `PropertyDefinition` a user-defined-attribute target.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum IdAttributeItem {
-    ShapeAspect(ShapeAspectId),
+    ShapeAspect(ShapeAspectRef),
+    PropertyDefinition(PropertyDefinitionId),
     Group(GroupId),
     Address(AddressId),
     ApplicationContext(ApplicationContextId),

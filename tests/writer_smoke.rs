@@ -1822,6 +1822,7 @@ fn id_attribute_shape_aspect_round_trip() {
     // shape_aspect_id_map is populated when the re-read resolves identified_item.
     // If the pass is moved back before the PMI block, the re-read drops the
     // id_attribute and this assertion fails.
+    use step_io::ir::ShapeAspectRef;
     use step_io::ir::property::{IdAttribute, IdAttributeItem, PropertyPool};
     let (mut model, sa, _cg, _cs, _aa) = shape_aspect_relationship_fixture();
     model
@@ -1830,7 +1831,7 @@ fn id_attribute_shape_aspect_round_trip() {
         .id_attributes
         .push(IdAttribute {
             attribute_value: "id1".into(),
-            identified_item: IdAttributeItem::ShapeAspect(sa),
+            identified_item: IdAttributeItem::ShapeAspect(ShapeAspectRef::ShapeAspect(sa)),
         });
 
     let text = model.write_to_string().expect("write");
@@ -1843,7 +1844,37 @@ fn id_attribute_shape_aspect_round_trip() {
     );
     assert!(matches!(
         pool.id_attributes.iter().next().unwrap().identified_item,
-        IdAttributeItem::ShapeAspect(_)
+        IdAttributeItem::ShapeAspect(ShapeAspectRef::ShapeAspect(_))
+    ));
+}
+
+#[test]
+fn id_attribute_composite_shape_aspect_round_trip() {
+    // ID_ATTRIBUTE.identified_item -> COMPOSITE_GROUP_SHAPE_ASPECT, exercising
+    // the resolve_shape_aspect_ref family path + emit_shape_aspect_ref. The
+    // composite_group_shape_aspects arena is compared by the round-trip diff,
+    // so this target is FAIL-safe.
+    use step_io::ir::ShapeAspectRef;
+    use step_io::ir::property::{IdAttribute, IdAttributeItem, PropertyPool};
+    let (mut model, _sa, cg, _cs, _aa) = shape_aspect_relationship_fixture();
+    model
+        .properties
+        .get_or_insert_with(PropertyPool::default)
+        .id_attributes
+        .push(IdAttribute {
+            attribute_value: "id-cg".into(),
+            identified_item: IdAttributeItem::ShapeAspect(
+                ShapeAspectRef::CompositeGroupShapeAspect(cg),
+            ),
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let pool = re.properties.as_ref().expect("properties pool survives");
+    assert_eq!(pool.id_attributes.len(), 1);
+    assert!(matches!(
+        pool.id_attributes.iter().next().unwrap().identified_item,
+        IdAttributeItem::ShapeAspect(ShapeAspectRef::CompositeGroupShapeAspect(_))
     ));
 }
 
