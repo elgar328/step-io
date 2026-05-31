@@ -15,7 +15,6 @@ use super::id::{
     PropertyDefinitionId, RepresentationId, ShapeAspectId, TessellatedItemId, ToleranceValueId,
     ToleranceZoneId, TypeQualifierId, ValueFormatTypeQualifierId,
 };
-use super::property::PropertyMeasure;
 use super::representation_item::RepresentationItemRef;
 use super::shape_aspect_ref::ShapeAspectRef;
 
@@ -370,17 +369,14 @@ pub enum GeometricToleranceModifier {
 /// The reference is polymorphic in real files: a plain `*_MEASURE_WITH_UNIT`
 /// lives in the `units` pool and is emitted once there ([`MeasureWithUnit`]
 /// variant — the writer references its cached step id); a
-/// `MEASURE_REPRESENTATION_ITEM` (simple or complex) carries no arena entry
-/// of its own and is held inline as a [`PropertyMeasure`], re-emitted by the
-/// GD&T writer. Keeping the two cases distinct avoids double-emitting a
-/// units-pool `MEASURE_WITH_UNIT`.
+/// `MEASURE_REPRESENTATION_ITEM` (simple or complex) lives in the
+/// `representation_item` arena ([`RepresentationItem`] variant). Keeping the
+/// two cases distinct avoids double-emitting a units-pool `MEASURE_WITH_UNIT`.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ToleranceMagnitude {
     /// A plain `*_MEASURE_WITH_UNIT` already held in the `units` pool.
     MeasureWithUnit(MeasureWithUnitId),
-    /// A simple `MEASURE_REPRESENTATION_ITEM` value carried inline.
-    Measure(PropertyMeasure),
-    /// A complex-MI `MEASURE_REPRESENTATION_ITEM` referenced in the
+    /// A `MEASURE_REPRESENTATION_ITEM` referenced in the
     /// `representation_item` arena (phase measure-arena-2) — the tolerance
     /// points at the faithful multi-part form rather than re-emitting a
     /// downgraded simple measure.

@@ -11,11 +11,8 @@ use crate::entities::SimpleEntityHandler;
 use crate::entities::property::property_definition_representation::{
     PropertyDefinitionRepresentationHandler, PropertyDefinitionRepresentationWriteInput,
 };
-use crate::ir::id::UnitContextId;
-use crate::ir::property::{
-    MeasureKind, Property, PropertyItem, PropertyMeasure, PropertyMeasureUnit,
-};
-use crate::ir::shape_rep::{DescriptiveItem, RepresentationContextRef};
+use crate::ir::property::{Property, PropertyItem, PropertyMeasureUnit};
+use crate::ir::shape_rep::DescriptiveItem;
 use crate::parser::entity::Attribute;
 
 impl WriteBuffer<'_> {
@@ -253,20 +250,11 @@ impl WriteBuffer<'_> {
             return 0;
         }
 
-        // A MEASURE item derives its unit from the unit-bearing context;
-        // a unit-less (plain / parametric) context yields None, falling back
-        // to the default in `resolve_property_unit_ref`.
-        let unit_ctx = match prop.context {
-            Some(RepresentationContextRef::Unitful(id)) => Some(id),
-            _ => None,
-        };
-
         // 1. Emit items (mixed MEASURE / DESCRIPTIVE in source order).
         let item_refs: Vec<u64> = prop
             .items
             .iter()
             .map(|item| match item {
-                PropertyItem::Measure(m) => self.emit_property_measure(m, unit_ctx),
                 PropertyItem::Descriptive(d) => self.emit_descriptive_item(d.clone()),
                 PropertyItem::MeasureItem(id) => self.representation_item_step_ids[id.0 as usize],
             })
@@ -524,38 +512,7 @@ impl WriteBuffer<'_> {
         crate::entities::shape_rep::descriptive_representation_item::DescriptiveRepresentationItemHandler::write(self, item).expect("descriptive item emit is infallible")
     }
 
-    pub(crate) fn emit_property_measure(
-        &mut self,
-        m: &PropertyMeasure,
-        ctx: Option<UnitContextId>,
-    ) -> u64 {
-        let typed_name = match m.kind {
-            MeasureKind::Length => "LENGTH_MEASURE",
-            MeasureKind::PlaneAngle => "PLANE_ANGLE_MEASURE",
-            MeasureKind::SolidAngle => "SOLID_ANGLE_MEASURE",
-            MeasureKind::PositiveRatio => "POSITIVE_RATIO_MEASURE",
-            MeasureKind::Mass => "MASS_MEASURE",
-            MeasureKind::Area => "AREA_MEASURE",
-            MeasureKind::Volume => "VOLUME_MEASURE",
-        };
-        let unit_ref = self
-            .resolve_explicit_unit_ref(m.unit_ref)
-            .unwrap_or_else(|| self.resolve_property_unit_ref(ctx, m.kind));
-        self.push_simple(
-            "MEASURE_REPRESENTATION_ITEM",
-            vec![
-                Attribute::String(m.name.clone()),
-                Attribute::Typed {
-                    type_name: typed_name.into(),
-                    value: Box::new(Attribute::Real(m.value)),
-                },
-                Attribute::EntityRef(unit_ref),
-            ],
-        )
-    }
-
     /// Resolve an explicit [`PropertyMeasureUnit`] to its emitted STEP id.
-    /// `None` falls through to the legacy context-based lookup.
     pub(in crate::writer::buffer) fn resolve_explicit_unit_ref(
         &self,
         unit_ref: Option<PropertyMeasureUnit>,
@@ -565,29 +522,6 @@ impl WriteBuffer<'_> {
             PropertyMeasureUnit::Derived(id) => {
                 self.derived_unit_step_ids.get(id.0 as usize).copied()
             }
-        }
-    }
-
-    /// Pick the unit-leaf STEP id matching this measure's kind and the
-    /// property's `UnitContext`. The `unit_leaf_ids` vec is populated by
-    /// the units emit pass that runs before properties in `emit_all`, so
-    /// indexing is always safe — upstream guards (assembly skip on empty
-    /// `unit_context_ids`, property skip on missing `product_def_ids`)
-    /// ensure this path is only reached when units are present.
-    ///
-    /// `PositiveRatio` reaches this path only for kernel-built IR without
-    /// an explicit `unit_ref` — falls back to the length leaf (lossy).
-    fn resolve_property_unit_ref(&self, ctx: Option<UnitContextId>, kind: MeasureKind) -> u64 {
-        let ctx_idx = ctx.unwrap_or(UnitContextId(0)).0 as usize;
-        let (length, angle, solid) = self.unit_leaf_ids[ctx_idx];
-        match kind {
-            MeasureKind::Length
-            | MeasureKind::PositiveRatio
-            | MeasureKind::Mass
-            | MeasureKind::Area
-            | MeasureKind::Volume => length,
-            MeasureKind::PlaneAngle => angle,
-            MeasureKind::SolidAngle => solid,
         }
     }
 }

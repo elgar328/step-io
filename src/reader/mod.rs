@@ -397,13 +397,9 @@ pub struct ReaderContext {
     /// Lazily-built property pool — populated by Pass 8's PDR converter.
     /// `None` if the source had no `PROPERTY_DEFINITION_REPRESENTATION`.
     pub(crate) properties: Option<crate::ir::property::PropertyPool>,
-    /// `MEASURE_REPRESENTATION_ITEM #N → PropertyMeasure` (Pass 8-1).
-    /// Items with unsupported `MeasureKind` (e.g. `AREA_MEASURE`) are
-    /// silently skipped — no map entry. Temp; discarded after Pass 8.
-    pub(crate) measure_item_map: HashMap<u64, crate::ir::property::PropertyMeasure>,
     /// `DESCRIPTIVE_REPRESENTATION_ITEM #N → DescriptiveItem` (Pass 8-1).
     /// Temp; discarded after Pass 8. PDR handler consults both this map
-    /// and `measure_item_map` when resolving `REPRESENTATION.items` refs.
+    /// and `repr_item_id_map` when resolving `REPRESENTATION.items` refs.
     pub(crate) descriptive_item_map: HashMap<u64, crate::ir::shape_rep::DescriptiveItem>,
     /// `SHAPE_DIMENSION_REPRESENTATION` repr id → its raw `items` step refs
     /// (phase measure-arena-1). SDR reads at `Pass6ShapeRep` — before the

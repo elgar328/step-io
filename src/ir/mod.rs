@@ -112,9 +112,9 @@ pub use pmi::{
 pub use property::{
     CharacterizedDefinition, DerivedDefinitionItem, DescriptionAttribute, DescriptionAttributeItem,
     DimensionalCharacteristicRepresentation, GeneralProperty, GeneralPropertyAssociation,
-    IdAttribute, IdAttributeItem, MeasureKind, NameAttribute, NameAttributeItem,
-    ProductDefinitionShape, Property, PropertyDefinition, PropertyDefinitionData, PropertyItem,
-    PropertyMeasure, PropertyMeasureUnit, PropertyPool,
+    IdAttribute, IdAttributeItem, NameAttribute, NameAttributeItem, ProductDefinitionShape,
+    Property, PropertyDefinition, PropertyDefinitionData, PropertyItem, PropertyMeasureUnit,
+    PropertyPool,
 };
 pub use representation_item::{
     MeasureValue, QualifiedRepresentationItem, QualifierRef, RepresentationItem,

@@ -247,61 +247,26 @@ pub struct Property {
 /// through the property cluster.
 ///
 /// This is a **step-io composite enum** — not to be confused with the
-/// ir.toml blueprint's `RepresentationItem` enum (which has five direct
-/// variants: integer / measure / qualified / real / value
-/// representation items). step-io picks a subset of the schema's
-/// `representation_item` ISA subtree by composing blueprint building
-/// blocks ([`PropertyMeasure`] and
-/// [`crate::ir::shape_rep::DescriptiveItem`]). Future phases extend
-/// this enum in-place — variant name and module location stay stable.
+/// ir.toml blueprint's `RepresentationItem` enum. A property
+/// `REPRESENTATION`'s items are either a `MEASURE_REPRESENTATION_ITEM`
+/// (referenced in the `representation_item` arena) or a
+/// `DESCRIPTIVE_REPRESENTATION_ITEM`.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PropertyItem {
-    Measure(PropertyMeasure),
     Descriptive(DescriptiveItem),
-    /// A complex-MI `MEASURE_REPRESENTATION_ITEM` referenced in the
-    /// `representation_item` arena (phase measure-arena-3) — the property
-    /// REPRESENTATION points at the faithful multi-part form rather than
-    /// re-emitting a downgraded simple measure.
+    /// A `MEASURE_REPRESENTATION_ITEM` referenced in the `representation_item`
+    /// arena (phase measure-arena-3/4) — the property REPRESENTATION points at
+    /// the arena entry rather than carrying the value inline.
     MeasureItem(crate::ir::id::RepresentationItemId),
 }
 
-/// `MEASURE_REPRESENTATION_ITEM(name, typed_value, unit_ref)` reduced to a
-/// passive value carrier. When the source MRI's `unit_component` resolves to
-/// a known unit in the IR, [`unit_ref`] holds the explicit reference;
-/// otherwise it is `None` and the writer falls back to resolving the unit
-/// from the parent [`Property`]'s context + the [`MeasureKind`].
-#[derive(Debug, Clone, PartialEq)]
-pub struct PropertyMeasure {
-    /// `MEASURE_REPRESENTATION_ITEM.name` (often `''`).
-    pub name: String,
-    /// Typed value wrapper.
-    pub kind: MeasureKind,
-    pub value: f64,
-    /// Explicit unit reference captured from `MEASURE_REPRESENTATION_ITEM.unit_component`.
-    /// `None` when the `unit_component` ref did not resolve to a known
-    /// `NamedUnit` / `DerivedUnit` arena entry (legacy fixtures, kernel-built
-    /// IR). The writer falls back to dynamic `UnitContext` lookup in that case.
-    pub unit_ref: Option<PropertyMeasureUnit>,
-}
-
-/// Source of a [`PropertyMeasure`]'s unit. `Named` for simple units
-/// (length, mass, ...), `Derived` for composite units (e.g. kg/m³).
+/// Source of a measure's unit. `Named` for simple units (length, mass, ...),
+/// `Derived` for composite units (e.g. kg/m³). Carried by a
+/// [`crate::ir::representation_item::MeasureRepresentationItem`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum PropertyMeasureUnit {
     Named(NamedUnitId),
     Derived(DerivedUnitId),
-}
-
-/// Subset of STEP measure kinds that step-io currently round-trips.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum MeasureKind {
-    Length,
-    PlaneAngle,
-    SolidAngle,
-    PositiveRatio,
-    Mass,
-    Area,
-    Volume,
 }
 
 /// `GENERAL_PROPERTY(id, name, description)` — AP242 user-defined attribute

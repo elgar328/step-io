@@ -574,12 +574,12 @@ pub(crate) enum PassLevel {
     /// (unit ctx).
     Pass8Measure,
     /// `geometric_tolerance` form tolerances (Pass 8-1b) — depend on
-    /// `Pass8Measure` (`measure_item_map`), `Pass0MwuDue` (`mwu_id_map`)
+    /// `Pass8Measure` (`repr_item_id_map`), `Pass0MwuDue` (`mwu_id_map`)
     /// and `Pass8ShapeAspect` (shape-aspect id maps) for resolving
     /// `magnitude` and `toleranced_shape_aspect`.
     Pass8GeometricTolerance,
     /// `geometric_tolerance_with_datum_reference` simple tolerances
-    /// (Pass 8-1c) — depend on `Pass8Measure` (`measure_item_map`),
+    /// (Pass 8-1c) — depend on `Pass8Measure` (`repr_item_id_map`),
     /// `Pass8ShapeAspect` (shape-aspect id maps) and `Pass8DatumSystem`
     /// (`datum_system_id_map`) for the `datum_system` set.
     Pass8GtWithDatumReference,
@@ -590,7 +590,7 @@ pub(crate) enum PassLevel {
     Pass8ToleranceZone,
     /// `TOLERANCE_VALUE` + `LIMITS_AND_FITS` (Pass 8-1d) — the
     /// `tolerance_method_definition` SELECT members. `TOLERANCE_VALUE` depends
-    /// on `Pass8Measure` (`measure_item_map`) / `Pass0MwuDue` (`mwu_id_map`)
+    /// on `Pass8Measure` (`repr_item_id_map`) / `Pass0MwuDue` (`mwu_id_map`)
     /// for its bounds.
     Pass8ToleranceValue,
     /// `PLUS_MINUS_TOLERANCE` (Pass 8-1e) — depends on `Pass8ToleranceValue`

@@ -427,7 +427,7 @@ impl ReaderContext {
         // Pass6ShapeRep now that the complex MRI arena entries exist.
         self.resolve_deferred_sdr_items();
         // geometric_tolerance form tolerances — resolve `magnitude` through
-        // `mwu_id_map` / `measure_item_map` and `toleranced_shape_aspect`
+        // `mwu_id_map` / `repr_item_id_map` and `toleranced_shape_aspect`
         // through the shape-aspect id maps Pass8ShapeAspect filled.
         self.dispatch_registry(graph, PassLevel::Pass8GeometricTolerance);
         // geometric_tolerance_with_datum_reference — also needs the

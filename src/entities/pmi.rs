@@ -1627,16 +1627,15 @@ impl SimpleEntityHandler for AngularLocationHandler {
 }
 
 /// Resolve a `geometric_tolerance.magnitude` ref (`ref_measure_with_unit`).
-/// A plain `*_MEASURE_WITH_UNIT` resolves through `mwu_id_map` (units pool);
-/// a `MEASURE_REPRESENTATION_ITEM` (simple or complex) through
-/// `measure_item_map`. `None` when the ref resolves to neither.
+/// A plain `*_MEASURE_WITH_UNIT` resolves through `mwu_id_map` (units pool); a
+/// `MEASURE_REPRESENTATION_ITEM` (simple or complex) through the
+/// `representation_item` arena (`repr_item_id_map`). `None` when the ref
+/// resolves to neither.
 fn resolve_tolerance_magnitude(ctx: &ReaderContext, item_ref: u64) -> Option<ToleranceMagnitude> {
     if let Some(&id) = ctx.mwu_id_map.get(&item_ref) {
         return Some(ToleranceMagnitude::MeasureWithUnit(id));
     }
-    // Complex MEASURE_REPRESENTATION_ITEM lives in the representation_item
-    // arena (phase measure-arena-2) — reference it so the writer emits the
-    // faithful multi-part form once instead of a downgraded simple measure.
+    // MEASURE_REPRESENTATION_ITEM lives in the representation_item arena.
     // Guard on the variant: repr_item_id_map also holds QRI / VRI.
     if let Some(&id) = ctx.repr_item_id_map.get(&item_ref) {
         if matches!(
@@ -1646,10 +1645,7 @@ fn resolve_tolerance_magnitude(ctx: &ReaderContext, item_ref: u64) -> Option<Tol
             return Some(ToleranceMagnitude::RepresentationItem(id));
         }
     }
-    ctx.measure_item_map
-        .get(&item_ref)
-        .cloned()
-        .map(ToleranceMagnitude::Measure)
+    None
 }
 
 /// Push a `GeometricTolerance` into the `pmi` pool and register its
@@ -1744,7 +1740,6 @@ pub(crate) fn write_geometric_tolerance(buf: &mut WriteBuffer, gt: GeometricTole
     // emit the (simple) MRI inline here.
     let magnitude = match data.magnitude {
         ToleranceMagnitude::MeasureWithUnit(id) => buf.mwu_step_ids[id.0 as usize],
-        ToleranceMagnitude::Measure(m) => buf.emit_property_measure(&m, None),
         ToleranceMagnitude::RepresentationItem(id) => {
             buf.representation_item_step_ids[id.0 as usize]
         }
@@ -2385,7 +2380,6 @@ pub(crate) fn write_geometric_tolerance_with_datum_reference(
     };
     let magnitude = match data.magnitude {
         ToleranceMagnitude::MeasureWithUnit(id) => buf.mwu_step_ids[id.0 as usize],
-        ToleranceMagnitude::Measure(m) => buf.emit_property_measure(&m, None),
         ToleranceMagnitude::RepresentationItem(id) => {
             buf.representation_item_step_ids[id.0 as usize]
         }
@@ -2829,7 +2823,6 @@ impl ComplexEntityHandler for LineProfileToleranceHandler {
 fn emit_tolerance_magnitude(buf: &mut WriteBuffer, m: &ToleranceMagnitude) -> u64 {
     match m {
         ToleranceMagnitude::MeasureWithUnit(id) => buf.mwu_step_ids[id.0 as usize],
-        ToleranceMagnitude::Measure(pm) => buf.emit_property_measure(pm, None),
         ToleranceMagnitude::RepresentationItem(id) => {
             buf.representation_item_step_ids[id.0 as usize]
         }

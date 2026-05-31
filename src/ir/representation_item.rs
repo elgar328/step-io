@@ -68,9 +68,10 @@ pub enum RepresentationItemRef {
 
 /// `representation_item` enum arena per the ir.toml blueprint (phase
 /// repr-item-arena-1). Holds `QualifiedRepresentationItem`,
-/// `ValueRepresentationItem`, and `MeasureRepresentationItem` (the complex
-/// MI form, migrated off `PropertyMeasure` in phase measure-arena-1 so that
-/// `SHAPE_DIMENSION_REPRESENTATION` resolves it through the arena).
+/// `ValueRepresentationItem`, and `MeasureRepresentationItem` (both the
+/// simple and complex MI forms; all measure representations live in this
+/// arena so property / GD&T / `SHAPE_DIMENSION_REPRESENTATION` consumers
+/// resolve them here).
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationItem {
     QualifiedRepresentationItem(QualifiedRepresentationItem),

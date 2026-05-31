@@ -1487,13 +1487,22 @@ fn property_definition_with_geometric_tolerance_target_round_trips() {
         GeometricTolerance, GeometricToleranceData, GeometricToleranceRef, ToleranceMagnitude,
     };
     use step_io::ir::property::{
-        CharacterizedDefinition, MeasureKind, PropertyDefinition, PropertyDefinitionData,
-        PropertyMeasure, PropertyMeasureUnit, PropertyPool,
+        CharacterizedDefinition, PropertyDefinition, PropertyDefinitionData, PropertyPool,
     };
+    use step_io::ir::units::MeasureWithUnit;
     let (mut model, sa, ..) = shape_aspect_relationship_fixture();
     let ctx = mm_radian_steradian(&mut model);
     let length = ctx.length;
     model.units.push(ctx);
+    let mwu = model
+        .units_pool
+        .as_mut()
+        .expect("units pool")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
+            value: 0.1,
+            unit: length,
+        });
     let gt_id = model
         .pmi
         .get_or_insert_with(PmiPool::default)
@@ -1501,12 +1510,7 @@ fn property_definition_with_geometric_tolerance_target_round_trips() {
         .push(GeometricTolerance::Flatness(GeometricToleranceData {
             name: "t".into(),
             description: String::new(),
-            magnitude: ToleranceMagnitude::Measure(PropertyMeasure {
-                name: String::new(),
-                kind: MeasureKind::Length,
-                value: 0.1,
-                unit_ref: Some(PropertyMeasureUnit::Named(length)),
-            }),
+            magnitude: ToleranceMagnitude::MeasureWithUnit(mwu),
             toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
             modifiers: Vec::new(),
             unit_size: None,
@@ -2939,7 +2943,7 @@ fn gt_relationship_round_trip() {
         GeometricTolerance, GeometricToleranceData, GeometricToleranceRef,
         GeometricToleranceRelationship, ToleranceMagnitude,
     };
-    use step_io::ir::property::{MeasureKind, PropertyMeasure, PropertyMeasureUnit};
+    use step_io::ir::units::MeasureWithUnit;
 
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
@@ -2974,14 +2978,16 @@ fn gt_relationship_round_trip() {
         target: part_pid,
         product_definitional: false,
     });
-    let measure = || {
-        ToleranceMagnitude::Measure(PropertyMeasure {
-            name: String::new(),
-            kind: MeasureKind::Length,
+    let mwu = model
+        .units_pool
+        .as_mut()
+        .expect("units pool")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
             value: 0.1,
-            unit_ref: Some(PropertyMeasureUnit::Named(length_unit)),
-        })
-    };
+            unit: length_unit,
+        });
+    let measure = || ToleranceMagnitude::MeasureWithUnit(mwu);
     let data = || GeometricToleranceData {
         name: "t".into(),
         description: String::new(),
@@ -3228,7 +3234,6 @@ fn geometric_tolerance_form_tolerances_round_trip() {
     // form tolerances. Magnitudes: a units-pool MEASURE_WITH_UNIT and an inline
     // `Measure` whose simple MRI re-reads through the arena (measure-arena-4).
     use step_io::ir::pmi::{GeometricTolerance, GeometricToleranceData, ToleranceMagnitude};
-    use step_io::ir::property::{MeasureKind, PropertyMeasure, PropertyMeasureUnit};
     use step_io::ir::units::MeasureWithUnit;
 
     let mut model = empty_model();
@@ -3287,14 +3292,7 @@ fn geometric_tolerance_form_tolerances_round_trip() {
         unit_size: None,
         defined_area_unit: None,
     };
-    let measure = || {
-        ToleranceMagnitude::Measure(PropertyMeasure {
-            name: String::new(),
-            kind: MeasureKind::Length,
-            value: 0.1,
-            unit_ref: Some(PropertyMeasureUnit::Named(length_unit)),
-        })
-    };
+    let measure = || ToleranceMagnitude::MeasureWithUnit(mwu);
 
     let pmi = model.pmi.get_or_insert_with(PmiPool::default);
     pmi.geometric_tolerances
@@ -3334,10 +3332,9 @@ fn geometric_tolerance_form_tolerances_round_trip() {
     let GeometricTolerance::Straightness(d1) = gts[1] else {
         unreachable!()
     };
-    // The simple-measure magnitude now round-trips through the arena.
     assert!(matches!(
         d1.magnitude,
-        ToleranceMagnitude::RepresentationItem(_)
+        ToleranceMagnitude::MeasureWithUnit(_)
     ));
 }
 
@@ -3419,8 +3416,8 @@ fn tolerance_zone_round_trip() {
         GeometricTolerance, GeometricToleranceData, GeometricToleranceRef, ToleranceMagnitude,
         ToleranceZoneForm,
     };
-    use step_io::ir::property::{MeasureKind, PropertyMeasure, PropertyMeasureUnit};
     use step_io::ir::shape_rep::ToleranceZone;
+    use step_io::ir::units::MeasureWithUnit;
 
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
@@ -3458,18 +3455,22 @@ fn tolerance_zone_round_trip() {
         product_definitional: false,
     });
 
+    let mwu = model
+        .units_pool
+        .as_mut()
+        .expect("units pool")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
+            value: 0.1,
+            unit: length_unit,
+        });
     let pmi = model.pmi.get_or_insert_with(PmiPool::default);
     let gt = pmi
         .geometric_tolerances
         .push(GeometricTolerance::Flatness(GeometricToleranceData {
             name: "t".into(),
             description: String::new(),
-            magnitude: ToleranceMagnitude::Measure(PropertyMeasure {
-                name: String::new(),
-                kind: MeasureKind::Length,
-                value: 0.1,
-                unit_ref: Some(PropertyMeasureUnit::Named(length_unit)),
-            }),
+            magnitude: ToleranceMagnitude::MeasureWithUnit(mwu),
             toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
             modifiers: Vec::new(),
             unit_size: None,
@@ -4006,9 +4007,9 @@ fn dmia_geometric_tolerance_with_datum_reference_round_trip() {
         GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData,
         ToleranceMagnitude,
     };
-    use step_io::ir::property::{MeasureKind, PropertyMeasure, PropertyMeasureUnit};
     use step_io::ir::representation_item::RepresentationItemRef;
     use step_io::ir::shape_rep::{DatumSystem, PlainRepr, Representation};
+    use step_io::ir::units::MeasureWithUnit;
     use step_io::ir::{PmiPool, ShapeAspectRef};
     let (mut model, sa, ..) = shape_aspect_relationship_fixture();
     let target = model.shape_aspects[sa].target;
@@ -4022,6 +4023,15 @@ fn dmia_geometric_tolerance_with_datum_reference_round_trip() {
         product_definitional: false,
         constituents: Vec::new(),
     });
+    let mwu = model
+        .units_pool
+        .as_mut()
+        .expect("units pool")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
+            value: 0.1,
+            unit: length_unit,
+        });
     let gt = model
         .pmi
         .get_or_insert_with(PmiPool::default)
@@ -4030,12 +4040,7 @@ fn dmia_geometric_tolerance_with_datum_reference_round_trip() {
             GeometricToleranceWithDatumReferenceData {
                 name: "t".into(),
                 description: String::new(),
-                magnitude: ToleranceMagnitude::Measure(PropertyMeasure {
-                    name: String::new(),
-                    kind: MeasureKind::Length,
-                    value: 0.1,
-                    unit_ref: Some(PropertyMeasureUnit::Named(length_unit)),
-                }),
+                magnitude: ToleranceMagnitude::MeasureWithUnit(mwu),
                 toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
                 datum_system: vec![ds],
                 modifiers: Vec::new(),
@@ -5097,7 +5102,6 @@ fn projected_zone_definition_round_trip() {
         GeometricTolerance, GeometricToleranceData, GeometricToleranceRef, ProjectedZoneDefinition,
         ToleranceMagnitude, ToleranceZoneForm,
     };
-    use step_io::ir::property::{MeasureKind, PropertyMeasure, PropertyMeasureUnit};
     use step_io::ir::shape_rep::ToleranceZone;
     use step_io::ir::units::MeasureWithUnit;
 
@@ -5149,18 +5153,22 @@ fn projected_zone_definition_round_trip() {
             value: 5.0,
             unit: length_unit,
         });
+    let mwu = model
+        .units_pool
+        .as_mut()
+        .expect("units pool")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
+            value: 0.1,
+            unit: length_unit,
+        });
     let pmi = model.pmi.get_or_insert_with(PmiPool::default);
     let gt = pmi
         .geometric_tolerances
         .push(GeometricTolerance::Flatness(GeometricToleranceData {
             name: "t".into(),
             description: String::new(),
-            magnitude: ToleranceMagnitude::Measure(PropertyMeasure {
-                name: String::new(),
-                kind: MeasureKind::Length,
-                value: 0.1,
-                unit_ref: Some(PropertyMeasureUnit::Named(length_unit)),
-            }),
+            magnitude: ToleranceMagnitude::MeasureWithUnit(mwu),
             toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
             modifiers: Vec::new(),
             unit_size: None,
@@ -5379,8 +5387,8 @@ fn geometric_tolerance_with_datum_reference_round_trip() {
         GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData,
         ToleranceMagnitude,
     };
-    use step_io::ir::property::{MeasureKind, PropertyMeasure, PropertyMeasureUnit};
     use step_io::ir::shape_rep::DatumSystem;
+    use step_io::ir::units::MeasureWithUnit;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length;
@@ -5427,18 +5435,22 @@ fn geometric_tolerance_with_datum_reference_round_trip() {
         constituents: Vec::new(),
     });
 
+    let mwu = model
+        .units_pool
+        .as_mut()
+        .expect("units pool")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
+            value: 0.1,
+            unit: length_unit,
+        });
     let mut pmi = PmiPool::default();
     pmi.geometric_tolerance_with_datum_references.push(
         GeometricToleranceWithDatumReference::Perpendicularity(
             GeometricToleranceWithDatumReferenceData {
                 name: "t".into(),
                 description: String::new(),
-                magnitude: ToleranceMagnitude::Measure(PropertyMeasure {
-                    name: String::new(),
-                    kind: MeasureKind::Length,
-                    value: 0.1,
-                    unit_ref: Some(PropertyMeasureUnit::Named(length_unit)),
-                }),
+                magnitude: ToleranceMagnitude::MeasureWithUnit(mwu),
                 toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
                 datum_system: vec![ds],
                 modifiers: Vec::new(),
@@ -5476,8 +5488,8 @@ fn complex_datum_ref_tolerance_round_trip() {
         GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData,
         ToleranceMagnitude,
     };
-    use step_io::ir::property::{MeasureKind, PropertyMeasure, PropertyMeasureUnit};
     use step_io::ir::shape_rep::DatumSystem;
+    use step_io::ir::units::MeasureWithUnit;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length;
@@ -5521,17 +5533,22 @@ fn complex_datum_ref_tolerance_round_trip() {
         constituents: Vec::new(),
     });
 
+    let mwu = model
+        .units_pool
+        .as_mut()
+        .expect("units pool")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
+            value: 0.1,
+            unit: length_unit,
+        });
+
     let mut pmi = PmiPool::default();
     pmi.geometric_tolerance_with_datum_references.push(
         GeometricToleranceWithDatumReference::Position(GeometricToleranceWithDatumReferenceData {
             name: "t".into(),
             description: String::new(),
-            magnitude: ToleranceMagnitude::Measure(PropertyMeasure {
-                name: String::new(),
-                kind: MeasureKind::Length,
-                value: 0.1,
-                unit_ref: Some(PropertyMeasureUnit::Named(length_unit)),
-            }),
+            magnitude: ToleranceMagnitude::MeasureWithUnit(mwu),
             toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
             datum_system: vec![ds],
             modifiers: Vec::new(),
@@ -5573,8 +5590,8 @@ fn geometric_tolerance_with_modifiers_round_trip() {
         GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData,
         ToleranceMagnitude,
     };
-    use step_io::ir::property::{MeasureKind, PropertyMeasure, PropertyMeasureUnit};
     use step_io::ir::shape_rep::{DatumSystem, ShapeAspect};
+    use step_io::ir::units::MeasureWithUnit;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length;
@@ -5635,14 +5652,16 @@ fn geometric_tolerance_with_modifiers_round_trip() {
                 base: GeneralDatumBase::Datum(step_io::ir::DatumId(0)),
             },
         ));
-    let magnitude = || {
-        ToleranceMagnitude::Measure(PropertyMeasure {
-            name: String::new(),
-            kind: MeasureKind::Length,
+    let mwu = model
+        .units_pool
+        .as_mut()
+        .expect("units pool")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
             value: 0.1,
-            unit_ref: Some(PropertyMeasureUnit::Named(length_unit)),
-        })
-    };
+            unit: length_unit,
+        });
+    let magnitude = || ToleranceMagnitude::MeasureWithUnit(mwu);
     pmi.geometric_tolerance_with_datum_references.push(
         GeometricToleranceWithDatumReference::Position(GeometricToleranceWithDatumReferenceData {
             name: "P".into(),
@@ -5717,8 +5736,8 @@ fn gt_defined_unit_area_unit_displacement_round_trip() {
         GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData,
         ToleranceMagnitude,
     };
-    use step_io::ir::property::{MeasureKind, PropertyMeasure, PropertyMeasureUnit};
     use step_io::ir::shape_rep::{DatumSystem, ShapeAspect};
+    use step_io::ir::units::MeasureWithUnit;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length;
@@ -5789,14 +5808,16 @@ fn gt_defined_unit_area_unit_displacement_round_trip() {
                 base: GeneralDatumBase::Datum(step_io::ir::DatumId(0)),
             },
         ));
-    let magnitude = || {
-        ToleranceMagnitude::Measure(PropertyMeasure {
-            name: String::new(),
-            kind: MeasureKind::Length,
+    let mwu = model
+        .units_pool
+        .as_mut()
+        .expect("units pool")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
             value: 0.1,
-            unit_ref: Some(PropertyMeasureUnit::Named(length_unit)),
-        })
-    };
+            unit: length_unit,
+        });
+    let magnitude = || ToleranceMagnitude::MeasureWithUnit(mwu);
     // Flatness + unit_size only
     pmi.geometric_tolerances
         .push(GeometricTolerance::Flatness(GeometricToleranceData {
@@ -5895,7 +5916,7 @@ fn plus_minus_tolerance_round_trip() {
         DimensionalCharacteristic, DimensionalSize, DimensionalSizeKind, PlusMinusTolerance,
         ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue,
     };
-    use step_io::ir::property::{MeasureKind, PropertyMeasure, PropertyMeasureUnit};
+    use step_io::ir::units::MeasureWithUnit;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length;
@@ -5932,14 +5953,16 @@ fn plus_minus_tolerance_round_trip() {
         product_definitional: false,
     });
 
-    let bound = || {
-        ToleranceMagnitude::Measure(PropertyMeasure {
-            name: String::new(),
-            kind: MeasureKind::Length,
+    let mwu = model
+        .units_pool
+        .as_mut()
+        .expect("units pool")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
             value: 0.02,
-            unit_ref: Some(PropertyMeasureUnit::Named(length_unit)),
-        })
-    };
+            unit: length_unit,
+        });
+    let bound = || ToleranceMagnitude::MeasureWithUnit(mwu);
     let mut pmi = PmiPool::default();
     let ds = pmi.dimensional_sizes.push(DimensionalSize {
         applies_to: ShapeAspectRef::ShapeAspect(sa),

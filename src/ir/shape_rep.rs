@@ -192,8 +192,9 @@ pub struct ShapeRepresentationWithParameters {
 }
 
 /// `shape_representation_with_parameters_items` SELECT — partial enum.
-/// `measure_representation_item` member is dropped (step-io's measure
-/// types live in `PropertyMeasure` not a `RepresentationItem` arena).
+/// The `measure_representation_item` member is dropped here pending its own
+/// `SrwpItem` variant; measures themselves live in the `representation_item`
+/// arena (`RepresentationItem::MeasureRepresentationItem`).
 #[derive(Debug, Clone, PartialEq)]
 pub enum SrwpItem {
     Direction(crate::ir::id::DirectionId),
