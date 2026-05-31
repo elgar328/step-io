@@ -405,6 +405,12 @@ pub struct ReaderContext {
     /// Temp; discarded after Pass 8. PDR handler consults both this map
     /// and `measure_item_map` when resolving `REPRESENTATION.items` refs.
     pub(crate) descriptive_item_map: HashMap<u64, crate::ir::shape_rep::DescriptiveItem>,
+    /// `SHAPE_DIMENSION_REPRESENTATION` repr id → its raw `items` step refs
+    /// (phase measure-arena-1). SDR reads at `Pass6ShapeRep` — before the
+    /// complex `MEASURE_REPRESENTATION_ITEM` arena push at `Pass8Measure` — so
+    /// item resolution is deferred: `resolve_deferred_sdr_items` (run after
+    /// `Pass8Measure`) re-resolves these once the arena is populated. Temp.
+    pub(crate) sdr_raw_items: HashMap<crate::ir::id::RepresentationId, Vec<u64>>,
     /// `PROPERTY_DEFINITION #N → (name, description, target ProductId)`
     /// (Pass 8-3). PDs whose target ref does not resolve to a Product
     /// (e.g. `SHAPE_ASPECT`) are silently dropped — no map entry.

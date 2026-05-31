@@ -423,6 +423,9 @@ impl ReaderContext {
         // Depends on Pass 0 (unit ctx) and Pass 6 (`pdef_to_product` for
         // resolving the PD's target).
         self.dispatch_registry(graph, PassLevel::Pass8Measure);
+        // Re-resolve SHAPE_DIMENSION_REPRESENTATION items deferred from
+        // Pass6ShapeRep now that the complex MRI arena entries exist.
+        self.resolve_deferred_sdr_items();
         // geometric_tolerance form tolerances — resolve `magnitude` through
         // `mwu_id_map` / `measure_item_map` and `toleranced_shape_aspect`
         // through the shape-aspect id maps Pass8ShapeAspect filled.
@@ -570,6 +573,28 @@ impl ReaderContext {
     /// pre-existing entries. Multiple handlers may match the same entity
     /// by design (e.g. 3D / 2D `CARTESIAN_POINT` co-exist at `Pass1` and
     /// self-discriminate by coordinate count).
+    /// Re-resolve `SHAPE_DIMENSION_REPRESENTATION` items deferred from
+    /// `Pass6ShapeRep` (phase measure-arena-1). Runs after `Pass8Measure` so
+    /// the complex `MEASURE_REPRESENTATION_ITEM` arena entries (and their
+    /// `repr_item_id_map` ids) exist. Refs are resolved in their original
+    /// order; unresolved ones drop, matching the prior inline behaviour.
+    fn resolve_deferred_sdr_items(&mut self) {
+        use crate::entities::visualization::styled_item::resolve_representation_item_ref;
+        use crate::ir::shape_rep::Representation;
+        let raw = std::mem::take(&mut self.sdr_raw_items);
+        for (repr_id, refs) in raw {
+            let items: Vec<_> = refs
+                .into_iter()
+                .filter_map(|r| resolve_representation_item_ref(self, r))
+                .collect();
+            if let Representation::ShapeDimensionRepresentation(sdr) =
+                &mut self.representations[repr_id]
+            {
+                sdr.items = items;
+            }
+        }
+    }
+
     fn dispatch_registry(&mut self, graph: &EntityGraph, pass_level: PassLevel) {
         validate_registry_no_ambiguity();
         for (&id, ent) in &graph.entities {

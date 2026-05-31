@@ -67,14 +67,32 @@ pub enum RepresentationItemRef {
 }
 
 /// `representation_item` enum arena per the ir.toml blueprint (phase
-/// repr-item-arena-1). Currently holds `QualifiedRepresentationItem` and
-/// `ValueRepresentationItem`. MRI ([`crate::ir::property::PropertyMeasure`]
-/// inline) migration is a
-/// follow-up sub-phase.
+/// repr-item-arena-1). Holds `QualifiedRepresentationItem`,
+/// `ValueRepresentationItem`, and `MeasureRepresentationItem` (the complex
+/// MI form, migrated off `PropertyMeasure` in phase measure-arena-1 so that
+/// `SHAPE_DIMENSION_REPRESENTATION` resolves it through the arena).
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationItem {
     QualifiedRepresentationItem(QualifiedRepresentationItem),
     ValueRepresentationItem(ValueRepresentationItem),
+    MeasureRepresentationItem(MeasureRepresentationItem),
+}
+
+/// The complex-MI `MEASURE_REPRESENTATION_ITEM`
+/// `(<X>_MEASURE_WITH_UNIT() MEASURE_REPRESENTATION_ITEM()
+/// MEASURE_WITH_UNIT(<typed value>, #unit) [QUALIFIED_REPRESENTATION_ITEM((..))]
+/// REPRESENTATION_ITEM(name))` — a `representation_item` carrying a typed
+/// measure value with its unit and optional value qualifiers. `value` keeps
+/// the `measure_value` type-name verbatim (e.g. `"POSITIVE_LENGTH_MEASURE"`)
+/// so the emit reproduces the literal; `measure_supertype` records the typed
+/// `<X>_MEASURE_WITH_UNIT` supertype part so the complex form round-trips.
+#[derive(Debug, Clone, PartialEq)]
+pub struct MeasureRepresentationItem {
+    pub name: String,
+    pub value: MeasureValue,
+    pub unit_ref: Option<crate::ir::property::PropertyMeasureUnit>,
+    pub qualifiers: Vec<QualifierRef>,
+    pub measure_supertype: Option<String>,
 }
 
 /// `QUALIFIED_REPRESENTATION_ITEM(name, qualifiers)` — wraps a

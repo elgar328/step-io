@@ -109,15 +109,33 @@ impl WriteBuffer<'_> {
         }
     }
 
-    /// Emit the `pmi` pool's leaf primitives (`TOLERANCE_ZONE_FORM` /
-    /// `TYPE_QUALIFIER` / `VALUE_FORMAT_TYPE_QUALIFIER` /
-    /// `DRAUGHTING_PRE_DEFINED_TEXT_FONT`). No cross-refs — each is a
-    /// standalone 1-attr entity.
-    fn emit_pmi_pool(&mut self) {
-        use crate::entities::pmi::{
-            DraughtingPreDefinedTextFontHandler, ToleranceZoneFormHandler, TypeQualifierHandler,
-            ValueFormatTypeQualifierHandler,
+    /// Emit the value-qualifier pools (`TYPE_QUALIFIER` /
+    /// `VALUE_FORMAT_TYPE_QUALIFIER`) and fill their step caches. Split out of
+    /// `emit_pmi_pool` and run before the representation pre-pass (phase
+    /// measure-arena-1) so `QUALIFIED_REPRESENTATION_ITEM` and
+    /// `MeasureRepresentationItem` emit — which index these caches — can run
+    /// there. Standalone 1-attr entities, no cross-refs.
+    pub(in crate::writer::buffer) fn emit_value_qualifier_pools(&mut self) {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::pmi::{TypeQualifierHandler, ValueFormatTypeQualifierHandler};
+        let Some(pmi) = self.model.pmi.clone() else {
+            return;
         };
+        for tq in pmi.type_qualifiers.iter() {
+            let step = TypeQualifierHandler::write(self, tq.clone()).unwrap_or(0);
+            self.type_qualifier_step_ids.push(step);
+        }
+        for vftq in pmi.value_format_type_qualifiers.iter() {
+            let step = ValueFormatTypeQualifierHandler::write(self, vftq.clone()).unwrap_or(0);
+            self.value_format_type_qualifier_step_ids.push(step);
+        }
+    }
+
+    /// Emit the `pmi` pool's remaining leaf primitives (`TOLERANCE_ZONE_FORM` /
+    /// `DRAUGHTING_PRE_DEFINED_TEXT_FONT`). The value-qualifier pools are
+    /// emitted earlier by `emit_value_qualifier_pools`.
+    fn emit_pmi_pool(&mut self) {
+        use crate::entities::pmi::{DraughtingPreDefinedTextFontHandler, ToleranceZoneFormHandler};
         let Some(pmi) = self.model.pmi.clone() else {
             return;
         };
@@ -127,14 +145,6 @@ impl WriteBuffer<'_> {
             if let Ok(step_id) = ToleranceZoneFormHandler::write(self, tzf.clone()) {
                 self.tolerance_zone_form_step_ids[index] = step_id;
             }
-        }
-        for tq in pmi.type_qualifiers.iter() {
-            let step = TypeQualifierHandler::write(self, tq.clone()).unwrap_or(0);
-            self.type_qualifier_step_ids.push(step);
-        }
-        for vftq in pmi.value_format_type_qualifiers.iter() {
-            let step = ValueFormatTypeQualifierHandler::write(self, vftq.clone()).unwrap_or(0);
-            self.value_format_type_qualifier_step_ids.push(step);
         }
         self.dptf_step_ids = Vec::with_capacity(pmi.draughting_pre_defined_text_fonts.len());
         for font in pmi.draughting_pre_defined_text_fonts.iter() {

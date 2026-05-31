@@ -4730,6 +4730,71 @@ fn qri_vri_round_trip() {
 }
 
 #[test]
+fn measure_representation_item_round_trip() {
+    // Complex-MI MEASURE_REPRESENTATION_ITEM in the representation_item arena
+    // (phase measure-arena-1): typed value + unit + value qualifier + the
+    // typed <X>_MEASURE_WITH_UNIT supertype, emitted as the multi-part form.
+    use step_io::ir::pmi::ValueFormatTypeQualifier;
+    use step_io::ir::property::PropertyMeasureUnit;
+    use step_io::ir::representation_item::{
+        MeasureRepresentationItem, MeasureValue, QualifierRef, RepresentationItem,
+    };
+
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length_unit = ctx.length;
+    model.units.push(ctx);
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    let vftq = pmi
+        .value_format_type_qualifiers
+        .push(ValueFormatTypeQualifier {
+            format_type: "NR2 1.1".into(),
+        });
+    model
+        .representation_items
+        .push(RepresentationItem::MeasureRepresentationItem(
+            MeasureRepresentationItem {
+                name: "nominal value".into(),
+                value: MeasureValue::Real {
+                    type_name: "POSITIVE_LENGTH_MEASURE".into(),
+                    value: 1.2,
+                },
+                unit_ref: Some(PropertyMeasureUnit::Named(length_unit)),
+                qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
+                measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    assert!(text.contains("LENGTH_MEASURE_WITH_UNIT"));
+    assert!(text.contains("MEASURE_WITH_UNIT"));
+    assert!(text.contains("QUALIFIED_REPRESENTATION_ITEM"));
+
+    let re = reconvert(&text);
+    assert_eq!(re.representation_items.len(), 1);
+    let RepresentationItem::MeasureRepresentationItem(mri) =
+        re.representation_items.iter().next().unwrap()
+    else {
+        panic!("expected MeasureRepresentationItem");
+    };
+    assert_eq!(mri.name, "nominal value");
+    let MeasureValue::Real { type_name, value } = &mri.value else {
+        panic!("expected Real measure value");
+    };
+    assert_eq!(type_name, "POSITIVE_LENGTH_MEASURE");
+    assert!((value - 1.2).abs() < 1e-9);
+    assert_eq!(mri.qualifiers.len(), 1);
+    assert_eq!(
+        mri.measure_supertype.as_deref(),
+        Some("LENGTH_MEASURE_WITH_UNIT")
+    );
+    assert!(
+        mri.unit_ref.is_some(),
+        "explicit unit ref should round-trip"
+    );
+}
+
+#[test]
 fn measure_qualification_round_trip() {
     // MEASURE_QUALIFICATION — qualifiers SET covers the two corpus-modelled
     // value_qualifier variants (TypeQualifier, ValueFormatTypeQualifier).

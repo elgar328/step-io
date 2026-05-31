@@ -667,6 +667,14 @@ impl<'m> WriteBuffer<'m> {
         // sbsm-cluster). The symbol-domain GRI entries still emit after
         // visualization (`emit_geometric_representation_items`).
         self.emit_sbsm_in_gri_arena()?;
+        // Emit the value-qualifier pools and the representation_item arena
+        // before the representation pre-pass (phase measure-arena-1): a
+        // SHAPE_DIMENSION_REPRESENTATION emitted in the pre-pass resolves its
+        // MeasureRepresentationItem items through representation_item_step_ids,
+        // and the MRI/QRI emit needs the qualifier step caches (units are
+        // already populated by emit_units_pool_if_set above).
+        self.emit_value_qualifier_pools();
+        self.emit_representation_items();
         self.emit_representations_pre_pass()?;
         self.emit_product_chain_if_eligible()?;
         // PC cluster (phase pc-unify-a) — arena-driven emit. Coexists with
@@ -743,9 +751,10 @@ impl<'m> WriteBuffer<'m> {
         // value_format_type_qualifier_step_ids (filled by emit_pmi_pool)
         // and mwu_step_ids.
         self.emit_measure_qualifications();
-        // QUALIFIED / VALUE REPRESENTATION_ITEM — depends on type_qualifier
-        // / value_format_type_qualifier step ids (emit_pmi_pool).
-        self.emit_representation_items();
+        // emit_representation_items moved before emit_representations_pre_pass
+        // (phase measure-arena-1) so a SHAPE_DIMENSION_REPRESENTATION emitted
+        // in the pre-pass resolves its MeasureRepresentationItem items through
+        // a populated representation_item_step_ids cache.
         // NOTE: emit_characterized_objects() is deferred to after the
         // delayed-emit Representation block below — a CIWR body resolves its
         // `rep` (a DraughtingModel, stepped by emit_draughting_models) and its

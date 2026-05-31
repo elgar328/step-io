@@ -10,12 +10,15 @@
 //! the bare simple MRI line with a typed measure and a resolved unit ref.
 
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
-use crate::ir::attr::{check_count, read_string_or_unset};
+use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::id::UnitContextId;
 use crate::ir::property::{MeasureKind, PropertyMeasure, PropertyMeasureUnit};
+use crate::ir::representation_item::{
+    MeasureRepresentationItem, MeasureValue, QualifierRef, RepresentationItem,
+};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
-use crate::reader::{ReaderContext, require_part_attrs};
+use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use step_io_macros::{step_entity, step_entity_complex};
@@ -78,7 +81,18 @@ impl ComplexEntityHandler for MeasureRepresentationItemComplexHandler {
         let name = read_string_or_unset(repr_attrs, 0, entity_id, "name")?.to_owned();
         let mwu_attrs = require_part_attrs(parts, "MEASURE_WITH_UNIT", entity_id)?;
         // MEASURE_WITH_UNIT part: attr[0] = typed value, attr[1] = unit_component.
-        insert_measure_item(ctx, entity_id, name, mwu_attrs.first(), mwu_attrs.get(1));
+        // Keep the `measure_item_map` entry for the GD&T tolerance-magnitude
+        // path (phase measure-arena-1 has not yet rerouted it).
+        insert_measure_item(
+            ctx,
+            entity_id,
+            name.clone(),
+            mwu_attrs.first(),
+            mwu_attrs.get(1),
+        );
+        // Also capture the complex form into the `representation_items` arena
+        // so `SHAPE_DIMENSION_REPRESENTATION` resolves it (phase measure-arena-1).
+        insert_measure_repr_item(ctx, entity_id, name, parts, mwu_attrs);
         Ok(())
     }
 
@@ -111,10 +125,25 @@ fn insert_measure_item(
     let Attribute::Real(measure_value) = value.as_ref() else {
         return;
     };
-    // Resolve the unit_component ref to an explicit NamedUnit / DerivedUnit
-    // arena ref; non-resolving refs fall through to `unit_ref = None` and the
-    // writer's context-based fallback.
-    let unit_ref = match unit_attr {
+    let unit_ref = resolve_unit_ref(ctx, unit_attr);
+    ctx.measure_item_map.insert(
+        entity_id,
+        PropertyMeasure {
+            name,
+            kind,
+            value: *measure_value,
+            unit_ref,
+        },
+    );
+}
+
+/// Resolve the `unit_component` ref to an explicit `NamedUnit` / `DerivedUnit`
+/// arena ref; non-resolving refs fall through to `None`.
+fn resolve_unit_ref(
+    ctx: &ReaderContext,
+    unit_attr: Option<&Attribute>,
+) -> Option<PropertyMeasureUnit> {
+    match unit_attr {
         Some(Attribute::EntityRef(uref)) => ctx
             .named_unit_id_map
             .get(uref)
@@ -127,16 +156,78 @@ fn insert_measure_item(
                     .map(PropertyMeasureUnit::Derived)
             }),
         _ => None,
-    };
-    ctx.measure_item_map.insert(
-        entity_id,
-        PropertyMeasure {
-            name,
-            kind,
-            value: *measure_value,
-            unit_ref,
+    }
+}
+
+/// Capture a complex `MEASURE_REPRESENTATION_ITEM` into the
+/// `representation_items` arena (phase measure-arena-1), preserving the typed
+/// `measure_value` (verbatim type-name), unit ref, value qualifiers, and the
+/// typed `<X>_MEASURE_WITH_UNIT` supertype part. Registered in
+/// `repr_item_id_map` so `resolve_representation_item_ref` reaches it. Skips
+/// (no push) when the value is not a primitive `measure_value`.
+fn insert_measure_repr_item(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    name: String,
+    parts: &[RawEntityPart],
+    mwu_attrs: &[Attribute],
+) {
+    let value = match mwu_attrs.first() {
+        Some(Attribute::Typed { type_name, value }) => match value.as_ref() {
+            Attribute::Real(v) => MeasureValue::Real {
+                type_name: type_name.clone(),
+                value: *v,
+            },
+            Attribute::Integer(v) => MeasureValue::Integer {
+                type_name: type_name.clone(),
+                value: *v,
+            },
+            Attribute::String(s) => MeasureValue::Text {
+                type_name: type_name.clone(),
+                value: s.clone(),
+            },
+            _ => return,
         },
-    );
+        _ => return,
+    };
+    let unit_ref = resolve_unit_ref(ctx, mwu_attrs.get(1));
+    // QUALIFIED_REPRESENTATION_ITEM part: attr[0] = SET of value_qualifier refs.
+    let qualifiers = match find_part_attrs(parts, "QUALIFIED_REPRESENTATION_ITEM") {
+        Some(q_attrs) => read_entity_ref_list(q_attrs, 0, entity_id, "qualifiers")
+            .unwrap_or_default()
+            .into_iter()
+            .filter_map(|r| {
+                if let Some(&id) = ctx.type_qualifier_id_map.get(&r) {
+                    Some(QualifierRef::TypeQualifier(id))
+                } else {
+                    ctx.value_format_type_qualifier_id_map
+                        .get(&r)
+                        .copied()
+                        .map(QualifierRef::ValueFormatTypeQualifier)
+                }
+            })
+            .collect(),
+        None => Vec::new(),
+    };
+    // The typed `<X>_MEASURE_WITH_UNIT` supertype part (e.g.
+    // `LENGTH_MEASURE_WITH_UNIT`), distinct from the base `MEASURE_WITH_UNIT`.
+    let measure_supertype = parts
+        .iter()
+        .map(|p| p.name.as_str())
+        .find(|n| n.ends_with("_MEASURE_WITH_UNIT") && *n != "MEASURE_WITH_UNIT")
+        .map(str::to_owned);
+    let id = ctx
+        .representation_items
+        .push(RepresentationItem::MeasureRepresentationItem(
+            MeasureRepresentationItem {
+                name,
+                value,
+                unit_ref,
+                qualifiers,
+                measure_supertype,
+            },
+        ));
+    ctx.repr_item_id_map.insert(entity_id, id);
 }
 
 fn match_measure_kind(type_name: &str) -> Option<MeasureKind> {

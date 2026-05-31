@@ -555,7 +555,10 @@ impl WriteBuffer<'_> {
 
     /// Resolve an explicit [`PropertyMeasureUnit`] to its emitted STEP id.
     /// `None` falls through to the legacy context-based lookup.
-    fn resolve_explicit_unit_ref(&self, unit_ref: Option<PropertyMeasureUnit>) -> Option<u64> {
+    pub(in crate::writer::buffer) fn resolve_explicit_unit_ref(
+        &self,
+        unit_ref: Option<PropertyMeasureUnit>,
+    ) -> Option<u64> {
         match unit_ref? {
             PropertyMeasureUnit::Named(id) => self.named_unit_step_ids.get(id.0 as usize).copied(),
             PropertyMeasureUnit::Derived(id) => {
