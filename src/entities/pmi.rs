@@ -23,10 +23,10 @@ use crate::ir::pmi::{
     GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance,
     GeometricToleranceData, GeometricToleranceRef, GeometricToleranceRelationship,
     GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData, LeaderCurve,
-    LeaderTerminator, LimitsAndFits, MeasureQualification, PlusMinusTolerance,
-    ProjectedZoneDefinition, TerminatorSymbol, TessellatedAnnotationOccurrence, ToleranceMagnitude,
-    ToleranceMethodDefinition, ToleranceValue, ToleranceZoneForm, TypeQualifier,
-    ValueFormatTypeQualifier, ValueQualifier,
+    LeaderTerminator, LimitsAndFits, MeasureQualification, PlainAnnotationOccurrence,
+    PlusMinusTolerance, ProjectedZoneDefinition, TerminatorSymbol, TessellatedAnnotationOccurrence,
+    ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue, ToleranceZoneForm,
+    TypeQualifier, ValueFormatTypeQualifier, ValueQualifier,
 };
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
@@ -457,6 +457,67 @@ impl SimpleEntityHandler for DraughtingAnnotationOccurrenceHandler {
             "DRAUGHTING_ANNOTATION_OCCURRENCE",
             vec![
                 Attribute::String(dao.name),
+                Attribute::List(style_refs),
+                Attribute::EntityRef(item_id),
+            ],
+        ))
+    }
+}
+
+pub(crate) struct AnnotationOccurrenceHandler;
+
+/// `ANNOTATION_OCCURRENCE(name, styles, item)` — the plain `annotation_occurrence`
+/// supertype, instantiated directly in some PMI corpora (e.g. as a
+/// `DRAUGHTING_MODEL_ITEM_ASSOCIATION.identified_item` or a `DRAUGHTING_CALLOUT`
+/// content). Same shape/handling as `DRAUGHTING_ANNOTATION_OCCURRENCE`.
+#[step_entity(name = "ANNOTATION_OCCURRENCE", pass = Pass7AnnotationPlane)]
+impl SimpleEntityHandler for AnnotationOccurrenceHandler {
+    type WriteInput = PlainAnnotationOccurrence;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 3, entity_id, "ANNOTATION_OCCURRENCE")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
+        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
+
+        let mut styles = Vec::with_capacity(style_refs.len());
+        for r in style_refs {
+            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+                styles.push(psa_id);
+            }
+        }
+        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
+            return Ok(());
+        };
+
+        let id = ctx
+            .pmi
+            .get_or_insert_with(PmiPool::default)
+            .annotation_occurrences
+            .push(AnnotationOccurrence::Plain(PlainAnnotationOccurrence {
+                name,
+                styles,
+                item,
+            }));
+        ctx.annotation_occurrence_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, ao: PlainAnnotationOccurrence) -> Result<u64, WriteError> {
+        let item_id = buf.emit_representation_item_ref(ao.item)?;
+        let mut style_refs = Vec::with_capacity(ao.styles.len());
+        for psa_id in ao.styles {
+            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+        }
+        Ok(buf.push_simple(
+            "ANNOTATION_OCCURRENCE",
+            vec![
+                Attribute::String(ao.name),
                 Attribute::List(style_refs),
                 Attribute::EntityRef(item_id),
             ],

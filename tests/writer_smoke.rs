@@ -3891,6 +3891,41 @@ fn draughting_model_shape_tessellated_complex_round_trips() {
 }
 
 #[test]
+fn plain_annotation_occurrence_round_trips() {
+    // plain ANNOTATION_OCCURRENCE (the supertype) — must emit under its own
+    // name and read back as AnnotationOccurrence::Plain so that a DMIA /
+    // DRAUGHTING_CALLOUT referencing it resolves.
+    use step_io::ir::PmiPool;
+    use step_io::ir::geometry::{Plane3, Surface};
+    use step_io::ir::pmi::{AnnotationOccurrence, PlainAnnotationOccurrence};
+    use step_io::ir::representation_item::RepresentationItemRef;
+    let mut model = empty_model();
+    let placement = xyz_placement(&mut model);
+    let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
+        position: placement,
+    }));
+    model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_occurrences
+        .push(AnnotationOccurrence::Plain(PlainAnnotationOccurrence {
+            name: "datum".into(),
+            styles: vec![],
+            item: RepresentationItemRef::Surface(surf),
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let pmi = re.pmi.expect("pmi pool");
+    assert!(
+        pmi.annotation_occurrences
+            .iter()
+            .any(|a| matches!(a, AnnotationOccurrence::Plain(_))),
+        "plain ANNOTATION_OCCURRENCE should round-trip as AnnotationOccurrence::Plain"
+    );
+}
+
+#[test]
 fn dmia_round_trip() {
     use step_io::ir::PmiPool;
     use step_io::ir::geometry::{Plane3, Surface};

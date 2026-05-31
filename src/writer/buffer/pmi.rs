@@ -284,7 +284,7 @@ impl WriteBuffer<'_> {
     /// `tessellated_item_step_ids`).
     pub(in crate::writer::buffer) fn emit_annotation_occurrences(&mut self) {
         use crate::entities::pmi::{
-            AnnotationPlaneHandler, AnnotationSymbolOccurrenceHandler,
+            AnnotationOccurrenceHandler, AnnotationPlaneHandler, AnnotationSymbolOccurrenceHandler,
             AnnotationTextOccurrenceHandler, DraughtingAnnotationOccurrenceHandler,
             LeaderTerminatorHandler, TerminatorSymbolHandler,
             TessellatedAnnotationOccurrenceHandler,
@@ -295,6 +295,9 @@ impl WriteBuffer<'_> {
         };
         for ao in pmi.annotation_occurrences.iter() {
             let step = match ao {
+                AnnotationOccurrence::Plain(p) => {
+                    AnnotationOccurrenceHandler::write(self, p.clone())
+                }
                 AnnotationOccurrence::AnnotationPlane(ap) => {
                     AnnotationPlaneHandler::write(self, ap.clone())
                 }

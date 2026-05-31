@@ -513,6 +513,9 @@ pub enum DatumFeatureKind {
 /// carry presentation annotations.
 #[derive(Debug, Clone, PartialEq)]
 pub enum AnnotationOccurrence {
+    /// Plain `ANNOTATION_OCCURRENCE` (the non-abstract supertype) — same
+    /// `(name, styles, item)` shape as the subtypes below.
+    Plain(PlainAnnotationOccurrence),
     AnnotationPlane(AnnotationPlane),
     TessellatedAnnotationOccurrence(TessellatedAnnotationOccurrence),
     AnnotationSymbolOccurrence(AnnotationSymbolOccurrence),
@@ -520,6 +523,18 @@ pub enum AnnotationOccurrence {
     DraughtingAnnotationOccurrence(DraughtingAnnotationOccurrence),
     TerminatorSymbol(TerminatorSymbol),
     LeaderTerminator(LeaderTerminator),
+}
+
+/// `ANNOTATION_OCCURRENCE(name, styles, item)` — the plain `styled_item`
+/// supertype, instantiated directly in some PMI corpora (e.g. as a
+/// `DRAUGHTING_MODEL_ITEM_ASSOCIATION.identified_item`). `item` is the
+/// inherited `styled_item` SELECT, carried as [`RepresentationItemRef`];
+/// an unresolved `item` drops the occurrence, symmetric on re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlainAnnotationOccurrence {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentId>,
+    pub item: RepresentationItemRef,
 }
 
 /// `LEADER_CURVE(name, styles, item)` — sole occupant of the
