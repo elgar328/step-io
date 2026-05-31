@@ -693,6 +693,12 @@ impl<'m> WriteBuffer<'m> {
         self.emit_shape_aspect_relationships()?;
         self.emit_dimensional_sizes()?;
         self.emit_dimensional_locations()?;
+        // geometric_tolerance(+_with_datum_reference) — moved before the PD
+        // pass so a PD.definition targeting a GEOMETRIC_TOLERANCE resolves its
+        // step id. Deps (mwu / shape-aspect / datum_systems) are all filled by
+        // the emits above. GT relationships stay after (below).
+        self.emit_geometric_tolerances();
+        self.emit_geometric_tolerance_with_datum_references();
         // Second half of the PD orchestrator — runs after every
         // step-id cache its definition SELECT may reference is populated:
         // SA-family (`emit_shape_aspect_ref` covering DATUM_FEATURE /
@@ -716,14 +722,9 @@ impl<'m> WriteBuffer<'m> {
         // later in emit_characterized_objects).
         self.emit_characterized_objects_prepass();
         self.emit_property_definitions_non_pds();
-        // geometric_tolerance form tolerances — after the units pass
-        // (`mwu_step_ids`) and emit_pmi_if_set (shape-aspect caches).
-        self.emit_geometric_tolerances();
-        // geometric_tolerance_with_datum_reference — also after
-        // emit_datum_systems (`datum_system_step_ids`).
-        self.emit_geometric_tolerance_with_datum_references();
         // GEOMETRIC_TOLERANCE_RELATIONSHIP — pairs two GT entries; both
-        // GT step-id caches must be filled by the two emits above.
+        // GT step-id caches are filled by emit_geometric_tolerances(+_with_datum)
+        // above (moved before the PD pass).
         self.emit_geometric_tolerance_relationships();
         // TOLERANCE_ZONE — after both geometric_tolerance emits (its
         // `defining_tolerance` caches) and emit_pmi_if_set (the

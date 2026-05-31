@@ -9,6 +9,7 @@
 //! handled in `buffer/property.rs::emit_property` (the orchestrator).
 
 use crate::entities::SimpleEntityHandler;
+use crate::entities::pmi::resolve_geometric_tolerance_ref;
 use crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_ref;
 use crate::ir::ProductId;
 use crate::ir::ShapeAspectRef;
@@ -161,12 +162,19 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
                 return Ok(());
             }
             CharacterizedDefinition::CharacterizedItemWithinRepresentation(co_id)
+        } else if let Some(gt_ref) = resolve_geometric_tolerance_ref(ctx, target_ref) {
+            // `geometric_tolerance` member (Plain or WithDatumReference complex
+            // MI). Both arenas live in the round-trip-diffed pmi pool.
+            CharacterizedDefinition::GeometricTolerance(gt_ref)
+        } else if let Some(&ds_id) = ctx.dimensional_size_id_map.get(&target_ref) {
+            CharacterizedDefinition::DimensionalSize(ds_id)
         } else {
             eprintln!(
                 "warning: PROPERTY_DEFINITION #{entity_id} target #{target_ref} \
                      resolves to no supported characterized_definition member \
                      (PRODUCT_DEFINITION / SHAPE_ASPECT / PRODUCT_DEFINITION_SHAPE / \
-                     GENERAL_PROPERTY / DOCUMENT_FILE / CHARACTERIZED_ITEM_WITHIN_REPRESENTATION) \
+                     GENERAL_PROPERTY / DOCUMENT_FILE / CHARACTERIZED_ITEM_WITHIN_REPRESENTATION / \
+                     GEOMETRIC_TOLERANCE / DIMENSIONAL_SIZE) \
                      — skipping"
             );
             return Ok(());

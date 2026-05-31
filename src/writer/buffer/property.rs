@@ -348,6 +348,7 @@ impl WriteBuffer<'_> {
     /// `PROPERTY_DEFINITION` (Itself variant) arena slots; both
     /// `ProductDefinition` and `ShapeAspect` targets resolve here.
     /// Preserves slots filled by [`emit_property_definitions_pds_only`].
+    #[allow(clippy::too_many_lines)]
     pub(in crate::writer::buffer) fn emit_property_definitions_non_pds(&mut self) {
         use crate::ir::property::{CharacterizedDefinition, PropertyDefinition};
         let pool_owned = self.model.properties.clone();
@@ -437,6 +438,39 @@ impl WriteBuffer<'_> {
                     let s = self
                         .characterized_object_step_ids
                         .get(co_id.0 as usize)
+                        .copied()
+                        .unwrap_or(0);
+                    if s == 0 {
+                        continue;
+                    }
+                    s
+                }
+                CharacterizedDefinition::GeometricTolerance(gt_ref) => {
+                    // geometric_tolerance(_with_datum_reference) step ids are
+                    // filled by emit_geometric_tolerances(+_with_datum), moved
+                    // before this pass.
+                    use crate::ir::pmi::GeometricToleranceRef;
+                    let s = match gt_ref {
+                        GeometricToleranceRef::Plain(id) => {
+                            self.geometric_tolerance_step_ids.get(id.0 as usize)
+                        }
+                        GeometricToleranceRef::WithDatumReference(id) => self
+                            .geometric_tolerance_with_datum_reference_step_ids
+                            .get(id.0 as usize),
+                    }
+                    .copied()
+                    .unwrap_or(0);
+                    if s == 0 {
+                        continue;
+                    }
+                    s
+                }
+                CharacterizedDefinition::DimensionalSize(ds_id) => {
+                    // dimensional_size step ids are filled by
+                    // emit_dimensional_sizes, which runs before this pass.
+                    let s = self
+                        .dimensional_size_step_ids
+                        .get(ds_id.0 as usize)
                         .copied()
                         .unwrap_or(0);
                     if s == 0 {

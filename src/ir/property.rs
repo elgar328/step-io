@@ -210,6 +210,11 @@ pub enum CharacterizedDefinition {
     /// `CHARACTERIZED_ITEM_WITHIN_REPRESENTATION` (a `characterized_object`
     /// subtype) — geometric-validation property shapes. No product binding.
     CharacterizedItemWithinRepresentation(CharacterizedObjectId),
+    /// `geometric_tolerance` member — `Plain` or `WithDatumReference` (the
+    /// complex MI form). Both arenas live in the `pmi` pool.
+    GeometricTolerance(crate::ir::pmi::GeometricToleranceRef),
+    /// `dimensional_size` member (`pmi` pool).
+    DimensionalSize(crate::ir::id::DimensionalSizeId),
 }
 
 /// `PROPERTY_DEFINITION` + bound `REPRESENTATION` collapsed into a single

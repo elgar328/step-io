@@ -1440,6 +1440,104 @@ fn property_definition_with_general_property_target_round_trips() {
 }
 
 #[test]
+fn property_definition_with_dimensional_size_target_round_trips() {
+    // PROPERTY_DEFINITION whose definition is a DIMENSIONAL_SIZE (pmi pool).
+    use step_io::ir::pmi::DimensionalSize;
+    use step_io::ir::property::{
+        CharacterizedDefinition, PropertyDefinition, PropertyDefinitionData, PropertyPool,
+    };
+    let (mut model, sa, ..) = shape_aspect_relationship_fixture();
+    let ds_id = model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .dimensional_sizes
+        .push(DimensionalSize {
+            applies_to: ShapeAspectRef::ShapeAspect(sa),
+            name: "diameter".into(),
+            kind: DimensionalSizeKind::Plain,
+        });
+    model
+        .properties
+        .get_or_insert_with(PropertyPool::default)
+        .property_definitions
+        .push(PropertyDefinition::Itself(PropertyDefinitionData {
+            name: "p_ds".into(),
+            description: String::new(),
+            definition: CharacterizedDefinition::DimensionalSize(ds_id),
+        }));
+
+    // Write-side guard: the PD line is emitted only if the DimensionalSize
+    // definition step resolved (non-zero). dimensional_size emits before the
+    // PD pass, so the PD must reference it. (Full re-read symmetry is covered
+    // by reference-check on real fixtures, which carry the product-shape PDS
+    // this minimal model omits.)
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("PROPERTY_DEFINITION('p_ds'"),
+        "PD with DIMENSIONAL_SIZE definition must emit (writer arm fires): {text}"
+    );
+}
+
+#[test]
+fn property_definition_with_geometric_tolerance_target_round_trips() {
+    // PROPERTY_DEFINITION whose definition is a GEOMETRIC_TOLERANCE. Also
+    // guards the writer reorder: emit_geometric_tolerances must run before the
+    // PD pass, else the re-read drops this PD and the assertion fails.
+    use step_io::ir::pmi::{
+        GeometricTolerance, GeometricToleranceData, GeometricToleranceRef, ToleranceMagnitude,
+    };
+    use step_io::ir::property::{
+        CharacterizedDefinition, MeasureKind, PropertyDefinition, PropertyDefinitionData,
+        PropertyMeasure, PropertyMeasureUnit, PropertyPool,
+    };
+    let (mut model, sa, ..) = shape_aspect_relationship_fixture();
+    let ctx = mm_radian_steradian(&mut model);
+    let length = ctx.length;
+    model.units.push(ctx);
+    let gt_id = model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .geometric_tolerances
+        .push(GeometricTolerance::Flatness(GeometricToleranceData {
+            name: "t".into(),
+            description: String::new(),
+            magnitude: ToleranceMagnitude::Measure(PropertyMeasure {
+                name: String::new(),
+                kind: MeasureKind::Length,
+                value: 0.1,
+                unit_ref: Some(PropertyMeasureUnit::Named(length)),
+            }),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            modifiers: Vec::new(),
+            unit_size: None,
+            defined_area_unit: None,
+        }));
+    model
+        .properties
+        .get_or_insert_with(PropertyPool::default)
+        .property_definitions
+        .push(PropertyDefinition::Itself(PropertyDefinitionData {
+            name: "p_gt".into(),
+            description: String::new(),
+            definition: CharacterizedDefinition::GeometricTolerance(GeometricToleranceRef::Plain(
+                gt_id,
+            )),
+        }));
+
+    // Write-side guard for the new arm AND the GT-emit reorder: the PD line is
+    // emitted only if the geometric_tolerance definition step resolved
+    // (non-zero) at PD-emit time, which requires emit_geometric_tolerances to
+    // run before the PD pass (the reorder). Reverting the reorder leaves the GT
+    // step 0 → the PD arm skips → no PD line → this fails. (Full re-read
+    // symmetry is covered by reference-check on real fixtures.)
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("PROPERTY_DEFINITION('p_gt'"),
+        "PD with GEOMETRIC_TOLERANCE definition must emit (writer arm + GT reorder): {text}"
+    );
+}
+
+#[test]
 fn property_definition_with_document_file_target_round_trips() {
     use step_io::ir::plm::{Document, DocumentFile, DocumentType, PlmPool};
     use step_io::ir::property::{
