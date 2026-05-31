@@ -212,6 +212,21 @@ impl WriteBuffer<'_> {
             },
         };
         let unit_step = self.resolve_explicit_unit_ref(mri.unit_ref).unwrap_or(0);
+        // Simple form: the bare 3-attr MEASURE_REPRESENTATION_ITEM line
+        // (phase measure-arena-4).
+        if matches!(
+            mri.form,
+            crate::ir::representation_item::MeasureForm::Simple
+        ) {
+            return self.push_simple(
+                "MEASURE_REPRESENTATION_ITEM",
+                vec![
+                    Attribute::String(mri.name),
+                    typed,
+                    Attribute::EntityRef(unit_step),
+                ],
+            );
+        }
         let mut parts: Vec<(String, Vec<Attribute>)> = Vec::with_capacity(5);
         if let Some(supertype) = mri.measure_supertype {
             parts.push((supertype, vec![]));

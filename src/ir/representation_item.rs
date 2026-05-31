@@ -78,16 +78,29 @@ pub enum RepresentationItem {
     MeasureRepresentationItem(MeasureRepresentationItem),
 }
 
-/// The complex-MI `MEASURE_REPRESENTATION_ITEM`
-/// `(<X>_MEASURE_WITH_UNIT() MEASURE_REPRESENTATION_ITEM()
+/// Whether a `MeasureRepresentationItem` serializes as the bare 3-attribute
+/// `MEASURE_REPRESENTATION_ITEM(name, <typed>, #unit)` form (`Simple`) or the
+/// complex-MI form (`Complex`). An explicit marker rather than inference: a
+/// schema-legal complex MRI can carry neither a typed supertype nor a
+/// qualifier, so `measure_supertype.is_none() && qualifiers.is_empty()` would
+/// misclassify it (phase measure-arena-4).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum MeasureForm {
+    Simple,
+    Complex,
+}
+
+/// A `MEASURE_REPRESENTATION_ITEM` — either the bare 3-attr form
+/// `MEASURE_REPRESENTATION_ITEM(name, <typed>MEASURE(v), #unit)` (`Simple`) or
+/// the complex-MI form `(<X>_MEASURE_WITH_UNIT() MEASURE_REPRESENTATION_ITEM()
 /// MEASURE_WITH_UNIT(<typed value>, #unit) [QUALIFIED_REPRESENTATION_ITEM((..))]
-/// REPRESENTATION_ITEM(name))` — a `representation_item` carrying a typed
-/// measure value with its unit and optional value qualifiers. `value` keeps
-/// the `measure_value` type-name verbatim (e.g. `"POSITIVE_LENGTH_MEASURE"`)
-/// so the emit reproduces the literal; `measure_supertype` records the typed
-/// `<X>_MEASURE_WITH_UNIT` supertype part so the complex form round-trips.
+/// REPRESENTATION_ITEM(name))` (`Complex`). `value` keeps the `measure_value`
+/// type-name verbatim (e.g. `"POSITIVE_LENGTH_MEASURE"`) so the emit reproduces
+/// the literal; `measure_supertype` records the typed `<X>_MEASURE_WITH_UNIT`
+/// supertype part (complex only). `qualifiers` are empty for the simple form.
 #[derive(Debug, Clone, PartialEq)]
 pub struct MeasureRepresentationItem {
+    pub form: MeasureForm,
     pub name: String,
     pub value: MeasureValue,
     pub unit_ref: Option<crate::ir::property::PropertyMeasureUnit>,

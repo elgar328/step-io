@@ -15,7 +15,7 @@ use crate::ir::error::ConvertError;
 use crate::ir::id::UnitContextId;
 use crate::ir::property::{MeasureKind, PropertyMeasure, PropertyMeasureUnit};
 use crate::ir::representation_item::{
-    MeasureRepresentationItem, MeasureValue, QualifierRef, RepresentationItem,
+    MeasureForm, MeasureRepresentationItem, MeasureValue, QualifierRef, RepresentationItem,
 };
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
@@ -39,8 +39,28 @@ impl SimpleEntityHandler for MeasureRepresentationItemHandler {
     ) -> Result<(), ConvertError> {
         check_count(attrs, 3, entity_id, "MEASURE_REPRESENTATION_ITEM")?;
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        // attrs[1] = typed value, attrs[2] = unit_component.
-        insert_measure_item(ctx, entity_id, name, attrs.get(1), attrs.get(2));
+        // attrs[1] = typed value, attrs[2] = unit_component. Capture into the
+        // representation_item arena (phase measure-arena-4) with the verbatim
+        // measure_value (no MeasureKind whitelist — NUMERIC_MEASURE /
+        // RATIO_MEASURE / POSITIVE_LENGTH_MEASURE are preserved, not dropped /
+        // downgraded). Consumers resolve it through repr_item_id_map.
+        let Some(value) = read_measure_value(attrs.get(1)) else {
+            return Ok(());
+        };
+        let unit_ref = resolve_unit_ref(ctx, attrs.get(2));
+        let id = ctx
+            .representation_items
+            .push(RepresentationItem::MeasureRepresentationItem(
+                MeasureRepresentationItem {
+                    form: MeasureForm::Simple,
+                    name,
+                    value,
+                    unit_ref,
+                    qualifiers: Vec::new(),
+                    measure_supertype: None,
+                },
+            ));
+        ctx.repr_item_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -159,6 +179,31 @@ fn resolve_unit_ref(
     }
 }
 
+/// Read a `measure_value` typed literal into [`MeasureValue`], preserving the
+/// SELECT member type-name verbatim (e.g. `"POSITIVE_LENGTH_MEASURE"`,
+/// `"NUMERIC_MEASURE"`). `None` when the attribute is not a primitive typed
+/// measure value.
+fn read_measure_value(value_attr: Option<&Attribute>) -> Option<MeasureValue> {
+    match value_attr {
+        Some(Attribute::Typed { type_name, value }) => match value.as_ref() {
+            Attribute::Real(v) => Some(MeasureValue::Real {
+                type_name: type_name.clone(),
+                value: *v,
+            }),
+            Attribute::Integer(v) => Some(MeasureValue::Integer {
+                type_name: type_name.clone(),
+                value: *v,
+            }),
+            Attribute::String(s) => Some(MeasureValue::Text {
+                type_name: type_name.clone(),
+                value: s.clone(),
+            }),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
 /// Capture a complex `MEASURE_REPRESENTATION_ITEM` into the
 /// `representation_items` arena (phase measure-arena-1), preserving the typed
 /// `measure_value` (verbatim type-name), unit ref, value qualifiers, and the
@@ -172,23 +217,8 @@ fn insert_measure_repr_item(
     parts: &[RawEntityPart],
     mwu_attrs: &[Attribute],
 ) {
-    let value = match mwu_attrs.first() {
-        Some(Attribute::Typed { type_name, value }) => match value.as_ref() {
-            Attribute::Real(v) => MeasureValue::Real {
-                type_name: type_name.clone(),
-                value: *v,
-            },
-            Attribute::Integer(v) => MeasureValue::Integer {
-                type_name: type_name.clone(),
-                value: *v,
-            },
-            Attribute::String(s) => MeasureValue::Text {
-                type_name: type_name.clone(),
-                value: s.clone(),
-            },
-            _ => return,
-        },
-        _ => return,
+    let Some(value) = read_measure_value(mwu_attrs.first()) else {
+        return;
     };
     let unit_ref = resolve_unit_ref(ctx, mwu_attrs.get(1));
     // QUALIFIED_REPRESENTATION_ITEM part: attr[0] = SET of value_qualifier refs.
@@ -220,6 +250,7 @@ fn insert_measure_repr_item(
         .representation_items
         .push(RepresentationItem::MeasureRepresentationItem(
             MeasureRepresentationItem {
+                form: MeasureForm::Complex,
                 name,
                 value,
                 unit_ref,

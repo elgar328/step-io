@@ -3222,10 +3222,11 @@ fn dimensional_size_with_datum_feature_round_trip() {
 }
 
 #[test]
+#[allow(clippy::too_many_lines)]
 fn geometric_tolerance_form_tolerances_round_trip() {
-    // FLATNESS / STRAIGHTNESS / ROUNDNESS / CYLINDRICITY_TOLERANCE — the four
-    // datum-free form tolerances, covering both ToleranceMagnitude variants:
-    // a units-pool MEASURE_WITH_UNIT ref and an inline MEASURE_REPRESENTATION_ITEM.
+    // FLATNESS / STRAIGHTNESS / ROUNDNESS / CYLINDRICITY_TOLERANCE — datum-free
+    // form tolerances. Magnitudes: a units-pool MEASURE_WITH_UNIT and an inline
+    // `Measure` whose simple MRI re-reads through the arena (measure-arena-4).
     use step_io::ir::pmi::{GeometricTolerance, GeometricToleranceData, ToleranceMagnitude};
     use step_io::ir::property::{MeasureKind, PropertyMeasure, PropertyMeasureUnit};
     use step_io::ir::units::MeasureWithUnit;
@@ -3333,7 +3334,11 @@ fn geometric_tolerance_form_tolerances_round_trip() {
     let GeometricTolerance::Straightness(d1) = gts[1] else {
         unreachable!()
     };
-    assert!(matches!(d1.magnitude, ToleranceMagnitude::Measure(_)));
+    // The simple-measure magnitude now round-trips through the arena.
+    assert!(matches!(
+        d1.magnitude,
+        ToleranceMagnitude::RepresentationItem(_)
+    ));
 }
 
 #[test]
@@ -4737,7 +4742,7 @@ fn measure_representation_item_round_trip() {
     use step_io::ir::pmi::ValueFormatTypeQualifier;
     use step_io::ir::property::PropertyMeasureUnit;
     use step_io::ir::representation_item::{
-        MeasureRepresentationItem, MeasureValue, QualifierRef, RepresentationItem,
+        MeasureForm, MeasureRepresentationItem, MeasureValue, QualifierRef, RepresentationItem,
     };
 
     let mut model = empty_model();
@@ -4754,6 +4759,7 @@ fn measure_representation_item_round_trip() {
         .representation_items
         .push(RepresentationItem::MeasureRepresentationItem(
             MeasureRepresentationItem {
+                form: MeasureForm::Complex,
                 name: "nominal value".into(),
                 value: MeasureValue::Real {
                     type_name: "POSITIVE_LENGTH_MEASURE".into(),
@@ -4804,7 +4810,7 @@ fn tolerance_magnitude_references_arena_measure() {
     };
     use step_io::ir::property::PropertyMeasureUnit;
     use step_io::ir::representation_item::{
-        MeasureRepresentationItem, MeasureValue, QualifierRef, RepresentationItem,
+        MeasureForm, MeasureRepresentationItem, MeasureValue, QualifierRef, RepresentationItem,
     };
     let (mut model, sa, ..) = shape_aspect_relationship_fixture();
     let ctx = mm_radian_steradian(&mut model);
@@ -4821,6 +4827,7 @@ fn tolerance_magnitude_references_arena_measure() {
         .representation_items
         .push(RepresentationItem::MeasureRepresentationItem(
             MeasureRepresentationItem {
+                form: MeasureForm::Complex,
                 name: "nominal value".into(),
                 value: MeasureValue::Real {
                     type_name: "POSITIVE_LENGTH_MEASURE".into(),
@@ -4885,7 +4892,7 @@ fn property_item_references_arena_measure() {
         PropertyDefinitionData, PropertyItem, PropertyMeasureUnit, PropertyPool,
     };
     use step_io::ir::representation_item::{
-        MeasureRepresentationItem, MeasureValue, QualifierRef, RepresentationItem,
+        MeasureForm, MeasureRepresentationItem, MeasureValue, QualifierRef, RepresentationItem,
     };
     use step_io::ir::shape_rep::RepresentationContextRef;
 
@@ -4904,6 +4911,7 @@ fn property_item_references_arena_measure() {
         .representation_items
         .push(RepresentationItem::MeasureRepresentationItem(
             MeasureRepresentationItem {
+                form: MeasureForm::Complex,
                 name: "nominal value".into(),
                 value: MeasureValue::Real {
                     type_name: "POSITIVE_LENGTH_MEASURE".into(),
@@ -4960,6 +4968,67 @@ fn property_item_references_arena_measure() {
             .any(|i| matches!(i, PropertyItem::MeasureItem(_))),
         "the measure item should round-trip as a representation_item arena ref"
     );
+}
+
+#[test]
+fn simple_measure_representation_item_round_trips_via_arena() {
+    // A simple MEASURE_REPRESENTATION_ITEM is captured in the representation_item
+    // arena (phase measure-arena-4) and emitted as the bare 3-attr form. The
+    // verbatim measure_value preserves a type the old MeasureKind whitelist
+    // dropped (NUMERIC_MEASURE).
+    use step_io::ir::property::PropertyMeasureUnit;
+    use step_io::ir::representation_item::{
+        MeasureForm, MeasureRepresentationItem, MeasureValue, RepresentationItem,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length = ctx.length;
+    model.units.push(ctx);
+    model
+        .representation_items
+        .push(RepresentationItem::MeasureRepresentationItem(
+            MeasureRepresentationItem {
+                form: MeasureForm::Simple,
+                name: "numeric measure".into(),
+                value: MeasureValue::Real {
+                    type_name: "NUMERIC_MEASURE".into(),
+                    value: 3.5,
+                },
+                unit_ref: Some(PropertyMeasureUnit::Named(length)),
+                qualifiers: Vec::new(),
+                measure_supertype: None,
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    assert!(text.contains("NUMERIC_MEASURE"));
+    // Simple form, not the complex multi-part body.
+    assert!(!text.contains("QUALIFIED_REPRESENTATION_ITEM"));
+    assert_eq!(
+        text.matches("MEASURE_REPRESENTATION_ITEM").count(),
+        1,
+        "exactly one MRI line, no duplicate"
+    );
+
+    let re = reconvert(&text);
+    assert_eq!(re.representation_items.len(), 1);
+    let RepresentationItem::MeasureRepresentationItem(mri) =
+        re.representation_items.iter().next().unwrap()
+    else {
+        panic!("expected MeasureRepresentationItem");
+    };
+    assert!(
+        matches!(mri.form, MeasureForm::Simple),
+        "round-trips as the simple form"
+    );
+    let MeasureValue::Real { type_name, value } = &mri.value else {
+        panic!("expected Real measure value");
+    };
+    assert_eq!(
+        type_name, "NUMERIC_MEASURE",
+        "verbatim type preserved, not dropped"
+    );
+    assert!((value - 3.5).abs() < 1e-9);
 }
 
 #[test]
