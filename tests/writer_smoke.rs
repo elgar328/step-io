@@ -4795,6 +4795,86 @@ fn measure_representation_item_round_trip() {
 }
 
 #[test]
+fn tolerance_magnitude_references_arena_measure() {
+    // A geometric tolerance whose magnitude is a complex MEASURE_REPRESENTATION_ITEM
+    // references the representation_item arena entry (phase measure-arena-2)
+    // instead of re-emitting a downgraded simple measure — no duplicate MRI.
+    use step_io::ir::pmi::{
+        GeometricTolerance, GeometricToleranceData, ToleranceMagnitude, ValueFormatTypeQualifier,
+    };
+    use step_io::ir::property::PropertyMeasureUnit;
+    use step_io::ir::representation_item::{
+        MeasureRepresentationItem, MeasureValue, QualifierRef, RepresentationItem,
+    };
+    let (mut model, sa, ..) = shape_aspect_relationship_fixture();
+    let ctx = mm_radian_steradian(&mut model);
+    let length = ctx.length;
+    model.units.push(ctx);
+    let vftq = model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .value_format_type_qualifiers
+        .push(ValueFormatTypeQualifier {
+            format_type: "NR2 1.1".into(),
+        });
+    let mri = model
+        .representation_items
+        .push(RepresentationItem::MeasureRepresentationItem(
+            MeasureRepresentationItem {
+                name: "nominal value".into(),
+                value: MeasureValue::Real {
+                    type_name: "POSITIVE_LENGTH_MEASURE".into(),
+                    value: 0.1,
+                },
+                unit_ref: Some(PropertyMeasureUnit::Named(length)),
+                qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
+                measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
+            },
+        ));
+    model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .geometric_tolerances
+        .push(GeometricTolerance::Flatness(GeometricToleranceData {
+            name: "t".into(),
+            description: String::new(),
+            magnitude: ToleranceMagnitude::RepresentationItem(mri),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            modifiers: Vec::new(),
+            unit_size: None,
+            defined_area_unit: None,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    // Complex MRI emitted once (arena), in full multi-part form.
+    assert!(text.contains("LENGTH_MEASURE_WITH_UNIT"));
+    assert!(text.contains("QUALIFIED_REPRESENTATION_ITEM"));
+    // No downgraded duplicate: exactly one MEASURE_REPRESENTATION_ITEM (the complex part).
+    assert_eq!(
+        text.matches("MEASURE_REPRESENTATION_ITEM").count(),
+        1,
+        "tolerance must reference the arena MRI, not emit a duplicate simple measure"
+    );
+
+    // Round-trip the resolver: the re-read tolerance magnitude resolves back
+    // to a representation_item arena ref (not a cloned simple measure).
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    let GeometricTolerance::Flatness(d) = re_pmi
+        .geometric_tolerances
+        .iter()
+        .next()
+        .expect("a geometric tolerance")
+    else {
+        panic!("expected Flatness");
+    };
+    assert!(
+        matches!(d.magnitude, ToleranceMagnitude::RepresentationItem(_)),
+        "magnitude should round-trip as a representation_item arena ref"
+    );
+}
+
+#[test]
 fn measure_qualification_round_trip() {
     // MEASURE_QUALIFICATION — qualifiers SET covers the two corpus-modelled
     // value_qualifier variants (TypeQualifier, ValueFormatTypeQualifier).

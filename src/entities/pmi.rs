@@ -1634,6 +1634,18 @@ fn resolve_tolerance_magnitude(ctx: &ReaderContext, item_ref: u64) -> Option<Tol
     if let Some(&id) = ctx.mwu_id_map.get(&item_ref) {
         return Some(ToleranceMagnitude::MeasureWithUnit(id));
     }
+    // Complex MEASURE_REPRESENTATION_ITEM lives in the representation_item
+    // arena (phase measure-arena-2) — reference it so the writer emits the
+    // faithful multi-part form once instead of a downgraded simple measure.
+    // Guard on the variant: repr_item_id_map also holds QRI / VRI.
+    if let Some(&id) = ctx.repr_item_id_map.get(&item_ref) {
+        if matches!(
+            ctx.representation_items[id],
+            crate::ir::representation_item::RepresentationItem::MeasureRepresentationItem(_)
+        ) {
+            return Some(ToleranceMagnitude::RepresentationItem(id));
+        }
+    }
     ctx.measure_item_map
         .get(&item_ref)
         .cloned()
@@ -1733,6 +1745,9 @@ pub(crate) fn write_geometric_tolerance(buf: &mut WriteBuffer, gt: GeometricTole
     let magnitude = match data.magnitude {
         ToleranceMagnitude::MeasureWithUnit(id) => buf.mwu_step_ids[id.0 as usize],
         ToleranceMagnitude::Measure(m) => buf.emit_property_measure(&m, None),
+        ToleranceMagnitude::RepresentationItem(id) => {
+            buf.representation_item_step_ids[id.0 as usize]
+        }
     };
     let shape_aspect = buf.emit_shape_aspect_ref(data.toleranced_shape_aspect);
     let has_unit_size = data.unit_size.is_some();
@@ -2371,6 +2386,9 @@ pub(crate) fn write_geometric_tolerance_with_datum_reference(
     let magnitude = match data.magnitude {
         ToleranceMagnitude::MeasureWithUnit(id) => buf.mwu_step_ids[id.0 as usize],
         ToleranceMagnitude::Measure(m) => buf.emit_property_measure(&m, None),
+        ToleranceMagnitude::RepresentationItem(id) => {
+            buf.representation_item_step_ids[id.0 as usize]
+        }
     };
     let shape_aspect = buf.emit_shape_aspect_ref(data.toleranced_shape_aspect);
     let mut datum_system_refs = Vec::with_capacity(data.datum_system.len());
@@ -2812,6 +2830,9 @@ fn emit_tolerance_magnitude(buf: &mut WriteBuffer, m: &ToleranceMagnitude) -> u6
     match m {
         ToleranceMagnitude::MeasureWithUnit(id) => buf.mwu_step_ids[id.0 as usize],
         ToleranceMagnitude::Measure(pm) => buf.emit_property_measure(pm, None),
+        ToleranceMagnitude::RepresentationItem(id) => {
+            buf.representation_item_step_ids[id.0 as usize]
+        }
     }
 }
 

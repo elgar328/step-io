@@ -378,8 +378,13 @@ pub enum GeometricToleranceModifier {
 pub enum ToleranceMagnitude {
     /// A plain `*_MEASURE_WITH_UNIT` already held in the `units` pool.
     MeasureWithUnit(MeasureWithUnitId),
-    /// A `MEASURE_REPRESENTATION_ITEM` value carried inline.
+    /// A simple `MEASURE_REPRESENTATION_ITEM` value carried inline.
     Measure(PropertyMeasure),
+    /// A complex-MI `MEASURE_REPRESENTATION_ITEM` referenced in the
+    /// `representation_item` arena (phase measure-arena-2) — the tolerance
+    /// points at the faithful multi-part form rather than re-emitting a
+    /// downgraded simple measure.
+    RepresentationItem(crate::ir::id::RepresentationItemId),
 }
 
 /// `dimensional_location` `enum_base` — a located dimension between two
