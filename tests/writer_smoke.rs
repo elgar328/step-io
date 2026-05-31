@@ -5942,7 +5942,8 @@ fn tessellation_2_round_trip() {
             | TessellatedItem::TessellatedGeometricSet(_)
             | TessellatedItem::TessellatedSolid(_)
             | TessellatedItem::TessellatedShell(_)
-            | TessellatedItem::RepositionedTessellatedItem(_) => None,
+            | TessellatedItem::RepositionedTessellatedItem(_)
+            | TessellatedItem::RepositionedTessellatedGeometricSet(_) => None,
         })
         .expect("curve set");
     assert_eq!(curve_set.name, "curves");
@@ -5955,6 +5956,39 @@ fn tessellation_2_round_trip() {
     assert_eq!(s.triangle_strips, vec![vec![1, 2, 3]]);
     assert!(s.triangle_fans.is_empty());
     assert!((s.normals[0][2] - 1.0).abs() < f64::EPSILON);
+}
+
+#[test]
+fn repositioned_tessellated_geometric_set_complex_round_trips() {
+    // The (GEOMETRIC_REPRESENTATION_ITEM REPOSITIONED_TESSELLATED_ITEM
+    // REPRESENTATION_ITEM TESSELLATED_GEOMETRIC_SET TESSELLATED_ITEM) complex MI
+    // must emit the five-part form and read back as the combined variant.
+    use step_io::ir::tessellation::{RepositionedTessellatedGeometricSet, TessellatedItem};
+    let mut model = empty_model();
+    let placement = xyz_placement(&mut model);
+    model
+        .tessellated_items
+        .push(TessellatedItem::RepositionedTessellatedGeometricSet(
+            RepositionedTessellatedGeometricSet {
+                name: "note".into(),
+                location: placement,
+                children: vec![],
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("REPOSITIONED_TESSELLATED_ITEM(")
+            && text.contains("TESSELLATED_GEOMETRIC_SET("),
+        "emits the five-part complex MI: {text}"
+    );
+    let re = reconvert(&text);
+    assert!(
+        re.tessellated_items
+            .iter()
+            .any(|i| matches!(i, TessellatedItem::RepositionedTessellatedGeometricSet(_))),
+        "5-part tessellated complex MI should round-trip"
+    );
 }
 
 #[test]

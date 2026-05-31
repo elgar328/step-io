@@ -42,7 +42,8 @@ impl WriteBuffer<'_> {
                 }
                 TessellatedItem::TessellatedGeometricSet(_)
                 | TessellatedItem::TessellatedSolid(_)
-                | TessellatedItem::TessellatedShell(_) => {}
+                | TessellatedItem::TessellatedShell(_)
+                | TessellatedItem::RepositionedTessellatedGeometricSet(_) => {}
             }
         }
         // Pass 2: faces + surface-sets — geometric sets reference these.
@@ -77,6 +78,39 @@ impl WriteBuffer<'_> {
                 TessellatedItem::TessellatedShell(s) => {
                     self.tessellated_item_step_ids[idx] =
                         TessellatedShellHandler::write(self, s.clone())?;
+                }
+                TessellatedItem::RepositionedTessellatedGeometricSet(g) => {
+                    use crate::parser::entity::Attribute;
+                    use crate::writer::entity::{WriterBody, WriterEntity};
+                    let location_step = self.emit_axis2_placement_3d(g.location)?;
+                    let children: Vec<Attribute> = g
+                        .children
+                        .iter()
+                        .map(|&r| Attribute::EntityRef(self.emit_tessellated_item_ref(r)))
+                        .collect();
+                    let n = self.fresh();
+                    self.entities.push(WriterEntity {
+                        id: n,
+                        body: WriterBody::Complex {
+                            parts: vec![
+                                ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),
+                                (
+                                    "REPOSITIONED_TESSELLATED_ITEM".into(),
+                                    vec![Attribute::EntityRef(location_step)],
+                                ),
+                                (
+                                    "REPRESENTATION_ITEM".into(),
+                                    vec![Attribute::String(g.name.clone())],
+                                ),
+                                (
+                                    "TESSELLATED_GEOMETRIC_SET".into(),
+                                    vec![Attribute::List(children)],
+                                ),
+                                ("TESSELLATED_ITEM".into(), vec![]),
+                            ],
+                        },
+                    });
+                    self.tessellated_item_step_ids[idx] = n;
                 }
                 TessellatedItem::CoordinatesList(_)
                 | TessellatedItem::TessellatedCurveSet(_)

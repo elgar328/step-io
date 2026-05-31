@@ -23,6 +23,24 @@ pub enum TessellatedItem {
     /// indirectly through a per-instance `AXIS2_PLACEMENT_3D` reference
     /// frame. Phase rti.
     RepositionedTessellatedItem(RepositionedTessellatedItem),
+    /// The `(GEOMETRIC_REPRESENTATION_ITEM REPOSITIONED_TESSELLATED_ITEM
+    /// REPRESENTATION_ITEM TESSELLATED_GEOMETRIC_SET TESSELLATED_ITEM)`
+    /// complex-MI form — a repositioned geometric set used as a PMI
+    /// annotation occurrence's `item`. Phase tessellated-repositioned-complex.
+    RepositionedTessellatedGeometricSet(RepositionedTessellatedGeometricSet),
+}
+
+/// The five-part complex-MI combining `REPOSITIONED_TESSELLATED_ITEM`'s
+/// reference frame with `TESSELLATED_GEOMETRIC_SET`'s child aggregate (both
+/// are concrete `tessellated_item` subtypes co-instantiated in PMI corpora).
+#[derive(Debug, Clone, PartialEq)]
+pub struct RepositionedTessellatedGeometricSet {
+    /// `name` from the `REPRESENTATION_ITEM` part.
+    pub name: String,
+    /// `location` from the `REPOSITIONED_TESSELLATED_ITEM` part.
+    pub location: Placement3dId,
+    /// `children` from the `TESSELLATED_GEOMETRIC_SET` part.
+    pub children: Vec<TessellatedItemRef>,
 }
 
 /// `REPOSITIONED_TESSELLATED_ITEM(name, location)` — a `tessellated_item`

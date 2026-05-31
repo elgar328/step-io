@@ -7,8 +7,8 @@
 //! `coordinates` ref does not resolve is silently dropped, symmetric on
 //! re-read.
 
-use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
+use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::attr::{
     check_count, read_entity_ref, read_entity_ref_list, read_integer, read_integer_grid,
     read_integer_list, read_optional_entity_ref, read_real_grid, read_string_or_unset,
@@ -16,14 +16,15 @@ use crate::ir::attr::{
 use crate::ir::error::ConvertError;
 use crate::ir::tessellation::{
     ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, CoordinatesList,
-    RepositionedTessellatedItem, TessellatedCurveSet, TessellatedGeometricSet, TessellatedItem,
-    TessellatedItemRef, TessellatedShell, TessellatedSolid,
+    RepositionedTessellatedGeometricSet, RepositionedTessellatedItem, TessellatedCurveSet,
+    TessellatedGeometricSet, TessellatedItem, TessellatedItemRef, TessellatedShell,
+    TessellatedSolid,
 };
-use crate::parser::entity::{Attribute, EntityGraph};
-use crate::reader::ReaderContext;
+use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
+use crate::reader::{ReaderContext, require_part_attrs};
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
-use step_io_macros::step_entity;
+use step_io_macros::{step_entity, step_entity_complex};
 
 pub(crate) struct CoordinatesListHandler;
 
@@ -467,5 +468,67 @@ impl SimpleEntityHandler for RepositionedTessellatedItemHandler {
                 Attribute::EntityRef(placement_ref),
             ],
         ))
+    }
+}
+
+pub(crate) struct RepositionedTessellatedGeometricSetHandler;
+
+/// `(GEOMETRIC_REPRESENTATION_ITEM REPOSITIONED_TESSELLATED_ITEM
+/// REPRESENTATION_ITEM TESSELLATED_GEOMETRIC_SET TESSELLATED_ITEM)` complex MI
+/// — a PMI annotation occurrence's `item`. Only the simple subtype names had
+/// handlers, so the complex was silently skipped; the writer re-emits the
+/// five-part form. Each part carries only its own (non-inherited) attributes:
+/// `name` lives in `REPRESENTATION_ITEM`, `location` in
+/// `REPOSITIONED_TESSELLATED_ITEM`, `children` in `TESSELLATED_GEOMETRIC_SET`.
+#[step_entity_complex(
+    name = "TESSELLATED_GEOMETRIC_SET",
+    pass = Pass6TessellatedGeometricSet,
+    required = [
+        "GEOMETRIC_REPRESENTATION_ITEM",
+        "REPOSITIONED_TESSELLATED_ITEM",
+        "REPRESENTATION_ITEM",
+        "TESSELLATED_GEOMETRIC_SET",
+        "TESSELLATED_ITEM"
+    ]
+)]
+impl ComplexEntityHandler for RepositionedTessellatedGeometricSetHandler {
+    type WriteInput = ();
+
+    fn read_complex(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        parts: &[RawEntityPart],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let name_attrs = require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
+        let name = read_string_or_unset(name_attrs, 0, entity_id, "name")?.to_owned();
+        let rti_attrs = require_part_attrs(parts, "REPOSITIONED_TESSELLATED_ITEM", entity_id)?;
+        let location_ref = read_entity_ref(rti_attrs, 0, entity_id, "location")?;
+        let Some(&location) = ctx.placement_map.get(&location_ref) else {
+            return Ok(());
+        };
+        let tgs_attrs = require_part_attrs(parts, "TESSELLATED_GEOMETRIC_SET", entity_id)?;
+        let child_refs = read_entity_ref_list(tgs_attrs, 0, entity_id, "children")?;
+        let children: Vec<TessellatedItemRef> = child_refs
+            .iter()
+            .filter_map(|&r| resolve_tessellated_item_ref(ctx, r))
+            .collect();
+
+        let id = ctx
+            .tessellated_items
+            .push(TessellatedItem::RepositionedTessellatedGeometricSet(
+                RepositionedTessellatedGeometricSet {
+                    name,
+                    location,
+                    children,
+                },
+            ));
+        ctx.tessellated_item_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(_buf: &mut WriteBuffer, _input: Self::WriteInput) -> Result<u64, WriteError> {
+        // Emitted by emit_tessellation's container pass (Pass 3), not here.
+        unreachable!("RepositionedTessellatedGeometricSet is emitted by emit_tessellation")
     }
 }
