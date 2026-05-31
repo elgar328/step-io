@@ -4875,6 +4875,94 @@ fn tolerance_magnitude_references_arena_measure() {
 }
 
 #[test]
+fn property_item_references_arena_measure() {
+    // A property whose REPRESENTATION item is a complex MEASURE_REPRESENTATION_ITEM
+    // references the representation_item arena (phase measure-arena-3) instead
+    // of re-emitting a downgraded simple measure — no duplicate MRI.
+    use step_io::ir::pmi::ValueFormatTypeQualifier;
+    use step_io::ir::property::{
+        CharacterizedDefinition, GeneralProperty, Property, PropertyDefinition,
+        PropertyDefinitionData, PropertyItem, PropertyMeasureUnit, PropertyPool,
+    };
+    use step_io::ir::representation_item::{
+        MeasureRepresentationItem, MeasureValue, QualifierRef, RepresentationItem,
+    };
+    use step_io::ir::shape_rep::RepresentationContextRef;
+
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length = ctx.length;
+    let ctx_id = model.units.push(ctx);
+    let vftq = model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .value_format_type_qualifiers
+        .push(ValueFormatTypeQualifier {
+            format_type: "NR2 1.1".into(),
+        });
+    let mri = model
+        .representation_items
+        .push(RepresentationItem::MeasureRepresentationItem(
+            MeasureRepresentationItem {
+                name: "nominal value".into(),
+                value: MeasureValue::Real {
+                    type_name: "POSITIVE_LENGTH_MEASURE".into(),
+                    value: 0.1,
+                },
+                unit_ref: Some(PropertyMeasureUnit::Named(length)),
+                qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
+                measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
+            },
+        ));
+
+    let mut pool = PropertyPool::default();
+    let gp_id = pool.general_properties.push(GeneralProperty {
+        id: "GP1".into(),
+        name: "p".into(),
+        description: None,
+    });
+    let pd_id =
+        pool.property_definitions
+            .push(PropertyDefinition::Itself(PropertyDefinitionData {
+                name: "validation property".into(),
+                description: String::new(),
+                definition: CharacterizedDefinition::GeneralProperty(gp_id),
+            }));
+    pool.properties.push(Property {
+        name: "validation property".into(),
+        description: None,
+        definition: pd_id,
+        representation_name: "gvp".into(),
+        context: Some(RepresentationContextRef::Unitful(ctx_id)),
+        items: vec![PropertyItem::MeasureItem(mri)],
+    });
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    assert!(text.contains("QUALIFIED_REPRESENTATION_ITEM"));
+    // No downgraded duplicate: exactly one MEASURE_REPRESENTATION_ITEM (the complex part).
+    assert_eq!(
+        text.matches("MEASURE_REPRESENTATION_ITEM").count(),
+        1,
+        "property must reference the arena MRI, not emit a duplicate simple measure"
+    );
+
+    let re = reconvert(&text);
+    let re_pool = re.properties.as_ref().expect("properties pool survives");
+    let prop = re_pool
+        .properties
+        .iter()
+        .find(|p| p.representation_name == "gvp")
+        .expect("the validation property survives round-trip");
+    assert!(
+        prop.items
+            .iter()
+            .any(|i| matches!(i, PropertyItem::MeasureItem(_))),
+        "the measure item should round-trip as a representation_item arena ref"
+    );
+}
+
+#[test]
 fn measure_qualification_round_trip() {
     // MEASURE_QUALIFICATION — qualifiers SET covers the two corpus-modelled
     // value_qualifier variants (TypeQualifier, ValueFormatTypeQualifier).

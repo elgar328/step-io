@@ -268,6 +268,7 @@ impl WriteBuffer<'_> {
             .map(|item| match item {
                 PropertyItem::Measure(m) => self.emit_property_measure(m, unit_ctx),
                 PropertyItem::Descriptive(d) => self.emit_descriptive_item(d.clone()),
+                PropertyItem::MeasureItem(id) => self.representation_item_step_ids[id.0 as usize],
             })
             .collect();
 

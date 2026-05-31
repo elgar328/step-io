@@ -61,6 +61,18 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
         let items: Vec<PropertyItem> = item_refs
             .into_iter()
             .filter_map(|r| {
+                // Complex MEASURE_REPRESENTATION_ITEM lives in the
+                // representation_item arena (phase measure-arena-3) — reference
+                // it so the writer emits the faithful multi-part form once.
+                // Guard on the variant: repr_item_id_map also holds QRI / VRI.
+                if let Some(&id) = ctx.repr_item_id_map.get(&r) {
+                    if matches!(
+                        ctx.representation_items[id],
+                        crate::ir::representation_item::RepresentationItem::MeasureRepresentationItem(_)
+                    ) {
+                        return Some(PropertyItem::MeasureItem(id));
+                    }
+                }
                 if let Some(m) = ctx.measure_item_map.get(&r) {
                     Some(PropertyItem::Measure(m.clone()))
                 } else {

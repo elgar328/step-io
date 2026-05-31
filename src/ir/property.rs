@@ -258,6 +258,11 @@ pub struct Property {
 pub enum PropertyItem {
     Measure(PropertyMeasure),
     Descriptive(DescriptiveItem),
+    /// A complex-MI `MEASURE_REPRESENTATION_ITEM` referenced in the
+    /// `representation_item` arena (phase measure-arena-3) — the property
+    /// REPRESENTATION points at the faithful multi-part form rather than
+    /// re-emitting a downgraded simple measure.
+    MeasureItem(crate::ir::id::RepresentationItemId),
 }
 
 /// `MEASURE_REPRESENTATION_ITEM(name, typed_value, unit_ref)` reduced to a
