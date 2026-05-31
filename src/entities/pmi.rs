@@ -3274,8 +3274,9 @@ impl SimpleEntityHandler for DraughtingModelItemAssociationHandler {
             DraughtingModelItemDefinition::PropertyDefinition(id)
         } else if let Some(&id) = ctx.dimensional_location_id_map.get(&def_ref) {
             DraughtingModelItemDefinition::DimensionalLocation(id)
-        } else if let Some(&id) = ctx.geometric_tolerance_id_map.get(&def_ref) {
-            DraughtingModelItemDefinition::GeometricTolerance(id)
+        } else if let Some(gt_ref) = resolve_geometric_tolerance_ref(ctx, def_ref) {
+            // geometric_tolerance member — Plain or WithDatumReference complex MI.
+            DraughtingModelItemDefinition::GeometricTolerance(gt_ref)
         } else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                 entity_id,
@@ -3339,9 +3340,12 @@ impl SimpleEntityHandler for DraughtingModelItemAssociationHandler {
             DraughtingModelItemDefinition::DimensionalLocation(id) => {
                 buf.dimensional_location_step_ids[id.0 as usize]
             }
-            DraughtingModelItemDefinition::GeometricTolerance(id) => {
-                buf.geometric_tolerance_step_ids[id.0 as usize]
-            }
+            DraughtingModelItemDefinition::GeometricTolerance(r) => match r {
+                GeometricToleranceRef::Plain(id) => buf.geometric_tolerance_step_ids[id.0 as usize],
+                GeometricToleranceRef::WithDatumReference(id) => {
+                    buf.geometric_tolerance_with_datum_reference_step_ids[id.0 as usize]
+                }
+            },
         };
         let used_step = buf.representation_step_ids[dmia.used_representation.0 as usize];
         let item_step = match dmia.identified_item {

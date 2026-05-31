@@ -105,7 +105,9 @@ pub enum DraughtingModelItemDefinition {
     DatumFeature(DatumFeatureId),
     PropertyDefinition(PropertyDefinitionId),
     DimensionalLocation(DimensionalLocationId),
-    GeometricTolerance(GeometricToleranceId),
+    /// `geometric_tolerance` member — `Plain` or `WithDatumReference` (the
+    /// complex MI form), via [`GeometricToleranceRef`].
+    GeometricTolerance(GeometricToleranceRef),
 }
 
 /// `draughting_model_item_association_select` SELECT — both members are

@@ -3990,6 +3990,103 @@ fn dmia_round_trip() {
 }
 
 #[test]
+fn dmia_geometric_tolerance_with_datum_reference_round_trip() {
+    // DMIA whose definition is a GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE complex
+    // MI — resolved via GeometricToleranceRef::WithDatumReference (the gap this
+    // phase fixes; previously dropped as "none of 8 modelled SELECT members").
+    use step_io::ir::geometry::{Plane3, Surface};
+    use step_io::ir::pmi::{
+        AnnotationOccurrence, AnnotationPlane, DraughtingModelIdentifiedItem,
+        DraughtingModelItemAssociation, DraughtingModelItemDefinition, GeometricToleranceRef,
+        GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData,
+        ToleranceMagnitude,
+    };
+    use step_io::ir::property::{MeasureKind, PropertyMeasure, PropertyMeasureUnit};
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{DatumSystem, PlainRepr, Representation};
+    use step_io::ir::{PmiPool, ShapeAspectRef};
+    let (mut model, sa, ..) = shape_aspect_relationship_fixture();
+    let target = model.shape_aspects[sa].target;
+    let ctx = mm_radian_steradian(&mut model);
+    let length_unit = ctx.length;
+    let ctx_id = model.units.push(ctx);
+    let ds = model.datum_systems.push(DatumSystem {
+        name: "DS".into(),
+        description: String::new(),
+        target,
+        product_definitional: false,
+        constituents: Vec::new(),
+    });
+    let gt = model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .geometric_tolerance_with_datum_references
+        .push(GeometricToleranceWithDatumReference::Perpendicularity(
+            GeometricToleranceWithDatumReferenceData {
+                name: "t".into(),
+                description: String::new(),
+                magnitude: ToleranceMagnitude::Measure(PropertyMeasure {
+                    name: String::new(),
+                    kind: MeasureKind::Length,
+                    value: 0.1,
+                    unit_ref: Some(PropertyMeasureUnit::Named(length_unit)),
+                }),
+                toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+                datum_system: vec![ds],
+                modifiers: Vec::new(),
+                displacement: None,
+            },
+        ));
+    let placement = xyz_placement(&mut model);
+    let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
+        position: placement,
+    }));
+    let ap = model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_occurrences
+        .push(AnnotationOccurrence::AnnotationPlane(AnnotationPlane {
+            name: "anno".into(),
+            styles: vec![],
+            item: RepresentationItemRef::Surface(surf),
+        }));
+    let used = model.representations.push(Representation::Plain(PlainRepr {
+        name: "dm".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+        frame: None,
+    }));
+    model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .draughting_model_item_associations
+        .push(DraughtingModelItemAssociation {
+            name: "link".into(),
+            description: None,
+            definition: DraughtingModelItemDefinition::GeometricTolerance(
+                GeometricToleranceRef::WithDatumReference(gt),
+            ),
+            used_representation: used,
+            identified_item: DraughtingModelIdentifiedItem::AnnotationOccurrence(ap),
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert!(
+        re_pmi
+            .draughting_model_item_associations
+            .iter()
+            .any(|d| matches!(
+                d.definition,
+                DraughtingModelItemDefinition::GeometricTolerance(
+                    GeometricToleranceRef::WithDatumReference(_)
+                )
+            )),
+        "DMIA with a GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE definition should round-trip"
+    );
+}
+
+#[test]
 fn text_literal_round_trip() {
     use step_io::ir::pmi::{DraughtingPreDefinedTextFont, PmiPool};
     use step_io::ir::visualization::{
