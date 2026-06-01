@@ -1,8 +1,126 @@
 //! Pass orchestration for geometry, topology and assembly conversion.
 
+use std::collections::{BTreeSet, HashMap};
+
 use super::{ReaderContext, has_all_parts};
 use crate::entities::{ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind};
-use crate::parser::entity::{EntityGraph, RawEntity};
+use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
+
+/// Pass levels whose handlers read 2D (pcurve-subtree) geometry. Used by the
+/// topological dispatch to decide whether the pcurve-subtree skip applies
+/// (3D handlers skip pcurve-subtree entities; 2D handlers self-discriminate).
+fn is_2d_pass(pass_level: PassLevel) -> bool {
+    matches!(
+        pass_level,
+        PassLevel::Pass4aPoint
+            | PassLevel::Pass4aVector
+            | PassLevel::Pass4aCurve
+            | PassLevel::Pass4aRational
+    )
+}
+
+/// Name → handler index for topological dispatch (avoids scanning all
+/// `ENTITY_HANDLERS` per entity). Simple handlers key on entity name; complex
+/// handlers are matched by `has_all_parts` so they share one bucket.
+struct TopoIndex {
+    simple: HashMap<&'static str, Vec<&'static EntityHandlerEntry>>,
+    complex: Vec<&'static EntityHandlerEntry>,
+}
+
+fn build_topo_index() -> TopoIndex {
+    let mut simple: HashMap<&'static str, Vec<&'static EntityHandlerEntry>> = HashMap::new();
+    let mut complex: Vec<&'static EntityHandlerEntry> = Vec::new();
+    for entry in ENTITY_HANDLERS {
+        match entry.kind {
+            ReadKind::Simple { .. } => simple.entry(entry.name).or_default().push(entry),
+            ReadKind::Complex { .. } => complex.push(entry),
+        }
+    }
+    TopoIndex { simple, complex }
+}
+
+/// Collect the **direct** `#N` references an entity makes in its own
+/// attributes (recursing lists / typed params, NOT following the targets).
+/// These are the dependency edges for the topological order.
+fn direct_refs(ent: &RawEntity, out: &mut Vec<u64>) {
+    match ent {
+        RawEntity::Simple { attributes, .. } => {
+            for a in attributes {
+                direct_refs_attr(a, out);
+            }
+        }
+        RawEntity::Complex { parts, .. } => {
+            for p in parts {
+                for a in &p.attributes {
+                    direct_refs_attr(a, out);
+                }
+            }
+        }
+    }
+}
+
+fn direct_refs_attr(a: &Attribute, out: &mut Vec<u64>) {
+    match a {
+        Attribute::EntityRef(n) => out.push(*n),
+        Attribute::List(items) => {
+            for i in items {
+                direct_refs_attr(i, out);
+            }
+        }
+        Attribute::Typed { value, .. } => direct_refs_attr(value, out),
+        _ => {}
+    }
+}
+
+/// Topological order of the DATA-section instances (dependencies first) via
+/// Kahn's algorithm with a `#N` tie-break (deterministic). Returns the order
+/// of all *acyclic* nodes; nodes in a reference cycle never reach in-degree 0
+/// and are **excluded** (the caller flags them — see the error-on-cycle
+/// policy). The corpus is a verified DAG, so this is purely defensive.
+fn topo_order(graph: &EntityGraph) -> Vec<u64> {
+    let n = graph.entities.len();
+    let mut in_degree: HashMap<u64, usize> = HashMap::with_capacity(n);
+    let mut dependents: HashMap<u64, Vec<u64>> = HashMap::new();
+    let mut refs = Vec::new();
+    for (&id, ent) in &graph.entities {
+        refs.clear();
+        direct_refs(ent, &mut refs);
+        refs.sort_unstable();
+        refs.dedup();
+        let mut deg = 0usize;
+        for &t in &refs {
+            // Edge t -> id (t must precede id). Self-refs and refs to absent
+            // instances are kept in the degree so a self-loop is treated as a
+            // cycle (node excluded) rather than silently processed.
+            if graph.entities.contains_key(&t) {
+                dependents.entry(t).or_default().push(id);
+                deg += 1;
+            }
+        }
+        in_degree.insert(id, deg);
+    }
+    let mut ready: BTreeSet<u64> = in_degree
+        .iter()
+        .filter(|&(_, &d)| d == 0)
+        .map(|(&k, _)| k)
+        .collect();
+    let mut order = Vec::with_capacity(n);
+    while let Some(&id) = ready.iter().next() {
+        ready.remove(&id);
+        order.push(id);
+        if let Some(deps) = dependents.get(&id) {
+            for &d in deps {
+                if let Some(e) = in_degree.get_mut(&d) {
+                    *e -= 1;
+                    if *e == 0 {
+                        ready.insert(d);
+                    }
+                }
+            }
+        }
+    }
+    order
+}
 
 impl ReaderContext {
     /// Pass 0: unit context. Runs before all geometry passes so that
@@ -672,6 +790,83 @@ impl ReaderContext {
         }
     }
 
+    /// Topological dispatch (Stage 2): convert every instance once in
+    /// dependency order instead of the hand-ordered pass list. Replicates the
+    /// inline post-passes `run_*_passes` performed (`backfill_cbu_base`,
+    /// `SURFACE_CURVE` pcurve collection, deferred SDR items) after the loop.
+    pub(super) fn run_topo(&mut self, graph: &EntityGraph) {
+        let order = topo_order(graph);
+        if order.len() < graph.entities.len() {
+            // Reference cycle / self-loop: the unprocessed nodes can't be built
+            // by the resolve-then-construct reader (chicken-and-egg). Flag as
+            // malformed (error-on-cycle policy). Corpus is a verified DAG, so
+            // this never triggers in practice.
+            let unresolved = graph.entities.len() - order.len();
+            self.warnings
+                .push(crate::ir::error::ConvertError::UnexpectedEntityForm {
+                    entity_id: 0,
+                    detail: format!(
+                        "cyclic reference: {unresolved} instance(s) unprocessable (malformed file)"
+                    ),
+                });
+        }
+        let index = build_topo_index();
+        for id in order {
+            let Some(ent) = graph.get(id) else { continue };
+            self.dispatch_one_topo(graph, id, ent, &index);
+            // Fold the SURFACE_CURVE / SEAM_CURVE pcurve collection in at the
+            // entity's topo position (its surfaces / 2D curves are already done).
+            if let RawEntity::Simple {
+                name, attributes, ..
+            } = ent
+                && (name == "SURFACE_CURVE" || name == "SEAM_CURVE")
+            {
+                crate::entities::geometry::surface_curve::collect_surface_curve(
+                    self,
+                    id,
+                    attributes,
+                    graph,
+                    name == "SEAM_CURVE",
+                );
+            }
+        }
+        // Inline post-passes that `run_*_passes` ran mid-sequence — now after
+        // the single loop (all producers done; equivalent timing).
+        self.backfill_cbu_base(graph);
+        self.resolve_deferred_sdr_items();
+    }
+
+    /// Dispatch all name-matching handlers for one instance, applying the
+    /// pcurve-subtree skip to 3D handlers (2D handlers self-discriminate).
+    /// Same matching/skip rules as `dispatch_registry` / `dispatch_registry_2d`,
+    /// just driven by the topo loop instead of pass order.
+    fn dispatch_one_topo(
+        &mut self,
+        graph: &EntityGraph,
+        id: u64,
+        ent: &RawEntity,
+        index: &TopoIndex,
+    ) {
+        let is_pcurve = self.pcurve_subtree_ids.contains(&id);
+        let candidates: &[&EntityHandlerEntry] = match ent {
+            RawEntity::Simple { name, .. } => {
+                index.simple.get(name.as_str()).map_or(&[], Vec::as_slice)
+            }
+            RawEntity::Complex { .. } => &index.complex,
+        };
+        for &entry in candidates {
+            if !is_2d_pass(entry.pass_level) {
+                // 3D handler: honour the pcurve-subtree partition (POINT /
+                // DIRECTION self-discriminate by coord count, so exempt).
+                let respect_pcurve = !matches!(entry.name, "CARTESIAN_POINT" | "DIRECTION");
+                if respect_pcurve && is_pcurve {
+                    continue;
+                }
+            }
+            self.dispatch_one(graph, entry, id, ent);
+        }
+    }
+
     /// Try to dispatch a single `(entry, entity)` pair. The handler runs
     /// when name (simple) or required-parts (complex) match; otherwise
     /// nothing happens. Multiple handlers may match the same entity by
@@ -748,4 +943,46 @@ fn validate_registry_no_ambiguity() {
             }
         }
     });
+}
+
+#[cfg(test)]
+mod topo_tests {
+    use super::topo_order;
+
+    fn graph(data: &str) -> crate::parser::EntityGraph {
+        let src = format!(
+            "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\n\
+             FILE_NAME('','',(''),(''),'','','');\n\
+             FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\nENDSEC;\nDATA;\n{data}\nENDSEC;\n\
+             END-ISO-10303-21;\n"
+        );
+        crate::parse(&src).expect("parse")
+    }
+
+    fn pos(order: &[u64], id: u64) -> usize {
+        order.iter().position(|&x| x == id).expect("in order")
+    }
+
+    #[test]
+    fn dependencies_precede_dependents_and_full_coverage() {
+        // #1 -> #2,#3 ; #2 -> #4 ; #3 -> #4 ; #4 -> (none)
+        let g = graph("#1=A('',#2,#3);\n#2=B('',#4);\n#3=C('',#4);\n#4=D('');");
+        let order = topo_order(&g);
+        assert_eq!(order.len(), 4, "all acyclic nodes covered");
+        assert!(pos(&order, 4) < pos(&order, 2));
+        assert!(pos(&order, 4) < pos(&order, 3));
+        assert!(pos(&order, 2) < pos(&order, 1));
+        assert!(pos(&order, 3) < pos(&order, 1));
+        // deterministic #N tie-break: #4 first, then #2 before #3.
+        assert_eq!(order, vec![4, 2, 3, 1]);
+    }
+
+    #[test]
+    fn cycle_nodes_excluded() {
+        // #1 <-> #2 cycle, #3 acyclic leaf referenced by #1.
+        let g = graph("#1=A('',#2,#3);\n#2=B('',#1);\n#3=C('');");
+        let order = topo_order(&g);
+        // #3 is acyclic and processable; #1/#2 (cycle) are excluded.
+        assert_eq!(order, vec![3], "only the acyclic leaf is ordered");
+    }
 }
