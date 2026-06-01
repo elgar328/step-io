@@ -191,15 +191,16 @@ pub struct ShapeRepresentationWithParameters {
     pub context: Option<RepresentationContextRef>,
 }
 
-/// `shape_representation_with_parameters_items` SELECT — partial enum.
-/// The `measure_representation_item` member is dropped here pending its own
-/// `SrwpItem` variant; measures themselves live in the `representation_item`
-/// arena (`RepresentationItem::MeasureRepresentationItem`).
+/// `shape_representation_with_parameters_items` SELECT. The
+/// `measure_representation_item` member resolves to the `representation_item`
+/// arena (`MeasureItem` -> `RepresentationItem::MeasureRepresentationItem`);
+/// the other three members are modelled directly.
 #[derive(Debug, Clone, PartialEq)]
 pub enum SrwpItem {
     Direction(crate::ir::id::DirectionId),
     Placement(Placement3dId),
     Descriptive(DescriptiveItem),
+    MeasureItem(crate::ir::id::RepresentationItemId),
 }
 
 /// `representation_relationship` `enum_base` — abstract supertype.

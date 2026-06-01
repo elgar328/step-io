@@ -1,8 +1,9 @@
 //! `SHAPE_REPRESENTATION_WITH_PARAMETERS` handler — phase srwp.
 //!
-//! `shape_representation` SUBTYPE that narrows `items` to a partial
-//! SELECT (`direction` / `placement` / `descriptive_representation_item`
-//! modelled; `measure_representation_item` dropped). Emit delayed
+//! `shape_representation` SUBTYPE that narrows `items` to a SELECT of
+//! `direction` / `placement` / `descriptive_representation_item` /
+//! `measure_representation_item` (the last resolved through the
+//! `representation_item` arena via `repr_item_id_map`). Emit delayed
 //! (Mdgpr / DM / TSR / CGR pattern) — the pre-pass skips this variant
 //! and `emit_shape_representation_with_parameters` writes into the
 //! `representation_step_ids` slot by `RepresentationId`.
@@ -46,6 +47,18 @@ impl SimpleEntityHandler for ShapeRepresentationWithParametersHandler {
                 items.push(SrwpItem::Placement(pid));
             } else if let Some(d) = ctx.descriptive_item_map.get(&r).cloned() {
                 items.push(SrwpItem::Descriptive(d));
+            } else if let Some(&id) = ctx.repr_item_id_map.get(&r) {
+                // MEASURE_REPRESENTATION_ITEM lives in the representation_item
+                // arena. Guard on the variant: repr_item_id_map also holds
+                // QRI / VRI.
+                if matches!(
+                    ctx.representation_items[id],
+                    crate::ir::representation_item::RepresentationItem::MeasureRepresentationItem(
+                        _
+                    )
+                ) {
+                    items.push(SrwpItem::MeasureItem(id));
+                }
             }
         }
         if items.is_empty() {
@@ -74,6 +87,7 @@ impl SimpleEntityHandler for ShapeRepresentationWithParametersHandler {
                 SrwpItem::Direction(id) => buf.emit_direction(id)?,
                 SrwpItem::Placement(id) => buf.emit_axis2_placement_3d(id)?,
                 SrwpItem::Descriptive(d) => DescriptiveRepresentationItemHandler::write(buf, d)?,
+                SrwpItem::MeasureItem(id) => buf.representation_item_step_ids[id.0 as usize],
             };
             item_refs.push(Attribute::EntityRef(step));
         }

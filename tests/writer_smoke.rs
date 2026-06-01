@@ -6767,6 +6767,69 @@ fn srwp_round_trip() {
 }
 
 #[test]
+fn srwp_measure_item_round_trip() {
+    // SHAPE_REPRESENTATION_WITH_PARAMETERS whose items include a
+    // measure_representation_item SELECT member — resolved through the
+    // representation_item arena (SrwpItem::MeasureItem) rather than dropped.
+    use step_io::ir::property::PropertyMeasureUnit;
+    use step_io::ir::representation_item::{
+        MeasureForm, MeasureRepresentationItem, MeasureValue, RepresentationItem,
+    };
+    use step_io::ir::shape_rep::{Representation, ShapeRepresentationWithParameters, SrwpItem};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length = ctx.length;
+    let uc = model.units.push(ctx);
+    let frame = model.geometry.identity_placement();
+    let mri = model
+        .representation_items
+        .push(RepresentationItem::MeasureRepresentationItem(
+            MeasureRepresentationItem {
+                form: MeasureForm::Simple,
+                name: "target width".into(),
+                value: MeasureValue::Real {
+                    type_name: "LENGTH_MEASURE".into(),
+                    value: 1.25,
+                },
+                unit_ref: Some(PropertyMeasureUnit::Named(length)),
+                qualifiers: Vec::new(),
+                measure_supertype: None,
+            },
+        ));
+    model
+        .representations
+        .push(Representation::ShapeRepresentationWithParameters(
+            ShapeRepresentationWithParameters {
+                name: "srwp".into(),
+                items: vec![SrwpItem::Placement(frame), SrwpItem::MeasureItem(mri)],
+                context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let srwp = re
+        .representations
+        .iter()
+        .find_map(|r| match r {
+            Representation::ShapeRepresentationWithParameters(s) => Some(s),
+            _ => None,
+        })
+        .expect("srwp round-trips");
+    assert_eq!(
+        srwp.items.len(),
+        2,
+        "both items survive, measure not dropped"
+    );
+    assert!(
+        srwp.items
+            .iter()
+            .any(|i| matches!(i, SrwpItem::MeasureItem(_))),
+        "the measure member resolves to a MeasureItem arena ref"
+    );
+}
+
+#[test]
 fn iiru_round_trip() {
     // ITEM_IDENTIFIED_REPRESENTATION_USAGE — concrete base entity with
     // 5 attrs. definition resolves to ShapeAspect; identified_item to
