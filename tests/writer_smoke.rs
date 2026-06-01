@@ -6215,6 +6215,63 @@ fn tessellation_round_trip() {
 }
 
 #[test]
+fn styled_item_tessellated_face_round_trips() {
+    // A STYLED_ITEM whose target is a COMPLEX_TRIANGULATED_FACE — a
+    // geometric_representation_item subtype, so it resolves through the
+    // tessellated_face arena rather than being dropped (phase
+    // styled-item-tess-face).
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::tessellation::{ComplexTriangulatedFace, CoordinatesList, TessellatedItem};
+    use step_io::ir::visualization::{PlainStyledItem, StyledItem, VisualizationPool};
+    let mut model = empty_model();
+    let coords = model
+        .tessellated_items
+        .push(TessellatedItem::CoordinatesList(CoordinatesList {
+            name: "pts".into(),
+            npoints: 3,
+            position_coords: vec![
+                vec![0.0, 0.0, 0.0],
+                vec![1.0, 0.0, 0.0],
+                vec![0.0, 1.0, 0.0],
+            ],
+        }));
+    let face = model.tessellated_faces.push(ComplexTriangulatedFace {
+        name: "face".into(),
+        coordinates: coords,
+        pnmax: 3,
+        normals: vec![vec![0.0, 0.0, 1.0]],
+        geometric_link: None,
+        pnindex: vec![1, 2, 3],
+        triangle_strips: vec![vec![1, 2, 3]],
+        triangle_fans: vec![],
+    });
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    viz.styled_items.push(StyledItem::Plain(PlainStyledItem {
+        name: String::new(),
+        styles: vec![],
+        item: RepresentationItemRef::TessellatedFace(face),
+    }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    assert_eq!(
+        re_viz.styled_items.len(),
+        1,
+        "styled_item targeting a tessellated face survives, not dropped"
+    );
+    let StyledItem::Plain(si) = re_viz.styled_items.iter().next().unwrap() else {
+        panic!("expected a plain styled_item");
+    };
+    assert!(
+        matches!(si.item, RepresentationItemRef::TessellatedFace(_)),
+        "item resolves to the tessellated_face arena"
+    );
+}
+
+#[test]
 fn tessellation_2_round_trip() {
     // COORDINATES_LIST + TESSELLATED_CURVE_SET + COMPLEX_TRIANGULATED_SURFACE_SET
     // — both new entities reference the shared coordinates list.

@@ -157,6 +157,11 @@ pub(crate) fn resolve_representation_item_ref(
     if let Some(&tid) = ctx.tessellated_item_id_map.get(&item_ref) {
         return Some(RepresentationItemRef::TessellatedItem(tid));
     }
+    // tessellated_face arena — STYLED_ITEM styles a COMPLEX_TRIANGULATED_FACE
+    // per-face (phase styled-item-tess-face).
+    if let Some(&fid) = ctx.tessellated_face_id_map.get(&item_ref) {
+        return Some(RepresentationItemRef::TessellatedFace(fid));
+    }
     // mapped_items arena (phase si-mapped-item) — STYLED_ITEM / CDORSI
     // routinely target a MAPPED_ITEM in grabcad-style assemblies (PMI
     // annotation instance entry point).

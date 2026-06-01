@@ -13,8 +13,8 @@
 use super::id::{
     AnnotationOccurrenceId, CameraModelId, CurveId, DraughtingCalloutId, EdgeId, FaceId,
     GeometricRepresentationItemId, MappedItemId, Placement3dId, PointId, RepresentationId,
-    RepresentationItemId, ShellId, SolidId, SurfaceId, TessellatedItemId, TypeQualifierId,
-    ValueFormatTypeQualifierId, VertexId,
+    RepresentationItemId, ShellId, SolidId, SurfaceId, TessellatedFaceId, TessellatedItemId,
+    TypeQualifierId, ValueFormatTypeQualifierId, VertexId,
 };
 
 /// What a STEP `representation_item` reference resolved to in step-io's IR.
@@ -46,6 +46,10 @@ pub enum RepresentationItemRef {
     /// `TessellatedShell`, `CoordinatesList`, and friends. `STYLED_ITEM` can
     /// target these directly (phase tessellation-repr-item).
     TessellatedItem(TessellatedItemId),
+    /// `tessellated_face` arena entry (`COMPLEX_TRIANGULATED_FACE`). A
+    /// `geometric_representation_item` subtype, so `STYLED_ITEM` styles it
+    /// per-face directly (phase styled-item-tess-face).
+    TessellatedFace(TessellatedFaceId),
     /// `MAPPED_ITEM` arena entry (phase si-mapped-item) — `STYLED_ITEM` /
     /// `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` can target a mapped
     /// instance directly (PMI annotation instance entry point).

@@ -46,6 +46,9 @@ impl WriteBuffer<'_> {
             RepresentationItemRef::TessellatedItem(id) => {
                 Ok(self.tessellated_item_step_ids[id.0 as usize])
             }
+            RepresentationItemRef::TessellatedFace(id) => {
+                Ok(self.tessellated_face_step_ids[id.0 as usize])
+            }
             RepresentationItemRef::MappedItem(id) => Ok(self.mapped_item_step_ids[id.0 as usize]),
             RepresentationItemRef::AnnotationOccurrence(id) => Ok(self.ao_step_ids[id.0 as usize]),
             RepresentationItemRef::DraughtingCallout(id) => {
