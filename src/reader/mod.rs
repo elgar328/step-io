@@ -1355,6 +1355,99 @@ pub(crate) fn has_all_parts(parts: &[RawEntityPart], required: &[&str]) -> bool 
         .all(|name| parts.iter().any(|p| p.name == *name))
 }
 
+/// How a complex (multi-part) instance lines up with the complex handler
+/// registry. Complex matching is a *subset* test (`required ⊆ parts`), so an
+/// instance can be claimed by a handler that does not account for all of its
+/// parts — silently dropping the rest. This classifies that looseness for an
+/// audit; it has no effect on [`ReaderContext::convert`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ComplexMatchClass {
+    /// Two or more complex handlers match the same instance — dispatch order
+    /// decides the winner and the losing handler's parts drop.
+    Ambiguous,
+    /// Exactly one handler matches, but the instance carries parts beyond that
+    /// handler's required set — those extra parts may be silently dropped.
+    Loose,
+    /// No complex handler matches — the instance is skipped entirely.
+    Unhandled,
+}
+
+/// One complex instance's audit result. See [`audit_complex_matching`].
+#[derive(Debug, Clone)]
+pub struct ComplexAuditFinding {
+    pub class: ComplexMatchClass,
+    /// Sorted, de-duplicated part type names of the instance.
+    pub parts: Vec<String>,
+    /// Matching handler names — the competitors (`Ambiguous`) or the single
+    /// claimant (`Loose`); empty for `Unhandled`.
+    pub handlers: Vec<String>,
+    /// `Loose` only: parts present on the instance but not in the matched
+    /// handler's required set (the silent-drop candidates).
+    pub extra_parts: Vec<String>,
+}
+
+/// Audit every complex instance in `graph` against the complex handler
+/// registry, classifying subset-match looseness ([`ComplexMatchClass`]).
+/// Purely diagnostic — does NOT run during [`ReaderContext::convert`]; a caller
+/// (the round-trip corpus tool) invokes it to map where complex matching can
+/// lose parts invisibly. Returns one finding per non-healthy complex instance
+/// (a single handler covering every part is healthy and omitted).
+#[must_use]
+pub fn audit_complex_matching(graph: &EntityGraph) -> Vec<ComplexAuditFinding> {
+    use crate::entities::{ENTITY_HANDLERS, ReadKind};
+    let mut out = Vec::new();
+    for ent in graph.entities.values() {
+        let RawEntity::Complex { parts, .. } = ent else {
+            continue;
+        };
+        let mut part_names: Vec<String> = parts.iter().map(|p| p.name.clone()).collect();
+        part_names.sort();
+        part_names.dedup();
+
+        let mut matched: Vec<(&'static str, &'static [&'static str])> = Vec::new();
+        for e in ENTITY_HANDLERS {
+            if let ReadKind::Complex { required_parts, .. } = &e.kind
+                && has_all_parts(parts, required_parts)
+            {
+                matched.push((e.name, required_parts));
+            }
+        }
+
+        let finding = if matched.len() >= 2 {
+            ComplexAuditFinding {
+                class: ComplexMatchClass::Ambiguous,
+                parts: part_names,
+                handlers: matched.iter().map(|(n, _)| (*n).to_string()).collect(),
+                extra_parts: Vec::new(),
+            }
+        } else if let [(name, required)] = matched[..] {
+            let extra: Vec<String> = part_names
+                .iter()
+                .filter(|p| !required.contains(&p.as_str()))
+                .cloned()
+                .collect();
+            if extra.is_empty() {
+                continue; // single handler covering every part — healthy.
+            }
+            ComplexAuditFinding {
+                class: ComplexMatchClass::Loose,
+                parts: part_names,
+                handlers: vec![name.to_string()],
+                extra_parts: extra,
+            }
+        } else {
+            ComplexAuditFinding {
+                class: ComplexMatchClass::Unhandled,
+                parts: part_names,
+                handlers: Vec::new(),
+                extra_parts: Vec::new(),
+            }
+        };
+        out.push(finding);
+    }
+    out
+}
+
 /// Collect entity ids that belong to any `DEFINITIONAL_REPRESENTATION`
 /// subtree. These represent PCURVE parametric-space geometry (2D points,
 /// 2D curves, `AXIS2_PLACEMENT_2D`, `PARAMETRIC_REPRESENTATION_CONTEXT`).
