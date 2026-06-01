@@ -15,6 +15,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
+use crate::ir::representation_item::RepresentationItemRef;
 use crate::ir::shape_rep::{MappedItem, MappedItemData, RepresentationMap, RepresentationMapData};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -39,8 +40,17 @@ impl SimpleEntityHandler for RepresentationMapHandler {
         let mapped_ref = read_entity_ref(attrs, 1, entity_id, "mapped_representation")?;
 
         let Some(mapping_origin) = resolve_representation_item_ref(ctx, origin_ref) else {
-            return Ok(()); // unmodelled origin (e.g. CAMERA_MODEL_D3) — drop
+            return Ok(()); // unmodelled origin — drop
         };
+        // A CAMERA_MODEL origin is the CAMERA_USAGE subtype's domain, not a
+        // plain `Itself` representation_map; the reader does not model it here.
+        // Drop it explicitly so the outcome does not depend on whether the
+        // CAMERA_MODEL has been read yet (dispatch-order independent — under
+        // pass dispatch the camera arena is still empty at this point, so the
+        // resolve above returned `None`; under topo it resolves early).
+        if matches!(mapping_origin, RepresentationItemRef::CameraModel(_)) {
+            return Ok(());
+        }
         let Some(&mapped_representation) = ctx.repr_id_map.get(&mapped_ref) else {
             return Ok(());
         };

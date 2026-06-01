@@ -63,6 +63,32 @@ pub enum DispatchStrategy {
     Topo,
 }
 
+/// A `SHAPE_DEFINITION_REPRESENTATION` whose product is resolved but whose
+/// geometry classification is deferred. The classification follows the
+/// indirect chain `SDR -> plain SR -> SHAPE_REPRESENTATION_RELATIONSHIP ->
+/// ABSR/MSSR/GBSSR`, but the SDR references only the plain SR — neither the
+/// SRR nor the geometry representation — so under topological dispatch the
+/// maps it reads (`srr_equiv_map`, `wireframe_data_map`, ...) are not
+/// guaranteed populated when the SDR is processed. Resolve in a post-pass.
+/// See [`ReaderContext::pending_sdr_geometry`].
+pub(crate) struct PendingSdrGeometry {
+    pub(crate) pid: ProductId,
+    pub(crate) shape_rep_ref: u64,
+    pub(crate) entity_id: u64,
+}
+
+/// A NAUO assembly instance with its parent/child resolved but its transform
+/// still pending. See [`ReaderContext::pending_nauo_instances`].
+pub(crate) struct PendingNauoInstance {
+    pub(crate) parent: ProductId,
+    pub(crate) child: ProductId,
+    pub(crate) occurrence_id: String,
+    pub(crate) occurrence_name: String,
+    /// STEP id of the NAUO — the key into `nauo_transform_map`, and the
+    /// `entity_id` reported if no transform was found.
+    pub(crate) nauo_id: u64,
+}
+
 /// Accumulates converted IR objects and tracks the mapping from STEP entity
 /// ids (`#N`) to typed arena Ids.
 #[derive(Default)]
@@ -333,6 +359,15 @@ pub struct ReaderContext {
     pub(crate) pdr_link_refs: Vec<(u64, u64)>,
     pub(crate) transform_map: HashMap<u64, Transform3d>,
     pub(crate) nauo_transform_map: HashMap<u64, Transform3d>,
+    /// SDRs whose product-geometry classification is deferred to
+    /// [`Self::resolve_sdr_product_geometry`] (dispatch-order independent).
+    pub(crate) pending_sdr_geometry: Vec<PendingSdrGeometry>,
+    /// NAUO instances awaiting their transform. The transform is produced by
+    /// the CDSR handler, but the reference graph runs NAUO -> PDS -> CDSR, so
+    /// under topological dispatch the NAUO is read before its CDSR. Stash the
+    /// resolved parent/child here and attach the transform in a post-pass,
+    /// once every CDSR has populated `nauo_transform_map`.
+    pub(crate) pending_nauo_instances: Vec<PendingNauoInstance>,
 
     /// Lazily-built `VisualizationPool` — Pass 7 's MDGPR convert pushes
     /// `Mdgpr` records here. `None` if no visualization entities were seen.
@@ -786,6 +821,9 @@ impl ReaderContext {
             DispatchStrategy::Topo => ctx.run_topo(graph),
         }
         ctx.resolve_product_contexts();
+        ctx.resolve_sdr_product_geometry();
+        ctx.ensure_product_ref_frames();
+        ctx.resolve_nauo_instances();
         ctx.finalize_assembly();
         ctx.resolve_sdr_links();
         ctx.resolve_pdr_links();
@@ -862,6 +900,52 @@ impl ReaderContext {
             if let Some(&pdcid) = self.product_definition_context_id_map.get(pdc_step_id) {
                 self.assembly_products[*pid].pdef_context = Some(pdcid);
             }
+        }
+    }
+
+    /// Resolve each product's `shape_ref_frame` for the degenerate case where
+    /// the file contains no `AXIS2_PLACEMENT_3D` at all: synthesize a single
+    /// identity placement and point every product at it. The PRODUCT handler
+    /// leaves `shape_ref_frame = Placement3dId(0)` as a tentative default;
+    /// SDR conversion overwrites it with the real frame when a shape
+    /// representation exists. Run after the full dispatch so the
+    /// `placements.is_empty()` test is dispatch-order independent. When any
+    /// placement exists no product was left dangling — an SDR frame derives
+    /// from a real placement, and the `Placement3dId(0)` default is valid — so
+    /// this is a no-op.
+    fn ensure_product_ref_frames(&mut self) {
+        if self.assembly_products.is_empty() || !self.geometry.placements.is_empty() {
+            return;
+        }
+        let identity = self.geometry.identity_placement();
+        let pids: Vec<_> = self.assembly_products.iter_ids().collect();
+        for pid in pids {
+            self.assembly_products[pid].shape_ref_frame = identity;
+        }
+    }
+
+    /// Attach the deferred NAUO transforms and push each instance onto its
+    /// parent product. Runs after the full dispatch (every CDSR has populated
+    /// `nauo_transform_map`) and before `finalize_assembly` consumes the
+    /// instances. Order-independent: identical result under either dispatch
+    /// strategy. A NAUO with no transform warns and drops, as before.
+    fn resolve_nauo_instances(&mut self) {
+        for pending in std::mem::take(&mut self.pending_nauo_instances) {
+            let Some(&transform) = self.nauo_transform_map.get(&pending.nauo_id) else {
+                self.warnings.push(ConvertError::UnexpectedEntityForm {
+                    entity_id: pending.nauo_id,
+                    detail: String::from("NEXT_ASSEMBLY_USAGE_OCCURRENCE with no transform found"),
+                });
+                continue;
+            };
+            self.assembly_products[pending.parent]
+                .instances
+                .push(crate::ir::assembly::Instance {
+                    child: pending.child,
+                    transform,
+                    occurrence_id: pending.occurrence_id,
+                    occurrence_name: pending.occurrence_name,
+                });
         }
     }
 

@@ -56,15 +56,12 @@ impl SimpleEntityHandler for ProductHandler {
 
         // Every Product needs a non-optional reference frame. SDR conversion
         // overwrites this with the shape representation's actual refFrame when
-        // available. As a placeholder, reuse the first AXIS2 already pushed
-        // during the geometry passes so the arena count stays faithful to the
-        // source file. Only fall back to pushing a fresh identity when no
-        // AXIS2 exists (degenerate fixture).
-        let shape_ref_frame = if ctx.geometry.placements.is_empty() {
-            ctx.geometry.identity_placement()
-        } else {
-            Placement3dId(0)
-        };
+        // available; otherwise it defaults to the first AXIS2 in the file.
+        // The "no AXIS2 at all" degenerate case is resolved in the
+        // `ensure_product_ref_frames` post-pass, which synthesizes an identity
+        // — deferred so the decision does not depend on how many placements
+        // happen to be read before this PRODUCT (dispatch-order independent).
+        let shape_ref_frame = Placement3dId(0);
         let product = Product {
             id: id.to_owned(),
             name: name.to_owned(),

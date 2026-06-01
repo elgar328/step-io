@@ -810,6 +810,13 @@ impl ReaderContext {
                     ),
                 });
         }
+        // Order-independent seeding of the CBU `conversion_factor` suppression
+        // set. In pass mode the CONVERSION_BASED_UNIT is read before its
+        // embedded MWU, so reading the CBU populates `cbu_internal_mwu_refs`
+        // in time. Under topo the MWU (a dependency) is processed first, so
+        // the set must be seeded up front or the MWU duplicates the inline
+        // conversion factor the writer re-emits.
+        self.prescan_cbu_internal_mwu_refs(graph);
         let index = build_topo_index();
         for id in order {
             let Some(ent) = graph.get(id) else { continue };
@@ -834,6 +841,26 @@ impl ReaderContext {
         // the single loop (all producers done; equivalent timing).
         self.backfill_cbu_base(graph);
         self.resolve_deferred_sdr_items();
+    }
+
+    /// Seed `cbu_internal_mwu_refs` from every `CONVERSION_BASED_UNIT`'s
+    /// `conversion_factor` ref (attr index 1) so the MWU handlers suppress the
+    /// embedded duplicate regardless of dispatch order. Mirrors the insert in
+    /// `read_conversion_based_unit_body` (which fires for any CBU name,
+    /// recognised or not), just hoisted ahead of the topo loop.
+    fn prescan_cbu_internal_mwu_refs(&mut self, graph: &EntityGraph) {
+        for ent in graph.entities.values() {
+            let RawEntity::Complex { parts, .. } = ent else {
+                continue;
+            };
+            for part in parts {
+                if part.name == "CONVERSION_BASED_UNIT"
+                    && let Some(Attribute::EntityRef(r)) = part.attributes.get(1)
+                {
+                    self.cbu_internal_mwu_refs.insert(*r);
+                }
+            }
+        }
     }
 
     /// Dispatch all name-matching handlers for one instance, applying the

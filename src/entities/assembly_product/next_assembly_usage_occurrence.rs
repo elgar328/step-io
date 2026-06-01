@@ -46,20 +46,18 @@ impl SimpleEntityHandler for NextAssemblyUsageOccurrenceHandler {
         let parent_pid = ctx.resolve_product_by_pdef(entity_id, relating_pdef, "relating_pdef")?;
         let child_pid = ctx.resolve_product_by_pdef(entity_id, related_pdef, "related_pdef")?;
 
-        let Some(&transform) = ctx.nauo_transform_map.get(&entity_id) else {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: String::from("NEXT_ASSEMBLY_USAGE_OCCURRENCE with no transform found"),
+        // The transform comes from the CDSR handler, which the reference graph
+        // (NAUO <- PDS <- CDSR) places *after* this NAUO under topological
+        // dispatch. Defer the instance: a post-pass attaches the transform once
+        // every CDSR has run. See `ReaderContext::resolve_nauo_instances`.
+        ctx.pending_nauo_instances
+            .push(crate::reader::PendingNauoInstance {
+                parent: parent_pid,
+                child: child_pid,
+                occurrence_id,
+                occurrence_name,
+                nauo_id: entity_id,
             });
-            return Ok(());
-        };
-
-        ctx.assembly_products[parent_pid].instances.push(Instance {
-            child: child_pid,
-            transform,
-            occurrence_id,
-            occurrence_name,
-        });
         Ok(())
     }
 
