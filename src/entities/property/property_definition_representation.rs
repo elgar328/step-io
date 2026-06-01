@@ -51,6 +51,15 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
             return Ok(());
         };
         if repr_name_step != "REPRESENTATION" {
+            // `used_representation` is a modelled representation subtype (e.g.
+            // SHAPE_REPRESENTATION) rather than a generic descriptive-property
+            // REPRESENTATION. Record a PD↔representation link for the writer to
+            // reference the existing representation; resolve_pdr_links filters
+            // by `property_def_step_to_id` / `repr_id_map`. (PD already gated
+            // resolved above.)
+            if ctx.repr_id_map.contains_key(&repr_ref) {
+                ctx.pdr_link_refs.push((pd_ref, repr_ref));
+            }
             return Ok(());
         }
         let representation_name = read_string_or_unset(repr_attrs, 0, repr_ref, "name")?.to_owned();

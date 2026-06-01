@@ -903,6 +903,9 @@ impl<'m> WriteBuffer<'m> {
         // SDRs don't fold into Product, so step-id order is irrelevant; the
         // re-read stashes + resolves them regardless.
         self.emit_sdr_links();
+        // PDR links whose used_representation is a modelled representation
+        // (e.g. SHAPE_REPRESENTATION) — same ordering constraints as SDR links.
+        self.emit_pdr_links();
         // CAMERA_USAGE — delayed emit (mirrors Mdgpr / DraughtingModel
         // pattern). `mapped_representation` may target a DM, so this runs
         // after `emit_draughting_models` populates the DM slot of

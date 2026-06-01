@@ -42,6 +42,36 @@ impl WriteBuffer<'_> {
         }
     }
 
+    /// Emit `PROPERTY_DEFINITION_REPRESENTATION`s from the
+    /// `property_definition_representations` arena — those whose
+    /// `used_representation` is an already-modelled representation. References
+    /// the existing PD and representation step ids (no fresh REPRESENTATION).
+    /// Same ordering constraints as [`Self::emit_sdr_links`]. Mirrors it.
+    pub(in crate::writer::buffer) fn emit_pdr_links(&mut self) {
+        let Some(pool) = self.model.properties.clone() else {
+            return;
+        };
+        for link in pool.property_definition_representations.iter() {
+            let pd = self
+                .property_definition_step_ids
+                .get(link.definition.0 as usize)
+                .copied()
+                .unwrap_or(0);
+            let repr = self
+                .representation_step_ids
+                .get(link.used_representation.0 as usize)
+                .copied()
+                .unwrap_or(0);
+            if pd == 0 || repr == 0 {
+                continue;
+            }
+            let _ = PropertyDefinitionRepresentationHandler::write(
+                self,
+                PropertyDefinitionRepresentationWriteInput { pd, repr },
+            );
+        }
+    }
+
     pub(in crate::writer::buffer) fn emit_properties_if_set(&mut self) {
         let Some(pool) = self.model.properties.clone() else {
             return;

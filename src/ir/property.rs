@@ -64,12 +64,32 @@ pub struct PropertyPool {
     /// refactor; later phases fold these (and PDR) into the blueprint
     /// `property_definition_representation` arena.
     pub shape_definition_representations: Arena<ShapeDefinitionRepresentationLink>,
+    /// `PROPERTY_DEFINITION_REPRESENTATION`s whose `used_representation` is an
+    /// already-modelled representation (e.g. `SHAPE_REPRESENTATION`) rather
+    /// than the generic descriptive-property `REPRESENTATION` folded into
+    /// [`Property`]. The writer references the existing representation's step
+    /// id (no fresh REPRESENTATION emitted). Mirrors
+    /// [`PropertyPool::shape_definition_representations`].
+    pub property_definition_representations: Arena<PropertyDefinitionRepresentationLink>,
 }
 
 /// A `SHAPE_DEFINITION_REPRESENTATION(definition, used_representation)` whose
 /// `definition` resolves to a [`PropertyDefinition`] (not the product PDS).
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeDefinitionRepresentationLink {
+    /// `definition` — a [`PropertyPool::property_definitions`] arena slot.
+    pub definition: PropertyDefinitionId,
+    /// `used_representation` — a `representations` arena entry.
+    pub used_representation: crate::ir::id::RepresentationId,
+}
+
+/// A `PROPERTY_DEFINITION_REPRESENTATION(definition, used_representation)` whose
+/// `used_representation` is an already-modelled representation (e.g.
+/// `SHAPE_REPRESENTATION`). Both refs point at existing arena entries — the
+/// writer reuses their cached step ids. Mirrors
+/// [`ShapeDefinitionRepresentationLink`].
+#[derive(Debug, Clone, PartialEq)]
+pub struct PropertyDefinitionRepresentationLink {
     /// `definition` — a [`PropertyPool::property_definitions`] arena slot.
     pub definition: PropertyDefinitionId,
     /// `used_representation` — a `representations` arena entry.

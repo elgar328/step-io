@@ -315,6 +315,11 @@ pub struct ReaderContext {
     /// to a `ShapeDefinitionRepresentationLink` after all passes once the
     /// `PROPERTY_DEFINITION`s they point at have been read at `Pass8`).
     pub(crate) sdr_link_refs: Vec<(u64, u64)>,
+    /// `PROPERTY_DEFINITION_REPRESENTATION` `(definition #N, used_representation #N)`
+    /// pairs whose `used_representation` is a modelled representation (e.g.
+    /// `SHAPE_REPRESENTATION`). Resolved to `PropertyDefinitionRepresentationLink`
+    /// by `resolve_pdr_links` after `Pass8`, mirroring `sdr_link_refs`.
+    pub(crate) pdr_link_refs: Vec<(u64, u64)>,
     pub(crate) transform_map: HashMap<u64, Transform3d>,
     pub(crate) nauo_transform_map: HashMap<u64, Transform3d>,
 
@@ -757,6 +762,7 @@ impl ReaderContext {
         ctx.resolve_product_contexts();
         ctx.finalize_assembly();
         ctx.resolve_sdr_links();
+        ctx.resolve_pdr_links();
         let header = header::extract_file_header(&graph.header, &mut ctx.warnings);
         for ((field, normalized_to), count) in std::mem::take(&mut ctx.nonstandard_normalizations) {
             ctx.warnings.push(ConvertError::NonStandardInput {
@@ -919,6 +925,39 @@ impl ReaderContext {
             .get_or_insert_with(crate::ir::property::PropertyPool::default);
         for link in links {
             pool.shape_definition_representations.push(link);
+        }
+    }
+
+    /// Resolve stashed `PROPERTY_DEFINITION_REPRESENTATION` links whose
+    /// `used_representation` is a modelled representation (e.g.
+    /// `SHAPE_REPRESENTATION`). Runs after all passes so the `PROPERTY_DEFINITION`
+    /// and the representation are both read. Unresolved links drop — FAIL-safe.
+    /// Mirrors [`Self::resolve_sdr_links`].
+    fn resolve_pdr_links(&mut self) {
+        if self.pdr_link_refs.is_empty() {
+            return;
+        }
+        let mut links = Vec::new();
+        for (def_ref, rep_ref) in std::mem::take(&mut self.pdr_link_refs) {
+            let effective = self.srr_equiv_map.get(&rep_ref).copied().unwrap_or(rep_ref);
+            if let (Some(&definition), Some(&used_representation)) = (
+                self.property_def_step_to_id.get(&def_ref),
+                self.repr_id_map.get(&effective),
+            ) {
+                links.push(crate::ir::property::PropertyDefinitionRepresentationLink {
+                    definition,
+                    used_representation,
+                });
+            }
+        }
+        if links.is_empty() {
+            return;
+        }
+        let pool = self
+            .properties
+            .get_or_insert_with(crate::ir::property::PropertyPool::default);
+        for link in links {
+            pool.property_definition_representations.push(link);
         }
     }
 
