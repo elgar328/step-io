@@ -9,7 +9,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use crate::ir::arena::Arena;
 use crate::ir::assembly::{AssemblyTree, Product, Transform3d, WireframeContent};
 use crate::ir::error::ConvertError;
-use crate::ir::geometry::{PCurveOrSurface, TransitionCode};
+use crate::ir::geometry::{SurfaceCurveWrapper, TransitionCode};
 use crate::ir::id::{
     ColourId, Curve2dId, CurveId, CurveStyleId, Direction2dId, DirectionId, EdgeId, FaceId,
     FoundedItemId, Placement1dId, Placement2dId, Placement3dId, Point2dId, PointId,
@@ -187,10 +187,10 @@ pub struct ReaderContext {
     pub(crate) curve_2d_map: HashMap<u64, Curve2dId>,
     pub(crate) vector_2d_map: HashMap<u64, (Direction2dId, f64)>,
     pub(crate) placement_2d_map: HashMap<u64, Placement2dId>,
-    /// `SURFACE_CURVE / SEAM_CURVE #N → Vec<PCurveOrSurface>`. Populated
-    /// during Pass 4-3 and consumed by `convert_edge_curve` to attach the
-    /// `associated_geometry` members (pcurves and/or surfaces) to each edge.
-    pub(crate) surface_curve_pcurves_map: HashMap<u64, Vec<PCurveOrSurface>>,
+    /// `SURFACE_CURVE / SEAM_CURVE #N → SurfaceCurveWrapper`. Populated during
+    /// Pass 4-3 and consumed by `convert_edge_curve` to attach the wrapper
+    /// (entity kind, associated geometry, `master_representation`) to each edge.
+    pub(crate) surface_curve_map: HashMap<u64, SurfaceCurveWrapper>,
 
     // Topology maps: STEP #N → typed Id.
     pub(crate) vertex_map: HashMap<u64, VertexId>,

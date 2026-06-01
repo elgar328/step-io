@@ -9,11 +9,12 @@
 //! handler.
 
 use crate::entities::SimpleEntityHandler;
+use crate::entities::geometry::surface_curve::{
+    master_representation_token, parse_master_representation,
+};
 use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::geometry::{
-    PCurveOrSurface, PreferredSurfaceCurveRepresentation, SurfaceCurve, SurfaceCurveData,
-};
+use crate::ir::geometry::{PCurveOrSurface, SurfaceCurve, SurfaceCurveData};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -89,11 +90,8 @@ fn read_surface_curve_body(
     let Attribute::Enum(token) = &attrs[3] else {
         return Ok(None);
     };
-    let master_representation = match token.as_str() {
-        "CURVE_3D" => PreferredSurfaceCurveRepresentation::Curve3d,
-        "PCURVE_S1" => PreferredSurfaceCurveRepresentation::PcurveS1,
-        "PCURVE_S2" => PreferredSurfaceCurveRepresentation::PcurveS2,
-        _ => return Ok(None),
+    let Some(master_representation) = parse_master_representation(token) else {
+        return Ok(None);
     };
     let Some(&curve_3d) = ctx.curve_map.get(&curve_3d_ref) else {
         return Ok(None);
@@ -132,11 +130,7 @@ fn emit_surface_curve_body(
         };
         assoc_attrs.push(Attribute::EntityRef(step));
     }
-    let token = match body.master_representation {
-        PreferredSurfaceCurveRepresentation::Curve3d => "CURVE_3D",
-        PreferredSurfaceCurveRepresentation::PcurveS1 => "PCURVE_S1",
-        PreferredSurfaceCurveRepresentation::PcurveS2 => "PCURVE_S2",
-    };
+    let token = master_representation_token(body.master_representation);
     Ok(buf.push_simple(
         type_name,
         vec![

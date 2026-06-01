@@ -161,8 +161,12 @@ impl ReaderContext {
                 RawEntity::Complex { .. } => continue,
             };
             if name == "SURFACE_CURVE" || name == "SEAM_CURVE" {
-                crate::entities::geometry::surface_curve::collect_surface_curve_pcurves(
-                    self, id, attrs, graph,
+                crate::entities::geometry::surface_curve::collect_surface_curve(
+                    self,
+                    id,
+                    attrs,
+                    graph,
+                    name == "SEAM_CURVE",
                 );
             }
         }

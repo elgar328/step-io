@@ -7,10 +7,10 @@ use crate::ir::{
     Circle2, Circle3, CompositeCurve, ConicalSurface, Curve, Curve2d, Curve2dId, CurveId,
     CylindricalSurface, DegenerateToroidalSurface, Direction2dId, Direction3, DirectionId,
     Ellipse2, Ellipse3, Hyperbola, Line2, Line3, NurbsCurve, NurbsCurve2d, NurbsSurface,
-    OffsetCurve3d, PCurveOrSurface, Parabola, Pcurve, Placement1dId, Placement2dId, Placement3dId,
-    Plane3, Point2dId, PointId, Polyline, Polyline2d, RectangularTrimmedSurface, SphericalSurface,
-    StepModel, Surface, SurfaceId, SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution,
-    ToroidalSurface, TrimmedCurve,
+    OffsetCurve3d, Parabola, Pcurve, Placement1dId, Placement2dId, Placement3dId, Plane3,
+    Point2dId, PointId, Polyline, Polyline2d, RectangularTrimmedSurface, SphericalSurface,
+    StepModel, Surface, SurfaceCurveWrapper, SurfaceId, SurfaceOfLinearExtrusion, SurfaceOfOffset,
+    SurfaceOfRevolution, ToroidalSurface, TrimmedCurve,
 };
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
@@ -431,39 +431,25 @@ impl WriteBuffer<'_> {
         Ok(n)
     }
 
-    /// Emit a SURFACE_CURVE or SEAM_CURVE wrapping `curve_3d_ref` plus each
-    /// `associated_geometry` member. The variant is chosen by the members:
-    /// if every member is a pcurve sharing one basis surface → SEAM_CURVE,
-    /// otherwise SURFACE_CURVE (any surface member forces SURFACE_CURVE).
-    /// `master_representation` is always `.PCURVE_S1.` (OCCT convention —
-    /// the reader doesn't consult this value).
+    /// Emit the preserved SURFACE_CURVE / SEAM_CURVE wrapping `curve_3d_ref`.
+    /// The entity kind, `name`, and `master_representation` come straight from
+    /// the wrapper (no heuristic — the original is reproduced verbatim).
     pub(crate) fn emit_surface_curve_wrapper(
         &mut self,
         curve_3d_ref: u64,
-        members: &[PCurveOrSurface],
+        wrapper: &SurfaceCurveWrapper,
     ) -> Result<u64, WriteError> {
         // Plan 5 stage C4: dispatch through EntityHandler trait.
         use crate::entities::SimpleEntityHandler;
-        let first_basis = match members.first() {
-            Some(PCurveOrSurface::Pcurve(p)) => Some(p.basis_surface),
-            _ => None,
-        };
-        let is_seam = members.len() >= 2
-            && first_basis.is_some_and(|basis| {
-                members
-                    .iter()
-                    .all(|m| matches!(m, PCurveOrSurface::Pcurve(p) if p.basis_surface == basis))
-            });
-        let members_owned = members.to_vec();
-        if is_seam {
+        if wrapper.is_seam {
             crate::entities::geometry::seam_curve::SeamCurveHandler::write(
                 self,
-                (curve_3d_ref, members_owned),
+                (curve_3d_ref, wrapper.clone()),
             )
         } else {
             crate::entities::geometry::surface_curve::SurfaceCurveHandler::write(
                 self,
-                (curve_3d_ref, members_owned),
+                (curve_3d_ref, wrapper.clone()),
             )
         }
     }

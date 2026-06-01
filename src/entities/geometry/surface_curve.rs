@@ -1,17 +1,17 @@
 //! `SURFACE_CURVE` handler — Pass 4-3 (transparent alias to a 3D curve
-//! with associated pcurves resolved in a post-pass).
+//! with the wrapper preserved in a post-pass).
 //!
 //! Shares its read body and write body with `SEAM_CURVE` via the
 //! `read_surface_or_seam_curve_body` / `write_surface_or_seam_curve_body`
 //! helpers below; the sister handler in `seam_curve.rs` imports them.
-//! The post-pass that collects pcurves into
-//! `surface_curve_pcurves_map` (formerly `ReaderContext::collect_surface_curve_pcurves`)
-//! also lives here so the entity module is self-contained.
+//! The post-pass that captures each wrapper into `surface_curve_map`
+//! (`collect_surface_curve`) also lives here so the entity module is
+//! self-contained.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::PCurveOrSurface;
 use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
+use crate::ir::{PCurveOrSurface, PreferredSurfaceCurveRepresentation, SurfaceCurveWrapper};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -41,17 +41,48 @@ pub(super) fn read_surface_or_seam_curve_body(
     Ok(())
 }
 
-/// Read the `associated_geometry` list off a `SURFACE_CURVE` /
-/// `SEAM_CURVE` entity and stash resolved [`Pcurve`]s into
-/// `surface_curve_pcurves_map`. Lives outside [`SimpleEntityHandler`]
-/// because pcurve resolution requires the [`EntityGraph`] (Pass 4a must
-/// have already populated `curve_2d_map`/`surface_map`).
-pub(crate) fn collect_surface_curve_pcurves(
+/// Parse a `preferred_surface_curve_representation` enum token. Shared with
+/// the subtype path (`surface_curve_subtypes.rs`).
+pub(crate) fn parse_master_representation(
+    token: &str,
+) -> Option<PreferredSurfaceCurveRepresentation> {
+    match token {
+        "CURVE_3D" => Some(PreferredSurfaceCurveRepresentation::Curve3d),
+        "PCURVE_S1" => Some(PreferredSurfaceCurveRepresentation::PcurveS1),
+        "PCURVE_S2" => Some(PreferredSurfaceCurveRepresentation::PcurveS2),
+        _ => None,
+    }
+}
+
+/// Serialize a `preferred_surface_curve_representation` back to its token.
+pub(crate) fn master_representation_token(m: PreferredSurfaceCurveRepresentation) -> &'static str {
+    match m {
+        PreferredSurfaceCurveRepresentation::Curve3d => "CURVE_3D",
+        PreferredSurfaceCurveRepresentation::PcurveS1 => "PCURVE_S1",
+        PreferredSurfaceCurveRepresentation::PcurveS2 => "PCURVE_S2",
+    }
+}
+
+/// Capture a `SURFACE_CURVE` / `SEAM_CURVE` wrapper into `surface_curve_map`,
+/// resolving its `associated_geometry` members and preserving the entity kind
+/// (`is_seam`), `name`, and `master_representation` so the writer reproduces
+/// them verbatim. Lives outside [`SimpleEntityHandler`] because member
+/// resolution requires the [`EntityGraph`] (Pass 4a must have already
+/// populated `curve_2d_map`/`surface_map`).
+pub(crate) fn collect_surface_curve(
     ctx: &mut ReaderContext,
     entity_id: u64,
     attrs: &[Attribute],
     graph: &EntityGraph,
+    is_seam: bool,
 ) {
+    let name = match read_string_or_unset(attrs, 0, entity_id, "name") {
+        Ok(s) => s.to_owned(),
+        Err(e) => {
+            ctx.warnings.push(e);
+            return;
+        }
+    };
     let member_refs = match read_entity_ref_list(attrs, 2, entity_id, "associated_geometry") {
         Ok(refs) => refs,
         Err(e) => {
@@ -59,6 +90,12 @@ pub(crate) fn collect_surface_curve_pcurves(
             return;
         }
     };
+    let master_representation = match attrs.get(3) {
+        Some(Attribute::Enum(tok)) => parse_master_representation(tok),
+        _ => None,
+    }
+    .unwrap_or(PreferredSurfaceCurveRepresentation::PcurveS1);
+
     let mut members = Vec::with_capacity(member_refs.len());
     for &member_ref in &member_refs {
         // `associated_geometry` is a `pcurve_or_surface` SELECT: a member is
@@ -92,28 +129,36 @@ pub(crate) fn collect_surface_curve_pcurves(
         }
     }
     if !members.is_empty() {
-        ctx.surface_curve_pcurves_map.insert(entity_id, members);
+        ctx.surface_curve_map.insert(
+            entity_id,
+            SurfaceCurveWrapper {
+                name,
+                is_seam,
+                associated_geometry: members,
+                master_representation,
+            },
+        );
     }
 }
 
-/// Writer body shared by `SURFACE_CURVE` and `SEAM_CURVE`. Caller
-/// already emitted the underlying 3D curve and supplies the pcurve list.
-/// `is_seam` selects the entity name; the body is otherwise identical.
+/// Writer body shared by `SURFACE_CURVE` and `SEAM_CURVE`. Caller already
+/// emitted the underlying 3D curve and supplies the preserved wrapper. The
+/// entity kind comes from `wrapper.is_seam`; `name` and `master_representation`
+/// are reproduced verbatim (no heuristic, no hardcoded token).
 pub(super) fn write_surface_or_seam_curve_body(
     buf: &mut WriteBuffer,
     curve_3d_ref: u64,
-    members: &[PCurveOrSurface],
-    is_seam: bool,
+    wrapper: &SurfaceCurveWrapper,
 ) -> Result<u64, WriteError> {
-    let mut pcurve_refs = Vec::with_capacity(members.len());
-    for member in members {
+    let mut member_refs = Vec::with_capacity(wrapper.associated_geometry.len());
+    for member in &wrapper.associated_geometry {
         let r = match member {
             PCurveOrSurface::Pcurve(pc) => buf.emit_pcurve(*pc)?,
             PCurveOrSurface::Surface(sid) => buf.emit_surface(*sid)?,
         };
-        pcurve_refs.push(r);
+        member_refs.push(r);
     }
-    let name = if is_seam {
+    let name = if wrapper.is_seam {
         "SEAM_CURVE"
     } else {
         "SURFACE_CURVE"
@@ -124,10 +169,10 @@ pub(super) fn write_surface_or_seam_curve_body(
         body: WriterBody::Simple {
             name: name.into(),
             attrs: vec![
-                Attribute::String(String::new()),
+                Attribute::String(wrapper.name.clone()),
                 Attribute::EntityRef(curve_3d_ref),
-                Attribute::List(pcurve_refs.into_iter().map(Attribute::EntityRef).collect()),
-                Attribute::Enum("PCURVE_S1".into()),
+                Attribute::List(member_refs.into_iter().map(Attribute::EntityRef).collect()),
+                Attribute::Enum(master_representation_token(wrapper.master_representation).into()),
             ],
         },
     });
@@ -138,10 +183,9 @@ pub(crate) struct SurfaceCurveHandler;
 
 #[step_entity(name = "SURFACE_CURVE", pass = Pass4_3SurfaceCurve)]
 impl SimpleEntityHandler for SurfaceCurveHandler {
-    /// `(curve_3d_ref, members)` — caller (writer wrapper) already
-    /// emitted the underlying 3D curve and hands over the resolved
-    /// `associated_geometry` members (pcurves and/or surfaces).
-    type WriteInput = (u64, Vec<PCurveOrSurface>);
+    /// `(curve_3d_ref, wrapper)` — caller (writer wrapper) already emitted
+    /// the underlying 3D curve and hands over the preserved wrapper.
+    type WriteInput = (u64, SurfaceCurveWrapper);
 
     fn read(
         ctx: &mut ReaderContext,
@@ -154,8 +198,8 @@ impl SimpleEntityHandler for SurfaceCurveHandler {
 
     fn write(
         buf: &mut WriteBuffer,
-        (curve_3d_ref, members): (u64, Vec<PCurveOrSurface>),
+        (curve_3d_ref, wrapper): (u64, SurfaceCurveWrapper),
     ) -> Result<u64, WriteError> {
-        write_surface_or_seam_curve_body(buf, curve_3d_ref, &members, false)
+        write_surface_or_seam_curve_body(buf, curve_3d_ref, &wrapper)
     }
 }

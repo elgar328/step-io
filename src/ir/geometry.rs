@@ -730,6 +730,20 @@ pub enum PreferredSurfaceCurveRepresentation {
     PcurveS2,
 }
 
+/// Faithful image of a base `SURFACE_CURVE` / `SEAM_CURVE` wrapper carried by
+/// the edge whose `edge_geometry` referenced it. `curve_3d` lives on the edge
+/// (`Edge::curve`); this preserves the wrapper's other attributes verbatim so
+/// the writer reproduces the original entity kind and `master_representation`
+/// instead of reconstructing them by heuristic.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceCurveWrapper {
+    pub name: String,
+    /// `true` for `SEAM_CURVE`, `false` for `SURFACE_CURVE`.
+    pub is_seam: bool,
+    pub associated_geometry: Vec<PCurveOrSurface>,
+    pub master_representation: PreferredSurfaceCurveRepresentation,
+}
+
 /// `parameter_space_curve` `enum_base` — phase bpc. Currently models the
 /// `BOUNDED_PCURVE` SUBTYPE only; corpus 0 inst (round-trip test only).
 #[derive(Debug, Clone, PartialEq)]

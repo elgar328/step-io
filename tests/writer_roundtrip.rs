@@ -160,7 +160,8 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
         "{name}: curves_2d count"
     );
 
-    // Per-edge pcurves
+    // Per-edge SURFACE_CURVE / SEAM_CURVE wrapper — compares the whole
+    // preserved wrapper (entity kind, name, master_representation, members).
     for (eidx, (oe, re_edge)) in original
         .topology
         .edges
@@ -169,16 +170,9 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
         .enumerate()
     {
         assert_eq!(
-            oe.pcurves.len(),
-            re_edge.pcurves.len(),
-            "{name}: edge[{eidx}] pcurves len"
+            oe.surface_curve, re_edge.surface_curve,
+            "{name}: edge[{eidx}] surface_curve wrapper"
         );
-        for (pidx, (op, rp)) in oe.pcurves.iter().zip(re_edge.pcurves.iter()).enumerate() {
-            assert_eq!(
-                op, rp,
-                "{name}: edge[{eidx}].associated_geometry[{pidx}] member"
-            );
-        }
     }
 
     assert_unit_contexts_equivalent(name, &re, &original);

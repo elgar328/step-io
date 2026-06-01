@@ -7,7 +7,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::surface_curve::{
     read_surface_or_seam_curve_body, write_surface_or_seam_curve_body,
 };
-use crate::ir::PCurveOrSurface;
+use crate::ir::SurfaceCurveWrapper;
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -19,7 +19,7 @@ pub(crate) struct SeamCurveHandler;
 
 #[step_entity(name = "SEAM_CURVE", pass = Pass4_3SurfaceCurve)]
 impl SimpleEntityHandler for SeamCurveHandler {
-    type WriteInput = (u64, Vec<PCurveOrSurface>);
+    type WriteInput = (u64, SurfaceCurveWrapper);
 
     fn read(
         ctx: &mut ReaderContext,
@@ -32,8 +32,8 @@ impl SimpleEntityHandler for SeamCurveHandler {
 
     fn write(
         buf: &mut WriteBuffer,
-        (curve_3d_ref, members): (u64, Vec<PCurveOrSurface>),
+        (curve_3d_ref, wrapper): (u64, SurfaceCurveWrapper),
     ) -> Result<u64, WriteError> {
-        write_surface_or_seam_curve_body(buf, curve_3d_ref, &members, true)
+        write_surface_or_seam_curve_body(buf, curve_3d_ref, &wrapper)
     }
 }

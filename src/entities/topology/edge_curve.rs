@@ -39,21 +39,17 @@ impl SimpleEntityHandler for EdgeCurveHandler {
         let start = ctx.resolve_vertex(entity_id, start_ref, "edge_start")?;
         let end = ctx.resolve_vertex(entity_id, end_ref, "edge_end")?;
         let curve = ctx.resolve_curve(entity_id, curve_ref, "edge_geometry")?;
-        // If edge_geometry referenced a SURFACE_CURVE / SEAM_CURVE, pcurves
-        // were collected in Pass 4-3b keyed by that wrapper id. Direct
-        // 3D-curve refs return None → empty Vec.
-        let pcurves = ctx
-            .surface_curve_pcurves_map
-            .get(&curve_ref)
-            .cloned()
-            .unwrap_or_default();
+        // If edge_geometry referenced a SURFACE_CURVE / SEAM_CURVE, its
+        // wrapper was captured in Pass 4-3b keyed by that wrapper id. Direct
+        // 3D-curve refs return None.
+        let surface_curve = ctx.surface_curve_map.get(&curve_ref).cloned();
 
         let edge = Edge {
             curve,
             vertices: (start, end),
             trim: (0.0, 0.0),
             orientation: bool_to_orientation(same_sense),
-            pcurves,
+            surface_curve,
         };
         let id = ctx.topology.edges.push(edge);
         ctx.edge_map.insert(entity_id, id);
@@ -77,12 +73,11 @@ impl SimpleEntityHandler for EdgeCurveHandler {
         let start = buf.emit_vertex(e.vertices.0)?;
         let end = buf.emit_vertex(e.vertices.1)?;
         let curve_3d = buf.emit_curve(e.curve)?;
-        // Wrap in SURFACE_CURVE / SEAM_CURVE if the edge carries pcurves;
+        // Wrap in SURFACE_CURVE / SEAM_CURVE if the edge carried one;
         // otherwise emit EDGE_CURVE against the 3D curve directly.
-        let curve_ref = if e.pcurves.is_empty() {
-            curve_3d
-        } else {
-            buf.emit_surface_curve_wrapper(curve_3d, &e.pcurves)?
+        let curve_ref = match &e.surface_curve {
+            Some(wrapper) => buf.emit_surface_curve_wrapper(curve_3d, wrapper)?,
+            None => curve_3d,
         };
         let n = buf.fresh();
         buf.entities.push(WriterEntity {

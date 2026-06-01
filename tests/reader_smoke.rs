@@ -1554,8 +1554,17 @@ fn cylinder_ap214_is_collects_pcurves() {
     let model = result.model;
 
     // Cylinder fixture has 6 PCURVE entities (2 on the seam, 2 on each of
-    // two surface curves). All six should land in Edge.pcurves.
-    let total_pcurves: usize = model.topology.edges.iter().map(|e| e.pcurves.len()).sum();
+    // two surface curves). All six should land in edge surface-curve wrappers.
+    let total_pcurves: usize = model
+        .topology
+        .edges
+        .iter()
+        .map(|e| {
+            e.surface_curve
+                .as_ref()
+                .map_or(0, |w| w.associated_geometry.len())
+        })
+        .sum();
     assert_eq!(total_pcurves, 6, "cylinder_ap214_is total pcurves");
 
     // 2D arenas populated.
@@ -1566,15 +1575,16 @@ fn cylinder_ap214_is_collects_pcurves() {
         "directions_2d empty"
     );
 
-    // Sanity: at least one edge has pcurves, and the basis_surface is a
-    // valid SurfaceId inside the 3D surface arena.
+    // Sanity: at least one edge has a surface-curve wrapper, and the
+    // basis_surface is a valid SurfaceId inside the 3D surface arena.
     let first = model
         .topology
         .edges
         .iter()
-        .find(|e| !e.pcurves.is_empty())
-        .expect("at least one edge has pcurves");
-    let PCurveOrSurface::Pcurve(pc) = first.pcurves[0] else {
+        .find(|e| e.surface_curve.is_some())
+        .expect("at least one edge has a surface curve");
+    let wrapper = first.surface_curve.as_ref().unwrap();
+    let PCurveOrSurface::Pcurve(pc) = wrapper.associated_geometry[0] else {
         panic!("cylinder_ap214_is: expected a pcurve member in associated_geometry");
     };
     let basis = pc.basis_surface;
@@ -1598,7 +1608,16 @@ fn loft_ap214_is_collects_pcurves() {
 
     // Loft fixture is much richer; we just require "many" pcurves and a
     // non-empty 2D curve arena including NURBS 2D entries.
-    let total_pcurves: usize = model.topology.edges.iter().map(|e| e.pcurves.len()).sum();
+    let total_pcurves: usize = model
+        .topology
+        .edges
+        .iter()
+        .map(|e| {
+            e.surface_curve
+                .as_ref()
+                .map_or(0, |w| w.associated_geometry.len())
+        })
+        .sum();
     assert!(
         total_pcurves > 20,
         "loft should have many pcurves; got {total_pcurves}"
@@ -1666,7 +1685,11 @@ fn pcurve_fixtures_convert_without_warnings() {
             .topology
             .edges
             .iter()
-            .map(|e| e.pcurves.len())
+            .map(|e| {
+                e.surface_curve
+                    .as_ref()
+                    .map_or(0, |w| w.associated_geometry.len())
+            })
             .sum();
         assert!(
             total > 0,
