@@ -1,4 +1,4 @@
-use super::geometry::Pcurve;
+use super::geometry::PCurveOrSurface;
 use super::id::{CurveId, EdgeId, FaceId, ShellId, SurfaceId, VertexId, WireId};
 
 /// Direction agreement flag used throughout B-Rep topology.
@@ -21,9 +21,10 @@ pub struct Edge {
     /// which is a geometric operation deferred to the kernel adapter.
     pub trim: (f64, f64),
     pub orientation: Orientation,
-    /// Pcurves from the source `SURFACE_CURVE` / `SEAM_CURVE` wrapper.
-    /// Empty when the edge's `edge_geometry` pointed directly at a 3D curve.
-    pub pcurves: Vec<Pcurve>,
+    /// `associated_geometry` members (pcurves and/or surfaces) from the
+    /// source `SURFACE_CURVE` / `SEAM_CURVE` wrapper. Empty when the edge's
+    /// `edge_geometry` pointed directly at a 3D curve.
+    pub pcurves: Vec<PCurveOrSurface>,
 }
 
 /// A reference to an edge with an orientation flag.

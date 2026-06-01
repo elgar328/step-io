@@ -126,12 +126,11 @@ fn emit_surface_curve_body(
     let curve_step = buf.emit_curve(body.curve_3d)?;
     let mut assoc_attrs = Vec::with_capacity(body.associated_geometry.len());
     for item in body.associated_geometry {
-        match item {
-            PCurveOrSurface::Surface(id) => {
-                let step = buf.emit_surface(id)?;
-                assoc_attrs.push(Attribute::EntityRef(step));
-            }
-        }
+        let step = match item {
+            PCurveOrSurface::Pcurve(pc) => buf.emit_pcurve(pc)?,
+            PCurveOrSurface::Surface(id) => buf.emit_surface(id)?,
+        };
+        assoc_attrs.push(Attribute::EntityRef(step));
     }
     let token = match body.master_representation {
         PreferredSurfaceCurveRepresentation::Curve3d => "CURVE_3D",

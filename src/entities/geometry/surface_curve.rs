@@ -9,10 +9,10 @@
 //! also lives here so the entity module is self-contained.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::Pcurve;
+use crate::ir::PCurveOrSurface;
 use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -52,30 +52,47 @@ pub(crate) fn collect_surface_curve_pcurves(
     attrs: &[Attribute],
     graph: &EntityGraph,
 ) {
-    let pcurve_refs = match read_entity_ref_list(attrs, 2, entity_id, "associated_geometry") {
+    let member_refs = match read_entity_ref_list(attrs, 2, entity_id, "associated_geometry") {
         Ok(refs) => refs,
         Err(e) => {
             ctx.warnings.push(e);
             return;
         }
     };
-    let mut pcurves = Vec::with_capacity(pcurve_refs.len());
-    for &pcurve_ref in &pcurve_refs {
-        match ctx.resolve_pcurve(pcurve_ref, graph) {
-            Some(pc) => pcurves.push(pc),
-            None => ctx
-                .warnings
-                .push(crate::ir::error::ConvertError::UnexpectedEntityForm {
+    let mut members = Vec::with_capacity(member_refs.len());
+    for &member_ref in &member_refs {
+        // `associated_geometry` is a `pcurve_or_surface` SELECT: a member is
+        // either a PCURVE (resolve through its definitional 2D curve) or a
+        // surface directly associated with the 3D curve.
+        let member_name = match graph.get(member_ref) {
+            Some(RawEntity::Simple { name, .. }) => name.as_str(),
+            _ => "",
+        };
+        if member_name == "PCURVE" {
+            match ctx.resolve_pcurve(member_ref, graph) {
+                Some(pc) => members.push(PCurveOrSurface::Pcurve(pc)),
+                None => ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                     entity_id,
                     detail: format!(
-                        "SURFACE_CURVE.associated_geometry #{pcurve_ref} unresolved \
-                     (basis_surface / curve_2d not in their respective maps)"
+                        "SURFACE_CURVE.associated_geometry PCURVE #{member_ref} unresolved \
+                     (definitional curve not 2D, or basis_surface missing)"
                     ),
                 }),
+            }
+        } else if let Some(&surface_id) = ctx.surface_map.get(&member_ref) {
+            members.push(PCurveOrSurface::Surface(surface_id));
+        } else {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "SURFACE_CURVE.associated_geometry #{member_ref} ({member_name}) unresolved \
+                     (neither a resolvable PCURVE nor a known surface)"
+                ),
+            });
         }
     }
-    if !pcurves.is_empty() {
-        ctx.surface_curve_pcurves_map.insert(entity_id, pcurves);
+    if !members.is_empty() {
+        ctx.surface_curve_pcurves_map.insert(entity_id, members);
     }
 }
 
@@ -85,12 +102,16 @@ pub(crate) fn collect_surface_curve_pcurves(
 pub(super) fn write_surface_or_seam_curve_body(
     buf: &mut WriteBuffer,
     curve_3d_ref: u64,
-    pcurves: &[Pcurve],
+    members: &[PCurveOrSurface],
     is_seam: bool,
 ) -> Result<u64, WriteError> {
-    let mut pcurve_refs = Vec::with_capacity(pcurves.len());
-    for pc in pcurves {
-        pcurve_refs.push(buf.emit_pcurve(*pc)?);
+    let mut pcurve_refs = Vec::with_capacity(members.len());
+    for member in members {
+        let r = match member {
+            PCurveOrSurface::Pcurve(pc) => buf.emit_pcurve(*pc)?,
+            PCurveOrSurface::Surface(sid) => buf.emit_surface(*sid)?,
+        };
+        pcurve_refs.push(r);
     }
     let name = if is_seam {
         "SEAM_CURVE"
@@ -117,10 +138,10 @@ pub(crate) struct SurfaceCurveHandler;
 
 #[step_entity(name = "SURFACE_CURVE", pass = Pass4_3SurfaceCurve)]
 impl SimpleEntityHandler for SurfaceCurveHandler {
-    /// `(curve_3d_ref, pcurves)` — caller (writer wrapper) already
+    /// `(curve_3d_ref, members)` — caller (writer wrapper) already
     /// emitted the underlying 3D curve and hands over the resolved
-    /// pcurve list.
-    type WriteInput = (u64, Vec<Pcurve>);
+    /// `associated_geometry` members (pcurves and/or surfaces).
+    type WriteInput = (u64, Vec<PCurveOrSurface>);
 
     fn read(
         ctx: &mut ReaderContext,
@@ -133,8 +154,8 @@ impl SimpleEntityHandler for SurfaceCurveHandler {
 
     fn write(
         buf: &mut WriteBuffer,
-        (curve_3d_ref, pcurves): (u64, Vec<Pcurve>),
+        (curve_3d_ref, members): (u64, Vec<PCurveOrSurface>),
     ) -> Result<u64, WriteError> {
-        write_surface_or_seam_curve_body(buf, curve_3d_ref, &pcurves, false)
+        write_surface_or_seam_curve_body(buf, curve_3d_ref, &members, false)
     }
 }

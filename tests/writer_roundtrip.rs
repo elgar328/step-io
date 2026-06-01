@@ -175,12 +175,8 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
         );
         for (pidx, (op, rp)) in oe.pcurves.iter().zip(re_edge.pcurves.iter()).enumerate() {
             assert_eq!(
-                op.basis_surface, rp.basis_surface,
-                "{name}: edge[{eidx}].pcurve[{pidx}] basis_surface"
-            );
-            assert_eq!(
-                op.curve_2d, rp.curve_2d,
-                "{name}: edge[{eidx}].pcurve[{pidx}] curve_2d"
+                op, rp,
+                "{name}: edge[{eidx}].associated_geometry[{pidx}] member"
             );
         }
     }

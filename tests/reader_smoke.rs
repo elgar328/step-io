@@ -1542,6 +1542,7 @@ fn assembly_fixtures_transform_target_is_non_origin() {
 
 #[test]
 fn cylinder_ap214_is_collects_pcurves() {
+    use step_io::ir::PCurveOrSurface;
     let src = include_str!("fixtures/cylinder_ap214_is.step");
     let graph = step_io::parse(src).expect("parse failed");
     let result = ReaderContext::convert(&graph);
@@ -1573,7 +1574,10 @@ fn cylinder_ap214_is_collects_pcurves() {
         .iter()
         .find(|e| !e.pcurves.is_empty())
         .expect("at least one edge has pcurves");
-    let basis = first.pcurves[0].basis_surface;
+    let PCurveOrSurface::Pcurve(pc) = first.pcurves[0] else {
+        panic!("cylinder_ap214_is: expected a pcurve member in associated_geometry");
+    };
+    let basis = pc.basis_surface;
     assert!(
         (basis.0 as usize) < model.geometry.surfaces.len(),
         "basis_surface out of range"

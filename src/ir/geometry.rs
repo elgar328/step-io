@@ -712,10 +712,13 @@ pub struct SurfaceCurveData {
     pub master_representation: PreferredSurfaceCurveRepresentation,
 }
 
-/// `pcurve_or_surface` SELECT — partial: only `surface` modelled.
-/// `pcurve` branch deferred until BPC handler exposes an id map.
+/// `pcurve_or_surface` SELECT — both branches modelled. The alias path
+/// (`surface_curve.rs`) populates the `Pcurve` branch from base
+/// `SURFACE_CURVE` / `SEAM_CURVE` wrappers; the `Surface` branch carries
+/// a surface directly associated with the curve.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PCurveOrSurface {
+    Pcurve(Pcurve),
     Surface(SurfaceId),
 }
 
