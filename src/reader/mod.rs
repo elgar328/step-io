@@ -792,12 +792,16 @@ impl ReaderContext {
 
     /// Convert an entire [`EntityGraph`] into a [`StepModel`].
     ///
-    /// Entities are processed in dependency order across multiple passes.
-    /// Unrecognised entities are silently skipped — only entities that the
-    /// reader *attempts* to convert but fails produce warnings.
+    /// Each instance is converted exactly once in reference-dependency
+    /// (topological) order: an entity is processed only after every entity it
+    /// references. Unrecognised entities are silently skipped — only entities
+    /// that the reader *attempts* to convert but fails produce warnings. The
+    /// legacy hand-ordered pass pipeline stays available via
+    /// [`Self::convert_with_strategy`] with [`DispatchStrategy::Passes`] as a
+    /// rollback oracle.
     #[must_use]
     pub fn convert(graph: &EntityGraph) -> ConvertResult {
-        Self::convert_with_strategy(graph, DispatchStrategy::Passes)
+        Self::convert_with_strategy(graph, DispatchStrategy::Topo)
     }
 
     /// Convert with an explicit dispatch strategy. `Passes` is the hand-ordered
