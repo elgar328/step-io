@@ -463,8 +463,14 @@ impl ReaderContext {
         // through repr_id_map. Its `items` (annotations / geometry) are
         // already populated by Pass6/Pass7.
         self.dispatch_registry(graph, PassLevel::Pass8DraughtingModelStComplex);
+        // DRAUGHTING_MODEL (simple form) — depends on Pass7 ids for items
+        // (styled_item, annotation_occurrence, draughting_callout). Runs here,
+        // before the CIWR pass, so a CIWR whose `rep` is a simple draughting
+        // model resolves through repr_id_map (mirrors the StComplex form
+        // above; still before Pass8Dmia).
+        self.dispatch_registry(graph, PassLevel::Pass8DraughtingModel);
         // CHARACTERIZED_ITEM_WITHIN_REPRESENTATION — depends on repr_id_map
-        // (Pass6 + Pass8DraughtingModelStComplex) + per-type arena id maps.
+        // (Pass6 + the two DRAUGHTING_MODEL passes above) + per-type arena id maps.
         self.dispatch_registry(graph, PassLevel::Pass8CharacterizedItemWithinRepresentation);
         // TOLERANCE_VALUE / LIMITS_AND_FITS, then PLUS_MINUS_TOLERANCE which
         // resolves `range` through the former and `toleranced_dimension`
@@ -498,18 +504,14 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass8TextLiteral);
         // COMPOSITE_TEXT — depends on text_literal_id_map just filled.
         self.dispatch_registry(graph, PassLevel::Pass8CompositeText);
-        // DRAUGHTING_MODEL — depends on Pass7 ids for items (styled_item,
-        // annotation_occurrence, draughting_callout). Must run before
-        // Pass8Dmia so DMIA's `used_representation` resolves.
-        self.dispatch_registry(graph, PassLevel::Pass8DraughtingModel);
         // CAMERA_USAGE — `representation_map` SUBTYPE whose
         // `mapped_representation` may target a DRAUGHTING_MODEL, so runs
         // after Pass8DraughtingModel populates the DM slot of repr_id_map.
         self.dispatch_registry(graph, PassLevel::Pass8CameraUsage);
-        // TESSELLATED_SHAPE_REPRESENTATION — runs after Pass8DraughtingModel
-        // so the `representations` arena keeps all delayed-emit variants
-        // (Mdgpr/DM/TSR) contiguous at the tail; writer's push-built
-        // `representation_step_ids` then aligns with arena ids.
+        // TESSELLATED_SHAPE_REPRESENTATION — a delayed-emit `representation`
+        // variant kept near the arena tail. Writer's push-built
+        // `representation_step_ids` aligns with arena ids by index regardless
+        // of read order (the DRAUGHTING_MODEL passes resolve earlier above).
         self.dispatch_registry(graph, PassLevel::Pass8TsrRead);
         // CONSTRUCTIVE_GEOMETRY_REPRESENTATION — runs after Pass8TsrRead
         // so the representations arena keeps delayed-emit variants

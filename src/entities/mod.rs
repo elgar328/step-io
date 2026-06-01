@@ -353,8 +353,10 @@ pub(crate) enum PassLevel {
     Pass8CompositeText,
     /// `DRAUGHTING_MODEL` (phase draughting-model). Depends on Pass7 ids
     /// for `items` (`styled_item` / `annotation_occurrence` /
-    /// `draughting_callout` `id_maps`). Runs before `Pass8Dmia` so a DMIA's
-    /// `used_representation` can resolve via `repr_id_map`.
+    /// `draughting_callout` `id_maps`). Dispatched before
+    /// `Pass8CharacterizedItemWithinRepresentation` (mirroring the complex
+    /// form) so a CIWR whose `rep` is a simple `DRAUGHTING_MODEL` resolves via
+    /// `repr_id_map`; still before `Pass8Dmia` (DMIA `used_representation`).
     Pass8DraughtingModel,
     /// `CAMERA_USAGE` (phase cm-usage). `representation_map` SUBTYPE
     /// whose `mapped_representation` may point at a `DRAUGHTING_MODEL`,
