@@ -103,6 +103,7 @@ pub(crate) fn emit_length_cbu_outer(
     unit: LengthUnit,
     base_step: u64,
     target_id: u64,
+    dim_exp_step: u64,
 ) -> u64 {
     let (name, factor) = match unit {
         LengthUnit::Millimetre => ("MILLIMETRE", 1.0),
@@ -111,7 +112,7 @@ pub(crate) fn emit_length_cbu_outer(
         LengthUnit::Inch => ("INCH", 25.4),
         LengthUnit::Foot => ("FOOT", 304.8),
     };
-    emit_conversion_based_length(buf, name, factor, base_step, target_id)
+    emit_conversion_based_length(buf, name, factor, base_step, target_id, dim_exp_step)
 }
 
 /// Record this `LENGTH_UNIT` complex in the `NamedUnit` arena so that
@@ -178,9 +179,19 @@ fn emit_conversion_based_length(
     factor: f64,
     base_step: u64,
     target_id: u64,
+    dim_exp_step: u64,
 ) -> u64 {
-    // CBU outer always carries explicit DE per spec.
-    let dim_exp = emit_length_dim_exponents(buf);
+    // CBU outer always carries explicit DE per spec. Reference the flavour's
+    // own DE (from the IR arena) when available so the CBU and its base SI
+    // share a single DIMENSIONAL_EXPONENTS — re-emitting a fresh one each pass
+    // makes the round-trip non-idempotent (the fresh DE re-reads into the arena
+    // and the next write adds another). Fall back to a synthesized DE only for
+    // kernel-built IR that carries no `dim_exp`.
+    let dim_exp = if dim_exp_step != 0 {
+        dim_exp_step
+    } else {
+        emit_length_dim_exponents(buf)
+    };
     let measure = buf.fresh();
     buf.entities.push(WriterEntity {
         id: measure,

@@ -91,12 +91,13 @@ pub(crate) fn emit_plane_angle_cbu_outer(
     unit: AngleUnit,
     base_step: u64,
     target_id: u64,
+    dim_exp_step: u64,
 ) -> u64 {
     let (name, factor) = match unit {
         AngleUnit::Radian => ("RADIAN", 1.0),
         AngleUnit::Degree => ("DEGREE", std::f64::consts::PI / 180.0),
     };
-    emit_conversion_based_angle(buf, name, factor, base_step, target_id)
+    emit_conversion_based_angle(buf, name, factor, base_step, target_id, dim_exp_step)
 }
 
 /// See `length_unit::register_named_length` for the rationale.
@@ -149,8 +150,16 @@ fn emit_conversion_based_angle(
     factor: f64,
     base_step: u64,
     target_id: u64,
+    dim_exp_step: u64,
 ) -> u64 {
-    let dim_exp = emit_dimensionless_exponents(buf);
+    // Reference the flavour's own DE (IR arena) when present so the round-trip
+    // is idempotent; only synthesize for kernel-built IR. See
+    // `length_unit::emit_conversion_based_length`.
+    let dim_exp = if dim_exp_step != 0 {
+        dim_exp_step
+    } else {
+        emit_dimensionless_exponents(buf)
+    };
     let measure = buf.fresh();
     buf.entities.push(WriterEntity {
         id: measure,

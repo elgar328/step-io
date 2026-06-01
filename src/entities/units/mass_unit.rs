@@ -127,6 +127,7 @@ pub(crate) fn emit_mass_cbu_outer(
     unit: MassUnit,
     base_step: u64,
     target_id: u64,
+    dim_exp_step: u64,
 ) -> Result<u64, WriteError> {
     let (name, factor) = match unit {
         MassUnit::Pound => ("POUND", 0.453_592_37),
@@ -135,7 +136,14 @@ pub(crate) fn emit_mass_cbu_outer(
         // fall back to the already-emitted base step id (no extra entity).
         MassUnit::Kilogram => return Ok(base_step),
     };
-    let dim_exp = emit_mass_dim_exponents(buf);
+    // Reference the flavour's own DE (IR arena) when present so the round-trip
+    // is idempotent; only synthesize for kernel-built IR. See
+    // `length_unit::emit_conversion_based_length`.
+    let dim_exp = if dim_exp_step != 0 {
+        dim_exp_step
+    } else {
+        emit_mass_dim_exponents(buf)
+    };
     let measure = buf.fresh();
     buf.entities.push(WriterEntity {
         id: measure,

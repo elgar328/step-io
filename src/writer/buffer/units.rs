@@ -189,12 +189,27 @@ fn emit_named_unit_cbu(
     use crate::entities::units::length_unit::emit_length_cbu_outer;
     use crate::entities::units::mass_unit::emit_mass_cbu_outer;
     use crate::entities::units::plane_angle_unit::emit_plane_angle_cbu_outer;
+    let dim_exp_step = |de: Option<crate::ir::DimensionalExponentsId>| {
+        de.map_or(0, |id| buf.dimensional_exponents_step_ids[id.0 as usize])
+    };
     match named {
-        NamedUnit::Length(f) => Ok(emit_length_cbu_outer(buf, f.unit, base_step, target_id)),
-        NamedUnit::PlaneAngle(f) => Ok(emit_plane_angle_cbu_outer(
-            buf, f.unit, base_step, target_id,
+        NamedUnit::Length(f) => Ok(emit_length_cbu_outer(
+            buf,
+            f.unit,
+            base_step,
+            target_id,
+            dim_exp_step(f.dim_exp),
         )),
-        NamedUnit::Mass(f) => emit_mass_cbu_outer(buf, f.unit, base_step, target_id),
+        NamedUnit::PlaneAngle(f) => Ok(emit_plane_angle_cbu_outer(
+            buf,
+            f.unit,
+            base_step,
+            target_id,
+            dim_exp_step(f.dim_exp),
+        )),
+        NamedUnit::Mass(f) => {
+            emit_mass_cbu_outer(buf, f.unit, base_step, target_id, dim_exp_step(f.dim_exp))
+        }
         // SolidAngle and Ratio have no CBU variant; fall through to plain.
         NamedUnit::SolidAngle(_) | NamedUnit::Ratio(_) => {
             emit_named_unit_plain(buf, named, target_id)
