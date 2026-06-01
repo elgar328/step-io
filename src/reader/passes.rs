@@ -113,17 +113,18 @@ impl ReaderContext {
         // PLANAR_BOX placement resolves against either placement map.
         self.dispatch_registry(graph, PassLevel::Pass4PlanarExtent);
 
-        // Pass 4-3: SURFACE_CURVE / SEAM_CURVE — alias to curve_3d so edges
-        // that reference these see the underlying 3D curve. Must come after
-        // 4-1 and 4-2 (curve_3d usually resolves to a simple or rational curve).
-        self.dispatch_registry(graph, PassLevel::Pass4_3SurfaceCurve);
-
         // Pass 4-3c: TRIMMED_CURVE / COMPOSITE_CURVE_SEGMENT (independent)
-        // → COMPOSITE_CURVE. Must come after Pass 4-1, 4-2, 4-3 — any of
-        // those simple/rational/surface-curve forms may appear as the basis
-        // or parent curve.
+        // → COMPOSITE_CURVE. Must come after Pass 4-1, 4-2 — those
+        // simple/rational forms appear as the basis or parent curve.
         self.dispatch_registry(graph, PassLevel::Pass4_3cTrimSeg);
         self.dispatch_registry(graph, PassLevel::Pass4_3cComp);
+
+        // Pass 4-3: SURFACE_CURVE / SEAM_CURVE — alias to curve_3d so edges
+        // that reference these see the underlying 3D curve. Runs after the
+        // 4-3c trimmed/composite pass because `curve_3d` can itself be a
+        // TRIMMED_CURVE (grabcad exports); resolving it requires those
+        // already captured.
+        self.dispatch_registry(graph, PassLevel::Pass4_3SurfaceCurve);
 
         // Pass 4-4A: derived surfaces that wrap a curve (swept curve / axis
         // of revolution / extrusion vector). Single sweep — no dependency

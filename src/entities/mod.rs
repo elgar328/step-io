@@ -50,7 +50,9 @@ pub(crate) enum PassLevel {
     /// `B_SPLINE_SURFACE_WITH_KNOTS`. All mutually independent.
     Pass4Leaf,
     /// `SURFACE_CURVE` / `SEAM_CURVE` (Pass 4-3) — alias to a 3D curve
-    /// with associated pcurves resolved in a post-pass.
+    /// with associated pcurves resolved in a post-pass. Dispatched after the
+    /// `Pass4_3c` trimmed/composite pass because `curve_3d` can itself be a
+    /// `TRIMMED_CURVE`.
     Pass4_3SurfaceCurve,
     /// `TRIMMED_CURVE` + `COMPOSITE_CURVE_SEGMENT` (Pass 4-3c) — both
     /// depend on a basis curve but not on each other.
