@@ -31,9 +31,10 @@ pub struct PmiPool {
     /// `annotation_occurrence` `enum_base` arena. Phase annotation-plane
     /// fills the `AnnotationPlane` variant only.
     pub annotation_occurrences: Arena<AnnotationOccurrence>,
-    /// `annotation_curve_occurrence` arena (phase annotation-curve-leader)
-    /// — currently holds `LeaderCurve` only.
-    pub annotation_curve_occurrences: Arena<LeaderCurve>,
+    /// `annotation_curve_occurrence` arena (phase annotation-curve-leader,
+    /// `LeaderCurve` subtype) extended (phase plain-aco) with the plain
+    /// supertype occurrence.
+    pub annotation_curve_occurrences: Arena<AnnotationCurveOccurrence>,
     /// `draughting_callout` `complex_supertype` arena (phase
     /// draughting-callout).
     pub draughting_callouts: Arena<DraughtingCallout>,
@@ -541,12 +542,32 @@ pub struct PlainAnnotationOccurrence {
 }
 
 /// `LEADER_CURVE(name, styles, item)` — sole occupant of the
-/// `annotation_curve_occurrence` arena (phase annotation-curve-leader). The
-/// EXPRESS supertype `annotation_curve_occurrence` is abstract (ONEOF of
-/// `dimension_curve` / `leader_curve` / `projection_curve`); the blueprint
-/// (ir.toml) currently lists only `leader_curve`, so step-io uses
-/// `Arena<LeaderCurve>` directly. Future phases may promote to an enum
-/// if other variants are added.
+/// `annotation_curve_occurrence` arena entry. EXPRESS models
+/// `annotation_curve_occurrence` as the (instantiable) supertype of
+/// `dimension_curve` / `leader_curve` / `projection_curve`. step-io captures
+/// the plain supertype occurrence and the `leader_curve` subtype (the two
+/// forms seen in the corpus); the `item` narrowing differs between them.
+#[derive(Debug, Clone, PartialEq)]
+pub enum AnnotationCurveOccurrence {
+    /// Plain `ANNOTATION_CURVE_OCCURRENCE` — `item` is the supertype
+    /// `curve_or_curve_set` SELECT, carried as `RepresentationItemRef`.
+    Plain(PlainAnnotationCurveOccurrence),
+    /// `LEADER_CURVE` subtype — `item` narrowed to a `Curve`.
+    LeaderCurve(LeaderCurve),
+}
+
+/// Plain `ANNOTATION_CURVE_OCCURRENCE(name, styles, item)`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlainAnnotationCurveOccurrence {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentId>,
+    /// `styled_item.item` — `curve_or_curve_set` (a `Curve` or e.g.
+    /// `GEOMETRIC_CURVE_SET`), carried as `RepresentationItemRef`.
+    pub item: RepresentationItemRef,
+}
+
+/// `LEADER_CURVE` — `annotation_curve_occurrence` subtype whose `item` is
+/// narrowed to `ref_curve` (a `Curve` arena id).
 #[derive(Debug, Clone, PartialEq)]
 pub struct LeaderCurve {
     pub name: String,

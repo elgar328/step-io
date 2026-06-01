@@ -173,6 +173,11 @@ pub(crate) fn resolve_representation_item_ref(
     if let Some(&id) = ctx.annotation_occurrence_id_map.get(&item_ref) {
         return Some(RepresentationItemRef::AnnotationOccurrence(id));
     }
+    // annotation_curve_occurrence arena (plain ACO / LEADER_CURVE) — CIWR /
+    // STYLED_ITEM can target it (phase plain-aco).
+    if let Some(&id) = ctx.annotation_curve_occurrence_id_map.get(&item_ref) {
+        return Some(RepresentationItemRef::AnnotationCurveOccurrence(id));
+    }
     if let Some(&id) = ctx.draughting_callout_id_map.get(&item_ref) {
         return Some(RepresentationItemRef::DraughtingCallout(id));
     }

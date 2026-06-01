@@ -2742,7 +2742,8 @@ fn leader_curve_terminator_round_trip() {
     // an `annotated_curve` back-reference into the LeaderCurve arena.
     use step_io::ir::RepresentationItemRef;
     use step_io::ir::pmi::{
-        AnnotationOccurrence, LeaderCurve, LeaderTerminator, PmiPool, TerminatorSymbol,
+        AnnotationCurveOccurrence, AnnotationOccurrence, LeaderCurve, LeaderTerminator, PmiPool,
+        TerminatorSymbol,
     };
     let mut model = empty_model();
     // A minimal Line curve serves as LeaderCurve.item.
@@ -2780,11 +2781,13 @@ fn leader_curve_terminator_round_trip() {
             step_io::ir::geometry::Plane3 { position },
         ));
     let pmi = model.pmi.get_or_insert_with(PmiPool::default);
-    let lc_id = pmi.annotation_curve_occurrences.push(LeaderCurve {
-        name: "lc".into(),
-        styles: vec![],
-        item: line,
-    });
+    let lc_id = pmi
+        .annotation_curve_occurrences
+        .push(AnnotationCurveOccurrence::LeaderCurve(LeaderCurve {
+            name: "lc".into(),
+            styles: vec![],
+            item: line,
+        }));
     pmi.annotation_occurrences
         .push(AnnotationOccurrence::TerminatorSymbol(TerminatorSymbol {
             name: "ts".into(),
@@ -2819,6 +2822,57 @@ fn leader_curve_terminator_round_trip() {
 }
 
 #[test]
+fn plain_annotation_curve_occurrence_round_trips() {
+    // Plain ANNOTATION_CURVE_OCCURRENCE (the instantiable supertype, not
+    // LEADER_CURVE) — item is the curve_or_curve_set SELECT carried as a
+    // RepresentationItemRef (phase plain-aco). Targeting it from a CIWR is
+    // what the datum-target PMI files rely on.
+    use step_io::ir::RepresentationItemRef;
+    use step_io::ir::pmi::{AnnotationCurveOccurrence, PlainAnnotationCurveOccurrence, PmiPool};
+    let mut model = empty_model();
+    let p0 = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let dir = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let line = model
+        .geometry
+        .curves
+        .push(step_io::ir::geometry::Curve::Line(
+            step_io::ir::geometry::Line3 {
+                point: p0,
+                direction: dir,
+                magnitude: 1.0,
+            },
+        ));
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    pmi.annotation_curve_occurrences
+        .push(AnnotationCurveOccurrence::Plain(
+            PlainAnnotationCurveOccurrence {
+                name: "Datum Target".into(),
+                styles: vec![],
+                item: RepresentationItemRef::Curve(line),
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    assert!(text.contains("ANNOTATION_CURVE_OCCURRENCE"));
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    assert_eq!(re_pmi.annotation_curve_occurrences.len(), 1);
+    let aco = re_pmi.annotation_curve_occurrences.iter().next().unwrap();
+    assert!(
+        matches!(aco, AnnotationCurveOccurrence::Plain(_)),
+        "plain ACO round-trips as Plain (not LeaderCurve)"
+    );
+}
+
+#[test]
 #[allow(clippy::too_many_lines)]
 fn draughting_callout_round_trip() {
     // Plain DraughtingCallout + LeaderDirected variant + Relationship —
@@ -2826,8 +2880,9 @@ fn draughting_callout_round_trip() {
     // element (AnnotationOccurrence and AnnotationCurveOccurrence).
     use step_io::ir::RepresentationItemRef;
     use step_io::ir::pmi::{
-        AnnotationOccurrence, DraughtingCallout, DraughtingCalloutData, DraughtingCalloutElement,
-        DraughtingCalloutRelationship, LeaderCurve, LeaderTerminator, PmiPool, TerminatorSymbol,
+        AnnotationCurveOccurrence, AnnotationOccurrence, DraughtingCallout, DraughtingCalloutData,
+        DraughtingCalloutElement, DraughtingCalloutRelationship, LeaderCurve, LeaderTerminator,
+        PmiPool, TerminatorSymbol,
     };
     let mut model = empty_model();
     let p0 = model.geometry.points.push(Point3 {
@@ -2863,11 +2918,13 @@ fn draughting_callout_round_trip() {
             step_io::ir::geometry::Plane3 { position },
         ));
     let pmi = model.pmi.get_or_insert_with(PmiPool::default);
-    let lc_id = pmi.annotation_curve_occurrences.push(LeaderCurve {
-        name: "lc".into(),
-        styles: vec![],
-        item: line,
-    });
+    let lc_id = pmi
+        .annotation_curve_occurrences
+        .push(AnnotationCurveOccurrence::LeaderCurve(LeaderCurve {
+            name: "lc".into(),
+            styles: vec![],
+            item: line,
+        }));
     let ts_id = pmi
         .annotation_occurrences
         .push(AnnotationOccurrence::TerminatorSymbol(TerminatorSymbol {

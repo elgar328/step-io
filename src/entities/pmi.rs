@@ -14,8 +14,8 @@ use crate::ir::attr::{
 };
 use crate::ir::error::ConvertError;
 use crate::ir::pmi::{
-    AngleSelection, AngularLocationData, AnnotationOccurrence, AnnotationPlane,
-    AnnotationSymbolOccurrence, AnnotationTextOccurrence, Datum, DatumFeature,
+    AngleSelection, AngularLocationData, AnnotationCurveOccurrence, AnnotationOccurrence,
+    AnnotationPlane, AnnotationSymbolOccurrence, AnnotationTextOccurrence, Datum, DatumFeature,
     DimensionalCharacteristic, DimensionalLocation, DimensionalLocationData, DimensionalSize,
     DimensionalSizeKind, DraughtingAnnotationOccurrence, DraughtingCallout, DraughtingCalloutData,
     DraughtingCalloutElement, DraughtingCalloutRelationship, DraughtingModelIdentifiedItem,
@@ -23,10 +23,10 @@ use crate::ir::pmi::{
     GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance,
     GeometricToleranceData, GeometricToleranceRef, GeometricToleranceRelationship,
     GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData, LeaderCurve,
-    LeaderTerminator, LimitsAndFits, MeasureQualification, PlainAnnotationOccurrence,
-    PlusMinusTolerance, ProjectedZoneDefinition, TerminatorSymbol, TessellatedAnnotationOccurrence,
-    ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue, ToleranceZoneForm,
-    TypeQualifier, ValueFormatTypeQualifier, ValueQualifier,
+    LeaderTerminator, LimitsAndFits, MeasureQualification, PlainAnnotationCurveOccurrence,
+    PlainAnnotationOccurrence, PlusMinusTolerance, ProjectedZoneDefinition, TerminatorSymbol,
+    TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue,
+    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier, ValueQualifier,
 };
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
@@ -563,7 +563,11 @@ impl SimpleEntityHandler for LeaderCurveHandler {
             .pmi
             .get_or_insert_with(PmiPool::default)
             .annotation_curve_occurrences
-            .push(LeaderCurve { name, styles, item });
+            .push(AnnotationCurveOccurrence::LeaderCurve(LeaderCurve {
+                name,
+                styles,
+                item,
+            }));
         ctx.annotation_curve_occurrence_id_map.insert(entity_id, id);
         Ok(())
     }
@@ -580,6 +584,71 @@ impl SimpleEntityHandler for LeaderCurveHandler {
                 Attribute::String(lc.name),
                 Attribute::List(style_refs),
                 Attribute::EntityRef(curve_step),
+            ],
+        ))
+    }
+}
+
+pub(crate) struct AnnotationCurveOccurrenceHandler;
+
+/// Plain `ANNOTATION_CURVE_OCCURRENCE(name, styles, item)` — the
+/// instantiable supertype (not `LEADER_CURVE`). `item` is the
+/// `curve_or_curve_set` SELECT, resolved through `resolve_representation_item_ref`
+/// (a plain `CURVE` or e.g. `GEOMETRIC_CURVE_SET`); unresolved item drops the
+/// occurrence, symmetric on re-read. Shares the `annotation_curve_occurrence`
+/// arena + `annotation_curve_occurrence_id_map` with `LEADER_CURVE` so
+/// callout contents and `resolve_representation_item_ref` reach it.
+#[step_entity(name = "ANNOTATION_CURVE_OCCURRENCE", pass = Pass7AnnotationCurve)]
+impl SimpleEntityHandler for AnnotationCurveOccurrenceHandler {
+    type WriteInput = PlainAnnotationCurveOccurrence;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 3, entity_id, "ANNOTATION_CURVE_OCCURRENCE")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
+        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
+
+        let mut styles = Vec::with_capacity(style_refs.len());
+        for r in style_refs {
+            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+                styles.push(psa_id);
+            }
+        }
+        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
+            return Ok(()); // item unresolved — drop the occurrence
+        };
+
+        let id = ctx
+            .pmi
+            .get_or_insert_with(PmiPool::default)
+            .annotation_curve_occurrences
+            .push(AnnotationCurveOccurrence::Plain(
+                PlainAnnotationCurveOccurrence { name, styles, item },
+            ));
+        ctx.annotation_curve_occurrence_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        aco: PlainAnnotationCurveOccurrence,
+    ) -> Result<u64, WriteError> {
+        let item_step = buf.emit_representation_item_ref(aco.item)?;
+        let mut style_refs = Vec::with_capacity(aco.styles.len());
+        for psa_id in aco.styles {
+            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+        }
+        Ok(buf.push_simple(
+            "ANNOTATION_CURVE_OCCURRENCE",
+            vec![
+                Attribute::String(aco.name),
+                Attribute::List(style_refs),
+                Attribute::EntityRef(item_step),
             ],
         ))
     }

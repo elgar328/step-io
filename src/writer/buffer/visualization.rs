@@ -51,6 +51,9 @@ impl WriteBuffer<'_> {
             }
             RepresentationItemRef::MappedItem(id) => Ok(self.mapped_item_step_ids[id.0 as usize]),
             RepresentationItemRef::AnnotationOccurrence(id) => Ok(self.ao_step_ids[id.0 as usize]),
+            RepresentationItemRef::AnnotationCurveOccurrence(id) => {
+                Ok(self.acoc_step_ids[id.0 as usize])
+            }
             RepresentationItemRef::DraughtingCallout(id) => {
                 Ok(self.draughting_callout_step_ids[id.0 as usize])
             }

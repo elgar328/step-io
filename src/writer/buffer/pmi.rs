@@ -386,18 +386,26 @@ impl WriteBuffer<'_> {
         }
     }
 
-    /// Emit the `annotation_curve_occurrence` arena (currently
-    /// `LEADER_CURVE` only). Fills `acoc_step_ids` so
-    /// `TERMINATOR_SYMBOL` / `LEADER_TERMINATOR` in
-    /// `emit_annotation_occurrences` can resolve `annotated_curve`.
+    /// Emit the `annotation_curve_occurrence` arena (plain ACO +
+    /// `LEADER_CURVE`). Fills `acoc_step_ids` so `TERMINATOR_SYMBOL` /
+    /// `LEADER_TERMINATOR` in `emit_annotation_occurrences` and
+    /// `emit_representation_item_ref` consumers (CIWR / `STYLED_ITEM`) can
+    /// resolve back-references.
     pub(in crate::writer::buffer) fn emit_annotation_curve_occurrences(&mut self) {
         use crate::entities::SimpleEntityHandler;
-        use crate::entities::pmi::LeaderCurveHandler;
+        use crate::entities::pmi::{AnnotationCurveOccurrenceHandler, LeaderCurveHandler};
+        use crate::ir::pmi::AnnotationCurveOccurrence;
         let Some(pmi) = self.model.pmi.clone() else {
             return;
         };
-        for lc in pmi.annotation_curve_occurrences.iter() {
-            match LeaderCurveHandler::write(self, lc.clone()) {
+        for aco in pmi.annotation_curve_occurrences.iter() {
+            let result = match aco.clone() {
+                AnnotationCurveOccurrence::LeaderCurve(lc) => LeaderCurveHandler::write(self, lc),
+                AnnotationCurveOccurrence::Plain(p) => {
+                    AnnotationCurveOccurrenceHandler::write(self, p)
+                }
+            };
+            match result {
                 Ok(n) => self.acoc_step_ids.push(n),
                 Err(_) => self.acoc_step_ids.push(0),
             }

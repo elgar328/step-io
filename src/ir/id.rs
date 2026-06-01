@@ -20,10 +20,10 @@ use super::plm::{
     SecurityClassification, SecurityClassificationAssignment, SecurityClassificationLevel,
 };
 use super::pmi::{
-    AnnotationOccurrence, Datum, DatumFeature, DimensionalLocation, DimensionalSize,
-    DraughtingCallout, DraughtingCalloutRelationship, DraughtingModelItemAssociation,
-    DraughtingPreDefinedTextFont, GeneralDatumReference, GeometricTolerance,
-    GeometricToleranceRelationship, GeometricToleranceWithDatumReference, LeaderCurve,
+    AnnotationCurveOccurrence, AnnotationOccurrence, Datum, DatumFeature, DimensionalLocation,
+    DimensionalSize, DraughtingCallout, DraughtingCalloutRelationship,
+    DraughtingModelItemAssociation, DraughtingPreDefinedTextFont, GeneralDatumReference,
+    GeometricTolerance, GeometricToleranceRelationship, GeometricToleranceWithDatumReference,
     LimitsAndFits, MeasureQualification, PlusMinusTolerance, ProjectedZoneDefinition,
     ToleranceValue, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
@@ -148,10 +148,10 @@ define_id!(ValueFormatTypeQualifierId, ValueFormatTypeQualifier);
 // annotation_occurrence enum_base arena (Phase annotation-plane).
 define_id!(AnnotationOccurrenceId, AnnotationOccurrence);
 
-// annotation_curve_occurrence arena (Phase annotation-curve-leader) —
-// blueprint uses `single_struct` (no enum). Currently holds LeaderCurve;
-// dimension_curve / projection_curve variants may join in a future phase.
-define_id!(AnnotationCurveOccurrenceId, LeaderCurve);
+// annotation_curve_occurrence arena (Phase annotation-curve-leader +
+// plain-aco) — holds the plain supertype occurrence and the LeaderCurve
+// subtype. dimension_curve / projection_curve variants may join later.
+define_id!(AnnotationCurveOccurrenceId, AnnotationCurveOccurrence);
 
 // draughting_callout complex_supertype arena (Phase draughting-callout).
 define_id!(DraughtingCalloutId, DraughtingCallout);

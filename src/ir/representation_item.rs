@@ -11,10 +11,10 @@
 //! consumers and fixtures require them.
 
 use super::id::{
-    AnnotationOccurrenceId, CameraModelId, CurveId, DraughtingCalloutId, EdgeId, FaceId,
-    GeometricRepresentationItemId, MappedItemId, Placement3dId, PointId, RepresentationId,
-    RepresentationItemId, ShellId, SolidId, SurfaceId, TessellatedFaceId, TessellatedItemId,
-    TypeQualifierId, ValueFormatTypeQualifierId, VertexId,
+    AnnotationCurveOccurrenceId, AnnotationOccurrenceId, CameraModelId, CurveId,
+    DraughtingCalloutId, EdgeId, FaceId, GeometricRepresentationItemId, MappedItemId,
+    Placement3dId, PointId, RepresentationId, RepresentationItemId, ShellId, SolidId, SurfaceId,
+    TessellatedFaceId, TessellatedItemId, TypeQualifierId, ValueFormatTypeQualifierId, VertexId,
 };
 
 /// What a STEP `representation_item` reference resolved to in step-io's IR.
@@ -61,6 +61,9 @@ pub enum RepresentationItemRef {
     /// `LEADER_TERMINATOR`. AP242 MBD `DRAUGHTING_MODEL.items` routinely
     /// references these (phase rir-pmi-variants).
     AnnotationOccurrence(AnnotationOccurrenceId),
+    /// `annotation_curve_occurrence` arena entry (plain ACO / `LEADER_CURVE`).
+    /// A `styled_item` subtype; `STYLED_ITEM` / CIWR can target it (phase plain-aco).
+    AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
     /// `DRAUGHTING_CALLOUT` arena entry — composite annotation grouping.
     /// Same AP242 MBD context as `AnnotationOccurrence`.
     DraughtingCallout(DraughtingCalloutId),
