@@ -92,12 +92,14 @@ impl SimpleEntityHandler for DefinedSymbolHandler {
         let Some(&target) = ctx.symbol_target_id_map.get(&target_ref) else {
             return Ok(());
         };
-        ctx.geometric_representation_items
-            .push(GeometricRepresentationItem::DefinedSymbol(DefinedSymbol {
-                name,
-                definition: DefinedSymbolDefinition::PreDefinedSymbol(pds_id),
-                target,
-            }));
+        let id =
+            ctx.geometric_representation_items
+                .push(GeometricRepresentationItem::DefinedSymbol(DefinedSymbol {
+                    name,
+                    definition: DefinedSymbolDefinition::PreDefinedSymbol(pds_id),
+                    target,
+                }));
+        ctx.defined_symbol_id_map.insert(entity_id, id);
         Ok(())
     }
 

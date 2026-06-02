@@ -673,6 +673,10 @@ pub struct ReaderContext {
     /// Populated by the `SymbolTarget` reader so `DEFINED_SYMBOL.target`
     /// can resolve.
     pub(crate) symbol_target_id_map: HashMap<u64, crate::ir::id::GeometricRepresentationItemId>,
+    /// `DEFINED_SYMBOL` step entity id → `GeometricRepresentationItemId`. Lets a
+    /// styled `LEADER_TERMINATOR` (or any `STYLED_ITEM` consumer) resolve a
+    /// `DEFINED_SYMBOL` item through the GRI arena.
+    pub(crate) defined_symbol_id_map: HashMap<u64, crate::ir::id::GeometricRepresentationItemId>,
 
     /// Lazily-built plm pool — populated by the plm reader chain
     /// (`CalendarDate` / `LocalTime` / UTC / `DateAndTime` / `DateTimeRole`
