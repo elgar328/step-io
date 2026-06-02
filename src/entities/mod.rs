@@ -406,11 +406,6 @@ pub(crate) enum PassLevel {
     /// `representation` SUBTYPE. Pass8 후반 (CGR/CGRR/MDDR 이후, arena
     /// tail 일관성).
     Pass8SrwpRead,
-    /// `(CHARACTERIZED_OBJECT CHARACTERIZED_REPRESENTATION ...)` complex
-    /// MI (phase characterized-min). Detects the corpus 100%-complex-MI
-    /// form and pushes a `CharacterizedObject::Itself` carrier — other
-    /// parts (DM/TSR/SR/REPRESENTATION) discarded.
-    Pass8CharacterizedComplex,
     /// `(DRAUGHTING_MODEL REPRESENTATION SHAPE_REPRESENTATION
     /// TESSELLATED_SHAPE_REPRESENTATION)` complex MI (phase
     /// dm-rep-tsr-complex). Reads the REPRESENTATION part into a
@@ -686,10 +681,10 @@ pub(crate) enum ReadKind {
     Simple {
         read: fn(&mut ReaderContext, u64, &[Attribute], &EntityGraph) -> Result<(), ConvertError>,
     },
-    /// Matches `RawEntity::Complex` whose parts contain every name in
-    /// `required_parts`.
+    /// Matches `RawEntity::Complex` whose distinct part-set EQUALS one of
+    /// `cases` (exact-case matching).
     Complex {
-        required_parts: &'static [&'static str],
+        cases: &'static [&'static [&'static str]],
         read:
             fn(&mut ReaderContext, u64, &[RawEntityPart], &EntityGraph) -> Result<(), ConvertError>,
     },

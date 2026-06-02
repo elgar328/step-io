@@ -361,6 +361,11 @@ pub enum DraughtingModelForm {
     /// SHAPE_REPRESENTATION() TESSELLATED_SHAPE_REPRESENTATION())` — the
     /// geometric-validation draughting model that PMI CIWRs reference.
     ShapeTessellated,
+    /// 6-part MI form `(CHARACTERIZED_OBJECT(*,*) CHARACTERIZED_REPRESENTATION()
+    /// DRAUGHTING_MODEL() REPRESENTATION(...) SHAPE_REPRESENTATION()
+    /// TESSELLATED_SHAPE_REPRESENTATION())` — the union of `Characterized` and
+    /// `ShapeTessellated`. The id is the inline `CHARACTERIZED_OBJECT`.
+    CharacterizedShapeTessellated(crate::ir::id::CharacterizedObjectId),
 }
 
 /// `characterized_object` `concrete_supertype` enum (phase

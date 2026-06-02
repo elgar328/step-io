@@ -483,13 +483,13 @@ pub(crate) struct RepositionedTessellatedGeometricSetHandler;
 #[step_entity_complex(
     name = "TESSELLATED_GEOMETRIC_SET",
     pass = Pass6TessellatedGeometricSet,
-    required = [
+    cases = [[
         "GEOMETRIC_REPRESENTATION_ITEM",
         "REPOSITIONED_TESSELLATED_ITEM",
         "REPRESENTATION_ITEM",
         "TESSELLATED_GEOMETRIC_SET",
         "TESSELLATED_ITEM"
-    ]
+    ]]
 )]
 impl ComplexEntityHandler for RepositionedTessellatedGeometricSetHandler {
     type WriteInput = ();

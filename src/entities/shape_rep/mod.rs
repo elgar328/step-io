@@ -20,7 +20,6 @@ pub mod datum_system;
 pub mod datum_target;
 pub mod descriptive_representation_item;
 pub mod draughting_model;
-pub mod draughting_model_st_complex;
 pub mod gbssr;
 pub mod gbwsr;
 pub mod geometric_item_specific_usage;

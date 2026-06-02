@@ -29,7 +29,10 @@ pub(crate) struct RationalBsplineCurve2dHandler;
 #[step_entity_complex(
     name = "RATIONAL_B_SPLINE_CURVE",
     pass = Pass4aRational,
-    required = ["B_SPLINE_CURVE", "B_SPLINE_CURVE_WITH_KNOTS", "RATIONAL_B_SPLINE_CURVE"]
+    cases = [[
+        "BOUNDED_CURVE", "B_SPLINE_CURVE", "B_SPLINE_CURVE_WITH_KNOTS", "CURVE",
+        "GEOMETRIC_REPRESENTATION_ITEM", "RATIONAL_B_SPLINE_CURVE", "REPRESENTATION_ITEM"
+    ]]
 )]
 impl ComplexEntityHandler for RationalBsplineCurve2dHandler {
     type WriteInput = NurbsCurve2d;

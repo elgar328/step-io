@@ -26,7 +26,10 @@ pub(crate) struct RationalQuasiUniformSurfaceHandler;
 #[step_entity_complex(
     name = "RATIONAL_B_SPLINE_SURFACE",
     pass = Pass4Rational,
-    required = ["B_SPLINE_SURFACE", "QUASI_UNIFORM_SURFACE", "RATIONAL_B_SPLINE_SURFACE"]
+    cases = [[
+        "BOUNDED_SURFACE", "B_SPLINE_SURFACE", "GEOMETRIC_REPRESENTATION_ITEM",
+        "QUASI_UNIFORM_SURFACE", "RATIONAL_B_SPLINE_SURFACE", "REPRESENTATION_ITEM", "SURFACE"
+    ]]
 )]
 impl ComplexEntityHandler for RationalQuasiUniformSurfaceHandler {
     type WriteInput = NurbsSurface;

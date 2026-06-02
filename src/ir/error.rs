@@ -45,6 +45,11 @@ pub enum ConvertError {
     UnexpectedEntityForm { entity_id: u64, detail: String },
     /// An entity type that the reader does not handle.
     UnsupportedEntity { entity_id: u64, name: String },
+    /// A complex (multi-part AND) instance whose exact part-set matches no
+    /// complex handler's declared cases — dropped. A distinct variant (not
+    /// `UnexpectedEntityForm`) so it can be told apart from genuine defects:
+    /// it means "a complex shape we have not modelled appeared — investigate".
+    UnhandledComplex { entity_id: u64, parts: Vec<String> },
     /// Coordinate list has wrong dimensionality.
     DimensionMismatch {
         entity_id: u64,
@@ -178,6 +183,13 @@ impl std::fmt::Display for ConvertError {
             }
             Self::UnsupportedEntity { entity_id, name } => {
                 write!(f, "entity #{entity_id}: unsupported type {name}")
+            }
+            Self::UnhandledComplex { entity_id, parts } => {
+                write!(
+                    f,
+                    "entity #{entity_id}: complex matches no handler case — parts ({})",
+                    parts.join(" ")
+                )
             }
             Self::DimensionMismatch {
                 entity_id,

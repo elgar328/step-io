@@ -2,9 +2,9 @@
 
 use std::collections::{BTreeSet, HashMap};
 
-use super::{ReaderContext, has_all_parts};
+use super::ReaderContext;
 use crate::entities::{ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind};
-use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
+use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
 
 /// Pass levels whose handlers read 2D (pcurve-subtree) geometry. Used by the
 /// topological dispatch to decide whether the pcurve-subtree skip applies
@@ -651,8 +651,6 @@ impl ReaderContext {
         self.dispatch_registry(graph, PassLevel::Pass8IiruRead);
         // SHAPE_REPRESENTATION_WITH_PARAMETERS — Representation subtype.
         self.dispatch_registry(graph, PassLevel::Pass8SrwpRead);
-        // (CHARACTERIZED_OBJECT CHARACTERIZED_REPRESENTATION ...) complex MI.
-        self.dispatch_registry(graph, PassLevel::Pass8CharacterizedComplex);
         // COMPOUND_REPRESENTATION_ITEM — resolves child refs through
         // descriptive_item_map (Pass8Measure) + per-arena representation
         // item id maps. Scheduled last in the Pass8 block.
@@ -892,6 +890,13 @@ impl ReaderContext {
             }
             self.dispatch_one(graph, entry, id, ent);
         }
+        // Exact-case matching: a complex instance whose part-set matches no
+        // handler case at all is dropped — surface it. The check is against the
+        // registry (not whether dispatch *ran* a handler) so a pcurve-skipped
+        // instance, which still has a matching handler, is not flagged.
+        if let RawEntity::Complex { parts, .. } = ent {
+            self.warn_unhandled_complex(id, parts);
+        }
     }
 
     /// Try to dispatch a single `(entry, entity)` pair. The handler runs
@@ -916,13 +921,9 @@ impl ReaderContext {
                     self.warnings.push(e);
                 }
             }
-            (
-                ReadKind::Complex {
-                    required_parts,
-                    read,
-                },
-                RawEntity::Complex { parts, .. },
-            ) if has_all_parts(parts, required_parts) => {
+            (ReadKind::Complex { cases, read }, RawEntity::Complex { parts, .. })
+                if crate::reader::matches_any_case(parts, cases) =>
+            {
                 if let Err(e) = read(self, id, parts, graph) {
                     self.warnings.push(e);
                 }
@@ -930,42 +931,79 @@ impl ReaderContext {
             _ => {}
         }
     }
+
+    /// Warn (once per distinct part-set per file) that a complex instance's
+    /// part-set matches no complex handler case and was dropped. Skipped when
+    /// some handler case *does* match (e.g. a pcurve-skipped instance) or the
+    /// shape is allow-listed as read indirectly by another handler.
+    fn warn_unhandled_complex(&mut self, id: u64, parts: &[RawEntityPart]) {
+        let handled = ENTITY_HANDLERS.iter().any(|e| {
+            matches!(&e.kind, ReadKind::Complex { cases, .. }
+                if crate::reader::matches_any_case(parts, cases))
+        });
+        if handled {
+            return;
+        }
+        let mut names: Vec<String> = parts.iter().map(|p| p.name.clone()).collect();
+        names.sort();
+        names.dedup();
+        let actual: BTreeSet<&str> = names.iter().map(String::as_str).collect();
+        if INDIRECTLY_READ_COMPLEX_CASES
+            .iter()
+            .any(|c| c.iter().copied().collect::<BTreeSet<_>>() == actual)
+        {
+            return;
+        }
+        if self.unhandled_complex_seen.insert(names.join("+")) {
+            self.warnings
+                .push(crate::ir::error::ConvertError::UnhandledComplex {
+                    entity_id: id,
+                    parts: names,
+                });
+        }
+    }
 }
 
-/// One-shot validator: flags pairs of complex handlers in the same pass
-/// whose `required_parts` sets are subset-related — such a pair would
-/// always double-fire on entities matching the larger set, producing
-/// duplicate IR pushes. Same-name simple handlers are *not* flagged:
-/// 3D/2D sister handlers (e.g. `CARTESIAN_POINT`, `DIRECTION`) share a
-/// name by design and self-discriminate by coordinate count.
-///
-/// Two complex handlers with disjoint required-parts can still both match
-/// a non-standard entity that carries every marker; that case is
-/// entity-level and outside this static check.
+/// Complex part-sets that are *not* dispatched by a registered handler but are
+/// read indirectly by another handler walking the graph — so an "unhandled
+/// complex" warning would be a false positive. (The RR complex is resolved by
+/// `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION`.)
+const INDIRECTLY_READ_COMPLEX_CASES: &[&[&str]] = &[&[
+    "REPRESENTATION_RELATIONSHIP",
+    "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION",
+    "SHAPE_REPRESENTATION_RELATIONSHIP",
+]];
+
+/// One-shot validator: under exact-case matching, asserts no two
+/// **distinct-name** complex handlers (across *all* passes) declare a shared
+/// exact case — such a pair would both claim the same instance, dropping the
+/// loser's parts. Same-name handlers are exempt: they are 2D/3D sisters
+/// (e.g. `RATIONAL_B_SPLINE_CURVE`) that deliberately share cases and are
+/// disambiguated at dispatch by the pcurve-subtree skip / 2D-vs-3D pass split.
 fn validate_registry_no_ambiguity() {
     use std::sync::OnceLock;
     static CHECKED: OnceLock<()> = OnceLock::new();
     CHECKED.get_or_init(|| {
+        let case_eq =
+            |a: &[&str], b: &[&str]| a.len() == b.len() && a.iter().all(|p| b.contains(p));
         for (i, a) in ENTITY_HANDLERS.iter().enumerate() {
             for b in ENTITY_HANDLERS.iter().skip(i + 1) {
-                if a.pass_level != b.pass_level {
-                    continue;
+                if a.name == b.name {
+                    continue; // 2D/3D sisters share cases by design.
                 }
-                if let (
-                    ReadKind::Complex {
-                        required_parts: ra, ..
-                    },
-                    ReadKind::Complex {
-                        required_parts: rb, ..
-                    },
-                ) = (&a.kind, &b.kind)
+                if let (ReadKind::Complex { cases: ca, .. }, ReadKind::Complex { cases: cb, .. }) =
+                    (&a.kind, &b.kind)
                 {
-                    let a_in_b = ra.iter().all(|p| rb.contains(p));
-                    let b_in_a = rb.iter().all(|p| ra.contains(p));
-                    assert!(
-                        !(a_in_b || b_in_a),
-                        "ambiguous complex handlers in pass: {ra:?} vs {rb:?}",
-                    );
+                    for x in *ca {
+                        for y in *cb {
+                            assert!(
+                                !case_eq(x, y),
+                                "ambiguous complex handlers '{}' vs '{}' share exact case {x:?}",
+                                a.name,
+                                b.name,
+                            );
+                        }
+                    }
                 }
             }
         }

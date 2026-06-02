@@ -22,7 +22,7 @@ pub(crate) struct ParametricRepresentationContextHandler;
 #[step_entity_complex(
     name = "PARAMETRIC_REPRESENTATION_CONTEXT",
     pass = Pass0Context,
-    required = ["GEOMETRIC_REPRESENTATION_CONTEXT", "PARAMETRIC_REPRESENTATION_CONTEXT", "REPRESENTATION_CONTEXT"]
+    cases = [["GEOMETRIC_REPRESENTATION_CONTEXT", "PARAMETRIC_REPRESENTATION_CONTEXT", "REPRESENTATION_CONTEXT"]]
 )]
 impl ComplexEntityHandler for ParametricRepresentationContextHandler {
     type WriteInput = UnitlessContext;

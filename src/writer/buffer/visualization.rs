@@ -105,7 +105,8 @@ impl WriteBuffer<'_> {
             .iter()
             .filter_map(|r| match r {
                 Representation::DraughtingModel(dm) => match dm.form {
-                    DraughtingModelForm::Characterized(id) => Some(id),
+                    DraughtingModelForm::Characterized(id)
+                    | DraughtingModelForm::CharacterizedShapeTessellated(id) => Some(id),
                     _ => None,
                 },
                 _ => None,

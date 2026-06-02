@@ -110,6 +110,38 @@ impl SimpleEntityHandler for DraughtingModelHandler {
                 });
                 Ok(n)
             }
+            DraughtingModelForm::CharacterizedShapeTessellated(_) => {
+                // 6-part MI form: the union of the Characterized and
+                // ShapeTessellated facets, parts in alphabetical order so
+                // re-read re-dispatches to the same case. CO emitted inline
+                // (DERIVE); the standalone CO pass dedups it.
+                use crate::writer::entity::{WriterBody, WriterEntity};
+                let n = buf.fresh();
+                buf.entities.push(WriterEntity {
+                    id: n,
+                    body: WriterBody::Complex {
+                        parts: vec![
+                            (
+                                "CHARACTERIZED_OBJECT".into(),
+                                vec![Attribute::Derived, Attribute::Derived],
+                            ),
+                            ("CHARACTERIZED_REPRESENTATION".into(), vec![]),
+                            ("DRAUGHTING_MODEL".into(), vec![]),
+                            (
+                                "REPRESENTATION".into(),
+                                vec![
+                                    Attribute::String(dm.name),
+                                    Attribute::List(item_refs),
+                                    ctx_attr,
+                                ],
+                            ),
+                            ("SHAPE_REPRESENTATION".into(), vec![]),
+                            ("TESSELLATED_SHAPE_REPRESENTATION".into(), vec![]),
+                        ],
+                    },
+                });
+                Ok(n)
+            }
             DraughtingModelForm::ShapeTessellated => {
                 // Complex MI form (phase dm-rep-tsr-complex): four-part entity
                 // `(DRAUGHTING_MODEL() REPRESENTATION(...) SHAPE_REPRESENTATION()

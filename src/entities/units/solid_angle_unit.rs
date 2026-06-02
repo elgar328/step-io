@@ -20,7 +20,9 @@ use step_io_macros::step_entity_complex;
 
 pub(crate) struct SolidAngleUnitHandler;
 
-#[step_entity_complex(name = "SOLID_ANGLE_UNIT", pass = Pass0Leaf, required = ["SOLID_ANGLE_UNIT"])]
+#[step_entity_complex(name = "SOLID_ANGLE_UNIT", pass = Pass0Leaf, cases = [
+    ["NAMED_UNIT", "SI_UNIT", "SOLID_ANGLE_UNIT"],
+])]
 impl ComplexEntityHandler for SolidAngleUnitHandler {
     /// `(unit, target_id)`. No `cbu_wrapped` / `dim_exp_explicit` flags —
     /// solid-angle CBU forms are unobserved and `NAMED_UNIT.dimensions`

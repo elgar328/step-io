@@ -23,7 +23,10 @@ use step_io_macros::step_entity_complex;
 
 pub(crate) struct PlaneAngleUnitHandler;
 
-#[step_entity_complex(name = "PLANE_ANGLE_UNIT", pass = Pass0Leaf, required = ["PLANE_ANGLE_UNIT"])]
+#[step_entity_complex(name = "PLANE_ANGLE_UNIT", pass = Pass0Leaf, cases = [
+    ["CONVERSION_BASED_UNIT", "NAMED_UNIT", "PLANE_ANGLE_UNIT"],
+    ["NAMED_UNIT", "PLANE_ANGLE_UNIT", "SI_UNIT"],
+])]
 impl ComplexEntityHandler for PlaneAngleUnitHandler {
     /// `(unit, target_id)`.
     type WriteInput = (AngleUnit, u64, u64);

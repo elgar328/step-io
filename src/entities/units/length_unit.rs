@@ -24,7 +24,10 @@ use step_io_macros::step_entity_complex;
 
 pub(crate) struct LengthUnitHandler;
 
-#[step_entity_complex(name = "LENGTH_UNIT", pass = Pass0Leaf, required = ["LENGTH_UNIT"])]
+#[step_entity_complex(name = "LENGTH_UNIT", pass = Pass0Leaf, cases = [
+    ["CONVERSION_BASED_UNIT", "LENGTH_UNIT", "NAMED_UNIT"],
+    ["LENGTH_UNIT", "NAMED_UNIT", "SI_UNIT"],
+])]
 impl ComplexEntityHandler for LengthUnitHandler {
     /// `(unit, target_id)` — caller pre-reserves the `LENGTH_UNIT` complex's
     /// step id so arena order is preserved on round-trip.

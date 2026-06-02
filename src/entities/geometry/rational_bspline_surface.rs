@@ -24,9 +24,10 @@ use step_io_macros::step_entity_complex;
 
 pub(crate) struct RationalBsplineSurfaceHandler;
 
-#[step_entity_complex(name = "RATIONAL_B_SPLINE_SURFACE", pass = Pass4Rational, required = ["B_SPLINE_SURFACE",
-        "B_SPLINE_SURFACE_WITH_KNOTS",
-        "RATIONAL_B_SPLINE_SURFACE",])]
+#[step_entity_complex(name = "RATIONAL_B_SPLINE_SURFACE", pass = Pass4Rational, cases = [[
+        "BOUNDED_SURFACE", "B_SPLINE_SURFACE", "B_SPLINE_SURFACE_WITH_KNOTS",
+        "GEOMETRIC_REPRESENTATION_ITEM", "RATIONAL_B_SPLINE_SURFACE", "REPRESENTATION_ITEM", "SURFACE"
+    ]])]
 impl ComplexEntityHandler for RationalBsplineSurfaceHandler {
     type WriteInput = NurbsSurface;
 

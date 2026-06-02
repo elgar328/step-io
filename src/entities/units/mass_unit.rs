@@ -31,7 +31,10 @@ use step_io_macros::step_entity_complex;
 
 pub(crate) struct MassUnitHandler;
 
-#[step_entity_complex(name = "MASS_UNIT", pass = Pass0Leaf, required = ["MASS_UNIT"])]
+#[step_entity_complex(name = "MASS_UNIT", pass = Pass0Leaf, cases = [
+    ["CONVERSION_BASED_UNIT", "MASS_UNIT", "NAMED_UNIT"],
+    ["MASS_UNIT", "NAMED_UNIT", "SI_UNIT"],
+])]
 impl ComplexEntityHandler for MassUnitHandler {
     type WriteInput = (MassUnit, u64, u64);
 

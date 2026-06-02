@@ -19,7 +19,12 @@ use step_io_macros::step_entity_complex;
 
 pub(crate) struct RatioUnitHandler;
 
-#[step_entity_complex(name = "RATIO_UNIT", pass = Pass0Leaf, required = ["RATIO_UNIT"])]
+// No RATIO_UNIT complex instances in the corpus; cases follow the invariant
+// unit-complex structure shared by the other named units (SI / CBU forms).
+#[step_entity_complex(name = "RATIO_UNIT", pass = Pass0Leaf, cases = [
+    ["CONVERSION_BASED_UNIT", "NAMED_UNIT", "RATIO_UNIT"],
+    ["NAMED_UNIT", "RATIO_UNIT", "SI_UNIT"],
+])]
 impl ComplexEntityHandler for RatioUnitHandler {
     /// `target_id`. Ratio has no flavour enum (zero-sized [`RatioFlavor`]),
     /// so the write input is just the pre-reserved step id.

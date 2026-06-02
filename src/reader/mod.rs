@@ -776,6 +776,10 @@ pub struct ReaderContext {
     /// one [`ConvertError::NonStandardInput`] per key at the end of `convert`.
     pub(crate) nonstandard_normalizations: BTreeMap<(String, &'static str), usize>,
 
+    /// Part-sets already reported via `ConvertError::UnhandledComplex` this
+    /// file, so a shape recurring across many instances warns once.
+    pub(crate) unhandled_complex_seen: std::collections::BTreeSet<String>,
+
     pub(crate) warnings: Vec<ConvertError>,
 }
 
@@ -1348,11 +1352,28 @@ pub(crate) fn require_part_attrs<'a>(
     })
 }
 
-/// Check whether a complex entity contains all required parts.
+/// Check whether a complex entity contains all required parts (subset test).
+/// Used by handler bodies that sniff optional companion parts after an
+/// exact-case match has selected them.
 pub(crate) fn has_all_parts(parts: &[RawEntityPart], required: &[&str]) -> bool {
     required
         .iter()
         .all(|name| parts.iter().any(|p| p.name == *name))
+}
+
+/// True when a complex entity's DISTINCT part-name set EQUALS `case`
+/// (order-independent; duplicate part names — which STEP AND-instances do not
+/// have — collapse). This is the exact-case dispatch predicate.
+pub(crate) fn matches_exact_case(parts: &[RawEntityPart], case: &[&str]) -> bool {
+    let actual: std::collections::BTreeSet<&str> = parts.iter().map(|p| p.name.as_str()).collect();
+    let expected: std::collections::BTreeSet<&str> = case.iter().copied().collect();
+    actual == expected
+}
+
+/// True when the entity's part-set exactly matches any of the handler's
+/// declared `cases`.
+pub(crate) fn matches_any_case(parts: &[RawEntityPart], cases: &[&[&str]]) -> bool {
+    cases.iter().any(|c| matches_exact_case(parts, c))
 }
 
 /// How a complex (multi-part) instance lines up with the complex handler
@@ -1387,10 +1408,9 @@ pub struct ComplexAuditFinding {
 }
 
 /// Every `(handler_name, sorted distinct part-set)` pair where a complex
-/// handler's current subset predicate matches an instance in `graph` — the
-/// healthy exact matches included (unlike [`audit_complex_matching`]). Run over
-/// the corpus and de-duplicated, this yields the authoritative exact-case list
-/// each handler must declare under exact-case matching. Diagnostic only.
+/// handler's declared cases exactly match an instance in `graph`. Run over the
+/// corpus and de-duplicated, this verifies the declared `cases` cover the
+/// observed shapes. Diagnostic only.
 #[must_use]
 pub fn complex_handler_matches(graph: &EntityGraph) -> Vec<(String, Vec<String>)> {
     use crate::entities::{ENTITY_HANDLERS, ReadKind};
@@ -1403,8 +1423,8 @@ pub fn complex_handler_matches(graph: &EntityGraph) -> Vec<(String, Vec<String>)
         part_names.sort();
         part_names.dedup();
         for e in ENTITY_HANDLERS {
-            if let ReadKind::Complex { required_parts, .. } = &e.kind
-                && has_all_parts(parts, required_parts)
+            if let ReadKind::Complex { cases, .. } = &e.kind
+                && matches_any_case(parts, cases)
             {
                 out.push((e.name.to_string(), part_names.clone()));
             }
@@ -1414,11 +1434,11 @@ pub fn complex_handler_matches(graph: &EntityGraph) -> Vec<(String, Vec<String>)
 }
 
 /// Audit every complex instance in `graph` against the complex handler
-/// registry, classifying subset-match looseness ([`ComplexMatchClass`]).
-/// Purely diagnostic — does NOT run during [`ReaderContext::convert`]; a caller
-/// (the round-trip corpus tool) invokes it to map where complex matching can
-/// lose parts invisibly. Returns one finding per non-healthy complex instance
-/// (a single handler covering every part is healthy and omitted).
+/// registry under exact-case matching. Diagnostic — does NOT run during
+/// [`ReaderContext::convert`]. `Ambiguous` = two **distinct-name** handlers
+/// match (2D/3D sisters share a name and are excluded). `Unhandled` = no
+/// handler matches. A single exact match is healthy and omitted; `Loose` is
+/// structurally impossible under exact-case (retained for API stability).
 #[must_use]
 pub fn audit_complex_matching(graph: &EntityGraph) -> Vec<ComplexAuditFinding> {
     use crate::entities::{ENTITY_HANDLERS, ReadKind};
@@ -1431,37 +1451,25 @@ pub fn audit_complex_matching(graph: &EntityGraph) -> Vec<ComplexAuditFinding> {
         part_names.sort();
         part_names.dedup();
 
-        let mut matched: Vec<(&'static str, &'static [&'static str])> = Vec::new();
+        let mut names: Vec<&'static str> = Vec::new();
         for e in ENTITY_HANDLERS {
-            if let ReadKind::Complex { required_parts, .. } = &e.kind
-                && has_all_parts(parts, required_parts)
+            if let ReadKind::Complex { cases, .. } = &e.kind
+                && matches_any_case(parts, cases)
             {
-                matched.push((e.name, required_parts));
+                names.push(e.name);
             }
         }
+        let distinct: std::collections::BTreeSet<&str> = names.iter().copied().collect();
 
-        let finding = if matched.len() >= 2 {
+        let finding = if distinct.len() >= 2 {
             ComplexAuditFinding {
                 class: ComplexMatchClass::Ambiguous,
                 parts: part_names,
-                handlers: matched.iter().map(|(n, _)| (*n).to_string()).collect(),
+                handlers: distinct.iter().map(|n| (*n).to_string()).collect(),
                 extra_parts: Vec::new(),
             }
-        } else if let [(name, required)] = matched[..] {
-            let extra: Vec<String> = part_names
-                .iter()
-                .filter(|p| !required.contains(&p.as_str()))
-                .cloned()
-                .collect();
-            if extra.is_empty() {
-                continue; // single handler covering every part — healthy.
-            }
-            ComplexAuditFinding {
-                class: ComplexMatchClass::Loose,
-                parts: part_names,
-                handlers: vec![name.to_string()],
-                extra_parts: extra,
-            }
+        } else if distinct.len() == 1 {
+            continue; // healthy exact match (sisters share the name).
         } else {
             ComplexAuditFinding {
                 class: ComplexMatchClass::Unhandled,

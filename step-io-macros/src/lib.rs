@@ -49,25 +49,27 @@ impl Parse for SimpleArgs {
     }
 }
 
-/// `name = "...", pass = ..., required = ["PART1", "PART2", ...]`
+/// `name = "...", pass = ..., cases = [["PART1","PART2"], ["PART1","PART3"]]`
+/// — every exact part-set this complex handler claims. An instance matches iff
+/// its distinct part-set EQUALS one listed case (set equality).
 struct ComplexArgs {
     name: LitStr,
     pass: Path,
-    required: ExprArray,
+    cases: ExprArray,
 }
 
 impl Parse for ComplexArgs {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let mut name: Option<LitStr> = None;
         let mut pass: Option<Path> = None;
-        let mut required: Option<ExprArray> = None;
+        let mut cases: Option<ExprArray> = None;
         while !input.is_empty() {
             let ident: syn::Ident = input.parse()?;
             input.parse::<Token![=]>()?;
             match ident.to_string().as_str() {
                 "name" => name = Some(input.parse()?),
                 "pass" => pass = Some(input.parse()?),
-                "required" => required = Some(input.parse()?),
+                "cases" => cases = Some(input.parse()?),
                 other => {
                     return Err(syn::Error::new(
                         ident.span(),
@@ -82,8 +84,8 @@ impl Parse for ComplexArgs {
         Ok(ComplexArgs {
             name: name.ok_or_else(|| syn::Error::new(input.span(), "missing `name = \"...\"`"))?,
             pass: pass.ok_or_else(|| syn::Error::new(input.span(), "missing `pass = ...`"))?,
-            required: required
-                .ok_or_else(|| syn::Error::new(input.span(), "missing `required = [...]`"))?,
+            cases: cases
+                .ok_or_else(|| syn::Error::new(input.span(), "missing `cases = [[...], ...]`"))?,
         })
     }
 }
@@ -155,9 +157,17 @@ pub fn step_entity_complex(attr: TokenStream, item: TokenStream) -> TokenStream 
         Err(e) => return e.to_compile_error().into(),
     };
     let entry_ident = format_ident!("__STEP_ENTRY_{}", handler_ident);
-    let required_parts_expr: &ExprArray = &args.required;
     let impl_with_consts = inject_consts(impl_block, &args.name, &args.pass);
-    let required_lit: Expr = syn::parse_quote! { &#required_parts_expr };
+    // Build `&[&["A","B"], &["C","D"], ...]` (type `&[&[&str]]`). Each inner
+    // case array must be referenced into a slice — they differ in length, so a
+    // plain nested array literal would not type-check.
+    let case_slices: Vec<Expr> = args
+        .cases
+        .elems
+        .iter()
+        .map(|inner| syn::parse_quote! { &#inner })
+        .collect();
+    let cases_lit: Expr = syn::parse_quote! { &[ #(#case_slices),* ] };
 
     quote! {
         #impl_with_consts
@@ -169,7 +179,7 @@ pub fn step_entity_complex(attr: TokenStream, item: TokenStream) -> TokenStream 
                 name: <#handler_ident as crate::entities::ComplexEntityHandler>::NAME,
                 pass_level: <#handler_ident as crate::entities::ComplexEntityHandler>::PASS_LEVEL,
                 kind: crate::entities::ReadKind::Complex {
-                    required_parts: #required_lit,
+                    cases: #cases_lit,
                     read: <#handler_ident as crate::entities::ComplexEntityHandler>::read_complex,
                 },
             };

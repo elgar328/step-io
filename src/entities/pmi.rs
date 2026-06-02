@@ -2774,10 +2774,9 @@ pub(crate) struct PositionToleranceHandler;
 #[step_entity_complex(
     name = "POSITION_TOLERANCE",
     pass = Pass8GtWithDatumReference,
-    required = [
-        "GEOMETRIC_TOLERANCE",
-        "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
-        "POSITION_TOLERANCE"
+    cases = [
+        ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "POSITION_TOLERANCE"],
+        ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "POSITION_TOLERANCE"],
     ]
 )]
 impl ComplexEntityHandler for PositionToleranceHandler {
@@ -2813,10 +2812,10 @@ pub(crate) struct SurfaceProfileToleranceHandler;
 #[step_entity_complex(
     name = "SURFACE_PROFILE_TOLERANCE",
     pass = Pass8GtWithDatumReference,
-    required = [
-        "GEOMETRIC_TOLERANCE",
-        "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
-        "SURFACE_PROFILE_TOLERANCE"
+    cases = [
+        ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "SURFACE_PROFILE_TOLERANCE"],
+        ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "SURFACE_PROFILE_TOLERANCE"],
+        ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "SURFACE_PROFILE_TOLERANCE", "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE"],
     ]
 )]
 impl ComplexEntityHandler for SurfaceProfileToleranceHandler {
@@ -2852,11 +2851,7 @@ pub(crate) struct LineProfileToleranceHandler;
 #[step_entity_complex(
     name = "LINE_PROFILE_TOLERANCE",
     pass = Pass8GtWithDatumReference,
-    required = [
-        "GEOMETRIC_TOLERANCE",
-        "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
-        "LINE_PROFILE_TOLERANCE"
-    ]
+    cases = [["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "LINE_PROFILE_TOLERANCE"]]
 )]
 impl ComplexEntityHandler for LineProfileToleranceHandler {
     type WriteInput = GeometricToleranceWithDatumReference;
@@ -3091,7 +3086,13 @@ pub(crate) struct FlatnessToleranceComplexHandler;
 #[step_entity_complex(
     name = "FLATNESS_TOLERANCE",
     pass = Pass8GtWithDatumReference,
-    required = ["FLATNESS_TOLERANCE"]
+    cases = [
+        ["FLATNESS_TOLERANCE", "GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT", "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT"],
+        // DEFINED_UNIT without the AREA_UNIT subtype (area is optional). Absent
+        // from the corpus, exercised by writer_smoke round-trip fixtures.
+        ["FLATNESS_TOLERANCE", "GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT"],
+        ["FLATNESS_TOLERANCE", "GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS"],
+    ]
 )]
 impl ComplexEntityHandler for FlatnessToleranceComplexHandler {
     type WriteInput = GeometricTolerance;
@@ -3119,7 +3120,7 @@ pub(crate) struct RoundnessToleranceComplexHandler;
 #[step_entity_complex(
     name = "ROUNDNESS_TOLERANCE",
     pass = Pass8GtWithDatumReference,
-    required = ["ROUNDNESS_TOLERANCE"]
+    cases = [["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "ROUNDNESS_TOLERANCE"]]
 )]
 impl ComplexEntityHandler for RoundnessToleranceComplexHandler {
     type WriteInput = GeometricTolerance;
@@ -3147,7 +3148,7 @@ pub(crate) struct StraightnessToleranceComplexHandler;
 #[step_entity_complex(
     name = "STRAIGHTNESS_TOLERANCE",
     pass = Pass8GtWithDatumReference,
-    required = ["STRAIGHTNESS_TOLERANCE"]
+    cases = [["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT", "STRAIGHTNESS_TOLERANCE"]]
 )]
 impl ComplexEntityHandler for StraightnessToleranceComplexHandler {
     type WriteInput = GeometricTolerance;
@@ -3217,7 +3218,7 @@ pub(crate) struct ParallelismToleranceComplexHandler;
 #[step_entity_complex(
     name = "PARALLELISM_TOLERANCE",
     pass = Pass8GtWithDatumReference,
-    required = ["PARALLELISM_TOLERANCE"]
+    cases = [["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "PARALLELISM_TOLERANCE"]]
 )]
 impl ComplexEntityHandler for ParallelismToleranceComplexHandler {
     type WriteInput = GeometricToleranceWithDatumReference;
@@ -3254,7 +3255,7 @@ pub(crate) struct PerpendicularityToleranceComplexHandler;
 #[step_entity_complex(
     name = "PERPENDICULARITY_TOLERANCE",
     pass = Pass8GtWithDatumReference,
-    required = ["PERPENDICULARITY_TOLERANCE"]
+    cases = [["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "PERPENDICULARITY_TOLERANCE"]]
 )]
 impl ComplexEntityHandler for PerpendicularityToleranceComplexHandler {
     type WriteInput = GeometricToleranceWithDatumReference;
@@ -3291,7 +3292,7 @@ pub(crate) struct CircularRunoutToleranceComplexHandler;
 #[step_entity_complex(
     name = "CIRCULAR_RUNOUT_TOLERANCE",
     pass = Pass8GtWithDatumReference,
-    required = ["CIRCULAR_RUNOUT_TOLERANCE"]
+    cases = [["CIRCULAR_RUNOUT_TOLERANCE", "GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS"]]
 )]
 impl ComplexEntityHandler for CircularRunoutToleranceComplexHandler {
     type WriteInput = GeometricToleranceWithDatumReference;
