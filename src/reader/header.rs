@@ -1,4 +1,4 @@
-//! HEADER-section metadata extraction (Pass 0a).
+//! HEADER-section metadata extraction.
 //!
 //! Promotes `FILE_DESCRIPTION` and `FILE_NAME` entities from
 //! [`EntityGraph.header`](crate::parser::entity::EntityGraph::header) into a
