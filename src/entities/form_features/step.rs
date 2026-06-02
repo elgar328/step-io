@@ -21,7 +21,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct StepHandler;
 
-#[step_entity(name = "STEP", pass = Pass6Features)]
+#[step_entity(name = "STEP")]
 impl SimpleEntityHandler for StepHandler {
     type WriteInput = Step;
 

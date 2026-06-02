@@ -23,7 +23,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct SymbolTargetHandler;
 
-#[step_entity(name = "SYMBOL_TARGET", pass = Pass6SymbolTarget)]
+#[step_entity(name = "SYMBOL_TARGET")]
 impl SimpleEntityHandler for SymbolTargetHandler {
     type WriteInput = SymbolTarget;
 
@@ -72,7 +72,7 @@ impl SimpleEntityHandler for SymbolTargetHandler {
 
 pub(crate) struct DefinedSymbolHandler;
 
-#[step_entity(name = "DEFINED_SYMBOL", pass = Pass8DefinedSymbol)]
+#[step_entity(name = "DEFINED_SYMBOL")]
 impl SimpleEntityHandler for DefinedSymbolHandler {
     type WriteInput = DefinedSymbol;
 

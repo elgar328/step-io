@@ -17,7 +17,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct BoundedPCurveHandler;
 
-#[step_entity(name = "BOUNDED_PCURVE", pass = Pass8BoundedPCurve)]
+#[step_entity(name = "BOUNDED_PCURVE")]
 impl SimpleEntityHandler for BoundedPCurveHandler {
     type WriteInput = BoundedPCurve;
 

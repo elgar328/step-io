@@ -23,7 +23,7 @@ use step_io_macros::step_entity_complex;
 
 pub(crate) struct PlaneAngleUnitHandler;
 
-#[step_entity_complex(name = "PLANE_ANGLE_UNIT", pass = Pass0Leaf, cases = [
+#[step_entity_complex(name = "PLANE_ANGLE_UNIT", cases = [
     ["CONVERSION_BASED_UNIT", "NAMED_UNIT", "PLANE_ANGLE_UNIT"],
     ["NAMED_UNIT", "PLANE_ANGLE_UNIT", "SI_UNIT"],
 ])]

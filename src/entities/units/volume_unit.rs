@@ -17,7 +17,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct VolumeUnitHandler;
 
-#[step_entity(name = "VOLUME_UNIT", pass = Pass0Du)]
+#[step_entity(name = "VOLUME_UNIT")]
 impl SimpleEntityHandler for VolumeUnitHandler {
     type WriteInput = Vec<u64>;
 

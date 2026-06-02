@@ -102,7 +102,7 @@ pub(super) fn write_face_body(buf: &mut WriteBuffer, id: FaceId) -> Result<u64, 
 
 pub(crate) struct AdvancedFaceHandler;
 
-#[step_entity(name = "ADVANCED_FACE", pass = Pass5Face)]
+#[step_entity(name = "ADVANCED_FACE")]
 impl SimpleEntityHandler for AdvancedFaceHandler {
     type WriteInput = FaceId;
 

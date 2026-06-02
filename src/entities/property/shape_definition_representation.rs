@@ -23,7 +23,7 @@ pub(crate) struct ShapeDefinitionRepresentationWriteInput {
 
 pub(crate) struct ShapeDefinitionRepresentationHandler;
 
-#[step_entity(name = "SHAPE_DEFINITION_REPRESENTATION", pass = Pass6Sdr)]
+#[step_entity(name = "SHAPE_DEFINITION_REPRESENTATION")]
 impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
     type WriteInput = ShapeDefinitionRepresentationWriteInput;
 

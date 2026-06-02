@@ -19,7 +19,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct CurveBoundedSurfaceHandler;
 
-#[step_entity(name = "CURVE_BOUNDED_SURFACE", pass = Pass4PlanarExtent)]
+#[step_entity(name = "CURVE_BOUNDED_SURFACE")]
 impl SimpleEntityHandler for CurveBoundedSurfaceHandler {
     type WriteInput = CurveBoundedSurface;
 

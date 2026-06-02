@@ -14,7 +14,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ToroidalSurfaceHandler;
 
-#[step_entity(name = "TOROIDAL_SURFACE", pass = Pass4Leaf)]
+#[step_entity(name = "TOROIDAL_SURFACE")]
 impl SimpleEntityHandler for ToroidalSurfaceHandler {
     type WriteInput = ToroidalSurface;
 

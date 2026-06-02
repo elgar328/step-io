@@ -17,7 +17,7 @@ use super::geometric_curve_set::{
 
 pub(crate) struct GeometricSetHandler;
 
-#[step_entity(name = "GEOMETRIC_SET", pass = Pass6CurveSet)]
+#[step_entity(name = "GEOMETRIC_SET")]
 impl SimpleEntityHandler for GeometricSetHandler {
     type WriteInput = CurveSetWriteInput;
 

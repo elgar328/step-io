@@ -12,7 +12,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct CalendarDateHandler;
 
-#[step_entity(name = "CALENDAR_DATE", pass = Pass9PlmDateLeaves)]
+#[step_entity(name = "CALENDAR_DATE")]
 impl SimpleEntityHandler for CalendarDateHandler {
     type WriteInput = CalendarDate;
 

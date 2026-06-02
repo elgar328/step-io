@@ -14,7 +14,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct PlaneHandler;
 
-#[step_entity(name = "PLANE", pass = Pass4Leaf)]
+#[step_entity(name = "PLANE")]
 impl SimpleEntityHandler for PlaneHandler {
     type WriteInput = Plane3;
 

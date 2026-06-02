@@ -19,7 +19,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct CcDesignPersonAndOrganizationAssignmentHandler;
 
-#[step_entity(name = "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT", pass = Pass9PlmPoa)]
+#[step_entity(name = "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT")]
 impl SimpleEntityHandler for CcDesignPersonAndOrganizationAssignmentHandler {
     type WriteInput = CcDesignPersonAndOrganizationAssignment;
 

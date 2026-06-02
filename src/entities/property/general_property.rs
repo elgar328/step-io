@@ -17,7 +17,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct GeneralPropertyHandler;
 
-#[step_entity(name = "GENERAL_PROPERTY", pass = Pass8GeneralProperty)]
+#[step_entity(name = "GENERAL_PROPERTY")]
 impl SimpleEntityHandler for GeneralPropertyHandler {
     type WriteInput = GeneralProperty;
 

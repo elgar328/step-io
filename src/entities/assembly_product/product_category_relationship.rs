@@ -21,7 +21,7 @@ pub(crate) struct ProductCategoryRelationshipWriteInput {
 
 pub(crate) struct ProductCategoryRelationshipHandler;
 
-#[step_entity(name = "PRODUCT_CATEGORY_RELATIONSHIP", pass = Pass6ProductCategoryRel)]
+#[step_entity(name = "PRODUCT_CATEGORY_RELATIONSHIP")]
 impl SimpleEntityHandler for ProductCategoryRelationshipHandler {
     type WriteInput = ProductCategoryRelationshipWriteInput;
 

@@ -16,7 +16,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct AppliedDocumentReferenceHandler;
 
-#[step_entity(name = "APPLIED_DOCUMENT_REFERENCE", pass = Pass9PlmDocLinkers)]
+#[step_entity(name = "APPLIED_DOCUMENT_REFERENCE")]
 impl SimpleEntityHandler for AppliedDocumentReferenceHandler {
     type WriteInput = AppliedDocumentReference;
 

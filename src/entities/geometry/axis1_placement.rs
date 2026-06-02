@@ -19,7 +19,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct Axis1PlacementHandler;
 
-#[step_entity(name = "AXIS1_PLACEMENT", pass = Pass3)]
+#[step_entity(name = "AXIS1_PLACEMENT")]
 impl SimpleEntityHandler for Axis1PlacementHandler {
     type WriteInput = Placement1dId;
 

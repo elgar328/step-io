@@ -25,7 +25,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct SurfaceStyleParameterLineHandler;
 
-#[step_entity(name = "SURFACE_STYLE_PARAMETER_LINE", pass = Pass7SurfaceStyleParameterLine)]
+#[step_entity(name = "SURFACE_STYLE_PARAMETER_LINE")]
 impl SimpleEntityHandler for SurfaceStyleParameterLineHandler {
     type WriteInput = SurfaceStyleParameterLine;
 

@@ -29,7 +29,7 @@ pub(crate) struct IdAttributeWriteInput {
 
 pub(crate) struct IdAttributeHandler;
 
-#[step_entity(name = "ID_ATTRIBUTE", pass = Pass9PlmAttributes)]
+#[step_entity(name = "ID_ATTRIBUTE")]
 impl SimpleEntityHandler for IdAttributeHandler {
     type WriteInput = IdAttributeWriteInput;
 

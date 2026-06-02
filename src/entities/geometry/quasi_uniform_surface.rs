@@ -22,7 +22,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct QuasiUniformSurfaceHandler;
 
-#[step_entity(name = "QUASI_UNIFORM_SURFACE", pass = Pass4Leaf)]
+#[step_entity(name = "QUASI_UNIFORM_SURFACE")]
 impl SimpleEntityHandler for QuasiUniformSurfaceHandler {
     type WriteInput = NurbsSurface;
 

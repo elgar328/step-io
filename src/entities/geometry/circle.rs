@@ -14,7 +14,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct CircleHandler;
 
-#[step_entity(name = "CIRCLE", pass = Pass4Leaf)]
+#[step_entity(name = "CIRCLE")]
 impl SimpleEntityHandler for CircleHandler {
     type WriteInput = Circle3;
 

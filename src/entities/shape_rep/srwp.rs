@@ -21,7 +21,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ShapeRepresentationWithParametersHandler;
 
-#[step_entity(name = "SHAPE_REPRESENTATION_WITH_PARAMETERS", pass = Pass8SrwpRead)]
+#[step_entity(name = "SHAPE_REPRESENTATION_WITH_PARAMETERS")]
 impl SimpleEntityHandler for ShapeRepresentationWithParametersHandler {
     type WriteInput = ShapeRepresentationWithParameters;
 

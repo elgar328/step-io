@@ -13,7 +13,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct DateAndTimeHandler;
 
-#[step_entity(name = "DATE_AND_TIME", pass = Pass9PlmDateAndTime)]
+#[step_entity(name = "DATE_AND_TIME")]
 impl SimpleEntityHandler for DateAndTimeHandler {
     type WriteInput = DateAndTime;
 

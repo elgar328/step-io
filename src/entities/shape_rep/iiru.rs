@@ -25,7 +25,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ItemIdentifiedRepresentationUsageHandler;
 
-#[step_entity(name = "ITEM_IDENTIFIED_REPRESENTATION_USAGE", pass = Pass8IiruRead)]
+#[step_entity(name = "ITEM_IDENTIFIED_REPRESENTATION_USAGE")]
 impl SimpleEntityHandler for ItemIdentifiedRepresentationUsageHandler {
     type WriteInput = ItemIdentifiedRepresentationUsage;
 

@@ -22,7 +22,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct RepresentationContextHandler;
 
-#[step_entity(name = "REPRESENTATION_CONTEXT", pass = Pass0Context)]
+#[step_entity(name = "REPRESENTATION_CONTEXT")]
 impl SimpleEntityHandler for RepresentationContextHandler {
     type WriteInput = UnitlessContext;
 

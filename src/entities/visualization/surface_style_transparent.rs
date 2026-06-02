@@ -13,7 +13,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct SurfaceStyleTransparentHandler;
 
-#[step_entity(name = "SURFACE_STYLE_TRANSPARENT", pass = Pass7Transparent)]
+#[step_entity(name = "SURFACE_STYLE_TRANSPARENT")]
 impl SimpleEntityHandler for SurfaceStyleTransparentHandler {
     type WriteInput = f64;
 

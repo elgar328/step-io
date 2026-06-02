@@ -21,7 +21,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct SurfaceStyleBoundaryHandler;
 
-#[step_entity(name = "SURFACE_STYLE_BOUNDARY", pass = Pass7SurfaceStyleBoundary)]
+#[step_entity(name = "SURFACE_STYLE_BOUNDARY")]
 impl SimpleEntityHandler for SurfaceStyleBoundaryHandler {
     type WriteInput = SurfaceStyleBoundary;
 

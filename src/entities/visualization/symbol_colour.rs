@@ -12,7 +12,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct SymbolColourHandler;
 
-#[step_entity(name = "SYMBOL_COLOUR", pass = Pass7SymbolColour)]
+#[step_entity(name = "SYMBOL_COLOUR")]
 impl SimpleEntityHandler for SymbolColourHandler {
     type WriteInput = SymbolColour;
 

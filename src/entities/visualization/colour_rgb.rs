@@ -19,7 +19,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ColourRgbHandler;
 
-#[step_entity(name = "COLOUR_RGB", pass = Pass7Colour)]
+#[step_entity(name = "COLOUR_RGB")]
 impl SimpleEntityHandler for ColourRgbHandler {
     type WriteInput = ColourRgb;
 

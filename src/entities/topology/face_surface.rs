@@ -18,7 +18,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct FaceSurfaceHandler;
 
-#[step_entity(name = "FACE_SURFACE", pass = Pass5Face)]
+#[step_entity(name = "FACE_SURFACE")]
 impl SimpleEntityHandler for FaceSurfaceHandler {
     type WriteInput = FaceId;
 

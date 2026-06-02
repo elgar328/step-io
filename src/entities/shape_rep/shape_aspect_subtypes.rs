@@ -76,7 +76,7 @@ fn write_shape_aspect_subtype(
 
 pub(crate) struct CompositeGroupShapeAspectHandler;
 
-#[step_entity(name = "COMPOSITE_GROUP_SHAPE_ASPECT", pass = Pass8ShapeAspect)]
+#[step_entity(name = "COMPOSITE_GROUP_SHAPE_ASPECT")]
 impl SimpleEntityHandler for CompositeGroupShapeAspectHandler {
     type WriteInput = ShapeAspectSubtypeWriteInput;
 
@@ -125,7 +125,7 @@ pub(crate) struct CompositeShapeAspectHandler;
 /// `composite_shape_aspect_id_map` consumer (`resolve_shape_aspect_ref`,
 /// `DRAUGHTING_MODEL_ITEM_ASSOCIATION`, `ID_ATTRIBUTE`,
 /// `SHAPE_ASPECT_RELATIONSHIP`, …) resolves it.
-#[step_entity(name = "COMPOSITE_SHAPE_ASPECT", pass = Pass8ShapeAspect)]
+#[step_entity(name = "COMPOSITE_SHAPE_ASPECT")]
 impl SimpleEntityHandler for CompositeShapeAspectHandler {
     type WriteInput = ShapeAspectSubtypeWriteInput;
 
@@ -167,7 +167,7 @@ impl SimpleEntityHandler for CompositeShapeAspectHandler {
 
 pub(crate) struct CentreOfSymmetryHandler;
 
-#[step_entity(name = "CENTRE_OF_SYMMETRY", pass = Pass8ShapeAspect)]
+#[step_entity(name = "CENTRE_OF_SYMMETRY")]
 impl SimpleEntityHandler for CentreOfSymmetryHandler {
     type WriteInput = ShapeAspectSubtypeWriteInput;
 
@@ -202,7 +202,7 @@ impl SimpleEntityHandler for CentreOfSymmetryHandler {
 
 pub(crate) struct AllAroundShapeAspectHandler;
 
-#[step_entity(name = "ALL_AROUND_SHAPE_ASPECT", pass = Pass8ShapeAspect)]
+#[step_entity(name = "ALL_AROUND_SHAPE_ASPECT")]
 impl SimpleEntityHandler for AllAroundShapeAspectHandler {
     type WriteInput = ShapeAspectSubtypeWriteInput;
 

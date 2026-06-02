@@ -27,7 +27,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct BrepWithVoidsHandler;
 
-#[step_entity(name = "BREP_WITH_VOIDS", pass = Pass5Solid)]
+#[step_entity(name = "BREP_WITH_VOIDS")]
 impl SimpleEntityHandler for BrepWithVoidsHandler {
     type WriteInput = SolidId;
 

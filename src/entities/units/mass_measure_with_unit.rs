@@ -16,7 +16,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct MassMeasureWithUnitHandler;
 
-#[step_entity(name = "MASS_MEASURE_WITH_UNIT", pass = Pass0MwuDue)]
+#[step_entity(name = "MASS_MEASURE_WITH_UNIT")]
 impl SimpleEntityHandler for MassMeasureWithUnitHandler {
     type WriteInput = (f64, u64);
 

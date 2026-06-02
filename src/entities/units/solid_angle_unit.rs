@@ -20,7 +20,7 @@ use step_io_macros::step_entity_complex;
 
 pub(crate) struct SolidAngleUnitHandler;
 
-#[step_entity_complex(name = "SOLID_ANGLE_UNIT", pass = Pass0Leaf, cases = [
+#[step_entity_complex(name = "SOLID_ANGLE_UNIT", cases = [
     ["NAMED_UNIT", "SI_UNIT", "SOLID_ANGLE_UNIT"],
 ])]
 impl ComplexEntityHandler for SolidAngleUnitHandler {

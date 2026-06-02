@@ -12,7 +12,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct GroupHandler;
 
-#[step_entity(name = "GROUP", pass = Pass9PlmGroup)]
+#[step_entity(name = "GROUP")]
 impl SimpleEntityHandler for GroupHandler {
     type WriteInput = Group;
 

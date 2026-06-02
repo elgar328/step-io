@@ -13,7 +13,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct SecurityClassificationHandler;
 
-#[step_entity(name = "SECURITY_CLASSIFICATION", pass = Pass9PlmSecClass)]
+#[step_entity(name = "SECURITY_CLASSIFICATION")]
 impl SimpleEntityHandler for SecurityClassificationHandler {
     type WriteInput = SecurityClassification;
 

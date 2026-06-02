@@ -16,7 +16,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct Direction2dHandler;
 
-#[step_entity(name = "DIRECTION", pass = Pass1)]
+#[step_entity(name = "DIRECTION")]
 impl SimpleEntityHandler for Direction2dHandler {
     type WriteInput = Direction2dId;
 

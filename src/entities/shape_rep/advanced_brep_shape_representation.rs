@@ -24,7 +24,7 @@ pub(crate) struct AdvancedBrepShapeRepresentationWriteInput {
 
 pub(crate) struct AdvancedBrepShapeRepresentationHandler;
 
-#[step_entity(name = "ADVANCED_BREP_SHAPE_REPRESENTATION", pass = Pass6ShapeRep)]
+#[step_entity(name = "ADVANCED_BREP_SHAPE_REPRESENTATION")]
 impl SimpleEntityHandler for AdvancedBrepShapeRepresentationHandler {
     type WriteInput = AdvancedBrepShapeRepresentationWriteInput;
 

@@ -13,7 +13,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct RatioMeasureWithUnitHandler;
 
-#[step_entity(name = "RATIO_MEASURE_WITH_UNIT", pass = Pass0MwuDue)]
+#[step_entity(name = "RATIO_MEASURE_WITH_UNIT")]
 impl SimpleEntityHandler for RatioMeasureWithUnitHandler {
     type WriteInput = (f64, u64);
 

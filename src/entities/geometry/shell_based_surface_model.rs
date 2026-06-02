@@ -19,7 +19,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ShellBasedSurfaceModelHandler;
 
-#[step_entity(name = "SHELL_BASED_SURFACE_MODEL", pass = Pass6Sbsm)]
+#[step_entity(name = "SHELL_BASED_SURFACE_MODEL")]
 impl SimpleEntityHandler for ShellBasedSurfaceModelHandler {
     type WriteInput = Vec<ShellId>;
 

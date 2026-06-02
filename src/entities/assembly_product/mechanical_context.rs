@@ -16,7 +16,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct MechanicalContextHandler;
 
-#[step_entity(name = "MECHANICAL_CONTEXT", pass = Pass9AssemblyContext)]
+#[step_entity(name = "MECHANICAL_CONTEXT")]
 impl SimpleEntityHandler for MechanicalContextHandler {
     type WriteInput = ProductContext;
 

@@ -26,7 +26,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct TessellatedShapeRepresentationHandler;
 
-#[step_entity(name = "TESSELLATED_SHAPE_REPRESENTATION", pass = Pass8TsrRead)]
+#[step_entity(name = "TESSELLATED_SHAPE_REPRESENTATION")]
 impl SimpleEntityHandler for TessellatedShapeRepresentationHandler {
     type WriteInput = TessellatedShapeRepresentation;
 

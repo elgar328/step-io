@@ -37,7 +37,7 @@ use step_io_macros::{step_entity, step_entity_complex};
 
 pub(crate) struct ToleranceZoneFormHandler;
 
-#[step_entity(name = "TOLERANCE_ZONE_FORM", pass = Pass8ShapeAspect)]
+#[step_entity(name = "TOLERANCE_ZONE_FORM")]
 impl SimpleEntityHandler for ToleranceZoneFormHandler {
     type WriteInput = ToleranceZoneForm;
 
@@ -65,7 +65,7 @@ impl SimpleEntityHandler for ToleranceZoneFormHandler {
 
 pub(crate) struct TypeQualifierHandler;
 
-#[step_entity(name = "TYPE_QUALIFIER", pass = Pass8ShapeAspect)]
+#[step_entity(name = "TYPE_QUALIFIER")]
 impl SimpleEntityHandler for TypeQualifierHandler {
     type WriteInput = TypeQualifier;
 
@@ -93,7 +93,7 @@ impl SimpleEntityHandler for TypeQualifierHandler {
 
 pub(crate) struct ValueFormatTypeQualifierHandler;
 
-#[step_entity(name = "VALUE_FORMAT_TYPE_QUALIFIER", pass = Pass8ShapeAspect)]
+#[step_entity(name = "VALUE_FORMAT_TYPE_QUALIFIER")]
 impl SimpleEntityHandler for ValueFormatTypeQualifierHandler {
     type WriteInput = ValueFormatTypeQualifier;
 
@@ -124,7 +124,7 @@ impl SimpleEntityHandler for ValueFormatTypeQualifierHandler {
 
 pub(crate) struct DraughtingPreDefinedTextFontHandler;
 
-#[step_entity(name = "DRAUGHTING_PRE_DEFINED_TEXT_FONT", pass = Pass8ShapeAspect)]
+#[step_entity(name = "DRAUGHTING_PRE_DEFINED_TEXT_FONT")]
 impl SimpleEntityHandler for DraughtingPreDefinedTextFontHandler {
     type WriteInput = DraughtingPreDefinedTextFont;
 
@@ -161,7 +161,7 @@ pub(crate) struct AnnotationPlaneHandler;
 /// attribute `elements` (a `DRAUGHTING_CALLOUT` list) is not modelled and
 /// is ignored on read. An `ANNOTATION_PLANE` whose `item` does not resolve
 /// is silently dropped, symmetric on re-read.
-#[step_entity(name = "ANNOTATION_PLANE", pass = Pass7AnnotationPlane)]
+#[step_entity(name = "ANNOTATION_PLANE")]
 impl SimpleEntityHandler for AnnotationPlaneHandler {
     type WriteInput = AnnotationPlane;
 
@@ -225,7 +225,7 @@ pub(crate) struct TessellatedAnnotationOccurrenceHandler;
 /// `viz_psa_id_map` (like `ANNOTATION_PLANE`); `item` is a
 /// `TESSELLATED_GEOMETRIC_SET` resolved through `tessellated_item_id_map`.
 /// An occurrence whose `item` does not resolve is silently dropped.
-#[step_entity(name = "TESSELLATED_ANNOTATION_OCCURRENCE", pass = Pass7AnnotationPlane)]
+#[step_entity(name = "TESSELLATED_ANNOTATION_OCCURRENCE")]
 impl SimpleEntityHandler for TessellatedAnnotationOccurrenceHandler {
     type WriteInput = TessellatedAnnotationOccurrence;
 
@@ -289,7 +289,7 @@ pub(crate) struct AnnotationSymbolOccurrenceHandler;
 /// through the generic `representation_item` resolver
 /// (`resolve_representation_item_ref`); occurrences whose `item` does not
 /// resolve are silently dropped, symmetric on re-read.
-#[step_entity(name = "ANNOTATION_SYMBOL_OCCURRENCE", pass = Pass7AnnotationPlane)]
+#[step_entity(name = "ANNOTATION_SYMBOL_OCCURRENCE")]
 impl SimpleEntityHandler for AnnotationSymbolOccurrenceHandler {
     type WriteInput = AnnotationSymbolOccurrence;
 
@@ -348,7 +348,7 @@ pub(crate) struct AnnotationTextOccurrenceHandler;
 /// `annotation_occurrence` subtype whose `item` is the
 /// `annotation_text_occurrence_item` SELECT. Same resolve / drop policy
 /// as `ANNOTATION_SYMBOL_OCCURRENCE`.
-#[step_entity(name = "ANNOTATION_TEXT_OCCURRENCE", pass = Pass7AnnotationPlane)]
+#[step_entity(name = "ANNOTATION_TEXT_OCCURRENCE")]
 impl SimpleEntityHandler for AnnotationTextOccurrenceHandler {
     type WriteInput = AnnotationTextOccurrence;
 
@@ -408,7 +408,7 @@ pub(crate) struct DraughtingAnnotationOccurrenceHandler;
 /// constraints) to `ref_representation_item`. step-io resolves `item`
 /// through `resolve_representation_item_ref`; unresolved items are
 /// silently dropped.
-#[step_entity(name = "DRAUGHTING_ANNOTATION_OCCURRENCE", pass = Pass7AnnotationPlane)]
+#[step_entity(name = "DRAUGHTING_ANNOTATION_OCCURRENCE")]
 impl SimpleEntityHandler for DraughtingAnnotationOccurrenceHandler {
     type WriteInput = DraughtingAnnotationOccurrence;
 
@@ -470,7 +470,7 @@ pub(crate) struct AnnotationOccurrenceHandler;
 /// supertype, instantiated directly in some PMI corpora (e.g. as a
 /// `DRAUGHTING_MODEL_ITEM_ASSOCIATION.identified_item` or a `DRAUGHTING_CALLOUT`
 /// content). Same shape/handling as `DRAUGHTING_ANNOTATION_OCCURRENCE`.
-#[step_entity(name = "ANNOTATION_OCCURRENCE", pass = Pass7AnnotationPlane)]
+#[step_entity(name = "ANNOTATION_OCCURRENCE")]
 impl SimpleEntityHandler for AnnotationOccurrenceHandler {
     type WriteInput = PlainAnnotationOccurrence;
 
@@ -534,7 +534,7 @@ pub(crate) struct LeaderCurveHandler;
 /// `ctx.annotation_curve_occurrence_id_map` so the `Pass7AnnotationPlane`
 /// `TERMINATOR_SYMBOL` / `LEADER_TERMINATOR` handlers can resolve their
 /// `annotated_curve` back-reference.
-#[step_entity(name = "LEADER_CURVE", pass = Pass7AnnotationCurve)]
+#[step_entity(name = "LEADER_CURVE")]
 impl SimpleEntityHandler for LeaderCurveHandler {
     type WriteInput = LeaderCurve;
 
@@ -598,7 +598,7 @@ pub(crate) struct AnnotationCurveOccurrenceHandler;
 /// occurrence, symmetric on re-read. Shares the `annotation_curve_occurrence`
 /// arena + `annotation_curve_occurrence_id_map` with `LEADER_CURVE` so
 /// callout contents and `resolve_representation_item_ref` reach it.
-#[step_entity(name = "ANNOTATION_CURVE_OCCURRENCE", pass = Pass7AnnotationCurve)]
+#[step_entity(name = "ANNOTATION_CURVE_OCCURRENCE")]
 impl SimpleEntityHandler for AnnotationCurveOccurrenceHandler {
     type WriteInput = PlainAnnotationCurveOccurrence;
 
@@ -662,7 +662,7 @@ pub(crate) struct TerminatorSymbolHandler;
 /// Unresolved `item` (via `resolve_representation_item_ref`) or
 /// `annotated_curve` (via `annotation_curve_occurrence_id_map`) drops
 /// the occurrence, symmetric on re-read.
-#[step_entity(name = "TERMINATOR_SYMBOL", pass = Pass7AnnotationPlane)]
+#[step_entity(name = "TERMINATOR_SYMBOL")]
 impl SimpleEntityHandler for TerminatorSymbolHandler {
     type WriteInput = TerminatorSymbol;
 
@@ -730,7 +730,7 @@ pub(crate) struct LeaderTerminatorHandler;
 /// `terminator_symbol` subtype. Same shape and resolve / drop policy as
 /// `TerminatorSymbol`; the EXPRESS WHERE narrowing `annotated_curve` to
 /// `LEADER_CURVE` is not enforced at IR level.
-#[step_entity(name = "LEADER_TERMINATOR", pass = Pass7AnnotationPlane)]
+#[step_entity(name = "LEADER_TERMINATOR")]
 impl SimpleEntityHandler for LeaderTerminatorHandler {
     type WriteInput = LeaderTerminator;
 
@@ -837,7 +837,7 @@ pub(crate) struct DraughtingCalloutHandler;
 /// `DRAUGHTING_CALLOUT(name, contents)` — base variant. The supertype is
 /// not abstract in EXPRESS, and fixtures contain many direct
 /// instances. Read into `DraughtingCallout::Plain`.
-#[step_entity(name = "DRAUGHTING_CALLOUT", pass = Pass7DraughtingCallout)]
+#[step_entity(name = "DRAUGHTING_CALLOUT")]
 impl SimpleEntityHandler for DraughtingCalloutHandler {
     type WriteInput = DraughtingCalloutData;
 
@@ -877,7 +877,7 @@ pub(crate) struct LeaderDirectedCalloutHandler;
 /// `LEADER_DIRECTED_CALLOUT(name, contents)` — same shape as the base
 /// supertype. EXPRESS WHERE narrows `contents` to include a
 /// `LEADER_CURVE`; the IR carries the same shape without enforcement.
-#[step_entity(name = "LEADER_DIRECTED_CALLOUT", pass = Pass7DraughtingCallout)]
+#[step_entity(name = "LEADER_DIRECTED_CALLOUT")]
 impl SimpleEntityHandler for LeaderDirectedCalloutHandler {
     type WriteInput = DraughtingCalloutData;
 
@@ -917,10 +917,7 @@ pub(crate) struct DraughtingCalloutRelationshipHandler;
 /// `DRAUGHTING_CALLOUT_RELATIONSHIP(name, description, relating, related)`
 /// — pairs two `draughting_callout` instances. Either ref unresolved drops
 /// the relationship.
-#[step_entity(
-    name = "DRAUGHTING_CALLOUT_RELATIONSHIP",
-    pass = Pass8DraughtingCalloutRelationship
-)]
+#[step_entity(name = "DRAUGHTING_CALLOUT_RELATIONSHIP")]
 impl SimpleEntityHandler for DraughtingCalloutRelationshipHandler {
     type WriteInput = DraughtingCalloutRelationship;
 
@@ -976,7 +973,7 @@ pub(crate) struct MeasureQualificationHandler;
 /// `value_format_type_qualifier_id_map`. The other two `value_qualifier`
 /// SELECT members (`precision_qualifier` / `uncertainty_qualifier`)
 /// have corpus 0 and are silently dropped (`ApprovalItem` precedent).
-#[step_entity(name = "MEASURE_QUALIFICATION", pass = Pass8MeasureQualification)]
+#[step_entity(name = "MEASURE_QUALIFICATION")]
 impl SimpleEntityHandler for MeasureQualificationHandler {
     type WriteInput = MeasureQualification;
 
@@ -1048,7 +1045,7 @@ pub(crate) struct ProjectedZoneDefinitionHandler;
 /// `mwu_id_map`. Required refs (`zone` / `projection_end` / `projected_length`)
 /// unresolved drop the occurrence; individual boundary refs skip
 /// silently.
-#[step_entity(name = "PROJECTED_ZONE_DEFINITION", pass = Pass8ProjectedZoneDefinition)]
+#[step_entity(name = "PROJECTED_ZONE_DEFINITION")]
 impl SimpleEntityHandler for ProjectedZoneDefinitionHandler {
     type WriteInput = ProjectedZoneDefinition;
 
@@ -1116,7 +1113,7 @@ pub(crate) struct GeometricToleranceRelationshipHandler;
 /// — pairs two `geometric_tolerance` entries. Each ref resolves via
 /// `resolve_geometric_tolerance_ref` (`Plain` vs `WithDatumReference` branch).
 /// Either side unresolved drops the relationship, symmetric on re-read.
-#[step_entity(name = "GEOMETRIC_TOLERANCE_RELATIONSHIP", pass = Pass8GtRelationship)]
+#[step_entity(name = "GEOMETRIC_TOLERANCE_RELATIONSHIP")]
 impl SimpleEntityHandler for GeometricToleranceRelationshipHandler {
     type WriteInput = GeometricToleranceRelationship;
 
@@ -1195,7 +1192,7 @@ pub(crate) struct DatumHandler;
 /// `SHAPE_ASPECT`; an unresolved `of_shape` drops the datum, symmetric on
 /// re-read. `product_definitional` is the inherited `shape_aspect` BOOLEAN
 /// (read as `bool`, like every other shape-aspect-family entity).
-#[step_entity(name = "DATUM", pass = Pass8ShapeAspect)]
+#[step_entity(name = "DATUM")]
 impl SimpleEntityHandler for DatumHandler {
     type WriteInput = DatumWriteInput;
 
@@ -1273,7 +1270,7 @@ pub(crate) struct DatumFeatureWriteInput {
 /// resolves onto it through `resolve_shape_aspect_ref`. Shares the arena
 /// with the `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` subtype through
 /// [`DatumFeatureKind`](crate::ir::DatumFeatureKind).
-#[step_entity(name = "DATUM_FEATURE", pass = Pass8ShapeAspect)]
+#[step_entity(name = "DATUM_FEATURE")]
 impl SimpleEntityHandler for DatumFeatureHandler {
     type WriteInput = DatumFeatureWriteInput;
 
@@ -1304,7 +1301,7 @@ pub(crate) struct DimensionalSizeWithDatumFeatureHandler;
 /// `shape_aspect` body
 /// and the [`DatumFeatureId`](crate::ir::DatumFeatureId) namespace with
 /// plain `DATUM_FEATURE`; the kind discriminant captures the subtype.
-#[step_entity(name = "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE", pass = Pass8ShapeAspect)]
+#[step_entity(name = "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE")]
 impl SimpleEntityHandler for DimensionalSizeWithDatumFeatureHandler {
     type WriteInput = DatumFeatureWriteInput;
 
@@ -1437,7 +1434,7 @@ fn write_dimensional_size(buf: &mut WriteBuffer, ds: DimensionalSize) -> u64 {
 
 pub(crate) struct DimensionalSizeHandler;
 
-#[step_entity(name = "DIMENSIONAL_SIZE", pass = Pass8Dimensional)]
+#[step_entity(name = "DIMENSIONAL_SIZE")]
 impl SimpleEntityHandler for DimensionalSizeHandler {
     type WriteInput = DimensionalSize;
 
@@ -1475,7 +1472,7 @@ impl SimpleEntityHandler for DimensionalSizeHandler {
 
 pub(crate) struct AngularSizeHandler;
 
-#[step_entity(name = "ANGULAR_SIZE", pass = Pass8Dimensional)]
+#[step_entity(name = "ANGULAR_SIZE")]
 impl SimpleEntityHandler for AngularSizeHandler {
     type WriteInput = DimensionalSize;
 
@@ -1589,7 +1586,7 @@ fn write_dimensional_location(buf: &mut WriteBuffer, dl: DimensionalLocation) ->
 
 pub(crate) struct DimensionalLocationHandler;
 
-#[step_entity(name = "DIMENSIONAL_LOCATION", pass = Pass8Dimensional)]
+#[step_entity(name = "DIMENSIONAL_LOCATION")]
 impl SimpleEntityHandler for DimensionalLocationHandler {
     type WriteInput = DimensionalLocation;
 
@@ -1620,7 +1617,7 @@ impl SimpleEntityHandler for DimensionalLocationHandler {
 
 pub(crate) struct DirectedDimensionalLocationHandler;
 
-#[step_entity(name = "DIRECTED_DIMENSIONAL_LOCATION", pass = Pass8Dimensional)]
+#[step_entity(name = "DIRECTED_DIMENSIONAL_LOCATION")]
 impl SimpleEntityHandler for DirectedDimensionalLocationHandler {
     type WriteInput = DimensionalLocation;
 
@@ -1651,7 +1648,7 @@ impl SimpleEntityHandler for DirectedDimensionalLocationHandler {
 
 pub(crate) struct AngularLocationHandler;
 
-#[step_entity(name = "ANGULAR_LOCATION", pass = Pass8Dimensional)]
+#[step_entity(name = "ANGULAR_LOCATION")]
 impl SimpleEntityHandler for AngularLocationHandler {
     type WriteInput = DimensionalLocation;
 
@@ -1915,7 +1912,7 @@ fn emit_modifier_set(modifiers: &[crate::ir::GeometricToleranceModifier]) -> Vec
 
 pub(crate) struct FlatnessToleranceHandler;
 
-#[step_entity(name = "FLATNESS_TOLERANCE", pass = Pass8GeometricTolerance)]
+#[step_entity(name = "FLATNESS_TOLERANCE")]
 impl SimpleEntityHandler for FlatnessToleranceHandler {
     type WriteInput = GeometricTolerance;
 
@@ -1941,7 +1938,7 @@ impl SimpleEntityHandler for FlatnessToleranceHandler {
 
 pub(crate) struct StraightnessToleranceHandler;
 
-#[step_entity(name = "STRAIGHTNESS_TOLERANCE", pass = Pass8GeometricTolerance)]
+#[step_entity(name = "STRAIGHTNESS_TOLERANCE")]
 impl SimpleEntityHandler for StraightnessToleranceHandler {
     type WriteInput = GeometricTolerance;
 
@@ -1967,7 +1964,7 @@ impl SimpleEntityHandler for StraightnessToleranceHandler {
 
 pub(crate) struct RoundnessToleranceHandler;
 
-#[step_entity(name = "ROUNDNESS_TOLERANCE", pass = Pass8GeometricTolerance)]
+#[step_entity(name = "ROUNDNESS_TOLERANCE")]
 impl SimpleEntityHandler for RoundnessToleranceHandler {
     type WriteInput = GeometricTolerance;
 
@@ -1993,7 +1990,7 @@ impl SimpleEntityHandler for RoundnessToleranceHandler {
 
 pub(crate) struct CylindricityToleranceHandler;
 
-#[step_entity(name = "CYLINDRICITY_TOLERANCE", pass = Pass8GeometricTolerance)]
+#[step_entity(name = "CYLINDRICITY_TOLERANCE")]
 impl SimpleEntityHandler for CylindricityToleranceHandler {
     type WriteInput = GeometricTolerance;
 
@@ -2097,7 +2094,7 @@ pub(crate) fn write_general_datum_reference(
 
 pub(crate) struct DatumReferenceCompartmentHandler;
 
-#[step_entity(name = "DATUM_REFERENCE_COMPARTMENT", pass = Pass8GeneralDatumReference)]
+#[step_entity(name = "DATUM_REFERENCE_COMPARTMENT")]
 impl SimpleEntityHandler for DatumReferenceCompartmentHandler {
     type WriteInput = GeneralDatumReference;
 
@@ -2132,7 +2129,7 @@ impl SimpleEntityHandler for DatumReferenceCompartmentHandler {
 
 pub(crate) struct DatumReferenceElementHandler;
 
-#[step_entity(name = "DATUM_REFERENCE_ELEMENT", pass = Pass8GeneralDatumReference)]
+#[step_entity(name = "DATUM_REFERENCE_ELEMENT")]
 impl SimpleEntityHandler for DatumReferenceElementHandler {
     type WriteInput = GeneralDatumReference;
 
@@ -2512,7 +2509,7 @@ pub(crate) fn write_geometric_tolerance_with_datum_reference(
 
 pub(crate) struct AngularityToleranceHandler;
 
-#[step_entity(name = "ANGULARITY_TOLERANCE", pass = Pass8GtWithDatumReference)]
+#[step_entity(name = "ANGULARITY_TOLERANCE")]
 impl SimpleEntityHandler for AngularityToleranceHandler {
     type WriteInput = GeometricToleranceWithDatumReference;
 
@@ -2549,7 +2546,7 @@ impl SimpleEntityHandler for AngularityToleranceHandler {
 
 pub(crate) struct CircularRunoutToleranceHandler;
 
-#[step_entity(name = "CIRCULAR_RUNOUT_TOLERANCE", pass = Pass8GtWithDatumReference)]
+#[step_entity(name = "CIRCULAR_RUNOUT_TOLERANCE")]
 impl SimpleEntityHandler for CircularRunoutToleranceHandler {
     type WriteInput = GeometricToleranceWithDatumReference;
 
@@ -2586,7 +2583,7 @@ impl SimpleEntityHandler for CircularRunoutToleranceHandler {
 
 pub(crate) struct ConcentricityToleranceHandler;
 
-#[step_entity(name = "CONCENTRICITY_TOLERANCE", pass = Pass8GtWithDatumReference)]
+#[step_entity(name = "CONCENTRICITY_TOLERANCE")]
 impl SimpleEntityHandler for ConcentricityToleranceHandler {
     type WriteInput = GeometricToleranceWithDatumReference;
 
@@ -2623,7 +2620,7 @@ impl SimpleEntityHandler for ConcentricityToleranceHandler {
 
 pub(crate) struct ParallelismToleranceHandler;
 
-#[step_entity(name = "PARALLELISM_TOLERANCE", pass = Pass8GtWithDatumReference)]
+#[step_entity(name = "PARALLELISM_TOLERANCE")]
 impl SimpleEntityHandler for ParallelismToleranceHandler {
     type WriteInput = GeometricToleranceWithDatumReference;
 
@@ -2660,7 +2657,7 @@ impl SimpleEntityHandler for ParallelismToleranceHandler {
 
 pub(crate) struct PerpendicularityToleranceHandler;
 
-#[step_entity(name = "PERPENDICULARITY_TOLERANCE", pass = Pass8GtWithDatumReference)]
+#[step_entity(name = "PERPENDICULARITY_TOLERANCE")]
 impl SimpleEntityHandler for PerpendicularityToleranceHandler {
     type WriteInput = GeometricToleranceWithDatumReference;
 
@@ -2697,7 +2694,7 @@ impl SimpleEntityHandler for PerpendicularityToleranceHandler {
 
 pub(crate) struct SymmetryToleranceHandler;
 
-#[step_entity(name = "SYMMETRY_TOLERANCE", pass = Pass8GtWithDatumReference)]
+#[step_entity(name = "SYMMETRY_TOLERANCE")]
 impl SimpleEntityHandler for SymmetryToleranceHandler {
     type WriteInput = GeometricToleranceWithDatumReference;
 
@@ -2734,7 +2731,7 @@ impl SimpleEntityHandler for SymmetryToleranceHandler {
 
 pub(crate) struct TotalRunoutToleranceHandler;
 
-#[step_entity(name = "TOTAL_RUNOUT_TOLERANCE", pass = Pass8GtWithDatumReference)]
+#[step_entity(name = "TOTAL_RUNOUT_TOLERANCE")]
 impl SimpleEntityHandler for TotalRunoutToleranceHandler {
     type WriteInput = GeometricToleranceWithDatumReference;
 
@@ -2773,7 +2770,6 @@ pub(crate) struct PositionToleranceHandler;
 
 #[step_entity_complex(
     name = "POSITION_TOLERANCE",
-    pass = Pass8GtWithDatumReference,
     cases = [
         ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "POSITION_TOLERANCE"],
         ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "POSITION_TOLERANCE"],
@@ -2811,7 +2807,6 @@ pub(crate) struct SurfaceProfileToleranceHandler;
 
 #[step_entity_complex(
     name = "SURFACE_PROFILE_TOLERANCE",
-    pass = Pass8GtWithDatumReference,
     cases = [
         ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "SURFACE_PROFILE_TOLERANCE"],
         ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "SURFACE_PROFILE_TOLERANCE"],
@@ -2850,7 +2845,6 @@ pub(crate) struct LineProfileToleranceHandler;
 
 #[step_entity_complex(
     name = "LINE_PROFILE_TOLERANCE",
-    pass = Pass8GtWithDatumReference,
     cases = [["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "LINE_PROFILE_TOLERANCE"]]
 )]
 impl ComplexEntityHandler for LineProfileToleranceHandler {
@@ -2895,7 +2889,7 @@ fn emit_tolerance_magnitude(buf: &mut WriteBuffer, m: &ToleranceMagnitude) -> u6
 
 pub(crate) struct ToleranceValueHandler;
 
-#[step_entity(name = "TOLERANCE_VALUE", pass = Pass8ToleranceValue)]
+#[step_entity(name = "TOLERANCE_VALUE")]
 impl SimpleEntityHandler for ToleranceValueHandler {
     type WriteInput = ToleranceValue;
 
@@ -2943,7 +2937,7 @@ pub(crate) fn write_tolerance_value(buf: &mut WriteBuffer, tv: &ToleranceValue) 
 
 pub(crate) struct LimitsAndFitsHandler;
 
-#[step_entity(name = "LIMITS_AND_FITS", pass = Pass8ToleranceValue)]
+#[step_entity(name = "LIMITS_AND_FITS")]
 impl SimpleEntityHandler for LimitsAndFitsHandler {
     type WriteInput = LimitsAndFits;
 
@@ -3022,7 +3016,7 @@ fn resolve_dimensional_characteristic(
 
 pub(crate) struct PlusMinusToleranceHandler;
 
-#[step_entity(name = "PLUS_MINUS_TOLERANCE", pass = Pass8PlusMinusTolerance)]
+#[step_entity(name = "PLUS_MINUS_TOLERANCE")]
 impl SimpleEntityHandler for PlusMinusToleranceHandler {
     type WriteInput = PlusMinusTolerance;
 
@@ -3085,7 +3079,6 @@ pub(crate) struct FlatnessToleranceComplexHandler;
 
 #[step_entity_complex(
     name = "FLATNESS_TOLERANCE",
-    pass = Pass8GtWithDatumReference,
     cases = [
         ["FLATNESS_TOLERANCE", "GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT", "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT"],
         // DEFINED_UNIT without the AREA_UNIT subtype (area is optional). Absent
@@ -3119,7 +3112,6 @@ pub(crate) struct RoundnessToleranceComplexHandler;
 
 #[step_entity_complex(
     name = "ROUNDNESS_TOLERANCE",
-    pass = Pass8GtWithDatumReference,
     cases = [["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "ROUNDNESS_TOLERANCE"]]
 )]
 impl ComplexEntityHandler for RoundnessToleranceComplexHandler {
@@ -3147,7 +3139,6 @@ pub(crate) struct StraightnessToleranceComplexHandler;
 
 #[step_entity_complex(
     name = "STRAIGHTNESS_TOLERANCE",
-    pass = Pass8GtWithDatumReference,
     cases = [["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT", "STRAIGHTNESS_TOLERANCE"]]
 )]
 impl ComplexEntityHandler for StraightnessToleranceComplexHandler {
@@ -3217,7 +3208,6 @@ pub(crate) struct ParallelismToleranceComplexHandler;
 
 #[step_entity_complex(
     name = "PARALLELISM_TOLERANCE",
-    pass = Pass8GtWithDatumReference,
     cases = [["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "PARALLELISM_TOLERANCE"]]
 )]
 impl ComplexEntityHandler for ParallelismToleranceComplexHandler {
@@ -3254,7 +3244,6 @@ pub(crate) struct PerpendicularityToleranceComplexHandler;
 
 #[step_entity_complex(
     name = "PERPENDICULARITY_TOLERANCE",
-    pass = Pass8GtWithDatumReference,
     cases = [["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "PERPENDICULARITY_TOLERANCE"]]
 )]
 impl ComplexEntityHandler for PerpendicularityToleranceComplexHandler {
@@ -3291,7 +3280,6 @@ pub(crate) struct CircularRunoutToleranceComplexHandler;
 
 #[step_entity_complex(
     name = "CIRCULAR_RUNOUT_TOLERANCE",
-    pass = Pass8GtWithDatumReference,
     cases = [["CIRCULAR_RUNOUT_TOLERANCE", "GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS"]]
 )]
 impl ComplexEntityHandler for CircularRunoutToleranceComplexHandler {
@@ -3326,7 +3314,7 @@ impl ComplexEntityHandler for CircularRunoutToleranceComplexHandler {
 
 pub(crate) struct DraughtingModelItemAssociationHandler;
 
-#[step_entity(name = "DRAUGHTING_MODEL_ITEM_ASSOCIATION", pass = Pass8Dmia)]
+#[step_entity(name = "DRAUGHTING_MODEL_ITEM_ASSOCIATION")]
 impl SimpleEntityHandler for DraughtingModelItemAssociationHandler {
     type WriteInput = DraughtingModelItemAssociation;
 

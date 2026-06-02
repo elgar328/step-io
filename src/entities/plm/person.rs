@@ -14,7 +14,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct PersonHandler;
 
-#[step_entity(name = "PERSON", pass = Pass9PlmPoLeaves)]
+#[step_entity(name = "PERSON")]
 impl SimpleEntityHandler for PersonHandler {
     type WriteInput = Person;
 

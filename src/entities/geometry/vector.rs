@@ -23,7 +23,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct VectorHandler;
 
-#[step_entity(name = "VECTOR", pass = Pass2)]
+#[step_entity(name = "VECTOR")]
 impl SimpleEntityHandler for VectorHandler {
     type WriteInput = (DirectionId, f64);
 

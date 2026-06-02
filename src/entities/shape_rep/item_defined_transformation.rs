@@ -17,7 +17,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ItemDefinedTransformationHandler;
 
-#[step_entity(name = "ITEM_DEFINED_TRANSFORMATION", pass = Pass6Idt)]
+#[step_entity(name = "ITEM_DEFINED_TRANSFORMATION")]
 impl SimpleEntityHandler for ItemDefinedTransformationHandler {
     type WriteInput = Transform3d;
 

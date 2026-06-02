@@ -16,7 +16,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ProductDefinitionContextAssociationHandler;
 
-#[step_entity(name = "PRODUCT_DEFINITION_CONTEXT_ASSOCIATION", pass = Pass9Pdca)]
+#[step_entity(name = "PRODUCT_DEFINITION_CONTEXT_ASSOCIATION")]
 impl SimpleEntityHandler for ProductDefinitionContextAssociationHandler {
     type WriteInput = ProductDefinitionContextAssociation;
 

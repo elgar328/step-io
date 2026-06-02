@@ -28,7 +28,6 @@ pub(crate) struct RationalBsplineCurve2dHandler;
 
 #[step_entity_complex(
     name = "RATIONAL_B_SPLINE_CURVE",
-    pass = Pass4aRational,
     is_2d,
     cases = [[
         "BOUNDED_CURVE", "B_SPLINE_CURVE", "B_SPLINE_CURVE_WITH_KNOTS", "CURVE",

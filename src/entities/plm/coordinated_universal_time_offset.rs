@@ -12,7 +12,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct CoordinatedUniversalTimeOffsetHandler;
 
-#[step_entity(name = "COORDINATED_UNIVERSAL_TIME_OFFSET", pass = Pass9PlmDateLeaves)]
+#[step_entity(name = "COORDINATED_UNIVERSAL_TIME_OFFSET")]
 impl SimpleEntityHandler for CoordinatedUniversalTimeOffsetHandler {
     type WriteInput = CoordinatedUniversalTimeOffset;
 

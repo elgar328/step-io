@@ -18,10 +18,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct DimensionalCharacteristicRepresentationHandler;
 
-#[step_entity(
-    name = "DIMENSIONAL_CHARACTERISTIC_REPRESENTATION",
-    pass = Pass8DimensionalCharacteristicRepresentation
-)]
+#[step_entity(name = "DIMENSIONAL_CHARACTERISTIC_REPRESENTATION")]
 impl SimpleEntityHandler for DimensionalCharacteristicRepresentationHandler {
     type WriteInput = DimensionalCharacteristicRepresentation;
 

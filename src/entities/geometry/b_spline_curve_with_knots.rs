@@ -18,7 +18,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct BSplineCurveWithKnotsHandler;
 
-#[step_entity(name = "B_SPLINE_CURVE_WITH_KNOTS", pass = Pass4Leaf)]
+#[step_entity(name = "B_SPLINE_CURVE_WITH_KNOTS")]
 impl SimpleEntityHandler for BSplineCurveWithKnotsHandler {
     type WriteInput = NurbsCurve;
 

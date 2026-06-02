@@ -20,7 +20,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct DatumSystemHandler;
 
-#[step_entity(name = "DATUM_SYSTEM", pass = Pass8DatumSystem)]
+#[step_entity(name = "DATUM_SYSTEM")]
 impl SimpleEntityHandler for DatumSystemHandler {
     type WriteInput = DatumSystem;
 

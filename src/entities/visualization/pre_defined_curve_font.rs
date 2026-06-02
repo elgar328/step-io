@@ -20,7 +20,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct PreDefinedCurveFontHandler;
 
-#[step_entity(name = "PRE_DEFINED_CURVE_FONT", pass = Pass7Colour)]
+#[step_entity(name = "PRE_DEFINED_CURVE_FONT")]
 impl SimpleEntityHandler for PreDefinedCurveFontHandler {
     type WriteInput = PreDefinedCurveFontData;
 

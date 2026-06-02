@@ -19,7 +19,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct EdgeLoopHandler;
 
-#[step_entity(name = "EDGE_LOOP", pass = Pass5EdgeLoop)]
+#[step_entity(name = "EDGE_LOOP")]
 impl SimpleEntityHandler for EdgeLoopHandler {
     type WriteInput = Vec<OrientedEdge>;
 

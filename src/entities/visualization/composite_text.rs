@@ -12,7 +12,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct CompositeTextHandler;
 
-#[step_entity(name = "COMPOSITE_TEXT", pass = Pass8CompositeText)]
+#[step_entity(name = "COMPOSITE_TEXT")]
 impl SimpleEntityHandler for CompositeTextHandler {
     type WriteInput = CompositeText;
 

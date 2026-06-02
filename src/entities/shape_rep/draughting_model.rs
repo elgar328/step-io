@@ -27,7 +27,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct DraughtingModelHandler;
 
-#[step_entity(name = "DRAUGHTING_MODEL", pass = Pass8DraughtingModel)]
+#[step_entity(name = "DRAUGHTING_MODEL")]
 impl SimpleEntityHandler for DraughtingModelHandler {
     type WriteInput = DraughtingModel;
 

@@ -16,7 +16,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct CcDesignApprovalHandler;
 
-#[step_entity(name = "CC_DESIGN_APPROVAL", pass = Pass9PlmAa)]
+#[step_entity(name = "CC_DESIGN_APPROVAL")]
 impl SimpleEntityHandler for CcDesignApprovalHandler {
     type WriteInput = CcDesignApproval;
 

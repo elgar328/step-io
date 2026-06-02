@@ -35,7 +35,7 @@ pub(crate) struct ProductDefinitionShapeWriteInput {
 
 pub(crate) struct ProductDefinitionShapeHandler;
 
-#[step_entity(name = "PRODUCT_DEFINITION_SHAPE", pass = Pass6PdsClassify)]
+#[step_entity(name = "PRODUCT_DEFINITION_SHAPE")]
 impl SimpleEntityHandler for ProductDefinitionShapeHandler {
     type WriteInput = ProductDefinitionShapeWriteInput;
 

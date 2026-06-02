@@ -19,7 +19,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ProductDefinitionWithAssociatedDocumentsHandler;
 
-#[step_entity(name = "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS", pass = Pass6Pdef)]
+#[step_entity(name = "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS")]
 impl SimpleEntityHandler for ProductDefinitionWithAssociatedDocumentsHandler {
     type WriteInput = ProductDefinitionWriteInput;
 

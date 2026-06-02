@@ -23,7 +23,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct AreaUnitHandler;
 
-#[step_entity(name = "AREA_UNIT", pass = Pass0Du)]
+#[step_entity(name = "AREA_UNIT")]
 impl SimpleEntityHandler for AreaUnitHandler {
     type WriteInput = Vec<u64>;
 

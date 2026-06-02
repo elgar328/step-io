@@ -13,7 +13,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ApplicationContextHandler;
 
-#[step_entity(name = "APPLICATION_CONTEXT", pass = Pass9PlmAppContext)]
+#[step_entity(name = "APPLICATION_CONTEXT")]
 impl SimpleEntityHandler for ApplicationContextHandler {
     type WriteInput = ApplicationContext;
 

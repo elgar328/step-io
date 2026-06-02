@@ -18,7 +18,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct CurveStyleHandler;
 
-#[step_entity(name = "CURVE_STYLE", pass = Pass7CurveStyle)]
+#[step_entity(name = "CURVE_STYLE")]
 impl SimpleEntityHandler for CurveStyleHandler {
     type WriteInput = CurveStyle;
 

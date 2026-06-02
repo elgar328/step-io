@@ -16,7 +16,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct AppliedGroupAssignmentHandler;
 
-#[step_entity(name = "APPLIED_GROUP_ASSIGNMENT", pass = Pass9PlmGa)]
+#[step_entity(name = "APPLIED_GROUP_ASSIGNMENT")]
 impl SimpleEntityHandler for AppliedGroupAssignmentHandler {
     type WriteInput = AppliedGroupAssignment;
 

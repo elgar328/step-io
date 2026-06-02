@@ -19,7 +19,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct DirectionHandler;
 
-#[step_entity(name = "DIRECTION", pass = Pass1)]
+#[step_entity(name = "DIRECTION")]
 impl SimpleEntityHandler for DirectionHandler {
     type WriteInput = DirectionId;
 

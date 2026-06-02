@@ -14,7 +14,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ExternalSourceHandler;
 
-#[step_entity(name = "EXTERNAL_SOURCE", pass = Pass9PlmIdLeaves)]
+#[step_entity(name = "EXTERNAL_SOURCE")]
 impl SimpleEntityHandler for ExternalSourceHandler {
     type WriteInput = ExternalSource;
 

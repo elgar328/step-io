@@ -22,7 +22,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ContextDependentOverRidingStyledItemHandler;
 
-#[step_entity(name = "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM", pass = Pass7ContextDependent)]
+#[step_entity(name = "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM")]
 impl SimpleEntityHandler for ContextDependentOverRidingStyledItemHandler {
     type WriteInput = ContextDependentOverRidingStyledItem;
 

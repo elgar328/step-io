@@ -15,7 +15,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ProductDefinitionContextHandler;
 
-#[step_entity(name = "PRODUCT_DEFINITION_CONTEXT", pass = Pass9AssemblyContext)]
+#[step_entity(name = "PRODUCT_DEFINITION_CONTEXT")]
 impl SimpleEntityHandler for ProductDefinitionContextHandler {
     type WriteInput = ProductDefinitionContext;
 

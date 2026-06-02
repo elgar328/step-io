@@ -21,7 +21,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct OffsetCurve3dHandler;
 
-#[step_entity(name = "OFFSET_CURVE_3D", pass = Pass4_4Offset)]
+#[step_entity(name = "OFFSET_CURVE_3D")]
 impl SimpleEntityHandler for OffsetCurve3dHandler {
     type WriteInput = OffsetCurve3d;
 

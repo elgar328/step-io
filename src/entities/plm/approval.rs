@@ -13,7 +13,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ApprovalHandler;
 
-#[step_entity(name = "APPROVAL", pass = Pass9PlmApproval)]
+#[step_entity(name = "APPROVAL")]
 impl SimpleEntityHandler for ApprovalHandler {
     type WriteInput = Approval;
 

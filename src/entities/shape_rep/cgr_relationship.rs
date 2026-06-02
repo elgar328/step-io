@@ -24,10 +24,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ConstructiveGeometryRepresentationRelationshipHandler;
 
-#[step_entity(
-    name = "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP",
-    pass = Pass8CgrrRead
-)]
+#[step_entity(name = "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP")]
 impl SimpleEntityHandler for ConstructiveGeometryRepresentationRelationshipHandler {
     type WriteInput = ConstructiveGeometryRepresentationRelationship;
 

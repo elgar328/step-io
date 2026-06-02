@@ -30,7 +30,7 @@ pub(crate) struct MakeFromUsageOptionWriteInput {
 
 pub(crate) struct MakeFromUsageOptionHandler;
 
-#[step_entity(name = "MAKE_FROM_USAGE_OPTION", pass = Pass6Pdr)]
+#[step_entity(name = "MAKE_FROM_USAGE_OPTION")]
 impl SimpleEntityHandler for MakeFromUsageOptionHandler {
     type WriteInput = MakeFromUsageOptionWriteInput;
 

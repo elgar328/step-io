@@ -51,7 +51,7 @@ fn bool_attr(b: bool) -> Attribute {
 
 pub(crate) struct ViewVolumeHandler;
 
-#[step_entity(name = "VIEW_VOLUME", pass = Pass8ViewVolume)]
+#[step_entity(name = "VIEW_VOLUME")]
 impl SimpleEntityHandler for ViewVolumeHandler {
     type WriteInput = ViewVolume;
 

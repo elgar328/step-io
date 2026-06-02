@@ -22,7 +22,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct CameraImageHandler;
 
-#[step_entity(name = "CAMERA_IMAGE", pass = Pass8CameraImage)]
+#[step_entity(name = "CAMERA_IMAGE")]
 impl SimpleEntityHandler for CameraImageHandler {
     type WriteInput = CameraImage;
 
@@ -48,7 +48,7 @@ impl SimpleEntityHandler for CameraImageHandler {
 
 pub(crate) struct CameraImage3dWithScaleHandler;
 
-#[step_entity(name = "CAMERA_IMAGE_3D_WITH_SCALE", pass = Pass8CameraImage)]
+#[step_entity(name = "CAMERA_IMAGE_3D_WITH_SCALE")]
 impl SimpleEntityHandler for CameraImage3dWithScaleHandler {
     type WriteInput = CameraImage;
 

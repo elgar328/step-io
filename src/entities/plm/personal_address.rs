@@ -18,7 +18,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct PersonalAddressHandler;
 
-#[step_entity(name = "PERSONAL_ADDRESS", pass = Pass9PlmAddress)]
+#[step_entity(name = "PERSONAL_ADDRESS")]
 impl SimpleEntityHandler for PersonalAddressHandler {
     type WriteInput = Address;
 

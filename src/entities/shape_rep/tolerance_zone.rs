@@ -22,7 +22,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ToleranceZoneHandler;
 
-#[step_entity(name = "TOLERANCE_ZONE", pass = Pass8ToleranceZone)]
+#[step_entity(name = "TOLERANCE_ZONE")]
 impl SimpleEntityHandler for ToleranceZoneHandler {
     type WriteInput = ToleranceZone;
 

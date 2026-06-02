@@ -25,7 +25,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct RepresentationMapHandler;
 
-#[step_entity(name = "REPRESENTATION_MAP", pass = Pass6RepresentationMap)]
+#[step_entity(name = "REPRESENTATION_MAP")]
 impl SimpleEntityHandler for RepresentationMapHandler {
     type WriteInput = RepresentationMap;
 
@@ -84,7 +84,7 @@ impl SimpleEntityHandler for RepresentationMapHandler {
 
 pub(crate) struct MappedItemHandler;
 
-#[step_entity(name = "MAPPED_ITEM", pass = Pass6MappedItem)]
+#[step_entity(name = "MAPPED_ITEM")]
 impl SimpleEntityHandler for MappedItemHandler {
     type WriteInput = MappedItem;
 

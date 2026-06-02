@@ -17,7 +17,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct SurfaceOfLinearExtrusionHandler;
 
-#[step_entity(name = "SURFACE_OF_LINEAR_EXTRUSION", pass = Pass4_4Swept)]
+#[step_entity(name = "SURFACE_OF_LINEAR_EXTRUSION")]
 impl SimpleEntityHandler for SurfaceOfLinearExtrusionHandler {
     type WriteInput = SurfaceOfLinearExtrusion;
 

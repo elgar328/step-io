@@ -20,7 +20,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct GeometricItemSpecificUsageHandler;
 
-#[step_entity(name = "GEOMETRIC_ITEM_SPECIFIC_USAGE", pass = Pass8Gisu)]
+#[step_entity(name = "GEOMETRIC_ITEM_SPECIFIC_USAGE")]
 impl SimpleEntityHandler for GeometricItemSpecificUsageHandler {
     type WriteInput = GeometricItemSpecificUsage;
 

@@ -16,7 +16,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct FillAreaStyleColourHandler;
 
-#[step_entity(name = "FILL_AREA_STYLE_COLOUR", pass = Pass7FillColour)]
+#[step_entity(name = "FILL_AREA_STYLE_COLOUR")]
 impl SimpleEntityHandler for FillAreaStyleColourHandler {
     type WriteInput = FillAreaStyleColour;
 

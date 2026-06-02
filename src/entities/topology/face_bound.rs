@@ -96,7 +96,7 @@ pub(super) fn write_face_bound_body(
 
 pub(crate) struct FaceBoundHandler;
 
-#[step_entity(name = "FACE_BOUND", pass = Pass5FaceBound)]
+#[step_entity(name = "FACE_BOUND")]
 impl SimpleEntityHandler for FaceBoundHandler {
     type WriteInput = (u64, Orientation);
 

@@ -16,7 +16,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct FillAreaStyleHandler;
 
-#[step_entity(name = "FILL_AREA_STYLE", pass = Pass7FillArea)]
+#[step_entity(name = "FILL_AREA_STYLE")]
 impl SimpleEntityHandler for FillAreaStyleHandler {
     type WriteInput = FillAreaStyle;
 

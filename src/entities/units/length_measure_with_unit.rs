@@ -23,7 +23,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct LengthMeasureWithUnitHandler;
 
-#[step_entity(name = "LENGTH_MEASURE_WITH_UNIT", pass = Pass0MwuDue)]
+#[step_entity(name = "LENGTH_MEASURE_WITH_UNIT")]
 impl SimpleEntityHandler for LengthMeasureWithUnitHandler {
     /// `(value, unit_step_id)` — value as f64, unit ref resolved to its
     /// emitted STEP entity id by the writer's named-unit cache.

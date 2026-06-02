@@ -24,7 +24,7 @@ pub(crate) struct ShapeAspectWriteInput {
 
 pub(crate) struct ShapeAspectHandler;
 
-#[step_entity(name = "SHAPE_ASPECT", pass = Pass8ShapeAspect)]
+#[step_entity(name = "SHAPE_ASPECT")]
 impl SimpleEntityHandler for ShapeAspectHandler {
     type WriteInput = ShapeAspectWriteInput;
 

@@ -22,7 +22,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct BSplineCurve2dWithKnotsHandler;
 
-#[step_entity(name = "B_SPLINE_CURVE_WITH_KNOTS", pass = Pass4aCurve, is_2d)]
+#[step_entity(name = "B_SPLINE_CURVE_WITH_KNOTS", is_2d)]
 impl SimpleEntityHandler for BSplineCurve2dWithKnotsHandler {
     type WriteInput = NurbsCurve2d;
 

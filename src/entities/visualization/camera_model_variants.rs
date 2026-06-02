@@ -23,7 +23,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct CameraModelD3WithHlhsrHandler;
 
-#[step_entity(name = "CAMERA_MODEL_D3_WITH_HLHSR", pass = Pass8CameraModel)]
+#[step_entity(name = "CAMERA_MODEL_D3_WITH_HLHSR")]
 impl SimpleEntityHandler for CameraModelD3WithHlhsrHandler {
     type WriteInput = CameraModelD3WithHlhsr;
 
@@ -75,7 +75,7 @@ impl SimpleEntityHandler for CameraModelD3WithHlhsrHandler {
 
 pub(crate) struct CameraModelD3MultiClippingHandler;
 
-#[step_entity(name = "CAMERA_MODEL_D3_MULTI_CLIPPING", pass = Pass8CameraModel)]
+#[step_entity(name = "CAMERA_MODEL_D3_MULTI_CLIPPING")]
 impl SimpleEntityHandler for CameraModelD3MultiClippingHandler {
     type WriteInput = CameraModelD3MultiClipping;
 

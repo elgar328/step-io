@@ -15,7 +15,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct Line2dHandler;
 
-#[step_entity(name = "LINE", pass = Pass4aCurve, is_2d)]
+#[step_entity(name = "LINE", is_2d)]
 impl SimpleEntityHandler for Line2dHandler {
     type WriteInput = Line2;
 

@@ -24,7 +24,7 @@ use step_io_macros::step_entity_complex;
 
 pub(crate) struct LengthUnitHandler;
 
-#[step_entity_complex(name = "LENGTH_UNIT", pass = Pass0Leaf, cases = [
+#[step_entity_complex(name = "LENGTH_UNIT", cases = [
     ["CONVERSION_BASED_UNIT", "LENGTH_UNIT", "NAMED_UNIT"],
     ["LENGTH_UNIT", "NAMED_UNIT", "SI_UNIT"],
 ])]

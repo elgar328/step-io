@@ -20,7 +20,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct DraughtingPreDefinedColourHandler;
 
-#[step_entity(name = "DRAUGHTING_PRE_DEFINED_COLOUR", pass = Pass7Colour)]
+#[step_entity(name = "DRAUGHTING_PRE_DEFINED_COLOUR")]
 impl SimpleEntityHandler for DraughtingPreDefinedColourHandler {
     type WriteInput = DraughtingPreDefinedColour;
 

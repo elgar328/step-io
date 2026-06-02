@@ -25,7 +25,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ConstructiveGeometryRepresentationHandler;
 
-#[step_entity(name = "CONSTRUCTIVE_GEOMETRY_REPRESENTATION", pass = Pass8CgrRead)]
+#[step_entity(name = "CONSTRUCTIVE_GEOMETRY_REPRESENTATION")]
 impl SimpleEntityHandler for ConstructiveGeometryRepresentationHandler {
     type WriteInput = ConstructiveGeometryRepr;
 

@@ -16,7 +16,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct AppliedExternalIdentificationAssignmentHandler;
 
-#[step_entity(name = "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT", pass = Pass9PlmIa)]
+#[step_entity(name = "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT")]
 impl SimpleEntityHandler for AppliedExternalIdentificationAssignmentHandler {
     type WriteInput = AppliedExternalIdentificationAssignment;
 

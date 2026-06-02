@@ -19,7 +19,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct EdgeCurveHandler;
 
-#[step_entity(name = "EDGE_CURVE", pass = Pass5Edge)]
+#[step_entity(name = "EDGE_CURVE")]
 impl SimpleEntityHandler for EdgeCurveHandler {
     type WriteInput = EdgeId;
 

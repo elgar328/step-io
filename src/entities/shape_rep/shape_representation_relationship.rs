@@ -23,7 +23,7 @@ pub(crate) struct ShapeRepresentationRelationshipWriteInput {
 
 pub(crate) struct ShapeRepresentationRelationshipHandler;
 
-#[step_entity(name = "SHAPE_REPRESENTATION_RELATIONSHIP", pass = Pass6SrRel)]
+#[step_entity(name = "SHAPE_REPRESENTATION_RELATIONSHIP")]
 impl SimpleEntityHandler for ShapeRepresentationRelationshipHandler {
     type WriteInput = ShapeRepresentationRelationshipWriteInput;
 

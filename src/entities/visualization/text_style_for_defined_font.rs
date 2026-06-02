@@ -12,7 +12,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct TextStyleForDefinedFontHandler;
 
-#[step_entity(name = "TEXT_STYLE_FOR_DEFINED_FONT", pass = Pass7TextStyleForDefinedFont)]
+#[step_entity(name = "TEXT_STYLE_FOR_DEFINED_FONT")]
 impl SimpleEntityHandler for TextStyleForDefinedFontHandler {
     type WriteInput = TextStyleForDefinedFont;
 

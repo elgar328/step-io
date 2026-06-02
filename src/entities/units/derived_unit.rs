@@ -21,7 +21,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct DerivedUnitHandler;
 
-#[step_entity(name = "DERIVED_UNIT", pass = Pass0Du)]
+#[step_entity(name = "DERIVED_UNIT")]
 impl SimpleEntityHandler for DerivedUnitHandler {
     /// Element STEP entity ids, in source order. Writer wraps them in a
     /// single `Attribute::List(EntityRef…)`.

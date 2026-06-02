@@ -29,7 +29,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct StyledItemHandler;
 
-#[step_entity(name = "STYLED_ITEM", pass = Pass7StyledItem)]
+#[step_entity(name = "STYLED_ITEM")]
 impl SimpleEntityHandler for StyledItemHandler {
     type WriteInput = PlainStyledItem;
 

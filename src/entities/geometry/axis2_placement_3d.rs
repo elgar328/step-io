@@ -21,7 +21,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct Axis2Placement3dHandler;
 
-#[step_entity(name = "AXIS2_PLACEMENT_3D", pass = Pass3)]
+#[step_entity(name = "AXIS2_PLACEMENT_3D")]
 impl SimpleEntityHandler for Axis2Placement3dHandler {
     type WriteInput = Placement3dId;
 

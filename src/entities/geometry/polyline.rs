@@ -17,7 +17,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct PolylineHandler;
 
-#[step_entity(name = "POLYLINE", pass = Pass4Leaf)]
+#[step_entity(name = "POLYLINE")]
 impl SimpleEntityHandler for PolylineHandler {
     type WriteInput = Polyline;
 

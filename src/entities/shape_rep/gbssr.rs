@@ -19,7 +19,7 @@ use super::gbwsr::{
 
 pub(crate) struct GbssrHandler;
 
-#[step_entity(name = "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION", pass = Pass6Gbsr)]
+#[step_entity(name = "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION")]
 impl SimpleEntityHandler for GbssrHandler {
     type WriteInput = WireframeRepresentationWriteInput;
 

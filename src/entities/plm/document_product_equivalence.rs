@@ -16,7 +16,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct DocumentProductEquivalenceHandler;
 
-#[step_entity(name = "DOCUMENT_PRODUCT_EQUIVALENCE", pass = Pass9PlmDocLinkers)]
+#[step_entity(name = "DOCUMENT_PRODUCT_EQUIVALENCE")]
 impl SimpleEntityHandler for DocumentProductEquivalenceHandler {
     type WriteInput = DocumentProductEquivalence;
 

@@ -49,7 +49,7 @@ pub(crate) fn read_product_definition_formation_body(
 
 pub(crate) struct ProductDefinitionFormationHandler;
 
-#[step_entity(name = "PRODUCT_DEFINITION_FORMATION", pass = Pass6PdefFormation)]
+#[step_entity(name = "PRODUCT_DEFINITION_FORMATION")]
 impl SimpleEntityHandler for ProductDefinitionFormationHandler {
     /// PRODUCT entity ref the formation points at.
     type WriteInput = u64;

@@ -17,7 +17,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct PlacedDatumTargetFeatureHandler;
 
-#[step_entity(name = "PLACED_DATUM_TARGET_FEATURE", pass = Pass8ShapeAspect)]
+#[step_entity(name = "PLACED_DATUM_TARGET_FEATURE")]
 impl SimpleEntityHandler for PlacedDatumTargetFeatureHandler {
     type WriteInput = PlacedDatumTargetFeature;
 

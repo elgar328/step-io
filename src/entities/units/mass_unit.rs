@@ -31,7 +31,7 @@ use step_io_macros::step_entity_complex;
 
 pub(crate) struct MassUnitHandler;
 
-#[step_entity_complex(name = "MASS_UNIT", pass = Pass0Leaf, cases = [
+#[step_entity_complex(name = "MASS_UNIT", cases = [
     ["CONVERSION_BASED_UNIT", "MASS_UNIT", "NAMED_UNIT"],
     ["MASS_UNIT", "NAMED_UNIT", "SI_UNIT"],
 ])]

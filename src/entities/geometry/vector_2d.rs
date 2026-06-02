@@ -19,7 +19,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct Vector2dHandler;
 
-#[step_entity(name = "VECTOR", pass = Pass4aVector, is_2d)]
+#[step_entity(name = "VECTOR", is_2d)]
 impl SimpleEntityHandler for Vector2dHandler {
     type WriteInput = (Direction2dId, f64);
 

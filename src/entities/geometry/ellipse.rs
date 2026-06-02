@@ -14,7 +14,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct EllipseHandler;
 
-#[step_entity(name = "ELLIPSE", pass = Pass4Leaf)]
+#[step_entity(name = "ELLIPSE")]
 impl SimpleEntityHandler for EllipseHandler {
     type WriteInput = Ellipse3;
 

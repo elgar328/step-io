@@ -15,7 +15,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct UncertaintyMeasureWithUnitHandler;
 
-#[step_entity(name = "UNCERTAINTY_MEASURE_WITH_UNIT", pass = Pass0Uncertainty)]
+#[step_entity(name = "UNCERTAINTY_MEASURE_WITH_UNIT")]
 impl SimpleEntityHandler for UncertaintyMeasureWithUnitHandler {
     /// `(LengthUncertainty, unit_step_id, measure_type_name)` — caller
     /// (`emit_unit_context`) already emitted the relevant unit (length,

@@ -18,7 +18,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ProductDefinitionFormationWithSourceHandler;
 
-#[step_entity(name = "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE", pass = Pass6PdefFormation)]
+#[step_entity(name = "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE")]
 impl SimpleEntityHandler for ProductDefinitionFormationWithSourceHandler {
     /// PRODUCT entity ref the formation points at.
     type WriteInput = u64;

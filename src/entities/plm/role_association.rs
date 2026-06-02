@@ -15,7 +15,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct RoleAssociationHandler;
 
-#[step_entity(name = "ROLE_ASSOCIATION", pass = Pass9PlmRoleAssoc)]
+#[step_entity(name = "ROLE_ASSOCIATION")]
 impl SimpleEntityHandler for RoleAssociationHandler {
     type WriteInput = RoleAssociation;
 

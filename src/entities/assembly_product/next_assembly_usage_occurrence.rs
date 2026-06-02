@@ -26,7 +26,7 @@ pub(crate) struct NextAssemblyUsageOccurrenceWriteInput {
 
 pub(crate) struct NextAssemblyUsageOccurrenceHandler;
 
-#[step_entity(name = "NEXT_ASSEMBLY_USAGE_OCCURRENCE", pass = Pass6Nauo)]
+#[step_entity(name = "NEXT_ASSEMBLY_USAGE_OCCURRENCE")]
 impl SimpleEntityHandler for NextAssemblyUsageOccurrenceHandler {
     type WriteInput = NextAssemblyUsageOccurrenceWriteInput;
 

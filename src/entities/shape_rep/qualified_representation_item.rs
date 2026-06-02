@@ -14,7 +14,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct QualifiedRepresentationItemHandler;
 
-#[step_entity(name = "QUALIFIED_REPRESENTATION_ITEM", pass = Pass8RepresentationItem)]
+#[step_entity(name = "QUALIFIED_REPRESENTATION_ITEM")]
 impl SimpleEntityHandler for QualifiedRepresentationItemHandler {
     type WriteInput = QualifiedRepresentationItem;
 

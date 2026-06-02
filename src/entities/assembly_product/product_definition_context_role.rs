@@ -13,7 +13,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ProductDefinitionContextRoleHandler;
 
-#[step_entity(name = "PRODUCT_DEFINITION_CONTEXT_ROLE", pass = Pass9PdcRole)]
+#[step_entity(name = "PRODUCT_DEFINITION_CONTEXT_ROLE")]
 impl SimpleEntityHandler for ProductDefinitionContextRoleHandler {
     type WriteInput = ProductDefinitionContextRole;
 

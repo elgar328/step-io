@@ -19,7 +19,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct AreaInSetHandler;
 
-#[step_entity(name = "AREA_IN_SET", pass = Pass8PrSize)]
+#[step_entity(name = "AREA_IN_SET")]
 impl SimpleEntityHandler for AreaInSetHandler {
     type WriteInput = AreaInSet;
 
@@ -62,7 +62,7 @@ impl SimpleEntityHandler for AreaInSetHandler {
 
 pub(crate) struct PresentationSizeHandler;
 
-#[step_entity(name = "PRESENTATION_SIZE", pass = Pass8PrSize)]
+#[step_entity(name = "PRESENTATION_SIZE")]
 impl SimpleEntityHandler for PresentationSizeHandler {
     type WriteInput = PresentationSize;
 

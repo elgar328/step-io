@@ -14,7 +14,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ApprovalDateTimeHandler;
 
-#[step_entity(name = "APPROVAL_DATE_TIME", pass = Pass9PlmApprovalLinkers)]
+#[step_entity(name = "APPROVAL_DATE_TIME")]
 impl SimpleEntityHandler for ApprovalDateTimeHandler {
     type WriteInput = ApprovalDateTime;
 

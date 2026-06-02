@@ -15,7 +15,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct OpenShellHandler;
 
-#[step_entity(name = "OPEN_SHELL", pass = Pass5Shell)]
+#[step_entity(name = "OPEN_SHELL")]
 impl SimpleEntityHandler for OpenShellHandler {
     type WriteInput = ShellId;
 

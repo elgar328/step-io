@@ -16,7 +16,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ApplicationProtocolDefinitionHandler;
 
-#[step_entity(name = "APPLICATION_PROTOCOL_DEFINITION", pass = Pass9PlmAppProtocol)]
+#[step_entity(name = "APPLICATION_PROTOCOL_DEFINITION")]
 impl SimpleEntityHandler for ApplicationProtocolDefinitionHandler {
     type WriteInput = ApplicationProtocolDefinition;
 

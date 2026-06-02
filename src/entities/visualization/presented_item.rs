@@ -20,7 +20,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct PresentedItemRepresentationHandler;
 
-#[step_entity(name = "PRESENTED_ITEM_REPRESENTATION", pass = Pass8PrItem)]
+#[step_entity(name = "PRESENTED_ITEM_REPRESENTATION")]
 impl SimpleEntityHandler for PresentedItemRepresentationHandler {
     type WriteInput = PresentedItemRepresentation;
 
@@ -72,7 +72,7 @@ impl SimpleEntityHandler for PresentedItemRepresentationHandler {
 
 pub(crate) struct AppliedPresentedItemHandler;
 
-#[step_entity(name = "APPLIED_PRESENTED_ITEM", pass = Pass8PrItem)]
+#[step_entity(name = "APPLIED_PRESENTED_ITEM")]
 impl SimpleEntityHandler for AppliedPresentedItemHandler {
     type WriteInput = AppliedPresentedItem;
 

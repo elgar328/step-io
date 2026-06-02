@@ -20,7 +20,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct DescriptiveRepresentationItemHandler;
 
-#[step_entity(name = "DESCRIPTIVE_REPRESENTATION_ITEM", pass = Pass8Measure)]
+#[step_entity(name = "DESCRIPTIVE_REPRESENTATION_ITEM")]
 impl SimpleEntityHandler for DescriptiveRepresentationItemHandler {
     type WriteInput = DescriptiveItem;
 

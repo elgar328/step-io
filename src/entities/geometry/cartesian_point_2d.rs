@@ -21,7 +21,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct CartesianPoint2dHandler;
 
-#[step_entity(name = "CARTESIAN_POINT", pass = Pass1)]
+#[step_entity(name = "CARTESIAN_POINT")]
 impl SimpleEntityHandler for CartesianPoint2dHandler {
     type WriteInput = Point2dId;
 

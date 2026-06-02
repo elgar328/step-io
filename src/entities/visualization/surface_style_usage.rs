@@ -14,7 +14,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct SurfaceStyleUsageHandler;
 
-#[step_entity(name = "SURFACE_STYLE_USAGE", pass = Pass7Usage)]
+#[step_entity(name = "SURFACE_STYLE_USAGE")]
 impl SimpleEntityHandler for SurfaceStyleUsageHandler {
     type WriteInput = SurfaceStyleUsage;
 

@@ -18,7 +18,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ManifoldSolidBrepHandler;
 
-#[step_entity(name = "MANIFOLD_SOLID_BREP", pass = Pass5Solid)]
+#[step_entity(name = "MANIFOLD_SOLID_BREP")]
 impl SimpleEntityHandler for ManifoldSolidBrepHandler {
     type WriteInput = SolidId;
 

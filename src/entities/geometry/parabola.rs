@@ -19,7 +19,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ParabolaHandler;
 
-#[step_entity(name = "PARABOLA", pass = Pass4Leaf)]
+#[step_entity(name = "PARABOLA")]
 impl SimpleEntityHandler for ParabolaHandler {
     type WriteInput = Parabola;
 

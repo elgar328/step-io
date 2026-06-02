@@ -14,7 +14,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct SphericalSurfaceHandler;
 
-#[step_entity(name = "SPHERICAL_SURFACE", pass = Pass4Leaf)]
+#[step_entity(name = "SPHERICAL_SURFACE")]
 impl SimpleEntityHandler for SphericalSurfaceHandler {
     type WriteInput = SphericalSurface;
 

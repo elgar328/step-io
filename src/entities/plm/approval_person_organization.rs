@@ -15,7 +15,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ApprovalPersonOrganizationHandler;
 
-#[step_entity(name = "APPROVAL_PERSON_ORGANIZATION", pass = Pass9PlmApprovalLinkers)]
+#[step_entity(name = "APPROVAL_PERSON_ORGANIZATION")]
 impl SimpleEntityHandler for ApprovalPersonOrganizationHandler {
     type WriteInput = ApprovalPersonOrganization;
 

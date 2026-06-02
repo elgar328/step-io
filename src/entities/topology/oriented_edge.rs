@@ -20,7 +20,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct OrientedEdgeHandler;
 
-#[step_entity(name = "ORIENTED_EDGE", pass = Pass5OrientedEdge)]
+#[step_entity(name = "ORIENTED_EDGE")]
 impl SimpleEntityHandler for OrientedEdgeHandler {
     type WriteInput = OrientedEdge;
 

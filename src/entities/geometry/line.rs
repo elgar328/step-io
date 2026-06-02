@@ -17,7 +17,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct LineHandler;
 
-#[step_entity(name = "LINE", pass = Pass4Leaf)]
+#[step_entity(name = "LINE")]
 impl SimpleEntityHandler for LineHandler {
     type WriteInput = Line3;
 

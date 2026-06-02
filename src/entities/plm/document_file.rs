@@ -15,7 +15,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct DocumentFileHandler;
 
-#[step_entity(name = "DOCUMENT_FILE", pass = Pass9PlmDocument)]
+#[step_entity(name = "DOCUMENT_FILE")]
 impl SimpleEntityHandler for DocumentFileHandler {
     type WriteInput = DocumentFile;
 

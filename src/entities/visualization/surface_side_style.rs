@@ -18,7 +18,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct SurfaceSideStyleHandler;
 
-#[step_entity(name = "SURFACE_SIDE_STYLE", pass = Pass7SurfaceSide)]
+#[step_entity(name = "SURFACE_SIDE_STYLE")]
 impl SimpleEntityHandler for SurfaceSideStyleHandler {
     type WriteInput = SurfaceSideStyle;
 

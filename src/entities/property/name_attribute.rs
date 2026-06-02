@@ -25,7 +25,7 @@ pub(crate) struct NameAttributeWriteInput {
 
 pub(crate) struct NameAttributeHandler;
 
-#[step_entity(name = "NAME_ATTRIBUTE", pass = Pass9PlmAttributes)]
+#[step_entity(name = "NAME_ATTRIBUTE")]
 impl SimpleEntityHandler for NameAttributeHandler {
     type WriteInput = NameAttributeWriteInput;
 

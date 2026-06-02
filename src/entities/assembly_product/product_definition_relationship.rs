@@ -24,7 +24,7 @@ pub(crate) struct ProductDefinitionRelationshipWriteInput {
 
 pub(crate) struct ProductDefinitionRelationshipHandler;
 
-#[step_entity(name = "PRODUCT_DEFINITION_RELATIONSHIP", pass = Pass6Pdr)]
+#[step_entity(name = "PRODUCT_DEFINITION_RELATIONSHIP")]
 impl SimpleEntityHandler for ProductDefinitionRelationshipHandler {
     type WriteInput = ProductDefinitionRelationshipWriteInput;
 

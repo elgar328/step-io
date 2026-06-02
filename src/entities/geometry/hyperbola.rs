@@ -18,7 +18,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct HyperbolaHandler;
 
-#[step_entity(name = "HYPERBOLA", pass = Pass4Leaf)]
+#[step_entity(name = "HYPERBOLA")]
 impl SimpleEntityHandler for HyperbolaHandler {
     type WriteInput = Hyperbola;
 

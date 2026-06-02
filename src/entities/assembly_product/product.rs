@@ -20,7 +20,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ProductHandler;
 
-#[step_entity(name = "PRODUCT", pass = Pass6Product)]
+#[step_entity(name = "PRODUCT")]
 impl SimpleEntityHandler for ProductHandler {
     /// `(product, context)` — `Product` clones from IR (single-emit per
     /// product, so the clone is incidental), `AssemblyContextIds` is `Copy`.

@@ -27,7 +27,7 @@ pub(crate) struct ManifoldSurfaceShapeRepresentationWriteInput {
 
 pub(crate) struct ManifoldSurfaceShapeRepresentationHandler;
 
-#[step_entity(name = "MANIFOLD_SURFACE_SHAPE_REPRESENTATION", pass = Pass6ShapeRep)]
+#[step_entity(name = "MANIFOLD_SURFACE_SHAPE_REPRESENTATION")]
 impl SimpleEntityHandler for ManifoldSurfaceShapeRepresentationHandler {
     type WriteInput = ManifoldSurfaceShapeRepresentationWriteInput;
 

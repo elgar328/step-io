@@ -15,7 +15,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct FaceOuterBoundHandler;
 
-#[step_entity(name = "FACE_OUTER_BOUND", pass = Pass5FaceBound)]
+#[step_entity(name = "FACE_OUTER_BOUND")]
 impl SimpleEntityHandler for FaceOuterBoundHandler {
     type WriteInput = (u64, Orientation);
 

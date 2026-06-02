@@ -24,7 +24,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct InvisibilityHandler;
 
-#[step_entity(name = "INVISIBILITY", pass = Pass8Invisibility)]
+#[step_entity(name = "INVISIBILITY")]
 impl SimpleEntityHandler for InvisibilityHandler {
     type WriteInput = Invisibility;
 

@@ -24,7 +24,7 @@ pub(crate) struct GeneralPropertyAssociationWriteInput {
 
 pub(crate) struct GeneralPropertyAssociationHandler;
 
-#[step_entity(name = "GENERAL_PROPERTY_ASSOCIATION", pass = Pass8Gpa)]
+#[step_entity(name = "GENERAL_PROPERTY_ASSOCIATION")]
 impl SimpleEntityHandler for GeneralPropertyAssociationHandler {
     type WriteInput = GeneralPropertyAssociationWriteInput;
 

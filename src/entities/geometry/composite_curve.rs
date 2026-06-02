@@ -21,7 +21,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct CompositeCurveHandler;
 
-#[step_entity(name = "COMPOSITE_CURVE", pass = Pass4_3cComp)]
+#[step_entity(name = "COMPOSITE_CURVE")]
 impl SimpleEntityHandler for CompositeCurveHandler {
     type WriteInput = CompositeCurve;
 

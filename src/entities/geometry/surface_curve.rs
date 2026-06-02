@@ -235,7 +235,7 @@ pub(super) fn write_surface_or_seam_curve_body(
 
 pub(crate) struct SurfaceCurveHandler;
 
-#[step_entity(name = "SURFACE_CURVE", pass = Pass4_3SurfaceCurve)]
+#[step_entity(name = "SURFACE_CURVE")]
 impl SimpleEntityHandler for SurfaceCurveHandler {
     /// `(curve_3d_ref, wrapper)` — caller (writer wrapper) already emitted
     /// the underlying 3D curve and hands over the preserved wrapper.

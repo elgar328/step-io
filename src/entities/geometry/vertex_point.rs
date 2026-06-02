@@ -19,7 +19,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct VertexPointHandler;
 
-#[step_entity(name = "VERTEX_POINT", pass = Pass5Vertex)]
+#[step_entity(name = "VERTEX_POINT")]
 impl SimpleEntityHandler for VertexPointHandler {
     type WriteInput = VertexId;
 

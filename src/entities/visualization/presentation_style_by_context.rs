@@ -22,7 +22,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct PresentationStyleByContextHandler;
 
-#[step_entity(name = "PRESENTATION_STYLE_BY_CONTEXT", pass = Pass7Assignment)]
+#[step_entity(name = "PRESENTATION_STYLE_BY_CONTEXT")]
 impl SimpleEntityHandler for PresentationStyleByContextHandler {
     type WriteInput = PresentationStyleByContext;
 

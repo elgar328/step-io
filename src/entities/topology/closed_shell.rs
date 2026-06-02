@@ -91,7 +91,7 @@ pub(super) fn write_shell_body(buf: &mut WriteBuffer, id: ShellId) -> Result<u64
 
 pub(crate) struct ClosedShellHandler;
 
-#[step_entity(name = "CLOSED_SHELL", pass = Pass5Shell)]
+#[step_entity(name = "CLOSED_SHELL")]
 impl SimpleEntityHandler for ClosedShellHandler {
     type WriteInput = ShellId;
 

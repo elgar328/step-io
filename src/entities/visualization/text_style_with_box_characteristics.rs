@@ -15,7 +15,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct TextStyleWithBoxCharacteristicsHandler;
 
-#[step_entity(name = "TEXT_STYLE_WITH_BOX_CHARACTERISTICS", pass = Pass7TextStyleBox)]
+#[step_entity(name = "TEXT_STYLE_WITH_BOX_CHARACTERISTICS")]
 impl SimpleEntityHandler for TextStyleWithBoxCharacteristicsHandler {
     type WriteInput = TextStyleWithBoxCharacteristics;
 

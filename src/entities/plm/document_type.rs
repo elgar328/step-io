@@ -12,7 +12,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct DocumentTypeHandler;
 
-#[step_entity(name = "DOCUMENT_TYPE", pass = Pass9PlmDocType)]
+#[step_entity(name = "DOCUMENT_TYPE")]
 impl SimpleEntityHandler for DocumentTypeHandler {
     type WriteInput = DocumentType;
 

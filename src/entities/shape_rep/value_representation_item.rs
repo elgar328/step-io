@@ -17,7 +17,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ValueRepresentationItemHandler;
 
-#[step_entity(name = "VALUE_REPRESENTATION_ITEM", pass = Pass8RepresentationItem)]
+#[step_entity(name = "VALUE_REPRESENTATION_ITEM")]
 impl SimpleEntityHandler for ValueRepresentationItemHandler {
     type WriteInput = ValueRepresentationItem;
 

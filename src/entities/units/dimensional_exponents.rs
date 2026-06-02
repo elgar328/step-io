@@ -17,7 +17,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct DimensionalExponentsHandler;
 
-#[step_entity(name = "DIMENSIONAL_EXPONENTS", pass = Pass0DimExp)]
+#[step_entity(name = "DIMENSIONAL_EXPONENTS")]
 impl SimpleEntityHandler for DimensionalExponentsHandler {
     type WriteInput = DimensionalExponents;
 

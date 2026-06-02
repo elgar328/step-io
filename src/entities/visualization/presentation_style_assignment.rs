@@ -21,7 +21,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct PresentationStyleAssignmentHandler;
 
-#[step_entity(name = "PRESENTATION_STYLE_ASSIGNMENT", pass = Pass7Assignment)]
+#[step_entity(name = "PRESENTATION_STYLE_ASSIGNMENT")]
 impl SimpleEntityHandler for PresentationStyleAssignmentHandler {
     type WriteInput = PresentationStyleAssignmentData;
 

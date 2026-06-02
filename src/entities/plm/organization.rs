@@ -12,7 +12,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct OrganizationHandler;
 
-#[step_entity(name = "ORGANIZATION", pass = Pass9PlmPoLeaves)]
+#[step_entity(name = "ORGANIZATION")]
 impl SimpleEntityHandler for OrganizationHandler {
     type WriteInput = Organization;
 

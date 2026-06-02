@@ -25,7 +25,6 @@ pub(crate) struct RationalQuasiUniformSurfaceHandler;
 
 #[step_entity_complex(
     name = "RATIONAL_B_SPLINE_SURFACE",
-    pass = Pass4Rational,
     cases = [[
         "BOUNDED_SURFACE", "B_SPLINE_SURFACE", "GEOMETRIC_REPRESENTATION_ITEM",
         "QUASI_UNIFORM_SURFACE", "RATIONAL_B_SPLINE_SURFACE", "REPRESENTATION_ITEM", "SURFACE"

@@ -17,7 +17,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct SurfaceOfRevolutionHandler;
 
-#[step_entity(name = "SURFACE_OF_REVOLUTION", pass = Pass4_4Swept)]
+#[step_entity(name = "SURFACE_OF_REVOLUTION")]
 impl SimpleEntityHandler for SurfaceOfRevolutionHandler {
     type WriteInput = SurfaceOfRevolution;
 

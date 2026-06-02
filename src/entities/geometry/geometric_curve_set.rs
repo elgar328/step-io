@@ -93,7 +93,7 @@ pub(crate) fn write_geometric_curve_set(
 
 pub(crate) struct GeometricCurveSetHandler;
 
-#[step_entity(name = "GEOMETRIC_CURVE_SET", pass = Pass6CurveSet)]
+#[step_entity(name = "GEOMETRIC_CURVE_SET")]
 impl SimpleEntityHandler for GeometricCurveSetHandler {
     type WriteInput = CurveSetWriteInput;
 

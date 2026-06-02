@@ -69,7 +69,7 @@ pub(crate) struct PropertyDefinitionWriteInput {
 
 pub(crate) struct PropertyDefinitionHandler;
 
-#[step_entity(name = "PROPERTY_DEFINITION", pass = Pass8PropertyDef)]
+#[step_entity(name = "PROPERTY_DEFINITION")]
 impl SimpleEntityHandler for PropertyDefinitionHandler {
     type WriteInput = PropertyDefinitionWriteInput;
 

@@ -18,7 +18,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct DatumTargetHandler;
 
-#[step_entity(name = "DATUM_TARGET", pass = Pass8ShapeAspect)]
+#[step_entity(name = "DATUM_TARGET")]
 impl SimpleEntityHandler for DatumTargetHandler {
     type WriteInput = DatumTarget;
 

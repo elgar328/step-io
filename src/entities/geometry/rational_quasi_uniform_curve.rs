@@ -25,7 +25,6 @@ pub(crate) struct RationalQuasiUniformCurveHandler;
 
 #[step_entity_complex(
     name = "RATIONAL_B_SPLINE_CURVE",
-    pass = Pass4Rational,
     cases = [[
         "BOUNDED_CURVE", "B_SPLINE_CURVE", "CURVE", "GEOMETRIC_REPRESENTATION_ITEM",
         "QUASI_UNIFORM_CURVE", "RATIONAL_B_SPLINE_CURVE", "REPRESENTATION_ITEM"

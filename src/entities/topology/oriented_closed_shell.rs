@@ -19,7 +19,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct OrientedClosedShellHandler;
 
-#[step_entity(name = "ORIENTED_CLOSED_SHELL", pass = Pass5OrientedShell)]
+#[step_entity(name = "ORIENTED_CLOSED_SHELL")]
 impl SimpleEntityHandler for OrientedClosedShellHandler {
     /// `(closed_shell_ref, orientation)` — caller already emitted the
     /// underlying `CLOSED_SHELL` and supplies the orientation extracted

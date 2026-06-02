@@ -16,7 +16,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct CcDesignDateAndTimeAssignmentHandler;
 
-#[step_entity(name = "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT", pass = Pass9PlmDta)]
+#[step_entity(name = "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT")]
 impl SimpleEntityHandler for CcDesignDateAndTimeAssignmentHandler {
     type WriteInput = CcDesignDateAndTimeAssignment;
 

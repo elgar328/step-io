@@ -17,7 +17,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct SeamCurveHandler;
 
-#[step_entity(name = "SEAM_CURVE", pass = Pass4_3SurfaceCurve)]
+#[step_entity(name = "SEAM_CURVE")]
 impl SimpleEntityHandler for SeamCurveHandler {
     type WriteInput = (u64, SurfaceCurveWrapper);
 

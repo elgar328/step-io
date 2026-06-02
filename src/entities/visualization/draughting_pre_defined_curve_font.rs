@@ -22,7 +22,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct DraughtingPreDefinedCurveFontHandler;
 
-#[step_entity(name = "DRAUGHTING_PRE_DEFINED_CURVE_FONT", pass = Pass7Colour)]
+#[step_entity(name = "DRAUGHTING_PRE_DEFINED_CURVE_FONT")]
 impl SimpleEntityHandler for DraughtingPreDefinedCurveFontHandler {
     type WriteInput = DraughtingPreDefinedCurveFont;
 

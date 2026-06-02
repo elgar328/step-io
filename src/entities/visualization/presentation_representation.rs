@@ -21,7 +21,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct PresentationViewHandler;
 
-#[step_entity(name = "PRESENTATION_VIEW", pass = Pass8PrCore)]
+#[step_entity(name = "PRESENTATION_VIEW")]
 impl SimpleEntityHandler for PresentationViewHandler {
     type WriteInput = PresentationReprData;
 
@@ -51,7 +51,7 @@ impl SimpleEntityHandler for PresentationViewHandler {
 
 pub(crate) struct PresentationAreaHandler;
 
-#[step_entity(name = "PRESENTATION_AREA", pass = Pass8PrCore)]
+#[step_entity(name = "PRESENTATION_AREA")]
 impl SimpleEntityHandler for PresentationAreaHandler {
     type WriteInput = PresentationReprData;
 
@@ -81,7 +81,7 @@ impl SimpleEntityHandler for PresentationAreaHandler {
 
 pub(crate) struct PresentationSetHandler;
 
-#[step_entity(name = "PRESENTATION_SET", pass = Pass8PrCore)]
+#[step_entity(name = "PRESENTATION_SET")]
 impl SimpleEntityHandler for PresentationSetHandler {
     type WriteInput = PresentationSet;
 

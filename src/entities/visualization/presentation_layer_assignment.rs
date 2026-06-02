@@ -19,7 +19,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct PresentationLayerAssignmentHandler;
 
-#[step_entity(name = "PRESENTATION_LAYER_ASSIGNMENT", pass = Pass7Pla)]
+#[step_entity(name = "PRESENTATION_LAYER_ASSIGNMENT")]
 impl SimpleEntityHandler for PresentationLayerAssignmentHandler {
     type WriteInput = PresentationLayerAssignment;
 

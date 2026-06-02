@@ -15,7 +15,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct AppliedApprovalAssignmentHandler;
 
-#[step_entity(name = "APPLIED_APPROVAL_ASSIGNMENT", pass = Pass9PlmAa)]
+#[step_entity(name = "APPLIED_APPROVAL_ASSIGNMENT")]
 impl SimpleEntityHandler for AppliedApprovalAssignmentHandler {
     type WriteInput = AppliedApprovalAssignment;
 

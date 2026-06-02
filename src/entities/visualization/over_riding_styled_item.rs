@@ -22,7 +22,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct OverRidingStyledItemHandler;
 
-#[step_entity(name = "OVER_RIDING_STYLED_ITEM", pass = Pass7OverRiding)]
+#[step_entity(name = "OVER_RIDING_STYLED_ITEM")]
 impl SimpleEntityHandler for OverRidingStyledItemHandler {
     type WriteInput = OverRidingStyledItem;
 

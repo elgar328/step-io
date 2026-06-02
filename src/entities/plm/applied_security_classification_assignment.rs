@@ -18,7 +18,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct AppliedSecurityClassificationAssignmentHandler;
 
-#[step_entity(name = "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT", pass = Pass9PlmSca)]
+#[step_entity(name = "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT")]
 impl SimpleEntityHandler for AppliedSecurityClassificationAssignmentHandler {
     type WriteInput = AppliedSecurityClassificationAssignment;
 

@@ -17,7 +17,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct PreDefinedSymbolHandler;
 
-#[step_entity(name = "PRE_DEFINED_SYMBOL", pass = Pass7Colour)]
+#[step_entity(name = "PRE_DEFINED_SYMBOL")]
 impl SimpleEntityHandler for PreDefinedSymbolHandler {
     type WriteInput = PreDefinedSymbolData;
 

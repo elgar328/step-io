@@ -28,7 +28,7 @@ use step_io_macros::{step_entity, step_entity_complex};
 
 pub(crate) struct CoordinatesListHandler;
 
-#[step_entity(name = "COORDINATES_LIST", pass = Pass6CoordinatesList)]
+#[step_entity(name = "COORDINATES_LIST")]
 impl SimpleEntityHandler for CoordinatesListHandler {
     type WriteInput = CoordinatesList;
 
@@ -68,7 +68,7 @@ impl SimpleEntityHandler for CoordinatesListHandler {
 
 pub(crate) struct ComplexTriangulatedFaceHandler;
 
-#[step_entity(name = "COMPLEX_TRIANGULATED_FACE", pass = Pass6ComplexTriangulatedFace)]
+#[step_entity(name = "COMPLEX_TRIANGULATED_FACE")]
 impl SimpleEntityHandler for ComplexTriangulatedFaceHandler {
     type WriteInput = ComplexTriangulatedFace;
 
@@ -132,7 +132,7 @@ impl SimpleEntityHandler for ComplexTriangulatedFaceHandler {
 
 pub(crate) struct TessellatedCurveSetHandler;
 
-#[step_entity(name = "TESSELLATED_CURVE_SET", pass = Pass6ComplexTriangulatedFace)]
+#[step_entity(name = "TESSELLATED_CURVE_SET")]
 impl SimpleEntityHandler for TessellatedCurveSetHandler {
     type WriteInput = TessellatedCurveSet;
 
@@ -177,7 +177,7 @@ impl SimpleEntityHandler for TessellatedCurveSetHandler {
 
 pub(crate) struct ComplexTriangulatedSurfaceSetHandler;
 
-#[step_entity(name = "COMPLEX_TRIANGULATED_SURFACE_SET", pass = Pass6ComplexTriangulatedFace)]
+#[step_entity(name = "COMPLEX_TRIANGULATED_SURFACE_SET")]
 impl SimpleEntityHandler for ComplexTriangulatedSurfaceSetHandler {
     type WriteInput = ComplexTriangulatedSurfaceSet;
 
@@ -253,7 +253,7 @@ pub(crate) fn resolve_tessellated_item_ref(
 
 pub(crate) struct TessellatedGeometricSetHandler;
 
-#[step_entity(name = "TESSELLATED_GEOMETRIC_SET", pass = Pass6TessellatedGeometricSet)]
+#[step_entity(name = "TESSELLATED_GEOMETRIC_SET")]
 impl SimpleEntityHandler for TessellatedGeometricSetHandler {
     type WriteInput = TessellatedGeometricSet;
 
@@ -297,7 +297,7 @@ impl SimpleEntityHandler for TessellatedGeometricSetHandler {
 
 pub(crate) struct TessellatedSolidHandler;
 
-#[step_entity(name = "TESSELLATED_SOLID", pass = Pass6TessellatedGeometricSet)]
+#[step_entity(name = "TESSELLATED_SOLID")]
 impl SimpleEntityHandler for TessellatedSolidHandler {
     type WriteInput = TessellatedSolid;
 
@@ -352,7 +352,7 @@ impl SimpleEntityHandler for TessellatedSolidHandler {
 
 pub(crate) struct TessellatedShellHandler;
 
-#[step_entity(name = "TESSELLATED_SHELL", pass = Pass6TessellatedGeometricSet)]
+#[step_entity(name = "TESSELLATED_SHELL")]
 impl SimpleEntityHandler for TessellatedShellHandler {
     type WriteInput = TessellatedShell;
 
@@ -431,7 +431,7 @@ fn integer_list_attr(list: &[i64]) -> Attribute {
 
 pub(crate) struct RepositionedTessellatedItemHandler;
 
-#[step_entity(name = "REPOSITIONED_TESSELLATED_ITEM", pass = Pass6TessellatedGeometricSet)]
+#[step_entity(name = "REPOSITIONED_TESSELLATED_ITEM")]
 impl SimpleEntityHandler for RepositionedTessellatedItemHandler {
     type WriteInput = RepositionedTessellatedItem;
 
@@ -482,7 +482,6 @@ pub(crate) struct RepositionedTessellatedGeometricSetHandler;
 /// `REPOSITIONED_TESSELLATED_ITEM`, `children` in `TESSELLATED_GEOMETRIC_SET`.
 #[step_entity_complex(
     name = "TESSELLATED_GEOMETRIC_SET",
-    pass = Pass6TessellatedGeometricSet,
     cases = [[
         "GEOMETRIC_REPRESENTATION_ITEM",
         "REPOSITIONED_TESSELLATED_ITEM",

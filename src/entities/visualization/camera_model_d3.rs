@@ -18,7 +18,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct CameraModelD3Handler;
 
-#[step_entity(name = "CAMERA_MODEL_D3", pass = Pass8CameraModel)]
+#[step_entity(name = "CAMERA_MODEL_D3")]
 impl SimpleEntityHandler for CameraModelD3Handler {
     type WriteInput = CameraModelD3;
 

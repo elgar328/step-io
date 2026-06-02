@@ -21,7 +21,7 @@ pub(crate) struct RatioUnitHandler;
 
 // No RATIO_UNIT complex instances in the corpus; cases follow the invariant
 // unit-complex structure shared by the other named units (SI / CBU forms).
-#[step_entity_complex(name = "RATIO_UNIT", pass = Pass0Leaf, cases = [
+#[step_entity_complex(name = "RATIO_UNIT", cases = [
     ["CONVERSION_BASED_UNIT", "NAMED_UNIT", "RATIO_UNIT"],
     ["NAMED_UNIT", "RATIO_UNIT", "SI_UNIT"],
 ])]

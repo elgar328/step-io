@@ -17,7 +17,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct PlanarExtentHandler;
 
-#[step_entity(name = "PLANAR_EXTENT", pass = Pass4PlanarExtent)]
+#[step_entity(name = "PLANAR_EXTENT")]
 impl SimpleEntityHandler for PlanarExtentHandler {
     type WriteInput = PlanarExtentData;
 
@@ -57,7 +57,7 @@ impl SimpleEntityHandler for PlanarExtentHandler {
 
 pub(crate) struct PlanarBoxHandler;
 
-#[step_entity(name = "PLANAR_BOX", pass = Pass4PlanarExtent)]
+#[step_entity(name = "PLANAR_BOX")]
 impl SimpleEntityHandler for PlanarBoxHandler {
     type WriteInput = PlanarBox;
 

@@ -23,7 +23,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct BoundedSurfaceCurveHandler;
 
-#[step_entity(name = "BOUNDED_SURFACE_CURVE", pass = Pass8SurfaceCurveSubtypes)]
+#[step_entity(name = "BOUNDED_SURFACE_CURVE")]
 impl SimpleEntityHandler for BoundedSurfaceCurveHandler {
     type WriteInput = SurfaceCurveData;
 
@@ -51,7 +51,7 @@ impl SimpleEntityHandler for BoundedSurfaceCurveHandler {
 
 pub(crate) struct IntersectionCurveHandler;
 
-#[step_entity(name = "INTERSECTION_CURVE", pass = Pass8SurfaceCurveSubtypes)]
+#[step_entity(name = "INTERSECTION_CURVE")]
 impl SimpleEntityHandler for IntersectionCurveHandler {
     type WriteInput = SurfaceCurveData;
 

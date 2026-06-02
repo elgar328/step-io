@@ -23,7 +23,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct PreDefinedMarkerHandler;
 
-#[step_entity(name = "PRE_DEFINED_MARKER", pass = Pass7Colour)]
+#[step_entity(name = "PRE_DEFINED_MARKER")]
 impl SimpleEntityHandler for PreDefinedMarkerHandler {
     type WriteInput = PreDefinedMarkerData;
 
@@ -52,7 +52,7 @@ impl SimpleEntityHandler for PreDefinedMarkerHandler {
 
 pub(crate) struct PreDefinedPointMarkerSymbolHandler;
 
-#[step_entity(name = "PRE_DEFINED_POINT_MARKER_SYMBOL", pass = Pass7Colour)]
+#[step_entity(name = "PRE_DEFINED_POINT_MARKER_SYMBOL")]
 impl SimpleEntityHandler for PreDefinedPointMarkerSymbolHandler {
     type WriteInput = PreDefinedPointMarkerSymbol;
 

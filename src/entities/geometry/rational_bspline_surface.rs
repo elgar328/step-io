@@ -1,10 +1,9 @@
-//! `RATIONAL_B_SPLINE_SURFACE` handler — Pass 4-2 complex NURBS surface.
+//! `RATIONAL_B_SPLINE_SURFACE` handler — complex NURBS surface.
 //!
 //! Mirrors the legacy `convert_rational_bspline_surface` and the
-//! rational branch of the writer's `emit_nurbs_surface`. Shares the
-//! `Pass4Rational` `PassLevel` with `RATIONAL_B_SPLINE_CURVE` — the two
-//! complex entities key on different `REQUIRED_PARTS` so dispatch never
-//! mistakes one for the other.
+//! rational branch of the writer's `emit_nurbs_surface`. Shares its
+//! entity name with `RATIONAL_B_SPLINE_CURVE` — the two complex entities
+//! key on different part-sets so dispatch never mistakes one for the other.
 
 use crate::entities::ComplexEntityHandler;
 use crate::entities::geometry::nurbs_shared::build_surface_common;
@@ -24,7 +23,7 @@ use step_io_macros::step_entity_complex;
 
 pub(crate) struct RationalBsplineSurfaceHandler;
 
-#[step_entity_complex(name = "RATIONAL_B_SPLINE_SURFACE", pass = Pass4Rational, cases = [[
+#[step_entity_complex(name = "RATIONAL_B_SPLINE_SURFACE", cases = [[
         "BOUNDED_SURFACE", "B_SPLINE_SURFACE", "B_SPLINE_SURFACE_WITH_KNOTS",
         "GEOMETRIC_REPRESENTATION_ITEM", "RATIONAL_B_SPLINE_SURFACE", "REPRESENTATION_ITEM", "SURFACE"
     ]])]

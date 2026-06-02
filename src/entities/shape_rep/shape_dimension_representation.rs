@@ -19,7 +19,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct ShapeDimensionRepresentationHandler;
 
-#[step_entity(name = "SHAPE_DIMENSION_REPRESENTATION", pass = Pass6ShapeRep)]
+#[step_entity(name = "SHAPE_DIMENSION_REPRESENTATION")]
 impl SimpleEntityHandler for ShapeDimensionRepresentationHandler {
     type WriteInput = ShapeDimensionRepresentation;
 

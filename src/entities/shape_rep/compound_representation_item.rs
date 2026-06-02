@@ -24,7 +24,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct CompoundRepresentationItemHandler;
 
-#[step_entity(name = "COMPOUND_REPRESENTATION_ITEM", pass = Pass8CompoundRepItem)]
+#[step_entity(name = "COMPOUND_REPRESENTATION_ITEM")]
 impl SimpleEntityHandler for CompoundRepresentationItemHandler {
     type WriteInput = CompoundRepresentationItem;
 

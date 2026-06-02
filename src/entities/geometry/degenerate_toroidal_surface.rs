@@ -18,7 +18,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct DegenerateToroidalSurfaceHandler;
 
-#[step_entity(name = "DEGENERATE_TOROIDAL_SURFACE", pass = Pass4Leaf)]
+#[step_entity(name = "DEGENERATE_TOROIDAL_SURFACE")]
 impl SimpleEntityHandler for DegenerateToroidalSurfaceHandler {
     type WriteInput = DegenerateToroidalSurface;
 

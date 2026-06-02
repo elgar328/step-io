@@ -18,7 +18,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct MechanicalDesignAndDraughtingRelationshipHandler;
 
-#[step_entity(name = "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP", pass = Pass8MddrRead)]
+#[step_entity(name = "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP")]
 impl SimpleEntityHandler for MechanicalDesignAndDraughtingRelationshipHandler {
     type WriteInput = MechanicalDesignAndDraughtingRelationship;
 

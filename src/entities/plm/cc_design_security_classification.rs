@@ -19,7 +19,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct CcDesignSecurityClassificationHandler;
 
-#[step_entity(name = "CC_DESIGN_SECURITY_CLASSIFICATION", pass = Pass9PlmSca)]
+#[step_entity(name = "CC_DESIGN_SECURITY_CLASSIFICATION")]
 impl SimpleEntityHandler for CcDesignSecurityClassificationHandler {
     type WriteInput = CcDesignSecurityClassification;
 

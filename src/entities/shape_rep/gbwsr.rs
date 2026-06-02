@@ -139,7 +139,7 @@ pub(crate) fn write_wireframe_representation(
 
 pub(crate) struct GbwsrHandler;
 
-#[step_entity(name = "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION", pass = Pass6Gbsr)]
+#[step_entity(name = "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION")]
 impl SimpleEntityHandler for GbwsrHandler {
     type WriteInput = WireframeRepresentationWriteInput;
 

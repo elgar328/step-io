@@ -17,7 +17,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct TrimmedCurveHandler;
 
-#[step_entity(name = "TRIMMED_CURVE", pass = Pass4_3cTrimSeg)]
+#[step_entity(name = "TRIMMED_CURVE")]
 impl SimpleEntityHandler for TrimmedCurveHandler {
     type WriteInput = TrimmedCurve;
 

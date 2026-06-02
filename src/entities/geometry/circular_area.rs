@@ -16,7 +16,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct CircularAreaHandler;
 
-#[step_entity(name = "CIRCULAR_AREA", pass = Pass4PlanarExtent)]
+#[step_entity(name = "CIRCULAR_AREA")]
 impl SimpleEntityHandler for CircularAreaHandler {
     type WriteInput = CircularArea;
 

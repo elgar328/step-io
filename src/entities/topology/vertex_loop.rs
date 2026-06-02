@@ -23,7 +23,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct VertexLoopHandler;
 
-#[step_entity(name = "VERTEX_LOOP", pass = Pass5EdgeLoop)]
+#[step_entity(name = "VERTEX_LOOP")]
 impl SimpleEntityHandler for VertexLoopHandler {
     type WriteInput = VertexId;
 

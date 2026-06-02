@@ -21,7 +21,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct SurfaceStyleRenderingHandler;
 
-#[step_entity(name = "SURFACE_STYLE_RENDERING", pass = Pass7Rendering)]
+#[step_entity(name = "SURFACE_STYLE_RENDERING")]
 impl SimpleEntityHandler for SurfaceStyleRenderingHandler {
     type WriteInput = SurfaceStyleRenderingData;
 

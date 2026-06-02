@@ -15,7 +15,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct LocalTimeHandler;
 
-#[step_entity(name = "LOCAL_TIME", pass = Pass9PlmLocalTime)]
+#[step_entity(name = "LOCAL_TIME")]
 impl SimpleEntityHandler for LocalTimeHandler {
     type WriteInput = LocalTime;
 

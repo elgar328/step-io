@@ -16,7 +16,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct MdgprHandler;
 
-#[step_entity(name = "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION", pass = Pass7Mdgpr)]
+#[step_entity(name = "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION")]
 impl SimpleEntityHandler for MdgprHandler {
     type WriteInput = Mdgpr;
 

@@ -19,10 +19,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct CharacterizedItemWithinRepresentationHandler;
 
-#[step_entity(
-    name = "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
-    pass = Pass8CharacterizedItemWithinRepresentation
-)]
+#[step_entity(name = "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION")]
 impl SimpleEntityHandler for CharacterizedItemWithinRepresentationHandler {
     type WriteInput = CharacterizedItemWithinRepresentation;
 

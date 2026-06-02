@@ -15,7 +15,7 @@ use step_io_macros::step_entity_complex;
 
 pub(crate) struct GlobalUnitAssignedContextHandler;
 
-#[step_entity_complex(name = "GLOBAL_UNIT_ASSIGNED_CONTEXT", pass = Pass0Context, cases = [
+#[step_entity_complex(name = "GLOBAL_UNIT_ASSIGNED_CONTEXT", cases = [
     ["GEOMETRIC_REPRESENTATION_CONTEXT", "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT", "GLOBAL_UNIT_ASSIGNED_CONTEXT", "REPRESENTATION_CONTEXT"],
     // No-uncertainty form (GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT is optional).
     // Absent from the round-trip corpus, present in older / FreeCAD fixtures.

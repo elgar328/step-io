@@ -19,7 +19,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct CompositeCurveSegmentHandler;
 
-#[step_entity(name = "COMPOSITE_CURVE_SEGMENT", pass = Pass4_3cTrimSeg)]
+#[step_entity(name = "COMPOSITE_CURVE_SEGMENT")]
 impl SimpleEntityHandler for CompositeCurveSegmentHandler {
     type WriteInput = CompositeSegment;
 

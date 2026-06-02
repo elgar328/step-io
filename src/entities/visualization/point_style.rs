@@ -14,7 +14,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct PointStyleHandler;
 
-#[step_entity(name = "POINT_STYLE", pass = Pass7PointStyle)]
+#[step_entity(name = "POINT_STYLE")]
 impl SimpleEntityHandler for PointStyleHandler {
     type WriteInput = PointStyle;
 

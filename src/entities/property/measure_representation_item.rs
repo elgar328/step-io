@@ -25,7 +25,7 @@ use step_io_macros::{step_entity, step_entity_complex};
 
 pub(crate) struct MeasureRepresentationItemHandler;
 
-#[step_entity(name = "MEASURE_REPRESENTATION_ITEM", pass = Pass8Measure)]
+#[step_entity(name = "MEASURE_REPRESENTATION_ITEM")]
 impl SimpleEntityHandler for MeasureRepresentationItemHandler {
     /// Never dispatched — the writer emits the MRI via the
     /// `representation_item` arena (`emit_representation_items`).
@@ -79,7 +79,6 @@ pub(crate) struct MeasureRepresentationItemComplexHandler;
 /// `representation_item` arena identically to the simple handler.
 #[step_entity_complex(
     name = "MEASURE_REPRESENTATION_ITEM",
-    pass = Pass8Measure,
     cases = [
         ["LENGTH_MEASURE_WITH_UNIT", "MEASURE_REPRESENTATION_ITEM", "MEASURE_WITH_UNIT", "QUALIFIED_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"],
         ["LENGTH_MEASURE_WITH_UNIT", "MEASURE_REPRESENTATION_ITEM", "MEASURE_WITH_UNIT", "REPRESENTATION_ITEM"],

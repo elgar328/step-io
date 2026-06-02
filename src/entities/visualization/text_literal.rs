@@ -14,7 +14,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct TextLiteralHandler;
 
-#[step_entity(name = "TEXT_LITERAL", pass = Pass8TextLiteral)]
+#[step_entity(name = "TEXT_LITERAL")]
 impl SimpleEntityHandler for TextLiteralHandler {
     type WriteInput = TextLiteral;
 

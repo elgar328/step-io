@@ -120,7 +120,7 @@ fn write_shape_aspect_relationship(buf: &mut WriteBuffer, rel: ShapeAspectRelati
 
 pub(crate) struct ShapeAspectRelationshipHandler;
 
-#[step_entity(name = "SHAPE_ASPECT_RELATIONSHIP", pass = Pass8ShapeAspectRel)]
+#[step_entity(name = "SHAPE_ASPECT_RELATIONSHIP")]
 impl SimpleEntityHandler for ShapeAspectRelationshipHandler {
     type WriteInput = ShapeAspectRelationship;
 
@@ -146,7 +146,7 @@ impl SimpleEntityHandler for ShapeAspectRelationshipHandler {
 
 pub(crate) struct ShapeAspectAssociativityHandler;
 
-#[step_entity(name = "SHAPE_ASPECT_ASSOCIATIVITY", pass = Pass8ShapeAspectRel)]
+#[step_entity(name = "SHAPE_ASPECT_ASSOCIATIVITY")]
 impl SimpleEntityHandler for ShapeAspectAssociativityHandler {
     type WriteInput = ShapeAspectRelationship;
 
@@ -172,7 +172,7 @@ impl SimpleEntityHandler for ShapeAspectAssociativityHandler {
 
 pub(crate) struct ShapeAspectDerivingRelationshipHandler;
 
-#[step_entity(name = "SHAPE_ASPECT_DERIVING_RELATIONSHIP", pass = Pass8ShapeAspectRel)]
+#[step_entity(name = "SHAPE_ASPECT_DERIVING_RELATIONSHIP")]
 impl SimpleEntityHandler for ShapeAspectDerivingRelationshipHandler {
     type WriteInput = ShapeAspectRelationship;
 
@@ -198,7 +198,7 @@ impl SimpleEntityHandler for ShapeAspectDerivingRelationshipHandler {
 
 pub(crate) struct FeatureForDatumTargetRelationshipHandler;
 
-#[step_entity(name = "FEATURE_FOR_DATUM_TARGET_RELATIONSHIP", pass = Pass8ShapeAspectRel)]
+#[step_entity(name = "FEATURE_FOR_DATUM_TARGET_RELATIONSHIP")]
 impl SimpleEntityHandler for FeatureForDatumTargetRelationshipHandler {
     type WriteInput = ShapeAspectRelationship;
 

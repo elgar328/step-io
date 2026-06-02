@@ -22,7 +22,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct IntegerRepresentationItemHandler;
 
-#[step_entity(name = "INTEGER_REPRESENTATION_ITEM", pass = Pass8ShapeAspect)]
+#[step_entity(name = "INTEGER_REPRESENTATION_ITEM")]
 impl SimpleEntityHandler for IntegerRepresentationItemHandler {
     type WriteInput = IntegerRepresentationItem;
 
@@ -58,7 +58,7 @@ impl SimpleEntityHandler for IntegerRepresentationItemHandler {
 
 pub(crate) struct RealRepresentationItemHandler;
 
-#[step_entity(name = "REAL_REPRESENTATION_ITEM", pass = Pass8ShapeAspect)]
+#[step_entity(name = "REAL_REPRESENTATION_ITEM")]
 impl SimpleEntityHandler for RealRepresentationItemHandler {
     type WriteInput = RealRepresentationItem;
 

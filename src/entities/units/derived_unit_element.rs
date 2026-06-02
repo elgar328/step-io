@@ -16,7 +16,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct DerivedUnitElementHandler;
 
-#[step_entity(name = "DERIVED_UNIT_ELEMENT", pass = Pass0MwuDue)]
+#[step_entity(name = "DERIVED_UNIT_ELEMENT")]
 impl SimpleEntityHandler for DerivedUnitElementHandler {
     /// `(unit_step_id, exponent)` — STEP positional `(unit, exponent)`.
     type WriteInput = (u64, f64);

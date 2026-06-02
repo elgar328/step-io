@@ -18,7 +18,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct PreDefinedTerminatorSymbolHandler;
 
-#[step_entity(name = "PRE_DEFINED_TERMINATOR_SYMBOL", pass = Pass7Colour)]
+#[step_entity(name = "PRE_DEFINED_TERMINATOR_SYMBOL")]
 impl SimpleEntityHandler for PreDefinedTerminatorSymbolHandler {
     type WriteInput = PreDefinedTerminatorSymbol;
 

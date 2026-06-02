@@ -24,7 +24,7 @@ pub(crate) struct DescriptionAttributeWriteInput {
 
 pub(crate) struct DescriptionAttributeHandler;
 
-#[step_entity(name = "DESCRIPTION_ATTRIBUTE", pass = Pass9PlmAttributes)]
+#[step_entity(name = "DESCRIPTION_ATTRIBUTE")]
 impl SimpleEntityHandler for DescriptionAttributeHandler {
     type WriteInput = DescriptionAttributeWriteInput;
 

@@ -12,7 +12,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct DateTimeRoleHandler;
 
-#[step_entity(name = "DATE_TIME_ROLE", pass = Pass9PlmDateLeaves)]
+#[step_entity(name = "DATE_TIME_ROLE")]
 impl SimpleEntityHandler for DateTimeRoleHandler {
     type WriteInput = DateTimeRole;
 

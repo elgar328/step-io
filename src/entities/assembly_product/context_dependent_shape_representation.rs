@@ -23,7 +23,7 @@ pub(crate) struct ContextDependentShapeRepresentationWriteInput {
 
 pub(crate) struct ContextDependentShapeRepresentationHandler;
 
-#[step_entity(name = "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION", pass = Pass6Cdsr)]
+#[step_entity(name = "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION")]
 impl SimpleEntityHandler for ContextDependentShapeRepresentationHandler {
     type WriteInput = ContextDependentShapeRepresentationWriteInput;
 

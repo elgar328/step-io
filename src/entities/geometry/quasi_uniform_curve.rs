@@ -23,7 +23,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct QuasiUniformCurveHandler;
 
-#[step_entity(name = "QUASI_UNIFORM_CURVE", pass = Pass4Leaf)]
+#[step_entity(name = "QUASI_UNIFORM_CURVE")]
 impl SimpleEntityHandler for QuasiUniformCurveHandler {
     type WriteInput = NurbsCurve;
 

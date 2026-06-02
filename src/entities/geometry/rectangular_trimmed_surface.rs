@@ -20,7 +20,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct RectangularTrimmedSurfaceHandler;
 
-#[step_entity(name = "RECTANGULAR_TRIMMED_SURFACE", pass = Pass4_4Offset)]
+#[step_entity(name = "RECTANGULAR_TRIMMED_SURFACE")]
 impl SimpleEntityHandler for RectangularTrimmedSurfaceHandler {
     type WriteInput = RectangularTrimmedSurface;
 
