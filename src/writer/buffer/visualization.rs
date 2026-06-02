@@ -60,6 +60,10 @@ impl WriteBuffer<'_> {
             RepresentationItemRef::CameraModel(id) => {
                 Ok(self.viz_camera_model_step_ids[id.0 as usize])
             }
+            RepresentationItemRef::TextLiteral(id) => Ok(self.text_literal_step_ids[id.0 as usize]),
+            RepresentationItemRef::CompositeText(id) => {
+                Ok(self.composite_text_step_ids[id.0 as usize])
+            }
         }
     }
 
@@ -415,9 +419,11 @@ impl WriteBuffer<'_> {
             self.text_literal_step_ids.push(step);
         }
         // COMPOSITE_TEXT — depends on text_literal_step_ids just filled.
+        self.composite_text_step_ids = Vec::with_capacity(viz.composite_texts.len());
         for ct in viz.composite_texts.iter() {
             use crate::entities::visualization::composite_text::CompositeTextHandler;
-            CompositeTextHandler::write(self, ct.clone())?;
+            let step = CompositeTextHandler::write(self, ct.clone())?;
+            self.composite_text_step_ids.push(step);
         }
         self.emit_pre_defined_curve_fonts(&viz)?;
         self.emit_pre_defined_symbols(&viz)?;

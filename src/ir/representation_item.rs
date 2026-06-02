@@ -11,10 +11,11 @@
 //! consumers and fixtures require them.
 
 use super::id::{
-    AnnotationCurveOccurrenceId, AnnotationOccurrenceId, CameraModelId, CurveId,
+    AnnotationCurveOccurrenceId, AnnotationOccurrenceId, CameraModelId, CompositeTextId, CurveId,
     DraughtingCalloutId, EdgeId, FaceId, GeometricRepresentationItemId, MappedItemId,
     Placement3dId, PointId, RepresentationId, RepresentationItemId, ShellId, SolidId, SurfaceId,
-    TessellatedFaceId, TessellatedItemId, TypeQualifierId, ValueFormatTypeQualifierId, VertexId,
+    TessellatedFaceId, TessellatedItemId, TextLiteralId, TypeQualifierId,
+    ValueFormatTypeQualifierId, VertexId,
 };
 
 /// What a STEP `representation_item` reference resolved to in step-io's IR.
@@ -71,6 +72,12 @@ pub enum RepresentationItemRef {
     /// / `D3MultiClipping`). Viewpoint definition routinely referenced by
     /// `DRAUGHTING_MODEL.items` in the AP242 MBD corpus.
     CameraModel(CameraModelId),
+    /// `TEXT_LITERAL` (visualization pool). A styled `ANNOTATION_TEXT_OCCURRENCE`
+    /// (and other `STYLED_ITEM` consumers) targets the text content directly.
+    TextLiteral(TextLiteralId),
+    /// `COMPOSITE_TEXT` (visualization pool) — a group of `TEXT_LITERAL`s, same
+    /// `annotation_text_occurrence_item` SELECT role as `TextLiteral`.
+    CompositeText(CompositeTextId),
 }
 
 /// `representation_item` enum arena per the ir.toml blueprint (phase

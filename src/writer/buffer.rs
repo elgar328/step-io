@@ -182,6 +182,10 @@ pub(crate) struct WriteBuffer<'m> {
     /// `TextLiteralId.0`. Consumed by the `COMPOSITE_TEXT` emitter for the
     /// `text_or_character` SELECT.
     pub(crate) text_literal_step_ids: Vec<u64>,
+    /// Emitted `COMPOSITE_TEXT` step ids, indexed by `CompositeTextId.0`.
+    /// Populated by `emit_visualization_if_set` so an annotation occurrence's
+    /// `item` can resolve to a `COMPOSITE_TEXT`.
+    pub(crate) composite_text_step_ids: Vec<u64>,
     /// Emitted `DRAUGHTING_MODEL_ITEM_ASSOCIATION` step ids (phase dmia),
     /// indexed by `DraughtingModelItemAssociationId.0`. No other entity
     /// currently references the cache; retained for symmetry.
@@ -490,6 +494,7 @@ impl<'m> WriteBuffer<'m> {
             text_style_step_ids: Vec::new(),
             dptf_step_ids: Vec::new(),
             text_literal_step_ids: Vec::new(),
+            composite_text_step_ids: Vec::new(),
             dmia_step_ids: Vec::new(),
             unitless_context_step_ids: Vec::new(),
             gisu_step_ids: Vec::new(),

@@ -43,13 +43,15 @@ impl SimpleEntityHandler for CompositeTextHandler {
         if collected_text.len() < 2 {
             return Ok(());
         }
-        ctx.visualization
+        let id = ctx
+            .visualization
             .get_or_insert_with(VisualizationPool::default)
             .composite_texts
             .push(CompositeText {
                 name,
                 collected_text,
             });
+        ctx.composite_text_id_map.insert(entity_id, id);
         Ok(())
     }
 

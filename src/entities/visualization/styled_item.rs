@@ -184,5 +184,13 @@ pub(crate) fn resolve_representation_item_ref(
     if let Some(&id) = ctx.viz_camera_model_id_map.get(&item_ref) {
         return Some(RepresentationItemRef::CameraModel(id));
     }
+    // text content (annotation_text_occurrence_item SELECT) — a styled
+    // ANNOTATION_TEXT_OCCURRENCE targets these (phase styled-annotation-text).
+    if let Some(&id) = ctx.text_literal_id_map.get(&item_ref) {
+        return Some(RepresentationItemRef::TextLiteral(id));
+    }
+    if let Some(&id) = ctx.composite_text_id_map.get(&item_ref) {
+        return Some(RepresentationItemRef::CompositeText(id));
+    }
     None
 }

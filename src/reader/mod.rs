@@ -567,6 +567,9 @@ pub struct ReaderContext {
     /// `TEXT_LITERAL` step id → `TextLiteralId` (phase text-literal).
     /// Consumed by `COMPOSITE_TEXT` for the `text_or_character` SELECT.
     pub(crate) text_literal_id_map: HashMap<u64, crate::ir::id::TextLiteralId>,
+    /// `COMPOSITE_TEXT` step id → `CompositeTextId`. Lets a styled
+    /// `ANNOTATION_TEXT_OCCURRENCE` resolve a `COMPOSITE_TEXT` item.
+    pub(crate) composite_text_id_map: HashMap<u64, crate::ir::id::CompositeTextId>,
     /// `DRAUGHTING_MODEL_ITEM_ASSOCIATION` step id → arena id (phase dmia).
     /// No other entity references DMIA in the modelled corpus; cache kept
     /// for symmetry / future ref-receiving entities.
