@@ -8,12 +8,12 @@
 //! `mapped_representation` ref is indexed.
 
 use super::WriteBuffer;
-use crate::entities::SimpleEntityHandler;
 use crate::entities::shape_rep::mapped_item::{MappedItemHandler, RepresentationMapHandler};
 use crate::entities::visualization::camera_image::{
     CameraImage3dWithScaleHandler, CameraImageHandler,
 };
 use crate::entities::visualization::camera_usage::CameraUsageHandler;
+use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::shape_rep::{MappedItem, RepresentationMap};
 use crate::writer::WriteError;
 
