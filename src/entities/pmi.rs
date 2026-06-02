@@ -791,25 +791,43 @@ impl SimpleEntityHandler for TerminatorSymbolHandler {
 
 pub(crate) struct LeaderTerminatorHandler;
 
-/// `LEADER_TERMINATOR(name, styles, item, annotated_curve)` — a
-/// `terminator_symbol` subtype. Same shape and resolve / drop policy as
-/// `TerminatorSymbol`; the EXPRESS WHERE narrowing `annotated_curve` to
-/// `LEADER_CURVE` is not enforced at IR level.
-#[step_entity(name = "LEADER_TERMINATOR")]
-impl SimpleEntityHandler for LeaderTerminatorHandler {
+/// Styled `LEADER_TERMINATOR` — read only as the AND-combined complex
+/// `(ANNOTATION_OCCURRENCE ANNOTATION_SYMBOL_OCCURRENCE DRAUGHTING_ANNOTATION_OCCURRENCE
+/// GEOMETRIC_REPRESENTATION_ITEM LEADER_TERMINATOR REPRESENTATION_ITEM STYLED_ITEM
+/// TERMINATOR_SYMBOL)`, the only form in the corpus (the simple single-name entity
+/// has count 0). `name` on `REPRESENTATION_ITEM`, `styles` + `item` on `STYLED_ITEM`
+/// (`item` = `DEFINED_SYMBOL`, resolved via `resolve_representation_item_ref`),
+/// `annotated_curve` on `TERMINATOR_SYMBOL` (a `LEADER_CURVE`). Unresolved `item`
+/// or `annotated_curve` drops the occurrence, symmetric on re-read.
+#[step_entity_complex(
+    name = "LEADER_TERMINATOR",
+    cases = [[
+        "ANNOTATION_OCCURRENCE",
+        "ANNOTATION_SYMBOL_OCCURRENCE",
+        "DRAUGHTING_ANNOTATION_OCCURRENCE",
+        "GEOMETRIC_REPRESENTATION_ITEM",
+        "LEADER_TERMINATOR",
+        "REPRESENTATION_ITEM",
+        "STYLED_ITEM",
+        "TERMINATOR_SYMBOL",
+    ]]
+)]
+impl ComplexEntityHandler for LeaderTerminatorHandler {
     type WriteInput = LeaderTerminator;
 
-    fn read(
+    fn read_complex(
         ctx: &mut ReaderContext,
         entity_id: u64,
-        attrs: &[Attribute],
+        parts: &[RawEntityPart],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "LEADER_TERMINATOR")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-        let ac_ref = read_entity_ref(attrs, 3, entity_id, "annotated_curve")?;
+        let ri = require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
+        let name = read_string_or_unset(ri, 0, entity_id, "name")?.to_owned();
+        let si = require_part_attrs(parts, "STYLED_ITEM", entity_id)?;
+        let style_refs = read_entity_ref_list(si, 0, entity_id, "styles")?;
+        let item_ref = read_entity_ref(si, 1, entity_id, "item")?;
+        let ts = require_part_attrs(parts, "TERMINATOR_SYMBOL", entity_id)?;
+        let ac_ref = read_entity_ref(ts, 0, entity_id, "annotated_curve")?;
 
         let mut styles = Vec::with_capacity(style_refs.len());
         for r in style_refs {
@@ -845,15 +863,35 @@ impl SimpleEntityHandler for LeaderTerminatorHandler {
         for psa_id in lt.styles {
             style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
         }
-        Ok(buf.push_simple(
-            "LEADER_TERMINATOR",
-            vec![
-                Attribute::String(lt.name),
-                Attribute::List(style_refs),
-                Attribute::EntityRef(item_id),
-                Attribute::EntityRef(ac_step),
-            ],
-        ))
+        // Re-emit the AND-combined complex form (alphabetical parts); data on
+        // REPRESENTATION_ITEM (name), STYLED_ITEM (styles, item), TERMINATOR_SYMBOL
+        // (annotated_curve).
+        let n = buf.fresh();
+        buf.entities.push(WriterEntity {
+            id: n,
+            body: WriterBody::Complex {
+                parts: vec![
+                    ("ANNOTATION_OCCURRENCE".into(), vec![]),
+                    ("ANNOTATION_SYMBOL_OCCURRENCE".into(), vec![]),
+                    ("DRAUGHTING_ANNOTATION_OCCURRENCE".into(), vec![]),
+                    ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),
+                    ("LEADER_TERMINATOR".into(), vec![]),
+                    (
+                        "REPRESENTATION_ITEM".into(),
+                        vec![Attribute::String(lt.name)],
+                    ),
+                    (
+                        "STYLED_ITEM".into(),
+                        vec![Attribute::List(style_refs), Attribute::EntityRef(item_id)],
+                    ),
+                    (
+                        "TERMINATOR_SYMBOL".into(),
+                        vec![Attribute::EntityRef(ac_step)],
+                    ),
+                ],
+            },
+        });
+        Ok(n)
     }
 }
 
