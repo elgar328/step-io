@@ -1,4 +1,4 @@
-//! `DOCUMENT_PRODUCT_EQUIVALENCE` handler — Pass 9-19 plm Document
+//! `DOCUMENT_PRODUCT_EQUIVALENCE` handler plm Document
 //! linker. `related_product` SELECT collapses to a `ProductId` via the
 //! shared `resolve_date_time_item` helper.
 

@@ -1,4 +1,4 @@
-//! `ELLIPSE` handler — Pass 4a-3 (2D, pcurve subtree).
+//! `ELLIPSE` handler (2D, pcurve subtree).
 
 use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::axis2_placement_2d::Axis2Placement2dHandler;

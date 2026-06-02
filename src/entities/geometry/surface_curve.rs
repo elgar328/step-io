@@ -1,4 +1,4 @@
-//! `SURFACE_CURVE` handler — Pass 4-3 (transparent alias to a 3D curve
+//! `SURFACE_CURVE` handler (transparent alias to a 3D curve
 //! with the wrapper preserved in a post-pass).
 //!
 //! Shares its read body and write body with `SEAM_CURVE` via the
@@ -68,8 +68,9 @@ pub(crate) fn master_representation_token(m: PreferredSurfaceCurveRepresentation
 /// resolving its `associated_geometry` members and preserving the entity kind
 /// (`is_seam`), `name`, and `master_representation` so the writer reproduces
 /// them verbatim. Lives outside [`SimpleEntityHandler`] because member
-/// resolution requires the [`EntityGraph`] (Pass 4a must have already
-/// populated `curve_2d_map`/`surface_map`).
+/// resolution requires the [`EntityGraph`] plus the
+/// `curve_2d_map`/`surface_map`, which topo order has already populated
+/// from the 2D-curve and surface handlers.
 pub(crate) fn collect_surface_curve(
     ctx: &mut ReaderContext,
     entity_id: u64,

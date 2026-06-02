@@ -1,4 +1,4 @@
-//! `DERIVED_UNIT_ELEMENT(unit, exponent)` handler — Pass 0-3 (units-1).
+//! `DERIVED_UNIT_ELEMENT(unit, exponent)` handler (units-1).
 //!
 //! STEP positional order is `(unit_ref, exponent_real)` — opposite of the
 //! ir.toml blueprint's alphabetical (exponent, unit) field declaration.

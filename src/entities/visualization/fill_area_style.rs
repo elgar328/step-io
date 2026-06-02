@@ -1,4 +1,4 @@
-//! `FILL_AREA_STYLE` handler — Pass 7-3. Aggregates one or more
+//! `FILL_AREA_STYLE` handler. Aggregates one or more
 //! `FILL_AREA_STYLE_COLOUR` entries into a named fill-area style. Pushes
 //! into the shared `founded_item` arena as the `FillAreaStyle` variant.
 

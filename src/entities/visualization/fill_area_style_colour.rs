@@ -1,4 +1,4 @@
-//! `FILL_AREA_STYLE_COLOUR` handler — Pass 7-2. Wraps a colour with a name.
+//! `FILL_AREA_STYLE_COLOUR` handler. Wraps a colour with a name.
 //! Reader resolves the colour ref through `viz_colour_id_map` and stores
 //! the `ColourId`; writer looks up the cached STEP id for that arena entry
 //! through `WriteBuffer::colour_step_ids`.

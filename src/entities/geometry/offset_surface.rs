@@ -1,8 +1,8 @@
-//! `OFFSET_SURFACE` handler — Pass 4-4B.
+//! `OFFSET_SURFACE` handler.
 //!
 //! `OFFSET_SURFACE(name, basis_surface, distance, self_intersect)` —
 //! wraps another surface as its basis. A chain of `OFFSET_SURFACE` on top of
-//! `OFFSET_SURFACE` (or a Pass 4-4A derived surface) resolves naturally under
+//! `OFFSET_SURFACE` (or another derived surface) resolves naturally under
 //! topological dispatch: each basis is processed before its dependent.
 
 #![allow(clippy::doc_markdown)]
@@ -32,8 +32,8 @@ impl SimpleEntityHandler for OffsetSurfaceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        // Pass 4-4B (multi-round): skip entities already interned by a
-        // previous round so the arena does not accumulate duplicates.
+        // Skip entities already interned through another resolution path
+        // so the arena does not accumulate duplicates.
         if ctx.surface_map.contains_key(&entity_id) {
             return Ok(());
         }

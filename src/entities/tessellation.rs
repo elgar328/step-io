@@ -527,7 +527,7 @@ impl ComplexEntityHandler for RepositionedTessellatedGeometricSetHandler {
     }
 
     fn write(_buf: &mut WriteBuffer, _input: Self::WriteInput) -> Result<u64, WriteError> {
-        // Emitted by emit_tessellation's container pass (Pass 3), not here.
+        // Emitted by emit_tessellation's container pass, not here.
         unreachable!("RepositionedTessellatedGeometricSet is emitted by emit_tessellation")
     }
 }

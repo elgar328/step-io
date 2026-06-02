@@ -1,10 +1,11 @@
-//! `PRODUCT_DEFINITION_SHAPE` handler — classifier (Pass 6-4c) + writer.
+//! `PRODUCT_DEFINITION_SHAPE` handler — classifier + writer.
 //!
 //! Reader path is a classifier: walks attr[2] (`definition`) to decide
 //! whether this `PDEF_SHAPE` describes a product (`PRODUCT_DEFINITION`
 //! target) or an instance (NAUO target). Populates `pdef_shape_to_pdef` or
 //! `pdef_shape_to_nauo` accordingly. No IR entity is materialised — the
-//! maps feed Pass 6-5 (SDR) and Pass 6-7 (CDSR) downstream.
+//! maps feed the `SHAPE_DEFINITION_REPRESENTATION` and
+//! `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` handlers downstream.
 //!
 //! Writer emits the standard three-attr form pointing at the PDEF.
 

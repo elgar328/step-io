@@ -1,5 +1,5 @@
-//! `SECURITY_CLASSIFICATION` handler — Pass 9-13 plm. Depends on
-//! `Pass9PlmSecLevel` for the `security_level` ref.
+//! `SECURITY_CLASSIFICATION` handler plm. Depends on
+//! the security-level handler for the `security_level` ref.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};

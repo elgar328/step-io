@@ -1,4 +1,4 @@
-//! `CALENDAR_DATE` handler — Pass 9-1 plm leaf.
+//! `CALENDAR_DATE` handler plm leaf.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_integer};

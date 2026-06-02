@@ -1,4 +1,4 @@
-//! `PLANAR_EXTENT` / `PLANAR_BOX` handlers — Pass 4-pe.
+//! `PLANAR_EXTENT` / `PLANAR_BOX` handlers.
 //!
 //! A `concrete_supertype` pair: both push into the single `planar_extents`
 //! arena as variants of [`PlanarExtent`]. `PLANAR_EXTENT(name, size_in_x,

@@ -2,8 +2,8 @@
 //!
 //! Both are `geometric_representation_item` subtypes that step-io models
 //! through the unified `GeometricRepresentationItem` enum arena. Pass
-//! split: `SYMBOL_TARGET` (Pass6) is read first so that `DEFINED_SYMBOL`
-//! (Pass8) can resolve its `target` ref through `symbol_target_id_map`.
+//! split: `SYMBOL_TARGET`  is read first so that `DEFINED_SYMBOL`
+//!  can resolve its `target` ref through `symbol_target_id_map`.
 //! `DEFINED_SYMBOL.definition` resolves through
 //! `viz_pre_defined_symbol_id_map`; unresolved members drop the carrier
 //! (symmetric on re-read).

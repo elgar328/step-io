@@ -1,4 +1,4 @@
-//! `PARABOLA` handler — Pass 4-1 leaf 3D parabola.
+//! `PARABOLA` handler leaf 3D parabola.
 //!
 //! `SUBTYPE OF CONIC`. Attributes: `(name, position, focal_dist)`.
 //! `focal_dist` is signed (sign chooses orientation along

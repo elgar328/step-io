@@ -1,4 +1,4 @@
-//! `VOLUME_UNIT` handler — Pass 0-4 (units-3a).
+//! `VOLUME_UNIT` handler (units-3a).
 //!
 //! Sister of [`crate::entities::units::area_unit::AreaUnitHandler`].
 //! EXPRESS: `VOLUME_UNIT SUBTYPE OF (derived_unit)` with `WHERE`

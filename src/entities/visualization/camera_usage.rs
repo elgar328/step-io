@@ -2,9 +2,9 @@
 //!
 //! `representation_map` SUBTYPE that narrows `mapping_origin` to a
 //! `camera_model`. The `mapped_representation` may target any
-//! `representation`, including a `DRAUGHTING_MODEL` — so this handler
-//! runs in `Pass8CameraUsage`, scheduled after `Pass8DraughtingModel`
-//! has populated the DM slot of `repr_id_map`.
+//! `representation`, including a `DRAUGHTING_MODEL`. Topo order processes
+//! that target first, so the DM slot of `repr_id_map` is populated before
+//! this handler resolves the ref.
 //!
 //!
 //! Writer side, the carrier is emitted by `emit_camera_usage_arena`

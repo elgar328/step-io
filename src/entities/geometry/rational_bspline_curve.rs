@@ -1,5 +1,5 @@
-//! `RATIONAL_B_SPLINE_CURVE` handler — Plan 3 stage 3 pilot for the
-//! `ComplexEntityHandler` registry path.
+//! `RATIONAL_B_SPLINE_CURVE` handler on the `ComplexEntityHandler`
+//! registry path.
 //!
 //! Mirrors the legacy `ReaderContext::convert_rational_bspline_curve`
 //! (`src/reader/geometry.rs`) and the rational branch of

@@ -1,4 +1,4 @@
-//! `LINE` handler — Pass 4-1 leaf 3D line.
+//! `LINE` handler leaf 3D line.
 //!
 //! Mirrors `ReaderContext::convert_line` and `WriteBuffer::emit_line`.
 

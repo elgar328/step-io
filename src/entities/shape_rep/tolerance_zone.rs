@@ -1,4 +1,4 @@
-//! `TOLERANCE_ZONE` handler — Pass 8-pre-c4.
+//! `TOLERANCE_ZONE` handler.
 //!
 //! `TOLERANCE_ZONE` is a `SHAPE_ASPECT` subtype: the 4-attr shape-aspect body
 //! plus a `defining_tolerance` SET of `geometric_tolerance` references and a

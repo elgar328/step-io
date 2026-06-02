@@ -1,4 +1,4 @@
-//! `ITEM_DEFINED_TRANSFORMATION` handler — Pass 6-6.
+//! `ITEM_DEFINED_TRANSFORMATION` handler.
 //!
 //! Reader resolves source / target placements through
 //! `ReaderContext::resolve_placement` and stores the resulting

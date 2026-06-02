@@ -1,4 +1,4 @@
-//! `VECTOR` handler — Pass 4a-2 (2D, intermediate map).
+//! `VECTOR` handler (2D, intermediate map).
 //!
 //! Sister handler of [`crate::entities::geometry::vector::VectorHandler`].
 //! Like its 3D counterpart, the reader stores the resolved

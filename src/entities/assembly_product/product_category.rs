@@ -1,4 +1,4 @@
-//! `PRODUCT_CATEGORY` handler — Pass 6-1b sub-pass a.
+//! `PRODUCT_CATEGORY` handler sub-pass a.
 //!
 //! Reader stores `(name, description)` in `pc_meta_map`; the relationship
 //! pass joins this metadata with PRPC's product list to attach a

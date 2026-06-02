@@ -1,4 +1,4 @@
-//! `APPROVAL_STATUS` handler — Pass 9-8 plm Approval leaf.
+//! `APPROVAL_STATUS` handler plm Approval leaf.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_string_or_unset};

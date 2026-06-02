@@ -1,4 +1,4 @@
-//! `ID_ATTRIBUTE` handler — Pass 9-25b.
+//! `ID_ATTRIBUTE` handler.
 //!
 //! `(attribute_value, identified_item)` — SELECT target. Coverage: the
 //! round-trip-diffed `shape_aspect` family (plain `shape_aspect` /

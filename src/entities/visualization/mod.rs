@@ -1,9 +1,9 @@
-//! Visualization entity handlers (Pass 7-1 ~ 7-10). Each handler impls
+//! Visualization entity handlers. Each handler impls
 //! [`crate::entities::SimpleEntityHandler`] and registers via the
 //! `#[step_entity]` proc-macro attribute from `step_io_macros`. The 10
 //! entities form a chain: leaf colour / transparent → fill / surface
 //! style aggregations → side / usage / assignment wrappers → styled item.
-//! The MDGPR top-level wrapper (Pass 7-11) sits in `entities/shape_rep/`
+//! The MDGPR top-level wrapper sits in `entities/shape_rep/`
 //! because its dispatch boundary is `representation`.
 
 pub mod camera_image;

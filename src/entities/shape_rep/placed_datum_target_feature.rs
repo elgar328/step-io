@@ -1,4 +1,4 @@
-//! `PLACED_DATUM_TARGET_FEATURE` handler — Pass 8-pre-c1. Same 5-attr
+//! `PLACED_DATUM_TARGET_FEATURE` handler. Same 5-attr
 //! shape as [`DatumTargetHandler`] (the `target_id` field is inherited
 //! from `datum_target`); the entity is its own ir.toml `shape_aspect`
 //! variant. step-io keeps a dedicated `placed_datum_target_features`

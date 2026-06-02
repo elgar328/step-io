@@ -1,4 +1,4 @@
-//! `STEP` form-feature handler — Pass 6-3c.
+//! `STEP` form-feature handler.
 //!
 //! AP242 `step SUBTYPE OF feature_definition SUBTYPE OF characterized_object`
 //! manufacturing-step entity. Inherits `(name, description)` from

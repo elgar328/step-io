@@ -1,4 +1,4 @@
-//! `MECHANICAL_CONTEXT` handler — Pass 9-27 `assembly_product`.
+//! `MECHANICAL_CONTEXT` handler `assembly_product`.
 //! `AP203` subtype of `PRODUCT_CONTEXT` with a
 //! `discipline_type='mechanical'` `WHERE` constraint; identical
 //! field layout. Lands in the `product_contexts` arena with

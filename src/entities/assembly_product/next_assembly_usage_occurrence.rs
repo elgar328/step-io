@@ -1,4 +1,4 @@
-//! `NEXT_ASSEMBLY_USAGE_OCCURRENCE` handler — Pass 6-8.
+//! `NEXT_ASSEMBLY_USAGE_OCCURRENCE` handler.
 //!
 //! Reader resolves the parent / child PDEFs through `pdef_to_product` and
 //! pushes a fully-formed `Instance` into the parent product's `Group`

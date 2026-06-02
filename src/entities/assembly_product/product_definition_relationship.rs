@@ -1,4 +1,4 @@
-//! `PRODUCT_DEFINITION_RELATIONSHIP` handler — Pass 6-3b.
+//! `PRODUCT_DEFINITION_RELATIONSHIP` handler.
 //!
 //! Reader resolves both `relating` / `related` PDEFs to [`ProductId`] via
 //! [`ReaderContext::resolve_product_by_pdef`] and pushes a

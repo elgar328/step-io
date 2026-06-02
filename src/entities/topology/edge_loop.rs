@@ -1,4 +1,4 @@
-//! `EDGE_LOOP` handler — Pass 5-4 (intermediate map).
+//! `EDGE_LOOP` handler (intermediate map).
 //!
 //! Mirrors `ReaderContext::convert_edge_loop`. The writer side does not
 //! own a top-level `emit_edge_loop`; `emit_wire` inlines the `EDGE_LOOP`

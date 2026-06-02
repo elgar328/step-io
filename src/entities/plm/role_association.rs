@@ -1,4 +1,4 @@
-//! `ROLE_ASSOCIATION` handler — Pass 9-23 plm. STEP positional shape
+//! `ROLE_ASSOCIATION` handler plm. STEP positional shape
 //! `(role, item_with_role)` per `AP214e3` schema lines 9773–9776.
 //! `item_with_role` is the AP214 `role_select` SELECT — step-io
 //! currently scopes to `APPLIED_DOCUMENT_REFERENCE` only.

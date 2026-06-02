@@ -1,4 +1,4 @@
-//! `DRAUGHTING_PRE_DEFINED_CURVE_FONT` handler — Pass 7-1 (shares the
+//! `DRAUGHTING_PRE_DEFINED_CURVE_FONT` handler (shares the
 //! leaf pass with `COLOUR_RGB` and the new `PRE_DEFINED_CURVE_FONT` self
 //! variant). Pre-defined curve fonts name a stock line pattern
 //! (`"continuous"`, `"dashed"`, etc.). Reader pushes a

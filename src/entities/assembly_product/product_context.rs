@@ -1,4 +1,4 @@
-//! `PRODUCT_CONTEXT` handler — Pass 9-27 `assembly_product`. STEP
+//! `PRODUCT_CONTEXT` handler `assembly_product`. STEP
 //! positional `(name, frame_of_reference, discipline_type)` per
 //! `AP214e3` (inherits `application_context_element`). Lands in the
 //! `product_contexts` arena with `kind = Plain`.
@@ -51,7 +51,7 @@ pub(crate) fn read_product_context(
     let frame_ref = read_entity_ref(attrs, 1, entity_id, "frame_of_reference")?;
     let discipline_type = read_string_or_unset(attrs, 2, entity_id, "discipline_type")?.to_owned();
     let Some(&frame_of_reference) = ctx.plm_application_context_id_map.get(&frame_ref) else {
-        return Ok(()); // AC missing — drop (Pass9PlmAppContext runs before us)
+        return Ok(()); // frame_of_reference APPLICATION_CONTEXT unmapped — drop
     };
     let id = ctx.product_contexts.push(ProductContext {
         name,

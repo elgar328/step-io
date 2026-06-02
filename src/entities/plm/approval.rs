@@ -1,4 +1,4 @@
-//! `APPROVAL` handler — Pass 9-9 plm. Depends on `Pass9PlmApprovalLeaves`
+//! `APPROVAL` handler plm. Depends on the approval-leaf handlers
 //! for the status ref.
 
 use crate::entities::SimpleEntityHandler;

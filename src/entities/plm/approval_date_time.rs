@@ -1,6 +1,6 @@
-//! `APPROVAL_DATE_TIME` handler — Pass 9-10 plm. Depends on
-//! `Pass9PlmApproval` (`dated_approval` ref) and `Pass9PlmDateAndTime`
-//! (`date_time` SELECT).
+//! `APPROVAL_DATE_TIME` handler plm. Depends on
+//! the `APPROVAL` handler (`dated_approval` ref) and the `DATE_AND_TIME`
+//! handler (`date_time` SELECT).
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref};

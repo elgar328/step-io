@@ -1,4 +1,4 @@
-//! `DESCRIPTIVE_REPRESENTATION_ITEM` handler — Pass 8-1 (property-1).
+//! `DESCRIPTIVE_REPRESENTATION_ITEM` handler (property-1).
 //!
 //! AP214: `DESCRIPTIVE_REPRESENTATION_ITEM SUBTYPE OF (representation_item)`
 //! with own field `description: text`. STEP positional inherits the parent

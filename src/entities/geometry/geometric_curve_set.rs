@@ -1,4 +1,4 @@
-//! `GEOMETRIC_CURVE_SET` handler — Pass 6-4f.
+//! `GEOMETRIC_CURVE_SET` handler.
 //!
 //! Hosts the shared reader/writer body that the `GEOMETRIC_SET` sister
 //! imports. Both names share the same EXPRESS shape; `GEOMETRIC_CURVE_SET`

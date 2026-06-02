@@ -1,4 +1,4 @@
-//! `SHAPE_ASPECT` handler — Pass 8-pre.
+//! `SHAPE_ASPECT` handler.
 //!
 //! Resolves `SHAPE_ASPECT.of_shape` through the assembly pass's
 //! `pdef_shape_to_pdef` and `pdef_to_product` maps to a `ProductId`.

@@ -1,4 +1,4 @@
-//! `GENERAL_PROPERTY_ASSOCIATION` handler — Pass 8-5.
+//! `GENERAL_PROPERTY_ASSOCIATION` handler.
 //!
 //! Links a `GENERAL_PROPERTY` (`base_definition`) to the property
 //! occurrence it annotates (`derived_definition`, a `PROPERTY_DEFINITION`).

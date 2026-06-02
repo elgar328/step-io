@@ -1,4 +1,4 @@
-//! `B_SPLINE_CURVE_WITH_KNOTS` handler — Pass 4-1 leaf NURBS curve
+//! `B_SPLINE_CURVE_WITH_KNOTS` handler leaf NURBS curve
 //! (non-rational; rational form lives in `rational_bspline_curve.rs`).
 
 use crate::entities::SimpleEntityHandler;

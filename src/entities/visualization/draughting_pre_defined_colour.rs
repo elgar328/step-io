@@ -1,4 +1,4 @@
-//! `DRAUGHTING_PRE_DEFINED_COLOUR` handler — Pass 7-1 (shares the colour
+//! `DRAUGHTING_PRE_DEFINED_COLOUR` handler (shares the colour
 //! leaf pass with `COLOUR_RGB`). Pre-defined colours name a stock colour
 //! (`"white"`, `"black"`, etc.) instead of carrying RGB triples. Reader
 //! pushes a `Colour::PreDefined(...)` variant into `VisualizationPool::colours`

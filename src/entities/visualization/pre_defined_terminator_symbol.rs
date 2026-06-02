@@ -1,4 +1,4 @@
-//! `PRE_DEFINED_TERMINATOR_SYMBOL` handler — Pass 7-1. Stock terminator
+//! `PRE_DEFINED_TERMINATOR_SYMBOL` handler. Stock terminator
 //! symbol referenced from leader / dimension annotation chains (arrow
 //! heads, slashes, ...). Reader pushes a
 //! `PreDefinedSymbol::Terminator(...)` variant into

@@ -1,4 +1,4 @@
-//! `SHAPE_ASPECT_RELATIONSHIP` family handlers — Pass 8-pre-b.
+//! `SHAPE_ASPECT_RELATIONSHIP` family handlers.
 //!
 //! A directed relation between two shape aspects. Both endpoints are
 //! `shape_aspect`-typed (an abstract supertype), resolved here through

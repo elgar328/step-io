@@ -1,4 +1,4 @@
-//! `VERTEX_LOOP` handler — Pass 5-4 (intermediate map).
+//! `VERTEX_LOOP` handler (intermediate map).
 //!
 //! Degenerate single-vertex face boundary used by spheres and some
 //! revolutions. Mirrors `ReaderContext::convert_vertex_loop` and
@@ -6,7 +6,7 @@
 
 // IR_PRESSURE: VERTEX_LOOP is read into `vertex_loop_map` keyed by entity
 // id while EDGE_LOOP lives in `edge_loop_map`. FACE_BOUND probes both. A
-// later IR refactor (Plan 7+) may unify the two into a single `Loop`
+// later IR refactor may unify the two into a single `Loop`
 // arena variant so the lookup is symmetric.
 
 use crate::entities::SimpleEntityHandler;

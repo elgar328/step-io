@@ -1,4 +1,4 @@
-//! `AREA_UNIT` handler — Pass 0-4 (units-3a).
+//! `AREA_UNIT` handler (units-3a).
 //!
 //! EXPRESS (`AP203e2` / `AP214e3`): `AREA_UNIT SUBTYPE OF (derived_unit)`
 //! with a `WHERE` clause fixing `dimensional_exponents` to `(2.0, 0, ...)`.

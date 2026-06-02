@@ -1,4 +1,4 @@
-//! `PERSONAL_ADDRESS` handler — Pass 9-24 plm. STEP positional shape
+//! `PERSONAL_ADDRESS` handler plm. STEP positional shape
 //! `(12 inherited ADDRESS fields, people, description)` per `AP214e3`
 //! schema. `people` is `SET[1:?] OF person`; `description` is required
 //! text. Lands in the same `addresses` arena as `ADDRESS` via the

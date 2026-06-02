@@ -1,12 +1,12 @@
-//! Units-group entity handlers (Pass 0 — runs before geometry passes).
-//! Pass 0-1 unit leaves + Pass 0-1b uncertainty. Each handler impls
+//! Units-group entity handlers.
+//! Unit-leaf + uncertainty handlers. Each handler impls
 //! [`crate::entities::SimpleEntityHandler`] or `ComplexEntityHandler` and
 //! registers via the `#[step_entity]` / `#[step_entity_complex]`
 //! proc-macro attributes from `step_io_macros`.
 //!
-//! `GLOBAL_UNIT_ASSIGNED_CONTEXT` (Pass 0-2 orchestrator) lives in
+//! `GLOBAL_UNIT_ASSIGNED_CONTEXT` orchestrator lives in
 //! `entities/shape_rep/` per the ir.toml blueprint — its arena is
-//! `representation_context` even though dispatch runs at Pass 0.
+//! `representation_context`.
 //!
 //! `uncertainty_measure_with_unit` keeps its `DOMAIN_TBD` marker — the
 //! catalog `ENTITY_GROUPS.md` labels it under `shape_rep` but the

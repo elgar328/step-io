@@ -1,4 +1,4 @@
-//! `CIRCLE` handler — Pass 4-1 leaf 3D circle.
+//! `CIRCLE` handler leaf 3D circle.
 
 use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::axis2_placement_3d::Axis2Placement3dHandler;

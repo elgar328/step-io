@@ -1,4 +1,4 @@
-//! `NAME_ATTRIBUTE` handler — Pass 9-25b.
+//! `NAME_ATTRIBUTE` handler.
 //!
 //! `(attribute_value, named_item)` — SELECT target. Initial coverage:
 //! `product_definition` (via `pdef_to_product` → `product_arena_map`) and

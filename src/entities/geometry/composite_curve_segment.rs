@@ -1,4 +1,4 @@
-//! `COMPOSITE_CURVE_SEGMENT` handler — Pass 4-3c.
+//! `COMPOSITE_CURVE_SEGMENT` handler.
 //!
 //! Mirrors `ReaderContext::convert_composite_curve_segment` and
 //! `WriteBuffer::emit_composite_curve_segment`. The reader records

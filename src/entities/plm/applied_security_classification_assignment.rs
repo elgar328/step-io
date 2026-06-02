@@ -1,4 +1,4 @@
-//! `APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT` handler — Pass 9-14 plm.
+//! `APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT` handler plm.
 //! Variant of the `security_classification_assignment` arena enum.
 
 use crate::entities::SimpleEntityHandler;

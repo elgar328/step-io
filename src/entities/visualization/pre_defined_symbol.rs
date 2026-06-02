@@ -1,4 +1,4 @@
-//! `PRE_DEFINED_SYMBOL` handler — Pass 7-1. Abstract supertype of
+//! `PRE_DEFINED_SYMBOL` handler. Abstract supertype of
 //! `PRE_DEFINED_TERMINATOR_SYMBOL`; corpus 0 in observed AP242 files.
 //! Reader pushes a `PreDefinedSymbol::Plain(...)` variant into
 //! `VisualizationPool::pre_defined_symbols` and records the

@@ -1,4 +1,4 @@
-//! `PLANE_ANGLE_MEASURE_WITH_UNIT` handler — Pass 0-3 (units-1).
+//! `PLANE_ANGLE_MEASURE_WITH_UNIT` handler (units-1).
 
 use crate::entities::SimpleEntityHandler;
 use crate::entities::units::length_measure_with_unit::emit_mwu;

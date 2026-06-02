@@ -1,4 +1,4 @@
-//! `OBJECT_ROLE` handler — Pass 9-22 plm Role leaf.
+//! `OBJECT_ROLE` handler plm Role leaf.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_optional_string, read_string_or_unset};

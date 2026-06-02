@@ -1,4 +1,4 @@
-//! `CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT` handler — Pass 9-7 plm.
+//! `CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT` handler plm.
 //! Variant of the `person_and_organization_assignment` arena enum. Same
 //! field shape as the Applied variant; differs in AP214 context.
 

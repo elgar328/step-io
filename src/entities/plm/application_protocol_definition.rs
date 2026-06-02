@@ -1,8 +1,8 @@
-//! `APPLICATION_PROTOCOL_DEFINITION` handler — Pass 9-26 plm. STEP
+//! `APPLICATION_PROTOCOL_DEFINITION` handler plm. STEP
 //! positional shape `(status, application_interpreted_model_schema_name,
 //! application_protocol_year, application)` per `AP214e3` schema.
 //! `application` is a ref to `APPLICATION_CONTEXT` populated by the
-//! earlier Pass 9-25.
+//! `APPLICATION_CONTEXT` handler.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref, read_integer, read_string_or_unset};

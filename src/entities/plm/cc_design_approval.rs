@@ -1,4 +1,4 @@
-//! `CC_DESIGN_APPROVAL` handler — Pass 9-11 plm. Variant of the
+//! `CC_DESIGN_APPROVAL` handler plm. Variant of the
 //! `approval_assignment` arena enum. STEP entity name lacks the
 //! `_ASSIGNMENT` suffix that the Applied sibling carries.
 

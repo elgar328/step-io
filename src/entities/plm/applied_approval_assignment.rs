@@ -1,4 +1,4 @@
-//! `APPLIED_APPROVAL_ASSIGNMENT` handler — Pass 9-11 plm. Variant of the
+//! `APPLIED_APPROVAL_ASSIGNMENT` handler plm. Variant of the
 //! `approval_assignment` arena enum.
 
 use crate::entities::SimpleEntityHandler;

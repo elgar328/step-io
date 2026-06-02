@@ -1,4 +1,4 @@
-//! `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` handler — Pass 6-7.
+//! `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` handler.
 //!
 //! Binds each NAUO to a `Transform3d` by walking the RR-complex sub-entity
 //! that the CDSR's first attribute references. Reader body needs `&graph`

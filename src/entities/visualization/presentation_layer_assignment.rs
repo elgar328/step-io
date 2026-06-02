@@ -1,8 +1,8 @@
-//! `PRESENTATION_LAYER_ASSIGNMENT` handler — Pass 7-12. Top-level
+//! `PRESENTATION_LAYER_ASSIGNMENT` handler. Top-level
 //! grouping of `STYLED_ITEM` entries into a named display layer
-//! ("VISIBLE", "HIDDEN", numeric ids, ...). Runs after `Pass7OverRiding`
-//! so the `assigned_items` SELECT refs resolve to existing
-//! `StyledItemId` arena entries. Other `layered_item` SELECT variants
+//! ("VISIBLE", "HIDDEN", numeric ids, ...). Topo order processes the
+//! referenced styled items first, so the `assigned_items` SELECT refs
+//! resolve to existing `StyledItemId` arena entries. Other `layered_item` SELECT variants
 //! (direct geometry refs, etc.) are silently dropped on read.
 
 use crate::entities::SimpleEntityHandler;

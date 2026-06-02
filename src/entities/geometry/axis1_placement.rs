@@ -1,4 +1,4 @@
-//! `AXIS1_PLACEMENT` handler — Pass 3.
+//! `AXIS1_PLACEMENT` handler.
 //!
 //! Mirrors the legacy `ReaderContext::convert_axis1_placement` and
 //! `WriteBuffer::emit_axis1_placement`.

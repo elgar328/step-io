@@ -1,4 +1,4 @@
-//! `DESCRIPTION_ATTRIBUTE` handler — Pass 9-25b.
+//! `DESCRIPTION_ATTRIBUTE` handler.
 //!
 //! `(attribute_value, described_item)` — SELECT target. Initial coverage:
 //! `person_and_organization` only. Other variants

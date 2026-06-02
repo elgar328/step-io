@@ -1,4 +1,4 @@
-//! `ORIENTED_CLOSED_SHELL` handler — Pass 5-7b (intermediate map).
+//! `ORIENTED_CLOSED_SHELL` handler (intermediate map).
 //!
 //! Records the wrapper in `oriented_closed_shell_map`; the actual
 //! `CLOSED_SHELL` arena entry is reused (orientation is later applied

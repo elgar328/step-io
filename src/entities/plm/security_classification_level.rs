@@ -1,4 +1,4 @@
-//! `SECURITY_CLASSIFICATION_LEVEL` handler — Pass 9-12 plm Security leaf.
+//! `SECURITY_CLASSIFICATION_LEVEL` handler plm Security leaf.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_string_or_unset};

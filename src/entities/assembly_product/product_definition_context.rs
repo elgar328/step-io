@@ -1,4 +1,4 @@
-//! `PRODUCT_DEFINITION_CONTEXT` handler — Pass 9-27 `assembly_product`.
+//! `PRODUCT_DEFINITION_CONTEXT` handler `assembly_product`.
 //! STEP positional `(name, frame_of_reference, life_cycle_stage)` per
 //! `AP214e3` (inherits `application_context_element`). Lands in the
 //! `product_definition_contexts` arena with `kind = Plain`.

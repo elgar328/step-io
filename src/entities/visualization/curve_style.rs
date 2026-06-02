@@ -1,4 +1,4 @@
-//! `CURVE_STYLE` handler — Pass 7-8b. Combines a curve-font reference, a
+//! `CURVE_STYLE` handler. Combines a curve-font reference, a
 //! width measure, and a colour reference. Reader resolves the font/colour
 //! refs through `viz_pre_defined_curve_font_id_map` / `viz_colour_id_map`
 //! and pushes the assembled `CurveStyle` into

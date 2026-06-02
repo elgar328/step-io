@@ -1,4 +1,4 @@
-//! `SURFACE_OF_REVOLUTION` handler — Pass 4-4A.
+//! `SURFACE_OF_REVOLUTION` handler.
 //!
 //! Mirrors `ReaderContext::convert_surface_of_revolution` and
 //! `WriteBuffer::emit_surface_of_revolution`.

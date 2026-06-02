@@ -1,4 +1,4 @@
-//! `CC_DESIGN_DATE_AND_TIME_ASSIGNMENT` handler — Pass 9-4 plm. Variant
+//! `CC_DESIGN_DATE_AND_TIME_ASSIGNMENT` handler plm. Variant
 //! of the `date_and_time_assignment` arena enum. Same field shape as
 //! `APPLIED_DATE_AND_TIME_ASSIGNMENT`; differs only in AP214 context.
 

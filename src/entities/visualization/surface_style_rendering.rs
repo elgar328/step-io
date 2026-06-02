@@ -1,4 +1,4 @@
-//! `SURFACE_STYLE_RENDERING` handler (Pass 7-6) — the `Itself` variant of
+//! `SURFACE_STYLE_RENDERING` handler — the `Itself` variant of
 //! the `surface_style_rendering` arena. Same shape as the
 //! `_WITH_PROPERTIES` subtype minus the `properties` list. Not currently
 //! observed in the reference-check corpus; the handler exists to align

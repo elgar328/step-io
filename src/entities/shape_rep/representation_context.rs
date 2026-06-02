@@ -1,5 +1,4 @@
-//! Plain `REPRESENTATION_CONTEXT(context_identifier, context_type)` handler —
-//! Pass 0-2 context.
+//! Plain `REPRESENTATION_CONTEXT(context_identifier, context_type)` handler.
 //!
 //! A standalone simple `REPRESENTATION_CONTEXT` (no `GLOBAL_UNIT_ASSIGNED_CONTEXT`
 //! and no `GEOMETRIC_REPRESENTATION_CONTEXT` parts) — e.g.

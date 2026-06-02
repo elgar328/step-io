@@ -1,4 +1,4 @@
-//! `TOROIDAL_SURFACE` handler — Pass 4-1 leaf surface.
+//! `TOROIDAL_SURFACE` handler leaf surface.
 
 use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::axis2_placement_3d::Axis2Placement3dHandler;

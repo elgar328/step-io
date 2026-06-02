@@ -1,4 +1,4 @@
-//! `DOCUMENT_REPRESENTATION_TYPE` handler — Pass 9-19 plm Document
+//! `DOCUMENT_REPRESENTATION_TYPE` handler plm Document
 //! linker.
 
 use crate::entities::SimpleEntityHandler;

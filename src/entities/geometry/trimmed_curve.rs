@@ -1,4 +1,4 @@
-//! `TRIMMED_CURVE` handler — Pass 4-3c.
+//! `TRIMMED_CURVE` handler.
 //!
 //! Mirrors `ReaderContext::convert_trimmed_curve` and
 //! `WriteBuffer::emit_trimmed_curve`.

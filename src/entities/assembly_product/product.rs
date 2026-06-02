@@ -1,4 +1,4 @@
-//! `PRODUCT` handler — Pass 6-1.
+//! `PRODUCT` handler.
 //!
 //! Reader populates `product_arena_map` and pushes a `Product` shell whose
 //! geometry/category fields are filled in by later sub-passes. Writer emits
@@ -38,8 +38,9 @@ impl SimpleEntityHandler for ProductHandler {
         let description_raw = read_string_or_unset(attrs, 2, entity_id, "description")?;
         // attrs[3] = frame_of_reference (SET[1:?] OF PRODUCT_CONTEXT).
         // Capture the first ref for per-product context wiring; the resolve
-        // to ProductContextId happens after Pass9AssemblyContext fills the
-        // id map. Corpus is consistently a single-element set.
+        // to ProductContextId happens in the `resolve_product_contexts`
+        // post-pass, once `product_context_id_map` is filled. Corpus is
+        // consistently a single-element set.
         let pc_step_ref = match attrs.get(3) {
             Some(Attribute::List(refs)) => match refs.first() {
                 Some(Attribute::EntityRef(r)) => Some(*r),

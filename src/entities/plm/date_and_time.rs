@@ -1,5 +1,5 @@
-//! `DATE_AND_TIME` handler — Pass 9-3 plm. Depends on date arena
-//! (`Pass9PlmDateLeaves`) and local-time arena (`Pass9PlmLocalTime`).
+//! `DATE_AND_TIME` handler plm. Depends on date arena
+//! (the date-leaf handlers) and local-time arena (the `LOCAL_TIME` handler).
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref};

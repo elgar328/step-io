@@ -1,4 +1,4 @@
-//! `PRODUCT_DEFINITION_FORMATION` handler — Pass 6-2.
+//! `PRODUCT_DEFINITION_FORMATION` handler.
 //!
 //! Hosts the shared reader body that the with-source sister
 //! (`product_definition_formation_with_source`) imports. Reader maps the

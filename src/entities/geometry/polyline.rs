@@ -1,7 +1,7 @@
-//! `POLYLINE` handler — Pass 4-1 leaf 3D polyline.
+//! `POLYLINE` handler leaf 3D polyline.
 //!
 //! Subtype of `BOUNDED_CURVE`. Stores an ordered point id list. The 2D
-//! sister variant is handled by `polyline_2d.rs` (Pass 4a) — discriminated
+//! sister variant is handled by `polyline_2d.rs` — discriminated
 //! by the first point ref's coordinate count.
 
 use crate::entities::SimpleEntityHandler;

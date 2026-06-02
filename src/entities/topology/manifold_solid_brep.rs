@@ -1,4 +1,4 @@
-//! `MANIFOLD_SOLID_BREP` handler — Pass 5-8.
+//! `MANIFOLD_SOLID_BREP` handler.
 //!
 //! Mirrors the legacy `convert_manifold_solid_brep` and the
 //! single-shell branch of `emit_solid`. The shared `solid_id_to_name`

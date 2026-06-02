@@ -1,4 +1,4 @@
-//! `VERTEX_POINT` handler — Pass 5-1 leaf vertex.
+//! `VERTEX_POINT` handler leaf vertex.
 //!
 //! Mirrors the legacy `ReaderContext::convert_vertex_point` and
 //! `WriteBuffer::emit_vertex` one-to-one. The writer entry point keeps

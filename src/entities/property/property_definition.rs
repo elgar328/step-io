@@ -1,4 +1,4 @@
-//! `PROPERTY_DEFINITION` handler — Pass 8-2.
+//! `PROPERTY_DEFINITION` handler.
 //!
 //! Reader stores `(name, description)` in `property_def_map` keyed by STEP
 //! entity id. Targets that don't resolve to a product context (e.g. an
@@ -91,7 +91,7 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
         // characterized_definition SELECT (subset). Pattern A:
         // PRODUCT_DEFINITION (pdef_to_product). Pattern B: SHAPE_ASPECT
         // (shape_aspect_id_map). Pattern C: PRODUCT_DEFINITION_SHAPE — its
-        // arena entry is pushed by Pass6PdsClassify with the
+        // arena entry is pushed by the PDS handler with the
         // ProductDefinitionShape variant; resolved through pdef_shape_to_pdef
         // → pdef_to_product. Pattern D: GENERAL_PROPERTY — standalone, no
         // product binding. Product-bound patterns still gate on a resolvable

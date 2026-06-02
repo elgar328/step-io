@@ -1,4 +1,4 @@
-//! `MANIFOLD_SURFACE_SHAPE_REPRESENTATION` handler — Pass 6-4a.
+//! `MANIFOLD_SURFACE_SHAPE_REPRESENTATION` handler.
 //!
 //! Reader resolves each item that points at an SBSM and flattens the
 //! collected shells into `mssr_shells_map`; the first `AXIS2_PLACEMENT_3D`

@@ -1,4 +1,4 @@
-//! `HYPERBOLA` handler — Pass 4-1 leaf 3D hyperbola.
+//! `HYPERBOLA` handler leaf 3D hyperbola.
 //!
 //! `SUBTYPE OF CONIC`. Attributes: `(name, position, semi_axis,
 //! semi_imag_axis)`. The 2D sister variant (placement in 2D arena) is

@@ -1,4 +1,4 @@
-//! `PRODUCT_RELATED_PRODUCT_CATEGORY` handler — Pass 6-1b sub-pass a.
+//! `PRODUCT_RELATED_PRODUCT_CATEGORY` handler sub-pass a.
 //!
 //! PRPC carries the product side of the category chain: a `kind` label, an
 //! optional description, and the list of products it applies to. Reader

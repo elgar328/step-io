@@ -1,4 +1,4 @@
-//! `MASS_MEASURE_WITH_UNIT` handler — Pass 0-3 (units-1).
+//! `MASS_MEASURE_WITH_UNIT` handler (units-1).
 //!
 //! Sister of [`crate::entities::units::length_measure_with_unit`]; same
 //! attribute shape with `MASS_MEASURE(real)` as the typed value component.

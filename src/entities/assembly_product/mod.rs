@@ -1,4 +1,4 @@
-//! Assembly + product entity handlers (Pass 6-1 ~ 6-3, 6-7, 6-8). Each
+//! Assembly + product entity handlers. Each
 //! handler impls [`crate::entities::SimpleEntityHandler`] and registers
 //! via the `#[step_entity]` proc-macro attribute from `step_io_macros`.
 //! The graph-aware variants (CDSR, `PRODUCT_DEFINITION_SHAPE` classifier)

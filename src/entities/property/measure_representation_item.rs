@@ -1,4 +1,4 @@
-//! `MEASURE_REPRESENTATION_ITEM` handlers — Pass 8-1.
+//! `MEASURE_REPRESENTATION_ITEM` handlers.
 //!
 //! Two handlers register for the same entity name: a simple handler for the
 //! single-line form and a `#[step_entity_complex]` handler for the

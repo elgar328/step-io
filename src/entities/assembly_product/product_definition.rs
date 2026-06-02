@@ -1,4 +1,4 @@
-//! `PRODUCT_DEFINITION` handler — Pass 6-3.
+//! `PRODUCT_DEFINITION` handler.
 //!
 //! Reader follows the formation ref out of `formation_to_product` to learn
 //! which product the PDEF describes, and stores the result in

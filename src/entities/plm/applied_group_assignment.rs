@@ -1,4 +1,4 @@
-//! `APPLIED_GROUP_ASSIGNMENT` handler — Pass 9-21 plm Group linker.
+//! `APPLIED_GROUP_ASSIGNMENT` handler plm Group linker.
 //! STEP positional shape `(assigned_group, items)` per `AP214e3` schema
 //! (`group_assignment` supertype lines 5795–5802 + own `items`).
 

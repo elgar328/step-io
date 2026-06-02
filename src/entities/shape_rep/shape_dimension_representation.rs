@@ -37,10 +37,10 @@ impl SimpleEntityHandler for ShapeDimensionRepresentationHandler {
         if let Some(crate::ir::shape_rep::RepresentationContextRef::Unitful(ctx_id)) = context {
             ctx.repr_context_map.insert(entity_id, ctx_id);
         }
-        // SDR reads at Pass6ShapeRep, before the complex MEASURE_REPRESENTATION_ITEM
-        // arena push at Pass8Measure. Defer item resolution: store the raw refs
-        // and push an empty `items`; `resolve_deferred_sdr_items` (run after
-        // Pass8Measure) rebuilds `items` once every referenced item is read.
+        // SDR is read before the complex MEASURE_REPRESENTATION_ITEM arena
+        // push. Defer item resolution: store the raw refs and push an empty
+        // `items`; `resolve_deferred_sdr_items` rebuilds `items` once every
+        // referenced item is read.
         let repr_id = ctx
             .representations
             .push(Representation::ShapeDimensionRepresentation(

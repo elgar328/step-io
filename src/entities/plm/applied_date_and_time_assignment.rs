@@ -1,4 +1,4 @@
-//! `APPLIED_DATE_AND_TIME_ASSIGNMENT` handler — Pass 9-4 plm. Variant
+//! `APPLIED_DATE_AND_TIME_ASSIGNMENT` handler plm. Variant
 //! of the `date_and_time_assignment` arena enum.
 
 use crate::entities::SimpleEntityHandler;

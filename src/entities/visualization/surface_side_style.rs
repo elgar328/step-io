@@ -1,4 +1,4 @@
-//! `SURFACE_SIDE_STYLE` handler — Pass 7-7. Aggregates one or more
+//! `SURFACE_SIDE_STYLE` handler. Aggregates one or more
 //! `SURFACE_SIDE_STYLE` entries (each a fill-area or rendering style)
 //! into a named composite. Pushes into the shared `founded_item` arena
 //! as the `SurfaceSideStyle` variant.

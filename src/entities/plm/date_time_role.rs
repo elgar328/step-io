@@ -1,4 +1,4 @@
-//! `DATE_TIME_ROLE` handler — Pass 9-1 plm leaf.
+//! `DATE_TIME_ROLE` handler plm leaf.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_string_or_unset};

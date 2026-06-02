@@ -1,4 +1,4 @@
-//! `DIRECTION` handler — Pass 4a-1 (2D, pcurve subtree).
+//! `DIRECTION` handler (2D, pcurve subtree).
 //!
 //! Sister handler of [`crate::entities::geometry::direction::DirectionHandler`].
 

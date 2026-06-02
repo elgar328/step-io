@@ -1,9 +1,9 @@
-//! `DERIVED_UNIT` handler — Pass 0-4 (units-1b).
+//! `DERIVED_UNIT` handler (units-1b).
 //!
 //! AP214: `DERIVED_UNIT(elements: SET[1:?] OF derived_unit_element)`.
 //! STEP positional: single `(#a,#b,...)` list. The reader resolves each
 //! element ref through [`crate::reader::ReaderContext::due_id_map`]
-//! (populated by `Pass0MwuDue`); refs that don't resolve are dropped with
+//! (populated by the `DERIVED_UNIT_ELEMENT` handler); refs that don't resolve are dropped with
 //! a warning. The schema's `[1:?]` cardinality is enforced post-resolve —
 //! a `DERIVED_UNIT` whose `elements` resolve to an empty `Vec` is
 //! dropped rather than admitted to the arena.

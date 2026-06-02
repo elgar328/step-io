@@ -1,4 +1,4 @@
-//! `STYLED_ITEM` handler — Pass 7-10.
+//! `STYLED_ITEM` handler.
 //!
 //! Pairs a list of `PRESENTATION_STYLE_ASSIGNMENT` entries with a target
 //! geometry/topology object. The reader pushes the resolved

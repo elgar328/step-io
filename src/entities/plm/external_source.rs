@@ -1,4 +1,4 @@
-//! `EXTERNAL_SOURCE` handler — Pass 9-15 plm Identification leaf.
+//! `EXTERNAL_SOURCE` handler plm Identification leaf.
 //! `source_id` is the AP214 `source_item` SELECT — step-io reads the
 //! `IDENTIFIER` variant only; other variants (`MESSAGE`, ...) drop.
 

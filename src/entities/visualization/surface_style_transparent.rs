@@ -1,4 +1,4 @@
-//! `SURFACE_STYLE_TRANSPARENT` handler — Pass 7-5. Leaf entity holding a
+//! `SURFACE_STYLE_TRANSPARENT` handler. Leaf entity holding a
 //! single transparency factor; populates `viz_transparent_map` for the
 //! rendering pass to consume.
 

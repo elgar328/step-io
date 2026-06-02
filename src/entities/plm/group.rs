@@ -1,4 +1,4 @@
-//! `GROUP` handler — Pass 9-20 plm Group leaf.
+//! `GROUP` handler plm Group leaf.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_optional_string, read_string_or_unset};

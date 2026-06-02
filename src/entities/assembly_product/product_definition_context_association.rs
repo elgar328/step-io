@@ -1,4 +1,4 @@
-//! `PRODUCT_DEFINITION_CONTEXT_ASSOCIATION` handler — Pass 9-29
+//! `PRODUCT_DEFINITION_CONTEXT_ASSOCIATION` handler
 //! `assembly_product`. STEP positional
 //! `(definition, frame_of_reference, role)` per `AP214e3`.
 //! `definition` refs `PRODUCT_DEFINITION` → resolved via

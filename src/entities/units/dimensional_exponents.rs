@@ -1,9 +1,9 @@
 //! `DIMENSIONAL_EXPONENTS` handler — phase dim-exp-arena-a.
 //!
 //! Schema-faithful `single_struct`: the seven SI base-quantity exponents
-//! as `REAL`. Runs at `Pass0DimExp` (before `Pass0Leaf`) so `NAMED_UNIT`
-//! subtype handlers (added in phase dim-exp-arena-b) can resolve their
-//! `dimensions` ref through `dim_exp_id_map`.
+//! as `REAL`. Read before the `NAMED_UNIT` subtype handlers (added in
+//! phase dim-exp-arena-b) so they can resolve their `dimensions` ref
+//! through `dim_exp_id_map`.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_real};

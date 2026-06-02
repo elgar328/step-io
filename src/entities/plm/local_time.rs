@@ -1,5 +1,5 @@
-//! `LOCAL_TIME` handler — Pass 9-2 plm. Depends on UTC offset arena
-//! populated by `Pass9PlmDateLeaves`.
+//! `LOCAL_TIME` handler plm. Depends on UTC offset arena
+//! populated by the date-leaf handlers.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{

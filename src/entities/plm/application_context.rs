@@ -1,4 +1,4 @@
-//! `APPLICATION_CONTEXT` handler — Pass 9-25 plm. STEP positional
+//! `APPLICATION_CONTEXT` handler plm. STEP positional
 //! shape `(application)` per `AP214e3` schema. Leaf entity; refs nothing.
 
 use crate::entities::SimpleEntityHandler;

@@ -1,10 +1,10 @@
-//! `MAKE_FROM_USAGE_OPTION` handler — Pass 6-3b.
+//! `MAKE_FROM_USAGE_OPTION` handler.
 //!
 //! `SUBTYPE OF PRODUCT_DEFINITION_RELATIONSHIP` — inherits the 5 base
 //! attributes and adds `(ranking INTEGER, ranking_rationale STRING,
 //! quantity REF→MEASURE_WITH_UNIT)`. Shares the
 //! `product_definition_relationships` arena with the plain supertype.
-//! `quantity` resolves through `mwu_id_map` (populated by Pass 0); an
+//! `quantity` resolves through `mwu_id_map`; an
 //! unmapped quantity (e.g. an unsupported MWU subtype) silently drops the
 //! entity, matching the policy of other MWU consumers.
 

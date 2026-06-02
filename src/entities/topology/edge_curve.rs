@@ -1,4 +1,4 @@
-//! `EDGE_CURVE` handler — Pass 5-2.
+//! `EDGE_CURVE` handler.
 //!
 //! Mirrors the legacy `ReaderContext::convert_edge_curve` and
 //! `WriteBuffer::emit_edge` one-to-one. The writer keeps `emit_edge` as a
@@ -40,7 +40,7 @@ impl SimpleEntityHandler for EdgeCurveHandler {
         let end = ctx.resolve_vertex(entity_id, end_ref, "edge_end")?;
         let curve = ctx.resolve_curve(entity_id, curve_ref, "edge_geometry")?;
         // If edge_geometry referenced a SURFACE_CURVE / SEAM_CURVE, its
-        // wrapper was captured in Pass 4-3b keyed by that wrapper id. Direct
+        // wrapper was captured by the `SURFACE_CURVE` / `SEAM_CURVE` handler keyed by that wrapper id. Direct
         // 3D-curve refs return None.
         let surface_curve = ctx.surface_curve_map.get(&curve_ref).cloned();
 

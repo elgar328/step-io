@@ -1,4 +1,4 @@
-//! `FACE_BOUND` handler — Pass 5-5 (intermediate map).
+//! `FACE_BOUND` handler (intermediate map).
 //!
 //! Shares its read/write body with `FACE_OUTER_BOUND` via the
 //! `read_face_bound_body` / `write_face_bound_body` helpers below; the

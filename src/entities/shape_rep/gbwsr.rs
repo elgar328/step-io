@@ -1,5 +1,4 @@
-//! `GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION` handler —
-//! Pass 6-4g.
+//! `GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION` handler.
 //!
 //! Hosts the shared reader/writer body that the GBSSR sister imports.
 //! Both wrappers share the same `(name, items, context)` shape: the items

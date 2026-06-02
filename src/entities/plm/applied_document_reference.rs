@@ -1,4 +1,4 @@
-//! `APPLIED_DOCUMENT_REFERENCE` handler — Pass 9-19 plm Document
+//! `APPLIED_DOCUMENT_REFERENCE` handler plm Document
 //! linker. STEP positional shape is `(assigned_document, source, items)`;
 //! `source` is inherited from `document_reference` supertype.
 

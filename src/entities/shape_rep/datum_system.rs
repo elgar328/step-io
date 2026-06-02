@@ -1,4 +1,4 @@
-//! `DATUM_SYSTEM` handler — Pass 8-pre-c3.
+//! `DATUM_SYSTEM` handler.
 //!
 //! `DATUM_SYSTEM` is a `SHAPE_ASPECT` subtype: the 4-attr shape-aspect body
 //! (name, description, `of_shape`, `product_definitional`) plus a

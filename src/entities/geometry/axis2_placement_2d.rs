@@ -1,4 +1,4 @@
-//! `AXIS2_PLACEMENT_2D` handler — Pass 4a-2.
+//! `AXIS2_PLACEMENT_2D` handler.
 //!
 //! Mirrors the legacy `convert_axis2_placement_2d` and
 //! `emit_axis2_placement_2d`. Distinct STEP entity name (no 3D

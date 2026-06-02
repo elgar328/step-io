@@ -1,4 +1,4 @@
-//! `CAMERA_MODEL_D3` handler — Pass 8-pre-e.
+//! `CAMERA_MODEL_D3` handler.
 //!
 //! A `camera_model` subtype pairing a view reference frame with a
 //! `VIEW_VOLUME`. Pushed into `VisualizationPool::camera_models` as the

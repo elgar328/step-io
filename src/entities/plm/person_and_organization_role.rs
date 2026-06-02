@@ -1,4 +1,4 @@
-//! `PERSON_AND_ORGANIZATION_ROLE` handler — Pass 9-5 plm leaf.
+//! `PERSON_AND_ORGANIZATION_ROLE` handler plm leaf.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_string_or_unset};

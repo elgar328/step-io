@@ -1,4 +1,4 @@
-//! `APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT` handler — Pass 9-16 plm.
+//! `APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT` handler plm.
 //! Variant of the `identification_assignment` arena enum. 4 fields —
 //! `source` ref distinguishes it from the Applied sibling.
 

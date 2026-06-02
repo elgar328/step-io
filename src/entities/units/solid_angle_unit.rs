@@ -1,4 +1,4 @@
-//! `SOLID_ANGLE_UNIT` handler — Pass 0-1 leaf for solid-angle flavour.
+//! `SOLID_ANGLE_UNIT` handler leaf for solid-angle flavour.
 //!
 //! Sister of `LengthUnitHandler` / `PlaneAngleUnitHandler`. Catalog
 //! group: `units` (O, part-only). `CONVERSION_BASED_UNIT` form for

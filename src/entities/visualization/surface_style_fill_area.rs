@@ -1,4 +1,4 @@
-//! `SURFACE_STYLE_FILL_AREA` handler — Pass 7-4. Wraps a `FILL_AREA_STYLE`
+//! `SURFACE_STYLE_FILL_AREA` handler. Wraps a `FILL_AREA_STYLE`
 //! into one of the `SURFACE_SIDE_STYLE` entry variants. Pushes into the
 //! shared `founded_item` arena as the `SurfaceStyleFillArea` variant.
 

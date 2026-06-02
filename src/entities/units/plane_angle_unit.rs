@@ -1,4 +1,4 @@
-//! `PLANE_ANGLE_UNIT` handler — Pass 0-1 leaf for plane-angle flavour.
+//! `PLANE_ANGLE_UNIT` handler leaf for plane-angle flavour.
 //!
 //! Sister of [`crate::entities::units::length_unit::LengthUnitHandler`].
 //! Catalog group: `units` (O, part-only — `REQUIRED_PARTS` dispatch keys

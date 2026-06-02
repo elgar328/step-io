@@ -1,4 +1,4 @@
-//! `LENGTH_MEASURE_WITH_UNIT` handler — Pass 0-3 (units-1).
+//! `LENGTH_MEASURE_WITH_UNIT` handler (units-1).
 //!
 //! AP214 schema: `LENGTH_MEASURE_WITH_UNIT(value_component: LENGTH_MEASURE,
 //! unit_component: unit)` — STEP positional `(typed-real, ref)`. The

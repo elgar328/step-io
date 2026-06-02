@@ -1,4 +1,4 @@
-//! `POLYLINE` handler — Pass 4a (2D, pcurve subtree).
+//! `POLYLINE` handler (2D, pcurve subtree).
 //!
 //! Sister of `polyline.rs`. The first point ref's coordinate count
 //! discriminates: 2D points dispatch here, 3D fall through to the 3D handler.

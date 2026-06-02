@@ -1,4 +1,4 @@
-//! `ADVANCED_BREP_SHAPE_REPRESENTATION` handler — Pass 6-4a.
+//! `ADVANCED_BREP_SHAPE_REPRESENTATION` handler.
 //!
 //! Reader collects every `MANIFOLD_SOLID_BREP` item (multi-body STEP files
 //! carry more than one) and binds the list to the ABSR id; the first

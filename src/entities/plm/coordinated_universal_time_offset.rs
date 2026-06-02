@@ -1,4 +1,4 @@
-//! `COORDINATED_UNIVERSAL_TIME_OFFSET` handler — Pass 9-1 plm leaf.
+//! `COORDINATED_UNIVERSAL_TIME_OFFSET` handler plm leaf.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_enum, read_integer, read_optional_integer};

@@ -1,4 +1,4 @@
-//! `PRODUCT_DEFINITION_CONTEXT_ROLE` handler — Pass 9-28 `assembly_product`.
+//! `PRODUCT_DEFINITION_CONTEXT_ROLE` handler `assembly_product`.
 //! STEP positional `(name, description)` per `AP214e3`. Leaf entity.
 
 use crate::entities::SimpleEntityHandler;

@@ -1,4 +1,4 @@
-//! `DOCUMENT` handler — Pass 9-18 plm. Variant `Itself` of the
+//! `DOCUMENT` handler plm. Variant `Itself` of the
 //! `document` arena enum.
 
 use crate::entities::SimpleEntityHandler;

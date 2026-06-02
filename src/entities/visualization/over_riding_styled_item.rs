@@ -1,9 +1,9 @@
-//! `OVER_RIDING_STYLED_ITEM` handler — Pass 7-10b.
+//! `OVER_RIDING_STYLED_ITEM` handler.
 //!
 //! Subtype of `STYLED_ITEM` whose `over_ridden_style` ref points at
-//! another styled item whose styles this entity replaces. Runs after
-//! `Pass7StyledItem` so the over-ridden ref can resolve to an existing
-//! `StyledItemId` in `VisualizationPool::styled_items`. Targets that
+//! another styled item whose styles this entity replaces. Topo order
+//! processes the referenced `STYLED_ITEM` first, so the over-ridden ref
+//! resolves to an existing `StyledItemId` in `VisualizationPool::styled_items`. Targets that
 //! don't resolve, missing over-ridden refs, or unsupported
 //! `representation_item` variants are silently dropped to preserve
 //! round-trip equality on the supported subset.

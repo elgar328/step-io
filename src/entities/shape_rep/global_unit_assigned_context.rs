@@ -1,4 +1,4 @@
-//! `GLOBAL_UNIT_ASSIGNED_CONTEXT` handler — Pass 0-2 orchestrator.
+//! `GLOBAL_UNIT_ASSIGNED_CONTEXT` handler orchestrator.
 
 use crate::entities::units::uncertainty_measure_with_unit::UncertaintyMeasureWithUnitHandler;
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};

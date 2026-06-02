@@ -1,4 +1,4 @@
-//! `ORIENTED_EDGE` handler — Pass 5-3 (intermediate map).
+//! `ORIENTED_EDGE` handler (intermediate map).
 //!
 //! Mirrors `ReaderContext::convert_oriented_edge` and
 //! `WriteBuffer::emit_oriented_edge`. `ORIENTED_EDGE` has no IR arena; the

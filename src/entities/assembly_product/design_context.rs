@@ -1,4 +1,4 @@
-//! `DESIGN_CONTEXT` handler — Pass 9-27 `assembly_product`. `AP203`
+//! `DESIGN_CONTEXT` handler `assembly_product`. `AP203`
 //! subtype of `PRODUCT_DEFINITION_CONTEXT` with a
 //! `life_cycle_stage='design'` `WHERE` constraint; identical field
 //! layout. Lands in the `product_definition_contexts` arena with

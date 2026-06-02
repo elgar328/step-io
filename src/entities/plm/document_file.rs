@@ -1,4 +1,4 @@
-//! `DOCUMENT_FILE` handler — Pass 9-18 plm. Variant `DocumentFile` of
+//! `DOCUMENT_FILE` handler plm. Variant `DocumentFile` of
 //! the `document` arena enum. `SUBTYPE OF (document, characterized_object)`
 //! — STEP P21 encodes all 6 attributes (4 from `document`, 2 from
 //! `characterized_object`).

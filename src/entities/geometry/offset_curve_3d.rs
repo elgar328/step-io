@@ -1,10 +1,9 @@
-//! `OFFSET_CURVE_3D` handler — Pass 4-4B (fixpoint dispatch).
+//! `OFFSET_CURVE_3D` handler.
 //!
 //! `OFFSET_CURVE_3D(name, basis_curve, distance, self_intersect,
 //! ref_direction)` — wraps another 3D curve as its basis offset by
-//! `distance` along `ref_direction`. Forward-ref to the basis curve is
-//! tolerated by the `Pass4_4Offset` fixpoint loop (same mechanism as
-//! `OFFSET_SURFACE`).
+//! `distance` along `ref_direction`. Topological dispatch processes the
+//! basis curve first, so the ref always resolves (same as `OFFSET_SURFACE`).
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{

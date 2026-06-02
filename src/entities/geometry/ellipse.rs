@@ -1,4 +1,4 @@
-//! `ELLIPSE` handler — Pass 4-1 leaf 3D ellipse.
+//! `ELLIPSE` handler leaf 3D ellipse.
 
 use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::axis2_placement_3d::Axis2Placement3dHandler;

@@ -1,4 +1,4 @@
-//! `IDENTIFICATION_ROLE` handler — Pass 9-15 plm Identification leaf.
+//! `IDENTIFICATION_ROLE` handler plm Identification leaf.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_optional_string, read_string_or_unset};

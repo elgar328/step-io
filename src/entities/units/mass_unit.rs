@@ -1,4 +1,4 @@
-//! `MASS_UNIT` handler — Pass 0-1 leaf for mass flavour.
+//! `MASS_UNIT` handler leaf for mass flavour.
 //!
 //! Mirrors the `LENGTH` / `PLANE_ANGLE` / `SOLID_ANGLE` leaves: dispatch keys on
 //! the `MASS_UNIT` part, the SI branch reads `(prefix, name)` from
@@ -102,8 +102,8 @@ impl ComplexEntityHandler for MassUnitHandler {
 
 /// Push a `NamedUnit::Mass` entry once the SI / CBU branch has resolved
 /// the unit into `mass_unit_map`. Mirrors `register_named_length` —
-/// `cbu_base` is set to `None` here and patched by the post-Pass0Leaf
-/// `backfill_cbu_base` once the outer↔base SI link is known.
+/// `cbu_base` is set to `None` here and patched by the
+/// `backfill_cbu_base` post-pass once the outer↔base SI link is known.
 fn register_named_mass(
     ctx: &mut ReaderContext,
     entity_id: u64,

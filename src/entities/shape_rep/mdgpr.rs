@@ -1,5 +1,5 @@
-//! `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION` handler —
-//! Pass 7-11. Top-level visualization wrapper holding a list of
+//! `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION` handler.
+//! Top-level visualization wrapper holding a list of
 //! `STYLED_ITEM`s plus an optional unit context.
 
 use crate::entities::SimpleEntityHandler;

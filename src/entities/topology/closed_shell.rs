@@ -1,4 +1,4 @@
-//! `CLOSED_SHELL` handler — Pass 5-7a.
+//! `CLOSED_SHELL` handler.
 //!
 //! Shares its read body with `OPEN_SHELL` via the `read_shell_body`
 //! helper. The writer keeps `emit_shell` as the dispatcher (keys off

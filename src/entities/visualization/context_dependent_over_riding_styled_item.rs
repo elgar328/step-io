@@ -1,4 +1,4 @@
-//! `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` (CDOSI) handler — Pass 7-10c.
+//! `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` (CDOSI) handler.
 //!
 //! Extends [`super::over_riding_styled_item::OverRidingStyledItemHandler`]
 //! with the additional `style_context` SELECT list. Each context resolves

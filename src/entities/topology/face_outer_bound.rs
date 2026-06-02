@@ -1,4 +1,4 @@
-//! `FACE_OUTER_BOUND` handler — Pass 5-5 (intermediate map).
+//! `FACE_OUTER_BOUND` handler (intermediate map).
 //!
 //! Sister handler of `FACE_BOUND`. Both share the read/write body in
 //! `face_bound.rs`; only the `is_outer` flag flips.

@@ -1,4 +1,4 @@
-//! `DOCUMENT_TYPE` handler — Pass 9-17 plm Document leaf.
+//! `DOCUMENT_TYPE` handler plm Document leaf.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_string_or_unset};

@@ -1,4 +1,4 @@
-//! `UNCERTAINTY_MEASURE_WITH_UNIT` handler — Pass 0-1b.
+//! `UNCERTAINTY_MEASURE_WITH_UNIT` handler.
 
 // DOMAIN_TBD: catalog ENTITY_GROUPS.md marks this as X but the reader handles length-flavour uncertainty. Catalog 갱신은 별도 작업.
 

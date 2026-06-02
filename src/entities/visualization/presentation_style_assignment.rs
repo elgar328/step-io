@@ -1,4 +1,4 @@
-//! `PRESENTATION_STYLE_ASSIGNMENT` handler — Pass 7-9. Aggregates one or
+//! `PRESENTATION_STYLE_ASSIGNMENT` handler. Aggregates one or
 //! more styling entries: currently `SURFACE_STYLE_USAGE` (stored inline)
 //! and `CURVE_STYLE` (stored via `CurveStyleId` arena reference).
 //!

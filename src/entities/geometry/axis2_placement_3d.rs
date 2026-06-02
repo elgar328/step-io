@@ -1,4 +1,4 @@
-//! `AXIS2_PLACEMENT_3D` handler — Pass 3.
+//! `AXIS2_PLACEMENT_3D` handler.
 //!
 //! Mirrors the legacy `ReaderContext::convert_axis2_placement_3d` and
 //! `WriteBuffer::emit_axis2_placement_3d`.

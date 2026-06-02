@@ -1,4 +1,4 @@
-//! `SURFACE_STYLE_USAGE` handler — Pass 7-8. Pairs a `SURFACE_SIDE_STYLE`
+//! `SURFACE_STYLE_USAGE` handler. Pairs a `SURFACE_SIDE_STYLE`
 //! arena ref with a side enum (Front / Back / Both). Pushes into the
 //! shared `founded_item` arena as the `SurfaceStyleUsage` variant.
 

@@ -1,4 +1,4 @@
-//! `B_SPLINE_CURVE_WITH_KNOTS` handler — Pass 4a-3 (2D, pcurve subtree).
+//! `B_SPLINE_CURVE_WITH_KNOTS` handler (2D, pcurve subtree).
 //!
 //! Sister of [`crate::entities::geometry::b_spline_curve_with_knots`].
 //! Read accepts the non-rational form only; write returns

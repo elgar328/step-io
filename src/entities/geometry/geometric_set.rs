@@ -1,4 +1,4 @@
-//! `GEOMETRIC_SET` handler — Pass 6-4f. Sister of `geometric_curve_set`;
+//! `GEOMETRIC_SET` handler. Sister of `geometric_curve_set`;
 //! shares the same EXPRESS shape but allows loose points (and rarely
 //! surfaces) alongside curves. Imports the shared body from the curve-set
 //! module and registers the alternate entity name.

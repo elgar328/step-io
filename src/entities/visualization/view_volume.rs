@@ -1,4 +1,4 @@
-//! `VIEW_VOLUME` handler — Pass 8-pre-d.
+//! `VIEW_VOLUME` handler.
 //!
 //! A `founded_item` subtype describing the projection volume a
 //! `CAMERA_MODEL_D3` views through. Pushed into the shared `founded_item`

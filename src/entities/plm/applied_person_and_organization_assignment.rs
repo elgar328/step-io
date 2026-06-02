@@ -1,4 +1,4 @@
-//! `APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT` handler — Pass 9-7 plm.
+//! `APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT` handler plm.
 //! Variant of the `person_and_organization_assignment` arena enum.
 
 use crate::entities::SimpleEntityHandler;

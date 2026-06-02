@@ -1,4 +1,4 @@
-//! `PRE_DEFINED_CURVE_FONT` handler — Pass 7-1. The abstract supertype of
+//! `PRE_DEFINED_CURVE_FONT` handler. The abstract supertype of
 //! `DRAUGHTING_PRE_DEFINED_CURVE_FONT`; corpus 0 in observed AP242 files,
 //! but the entity is still legal as a standalone instance per the
 //! schema. Reader pushes a `PreDefinedCurveFont::Plain(...)` variant into

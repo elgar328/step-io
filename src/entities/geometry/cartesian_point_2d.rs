@@ -1,8 +1,8 @@
-//! `CARTESIAN_POINT` handler — Pass 1 (2D variant).
+//! `CARTESIAN_POINT` handler (2D variant).
 //!
 //! Sister handler of [`crate::entities::geometry::cartesian_point::CartesianPointHandler`].
-//! Same STEP entity name; both run in Pass 1 alongside each other and
-//! select which arena receives the entity by coordinate count. A
+//! Same STEP entity name; both select which arena receives the entity
+//! by coordinate count. A
 //! 2-coordinate point goes to `geometry.points_2d`; a 3-coordinate point
 //! goes to `geometry.points`. Wrong-dimension or malformed inputs land
 //! in no arena (silent skip).

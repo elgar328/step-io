@@ -1,4 +1,4 @@
-//! `pmi` pool entity handlers — Pass 8.
+//! `pmi` pool entity handlers.
 //!
 //! Three dependency-free `single_struct` primitives — `TOLERANCE_ZONE_FORM`,
 //! `TYPE_QUALIFIER`, `VALUE_FORMAT_TYPE_QUALIFIER` — each a 1-attr string
@@ -531,7 +531,7 @@ pub(crate) struct LeaderCurveHandler;
 /// `annotation_curve_occurrence` arena. `item` resolves through
 /// `ctx.curve_map`; unresolved items drop the occurrence, symmetric on
 /// re-read. The arena id is recorded in
-/// `ctx.annotation_curve_occurrence_id_map` so the `Pass7AnnotationPlane`
+/// `ctx.annotation_curve_occurrence_id_map` so the
 /// `TERMINATOR_SYMBOL` / `LEADER_TERMINATOR` handlers can resolve their
 /// `annotated_curve` back-reference.
 #[step_entity(name = "LEADER_CURVE")]

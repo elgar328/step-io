@@ -1,4 +1,4 @@
-//! `ADVANCED_FACE` handler — Pass 5-6.
+//! `ADVANCED_FACE` handler.
 //!
 //! Shares its read/write body with `FACE_SURFACE` via the
 //! `read_face_body` / `write_face_body` helpers below. The sister

@@ -1,4 +1,4 @@
-//! `SURFACE_STYLE_RENDERING_WITH_PROPERTIES` handler — Pass 7-6.
+//! `SURFACE_STYLE_RENDERING_WITH_PROPERTIES` handler.
 //!
 //! Combines a `COLOUR_RGB` reference with a rendering-method enum and
 //! `SURFACE_STYLE_TRANSPARENT` property refs. The schema declares both

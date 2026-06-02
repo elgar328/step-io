@@ -1,4 +1,4 @@
-//! `CC_DESIGN_SECURITY_CLASSIFICATION` handler — Pass 9-14 plm. Variant
+//! `CC_DESIGN_SECURITY_CLASSIFICATION` handler plm. Variant
 //! of the `security_classification_assignment` arena enum. STEP entity
 //! name lacks the `_ASSIGNMENT` suffix carried by the Applied sibling.
 

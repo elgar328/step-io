@@ -1,4 +1,4 @@
-//! `SHAPE_ASPECT` subtype handlers — Pass 8-pre.
+//! `SHAPE_ASPECT` subtype handlers.
 //!
 //! `COMPOSITE_GROUP_SHAPE_ASPECT` / `CENTRE_OF_SYMMETRY` /
 //! `ALL_AROUND_SHAPE_ASPECT` share `SHAPE_ASPECT`'s 4-attr shape

@@ -1,4 +1,4 @@
-//! Helpers shared by the four Pass 0-1 unit-leaf handlers
+//! Helpers shared by the four unit-leaf handlers
 //! (`LengthUnitHandler` / `PlaneAngleUnitHandler` / `SolidAngleUnitHandler` /
 //! `MassUnitHandler`).
 //!
@@ -133,7 +133,7 @@ pub(super) fn read_conversion_based_unit_body(
     };
     // units-1: always suppress the embedded `conversion_factor` MWU duplicate;
     // `cbu_outer_to_mwu` is populated only on recognised names so the
-    // post-Pass0Leaf backfill never chases a dead outer.
+    // `backfill_cbu_base` post-pass never chases a dead outer.
     if let Some(r) = mwu_ref {
         ctx.cbu_internal_mwu_refs.insert(r);
     }

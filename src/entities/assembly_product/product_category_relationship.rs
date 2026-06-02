@@ -1,8 +1,9 @@
-//! `PRODUCT_CATEGORY_RELATIONSHIP` handler — Pass 6-1b sub-pass b.
+//! `PRODUCT_CATEGORY_RELATIONSHIP` handler.
 //!
 //! Reader pushes the relationship into the schema-faithful
 //! `product_category_relationships` arena, resolving the PC and PRPC
-//! refs through the arena maps populated earlier in Pass 6-1b.
+//! refs through arena maps the `PRODUCT_CATEGORY` and
+//! `PRODUCT_RELATED_PRODUCT_CATEGORY` handlers fill upstream.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::assembly::ProductCategoryRelationship;

@@ -1,4 +1,4 @@
-//! `PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS` handler — Pass 6-3.
+//! `PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS` handler.
 //!
 //! Standard STEP subtype of `PRODUCT_DEFINITION` (AP203 / AP242) that
 //! tags the definition with a list of documentation refs. The reader

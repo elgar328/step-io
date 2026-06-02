@@ -1,4 +1,4 @@
-//! `LINE` handler — Pass 4a-3 (2D, pcurve subtree).
+//! `LINE` handler (2D, pcurve subtree).
 
 use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::cartesian_point_2d::CartesianPoint2dHandler;

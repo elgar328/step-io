@@ -1,4 +1,4 @@
-//! `ADDRESS` handler — Pass 9-24 plm. STEP positional shape
+//! `ADDRESS` handler plm. STEP positional shape
 //! `(internal_location, street_number, street, postal_box, town,
 //! region, postal_code, country, facsimile_number, telephone_number,
 //! electronic_mail_address, telex_number)` per `AP214e3` schema. The

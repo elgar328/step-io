@@ -1,4 +1,4 @@
-//! `PROPERTY_DEFINITION_REPRESENTATION` handler — Pass 8-3.
+//! `PROPERTY_DEFINITION_REPRESENTATION` handler.
 //!
 //! Reader walks the bound `REPRESENTATION` directly off the graph because
 //! `REPRESENTATION` is a generic entity name shared with MDGPR / SR — a

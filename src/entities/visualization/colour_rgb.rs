@@ -1,4 +1,4 @@
-//! `COLOUR_RGB` handler — Pass 7-1. Leaf colour record. Reader pushes the
+//! `COLOUR_RGB` handler. Leaf colour record. Reader pushes the
 //! resolved [`ColourRgb`] into `VisualizationPool::colours` as
 //! `Colour::Rgb(...)` and records the resulting `ColourId` in
 //! `viz_colour_id_map` so downstream consumers can resolve a colour ref

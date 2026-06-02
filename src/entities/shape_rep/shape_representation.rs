@@ -1,4 +1,4 @@
-//! Plain `SHAPE_REPRESENTATION` handler — Pass 6-4a.
+//! Plain `SHAPE_REPRESENTATION` handler.
 //!
 //! Catches the bare `SHAPE_REPRESENTATION` form used by Group products and
 //! by the outer wrapper of Fusion 360 / CATIA indirect-SR chains. Reader

@@ -1,4 +1,4 @@
-//! `DATUM_TARGET` handler — Pass 8-pre-c1 (alongside the other
+//! `DATUM_TARGET` handler (alongside the other
 //! `SHAPE_ASPECT` subtypes). 5-attr body: the shared `shape_aspect` four
 //! plus `target_id` (an alphabetic label such as `"A1"`). The ir.toml
 //! blueprint folds this entity into the `shape_aspect` arena under

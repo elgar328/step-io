@@ -1,4 +1,4 @@
-//! `SHAPE_DEFINITION_REPRESENTATION` handler — Pass 6-5.
+//! `SHAPE_DEFINITION_REPRESENTATION` handler.
 //!
 //! Reader classifies each product as `Solid` / `SurfaceBody` / `Wireframe`
 //! / `Group` based on the resolved shape representation. NAUO-tagged SDRs
@@ -40,8 +40,8 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
         // Only consider SDRs where `pdef_shape.definition` is a
         // PRODUCT_DEFINITION. Others (definition = a PROPERTY_DEFINITION, e.g.
         // geometric-validation / CATIA geometric-set PMI shapes) are stashed
-        // raw and resolved after Pass8 (the PD is read at Pass8PropertyDef,
-        // later than this Pass6Sdr). NAUO-tagged PDS resolve to neither and
+        // raw and resolved after all entities are read (the PD is read by the
+        // property handler, later than this SDR). NAUO-tagged PDS resolve to neither and
         // stay dropped (assembly-instance shape — a later phase).
         let Some(pdef_ref) = ctx.pdef_shape_to_pdef.get(&pdef_shape_ref).copied() else {
             ctx.sdr_link_refs.push((pdef_shape_ref, shape_rep_ref));
@@ -99,8 +99,7 @@ impl ReaderContext {
     /// `Wireframe` (or leave it a `Group`). Runs after the full dispatch so the
     /// indirection maps are complete, and before `resolve_nauo_instances` so
     /// the duplicate-claim guard observes the same (instance-free) product
-    /// state it did under the legacy `Pass6Sdr` ordering (`Pass6Sdr` preceded
-    /// `Pass6Nauo`).
+    /// state it did under the legacy SDR-before-NAUO ordering.
     pub(crate) fn resolve_sdr_product_geometry(&mut self) {
         let ctx = self;
         for pending in std::mem::take(&mut ctx.pending_sdr_geometry) {

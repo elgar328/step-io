@@ -1,4 +1,4 @@
-//! `PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE` handler — Pass 6-2.
+//! `PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE` handler.
 //!
 //! Sister of `product_definition_formation`. Reads through the shared
 //! body with `with_source = true` so the loyalty flag on the referenced

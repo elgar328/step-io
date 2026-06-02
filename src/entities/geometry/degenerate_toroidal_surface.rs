@@ -1,4 +1,4 @@
-//! `DEGENERATE_TOROIDAL_SURFACE` handler — Pass 4-1 leaf surface.
+//! `DEGENERATE_TOROIDAL_SURFACE` handler leaf surface.
 //!
 //! Subtype of `TOROIDAL_SURFACE` adding the `select_outer` boolean which
 //! chooses the outer or inner sheet when the minor radius produces a

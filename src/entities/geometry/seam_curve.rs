@@ -1,4 +1,4 @@
-//! `SEAM_CURVE` handler — Pass 4-3.
+//! `SEAM_CURVE` handler.
 //!
 //! Sister handler of `SURFACE_CURVE`. Both share their read/write body
 //! in `surface_curve.rs`; only the entity name on emission differs.

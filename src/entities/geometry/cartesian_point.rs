@@ -1,4 +1,4 @@
-//! `CARTESIAN_POINT` handler — Pass 1 leaf 3D point.
+//! `CARTESIAN_POINT` handler leaf 3D point.
 //!
 //! Mirrors the legacy `ReaderContext::convert_cartesian_point` and
 //! `WriteBuffer::emit_point` one-to-one. The writer entry point keeps

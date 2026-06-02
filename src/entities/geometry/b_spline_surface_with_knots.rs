@@ -1,4 +1,4 @@
-//! `B_SPLINE_SURFACE_WITH_KNOTS` handler — Pass 4-1 leaf NURBS surface
+//! `B_SPLINE_SURFACE_WITH_KNOTS` handler leaf NURBS surface
 //! (non-rational; rational form lives in `rational_bspline_surface.rs`).
 
 use crate::entities::SimpleEntityHandler;

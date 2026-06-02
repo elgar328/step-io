@@ -1,4 +1,4 @@
-//! `LENGTH_UNIT` handler — Pass 0-1 leaf for length flavour.
+//! `LENGTH_UNIT` handler leaf for length flavour.
 //!
 //! Mirrors the LENGTH branch of `ReaderContext::convert_unit_leaf` and
 //! `WriteBuffer::emit_length_unit` (plus the SI / CBU sub-helpers it
@@ -121,7 +121,7 @@ pub(crate) fn emit_length_cbu_outer(
 /// Record this `LENGTH_UNIT` complex in the `NamedUnit` arena so that
 /// MWU / DUE consumers and `GLOBAL_UNIT_ASSIGNED_CONTEXT` can resolve their
 /// `unit_component` / `units` refs through `named_unit_id_map`. CBU outers
-/// pass `cbu_base = None` here; the post-Pass0Leaf backfill patches in the
+/// pass `cbu_base = None` here; the `backfill_cbu_base` post-pass patches in the
 /// actual base `NamedUnitId` once both ends of the chain are registered.
 fn register_named_length(
     ctx: &mut ReaderContext,

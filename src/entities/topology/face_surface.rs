@@ -1,4 +1,4 @@
-//! `FACE_SURFACE` handler — Pass 5-6.
+//! `FACE_SURFACE` handler.
 //!
 //! Sister handler of `ADVANCED_FACE`. Both share the read/write body in
 //! `advanced_face.rs`; the read side flips the `FaceKind` tag, and the

@@ -1,4 +1,4 @@
-//! `GENERAL_PROPERTY` handler — Pass 8-4.
+//! `GENERAL_PROPERTY` handler.
 //!
 //! AP242 user-defined attribute definition `(id, name, description)`.
 //! Pushed into the `general_properties` arena; the GPA handler resolves

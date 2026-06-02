@@ -1,4 +1,4 @@
-//! `SHAPE_REPRESENTATION_RELATIONSHIP` handler — Pass 6-4b.
+//! `SHAPE_REPRESENTATION_RELATIONSHIP` handler.
 //!
 //! Reader records SR-to-SR equivalences for the Fusion 360 / CATIA
 //! `SDR → plain SR → SRR → ABSR/MSSR` indirection. When one side already

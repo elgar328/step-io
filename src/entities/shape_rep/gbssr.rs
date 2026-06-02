@@ -1,5 +1,5 @@
-//! `GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION` handler —
-//! Pass 6-4g. Sister of `gbwsr`. Imports the shared body and registers
+//! `GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION` handler.
+//! Sister of `gbwsr`. Imports the shared body and registers
 //! the `_SURFACE_` wrapper name so the writer round-trips the spelling
 //! the source file used.
 

@@ -1,15 +1,15 @@
-//! `BREP_WITH_VOIDS` handler — Pass 5-8.
+//! `BREP_WITH_VOIDS` handler.
 //!
 //! Mirrors the legacy `convert_brep_with_voids` and the multi-shell
 //! branch of `emit_solid`. Reads the inner shells via the
-//! `oriented_closed_shell_map` populated by Pass 5-7b and, on the read
+//! `oriented_closed_shell_map` populated by the `ORIENTED_CLOSED_SHELL` handler and, on the read
 //! side, overwrites each inner shell's orientation in place rather
 //! than cloning so the arena stays free of duplicates.
 
 // IR_PRESSURE: read side mutates `topology.shells[inner_id].orientation`
 // in place because `BREP_WITH_VOIDS` has its own ORIENTED_CLOSED_SHELL
 // wrappers but the IR `Solid` only stores `Vec<ShellId>`. A future IR
-// refactor (Plan 7+) may replace this with an `OrientedShell` arena
+// refactor may replace this with an `OrientedShell` arena
 // variant so the wrapper stays first-class instead of leaking into the
 // Shell record.
 

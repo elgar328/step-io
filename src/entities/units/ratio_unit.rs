@@ -1,4 +1,4 @@
-//! `RATIO_UNIT` handler — Pass 0-1 leaf for dimensionless ratio flavour.
+//! `RATIO_UNIT` handler leaf for dimensionless ratio flavour.
 //!
 //! `RATIO_UNIT` is a SUBTYPE OF `NAMED_UNIT` with no additional attributes —
 //! always dimensionless. `CONVERSION_BASED_UNIT` and `SI_UNIT` variants are

@@ -1,7 +1,7 @@
-//! `APPROVAL_PERSON_ORGANIZATION` handler — Pass 9-10 plm. Depends on
-//! `Pass9PlmApproval` (`authorized_approval` ref),
-//! `Pass9PlmPersonAndOrganization` (`person_organization` SELECT) and
-//! `Pass9PlmApprovalLeaves` (`role` ref).
+//! `APPROVAL_PERSON_ORGANIZATION` handler plm. Depends on
+//! the `APPROVAL` handler (`authorized_approval` ref),
+//! the `PERSON_AND_ORGANIZATION` handler (`person_organization` SELECT) and
+//! the approval-leaf handlers (`role` ref).
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref};

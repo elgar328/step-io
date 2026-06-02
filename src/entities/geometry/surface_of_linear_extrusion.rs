@@ -1,4 +1,4 @@
-//! `SURFACE_OF_LINEAR_EXTRUSION` handler — Pass 4-4A.
+//! `SURFACE_OF_LINEAR_EXTRUSION` handler.
 //!
 //! Mirrors `ReaderContext::convert_surface_of_linear_extrusion` and
 //! `WriteBuffer::emit_surface_of_linear_extrusion`.

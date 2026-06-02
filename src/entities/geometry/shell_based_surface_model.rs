@@ -1,4 +1,4 @@
-//! `SHELL_BASED_SURFACE_MODEL` handler — Pass 6-4.
+//! `SHELL_BASED_SURFACE_MODEL` handler.
 //!
 //! Reader resolves the boundary list into `ShellId`s via `shell_map` and
 //! caches the per-SBSM list in `sbsm_shells_map` so MSSR can flatten one

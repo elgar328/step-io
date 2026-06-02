@@ -1,4 +1,4 @@
-//! `PERSON` handler — Pass 9-5 plm leaf.
+//! `PERSON` handler plm leaf.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{

@@ -1,4 +1,4 @@
-//! `OPEN_SHELL` handler — Pass 5-7a.
+//! `OPEN_SHELL` handler.
 //!
 //! Sister handler of `CLOSED_SHELL`. Both share the read/write body in
 //! `closed_shell.rs`; only `is_open` flips and the entity name differs.

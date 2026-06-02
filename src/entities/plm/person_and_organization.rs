@@ -1,5 +1,5 @@
-//! `PERSON_AND_ORGANIZATION` handler — Pass 9-6 plm. Depends on Person +
-//! Organization arenas populated by `Pass9PlmPoLeaves`.
+//! `PERSON_AND_ORGANIZATION` handler plm. Depends on Person +
+//! Organization arenas populated by the Person / Organization handlers.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref};
