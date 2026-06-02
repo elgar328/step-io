@@ -14,7 +14,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct Ellipse2dHandler;
 
-#[step_entity(name = "ELLIPSE", pass = Pass4aCurve)]
+#[step_entity(name = "ELLIPSE", pass = Pass4aCurve, is_2d)]
 impl SimpleEntityHandler for Ellipse2dHandler {
     type WriteInput = Ellipse2;
 

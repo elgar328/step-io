@@ -6,18 +6,8 @@
 use std::collections::{BTreeSet, HashMap};
 
 use super::ReaderContext;
-use crate::entities::{ENTITY_HANDLERS, EntityHandlerEntry, PassLevel, ReadKind};
+use crate::entities::{ENTITY_HANDLERS, EntityHandlerEntry, ReadKind};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
-
-/// Pass levels whose handlers read 2D (pcurve-subtree) geometry. Used by the
-/// topological dispatch to decide whether the pcurve-subtree skip applies
-/// (3D handlers skip pcurve-subtree entities; 2D handlers self-discriminate).
-fn is_2d_pass(pass_level: PassLevel) -> bool {
-    matches!(
-        pass_level,
-        PassLevel::Pass4aVector | PassLevel::Pass4aCurve | PassLevel::Pass4aRational
-    )
-}
 
 /// Name → handler index for topological dispatch (avoids scanning all
 /// `ENTITY_HANDLERS` per entity). Simple handlers key on entity name; complex
@@ -278,7 +268,7 @@ impl ReaderContext {
             RawEntity::Complex { .. } => &index.complex,
         };
         for &entry in candidates {
-            if !is_2d_pass(entry.pass_level) {
+            if !entry.is_2d {
                 // 3D handler: honour the pcurve-subtree partition (POINT /
                 // DIRECTION self-discriminate by coord count, so exempt).
                 let respect_pcurve = !matches!(entry.name, "CARTESIAN_POINT" | "DIRECTION");

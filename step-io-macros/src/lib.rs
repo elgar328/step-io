@@ -15,22 +15,31 @@ use syn::{
     parse_macro_input,
 };
 
-/// `name = "ENTITY_NAME", pass = PassLevel::Variant`
+/// `name = "ENTITY_NAME", pass = PassLevel::Variant[, is_2d]`
 struct SimpleArgs {
     name: LitStr,
     pass: Path,
+    is_2d: bool,
 }
 
 impl Parse for SimpleArgs {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let mut name: Option<LitStr> = None;
         let mut pass: Option<Path> = None;
+        let mut is_2d = false;
         while !input.is_empty() {
             let ident: syn::Ident = input.parse()?;
-            input.parse::<Token![=]>()?;
             match ident.to_string().as_str() {
-                "name" => name = Some(input.parse()?),
-                "pass" => pass = Some(input.parse()?),
+                // Flag form (no `= value`): marks a 2D parameter-space handler.
+                "is_2d" => is_2d = true,
+                "name" => {
+                    input.parse::<Token![=]>()?;
+                    name = Some(input.parse()?);
+                }
+                "pass" => {
+                    input.parse::<Token![=]>()?;
+                    pass = Some(input.parse()?);
+                }
                 other => {
                     return Err(syn::Error::new(
                         ident.span(),
@@ -45,6 +54,7 @@ impl Parse for SimpleArgs {
         Ok(SimpleArgs {
             name: name.ok_or_else(|| syn::Error::new(input.span(), "missing `name = \"...\"`"))?,
             pass: pass.ok_or_else(|| syn::Error::new(input.span(), "missing `pass = ...`"))?,
+            is_2d,
         })
     }
 }
@@ -56,6 +66,7 @@ struct ComplexArgs {
     name: LitStr,
     pass: Path,
     cases: ExprArray,
+    is_2d: bool,
 }
 
 impl Parse for ComplexArgs {
@@ -63,13 +74,24 @@ impl Parse for ComplexArgs {
         let mut name: Option<LitStr> = None;
         let mut pass: Option<Path> = None;
         let mut cases: Option<ExprArray> = None;
+        let mut is_2d = false;
         while !input.is_empty() {
             let ident: syn::Ident = input.parse()?;
-            input.parse::<Token![=]>()?;
             match ident.to_string().as_str() {
-                "name" => name = Some(input.parse()?),
-                "pass" => pass = Some(input.parse()?),
-                "cases" => cases = Some(input.parse()?),
+                // Flag form (no `= value`): marks a 2D parameter-space handler.
+                "is_2d" => is_2d = true,
+                "name" => {
+                    input.parse::<Token![=]>()?;
+                    name = Some(input.parse()?);
+                }
+                "pass" => {
+                    input.parse::<Token![=]>()?;
+                    pass = Some(input.parse()?);
+                }
+                "cases" => {
+                    input.parse::<Token![=]>()?;
+                    cases = Some(input.parse()?);
+                }
                 other => {
                     return Err(syn::Error::new(
                         ident.span(),
@@ -86,6 +108,7 @@ impl Parse for ComplexArgs {
             pass: pass.ok_or_else(|| syn::Error::new(input.span(), "missing `pass = ...`"))?,
             cases: cases
                 .ok_or_else(|| syn::Error::new(input.span(), "missing `cases = [[...], ...]`"))?,
+            is_2d,
         })
     }
 }
@@ -129,6 +152,7 @@ pub fn step_entity(attr: TokenStream, item: TokenStream) -> TokenStream {
         Err(e) => return e.to_compile_error().into(),
     };
     let entry_ident = format_ident!("__STEP_ENTRY_{}", handler_ident);
+    let is_2d = args.is_2d;
     let impl_with_consts = inject_consts(impl_block, &args.name, &args.pass);
 
     quote! {
@@ -140,6 +164,7 @@ pub fn step_entity(attr: TokenStream, item: TokenStream) -> TokenStream {
             crate::entities::EntityHandlerEntry {
                 name: <#handler_ident as crate::entities::SimpleEntityHandler>::NAME,
                 pass_level: <#handler_ident as crate::entities::SimpleEntityHandler>::PASS_LEVEL,
+                is_2d: #is_2d,
                 kind: crate::entities::ReadKind::Simple {
                     read: <#handler_ident as crate::entities::SimpleEntityHandler>::read,
                 },
@@ -157,6 +182,7 @@ pub fn step_entity_complex(attr: TokenStream, item: TokenStream) -> TokenStream 
         Err(e) => return e.to_compile_error().into(),
     };
     let entry_ident = format_ident!("__STEP_ENTRY_{}", handler_ident);
+    let is_2d = args.is_2d;
     let impl_with_consts = inject_consts(impl_block, &args.name, &args.pass);
     // Build `&[&["A","B"], &["C","D"], ...]` (type `&[&[&str]]`). Each inner
     // case array must be referenced into a slice — they differ in length, so a
@@ -178,6 +204,7 @@ pub fn step_entity_complex(attr: TokenStream, item: TokenStream) -> TokenStream 
             crate::entities::EntityHandlerEntry {
                 name: <#handler_ident as crate::entities::ComplexEntityHandler>::NAME,
                 pass_level: <#handler_ident as crate::entities::ComplexEntityHandler>::PASS_LEVEL,
+                is_2d: #is_2d,
                 kind: crate::entities::ReadKind::Complex {
                     cases: #cases_lit,
                     read: <#handler_ident as crate::entities::ComplexEntityHandler>::read_complex,

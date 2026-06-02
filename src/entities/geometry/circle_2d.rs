@@ -14,7 +14,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct Circle2dHandler;
 
-#[step_entity(name = "CIRCLE", pass = Pass4aCurve)]
+#[step_entity(name = "CIRCLE", pass = Pass4aCurve, is_2d)]
 impl SimpleEntityHandler for Circle2dHandler {
     type WriteInput = Circle2;
 

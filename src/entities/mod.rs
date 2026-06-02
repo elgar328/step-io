@@ -688,10 +688,14 @@ pub(crate) enum ReadKind {
 /// Reader-side registry entry. Each handler module submits one via
 /// `#[linkme::distributed_slice(ENTITY_HANDLERS)]`. Writer is intentionally
 /// absent — see Plan 3 for the type-erasure trade-off.
-#[allow(dead_code)] // Fields are read by dispatch_entry in src/reader/passes.rs
+#[allow(dead_code)] // Fields are read by dispatch in src/reader/dispatch.rs
 pub(crate) struct EntityHandlerEntry {
     pub name: &'static str,
     pub pass_level: PassLevel,
+    /// True for 2D parameter-space handlers (those reading pcurve-subtree
+    /// geometry). Dispatch exempts them from the pcurve-subtree skip; all
+    /// other (3D) handlers leave this false.
+    pub is_2d: bool,
     pub kind: ReadKind,
 }
 

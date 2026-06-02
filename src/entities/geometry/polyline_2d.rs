@@ -16,7 +16,7 @@ use step_io_macros::step_entity;
 
 pub(crate) struct Polyline2dHandler;
 
-#[step_entity(name = "POLYLINE", pass = Pass4aCurve)]
+#[step_entity(name = "POLYLINE", pass = Pass4aCurve, is_2d)]
 impl SimpleEntityHandler for Polyline2dHandler {
     type WriteInput = Polyline2d;
 
