@@ -2,9 +2,9 @@
 //!
 //! Each entity lives in `src/entities/<group>/<name>.rs` and impls one of
 //! [`SimpleEntityHandler`] (single-line `RawEntity::Simple`) or
-//! [`ComplexEntityHandler`] (multi-part `RawEntity::Complex`). Plan 3 added
-//! the complex variant so registry dispatch can cover the rational B-spline
-//! family. Writer dispatch still goes through hand-rolled emit methods.
+//! [`ComplexEntityHandler`] (multi-part `RawEntity::Complex`). The complex
+//! variant lets registry dispatch cover the rational B-spline family.
+//! Writer dispatch still goes through hand-rolled emit methods.
 
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
@@ -81,7 +81,7 @@ pub(crate) trait ComplexEntityHandler {
 
 /// Distinguishes the two reader entry shapes inside a single
 /// [`EntityHandlerEntry`] / [`ENTITY_HANDLERS`] slice.
-#[allow(dead_code)] // variants and fields read by dispatch_entry in src/reader/passes.rs
+#[allow(dead_code)] // variants and fields read by dispatch in src/reader/dispatch.rs
 pub(crate) enum ReadKind {
     /// Matches `RawEntity::Simple` whose name equals the entry's `name`.
     Simple {
@@ -98,7 +98,7 @@ pub(crate) enum ReadKind {
 
 /// Reader-side registry entry. Each handler module submits one via
 /// `#[linkme::distributed_slice(ENTITY_HANDLERS)]`. Writer is intentionally
-/// absent — see Plan 3 for the type-erasure trade-off.
+/// absent — the writer uses hand-rolled emit methods (type-erasure trade-off).
 #[allow(dead_code)] // Fields are read by dispatch in src/reader/dispatch.rs
 pub(crate) struct EntityHandlerEntry {
     pub name: &'static str,

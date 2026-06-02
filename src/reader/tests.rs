@@ -784,7 +784,7 @@ fn convert_face_outer_bound_sets_is_outer() {
 }
 
 // ---------------------------------------------------------------------------
-// Unit context (Pass 0)
+// Unit context
 // ---------------------------------------------------------------------------
 
 /// Build the canonical mm / radian / steradian unit entities plus the

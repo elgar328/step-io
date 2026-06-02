@@ -154,9 +154,9 @@ impl ReaderContext {
         }
     }
 
-    /// Re-resolve `SHAPE_DIMENSION_REPRESENTATION` items deferred from
-    /// `Pass6ShapeRep` (phase measure-arena-1). Runs after `Pass8Measure` so
-    /// the complex `MEASURE_REPRESENTATION_ITEM` arena entries (and their
+    /// Re-resolve `SHAPE_DIMENSION_REPRESENTATION` items deferred from the
+    /// SDR handler (phase measure-arena-1). Runs once the complex
+    /// `MEASURE_REPRESENTATION_ITEM` arena entries (and their
     /// `repr_item_id_map` ids) exist. Refs are resolved in their original
     /// order; unresolved ones drop, matching the prior inline behaviour.
     fn resolve_deferred_sdr_items(&mut self) {

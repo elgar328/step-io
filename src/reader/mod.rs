@@ -87,8 +87,8 @@ pub(crate) struct PendingNauoInstance {
 pub struct ReaderContext {
     pub(crate) geometry: GeometryPool,
     pub(crate) topology: TopologyPool,
-    /// Unit / uncertainty contexts accumulated during Pass 0-2 — one entry
-    /// per `REPRESENTATION_CONTEXT` complex entity in the source file.
+    /// Unit / uncertainty contexts — one entry per `REPRESENTATION_CONTEXT`
+    /// complex entity in the source file.
     pub(crate) units: Arena<UnitContext>,
     /// Unit-less `(GRC PRC REP_CONTEXT)` complex MI contexts (phase
     /// unitless-context). Populated by `ParametricRepresentationContextHandler`.
@@ -114,7 +114,7 @@ pub struct ReaderContext {
     /// `AREA_IN_SET` step id → arena id (phase pr-size). Consumed by
     /// `presentation_size.unit` SELECT.
     pub(crate) area_in_set_id_map: HashMap<u64, crate::ir::id::AreaInSetId>,
-    /// `REPRESENTATION_CONTEXT #N → UnitContextId` populated by Pass 0-2.
+    /// `REPRESENTATION_CONTEXT #N → UnitContextId`.
     /// Used by representation converters (ABSR, MSSR, plain SR, GBWSR, GBSSR,
     /// MDGPR) to translate their `context_of_items` ref into an `UnitContextId`.
     pub(crate) context_id_map: HashMap<u64, UnitContextId>,
@@ -132,8 +132,8 @@ pub struct ReaderContext {
     /// Entity ids inside any `DEFINITIONAL_REPRESENTATION` subtree (PCURVE
     /// parametric-space geometry). 3D passes skip them so their 2D
     /// `CARTESIAN_POINT` / `DIRECTION` / `LINE` / … don't collide with 3D
-    /// conversion. Pass 4a then walks the same set to populate the 2D
-    /// arenas (`points_2d`, `directions_2d`, `curves_2d`).
+    /// conversion. The 2D-curve handlers then walk the same set to populate
+    /// the 2D arenas (`points_2d`, `directions_2d`, `curves_2d`).
     pub(crate) pcurve_subtree_ids: HashSet<u64>,
 
     // Unit entity maps: STEP #N → resolved unit variant.
@@ -145,9 +145,9 @@ pub struct ReaderContext {
     /// `LENGTH` / `PLANE_ANGLE` / `SOLID_ANGLE` / `MASS` unit complex
     /// handlers alongside their existing flavour-specific maps.
     pub(crate) named_units_arena: Arena<NamedUnit>,
-    /// `MEASURE_WITH_UNIT` arena (units-1). Populated by `Pass0MwuDue`.
+    /// `MEASURE_WITH_UNIT` arena (units-1). Populated by the `MEASURE_WITH_UNIT` handlers.
     pub(crate) mwu_arena: Arena<MeasureWithUnit>,
-    /// `DERIVED_UNIT_ELEMENT` arena (units-1). Populated by `Pass0MwuDue`.
+    /// `DERIVED_UNIT_ELEMENT` arena (units-1). Populated by the `DERIVED_UNIT_ELEMENT` handlers.
     pub(crate) due_arena: Arena<DerivedUnitElement>,
     /// `NAMED_UNIT` complex `#N → NamedUnitId` (units-1). Used by MWU
     /// readers (`unit_component` ref) and the DUE reader (`unit` ref) to
@@ -157,12 +157,11 @@ pub struct ReaderContext {
     pub(crate) mwu_id_map: HashMap<u64, crate::ir::id::MeasureWithUnitId>,
     /// `DERIVED_UNIT_ELEMENT` `#N → DerivedUnitElementId` (units-1).
     pub(crate) due_id_map: HashMap<u64, crate::ir::id::DerivedUnitElementId>,
-    /// `DERIVED_UNIT` arena (units-1b). Populated by `Pass0Du`.
+    /// `DERIVED_UNIT` arena (units-1b). Populated by the `DERIVED_UNIT` handler.
     pub(crate) derived_unit_arena: Arena<DerivedUnit>,
-    /// `DIMENSIONAL_EXPONENTS` arena (phase dim-exp-arena-a). Populated
-    /// by a dedicated handler at `Pass0DimExp` (before `Pass0Leaf` so
-    /// `NAMED_UNIT` subtypes can look up the ref in
-    /// [`Self::dim_exp_id_map`]).
+    /// `DIMENSIONAL_EXPONENTS` arena (phase dim-exp-arena-a). Populated by a
+    /// dedicated `DIMENSIONAL_EXPONENTS` handler so `NAMED_UNIT` subtypes can
+    /// look up the ref in [`Self::dim_exp_id_map`].
     pub(crate) dimensional_exponents: Arena<crate::ir::units::DimensionalExponents>,
     /// `DIMENSIONAL_EXPONENTS` `#N → DimensionalExponentsId`.
     pub(crate) dim_exp_id_map: HashMap<u64, crate::ir::DimensionalExponentsId>,
@@ -171,20 +170,20 @@ pub struct ReaderContext {
     pub(crate) derived_unit_id_map: HashMap<u64, crate::ir::id::DerivedUnitId>,
     /// MWU step ids that appear as the `conversion_factor` of a
     /// `CONVERSION_BASED_UNIT` complex (units-1). Populated by the unit
-    /// complex handlers in `Pass0Leaf` and consulted by `Pass0MwuDue` MWU
-    /// readers — those MWUs are re-emitted inline by the CBU writer
+    /// complex handlers and consulted by the `MEASURE_WITH_UNIT` readers —
+    /// those MWUs are re-emitted inline by the CBU writer
     /// chain, so adding them to `mwu_arena` would cause double-emit on
     /// round-trip.
     pub(crate) cbu_internal_mwu_refs: HashSet<u64>,
     /// units-2: `CBU outer entity_id → conversion_factor MWU entity_id`.
     /// Populated by `read_conversion_based_unit_body` (`LENGTH` / `PLANE_ANGLE`
-    /// / `MASS` branches) and consumed by `backfill_cbu_base` after `Pass0Leaf`
+    /// / `MASS` branches) and consumed by the `backfill_cbu_base` post-pass
     /// to set each outer's `LengthFlavor.cbu_base` (etc.) to the
     /// `NamedUnitId` of its base SI entry.
     pub(crate) cbu_outer_to_mwu: HashMap<u64, u64>,
     /// `UNCERTAINTY_MEASURE_WITH_UNIT #N → value+metadata` for uncertainty
     /// entities whose `unit_component` resolved to a length unit. Populated
-    /// between Pass 0-1 (unit leaves) and Pass 0-2 (context assembly).
+    /// when `UNCERTAINTY_MEASURE_WITH_UNIT` entities are read.
     pub(crate) length_uncertainty_map: HashMap<u64, LengthUncertainty>,
     /// Same shape as `length_uncertainty_map` but keyed on UMUs whose
     /// `unit_component` is a plane-angle unit.
@@ -212,9 +211,10 @@ pub struct ReaderContext {
     pub(crate) curve_2d_map: HashMap<u64, Curve2dId>,
     pub(crate) vector_2d_map: HashMap<u64, (Direction2dId, f64)>,
     pub(crate) placement_2d_map: HashMap<u64, Placement2dId>,
-    /// `SURFACE_CURVE / SEAM_CURVE #N → SurfaceCurveWrapper`. Populated during
-    /// Pass 4-3 and consumed by `convert_edge_curve` to attach the wrapper
-    /// (entity kind, associated geometry, `master_representation`) to each edge.
+    /// `SURFACE_CURVE / SEAM_CURVE #N → SurfaceCurveWrapper`. Populated by the
+    /// `SURFACE_CURVE` / `SEAM_CURVE` handler and consumed by `convert_edge_curve`
+    /// to attach the wrapper (entity kind, associated geometry,
+    /// `master_representation`) to each edge.
     pub(crate) surface_curve_map: HashMap<u64, SurfaceCurveWrapper>,
 
     // Topology maps: STEP #N → typed Id.
@@ -232,12 +232,12 @@ pub struct ReaderContext {
     /// loop ref is not in `edge_loop_map`.
     pub(crate) vertex_loop_map: HashMap<u64, VertexId>,
     /// `ORIENTED_CLOSED_SHELL #N → (underlying CLOSED_SHELL's ShellId,
-    /// wrapper orientation)`. Populated by Pass 5-7b, consumed by
-    /// `convert_brep_with_voids` in Pass 5-8.
+    /// wrapper orientation)`. Populated by the `ORIENTED_CLOSED_SHELL` handler,
+    /// consumed by `convert_brep_with_voids`.
     pub(crate) oriented_closed_shell_map: HashMap<u64, (ShellId, Orientation)>,
 
-    // Assembly (Phase A): product arena + lookup maps populated by Pass 6.
-    // `assembly` is filled in `convert()` after Pass 6 if any PRODUCT was seen.
+    // Assembly: product arena + lookup maps.
+    // `assembly` is filled in `convert()` if any PRODUCT was seen.
     pub(crate) assembly: Option<AssemblyTree>,
     pub(crate) assembly_products: Arena<Product>,
     pub(crate) product_contexts: Arena<crate::ir::ProductContext>,
@@ -247,7 +247,7 @@ pub struct ReaderContext {
         HashMap<u64, crate::ir::ProductDefinitionContextId>,
     /// `ProductId → raw STEP entity id of the product's first PC`
     /// (`PRODUCT.frame_of_reference[0]`). `resolve_product_contexts`
-    /// converts these refs to `ProductContextId` after `Pass9AssemblyContext`.
+    /// converts these refs to `ProductContextId`.
     pub(crate) product_pc_step_refs: HashMap<ProductId, u64>,
     /// Same pattern, populated by `PRODUCT_DEFINITION.frame_of_reference`.
     pub(crate) product_pdc_step_refs: HashMap<ProductId, u64>,
@@ -281,8 +281,9 @@ pub struct ReaderContext {
     /// reference frame). Consumed by SDR conversion to populate
     /// `Product.shape_ref_frame`.
     pub(crate) absr_ref_frame_map: HashMap<u64, Placement3dId>,
-    /// `SHELL_BASED_SURFACE_MODEL #N → resolved shell ids`. Populated in
-    /// Pass 5-8b and consumed by MSSR conversion to flatten shells.
+    /// `SHELL_BASED_SURFACE_MODEL #N → resolved shell ids`. Populated by the
+    /// `SHELL_BASED_SURFACE_MODEL` handler and consumed by MSSR conversion to
+    /// flatten shells.
     pub(crate) sbsm_shells_map: HashMap<u64, Vec<ShellId>>,
     /// `SHELL_BASED_SURFACE_MODEL #N → GeometricRepresentationItemId`.
     /// Same SBSM, dual-indexed so `STYLED_ITEM` can resolve a standalone
@@ -309,15 +310,17 @@ pub struct ReaderContext {
     /// `SDR → plain SR → SRR → ABSR/MSSR`.
     pub(crate) srr_equiv_map: HashMap<u64, u64>,
     /// `plain SHAPE_REPRESENTATION #N → items[0] axis Placement3dId`. Captured
-    /// during Pass 6-4 so SDR conversion can attach the plain SR's reference
-    /// frame to `Product.outer_sr_frame` when the indirection chain is taken.
+    /// by the plain `SHAPE_REPRESENTATION` handler so SDR conversion can attach
+    /// the plain SR's reference frame to `Product.outer_sr_frame` when the
+    /// indirection chain is taken.
     pub(crate) plain_sr_frame_map: HashMap<u64, Placement3dId>,
     /// `COMPOSITE_CURVE_SEGMENT #N → (transition, same_sense, parent_curve
-    /// step id)`. Populated by Pass 4 immediately after `TRIMMED_CURVE` so
+    /// step id)`. Populated by the `COMPOSITE_CURVE_SEGMENT` handler so
     /// `COMPOSITE_CURVE` conversion can resolve segments by entity ref.
     pub(crate) composite_segment_map: HashMap<u64, (TransitionCode, bool, u64)>,
-    /// `GEOMETRIC_(CURVE_)SET #N → (curves, loose points)`. Populated in
-    /// Pass 6-4 just before the GBWSR / GBSSR converters consume it.
+    /// `GEOMETRIC_(CURVE_)SET #N → (curves, loose points)`. Populated by the
+    /// `GEOMETRIC_(CURVE_)SET` handler, just before the GBWSR / GBSSR converters
+    /// consume it.
     pub(crate) curve_set_map: HashMap<u64, (Vec<CurveId>, Vec<PointId>)>,
     /// `GBWSR / GBSSR #N → wireframe content payload`. Same role as
     /// `absr_solid_map` / `mssr_shells_map` but for wireframe products.
@@ -329,21 +332,21 @@ pub struct ReaderContext {
     pub(crate) wireframe_ref_frame_map: HashMap<u64, Placement3dId>,
     /// `PRODUCT_DEFINITION_SHAPE #N → PRODUCT_DEFINITION #N` when the
     /// `pdef_shape` points at a product definition (not a `NAUO`).
-    /// Populated before Pass 6-5.
+    /// Populated by the `PRODUCT_DEFINITION_SHAPE` handler.
     pub(crate) pdef_shape_to_pdef: HashMap<u64, u64>,
     /// `PRODUCT_DEFINITION_SHAPE #N → NEXT_ASSEMBLY_USAGE_OCCURRENCE #N` when
     /// the `pdef_shape` points at a `NAUO` (instance-tagged). Populated
-    /// alongside `pdef_shape_to_pdef` and consumed by Pass 6-7.
+    /// alongside `pdef_shape_to_pdef` and consumed during NAUO instance wiring.
     pub(crate) pdef_shape_to_nauo: HashMap<u64, u64>,
     /// Raw `(definition #N, used_representation #N)` of `SHAPE_DEFINITION_REPRESENTATION`s
-    /// whose `definition` is not a product PDS (stashed at `Pass6Sdr`, resolved
-    /// to a `ShapeDefinitionRepresentationLink` after all passes once the
-    /// `PROPERTY_DEFINITION`s they point at have been read at `Pass8`).
+    /// whose `definition` is not a product PDS (stashed by the SDR handler,
+    /// resolved to a `ShapeDefinitionRepresentationLink` after all entities once
+    /// the `PROPERTY_DEFINITION`s they point at have been read).
     pub(crate) sdr_link_refs: Vec<(u64, u64)>,
     /// `PROPERTY_DEFINITION_REPRESENTATION` `(definition #N, used_representation #N)`
     /// pairs whose `used_representation` is a modelled representation (e.g.
     /// `SHAPE_REPRESENTATION`). Resolved to `PropertyDefinitionRepresentationLink`
-    /// by `resolve_pdr_links` after `Pass8`, mirroring `sdr_link_refs`.
+    /// by `resolve_pdr_links` after all entities are read, mirroring `sdr_link_refs`.
     pub(crate) pdr_link_refs: Vec<(u64, u64)>,
     pub(crate) transform_map: HashMap<u64, Transform3d>,
     pub(crate) nauo_transform_map: HashMap<u64, Transform3d>,
@@ -357,7 +360,7 @@ pub struct ReaderContext {
     /// once every CDSR has populated `nauo_transform_map`.
     pub(crate) pending_nauo_instances: Vec<PendingNauoInstance>,
 
-    /// Lazily-built `VisualizationPool` — Pass 7 's MDGPR convert pushes
+    /// Lazily-built `VisualizationPool` — the MDGPR converter pushes
     /// `Mdgpr` records here. `None` if no visualization entities were seen.
     pub(crate) visualization: Option<VisualizationPool>,
     /// `COLOUR_RGB` / `DRAUGHTING_PRE_DEFINED_COLOUR` step entity id →
@@ -369,19 +372,19 @@ pub struct ReaderContext {
     pub(crate) viz_colour_id_map: HashMap<u64, ColourId>,
     /// `PRE_DEFINED_CURVE_FONT` / `DRAUGHTING_PRE_DEFINED_CURVE_FONT` step
     /// entity id → `PreDefinedCurveFontId`. Populated by the curve-font
-    /// leaf readers during Pass 7-1; consumed by the `CURVE_STYLE` reader
+    /// leaf readers; consumed by the `CURVE_STYLE` reader
     /// to resolve a font ref to an arena index.
     pub(crate) viz_pre_defined_curve_font_id_map: HashMap<u64, PreDefinedCurveFontId>,
     /// `PRE_DEFINED_SYMBOL` / `PRE_DEFINED_TERMINATOR_SYMBOL` step entity id
-    /// → `PreDefinedSymbolId`. Populated by the symbol leaf readers during
-    /// Pass 7-1. No step-io consumer reads this map yet; entries exist so
+    /// → `PreDefinedSymbolId`. Populated by the symbol leaf readers.
+    /// No step-io consumer reads this map yet; entries exist so
     /// the writer round-trips the source symbols unchanged.
     pub(crate) viz_pre_defined_symbol_id_map: HashMap<u64, PreDefinedSymbolId>,
-    /// `CURVE_STYLE` step entity id → `CurveStyleId`. Populated during
-    /// `Pass7CurveStyle`; consumed by the PSA reader to dispatch styling
+    /// `CURVE_STYLE` step entity id → `CurveStyleId`. Populated by the
+    /// `CURVE_STYLE` handler; consumed by the PSA reader to dispatch styling
     /// list entries to the `PsaStyle::Curve(...)` variant.
     pub(crate) viz_curve_style_id_map: HashMap<u64, CurveStyleId>,
-    /// `FILL_AREA_STYLE_COLOUR #N → FillAreaStyleColour` (Pass 7-2).
+    /// `FILL_AREA_STYLE_COLOUR #N → FillAreaStyleColour`.
     pub(crate) viz_fasc_map: HashMap<u64, FillAreaStyleColour>,
     /// `FILL_AREA_STYLE` step entity id → `FoundedItemId`. Populated by the
     /// FAS handler after pushing the `FoundedItem::FillAreaStyle` variant
@@ -399,7 +402,7 @@ pub struct ReaderContext {
     /// `VisualizationPool::surface_style_renderings`; consumed by the
     /// `SURFACE_SIDE_STYLE` reader to build `SurfaceSideStyleEntry::Rendering(...)`.
     pub(crate) viz_ssr_id_map: HashMap<u64, SurfaceStyleRenderingId>,
-    /// `SURFACE_STYLE_TRANSPARENT #N → transparency value` (Pass 7-3b).
+    /// `SURFACE_STYLE_TRANSPARENT #N → transparency value`.
     pub(crate) viz_transparent_map: HashMap<u64, f64>,
     /// `SURFACE_SIDE_STYLE` step entity id → `FoundedItemId`. Populated by
     /// the SSS handler after pushing the `FoundedItem::SurfaceSideStyle`
@@ -417,7 +420,7 @@ pub struct ReaderContext {
     /// `SURFACE_STYLE_BOUNDARY` step entity id → `FoundedItemId` (phase ssb).
     pub(crate) viz_ssb_id_map: HashMap<u64, FoundedItemId>,
     /// `CAMERA_MODEL*` step entity id → `CameraModelId`. Populated by the
-    /// `Pass8CameraModel` handlers; consumed by `Pass8CameraUsage` to
+    /// `CAMERA_MODEL*` handlers; consumed by the camera-usage handler to
     /// resolve `mapping_origin`.
     pub(crate) viz_camera_model_id_map: HashMap<u64, crate::ir::id::CameraModelId>,
     /// `PRESENTATION_STYLE_ASSIGNMENT` step entity id →
@@ -428,34 +431,34 @@ pub struct ReaderContext {
     /// `styles` ref lists into arena ids.
     pub(crate) viz_psa_id_map: HashMap<u64, PresentationStyleAssignmentId>,
     /// `STYLED_ITEM` step entity id → `StyledItemId`. Populated by the
-    /// `Pass7StyledItem` reader after pushing the resolved `StyledItem`
+    /// `STYLED_ITEM` reader after pushing the resolved `StyledItem`
     /// variant into `VisualizationPool::styled_items`. Consumed by the
     /// MDGPR reader to convert its `items` list into arena references.
     pub(crate) viz_styled_item_id_map: HashMap<u64, StyledItemId>,
 
-    /// Lazily-built property pool — populated by Pass 8's PDR converter.
+    /// Lazily-built property pool — populated by the PDR converter.
     /// `None` if the source had no `PROPERTY_DEFINITION_REPRESENTATION`.
     pub(crate) properties: Option<crate::ir::property::PropertyPool>,
-    /// `DESCRIPTIVE_REPRESENTATION_ITEM #N → DescriptiveItem` (Pass 8-1).
-    /// Temp; discarded after Pass 8. PDR handler consults both this map
-    /// and `repr_item_id_map` when resolving `REPRESENTATION.items` refs.
+    /// `DESCRIPTIVE_REPRESENTATION_ITEM #N → DescriptiveItem`.
+    /// Temp; discarded after the property handlers run. PDR handler consults
+    /// both this map and `repr_item_id_map` when resolving `REPRESENTATION.items` refs.
     pub(crate) descriptive_item_map: HashMap<u64, crate::ir::shape_rep::DescriptiveItem>,
     /// `SHAPE_DIMENSION_REPRESENTATION` repr id → its raw `items` step refs
-    /// (phase measure-arena-1). SDR reads at `Pass6ShapeRep` — before the
-    /// complex `MEASURE_REPRESENTATION_ITEM` arena push at `Pass8Measure` — so
-    /// item resolution is deferred: `resolve_deferred_sdr_items` (run after
-    /// `Pass8Measure`) re-resolves these once the arena is populated. Temp.
+    /// (phase measure-arena-1). SDR is read before the complex
+    /// `MEASURE_REPRESENTATION_ITEM` arena push, so item resolution is deferred:
+    /// `resolve_deferred_sdr_items` re-resolves these once the arena is
+    /// populated. Temp.
     pub(crate) sdr_raw_items: HashMap<crate::ir::id::RepresentationId, Vec<u64>>,
-    /// `PROPERTY_DEFINITION #N → (name, description, target ProductId)`
-    /// (Pass 8-3). PDs whose target ref does not resolve to a Product
+    /// `PROPERTY_DEFINITION #N → (name, description, target ProductId)`.
+    /// PDs whose target ref does not resolve to a Product
     /// (e.g. `SHAPE_ASPECT`) are silently dropped — no map entry.
     pub(crate) property_def_map: HashMap<u64, (String, Option<String>)>,
-    /// `PROPERTY_DEFINITION #N → PropertyId` (Pass 8-3). Recorded by the
+    /// `PROPERTY_DEFINITION #N → PropertyId`. Recorded by the
     /// PDR reader when it pushes a `Property`; consumed by the GPA reader
-    /// to resolve `derived_definition`. Temp; discarded after Pass 8.
+    /// to resolve `derived_definition`. Temp; discarded after the property handlers run.
     pub(crate) property_step_to_id: HashMap<u64, crate::ir::PropertyId>,
     /// `PROPERTY_DEFINITION` / `PRODUCT_DEFINITION_SHAPE` #N →
-    /// `PropertyDefinitionId` (Pass 6 + Pass 8). Recorded by the PD /
+    /// `PropertyDefinitionId`. Recorded by the PD /
     /// PDS handlers when they push into the schema-faithful
     /// `property_definitions` arena. Consumed by:
     /// - the PDR handler — fills the new `Property.definition` field;
@@ -463,30 +466,30 @@ pub struct ReaderContext {
     ///   `PropertyDefinitionId` (replacing the legacy `property_step_to_id`
     ///   lookup for that purpose). Phase property-definition-2.
     pub(crate) property_def_step_to_id: HashMap<u64, crate::ir::PropertyDefinitionId>,
-    /// `GENERAL_PROPERTY #N → GeneralPropertyId` (Pass 8-4). Consumed by
+    /// `GENERAL_PROPERTY #N → GeneralPropertyId`. Consumed by
     /// the GPA reader to resolve `base_definition`. Temp; discarded after
-    /// Pass 8.
+    /// the property handlers run.
     pub(crate) general_property_id_map: HashMap<u64, crate::ir::GeneralPropertyId>,
 
-    /// `pmi` pool — populated by the Pass 8 PMI handlers. `None` until the
+    /// `pmi` pool — populated by the PMI handlers. `None` until the
     /// first PMI entity is seen.
     pub(crate) pmi: Option<crate::ir::pmi::PmiPool>,
 
-    /// `SHAPE_ASPECT` arena — Pass 8 's `SHAPE_ASPECT` convert pushes
+    /// `SHAPE_ASPECT` arena — the `SHAPE_ASPECT` converter pushes
     /// here. Empty when no PMI entities were seen.
     pub(crate) shape_aspects: crate::ir::Arena<crate::ir::ShapeAspect>,
-    /// `SHAPE_ASPECT` `#N → ShapeAspectId`. Populated by `Pass8ShapeAspect`;
-    /// consumed by `id_attribute` (`Pass9PlmAttributes`) and future PMI
+    /// `SHAPE_ASPECT` `#N → ShapeAspectId`. Populated by the `SHAPE_ASPECT`
+    /// handler; consumed by `id_attribute` and future PMI
     /// handlers that resolve shape-aspect refs.
     pub(crate) shape_aspect_id_map: HashMap<u64, crate::ir::ShapeAspectId>,
-    /// `SHAPE_ASPECT` subtype arenas — Pass 8. No STEP-id map (no consumer
+    /// `SHAPE_ASPECT` subtype arenas. No STEP-id map (no consumer
     /// yet; the entities round-trip as standalone arena entries).
     pub(crate) composite_group_shape_aspects:
         crate::ir::Arena<crate::ir::CompositeGroupShapeAspect>,
     pub(crate) centre_of_symmetries: crate::ir::Arena<crate::ir::CentreOfSymmetry>,
     pub(crate) all_around_shape_aspects: crate::ir::Arena<crate::ir::AllAroundShapeAspect>,
     /// `SHAPE_ASPECT` subtype `#N → …Id` maps (phase shape-aspect-ref).
-    /// Populated by the subtype handlers in `Pass8ShapeAspect`; consumed by
+    /// Populated by the `SHAPE_ASPECT` subtype handlers; consumed by
     /// `resolve_shape_aspect_ref` for `ShapeAspectRef` resolution.
     pub(crate) composite_shape_aspect_id_map: HashMap<u64, crate::ir::CompositeShapeAspectId>,
     pub(crate) centre_of_symmetry_id_map: HashMap<u64, crate::ir::DerivedShapeAspectId>,
@@ -497,7 +500,7 @@ pub struct ReaderContext {
     pub(crate) datum_id_map: HashMap<u64, crate::ir::DatumId>,
     pub(crate) datum_feature_id_map: HashMap<u64, crate::ir::DatumFeatureId>,
     /// `DATUM_SYSTEM` arena + `#N → DatumSystemId` map (phase datum-system).
-    /// Populated by `Pass8DatumSystem`; the map lets `resolve_shape_aspect_ref`
+    /// Populated by the `DATUM_SYSTEM` handler; the map lets `resolve_shape_aspect_ref`
     /// resolve a `shape_aspect` ref onto a datum system.
     pub(crate) datum_systems: crate::ir::Arena<crate::ir::DatumSystem>,
     pub(crate) datum_system_id_map: HashMap<u64, crate::ir::DatumSystemId>,
@@ -602,9 +605,8 @@ pub struct ReaderContext {
     pub(crate) tessellated_items: crate::ir::Arena<crate::ir::tessellation::TessellatedItem>,
     pub(crate) tessellated_item_id_map: HashMap<u64, crate::ir::TessellatedItemId>,
     /// `LEADER_CURVE` step entity id → `AnnotationCurveOccurrenceId`
-    /// (phase annotation-curve-leader). Populated by `LeaderCurveHandler`
-    /// during `Pass7AnnotationCurve`; consumed by `TerminatorSymbolHandler`
-    /// / `LeaderTerminatorHandler` during `Pass7AnnotationPlane` to
+    /// (phase annotation-curve-leader). Populated by `LeaderCurveHandler`;
+    /// consumed by `TerminatorSymbolHandler` / `LeaderTerminatorHandler` to
     /// resolve `annotated_curve`.
     pub(crate) annotation_curve_occurrence_id_map:
         HashMap<u64, crate::ir::id::AnnotationCurveOccurrenceId>,
@@ -669,7 +671,7 @@ pub struct ReaderContext {
     /// can resolve.
     pub(crate) symbol_target_id_map: HashMap<u64, crate::ir::id::GeometricRepresentationItemId>,
 
-    /// Lazily-built plm pool — populated by the Pass 9 plm reader chain
+    /// Lazily-built plm pool — populated by the plm reader chain
     /// (`CalendarDate` / `LocalTime` / UTC / `DateAndTime` / `DateTimeRole`
     /// in Phase plm-1a; Person/Approval/Security clusters later).
     pub(crate) plm: Option<crate::ir::PlmPool>,
@@ -861,10 +863,10 @@ impl ReaderContext {
     }
 
     /// Resolve `product_pc_step_refs` / `product_pdc_step_refs` (raw STEP
-    /// entity ids captured at `Pass6Product` / `Pass6Pdef`) into typed
-    /// `ProductContextId` / `ProductDefinitionContextId` and write them
-    /// back onto each `Product`. Run after `Pass9AssemblyContext`
-    /// (which populates the id maps).
+    /// entity ids captured by the `PRODUCT` / `PRODUCT_DEFINITION` handlers) into
+    /// typed `ProductContextId` / `ProductDefinitionContextId` and write them
+    /// back onto each `Product`. Run after the assembly-context handlers
+    /// populate the id maps.
     fn resolve_product_contexts(&mut self) {
         for (pid, pc_step_id) in &self.product_pc_step_refs {
             if let Some(&pcid) = self.product_context_id_map.get(pc_step_id) {
@@ -980,11 +982,11 @@ impl ReaderContext {
         });
     }
 
-    /// Resolve the raw `SHAPE_DEFINITION_REPRESENTATION` links stashed at
-    /// `Pass6Sdr` (definition = a `PROPERTY_DEFINITION`). Runs after all passes,
-    /// so `property_def_step_to_id` (`Pass8`) and `repr_id_map` (`Pass6`) are
+    /// Resolve the raw `SHAPE_DEFINITION_REPRESENTATION` links stashed by the
+    /// SDR handler (definition = a `PROPERTY_DEFINITION`). Runs after all entities
+    /// are read, so `property_def_step_to_id` and `repr_id_map` are
     /// complete. Unresolved links (PD or representation not modelled) drop —
-    /// same as before this phase, FAIL-safe.
+    /// FAIL-safe.
     fn resolve_sdr_links(&mut self) {
         if self.sdr_link_refs.is_empty() {
             return;
@@ -1154,7 +1156,7 @@ impl ReaderContext {
     }
 
     /// Two-step lookup `PRODUCT_DEFINITION #N → PRODUCT #N → ProductId`
-    /// shared by Pass 6-8 (NAUO tree wiring).
+    /// shared by the NAUO tree-wiring handlers.
     pub(crate) fn resolve_product_by_pdef(
         &self,
         from: u64,
@@ -1453,9 +1455,9 @@ pub fn audit_complex_matching(graph: &EntityGraph) -> Vec<ComplexAuditFinding> {
 /// Collect entity ids that belong to any `DEFINITIONAL_REPRESENTATION`
 /// subtree. These represent PCURVE parametric-space geometry (2D points,
 /// 2D curves, `AXIS2_PLACEMENT_2D`, `PARAMETRIC_REPRESENTATION_CONTEXT`).
-/// 3D passes skip them so their 2D `CARTESIAN_POINT` / `DIRECTION` / etc.
-/// don't collide with the 3D converters; Pass 4a then walks the same set
-/// to populate the 2D arenas.
+/// 3D handlers skip them so their 2D `CARTESIAN_POINT` / `DIRECTION` / etc.
+/// don't collide with the 3D converters; the 2D-curve handlers then walk
+/// the same set to populate the 2D arenas.
 ///
 /// Only the exact entity type name `DEFINITIONAL_REPRESENTATION` is treated
 /// as a root — other `REPRESENTATION` subtypes (e.g. `SHAPE_REPRESENTATION`,
