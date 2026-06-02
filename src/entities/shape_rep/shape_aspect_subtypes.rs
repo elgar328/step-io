@@ -7,18 +7,19 @@
 //! STEP entity name. The reader/writer bodies are shared here — only the
 //! entity name and target arena differ per handler.
 
-use crate::entities::SimpleEntityHandler;
+use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::ProductId;
 use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::{
     AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, CompositeShapeAspectKind,
 };
-use crate::parser::entity::{Attribute, EntityGraph};
-use crate::reader::ReaderContext;
+use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
+use crate::reader::{ReaderContext, has_all_parts, require_part_attrs};
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
-use step_io_macros::step_entity;
+use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::{step_entity, step_entity_complex};
 
 /// Resolved write input shared by all three subtype handlers.
 pub(crate) struct ShapeAspectSubtypeWriteInput {
@@ -99,6 +100,7 @@ impl SimpleEntityHandler for CompositeGroupShapeAspectHandler {
                 target,
                 product_definitional,
                 kind: CompositeShapeAspectKind::Group,
+                datum_feature: false,
             });
         ctx.composite_shape_aspect_id_map.insert(entity_id, id);
         Ok(())
@@ -148,6 +150,7 @@ impl SimpleEntityHandler for CompositeShapeAspectHandler {
                 target,
                 product_definitional,
                 kind: CompositeShapeAspectKind::Composite,
+                datum_feature: false,
             });
         ctx.composite_shape_aspect_id_map.insert(entity_id, id);
         Ok(())
@@ -236,5 +239,103 @@ impl SimpleEntityHandler for AllAroundShapeAspectHandler {
             "ALL_AROUND_SHAPE_ASPECT",
             input,
         ))
+    }
+}
+
+/// Resolved write input for the datum-composite complex forms — the shared
+/// `SHAPE_ASPECT` body plus the [`CompositeShapeAspectKind`] that selects the
+/// 3-part vs 4-part part list.
+pub(crate) struct CompositeDatumShapeAspectWriteInput {
+    pub(crate) kind: CompositeShapeAspectKind,
+    pub(crate) name: String,
+    pub(crate) description: String,
+    pub(crate) pds_step_id: u64,
+    pub(crate) product_definitional: bool,
+}
+
+pub(crate) struct CompositeDatumShapeAspectHandler;
+
+/// AND-combined `SHAPE_ASPECT` subtype complexes that are simultaneously a
+/// `COMPOSITE_(GROUP_)SHAPE_ASPECT` and a `DATUM_FEATURE`. Data lives only on
+/// the `SHAPE_ASPECT` part; the other leaves are empty. Stored in the shared
+/// `composite_group_shape_aspects` arena (the ir.toml `composite_shape_aspect`
+/// family) with `datum_feature = true` so `resolve_shape_aspect_ref` consumers
+/// resolve it and the writer re-emits the exact multi-leaf form.
+#[step_entity_complex(
+    name = "COMPOSITE_DATUM_SHAPE_ASPECT",
+    cases = [
+        ["COMPOSITE_SHAPE_ASPECT", "DATUM_FEATURE", "SHAPE_ASPECT"],
+        ["COMPOSITE_GROUP_SHAPE_ASPECT", "COMPOSITE_SHAPE_ASPECT", "DATUM_FEATURE", "SHAPE_ASPECT"],
+    ]
+)]
+impl ComplexEntityHandler for CompositeDatumShapeAspectHandler {
+    type WriteInput = CompositeDatumShapeAspectWriteInput;
+
+    fn read_complex(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        parts: &[RawEntityPart],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        // All four attributes live on the SHAPE_ASPECT part; the other leaves
+        // are `()`. Reuse the shared subtype body reader.
+        let attrs = require_part_attrs(parts, "SHAPE_ASPECT", entity_id)?;
+        let Some((name, description, target, product_definitional)) =
+            read_shape_aspect_subtype(ctx, entity_id, attrs, "SHAPE_ASPECT")?
+        else {
+            return Ok(());
+        };
+        let kind = if has_all_parts(parts, &["COMPOSITE_GROUP_SHAPE_ASPECT"]) {
+            CompositeShapeAspectKind::Group
+        } else {
+            CompositeShapeAspectKind::Composite
+        };
+        let id = ctx
+            .composite_group_shape_aspects
+            .push(CompositeGroupShapeAspect {
+                name,
+                description,
+                target,
+                product_definitional,
+                kind,
+                datum_feature: true,
+            });
+        ctx.composite_shape_aspect_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        input: CompositeDatumShapeAspectWriteInput,
+    ) -> Result<u64, WriteError> {
+        let bool_attr = if input.product_definitional { "T" } else { "F" };
+        // Composite leaf tags first (alphabetical, matching the source), then
+        // the data-bearing SHAPE_ASPECT part last.
+        let mut parts: Vec<(String, Vec<Attribute>)> = match input.kind {
+            CompositeShapeAspectKind::Composite => vec![
+                ("COMPOSITE_SHAPE_ASPECT".into(), vec![]),
+                ("DATUM_FEATURE".into(), vec![]),
+            ],
+            CompositeShapeAspectKind::Group => vec![
+                ("COMPOSITE_GROUP_SHAPE_ASPECT".into(), vec![]),
+                ("COMPOSITE_SHAPE_ASPECT".into(), vec![]),
+                ("DATUM_FEATURE".into(), vec![]),
+            ],
+        };
+        parts.push((
+            "SHAPE_ASPECT".into(),
+            vec![
+                Attribute::String(input.name),
+                Attribute::String(input.description),
+                Attribute::EntityRef(input.pds_step_id),
+                Attribute::Enum(bool_attr.into()),
+            ],
+        ));
+        let n = buf.fresh();
+        buf.entities.push(WriterEntity {
+            id: n,
+            body: WriterBody::Complex { parts },
+        });
+        Ok(n)
     }
 }

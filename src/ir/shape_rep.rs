@@ -672,6 +672,12 @@ pub struct CompositeGroupShapeAspect {
     pub target: ProductId,
     pub product_definitional: bool,
     pub kind: CompositeShapeAspectKind,
+    /// `true` when this entry was read from an AND-combined complex that also
+    /// carried a `DATUM_FEATURE` part (`(COMPOSITE_SHAPE_ASPECT DATUM_FEATURE
+    /// SHAPE_ASPECT)` or its `COMPOSITE_GROUP_SHAPE_ASPECT` variant). The writer
+    /// re-emits the multi-leaf complex form for these; `false` round-trips the
+    /// plain single-name entity.
+    pub datum_feature: bool,
 }
 
 /// `CENTRE_OF_SYMMETRY` — a `SHAPE_ASPECT` subtype. See

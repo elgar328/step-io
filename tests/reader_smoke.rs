@@ -1810,14 +1810,16 @@ fn nist_property_def_tolerance_zones() {
         .iter()
         .filter(|tz| !tz.defining_tolerance.is_empty())
         .count();
-    assert_eq!(resolved, 6, "zones with resolved defining_tolerance");
+    assert_eq!(resolved, 7, "zones with resolved defining_tolerance");
 }
 
 /// `geometric_tolerance_with_datum_reference` simple tolerances read into the
 /// `pmi` pool. The NIST property fixture has two `PERPENDICULARITY_TOLERANCE`;
-/// one (`#10307`) points at a simple `DATUM_FEATURE` and round-trips, the
-/// other (`#10246`) at a complex multi-inheritance shape aspect step-io does
-/// not model and is dropped.
+/// one (`#10307`) points at a simple `DATUM_FEATURE`, the other (`#10246`) at a
+/// composite-datum multi-inheritance shape aspect (`#8313`,
+/// `(COMPOSITE_GROUP_SHAPE_ASPECT COMPOSITE_SHAPE_ASPECT DATUM_FEATURE
+/// SHAPE_ASPECT)`). Both round-trip — the complex form is modelled in the
+/// `composite_shape_aspect` arena (`datum_feature = true`).
 #[test]
 fn nist_property_def_gt_with_datum_reference() {
     use step_io::ir::pmi::GeometricToleranceWithDatumReference;
@@ -1839,11 +1841,11 @@ fn nist_property_def_gt_with_datum_reference() {
         .collect();
     assert_eq!(
         perpendicularity.len(),
-        1,
-        "resolvable PERPENDICULARITY_TOLERANCE"
+        2,
+        "resolvable PERPENDICULARITY_TOLERANCE (both shape-aspect targets modelled)"
     );
     assert!(
-        !perpendicularity[0].datum_system.is_empty(),
+        perpendicularity.iter().all(|p| !p.datum_system.is_empty()),
         "datum_system should resolve"
     );
 }

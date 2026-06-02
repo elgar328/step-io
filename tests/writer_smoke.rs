@@ -1773,6 +1773,7 @@ fn shape_aspect_subtypes_round_trip() {
             target: part_pid,
             product_definitional: false,
             kind: CompositeShapeAspectKind::Group,
+            datum_feature: false,
         });
     model.centre_of_symmetries.push(CentreOfSymmetry {
         name: "cs".into(),
@@ -1858,6 +1859,7 @@ fn shape_aspect_relationship_fixture() -> (
             target: part_pid,
             product_definitional: false,
             kind: CompositeShapeAspectKind::Group,
+            datum_feature: false,
         });
     let cs = model.centre_of_symmetries.push(CentreOfSymmetry {
         name: "cs".into(),
@@ -1890,6 +1892,7 @@ fn composite_shape_aspect_round_trips_under_its_own_name() {
             target,
             product_definitional: false,
             kind: CompositeShapeAspectKind::Composite,
+            datum_feature: false,
         });
 
     let text = model.write_to_string().expect("write");

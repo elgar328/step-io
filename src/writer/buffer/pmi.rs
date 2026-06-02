@@ -4,12 +4,13 @@
 //! cached `PRODUCT_DEFINITION_SHAPE` step id populated by the assembly emitter.
 
 use super::WriteBuffer;
-use crate::entities::SimpleEntityHandler;
 use crate::entities::shape_rep::shape_aspect::{ShapeAspectHandler, ShapeAspectWriteInput};
 use crate::entities::shape_rep::shape_aspect_subtypes::{
-    AllAroundShapeAspectHandler, CentreOfSymmetryHandler, CompositeGroupShapeAspectHandler,
+    AllAroundShapeAspectHandler, CentreOfSymmetryHandler, CompositeDatumShapeAspectHandler,
+    CompositeDatumShapeAspectWriteInput, CompositeGroupShapeAspectHandler,
     CompositeShapeAspectHandler, ShapeAspectSubtypeWriteInput,
 };
+use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::shape_aspect_ref::ShapeAspectRef;
 use crate::ir::shape_rep::{CompositeShapeAspectKind, ShapeAspect};
 use crate::writer::WriteError;
@@ -434,19 +435,35 @@ impl WriteBuffer<'_> {
                 continue;
             };
             let kind = sa.kind;
-            let input = ShapeAspectSubtypeWriteInput {
-                name: sa.name,
-                description: sa.description,
-                pds_step_id,
-                product_definitional: sa.product_definitional,
-            };
-            // Re-emit the original STEP entity name per kind.
-            let written = match kind {
-                CompositeShapeAspectKind::Composite => {
-                    CompositeShapeAspectHandler::write(self, input)
-                }
-                CompositeShapeAspectKind::Group => {
-                    CompositeGroupShapeAspectHandler::write(self, input)
+            // datum_feature entries were read from an AND-combined complex
+            // `(COMPOSITE_(GROUP_)SHAPE_ASPECT DATUM_FEATURE SHAPE_ASPECT)`;
+            // re-emit that multi-leaf form. Plain entries emit under their
+            // single STEP entity name per kind.
+            let written = if sa.datum_feature {
+                CompositeDatumShapeAspectHandler::write(
+                    self,
+                    CompositeDatumShapeAspectWriteInput {
+                        kind,
+                        name: sa.name,
+                        description: sa.description,
+                        pds_step_id,
+                        product_definitional: sa.product_definitional,
+                    },
+                )
+            } else {
+                let input = ShapeAspectSubtypeWriteInput {
+                    name: sa.name,
+                    description: sa.description,
+                    pds_step_id,
+                    product_definitional: sa.product_definitional,
+                };
+                match kind {
+                    CompositeShapeAspectKind::Composite => {
+                        CompositeShapeAspectHandler::write(self, input)
+                    }
+                    CompositeShapeAspectKind::Group => {
+                        CompositeGroupShapeAspectHandler::write(self, input)
+                    }
                 }
             };
             if let Ok(step_id) = written {
