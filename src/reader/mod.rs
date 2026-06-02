@@ -1386,6 +1386,33 @@ pub struct ComplexAuditFinding {
     pub extra_parts: Vec<String>,
 }
 
+/// Every `(handler_name, sorted distinct part-set)` pair where a complex
+/// handler's current subset predicate matches an instance in `graph` — the
+/// healthy exact matches included (unlike [`audit_complex_matching`]). Run over
+/// the corpus and de-duplicated, this yields the authoritative exact-case list
+/// each handler must declare under exact-case matching. Diagnostic only.
+#[must_use]
+pub fn complex_handler_matches(graph: &EntityGraph) -> Vec<(String, Vec<String>)> {
+    use crate::entities::{ENTITY_HANDLERS, ReadKind};
+    let mut out = Vec::new();
+    for ent in graph.entities.values() {
+        let RawEntity::Complex { parts, .. } = ent else {
+            continue;
+        };
+        let mut part_names: Vec<String> = parts.iter().map(|p| p.name.clone()).collect();
+        part_names.sort();
+        part_names.dedup();
+        for e in ENTITY_HANDLERS {
+            if let ReadKind::Complex { required_parts, .. } = &e.kind
+                && has_all_parts(parts, required_parts)
+            {
+                out.push((e.name.to_string(), part_names.clone()));
+            }
+        }
+    }
+    out
+}
+
 /// Audit every complex instance in `graph` against the complex handler
 /// registry, classifying subset-match looseness ([`ComplexMatchClass`]).
 /// Purely diagnostic — does NOT run during [`ReaderContext::convert`]; a caller
