@@ -344,24 +344,39 @@ impl SimpleEntityHandler for AnnotationSymbolOccurrenceHandler {
 
 pub(crate) struct AnnotationTextOccurrenceHandler;
 
-/// `ANNOTATION_TEXT_OCCURRENCE(name, styles, item)` — an
-/// `annotation_occurrence` subtype whose `item` is the
-/// `annotation_text_occurrence_item` SELECT. Same resolve / drop policy
-/// as `ANNOTATION_SYMBOL_OCCURRENCE`.
-#[step_entity(name = "ANNOTATION_TEXT_OCCURRENCE")]
-impl SimpleEntityHandler for AnnotationTextOccurrenceHandler {
+/// Styled `ANNOTATION_TEXT_OCCURRENCE` — read only as the AND-combined complex
+/// `(ANNOTATION_OCCURRENCE ANNOTATION_TEXT_OCCURRENCE DRAUGHTING_ANNOTATION_OCCURRENCE
+/// GEOMETRIC_REPRESENTATION_ITEM REPRESENTATION_ITEM STYLED_ITEM)`, the only form
+/// in the corpus (the simple single-name entity has count 0). `name` is on the
+/// `REPRESENTATION_ITEM` part, `styles` + `item` on `STYLED_ITEM`; `item` is the
+/// `annotation_text_occurrence_item` SELECT (`TEXT_LITERAL` / `COMPOSITE_TEXT`),
+/// resolved through `resolve_representation_item_ref` (unresolved drops the
+/// occurrence, symmetric on re-read).
+#[step_entity_complex(
+    name = "ANNOTATION_TEXT_OCCURRENCE",
+    cases = [[
+        "ANNOTATION_OCCURRENCE",
+        "ANNOTATION_TEXT_OCCURRENCE",
+        "DRAUGHTING_ANNOTATION_OCCURRENCE",
+        "GEOMETRIC_REPRESENTATION_ITEM",
+        "REPRESENTATION_ITEM",
+        "STYLED_ITEM",
+    ]]
+)]
+impl ComplexEntityHandler for AnnotationTextOccurrenceHandler {
     type WriteInput = AnnotationTextOccurrence;
 
-    fn read(
+    fn read_complex(
         ctx: &mut ReaderContext,
         entity_id: u64,
-        attrs: &[Attribute],
+        parts: &[RawEntityPart],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "ANNOTATION_TEXT_OCCURRENCE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
+        let ri = require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
+        let name = read_string_or_unset(ri, 0, entity_id, "name")?.to_owned();
+        let si = require_part_attrs(parts, "STYLED_ITEM", entity_id)?;
+        let style_refs = read_entity_ref_list(si, 0, entity_id, "styles")?;
+        let item_ref = read_entity_ref(si, 1, entity_id, "item")?;
 
         let mut styles = Vec::with_capacity(style_refs.len());
         for r in style_refs {
@@ -390,14 +405,29 @@ impl SimpleEntityHandler for AnnotationTextOccurrenceHandler {
         for psa_id in ato.styles {
             style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
         }
-        Ok(buf.push_simple(
-            "ANNOTATION_TEXT_OCCURRENCE",
-            vec![
-                Attribute::String(ato.name),
-                Attribute::List(style_refs),
-                Attribute::EntityRef(item_id),
-            ],
-        ))
+        // Re-emit the AND-combined complex form (alphabetical parts); data only
+        // on REPRESENTATION_ITEM (name) + STYLED_ITEM (styles, item).
+        let n = buf.fresh();
+        buf.entities.push(WriterEntity {
+            id: n,
+            body: WriterBody::Complex {
+                parts: vec![
+                    ("ANNOTATION_OCCURRENCE".into(), vec![]),
+                    ("ANNOTATION_TEXT_OCCURRENCE".into(), vec![]),
+                    ("DRAUGHTING_ANNOTATION_OCCURRENCE".into(), vec![]),
+                    ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),
+                    (
+                        "REPRESENTATION_ITEM".into(),
+                        vec![Attribute::String(ato.name)],
+                    ),
+                    (
+                        "STYLED_ITEM".into(),
+                        vec![Attribute::List(style_refs), Attribute::EntityRef(item_id)],
+                    ),
+                ],
+            },
+        });
+        Ok(n)
     }
 }
 
