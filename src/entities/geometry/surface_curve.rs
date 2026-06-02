@@ -11,6 +11,7 @@
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
+use crate::ir::geometry::Pcurve;
 use crate::ir::{PCurveOrSurface, PreferredSurfaceCurveRepresentation, SurfaceCurveWrapper};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
 use crate::reader::ReaderContext;
@@ -21,7 +22,7 @@ use step_io_macros::step_entity;
 
 /// Reader body shared by `SURFACE_CURVE` and `SEAM_CURVE`. Both alias
 /// the entity id to its underlying 3D curve in `curve_map`; pcurves are
-/// resolved separately by `collect_surface_curve_pcurves`.
+/// resolved separately by `collect_surface_curve`.
 pub(super) fn read_surface_or_seam_curve_body(
     ctx: &mut ReaderContext,
     entity_id: u64,
@@ -32,7 +33,7 @@ pub(super) fn read_surface_or_seam_curve_body(
     let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
     let curve_3d_ref = read_entity_ref(attrs, 1, entity_id, "curve_3d")?;
     // attrs[2] = associated_geometry (pcurves) — resolved separately by
-    // `collect_surface_curve_pcurves` once the 2D arenas are populated.
+    // `collect_surface_curve` once the 2D arenas are populated.
     // attrs[3] = master_representation enum — intentionally ignored;
     // the writer reproduces OCCT's `.PCURVE_S1.` convention.
 
@@ -138,6 +139,59 @@ pub(crate) fn collect_surface_curve(
                 master_representation,
             },
         );
+    }
+}
+
+impl ReaderContext {
+    /// Resolve a `PCURVE` member of a `SURFACE_CURVE` / `SEAM_CURVE`
+    /// `associated_geometry` SET into a [`Pcurve`]. Walks
+    /// `PCURVE → basis_surface + DEFINITIONAL_REPRESENTATION → items[0] → 2D
+    /// curve`; the `DEFINITIONAL_REPRESENTATION` is traversed but not stored in
+    /// IR. Returns `None` when any link is missing or a referenced entity does
+    /// not resolve, in which case [`collect_surface_curve`] emits a warning so
+    /// the dropped pcurve stays visible in reader diagnostics.
+    pub(crate) fn resolve_pcurve(&self, pcurve_ref: u64, graph: &EntityGraph) -> Option<Pcurve> {
+        let RawEntity::Simple {
+            name, attributes, ..
+        } = graph.get(pcurve_ref)?
+        else {
+            return None;
+        };
+        if name != "PCURVE" {
+            return None;
+        }
+        let Attribute::EntityRef(basis_surface_ref) = attributes.get(1)? else {
+            return None;
+        };
+        let Attribute::EntityRef(def_repr_ref) = attributes.get(2)? else {
+            return None;
+        };
+
+        let basis_surface = *self.surface_map.get(basis_surface_ref)?;
+
+        let RawEntity::Simple {
+            name: def_name,
+            attributes: def_attrs,
+            ..
+        } = graph.get(*def_repr_ref)?
+        else {
+            return None;
+        };
+        if def_name != "DEFINITIONAL_REPRESENTATION" {
+            return None;
+        }
+        let Attribute::List(items) = def_attrs.get(1)? else {
+            return None;
+        };
+        let Attribute::EntityRef(first_item_ref) = items.first()? else {
+            return None;
+        };
+        let curve_2d = *self.curve_2d_map.get(first_item_ref)?;
+
+        Some(Pcurve {
+            basis_surface,
+            curve_2d,
+        })
     }
 }
 

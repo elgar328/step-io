@@ -25,7 +25,6 @@ use crate::ir::visualization::{FillAreaStyleColour, VisualizationPool};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
 
 mod dispatch;
-mod geometry;
 mod header;
 
 #[cfg(test)]
