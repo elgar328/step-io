@@ -1,8 +1,8 @@
-//! VECTOR handler — Step 1 pilot (dependency + intermediate-map case).
+//! VECTOR handler (dependency + intermediate-map case).
 //!
 //! Mirrors the legacy `ReaderContext::convert_vector` (`reader/geometry.rs`)
 //! and the previously module-local `WriteBuffer::emit_vector`
-//! (`writer/buffer/geometry.rs`). VECTOR is the second pilot because it
+//! (`writer/buffer/geometry.rs`). VECTOR
 //! demonstrates two patterns absent from DIRECTION:
 //!   - **Dependency**: read resolves an upstream DIRECTION reference.
 //!   - **Intermediate map**: VECTOR is not stored in an arena. The reader

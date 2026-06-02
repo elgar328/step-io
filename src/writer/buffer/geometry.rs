@@ -18,21 +18,21 @@ use crate::writer::entity::{WriterBody, WriterEntity};
 
 impl WriteBuffer<'_> {
     pub(crate) fn emit_point(&mut self, id: PointId) -> Result<u64, WriteError> {
-        // Plan 5 stage C1: dispatch through the EntityHandler trait. Body
+        // Dispatch through the EntityHandler trait. Body
         // lives in `src/entities/geometry/cartesian_point.rs`.
         use crate::entities::SimpleEntityHandler;
         crate::entities::geometry::cartesian_point::CartesianPointHandler::write(self, id)
     }
 
     pub(crate) fn emit_direction(&mut self, id: DirectionId) -> Result<u64, WriteError> {
-        // Step 1 pilot: dispatch through the EntityHandler trait. Body lives in
-        // `src/entities/geometry/direction.rs`. Plan 2 removes this wrapper.
+        // Dispatch through the EntityHandler trait. Body lives in
+        // `src/entities/geometry/direction.rs`.
         use crate::entities::SimpleEntityHandler;
         crate::entities::geometry::direction::DirectionHandler::write(self, id)
     }
 
     pub(crate) fn emit_axis2_placement_3d(&mut self, id: Placement3dId) -> Result<u64, WriteError> {
-        // Plan 5 stage C1: dispatch through the EntityHandler trait.
+        // Dispatch through the EntityHandler trait.
         use crate::entities::SimpleEntityHandler;
         crate::entities::geometry::axis2_placement_3d::Axis2Placement3dHandler::write(self, id)
     }
@@ -79,13 +79,13 @@ impl WriteBuffer<'_> {
     }
 
     fn emit_trimmed_curve(&mut self, trimmed: TrimmedCurve) -> Result<u64, WriteError> {
-        // Plan 5 stage C5: dispatch through EntityHandler trait.
+        // Dispatch through EntityHandler trait.
         use crate::entities::SimpleEntityHandler;
         crate::entities::geometry::trimmed_curve::TrimmedCurveHandler::write(self, trimmed)
     }
 
     fn emit_composite_curve(&mut self, composite: &CompositeCurve) -> Result<u64, WriteError> {
-        // Plan 5 stage C5: dispatch through EntityHandler trait. Cloning
+        // Dispatch through EntityHandler trait. Cloning
         // the IR struct is cheap (segments are a small Vec of Copy values).
         use crate::entities::SimpleEntityHandler;
         crate::entities::geometry::composite_curve::CompositeCurveHandler::write(
@@ -95,7 +95,7 @@ impl WriteBuffer<'_> {
     }
 
     fn emit_circle(&mut self, circle: Circle3) -> Result<u64, WriteError> {
-        // Plan 5 stage C2: dispatch through EntityHandler trait.
+        // Dispatch through EntityHandler trait.
         use crate::entities::SimpleEntityHandler;
         crate::entities::geometry::circle::CircleHandler::write(self, circle)
     }
@@ -209,7 +209,7 @@ impl WriteBuffer<'_> {
     }
 
     fn emit_surface_of_revolution(&mut self, r: SurfaceOfRevolution) -> Result<u64, WriteError> {
-        // Plan 5 stage C6: dispatch through EntityHandler trait.
+        // Dispatch through EntityHandler trait.
         use crate::entities::SimpleEntityHandler;
         crate::entities::geometry::surface_of_revolution::SurfaceOfRevolutionHandler::write(self, r)
     }
@@ -228,7 +228,7 @@ impl WriteBuffer<'_> {
     }
 
     pub(crate) fn emit_axis1_placement(&mut self, id: Placement1dId) -> Result<u64, WriteError> {
-        // Plan 5 stage C1: dispatch through the EntityHandler trait.
+        // Dispatch through the EntityHandler trait.
         use crate::entities::SimpleEntityHandler;
         crate::entities::geometry::axis1_placement::Axis1PlacementHandler::write(self, id)
     }
@@ -274,19 +274,19 @@ fn surface_at(model: &StepModel, id: SurfaceId) -> Result<&Surface, WriteError> 
 
 impl WriteBuffer<'_> {
     pub(crate) fn emit_point_2d(&mut self, id: Point2dId) -> Result<u64, WriteError> {
-        // Plan 5.5 stage C2: dispatch through EntityHandler trait.
+        // Dispatch through EntityHandler trait.
         use crate::entities::SimpleEntityHandler;
         crate::entities::geometry::cartesian_point_2d::CartesianPoint2dHandler::write(self, id)
     }
 
     pub(crate) fn emit_direction_2d(&mut self, id: Direction2dId) -> Result<u64, WriteError> {
-        // Plan 5.5 stage C2: dispatch through EntityHandler trait.
+        // Dispatch through EntityHandler trait.
         use crate::entities::SimpleEntityHandler;
         crate::entities::geometry::direction_2d::Direction2dHandler::write(self, id)
     }
 
     pub(crate) fn emit_axis2_placement_2d(&mut self, id: Placement2dId) -> Result<u64, WriteError> {
-        // Plan 5.5 stage C3: dispatch through EntityHandler trait.
+        // Dispatch through EntityHandler trait.
         use crate::entities::SimpleEntityHandler;
         crate::entities::geometry::axis2_placement_2d::Axis2Placement2dHandler::write(self, id)
     }
@@ -336,7 +336,7 @@ impl WriteBuffer<'_> {
     }
 
     fn emit_line_2d(&mut self, line: Line2) -> Result<u64, WriteError> {
-        // Plan 5.5 stage C4: dispatch through EntityHandler trait.
+        // Dispatch through EntityHandler trait.
         use crate::entities::SimpleEntityHandler;
         crate::entities::geometry::line_2d::Line2dHandler::write(self, line)
     }
@@ -439,7 +439,7 @@ impl WriteBuffer<'_> {
         curve_3d_ref: u64,
         wrapper: &SurfaceCurveWrapper,
     ) -> Result<u64, WriteError> {
-        // Plan 5 stage C4: dispatch through EntityHandler trait.
+        // Dispatch through EntityHandler trait.
         use crate::entities::SimpleEntityHandler;
         if wrapper.is_seam {
             crate::entities::geometry::seam_curve::SeamCurveHandler::write(

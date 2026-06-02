@@ -24,7 +24,7 @@ impl WriteBuffer<'_> {
         // Snapshot to release the &model borrow before per-entity emission.
         let items: Vec<_> = self.model.tessellated_items.iter().cloned().collect();
         self.tessellated_item_step_ids = vec![0; items.len()];
-        // Pass 1: base items — faces depend on their `coordinates`.
+        // Phase 1: base items — faces depend on their `coordinates`.
         for (idx, item) in items.iter().enumerate() {
             match item {
                 TessellatedItem::CoordinatesList(c) => {
@@ -46,7 +46,7 @@ impl WriteBuffer<'_> {
                 | TessellatedItem::RepositionedTessellatedGeometricSet(_) => {}
             }
         }
-        // Pass 2: faces + surface-sets — geometric sets reference these.
+        // Phase 2: faces + surface-sets — geometric sets reference these.
         let faces: Vec<_> = self.model.tessellated_faces.iter().cloned().collect();
         self.tessellated_face_step_ids = vec![0; faces.len()];
         for (idx, face) in faces.into_iter().enumerate() {
@@ -64,7 +64,7 @@ impl WriteBuffer<'_> {
             self.tessellated_surface_set_step_ids[idx] =
                 ComplexTriangulatedSurfaceSetHandler::write(self, set)?;
         }
-        // Pass 3: composite items — their refs resolve through passes 1-2.
+        // Phase 3: composite items — their refs resolve through phases 1-2.
         for (idx, item) in items.iter().enumerate() {
             match item {
                 TessellatedItem::TessellatedGeometricSet(g) => {
@@ -122,7 +122,7 @@ impl WriteBuffer<'_> {
 
     /// Resolve a [`TessellatedItemRef`] to its emitted STEP id — a cache
     /// lookup; `emit_tessellation` fills all three caches before any
-    /// `TESSELLATED_GEOMETRIC_SET` (pass 3) emits.
+    /// `TESSELLATED_GEOMETRIC_SET` (phase 3) emits.
     pub(crate) fn emit_tessellated_item_ref(&self, item: TessellatedItemRef) -> u64 {
         match item {
             TessellatedItemRef::Item(id) => self.tessellated_item_step_ids[id.0 as usize],

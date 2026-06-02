@@ -1,7 +1,7 @@
 //! Converts a raw [`EntityGraph`] into a typed [`StepModel`].
 //!
 //! This module is the boundary between the parser layer and the IR layer.
-//! It uses multi-pass eager conversion: entities are processed in dependency
+//! It converts entities eagerly in reference-dependency (topological)
 //! order so that referenced objects are always available when needed.
 
 use std::collections::{BTreeMap, HashMap, HashSet};

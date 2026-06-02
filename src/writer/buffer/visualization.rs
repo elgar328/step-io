@@ -1,5 +1,5 @@
-//! Visualization emission entry point. Plan 7 stage C2~C4 lifted every
-//! emit body into `entities/visualization/<name>.rs` (the per-entity
+//! Visualization emission entry point. Every emit body lives
+//! in `entities/visualization/<name>.rs` (the per-entity
 //! handler chain). This file remains as a single dispatcher so
 //! `emit_all` keeps a stable entry — analogous to the `emit_unit_context`
 //! / `emit_face` wrappers in units / topology.

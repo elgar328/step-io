@@ -1,4 +1,4 @@
-//! `RECTANGULAR_TRIMMED_SURFACE` handler (fixpoint dispatch).
+//! `RECTANGULAR_TRIMMED_SURFACE` handler.
 
 #![allow(clippy::similar_names)] // `usense` / `vsense` mirror the EXPRESS field names.
 //!

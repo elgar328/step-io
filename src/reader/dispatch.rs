@@ -198,11 +198,9 @@ impl ReaderContext {
                 });
         }
         // Order-independent seeding of the CBU `conversion_factor` suppression
-        // set. In pass mode the CONVERSION_BASED_UNIT is read before its
-        // embedded MWU, so reading the CBU populates `cbu_internal_mwu_refs`
-        // in time. Under topo the MWU (a dependency) is processed first, so
-        // the set must be seeded up front or the MWU duplicates the inline
-        // conversion factor the writer re-emits.
+        // set. Under topo the embedded MWU (a dependency) is processed before
+        // its CONVERSION_BASED_UNIT, so the set must be seeded up front or the
+        // MWU duplicates the inline conversion factor the writer re-emits.
         self.prescan_cbu_internal_mwu_refs(graph);
         let index = build_topo_index();
         for id in order {

@@ -4,7 +4,7 @@
 //! `WriteBuffer::emit_oriented_edge`. `ORIENTED_EDGE` has no IR arena; the
 //! reader stores `(EdgeId, Orientation)` in `oriented_edge_map` keyed by
 //! the entity id, and the writer reconstructs an `OrientedEdge` value
-//! from `Wire::edges` at emit time. Same shape as the VECTOR pilot.
+//! from `Wire::edges` at emit time. Same shape as the VECTOR handler.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::OrientedEdge;

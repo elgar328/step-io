@@ -1,5 +1,5 @@
-//! Unit context emission. Plan 5.6 C4 lifted the entire emit chain
-//! into `entities/units/global_unit_assigned_context.rs` (the
+//! Unit context emission. The entire emit chain lives
+//! in `entities/units/global_unit_assigned_context.rs` (the
 //! orchestrator) plus the three leaf handlers and the
 //! `UncertaintyMeasureWithUnit` handler. This file remains as a 1-line
 //! dispatcher so `emit_all` keeps a stable entry point — analogous to
@@ -14,7 +14,7 @@ impl WriteBuffer<'_> {
         &mut self,
         units: UnitContext,
     ) -> Result<u64, WriteError> {
-        // Plan 5.6 stage C4: dispatch through EntityHandler trait. Body
+        // Dispatch through EntityHandler trait. Body
         // lives in
         // `src/entities/shape_rep/global_unit_assigned_context.rs`.
         use crate::entities::ComplexEntityHandler;

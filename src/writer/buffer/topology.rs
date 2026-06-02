@@ -7,14 +7,14 @@ use crate::writer::WriteError;
 
 impl WriteBuffer<'_> {
     pub(crate) fn emit_vertex(&mut self, id: VertexId) -> Result<u64, WriteError> {
-        // Plan 4 stage C2: dispatch through the EntityHandler trait. Body
+        // Dispatch through the EntityHandler trait. Body
         // lives in `src/entities/geometry/vertex_point.rs`.
         use crate::entities::SimpleEntityHandler;
         crate::entities::geometry::vertex_point::VertexPointHandler::write(self, id)
     }
 
     pub(crate) fn emit_edge(&mut self, id: EdgeId) -> Result<u64, WriteError> {
-        // Plan 4 stage C2: dispatch through the EntityHandler trait. Body
+        // Dispatch through the EntityHandler trait. Body
         // lives in `src/entities/topology/edge_curve.rs`.
         use crate::entities::SimpleEntityHandler;
         crate::entities::topology::edge_curve::EdgeCurveHandler::write(self, id)
@@ -61,14 +61,14 @@ impl WriteBuffer<'_> {
     }
 
     pub(crate) fn emit_face(&mut self, id: FaceId) -> Result<u64, WriteError> {
-        // Plan 4 stage C4: delegated to the AdvancedFace/FaceSurface
+        // Delegated to the AdvancedFace/FaceSurface
         // handlers (write body keys off the IR-stored FaceKind).
         use crate::entities::SimpleEntityHandler;
         crate::entities::topology::advanced_face::AdvancedFaceHandler::write(self, id)
     }
 
     pub(crate) fn emit_shell(&mut self, id: ShellId) -> Result<u64, WriteError> {
-        // Plan 4 stage C5: write body keys off the IR-stored `is_open` to
+        // Write body keys off the IR-stored `is_open` to
         // pick CLOSED_SHELL or OPEN_SHELL. Helper lives in
         // `entities/topology/closed_shell.rs`.
         use crate::entities::SimpleEntityHandler;
@@ -80,7 +80,7 @@ impl WriteBuffer<'_> {
         closed_shell_ref: u64,
         orientation: Orientation,
     ) -> Result<u64, WriteError> {
-        // Plan 4 stage C5: dispatch through EntityHandler trait.
+        // Dispatch through EntityHandler trait.
         use crate::entities::SimpleEntityHandler;
         crate::entities::topology::oriented_closed_shell::OrientedClosedShellHandler::write(
             self,
@@ -89,7 +89,7 @@ impl WriteBuffer<'_> {
     }
 
     pub(crate) fn emit_solid(&mut self, id: SolidId) -> Result<u64, WriteError> {
-        // Plan 4 stage C6: solids dispatch by `Solid::shells.len()`. Single
+        // Solids dispatch by `Solid::shells.len()`. Single
         // shell → MANIFOLD_SOLID_BREP, multi-shell → BREP_WITH_VOIDS.
         use crate::entities::SimpleEntityHandler;
         let shells_len = self

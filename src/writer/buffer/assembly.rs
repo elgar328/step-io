@@ -345,7 +345,7 @@ impl WriteBuffer<'_> {
     /// each `RepresentationId` to a cached step id. `MDGPR` entries are
     /// skipped — they depend on `STYLED_ITEM`s and are emitted later by
     /// `emit_visualization_if_set`, which appends their slots. The arena is
-    /// `[geometry reprs (Pass 6), MDGPR (Pass 7)]`, so the geometry reprs
+    /// `[geometry reprs, MDGPR]`, so the geometry reprs
     /// form a contiguous prefix and the appended `MDGPR` slots stay aligned
     /// with their `RepresentationId`s.
     /// Emit the `unitless_contexts` arena (phase unitless-context) as
@@ -376,8 +376,8 @@ impl WriteBuffer<'_> {
     /// / annotation / callout passes so every `items` ref cache
     /// (styled_item / ao / draughting_callout / representation_item /
     /// per-geometry placement) is populated. Appends to
-    /// `representation_step_ids` in arena id order — Mdgpr (Pass7) entries
-    /// have already been pushed by the visualization pass and Pass8
+    /// `representation_step_ids` in arena id order — the MDGPR entries
+    /// have already been pushed by the visualization pass and the
     /// DraughtingModel entries follow them.
     pub(in crate::writer::buffer) fn emit_draughting_models(&mut self) -> Result<(), WriteError> {
         use crate::entities::SimpleEntityHandler;
