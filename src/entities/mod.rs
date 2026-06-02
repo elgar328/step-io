@@ -64,25 +64,20 @@ pub(crate) enum PassLevel {
     /// (Pass 4-4A) — derived surfaces wrapping a swept curve.
     Pass4_4Swept,
 
-    // ----- Plan 5.5 (PCURVE definitional 2D geometry) -----
-    /// 2D `DIRECTION`. Shares the entity name with its 3D counterpart;
-    /// each handler self-discriminates by coordinate count and silently
-    /// skips the wrong dimension, so orphan 2D directions (those not
-    /// reachable from a `DEFINITIONAL_REPRESENTATION`) still survive
-    /// round-trip. (2D `CARTESIAN_POINT` moved to `Pass1` for the same
-    /// reason and is dispatched alongside the 3D handler.)
-    Pass4aPoint,
-    /// 2D `VECTOR` + `AXIS2_PLACEMENT_2D` (Pass 4a-2). Independent of
-    /// each other; both depend only on `Pass4aPoint` outputs.
+    // ----- PCURVE definitional 2D geometry -----
+    // 2D `CARTESIAN_POINT` / `DIRECTION` are handled by their 3D sister
+    // handlers (self-discriminate by coordinate count, exempt from the
+    // pcurve-subtree skip), so there is no dedicated 2D point/direction pass.
+    /// 2D `VECTOR` + `AXIS2_PLACEMENT_2D`.
     Pass4aVector,
     /// 2D curves (Pass 4a-3) — `LINE` / `CIRCLE` / `ELLIPSE` /
     /// `B_SPLINE_CURVE_WITH_KNOTS`. Each handler discriminates 2D vs 3D
     /// by its first cross-reference (point / placement in the 2D arena)
     /// and silently skips when the reference is absent.
     Pass4aCurve,
-    /// 2D rational `RATIONAL_B_SPLINE_CURVE` (Pass 4a-4) — complex entity
-    /// living inside a PCURVE `DEFINITIONAL_REPRESENTATION`. Mirrors the
-    /// 3D `Pass4Rational` but dispatched through `dispatch_registry_2d`.
+    /// 2D rational `RATIONAL_B_SPLINE_CURVE` — complex entity living inside a
+    /// PCURVE `DEFINITIONAL_REPRESENTATION`. Sister of the 3D `Pass4Rational`
+    /// handler; the topo dispatch routes by the pcurve-subtree skip.
     Pass4aRational,
     /// `PLANAR_EXTENT` / `PLANAR_BOX` (Pass 4-pe) — runs after the Pass 4a
     /// 2D block so a `PLANAR_BOX` placement resolves against either
@@ -220,9 +215,9 @@ pub(crate) enum PassLevel {
     Pass6TessellatedGeometricSet,
 
     // ----- Plan 7 (Pass 4-4B + Pass 7 visualization + Pass 8 property/PMI) -----
-    /// `OFFSET_SURFACE` (Pass 4-4B) — fixpoint dispatch. Dispatched via
-    /// [`Self::dispatch_registry_until_fixpoint`] because a chain of
-    /// `OFFSET_SURFACE` on top of `OFFSET_SURFACE` may resolve in any order.
+    /// `OFFSET_SURFACE` (Pass 4-4B) — wraps another surface as its basis. A
+    /// chain of `OFFSET_SURFACE` on top of `OFFSET_SURFACE` resolves naturally
+    /// under topological order (the basis is processed first).
     Pass4_4Offset,
     /// `COLOUR_RGB` (Pass 7-1) — leaf, no entity-ref dependencies.
     Pass7Colour,

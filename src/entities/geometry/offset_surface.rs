@@ -1,12 +1,9 @@
-//! `OFFSET_SURFACE` handler — Pass 4-4B (fixpoint dispatch).
+//! `OFFSET_SURFACE` handler — Pass 4-4B.
 //!
 //! `OFFSET_SURFACE(name, basis_surface, distance, self_intersect)` —
-//! wraps another surface as its basis. When that basis is itself an
-//! `OFFSET_SURFACE` or a Pass 4-4A derived surface that comes later in
-//! entity-id order, a single sweep fails to resolve. `passes.rs` calls
-//! [`ReaderContext::dispatch_registry_until_fixpoint`] with this pass
-//! level and the `geometry.surfaces.len()` measure, repeating until the
-//! arena stops growing.
+//! wraps another surface as its basis. A chain of `OFFSET_SURFACE` on top of
+//! `OFFSET_SURFACE` (or a Pass 4-4A derived surface) resolves naturally under
+//! topological dispatch: each basis is processed before its dependent.
 
 #![allow(clippy::doc_markdown)]
 

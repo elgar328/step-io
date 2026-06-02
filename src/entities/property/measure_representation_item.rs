@@ -71,11 +71,10 @@ impl SimpleEntityHandler for MeasureRepresentationItemHandler {
 
 pub(crate) struct MeasureRepresentationItemComplexHandler;
 
-/// Complex (multi-part) `MEASURE_REPRESENTATION_ITEM`. `required` keeps only
-/// the three parts every instance carries, so both the 4-part and the
-/// 5-part (`QUALIFIED_REPRESENTATION_ITEM`-bearing) forms match —
-/// `has_all_parts` admits supersets. `name` comes from the
-/// `REPRESENTATION_ITEM` part, the typed value + unit ref from the
+/// Complex (multi-part) `MEASURE_REPRESENTATION_ITEM`. The macro lists every
+/// exact part-set this handler owns (the length / plane-angle / ratio measure
+/// forms, with and without `QUALIFIED_REPRESENTATION_ITEM`). `name` comes from
+/// the `REPRESENTATION_ITEM` part, the typed value + unit ref from the
 /// `MEASURE_WITH_UNIT` part; the result is captured into the
 /// `representation_item` arena identically to the simple handler.
 #[step_entity_complex(

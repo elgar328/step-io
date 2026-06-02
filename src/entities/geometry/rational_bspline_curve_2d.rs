@@ -2,11 +2,11 @@
 //! (Pass 4a-4). Mirrors the 3D `rational_bspline_curve.rs` but reads
 //! 2D control points and pushes into `curves_2d`.
 //!
-//! Dispatched via `dispatch_registry_2d(Pass4aRational)` — the 2D pass
-//! only visits entities inside a PCURVE `DEFINITIONAL_REPRESENTATION`
-//! subtree, so this handler never sees a 3D rational entity. The 3D
-//! sister handler in `rational_bspline_curve.rs` likewise never sees a
-//! 2D entity (the 3D dispatch path skips the pcurve subtree).
+//! Tagged `Pass4aRational` (2D); the topo dispatch routes 2D handlers only to
+//! entities inside a PCURVE `DEFINITIONAL_REPRESENTATION` subtree, so this
+//! handler never sees a 3D rational entity. The 3D sister handler in
+//! `rational_bspline_curve.rs` likewise never sees a 2D entity (the 3D
+//! dispatch path skips the pcurve subtree).
 
 use crate::entities::geometry::cartesian_point_2d::CartesianPoint2dHandler;
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};

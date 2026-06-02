@@ -4,9 +4,8 @@
 //!
 //! `RECTANGULAR_TRIMMED_SURFACE(name, basis_surface, u1, u2, usense, v1,
 //! v2, vsense)` — parameter-space rectangle trimming a basis surface. The
-//! basis can be any other surface (including another derived surface), so
-//! the handler runs at `Pass4_4Offset` which `dispatch_registry_until_fixpoint`
-//! re-runs while the surface arena keeps growing.
+//! basis can be any other surface (including another derived surface);
+//! topological dispatch processes that basis before this trimmed surface.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_real, read_string_or_unset};

@@ -24,9 +24,9 @@ use crate::ir::visualization::{FillAreaStyleColour, VisualizationPool};
 // PreDefinedCurveFontId / CurveStyleId / StyledItemId imported above; the map types reference them directly.
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
 
+mod dispatch;
 mod geometry;
 mod header;
-mod passes;
 
 #[cfg(test)]
 mod tests;
@@ -50,17 +50,6 @@ pub struct ConvertResult {
     /// sections land here. The IR carries the spec-conformant form;
     /// these warnings are the only trace of what was repaired.
     pub parse_warnings: Vec<crate::parser::ParseWarning>,
-}
-
-/// Dispatch strategy for `convert_with_strategy`.
-///
-/// `Passes` is the hand-ordered 155-pass path (historical default). `Topo`
-/// runs a single dependency-ordered loop (Stage 2 reader refactor). Both share
-/// the same entity handlers and post-pass tail.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum DispatchStrategy {
-    Passes,
-    Topo,
 }
 
 /// A `SHAPE_DEFINITION_REPRESENTATION` whose product is resolved but whose
@@ -799,35 +788,14 @@ impl ReaderContext {
     /// Each instance is converted exactly once in reference-dependency
     /// (topological) order: an entity is processed only after every entity it
     /// references. Unrecognised entities are silently skipped — only entities
-    /// that the reader *attempts* to convert but fails produce warnings. The
-    /// legacy hand-ordered pass pipeline stays available via
-    /// [`Self::convert_with_strategy`] with [`DispatchStrategy::Passes`] as a
-    /// rollback oracle.
+    /// that the reader *attempts* to convert but fails produce warnings.
     #[must_use]
     pub fn convert(graph: &EntityGraph) -> ConvertResult {
-        Self::convert_with_strategy(graph, DispatchStrategy::Topo)
-    }
-
-    /// Convert with an explicit dispatch strategy. `Passes` is the hand-ordered
-    /// 155-pass path (current default); `Topo` runs a single dependency-ordered
-    /// loop (Stage 2). Both share the same handlers and the post-pass tail; only
-    /// the main dispatch differs. Exposed so the round-trip harness can shadow-
-    /// compare the two for data-equivalence before cutover.
-    #[must_use]
-    pub fn convert_with_strategy(graph: &EntityGraph, strategy: DispatchStrategy) -> ConvertResult {
         let mut ctx = Self {
             pcurve_subtree_ids: collect_pcurve_subtree_ids(graph),
             ..Self::default()
         };
-        match strategy {
-            DispatchStrategy::Passes => {
-                ctx.run_unit_pass(graph);
-                ctx.run_geometry_passes(graph);
-                ctx.run_topology_passes(graph);
-                ctx.run_assembly_passes(graph);
-            }
-            DispatchStrategy::Topo => ctx.run_topo(graph),
-        }
+        ctx.run_topo(graph);
         ctx.resolve_product_contexts();
         ctx.resolve_sdr_product_geometry();
         ctx.ensure_product_ref_frames();
