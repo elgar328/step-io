@@ -527,27 +527,42 @@ impl SimpleEntityHandler for AnnotationOccurrenceHandler {
 
 pub(crate) struct LeaderCurveHandler;
 
-/// `LEADER_CURVE(name, styles, item)` — sole occupant of the
-/// `annotation_curve_occurrence` arena. `item` resolves through
-/// `ctx.curve_map`; unresolved items drop the occurrence, symmetric on
-/// re-read. The arena id is recorded in
-/// `ctx.annotation_curve_occurrence_id_map` so the
+/// Styled `LEADER_CURVE` — read only as the AND-combined complex
+/// `(ANNOTATION_CURVE_OCCURRENCE ANNOTATION_OCCURRENCE
+/// DRAUGHTING_ANNOTATION_OCCURRENCE GEOMETRIC_REPRESENTATION_ITEM LEADER_CURVE
+/// REPRESENTATION_ITEM STYLED_ITEM)`, the only form in the corpus (the simple
+/// single-name entity has count 0). `name` is on the `REPRESENTATION_ITEM`
+/// part, `styles` + `item` on `STYLED_ITEM`; `item` narrows to a `Curve` via
+/// `ctx.curve_map` (unresolved drops the occurrence, symmetric on re-read).
+/// The arena id is recorded in `ctx.annotation_curve_occurrence_id_map` so the
 /// `TERMINATOR_SYMBOL` / `LEADER_TERMINATOR` handlers can resolve their
 /// `annotated_curve` back-reference.
-#[step_entity(name = "LEADER_CURVE")]
-impl SimpleEntityHandler for LeaderCurveHandler {
+#[step_entity_complex(
+    name = "LEADER_CURVE",
+    cases = [[
+        "ANNOTATION_CURVE_OCCURRENCE",
+        "ANNOTATION_OCCURRENCE",
+        "DRAUGHTING_ANNOTATION_OCCURRENCE",
+        "GEOMETRIC_REPRESENTATION_ITEM",
+        "LEADER_CURVE",
+        "REPRESENTATION_ITEM",
+        "STYLED_ITEM",
+    ]]
+)]
+impl ComplexEntityHandler for LeaderCurveHandler {
     type WriteInput = LeaderCurve;
 
-    fn read(
+    fn read_complex(
         ctx: &mut ReaderContext,
         entity_id: u64,
-        attrs: &[Attribute],
+        parts: &[RawEntityPart],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "LEADER_CURVE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
+        let ri = require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
+        let name = read_string_or_unset(ri, 0, entity_id, "name")?.to_owned();
+        let si = require_part_attrs(parts, "STYLED_ITEM", entity_id)?;
+        let style_refs = read_entity_ref_list(si, 0, entity_id, "styles")?;
+        let item_ref = read_entity_ref(si, 1, entity_id, "item")?;
 
         let mut styles = Vec::with_capacity(style_refs.len());
         for r in style_refs {
@@ -578,14 +593,34 @@ impl SimpleEntityHandler for LeaderCurveHandler {
         for psa_id in lc.styles {
             style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
         }
-        Ok(buf.push_simple(
-            "LEADER_CURVE",
-            vec![
-                Attribute::String(lc.name),
-                Attribute::List(style_refs),
-                Attribute::EntityRef(curve_step),
-            ],
-        ))
+        // Re-emit the AND-combined complex form (alphabetical parts, matching the
+        // source); data only on REPRESENTATION_ITEM (name) + STYLED_ITEM
+        // (styles, item).
+        let n = buf.fresh();
+        buf.entities.push(WriterEntity {
+            id: n,
+            body: WriterBody::Complex {
+                parts: vec![
+                    ("ANNOTATION_CURVE_OCCURRENCE".into(), vec![]),
+                    ("ANNOTATION_OCCURRENCE".into(), vec![]),
+                    ("DRAUGHTING_ANNOTATION_OCCURRENCE".into(), vec![]),
+                    ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),
+                    ("LEADER_CURVE".into(), vec![]),
+                    (
+                        "REPRESENTATION_ITEM".into(),
+                        vec![Attribute::String(lc.name)],
+                    ),
+                    (
+                        "STYLED_ITEM".into(),
+                        vec![
+                            Attribute::List(style_refs),
+                            Attribute::EntityRef(curve_step),
+                        ],
+                    ),
+                ],
+            },
+        });
+        Ok(n)
     }
 }
 
