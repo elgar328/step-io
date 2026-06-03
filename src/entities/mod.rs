@@ -13,7 +13,6 @@ use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
 pub mod assembly_product;
-pub mod form_features;
 pub mod geometry;
 pub mod plm;
 pub mod pmi;

@@ -4,7 +4,6 @@ use super::assembly::{
     ProductDefinitionContext, ProductDefinitionContextAssociation, ProductDefinitionContextRole,
     ProductDefinitionRelationship,
 };
-use super::form_features::Step;
 use super::geometry::{
     Axis1Placement, Axis2Placement2d, Axis2Placement3d, Curve, Curve2d, Direction2, Direction3,
     PlanarExtent, Point2, Point3, Surface, Vertex,
@@ -94,7 +93,6 @@ define_id!(
     ProductDefinitionRelationshipId,
     ProductDefinitionRelationship
 );
-define_id!(FeatureDefinitionId, Step);
 define_id!(NameAttributeId, NameAttribute);
 define_id!(DescriptionAttributeId, DescriptionAttribute);
 define_id!(IdAttributeId, IdAttribute);

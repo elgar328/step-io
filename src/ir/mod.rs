@@ -2,7 +2,6 @@ pub mod arena;
 pub mod assembly;
 pub mod attr;
 pub mod error;
-pub mod form_features;
 pub mod geometry;
 pub mod id;
 pub mod model;
@@ -26,7 +25,6 @@ pub use assembly::{
     Transform3d, WireframeContent, WireframeReprKind,
 };
 pub use error::{AttributeKindTag, ConvertError};
-pub use form_features::{FormFeaturesPool, Step};
 pub use geometry::{
     Axis1Placement, Axis2Placement2d, Axis2Placement3d, Circle2, Circle3, CompositeCurve,
     CompositeSegment, ConicalSurface, Curve, Curve2d, CurveForm, CylindricalSurface,
@@ -45,10 +43,10 @@ pub use id::{
     DateAndTimeId, DateId, DateTimeRoleId, DerivedUnitElementId, DerivedUnitId,
     DescriptionAttributeId, DimensionalExponentsId, Direction2dId, DirectionId, DocumentId,
     DocumentProductEquivalenceId, DocumentReferenceId, DocumentRepresentationTypeId,
-    DocumentTypeId, EdgeId, ExternalSourceId, FaceId, FeatureDefinitionId, FoundedItemId,
-    GeneralPropertyAssociationId, GeneralPropertyId, GroupAssignmentId, GroupId, IdAttributeId,
-    IdentificationAssignmentId, IdentificationRoleId, LocalTimeId, MappedItemId, MeasureWithUnitId,
-    NameAttributeId, NamedUnitId, NumericRepresentationItemId, ObjectRoleId, OrganizationId,
+    DocumentTypeId, EdgeId, ExternalSourceId, FaceId, FoundedItemId, GeneralPropertyAssociationId,
+    GeneralPropertyId, GroupAssignmentId, GroupId, IdAttributeId, IdentificationAssignmentId,
+    IdentificationRoleId, LocalTimeId, MappedItemId, MeasureWithUnitId, NameAttributeId,
+    NamedUnitId, NumericRepresentationItemId, ObjectRoleId, OrganizationId,
     PersonAndOrganizationAssignmentId, PersonAndOrganizationId, PersonAndOrganizationRoleId,
     PersonId, Placement1dId, Placement2dId, Placement3dId, PlanarExtentId, Point2dId, PointId,
     ProductCategoryId, ProductCategoryRelationshipId, ProductContextId,

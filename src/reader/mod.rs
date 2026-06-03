@@ -268,10 +268,6 @@ pub struct ReaderContext {
     /// `PRODUCT_RELATED_PRODUCT_CATEGORY` STEP `#N → ProductCategoryId`
     /// (`ProductRelatedProductCategory` variant).
     pub(crate) prpc_arena_map: HashMap<u64, crate::ir::ProductCategoryId>,
-    /// `form_features` pool staging. Moved into `StepModel.form_features` at `into_model` time.
-    pub(crate) form_features: Option<crate::ir::FormFeaturesPool>,
-    /// `STEP feature` `#N → FeatureDefinitionId`. Reserved for future PMI consumers.
-    pub(crate) feature_definition_id_map: HashMap<u64, crate::ir::FeatureDefinitionId>,
     pub(crate) product_arena_map: HashMap<u64, ProductId>,
     pub(crate) formation_to_product: HashMap<u64, u64>,
     pub(crate) pdef_to_product: HashMap<u64, u64>,
@@ -849,7 +845,6 @@ impl ReaderContext {
                     ctx.derived_unit_arena,
                     ctx.dimensional_exponents,
                 ),
-                form_features: ctx.form_features,
                 representations: ctx.representations,
                 representation_items: ctx.representation_items,
                 characterized_objects: ctx.characterized_objects,
