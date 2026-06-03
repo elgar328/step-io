@@ -3179,13 +3179,14 @@ fn datum_feature_round_trip() {
         product_definitional: false,
         identification: "A".into(),
     });
-    let df = pmi.datum_features.push(DatumFeature {
-        name: "Datum Feature A".into(),
-        description: String::new(),
-        target: part_pid,
-        product_definitional: true,
-        kind: step_io::ir::DatumFeatureKind::Plain,
-    });
+    let df = pmi
+        .datum_features
+        .push(DatumFeature::Itself(step_io::ir::DatumFeatureData {
+            name: "Datum Feature A".into(),
+            description: String::new(),
+            target: part_pid,
+            product_definitional: true,
+        }));
     model.pmi = Some(pmi);
 
     model
@@ -3203,7 +3204,7 @@ fn datum_feature_round_trip() {
 
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
     assert_eq!(re_pmi.datum_features.len(), 1);
-    let re_df = re_pmi.datum_features.iter().next().unwrap();
+    let re_df = re_pmi.datum_features.iter().next().unwrap().data();
     assert_eq!(re_df.name, "Datum Feature A");
     assert!(re_df.product_definitional);
     assert_eq!(re_df.target, step_io::ProductId(0));
@@ -3221,9 +3222,8 @@ fn datum_feature_round_trip() {
 fn dimensional_size_with_datum_feature_round_trip() {
     // DIMENSIONAL_SIZE_WITH_DATUM_FEATURE — datum_feature arena's in_enum
     // subtype (phase dsf-datum-feature). Shares the DatumFeatureId namespace
-    // with plain DATUM_FEATURE via the DatumFeatureKind discriminant.
-    use step_io::ir::DatumFeatureKind;
-    use step_io::ir::pmi::DatumFeature;
+    // with plain DATUM_FEATURE via the DatumFeature variant.
+    use step_io::ir::pmi::{DatumFeature, DatumFeatureData};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     model.units.push(ctx);
@@ -3253,20 +3253,22 @@ fn dimensional_size_with_datum_feature_round_trip() {
     model.assembly = Some(tree);
 
     let mut pmi = PmiPool::default();
-    pmi.datum_features.push(DatumFeature {
-        name: "df-plain".into(),
-        description: String::new(),
-        target: part_pid,
-        product_definitional: false,
-        kind: DatumFeatureKind::Plain,
-    });
-    pmi.datum_features.push(DatumFeature {
-        name: "df-dswdf".into(),
-        description: String::new(),
-        target: part_pid,
-        product_definitional: false,
-        kind: DatumFeatureKind::DimensionalSizeWithDatumFeature,
-    });
+    pmi.datum_features
+        .push(DatumFeature::Itself(DatumFeatureData {
+            name: "df-plain".into(),
+            description: String::new(),
+            target: part_pid,
+            product_definitional: false,
+        }));
+    pmi.datum_features
+        .push(DatumFeature::DimensionalSizeWithDatumFeature(
+            DatumFeatureData {
+                name: "df-dswdf".into(),
+                description: String::new(),
+                target: part_pid,
+                product_definitional: false,
+            },
+        ));
     model.pmi = Some(pmi);
 
     let text = model.write_to_string().expect("write");
@@ -3278,11 +3280,11 @@ fn dimensional_size_with_datum_feature_round_trip() {
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
     assert_eq!(re_pmi.datum_features.len(), 2);
     let mut iter = re_pmi.datum_features.iter();
-    assert_eq!(iter.next().unwrap().kind, DatumFeatureKind::Plain);
-    assert_eq!(
-        iter.next().unwrap().kind,
-        DatumFeatureKind::DimensionalSizeWithDatumFeature
-    );
+    assert!(matches!(iter.next().unwrap(), DatumFeature::Itself(_)));
+    assert!(matches!(
+        iter.next().unwrap(),
+        DatumFeature::DimensionalSizeWithDatumFeature(_)
+    ));
 }
 
 #[test]

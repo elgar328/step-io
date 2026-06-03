@@ -1361,7 +1361,9 @@ pub(crate) struct DatumFeatureWriteInput {
     pub(crate) description: String,
     pub(crate) pds_step_id: u64,
     pub(crate) product_definitional: bool,
-    pub(crate) kind: crate::ir::DatumFeatureKind,
+    /// `DATUM_FEATURE` or `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`, resolved
+    /// from the IR `DatumFeature` variant at the emit site.
+    pub(crate) entity_name: &'static str,
 }
 
 /// `DATUM_FEATURE(name, description, of_shape, product_definitional)` — a
@@ -1371,8 +1373,8 @@ pub(crate) struct DatumFeatureWriteInput {
 /// symmetric on re-read. Registered into `datum_feature_id_map` so a
 /// `shape_aspect` ref (e.g. `geometric_tolerance.toleranced_shape_aspect`)
 /// resolves onto it through `resolve_shape_aspect_ref`. Shares the arena
-/// with the `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` subtype through
-/// [`DatumFeatureKind`](crate::ir::DatumFeatureKind).
+/// with the `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` subtype through the
+/// [`DatumFeature`](crate::ir::DatumFeature) variants.
 #[step_entity(name = "DATUM_FEATURE")]
 impl SimpleEntityHandler for DatumFeatureHandler {
     type WriteInput = DatumFeatureWriteInput;
@@ -1388,7 +1390,7 @@ impl SimpleEntityHandler for DatumFeatureHandler {
             entity_id,
             attrs,
             "DATUM_FEATURE",
-            crate::ir::DatumFeatureKind::Plain,
+            crate::ir::DatumFeature::Itself,
         )
     }
 
@@ -1403,7 +1405,7 @@ pub(crate) struct DimensionalSizeWithDatumFeatureHandler;
 /// `in_enum` subtype per the ir.toml blueprint. Shares the 4-attr
 /// `shape_aspect` body
 /// and the [`DatumFeatureId`](crate::ir::DatumFeatureId) namespace with
-/// plain `DATUM_FEATURE`; the kind discriminant captures the subtype.
+/// plain `DATUM_FEATURE`; the `DatumFeature` variant captures the subtype.
 #[step_entity(name = "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE")]
 impl SimpleEntityHandler for DimensionalSizeWithDatumFeatureHandler {
     type WriteInput = DatumFeatureWriteInput;
@@ -1419,7 +1421,7 @@ impl SimpleEntityHandler for DimensionalSizeWithDatumFeatureHandler {
             entity_id,
             attrs,
             "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
-            crate::ir::DatumFeatureKind::DimensionalSizeWithDatumFeature,
+            crate::ir::DatumFeature::DimensionalSizeWithDatumFeature,
         )
     }
 
@@ -1436,7 +1438,7 @@ fn read_datum_feature_variant(
     entity_id: u64,
     attrs: &[Attribute],
     entity_name: &'static str,
-    kind: crate::ir::DatumFeatureKind,
+    variant: fn(crate::ir::DatumFeatureData) -> DatumFeature,
 ) -> Result<(), ConvertError> {
     check_count(attrs, 4, entity_id, entity_name)?;
     let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
@@ -1459,29 +1461,22 @@ fn read_datum_feature_variant(
         .pmi
         .get_or_insert_with(PmiPool::default)
         .datum_features
-        .push(DatumFeature {
+        .push(variant(crate::ir::DatumFeatureData {
             name,
             description,
             target,
             product_definitional,
-            kind,
-        });
+        }));
     ctx.datum_feature_id_map.insert(entity_id, id);
     Ok(())
 }
 
-/// Shared writer for the `datum_feature` family. Dispatches the STEP
-/// entity name on `kind`.
+/// Shared writer for the `datum_feature` family. The STEP entity name is
+/// resolved from the IR variant at the emit site and carried on `input`.
 fn write_datum_feature(buf: &mut WriteBuffer, input: DatumFeatureWriteInput) -> u64 {
-    let entity_name = match input.kind {
-        crate::ir::DatumFeatureKind::Plain => "DATUM_FEATURE",
-        crate::ir::DatumFeatureKind::DimensionalSizeWithDatumFeature => {
-            "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE"
-        }
-    };
     let bool_attr = if input.product_definitional { "T" } else { "F" };
     buf.push_simple(
-        entity_name,
+        input.entity_name,
         vec![
             Attribute::String(input.name),
             Attribute::String(input.description),

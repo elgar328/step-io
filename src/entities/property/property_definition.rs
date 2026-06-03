@@ -52,7 +52,9 @@ fn shape_aspect_ref_target(ctx: &ReaderContext, sa_ref: ShapeAspectRef) -> Optio
         ShapeAspectRef::CentreOfSymmetry(id) => Some(ctx.centre_of_symmetries[id].target),
         ShapeAspectRef::AllAroundShapeAspect(id) => Some(ctx.all_around_shape_aspects[id].target),
         ShapeAspectRef::Datum(id) => ctx.pmi.as_ref().map(|p| p.datums[id].target),
-        ShapeAspectRef::DatumFeature(id) => ctx.pmi.as_ref().map(|p| p.datum_features[id].target),
+        ShapeAspectRef::DatumFeature(id) => {
+            ctx.pmi.as_ref().map(|p| p.datum_features[id].data().target)
+        }
         ShapeAspectRef::DatumSystem(id) => Some(ctx.datum_systems[id].target),
         ShapeAspectRef::DatumTarget(id) => Some(ctx.datum_targets[id].target),
         ShapeAspectRef::PlacedDatumTargetFeature(id) => {

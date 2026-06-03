@@ -97,7 +97,7 @@ pub use plm::{
 pub use pmi::{
     AngleSelection, AngularLocationData, AnnotationCurveOccurrence, AnnotationOccurrence,
     AnnotationPlane, AnnotationSymbolOccurrence, AnnotationTextOccurrence, AreaUnitType, Datum,
-    DatumFeature, DatumFeatureKind, DefinedAreaUnit, DimensionalCharacteristic,
+    DatumFeature, DatumFeatureData, DefinedAreaUnit, DimensionalCharacteristic,
     DimensionalLocation, DimensionalLocationData, DimensionalSize, DimensionalSizeKind,
     DraughtingAnnotationOccurrence, DraughtingCallout, DraughtingCalloutData,
     DraughtingCalloutElement, DraughtingCalloutRelationship, DraughtingModelIdentifiedItem,

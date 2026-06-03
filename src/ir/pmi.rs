@@ -482,35 +482,40 @@ pub struct Datum {
 /// A `DATUM_FEATURE` whose `of_shape` does not resolve is silently dropped,
 /// symmetric on re-read.
 ///
-/// The ir.toml blueprint classifies `datum_feature` as a
-/// `concrete_supertype` with `base_parallel` shape — [`DatumFeatureKind`]
-/// discriminates the plain entity from its
-/// `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` subtype.
-///
-/// step-io keeps a single arena per `shape_aspect`-family member and
-/// captures the subtype in `kind` so consumers reach the entry through
-/// the unified [`ShapeAspectRef`](crate::ir::ShapeAspectRef)`::DatumFeature`
-/// variant.
+/// The ir.toml blueprint classifies the `datum_feature` family as flat
+/// `in_enum` members under `shape_aspect`; step-io keeps a single arena and
+/// tags the entry with the [`DatumFeature`] variant so consumers reach it
+/// through the unified
+/// [`ShapeAspectRef`](crate::ir::ShapeAspectRef)`::DatumFeature` variant.
 #[derive(Debug, Clone, PartialEq)]
-pub struct DatumFeature {
+pub struct DatumFeatureData {
     pub name: String,
     pub description: String,
     /// `of_shape` resolved to the owning product.
     pub target: ProductId,
     pub product_definitional: bool,
-    pub kind: DatumFeatureKind,
 }
 
-/// Which `datum_feature` flavour an arena entry round-trips as. AP242
-/// declares `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` as the only subtype and
-/// adds no own attributes, so the discriminant is enough to round-trip
-/// the source entity name.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum DatumFeatureKind {
+/// A datum feature, tagged with the source STEP entity. AP242 declares
+/// `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` as the only subtype and it adds no
+/// own attributes over the 4-attr `shape_aspect` body, so the variant alone
+/// round-trips the source entity name.
+#[derive(Debug, Clone, PartialEq)]
+pub enum DatumFeature {
     /// Plain `DATUM_FEATURE`.
-    Plain,
+    Itself(DatumFeatureData),
     /// `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`.
-    DimensionalSizeWithDatumFeature,
+    DimensionalSizeWithDatumFeature(DatumFeatureData),
+}
+
+impl DatumFeature {
+    /// The shared `shape_aspect`-body payload, regardless of source entity.
+    #[must_use]
+    pub fn data(&self) -> &DatumFeatureData {
+        match self {
+            DatumFeature::Itself(d) | DatumFeature::DimensionalSizeWithDatumFeature(d) => d,
+        }
+    }
 }
 
 /// `annotation_occurrence` `enum_base` — STEP `styled_item` PMI subtypes that

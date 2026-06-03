@@ -90,19 +90,26 @@ impl WriteBuffer<'_> {
         self.datum_feature_step_ids
             .resize(pmi.datum_features.len(), 0);
         for (index, df) in pmi.datum_features.iter().enumerate() {
-            let Some(&pds_step_id) = self.product_def_shape_ids.get(&df.target) else {
+            let d = df.data();
+            let Some(&pds_step_id) = self.product_def_shape_ids.get(&d.target) else {
                 continue;
             };
-            // Shared writer dispatches the STEP entity name on `df.kind`
+            // The STEP entity name follows the IR variant
             // (`DATUM_FEATURE` vs `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`).
+            let entity_name = match df {
+                crate::ir::DatumFeature::Itself(_) => "DATUM_FEATURE",
+                crate::ir::DatumFeature::DimensionalSizeWithDatumFeature(_) => {
+                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE"
+                }
+            };
             if let Ok(step_id) = DatumFeatureHandler::write(
                 self,
                 DatumFeatureWriteInput {
-                    name: df.name.clone(),
-                    description: df.description.clone(),
+                    name: d.name.clone(),
+                    description: d.description.clone(),
                     pds_step_id,
-                    product_definitional: df.product_definitional,
-                    kind: df.kind,
+                    product_definitional: d.product_definitional,
+                    entity_name,
                 },
             ) {
                 self.datum_feature_step_ids[index] = step_id;
