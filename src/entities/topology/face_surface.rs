@@ -1,15 +1,15 @@
 //! `FACE_SURFACE` handler.
 //!
 //! Sister handler of `ADVANCED_FACE`. Both share the read/write body in
-//! `advanced_face.rs`; the read side flips the `FaceKind` tag, and the
-//! write body keys off the IR-stored kind so a single helper covers
+//! `advanced_face.rs`; the read side picks the `Face` variant, and the
+//! write body keys off the IR-stored variant so a single helper covers
 //! both entity names.
 
 use crate::entities::SimpleEntityHandler;
 use crate::entities::topology::advanced_face::{read_face_body, write_face_body};
 use crate::ir::FaceId;
 use crate::ir::error::ConvertError;
-use crate::ir::topology::FaceKind;
+use crate::ir::topology::Face;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -28,7 +28,7 @@ impl SimpleEntityHandler for FaceSurfaceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        read_face_body(ctx, entity_id, attrs, FaceKind::General)
+        read_face_body(ctx, entity_id, attrs, "FACE_SURFACE", Face::FaceSurface)
     }
 
     fn write(buf: &mut WriteBuffer, id: FaceId) -> Result<u64, WriteError> {

@@ -947,7 +947,7 @@ fn hollow_box_solid_has_outer_plus_one_void() {
 }
 
 // ------------------------------------------------------------------
-// Face surface fixtures — exercise FaceKind::General (FACE_SURFACE)
+// Face surface fixtures — exercise Face::FaceSurface (FACE_SURFACE)
 // ------------------------------------------------------------------
 
 const FACE_SURFACE_FIXTURES: &[(&str, &str)] = &[(
@@ -1009,12 +1009,12 @@ fn face_surface_fixtures_topology_pool_counts() {
     }
 }
 
-/// Spot-check `FACE_SURFACE` round-trip — verifies `FaceKind::General` is
+/// Spot-check `FACE_SURFACE` round-trip — verifies `Face::FaceSurface` is
 /// preserved on read and emitted back as `FACE_SURFACE(`, not downgraded to
 /// `ADVANCED_FACE(`.
 #[test]
 fn face_surface_ap214_is_spot_check() {
-    use step_io::ir::topology::FaceKind;
+    use step_io::ir::topology::Face;
 
     let source = include_str!("fixtures/face_surface_ap214_is.step");
     let graph = step_io::parse(source).expect("parse failed");
@@ -1022,10 +1022,9 @@ fn face_surface_ap214_is_spot_check() {
     let faces: Vec<_> = result.model.topology.faces.iter().collect();
 
     assert_eq!(faces.len(), 1, "expected exactly 1 face");
-    assert_eq!(
-        faces[0].kind,
-        FaceKind::General,
-        "face kind should be General (FACE_SURFACE origin)"
+    assert!(
+        matches!(faces[0], Face::FaceSurface(_)),
+        "face should be FaceSurface (FACE_SURFACE origin)"
     );
 
     // Round-trip the IR through the writer and check the emitted text.

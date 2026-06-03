@@ -35,7 +35,7 @@ use step_io::ir::shape_rep::{
     CompositeShapeAspectKind, LengthUnit, ShapeAspect, ShapeAspectRelationship,
     ShapeAspectRelationshipKind, SolidAngleUnit, UnitContext,
 };
-use step_io::ir::topology::{Face, FaceKind, Orientation, Shell, Solid, Wire, WireData};
+use step_io::ir::topology::{Face, FaceData, Orientation, Shell, Solid, Wire, WireData};
 use step_io::ir::units::{MassFlavor, MassUnit, NamedUnit, UnitsPool};
 use step_io::ir::visualization::{
     CameraModel, CameraModelD3, FoundedItem, Projection, ViewVolume, VisualizationPool,
@@ -813,12 +813,11 @@ fn push_minimal_solid(model: &mut StepModel) -> SolidId {
         vertex: Some(vertex),
         orientation: Orientation::Forward,
     }));
-    let face = model.topology.faces.push(Face {
+    let face = model.topology.faces.push(Face::AdvancedFace(FaceData {
         surface: plane_surface,
         bounds: vec![wire],
         orientation: Orientation::Forward,
-        kind: FaceKind::Advanced,
-    });
+    }));
     let shell = model.topology.shells.push(Shell {
         faces: vec![face],
         orientation: Orientation::Forward,

@@ -3,7 +3,7 @@
 //! Shares its read/write body with `FACE_SURFACE` via the
 //! `read_face_body` / `write_face_body` helpers below. The sister
 //! handler in `face_surface.rs` imports those helpers and only swaps
-//! the `FaceKind` discriminator.
+//! the `Face` variant constructor.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::FaceId;
@@ -11,7 +11,7 @@ use crate::ir::attr::{
     check_count, read_bool, read_entity_ref, read_entity_ref_list, read_string_or_unset,
 };
 use crate::ir::error::ConvertError;
-use crate::ir::topology::{Face, FaceKind};
+use crate::ir::topology::{Face, FaceData};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::{ReaderContext, bool_to_orientation};
 use crate::writer::WriteError;
@@ -21,17 +21,14 @@ use crate::writer::entity::{WriterBody, WriterEntity};
 use step_io_macros::step_entity;
 
 /// Reader body shared by `ADVANCED_FACE` and `FACE_SURFACE`. The two
-/// entities share the same shape; only the `FaceKind` tag differs.
+/// entities share the same shape; only the `Face` variant differs.
 pub(super) fn read_face_body(
     ctx: &mut ReaderContext,
     entity_id: u64,
     attrs: &[Attribute],
-    kind: FaceKind,
+    step_name: &'static str,
+    variant: fn(FaceData) -> Face,
 ) -> Result<(), ConvertError> {
-    let step_name = match kind {
-        FaceKind::Advanced => "ADVANCED_FACE",
-        FaceKind::General => "FACE_SURFACE",
-    };
     check_count(attrs, 4, entity_id, step_name)?;
     let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
     let bound_refs = read_entity_ref_list(attrs, 1, entity_id, "bounds")?;
@@ -46,12 +43,11 @@ pub(super) fn read_face_body(
 
     let surface = ctx.resolve_surface(entity_id, surface_ref, "face_geometry")?;
 
-    let face = Face {
+    let face = variant(FaceData {
         surface,
         bounds,
         orientation: bool_to_orientation(same_sense),
-        kind,
-    };
+    });
     let id = ctx.topology.faces.push(face);
     ctx.face_map.insert(entity_id, id);
     Ok(())
@@ -59,7 +55,7 @@ pub(super) fn read_face_body(
 
 /// Writer body shared by `ADVANCED_FACE` and `FACE_SURFACE`. Looks up
 /// the IR `Face` and emits with the entity name selected by the IR's
-/// stored `FaceKind` (so callers can dispatch by id alone).
+/// stored variant (so callers can dispatch by id alone).
 pub(super) fn write_face_body(buf: &mut WriteBuffer, id: FaceId) -> Result<u64, WriteError> {
     if let Some(&n) = buf.face_ids.get(&id) {
         return Ok(n);
@@ -74,15 +70,17 @@ pub(super) fn write_face_body(buf: &mut WriteBuffer, id: FaceId) -> Result<u64, 
         .ok_or_else(|| WriteError::DanglingId {
             detail: format!("FaceId({})", id.0),
         })?;
-    let surface = buf.emit_surface(f.surface)?;
-    let mut bound_refs = Vec::with_capacity(f.bounds.len());
-    for &wid in &f.bounds {
+    let name = match f {
+        Face::AdvancedFace(_) => "ADVANCED_FACE",
+        Face::FaceSurface(_) => "FACE_SURFACE",
+    };
+    let d = f.data();
+    let surface = buf.emit_surface(d.surface)?;
+    let mut bound_refs = Vec::with_capacity(d.bounds.len());
+    for &wid in &d.bounds {
         bound_refs.push(buf.emit_wire(wid)?);
     }
-    let name = match f.kind {
-        FaceKind::Advanced => "ADVANCED_FACE",
-        FaceKind::General => "FACE_SURFACE",
-    };
+    let orientation = orientation_bool(d.orientation);
     let n = buf.fresh();
     buf.entities.push(WriterEntity {
         id: n,
@@ -92,7 +90,7 @@ pub(super) fn write_face_body(buf: &mut WriteBuffer, id: FaceId) -> Result<u64, 
                 Attribute::String(String::new()),
                 Attribute::List(bound_refs.into_iter().map(Attribute::EntityRef).collect()),
                 Attribute::EntityRef(surface),
-                orientation_bool(f.orientation),
+                orientation,
             ],
         },
     });
@@ -112,7 +110,7 @@ impl SimpleEntityHandler for AdvancedFaceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        read_face_body(ctx, entity_id, attrs, FaceKind::Advanced)
+        read_face_body(ctx, entity_id, attrs, "ADVANCED_FACE", Face::AdvancedFace)
     }
 
     fn write(buf: &mut WriteBuffer, id: FaceId) -> Result<u64, WriteError> {

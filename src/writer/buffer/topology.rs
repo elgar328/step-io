@@ -66,7 +66,7 @@ impl WriteBuffer<'_> {
 
     pub(crate) fn emit_face(&mut self, id: FaceId) -> Result<u64, WriteError> {
         // Delegated to the AdvancedFace/FaceSurface
-        // handlers (write body keys off the IR-stored FaceKind).
+        // handlers (write body keys off the IR-stored Face variant).
         use crate::entities::SimpleEntityHandler;
         crate::entities::topology::advanced_face::AdvancedFaceHandler::write(self, id)
     }
