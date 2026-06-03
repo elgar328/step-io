@@ -35,25 +35,29 @@ impl WriteBuffer<'_> {
             .ok_or_else(|| WriteError::DanglingId {
                 detail: format!("WireId({})", id.0),
             })?;
+        // FACE_BOUND / FACE_OUTER_BOUND wrapper now lives in dedicated
+        // handlers; pick the matching one by the `Wire` variant.
+        let is_outer = matches!(w, Wire::FaceOuterBound(_));
+        let data = match w {
+            Wire::FaceBound(d) | Wire::FaceOuterBound(d) => d,
+        };
         // EDGE_LOOP (common case) or VERTEX_LOOP (degenerate — a single
         // vertex, used by some revolutions and sphere poles). Reader stores
         // either `edges` or `vertex`, never both.
-        let loop_id = if let Some(vid) = w.vertex {
+        let loop_id = if let Some(vid) = data.vertex {
             crate::entities::topology::vertex_loop::VertexLoopHandler::write(self, vid)?
         } else {
-            crate::entities::topology::edge_loop::EdgeLoopHandler::write(self, w.edges)?
+            crate::entities::topology::edge_loop::EdgeLoopHandler::write(self, data.edges)?
         };
-        // FACE_BOUND / FACE_OUTER_BOUND wrapper now lives in dedicated
-        // handlers; pick the matching one by `Wire::is_outer`.
-        let bound_id = if w.is_outer {
+        let bound_id = if is_outer {
             crate::entities::topology::face_outer_bound::FaceOuterBoundHandler::write(
                 self,
-                (loop_id, w.orientation),
+                (loop_id, data.orientation),
             )?
         } else {
             crate::entities::topology::face_bound::FaceBoundHandler::write(
                 self,
-                (loop_id, w.orientation),
+                (loop_id, data.orientation),
             )?
         };
         self.wire_ids.insert(id, bound_id);

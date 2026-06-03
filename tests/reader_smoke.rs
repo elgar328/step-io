@@ -1277,7 +1277,7 @@ fn assembly_fixtures_preserve_sphere_vertex_loop() {
             .topology
             .wires
             .iter()
-            .filter(|w| w.vertex.is_some() && w.edges.is_empty())
+            .filter(|w| w.data().vertex.is_some() && w.data().edges.is_empty())
             .count();
         assert_eq!(
             vertex_wire_count, 1,

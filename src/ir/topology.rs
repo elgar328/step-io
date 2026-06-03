@@ -36,7 +36,7 @@ pub struct OrientedEdge {
     pub orientation: Orientation,
 }
 
-/// A closed or open loop of oriented edges, forming a face boundary.
+/// The shared payload of a face boundary wire.
 ///
 /// Created from STEP `FACE_BOUND` / `FACE_OUTER_BOUND` whose loop is an
 /// `EDGE_LOOP` (normal case) or a `VERTEX_LOOP` (degenerate — a single
@@ -44,16 +44,35 @@ pub struct OrientedEdge {
 /// case `edges` is empty and [`vertex`](Self::vertex) carries the degenerate
 /// point; for edge-loop case the opposite holds.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Wire {
+pub struct WireData {
     pub edges: Vec<OrientedEdge>,
     /// Set when the boundary came from a STEP `VERTEX_LOOP`. `None` for
     /// the common `EDGE_LOOP` case.
     pub vertex: Option<VertexId>,
-    /// `true` when the source entity was `FACE_OUTER_BOUND`.
-    pub is_outer: bool,
-    /// Orientation from the `FACE_BOUND` entity — indicates whether this
-    /// wire's traversal direction agrees with the face's surface normal.
+    /// Orientation from the bound entity — indicates whether this wire's
+    /// traversal direction agrees with the face's surface normal.
     pub orientation: Orientation,
+}
+
+/// A closed or open loop of oriented edges, forming a face boundary.
+///
+/// The variant records the source STEP entity (`FACE_BOUND` /
+/// `FACE_OUTER_BOUND`) so the writer emits it back verbatim; the payload is
+/// identical between them.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Wire {
+    FaceBound(WireData),
+    FaceOuterBound(WireData),
+}
+
+impl Wire {
+    /// The shared boundary payload, regardless of bound kind.
+    #[must_use]
+    pub fn data(&self) -> &WireData {
+        match self {
+            Wire::FaceBound(d) | Wire::FaceOuterBound(d) => d,
+        }
+    }
 }
 
 /// Source STEP entity type for a face.

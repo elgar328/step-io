@@ -139,7 +139,7 @@ pub use tessellation::{
     TessellatedGeometricSet, TessellatedItem, TessellatedItemRef, TessellatedShell,
     TessellatedSolid,
 };
-pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Wire};
+pub use topology::{Edge, Face, FaceKind, Orientation, OrientedEdge, Shell, Solid, Wire, WireData};
 pub use units::{
     DerivedUnit, DerivedUnitElement, DerivedUnitKind, DimensionalExponents, MassUnit,
     MeasureWithUnit, NamedUnit, UnitsPool,

@@ -757,7 +757,7 @@ fn convert_solid_empty_name_is_none() {
 fn convert_face_bound_is_outer_false() {
     let result = convert_source(&full_topology_step());
     let wire = &result.model.topology.wires[crate::WireId(0)];
-    assert!(!wire.is_outer);
+    assert!(matches!(wire, crate::ir::Wire::FaceBound(_)));
 }
 
 #[test]
@@ -780,7 +780,7 @@ fn convert_face_outer_bound_sets_is_outer() {
          #17 = MANIFOLD_SOLID_BREP('',#16);",
     ));
     let wire = &result.model.topology.wires[crate::WireId(0)];
-    assert!(wire.is_outer);
+    assert!(matches!(wire, crate::ir::Wire::FaceOuterBound(_)));
 }
 
 // ---------------------------------------------------------------------------

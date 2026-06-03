@@ -35,7 +35,7 @@ use step_io::ir::shape_rep::{
     CompositeShapeAspectKind, LengthUnit, ShapeAspect, ShapeAspectRelationship,
     ShapeAspectRelationshipKind, SolidAngleUnit, UnitContext,
 };
-use step_io::ir::topology::{Face, FaceKind, Orientation, Shell, Solid, Wire};
+use step_io::ir::topology::{Face, FaceKind, Orientation, Shell, Solid, Wire, WireData};
 use step_io::ir::units::{MassFlavor, MassUnit, NamedUnit, UnitsPool};
 use step_io::ir::visualization::{
     CameraModel, CameraModelD3, FoundedItem, Projection, ViewVolume, VisualizationPool,
@@ -808,12 +808,11 @@ fn push_minimal_solid(model: &mut StepModel) -> SolidId {
         .surfaces
         .push(Surface::Plane(Plane3 { position }));
     let vertex = model.geometry.vertices.push(Vertex { point: pt });
-    let wire = model.topology.wires.push(Wire {
+    let wire = model.topology.wires.push(Wire::FaceOuterBound(WireData {
         edges: Vec::new(),
         vertex: Some(vertex),
-        is_outer: true,
         orientation: Orientation::Forward,
-    });
+    }));
     let face = model.topology.faces.push(Face {
         surface: plane_surface,
         bounds: vec![wire],
@@ -841,9 +840,9 @@ fn vertex_loop_wire_round_trips() {
     let re = reconvert(&text);
     assert_eq!(re.topology.wires.len(), 1);
     let roundtripped_wire = re.topology.wires.iter().next().unwrap();
-    assert!(roundtripped_wire.vertex.is_some());
-    assert!(roundtripped_wire.edges.is_empty());
-    assert!(roundtripped_wire.is_outer);
+    assert!(roundtripped_wire.data().vertex.is_some());
+    assert!(roundtripped_wire.data().edges.is_empty());
+    assert!(matches!(roundtripped_wire, Wire::FaceOuterBound(_)));
 }
 
 fn identity_transform(model: &mut StepModel) -> Transform3d {

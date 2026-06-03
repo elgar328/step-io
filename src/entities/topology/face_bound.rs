@@ -8,7 +8,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::ir::Orientation;
 use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::topology::Wire;
+use crate::ir::topology::{Wire, WireData};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::{ReaderContext, bool_to_orientation};
 use crate::writer::WriteError;
@@ -38,27 +38,26 @@ pub(super) fn read_face_bound_body(
     // `loop_ref` targets either an EDGE_LOOP (edges) or a VERTEX_LOOP
     // (degenerate single vertex). Try both maps before reporting a
     // missing reference.
-    let wire = if ctx.edge_loop_map.contains_key(&loop_ref) {
-        let edges = ctx.resolve_edge_loop(entity_id, loop_ref, "bound")?;
-        Wire {
-            edges,
-            vertex: None,
-            is_outer,
-            orientation: bool_to_orientation(orientation),
-        }
+    let (edges, vertex) = if ctx.edge_loop_map.contains_key(&loop_ref) {
+        (ctx.resolve_edge_loop(entity_id, loop_ref, "bound")?, None)
     } else if let Some(&vertex) = ctx.vertex_loop_map.get(&loop_ref) {
-        Wire {
-            edges: Vec::new(),
-            vertex: Some(vertex),
-            is_outer,
-            orientation: bool_to_orientation(orientation),
-        }
+        (Vec::new(), Some(vertex))
     } else {
         return Err(ConvertError::MissingReference {
             from: entity_id,
             to: loop_ref,
             field_name: "bound",
         });
+    };
+    let data = WireData {
+        edges,
+        vertex,
+        orientation: bool_to_orientation(orientation),
+    };
+    let wire = if is_outer {
+        Wire::FaceOuterBound(data)
+    } else {
+        Wire::FaceBound(data)
     };
     let id = ctx.topology.wires.push(wire);
     ctx.face_bound_map.insert(entity_id, id);
