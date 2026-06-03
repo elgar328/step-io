@@ -4,7 +4,7 @@
 //! `product_contexts` arena with `kind = Plain`.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::assembly::{ProductContext, ProductContextKind};
+use crate::ir::assembly::{ProductContext, ProductContextData};
 use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -30,7 +30,7 @@ impl SimpleEntityHandler for ProductContextHandler {
             entity_id,
             attrs,
             "PRODUCT_CONTEXT",
-            ProductContextKind::Plain,
+            ProductContext::Itself,
         )
     }
 
@@ -44,7 +44,7 @@ pub(crate) fn read_product_context(
     entity_id: u64,
     attrs: &[Attribute],
     entity_name: &'static str,
-    kind: ProductContextKind,
+    variant: fn(ProductContextData) -> ProductContext,
 ) -> Result<(), ConvertError> {
     check_count(attrs, 3, entity_id, entity_name)?;
     let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
@@ -53,12 +53,11 @@ pub(crate) fn read_product_context(
     let Some(&frame_of_reference) = ctx.plm_application_context_id_map.get(&frame_ref) else {
         return Ok(()); // frame_of_reference APPLICATION_CONTEXT unmapped — drop
     };
-    let id = ctx.product_contexts.push(ProductContext {
+    let id = ctx.product_contexts.push(variant(ProductContextData {
         name,
         frame_of_reference,
         discipline_type,
-        kind,
-    });
+    }));
     ctx.product_context_id_map.insert(entity_id, id);
     Ok(())
 }

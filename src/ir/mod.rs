@@ -20,8 +20,8 @@ pub mod visualization;
 pub use arena::Arena;
 pub use assembly::{
     AssemblyTree, GeometryLeaf, Instance, MakeFromUsageOption, PlainProductDefinitionRelationship,
-    Product, ProductCategoryChain, ProductCategoryRoot, ProductContext, ProductContextKind,
-    ProductDefinitionContext, ProductDefinitionContextAssociation, ProductDefinitionContextKind,
+    Product, ProductCategoryChain, ProductCategoryRoot, ProductContext, ProductContextData,
+    ProductDefinitionContext, ProductDefinitionContextAssociation, ProductDefinitionContextData,
     ProductDefinitionContextRole, ProductDefinitionRelationship, SolidContent, SurfaceBodyContent,
     Transform3d, WireframeContent, WireframeReprKind,
 };

@@ -6,7 +6,7 @@
 
 use crate::entities::SimpleEntityHandler;
 use crate::entities::assembly_product::product_definition_context::read_product_definition_context;
-use crate::ir::assembly::{ProductDefinitionContext, ProductDefinitionContextKind};
+use crate::ir::assembly::ProductDefinitionContext;
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -31,7 +31,7 @@ impl SimpleEntityHandler for DesignContextHandler {
             entity_id,
             attrs,
             "DESIGN_CONTEXT",
-            ProductDefinitionContextKind::Design,
+            ProductDefinitionContext::Design,
         )
     }
 

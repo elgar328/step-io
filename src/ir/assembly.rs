@@ -325,47 +325,61 @@ pub struct Transform3d {
 }
 
 /// `PRODUCT_CONTEXT` vs `MECHANICAL_CONTEXT` discriminator. The two
-/// `AP203` / `AP214e3` entities share identical fields; only the STEP
-/// entity name differs at write time (`MECHANICAL_CONTEXT` is an
-/// `AP203` subtype with a `discipline_type='mechanical'` `WHERE`
-/// constraint).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum ProductContextKind {
-    #[default]
-    Plain,
-    Mechanical,
-}
-
-/// `PRODUCT_CONTEXT(name, frame_of_reference, discipline_type)` per
-/// `AP214e3`. `MECHANICAL_CONTEXT` reuses this struct with
-/// `kind = Mechanical`; the writer picks the STEP entity name based
-/// on `kind`.
+/// `PRODUCT_CONTEXT(name, frame_of_reference, discipline_type)` payload
+/// per `AP214e3`. Shared by `PRODUCT_CONTEXT` and its `AP203` subtype
+/// `MECHANICAL_CONTEXT` — identical fields.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ProductContext {
+pub struct ProductContextData {
     pub name: String,
     pub frame_of_reference: ApplicationContextId,
     pub discipline_type: String,
-    pub kind: ProductContextKind,
 }
 
-/// `PRODUCT_DEFINITION_CONTEXT` vs `DESIGN_CONTEXT` discriminator.
-/// Same `base_parallel` pattern as `ProductContextKind`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum ProductDefinitionContextKind {
-    #[default]
-    Plain,
-    Design,
-}
-
-/// `PRODUCT_DEFINITION_CONTEXT(name, frame_of_reference,
-/// life_cycle_stage)` per `AP214e3`. `DESIGN_CONTEXT` reuses this
-/// struct with `kind = Design`.
+/// A product context. The variant records the source STEP entity so the
+/// writer emits it back verbatim; `Mechanical` is the `AP203` subtype with
+/// a `discipline_type='mechanical'` `WHERE` constraint.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ProductDefinitionContext {
+pub enum ProductContext {
+    Itself(ProductContextData),
+    Mechanical(ProductContextData),
+}
+
+impl ProductContext {
+    /// The shared context payload, regardless of source entity.
+    #[must_use]
+    pub fn data(&self) -> &ProductContextData {
+        match self {
+            ProductContext::Itself(d) | ProductContext::Mechanical(d) => d,
+        }
+    }
+}
+
+/// `PRODUCT_DEFINITION_CONTEXT(name, frame_of_reference, life_cycle_stage)`
+/// payload per `AP214e3`. Shared by `PRODUCT_DEFINITION_CONTEXT` and its
+/// `AP203` subtype `DESIGN_CONTEXT` — identical fields.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ProductDefinitionContextData {
     pub name: String,
     pub frame_of_reference: ApplicationContextId,
     pub life_cycle_stage: String,
-    pub kind: ProductDefinitionContextKind,
+}
+
+/// A product definition context. `Design` is the `AP203` subtype with a
+/// `life_cycle_stage='design'` `WHERE` constraint.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ProductDefinitionContext {
+    Itself(ProductDefinitionContextData),
+    Design(ProductDefinitionContextData),
+}
+
+impl ProductDefinitionContext {
+    /// The shared context payload, regardless of source entity.
+    #[must_use]
+    pub fn data(&self) -> &ProductDefinitionContextData {
+        match self {
+            ProductDefinitionContext::Itself(d) | ProductDefinitionContext::Design(d) => d,
+        }
+    }
 }
 
 /// `PRODUCT_DEFINITION_CONTEXT_ROLE(name, description)` per `AP214e3`.

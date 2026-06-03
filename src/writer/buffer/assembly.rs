@@ -724,7 +724,7 @@ impl WriteBuffer<'_> {
 
     #[allow(clippy::too_many_lines)]
     fn emit_application_context(&mut self, schema: &StepSchema) -> AssemblyContextIds {
-        use crate::ir::{ProductContextKind, ProductDefinitionContextKind};
+        use crate::ir::{ProductContext, ProductDefinitionContext};
         let has_ac = self
             .model
             .plm
@@ -780,17 +780,18 @@ impl WriteBuffer<'_> {
             let assembly = self.model.assembly.clone().unwrap_or_default();
             self.pc_step_ids = Vec::with_capacity(assembly.product_contexts.len());
             for pc in assembly.product_contexts.iter() {
-                let entity_name = match pc.kind {
-                    ProductContextKind::Plain => "PRODUCT_CONTEXT",
-                    ProductContextKind::Mechanical => "MECHANICAL_CONTEXT",
+                let entity_name = match pc {
+                    ProductContext::Itself(_) => "PRODUCT_CONTEXT",
+                    ProductContext::Mechanical(_) => "MECHANICAL_CONTEXT",
                 };
-                let ac_step = self.ac_step_ids[pc.frame_of_reference.0 as usize];
+                let d = pc.data();
+                let ac_step = self.ac_step_ids[d.frame_of_reference.0 as usize];
                 let id = self.push_simple(
                     entity_name,
                     vec![
-                        Attribute::String(pc.name.clone()),
+                        Attribute::String(d.name.clone()),
                         Attribute::EntityRef(ac_step),
-                        Attribute::String(pc.discipline_type.clone()),
+                        Attribute::String(d.discipline_type.clone()),
                     ],
                 );
                 self.pc_step_ids.push(id);
@@ -798,17 +799,18 @@ impl WriteBuffer<'_> {
             // 4) Emit all PDC entries (refs AC via cache).
             self.pdc_step_ids = Vec::with_capacity(assembly.product_definition_contexts.len());
             for pdc in assembly.product_definition_contexts.iter() {
-                let entity_name = match pdc.kind {
-                    ProductDefinitionContextKind::Plain => "PRODUCT_DEFINITION_CONTEXT",
-                    ProductDefinitionContextKind::Design => "DESIGN_CONTEXT",
+                let entity_name = match pdc {
+                    ProductDefinitionContext::Itself(_) => "PRODUCT_DEFINITION_CONTEXT",
+                    ProductDefinitionContext::Design(_) => "DESIGN_CONTEXT",
                 };
-                let ac_step = self.ac_step_ids[pdc.frame_of_reference.0 as usize];
+                let d = pdc.data();
+                let ac_step = self.ac_step_ids[d.frame_of_reference.0 as usize];
                 let id = self.push_simple(
                     entity_name,
                     vec![
-                        Attribute::String(pdc.name.clone()),
+                        Attribute::String(d.name.clone()),
                         Attribute::EntityRef(ac_step),
-                        Attribute::String(pdc.life_cycle_stage.clone()),
+                        Attribute::String(d.life_cycle_stage.clone()),
                     ],
                 );
                 self.pdc_step_ids.push(id);

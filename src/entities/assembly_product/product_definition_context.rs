@@ -4,7 +4,7 @@
 //! `product_definition_contexts` arena with `kind = Plain`.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::assembly::{ProductDefinitionContext, ProductDefinitionContextKind};
+use crate::ir::assembly::{ProductDefinitionContext, ProductDefinitionContextData};
 use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -30,7 +30,7 @@ impl SimpleEntityHandler for ProductDefinitionContextHandler {
             entity_id,
             attrs,
             "PRODUCT_DEFINITION_CONTEXT",
-            ProductDefinitionContextKind::Plain,
+            ProductDefinitionContext::Itself,
         )
     }
 
@@ -44,7 +44,7 @@ pub(crate) fn read_product_definition_context(
     entity_id: u64,
     attrs: &[Attribute],
     entity_name: &'static str,
-    kind: ProductDefinitionContextKind,
+    variant: fn(ProductDefinitionContextData) -> ProductDefinitionContext,
 ) -> Result<(), ConvertError> {
     check_count(attrs, 3, entity_id, entity_name)?;
     let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
@@ -56,12 +56,11 @@ pub(crate) fn read_product_definition_context(
     };
     let id = ctx
         .product_definition_contexts
-        .push(ProductDefinitionContext {
+        .push(variant(ProductDefinitionContextData {
             name,
             frame_of_reference,
             life_cycle_stage,
-            kind,
-        });
+        }));
     ctx.product_definition_context_id_map.insert(entity_id, id);
     Ok(())
 }

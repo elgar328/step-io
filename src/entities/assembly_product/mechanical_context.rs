@@ -6,7 +6,7 @@
 
 use crate::entities::SimpleEntityHandler;
 use crate::entities::assembly_product::product_context::read_product_context;
-use crate::ir::assembly::{ProductContext, ProductContextKind};
+use crate::ir::assembly::ProductContext;
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -31,7 +31,7 @@ impl SimpleEntityHandler for MechanicalContextHandler {
             entity_id,
             attrs,
             "MECHANICAL_CONTEXT",
-            ProductContextKind::Mechanical,
+            ProductContext::Mechanical,
         )
     }
 
