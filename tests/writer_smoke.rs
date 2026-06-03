@@ -4680,6 +4680,50 @@ fn symbol_colour_round_trip() {
 }
 
 #[test]
+fn bare_colour_in_fill_area_style_round_trips() {
+    // Bare `COLOUR()` (Colour::Itself) referenced by a FILL_AREA_STYLE_COLOUR
+    // inside a FILL_AREA_STYLE. The writer emits `COLOUR()`; re-reading it
+    // exercises the COLOUR handler. Without it the colour ref would not
+    // resolve, the fill-style list would empty, and both FASC and COLOUR would
+    // drop. Verify the whole chain survives round-trip.
+    use step_io::ir::visualization::{
+        Colour, FillAreaStyle, FillAreaStyleColour, FoundedItem, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let colour_id = viz.colours.push(Colour::Itself);
+    viz.founded_items
+        .push(FoundedItem::FillAreaStyle(FillAreaStyle {
+            name: "NULL".into(),
+            fill_styles: vec![FillAreaStyleColour {
+                name: "NULL".into(),
+                colour: colour_id,
+            }],
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    // The bare COLOUR survives the round-trip as Colour::Itself.
+    assert!(
+        re_viz.colours.iter().any(|c| matches!(c, Colour::Itself)),
+        "bare COLOUR() round-trips as Colour::Itself"
+    );
+    // The FILL_AREA_STYLE keeps its FILL_AREA_STYLE_COLOUR (non-empty list).
+    let fas = re_viz
+        .founded_items
+        .iter()
+        .find_map(|f| match f {
+            FoundedItem::FillAreaStyle(f) => Some(f),
+            _ => None,
+        })
+        .expect("FILL_AREA_STYLE round-trips");
+    assert_eq!(fas.fill_styles.len(), 1, "FASC is not dropped");
+}
+
+#[test]
 fn ciwr_round_trip() {
     // CHARACTERIZED_ITEM_WITHIN_REPRESENTATION (phase characterized-object-ciwr).
     use step_io::ir::RepresentationItemRef;

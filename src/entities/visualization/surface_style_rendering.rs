@@ -10,8 +10,7 @@ use crate::ir::attr::{check_count, read_entity_ref, read_enum};
 use crate::ir::error::ConvertError;
 use crate::ir::id::ColourId;
 use crate::ir::visualization::{
-    Colour, ColourRgb, ShadingMethod, SurfaceStyleRendering, SurfaceStyleRenderingData,
-    VisualizationPool,
+    Colour, ShadingMethod, SurfaceStyleRendering, SurfaceStyleRenderingData, VisualizationPool,
 };
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -98,9 +97,11 @@ pub(crate) fn read_rendering_method(
 }
 
 /// Read the required `surface_colour` field, shared between the two
-/// rendering entities. A non-standard `$` (Unset) is normalized to a neutral
-/// grey `COLOUR_RGB` pushed into the colour arena. `Ok(None)` means the ref
-/// was present but unresolved — the caller drops the entity, as before.
+/// rendering entities. A non-standard `$` (Unset) — the field is required in
+/// EXPRESS — is normalized to a bare `COLOUR()` (`Colour::Itself`, the
+/// schema's unspecified-colour placeholder) pushed into the colour arena,
+/// rather than fabricating a specific colour. `Ok(None)` means the ref was
+/// present but unresolved — the caller drops the entity, as before.
 pub(crate) fn read_surface_colour(
     ctx: &mut ReaderContext,
     attrs: &[Attribute],
@@ -110,17 +111,12 @@ pub(crate) fn read_surface_colour(
     if attrs[1] == Attribute::Unset {
         ctx.record_nonstandard(
             format!("{type_name}.surface_colour"),
-            "grey COLOUR_RGB(0.7,0.7,0.7)",
+            "COLOUR() (unspecified colour)",
         );
         let pool = ctx
             .visualization
             .get_or_insert_with(VisualizationPool::default);
-        Ok(Some(pool.colours.push(Colour::Rgb(ColourRgb {
-            name: String::new(),
-            red: 0.7,
-            green: 0.7,
-            blue: 0.7,
-        }))))
+        Ok(Some(pool.colours.push(Colour::Itself)))
     } else {
         let colour_ref = read_entity_ref(attrs, 1, entity_id, "surface_colour")?;
         Ok(ctx.viz_colour_id_map.get(&colour_ref).copied())

@@ -423,13 +423,18 @@ pub enum CurveWidth {
     PositiveLengthMeasure(f64),
 }
 
-/// `COLOUR` SELECT supertype per the AP214/AP242 schema. Only the variants
+/// `COLOUR` supertype per the AP214/AP242 schema. Only the variants
 /// step-io currently round-trips are listed; unsupported forms are
 /// silently dropped at read.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Colour {
     Rgb(ColourRgb),
     PreDefined(DraughtingPreDefinedColour),
+    /// Bare `COLOUR()` — the attributeless base entity (`ENTITY colour;
+    /// END_ENTITY;`, ISO 10303-46) instantiated directly as an unspecified
+    /// colour placeholder. Fieldless because the base carries no attributes
+    /// (unlike the data-bearing `Itself` variants of other enums).
+    Itself,
 }
 
 /// `DRAUGHTING_PRE_DEFINED_COLOUR(name)` — predefined colour reference.

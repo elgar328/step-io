@@ -352,6 +352,7 @@ impl WriteBuffer<'_> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::shape_rep::mdgpr::MdgprHandler;
         use crate::entities::visualization::camera_model_d3::CameraModelD3Handler;
+        use crate::entities::visualization::colour::ColourHandler;
         use crate::entities::visualization::colour_rgb::ColourRgbHandler;
         use crate::entities::visualization::context_dependent_over_riding_styled_item::ContextDependentOverRidingStyledItemHandler;
         use crate::entities::visualization::curve_style::CurveStyleHandler;
@@ -375,6 +376,7 @@ impl WriteBuffer<'_> {
             let id = match colour {
                 Colour::Rgb(c) => ColourRgbHandler::write(self, c.clone())?,
                 Colour::PreDefined(c) => DraughtingPreDefinedColourHandler::write(self, c.clone())?,
+                Colour::Itself => ColourHandler::write(self, ())?,
             };
             self.colour_step_ids.push(id);
         }
