@@ -823,8 +823,8 @@ fn push_minimal_solid(model: &mut StepModel) -> SolidId {
         orientation: Orientation::Forward,
         is_open: false,
     });
-    model.topology.solids.push(Solid {
-        shells: vec![shell],
+    model.topology.solids.push(Solid::ManifoldSolidBrep {
+        outer: shell,
         name: None,
     })
 }

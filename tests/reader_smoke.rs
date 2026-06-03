@@ -231,9 +231,9 @@ fn box_ap214_is_solid_structure() {
 
     assert_eq!(topo.solids.len(), 1);
     let solid = &topo.solids[step_io::SolidId(0)];
-    assert_eq!(solid.shells.len(), 1);
+    assert!(matches!(solid, step_io::Solid::ManifoldSolidBrep { .. }));
 
-    let shell = &topo.shells[solid.shells[0]];
+    let shell = &topo.shells[solid.outer()];
     assert_eq!(shell.faces.len(), 6);
 }
 
@@ -929,10 +929,10 @@ fn hollow_box_solid_has_outer_plus_one_void() {
         let result = ReaderContext::convert(&graph);
         let topo = &result.model.topology;
         let solid = topo.solids.iter().next().expect("one solid");
-        assert_eq!(solid.shells.len(), 2, "fixture {name}: 1 outer + 1 void");
+        assert_eq!(solid.voids().len(), 1, "fixture {name}: 1 outer + 1 void");
 
-        let outer = topo.shells.iter().nth(solid.shells[0].0 as usize).unwrap();
-        let inner = topo.shells.iter().nth(solid.shells[1].0 as usize).unwrap();
+        let outer = topo.shells.iter().nth(solid.outer().0 as usize).unwrap();
+        let inner = topo.shells.iter().nth(solid.voids()[0].0 as usize).unwrap();
         assert_eq!(
             outer.orientation,
             Orientation::Forward,

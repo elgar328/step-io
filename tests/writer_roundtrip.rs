@@ -306,7 +306,7 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
         original.topology.solids.iter().next(),
         re.topology.solids.iter().next(),
     ) {
-        assert_eq!(o_sol.name, r_sol.name, "{name}: solid name");
+        assert_eq!(o_sol.name(), r_sol.name(), "{name}: solid name");
     }
 }
 
@@ -567,19 +567,19 @@ fn hollow_box_ap214_is_preserves_void_orientation() {
 
     assert_eq!(re.topology.solids.len(), 1);
     let solid = re.topology.solids.iter().next().unwrap();
-    assert_eq!(solid.shells.len(), 2, "1 outer + 1 void");
+    assert_eq!(solid.voids().len(), 1, "1 outer + 1 void");
 
     let outer = &re
         .topology
         .shells
         .iter()
-        .nth(solid.shells[0].0 as usize)
+        .nth(solid.outer().0 as usize)
         .unwrap();
     let inner = &re
         .topology
         .shells
         .iter()
-        .nth(solid.shells[1].0 as usize)
+        .nth(solid.voids()[0].0 as usize)
         .unwrap();
     assert_eq!(outer.orientation, Orientation::Forward);
     assert_eq!(inner.orientation, Orientation::Reversed);

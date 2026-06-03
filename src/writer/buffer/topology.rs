@@ -93,10 +93,10 @@ impl WriteBuffer<'_> {
     }
 
     pub(crate) fn emit_solid(&mut self, id: SolidId) -> Result<u64, WriteError> {
-        // Solids dispatch by `Solid::shells.len()`. Single
-        // shell → MANIFOLD_SOLID_BREP, multi-shell → BREP_WITH_VOIDS.
+        // Solids dispatch by `Solid` variant: ManifoldSolidBrep →
+        // MANIFOLD_SOLID_BREP, BrepWithVoids → BREP_WITH_VOIDS.
         use crate::entities::SimpleEntityHandler;
-        let shells_len = self
+        let solid = self
             .model
             .topology
             .solids
@@ -104,15 +104,16 @@ impl WriteBuffer<'_> {
             .nth(id.0 as usize)
             .ok_or_else(|| WriteError::DanglingId {
                 detail: format!("SolidId({})", id.0),
-            })?
-            .shells
-            .len();
-        if shells_len == 1 {
-            crate::entities::topology::manifold_solid_brep::ManifoldSolidBrepHandler::write(
-                self, id,
-            )
-        } else {
-            crate::entities::topology::brep_with_voids::BrepWithVoidsHandler::write(self, id)
+            })?;
+        match solid {
+            crate::ir::Solid::ManifoldSolidBrep { .. } => {
+                crate::entities::topology::manifold_solid_brep::ManifoldSolidBrepHandler::write(
+                    self, id,
+                )
+            }
+            crate::ir::Solid::BrepWithVoids { .. } => {
+                crate::entities::topology::brep_with_voids::BrepWithVoidsHandler::write(self, id)
+            }
         }
     }
 }

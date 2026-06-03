@@ -1,8 +1,7 @@
 //! `MANIFOLD_SOLID_BREP` handler.
 //!
 //! Mirrors the legacy `convert_manifold_solid_brep` and the
-//! single-shell branch of `emit_solid`. The shared `solid_id_to_name`
-//! helper builds the optional `name` value common to both solid kinds.
+//! `Solid::ManifoldSolidBrep` branch of `emit_solid`.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::SolidId;
@@ -40,8 +39,8 @@ impl SimpleEntityHandler for ManifoldSolidBrepHandler {
             Some(name_str.to_owned())
         };
 
-        let solid = Solid {
-            shells: vec![shell_id],
+        let solid = Solid::ManifoldSolidBrep {
+            outer: shell_id,
             name,
         };
         let id = ctx.topology.solids.push(solid);
@@ -63,11 +62,8 @@ impl SimpleEntityHandler for ManifoldSolidBrepHandler {
             .ok_or_else(|| WriteError::DanglingId {
                 detail: format!("SolidId({})", id.0),
             })?;
-        let outer_id = *s.shells.first().ok_or_else(|| WriteError::DanglingId {
-            detail: format!("SolidId({}) has no shells", id.0),
-        })?;
-        let outer_ref = buf.emit_shell(outer_id)?;
-        let name = s.name.clone().unwrap_or_default();
+        let outer_ref = buf.emit_shell(s.outer())?;
+        let name = s.name().unwrap_or_default().to_owned();
         let n = buf.fresh();
         buf.entities.push(WriterEntity {
             id: n,

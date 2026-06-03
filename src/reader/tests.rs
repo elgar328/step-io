@@ -727,7 +727,7 @@ fn convert_full_topology_chain() {
 fn convert_solid_name_preserved() {
     let result = convert_source(&full_topology_step());
     let solid = &result.model.topology.solids[crate::SolidId(0)];
-    assert_eq!(solid.name.as_deref(), Some("Test"));
+    assert_eq!(solid.name(), Some("Test"));
 }
 
 #[test]
@@ -750,7 +750,7 @@ fn convert_solid_empty_name_is_none() {
          #17 = MANIFOLD_SOLID_BREP('',#16);",
     ));
     let solid = &result.model.topology.solids[crate::SolidId(0)];
-    assert_eq!(solid.name, None);
+    assert_eq!(solid.name(), None);
 }
 
 #[test]

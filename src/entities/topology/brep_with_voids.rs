@@ -42,10 +42,9 @@ impl SimpleEntityHandler for BrepWithVoidsHandler {
         let outer_ref = read_entity_ref(attrs, 1, entity_id, "outer")?;
         let void_refs = read_entity_ref_list(attrs, 2, entity_id, "voids")?;
 
-        let outer_id = ctx.resolve_shell(entity_id, outer_ref, "outer")?;
+        let outer = ctx.resolve_shell(entity_id, outer_ref, "outer")?;
 
-        let mut shells = Vec::with_capacity(1 + void_refs.len());
-        shells.push(outer_id);
+        let mut voids = Vec::with_capacity(void_refs.len());
 
         for &ocs_ref in &void_refs {
             let (inner_id, orientation) = *ctx.oriented_closed_shell_map.get(&ocs_ref).ok_or(
@@ -71,7 +70,7 @@ impl SimpleEntityHandler for BrepWithVoidsHandler {
                 });
             }
             ctx.topology.shells[inner_id].orientation = orientation;
-            shells.push(inner_id);
+            voids.push(inner_id);
         }
 
         let name = if name_str.is_empty() {
@@ -79,7 +78,7 @@ impl SimpleEntityHandler for BrepWithVoidsHandler {
         } else {
             Some(name_str.to_owned())
         };
-        let solid = Solid { shells, name };
+        let solid = Solid::BrepWithVoids { outer, voids, name };
         let id = ctx.topology.solids.push(solid);
         ctx.solid_map.insert(entity_id, id);
         Ok(())
@@ -99,14 +98,11 @@ impl SimpleEntityHandler for BrepWithVoidsHandler {
             .ok_or_else(|| WriteError::DanglingId {
                 detail: format!("SolidId({})", id.0),
             })?;
-        let outer_id = *s.shells.first().ok_or_else(|| WriteError::DanglingId {
-            detail: format!("SolidId({}) has no shells", id.0),
-        })?;
-        let outer_ref = buf.emit_shell(outer_id)?;
-        let name = s.name.clone().unwrap_or_default();
+        let outer_ref = buf.emit_shell(s.outer())?;
+        let name = s.name().unwrap_or_default().to_owned();
 
-        let mut void_refs = Vec::with_capacity(s.shells.len() - 1);
-        for &inner_id in &s.shells[1..] {
+        let mut void_refs = Vec::with_capacity(s.voids().len());
+        for &inner_id in s.voids() {
             let inner_shell: Shell = buf
                 .model
                 .topology

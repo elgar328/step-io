@@ -119,13 +119,49 @@ pub struct Shell {
     pub is_open: bool,
 }
 
-/// A solid bounded by one or more shells.
+/// A solid bounded by one or more shells, tagged with the source STEP
+/// entity. `ManifoldSolidBrep` has a single outer shell; `BrepWithVoids`
+/// adds inner void shells (each carrying `Orientation::Reversed` when
+/// imported from an `ORIENTED_CLOSED_SHELL('', *, cs, .F.)` wrapper) — so
+/// the "voids only on `BREP_WITH_VOIDS`" invariant is encoded in the type.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Solid {
-    /// `shells[0]` is the outer shell with `Orientation::Forward`.
-    /// `shells[1..]` are inner void shells from `BREP_WITH_VOIDS`; each
-    /// carries `Orientation::Reversed` when imported from an
-    /// `ORIENTED_CLOSED_SHELL('', *, cs, .F.)` wrapper.
-    pub shells: Vec<ShellId>,
-    pub name: Option<String>,
+pub enum Solid {
+    ManifoldSolidBrep {
+        outer: ShellId,
+        name: Option<String>,
+    },
+    BrepWithVoids {
+        outer: ShellId,
+        voids: Vec<ShellId>,
+        name: Option<String>,
+    },
+}
+
+impl Solid {
+    /// The outer bounding shell (`Orientation::Forward`).
+    #[must_use]
+    pub fn outer(&self) -> ShellId {
+        match self {
+            Solid::ManifoldSolidBrep { outer, .. } | Solid::BrepWithVoids { outer, .. } => *outer,
+        }
+    }
+
+    /// The inner void shells — empty for a `ManifoldSolidBrep`.
+    #[must_use]
+    pub fn voids(&self) -> &[ShellId] {
+        match self {
+            Solid::ManifoldSolidBrep { .. } => &[],
+            Solid::BrepWithVoids { voids, .. } => voids,
+        }
+    }
+
+    /// The optional solid name.
+    #[must_use]
+    pub fn name(&self) -> Option<&str> {
+        match self {
+            Solid::ManifoldSolidBrep { name, .. } | Solid::BrepWithVoids { name, .. } => {
+                name.as_deref()
+            }
+        }
+    }
 }
