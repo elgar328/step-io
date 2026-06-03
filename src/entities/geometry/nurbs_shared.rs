@@ -72,7 +72,7 @@ pub(super) fn build_curve_common(
         degree,
         cps: Attribute::List(cp_refs.into_iter().map(Attribute::EntityRef).collect()),
         form: Attribute::Enum(nurbs.form.as_step_enum().into()),
-        closed: Attribute::Enum(if nurbs.closed { "T".into() } else { "F".into() }),
+        closed: Attribute::Enum(logical_to_step(nurbs.closed).into()),
         self_intersect: Attribute::Enum(logical_to_step(nurbs.self_intersect).into()),
         mults: Attribute::List(
             nurbs
@@ -121,16 +121,8 @@ pub(super) fn build_surface_common(
         v_degree,
         cps: Attribute::List(cp_rows),
         form: Attribute::Enum(nurbs.form.as_step_enum().into()),
-        u_closed: Attribute::Enum(if nurbs.u_closed {
-            "T".into()
-        } else {
-            "F".into()
-        }),
-        v_closed: Attribute::Enum(if nurbs.v_closed {
-            "T".into()
-        } else {
-            "F".into()
-        }),
+        u_closed: Attribute::Enum(logical_to_step(nurbs.u_closed).into()),
+        v_closed: Attribute::Enum(logical_to_step(nurbs.v_closed).into()),
         self_intersect: Attribute::Enum(logical_to_step(nurbs.self_intersect).into()),
         u_mults: Attribute::List(
             nurbs

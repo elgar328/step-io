@@ -4,8 +4,8 @@
 use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::nurbs_shared::build_surface_common;
 use crate::ir::attr::{
-    check_count, read_bool, read_entity_ref_grid, read_enum, read_integer, read_integer_list,
-    read_logical, read_real_list, read_string_or_unset,
+    check_count, read_entity_ref_grid, read_enum, read_integer, read_integer_list, read_logical,
+    read_real_list, read_string_or_unset,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{NurbsSurface, NurbsSurfaceKind, Surface, SurfaceForm};
@@ -35,8 +35,8 @@ impl SimpleEntityHandler for BSplineSurfaceWithKnotsHandler {
         let v_degree_i = read_integer(attrs, 2, entity_id, "v_degree")?;
         let cp_grid = read_entity_ref_grid(attrs, 3, entity_id, "control_points_list")?;
         let form = SurfaceForm::from_step_enum(read_enum(attrs, 4, entity_id, "surface_form")?);
-        let u_closed = read_bool(attrs, 5, entity_id, "u_closed")?;
-        let v_closed = read_bool(attrs, 6, entity_id, "v_closed")?;
+        let u_closed = read_logical(attrs, 5, entity_id, "u_closed")?;
+        let v_closed = read_logical(attrs, 6, entity_id, "v_closed")?;
         let self_intersect = read_logical(attrs, 7, entity_id, "self_intersect")?;
         let u_knot_multiplicities = read_integer_list(attrs, 8, entity_id, "u_multiplicities")?;
         let v_knot_multiplicities = read_integer_list(attrs, 9, entity_id, "v_multiplicities")?;

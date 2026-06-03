@@ -9,8 +9,8 @@
 use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::nurbs_shared::quasi_uniform_knots;
 use crate::ir::attr::{
-    check_count, logical_to_step, read_bool, read_entity_ref_list, read_enum, read_integer,
-    read_logical, read_string_or_unset,
+    check_count, logical_to_step, read_entity_ref_list, read_enum, read_integer, read_logical,
+    read_string_or_unset,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{Curve, CurveForm, NurbsCurve, NurbsKind};
@@ -38,7 +38,7 @@ impl SimpleEntityHandler for QuasiUniformCurveHandler {
         let degree_i = read_integer(attrs, 1, entity_id, "degree")?;
         let cp_refs = read_entity_ref_list(attrs, 2, entity_id, "control_points_list")?;
         let form = CurveForm::from_step_enum(read_enum(attrs, 3, entity_id, "curve_form")?);
-        let closed = read_bool(attrs, 4, entity_id, "closed_curve")?;
+        let closed = read_logical(attrs, 4, entity_id, "closed_curve")?;
         let self_intersect = read_logical(attrs, 5, entity_id, "self_intersect")?;
 
         let degree = u32::try_from(degree_i).map_err(|_| ConvertError::AttributeType {
@@ -104,7 +104,7 @@ impl SimpleEntityHandler for QuasiUniformCurveHandler {
             Attribute::Integer(i64::from(nurbs.degree)),
             Attribute::List(cp_refs.into_iter().map(Attribute::EntityRef).collect()),
             Attribute::Enum(nurbs.form.as_step_enum().into()),
-            Attribute::Enum(if nurbs.closed { "T".into() } else { "F".into() }),
+            Attribute::Enum(logical_to_step(nurbs.closed).into()),
             Attribute::Enum(logical_to_step(nurbs.self_intersect).into()),
         ];
         let n = buf.fresh();

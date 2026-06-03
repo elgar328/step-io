@@ -11,8 +11,8 @@
 use crate::entities::ComplexEntityHandler;
 use crate::entities::geometry::nurbs_shared::build_curve_common;
 use crate::ir::attr::{
-    read_bool, read_entity_ref_list, read_enum, read_integer, read_integer_list, read_logical,
-    read_real_list, read_string_or_unset,
+    read_entity_ref_list, read_enum, read_integer, read_integer_list, read_logical, read_real_list,
+    read_string_or_unset,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::NurbsKind;
@@ -50,7 +50,7 @@ impl ComplexEntityHandler for RationalBsplineCurveHandler {
         let degree_i = read_integer(bsc_attrs, 0, entity_id, "degree")?;
         let cp_refs = read_entity_ref_list(bsc_attrs, 1, entity_id, "control_points_list")?;
         let form = CurveForm::from_step_enum(read_enum(bsc_attrs, 2, entity_id, "curve_form")?);
-        let closed = read_bool(bsc_attrs, 3, entity_id, "closed_curve")?;
+        let closed = read_logical(bsc_attrs, 3, entity_id, "closed_curve")?;
         let self_intersect = read_logical(bsc_attrs, 4, entity_id, "self_intersect")?;
 
         let bswk_attrs = require_part_attrs(parts, "B_SPLINE_CURVE_WITH_KNOTS", entity_id)?;

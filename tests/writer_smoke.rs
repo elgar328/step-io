@@ -510,8 +510,8 @@ fn nurbs_surface_non_rational_round_trips() {
         v_knot_multiplicities: vec![2, 2],
         u_knots: vec![0.0, 1.0],
         v_knots: vec![0.0, 1.0],
-        u_closed: false,
-        v_closed: false,
+        u_closed: Logical::False,
+        v_closed: Logical::False,
         form: SurfaceForm::Unspecified,
         self_intersect: Logical::Unknown,
     }));
@@ -524,6 +524,38 @@ fn nurbs_surface_non_rational_round_trips() {
             assert!(s.weights().is_none());
             assert_eq!(s.control_points.len(), 2);
             assert_eq!(s.control_points[0].len(), 2);
+        }
+        other => panic!("expected Nurbs surface, got {other:?}"),
+    }
+}
+
+#[test]
+fn nurbs_surface_unknown_closedness_round_trips() {
+    // `u_closed` / `v_closed` are STEP LOGICAL; a freeform surface emits
+    // `.U.` (Unknown). It must survive write -> read as `Logical::Unknown`,
+    // not collapse to a boolean.
+    let mut model = empty_model();
+    let control_points = push_surface_control_grid(&mut model);
+    model.geometry.surfaces.push(Surface::Nurbs(NurbsSurface {
+        u_degree: 1,
+        v_degree: 1,
+        control_points,
+        kind: NurbsSurfaceKind::NonRational,
+        u_knot_multiplicities: vec![2, 2],
+        v_knot_multiplicities: vec![2, 2],
+        u_knots: vec![0.0, 1.0],
+        v_knots: vec![0.0, 1.0],
+        u_closed: Logical::Unknown,
+        v_closed: Logical::Unknown,
+        form: SurfaceForm::Unspecified,
+        self_intersect: Logical::Unknown,
+    }));
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    match re.geometry.surfaces.iter().next().unwrap() {
+        Surface::Nurbs(s) => {
+            assert_eq!(s.u_closed, Logical::Unknown);
+            assert_eq!(s.v_closed, Logical::Unknown);
         }
         other => panic!("expected Nurbs surface, got {other:?}"),
     }
@@ -544,8 +576,8 @@ fn nurbs_surface_rational_round_trips() {
         v_knot_multiplicities: vec![2, 2],
         u_knots: vec![0.0, 1.0],
         v_knots: vec![0.0, 1.0],
-        u_closed: false,
-        v_closed: false,
+        u_closed: Logical::False,
+        v_closed: Logical::False,
         form: SurfaceForm::Unspecified,
         self_intersect: Logical::Unknown,
     }));
@@ -592,7 +624,7 @@ fn nurbs_curve_non_rational_round_trips() {
         kind: NurbsKind::NonRational,
         knot_multiplicities: vec![3, 3],
         knots: vec![0.0, 1.0],
-        closed: false,
+        closed: Logical::False,
         form: CurveForm::Unspecified,
         self_intersect: Logical::Unknown,
     }));
@@ -605,7 +637,7 @@ fn nurbs_curve_non_rational_round_trips() {
             assert!(c.weights().is_none());
             assert_eq!(c.knot_multiplicities, vec![3, 3]);
             assert_eq!(c.knots, vec![0.0, 1.0]);
-            assert!(!c.closed);
+            assert_eq!(c.closed, Logical::False);
         }
         other => panic!("expected Nurbs curve, got {other:?}"),
     }
@@ -623,7 +655,7 @@ fn nurbs_curve_rational_round_trips() {
         },
         knot_multiplicities: vec![3, 3],
         knots: vec![0.0, 1.0],
-        closed: false,
+        closed: Logical::False,
         form: CurveForm::Unspecified,
         self_intersect: Logical::Unknown,
     }));
@@ -649,7 +681,7 @@ fn nurbs_curve_form_hint_round_trips() {
         kind: NurbsKind::NonRational,
         knot_multiplicities: vec![3, 3],
         knots: vec![0.0, 1.0],
-        closed: false,
+        closed: Logical::False,
         form: CurveForm::CircularArc,
         self_intersect: Logical::Unknown,
     }));
@@ -675,8 +707,8 @@ fn nurbs_surface_form_hint_round_trips() {
         v_knot_multiplicities: vec![2, 2],
         u_knots: vec![0.0, 1.0],
         v_knots: vec![0.0, 1.0],
-        u_closed: false,
-        v_closed: false,
+        u_closed: Logical::False,
+        v_closed: Logical::False,
         form: SurfaceForm::CylindricalSurf,
         self_intersect: Logical::Unknown,
     }));

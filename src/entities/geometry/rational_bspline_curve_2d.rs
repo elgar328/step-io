@@ -11,8 +11,8 @@
 use crate::entities::geometry::cartesian_point_2d::CartesianPoint2dHandler;
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::attr::{
-    read_bool, read_entity_ref_list, read_enum, read_integer, read_integer_list, read_logical,
-    read_real_list, read_string_or_unset,
+    logical_to_step, read_entity_ref_list, read_enum, read_integer, read_integer_list,
+    read_logical, read_real_list, read_string_or_unset,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{Curve2d, CurveForm, NurbsCurve2d, NurbsKind2d};
@@ -50,7 +50,7 @@ impl ComplexEntityHandler for RationalBsplineCurve2dHandler {
         let degree_i = read_integer(bsc_attrs, 0, entity_id, "degree")?;
         let cp_refs = read_entity_ref_list(bsc_attrs, 1, entity_id, "control_points_list")?;
         let form = CurveForm::from_step_enum(read_enum(bsc_attrs, 2, entity_id, "curve_form")?);
-        let closed = read_bool(bsc_attrs, 3, entity_id, "closed_curve")?;
+        let closed = read_logical(bsc_attrs, 3, entity_id, "closed_curve")?;
         let _self_intersect = read_logical(bsc_attrs, 4, entity_id, "self_intersect")?;
 
         let bswk_attrs = require_part_attrs(parts, "B_SPLINE_CURVE_WITH_KNOTS", entity_id)?;
@@ -136,7 +136,7 @@ impl ComplexEntityHandler for RationalBsplineCurve2dHandler {
         );
         let knots_attr =
             Attribute::List(nurbs.knots.iter().copied().map(Attribute::Real).collect());
-        let closed_attr = Attribute::Enum(if nurbs.closed { "T".into() } else { "F".into() });
+        let closed_attr = Attribute::Enum(logical_to_step(nurbs.closed).into());
         let form = nurbs.form;
         let weights_attr = Attribute::List(weights.into_iter().map(Attribute::Real).collect());
 

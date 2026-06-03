@@ -451,7 +451,8 @@ pub struct NurbsCurve {
     pub kind: NurbsKind,
     pub knot_multiplicities: Vec<i64>,
     pub knots: Vec<f64>,
-    pub closed: bool,
+    /// `closed_curve : LOGICAL`.
+    pub closed: Logical,
     pub form: CurveForm,
     /// `self_intersect : LOGICAL`.
     pub self_intersect: Logical,
@@ -485,8 +486,10 @@ pub struct NurbsSurface {
     pub v_knot_multiplicities: Vec<i64>,
     pub u_knots: Vec<f64>,
     pub v_knots: Vec<f64>,
-    pub u_closed: bool,
-    pub v_closed: bool,
+    /// `u_closed : LOGICAL`.
+    pub u_closed: Logical,
+    /// `v_closed : LOGICAL`.
+    pub v_closed: Logical,
     pub form: SurfaceForm,
     /// `self_intersect : LOGICAL`.
     pub self_intersect: Logical,
@@ -617,7 +620,8 @@ pub struct NurbsCurve2d {
     pub kind: NurbsKind2d,
     pub knot_multiplicities: Vec<i64>,
     pub knots: Vec<f64>,
-    pub closed: bool,
+    /// `closed_curve : LOGICAL`.
+    pub closed: Logical,
     pub form: CurveForm,
 }
 

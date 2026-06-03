@@ -8,7 +8,7 @@
 use crate::entities::ComplexEntityHandler;
 use crate::entities::geometry::nurbs_shared::{build_surface_common, quasi_uniform_knots};
 use crate::ir::attr::{
-    read_bool, read_entity_ref_grid, read_enum, read_integer, read_logical, read_real_grid,
+    read_entity_ref_grid, read_enum, read_integer, read_logical, read_real_grid,
     read_string_or_unset,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
@@ -47,8 +47,8 @@ impl ComplexEntityHandler for RationalQuasiUniformSurfaceHandler {
         let v_degree_i = read_integer(bss_attrs, 1, entity_id, "v_degree")?;
         let cp_grid = read_entity_ref_grid(bss_attrs, 2, entity_id, "control_points_list")?;
         let form = SurfaceForm::from_step_enum(read_enum(bss_attrs, 3, entity_id, "surface_form")?);
-        let u_closed = read_bool(bss_attrs, 4, entity_id, "u_closed")?;
-        let v_closed = read_bool(bss_attrs, 5, entity_id, "v_closed")?;
+        let u_closed = read_logical(bss_attrs, 4, entity_id, "u_closed")?;
+        let v_closed = read_logical(bss_attrs, 5, entity_id, "v_closed")?;
         let self_intersect = read_logical(bss_attrs, 6, entity_id, "self_intersect")?;
 
         let rat_attrs = require_part_attrs(parts, "RATIONAL_B_SPLINE_SURFACE", entity_id)?;

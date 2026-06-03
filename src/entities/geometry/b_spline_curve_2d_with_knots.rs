@@ -8,8 +8,8 @@
 use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::cartesian_point_2d::CartesianPoint2dHandler;
 use crate::ir::attr::{
-    check_count, read_bool, read_entity_ref_list, read_enum, read_integer, read_integer_list,
-    read_real_list, read_string_or_unset,
+    check_count, logical_to_step, read_entity_ref_list, read_enum, read_integer, read_integer_list,
+    read_logical, read_real_list, read_string_or_unset,
 };
 use crate::ir::error::{AttributeKindTag, ConvertError};
 use crate::ir::geometry::{Curve2d, CurveForm, NurbsCurve2d, NurbsKind2d};
@@ -37,7 +37,7 @@ impl SimpleEntityHandler for BSplineCurve2dWithKnotsHandler {
         let degree_i = read_integer(attrs, 1, entity_id, "degree")?;
         let cp_refs = read_entity_ref_list(attrs, 2, entity_id, "control_points_list")?;
         let form = CurveForm::from_step_enum(read_enum(attrs, 3, entity_id, "curve_form")?);
-        let closed = read_bool(attrs, 4, entity_id, "closed_curve")?;
+        let closed = read_logical(attrs, 4, entity_id, "closed_curve")?;
         let knot_multiplicities = read_integer_list(attrs, 6, entity_id, "knot_multiplicities")?;
         let knots = read_real_list(attrs, 7, entity_id, "knots")?;
 
@@ -105,7 +105,7 @@ impl SimpleEntityHandler for BSplineCurve2dWithKnotsHandler {
         );
         let knots_attr =
             Attribute::List(nurbs.knots.iter().copied().map(Attribute::Real).collect());
-        let closed_attr = Attribute::Enum(if nurbs.closed { "T".into() } else { "F".into() });
+        let closed_attr = Attribute::Enum(logical_to_step(nurbs.closed).into());
         let form = nurbs.form;
         let n = buf.fresh();
         buf.entities.push(WriterEntity {
