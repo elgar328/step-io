@@ -409,6 +409,10 @@ pub struct ReaderContext {
     /// the SSU handler after pushing the `FoundedItem::SurfaceStyleUsage`
     /// variant; consumed by the PSA reader for `PsaStyle::Surface(...)`.
     pub(crate) viz_ssu_id_map: HashMap<u64, FoundedItemId>,
+    /// `POINT_STYLE` step entity id → `FoundedItemId`. Populated by the
+    /// `POINT_STYLE` handler after pushing the `FoundedItem::PointStyle`
+    /// variant; consumed by the PSA reader for `PsaStyle::Point(...)`.
+    pub(crate) viz_point_style_id_map: HashMap<u64, FoundedItemId>,
     /// `VIEW_VOLUME` step entity id → `FoundedItemId` (phase camera-model-d3).
     /// Populated by the `VIEW_VOLUME` handler; consumed by `CAMERA_MODEL_D3`
     /// for its `perspective_of_volume` ref.

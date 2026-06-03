@@ -1,10 +1,10 @@
 //! `PRESENTATION_STYLE_ASSIGNMENT` handler. Aggregates one or
-//! more styling entries: currently `SURFACE_STYLE_USAGE` (stored inline)
-//! and `CURVE_STYLE` (stored via `CurveStyleId` arena reference).
+//! more styling entries: `SURFACE_STYLE_USAGE` and `POINT_STYLE` (each a
+//! `FoundedItemId` arena reference) and `CURVE_STYLE` (a `CurveStyleId`).
 //!
-//! Other style flavours (`POINT_STYLE`, etc.) are silently dropped at
-//! read time so the writer's symmetric drop preserves round-trip
-//! equality on the supported subset.
+//! Remaining style flavours (`FILL_AREA_STYLE` direct, `SYMBOL_STYLE`, etc.)
+//! are silently dropped at read time so the writer's symmetric drop
+//! preserves round-trip equality on the supported subset.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::check_count;
@@ -81,12 +81,14 @@ pub(crate) fn parse_psa_styles(
             Attribute::EntityRef(r) => {
                 if let Some(&ssu_id) = ctx.viz_ssu_id_map.get(r) {
                     styles.push(PsaStyle::Surface(ssu_id));
+                } else if let Some(&ps_id) = ctx.viz_point_style_id_map.get(r) {
+                    styles.push(PsaStyle::Point(ps_id));
                 } else if let Some(&cs_id) = ctx.viz_curve_style_id_map.get(r) {
                     styles.push(PsaStyle::Curve(cs_id));
                 }
-                // Other style flavours (POINT_STYLE, etc.) silently skipped —
-                // matches the pre-existing behaviour. Add explicit handling
-                // here if a flavour becomes corpus-relevant.
+                // Remaining style flavours (FILL_AREA_STYLE direct, SYMBOL_STYLE,
+                // etc.) silently skipped. Add explicit handling here if a
+                // flavour becomes corpus-relevant.
             }
             Attribute::Typed { type_name, value }
                 if type_name == "NULL_STYLE"
@@ -114,6 +116,9 @@ pub(crate) fn emit_psa_styles(buf: &WriteBuffer, styles: Vec<PsaStyle>) -> Vec<A
         .map(|style| match style {
             PsaStyle::Surface(ssu_id) => {
                 Attribute::EntityRef(buf.founded_item_step_ids[ssu_id.0 as usize])
+            }
+            PsaStyle::Point(ps_id) => {
+                Attribute::EntityRef(buf.founded_item_step_ids[ps_id.0 as usize])
             }
             PsaStyle::Curve(cs_id) => {
                 Attribute::EntityRef(buf.curve_style_step_ids[cs_id.0 as usize])

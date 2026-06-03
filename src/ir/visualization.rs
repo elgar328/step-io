@@ -539,10 +539,12 @@ pub enum StyleContext {
 /// One element of [`PresentationStyleAssignmentData::styles`]. Both
 /// variants reference their target through arena ids — `Surface` carries
 /// a [`FoundedItemId`] aimed at a `FoundedItem::SurfaceStyleUsage` entry,
-/// and `Curve` carries a [`CurveStyleId`].
+/// `Point` carries a [`FoundedItemId`] aimed at a `FoundedItem::PointStyle`
+/// entry, and `Curve` carries a [`CurveStyleId`].
 #[derive(Debug, Clone, PartialEq)]
 pub enum PsaStyle {
     Surface(FoundedItemId),
+    Point(FoundedItemId),
     Curve(CurveStyleId),
     /// `null_style` ENUMERATION placeholder — emitted by NIST AP242
     /// fixtures as `NULL_STYLE(.NULL.)` typed parameter. Phase psa-typed.

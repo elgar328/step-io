@@ -33,6 +33,16 @@ impl SimpleEntityHandler for PointStyleHandler {
                 };
                 Marker::Predefined(id)
             }
+            // `marker_select` is a SELECT whose `marker_type` member is an
+            // enumeration; P21 type-tags it as `MARKER_TYPE(.PLUS.)`, which
+            // the parser yields as a `Typed` wrapper. NIST fixtures use this
+            // form. A bare `Enum` is also accepted for tolerant input.
+            Attribute::Typed { type_name, value } if type_name == "MARKER_TYPE" => {
+                let Attribute::Enum(token) = value.as_ref() else {
+                    return Ok(());
+                };
+                Marker::Type(marker_type_from_token(token))
+            }
             Attribute::Enum(token) => Marker::Type(marker_type_from_token(token)),
             _ => return Ok(()),
         };
@@ -62,12 +72,13 @@ impl SimpleEntityHandler for PointStyleHandler {
         let viz = ctx
             .visualization
             .get_or_insert_with(VisualizationPool::default);
-        viz.founded_items.push(FoundedItem::PointStyle(PointStyle {
+        let id = viz.founded_items.push(FoundedItem::PointStyle(PointStyle {
             name,
             marker,
             marker_size,
             marker_colour,
         }));
+        ctx.viz_point_style_id_map.insert(entity_id, id);
         Ok(())
     }
 
@@ -76,7 +87,11 @@ impl SimpleEntityHandler for PointStyleHandler {
             Marker::Predefined(id) => {
                 Attribute::EntityRef(buf.pre_defined_marker_step_ids[id.0 as usize])
             }
-            Marker::Type(t) => Attribute::Enum(marker_type_to_token(&t)),
+            // Type-tag the enum SELECT member: `MARKER_TYPE(.PLUS.)`.
+            Marker::Type(t) => Attribute::Typed {
+                type_name: "MARKER_TYPE".into(),
+                value: Box::new(Attribute::Enum(marker_type_to_token(&t))),
+            },
         };
         let size_attr = match ps.marker_size {
             MarkerSize::PositiveLength(v) => Attribute::Typed {

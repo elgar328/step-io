@@ -659,7 +659,8 @@ fn box_ap214_is_preserves_visualization() {
         .iter()
         .find_map(|s| match s {
             step_io::ir::visualization::PsaStyle::Surface(id) => Some(*id),
-            step_io::ir::visualization::PsaStyle::Curve(_)
+            step_io::ir::visualization::PsaStyle::Point(_)
+            | step_io::ir::visualization::PsaStyle::Curve(_)
             | step_io::ir::visualization::PsaStyle::Null => None,
         })
         .expect("PSA carries a SurfaceStyleUsage");

@@ -4372,6 +4372,68 @@ fn point_style_round_trip() {
 }
 
 #[test]
+fn point_style_marker_type_in_psa_round_trips() {
+    // NIST fixtures use a type-tagged enum marker `MARKER_TYPE(.PLUS.)` and
+    // reference the POINT_STYLE from a PRESENTATION_STYLE_ASSIGNMENT. Verify
+    // the typed marker survives write -> read and the PSA keeps a Point ref.
+    use step_io::ir::visualization::{
+        Colour, ColourRgb, FoundedItem, Marker, MarkerSize, MarkerType, PointStyle,
+        PresentationStyleAssignment, PresentationStyleAssignmentData, PsaStyle, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let colour_id = viz.colours.push(Colour::Rgb(ColourRgb {
+        name: String::new(),
+        red: 0.6,
+        green: 0.4,
+        blue: 0.4,
+    }));
+    let ps_id = viz.founded_items.push(FoundedItem::PointStyle(PointStyle {
+        name: String::new(),
+        marker: Marker::Type(MarkerType::Plus),
+        marker_size: MarkerSize::PositiveLength(3.0),
+        marker_colour: colour_id,
+    }));
+    viz.presentation_style_assignments
+        .push(PresentationStyleAssignment::Itself(
+            PresentationStyleAssignmentData {
+                styles: vec![PsaStyle::Point(ps_id)],
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+
+    // POINT_STYLE round-trips with the typed marker preserved.
+    let ps = re_viz
+        .founded_items
+        .iter()
+        .find_map(|f| match f {
+            FoundedItem::PointStyle(p) => Some(p),
+            _ => None,
+        })
+        .expect("POINT_STYLE round-trips");
+    assert_eq!(ps.marker, Marker::Type(MarkerType::Plus));
+
+    // The PSA keeps a Point reference rather than dropping it.
+    let PresentationStyleAssignment::Itself(psa) = re_viz
+        .presentation_style_assignments
+        .iter()
+        .next()
+        .expect("PSA round-trips")
+    else {
+        panic!("expected Itself PSA variant");
+    };
+    assert!(
+        psa.styles.iter().any(|s| matches!(s, PsaStyle::Point(_))),
+        "PSA retains the POINT_STYLE reference"
+    );
+}
+
+#[test]
 fn defined_symbol_round_trip() {
     // SYMBOL_TARGET + DEFINED_SYMBOL via the GeometricRepresentationItem
     // arena. Definition is a PreDefinedSymbol, target is a SymbolTarget
