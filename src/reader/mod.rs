@@ -91,6 +91,18 @@ pub(crate) struct AssemblyRrData {
     pub(crate) rr_complex_entity: u64,
 }
 
+/// A `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` whose `style_context` SELECT
+/// list is resolved in a post-pass. The targets are overwhelmingly assembly
+/// RR-complexes, which only gain a `RepresentationRelationshipId` after
+/// `resolve_nauo_instances` materialises them — so resolution is deferred until
+/// then (mirrors [`PendingNauoInstance`]). The styled item is already pushed
+/// with an empty `style_context`; the post-pass patches it in place.
+pub(crate) struct PendingCdorsiStyleContext {
+    pub(crate) styled_item_id: crate::ir::id::StyledItemId,
+    pub(crate) context_refs: Vec<u64>,
+    pub(crate) entity_id: u64,
+}
+
 /// Accumulates converted IR objects and tracks the mapping from STEP entity
 /// ids (`#N`) to typed arena Ids.
 #[derive(Default)]
@@ -377,6 +389,9 @@ pub struct ReaderContext {
     /// Built by `resolve_nauo_instances`; consumed by
     /// `resolve_cdorsi_style_contexts` to resolve `style_context` targets.
     pub(crate) rrcomplex_to_rrid: HashMap<u64, crate::ir::id::RepresentationRelationshipId>,
+    /// `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM`s awaiting `style_context`
+    /// resolution (post-pass, after `rrcomplex_to_rrid` is populated).
+    pub(crate) pending_cdorsi: Vec<PendingCdorsiStyleContext>,
     /// SDRs whose product-geometry classification is deferred to
     /// [`Self::resolve_sdr_product_geometry`] (dispatch-order independent).
     pub(crate) pending_sdr_geometry: Vec<PendingSdrGeometry>,
@@ -839,6 +854,7 @@ impl ReaderContext {
         ctx.resolve_sdr_product_geometry();
         ctx.ensure_product_ref_frames();
         ctx.resolve_nauo_instances();
+        ctx.resolve_cdorsi_style_contexts();
         ctx.finalize_assembly();
         ctx.resolve_sdr_links();
         ctx.resolve_pdr_links();
@@ -1001,6 +1017,51 @@ impl ReaderContext {
                 );
                 self.assembly_products[pid].instances[idx].transform_rr = Some(rrid);
                 self.rrcomplex_to_rrid.insert(data.rr_complex_entity, rrid);
+            }
+        }
+    }
+
+    /// Resolve each deferred `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM`'s
+    /// `style_context` SELECT list and patch the already-pushed styled item.
+    /// Runs after `resolve_nauo_instances` so assembly RR-complex targets have
+    /// a `RepresentationRelationshipId`. A `representation_item` target resolves
+    /// to [`StyleContextRef::RepresentationItem`]; an assembly RR-complex to
+    /// [`StyleContextRef::RepresentationRelationship`]; anything else warns and
+    /// drops (e.g. a `shape` / `shape_aspect` member, or a cascade from a
+    /// dropped placement).
+    fn resolve_cdorsi_style_contexts(&mut self) {
+        use crate::entities::visualization::styled_item::resolve_representation_item_ref;
+        use crate::ir::visualization::{StyleContextRef, StyledItem};
+        let pendings = std::mem::take(&mut self.pending_cdorsi);
+        // Resolve against `self` immutably first, then apply the mutations.
+        let mut patches: Vec<(crate::ir::id::StyledItemId, Vec<StyleContextRef>)> =
+            Vec::with_capacity(pendings.len());
+        let mut warnings: Vec<ConvertError> = Vec::new();
+        for pending in &pendings {
+            let mut resolved = Vec::with_capacity(pending.context_refs.len());
+            for &r in &pending.context_refs {
+                if let Some(target) = resolve_representation_item_ref(self, r) {
+                    resolved.push(StyleContextRef::RepresentationItem(target));
+                } else if let Some(&rrid) = self.rrcomplex_to_rrid.get(&r) {
+                    resolved.push(StyleContextRef::RepresentationRelationship(rrid));
+                } else {
+                    warnings.push(ConvertError::UnexpectedEntityForm {
+                        entity_id: pending.entity_id,
+                        detail: format!(
+                            "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.style_context #{r} target \
+                             type unsupported"
+                        ),
+                    });
+                }
+            }
+            patches.push((pending.styled_item_id, resolved));
+        }
+        self.warnings.extend(warnings);
+        if let Some(pool) = self.visualization.as_mut() {
+            for (id, resolved) in patches {
+                if let StyledItem::ContextDependent(cd) = &mut pool.styled_items[id] {
+                    cd.style_context = resolved;
+                }
             }
         }
     }

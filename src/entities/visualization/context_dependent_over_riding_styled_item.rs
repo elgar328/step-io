@@ -72,20 +72,11 @@ impl SimpleEntityHandler for ContextDependentOverRidingStyledItemHandler {
             return Ok(());
         };
 
-        let mut style_context = Vec::with_capacity(context_refs.len());
-        for r in &context_refs {
-            if let Some(target) = resolve_representation_item_ref(ctx, *r) {
-                style_context.push(StyleContextRef::RepresentationItem(target));
-            } else {
-                ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                    entity_id,
-                    detail: format!(
-                        "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.style_context #{r} target type unsupported"
-                    ),
-                });
-            }
-        }
-
+        // `style_context` targets are overwhelmingly assembly RR-complexes,
+        // which only gain a `RepresentationRelationshipId` after
+        // `resolve_nauo_instances`. Defer the whole list to the
+        // `resolve_cdorsi_style_contexts` post-pass; push the styled item now
+        // (with an empty list) so dependents can still resolve it by id.
         let pool = ctx
             .visualization
             .get_or_insert_with(VisualizationPool::default);
@@ -95,10 +86,16 @@ impl SimpleEntityHandler for ContextDependentOverRidingStyledItemHandler {
                 styles,
                 item,
                 over_ridden_style,
-                style_context,
+                style_context: Vec::new(),
             },
         ));
         ctx.viz_styled_item_id_map.insert(entity_id, id);
+        ctx.pending_cdorsi
+            .push(crate::reader::PendingCdorsiStyleContext {
+                styled_item_id: id,
+                context_refs,
+                entity_id,
+            });
         Ok(())
     }
 
