@@ -1070,6 +1070,114 @@ fn shared_child_assembly_round_trips() {
 }
 
 #[test]
+fn assembly_placement_materialises_distinct_rrwt_per_instance() {
+    // Two instances of the same Leaf with the SAME transform must still gain
+    // DISTINCT RepresentationRelationshipWithTransformation arena ids on
+    // re-read — the disambiguation that lets a per-instance style override
+    // (CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.style_context) target one
+    // specific placement. Guards the canonical-order materialisation and its
+    // round-trip stability (the metric-insensitive core of the change).
+    use step_io::ir::shape_rep::RepresentationRelationship;
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let transform = identity_transform(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let leaf_pid = tree.products.push(Product {
+        id: "Leaf".into(),
+        name: "Leaf".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+    });
+    let root_pid = tree.products.push(Product {
+        id: "Root".into(),
+        name: "Root".into(),
+        description: None,
+        geometry: None,
+        instances: vec![
+            Instance {
+                child: leaf_pid,
+                transform,
+                occurrence_id: "1".into(),
+                occurrence_name: "A".into(),
+                transform_rr: None,
+            },
+            Instance {
+                child: leaf_pid,
+                transform,
+                occurrence_id: "2".into(),
+                occurrence_name: "B".into(),
+                transform_rr: None,
+            },
+        ],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+    });
+    tree.roots = vec![root_pid];
+    model.assembly = Some(tree);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let r_asm = re.assembly.as_ref().unwrap();
+    let root = r_asm.products.iter().find(|p| p.id == "Root").unwrap();
+    assert_eq!(root.instances.len(), 2);
+    let rr0 = root.instances[0]
+        .transform_rr
+        .expect("instance 0 materialised its placement RR");
+    let rr1 = root.instances[1]
+        .transform_rr
+        .expect("instance 1 materialised its placement RR");
+    assert_ne!(
+        rr0, rr1,
+        "two placements of the same child must get distinct RR ids"
+    );
+    for rrid in [rr0, rr1] {
+        assert!(
+            matches!(
+                re.representation_relationships[rrid],
+                RepresentationRelationship::RepresentationRelationshipWithTransformation(_)
+            ),
+            "transform_rr must point at an RRWT arena entry"
+        );
+    }
+
+    // Idempotent: two further read->write cycles produce identical output
+    // (the materialised RR ids are round-trip stable).
+    let text_b = re.write_to_string().expect("write b");
+    let text_c = reconvert(&text_b).write_to_string().expect("write c");
+    assert_eq!(
+        text_b, text_c,
+        "assembly placement round-trip must be idempotent"
+    );
+}
+
+#[test]
 fn default_schema_is_ap214_is() {
     let model = empty_model();
     assert_eq!(model.schema.class(), Some(SchemaClass::Ap214Is));

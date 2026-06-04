@@ -1,10 +1,12 @@
 //! `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` (CDOSI) handler.
 //!
 //! Extends [`super::over_riding_styled_item::OverRidingStyledItemHandler`]
-//! with the additional `style_context` SELECT list. Each context resolves
-//! through [`resolve_representation_item_ref`] into a `RepresentationItemRef`
-//! (geometry, topology, geometry representation, or 3D placement); `shape`
-//! and `shape_aspect` SELECT members are silently dropped with a warning.
+//! with the additional `style_context` SELECT list. The list is resolved in
+//! the [`crate::reader::ReaderContext::resolve_cdorsi_style_contexts`] post-pass
+//! (assembly RR-complex targets only gain an id after the placements are
+//! materialised): a `representation_item` becomes a `RepresentationItem`, an
+//! assembly placement complex a `RepresentationRelationship`, and other SELECT
+//! members (`shape` / `shape_aspect`) are dropped with a warning.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
