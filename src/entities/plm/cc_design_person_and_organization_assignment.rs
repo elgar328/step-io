@@ -39,6 +39,16 @@ impl SimpleEntityHandler for CcDesignPersonAndOrganizationAssignmentHandler {
         let role_ref = read_entity_ref(attrs, 1, entity_id, "role")?;
         let item_refs = read_entity_ref_list(attrs, 2, entity_id, "items")?;
         let Some(&assigned_person_and_organization) = ctx.plm_p_and_o_id_map.get(&po_ref) else {
+            // The assigned P&O was dropped as a non-standard (dangling-ref)
+            // normalization — drop this assignment as a normalization too.
+            if ctx.nonstd_person_org_refs.contains(&po_ref) {
+                ctx.warnings.push(ConvertError::NonStandardInput {
+                    field: "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT".into(),
+                    count: 1,
+                    normalized_to: "dropped (references non-standard PERSON_AND_ORGANIZATION)"
+                        .into(),
+                });
+            }
             return Ok(());
         };
         let Some(&role) = ctx.plm_p_and_o_role_id_map.get(&role_ref) else {

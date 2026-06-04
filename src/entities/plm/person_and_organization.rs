@@ -21,15 +21,30 @@ impl SimpleEntityHandler for PersonAndOrganizationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "PERSON_AND_ORGANIZATION")?;
         let person_ref = read_entity_ref(attrs, 0, entity_id, "the_person")?;
         let org_ref = read_entity_ref(attrs, 1, entity_id, "the_organization")?;
-        let Some(&the_person) = ctx.plm_person_id_map.get(&person_ref) else {
-            return Ok(());
-        };
-        let Some(&the_organization) = ctx.plm_organization_id_map.get(&org_ref) else {
+        let person = ctx.plm_person_id_map.get(&person_ref).copied();
+        let org = ctx.plm_organization_id_map.get(&org_ref).copied();
+        let (Some(the_person), Some(the_organization)) = (person, org) else {
+            // A required reference did not resolve. When it is dangling — points
+            // to no entity defined in the file (e.g. the #18446744073709551615
+            // sentinel some anonymizers emit for a scrubbed person) — the P&O is
+            // non-standard: drop it as a normalization and record the id so the
+            // referencing assignments / approvals drop as normalizations too.
+            // (A ref that *is* defined but whose PERSON / ORGANIZATION step-io
+            // did not model is a separate gap — keep the silent drop.)
+            if graph.get(person_ref).is_none() || graph.get(org_ref).is_none() {
+                ctx.warnings.push(ConvertError::NonStandardInput {
+                    field: "PERSON_AND_ORGANIZATION".into(),
+                    count: 1,
+                    normalized_to: "dropped (dangling person/organization reference, non-standard)"
+                        .into(),
+                });
+                ctx.nonstd_person_org_refs.insert(entity_id);
+            }
             return Ok(());
         };
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);

@@ -1153,6 +1153,57 @@ fn empty_prrpc_and_its_relationship_dropped_as_normalization() {
 }
 
 #[test]
+fn dangling_person_and_organization_and_cascade_dropped_as_normalization() {
+    // `PERSON_AND_ORGANIZATION.the_person` is a required ref; some anonymizers
+    // (e.g. the GrabCAD badland-winch / fairlead fixtures) scrub the person and
+    // leave a dangling sentinel (#18446744073709551615 = u64::MAX) that points
+    // to no defined entity. The reader drops such a P&O — and the
+    // CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT / APPROVAL_PERSON_ORGANIZATION
+    // that reference it — as NonStandardInput normalizations, not defects. A P&O
+    // with real PERSON / ORGANIZATION refs is preserved.
+    let result = convert_source(&minimal_step(
+        "#1 = PERSON('id','last','first',$,$,$);\n\
+         #2 = ORGANIZATION($,'org','');\n\
+         #3 = PERSON_AND_ORGANIZATION(#1,#2);\n\
+         #4 = PERSON_AND_ORGANIZATION(#18446744073709551615,#2);\n\
+         #5 = PERSON_AND_ORGANIZATION_ROLE('creator');\n\
+         #6 = CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT(#4,#5,());\n\
+         #7 = APPROVAL_PERSON_ORGANIZATION(#4,#9998,#5);",
+    ));
+    // The dangling P&O and its two referencing entities each surface as a
+    // "dropped" normalization; no defect.
+    let dropped: Vec<&str> = result
+        .warnings
+        .iter()
+        .filter_map(|w| match w {
+            ConvertError::NonStandardInput {
+                field,
+                normalized_to,
+                ..
+            } if normalized_to.starts_with("dropped") => Some(field.as_str()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(dropped.len(), 3, "{:#?}", result.warnings);
+    assert!(dropped.contains(&"PERSON_AND_ORGANIZATION"));
+    assert!(dropped.contains(&"CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT"));
+    assert!(dropped.contains(&"APPROVAL_PERSON_ORGANIZATION"));
+    assert!(
+        !result
+            .warnings
+            .iter()
+            .any(|w| matches!(w, ConvertError::MissingReference { .. })),
+        "{:#?}",
+        result.warnings
+    );
+    // Only the P&O with real person + organization refs survives in the IR.
+    let plm = result.model.plm.as_ref().expect("plm pool");
+    assert_eq!(plm.person_and_organizations.iter().count(), 1);
+    assert!(plm.person_and_organization_assignments.iter().count() == 0);
+    assert!(plm.approval_person_organizations.iter().count() == 0);
+}
+
+#[test]
 fn file_name_unset_string_fields_normalized_to_empty() {
     // Part 21 (ISO 10303-21) defines FILE_NAME scalar fields as required
     // STRING; `$` is non-standard (`''` denotes unspecified). Some exporters
