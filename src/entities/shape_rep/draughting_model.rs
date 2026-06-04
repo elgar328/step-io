@@ -50,15 +50,27 @@ impl SimpleEntityHandler for DraughtingModelHandler {
         if let Some(crate::ir::shape_rep::RepresentationContextRef::Unitful(ctx_id)) = context {
             ctx.repr_context_map.insert(entity_id, ctx_id);
         }
+        let had_item_refs = !item_refs.is_empty();
         let mut items = Vec::with_capacity(item_refs.len());
         for r in item_refs {
             if let Some(item) = resolve_representation_item_ref(ctx, r) {
                 items.push(item);
             }
         }
-        if items.is_empty() {
+        if items.is_empty() && had_item_refs {
+            // The model listed items but none resolved to a modelled
+            // representation_item — the whole DRAUGHTING_MODEL is dropped.
+            // Surface it rather than dropping silently.
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: String::from(
+                    "DRAUGHTING_MODEL dropped: no items resolved to a modelled representation_item",
+                ),
+            });
             return Ok(());
         }
+        // A genuinely empty `items` SET (source had `()`) is schema-legal and
+        // preserved as an empty draughting model.
         let repr_id = ctx
             .representations
             .push(Representation::DraughtingModel(DraughtingModel {

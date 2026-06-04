@@ -6702,6 +6702,61 @@ fn styled_item_tessellated_face_round_trips() {
 }
 
 #[test]
+fn draughting_model_with_styled_item_round_trips() {
+    // A DRAUGHTING_MODEL whose `items` are STYLED_ITEMs (the AP242 MBD
+    // pattern). STYLED_ITEM is itself a representation_item, so it must
+    // resolve through `viz_styled_item_id_map` (phase dm-styled-item) — without
+    // it the items list resolves empty and the whole model is silently dropped.
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{
+        DraughtingModel, DraughtingModelForm, Representation, RepresentationContextRef,
+        UnitlessContext,
+    };
+    use step_io::ir::visualization::{PlainStyledItem, StyledItem, VisualizationPool};
+    let mut model = empty_model();
+    let uc = model.unitless_contexts.push(UnitlessContext {
+        identifier: String::new(),
+        context_type: "document parameters".into(),
+        coordinate_space_dimension: None,
+    });
+    let frame = model.geometry.identity_placement();
+    let styled = {
+        let viz = model
+            .visualization
+            .get_or_insert_with(VisualizationPool::default);
+        viz.styled_items.push(StyledItem::Plain(PlainStyledItem {
+            name: String::new(),
+            styles: vec![],
+            item: RepresentationItemRef::Placement3d(frame),
+        }))
+    };
+    model
+        .representations
+        .push(Representation::DraughtingModel(DraughtingModel {
+            name: "Default".into(),
+            items: vec![RepresentationItemRef::StyledItem(styled)],
+            context: Some(RepresentationContextRef::Unitless(uc)),
+            form: DraughtingModelForm::Simple,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let dm = re
+        .representations
+        .iter()
+        .find_map(|r| match r {
+            Representation::DraughtingModel(d) => Some(d),
+            _ => None,
+        })
+        .expect("draughting model survives (not dropped on empty-resolve)");
+    assert!(
+        matches!(dm.items.as_slice(), [RepresentationItemRef::StyledItem(_)]),
+        "the model's STYLED_ITEM item resolves and round-trips, got {:?}",
+        dm.items
+    );
+}
+
+#[test]
 fn tessellation_2_round_trip() {
     // COORDINATES_LIST + TESSELLATED_CURVE_SET + COMPLEX_TRIANGULATED_SURFACE_SET
     // — both new entities reference the shared coordinates list.

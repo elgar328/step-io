@@ -64,6 +64,7 @@ impl WriteBuffer<'_> {
             RepresentationItemRef::CompositeText(id) => {
                 Ok(self.composite_text_step_ids[id.0 as usize])
             }
+            RepresentationItemRef::StyledItem(id) => Ok(self.styled_item_step_ids[id.0 as usize]),
         }
     }
 

@@ -13,8 +13,8 @@
 use super::id::{
     AnnotationCurveOccurrenceId, AnnotationOccurrenceId, CameraModelId, CompositeTextId, CurveId,
     DraughtingCalloutId, EdgeId, FaceId, GeometricRepresentationItemId, MappedItemId,
-    Placement3dId, PointId, RepresentationId, RepresentationItemId, ShellId, SolidId, SurfaceId,
-    TessellatedFaceId, TessellatedItemId, TextLiteralId, TypeQualifierId,
+    Placement3dId, PointId, RepresentationId, RepresentationItemId, ShellId, SolidId, StyledItemId,
+    SurfaceId, TessellatedFaceId, TessellatedItemId, TextLiteralId, TypeQualifierId,
     ValueFormatTypeQualifierId, VertexId,
 };
 
@@ -78,6 +78,12 @@ pub enum RepresentationItemRef {
     /// `COMPOSITE_TEXT` (visualization pool) — a group of `TEXT_LITERAL`s, same
     /// `annotation_text_occurrence_item` SELECT role as `TextLiteral`.
     CompositeText(CompositeTextId),
+    /// `STYLED_ITEM` (visualization pool). `STYLED_ITEM` is itself a
+    /// `representation_item` subtype, so the AP242 MBD `DRAUGHTING_MODEL.items`
+    /// SET routinely lists styled annotations directly (phase
+    /// dm-styled-item). Without this the draughting model's items resolve to
+    /// empty and the whole model is dropped.
+    StyledItem(StyledItemId),
 }
 
 /// `representation_item` enum arena per the ir.toml blueprint (phase

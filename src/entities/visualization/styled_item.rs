@@ -197,5 +197,11 @@ pub(crate) fn resolve_representation_item_ref(
     if let Some(&id) = ctx.composite_text_id_map.get(&item_ref) {
         return Some(RepresentationItemRef::CompositeText(id));
     }
+    // STYLED_ITEM is itself a representation_item — DRAUGHTING_MODEL.items lists
+    // styled annotations directly (phase dm-styled-item). Probed last so a
+    // styled item never shadows a more specific geometry/annotation target.
+    if let Some(&id) = ctx.viz_styled_item_id_map.get(&item_ref) {
+        return Some(RepresentationItemRef::StyledItem(id));
+    }
     None
 }
