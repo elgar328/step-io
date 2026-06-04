@@ -4498,6 +4498,101 @@ fn dmia_round_trip() {
 }
 
 #[test]
+fn dmia_shape_aspect_datum_definition_round_trip() {
+    // DMIA whose definition is a DATUM — a shape_aspect subtype resolved through
+    // the shared ShapeAspectRef (the gap this phase fixes; DATUM / ALL_AROUND /
+    // … were previously dropped as "none of the modelled SELECT members").
+    use step_io::ir::PmiPool;
+    use step_io::ir::ShapeAspectRef;
+    use step_io::ir::geometry::{Plane3, Surface};
+    use step_io::ir::pmi::{
+        AnnotationOccurrence, AnnotationPlane, Datum, DraughtingModelIdentifiedItem,
+        DraughtingModelItemAssociation, DraughtingModelItemDefinition,
+    };
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{PlainRepr, Representation};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let ctx_id = model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let placement = xyz_placement(&mut model);
+    let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
+        position: placement,
+    }));
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    let datum = pmi.datums.push(Datum {
+        name: String::new(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        identification: "A".into(),
+    });
+    let ap_id = pmi
+        .annotation_occurrences
+        .push(AnnotationOccurrence::AnnotationPlane(AnnotationPlane {
+            name: "anno".into(),
+            styles: vec![],
+            item: RepresentationItemRef::Surface(surf),
+        }));
+    let used = model.representations.push(Representation::Plain(PlainRepr {
+        name: "draughting_model".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+        frame: None,
+    }));
+    model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .draughting_model_item_associations
+        .push(DraughtingModelItemAssociation {
+            name: "link".into(),
+            description: None,
+            definition: DraughtingModelItemDefinition::ShapeAspect(ShapeAspectRef::Datum(datum)),
+            used_representation: used,
+            identified_item: DraughtingModelIdentifiedItem::AnnotationOccurrence(ap_id),
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.draughting_model_item_associations.len(), 1);
+    let dmia = re_pmi
+        .draughting_model_item_associations
+        .iter()
+        .next()
+        .unwrap();
+    assert!(matches!(
+        dmia.definition,
+        DraughtingModelItemDefinition::ShapeAspect(ShapeAspectRef::Datum(_))
+    ));
+}
+
+#[test]
 fn dmia_geometric_tolerance_with_datum_reference_round_trip() {
     // DMIA whose definition is a GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE complex
     // MI — resolved via GeometricToleranceRef::WithDatumReference (the gap this

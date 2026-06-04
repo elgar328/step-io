@@ -8,12 +8,12 @@
 
 use super::arena::Arena;
 use super::id::{
-    AnnotationCurveOccurrenceId, AnnotationOccurrenceId, CompositeShapeAspectId, CurveId,
-    DatumFeatureId, DatumId, DatumSystemId, DimensionalLocationId, DimensionalSizeId,
-    DraughtingCalloutId, GeometricToleranceId, GeometricToleranceWithDatumReferenceId,
-    LimitsAndFitsId, MeasureWithUnitId, PresentationStyleAssignmentId, ProductId,
-    PropertyDefinitionId, RepresentationId, ShapeAspectId, TessellatedItemId, ToleranceValueId,
-    ToleranceZoneId, TypeQualifierId, ValueFormatTypeQualifierId,
+    AnnotationCurveOccurrenceId, AnnotationOccurrenceId, CurveId, DatumId, DatumSystemId,
+    DimensionalLocationId, DimensionalSizeId, DraughtingCalloutId, GeometricToleranceId,
+    GeometricToleranceWithDatumReferenceId, LimitsAndFitsId, MeasureWithUnitId,
+    PresentationStyleAssignmentId, ProductId, PropertyDefinitionId, RepresentationId,
+    TessellatedItemId, ToleranceValueId, ToleranceZoneId, TypeQualifierId,
+    ValueFormatTypeQualifierId,
 };
 use super::representation_item::RepresentationItemRef;
 use super::shape_aspect_ref::ShapeAspectRef;
@@ -95,17 +95,17 @@ pub struct DraughtingModelItemAssociation {
     pub identified_item: DraughtingModelIdentifiedItem,
 }
 
-/// `draughting_model_item_definition` SELECT — step-io models the eight
+/// `draughting_model_item_definition` SELECT — step-io models the six
 /// members below. SELECT entries pointing to other members (assignment /
 /// classification / approval items) are dropped on read with a warning
 /// (`feedback_partial_select_enum`, `feedback_no_silent_skip`).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DraughtingModelItemDefinition {
     Representation(RepresentationId),
-    CompositeShapeAspect(CompositeShapeAspectId),
     DimensionalSize(DimensionalSizeId),
-    ShapeAspect(ShapeAspectId),
-    DatumFeature(DatumFeatureId),
+    /// `shape_aspect` member — the abstract supertype, resolved to whichever
+    /// concrete subtype it is via the shared [`ShapeAspectRef`].
+    ShapeAspect(ShapeAspectRef),
     PropertyDefinition(PropertyDefinitionId),
     DimensionalLocation(DimensionalLocationId),
     /// `geometric_tolerance` member — `Plain` or `WithDatumReference` (the

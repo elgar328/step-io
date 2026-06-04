@@ -3532,14 +3532,12 @@ impl SimpleEntityHandler for DraughtingModelItemAssociationHandler {
         let def_ref = read_entity_ref(attrs, 2, entity_id, "definition")?;
         let definition = if let Some(&id) = ctx.repr_id_map.get(&def_ref) {
             DraughtingModelItemDefinition::Representation(id)
-        } else if let Some(&id) = ctx.composite_shape_aspect_id_map.get(&def_ref) {
-            DraughtingModelItemDefinition::CompositeShapeAspect(id)
         } else if let Some(&id) = ctx.dimensional_size_id_map.get(&def_ref) {
             DraughtingModelItemDefinition::DimensionalSize(id)
-        } else if let Some(&id) = ctx.shape_aspect_id_map.get(&def_ref) {
-            DraughtingModelItemDefinition::ShapeAspect(id)
-        } else if let Some(&id) = ctx.datum_feature_id_map.get(&def_ref) {
-            DraughtingModelItemDefinition::DatumFeature(id)
+        } else if let Some(sa_ref) = resolve_shape_aspect_ref(ctx, def_ref) {
+            // shape_aspect member — any concrete subtype (datum / all_around /
+            // datum_feature / …) via the shared ShapeAspectRef.
+            DraughtingModelItemDefinition::ShapeAspect(sa_ref)
         } else if let Some(&id) = ctx.property_def_step_to_id.get(&def_ref) {
             DraughtingModelItemDefinition::PropertyDefinition(id)
         } else if let Some(&id) = ctx.dimensional_location_id_map.get(&def_ref) {
@@ -3552,7 +3550,7 @@ impl SimpleEntityHandler for DraughtingModelItemAssociationHandler {
                 entity_id,
                 detail: format!(
                     "DRAUGHTING_MODEL_ITEM_ASSOCIATION definition #{def_ref} \
-                     resolves to none of the 8 modelled SELECT members — skipping"
+                     resolves to none of the 6 modelled SELECT members — skipping"
                 ),
             });
             return Ok(());
@@ -3592,18 +3590,10 @@ impl SimpleEntityHandler for DraughtingModelItemAssociationHandler {
             DraughtingModelItemDefinition::Representation(id) => {
                 buf.representation_step_ids[id.0 as usize]
             }
-            DraughtingModelItemDefinition::CompositeShapeAspect(id) => {
-                buf.composite_shape_aspect_step_ids[id.0 as usize]
-            }
             DraughtingModelItemDefinition::DimensionalSize(id) => {
                 buf.dimensional_size_step_ids[id.0 as usize]
             }
-            DraughtingModelItemDefinition::ShapeAspect(id) => {
-                buf.shape_aspect_step_ids[id.0 as usize]
-            }
-            DraughtingModelItemDefinition::DatumFeature(id) => {
-                buf.datum_feature_step_ids[id.0 as usize]
-            }
+            DraughtingModelItemDefinition::ShapeAspect(sa_ref) => buf.emit_shape_aspect_ref(sa_ref),
             DraughtingModelItemDefinition::PropertyDefinition(id) => {
                 buf.property_definition_step_ids[id.0 as usize]
             }
