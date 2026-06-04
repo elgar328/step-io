@@ -2,10 +2,11 @@
 //!
 //! Standard STEP subtype of `PRODUCT_DEFINITION` (AP203 / AP242) that
 //! tags the definition with a list of documentation refs. The reader
-//! treats the entity exactly like the base type — reusing
-//! [`super::product_definition::read_product_definition_body`] — and
-//! ignores the extra `documentation_ids` attribute. Writer support is
-//! out of scope (round-trip downgrades to plain `PRODUCT_DEFINITION`).
+//! reuses [`super::product_definition::read_product_definition_body`] for
+//! the base attrs and additionally resolves `documentation_ids` onto the
+//! product's `associated_documents` loyalty field, so the writer re-emits
+//! this subtype (via `emit_pdef`) instead of downgrading to plain
+//! `PRODUCT_DEFINITION`.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{read_entity_ref, read_entity_ref_list};
