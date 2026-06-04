@@ -490,14 +490,17 @@ pub struct ContextDependentOverRidingStyledItem {
 }
 
 /// SELECT target for [`ContextDependentOverRidingStyledItem::style_context`].
-/// Each context is a `representation_item` reference — geometry, topology, a
-/// geometry representation, or a 3D placement via [`RepresentationItemRef`].
-/// Other `style_context` SELECT members (`shape`, `shape_aspect`) are
-/// silently dropped at read time with a warning; future phases expand the
-/// enum once those are modelled.
+/// `RepresentationItem` covers geometry, topology, a geometry representation,
+/// or a 3D placement via [`RepresentationItemRef`]. `RepresentationRelationship`
+/// covers the assembly placement complex (the dominant `style_context` target):
+/// a style override scoped to one specific assembly instance, referenced by its
+/// materialised [`RepresentationRelationshipId`] (the
+/// `RepresentationRelationshipWithTransformation` arena entry). Other SELECT
+/// members (`shape`, `shape_aspect`) are dropped at read time with a warning.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum StyleContextRef {
     RepresentationItem(RepresentationItemRef),
+    RepresentationRelationship(crate::ir::id::RepresentationRelationshipId),
 }
 
 /// `PRESENTATION_STYLE_ASSIGNMENT` enum per the ir.toml blueprint

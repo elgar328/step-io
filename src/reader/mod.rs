@@ -936,6 +936,7 @@ impl ReaderContext {
                     transform,
                     occurrence_id: pending.occurrence_id,
                     occurrence_name: pending.occurrence_name,
+                    transform_rr: None,
                 });
         }
     }

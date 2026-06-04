@@ -222,6 +222,14 @@ pub enum RepresentationRelationship {
     /// `SHAPE_REPRESENTATION` subtype. Reader pushes every SRR seen in the
     /// source (including 1-to-many fan-out + multi-hop chains).
     ShapeRepresentationRelationship(ShapeRepresentationRelationshipIr),
+    /// Assembly placement complex `(REPRESENTATION_RELATIONSHIP RRWT
+    /// SHAPE_REPRESENTATION_RELATIONSHIP)` — the `RRWT` part adds a rigid
+    /// `transform`, binding a child product's `rep_2` into a parent's `rep_1`.
+    /// Materialised from the source (reader path) so each placement keeps a
+    /// stable arena identity; the writer re-emits the 3-part complex. Kernel /
+    /// empty-IR paths leave this absent and the assembly writer synthesises the
+    /// complex from `Instance.transform` instead.
+    RepresentationRelationshipWithTransformation(RrwtData),
 }
 
 /// `representation_relationship` carrier body (`name`, `description`,
@@ -272,6 +280,20 @@ pub struct ShapeRepresentationRelationshipIr {
     pub description: String,
     pub rep_1: RepresentationId,
     pub rep_2: RepresentationId,
+}
+
+/// Assembly placement complex body. `rep_1` is the parent product's
+/// `SHAPE_REPRESENTATION`, `rep_2` the child's; `transform` is the
+/// `ITEM_DEFINED_TRANSFORMATION` payload carried by the
+/// `REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION` part. `name`/`description`
+/// come from the base `REPRESENTATION_RELATIONSHIP` part (commonly empty).
+#[derive(Debug, Clone, PartialEq)]
+pub struct RrwtData {
+    pub name: String,
+    pub description: String,
+    pub rep_1: RepresentationId,
+    pub rep_2: RepresentationId,
+    pub transform: crate::ir::assembly::Transform3d,
 }
 
 /// `ITEM_IDENTIFIED_REPRESENTATION_USAGE(name, description, definition,

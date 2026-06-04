@@ -556,6 +556,11 @@ impl WriteBuffer<'_> {
                     }
                     let _ = self.emit_simple_srr(r1, r2);
                 }
+                RepresentationRelationship::RepresentationRelationshipWithTransformation(_) => {
+                    // Assembly placement complexes are emitted inline by
+                    // `emit_instance_bundle` (interleaved with their NAUO / CDSR /
+                    // IDT). Skip here so they are not double-emitted.
+                }
             }
         }
         Ok(())

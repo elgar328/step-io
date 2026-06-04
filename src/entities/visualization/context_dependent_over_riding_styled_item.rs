@@ -119,6 +119,26 @@ impl SimpleEntityHandler for ContextDependentOverRidingStyledItemHandler {
                     let step_id = buf.emit_representation_item_ref(target)?;
                     context_refs.push(Attribute::EntityRef(step_id));
                 }
+                StyleContextRef::RepresentationRelationship(rrid) => {
+                    let step_id = buf
+                        .representation_relationship_step_ids
+                        .get(rrid.0 as usize)
+                        .copied()
+                        .unwrap_or(0);
+                    if step_id == 0 {
+                        // The placement's RR complex was never emitted (its
+                        // parent product chain was skipped). Surface rather than
+                        // writing a dangling `#0` reference.
+                        return Err(WriteError::DanglingId {
+                            detail: format!(
+                                "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.style_context \
+                                 RepresentationRelationshipId({}) has no emitted RR complex",
+                                rrid.0
+                            ),
+                        });
+                    }
+                    context_refs.push(Attribute::EntityRef(step_id));
+                }
             }
         }
         Ok(buf.push_simple(

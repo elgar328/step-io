@@ -70,6 +70,13 @@ pub(crate) struct WriteBuffer<'m> {
     /// cached id instead of re-emitting the representation inline. Empty
     /// for hand/kernel-built IR (the arena is reader-populated only).
     pub(crate) representation_step_ids: Vec<u64>,
+    /// STEP entity id of every emitted `RepresentationRelationship`, indexed by
+    /// `RepresentationRelationshipId.0`. Only the assembly
+    /// `RepresentationRelationshipWithTransformation` slots are populated (by
+    /// `emit_instance_bundle`, inline with each placement); standalone RR
+    /// variants leave their slot `0` since nothing references them. Consumed by
+    /// `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.style_context`.
+    pub(crate) representation_relationship_step_ids: Vec<u64>,
     /// STEP entity id of every emitted `REPRESENTATION_MAP`, indexed by
     /// `RepresentationMapId.0`. Populated by `emit_mapped_items` before the
     /// `MAPPED_ITEM` loop so each item resolves its `mapping_source` ref.
@@ -472,6 +479,7 @@ impl<'m> WriteBuffer<'m> {
             planar_extent_ids: HashMap::new(),
             unit_context_ids: Vec::new(),
             representation_step_ids: Vec::new(),
+            representation_relationship_step_ids: Vec::new(),
             representation_map_step_ids: Vec::new(),
             tessellated_item_step_ids: Vec::new(),
             tessellated_face_step_ids: Vec::new(),
@@ -588,6 +596,8 @@ impl<'m> WriteBuffer<'m> {
         // Arena iteration yields the original Id order, so dedup maps set
         // in one pass are reused in the next.
         self.representation_step_ids = vec![0u64; self.model.representations.len()];
+        self.representation_relationship_step_ids =
+            vec![0u64; self.model.representation_relationships.len()];
         for id in self.model.geometry.points.iter_ids() {
             self.emit_point(id)?;
         }

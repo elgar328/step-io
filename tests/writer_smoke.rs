@@ -940,6 +940,7 @@ fn simple_assembly_round_trips() {
             transform,
             occurrence_id: "1".into(),
             occurrence_name: "LeafInst".into(),
+            transform_rr: None,
         }],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
@@ -1025,12 +1026,14 @@ fn shared_child_assembly_round_trips() {
                 transform,
                 occurrence_id: "1".into(),
                 occurrence_name: "A".into(),
+                transform_rr: None,
             },
             Instance {
                 child: leaf_pid,
                 transform,
                 occurrence_id: "2".into(),
                 occurrence_name: "B".into(),
+                transform_rr: None,
             },
         ],
         shape_ref_frame: identity_frame,
@@ -7290,7 +7293,8 @@ fn mddr_round_trip() {
             RepresentationRelationship::MechanicalDesignAndDraughtingRelationship(m) => Some(m),
             RepresentationRelationship::Itself(_)
             | RepresentationRelationship::ConstructiveGeometryRepresentationRelationship(_)
-            | RepresentationRelationship::ShapeRepresentationRelationship(_) => None,
+            | RepresentationRelationship::ShapeRepresentationRelationship(_)
+            | RepresentationRelationship::RepresentationRelationshipWithTransformation(_) => None,
         })
         .expect("mddr round-trips");
     assert_eq!(mddr.name, "mddr");
@@ -7341,7 +7345,8 @@ fn representation_relationship_itself_round_trip() {
             RepresentationRelationship::Itself(d) => Some(d),
             RepresentationRelationship::MechanicalDesignAndDraughtingRelationship(_)
             | RepresentationRelationship::ConstructiveGeometryRepresentationRelationship(_)
-            | RepresentationRelationship::ShapeRepresentationRelationship(_) => None,
+            | RepresentationRelationship::ShapeRepresentationRelationship(_)
+            | RepresentationRelationship::RepresentationRelationshipWithTransformation(_) => None,
         })
         .expect("base REPRESENTATION_RELATIONSHIP round-trips as Itself");
     assert_eq!(rr.name, "rr");
@@ -7398,7 +7403,8 @@ fn cgr_relationship_round_trip() {
             }
             RepresentationRelationship::Itself(_)
             | RepresentationRelationship::MechanicalDesignAndDraughtingRelationship(_)
-            | RepresentationRelationship::ShapeRepresentationRelationship(_) => None,
+            | RepresentationRelationship::ShapeRepresentationRelationship(_)
+            | RepresentationRelationship::RepresentationRelationshipWithTransformation(_) => None,
         })
         .expect("cgrr round-trips");
     assert_eq!(cgrr.name, "supplemental geometry");

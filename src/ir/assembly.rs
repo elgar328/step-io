@@ -374,6 +374,12 @@ pub struct Instance {
     pub occurrence_id: String,
     /// STEP NAUO `name` attribute (e.g. "Cube", "Part003").
     pub occurrence_name: String,
+    /// Materialised `RepresentationRelationshipWithTransformation` arena entry
+    /// for this placement (reader path) — gives the placement a stable arena
+    /// identity that `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.style_context`
+    /// can reference. `None` for kernel/empty-IR builds, where the assembly
+    /// writer synthesises the RR complex from `transform` instead.
+    pub transform_rr: Option<crate::ir::id::RepresentationRelationshipId>,
 }
 
 /// A rigid 3D placement expressed as STEP does it: two axis placements
