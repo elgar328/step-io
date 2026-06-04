@@ -1876,6 +1876,103 @@ fn pd_based_shape_definition_representation_round_trips() {
 }
 
 #[test]
+fn product_with_additional_shape_representation_round_trips() {
+    use step_io::ir::property::{
+        CharacterizedDefinition, ProductDefinitionShape, PropertyDefinition,
+        PropertyDefinitionData, PropertyPool, ShapeDefinitionRepresentationLink,
+    };
+    use step_io::ir::shape_rep::{AdvancedBrepRepr, Representation, RepresentationContextRef};
+    // One product PDS referencing TWO shape representations: the product's own
+    // solid geometry (primary, folds into `Product.representation_id`) plus an
+    // additional ADVANCED_BREP_SHAPE_REPRESENTATION preserved as a
+    // `ShapeDefinitionRepresentationLink` (the multi-representation-per-product
+    // case, e.g. a part whose solids are split across distinct ABSRs). Both
+    // SDRs share the single product PDS and must survive the round-trip.
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let identity_frame = model.geometry.identity_placement();
+    // The additional representation: a second ABSR over its own solid.
+    let extra_solid = push_minimal_solid(&mut model);
+    let extra_rep = model
+        .representations
+        .push(Representation::AdvancedBrep(AdvancedBrepRepr {
+            name: "additional rep".into(),
+            context: Some(RepresentationContextRef::Unitful(UnitContextId(0))),
+            ref_frame: Some(identity_frame),
+            solids: vec![extra_solid],
+        }));
+    // The product with its own (primary) solid geometry.
+    let primary_solid = push_minimal_solid(&mut model);
+    let mut tree = AssemblyTree::default();
+    let pid = tree.products.push(Product {
+        id: "Bearing".into(),
+        name: "Bearing".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![primary_solid],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+    });
+    tree.roots = vec![pid];
+    model.assembly = Some(tree);
+    // The product PDS in the property_definitions arena, plus the additional
+    // SDR link pointing at it.
+    let mut pool = PropertyPool::default();
+    let pds_id = pool
+        .property_definitions
+        .push(PropertyDefinition::ProductDefinitionShape(
+            ProductDefinitionShape {
+                inherited: PropertyDefinitionData {
+                    name: String::new(),
+                    description: String::new(),
+                    definition: CharacterizedDefinition::ProductDefinition(pid),
+                },
+            },
+        ));
+    pool.shape_definition_representations
+        .push(ShapeDefinitionRepresentationLink {
+            definition: pds_id,
+            used_representation: extra_rep,
+        });
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    assert_eq!(
+        text.matches("SHAPE_DEFINITION_REPRESENTATION").count(),
+        2,
+        "primary + additional SDR both emitted against the one PDS"
+    );
+    let re = reconvert(&text);
+    let re_pool = re
+        .properties
+        .as_ref()
+        .expect("round-tripped has properties");
+    assert_eq!(
+        re_pool.shape_definition_representations.len(),
+        1,
+        "the additional SDR survives round-trip as a link"
+    );
+    let r_asm = re.assembly.as_ref().expect("round-tripped has assembly");
+    assert_eq!(r_asm.products.len(), 1);
+    assert!(
+        r_asm.products.iter().next().unwrap().geometry.is_some(),
+        "the product keeps its primary geometry"
+    );
+}
+
+#[test]
 fn multi_root_independent_products_round_trip() {
     // A STEP file may hold several independent top-level products with no
     // NAUO between them. `AssemblyTree.roots` lists all of them; the reader

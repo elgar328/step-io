@@ -63,6 +63,10 @@ pub(crate) struct PendingSdrGeometry {
     pub(crate) pid: ProductId,
     pub(crate) shape_rep_ref: u64,
     pub(crate) entity_id: u64,
+    /// STEP id of the `definition` `PRODUCT_DEFINITION_SHAPE` — used to resolve
+    /// the `property_definitions` arena slot when a second SDR for the same
+    /// product is preserved as a `ShapeDefinitionRepresentationLink`.
+    pub(crate) pdef_shape_ref: u64,
 }
 
 /// A NAUO assembly instance with its parent/child resolved but its transform

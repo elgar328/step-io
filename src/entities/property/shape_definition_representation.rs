@@ -73,6 +73,7 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
                 pid,
                 shape_rep_ref,
                 entity_id,
+                pdef_shape_ref,
             });
         Ok(())
     }
@@ -107,14 +108,50 @@ impl ReaderContext {
                 pid,
                 shape_rep_ref,
                 entity_id,
+                pdef_shape_ref,
             } = pending;
 
-            // Guard against a second SDR pinning the same product: keep the
-            // first classification and warn on the duplicate. A product that
-            // already has geometry assigned, or that has accumulated child
-            // instances, has been "claimed" — a second SDR is a no-op + warning.
+            // Guard against a second SDR pinning the same product. The first SDR
+            // classifies the product's geometry (via `representation_id`); any
+            // further SDR for the same product is an *additional* representation
+            // of that product's shape.
             let product = &ctx.assembly_products[pid];
-            if product.geometry.is_some() || !product.instances.is_empty() {
+            if product.geometry.is_some() {
+                // A geometry-bearing product with a second geometry SDR — one
+                // PDS referencing several shape representations (e.g. a part
+                // whose solids are split across distinct ABSRs). Preserve the
+                // extra link faithfully in the blueprint `shape_definition_
+                // representations` arena (the writer's `emit_sdr_links` re-emits
+                // it against the same single PDS step id). Resolve the PDS to its
+                // `property_definitions` slot and the SDR's literal
+                // `used_representation` to its arena entry.
+                if let (Some(&definition), Some(&used_representation)) = (
+                    ctx.property_def_step_to_id.get(&pdef_shape_ref),
+                    ctx.repr_id_map.get(&shape_rep_ref),
+                ) {
+                    ctx.properties
+                        .get_or_insert_with(crate::ir::property::PropertyPool::default)
+                        .shape_definition_representations
+                        .push(crate::ir::property::ShapeDefinitionRepresentationLink {
+                            definition,
+                            used_representation,
+                        });
+                } else {
+                    ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                        entity_id,
+                        detail: format!(
+                            "additional SHAPE_DEFINITION_REPRESENTATION for product (pid {}) \
+                             could not resolve its definition or representation — skipping",
+                            pid.0
+                        ),
+                    });
+                }
+                continue;
+            }
+            if !product.instances.is_empty() {
+                // Pure-assembly product (no own geometry) with an SDR — the
+                // instance-placement form, handled by the assembly chain's
+                // CDSR+RRWT model. Out of scope here: keep the warning.
                 ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                     entity_id,
                     detail: format!(
