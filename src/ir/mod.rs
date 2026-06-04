@@ -21,8 +21,9 @@ pub use assembly::{
     AssemblyTree, GeometryLeaf, Instance, MakeFromUsageOption, PlainProductDefinitionRelationship,
     Product, ProductCategoryChain, ProductCategoryRoot, ProductContext, ProductContextData,
     ProductDefinitionContext, ProductDefinitionContextAssociation, ProductDefinitionContextData,
-    ProductDefinitionContextRole, ProductDefinitionRelationship, SolidContent, SurfaceBodyContent,
-    Transform3d, WireframeContent, WireframeReprKind,
+    ProductDefinitionContextRole, ProductDefinitionFormation, ProductDefinitionFormationData,
+    ProductDefinitionFormationWithSpecifiedSource, ProductDefinitionRelationship, SolidContent,
+    SurfaceBodyContent, Transform3d, WireframeContent, WireframeReprKind,
 };
 pub use error::{AttributeKindTag, ConvertError};
 pub use geometry::{
@@ -51,11 +52,11 @@ pub use id::{
     PersonId, Placement1dId, Placement2dId, Placement3dId, PlanarExtentId, Point2dId, PointId,
     ProductCategoryId, ProductCategoryRelationshipId, ProductContextId,
     ProductDefinitionContextAssociationId, ProductDefinitionContextId,
-    ProductDefinitionContextRoleId, ProductDefinitionRelationshipId, ProductId, PropertyId,
-    RepresentationId, RepresentationMapId, RoleAssociationId, SecurityClassificationAssignmentId,
-    SecurityClassificationId, SecurityClassificationLevelId, ShapeAspectId,
-    ShapeAspectRelationshipId, ShellId, SolidId, SurfaceId, TessellatedFaceId, TessellatedItemId,
-    TessellatedSurfaceSetId, UnitContextId, VertexId, WireId,
+    ProductDefinitionContextRoleId, ProductDefinitionFormationId, ProductDefinitionRelationshipId,
+    ProductId, PropertyId, RepresentationId, RepresentationMapId, RoleAssociationId,
+    SecurityClassificationAssignmentId, SecurityClassificationId, SecurityClassificationLevelId,
+    ShapeAspectId, ShapeAspectRelationshipId, ShellId, SolidId, SurfaceId, TessellatedFaceId,
+    TessellatedItemId, TessellatedSurfaceSetId, UnitContextId, VertexId, WireId,
     {
         AnnotationCurveOccurrenceId, AnnotationOccurrenceId, AppliedPresentedItemId, AreaInSetId,
         CharacterizedObjectId, CompositeShapeAspectId, CompositeTextId, ContinuousShapeAspectId,

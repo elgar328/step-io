@@ -16,12 +16,20 @@ use crate::writer::buffer::WriteBuffer;
 use super::product_definition_formation::read_product_definition_formation_body;
 use step_io_macros::step_entity;
 
+/// Writer input: the carrier body strings + PRODUCT ref + the `make_or_buy`
+/// enum (`"NOT_KNOWN"` synthesised; faithful from the arena on the reader path).
+pub(crate) struct ProductDefinitionFormationWithSourceWriteInput {
+    pub(crate) id: String,
+    pub(crate) description: String,
+    pub(crate) prod_entity: u64,
+    pub(crate) make_or_buy: String,
+}
+
 pub(crate) struct ProductDefinitionFormationWithSourceHandler;
 
 #[step_entity(name = "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE")]
 impl SimpleEntityHandler for ProductDefinitionFormationWithSourceHandler {
-    /// PRODUCT entity ref the formation points at.
-    type WriteInput = u64;
+    type WriteInput = ProductDefinitionFormationWithSourceWriteInput;
 
     fn read(
         ctx: &mut ReaderContext,
@@ -32,14 +40,17 @@ impl SimpleEntityHandler for ProductDefinitionFormationWithSourceHandler {
         read_product_definition_formation_body(ctx, entity_id, attrs, true)
     }
 
-    fn write(buf: &mut WriteBuffer, prod_entity: u64) -> Result<u64, WriteError> {
+    fn write(
+        buf: &mut WriteBuffer,
+        input: ProductDefinitionFormationWithSourceWriteInput,
+    ) -> Result<u64, WriteError> {
         Ok(buf.push_simple(
             "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
             vec![
-                Attribute::String(String::new()),
-                Attribute::String(String::new()),
-                Attribute::EntityRef(prod_entity),
-                Attribute::Enum("NOT_KNOWN".into()),
+                Attribute::String(input.id),
+                Attribute::String(input.description),
+                Attribute::EntityRef(input.prod_entity),
+                Attribute::Enum(input.make_or_buy),
             ],
         ))
     }

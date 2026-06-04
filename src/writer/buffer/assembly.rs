@@ -167,12 +167,22 @@ impl WriteBuffer<'_> {
         Some(self.unit_context_ids[id.0 as usize])
     }
 
+    #[allow(clippy::too_many_lines)] // sequential per-product chain emit
     fn emit_assembly_chain(
         &mut self,
         products: &Arena<Product>,
         schema: &StepSchema,
     ) -> Result<(), WriteError> {
         let fallback_ctx = self.emit_application_context(schema);
+
+        // Size the formation step-id cache to the arena so `emit_formation`
+        // can record each faithful formation's step id by `FormationId`.
+        let formation_arena_len = self
+            .model
+            .assembly
+            .as_ref()
+            .map_or(0, |a| a.product_definition_formations.len());
+        self.product_definition_formation_step_ids = vec![0; formation_arena_len];
 
         // Emit PRODUCT chain + shape representation + SDR for every product;
         // collect each product's PDEF and SR entity ids for later instance
@@ -217,6 +227,15 @@ impl WriteBuffer<'_> {
             // sets it when constructing geometry) so it bypasses this branch
             // and gets the full chain as before.
             if product.pdef_context.is_none() && product.geometry_context.is_none() {
+                // Document-style product: no PDEF/SDR chain. But if the source
+                // gave it a formation (e.g. an ASME-standard reference linked
+                // via DOCUMENT_PRODUCT_EQUIVALENCE), emit that formation so it
+                // round-trips. `product_def_ids` stays the PRODUCT ref (the PD
+                // chain is still absent — keeps the pdef_context None→None
+                // idempotency); DPE reaches the formation via its own cache.
+                if product.formation.is_some() {
+                    let _ = self.emit_formation(prod_entity, product);
+                }
                 self.product_def_ids.insert(pid, prod_entity);
                 continue;
             }
@@ -917,22 +936,79 @@ impl WriteBuffer<'_> {
         .expect("PRODUCT write only pushes one simple entity")
     }
 
+    /// Emit this product's `PRODUCT_DEFINITION_FORMATION`. When the product
+    /// links an arena formation (reader path), emit it faithfully — preserving
+    /// the version `id` / `description` / `make_or_buy` — and cache its step id
+    /// in `product_definition_formation_step_ids`. Otherwise (kernel-built IR,
+    /// empty arena) synthesise a bare formation, picking the subtype by the
+    /// `formation_with_source` mirror flag, exactly as before.
     pub(crate) fn emit_formation(&mut self, prod_entity: u64, product: &Product) -> u64 {
-        // The `_WITH_SPECIFIED_SOURCE` subtype is selected by the loyalty
-        // flag alone — AP203 readers always set it to `true` (the schema
-        // mandates the subtype), AP214/242 set it only when the source
-        // file used the subtype (e.g. some CATIA exports). The subtype
-        // carries an extra `source` enum which the handler hardcodes to
-        // `.NOT_KNOWN.` (the only value seen in real fixtures).
         use crate::entities::SimpleEntityHandler;
-        use crate::entities::assembly_product::product_definition_formation::ProductDefinitionFormationHandler;
-        use crate::entities::assembly_product::product_definition_formation_with_source::ProductDefinitionFormationWithSourceHandler;
+        use crate::entities::assembly_product::product_definition_formation::{
+            ProductDefinitionFormationHandler, ProductDefinitionFormationWriteInput,
+        };
+        use crate::entities::assembly_product::product_definition_formation_with_source::{
+            ProductDefinitionFormationWithSourceHandler,
+            ProductDefinitionFormationWithSourceWriteInput,
+        };
+        use crate::ir::assembly::ProductDefinitionFormation;
+
+        if let Some(fid) = product.formation {
+            let formation = self
+                .model
+                .assembly
+                .as_ref()
+                .expect("product.formation set implies an assembly")
+                .product_definition_formations[fid]
+                .clone();
+            let step = match formation {
+                ProductDefinitionFormation::Itself(d) => ProductDefinitionFormationHandler::write(
+                    self,
+                    ProductDefinitionFormationWriteInput {
+                        id: d.id,
+                        description: d.description,
+                        prod_entity,
+                    },
+                ),
+                ProductDefinitionFormation::WithSpecifiedSource(s) => {
+                    ProductDefinitionFormationWithSourceHandler::write(
+                        self,
+                        ProductDefinitionFormationWithSourceWriteInput {
+                            id: s.inherited.id,
+                            description: s.inherited.description,
+                            prod_entity,
+                            make_or_buy: s.make_or_buy,
+                        },
+                    )
+                }
+            }
+            .expect("formation write only pushes one simple entity");
+            self.product_definition_formation_step_ids[fid.0 as usize] = step;
+            return step;
+        }
+
+        // Synthesis fallback — kernel-built IR with no arena formation.
         if product.formation_with_source {
-            ProductDefinitionFormationWithSourceHandler::write(self, prod_entity)
-                .expect("PDF_WITH_SOURCE write only pushes one simple entity")
+            ProductDefinitionFormationWithSourceHandler::write(
+                self,
+                ProductDefinitionFormationWithSourceWriteInput {
+                    id: String::new(),
+                    description: String::new(),
+                    prod_entity,
+                    make_or_buy: "NOT_KNOWN".into(),
+                },
+            )
+            .expect("PDF_WITH_SOURCE write only pushes one simple entity")
         } else {
-            ProductDefinitionFormationHandler::write(self, prod_entity)
-                .expect("PDF write only pushes one simple entity")
+            ProductDefinitionFormationHandler::write(
+                self,
+                ProductDefinitionFormationWriteInput {
+                    id: String::new(),
+                    description: String::new(),
+                    prod_entity,
+                },
+            )
+            .expect("PDF write only pushes one simple entity")
         }
     }
 

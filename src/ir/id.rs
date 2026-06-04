@@ -2,7 +2,7 @@ use super::arena::{Arena, define_id};
 use super::assembly::{
     Product, ProductCategory, ProductCategoryRelationship, ProductContext,
     ProductDefinitionContext, ProductDefinitionContextAssociation, ProductDefinitionContextRole,
-    ProductDefinitionRelationship,
+    ProductDefinitionFormation, ProductDefinitionRelationship,
 };
 use super::geometry::{
     Axis1Placement, Axis2Placement2d, Axis2Placement3d, Curve, Curve2d, Direction2, Direction3,
@@ -82,6 +82,7 @@ define_id!(SolidId, Solid);
 define_id!(ProductId, Product);
 define_id!(ProductCategoryId, ProductCategory);
 define_id!(ProductCategoryRelationshipId, ProductCategoryRelationship);
+define_id!(ProductDefinitionFormationId, ProductDefinitionFormation);
 define_id!(ProductContextId, ProductContext);
 define_id!(ProductDefinitionContextId, ProductDefinitionContext);
 define_id!(ProductDefinitionContextRoleId, ProductDefinitionContextRole);

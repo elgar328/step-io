@@ -417,6 +417,11 @@ pub(crate) struct WriteBuffer<'m> {
     /// `emit_product_categories_arena`, consumed by
     /// `emit_product_category_relationships_arena`.
     pub(crate) product_category_step_ids: Vec<u64>,
+    /// `ProductDefinitionFormationId → PRODUCT_DEFINITION_FORMATION step id`.
+    /// Filled by `emit_formation` (arena path); consumed by the DPE writer when
+    /// its `related_product` was a formation. Sized to the arena before the
+    /// per-product loop; `0` means "not emitted".
+    pub(crate) product_definition_formation_step_ids: Vec<u64>,
     /// `ProductId → PRODUCT_DEFINITION_SHAPE step id`. Same role as
     /// `product_def_ids` but for the PDS sibling — consumed by the PMI
     /// emitter to resolve `ShapeAspect.target` (SAs reference PDS, not PD).
@@ -563,6 +568,7 @@ impl<'m> WriteBuffer<'m> {
             dimensional_exponents_step_ids: Vec::new(),
             product_step_ids: std::collections::HashMap::new(),
             product_category_step_ids: Vec::new(),
+            product_definition_formation_step_ids: Vec::new(),
             product_def_shape_ids: std::collections::HashMap::new(),
             property_step_ids: Vec::new(),
             property_definition_step_ids: Vec::new(),

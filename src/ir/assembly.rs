@@ -10,7 +10,8 @@ use super::arena::Arena;
 use super::id::{
     ApplicationContextId, CurveId, DocumentId, MeasureWithUnitId, Placement3dId, PointId,
     ProductCategoryId, ProductContextId, ProductDefinitionContextId,
-    ProductDefinitionContextRoleId, ProductId, RepresentationId, ShellId, SolidId, UnitContextId,
+    ProductDefinitionContextRoleId, ProductDefinitionFormationId, ProductId, RepresentationId,
+    ShellId, SolidId, UnitContextId,
 };
 
 /// Assembly graph. Conventionally called a "tree" but shared instances
@@ -50,6 +51,11 @@ pub struct AssemblyTree {
     /// `PRODUCT_CATEGORY_RELATIONSHIP` arena — pairs a PC `Itself` entry
     /// with a PRPC entry (`sub_category`) per the AP203 / AP242 schema.
     pub product_category_relationships: Arena<ProductCategoryRelationship>,
+    /// `PRODUCT_DEFINITION_FORMATION` arena (`carrier` enum). Source of truth
+    /// for the version metadata the reader saw; empty for kernel-built IR (the
+    /// writer then synthesises one bare formation per product). Each
+    /// `Product.formation` indexes into this arena.
+    pub product_definition_formations: Arena<ProductDefinitionFormation>,
 }
 
 /// `PRODUCT_DEFINITION_RELATIONSHIP` arena entry. Carries the plain base
@@ -84,6 +90,49 @@ pub struct MakeFromUsageOption {
     pub ranking: i64,
     pub ranking_rationale: String,
     pub quantity: MeasureWithUnitId,
+}
+
+/// `product_definition_formation` carrier enum — the base supertype plus the
+/// `_WITH_SPECIFIED_SOURCE` subtype. The base body (`id`, `description`,
+/// `of_product`) lives in [`ProductDefinitionFormationData`]; the subtype
+/// embeds it and adds `make_or_buy`. Mirrors the `PropertyDefinition` /
+/// `RepresentationRelationship` carrier shape.
+///
+/// Populated from the STEP reader; empty for kernel-built IR, where the writer
+/// synthesises a formation per product (no version metadata to preserve).
+#[derive(Debug, Clone, PartialEq)]
+pub enum ProductDefinitionFormation {
+    Itself(ProductDefinitionFormationData),
+    WithSpecifiedSource(ProductDefinitionFormationWithSpecifiedSource),
+}
+
+impl ProductDefinitionFormation {
+    /// The shared carrier body, regardless of variant.
+    #[must_use]
+    pub fn data(&self) -> &ProductDefinitionFormationData {
+        match self {
+            Self::Itself(d) => d,
+            Self::WithSpecifiedSource(s) => &s.inherited,
+        }
+    }
+}
+
+/// `PRODUCT_DEFINITION_FORMATION(id, description, of_product)` carrier body.
+/// `id` is the version/revision label (`'1'`, `'LAST_VERSION'`, `'ASME …'`,
+/// often `''`); kept verbatim from the source.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductDefinitionFormationData {
+    pub id: String,
+    pub description: String,
+    pub of_product: ProductId,
+}
+
+/// `PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE` — SUBTYPE adding the
+/// `make_or_buy` enum (`.NOT_KNOWN.` in every observed fixture).
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductDefinitionFormationWithSpecifiedSource {
+    pub inherited: ProductDefinitionFormationData,
+    pub make_or_buy: String,
 }
 
 /// A single STEP `PRODUCT` with its resolved content.
@@ -134,9 +183,18 @@ pub struct Product {
     /// `true` when the source file used the `_WITH_SPECIFIED_SOURCE`
     /// subtype of `PRODUCT_DEFINITION_FORMATION`. AP203 always uses this
     /// form (mandatory by schema); AP214/242 use it occasionally — notably
-    /// CATIA AP214 IS exports. Writer emits the subtype iff this flag is
-    /// `true`. Default `false`.
+    /// CATIA AP214 IS exports. Default `false`.
+    ///
+    /// Deprecated mirror of the arena variant: when `formation` is `Some`, the
+    /// arena entry's variant is authoritative. Retained only for the
+    /// kernel/empty-arena synthesis fallback (which has no arena entry to read
+    /// the subtype from).
     pub formation_with_source: bool,
+    /// `PRODUCT_DEFINITION_FORMATION` arena index for this product's version
+    /// metadata. `Some` when the source defined a formation (reader path);
+    /// `None` for kernel-built IR (writer synthesises a bare formation). At
+    /// most one per product (corpus-verified: no product carries two).
+    pub formation: Option<ProductDefinitionFormationId>,
     /// Unit / uncertainty context referenced by this product's shape
     /// representation (`ABSR`, `MSSR`, plain `SHAPE_REPRESENTATION`, `GBWSR`,
     /// `GBSSR`). `Some(id)` indexes into [`crate::ir::model::StepModel::units`].

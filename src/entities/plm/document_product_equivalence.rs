@@ -34,8 +34,16 @@ impl SimpleEntityHandler for DocumentProductEquivalenceHandler {
         let Some(&relating_document) = ctx.plm_document_id_map.get(&doc_ref) else {
             return Ok(());
         };
-        let Some(pid) = resolve_date_time_item(ctx, product_ref) else {
-            return Ok(());
+        // `related_product` may reference a PRODUCT_DEFINITION_FORMATION
+        // directly (common for document-equivalence links). Preserve that so
+        // the formation ref round-trips; otherwise collapse to the product.
+        let related_product = if let Some(&fid) = ctx.formation_arena_map.get(&product_ref) {
+            DocumentProductItem::Formation(fid)
+        } else {
+            let Some(pid) = resolve_date_time_item(ctx, product_ref) else {
+                return Ok(());
+            };
+            DocumentProductItem::Product(pid)
         };
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
         let id = pool
@@ -44,7 +52,7 @@ impl SimpleEntityHandler for DocumentProductEquivalenceHandler {
                 name,
                 description,
                 relating_document,
-                related_product: DocumentProductItem::Product(pid),
+                related_product,
             });
         ctx.plm_document_product_equivalence_id_map
             .insert(entity_id, id);
@@ -55,6 +63,24 @@ impl SimpleEntityHandler for DocumentProductEquivalenceHandler {
         let doc_step = buf.plm_document_step_ids[d.relating_document.0 as usize];
         let product_step = match d.related_product {
             DocumentProductItem::Product(pid) => buf.product_def_ids[&pid],
+            DocumentProductItem::Formation(fid) => {
+                // The faithful formation step id, filled by the assembly chain
+                // (which runs before the plm cluster). A `0` slot means the
+                // formation wasn't emitted — fall back to its product ref.
+                let step = buf.product_definition_formation_step_ids[fid.0 as usize];
+                if step != 0 {
+                    step
+                } else {
+                    let of_product = buf
+                        .model
+                        .assembly
+                        .as_ref()
+                        .map(|a| a.product_definition_formations[fid].data().of_product);
+                    of_product
+                        .and_then(|pid| buf.product_def_ids.get(&pid).copied())
+                        .unwrap_or(0)
+                }
+            }
         };
         let desc_attr = match d.description {
             Some(s) => Attribute::String(s),

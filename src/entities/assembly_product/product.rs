@@ -79,6 +79,7 @@ impl SimpleEntityHandler for ProductHandler {
             representation_id: None,
             outer_representation_id: None,
             associated_documents: Vec::new(),
+            formation: None,
         };
         let pid = ctx.assembly_products.push(product);
         ctx.product_arena_map.insert(entity_id, pid);

@@ -928,6 +928,7 @@ fn simple_assembly_round_trips() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     let root_pid = tree.products.push(Product {
         id: "Root".into(),
@@ -950,6 +951,7 @@ fn simple_assembly_round_trips() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.roots = vec![root_pid];
     model.assembly = Some(tree);
@@ -1010,6 +1012,7 @@ fn shared_child_assembly_round_trips() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     let root_pid = tree.products.push(Product {
         id: "Root".into(),
@@ -1040,6 +1043,7 @@ fn shared_child_assembly_round_trips() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.roots = vec![root_pid];
     model.assembly = Some(tree);
@@ -1110,6 +1114,7 @@ fn multi_body_solid_round_trips() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.roots = vec![pid];
     model.assembly = Some(tree);
@@ -1169,6 +1174,7 @@ fn metadata_only_product_round_trips_with_none_geometry_context() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.products.push(Product {
         id: "MetadataDoc".into(),
@@ -1186,6 +1192,7 @@ fn metadata_only_product_round_trips_with_none_geometry_context() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     model.assembly = Some(tree);
 
@@ -1207,6 +1214,69 @@ fn metadata_only_product_round_trips_with_none_geometry_context() {
         "metadata product must keep geometry_context: None; got {:?}",
         meta.geometry_context
     );
+}
+
+#[test]
+fn formation_id_round_trips_faithfully() {
+    // A product whose arena formation carries a real version id/description
+    // must re-emit them verbatim (not the synthesised empty strings) and
+    // round-trip back to the same arena entry.
+    use step_io::ir::{ProductDefinitionFormation, ProductDefinitionFormationData};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let pid = tree.products.push(Product {
+        id: "P".into(),
+        name: "P".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+    });
+    let fid = tree
+        .product_definition_formations
+        .push(ProductDefinitionFormation::Itself(
+            ProductDefinitionFormationData {
+                id: "LAST_VERSION".into(),
+                description: "rev".into(),
+                of_product: pid,
+            },
+        ));
+    tree.products[pid].formation = Some(fid);
+    model.assembly = Some(tree);
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("PRODUCT_DEFINITION_FORMATION('LAST_VERSION','rev',"),
+        "faithful formation id/description emitted, got:\n{text}"
+    );
+    let re = reconvert(&text);
+    let f = re
+        .assembly
+        .as_ref()
+        .expect("assembly")
+        .product_definition_formations
+        .iter()
+        .next()
+        .expect("formation round-trips into the arena");
+    assert_eq!(f.data().id, "LAST_VERSION");
+    assert_eq!(f.data().description, "rev");
 }
 
 #[test]
@@ -1257,6 +1327,7 @@ fn empty_group_product_preserves_non_identity_shape_ref_frame() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.products.push(Product {
         id: "Placeholder".into(),
@@ -1274,6 +1345,7 @@ fn empty_group_product_preserves_non_identity_shape_ref_frame() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     model.assembly = Some(tree);
 
@@ -1354,6 +1426,7 @@ fn general_property_and_association_round_trip() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
@@ -1724,6 +1797,7 @@ fn multi_root_independent_products_round_trip() {
             representation_id: None,
             outer_representation_id: None,
             associated_documents: Vec::new(),
+            formation: None,
         });
         pids.push(pid);
     }
@@ -1803,6 +1877,7 @@ fn shape_aspect_subtypes_round_trip() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
@@ -1884,6 +1959,7 @@ fn shape_aspect_relationship_fixture() -> (
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
@@ -3073,6 +3149,7 @@ fn gt_relationship_round_trip() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
@@ -3160,6 +3237,7 @@ fn datum_round_trip() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
@@ -3215,6 +3293,7 @@ fn datum_feature_round_trip() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
@@ -3297,6 +3376,7 @@ fn dimensional_size_with_datum_feature_round_trip() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
@@ -3371,6 +3451,7 @@ fn geometric_tolerance_form_tolerances_round_trip() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
@@ -3480,6 +3561,7 @@ fn general_datum_reference_round_trip() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
@@ -3556,6 +3638,7 @@ fn tolerance_zone_round_trip() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
@@ -3649,6 +3732,7 @@ fn shape_dimension_repr_and_dim_char_repr_round_trip() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
@@ -5349,6 +5433,7 @@ fn projected_zone_definition_round_trip() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
@@ -5459,6 +5544,7 @@ fn datum_system_round_trip() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
@@ -5535,6 +5621,7 @@ fn datum_target_cluster_round_trip() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
@@ -5637,6 +5724,7 @@ fn geometric_tolerance_with_datum_reference_round_trip() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
@@ -5739,6 +5827,7 @@ fn complex_datum_ref_tolerance_round_trip() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
@@ -5842,6 +5931,7 @@ fn geometric_tolerance_with_modifiers_round_trip() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
@@ -5999,6 +6089,7 @@ fn gt_defined_unit_area_unit_displacement_round_trip() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
@@ -6169,6 +6260,7 @@ fn plus_minus_tolerance_round_trip() {
         representation_id: None,
         outer_representation_id: None,
         associated_documents: Vec::new(),
+        formation: None,
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);

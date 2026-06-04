@@ -270,6 +270,14 @@ pub struct ReaderContext {
     pub(crate) prpc_arena_map: HashMap<u64, crate::ir::ProductCategoryId>,
     pub(crate) product_arena_map: HashMap<u64, ProductId>,
     pub(crate) formation_to_product: HashMap<u64, u64>,
+    /// `PRODUCT_DEFINITION_FORMATION` arena (carrier enum), `mem::take`-n into
+    /// `AssemblyTree` at finalize. Source of truth for version metadata.
+    pub(crate) product_definition_formations:
+        crate::ir::Arena<crate::ir::assembly::ProductDefinitionFormation>,
+    /// formation step entity id → arena `ProductDefinitionFormationId`. Lets a
+    /// `DOCUMENT_PRODUCT_EQUIVALENCE` whose `related_product` is a formation
+    /// resolve it back to the arena entry.
+    pub(crate) formation_arena_map: HashMap<u64, crate::ir::ProductDefinitionFormationId>,
     pub(crate) pdef_to_product: HashMap<u64, u64>,
     pub(crate) absr_solid_map: HashMap<u64, Vec<SolidId>>,
     /// `ADVANCED_BREP_SHAPE_REPRESENTATION #N → Placement3dId` for the first
@@ -975,6 +983,7 @@ impl ReaderContext {
         let product_categories = std::mem::take(&mut self.product_categories);
         let product_category_relationships =
             std::mem::take(&mut self.product_category_relationships);
+        let product_definition_formations = std::mem::take(&mut self.product_definition_formations);
         self.assembly = Some(AssemblyTree {
             products,
             roots,
@@ -985,6 +994,7 @@ impl ReaderContext {
             product_definition_relationships,
             product_categories,
             product_category_relationships,
+            product_definition_formations,
         });
     }
 

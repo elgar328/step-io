@@ -230,10 +230,14 @@ pub struct DocumentProductEquivalence {
 }
 
 /// AP214 `product_or_formation_or_definition` SELECT — step-io scopes
-/// to the product chain (`Product` only). Other variants drop silently.
+/// to the product chain (`Product` / `Formation`). Other variants drop.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DocumentProductItem {
     Product(ProductId),
+    /// `related_product` pointed at a `PRODUCT_DEFINITION_FORMATION` directly
+    /// — preserved so the writer re-emits the same formation ref the source
+    /// used (rather than collapsing to the product).
+    Formation(crate::ir::ProductDefinitionFormationId),
 }
 
 /// `APPLIED_DOCUMENT_REFERENCE(assigned_document, source, items)`.
