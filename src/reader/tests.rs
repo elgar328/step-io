@@ -1233,4 +1233,26 @@ fn pdef_with_associated_documents_is_recognised_as_product_definition() {
         1,
         "documentation_ids must be recorded on the product"
     );
+    // Write-back re-emits the subtype (not a downgraded plain PRODUCT_DEFINITION)
+    // and a full round-trip preserves the documentation_ids.
+    let out = result.model.write_to_string().expect("write");
+    assert!(
+        out.contains("PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS"),
+        "writer must re-emit the subtype, got:\n{out}"
+    );
+    let re = convert_source(&out);
+    let re_product = re
+        .model
+        .assembly
+        .as_ref()
+        .expect("round-tripped assembly")
+        .products
+        .iter()
+        .next()
+        .expect("round-tripped product");
+    assert_eq!(
+        re_product.associated_documents.len(),
+        1,
+        "documentation_ids survive a full round-trip"
+    );
 }

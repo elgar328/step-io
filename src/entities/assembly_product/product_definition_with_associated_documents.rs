@@ -15,14 +15,23 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
-use super::product_definition::{ProductDefinitionWriteInput, read_product_definition_body};
+use super::product_definition::read_product_definition_body;
 use step_io_macros::step_entity;
+
+/// Writer input for the subtype: the same formation / context refs as a plain
+/// `PRODUCT_DEFINITION` plus the resolved `DOCUMENT` step ids for
+/// `documentation_ids`.
+pub(crate) struct ProductDefinitionWithAssociatedDocumentsWriteInput {
+    pub(crate) formation: u64,
+    pub(crate) pdef_ctx: u64,
+    pub(crate) documentation: Vec<u64>,
+}
 
 pub(crate) struct ProductDefinitionWithAssociatedDocumentsHandler;
 
 #[step_entity(name = "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS")]
 impl SimpleEntityHandler for ProductDefinitionWithAssociatedDocumentsHandler {
-    type WriteInput = ProductDefinitionWriteInput;
+    type WriteInput = ProductDefinitionWithAssociatedDocumentsWriteInput;
 
     fn read(
         ctx: &mut ReaderContext,
@@ -68,18 +77,27 @@ impl SimpleEntityHandler for ProductDefinitionWithAssociatedDocumentsHandler {
     }
 
     fn write(
-        _buf: &mut WriteBuffer,
-        _input: ProductDefinitionWriteInput,
+        buf: &mut WriteBuffer,
+        input: ProductDefinitionWithAssociatedDocumentsWriteInput,
     ) -> Result<u64, WriteError> {
-        // Writer downgrades to plain PRODUCT_DEFINITION: the IR carries no
-        // documentation_ids loyalty field today, so re-emitting the subtype
-        // would require synthesising fake document refs. Round-trip is
-        // semantically faithful at the PRODUCT_DEFINITION level — the
-        // entity-type rename is recorded in reference-check's added/missing
-        // type diff. Loyalty for the subtype is a separate plan.
-        unreachable!(
-            "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS is read-only; \
-             writer emits plain PRODUCT_DEFINITION via ProductDefinitionHandler"
-        )
+        // Mirror the plain PRODUCT_DEFINITION attrs (id / description are
+        // synthesised the same way) plus the documentation_ids SET.
+        let docs = Attribute::List(
+            input
+                .documentation
+                .into_iter()
+                .map(Attribute::EntityRef)
+                .collect(),
+        );
+        Ok(buf.push_simple(
+            "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
+            vec![
+                Attribute::String("design".into()),
+                Attribute::String(String::new()),
+                Attribute::EntityRef(input.formation),
+                Attribute::EntityRef(input.pdef_ctx),
+                docs,
+            ],
+        ))
     }
 }

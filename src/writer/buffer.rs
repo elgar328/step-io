@@ -680,6 +680,15 @@ impl<'m> WriteBuffer<'m> {
         self.emit_value_qualifier_pools();
         self.emit_representation_items();
         self.emit_representations_pre_pass()?;
+        // DOCUMENT prepass — must run before the product chain so a product's
+        // PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS can resolve its
+        // documentation_ids to DOCUMENT step ids in emit_pdef. The prepass is
+        // leaf (DOCUMENT_TYPE / DOCUMENT / DOCUMENT_FILE reference only the
+        // document_type it emits itself), so this earlier position is safe and
+        // still precedes emit_property_definitions_non_pds below.
+        if let Some(plm) = self.model.plm.clone() {
+            self.emit_documents_prepass(&plm)?;
+        }
         self.emit_product_chain_if_eligible()?;
         // PC cluster (phase pc-unify-a) — arena-driven emit. Coexists with
         // the legacy `emit_product_category_chain` inline path until phase
@@ -719,15 +728,12 @@ impl<'m> WriteBuffer<'m> {
         // ALL_AROUND_SHAPE_ASPECT) and the dimensional_location family
         // (`dimensional_location_step_ids`, the shape_aspect_relationship
         // SELECT branch).
-        // GENERAL_PROPERTY / DOCUMENT step ids first — a PD.definition may
-        // target a GeneralProperty or DOCUMENT_FILE, so those step-id caches
-        // must be filled before emit_property_definitions_non_pds resolves
-        // those branches.
+        // GENERAL_PROPERTY step ids first — a PD.definition may target a
+        // GeneralProperty, so that step-id cache must be filled before
+        // emit_property_definitions_non_pds resolves that branch. (DOCUMENT
+        // step ids are filled by the prepass moved above the product chain.)
         if let Some(pool) = self.model.properties.clone() {
             self.emit_general_properties(&pool);
-        }
-        if let Some(plm) = self.model.plm.clone() {
-            self.emit_documents_prepass(&plm)?;
         }
         // Reserve CIWR step ids so a PD.definition targeting one resolves the
         // forward ref at emit_property_definitions_non_pds (CO bodies emit

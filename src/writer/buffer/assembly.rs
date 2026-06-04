@@ -221,7 +221,15 @@ impl WriteBuffer<'_> {
                 continue;
             }
             let formation = self.emit_formation(prod_entity, product);
-            let pdef = self.emit_pdef(formation, per_product_ctx.pdef_ctx);
+            // Resolve documentation_ids (DocumentId -> DOCUMENT step id, filled
+            // by the document prepass that runs before the product chain) so
+            // the WITH_ASSOCIATED_DOCUMENTS subtype round-trips when present.
+            let doc_refs: Vec<u64> = product
+                .associated_documents
+                .iter()
+                .map(|d| self.plm_document_step_ids[d.0 as usize])
+                .collect();
+            let pdef = self.emit_pdef(formation, per_product_ctx.pdef_ctx, &doc_refs);
             self.product_def_ids.insert(pid, pdef);
         }
         // Now that every product's PDEF step id is cached in
@@ -1002,19 +1010,39 @@ impl WriteBuffer<'_> {
         }
     }
 
-    pub(crate) fn emit_pdef(&mut self, formation: u64, pdef_ctx: u64) -> u64 {
+    /// Emit the product definition for one product. With `doc_refs` empty this
+    /// is a plain `PRODUCT_DEFINITION`; otherwise the source used the
+    /// `_WITH_ASSOCIATED_DOCUMENTS` subtype and we re-emit it with the resolved
+    /// `DOCUMENT` step ids in `documentation_ids`.
+    pub(crate) fn emit_pdef(&mut self, formation: u64, pdef_ctx: u64, doc_refs: &[u64]) -> u64 {
         use crate::entities::SimpleEntityHandler;
-        use crate::entities::assembly_product::product_definition::{
-            ProductDefinitionHandler, ProductDefinitionWriteInput,
-        };
-        ProductDefinitionHandler::write(
-            self,
-            ProductDefinitionWriteInput {
-                formation,
-                pdef_ctx,
-            },
-        )
-        .expect("PRODUCT_DEFINITION write only pushes one simple entity")
+        if doc_refs.is_empty() {
+            use crate::entities::assembly_product::product_definition::{
+                ProductDefinitionHandler, ProductDefinitionWriteInput,
+            };
+            ProductDefinitionHandler::write(
+                self,
+                ProductDefinitionWriteInput {
+                    formation,
+                    pdef_ctx,
+                },
+            )
+            .expect("PRODUCT_DEFINITION write only pushes one simple entity")
+        } else {
+            use crate::entities::assembly_product::product_definition_with_associated_documents::{
+                ProductDefinitionWithAssociatedDocumentsHandler,
+                ProductDefinitionWithAssociatedDocumentsWriteInput,
+            };
+            ProductDefinitionWithAssociatedDocumentsHandler::write(
+                self,
+                ProductDefinitionWithAssociatedDocumentsWriteInput {
+                    formation,
+                    pdef_ctx,
+                    documentation: doc_refs.to_vec(),
+                },
+            )
+            .expect("PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS write pushes one simple entity")
+        }
     }
 
     pub(crate) fn emit_mssr(
