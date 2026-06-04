@@ -8,6 +8,7 @@
 //! out of scope (round-trip downgrades to plain `PRODUCT_DEFINITION`).
 
 use crate::entities::SimpleEntityHandler;
+use crate::ir::attr::{read_entity_ref, read_entity_ref_list};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -29,7 +30,41 @@ impl SimpleEntityHandler for ProductDefinitionWithAssociatedDocumentsHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        read_product_definition_body(ctx, entity_id, attrs)
+        // Shared base read also records pdef -> product. On success the
+        // formation ref is known to resolve to a product.
+        read_product_definition_body(ctx, entity_id, attrs)?;
+
+        // Capture documentation_ids (attr[4], a SET OF document) onto the
+        // product so the writer re-emits the WITH_ASSOCIATED_DOCUMENTS subtype
+        // rather than downgrading to a plain PRODUCT_DEFINITION.
+        if attrs.len() < 5 {
+            return Ok(()); // defensive: malformed subtype without the extra attr
+        }
+        let doc_refs = read_entity_ref_list(attrs, 4, entity_id, "documentation_ids")?;
+        let mut docs = Vec::with_capacity(doc_refs.len());
+        for r in doc_refs {
+            if let Some(&id) = ctx.plm_document_id_map.get(&r) {
+                docs.push(id);
+            } else {
+                // Unsupported document subtype — surface and skip that ref;
+                // the remaining resolved docs still ride the subtype.
+                ctx.warnings.push(ConvertError::MissingReference {
+                    from: entity_id,
+                    to: r,
+                    field_name: "documentation_ids",
+                });
+            }
+        }
+        if docs.is_empty() {
+            return Ok(()); // nothing resolved -> writer keeps plain PD
+        }
+        let formation_ref = read_entity_ref(attrs, 2, entity_id, "formation")?;
+        if let Some(&product_ref) = ctx.formation_to_product.get(&formation_ref)
+            && let Some(&pid) = ctx.product_arena_map.get(&product_ref)
+        {
+            ctx.assembly_products[pid].associated_documents = docs;
+        }
+        Ok(())
     }
 
     fn write(

@@ -8,9 +8,9 @@
 
 use super::arena::Arena;
 use super::id::{
-    ApplicationContextId, CurveId, MeasureWithUnitId, Placement3dId, PointId, ProductCategoryId,
-    ProductContextId, ProductDefinitionContextId, ProductDefinitionContextRoleId, ProductId,
-    RepresentationId, ShellId, SolidId, UnitContextId,
+    ApplicationContextId, CurveId, DocumentId, MeasureWithUnitId, Placement3dId, PointId,
+    ProductCategoryId, ProductContextId, ProductDefinitionContextId,
+    ProductDefinitionContextRoleId, ProductId, RepresentationId, ShellId, SolidId, UnitContextId,
 };
 
 /// Assembly graph. Conventionally called a "tree" but shared instances
@@ -162,6 +162,11 @@ pub struct Product {
     /// pattern, the arena index of the outer plain `SHAPE_REPRESENTATION`
     /// wrapper. `None` for the direct form. Pairs with `outer_sr_frame`.
     pub outer_representation_id: Option<RepresentationId>,
+    /// `DOCUMENT` refs from the source `PRODUCT_DEFINITION_WITH_ASSOCIATED_
+    /// DOCUMENTS.documentation_ids`. Non-empty makes the writer re-emit that
+    /// PD subtype instead of plain `PRODUCT_DEFINITION`. Empty for plain PD and
+    /// for kernel-built IR (the common case).
+    pub associated_documents: Vec<DocumentId>,
 }
 
 /// `PRODUCT_CATEGORY` chain attached to a [`Product`] — preserves the source

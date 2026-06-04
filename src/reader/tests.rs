@@ -1191,7 +1191,8 @@ fn pdef_with_associated_documents_is_recognised_as_product_definition() {
          #3 = PRODUCT_DEFINITION_CONTEXT('part definition',#1,'design');\n\
          #4 = PRODUCT('P','P','',(#2));\n\
          #5 = PRODUCT_DEFINITION_FORMATION('1','',#4);\n\
-         #6 = DOCUMENT('','','','');\n\
+         #16 = DOCUMENT_TYPE('');\n\
+         #6 = DOCUMENT('','','',#16);\n\
          #7 = PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS('design','',#5,#3,(#6));\n\
          #8 = PRODUCT_DEFINITION_SHAPE('','',#7);\n\
          #10 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
@@ -1224,5 +1225,12 @@ fn pdef_with_associated_documents_is_recognised_as_product_definition() {
     assert!(
         product.geometry_context.is_some(),
         "PDWAD product must get geometry_context bound via the SDR chain"
+    );
+    // The subtype's documentation_ids must be captured onto the product so the
+    // writer can re-emit the subtype rather than downgrading to plain PD.
+    assert_eq!(
+        product.associated_documents.len(),
+        1,
+        "documentation_ids must be recorded on the product"
     );
 }
