@@ -482,6 +482,23 @@ impl WriteBuffer<'_> {
             .collect();
         for rr in rrs {
             match rr {
+                RepresentationRelationship::Itself(data) => {
+                    use crate::entities::shape_rep::representation_relationship::RepresentationRelationshipHandler;
+                    let r1 = self
+                        .representation_step_ids
+                        .get(data.rep_1.0 as usize)
+                        .copied()
+                        .unwrap_or(0);
+                    let r2 = self
+                        .representation_step_ids
+                        .get(data.rep_2.0 as usize)
+                        .copied()
+                        .unwrap_or(0);
+                    if r1 == 0 || r2 == 0 {
+                        continue;
+                    }
+                    RepresentationRelationshipHandler::write(self, data)?;
+                }
                 RepresentationRelationship::ConstructiveGeometryRepresentationRelationship(
                     cgrr,
                 ) => {

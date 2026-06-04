@@ -35,6 +35,7 @@ pub mod parametric_representation_context;
 pub mod placed_datum_target_feature;
 pub mod qualified_representation_item;
 pub mod representation_context;
+pub mod representation_relationship;
 pub mod shape_aspect;
 pub mod shape_aspect_relationship;
 pub mod shape_aspect_subtypes;

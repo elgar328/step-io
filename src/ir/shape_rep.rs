@@ -208,6 +208,10 @@ pub enum SrwpItem {
 /// SRR (phase srr-unify).
 #[derive(Debug, Clone, PartialEq)]
 pub enum RepresentationRelationship {
+    /// Base `REPRESENTATION_RELATIONSHIP(name, description, rep_1, rep_2)` with
+    /// no subtype narrowing — `concrete_supertype` carrier variant. NIST AP203
+    /// PMI files use it standalone to relate two `DRAUGHTING_MODEL`s.
+    Itself(RepresentationRelationshipData),
     ConstructiveGeometryRepresentationRelationship(ConstructiveGeometryRepresentationRelationship),
     /// `MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP` (phase mddr) —
     /// pairs `DM` / `MDGPR` / `SR` representations. `rep_1` / `rep_2` narrowed
@@ -218,6 +222,18 @@ pub enum RepresentationRelationship {
     /// `SHAPE_REPRESENTATION` subtype. Reader pushes every SRR seen in the
     /// source (including 1-to-many fan-out + multi-hop chains).
     ShapeRepresentationRelationship(ShapeRepresentationRelationshipIr),
+}
+
+/// `representation_relationship` carrier body (`name`, `description`,
+/// `rep_1`, `rep_2`) — the `Itself` variant's payload. EXPRESS leaves
+/// `rep_1`/`rep_2` as plain `representation`; subtypes narrow them via WHERE
+/// rules, which step-io does not enforce (both stored as `RepresentationId`).
+#[derive(Debug, Clone, PartialEq)]
+pub struct RepresentationRelationshipData {
+    pub name: String,
+    pub description: String,
+    pub rep_1: RepresentationId,
+    pub rep_2: RepresentationId,
 }
 
 /// `CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP(name, description,

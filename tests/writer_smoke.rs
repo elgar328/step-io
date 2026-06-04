@@ -7196,12 +7196,64 @@ fn mddr_round_trip() {
         .iter()
         .find_map(|r| match r {
             RepresentationRelationship::MechanicalDesignAndDraughtingRelationship(m) => Some(m),
-            RepresentationRelationship::ConstructiveGeometryRepresentationRelationship(_)
+            RepresentationRelationship::Itself(_)
+            | RepresentationRelationship::ConstructiveGeometryRepresentationRelationship(_)
             | RepresentationRelationship::ShapeRepresentationRelationship(_) => None,
         })
         .expect("mddr round-trips");
     assert_eq!(mddr.name, "mddr");
     assert_eq!(mddr.description, "test");
+}
+
+#[test]
+fn representation_relationship_itself_round_trip() {
+    // Base REPRESENTATION_RELATIONSHIP (the `Itself` carrier variant) relating
+    // two representations — used standalone by NIST AP203 PMI files.
+    use step_io::ir::shape_rep::{
+        PlainRepr, Representation, RepresentationRelationship, RepresentationRelationshipData,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+    let r1 = model.representations.push(Representation::Plain(PlainRepr {
+        name: "r1".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+        frame: None,
+    }));
+    let r2 = model.representations.push(Representation::Plain(PlainRepr {
+        name: "r2".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+        frame: None,
+    }));
+    model
+        .representation_relationships
+        .push(RepresentationRelationship::Itself(
+            RepresentationRelationshipData {
+                name: "rr".into(),
+                description: "test".into(),
+                rep_1: r1,
+                rep_2: r2,
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("= REPRESENTATION_RELATIONSHIP("),
+        "base subtype is emitted (not a SHAPE_/SUBTYPE form), got:\n{text}"
+    );
+    let re = reconvert(&text);
+    let rr = re
+        .representation_relationships
+        .iter()
+        .find_map(|r| match r {
+            RepresentationRelationship::Itself(d) => Some(d),
+            RepresentationRelationship::MechanicalDesignAndDraughtingRelationship(_)
+            | RepresentationRelationship::ConstructiveGeometryRepresentationRelationship(_)
+            | RepresentationRelationship::ShapeRepresentationRelationship(_) => None,
+        })
+        .expect("base REPRESENTATION_RELATIONSHIP round-trips as Itself");
+    assert_eq!(rr.name, "rr");
+    assert_eq!(rr.description, "test");
 }
 
 #[test]
@@ -7252,7 +7304,8 @@ fn cgr_relationship_round_trip() {
             RepresentationRelationship::ConstructiveGeometryRepresentationRelationship(c) => {
                 Some(c)
             }
-            RepresentationRelationship::MechanicalDesignAndDraughtingRelationship(_)
+            RepresentationRelationship::Itself(_)
+            | RepresentationRelationship::MechanicalDesignAndDraughtingRelationship(_)
             | RepresentationRelationship::ShapeRepresentationRelationship(_) => None,
         })
         .expect("cgrr round-trips");
