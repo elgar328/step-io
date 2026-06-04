@@ -1100,6 +1100,56 @@ fn unit_no_global_context_is_silent() {
 }
 
 #[test]
+fn file_name_unset_string_fields_normalized_to_empty() {
+    // Part 21 (ISO 10303-21) defines FILE_NAME scalar fields as required
+    // STRING; `$` is non-standard (`''` denotes unspecified). Some exporters
+    // (e.g. the SO14 sensor / centrifugal-fan grabcad fixtures) emit `$` for
+    // originating_system / authorization. The reader normalizes `$` to `''`
+    // and keeps the header rather than discarding it.
+    let source = "ISO-10303-21;\n\
+         HEADER;\n\
+         FILE_DESCRIPTION((''), '2;1');\n\
+         FILE_NAME('n', 't', (''), (''), 'pp', $, $);\n\
+         FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\n\
+         ENDSEC;\n\
+         DATA;\n\
+         #1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         ENDSEC;\n\
+         END-ISO-10303-21;\n";
+    let result = convert_source(source);
+    let header = result
+        .model
+        .header
+        .as_ref()
+        .expect("header kept, not discarded");
+    assert_eq!(header.originating_system, "");
+    assert_eq!(header.authorization, "");
+    // Both `$` fields surface as normalizations, and no defect warning.
+    let norm = result
+        .warnings
+        .iter()
+        .filter(|w| {
+            matches!(w, ConvertError::NonStandardInput { field, .. }
+                if field.contains("FILE_NAME") && field.contains("Unset"))
+        })
+        .count();
+    assert_eq!(norm, 2, "{:#?}", result.warnings);
+    assert!(
+        !result.warnings.iter().any(|w| matches!(
+            w,
+            ConvertError::AttributeType { .. } | ConvertError::UnexpectedEntityForm { .. }
+        )),
+        "{:#?}",
+        result.warnings
+    );
+
+    // Re-read of the written output keeps the header with no new normalization.
+    let text = result.model.write_to_string().expect("write");
+    let re = convert_source(&text);
+    assert!(re.model.header.is_some(), "header survives round-trip");
+}
+
+#[test]
 fn curve_style_unset_curve_font_round_trips_as_none() {
     // CURVE_STYLE.curve_font is OPTIONAL in AP242 (required in AP203/AP214);
     // Rhino 8 omits it as `$`. The reader preserves the omission as `None`
