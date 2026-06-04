@@ -19,12 +19,13 @@ use super::plm::{
     SecurityClassification, SecurityClassificationAssignment, SecurityClassificationLevel,
 };
 use super::pmi::{
-    AnnotationCurveOccurrence, AnnotationOccurrence, Datum, DatumFeature, DimensionalLocation,
-    DimensionalSize, DraughtingCallout, DraughtingCalloutRelationship,
-    DraughtingModelItemAssociation, DraughtingPreDefinedTextFont, GeneralDatumReference,
-    GeometricTolerance, GeometricToleranceRelationship, GeometricToleranceWithDatumReference,
-    LimitsAndFits, MeasureQualification, PlusMinusTolerance, ProjectedZoneDefinition,
-    ToleranceValue, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
+    AnnotationCurveOccurrence, AnnotationOccurrence, AnnotationOccurrenceAssociativity, Datum,
+    DatumFeature, DimensionalLocation, DimensionalSize, DraughtingCallout,
+    DraughtingCalloutRelationship, DraughtingModelItemAssociation, DraughtingPreDefinedTextFont,
+    GeneralDatumReference, GeometricTolerance, GeometricToleranceRelationship,
+    GeometricToleranceWithDatumReference, LimitsAndFits, MeasureQualification, PlusMinusTolerance,
+    ProjectedZoneDefinition, ToleranceValue, ToleranceZoneForm, TypeQualifier,
+    ValueFormatTypeQualifier,
 };
 use super::property::{
     DescriptionAttribute, DimensionalCharacteristicRepresentation, GeneralProperty,
@@ -158,6 +159,12 @@ define_id!(DraughtingCalloutId, DraughtingCallout);
 define_id!(
     DraughtingCalloutRelationshipId,
     DraughtingCalloutRelationship
+);
+
+// annotation_occurrence_associativity arena (Phase aoa).
+define_id!(
+    AnnotationOccurrenceAssociativityId,
+    AnnotationOccurrenceAssociativity
 );
 
 // geometric_tolerance_relationship arena (Phase gt-relationship).

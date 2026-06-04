@@ -893,6 +893,10 @@ impl<'m> WriteBuffer<'m> {
         self.emit_draughting_callouts();
         // DRAUGHTING_CALLOUT_RELATIONSHIP — after draughting_callouts.
         self.emit_draughting_callout_relationships();
+        // ANNOTATION_OCCURRENCE_ASSOCIATIVITY — after annotation occurrence
+        // emits (`ao_step_ids` / `acoc_step_ids` populated) so relating /
+        // related refs resolve.
+        self.emit_annotation_occurrence_associativities();
         // DRAUGHTING_MODEL — delayed emit (Mdgpr pattern). At this point
         // every items ref cache (styled_item, ao, draughting_callout,
         // representation_item, per-geometry placements) is populated, so

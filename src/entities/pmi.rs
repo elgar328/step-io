@@ -15,7 +15,8 @@ use crate::ir::attr::{
 use crate::ir::error::ConvertError;
 use crate::ir::pmi::{
     AngleSelection, AngularLocationData, AnnotationCurveOccurrence, AnnotationOccurrence,
-    AnnotationPlane, AnnotationSymbolOccurrence, AnnotationTextOccurrence, Datum, DatumFeature,
+    AnnotationOccurrenceAssociativity, AnnotationOccurrenceRef, AnnotationPlane,
+    AnnotationSymbolOccurrence, AnnotationTextOccurrence, Datum, DatumFeature,
     DimensionalCharacteristic, DimensionalLocation, DimensionalLocationData, DimensionalSize,
     DimensionalSizeKind, DraughtingAnnotationOccurrence, DraughtingCallout, DraughtingCalloutData,
     DraughtingCalloutElement, DraughtingCalloutRelationship, DraughtingModelIdentifiedItem,
@@ -1065,6 +1066,105 @@ impl SimpleEntityHandler for DraughtingCalloutRelationshipHandler {
                 Attribute::EntityRef(related),
             ],
         ))
+    }
+}
+
+/// Resolve an `annotation_occurrence` reference to step-io's two annotation
+/// occurrence arenas: the [`AnnotationOccurrence`] enum
+/// (`annotation_occurrence_id_map`) or the separate
+/// `annotation_curve_occurrence` arena (`annotation_curve_occurrence_id_map`).
+/// Returns `None` for an unmodelled member (e.g.
+/// `annotation_fill_area_occurrence`).
+fn resolve_annotation_occurrence_ref(
+    ctx: &ReaderContext,
+    entity_ref: u64,
+) -> Option<AnnotationOccurrenceRef> {
+    if let Some(&id) = ctx.annotation_occurrence_id_map.get(&entity_ref) {
+        Some(AnnotationOccurrenceRef::AnnotationOccurrence(id))
+    } else {
+        ctx.annotation_curve_occurrence_id_map
+            .get(&entity_ref)
+            .map(|&id| AnnotationOccurrenceRef::AnnotationCurveOccurrence(id))
+    }
+}
+
+pub(crate) struct AnnotationOccurrenceAssociativityHandler;
+
+/// `ANNOTATION_OCCURRENCE_ASSOCIATIVITY(name, description, relating, related)`
+/// — pairs two `annotation_occurrence` instances. Either ref that resolves to
+/// none of the modelled annotation occurrence arenas drops the associativity.
+#[step_entity(name = "ANNOTATION_OCCURRENCE_ASSOCIATIVITY")]
+impl SimpleEntityHandler for AnnotationOccurrenceAssociativityHandler {
+    type WriteInput = AnnotationOccurrenceAssociativity;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 4, entity_id, "ANNOTATION_OCCURRENCE_ASSOCIATIVITY")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
+        let relating_ref = read_entity_ref(attrs, 2, entity_id, "relating_annotation_occurrence")?;
+        let related_ref = read_entity_ref(attrs, 3, entity_id, "related_annotation_occurrence")?;
+        let Some(relating) = resolve_annotation_occurrence_ref(ctx, relating_ref) else {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "ANNOTATION_OCCURRENCE_ASSOCIATIVITY relating #{relating_ref} \
+                     resolves to no modelled annotation occurrence — skipping"
+                ),
+            });
+            return Ok(());
+        };
+        let Some(related) = resolve_annotation_occurrence_ref(ctx, related_ref) else {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "ANNOTATION_OCCURRENCE_ASSOCIATIVITY related #{related_ref} \
+                     resolves to no modelled annotation occurrence — skipping"
+                ),
+            });
+            return Ok(());
+        };
+        ctx.pmi
+            .get_or_insert_with(PmiPool::default)
+            .annotation_occurrence_associativities
+            .push(AnnotationOccurrenceAssociativity {
+                name,
+                description,
+                relating,
+                related,
+            });
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        aoa: AnnotationOccurrenceAssociativity,
+    ) -> Result<u64, WriteError> {
+        let relating = emit_annotation_occurrence_ref(buf, aoa.relating);
+        let related = emit_annotation_occurrence_ref(buf, aoa.related);
+        Ok(buf.push_simple(
+            "ANNOTATION_OCCURRENCE_ASSOCIATIVITY",
+            vec![
+                Attribute::String(aoa.name),
+                Attribute::String(aoa.description),
+                Attribute::EntityRef(relating),
+                Attribute::EntityRef(related),
+            ],
+        ))
+    }
+}
+
+/// Emit an [`AnnotationOccurrenceRef`] as the step id of the matching
+/// occurrence, via the writer's two annotation occurrence step-id caches
+/// (`ao_step_ids` / `acoc_step_ids`).
+fn emit_annotation_occurrence_ref(buf: &WriteBuffer, r: AnnotationOccurrenceRef) -> u64 {
+    match r {
+        AnnotationOccurrenceRef::AnnotationOccurrence(id) => buf.ao_step_ids[id.0 as usize],
+        AnnotationOccurrenceRef::AnnotationCurveOccurrence(id) => buf.acoc_step_ids[id.0 as usize],
     }
 }
 

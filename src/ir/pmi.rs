@@ -40,6 +40,9 @@ pub struct PmiPool {
     pub draughting_callouts: Arena<DraughtingCallout>,
     /// `draughting_callout_relationship` arena (phase draughting-callout).
     pub draughting_callout_relationships: Arena<DraughtingCalloutRelationship>,
+    /// `annotation_occurrence_associativity` arena (phase aoa). Pairs two
+    /// annotation occurrences.
+    pub annotation_occurrence_associativities: Arena<AnnotationOccurrenceAssociativity>,
     /// `geometric_tolerance_relationship` arena (phase gt-relationship).
     pub geometric_tolerance_relationships: Arena<GeometricToleranceRelationship>,
     /// `tolerance_zone_definition` arena — currently holds
@@ -768,6 +771,30 @@ pub struct DraughtingCalloutRelationship {
     pub description: String,
     pub relating: DraughtingCalloutId,
     pub related: DraughtingCalloutId,
+}
+
+/// `annotation_occurrence` reference, narrowed to step-io's two annotation
+/// occurrence arenas. The plain occurrence / its subtypes live in the
+/// [`AnnotationOccurrence`] enum (`annotation_occurrence_id_map`);
+/// `annotation_curve_occurrence` is a separate arena
+/// (`annotation_curve_occurrence_id_map`). An unmodelled member
+/// (`annotation_fill_area_occurrence`) is not represented.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum AnnotationOccurrenceRef {
+    AnnotationOccurrence(AnnotationOccurrenceId),
+    AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
+}
+
+/// `ANNOTATION_OCCURRENCE_ASSOCIATIVITY(name, description, relating, related)`
+/// — pairs two `annotation_occurrence` instances. Each ref resolves through
+/// [`AnnotationOccurrenceRef`]; if either does not resolve, the associativity
+/// is dropped (symmetric on re-read).
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnnotationOccurrenceAssociativity {
+    pub name: String,
+    pub description: String,
+    pub relating: AnnotationOccurrenceRef,
+    pub related: AnnotationOccurrenceRef,
 }
 
 /// `TOLERANCE_ZONE_FORM(name)` — names a tolerance zone's geometric form

@@ -2888,6 +2888,103 @@ fn tessellated_annotation_occurrence_round_trip() {
 }
 
 #[test]
+fn annotation_occurrence_associativity_round_trips() {
+    // ANNOTATION_OCCURRENCE_ASSOCIATIVITY pairs two annotation occurrences,
+    // each living in a different step-io arena: relating in the
+    // AnnotationOccurrence enum (AnnotationPlane), related in the separate
+    // annotation_curve_occurrence arena (Plain). The AOA must survive the
+    // round-trip with both ref variants intact.
+    use step_io::ir::pmi::{
+        AnnotationCurveOccurrence, AnnotationOccurrence, AnnotationOccurrenceAssociativity,
+        AnnotationOccurrenceRef, AnnotationPlane, PlainAnnotationCurveOccurrence, PmiPool,
+    };
+    use step_io::ir::representation_item::RepresentationItemRef;
+    let mut model = empty_model();
+    // relating: an ANNOTATION_PLANE over a PLANE surface.
+    let loc = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let axis = model.geometry.directions.push(Direction3 {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+    });
+    let refd = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let position = push_placement(&mut model, loc, Some(axis), Some(refd));
+    let surf = model
+        .geometry
+        .surfaces
+        .push(Surface::Plane(Plane3 { position }));
+    // related: a plain ANNOTATION_CURVE_OCCURRENCE over a LINE curve.
+    let cp = model.geometry.points.push(Point3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let cd = model.geometry.directions.push(Direction3 {
+        x: 0.0,
+        y: 1.0,
+        z: 0.0,
+    });
+    let curve = model.geometry.curves.push(Curve::Line(Line3 {
+        point: cp,
+        direction: cd,
+        magnitude: 1.0,
+    }));
+    let mut pmi = PmiPool::default();
+    let occ = pmi
+        .annotation_occurrences
+        .push(AnnotationOccurrence::AnnotationPlane(AnnotationPlane {
+            name: "occ".into(),
+            styles: vec![],
+            item: RepresentationItemRef::Surface(surf),
+        }));
+    let curve_occ = pmi
+        .annotation_curve_occurrences
+        .push(AnnotationCurveOccurrence::Plain(
+            PlainAnnotationCurveOccurrence {
+                name: "curve occ".into(),
+                styles: vec![],
+                item: RepresentationItemRef::Curve(curve),
+            },
+        ));
+    pmi.annotation_occurrence_associativities
+        .push(AnnotationOccurrenceAssociativity {
+            name: "assoc".into(),
+            description: "desc".into(),
+            relating: AnnotationOccurrenceRef::AnnotationOccurrence(occ),
+            related: AnnotationOccurrenceRef::AnnotationCurveOccurrence(curve_occ),
+        });
+    model.pmi = Some(pmi);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    assert_eq!(re_pmi.annotation_occurrence_associativities.len(), 1);
+    let aoa = re_pmi
+        .annotation_occurrence_associativities
+        .iter()
+        .next()
+        .unwrap();
+    assert_eq!(aoa.name, "assoc");
+    assert_eq!(aoa.description, "desc");
+    assert!(matches!(
+        aoa.relating,
+        AnnotationOccurrenceRef::AnnotationOccurrence(_)
+    ));
+    assert!(matches!(
+        aoa.related,
+        AnnotationOccurrenceRef::AnnotationCurveOccurrence(_)
+    ));
+}
+
+#[test]
 fn annotation_occurrence_subtypes_round_trip() {
     // ANNOTATION_SYMBOL_OCCURRENCE / ANNOTATION_TEXT_OCCURRENCE /
     // DRAUGHTING_ANNOTATION_OCCURRENCE — same shape as ANNOTATION_PLANE

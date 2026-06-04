@@ -394,6 +394,20 @@ impl WriteBuffer<'_> {
         }
     }
 
+    /// Emit the `annotation_occurrence_associativity` arena. Both annotation
+    /// occurrence step-id caches (`ao_step_ids` / `acoc_step_ids`) must be
+    /// filled by the preceding occurrence emits so relating / related resolve.
+    pub(in crate::writer::buffer) fn emit_annotation_occurrence_associativities(&mut self) {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::pmi::AnnotationOccurrenceAssociativityHandler;
+        let Some(pmi) = self.model.pmi.clone() else {
+            return;
+        };
+        for aoa in pmi.annotation_occurrence_associativities.iter() {
+            let _ = AnnotationOccurrenceAssociativityHandler::write(self, aoa.clone());
+        }
+    }
+
     /// Emit the `annotation_curve_occurrence` arena (plain ACO +
     /// `LEADER_CURVE`). Fills `acoc_step_ids` so `TERMINATOR_SYMBOL` /
     /// `LEADER_TERMINATOR` in `emit_annotation_occurrences` and
