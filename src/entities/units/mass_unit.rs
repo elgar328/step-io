@@ -42,10 +42,10 @@ impl ComplexEntityHandler for MassUnitHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         if has_part(parts, "CONVERSION_BASED_UNIT") {
-            read_conversion_based_unit_body(ctx, entity_id, parts, CbuFlavor::Mass)?;
+            read_conversion_based_unit_body(ctx, entity_id, parts, CbuFlavor::Mass, graph)?;
             let dim_exp = super::shared::read_named_unit_dim_exp(ctx, parts);
             register_named_mass(ctx, entity_id, None, dim_exp);
             return Ok(());

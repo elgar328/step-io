@@ -37,13 +37,13 @@ impl ComplexEntityHandler for LengthUnitHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         // CONVERSION_BASED_UNIT (inch, foot, degree, or CBU-wrapped metric)
         // takes precedence over SI_UNIT: some AP242 files wrap SI units in a
         // CONVERSION_BASED_UNIT, and the CBU name is the authoritative identity.
         if has_part(parts, "CONVERSION_BASED_UNIT") {
-            read_conversion_based_unit_body(ctx, entity_id, parts, CbuFlavor::Length)?;
+            read_conversion_based_unit_body(ctx, entity_id, parts, CbuFlavor::Length, graph)?;
             let dim_exp = super::shared::read_named_unit_dim_exp(ctx, parts);
             register_named_length(ctx, entity_id, None, dim_exp);
             return Ok(());

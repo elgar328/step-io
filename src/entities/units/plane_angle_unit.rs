@@ -35,10 +35,10 @@ impl ComplexEntityHandler for PlaneAngleUnitHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         if has_part(parts, "CONVERSION_BASED_UNIT") {
-            read_conversion_based_unit_body(ctx, entity_id, parts, CbuFlavor::PlaneAngle)?;
+            read_conversion_based_unit_body(ctx, entity_id, parts, CbuFlavor::PlaneAngle, graph)?;
             let dim_exp = super::shared::read_named_unit_dim_exp(ctx, parts);
             register_named_plane_angle(ctx, entity_id, None, dim_exp);
             return Ok(());

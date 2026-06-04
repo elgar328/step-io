@@ -1041,15 +1041,16 @@ fn reads_unrecognized_cbu_name_warns() {
 }
 
 #[test]
-fn garbage_angle_cbu_falls_back_to_radian_with_warning() {
+fn garbage_angle_cbu_recovered_as_degree_by_factor() {
     // Anonymised fixtures occasionally carry a CONVERSION_BASED_UNIT with a
     // nonsense angle name (the `interior-vehicle-hvac` grabcad fixtures
     // replaced every string with the placeholder 'MIAU' before upload). The
-    // reader can't recognise the name, but the GUAC fallback fills the
-    // missing plane-angle slot with the SI default (Radian) and pushes the
-    // unit context anyway — without this, downstream writer paths that
-    // depend on a non-empty `units` arena (most notably the PRODUCT chain
-    // emit) would silently drop the assembly on round-trip.
+    // name is unrecognisable, but the conversion factor (0.01745329252 = π/180,
+    // relative to the only SI plane-angle base radian) unambiguously identifies
+    // the unit as a degree. The reader recovers it by factor and records a
+    // `NonStandardInput` normalization (not a defect) — so the plane-angle slot
+    // is filled, no "incomplete unit context" fallback fires, and the unit
+    // round-trips as a standard 'DEGREE'.
     let source = minimal_step(
         "#1 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
          #2 = DIMENSIONAL_EXPONENTS(0.,0.,0.,0.,0.,0.,0.);\n\
@@ -1062,33 +1063,29 @@ fn garbage_angle_cbu_falls_back_to_radian_with_warning() {
          \t\tREPRESENTATION_CONTEXT('','') );",
     );
     let result = convert_source(&source);
-    // Two warnings: leaf rejected the name; GUAC reported the fallback.
+    // The non-standard name is surfaced as a normalization, not a defect.
     assert!(
         result.warnings.iter().any(
-            |w| matches!(w, ConvertError::UnexpectedEntityForm { detail, .. }
-            if detail.contains("CONVERSION_BASED_UNIT") && detail.contains("NONSENSE"))
+            |w| matches!(w, ConvertError::NonStandardInput { field, normalized_to, .. }
+            if field.contains("CONVERSION_BASED_UNIT.name") && field.contains("NONSENSE")
+                && normalized_to == "DEGREE")
         ),
         "{:#?}",
         result.warnings,
     );
+    // No "unsupported name" defect and no incomplete-context fallback: the unit
+    // was recovered, so the plane-angle slot is filled.
     assert!(
-        result.warnings.iter().any(
+        !result.warnings.iter().any(
             |w| matches!(w, ConvertError::UnexpectedEntityForm { detail, .. }
-            if detail.contains("incomplete unit context"))
+            if detail.contains("incomplete unit context")
+                || (detail.contains("CONVERSION_BASED_UNIT") && detail.contains("NONSENSE")))
         ),
         "{:#?}",
         result.warnings,
     );
-    // Crucial property: unit context survived (downstream writer would now
-    // emit the PRODUCT chain instead of silently bailing out).
-    let unit = result
-        .model
-        .units
-        .iter()
-        .next()
-        .expect("fallback context pushed");
-    let _ = unit;
-    assert_eq!(first_plane_angle(&result.model), Some(AngleUnit::Radian));
+    // The recovered unit is a degree (not the old radian fallback).
+    assert_eq!(first_plane_angle(&result.model), Some(AngleUnit::Degree));
     assert_eq!(first_length(&result.model), Some(LengthUnit::Millimetre));
 }
 

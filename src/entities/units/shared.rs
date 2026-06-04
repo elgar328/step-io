@@ -15,7 +15,7 @@ use crate::ir::attr::{check_count, read_entity_ref, read_enum, read_string_or_un
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit};
 use crate::ir::units::MassUnit;
-use crate::parser::entity::{Attribute, RawEntityPart};
+use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
 use crate::reader::{ReaderContext, find_part_attrs, has_all_parts, require_part_attrs};
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
@@ -109,19 +109,72 @@ pub(super) enum CbuFlavor {
     Mass,
 }
 
+/// Read a `CONVERSION_BASED_UNIT.conversion_factor` MWU's scalar factor from
+/// the graph. The MWU is a `*_MEASURE_WITH_UNIT` whose attr[0] is a typed real
+/// (`PLANE_ANGLE_MEASURE(0.01745)` / `MASS_MEASURE(0.4536)` / …). Mirrors the
+/// typed-real shape used by [`read_mwu_attrs`] / `backfill_cbu_base`.
+fn cbu_factor(graph: &EntityGraph, mwu_ref: u64) -> Option<f64> {
+    let RawEntity::Simple { attributes, .. } = graph.entities.get(&mwu_ref)? else {
+        return None;
+    };
+    if let Some(Attribute::Typed { value, .. }) = attributes.first()
+        && let Attribute::Real(v) = value.as_ref()
+    {
+        Some(*v)
+    } else {
+        None
+    }
+}
+
+/// Relative-tolerance compare for CBU conversion factors (source files vary in
+/// printed precision; the canonical constants are exact).
+fn factor_eq(a: f64, b: f64) -> bool {
+    (a - b).abs() <= 1e-6 * b.abs()
+}
+
+/// Identify a plane-angle unit by its conversion factor to the SI base
+/// (radian, the only SI plane-angle unit — so the factor is an unambiguous
+/// identity). π/180 → Degree, 1.0 → Radian.
+fn match_angle_by_factor(factor: f64) -> Option<AngleUnit> {
+    if factor_eq(factor, std::f64::consts::PI / 180.0) {
+        Some(AngleUnit::Degree)
+    } else if factor_eq(factor, 1.0) {
+        Some(AngleUnit::Radian)
+    } else {
+        None
+    }
+}
+
+/// Identify a mass unit by its conversion factor to the SI base (kilogram).
+/// `0.453_592_37` → Pound, `0.001` → Gram. (Length is excluded from factor
+/// matching: its CBU base varies — millimetre vs metre — so the factor is not
+/// a base-free identity.)
+fn match_mass_by_factor(factor: f64) -> Option<MassUnit> {
+    if factor_eq(factor, 0.453_592_37) {
+        Some(MassUnit::Pound)
+    } else if factor_eq(factor, 0.001) {
+        Some(MassUnit::Gram)
+    } else {
+        None
+    }
+}
+
 /// Reader body shared by `LengthUnitHandler` / `PlaneAngleUnitHandler` /
 /// `MassUnitHandler` for the `CONVERSION_BASED_UNIT` branch. The flavour
-/// selector picks the right name matcher and per-flavour bookkeeping (e.g.
-/// `length_cbu_wrapped`). Unrecognised CBU names are dropped with a warning
-/// and **not** recorded in `cbu_outer_to_mwu` — the outer never reaches
-/// `NamedUnit` registration so the backfill lookup would be a dead entry.
-/// `SOLID_ANGLE_UNIT + CONVERSION_BASED_UNIT` is unobserved and therefore
-/// uncovered here.
+/// selector picks the right matcher and per-flavour bookkeeping. For the
+/// fixed-SI-base flavours (plane-angle → radian, mass → kilogram) the unit is
+/// identified **by conversion factor first, name second** — a non-standard
+/// name (e.g. a degree unit named `'MIAU'`) is normalized to the standard
+/// unit when its factor matches. Length keeps name-matching (its base varies).
+/// Unrecognised CBUs are dropped with a warning and **not** recorded in
+/// `cbu_outer_to_mwu` — the outer never reaches `NamedUnit` registration so
+/// the backfill lookup would be a dead entry.
 pub(super) fn read_conversion_based_unit_body(
     ctx: &mut ReaderContext,
     entity_id: u64,
     parts: &[RawEntityPart],
     flavor: CbuFlavor,
+    graph: &EntityGraph,
 ) -> Result<(), ConvertError> {
     let cbu_attrs = require_part_attrs(parts, "CONVERSION_BASED_UNIT", entity_id)?;
     check_count(cbu_attrs, 2, entity_id, "CONVERSION_BASED_UNIT")?;
@@ -137,6 +190,7 @@ pub(super) fn read_conversion_based_unit_body(
     if let Some(r) = mwu_ref {
         ctx.cbu_internal_mwu_refs.insert(r);
     }
+    let factor = mwu_ref.and_then(|r| cbu_factor(graph, r));
 
     let recognised = match flavor {
         CbuFlavor::Length => {
@@ -152,8 +206,20 @@ pub(super) fn read_conversion_based_unit_body(
             }
         }
         CbuFlavor::PlaneAngle => {
-            if let Some(unit) = match_angle_conversion(&upper) {
+            let by_name = match_angle_conversion(&upper);
+            if let Some(unit) = factor.and_then(match_angle_by_factor).or(by_name) {
                 ctx.angle_unit_map.insert(entity_id, unit);
+                if by_name != Some(unit) {
+                    let normalized_to = match unit {
+                        AngleUnit::Degree => "DEGREE",
+                        AngleUnit::Radian => "RADIAN",
+                    };
+                    ctx.warnings.push(ConvertError::NonStandardInput {
+                        field: format!("CONVERSION_BASED_UNIT.name ({name:?})"),
+                        count: 1,
+                        normalized_to: normalized_to.into(),
+                    });
+                }
                 true
             } else {
                 ctx.warnings.push(ConvertError::UnexpectedEntityForm {
@@ -164,8 +230,21 @@ pub(super) fn read_conversion_based_unit_body(
             }
         }
         CbuFlavor::Mass => {
-            if let Some(unit) = match_mass_conversion(&upper) {
+            let by_name = match_mass_conversion(&upper);
+            if let Some(unit) = factor.and_then(match_mass_by_factor).or(by_name) {
                 ctx.mass_unit_map.insert(entity_id, unit);
+                if by_name != Some(unit) {
+                    let normalized_to = match unit {
+                        MassUnit::Pound => "POUND",
+                        MassUnit::Gram => "GRAM",
+                        MassUnit::Kilogram => "KILOGRAM",
+                    };
+                    ctx.warnings.push(ConvertError::NonStandardInput {
+                        field: format!("CONVERSION_BASED_UNIT.name ({name:?})"),
+                        count: 1,
+                        normalized_to: normalized_to.into(),
+                    });
+                }
                 true
             } else {
                 ctx.warnings.push(ConvertError::UnexpectedEntityForm {
