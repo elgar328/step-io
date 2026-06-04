@@ -1302,7 +1302,42 @@ impl WriteBuffer<'_> {
         let idt = self.emit_item_defined_transformation(inst.transform)?;
         let nauo = self.emit_nauo(inst, parent_pdef, child_pdef);
         let nauo_pds = self.emit_nauo_owned_pds(nauo);
-        let rrwt = self.emit_rrwt_complex(parent_sr, child_sr, idt);
+        // Reader-built IR materialises the placement as a
+        // `RepresentationRelationshipWithTransformation` arena entry; emit the
+        // complex from its faithful `rep_1`/`rep_2`/`name`/`description` and
+        // record the step id so `style_context` can reference it. Kernel-built
+        // IR (`transform_rr == None`) synthesises the complex from `parent_sr` /
+        // `child_sr` as before.
+        let rrwt = match inst.transform_rr {
+            Some(rrid) => {
+                use crate::ir::shape_rep::RepresentationRelationship;
+                let (name, description, p_step, c_step) = match &self
+                    .model
+                    .representation_relationships[rrid]
+                {
+                    RepresentationRelationship::RepresentationRelationshipWithTransformation(d) => {
+                        let p = self
+                            .representation_step_ids
+                            .get(d.rep_1.0 as usize)
+                            .copied()
+                            .filter(|&s| s != 0)
+                            .unwrap_or(parent_sr);
+                        let c = self
+                            .representation_step_ids
+                            .get(d.rep_2.0 as usize)
+                            .copied()
+                            .filter(|&s| s != 0)
+                            .unwrap_or(child_sr);
+                        (d.name.clone(), d.description.clone(), p, c)
+                    }
+                    _ => (String::new(), String::new(), parent_sr, child_sr),
+                };
+                let rrwt = self.emit_rrwt_complex(&name, &description, p_step, c_step, idt);
+                self.representation_relationship_step_ids[rrid.0 as usize] = rrwt;
+                rrwt
+            }
+            None => self.emit_rrwt_complex("", "", parent_sr, child_sr, idt),
+        };
         let _cdsr = {
             use crate::entities::SimpleEntityHandler;
             use crate::entities::assembly_product::context_dependent_shape_representation::{
@@ -1359,7 +1394,14 @@ impl WriteBuffer<'_> {
         )
     }
 
-    fn emit_rrwt_complex(&mut self, parent_sr: u64, child_sr: u64, idt: u64) -> u64 {
+    fn emit_rrwt_complex(
+        &mut self,
+        name: &str,
+        description: &str,
+        parent_sr: u64,
+        child_sr: u64,
+        idt: u64,
+    ) -> u64 {
         let n = self.fresh();
         self.entities.push(WriterEntity {
             id: n,
@@ -1368,8 +1410,8 @@ impl WriteBuffer<'_> {
                     (
                         "REPRESENTATION_RELATIONSHIP".into(),
                         vec![
-                            Attribute::String(String::new()),
-                            Attribute::String(String::new()),
+                            Attribute::String(name.to_owned()),
+                            Attribute::String(description.to_owned()),
                             Attribute::EntityRef(parent_sr),
                             Attribute::EntityRef(child_sr),
                         ],

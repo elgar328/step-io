@@ -77,6 +77,20 @@ pub(crate) struct PendingNauoInstance {
     pub(crate) nauo_id: u64,
 }
 
+/// Assembly placement RR-complex payload, stashed by the CDSR handler until
+/// `resolve_nauo_instances` materialises it into the
+/// `representation_relationships` arena. `rep_1`/`rep_2` are the parent/child
+/// `SHAPE_REPRESENTATION`s (already resolved to `RepresentationId`);
+/// `rr_complex_entity` is the source complex's `#N` (the `style_context` target
+/// key).
+pub(crate) struct AssemblyRrData {
+    pub(crate) name: String,
+    pub(crate) description: String,
+    pub(crate) rep_1: crate::ir::RepresentationId,
+    pub(crate) rep_2: crate::ir::RepresentationId,
+    pub(crate) rr_complex_entity: u64,
+}
+
 /// Accumulates converted IR objects and tracks the mapping from STEP entity
 /// ids (`#N`) to typed arena Ids.
 #[derive(Default)]
@@ -354,6 +368,15 @@ pub struct ReaderContext {
     pub(crate) pdr_link_refs: Vec<(u64, u64)>,
     pub(crate) transform_map: HashMap<u64, Transform3d>,
     pub(crate) nauo_transform_map: HashMap<u64, Transform3d>,
+    /// Assembly placement RR-complex data stashed by the CDSR handler, keyed by
+    /// NAUO #N. Materialised into the `representation_relationships` arena in
+    /// canonical (product, instance-index) order by `resolve_nauo_instances` so
+    /// the resulting `RepresentationRelationshipId` is round-trip stable.
+    pub(crate) nauo_assembly_rr: HashMap<u64, AssemblyRrData>,
+    /// Assembly RR-complex #N → its materialised `RepresentationRelationshipId`.
+    /// Built by `resolve_nauo_instances`; consumed by
+    /// `resolve_cdorsi_style_contexts` to resolve `style_context` targets.
+    pub(crate) rrcomplex_to_rrid: HashMap<u64, crate::ir::id::RepresentationRelationshipId>,
     /// SDRs whose product-geometry classification is deferred to
     /// [`Self::resolve_sdr_product_geometry`] (dispatch-order independent).
     pub(crate) pending_sdr_geometry: Vec<PendingSdrGeometry>,
@@ -918,9 +941,20 @@ impl ReaderContext {
     /// Attach the deferred NAUO transforms and push each instance onto its
     /// parent product. Runs after the full dispatch (every CDSR has populated
     /// `nauo_transform_map`) and before `finalize_assembly` consumes the
-    /// instances. Order-independent: identical result under either dispatch
-    /// strategy. A NAUO with no transform warns and drops, as before.
+    /// instances. A NAUO with no transform warns and drops, as before.
+    ///
+    /// Second pass materialises each placement's RR-complex into the
+    /// `representation_relationships` arena in **canonical (product-arena ×
+    /// instance-index) order** — not the flat NAUO dispatch order — so the
+    /// resulting `RepresentationRelationshipId`s (referenced by
+    /// `Instance.transform_rr` and `style_context`, both deep-diffed) are
+    /// round-trip stable. See [`crate::ir::shape_rep::RrwtData`].
     fn resolve_nauo_instances(&mut self) {
+        use crate::ir::id::ProductId;
+        use crate::ir::shape_rep::{RepresentationRelationship, RrwtData};
+        // Pass 1 — build instances (flat NAUO order). Remember which NAUO each
+        // (parent, index) slot came from so pass 2 can look up its RR payload.
+        let mut slot_nauo: HashMap<(ProductId, usize), u64> = HashMap::new();
         for pending in std::mem::take(&mut self.pending_nauo_instances) {
             let Some(&transform) = self.nauo_transform_map.get(&pending.nauo_id) else {
                 self.warnings.push(ConvertError::UnexpectedEntityForm {
@@ -929,7 +963,10 @@ impl ReaderContext {
                 });
                 continue;
             };
-            self.assembly_products[pending.parent]
+            let parent = pending.parent;
+            let idx = self.assembly_products[parent].instances.len();
+            slot_nauo.insert((parent, idx), pending.nauo_id);
+            self.assembly_products[parent]
                 .instances
                 .push(crate::ir::assembly::Instance {
                     child: pending.child,
@@ -938,6 +975,33 @@ impl ReaderContext {
                     occurrence_name: pending.occurrence_name,
                     transform_rr: None,
                 });
+        }
+        // Pass 2 — canonical-order RR materialisation.
+        let pids: Vec<ProductId> = self.assembly_products.iter_ids().collect();
+        for pid in pids {
+            let count = self.assembly_products[pid].instances.len();
+            for idx in 0..count {
+                let Some(&nauo_id) = slot_nauo.get(&(pid, idx)) else {
+                    continue;
+                };
+                let Some(data) = self.nauo_assembly_rr.remove(&nauo_id) else {
+                    continue;
+                };
+                let transform = self.assembly_products[pid].instances[idx].transform;
+                let rrid = self.representation_relationships.push(
+                    RepresentationRelationship::RepresentationRelationshipWithTransformation(
+                        RrwtData {
+                            name: data.name,
+                            description: data.description,
+                            rep_1: data.rep_1,
+                            rep_2: data.rep_2,
+                            transform,
+                        },
+                    ),
+                );
+                self.assembly_products[pid].instances[idx].transform_rr = Some(rrid);
+                self.rrcomplex_to_rrid.insert(data.rr_complex_entity, rrid);
+            }
         }
     }
 

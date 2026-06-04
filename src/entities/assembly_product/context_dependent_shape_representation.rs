@@ -8,7 +8,7 @@
 //! `CDSR(rr_complex_ref, pdef_shape_ref)`.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref};
+use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
 use crate::reader::ReaderContext;
@@ -75,6 +75,35 @@ impl SimpleEntityHandler for ContextDependentShapeRepresentationHandler {
             });
         };
         ctx.nauo_transform_map.insert(nauo_ref, transform);
+
+        // Stash the base REPRESENTATION_RELATIONSHIP payload so the placement
+        // can be materialised into the `representation_relationships` arena
+        // (blueprint-faithful identity for `style_context` to reference). The
+        // arena push happens in `resolve_nauo_instances` in canonical order so
+        // the resulting id is round-trip stable. If either rep is not a
+        // modelled `Representation`, skip materialisation (the transform is
+        // still recorded above; `style_context` then drops with a warning).
+        let rr_attrs =
+            crate::reader::require_part_attrs(parts, "REPRESENTATION_RELATIONSHIP", rr_ref)?;
+        let name = read_string_or_unset(rr_attrs, 0, rr_ref, "name")?.to_owned();
+        let description = read_string_or_unset(rr_attrs, 1, rr_ref, "description")?.to_owned();
+        let rep_1_ref = read_entity_ref(rr_attrs, 2, rr_ref, "rep_1")?;
+        let rep_2_ref = read_entity_ref(rr_attrs, 3, rr_ref, "rep_2")?;
+        if let (Some(&rep_1), Some(&rep_2)) = (
+            ctx.repr_id_map.get(&rep_1_ref),
+            ctx.repr_id_map.get(&rep_2_ref),
+        ) {
+            ctx.nauo_assembly_rr.insert(
+                nauo_ref,
+                crate::reader::AssemblyRrData {
+                    name,
+                    description,
+                    rep_1,
+                    rep_2,
+                    rr_complex_entity: rr_ref,
+                },
+            );
+        }
         Ok(())
     }
 
