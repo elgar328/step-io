@@ -360,7 +360,10 @@ pub struct CameraModelD3 {
 #[derive(Debug, Clone, PartialEq)]
 pub struct CurveStyle {
     pub name: String,
-    pub curve_font: PreDefinedCurveFontId,
+    /// `curve_font` SELECT. `OPTIONAL` in AP242 (required in AP203/AP214); an
+    /// omitted `$` round-trips as `None`. `Some` points at a modelled
+    /// `pre_defined_curve_font` arena entry.
+    pub curve_font: Option<PreDefinedCurveFontId>,
     pub curve_width: CurveWidth,
     pub curve_colour: ColourId,
 }

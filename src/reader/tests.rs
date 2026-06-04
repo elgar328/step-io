@@ -1099,6 +1099,47 @@ fn unit_no_global_context_is_silent() {
     assert!(result.model.units.is_empty());
 }
 
+#[test]
+fn curve_style_unset_curve_font_round_trips_as_none() {
+    // CURVE_STYLE.curve_font is OPTIONAL in AP242 (required in AP203/AP214);
+    // Rhino 8 omits it as `$`. The reader preserves the omission as `None`
+    // (rather than dropping the whole CURVE_STYLE) and the writer re-emits `$`.
+    use crate::ir::visualization::CurveWidth;
+    let source = minimal_step(
+        "#1 = COLOUR_RGB('',0.,1.,1.);\n\
+         #2 = CURVE_STYLE('',$,POSITIVE_LENGTH_MEASURE(0.02),#1);",
+    );
+    let result = convert_source(&source);
+    assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
+    let pool = result.model.visualization.as_ref().expect("viz pool");
+    assert_eq!(
+        pool.curve_styles.len(),
+        1,
+        "CURVE_STYLE preserved, not dropped on $ curve_font"
+    );
+    let cs = pool.curve_styles.iter().next().unwrap();
+    assert_eq!(cs.curve_font, None, "$ curve_font preserved as None");
+    assert!(matches!(
+        cs.curve_width,
+        CurveWidth::PositiveLengthMeasure(_)
+    ));
+
+    // Writer re-emits `$`, and re-reading yields the same `None` (idempotent).
+    let text = result.model.write_to_string().expect("write");
+    assert!(text.contains("CURVE_STYLE("), "CURVE_STYLE emitted: {text}");
+    let re = convert_source(&text);
+    let re_cs = re
+        .model
+        .visualization
+        .as_ref()
+        .expect("viz pool")
+        .curve_styles
+        .iter()
+        .next()
+        .unwrap();
+    assert_eq!(re_cs.curve_font, None, "round-trip keeps None");
+}
+
 // ---------------------------------------------------------------------------
 // PCURVE skip-set + SURFACE_CURVE alias
 // ---------------------------------------------------------------------------

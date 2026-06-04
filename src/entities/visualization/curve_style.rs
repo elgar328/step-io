@@ -30,9 +30,18 @@ impl SimpleEntityHandler for CurveStyleHandler {
     ) -> Result<(), ConvertError> {
         check_count(attrs, 4, entity_id, "CURVE_STYLE")?;
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let font_ref = read_entity_ref(attrs, 1, entity_id, "curve_font")?;
-        let Some(&curve_font) = ctx.viz_pre_defined_curve_font_id_map.get(&font_ref) else {
-            return Ok(()); // unsupported curve_font SELECT variant — drop
+        // `curve_font` is OPTIONAL in AP242 (required in AP203/AP214). An
+        // omitted `$` is preserved as `None`; a present ref resolves to a
+        // modelled pre_defined_curve_font, else the unsupported SELECT variant
+        // drops the whole CURVE_STYLE (as before).
+        let curve_font = if matches!(attrs.get(1), Some(Attribute::Unset)) {
+            None
+        } else {
+            let font_ref = read_entity_ref(attrs, 1, entity_id, "curve_font")?;
+            let Some(&id) = ctx.viz_pre_defined_curve_font_id_map.get(&font_ref) else {
+                return Ok(()); // unsupported curve_font SELECT variant — drop
+            };
+            Some(id)
         };
         let curve_width = read_positive_length_measure(attrs, 2, entity_id)?;
         let colour_ref = read_entity_ref(attrs, 3, entity_id, "curve_colour")?;
@@ -53,7 +62,10 @@ impl SimpleEntityHandler for CurveStyleHandler {
     }
 
     fn write(buf: &mut WriteBuffer, cs: CurveStyle) -> Result<u64, WriteError> {
-        let font_step_id = buf.pre_defined_curve_font_step_ids[cs.curve_font.0 as usize];
+        let font_attr = match cs.curve_font {
+            Some(id) => Attribute::EntityRef(buf.pre_defined_curve_font_step_ids[id.0 as usize]),
+            None => Attribute::Unset,
+        };
         let width_attr = match cs.curve_width {
             CurveWidth::PositiveLengthMeasure(v) => Attribute::Typed {
                 type_name: "POSITIVE_LENGTH_MEASURE".into(),
@@ -65,7 +77,7 @@ impl SimpleEntityHandler for CurveStyleHandler {
             "CURVE_STYLE",
             vec![
                 Attribute::String(cs.name),
-                Attribute::EntityRef(font_step_id),
+                font_attr,
                 width_attr,
                 Attribute::EntityRef(colour_step_id),
             ],
