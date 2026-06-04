@@ -38,6 +38,18 @@ impl SimpleEntityHandler for ProductCategoryRelationshipHandler {
         let pc_ref = read_entity_ref(attrs, 2, entity_id, "category")?;
         let prpc_ref = read_entity_ref(attrs, 3, entity_id, "sub_category")?;
 
+        // The `sub_category` is a non-standard empty PRRPC that was dropped as
+        // a normalization; this relationship to it carries no information, so
+        // drop it as a normalization too (not a MissingReference defect).
+        if ctx.empty_prrpc_refs.contains(&prpc_ref) {
+            ctx.warnings.push(ConvertError::NonStandardInput {
+                field: "PRODUCT_CATEGORY_RELATIONSHIP".into(),
+                count: 1,
+                normalized_to: "dropped (relates empty PRRPC)".into(),
+            });
+            return Ok(());
+        }
+
         let (Some(&category_id), Some(&sub_category_id)) = (
             ctx.pc_arena_map.get(&pc_ref),
             ctx.prpc_arena_map.get(&prpc_ref),

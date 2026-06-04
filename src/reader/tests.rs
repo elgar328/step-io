@@ -1100,6 +1100,59 @@ fn unit_no_global_context_is_silent() {
 }
 
 #[test]
+fn empty_prrpc_and_its_relationship_dropped_as_normalization() {
+    // `PRODUCT_RELATED_PRODUCT_CATEGORY.products` is SET[1:?] in every schema;
+    // some CATIA / Autodesk exports emit an empty `()`. The reader drops the
+    // empty PRRPC (and the PRODUCT_CATEGORY_RELATIONSHIP that references it) as
+    // a NonStandardInput normalization, not a MissingReference defect. A
+    // PRRPC with real products is preserved.
+    let result = convert_source(&minimal_step(
+        "#1 = PRODUCT('P','P',' ',(#2));\n\
+         #2 = PRODUCT_CONTEXT('',#3,'mechanical');\n\
+         #3 = APPLICATION_CONTEXT('core');\n\
+         #4 = PRODUCT_CATEGORY('part','');\n\
+         #5 = PRODUCT_RELATED_PRODUCT_CATEGORY('part',$,());\n\
+         #6 = PRODUCT_CATEGORY_RELATIONSHIP('','',#4,#5);\n\
+         #7 = PRODUCT_RELATED_PRODUCT_CATEGORY('part',$,(#1));",
+    ));
+    // Both `$`-empty entities surface as normalizations; no defect.
+    let norms = result
+        .warnings
+        .iter()
+        .filter(|w| {
+            matches!(w, ConvertError::NonStandardInput { normalized_to, .. }
+                if normalized_to.starts_with("dropped"))
+        })
+        .count();
+    assert_eq!(norms, 2, "{:#?}", result.warnings);
+    assert!(
+        !result
+            .warnings
+            .iter()
+            .any(|w| matches!(w, ConvertError::MissingReference { .. })),
+        "{:#?}",
+        result.warnings
+    );
+    // The empty PRRPC + its relationship are not in the IR; the real PRRPC is.
+    let asm = result.model.assembly.as_ref().expect("assembly");
+    assert!(
+        asm.product_category_relationships.is_empty(),
+        "the relationship to the empty PRRPC is dropped"
+    );
+    let prpc_count = asm
+        .product_categories
+        .iter()
+        .filter(|pc| {
+            matches!(
+                pc,
+                crate::ir::assembly::ProductCategory::ProductRelatedProductCategory(_)
+            )
+        })
+        .count();
+    assert_eq!(prpc_count, 1, "only the non-empty PRRPC survives");
+}
+
+#[test]
 fn file_name_unset_string_fields_normalized_to_empty() {
     // Part 21 (ISO 10303-21) defines FILE_NAME scalar fields as required
     // STRING; `$` is non-standard (`''` denotes unspecified). Some exporters

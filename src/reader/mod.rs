@@ -298,6 +298,11 @@ pub struct ReaderContext {
     /// `PRODUCT_RELATED_PRODUCT_CATEGORY` STEP `#N → ProductCategoryId`
     /// (`ProductRelatedProductCategory` variant).
     pub(crate) prpc_arena_map: HashMap<u64, crate::ir::ProductCategoryId>,
+    /// STEP ids of `PRODUCT_RELATED_PRODUCT_CATEGORY` entities dropped because
+    /// their `products` SET was empty `()` (non-standard — `SET[1:?]`). A
+    /// `PRODUCT_CATEGORY_RELATIONSHIP` whose `sub_category` points here is
+    /// dropped as a normalization (relates a non-standard empty category).
+    pub(crate) empty_prrpc_refs: HashSet<u64>,
     pub(crate) product_arena_map: HashMap<u64, ProductId>,
     pub(crate) formation_to_product: HashMap<u64, u64>,
     /// `PRODUCT_DEFINITION_FORMATION` arena (carrier enum), `mem::take`-n into
