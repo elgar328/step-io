@@ -29,13 +29,12 @@ impl SimpleEntityHandler for PersonAndOrganizationHandler {
         let person = ctx.plm_person_id_map.get(&person_ref).copied();
         let org = ctx.plm_organization_id_map.get(&org_ref).copied();
         let (Some(the_person), Some(the_organization)) = (person, org) else {
-            // A required reference did not resolve. When it is dangling — points
-            // to no entity defined in the file (e.g. the #18446744073709551615
-            // sentinel some anonymizers emit for a scrubbed person) — the P&O is
-            // non-standard: drop it as a normalization and record the id so the
-            // referencing assignments / approvals drop as normalizations too.
-            // (A ref that *is* defined but whose PERSON / ORGANIZATION step-io
-            // did not model is a separate gap — keep the silent drop.)
+            // [NS-dangling-person-org] anonymizers / grabcad: a required person /
+            // organization ref dangles (e.g. the #18446744073709551615 sentinel
+            // a scrubbed person leaves, undefined in the file) → drop as a
+            // normalization and record the id so assignments / approvals cascade
+            // (NS-dangling-person-org-cascade). A ref that *is* defined but
+            // unmodelled is a separate gap (silent drop). See reader::nonstandard.
             if graph.get(person_ref).is_none() || graph.get(org_ref).is_none() {
                 ctx.warnings.push(ConvertError::NonStandardInput {
                     field: "PERSON_AND_ORGANIZATION".into(),

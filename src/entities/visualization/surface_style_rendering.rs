@@ -65,8 +65,11 @@ impl SimpleEntityHandler for SurfaceStyleRenderingHandler {
 
 /// Read the required `rendering_method` field, shared between
 /// `SURFACE_STYLE_RENDERING` and `SURFACE_STYLE_RENDERING_WITH_PROPERTIES`.
-/// Non-standard `$` (Unset) and unrecognized enum values are normalized to
-/// `NORMAL_SHADING`; each is recorded for the per-file summary warning.
+///
+/// [NS-surface-style-rendering-method] a non-standard `$` (Unset) or
+/// unrecognized enum value on the required field is normalized to
+/// `NORMAL_SHADING`, aggregated via `record_nonstandard`. See
+/// `reader::nonstandard`.
 pub(crate) fn read_rendering_method(
     ctx: &mut ReaderContext,
     attrs: &[Attribute],
@@ -97,11 +100,14 @@ pub(crate) fn read_rendering_method(
 }
 
 /// Read the required `surface_colour` field, shared between the two
-/// rendering entities. A non-standard `$` (Unset) — the field is required in
-/// EXPRESS — is normalized to a bare `COLOUR()` (`Colour::Itself`, the
-/// schema's unspecified-colour placeholder) pushed into the colour arena,
-/// rather than fabricating a specific colour. `Ok(None)` means the ref was
-/// present but unresolved — the caller drops the entity, as before.
+/// rendering entities.
+///
+/// [NS-surface-style-surface-colour] a non-standard `$` (Unset) on the
+/// EXPRESS-required field is normalized to a bare `COLOUR()`
+/// (`Colour::Itself`, the schema's unspecified-colour placeholder) rather
+/// than fabricating a specific colour, aggregated via `record_nonstandard`.
+/// `Ok(None)` means the ref was present but unresolved — the caller drops the
+/// entity, as before. See `reader::nonstandard`.
 pub(crate) fn read_surface_colour(
     ctx: &mut ReaderContext,
     attrs: &[Attribute],

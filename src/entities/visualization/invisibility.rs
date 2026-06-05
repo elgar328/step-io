@@ -36,9 +36,9 @@ impl SimpleEntityHandler for InvisibilityHandler {
     ) -> Result<(), ConvertError> {
         check_count(attrs, 1, entity_id, "INVISIBILITY")?;
         let refs = read_entity_ref_list(attrs, 0, entity_id, "invisible_items")?;
-        // `invisible_items` is `SET[1:?]` in every schema; an empty `()` (some
-        // grabcad exports) is non-standard and hides nothing. Drop it as a
-        // normalization (not a defect). INVISIBILITY is a leaf — no cascade.
+        // [NS-empty-invisibility] grabcad: invisible_items is SET[1:?] but an
+        // empty `()` violates the cardinality (and hides nothing) → drop as a
+        // normalization (leaf, no cascade). See reader::nonstandard.
         if refs.is_empty() {
             ctx.warnings.push(ConvertError::NonStandardInput {
                 field: "INVISIBILITY".into(),

@@ -26,6 +26,8 @@ use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
 
 mod dispatch;
 mod header;
+/// Catalogue of non-standard input normalizations (documentation only).
+mod nonstandard;
 
 #[cfg(test)]
 mod tests;
@@ -1326,8 +1328,9 @@ impl ReaderContext {
             recovered += 1;
         }
         if recovered > 0 {
-            // Non-standard required field normalised (reader-tolerant). Surfaced
-            // as a normalization, not a defect — the GISU is preserved.
+            // [NS-gisu-unset-used-rep] recovery side (detect/defer is in
+            // geometric_item_specific_usage.rs). Surfaced as a normalization,
+            // not a defect — the GISU is preserved. See reader::nonstandard.
             self.warnings.push(ConvertError::NonStandardInput {
                 field: "GEOMETRIC_ITEM_SPECIFIC_USAGE.used_representation (Unset)".into(),
                 count: recovered,

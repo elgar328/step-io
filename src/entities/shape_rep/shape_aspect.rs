@@ -42,10 +42,10 @@ impl SimpleEntityHandler for ShapeAspectHandler {
 
         // Lookup chain: SHAPE_ASPECT.of_shape → PRODUCT_DEFINITION_SHAPE
         //   → PRODUCT_DEFINITION → ProductId.
-        // of_shape is required to be a PRODUCT_DEFINITION_SHAPE, but the C3D
-        // kernel emits a PRODUCT_DEFINITION directly (non-standard). Accept it:
-        // resolve to the product and let the writer re-emit the standard PDS
-        // form (via the product's `product_def_shape_ids`).
+        // [NS-shape-aspect-of-shape-pd] C3D: of_shape references a
+        // PRODUCT_DEFINITION directly (must be a PRODUCT_DEFINITION_SHAPE) →
+        // resolve via the product; writer re-emits the standard PDS form.
+        // See reader::nonstandard.
         let pdef_step_id = if let Some(&pd) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) {
             pd
         } else if ctx.pdef_to_product.contains_key(&of_shape_ref) {

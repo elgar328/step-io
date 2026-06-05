@@ -14,11 +14,12 @@ use crate::ir::error::ConvertError;
 use crate::ir::model::{FileHeader, ImplementationLevel, NonEmptyStringList};
 use crate::parser::entity::{Attribute, RawEntity};
 
-/// Read a `FILE_NAME` scalar `STRING` field. Part 21 (ISO 10303-21) defines
-/// these as required strings — `''` denotes unspecified, and `$` (Unset) is
-/// non-standard. Some exporters emit `$` regardless; rather than discarding
-/// the whole header, normalize `$` to the empty string and record a
-/// `NonStandardInput` note (a recovery, not data loss).
+/// Read a `FILE_NAME` scalar `STRING` field.
+///
+/// [NS-filename-unset] grabcad (SO14/blower): a required Part 21 `FILE_NAME`
+/// string (`''` denotes unspecified) is written `$` (Unset) → normalize `$`
+/// to the empty string rather than discarding the whole header. See
+/// `reader::nonstandard`.
 fn read_header_string(
     attrs: &[Attribute],
     index: usize,

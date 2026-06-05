@@ -40,11 +40,10 @@ impl SimpleEntityHandler for ProductRelatedProductCategoryHandler {
         let description = optional_text(attrs, 1, entity_id, "description")?;
         let product_refs = read_entity_ref_list(attrs, 2, entity_id, "products")?;
 
-        // `products` is `SET[1:?]` in every schema; an empty `()` (emitted by
-        // some CATIA / Autodesk exports) is non-standard and relates no
-        // products — a meaningless category. Drop it as a normalization (not a
-        // defect) and remember the id so the referencing
-        // PRODUCT_CATEGORY_RELATIONSHIP drops as a normalization too.
+        // [NS-empty-prrpc] CATIA / Autodesk: products is SET[1:?] but an empty
+        // `()` relates no products → drop as a normalization and record the id
+        // so the referencing PRODUCT_CATEGORY_RELATIONSHIP cascades
+        // (NS-empty-prrpc-cascade). See reader::nonstandard.
         if product_refs.is_empty() {
             ctx.warnings.push(ConvertError::NonStandardInput {
                 field: "PRODUCT_RELATED_PRODUCT_CATEGORY".into(),

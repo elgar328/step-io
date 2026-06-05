@@ -30,8 +30,10 @@ impl SimpleEntityHandler for ApprovalPersonOrganizationHandler {
         let approval_ref = read_entity_ref(attrs, 1, entity_id, "authorized_approval")?;
         let role_ref = read_entity_ref(attrs, 2, entity_id, "role")?;
         let Some(&po_id) = ctx.plm_p_and_o_id_map.get(&po_ref) else {
-            // The P&O was dropped as a non-standard (dangling-ref) normalization
-            // — drop this approval-person-organization as a normalization too.
+            // [NS-dangling-person-org-cascade] the P&O was dropped as a
+            // dangling-ref normalization (NS-dangling-person-org) → drop this
+            // approval too; otherwise it is an unsupported SELECT variant
+            // (direct PERSON / ORGANIZATION). See reader::nonstandard.
             if ctx.nonstd_person_org_refs.contains(&po_ref) {
                 ctx.warnings.push(ConvertError::NonStandardInput {
                     field: "APPROVAL_PERSON_ORGANIZATION".into(),
@@ -40,7 +42,6 @@ impl SimpleEntityHandler for ApprovalPersonOrganizationHandler {
                         .into(),
                 });
             }
-            // Otherwise: unsupported SELECT variant (direct PERSON / ORGANIZATION).
             return Ok(());
         };
         let Some(&authorized_approval) = ctx.plm_approval_id_map.get(&approval_ref) else {

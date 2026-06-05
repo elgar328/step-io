@@ -206,6 +206,9 @@ pub(super) fn read_conversion_based_unit_body(
             }
         }
         CbuFlavor::PlaneAngle => {
+            // [NS-cbu-angle-factor] anonymizers: a non-standard CBU name no
+            // longer identifies the unit → identify by conversion factor, name
+            // fallback; warn on disagreement. See reader::nonstandard.
             let by_name = match_angle_conversion(&upper);
             if let Some(unit) = factor.and_then(match_angle_by_factor).or(by_name) {
                 ctx.angle_unit_map.insert(entity_id, unit);
@@ -230,6 +233,8 @@ pub(super) fn read_conversion_based_unit_body(
             }
         }
         CbuFlavor::Mass => {
+            // [NS-cbu-mass-factor] anonymizers: as NS-cbu-angle-factor, for
+            // mass (fixed kg base). See reader::nonstandard.
             let by_name = match_mass_conversion(&upper);
             if let Some(unit) = factor.and_then(match_mass_by_factor).or(by_name) {
                 ctx.mass_unit_map.insert(entity_id, unit);

@@ -45,11 +45,12 @@ impl SimpleEntityHandler for GeometricItemSpecificUsageHandler {
         let Some(identified_item) = resolve_representation_item_ref(ctx, item_ref) else {
             return Ok(());
         };
-        // `used_representation` is a required `representation`, but CATIA emits
-        // `$` for "Solid" GISUs. Defer the `$` case: its standard value (the
-        // WHERE-rule container of `identified_item`) is not referenced by this
-        // GISU, so dispatch order gives no guarantee the container was read
-        // first — `resolve_deferred_gisu_used_representation` derives it.
+        // [NS-gisu-unset-used-rep] CATIA: used_representation (required) is `$`
+        // for "Solid" GISUs. The standard value (the WHERE-rule container of
+        // identified_item) is not referenced here, so dispatch order gives no
+        // guarantee the container was read first → defer; the post-pass
+        // `resolve_deferred_gisu_used_representation` derives it. See
+        // reader::nonstandard.
         if matches!(attrs[3], Attribute::Unset) {
             ctx.deferred_gisu_used_repr.push(DeferredGisu {
                 entity_id,

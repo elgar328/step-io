@@ -38,9 +38,10 @@ impl SimpleEntityHandler for ProductCategoryRelationshipHandler {
         let pc_ref = read_entity_ref(attrs, 2, entity_id, "category")?;
         let prpc_ref = read_entity_ref(attrs, 3, entity_id, "sub_category")?;
 
-        // The `sub_category` is a non-standard empty PRRPC that was dropped as
-        // a normalization; this relationship to it carries no information, so
-        // drop it as a normalization too (not a MissingReference defect).
+        // [NS-empty-prrpc-cascade] sub_category is an empty PRRPC dropped as a
+        // normalization (NS-empty-prrpc); this relationship carries no info →
+        // drop as a normalization, not a MissingReference defect. See
+        // reader::nonstandard.
         if ctx.empty_prrpc_refs.contains(&prpc_ref) {
             ctx.warnings.push(ConvertError::NonStandardInput {
                 field: "PRODUCT_CATEGORY_RELATIONSHIP".into(),
