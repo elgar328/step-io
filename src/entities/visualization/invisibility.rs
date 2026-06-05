@@ -36,6 +36,17 @@ impl SimpleEntityHandler for InvisibilityHandler {
     ) -> Result<(), ConvertError> {
         check_count(attrs, 1, entity_id, "INVISIBILITY")?;
         let refs = read_entity_ref_list(attrs, 0, entity_id, "invisible_items")?;
+        // `invisible_items` is `SET[1:?]` in every schema; an empty `()` (some
+        // grabcad exports) is non-standard and hides nothing. Drop it as a
+        // normalization (not a defect). INVISIBILITY is a leaf — no cascade.
+        if refs.is_empty() {
+            ctx.warnings.push(ConvertError::NonStandardInput {
+                field: "INVISIBILITY".into(),
+                count: 1,
+                normalized_to: "dropped (empty invisible_items, non-standard SET[1:?])".into(),
+            });
+            return Ok(());
+        }
         let mut invisible_items = Vec::with_capacity(refs.len());
         for r in refs {
             if let Some(&id) = ctx.viz_styled_item_id_map.get(&r) {
@@ -45,9 +56,22 @@ impl SimpleEntityHandler for InvisibilityHandler {
             } else if let Some(&id) = ctx.draughting_callout_id_map.get(&r) {
                 invisible_items.push(InvisibleItem::DraughtingCallout(id));
             }
-            // PLA / other SELECT members: silent skip.
+            // Other SELECT members (e.g. presentation_layer_assignment) and
+            // dropped item instances: skipped per-item — the entity survives on
+            // its resolved items.
         }
         if invisible_items.is_empty() {
+            // The set was non-empty but nothing resolved (all unmodelled SELECT
+            // members, or every target instance was dropped). Surface the gap
+            // instead of dropping silently — these entities already count as
+            // missing, so this adds visibility, not loss.
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: String::from(
+                    "INVISIBILITY invisible_items did not resolve to any modelled \
+                     styled_item / representation / draughting_callout — dropping",
+                ),
+            });
             return Ok(());
         }
         let id = ctx

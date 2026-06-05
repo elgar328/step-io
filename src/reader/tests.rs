@@ -1153,6 +1153,82 @@ fn empty_prrpc_and_its_relationship_dropped_as_normalization() {
 }
 
 #[test]
+fn empty_invisibility_dropped_as_normalization() {
+    // `INVISIBILITY.invisible_items` is SET[1:?] in every schema; some grabcad
+    // exports emit an empty `()` (hides nothing). The reader drops it as a
+    // NonStandardInput normalization, not a MissingReference defect. INVISIBILITY
+    // is a leaf, so there is no cascade.
+    let result = convert_source(&minimal_step("#1 = INVISIBILITY(());"));
+    let norms = result
+        .warnings
+        .iter()
+        .filter(|w| {
+            matches!(w, ConvertError::NonStandardInput { field, normalized_to, .. }
+                if field == "INVISIBILITY" && normalized_to.starts_with("dropped"))
+        })
+        .count();
+    assert_eq!(norms, 1, "{:#?}", result.warnings);
+    assert!(
+        !result.warnings.iter().any(|w| matches!(
+            w,
+            ConvertError::MissingReference { .. } | ConvertError::UnexpectedEntityForm { .. }
+        )),
+        "{:#?}",
+        result.warnings
+    );
+    // No empty invisibility entity is materialised.
+    assert!(
+        result
+            .model
+            .visualization
+            .as_ref()
+            .is_none_or(|v| v.invisibilities.is_empty()),
+        "the empty INVISIBILITY is not in the IR"
+    );
+}
+
+#[test]
+fn invisibility_with_all_items_unresolved_surfaces_a_warning() {
+    // A non-empty INVISIBILITY whose items resolve to no modelled
+    // styled_item / representation / draughting_callout (here a CARTESIAN_POINT,
+    // outside all three id_maps — the handler treats any non-target ref the same)
+    // is dropped, but surfaced as a defect warning rather than silently. These
+    // entities already count as missing, so this adds visibility, not loss.
+    let result = convert_source(&minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = INVISIBILITY((#1));",
+    ));
+    let unresolved = result
+        .warnings
+        .iter()
+        .filter(|w| {
+            matches!(w, ConvertError::UnexpectedEntityForm { detail, .. }
+                if detail.contains("INVISIBILITY") && detail.contains("did not resolve"))
+        })
+        .count();
+    assert_eq!(unresolved, 1, "{:#?}", result.warnings);
+    // It is not a NonStandardInput normalization (the set was non-empty).
+    assert!(
+        !result
+            .warnings
+            .iter()
+            .any(|w| matches!(w, ConvertError::NonStandardInput { field, .. }
+                if field == "INVISIBILITY")),
+        "{:#?}",
+        result.warnings
+    );
+    // No invisibility entity is materialised.
+    assert!(
+        result
+            .model
+            .visualization
+            .as_ref()
+            .is_none_or(|v| v.invisibilities.is_empty()),
+        "the unresolved INVISIBILITY is not in the IR"
+    );
+}
+
+#[test]
 fn dangling_person_and_organization_and_cascade_dropped_as_normalization() {
     // `PERSON_AND_ORGANIZATION.the_person` is a required ref; some anonymizers
     // (e.g. the GrabCAD badland-winch / fairlead fixtures) scrub the person and
