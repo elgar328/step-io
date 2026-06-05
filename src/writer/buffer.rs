@@ -217,6 +217,9 @@ pub(crate) struct WriteBuffer<'m> {
     /// Emitted `PRESENTATION_SET` step ids (phase pr-core), indexed by
     /// `PresentationSetId.0`. Consumed by `AREA_IN_SET.in_set`.
     pub(crate) presentation_set_step_ids: Vec<u64>,
+    /// Emitted `APPLIED_PRESENTED_ITEM` step ids (phase pr-item), indexed by
+    /// `AppliedPresentedItemId.0`. Consumed by `presented_item_representation.item`.
+    pub(crate) applied_presented_item_step_ids: Vec<u64>,
     /// Emitted `AREA_IN_SET` step ids (phase pr-size), indexed by
     /// `AreaInSetId.0`. Consumed by `PRESENTATION_SIZE.unit` SELECT.
     pub(crate) area_in_set_step_ids: Vec<u64>,
@@ -522,6 +525,7 @@ impl<'m> WriteBuffer<'m> {
             invisibility_step_ids: Vec::new(),
             presentation_representation_step_ids: Vec::new(),
             presentation_set_step_ids: Vec::new(),
+            applied_presented_item_step_ids: Vec::new(),
             area_in_set_step_ids: Vec::new(),
             pre_defined_curve_font_step_ids: Vec::new(),
             pre_defined_symbol_step_ids: Vec::new(),

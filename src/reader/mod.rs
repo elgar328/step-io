@@ -170,6 +170,10 @@ pub struct ReaderContext {
     /// `PRESENTATION_SET` step id → arena id (phase pr-core). Consumed by
     /// `area_in_set.in_set`.
     pub(crate) presentation_set_id_map: HashMap<u64, crate::ir::id::PresentationSetId>,
+    /// `APPLIED_PRESENTED_ITEM` step id → arena id (phase pr-item). Consumed by
+    /// `presented_item_representation.item` (a `presented_item` whose concrete
+    /// subtype is `applied_presented_item`).
+    pub(crate) applied_presented_item_id_map: HashMap<u64, crate::ir::id::AppliedPresentedItemId>,
     /// `AREA_IN_SET` step id → arena id (phase pr-size). Consumed by
     /// `presentation_size.unit` SELECT.
     pub(crate) area_in_set_id_map: HashMap<u64, crate::ir::id::AreaInSetId>,

@@ -17,7 +17,9 @@ use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::shape_rep::{MappedItem, MappedItemData, RepresentationMap, RepresentationMapData};
+use crate::ir::shape_rep::{
+    MappedItem, MappedItemData, MappedRepresentationRef, RepresentationMap, RepresentationMapData,
+};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -47,7 +49,14 @@ impl SimpleEntityHandler for RepresentationMapHandler {
         // REPRESENTATION_MAP (CAMERA_USAGE narrows it but is a separate entity).
         // Keep it as `Itself`; the writer emits it in a delayed pass once the
         // camera step ids are populated (`emit_camera_origin_mapped_items`).
-        let Some(&mapped_representation) = ctx.repr_id_map.get(&mapped_ref) else {
+        // `mapped_representation` is the `representation` supertype: a plain
+        // representation, or a PRESENTATION_VIEW/AREA (separate arena). Probe
+        // both; presentation-mapped rmaps emit in a delayed pass too.
+        let mapped_representation = if let Some(&rid) = ctx.repr_id_map.get(&mapped_ref) {
+            MappedRepresentationRef::Representation(rid)
+        } else if let Some(&pid) = ctx.presentation_representation_id_map.get(&mapped_ref) {
+            MappedRepresentationRef::Presentation(pid)
+        } else {
             return Ok(());
         };
 
@@ -70,7 +79,14 @@ impl SimpleEntityHandler for RepresentationMapHandler {
             return Ok(0);
         };
         let origin = buf.emit_representation_item_ref(d.mapping_origin)?;
-        let mapped = buf.representation_step_ids[d.mapped_representation.0 as usize];
+        let mapped = match d.mapped_representation {
+            MappedRepresentationRef::Representation(id) => {
+                buf.representation_step_ids[id.0 as usize]
+            }
+            MappedRepresentationRef::Presentation(id) => {
+                buf.presentation_representation_step_ids[id.0 as usize]
+            }
+        };
         Ok(buf.push_simple(
             "REPRESENTATION_MAP",
             vec![Attribute::EntityRef(origin), Attribute::EntityRef(mapped)],

@@ -851,13 +851,12 @@ pub struct PresentationReprData {
     pub context: Option<crate::ir::shape_rep::RepresentationContextRef>,
 }
 
-/// `PRESENTATION_SET` — blueprint omits this entity; step-io carries a
-/// minimal struct (name only) so `AREA_IN_SET.in_set` references resolve
-/// during read.
+/// `PRESENTATION_SET` — has no direct attributes in the schema (only an
+/// INVERSE `areas` SET); instantiated as `PRESENTATION_SET()`. Carried as a
+/// marker so `AREA_IN_SET.in_set` / `PRESENTED_ITEM_REPRESENTATION` refs
+/// resolve during read.
 #[derive(Debug, Clone, PartialEq)]
-pub struct PresentationSet {
-    pub name: String,
-}
+pub struct PresentationSet;
 
 /// `AREA_IN_SET(area, in_set)` — phase pr-size. Both refs must resolve
 /// at read time (otherwise the carrier is dropped). `area` narrows to a
@@ -893,11 +892,13 @@ pub enum PresentationSizeAssignment {
 /// `PRESENTED_ITEM_REPRESENTATION(presentation, item)` — phase pr-item.
 /// `presentation` is a `presentation_representation_select` (modelled
 /// `PresentationRepresentationId` / `PresentationSetId`); `item` is a
-/// `presented_item` SELECT (only `ProductDefinition` modelled today).
+/// `presented_item` — an abstract entity whose only concrete subtype is
+/// `applied_presented_item`, so it references the `applied_presented_items`
+/// arena (not a `presented_item_select` member).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct PresentedItemRepresentation {
     pub presentation: PresentationReprSelect,
-    pub item: PresentedItem,
+    pub item: crate::ir::id::AppliedPresentedItemId,
 }
 
 /// `presentation_representation_select` SELECT — modelled members.

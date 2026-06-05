@@ -41,7 +41,10 @@ impl SimpleEntityHandler for PresentedItemRepresentationHandler {
             return Ok(());
         };
         let item_ref = read_entity_ref(attrs, 1, entity_id, "item")?;
-        let Some(item) = resolve_presented_item(ctx, item_ref) else {
+        // `item` is a `presented_item` (abstract; concrete subtype
+        // `applied_presented_item`), so it resolves through the
+        // applied-presented-item arena, not a `presented_item_select` member.
+        let Some(&item) = ctx.applied_presented_item_id_map.get(&item_ref) else {
             return Ok(());
         };
         let _id = ctx
@@ -59,7 +62,7 @@ impl SimpleEntityHandler for PresentedItemRepresentationHandler {
             }
             PresentationReprSelect::Set(id) => buf.presentation_set_step_ids[id.0 as usize],
         };
-        let item_step = emit_presented_item(buf, pir.item);
+        let item_step = buf.applied_presented_item_step_ids[pir.item.0 as usize];
         Ok(buf.push_simple(
             "PRESENTED_ITEM_REPRESENTATION",
             vec![
@@ -93,11 +96,12 @@ impl SimpleEntityHandler for AppliedPresentedItemHandler {
         if items.is_empty() {
             return Ok(());
         }
-        let _id = ctx
+        let id = ctx
             .visualization
             .get_or_insert_with(VisualizationPool::default)
             .applied_presented_items
             .push(AppliedPresentedItem { items });
+        ctx.applied_presented_item_id_map.insert(entity_id, id);
         Ok(())
     }
 

@@ -195,18 +195,25 @@ impl WriteBuffer<'_> {
         let Some(viz) = self.model.visualization.clone() else {
             return Ok(());
         };
-        self.presentation_representation_step_ids =
-            Vec::with_capacity(viz.presentation_representations.len());
-        for repr in viz.presentation_representations.iter() {
-            let step = match repr {
-                PresentationRepresentation::View(d) => {
-                    PresentationViewHandler::write(self, d.clone())?
-                }
-                PresentationRepresentation::Area(d) => {
-                    PresentationAreaHandler::write(self, d.clone())?
-                }
-            };
-            self.presentation_representation_step_ids.push(step);
+        // Split emit (indexed fill): VIEWs first — they reference no `Itself`
+        // MAPPED_ITEM. Then the presentation-mapped REPRESENTATION_MAP + the
+        // MAPPED_ITEMs sourced from them (a rmap maps a PRESENTATION_VIEW, now
+        // stepped). Then AREAs, whose `items` reference those MAPPED_ITEMs.
+        // Orders VIEW -> rmap -> mapped_item -> AREA without a cyclic
+        // forward-ref (a rmap never maps a PRESENTATION_AREA in the corpus).
+        self.presentation_representation_step_ids = vec![0; viz.presentation_representations.len()];
+        for (idx, repr) in viz.presentation_representations.iter().enumerate() {
+            if let PresentationRepresentation::View(d) = repr {
+                self.presentation_representation_step_ids[idx] =
+                    PresentationViewHandler::write(self, d.clone())?;
+            }
+        }
+        self.emit_presentation_mapped_items()?;
+        for (idx, repr) in viz.presentation_representations.iter().enumerate() {
+            if let PresentationRepresentation::Area(d) = repr {
+                self.presentation_representation_step_ids[idx] =
+                    PresentationAreaHandler::write(self, d.clone())?;
+            }
         }
         self.presentation_set_step_ids = Vec::with_capacity(viz.presentation_sets.len());
         for set in viz.presentation_sets.iter() {
@@ -226,11 +233,15 @@ impl WriteBuffer<'_> {
         let Some(viz) = self.model.visualization.clone() else {
             return Ok(());
         };
+        // APPLIED_PRESENTED_ITEM first — PRESENTED_ITEM_REPRESENTATION.item
+        // forward-references it through `applied_presented_item_step_ids`.
+        self.applied_presented_item_step_ids = vec![0; viz.applied_presented_items.len()];
+        for (idx, api) in viz.applied_presented_items.iter().enumerate() {
+            self.applied_presented_item_step_ids[idx] =
+                AppliedPresentedItemHandler::write(self, api.clone())?;
+        }
         for pir in viz.presented_item_representations.iter() {
             let _ = PresentedItemRepresentationHandler::write(self, *pir)?;
-        }
-        for api in viz.applied_presented_items.iter() {
-            let _ = AppliedPresentedItemHandler::write(self, api.clone())?;
         }
         Ok(())
     }

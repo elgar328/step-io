@@ -15,7 +15,7 @@ use crate::entities::visualization::camera_image::{
 use crate::entities::visualization::camera_usage::CameraUsageHandler;
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::representation_item::RepresentationItemRef;
-use crate::ir::shape_rep::{MappedItem, RepresentationMap};
+use crate::ir::shape_rep::{MappedItem, MappedRepresentationRef, RepresentationMap};
 use crate::writer::WriteError;
 
 impl WriteBuffer<'_> {
@@ -30,10 +30,13 @@ impl WriteBuffer<'_> {
         self.representation_map_step_ids = vec![0; rmaps.len()];
         for (idx, rmap) in rmaps.into_iter().enumerate() {
             // A camera-origin Itself rmap needs `viz_camera_model_step_ids`
-            // (filled later by emit_visualization_if_set), so it is deferred to
-            // `emit_camera_origin_mapped_items` — leave the 0 placeholder here.
+            // (deferred to `emit_camera_origin_mapped_items`); a
+            // presentation-mapped one needs `presentation_representation_step_ids`
+            // (deferred to `emit_presentation_mapped_items`). Leave the 0
+            // placeholder here for both.
             if matches!(&rmap, RepresentationMap::Itself(d)
-                if !matches!(d.mapping_origin, RepresentationItemRef::CameraModel(_)))
+                if !matches!(d.mapping_origin, RepresentationItemRef::CameraModel(_))
+                    && !matches!(d.mapped_representation, MappedRepresentationRef::Presentation(_)))
             {
                 let step_id = RepresentationMapHandler::write(self, rmap)?;
                 self.representation_map_step_ids[idx] = step_id;
@@ -48,7 +51,10 @@ impl WriteBuffer<'_> {
         let mitems: Vec<_> = self.model.mapped_items.iter().cloned().collect();
         self.mapped_item_step_ids = vec![0; mitems.len()];
         for (idx, mi) in mitems.into_iter().enumerate() {
-            if matches!(&mi, MappedItem::Itself(_)) && !self.is_camera_sourced(&mi) {
+            if matches!(&mi, MappedItem::Itself(_))
+                && !self.is_camera_sourced(&mi)
+                && !self.is_presentation_sourced(&mi)
+            {
                 let step_id = MappedItemHandler::write(self, mi)?;
                 self.mapped_item_step_ids[idx] = step_id;
             }
@@ -68,6 +74,50 @@ impl WriteBuffer<'_> {
             RepresentationMap::Itself(rd)
                 if matches!(rd.mapping_origin, RepresentationItemRef::CameraModel(_))
         )
+    }
+
+    /// True iff `mi` is an `Itself` `MAPPED_ITEM` whose `mapping_source` rmap
+    /// maps a presentation representation — deferred to
+    /// `emit_presentation_mapped_items` (its source rmap emits after the
+    /// presentation cluster's `PRESENTATION_VIEW`s are stepped).
+    fn is_presentation_sourced(&self, mi: &MappedItem) -> bool {
+        let MappedItem::Itself(d) = mi else {
+            return false;
+        };
+        matches!(
+            &self.model.representation_maps[d.mapping_source],
+            RepresentationMap::Itself(rd)
+                if matches!(rd.mapped_representation, MappedRepresentationRef::Presentation(_))
+        )
+    }
+
+    /// Delayed emission of presentation-mapped (`Itself`) `REPRESENTATION_MAP`s
+    /// and the `MAPPED_ITEM`s sourced from them. Called from
+    /// `emit_presentation_repr_cluster` after the `PRESENTATION_VIEW`s are
+    /// stepped (so a `Presentation` `mapped_representation` resolves) and before
+    /// the `PRESENTATION_AREA`s (whose `items` reference these `MAPPED_ITEM`s).
+    /// Fills the 0 placeholders left by `emit_mapped_items`; rmaps first.
+    pub(in crate::writer::buffer) fn emit_presentation_mapped_items(
+        &mut self,
+    ) -> Result<(), WriteError> {
+        let rmaps: Vec<_> = self.model.representation_maps.iter().cloned().collect();
+        for (idx, rmap) in rmaps.into_iter().enumerate() {
+            if self.representation_map_step_ids[idx] == 0
+                && matches!(&rmap, RepresentationMap::Itself(d)
+                    if matches!(d.mapped_representation, MappedRepresentationRef::Presentation(_)))
+            {
+                let step_id = RepresentationMapHandler::write(self, rmap)?;
+                self.representation_map_step_ids[idx] = step_id;
+            }
+        }
+        let mitems: Vec<_> = self.model.mapped_items.iter().cloned().collect();
+        for (idx, mi) in mitems.into_iter().enumerate() {
+            if self.mapped_item_step_ids[idx] == 0 && self.is_presentation_sourced(&mi) {
+                let step_id = MappedItemHandler::write(self, mi)?;
+                self.mapped_item_step_ids[idx] = step_id;
+            }
+        }
+        Ok(())
     }
 
     /// Delayed emission of camera-origin plain (`Itself`) `REPRESENTATION_MAP`s

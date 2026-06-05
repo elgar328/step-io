@@ -541,13 +541,24 @@ pub struct CameraUsage {
     pub mapped_representation: RepresentationId,
 }
 
+/// `mapped_representation` target of a `REPRESENTATION_MAP` — the schema's
+/// `representation` supertype. step-io keeps a plain `representation` and a
+/// `presentation_representation` in separate arenas, so the ref is an enum
+/// over both (a `PRESENTATION_VIEW` / `PRESENTATION_AREA` is a legal
+/// `representation` subtype that draughting maps point into).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MappedRepresentationRef {
+    Representation(RepresentationId),
+    Presentation(crate::ir::id::PresentationRepresentationId),
+}
+
 /// Carrier for the base `REPRESENTATION_MAP` entity.
 #[derive(Debug, Clone, PartialEq)]
 pub struct RepresentationMapData {
     /// The `representation_item` that consumers of this map place.
     pub mapping_origin: RepresentationItemRef,
     /// The representation this map points into.
-    pub mapped_representation: RepresentationId,
+    pub mapped_representation: MappedRepresentationRef,
 }
 
 /// `MAPPED_ITEM(name, mapping_source, mapping_target)` — an instance of a

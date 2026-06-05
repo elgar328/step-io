@@ -91,19 +91,18 @@ impl SimpleEntityHandler for PresentationSetHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 1, entity_id, "PRESENTATION_SET")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        check_count(attrs, 0, entity_id, "PRESENTATION_SET")?;
         let id = ctx
             .visualization
             .get_or_insert_with(VisualizationPool::default)
             .presentation_sets
-            .push(PresentationSet { name });
+            .push(PresentationSet);
         ctx.presentation_set_id_map.insert(entity_id, id);
         Ok(())
     }
 
-    fn write(buf: &mut WriteBuffer, set: PresentationSet) -> Result<u64, WriteError> {
-        Ok(buf.push_simple("PRESENTATION_SET", vec![Attribute::String(set.name)]))
+    fn write(buf: &mut WriteBuffer, _set: PresentationSet) -> Result<u64, WriteError> {
+        Ok(buf.push_simple("PRESENTATION_SET", vec![]))
     }
 }
 
