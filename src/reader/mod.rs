@@ -117,6 +117,19 @@ pub(crate) struct PendingCdorsiStyleContext {
     pub(crate) entity_id: u64,
 }
 
+/// A `GEOMETRIC_ITEM_SPECIFIC_USAGE` whose `used_representation` was the
+/// non-standard `$` (CATIA). Its other refs are resolved during dispatch; the
+/// `used_representation` is derived post-dispatch from the representation that
+/// contains `identified_item` (the schema's WHERE rule). See
+/// [`ReaderContext::deferred_gisu_used_repr`].
+pub(crate) struct DeferredGisu {
+    pub(crate) entity_id: u64,
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) definition: crate::ir::ShapeAspectRef,
+    pub(crate) identified_item: crate::ir::representation_item::RepresentationItemRef,
+}
+
 /// Accumulates converted IR objects and tracks the mapping from STEP entity
 /// ids (`#N`) to typed arena Ids.
 #[derive(Default)]
@@ -141,6 +154,10 @@ pub struct ReaderContext {
     /// No step-io entity references GISU today; the map is retained for
     /// symmetry with sibling handlers.
     pub(crate) gisu_id_map: HashMap<u64, crate::ir::id::GeometricItemSpecificUsageId>,
+    /// GISUs whose `used_representation` was a non-standard `$`, deferred so
+    /// `resolve_deferred_gisu_used_representation` can derive it from the
+    /// `identified_item`'s containing representation after all reps are read.
+    pub(crate) deferred_gisu_used_repr: Vec<DeferredGisu>,
     /// `INVISIBILITY` step id → arena id (phase invisibility).
     pub(crate) invisibility_id_map: HashMap<u64, crate::ir::id::InvisibilityId>,
     /// `PRESENTATION_VIEW` / `PRESENTATION_AREA` step id → arena id
@@ -922,6 +939,7 @@ impl ReaderContext {
             ..Self::default()
         };
         ctx.run_topo(graph);
+        ctx.resolve_deferred_gisu_used_representation();
         ctx.resolve_product_contexts();
         ctx.resolve_sdr_product_geometry();
         ctx.ensure_product_ref_frames();
@@ -1233,6 +1251,88 @@ impl ReaderContext {
                     items,
                 });
             self.property_step_to_id.insert(pd_step, prop_id);
+        }
+    }
+
+    /// Derive the `used_representation` of GISUs whose source value was the
+    /// non-standard `$` (CATIA). The schema requires it and its WHERE rule ties
+    /// it to the representation that contains `identified_item`; step-io recovers
+    /// that container instead of dropping the GISU. Deferred to here (post
+    /// `run_topo`) because the container is not referenced by the GISU, so
+    /// dispatch order gives no guarantee it was read first. Pushes in source-`#N`
+    /// order so the round-trip-diffed arena reproduces identically on re-read
+    /// (where the now-explicit ref resolves inline).
+    fn resolve_deferred_gisu_used_representation(&mut self) {
+        use crate::ir::representation_item::RepresentationItemRef;
+        use crate::ir::shape_rep::{GeometricItemSpecificUsage, Representation};
+
+        let mut deferred = std::mem::take(&mut self.deferred_gisu_used_repr);
+        if deferred.is_empty() {
+            return;
+        }
+
+        // Typed reverse indices: an item belongs to exactly one shape
+        // representation in well-formed STEP, so first-writer-wins is safe.
+        let mut solid_to_rep: HashMap<crate::ir::id::SolidId, crate::ir::RepresentationId> =
+            HashMap::new();
+        let mut curve_to_rep: HashMap<crate::ir::id::CurveId, crate::ir::RepresentationId> =
+            HashMap::new();
+        for (rid, repr) in self.representations.iter_with_ids() {
+            match repr {
+                Representation::AdvancedBrep(r) => {
+                    for s in &r.solids {
+                        solid_to_rep.entry(*s).or_insert(rid);
+                    }
+                }
+                Representation::Wireframe(r) => {
+                    for c in &r.content.curves {
+                        curve_to_rep.entry(*c).or_insert(rid);
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        deferred.sort_by_key(|d| d.entity_id);
+        let mut recovered = 0usize;
+        for d in deferred {
+            let used = match d.identified_item {
+                RepresentationItemRef::Solid(sid) => solid_to_rep.get(&sid).copied(),
+                RepresentationItemRef::Curve(cid) => curve_to_rep.get(&cid).copied(),
+                _ => None,
+            };
+            let Some(used_representation) = used else {
+                // No container found — drop with a visibility warning (symmetric
+                // on re-read, where the GISU was never emitted).
+                self.warnings.push(ConvertError::UnexpectedEntityForm {
+                    entity_id: d.entity_id,
+                    detail: String::from(
+                        "GEOMETRIC_ITEM_SPECIFIC_USAGE used_representation Unset and no containing \
+                         representation found for identified_item — dropping",
+                    ),
+                });
+                continue;
+            };
+            let id = self
+                .geometric_item_specific_usages
+                .push(GeometricItemSpecificUsage {
+                    name: d.name,
+                    description: d.description,
+                    definition: d.definition,
+                    used_representation,
+                    identified_item: d.identified_item,
+                });
+            self.gisu_id_map.insert(d.entity_id, id);
+            recovered += 1;
+        }
+        if recovered > 0 {
+            // Non-standard required field normalised (reader-tolerant). Surfaced
+            // as a normalization, not a defect — the GISU is preserved.
+            self.warnings.push(ConvertError::NonStandardInput {
+                field: "GEOMETRIC_ITEM_SPECIFIC_USAGE.used_representation (Unset)".into(),
+                count: recovered,
+                normalized_to: "containing representation (derived from identified_item)".into(),
+            });
         }
     }
 

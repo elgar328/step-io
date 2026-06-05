@@ -1582,3 +1582,83 @@ fn product_definition_id_description_materialised_in_arena() {
     assert_eq!(re_pd.id, "MyPart", "PD id survives the round-trip");
     assert_eq!(re_pd.description, "rev A", "PD description survives");
 }
+
+#[test]
+fn gisu_unset_used_representation_derived_from_identified_item() {
+    // `GEOMETRIC_ITEM_SPECIFIC_USAGE.used_representation` is required, but CATIA
+    // emits `$` for "Solid" GISUs. The reader derives it from the representation
+    // that contains `identified_item` (the schema's WHERE rule) and recovers the
+    // GISU instead of dropping it, surfacing a NonStandardInput normalization.
+    let source = minimal_step(
+        "#1 = APPLICATION_CONTEXT('test');\n\
+         #2 = PRODUCT_CONTEXT('',#1,'mechanical');\n\
+         #3 = PRODUCT_DEFINITION_CONTEXT('part definition',#1,'design');\n\
+         #4 = PRODUCT('P','P','',(#2));\n\
+         #5 = PRODUCT_DEFINITION_FORMATION('1','',#4);\n\
+         #6 = PRODUCT_DEFINITION('part','',#5,#3);\n\
+         #7 = PRODUCT_DEFINITION_SHAPE('','',#6);\n\
+         #10 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+         #11 = ( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n\
+         #12 = ( NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT() );\n\
+         #13 = ( GEOMETRIC_REPRESENTATION_CONTEXT(3)\n\
+         \t\tGLOBAL_UNIT_ASSIGNED_CONTEXT((#10,#11,#12))\n\
+         \t\tREPRESENTATION_CONTEXT('','') );\n\
+         #20 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #21 = DIRECTION('',(0.,0.,1.));\n\
+         #22 = DIRECTION('',(1.,0.,0.));\n\
+         #23 = VECTOR('',#21,1.);\n\
+         #24 = LINE('',#20,#23);\n\
+         #25 = AXIS2_PLACEMENT_3D('',#20,#21,#22);\n\
+         #26 = PLANE('',#25);\n\
+         #27 = VERTEX_POINT('',#20);\n\
+         #28 = EDGE_CURVE('',#27,#27,#24,.T.);\n\
+         #29 = ORIENTED_EDGE('',*,*,#28,.T.);\n\
+         #30 = EDGE_LOOP('',(#29));\n\
+         #31 = FACE_BOUND('',#30,.T.);\n\
+         #32 = ADVANCED_FACE('',(#31),#26,.T.);\n\
+         #33 = CLOSED_SHELL('',(#32));\n\
+         #34 = MANIFOLD_SOLID_BREP('',#33);\n\
+         #35 = ADVANCED_BREP_SHAPE_REPRESENTATION('',(#34),#13);\n\
+         #36 = SHAPE_ASPECT('','Solid',#7,.F.);\n\
+         #37 = GEOMETRIC_ITEM_SPECIFIC_USAGE('','Solid',#36,$,#34);",
+    );
+    let result = convert_source(&source);
+
+    // The GISU is recovered (not dropped); its used_representation resolves to
+    // the only representation in the model (the ABSR containing the solid).
+    assert_eq!(
+        result.model.geometric_item_specific_usages.iter().count(),
+        1,
+        "$-used_representation GISU recovered"
+    );
+    let gisu = result
+        .model
+        .geometric_item_specific_usages
+        .iter()
+        .next()
+        .unwrap();
+    assert_eq!(
+        gisu.used_representation,
+        crate::ir::RepresentationId(0),
+        "derived used_representation points at the ABSR"
+    );
+
+    // Surfaced as a NonStandardInput normalization (LOSS-exempt), not a defect.
+    let norm = result
+        .warnings
+        .iter()
+        .filter(|w| {
+            matches!(w, ConvertError::NonStandardInput { field, .. }
+                if field.contains("GEOMETRIC_ITEM_SPECIFIC_USAGE.used_representation"))
+        })
+        .count();
+    assert_eq!(norm, 1, "{:#?}", result.warnings);
+    assert!(
+        !result.warnings.iter().any(|w| matches!(
+            w,
+            ConvertError::MissingReference { .. } | ConvertError::UnexpectedEntityForm { .. }
+        )),
+        "{:#?}",
+        result.warnings
+    );
+}

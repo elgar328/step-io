@@ -13,7 +13,7 @@ use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::GeometricItemSpecificUsage;
 use crate::parser::entity::{Attribute, EntityGraph};
-use crate::reader::ReaderContext;
+use crate::reader::{DeferredGisu, ReaderContext};
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use step_io_macros::step_entity;
@@ -41,12 +41,27 @@ impl SimpleEntityHandler for GeometricItemSpecificUsageHandler {
         let Some(definition) = resolve_shape_aspect_ref(ctx, def_ref) else {
             return Ok(());
         };
-        let used_ref = read_entity_ref(attrs, 3, entity_id, "used_representation")?;
-        let Some(&used_representation) = ctx.repr_id_map.get(&used_ref) else {
-            return Ok(());
-        };
         let item_ref = read_entity_ref(attrs, 4, entity_id, "identified_item")?;
         let Some(identified_item) = resolve_representation_item_ref(ctx, item_ref) else {
+            return Ok(());
+        };
+        // `used_representation` is a required `representation`, but CATIA emits
+        // `$` for "Solid" GISUs. Defer the `$` case: its standard value (the
+        // WHERE-rule container of `identified_item`) is not referenced by this
+        // GISU, so dispatch order gives no guarantee the container was read
+        // first — `resolve_deferred_gisu_used_representation` derives it.
+        if matches!(attrs[3], Attribute::Unset) {
+            ctx.deferred_gisu_used_repr.push(DeferredGisu {
+                entity_id,
+                name,
+                description,
+                definition,
+                identified_item,
+            });
+            return Ok(());
+        }
+        let used_ref = read_entity_ref(attrs, 3, entity_id, "used_representation")?;
+        let Some(&used_representation) = ctx.repr_id_map.get(&used_ref) else {
             return Ok(());
         };
         let id = ctx
