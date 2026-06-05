@@ -1363,11 +1363,49 @@ impl WriteBuffer<'_> {
         )
     }
 
+    /// Emit the instance's `NEXT_ASSEMBLY_USAGE_OCCURRENCE`. The sole NAUO emit
+    /// point (called once per bundle), so the NAUO appears exactly when its
+    /// placement bundle does — no orphan / double emit. Reader-built instances
+    /// (`acu == Some`) emit from the canonical `assembly_component_usage` arena
+    /// entry (real id / name / description / reference_designator); kernel-built
+    /// instances (`acu == None`) synthesise from the `Instance` fields as before
+    /// (no description / reference_designator to preserve → empty / unset).
     pub(crate) fn emit_nauo(&mut self, inst: &Instance, parent_pdef: u64, child_pdef: u64) -> u64 {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::assembly_product::next_assembly_usage_occurrence::{
             NextAssemblyUsageOccurrenceHandler, NextAssemblyUsageOccurrenceWriteInput,
         };
+        if let Some(acuid) = inst.acu {
+            let (id, name, description, reference_designator) = {
+                let acu = &self
+                    .model
+                    .assembly
+                    .as_ref()
+                    .expect("assembly present when Instance.acu is set")
+                    .assembly_component_usages[acuid];
+                (
+                    acu.id.clone(),
+                    acu.name.clone(),
+                    acu.description.clone(),
+                    acu.reference_designator.clone(),
+                )
+            };
+            let ref_designator_attr = match reference_designator {
+                Some(s) => Attribute::String(s),
+                None => Attribute::Unset,
+            };
+            return self.push_simple(
+                "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+                vec![
+                    Attribute::String(id),
+                    Attribute::String(name),
+                    Attribute::String(description),
+                    Attribute::EntityRef(parent_pdef),
+                    Attribute::EntityRef(child_pdef),
+                    ref_designator_attr,
+                ],
+            );
+        }
         NextAssemblyUsageOccurrenceHandler::write(
             self,
             NextAssemblyUsageOccurrenceWriteInput {

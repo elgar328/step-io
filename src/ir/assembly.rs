@@ -56,6 +56,31 @@ pub struct AssemblyTree {
     /// writer then synthesises one bare formation per product). Each
     /// `Product.formation` indexes into this arena.
     pub product_definition_formations: Arena<ProductDefinitionFormation>,
+    /// `assembly_component_usage` arena (`NEXT_ASSEMBLY_USAGE_OCCURRENCE`) — the
+    /// blueprint-canonical flat store of assembly instance occurrences. The
+    /// ergonomic `Product.instances` tree is a derived view: each reader-built
+    /// `Instance` carries an `acu` index back into this arena, and the writer
+    /// emits the NAUO line from here. Empty for kernel-built IR (the writer
+    /// synthesises the NAUO from `Instance` instead — see `Instance::acu`).
+    pub assembly_component_usages: Arena<NextAssemblyUsageOccurrence>,
+}
+
+/// `NEXT_ASSEMBLY_USAGE_OCCURRENCE` — the blueprint `assembly_component_usage`
+/// arena entry, the canonical record of one assembly instance occurrence
+/// (which child product is placed under which parent, plus the schema id /
+/// name / description / reference designator). The placement transform is NOT
+/// here — it comes from the CDSR/RRWT path and lives on the derived
+/// [`Instance`]. `relating` / `related` are stored as [`ProductId`] (step-io
+/// has no `product_definition` arena yet), mirroring
+/// [`PlainProductDefinitionRelationship`].
+#[derive(Debug, Clone, PartialEq)]
+pub struct NextAssemblyUsageOccurrence {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    pub relating: ProductId,
+    pub related: ProductId,
+    pub reference_designator: Option<String>,
 }
 
 /// `PRODUCT_DEFINITION_RELATIONSHIP` arena entry. Carries the plain base
@@ -380,6 +405,14 @@ pub struct Instance {
     /// can reference. `None` for kernel/empty-IR builds, where the assembly
     /// writer synthesises the RR complex from `transform` instead.
     pub transform_rr: Option<crate::ir::id::RepresentationRelationshipId>,
+    /// Index into [`AssemblyTree::assembly_component_usages`] — the canonical
+    /// `NEXT_ASSEMBLY_USAGE_OCCURRENCE` this instance is the placement view of.
+    /// `Some` for reader-built IR (the writer emits the NAUO from the arena and
+    /// this instance consumes that step id); `None` for kernel/hand-built IR
+    /// (the writer synthesises the NAUO inline from this instance's fields).
+    /// The instance's `occurrence_id` / `occurrence_name` / `child` mirror the
+    /// arena entry's `id` / `name` / `related`.
+    pub acu: Option<crate::ir::id::AssemblyComponentUsageId>,
 }
 
 /// A rigid 3D placement expressed as STEP does it: two axis placements

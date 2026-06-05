@@ -76,6 +76,11 @@ pub(crate) struct PendingNauoInstance {
     pub(crate) child: ProductId,
     pub(crate) occurrence_id: String,
     pub(crate) occurrence_name: String,
+    /// NAUO `description` (attr 2) — kept for the canonical
+    /// `assembly_component_usage` arena entry built in `resolve_nauo_instances`.
+    pub(crate) description: String,
+    /// NAUO `reference_designator` (attr 5) — `None` when unset (`$`).
+    pub(crate) reference_designator: Option<String>,
     /// STEP id of the NAUO — the key into `nauo_transform_map`, and the
     /// `entity_id` reported if no transform was found.
     pub(crate) nauo_id: u64,
@@ -270,6 +275,10 @@ pub struct ReaderContext {
     // `assembly` is filled in `convert()` if any PRODUCT was seen.
     pub(crate) assembly: Option<AssemblyTree>,
     pub(crate) assembly_products: Arena<Product>,
+    /// Canonical `assembly_component_usage` (NAUO) arena, accumulated by
+    /// `resolve_nauo_instances` and `mem::take`-n into the `AssemblyTree` at
+    /// finalize. Each entry is 1:1 with a built `Instance` (via `Instance::acu`).
+    pub(crate) assembly_component_usages: Arena<crate::ir::NextAssemblyUsageOccurrence>,
     pub(crate) product_contexts: Arena<crate::ir::ProductContext>,
     pub(crate) product_definition_contexts: Arena<crate::ir::ProductDefinitionContext>,
     pub(crate) product_context_id_map: HashMap<u64, crate::ir::ProductContextId>,
@@ -999,14 +1008,34 @@ impl ReaderContext {
             let parent = pending.parent;
             let idx = self.assembly_products[parent].instances.len();
             slot_nauo.insert((parent, idx), pending.nauo_id);
+            // Push the canonical `assembly_component_usage` arena entry here —
+            // co-located with the Instance build — so a transform-less NAUO
+            // (the `else continue` above) leaves neither an arena entry nor an
+            // Instance, keeping the two strictly 1:1 (no orphan NAUO on write).
+            let acu_id = self.assembly_component_usages.push(
+                crate::ir::assembly::NextAssemblyUsageOccurrence {
+                    id: pending.occurrence_id,
+                    name: pending.occurrence_name,
+                    description: pending.description,
+                    relating: pending.parent,
+                    related: pending.child,
+                    reference_designator: pending.reference_designator,
+                },
+            );
+            // The Instance is a denormalized view of the arena entry.
+            let (child, occurrence_id, occurrence_name) = {
+                let acu = &self.assembly_component_usages[acu_id];
+                (acu.related, acu.id.clone(), acu.name.clone())
+            };
             self.assembly_products[parent]
                 .instances
                 .push(crate::ir::assembly::Instance {
-                    child: pending.child,
+                    child,
                     transform,
-                    occurrence_id: pending.occurrence_id,
-                    occurrence_name: pending.occurrence_name,
+                    occurrence_id,
+                    occurrence_name,
                     transform_rr: None,
+                    acu: Some(acu_id),
                 });
         }
         // Pass 2 — canonical-order RR materialisation.
@@ -1090,13 +1119,13 @@ impl ReaderContext {
         if self.product_arena_map.is_empty() {
             return;
         }
-        // Collect every ProductId that appears as an Instance.child. The
-        // remaining products are root candidates.
+        // Collect every ProductId that appears as a child in the canonical
+        // `assembly_component_usage` arena (`related`). The remaining products
+        // are root candidates. (Equivalent to scanning `Instance.child`, since
+        // the view is built 1:1 from the arena — the arena is the source.)
         let mut is_child: HashSet<ProductId> = HashSet::new();
-        for product in self.assembly_products.iter() {
-            for inst in &product.instances {
-                is_child.insert(inst.child);
-            }
+        for acu in self.assembly_component_usages.iter() {
+            is_child.insert(acu.related);
         }
         let roots: Vec<ProductId> = self
             .assembly_products
@@ -1127,6 +1156,7 @@ impl ReaderContext {
         let product_category_relationships =
             std::mem::take(&mut self.product_category_relationships);
         let product_definition_formations = std::mem::take(&mut self.product_definition_formations);
+        let assembly_component_usages = std::mem::take(&mut self.assembly_component_usages);
         self.assembly = Some(AssemblyTree {
             products,
             roots,
@@ -1138,6 +1168,7 @@ impl ReaderContext {
             product_categories,
             product_category_relationships,
             product_definition_formations,
+            assembly_component_usages,
         });
     }
 

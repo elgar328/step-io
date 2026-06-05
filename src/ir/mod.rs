@@ -18,9 +18,10 @@ pub mod visualization;
 
 pub use arena::Arena;
 pub use assembly::{
-    AssemblyTree, GeometryLeaf, Instance, MakeFromUsageOption, PlainProductDefinitionRelationship,
-    Product, ProductCategoryChain, ProductCategoryRoot, ProductContext, ProductContextData,
-    ProductDefinitionContext, ProductDefinitionContextAssociation, ProductDefinitionContextData,
+    AssemblyTree, GeometryLeaf, Instance, MakeFromUsageOption, NextAssemblyUsageOccurrence,
+    PlainProductDefinitionRelationship, Product, ProductCategoryChain, ProductCategoryRoot,
+    ProductContext, ProductContextData, ProductDefinitionContext,
+    ProductDefinitionContextAssociation, ProductDefinitionContextData,
     ProductDefinitionContextRole, ProductDefinitionFormation, ProductDefinitionFormationData,
     ProductDefinitionFormationWithSpecifiedSource, ProductDefinitionRelationship, SolidContent,
     SurfaceBodyContent, Transform3d, WireframeContent, WireframeReprKind,
@@ -40,10 +41,10 @@ pub use geometry::{
 pub use id::{
     AddressId, ApplicationContextId, ApplicationProtocolDefinitionId, ApprovalAssignmentId,
     ApprovalDateTimeId, ApprovalId, ApprovalPersonOrganizationId, ApprovalRoleId, ApprovalStatusId,
-    CameraModelId, CoordinatedUniversalTimeOffsetId, Curve2dId, CurveId, DateAndTimeAssignmentId,
-    DateAndTimeId, DateId, DateTimeRoleId, DerivedUnitElementId, DerivedUnitId,
-    DescriptionAttributeId, DimensionalExponentsId, Direction2dId, DirectionId, DocumentId,
-    DocumentProductEquivalenceId, DocumentReferenceId, DocumentRepresentationTypeId,
+    AssemblyComponentUsageId, CameraModelId, CoordinatedUniversalTimeOffsetId, Curve2dId, CurveId,
+    DateAndTimeAssignmentId, DateAndTimeId, DateId, DateTimeRoleId, DerivedUnitElementId,
+    DerivedUnitId, DescriptionAttributeId, DimensionalExponentsId, Direction2dId, DirectionId,
+    DocumentId, DocumentProductEquivalenceId, DocumentReferenceId, DocumentRepresentationTypeId,
     DocumentTypeId, EdgeId, ExternalSourceId, FaceId, FoundedItemId, GeneralPropertyAssociationId,
     GeneralPropertyId, GroupAssignmentId, GroupId, IdAttributeId, IdentificationAssignmentId,
     IdentificationRoleId, LocalTimeId, MappedItemId, MeasureWithUnitId, NameAttributeId,

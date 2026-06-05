@@ -941,6 +941,7 @@ fn simple_assembly_round_trips() {
             occurrence_id: "1".into(),
             occurrence_name: "LeafInst".into(),
             transform_rr: None,
+            acu: None,
         }],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
@@ -1027,6 +1028,7 @@ fn shared_child_assembly_round_trips() {
                 occurrence_id: "1".into(),
                 occurrence_name: "A".into(),
                 transform_rr: None,
+                acu: None,
             },
             Instance {
                 child: leaf_pid,
@@ -1034,6 +1036,7 @@ fn shared_child_assembly_round_trips() {
                 occurrence_id: "2".into(),
                 occurrence_name: "B".into(),
                 transform_rr: None,
+                acu: None,
             },
         ],
         shape_ref_frame: identity_frame,
@@ -1067,6 +1070,119 @@ fn shared_child_assembly_round_trips() {
     );
     assert_eq!(root_prod.instances[0].occurrence_id, "1");
     assert_eq!(root_prod.instances[1].occurrence_id, "2");
+}
+
+#[test]
+fn nauo_arena_is_canonical_with_instance_view() {
+    // Direction-(b) prototype: the `assembly_component_usage` (NAUO) arena is
+    // the canonical store and `Product.instances` is a derived view (via
+    // `Instance.acu`). A reader-built instance carries `acu = Some`; the writer
+    // emits the NAUO from the arena entry — round-tripping `description` and
+    // `reference_designator`, which the legacy inline synthesis dropped. Also
+    // guards the arena↔instance 1:1 invariant (no orphan NAUO).
+    use step_io::ir::NextAssemblyUsageOccurrence;
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let transform = identity_transform(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let leaf_pid = tree.products.push(Product {
+        id: "Leaf".into(),
+        name: "Leaf".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+    });
+    let root_pid = tree.products.push(Product {
+        id: "Root".into(),
+        name: "Root".into(),
+        description: None,
+        geometry: None,
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+    });
+    // Canonical NAUO arena entry with a non-empty description + reference
+    // designator (the fields the legacy path dropped).
+    let acu_id = tree
+        .assembly_component_usages
+        .push(NextAssemblyUsageOccurrence {
+            id: "7".into(),
+            name: "BoltInst".into(),
+            description: "component placement".into(),
+            relating: root_pid,
+            related: leaf_pid,
+            reference_designator: Some("=>[0:1:1:5]".into()),
+        });
+    // The Instance is the derived view: its occurrence fields mirror the arena
+    // entry, plus the `acu` link the writer follows.
+    tree.products[root_pid].instances.push(Instance {
+        child: leaf_pid,
+        transform,
+        occurrence_id: "7".into(),
+        occurrence_name: "BoltInst".into(),
+        transform_rr: None,
+        acu: Some(acu_id),
+    });
+    tree.roots = vec![root_pid];
+    model.assembly = Some(tree);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let r_asm = re.assembly.as_ref().expect("assembly");
+
+    // Canonical arena round-tripped, including description + reference_designator.
+    assert_eq!(r_asm.assembly_component_usages.iter().count(), 1);
+    let acu = r_asm.assembly_component_usages.iter().next().unwrap();
+    assert_eq!(acu.id, "7");
+    assert_eq!(acu.name, "BoltInst");
+    assert_eq!(acu.description, "component placement");
+    assert_eq!(acu.reference_designator.as_deref(), Some("=>[0:1:1:5]"));
+
+    // Derived view intact and linked to the arena (acu = Some on re-read).
+    let root_prod = r_asm.products.iter().find(|p| p.id == "Root").unwrap();
+    assert_eq!(root_prod.instances.len(), 1);
+    let inst = &root_prod.instances[0];
+    assert_eq!(inst.occurrence_id, "7");
+    assert_eq!(inst.occurrence_name, "BoltInst");
+    assert!(
+        inst.acu.is_some(),
+        "reader-built instance links to the arena"
+    );
+
+    // Arena ↔ instance is strictly 1:1 (every entry has its view, no orphan NAUO).
+    let view_count: usize = r_asm
+        .products
+        .iter()
+        .flat_map(|p| p.instances.iter())
+        .filter(|i| i.acu.is_some())
+        .count();
+    assert_eq!(r_asm.assembly_component_usages.iter().count(), view_count);
 }
 
 #[test]
@@ -1118,6 +1234,7 @@ fn assembly_placement_materialises_distinct_rrwt_per_instance() {
                 occurrence_id: "1".into(),
                 occurrence_name: "A".into(),
                 transform_rr: None,
+                acu: None,
             },
             Instance {
                 child: leaf_pid,
@@ -1125,6 +1242,7 @@ fn assembly_placement_materialises_distinct_rrwt_per_instance() {
                 occurrence_id: "2".into(),
                 occurrence_name: "B".into(),
                 transform_rr: None,
+                acu: None,
             },
         ],
         shape_ref_frame: identity_frame,

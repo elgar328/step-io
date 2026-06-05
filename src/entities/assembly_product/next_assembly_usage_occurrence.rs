@@ -10,7 +10,7 @@
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::assembly::Instance;
-use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
+use crate::ir::attr::{check_count, read_entity_ref, read_optional_string, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -39,7 +39,12 @@ impl SimpleEntityHandler for NextAssemblyUsageOccurrenceHandler {
         check_count(attrs, 6, entity_id, "NEXT_ASSEMBLY_USAGE_OCCURRENCE")?;
         let occurrence_id = read_string_or_unset(attrs, 0, entity_id, "id")?.to_owned();
         let occurrence_name = read_string_or_unset(attrs, 1, entity_id, "name")?.to_owned();
-        // attrs[2] = description, attrs[5] = reference_designator — ignored.
+        // attr[2] = description (required STRING — `$` normalizes to ""),
+        // attr[5] = reference_designator (OPTIONAL STRING). Both feed the
+        // canonical `assembly_component_usage` arena entry built in the post-pass.
+        let description = read_string_or_unset(attrs, 2, entity_id, "description")?.to_owned();
+        let reference_designator =
+            read_optional_string(attrs, 5, entity_id, "reference_designator")?;
         let relating_pdef = read_entity_ref(attrs, 3, entity_id, "relating_pdef")?;
         let related_pdef = read_entity_ref(attrs, 4, entity_id, "related_pdef")?;
 
@@ -48,14 +53,18 @@ impl SimpleEntityHandler for NextAssemblyUsageOccurrenceHandler {
 
         // The transform comes from the CDSR handler, which the reference graph
         // (NAUO <- PDS <- CDSR) places *after* this NAUO under topological
-        // dispatch. Defer the instance: a post-pass attaches the transform once
-        // every CDSR has run. See `ReaderContext::resolve_nauo_instances`.
+        // dispatch. Defer the instance: a post-pass attaches the transform AND
+        // pushes the canonical arena entry once every CDSR has run, so a NAUO
+        // with no transform leaves neither an Instance nor an arena entry. See
+        // `ReaderContext::resolve_nauo_instances`.
         ctx.pending_nauo_instances
             .push(crate::reader::PendingNauoInstance {
                 parent: parent_pid,
                 child: child_pid,
                 occurrence_id,
                 occurrence_name,
+                description,
+                reference_designator,
                 nauo_id: entity_id,
             });
         Ok(())
