@@ -331,9 +331,7 @@ mod tests {
             let solid_id = pool.push_plain_solid_angle(self.solid_angle);
 
             let ctx = UnitContext {
-                length: length_id,
-                plane_angle: plane_id,
-                solid_angle: solid_id,
+                units: vec![length_id, plane_id, solid_id],
                 length_uncertainty: self.length_uncertainty,
                 plane_angle_uncertainty: self.plane_angle_uncertainty,
                 solid_angle_uncertainty: self.solid_angle_uncertainty,
@@ -357,7 +355,7 @@ mod tests {
     fn first_length(model: &StepModel) -> Option<LengthUnit> {
         let ctx = model.units.iter().next()?;
         let pool = model.units_pool.as_ref()?;
-        match pool.named_units[ctx.length] {
+        match pool.named_units[ctx.length(pool)?] {
             NamedUnit::Length(f) => Some(f.unit),
             _ => None,
         }
@@ -365,7 +363,7 @@ mod tests {
     fn first_plane_angle(model: &StepModel) -> Option<AngleUnit> {
         let ctx = model.units.iter().next()?;
         let pool = model.units_pool.as_ref()?;
-        match pool.named_units[ctx.plane_angle] {
+        match pool.named_units[ctx.plane_angle(pool)?] {
             NamedUnit::PlaneAngle(f) => Some(f.unit),
             _ => None,
         }
@@ -373,7 +371,7 @@ mod tests {
     fn first_solid_angle(model: &StepModel) -> Option<SolidAngleUnit> {
         let ctx = model.units.iter().next()?;
         let pool = model.units_pool.as_ref()?;
-        match pool.named_units[ctx.solid_angle] {
+        match pool.named_units[ctx.solid_angle(pool)?] {
             NamedUnit::SolidAngle(f) => Some(f.unit),
             _ => None,
         }

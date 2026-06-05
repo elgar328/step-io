@@ -4,8 +4,8 @@ use crate::entities::units::uncertainty_measure_with_unit::UncertaintyMeasureWit
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::attr::{check_count, read_entity_ref_list};
 use crate::ir::error::ConvertError;
-use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit, SolidAngleUnit, UnitContext};
-use crate::ir::units::{LengthFlavor, NamedUnit, PlaneAngleFlavor, SolidAngleFlavor};
+use crate::ir::shape_rep::{LengthUncertainty, UnitContext};
+use crate::ir::units::NamedUnit;
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::{ReaderContext, require_part_attrs};
 use crate::writer::WriteError;
@@ -34,63 +34,26 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
         check_count(guac_attrs, 1, entity_id, "GLOBAL_UNIT_ASSIGNED_CONTEXT")?;
         let unit_refs = read_entity_ref_list(guac_attrs, 0, entity_id, "units")?;
 
-        // Walk each ref — variant-classify via the already-populated
-        // named_unit arena (units-2: every LENGTH/PLANE_ANGLE/SOLID_ANGLE
-        // complex registers a NamedUnit entry; this loop picks the entry
-        // that matches each GUAC ref).
-        let mut length = None;
-        let mut plane_angle = None;
-        let mut solid_angle = None;
+        // `units` is `SET[1:?] OF unit` — collect each ref (any kind: length /
+        // plane_angle / solid_angle / mass / ratio, in source order) into the
+        // set. A source may legitimately omit a kind (e.g. solid_angle); no
+        // synthesis, no "incomplete" warning. An unresolved ref (unit step-io
+        // did not model) is surfaced and skipped.
+        let mut units = Vec::with_capacity(unit_refs.len());
         for r in &unit_refs {
             if let Some(&nu_id) = ctx.named_unit_id_map.get(r) {
-                match ctx.named_units_arena[nu_id] {
-                    NamedUnit::Length(_) => length = Some(nu_id),
-                    NamedUnit::PlaneAngle(_) => plane_angle = Some(nu_id),
-                    NamedUnit::SolidAngle(_) => solid_angle = Some(nu_id),
-                    // GUAC does not reference mass or ratio.
-                    NamedUnit::Mass(_) | NamedUnit::Ratio(_) => {}
-                }
+                units.push(nu_id);
+            } else {
+                ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                    entity_id,
+                    detail: format!("GLOBAL_UNIT_ASSIGNED_CONTEXT.units ref #{r} unresolved"),
+                });
             }
-        }
-
-        // Fallback for incomplete unit contexts: synthesize missing slots
-        // with SI defaults so `UnitContext` always has a valid arena ref.
-        let incomplete = length.is_none() || plane_angle.is_none() || solid_angle.is_none();
-        let length = length.unwrap_or_else(|| {
-            ctx.named_units_arena.push(NamedUnit::Length(LengthFlavor {
-                unit: LengthUnit::Millimetre,
-                cbu_base: None,
-                dim_exp: None,
-            }))
-        });
-        let plane_angle = plane_angle.unwrap_or_else(|| {
-            ctx.named_units_arena
-                .push(NamedUnit::PlaneAngle(PlaneAngleFlavor {
-                    unit: AngleUnit::Radian,
-                    cbu_base: None,
-                    dim_exp: None,
-                }))
-        });
-        let solid_angle = solid_angle.unwrap_or_else(|| {
-            ctx.named_units_arena
-                .push(NamedUnit::SolidAngle(SolidAngleFlavor {
-                    unit: SolidAngleUnit::Steradian,
-                    dim_exp: None,
-                }))
-        });
-        if incomplete {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: "incomplete unit context (synthesized missing components as SI defaults)"
-                    .into(),
-            });
         }
         let (length_uncertainty, plane_angle_uncertainty, solid_angle_uncertainty) =
             extract_uncertainties(ctx, parts);
         let ctx_id = ctx.units.push(UnitContext {
-            length,
-            plane_angle,
-            solid_angle,
+            units,
             length_uncertainty,
             plane_angle_uncertainty,
             solid_angle_uncertainty,
@@ -101,12 +64,29 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
 
     fn write(buf: &mut WriteBuffer, units: UnitContext) -> Result<u64, WriteError> {
         // units-2: leaf entities are emitted once by `emit_units_pool_if_set`
-        // before `emit_all` reaches the GUAC loop. Here we resolve each
-        // `NamedUnitId` to the already-emitted step id via the cache.
-        let length = buf.named_unit_step_ids[units.length.0 as usize];
-        let angle = buf.named_unit_step_ids[units.plane_angle.0 as usize];
-        let solid = buf.named_unit_step_ids[units.solid_angle.0 as usize];
-        buf.unit_leaf_ids.push((length, angle, solid));
+        // before `emit_all` reaches the GUAC loop. Resolve each `NamedUnitId`
+        // to the emitted step id, preserving the source `units` set order.
+        let unit_steps: Vec<u64> = units
+            .units
+            .iter()
+            .map(|id| buf.named_unit_step_ids[id.0 as usize])
+            .collect();
+
+        // For uncertainty binding, find the step id of the first unit of a
+        // given kind in `units` (a kind may be absent — the schema permits it,
+        // and an uncertainty with no matching unit kind is dropped). Resolved
+        // before the mutable uncertainty emits below (immutable borrow).
+        let kind_step = |want: fn(&NamedUnit) -> bool| -> Option<u64> {
+            let pool = buf.model.units_pool.as_ref()?;
+            units
+                .units
+                .iter()
+                .find(|id| want(&pool.named_units[**id]))
+                .map(|id| buf.named_unit_step_ids[id.0 as usize])
+        };
+        let length_step = kind_step(|u| matches!(u, NamedUnit::Length(_)));
+        let angle_step = kind_step(|u| matches!(u, NamedUnit::PlaneAngle(_)));
+        let solid_step = kind_step(|u| matches!(u, NamedUnit::SolidAngle(_)));
 
         // ISO 10303-21:2016 §11.2.5.1 — complex entity parts serialize in
         // alphabetical order. Final order with uncertainty present:
@@ -121,11 +101,12 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
             ),
             (
                 "GLOBAL_UNIT_ASSIGNED_CONTEXT".into(),
-                vec![Attribute::List(vec![
-                    Attribute::EntityRef(length),
-                    Attribute::EntityRef(angle),
-                    Attribute::EntityRef(solid),
-                ])],
+                vec![Attribute::List(
+                    unit_steps
+                        .iter()
+                        .map(|&s| Attribute::EntityRef(s))
+                        .collect(),
+                )],
             ),
             (
                 "REPRESENTATION_CONTEXT".into(),
@@ -136,24 +117,32 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
             ),
         ];
         let mut unc_refs: Vec<Attribute> = Vec::new();
-        if let Some(uncertainty) = units.length_uncertainty.clone() {
+        // Emit each uncertainty only when its corresponding unit kind is
+        // present in the set (cannot reference a unit that was not emitted).
+        if let (Some(uncertainty), Some(unit_step)) =
+            (units.length_uncertainty.clone(), length_step)
+        {
             let id = UncertaintyMeasureWithUnitHandler::write(
                 buf,
-                (uncertainty, length, "LENGTH_MEASURE"),
+                (uncertainty, unit_step, "LENGTH_MEASURE"),
             )?;
             unc_refs.push(Attribute::EntityRef(id));
         }
-        if let Some(uncertainty) = units.plane_angle_uncertainty.clone() {
+        if let (Some(uncertainty), Some(unit_step)) =
+            (units.plane_angle_uncertainty.clone(), angle_step)
+        {
             let id = UncertaintyMeasureWithUnitHandler::write(
                 buf,
-                (uncertainty, angle, "PLANE_ANGLE_MEASURE"),
+                (uncertainty, unit_step, "PLANE_ANGLE_MEASURE"),
             )?;
             unc_refs.push(Attribute::EntityRef(id));
         }
-        if let Some(uncertainty) = units.solid_angle_uncertainty.clone() {
+        if let (Some(uncertainty), Some(unit_step)) =
+            (units.solid_angle_uncertainty.clone(), solid_step)
+        {
             let id = UncertaintyMeasureWithUnitHandler::write(
                 buf,
-                (uncertainty, solid, "SOLID_ANGLE_MEASURE"),
+                (uncertainty, unit_step, "SOLID_ANGLE_MEASURE"),
             )?;
             unc_refs.push(Attribute::EntityRef(id));
         }

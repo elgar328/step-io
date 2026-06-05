@@ -387,13 +387,6 @@ pub(crate) struct WriteBuffer<'m> {
     /// IR `ProductDefinitionContext` index → emitted
     /// `PRODUCT_DEFINITION_CONTEXT` (or `DESIGN_CONTEXT`) step id.
     pub(crate) pdc_step_ids: Vec<u64>,
-    /// Per-`UnitContext` resolved leaf STEP ids `(length, angle, solid_angle)`,
-    /// indexed by `UnitContextId.0`. Each tuple is filled in by the GUAC
-    /// writer by looking up `UnitContext.{length, plane_angle, solid_angle}`
-    /// in [`Self::named_unit_step_ids`] — no new leaf entities are emitted
-    /// here. Consumed by the property emitter when resolving a measure's
-    /// unit ref.
-    pub(crate) unit_leaf_ids: Vec<(u64, u64, u64)>,
     /// `ProductId → best step id for cross-references that target this
     /// product`. Populated by `emit_assembly_chain`; consumed by the
     /// property emitter and the plm `applied_*_assignment` writers so
@@ -506,7 +499,6 @@ impl<'m> WriteBuffer<'m> {
             type_qualifier_step_ids: Vec::new(),
             value_format_type_qualifier_step_ids: Vec::new(),
             representation_item_step_ids: Vec::new(),
-            unit_leaf_ids: Vec::new(),
             named_unit_step_ids: Vec::new(),
             mwu_step_ids: Vec::new(),
             due_step_ids: Vec::new(),
@@ -679,12 +671,10 @@ impl<'m> WriteBuffer<'m> {
         // ids from that cache instead of producing fresh entities).
         self.emit_units_pool_if_set()?;
         // Emit one REPRESENTATION_CONTEXT per IR `UnitContext`. The cached
-        // STEP ids land in `unit_context_ids` and `unit_leaf_ids` so each
-        // downstream emitter can resolve `Option<UnitContextId>` with a
-        // single index lookup. Leaf entities are reused from the units
-        // pool — see GUAC writer.
+        // STEP ids land in `unit_context_ids` so each downstream emitter can
+        // resolve `Option<UnitContextId>` with a single index lookup. Leaf
+        // entities are reused from the units pool — see GUAC writer.
         self.unit_context_ids = Vec::with_capacity(self.model.units.len());
-        self.unit_leaf_ids = Vec::with_capacity(self.model.units.len());
         for ctx in self.model.units.iter() {
             let id = self.emit_unit_context(ctx.clone())?;
             self.unit_context_ids.push(id);

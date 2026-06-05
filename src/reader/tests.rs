@@ -12,7 +12,7 @@ use crate::ir::units::NamedUnit;
 fn first_length(model: &StepModel) -> Option<LengthUnit> {
     let ctx = model.units.iter().next()?;
     let pool = model.units_pool.as_ref()?;
-    match pool.named_units[ctx.length] {
+    match pool.named_units[ctx.length(pool)?] {
         NamedUnit::Length(f) => Some(f.unit),
         _ => None,
     }
@@ -20,7 +20,7 @@ fn first_length(model: &StepModel) -> Option<LengthUnit> {
 fn first_plane_angle(model: &StepModel) -> Option<AngleUnit> {
     let ctx = model.units.iter().next()?;
     let pool = model.units_pool.as_ref()?;
-    match pool.named_units[ctx.plane_angle] {
+    match pool.named_units[ctx.plane_angle(pool)?] {
         NamedUnit::PlaneAngle(f) => Some(f.unit),
         _ => None,
     }
@@ -28,7 +28,7 @@ fn first_plane_angle(model: &StepModel) -> Option<AngleUnit> {
 fn first_solid_angle(model: &StepModel) -> Option<SolidAngleUnit> {
     let ctx = model.units.iter().next()?;
     let pool = model.units_pool.as_ref()?;
-    match pool.named_units[ctx.solid_angle] {
+    match pool.named_units[ctx.solid_angle(pool)?] {
         NamedUnit::SolidAngle(f) => Some(f.unit),
         _ => None,
     }
@@ -835,7 +835,9 @@ fn unit_plain_metre_mapping() {
 fn unit_unsupported_prefix_produces_warning_and_default_length() {
     let result = convert_source(&minimal_step(&unit_data(".KILO.")));
     // Two warnings expected: (1) the leaf flagged .KILO. as unsupported,
-    // (2) the global context filled the missing length slot with the SI default.
+    // (2) the GUAC `units` set carried an unresolved ref to it. The set model
+    // does NOT synthesize an SI default — the unsupported unit is simply
+    // absent from the set (no fabricated length).
     assert_eq!(result.warnings.len(), 2, "{:#?}", result.warnings);
     assert!(matches!(
         &result.warnings[0],
@@ -845,18 +847,53 @@ fn unit_unsupported_prefix_produces_warning_and_default_length() {
     assert!(matches!(
         &result.warnings[1],
         ConvertError::UnexpectedEntityForm { detail, .. }
-            if detail.contains("incomplete unit context")
+            if detail.contains("units ref") && detail.contains("unresolved")
     ));
-    // GUAC fallback pushed a unit context with SI defaults so downstream
-    // PRODUCT chain emit isn't silently lost.
+    // The unit context still exists (downstream PRODUCT chain not lost), but
+    // carries only the resolvable units — no fabricated length.
     let unit = result
         .model
         .units
         .iter()
         .next()
-        .expect("fallback context pushed");
+        .expect("unit context pushed");
     let _ = unit;
-    assert_eq!(first_length(&result.model), Some(LengthUnit::Millimetre));
+    assert_eq!(first_length(&result.model), None);
+}
+
+#[test]
+fn partial_unit_context_omits_solid_angle_faithfully() {
+    // A GUAC with only LENGTH + PLANE_ANGLE (no SOLID_ANGLE_UNIT) is
+    // schema-valid (`units : SET[1:?]`). The set model keeps exactly those two
+    // units — no SI-default synthesis, no "incomplete" warning — and re-emits a
+    // 2-unit GUAC (no fabricated SOLID_ANGLE_UNIT).
+    let data = "#1 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+                #2 = ( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n\
+                #4 = ( GEOMETRIC_REPRESENTATION_CONTEXT(3)\n\
+                \t\tGLOBAL_UNIT_ASSIGNED_CONTEXT((#1,#2))\n\
+                \t\tREPRESENTATION_CONTEXT('','') );";
+    let result = convert_source(&minimal_step(data));
+    assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
+    let pool = result.model.units_pool.as_ref().expect("pool");
+    let ctx = result.model.units.iter().next().expect("ctx");
+    assert_eq!(ctx.units.len(), 2, "only the two source units are kept");
+    assert!(ctx.length(pool).is_some());
+    assert!(ctx.plane_angle(pool).is_some());
+    assert!(ctx.solid_angle(pool).is_none(), "no fabricated solid angle");
+
+    // Round-trip: re-emit keeps the 2-unit GUAC, no SOLID_ANGLE_UNIT.
+    let out = result.model.write_to_string().expect("write");
+    assert!(
+        !out.contains("SOLID_ANGLE_UNIT"),
+        "no fabricated SOLID_ANGLE_UNIT:\n{out}"
+    );
+    let re = convert_source(&out);
+    let re_ctx = re.model.units.iter().next().expect("re ctx");
+    assert_eq!(
+        re_ctx.units.len(),
+        2,
+        "2-unit set is stable across round-trip"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -1004,9 +1041,9 @@ fn reads_degrees_plural_cbu_name() {
 #[test]
 fn reads_unrecognized_cbu_name_warns() {
     // An unknown name on a LENGTH_UNIT-flavoured CBU: reader emits an
-    // UnexpectedEntityForm warning AND a second warning when the GUAC falls
-    // back to SI defaults to keep the unit context alive (so the PRODUCT
-    // chain doesn't silently disappear downstream).
+    // UnexpectedEntityForm warning, and the GUAC `units` set carries an
+    // unresolved ref to it (the CBU was not registered). The set model does
+    // not synthesize an SI default — the length is simply absent.
     let block = "\
          #1 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
          #2 = DIMENSIONAL_EXPONENTS(1.,0.,0.,0.,0.,0.,0.);\n\
@@ -1025,7 +1062,7 @@ fn reads_unrecognized_cbu_name_warns() {
     assert!(
         result.warnings.iter().any(
             |w| matches!(w, ConvertError::UnexpectedEntityForm { detail, .. }
-                if detail.contains("incomplete unit context"))
+                if detail.contains("units ref") && detail.contains("unresolved"))
         ),
         "{:#?}",
         result.warnings,
@@ -1035,9 +1072,9 @@ fn reads_unrecognized_cbu_name_warns() {
         .units
         .iter()
         .next()
-        .expect("fallback context pushed");
+        .expect("unit context pushed");
     let _ = unit;
-    assert_eq!(first_length(&result.model), Some(LengthUnit::Millimetre));
+    assert_eq!(first_length(&result.model), None);
 }
 
 #[test]

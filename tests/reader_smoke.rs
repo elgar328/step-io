@@ -1345,18 +1345,20 @@ fn every_fixture_has_expected_units() {
                 .units_pool
                 .as_ref()
                 .unwrap_or_else(|| panic!("fixture {name}: units pool missing"));
-            let length = match pool.named_units[units.length] {
+            let length = match pool.named_units[units.length(pool).expect("length unit")] {
                 NamedUnit::Length(f) => f.unit,
                 _ => panic!("fixture {name}: length slot is not Length"),
             };
-            let plane_angle = match pool.named_units[units.plane_angle] {
-                NamedUnit::PlaneAngle(f) => f.unit,
-                _ => panic!("fixture {name}: plane_angle slot is not PlaneAngle"),
-            };
-            let solid_angle = match pool.named_units[units.solid_angle] {
-                NamedUnit::SolidAngle(f) => f.unit,
-                _ => panic!("fixture {name}: solid_angle slot is not SolidAngle"),
-            };
+            let plane_angle =
+                match pool.named_units[units.plane_angle(pool).expect("plane_angle unit")] {
+                    NamedUnit::PlaneAngle(f) => f.unit,
+                    _ => panic!("fixture {name}: plane_angle slot is not PlaneAngle"),
+                };
+            let solid_angle =
+                match pool.named_units[units.solid_angle(pool).expect("solid_angle unit")] {
+                    NamedUnit::SolidAngle(f) => f.unit,
+                    _ => panic!("fixture {name}: solid_angle slot is not SolidAngle"),
+                };
             let expected_length = if *name == "fillet_box_ap214_is" {
                 LengthUnit::Inch
             } else {

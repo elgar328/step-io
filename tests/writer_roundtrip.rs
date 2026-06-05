@@ -29,29 +29,29 @@ fn assert_unit_contexts_equivalent(
     for (lc, rc) in lhs.units.iter().zip(rhs.units.iter()) {
         // Compare semantic content (unit enum + flag bits); skip `cbu_base`
         // since it's an arena ref whose absolute value depends on emit order.
-        let l_len = match lpool.named_units[lc.length] {
+        let l_len = match lpool.named_units[lc.length(lpool).expect("length unit")] {
             NamedUnit::Length(f) => (f.unit, f.cbu_base.is_some()),
             _ => panic!("{name}: lhs length slot is not Length"),
         };
-        let r_len = match rpool.named_units[rc.length] {
+        let r_len = match rpool.named_units[rc.length(rpool).expect("length unit")] {
             NamedUnit::Length(f) => (f.unit, f.cbu_base.is_some()),
             _ => panic!("{name}: rhs length slot is not Length"),
         };
         assert_eq!(l_len, r_len, "{name}: length");
-        let l_pa = match lpool.named_units[lc.plane_angle] {
+        let l_pa = match lpool.named_units[lc.plane_angle(lpool).expect("plane_angle unit")] {
             NamedUnit::PlaneAngle(f) => (f.unit, f.cbu_base.is_some()),
             _ => panic!("{name}: lhs plane_angle slot is not PlaneAngle"),
         };
-        let r_pa = match rpool.named_units[rc.plane_angle] {
+        let r_pa = match rpool.named_units[rc.plane_angle(rpool).expect("plane_angle unit")] {
             NamedUnit::PlaneAngle(f) => (f.unit, f.cbu_base.is_some()),
             _ => panic!("{name}: rhs plane_angle slot is not PlaneAngle"),
         };
         assert_eq!(l_pa, r_pa, "{name}: plane_angle");
-        let l_solid = match lpool.named_units[lc.solid_angle] {
+        let l_solid = match lpool.named_units[lc.solid_angle(lpool).expect("solid_angle unit")] {
             NamedUnit::SolidAngle(f) => f.unit,
             _ => panic!("{name}: lhs solid_angle slot is not SolidAngle"),
         };
-        let r_solid = match rpool.named_units[rc.solid_angle] {
+        let r_solid = match rpool.named_units[rc.solid_angle(rpool).expect("solid_angle unit")] {
             NamedUnit::SolidAngle(f) => f.unit,
             _ => panic!("{name}: rhs solid_angle slot is not SolidAngle"),
         };

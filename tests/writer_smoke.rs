@@ -54,9 +54,11 @@ fn empty_model() -> StepModel {
 fn mm_radian_steradian(model: &mut StepModel) -> UnitContext {
     let pool = model.units_pool.get_or_insert_with(UnitsPool::default);
     UnitContext {
-        length: pool.push_plain_length(LengthUnit::Millimetre),
-        plane_angle: pool.push_plain_plane_angle(AngleUnit::Radian),
-        solid_angle: pool.push_plain_solid_angle(SolidAngleUnit::Steradian),
+        units: vec![
+            pool.push_plain_length(LengthUnit::Millimetre),
+            pool.push_plain_plane_angle(AngleUnit::Radian),
+            pool.push_plain_solid_angle(SolidAngleUnit::Steradian),
+        ],
         length_uncertainty: None,
         plane_angle_uncertainty: None,
         solid_angle_uncertainty: None,
@@ -275,15 +277,15 @@ fn unit_context_mm_radian_steradian_round_trips() {
     // the resolved enum values via arena lookup.
     let ctx_back = re.units.iter().next().expect("ctx");
     let pool = re.units_pool.as_ref().expect("units pool");
-    match pool.named_units[ctx_back.length] {
+    match pool.named_units[ctx_back.length(pool).expect("length unit")] {
         NamedUnit::Length(f) => assert_eq!(f.unit, LengthUnit::Millimetre),
         _ => panic!("length not Length"),
     }
-    match pool.named_units[ctx_back.plane_angle] {
+    match pool.named_units[ctx_back.plane_angle(pool).expect("plane_angle unit")] {
         NamedUnit::PlaneAngle(f) => assert_eq!(f.unit, AngleUnit::Radian),
         _ => panic!("plane_angle not PlaneAngle"),
     }
-    match pool.named_units[ctx_back.solid_angle] {
+    match pool.named_units[ctx_back.solid_angle(pool).expect("solid_angle unit")] {
         NamedUnit::SolidAngle(f) => assert_eq!(f.unit, SolidAngleUnit::Steradian),
         _ => panic!("solid_angle not SolidAngle"),
     }
@@ -2137,7 +2139,7 @@ fn property_definition_with_geometric_tolerance_target_round_trips() {
     use step_io::ir::units::MeasureWithUnit;
     let (mut model, sa, ..) = shape_aspect_relationship_fixture();
     let ctx = mm_radian_steradian(&mut model);
-    let length = ctx.length;
+    let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
     model.units.push(ctx);
     let mwu = model
         .units_pool
@@ -4067,7 +4069,7 @@ fn gt_relationship_round_trip() {
 
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let length_unit = ctx.length;
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
     model.units.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -4372,7 +4374,7 @@ fn geometric_tolerance_form_tolerances_round_trip() {
 
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let length_unit = ctx.length;
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
     model.units.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -4561,7 +4563,7 @@ fn tolerance_zone_round_trip() {
 
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let length_unit = ctx.length;
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
     model.units.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -5299,7 +5301,7 @@ fn dmia_geometric_tolerance_with_datum_reference_round_trip() {
     let (mut model, sa, ..) = shape_aspect_relationship_fixture();
     let target = model.shape_aspects[sa].target;
     let ctx = mm_radian_steradian(&mut model);
-    let length_unit = ctx.length;
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
     let ctx_id = model.units.push(ctx);
     let ds = model.datum_systems.push(DatumSystem {
         name: "DS".into(),
@@ -6143,7 +6145,7 @@ fn measure_representation_item_round_trip() {
 
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let length_unit = ctx.length;
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
     model.units.push(ctx);
     let pmi = model.pmi.get_or_insert_with(PmiPool::default);
     let vftq = pmi
@@ -6210,7 +6212,7 @@ fn tolerance_magnitude_references_arena_measure() {
     };
     let (mut model, sa, ..) = shape_aspect_relationship_fixture();
     let ctx = mm_radian_steradian(&mut model);
-    let length = ctx.length;
+    let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
     model.units.push(ctx);
     let vftq = model
         .pmi
@@ -6294,7 +6296,7 @@ fn property_item_references_arena_measure() {
 
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let length = ctx.length;
+    let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
     let ctx_id = model.units.push(ctx);
     let vftq = model
         .pmi
@@ -6378,7 +6380,7 @@ fn simple_measure_representation_item_round_trips_via_arena() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let length = ctx.length;
+    let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
     model.units.push(ctx);
     model
         .representation_items
@@ -6438,7 +6440,7 @@ fn measure_qualification_round_trip() {
 
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let length_unit = ctx.length;
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
     model.units.push(ctx);
 
     let mwu_id = model
@@ -6498,7 +6500,7 @@ fn projected_zone_definition_round_trip() {
 
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let length_unit = ctx.length;
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
     model.units.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -6791,7 +6793,7 @@ fn geometric_tolerance_with_datum_reference_round_trip() {
     use step_io::ir::units::MeasureWithUnit;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let length_unit = ctx.length;
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
     model.units.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -6895,7 +6897,7 @@ fn complex_datum_ref_tolerance_round_trip() {
     use step_io::ir::units::MeasureWithUnit;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let length_unit = ctx.length;
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
     model.units.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -7000,7 +7002,7 @@ fn geometric_tolerance_with_modifiers_round_trip() {
     use step_io::ir::units::MeasureWithUnit;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let length_unit = ctx.length;
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
     model.units.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -7149,7 +7151,7 @@ fn gt_defined_unit_area_unit_displacement_round_trip() {
     use step_io::ir::units::MeasureWithUnit;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let length_unit = ctx.length;
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
     // Push an MWU into the units pool so unit_size / displacement refs
     // have a valid step id after emit (mwu_step_ids[0]).
     let mwu_id = {
@@ -7331,7 +7333,7 @@ fn plus_minus_tolerance_round_trip() {
     use step_io::ir::units::MeasureWithUnit;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let length_unit = ctx.length;
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
     model.units.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -8305,7 +8307,7 @@ fn srwp_measure_item_round_trip() {
     use step_io::ir::shape_rep::{Representation, ShapeRepresentationWithParameters, SrwpItem};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let length = ctx.length;
+    let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
     let uc = model.units.push(ctx);
     let frame = model.geometry.identity_placement();
     let mri = model

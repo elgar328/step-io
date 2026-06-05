@@ -28,17 +28,19 @@ use super::shape_aspect_ref::ShapeAspectRef;
 /// `name` / `description` strings are preserved verbatim so round-trip
 /// reproduces the original metadata (writers no longer hardcode
 /// `'distance_accuracy_value'` / `'confusion accuracy'`).
-/// units-2: `length` / `plane_angle` / `solid_angle` are `NamedUnitId`
-/// refs into `StepModel.units_pool.named_units`. Presentation flags
-/// (`cbu_wrapped`, `dim_exp_explicit`) moved into the per-flavour
+/// `units` is the schema's `GLOBAL_UNIT_ASSIGNED_CONTEXT.units : SET[1:?] OF
+/// unit` — an ordered set of `NamedUnitId` refs into
+/// `StepModel.units_pool.named_units`. Any unit kind (`length` / `plane_angle`
+/// / `solid_angle` / `mass` / `ratio`) and any combination is permitted; a
+/// source that omits, say, the solid angle round-trips faithfully as a shorter
+/// set (no SI-default synthesis). Order is preserved for byte/IR fidelity.
+/// Presentation flags moved into the per-flavour
 /// [`crate::ir::units::LengthFlavor`] / [`crate::ir::units::PlaneAngleFlavor`]
 /// structs, so a single source `NAMED_UNIT` entity round-trips to a single
 /// output entity (no dual-emit).
 #[derive(Debug, Clone, PartialEq)]
 pub struct UnitContext {
-    pub length: NamedUnitId,
-    pub plane_angle: NamedUnitId,
-    pub solid_angle: NamedUnitId,
+    pub units: Vec<NamedUnitId>,
     pub length_uncertainty: Option<LengthUncertainty>,
     /// Optional plane-angle uncertainty (e.g. `'angle_accuracy'` in some
     /// CAD exports). `None` when the source carried no angle-typed
@@ -47,6 +49,40 @@ pub struct UnitContext {
     pub plane_angle_uncertainty: Option<LengthUncertainty>,
     /// Optional solid-angle uncertainty. `None` for the typical case.
     pub solid_angle_uncertainty: Option<LengthUncertainty>,
+}
+
+impl UnitContext {
+    /// First `units` entry of `Length` kind (`None` if the set omits it).
+    #[must_use]
+    pub fn length(&self, pool: &crate::ir::units::UnitsPool) -> Option<NamedUnitId> {
+        self.unit_of_kind(pool, |u| {
+            matches!(u, crate::ir::units::NamedUnit::Length(_))
+        })
+    }
+    /// First `units` entry of `PlaneAngle` kind.
+    #[must_use]
+    pub fn plane_angle(&self, pool: &crate::ir::units::UnitsPool) -> Option<NamedUnitId> {
+        self.unit_of_kind(pool, |u| {
+            matches!(u, crate::ir::units::NamedUnit::PlaneAngle(_))
+        })
+    }
+    /// First `units` entry of `SolidAngle` kind.
+    #[must_use]
+    pub fn solid_angle(&self, pool: &crate::ir::units::UnitsPool) -> Option<NamedUnitId> {
+        self.unit_of_kind(pool, |u| {
+            matches!(u, crate::ir::units::NamedUnit::SolidAngle(_))
+        })
+    }
+    fn unit_of_kind(
+        &self,
+        pool: &crate::ir::units::UnitsPool,
+        want: impl Fn(&crate::ir::units::NamedUnit) -> bool,
+    ) -> Option<NamedUnitId> {
+        self.units
+            .iter()
+            .copied()
+            .find(|&id| want(&pool.named_units[id]))
+    }
 }
 
 /// `UNCERTAINTY_MEASURE_WITH_UNIT(value, unit_ref, name, description)`.
