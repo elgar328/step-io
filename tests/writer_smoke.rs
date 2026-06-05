@@ -3320,6 +3320,104 @@ fn mapped_item_round_trip() {
 }
 
 #[test]
+fn camera_origin_mapped_item_round_trip() {
+    // A plain REPRESENTATION_MAP whose mapping_origin is a CAMERA_MODEL_D3
+    // (schema-valid: CAMERA_MODEL is a representation_item subtype), plus the
+    // MAPPED_ITEM sourced from it. The reader keeps both; the writer emits the
+    // rmap and item in the delayed `emit_camera_origin_mapped_items` pass once
+    // the camera step ids exist. A dangling #0 origin would make the re-read
+    // drop the rmap (origin unresolved), so a surviving CameraModel origin
+    // proves the delayed-emit ordering is correct.
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{
+        MappedItem, MappedItemData, PlainRepr, Representation, RepresentationMap,
+        RepresentationMapData,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+
+    let frame = model.geometry.identity_placement();
+    let pt = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let pb = model
+        .geometry
+        .planar_extents
+        .push(PlanarExtent::PlanarBox(PlanarBox {
+            name: "win".into(),
+            size_in_x: 1.0,
+            size_in_y: 2.0,
+            placement: PlanarBoxPlacement::Placement3d(frame),
+        }));
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let vv = viz.founded_items.push(FoundedItem::ViewVolume(ViewVolume {
+        projection_type: Projection::Central,
+        projection_point: pt,
+        view_plane_distance: 100.0,
+        front_plane_distance: 0.0,
+        front_plane_clipping: false,
+        back_plane_distance: 0.0,
+        back_plane_clipping: false,
+        view_volume_sides_clipping: false,
+        view_window: pb,
+    }));
+    let cam = viz
+        .camera_models
+        .push(CameraModel::CameraModelD3(CameraModelD3 {
+            name: "cam".into(),
+            view_reference_system: frame,
+            perspective_of_volume: vv,
+        }));
+
+    let rep = model.representations.push(Representation::Plain(PlainRepr {
+        name: "mapped".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+        frame: None,
+    }));
+    let rmap = model
+        .representation_maps
+        .push(RepresentationMap::Itself(RepresentationMapData {
+            mapping_origin: RepresentationItemRef::CameraModel(cam),
+            mapped_representation: rep,
+        }));
+    model.mapped_items.push(MappedItem::Itself(MappedItemData {
+        name: "inst".into(),
+        mapping_source: rmap,
+        mapping_target: RepresentationItemRef::Placement3d(frame),
+    }));
+
+    let text = model.write_to_string().expect("write");
+    // No dangling forward-ref: a 0 step id would serialize as `#0`.
+    assert!(
+        !text.contains("#0,") && !text.contains("#0)") && !text.contains("(#0"),
+        "no dangling #0 ref in:\n{text}"
+    );
+    let re = reconvert(&text);
+    assert_eq!(
+        re.representation_maps.len(),
+        1,
+        "camera-origin REPRESENTATION_MAP survives instead of being dropped"
+    );
+    assert_eq!(re.mapped_items.len(), 1, "MAPPED_ITEM survives");
+    let RepresentationMap::Itself(rm) = re.representation_maps.iter().next().unwrap() else {
+        panic!("expected Itself variant");
+    };
+    assert!(
+        matches!(rm.mapping_origin, RepresentationItemRef::CameraModel(_)),
+        "the camera mapping_origin round-trips (no dangling drop)"
+    );
+    let MappedItem::Itself(mi) = re.mapped_items.iter().next().unwrap() else {
+        panic!("expected Itself variant");
+    };
+    assert_eq!(mi.name, "inst");
+}
+
+#[test]
 fn annotation_plane_round_trip() {
     // ANNOTATION_PLANE — a styled_item PMI subtype. orphan round-trip:
     // name + styles + item(a PLANE surface); `elements` is not modelled.

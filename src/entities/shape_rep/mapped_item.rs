@@ -7,15 +7,16 @@
 //! / plain `REPRESENTATION`) are not modelled yet, so a `MAPPED_ITEM` that
 //! is otherwise unreferenced still round-trips as an orphan.
 //!
-//! Refs that step-io cannot model (e.g. a `CAMERA_MODEL_D3` mapping origin)
-//! leave the entity unresolved; it is silently dropped, symmetric on
-//! re-read so round-trip equality holds for the supported subset.
+//! A `CAMERA_MODEL_D3` mapping origin is schema-valid (it is a
+//! `representation_item` subtype) and is preserved as an `Itself` rmap; the
+//! writer emits it in a delayed pass once the camera step ids are populated.
+//! Refs that step-io genuinely cannot model leave the entity unresolved; it
+//! is silently dropped, symmetric on re-read so round-trip equality holds.
 
 use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::representation_item::RepresentationItemRef;
 use crate::ir::shape_rep::{MappedItem, MappedItemData, RepresentationMap, RepresentationMapData};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -42,15 +43,10 @@ impl SimpleEntityHandler for RepresentationMapHandler {
         let Some(mapping_origin) = resolve_representation_item_ref(ctx, origin_ref) else {
             return Ok(()); // unmodelled origin — drop
         };
-        // A CAMERA_MODEL origin is the CAMERA_USAGE subtype's domain, not a
-        // plain `Itself` representation_map; the reader does not model it here.
-        // Drop it explicitly so the outcome does not depend on whether the
-        // CAMERA_MODEL has been read yet (dispatch-order independent — under
-        // pass dispatch the camera arena is still empty at this point, so the
-        // resolve above returned `None`; under topo it resolves early).
-        if matches!(mapping_origin, RepresentationItemRef::CameraModel(_)) {
-            return Ok(());
-        }
+        // A CAMERA_MODEL mapping_origin is schema-valid for a plain
+        // REPRESENTATION_MAP (CAMERA_USAGE narrows it but is a separate entity).
+        // Keep it as `Itself`; the writer emits it in a delayed pass once the
+        // camera step ids are populated (`emit_camera_origin_mapped_items`).
         let Some(&mapped_representation) = ctx.repr_id_map.get(&mapped_ref) else {
             return Ok(());
         };

@@ -809,6 +809,10 @@ impl<'m> WriteBuffer<'m> {
         // the cache need not cover MDGPR slots.
         self.emit_mapped_items()?;
         self.emit_visualization_if_set()?;
+        // Camera-origin plain REPRESENTATION_MAPs + their MAPPED_ITEMs, deferred
+        // by `emit_mapped_items` until cameras are stepped. Must precede
+        // `emit_draughting_models` (MBD complex items index `mapped_item_step_ids`).
+        self.emit_camera_origin_mapped_items()?;
         // GEOMETRIC_REPRESENTATION_ITEM (phase ds-st) — emitted after
         // visualization so `pre_defined_symbol_step_ids` is populated
         // before `DefinedSymbol.definition` resolves through it.

@@ -14,6 +14,7 @@ use crate::entities::visualization::camera_image::{
 };
 use crate::entities::visualization::camera_usage::CameraUsageHandler;
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
+use crate::ir::representation_item::RepresentationItemRef;
 use crate::ir::shape_rep::{MappedItem, RepresentationMap};
 use crate::writer::WriteError;
 
@@ -28,7 +29,12 @@ impl WriteBuffer<'_> {
         let rmaps: Vec<_> = self.model.representation_maps.iter().cloned().collect();
         self.representation_map_step_ids = vec![0; rmaps.len()];
         for (idx, rmap) in rmaps.into_iter().enumerate() {
-            if matches!(rmap, RepresentationMap::Itself(_)) {
+            // A camera-origin Itself rmap needs `viz_camera_model_step_ids`
+            // (filled later by emit_visualization_if_set), so it is deferred to
+            // `emit_camera_origin_mapped_items` — leave the 0 placeholder here.
+            if matches!(&rmap, RepresentationMap::Itself(d)
+                if !matches!(d.mapping_origin, RepresentationItemRef::CameraModel(_)))
+            {
                 let step_id = RepresentationMapHandler::write(self, rmap)?;
                 self.representation_map_step_ids[idx] = step_id;
             }
@@ -36,11 +42,57 @@ impl WriteBuffer<'_> {
         // Only `Itself` MAPPED_ITEM emits here; CameraImage variants
         // forward-reference CameraUsage, so they emit later via
         // `emit_camera_image_arena` after the CameraUsage slot of
-        // `representation_map_step_ids` is populated.
+        // `representation_map_step_ids` is populated. A MAPPED_ITEM whose
+        // source rmap is camera-origin is likewise deferred (its source slot is
+        // still 0 here).
         let mitems: Vec<_> = self.model.mapped_items.iter().cloned().collect();
         self.mapped_item_step_ids = vec![0; mitems.len()];
         for (idx, mi) in mitems.into_iter().enumerate() {
-            if matches!(mi, MappedItem::Itself(_)) {
+            if matches!(&mi, MappedItem::Itself(_)) && !self.is_camera_sourced(&mi) {
+                let step_id = MappedItemHandler::write(self, mi)?;
+                self.mapped_item_step_ids[idx] = step_id;
+            }
+        }
+        Ok(())
+    }
+
+    /// True iff `mi` is an `Itself` `MAPPED_ITEM` whose `mapping_source` rmap has
+    /// a camera `mapping_origin` — such items are deferred to
+    /// `emit_camera_origin_mapped_items` (their source rmap emits after cameras).
+    fn is_camera_sourced(&self, mi: &MappedItem) -> bool {
+        let MappedItem::Itself(d) = mi else {
+            return false;
+        };
+        matches!(
+            &self.model.representation_maps[d.mapping_source],
+            RepresentationMap::Itself(rd)
+                if matches!(rd.mapping_origin, RepresentationItemRef::CameraModel(_))
+        )
+    }
+
+    /// Delayed emission of camera-origin plain (`Itself`) `REPRESENTATION_MAP`s
+    /// and the `MAPPED_ITEM`s sourced from them. Runs after
+    /// `emit_visualization_if_set`
+    /// (so a `CameraModel` origin resolves through `viz_camera_model_step_ids`)
+    /// and before `emit_draughting_models` (whose MBD complex items index
+    /// `mapped_item_step_ids`). Fills the 0 placeholders left by
+    /// `emit_mapped_items`; rmaps first so each `MAPPED_ITEM`'s source resolves.
+    pub(in crate::writer::buffer) fn emit_camera_origin_mapped_items(
+        &mut self,
+    ) -> Result<(), WriteError> {
+        let rmaps: Vec<_> = self.model.representation_maps.iter().cloned().collect();
+        for (idx, rmap) in rmaps.into_iter().enumerate() {
+            if self.representation_map_step_ids[idx] == 0
+                && matches!(&rmap, RepresentationMap::Itself(d)
+                    if matches!(d.mapping_origin, RepresentationItemRef::CameraModel(_)))
+            {
+                let step_id = RepresentationMapHandler::write(self, rmap)?;
+                self.representation_map_step_ids[idx] = step_id;
+            }
+        }
+        let mitems: Vec<_> = self.model.mapped_items.iter().cloned().collect();
+        for (idx, mi) in mitems.into_iter().enumerate() {
+            if self.mapped_item_step_ids[idx] == 0 && self.is_camera_sourced(&mi) {
                 let step_id = MappedItemHandler::write(self, mi)?;
                 self.mapped_item_step_ids[idx] = step_id;
             }
