@@ -248,7 +248,28 @@ impl WriteBuffer<'_> {
                 .iter()
                 .map(|d| self.plm_document_step_ids[d.0 as usize])
                 .collect();
-            let pdef = self.emit_pdef(formation, per_product_ctx.pdef_ctx, &doc_refs);
+            // Reader-built products carry the canonical PD id/description in the
+            // arena (the legacy synthesis hardcoded "design"/""). Kernel-built
+            // products (`pdef = None`) keep the synthesized values.
+            let (pd_id, pd_desc) = match product.pdef {
+                Some(pdid) => {
+                    let pd = &self
+                        .model
+                        .assembly
+                        .as_ref()
+                        .expect("assembly present when Product.pdef is set")
+                        .product_definitions[pdid];
+                    (pd.id.clone(), pd.description.clone())
+                }
+                None => ("design".to_owned(), String::new()),
+            };
+            let pdef = self.emit_pdef(
+                &pd_id,
+                &pd_desc,
+                formation,
+                per_product_ctx.pdef_ctx,
+                &doc_refs,
+            );
             self.product_def_ids.insert(pid, pdef);
         }
         // Now that every product's PDEF step id is cached in
@@ -1112,7 +1133,14 @@ impl WriteBuffer<'_> {
     /// is a plain `PRODUCT_DEFINITION`; otherwise the source used the
     /// `_WITH_ASSOCIATED_DOCUMENTS` subtype and we re-emit it with the resolved
     /// `DOCUMENT` step ids in `documentation_ids`.
-    pub(crate) fn emit_pdef(&mut self, formation: u64, pdef_ctx: u64, doc_refs: &[u64]) -> u64 {
+    pub(crate) fn emit_pdef(
+        &mut self,
+        id: &str,
+        description: &str,
+        formation: u64,
+        pdef_ctx: u64,
+        doc_refs: &[u64],
+    ) -> u64 {
         use crate::entities::SimpleEntityHandler;
         if doc_refs.is_empty() {
             use crate::entities::assembly_product::product_definition::{
@@ -1121,6 +1149,8 @@ impl WriteBuffer<'_> {
             ProductDefinitionHandler::write(
                 self,
                 ProductDefinitionWriteInput {
+                    id: id.to_owned(),
+                    description: description.to_owned(),
                     formation,
                     pdef_ctx,
                 },
@@ -1134,6 +1164,8 @@ impl WriteBuffer<'_> {
             ProductDefinitionWithAssociatedDocumentsHandler::write(
                 self,
                 ProductDefinitionWithAssociatedDocumentsWriteInput {
+                    id: id.to_owned(),
+                    description: description.to_owned(),
                     formation,
                     pdef_ctx,
                     documentation: doc_refs.to_vec(),

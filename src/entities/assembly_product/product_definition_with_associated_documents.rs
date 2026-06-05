@@ -23,6 +23,8 @@ use step_io_macros::step_entity;
 /// `PRODUCT_DEFINITION` plus the resolved `DOCUMENT` step ids for
 /// `documentation_ids`.
 pub(crate) struct ProductDefinitionWithAssociatedDocumentsWriteInput {
+    pub(crate) id: String,
+    pub(crate) description: String,
     pub(crate) formation: u64,
     pub(crate) pdef_ctx: u64,
     pub(crate) documentation: Vec<u64>,
@@ -101,8 +103,8 @@ impl SimpleEntityHandler for ProductDefinitionWithAssociatedDocumentsHandler {
         Ok(buf.push_simple(
             "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
             vec![
-                Attribute::String("design".into()),
-                Attribute::String(String::new()),
+                Attribute::String(input.id),
+                Attribute::String(input.description),
                 Attribute::EntityRef(input.formation),
                 Attribute::EntityRef(input.pdef_ctx),
                 docs,

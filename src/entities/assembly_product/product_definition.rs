@@ -77,6 +77,8 @@ pub(crate) fn read_product_definition_body(
 }
 
 pub(crate) struct ProductDefinitionWriteInput {
+    pub(crate) id: String,
+    pub(crate) description: String,
     pub(crate) formation: u64,
     pub(crate) pdef_ctx: u64,
 }
@@ -100,6 +102,8 @@ impl SimpleEntityHandler for ProductDefinitionHandler {
     fn write(
         buf: &mut WriteBuffer,
         ProductDefinitionWriteInput {
+            id,
+            description,
             formation,
             pdef_ctx,
         }: ProductDefinitionWriteInput,
@@ -107,8 +111,8 @@ impl SimpleEntityHandler for ProductDefinitionHandler {
         Ok(buf.push_simple(
             "PRODUCT_DEFINITION",
             vec![
-                Attribute::String("design".into()),
-                Attribute::String(String::new()),
+                Attribute::String(id),
+                Attribute::String(description),
                 Attribute::EntityRef(formation),
                 Attribute::EntityRef(pdef_ctx),
             ],

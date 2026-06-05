@@ -1461,7 +1461,16 @@ fn product_definition_id_description_materialised_in_arena() {
          #3 = PRODUCT_DEFINITION_CONTEXT('part definition',#1,'design');\n\
          #4 = PRODUCT('P','P','',(#2));\n\
          #5 = PRODUCT_DEFINITION_FORMATION('1','',#4);\n\
-         #6 = PRODUCT_DEFINITION('MyPart','rev A',#5,#3);",
+         #6 = PRODUCT_DEFINITION('MyPart','rev A',#5,#3);\n\
+         #8 = PRODUCT_DEFINITION_SHAPE('','',#6);\n\
+         #10 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+         #11 = ( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n\
+         #12 = ( NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT() );\n\
+         #13 = ( GEOMETRIC_REPRESENTATION_CONTEXT(3)\n\
+         \t\tGLOBAL_UNIT_ASSIGNED_CONTEXT((#10,#11,#12))\n\
+         \t\tREPRESENTATION_CONTEXT('','') );\n\
+         #14 = SHAPE_REPRESENTATION('',(),#13);\n\
+         #15 = SHAPE_DEFINITION_REPRESENTATION(#8,#14);",
     );
     let result = convert_source(&source);
     let assembly = result.model.assembly.as_ref().expect("assembly present");
@@ -1479,4 +1488,21 @@ fn product_definition_id_description_materialised_in_arena() {
         product.pdef.is_some(),
         "Product links to its canonical PD arena entry"
     );
+
+    // Round-trip: the writer now emits id/description from the arena (Commit B),
+    // so they survive write -> read (the legacy hardcoded 'design'/'' would
+    // lose them).
+    let out = result.model.write_to_string().expect("write");
+    let re = convert_source(&out);
+    let re_pd = re
+        .model
+        .assembly
+        .as_ref()
+        .expect("round-tripped assembly")
+        .product_definitions
+        .iter()
+        .next()
+        .expect("round-tripped PD");
+    assert_eq!(re_pd.id, "MyPart", "PD id survives the round-trip");
+    assert_eq!(re_pd.description, "rev A", "PD description survives");
 }
