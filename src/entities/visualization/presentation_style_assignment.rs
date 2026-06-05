@@ -96,6 +96,16 @@ pub(crate) fn parse_psa_styles(
             {
                 styles.push(PsaStyle::Null);
             }
+            // [NS-psa-bare-null-style] some exporters write a bare `.NULL.`
+            // enum instead of the typed NULL_STYLE(.NULL.) placeholder → accept
+            // and re-emit the standard typed form. See reader::nonstandard.
+            Attribute::Enum(t) if t == "NULL" => {
+                ctx.record_nonstandard(
+                    "PRESENTATION_STYLE_ASSIGNMENT.styles (bare .NULL.)".into(),
+                    "NULL_STYLE(.NULL.)",
+                );
+                styles.push(PsaStyle::Null);
+            }
             other => {
                 ctx.warnings
                     .push(crate::ir::error::ConvertError::UnexpectedEntityForm {

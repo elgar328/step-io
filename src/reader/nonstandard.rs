@@ -196,3 +196,14 @@
 //! - **Writer symmetry**: emits `COLOUR()`.
 //! - **Code**: `entities/visualization/surface_style_rendering.rs`
 //!   (`read_surface_colour`).
+//!
+//! ### NS-psa-bare-null-style
+//! - **Source**: exporters that abbreviate the null style placeholder.
+//! - **Schema rule broken**: a `PRESENTATION_STYLE_ASSIGNMENT.styles`
+//!   (`presentation_style_select`) member is written as a bare `.NULL.` enum
+//!   instead of the typed `NULL_STYLE(.NULL.)` placeholder.
+//! - **Acceptance**: accept the bare enum as `PsaStyle::Null`; aggregated via
+//!   `record_nonstandard`.
+//! - **Writer symmetry**: emits the standard typed `NULL_STYLE(.NULL.)`.
+//! - **Code**: `entities/visualization/presentation_style_assignment.rs`
+//!   (`parse_psa_styles`).
