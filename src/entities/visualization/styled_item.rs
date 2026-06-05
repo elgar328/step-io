@@ -130,6 +130,12 @@ pub(crate) fn resolve_representation_item_ref(
     if let Some(&plid) = ctx.placement_map.get(&item_ref) {
         return Some(RepresentationItemRef::Placement3d(plid));
     }
+    if let Some(&pl2id) = ctx.placement_2d_map.get(&item_ref) {
+        return Some(RepresentationItemRef::Placement2d(pl2id));
+    }
+    if let Some(&peid) = ctx.planar_extent_id_map.get(&item_ref) {
+        return Some(RepresentationItemRef::PlanarExtent(peid));
+    }
     if let Some(&rid) = ctx.repr_id_map.get(&item_ref) {
         if !matches!(ctx.representations[rid], Representation::Mdgpr(_)) {
             return Some(RepresentationItemRef::Representation(rid));

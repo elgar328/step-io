@@ -34,6 +34,8 @@ impl WriteBuffer<'_> {
             RepresentationItemRef::Vertex(id) => self.emit_vertex(id),
             RepresentationItemRef::Shell(id) => self.emit_shell(id),
             RepresentationItemRef::Placement3d(id) => self.emit_axis2_placement_3d(id),
+            RepresentationItemRef::Placement2d(id) => self.emit_axis2_placement_2d(id),
+            RepresentationItemRef::PlanarExtent(id) => self.emit_planar_extent(id),
             RepresentationItemRef::Representation(id) => {
                 Ok(self.representation_step_ids[id.0 as usize])
             }

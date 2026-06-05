@@ -13,9 +13,9 @@
 use super::id::{
     AnnotationCurveOccurrenceId, AnnotationOccurrenceId, CameraModelId, CompositeTextId, CurveId,
     DraughtingCalloutId, EdgeId, FaceId, GeometricRepresentationItemId, MappedItemId,
-    Placement3dId, PointId, RepresentationId, RepresentationItemId, ShellId, SolidId, StyledItemId,
-    SurfaceId, TessellatedFaceId, TessellatedItemId, TextLiteralId, TypeQualifierId,
-    ValueFormatTypeQualifierId, VertexId,
+    Placement2dId, Placement3dId, PlanarExtentId, PointId, RepresentationId, RepresentationItemId,
+    ShellId, SolidId, StyledItemId, SurfaceId, TessellatedFaceId, TessellatedItemId, TextLiteralId,
+    TypeQualifierId, ValueFormatTypeQualifierId, VertexId,
 };
 
 /// What a STEP `representation_item` reference resolved to in step-io's IR.
@@ -35,6 +35,15 @@ pub enum RepresentationItemRef {
     Shell(ShellId),
     Representation(RepresentationId),
     Placement3d(Placement3dId),
+    /// `AXIS2_PLACEMENT_2D` (geometry `placements_2d` arena). A
+    /// `representation_item` subtype; a `MAPPED_ITEM.mapping_target` or a
+    /// `PRESENTATION_AREA`/`PRESENTATION_VIEW` item references it in the
+    /// AP242 draughting-presentation corpus (phase presentation-cluster).
+    Placement2d(Placement2dId),
+    /// `PLANAR_BOX` / `PLANAR_EXTENT` (geometry `planar_extents` arena). A
+    /// `representation_item` subtype listed in `PRESENTATION_AREA.items`; the
+    /// writer's `emit_planar_extent` dispatches the inner variant.
+    PlanarExtent(PlanarExtentId),
     /// `representation_item` enum arena entry (phase repr-item-arena-1) —
     /// covers `qualified_representation_item` / `value_representation_item`
     /// variants. Future sub-phases extend to MRI / `NumericRepresentationItem`.
