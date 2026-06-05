@@ -1762,3 +1762,52 @@ fn pmi_validation_property_on_mbd_characterized_object_recovered() {
         result.warnings
     );
 }
+
+#[test]
+fn shape_dimension_representation_preserves_descriptive_item() {
+    // SHAPE_DIMENSION_REPRESENTATION.items is a SET of representation_item; a
+    // DESCRIPTIVE_REPRESENTATION_ITEM is a valid member (PMI dimension notes).
+    // step-io previously resolved items only through the geometry/measure
+    // resolver, silently dropping the descriptive note; now the items SET keeps
+    // both an `Item` and a `Descriptive` member.
+    use crate::ir::shape_rep::{DimensionItem, Representation};
+    let source = minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = DESCRIPTIVE_REPRESENTATION_ITEM('dimensional note','auxiliary');\n\
+         #3 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+         #4 = ( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n\
+         #5 = ( NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT() );\n\
+         #6 = ( GEOMETRIC_REPRESENTATION_CONTEXT(3)\n\
+         \t\tGLOBAL_UNIT_ASSIGNED_CONTEXT((#3,#4,#5))\n\
+         \t\tREPRESENTATION_CONTEXT('','') );\n\
+         #7 = SHAPE_DIMENSION_REPRESENTATION('',(#1,#2),#6);",
+    );
+    let result = convert_source(&source);
+
+    let sdr_items = |m: &crate::StepModel| {
+        m.representations
+            .iter()
+            .find_map(|r| match r {
+                Representation::ShapeDimensionRepresentation(s) => Some(s.items.clone()),
+                _ => None,
+            })
+            .expect("SDR present")
+    };
+    let items = sdr_items(&result.model);
+    assert_eq!(items.len(), 2, "both the point item and the DRI are kept");
+    assert!(items.iter().any(|i| matches!(i, DimensionItem::Item(_))));
+    assert!(
+        items
+            .iter()
+            .any(|i| matches!(i, DimensionItem::Descriptive(d)
+                if d.name == "dimensional note" && d.description == "auxiliary")),
+        "the descriptive note is preserved, not dropped"
+    );
+
+    // Round-trip: the SDR is standalone (no product chain), so the descriptive
+    // item survives write -> read.
+    let out = result.model.write_to_string().expect("write");
+    let re = convert_source(&out);
+    let re_items = sdr_items(&re.model);
+    assert_eq!(items, re_items, "SDR items idempotent across round-trip");
+}

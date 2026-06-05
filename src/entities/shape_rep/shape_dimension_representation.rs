@@ -56,9 +56,13 @@ impl SimpleEntityHandler for ShapeDimensionRepresentationHandler {
     }
 
     fn write(buf: &mut WriteBuffer, sdr: ShapeDimensionRepresentation) -> Result<u64, WriteError> {
+        use crate::ir::shape_rep::DimensionItem;
         let mut item_refs = Vec::with_capacity(sdr.items.len());
         for item in sdr.items {
-            let step = buf.emit_representation_item_ref(item)?;
+            let step = match item {
+                DimensionItem::Item(r) => buf.emit_representation_item_ref(r)?,
+                DimensionItem::Descriptive(d) => buf.emit_descriptive_item(d),
+            };
             item_refs.push(Attribute::EntityRef(step));
         }
         let ctx_attr = buf.repr_context_attr(sdr.context);

@@ -161,12 +161,23 @@ impl ReaderContext {
     /// order; unresolved ones drop, matching the prior inline behaviour.
     fn resolve_deferred_sdr_items(&mut self) {
         use crate::entities::visualization::styled_item::resolve_representation_item_ref;
+        use crate::ir::shape_rep::DimensionItem;
         use crate::ir::shape_rep::Representation;
         let raw = std::mem::take(&mut self.sdr_raw_items);
         for (repr_id, refs) in raw {
+            // Try the descriptive map first (mirrors the CRI handler), then the
+            // generic representation-item resolver; a ref is in exactly one.
             let items: Vec<_> = refs
                 .into_iter()
-                .filter_map(|r| resolve_representation_item_ref(self, r))
+                .filter_map(|r| {
+                    self.descriptive_item_map
+                        .get(&r)
+                        .cloned()
+                        .map(DimensionItem::Descriptive)
+                        .or_else(|| {
+                            resolve_representation_item_ref(self, r).map(DimensionItem::Item)
+                        })
+                })
                 .collect();
             if let Representation::ShapeDimensionRepresentation(sdr) =
                 &mut self.representations[repr_id]

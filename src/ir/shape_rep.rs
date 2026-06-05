@@ -444,13 +444,23 @@ pub struct CharacterizedItemWithinRepresentation {
 
 /// `SHAPE_DIMENSION_REPRESENTATION(name, items, context_of_items)` —
 /// SUBTYPE OF `SHAPE_REPRESENTATION` SUBTYPE OF `REPRESENTATION`. `items`
-/// preserved as a generic SET of [`RepresentationItemRef`]; unresolved
+/// is a SET of `representation_item`; each is a geometry/measure ref
+/// ([`DimensionItem::Item`]) or a `DESCRIPTIVE_REPRESENTATION_ITEM`
+/// ([`DimensionItem::Descriptive`], carried inline — no arena). Unresolved
 /// members skip silently.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeDimensionRepresentation {
     pub name: String,
     pub context: Option<RepresentationContextRef>,
-    pub items: Vec<RepresentationItemRef>,
+    pub items: Vec<DimensionItem>,
+}
+
+/// A `SHAPE_DIMENSION_REPRESENTATION.items` member — mirrors [`CompoundItem`]:
+/// a resolved representation-item ref or an inline descriptive item.
+#[derive(Debug, Clone, PartialEq)]
+pub enum DimensionItem {
+    Item(RepresentationItemRef),
+    Descriptive(DescriptiveItem),
 }
 
 /// `ADVANCED_BREP_SHAPE_REPRESENTATION(name, items, context)`.
