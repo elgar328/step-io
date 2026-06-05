@@ -1334,6 +1334,17 @@ impl WriteBuffer<'_> {
         let idt = self.emit_item_defined_transformation(inst.transform)?;
         let nauo = self.emit_nauo(inst, parent_pdef, child_pdef);
         let nauo_pds = self.emit_nauo_owned_pds(nauo);
+        // Extra placement SDRs: some exporters link the NAUO-owned PDS to one or
+        // more standalone placement SHAPE_REPRESENTATIONs (besides the CDSR).
+        // Re-emit one SDR per entry, all sharing the same `nauo_pds` the CDSR
+        // uses (so every SDR references the one placement PDS, as in the source).
+        for &sr_id in &inst.placement_representation {
+            if let Some(&sr_step) = self.representation_step_ids.get(sr_id.0 as usize)
+                && sr_step != 0
+            {
+                self.emit_sdr(nauo_pds, sr_step);
+            }
+        }
         // Reader-built IR materialises the placement as a
         // `RepresentationRelationshipWithTransformation` arena entry; emit the
         // complex from its faithful `rep_1`/`rep_2`/`name`/`description` and

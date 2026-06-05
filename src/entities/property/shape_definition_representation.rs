@@ -44,6 +44,23 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
         // property handler, later than this SDR). NAUO-tagged PDS resolve to neither and
         // stay dropped (assembly-instance shape — a later phase).
         let Some(pdef_ref) = ctx.pdef_shape_to_pdef.get(&pdef_shape_ref).copied() else {
+            // NAUO-tagged placement PDS: this SDR links the instance's placement
+            // PDS to a standalone placement SHAPE_REPRESENTATION (an extra SDR
+            // some exporters emit besides the CDSR; one placement PDS may carry
+            // several). Append the SR to the NAUO's list so
+            // `resolve_nauo_instances` attaches them to the Instance; the writer
+            // re-emits one SDR per SR next to the NAUO-owned PDS. (Without this
+            // it falls to `sdr_link_refs` and `resolve_sdr_links` drops it, since
+            // the NAUO-owned PDS is never a modelled property_definition.)
+            if let Some(&nauo_ref) = ctx.pdef_shape_to_nauo.get(&pdef_shape_ref) {
+                if let Some(&sr_id) = ctx.repr_id_map.get(&shape_rep_ref) {
+                    ctx.nauo_placement_sr
+                        .entry(nauo_ref)
+                        .or_default()
+                        .push(sr_id);
+                }
+                return Ok(());
+            }
             ctx.sdr_link_refs.push((pdef_shape_ref, shape_rep_ref));
             return Ok(());
         };

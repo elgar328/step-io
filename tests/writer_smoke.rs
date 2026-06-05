@@ -943,6 +943,7 @@ fn simple_assembly_round_trips() {
             occurrence_name: "LeafInst".into(),
             transform_rr: None,
             acu: None,
+            placement_representation: vec![],
         }],
         shape_ref_frame: identity_frame,
         outer_sr_frame: None,
@@ -1032,6 +1033,7 @@ fn shared_child_assembly_round_trips() {
                 occurrence_name: "A".into(),
                 transform_rr: None,
                 acu: None,
+                placement_representation: vec![],
             },
             Instance {
                 child: leaf_pid,
@@ -1040,6 +1042,7 @@ fn shared_child_assembly_round_trips() {
                 occurrence_name: "B".into(),
                 transform_rr: None,
                 acu: None,
+                placement_representation: vec![],
             },
         ],
         shape_ref_frame: identity_frame,
@@ -1167,6 +1170,7 @@ fn nauo_arena_is_canonical_with_instance_view() {
         occurrence_name: "BoltInst".into(),
         transform_rr: None,
         acu: Some(acu_id),
+        placement_representation: vec![],
     });
     tree.roots = vec![root_pid];
     model.assembly = Some(tree);
@@ -1212,6 +1216,105 @@ fn nauo_arena_is_canonical_with_instance_view() {
         related_product,
         Some(inst.child),
         "NAUO.related PD's product matches the Instance child"
+    );
+}
+
+#[test]
+fn instance_placement_representation_round_trips() {
+    // Some exporters link the instance's NAUO-owned placement PDS to one or more
+    // standalone placement SHAPE_REPRESENTATIONs via EXTRA
+    // SHAPE_DEFINITION_REPRESENTATIONs (besides the CDSR). A single placement PDS
+    // legally carries several (nema_23hs9430B does). step-io preserves them on
+    // Instance.placement_representation (a Vec); the writer re-emits one SDR per
+    // entry next to the NAUO-owned PDS, and the reader recovers them all (the PDS
+    // is NAUO-tagged). This test exercises the multi-SDR-per-instance case.
+    use step_io::ir::shape_rep::{PlainRepr, Representation, RepresentationContextRef};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let ctx_id = model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let transform = identity_transform(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    // Two standalone placement SHAPE_REPRESENTATIONs sharing the one placement
+    // PDS — the multi-SDR-per-instance shape a single Option would have dropped.
+    let mut placement_sr = |name: &str| {
+        model.representations.push(Representation::Plain(PlainRepr {
+            name: name.into(),
+            context: Some(RepresentationContextRef::Unitful(ctx_id)),
+            frame: None,
+        }))
+    };
+    let placement_sr_a = placement_sr("placement_a");
+    let placement_sr_b = placement_sr("placement_b");
+
+    let mut tree = AssemblyTree::default();
+    let leaf_pid = tree.products.push(Product {
+        id: "Leaf".into(),
+        name: "Leaf".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    let root_pid = tree.products.push(Product {
+        id: "Root".into(),
+        name: "Root".into(),
+        description: None,
+        geometry: None,
+        instances: vec![Instance {
+            child: leaf_pid,
+            transform,
+            occurrence_id: "1".into(),
+            occurrence_name: "Inst".into(),
+            transform_rr: None,
+            acu: None,
+            placement_representation: vec![placement_sr_a, placement_sr_b],
+        }],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![root_pid];
+    model.assembly = Some(tree);
+
+    let text = model.write_to_string().expect("write");
+    // The writer emitted BOTH extra placement SDRs (the Leaf product's own SDR
+    // plus these two → at least 3 SDRs).
+    assert!(
+        text.matches("SHAPE_DEFINITION_REPRESENTATION").count() >= 3,
+        "expected two extra placement SDRs, got:\n{text}"
+    );
+    let re = reconvert(&text);
+    let r_asm = re.assembly.as_ref().expect("assembly");
+    let root_prod = r_asm.products.iter().find(|p| p.id == "Root").unwrap();
+    let inst = &root_prod.instances[0];
+    assert_eq!(
+        inst.placement_representation.len(),
+        2,
+        "both placement SDRs recovered onto the instance (multi per PDS)"
     );
 }
 
@@ -1266,6 +1369,7 @@ fn assembly_placement_materialises_distinct_rrwt_per_instance() {
                 occurrence_name: "A".into(),
                 transform_rr: None,
                 acu: None,
+                placement_representation: vec![],
             },
             Instance {
                 child: leaf_pid,
@@ -1274,6 +1378,7 @@ fn assembly_placement_materialises_distinct_rrwt_per_instance() {
                 occurrence_name: "B".into(),
                 transform_rr: None,
                 acu: None,
+                placement_representation: vec![],
             },
         ],
         shape_ref_frame: identity_frame,

@@ -284,6 +284,11 @@ pub struct ReaderContext {
     /// `resolve_nauo_instances` and `mem::take`-n into the `AssemblyTree` at
     /// finalize. Each entry is 1:1 with a built `Instance` (via `Instance::acu`).
     pub(crate) assembly_component_usages: Arena<crate::ir::NextAssemblyUsageOccurrence>,
+    /// NAUO step id → the standalone placement `SHAPE_REPRESENTATION`s linked by
+    /// extra `SHAPE_DEFINITION_REPRESENTATION`s to the instance's NAUO-owned PDS
+    /// (a single placement PDS can carry several). Recorded by the SDR handler;
+    /// attached to `Instance::placement_representation`.
+    pub(crate) nauo_placement_sr: HashMap<u64, Vec<crate::ir::id::RepresentationId>>,
     /// Canonical `product_definition` arena, populated by the `PRODUCT_DEFINITION`
     /// handler and `mem::take`-n into the `AssemblyTree` at finalize. Each
     /// `Product.pdef` indexes here.
@@ -1047,6 +1052,11 @@ impl ReaderContext {
                 let acu = &self.assembly_component_usages[acu_id];
                 (acu.id.clone(), acu.name.clone())
             };
+            let placement_representation = self
+                .nauo_placement_sr
+                .get(&pending.nauo_id)
+                .cloned()
+                .unwrap_or_default();
             self.assembly_products[parent]
                 .instances
                 .push(crate::ir::assembly::Instance {
@@ -1056,6 +1066,7 @@ impl ReaderContext {
                     occurrence_name,
                     transform_rr: None,
                     acu: Some(acu_id),
+                    placement_representation,
                 });
         }
         // Pass 2 — canonical-order RR materialisation.

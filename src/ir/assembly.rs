@@ -443,6 +443,14 @@ pub struct Instance {
     /// The instance's `occurrence_id` / `occurrence_name` / `child` mirror the
     /// arena entry's `id` / `name` / `related`.
     pub acu: Option<crate::ir::id::AssemblyComponentUsageId>,
+    /// Standalone placement `SHAPE_REPRESENTATION`s linked to this instance's
+    /// placement `PRODUCT_DEFINITION_SHAPE` by EXTRA
+    /// `SHAPE_DEFINITION_REPRESENTATION`s (besides the CDSR). Some CAD exporters
+    /// emit one or more of these redundant SDRs to route the instance's
+    /// placement geometry (a single placement PDS can carry several); the writer
+    /// re-emits one SDR per entry next to the NAUO-owned PDS. Empty for the
+    /// common case (no extra SDR) and for kernel-built IR.
+    pub placement_representation: Vec<RepresentationId>,
 }
 
 /// A rigid 3D placement expressed as STEP does it: two axis placements
