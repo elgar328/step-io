@@ -50,6 +50,19 @@ impl SimpleEntityHandler for NextAssemblyUsageOccurrenceHandler {
 
         let parent_pid = ctx.resolve_product_by_pdef(entity_id, relating_pdef, "relating_pdef")?;
         let child_pid = ctx.resolve_product_by_pdef(entity_id, related_pdef, "related_pdef")?;
+        // Canonical NAUO endpoints are PRODUCT_DEFINITION refs — resolve them to
+        // `product_definitions` arena ids (the `Instance` view keeps the
+        // ProductId child above). Missing = drop, mirroring resolve_product_by_pdef.
+        let (Some(&relating_pd), Some(&related_pd)) = (
+            ctx.pdef_arena_map.get(&relating_pdef),
+            ctx.pdef_arena_map.get(&related_pdef),
+        ) else {
+            return Err(ConvertError::MissingReference {
+                from: entity_id,
+                to: relating_pdef,
+                field_name: "relating/related_product_definition",
+            });
+        };
 
         // The transform comes from the CDSR handler, which the reference graph
         // (NAUO <- PDS <- CDSR) places *after* this NAUO under topological
@@ -61,6 +74,8 @@ impl SimpleEntityHandler for NextAssemblyUsageOccurrenceHandler {
             .push(crate::reader::PendingNauoInstance {
                 parent: parent_pid,
                 child: child_pid,
+                relating_pd,
+                related_pd,
                 occurrence_id,
                 occurrence_name,
                 description,

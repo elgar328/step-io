@@ -1077,6 +1077,7 @@ fn shared_child_assembly_round_trips() {
 }
 
 #[test]
+#[allow(clippy::too_many_lines)]
 fn nauo_arena_is_canonical_with_instance_view() {
     // Direction-(b) prototype: the `assembly_component_usage` (NAUO) arena is
     // the canonical store and `Product.instances` is a derived view (via
@@ -1084,7 +1085,7 @@ fn nauo_arena_is_canonical_with_instance_view() {
     // emits the NAUO from the arena entry — round-tripping `description` and
     // `reference_designator`, which the legacy inline synthesis dropped. Also
     // guards the arena↔instance 1:1 invariant (no orphan NAUO).
-    use step_io::ir::NextAssemblyUsageOccurrence;
+    use step_io::ir::{NextAssemblyUsageOccurrence, ProductDefinition};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     model.units.push(ctx);
@@ -1133,6 +1134,18 @@ fn nauo_arena_is_canonical_with_instance_view() {
         formation: None,
         pdef: None,
     });
+    // PRODUCT_DEFINITION arena endpoints (the NAUO's relating/related are PD
+    // refs). The writer emits the NAUO's parent/child from `product_def_ids`,
+    // so these are the canonical record, not the writer's working refs.
+    let make_pd = |id: &str| ProductDefinition {
+        id: id.into(),
+        description: String::new(),
+        formation: None,
+        context: None,
+        documentation_ids: vec![],
+    };
+    let root_def = tree.product_definitions.push(make_pd("design"));
+    let leaf_def = tree.product_definitions.push(make_pd("design"));
     // Canonical NAUO arena entry with a non-empty description + reference
     // designator (the fields the legacy path dropped).
     let acu_id = tree
@@ -1141,8 +1154,8 @@ fn nauo_arena_is_canonical_with_instance_view() {
             id: "7".into(),
             name: "BoltInst".into(),
             description: "component placement".into(),
-            relating: root_pid,
-            related: leaf_pid,
+            relating: root_def,
+            related: leaf_def,
             reference_designator: Some("=>[0:1:1:5]".into()),
         });
     // The Instance is the derived view: its occurrence fields mirror the arena
@@ -1189,6 +1202,17 @@ fn nauo_arena_is_canonical_with_instance_view() {
         .filter(|i| i.acu.is_some())
         .count();
     assert_eq!(r_asm.assembly_component_usages.iter().count(), view_count);
+
+    // The NAUO endpoints are PRODUCT_DEFINITION refs — `related`'s PD (indexing
+    // validates it resolves) points at the same child product as the Instance.
+    let related_product = r_asm.product_definitions[acu.related]
+        .formation
+        .map(|fid| r_asm.product_definition_formations[fid].data().of_product);
+    assert_eq!(
+        related_product,
+        Some(inst.child),
+        "NAUO.related PD's product matches the Instance child"
+    );
 }
 
 #[test]

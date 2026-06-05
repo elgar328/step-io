@@ -74,6 +74,11 @@ pub(crate) struct PendingSdrGeometry {
 pub(crate) struct PendingNauoInstance {
     pub(crate) parent: ProductId,
     pub(crate) child: ProductId,
+    /// `relating_product_definition` / `related_product_definition` resolved to
+    /// `product_definitions` arena ids — the canonical NAUO endpoints. (The
+    /// `Instance` view keeps `parent`/`child` as `ProductId`.)
+    pub(crate) relating_pd: crate::ir::ProductDefinitionId,
+    pub(crate) related_pd: crate::ir::ProductDefinitionId,
     pub(crate) occurrence_id: String,
     pub(crate) occurrence_name: String,
     /// NAUO `description` (attr 2) — kept for the canonical
@@ -1030,20 +1035,22 @@ impl ReaderContext {
                     id: pending.occurrence_id,
                     name: pending.occurrence_name,
                     description: pending.description,
-                    relating: pending.parent,
-                    related: pending.child,
+                    relating: pending.relating_pd,
+                    related: pending.related_pd,
                     reference_designator: pending.reference_designator,
                 },
             );
-            // The Instance is a denormalized view of the arena entry.
-            let (child, occurrence_id, occurrence_name) = {
+            // The Instance is a denormalized view of the arena entry. `child` is
+            // the resolved child ProductId (the arena's `related` is the
+            // PRODUCT_DEFINITION ref); occurrence id/name mirror the arena.
+            let (occurrence_id, occurrence_name) = {
                 let acu = &self.assembly_component_usages[acu_id];
-                (acu.related, acu.id.clone(), acu.name.clone())
+                (acu.id.clone(), acu.name.clone())
             };
             self.assembly_products[parent]
                 .instances
                 .push(crate::ir::assembly::Instance {
-                    child,
+                    child: pending.child,
                     transform,
                     occurrence_id,
                     occurrence_name,
@@ -1132,13 +1139,15 @@ impl ReaderContext {
         if self.product_arena_map.is_empty() {
             return;
         }
-        // Collect every ProductId that appears as a child in the canonical
-        // `assembly_component_usage` arena (`related`). The remaining products
-        // are root candidates. (Equivalent to scanning `Instance.child`, since
-        // the view is built 1:1 from the arena — the arena is the source.)
+        // Collect every ProductId that appears as an Instance.child. The
+        // remaining products are root candidates. (The canonical NAUO arena's
+        // `related` is now a ProductDefinitionId, so the root scan walks the
+        // 1:1 Instance view, which carries the resolved child ProductId.)
         let mut is_child: HashSet<ProductId> = HashSet::new();
-        for acu in self.assembly_component_usages.iter() {
-            is_child.insert(acu.related);
+        for product in self.assembly_products.iter() {
+            for inst in &product.instances {
+                is_child.insert(inst.child);
+            }
         }
         let roots: Vec<ProductId> = self
             .assembly_products

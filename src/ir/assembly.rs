@@ -93,16 +93,17 @@ pub struct ProductDefinition {
 /// (which child product is placed under which parent, plus the schema id /
 /// name / description / reference designator). The placement transform is NOT
 /// here — it comes from the CDSR/RRWT path and lives on the derived
-/// [`Instance`]. `relating` / `related` are stored as [`ProductId`] (step-io
-/// has no `product_definition` arena yet), mirroring
-/// [`PlainProductDefinitionRelationship`].
+/// [`Instance`]. `relating` / `related` are `PRODUCT_DEFINITION` refs per the
+/// schema ([`ProductDefinitionId`] into the `product_definitions` arena); the
+/// derived `Instance.child` carries the resolved [`ProductId`] for the
+/// placement view.
 #[derive(Debug, Clone, PartialEq)]
 pub struct NextAssemblyUsageOccurrence {
     pub id: String,
     pub name: String,
     pub description: String,
-    pub relating: ProductId,
-    pub related: ProductId,
+    pub relating: ProductDefinitionId,
+    pub related: ProductDefinitionId,
     pub reference_designator: Option<String>,
 }
 
