@@ -170,6 +170,10 @@ pub struct ReaderContext {
     /// `PRESENTATION_SET` step id → arena id (phase pr-core). Consumed by
     /// `area_in_set.in_set`.
     pub(crate) presentation_set_id_map: HashMap<u64, crate::ir::id::PresentationSetId>,
+    /// `PRESENTATION_LAYER_ASSIGNMENT` step id → arena id. Consumed by
+    /// `invisibility.invisible_items` (a PLA is an `invisible_item` member).
+    pub(crate) presentation_layer_assignment_id_map:
+        HashMap<u64, crate::ir::id::PresentationLayerAssignmentId>,
     /// `APPLIED_PRESENTED_ITEM` step id → arena id (phase pr-item). Consumed by
     /// `presented_item_representation.item` (a `presented_item` whose concrete
     /// subtype is `applied_presented_item`).

@@ -933,12 +933,13 @@ pub struct Invisibility {
     pub presentation_context: Option<InvisibilityContext>,
 }
 
-/// `invisible_item` SELECT — 3 modelled members (no `PresentationLayerAssignment`
-/// today since step-io lacks a PLA `id_map`). Source refs to other members
-/// are silently skipped on read.
+/// `invisible_item` SELECT — all four schema members
+/// (`draughting_callout`, `presentation_layer_assignment`, `representation`,
+/// `styled_item`). Source refs to dropped target instances are skipped on read.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum InvisibleItem {
     DraughtingCallout(crate::ir::id::DraughtingCalloutId),
+    PresentationLayerAssignment(crate::ir::id::PresentationLayerAssignmentId),
     Representation(crate::ir::id::RepresentationId),
     StyledItem(StyledItemId),
 }

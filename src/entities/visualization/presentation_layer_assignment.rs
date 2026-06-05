@@ -42,12 +42,15 @@ impl SimpleEntityHandler for PresentationLayerAssignmentHandler {
         let pool = ctx
             .visualization
             .get_or_insert_with(VisualizationPool::default);
-        pool.presentation_layer_assignments
+        let id = pool
+            .presentation_layer_assignments
             .push(PresentationLayerAssignment {
                 name,
                 description,
                 assigned_items,
             });
+        ctx.presentation_layer_assignment_id_map
+            .insert(entity_id, id);
         Ok(())
     }
 

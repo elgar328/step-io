@@ -549,8 +549,13 @@ impl WriteBuffer<'_> {
                 self.representation_step_ids[id.0 as usize] = step_id;
             }
         }
-        for pla in viz.presentation_layer_assignments.iter() {
-            PresentationLayerAssignmentHandler::write(self, pla.clone())?;
+        // Cache the step ids (indexed by PresentationLayerAssignmentId) so a
+        // later INVISIBILITY (delayed emit) can reference the PLA.
+        self.presentation_layer_assignment_step_ids =
+            vec![0; viz.presentation_layer_assignments.len()];
+        for (idx, pla) in viz.presentation_layer_assignments.iter().enumerate() {
+            self.presentation_layer_assignment_step_ids[idx] =
+                PresentationLayerAssignmentHandler::write(self, pla.clone())?;
         }
         Ok(())
     }

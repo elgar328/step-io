@@ -1,9 +1,9 @@
 //! `INVISIBILITY` handler — phase invisibility (delayed emit).
 //!
-//! Reads the SET of `invisible_item` refs and classifies each as
-//! `StyledItem` / `Representation` / `DraughtingCallout`. Source refs to
-//! other SELECT members (e.g. `presentation_layer_assignment`) are
-//! silently skipped — step-io has no `id_map` for that target today.
+//! Reads the SET of `invisible_item` refs and classifies each as one of the
+//! four schema members: `StyledItem` / `Representation` / `DraughtingCallout`
+//! / `PresentationLayerAssignment`. Refs to dropped target instances are
+//! skipped per-item.
 //!
 //! Emit is scheduled in `emit_pools` after
 //! `emit_draughting_callouts` / `emit_draughting_models`, so every item
@@ -55,10 +55,11 @@ impl SimpleEntityHandler for InvisibilityHandler {
                 invisible_items.push(InvisibleItem::Representation(id));
             } else if let Some(&id) = ctx.draughting_callout_id_map.get(&r) {
                 invisible_items.push(InvisibleItem::DraughtingCallout(id));
+            } else if let Some(&id) = ctx.presentation_layer_assignment_id_map.get(&r) {
+                invisible_items.push(InvisibleItem::PresentationLayerAssignment(id));
             }
-            // Other SELECT members (e.g. presentation_layer_assignment) and
-            // dropped item instances: skipped per-item — the entity survives on
-            // its resolved items.
+            // Dropped item instances are skipped per-item — the entity survives
+            // on its resolved items.
         }
         if invisible_items.is_empty() {
             // The set was non-empty but nothing resolved (all unmodelled SELECT
@@ -69,7 +70,8 @@ impl SimpleEntityHandler for InvisibilityHandler {
                 entity_id,
                 detail: String::from(
                     "INVISIBILITY invisible_items did not resolve to any modelled \
-                     styled_item / representation / draughting_callout — dropping",
+                     styled_item / representation / draughting_callout / \
+                     presentation_layer_assignment — dropping",
                 ),
             });
             return Ok(());
@@ -99,6 +101,9 @@ impl SimpleEntityHandler for InvisibilityHandler {
                 }
                 InvisibleItem::DraughtingCallout(id) => {
                     Attribute::EntityRef(buf.draughting_callout_step_ids[id.0 as usize])
+                }
+                InvisibleItem::PresentationLayerAssignment(id) => {
+                    Attribute::EntityRef(buf.presentation_layer_assignment_step_ids[id.0 as usize])
                 }
             })
             .collect();

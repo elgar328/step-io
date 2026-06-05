@@ -4819,6 +4819,49 @@ fn invisibility_round_trip() {
 }
 
 #[test]
+fn invisibility_presentation_layer_assignment_round_trip() {
+    // An INVISIBILITY whose invisible_items is a PRESENTATION_LAYER_ASSIGNMENT
+    // (the fourth invisible_item SELECT member). Exercises the
+    // InvisibleItem::PresentationLayerAssignment variant.
+    use step_io::ir::visualization::{
+        Invisibility, InvisibleItem, PresentationLayerAssignment, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let pla = viz
+        .presentation_layer_assignments
+        .push(PresentationLayerAssignment {
+            name: "01_DATUM".into(),
+            description: String::new(),
+            assigned_items: vec![],
+        });
+    viz.invisibilities.push(Invisibility {
+        invisible_items: vec![InvisibleItem::PresentationLayerAssignment(pla)],
+        presentation_context: None,
+    });
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        !text.contains("#0,") && !text.contains("#0)") && !text.contains("(#0"),
+        "no dangling #0 ref in:\n{text}"
+    );
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    assert_eq!(re_viz.invisibilities.len(), 1, "the INVISIBILITY survives");
+    let inv = re_viz.invisibilities.iter().next().unwrap();
+    assert_eq!(inv.invisible_items.len(), 1);
+    assert!(
+        matches!(
+            inv.invisible_items[0],
+            InvisibleItem::PresentationLayerAssignment(_)
+        ),
+        "the PLA invisible_item round-trips"
+    );
+}
+
+#[test]
 fn unitless_context_round_trip() {
     use step_io::ir::shape_rep::{
         DraughtingModel, DraughtingModelForm, Representation, RepresentationContextRef,
