@@ -150,7 +150,9 @@ impl ReaderContext {
                         .get_or_insert_with(crate::ir::property::PropertyPool::default)
                         .shape_definition_representations
                         .push(crate::ir::property::ShapeDefinitionRepresentationLink {
-                            definition,
+                            definition: crate::ir::property::SdrDefinition::PropertyDefinition(
+                                definition,
+                            ),
                             used_representation,
                         });
                 } else {

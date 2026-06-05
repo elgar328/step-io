@@ -1458,21 +1458,30 @@ impl ReaderContext {
     /// complete. Unresolved links (PD or representation not modelled) drop —
     /// FAIL-safe.
     fn resolve_sdr_links(&mut self) {
+        use crate::ir::property::SdrDefinition;
         if self.sdr_link_refs.is_empty() {
             return;
         }
         let mut links = Vec::new();
         for (def_ref, rep_ref) in std::mem::take(&mut self.sdr_link_refs) {
             let effective = self.srr_equiv_map.get(&rep_ref).copied().unwrap_or(rep_ref);
-            if let (Some(&definition), Some(&used_representation)) = (
-                self.property_def_step_to_id.get(&def_ref),
-                self.repr_id_map.get(&effective),
-            ) {
-                links.push(crate::ir::property::ShapeDefinitionRepresentationLink {
-                    definition,
-                    used_representation,
-                });
-            }
+            // `definition` is a `represented_definition` SELECT: a
+            // property_definition, or a SHAPE_ASPECT (C3D / grabcad define a
+            // shape aspect's shape directly).
+            let definition = if let Some(&pd) = self.property_def_step_to_id.get(&def_ref) {
+                SdrDefinition::PropertyDefinition(pd)
+            } else if let Some(&sa) = self.shape_aspect_id_map.get(&def_ref) {
+                SdrDefinition::ShapeAspect(sa)
+            } else {
+                continue;
+            };
+            let Some(&used_representation) = self.repr_id_map.get(&effective) else {
+                continue;
+            };
+            links.push(crate::ir::property::ShapeDefinitionRepresentationLink {
+                definition,
+                used_representation,
+            });
         }
         if links.is_empty() {
             return;

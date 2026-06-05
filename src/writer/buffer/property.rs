@@ -25,11 +25,18 @@ impl WriteBuffer<'_> {
             return;
         };
         for link in pool.shape_definition_representations.iter() {
-            let def_step = self
-                .property_definition_step_ids
-                .get(link.definition.0 as usize)
-                .copied()
-                .unwrap_or(0);
+            let def_step = match link.definition {
+                crate::ir::property::SdrDefinition::PropertyDefinition(id) => self
+                    .property_definition_step_ids
+                    .get(id.0 as usize)
+                    .copied()
+                    .unwrap_or(0),
+                crate::ir::property::SdrDefinition::ShapeAspect(id) => self
+                    .shape_aspect_step_ids
+                    .get(id.0 as usize)
+                    .copied()
+                    .unwrap_or(0),
+            };
             let sr_step = self
                 .representation_step_ids
                 .get(link.used_representation.0 as usize)

@@ -73,12 +73,22 @@ pub struct PropertyPool {
     pub property_definition_representations: Arena<PropertyDefinitionRepresentationLink>,
 }
 
+/// `SHAPE_DEFINITION_REPRESENTATION.definition` — a `represented_definition`
+/// SELECT. step-io models the `property_definition` and `shape_aspect`
+/// members (a C3D / grabcad SDR routinely defines a `SHAPE_ASPECT`'s shape).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum SdrDefinition {
+    PropertyDefinition(PropertyDefinitionId),
+    ShapeAspect(crate::ir::id::ShapeAspectId),
+}
+
 /// A `SHAPE_DEFINITION_REPRESENTATION(definition, used_representation)` whose
-/// `definition` resolves to a [`PropertyDefinition`] (not the product PDS).
+/// `definition` resolves to a [`PropertyDefinition`] or a `SHAPE_ASPECT`
+/// (not the product PDS).
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeDefinitionRepresentationLink {
-    /// `definition` — a [`PropertyPool::property_definitions`] arena slot.
-    pub definition: PropertyDefinitionId,
+    /// `definition` — a `represented_definition` SELECT member.
+    pub definition: SdrDefinition,
     /// `used_representation` — a `representations` arena entry.
     pub used_representation: crate::ir::id::RepresentationId,
 }
