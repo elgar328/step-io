@@ -8,6 +8,8 @@
 //! [`read_product_definition_body`].
 
 use crate::entities::SimpleEntityHandler;
+use crate::ir::ProductDefinitionId;
+use crate::ir::assembly::ProductDefinition;
 use crate::ir::attr::{read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -25,7 +27,7 @@ pub(crate) fn read_product_definition_body(
     ctx: &mut ReaderContext,
     entity_id: u64,
     attrs: &[Attribute],
-) -> Result<(), ConvertError> {
+) -> Result<ProductDefinitionId, ConvertError> {
     if attrs.len() < 4 {
         return Err(ConvertError::AttributeCount {
             entity_id,
@@ -35,9 +37,10 @@ pub(crate) fn read_product_definition_body(
         });
     }
     // PRODUCT_DEFINITION.id is a fixed-value enum-like string ("design" /
-    // "implementation"); keep strict. description is informal — accept `$`.
-    let _id = read_string_or_unset(attrs, 0, entity_id, "id")?;
-    let _description = read_string_or_unset(attrs, 1, entity_id, "description")?;
+    // "implementation"); description is informal. Both were dropped by the
+    // legacy writer (hardcoded "design" / "") — now preserved in the arena.
+    let id = read_string_or_unset(attrs, 0, entity_id, "id")?.to_owned();
+    let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
     let formation_ref = read_entity_ref(attrs, 2, entity_id, "formation")?;
     // attrs[3] = frame_of_reference (PRODUCT_DEFINITION_CONTEXT).
     let pdc_step_ref = read_entity_ref(attrs, 3, entity_id, "frame_of_reference").ok();
@@ -50,12 +53,27 @@ pub(crate) fn read_product_definition_body(
         });
     };
     ctx.pdef_to_product.insert(entity_id, product_ref);
-    if let Some(pdc_ref) = pdc_step_ref {
-        if let Some(&pid) = ctx.product_arena_map.get(&product_ref) {
+
+    // Materialize the canonical `product_definition` arena entry. `formation`
+    // resolves inline (the formation handler ran first under topo dispatch);
+    // `context` is filled later by `resolve_product_contexts` (the context id
+    // maps populate after this pass — same deferral as `Product.pdef_context`).
+    let formation = ctx.formation_arena_map.get(&formation_ref).copied();
+    let pd_id = ctx.product_definitions.push(ProductDefinition {
+        id,
+        description,
+        formation,
+        context: None,
+        documentation_ids: Vec::new(),
+    });
+    ctx.pdef_arena_map.insert(entity_id, pd_id);
+    if let Some(&pid) = ctx.product_arena_map.get(&product_ref) {
+        ctx.assembly_products[pid].pdef = Some(pd_id);
+        if let Some(pdc_ref) = pdc_step_ref {
             ctx.product_pdc_step_refs.insert(pid, pdc_ref);
         }
     }
-    Ok(())
+    Ok(pd_id)
 }
 
 pub(crate) struct ProductDefinitionWriteInput {
@@ -75,7 +93,8 @@ impl SimpleEntityHandler for ProductDefinitionHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        read_product_definition_body(ctx, entity_id, attrs)
+        read_product_definition_body(ctx, entity_id, attrs)?;
+        Ok(())
     }
 
     fn write(

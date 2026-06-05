@@ -10,8 +10,8 @@ use super::arena::Arena;
 use super::id::{
     ApplicationContextId, CurveId, DocumentId, MeasureWithUnitId, Placement3dId, PointId,
     ProductCategoryId, ProductContextId, ProductDefinitionContextId,
-    ProductDefinitionContextRoleId, ProductDefinitionFormationId, ProductId, RepresentationId,
-    ShellId, SolidId, UnitContextId,
+    ProductDefinitionContextRoleId, ProductDefinitionFormationId, ProductDefinitionId, ProductId,
+    RepresentationId, ShellId, SolidId, UnitContextId,
 };
 
 /// Assembly graph. Conventionally called a "tree" but shared instances
@@ -63,6 +63,29 @@ pub struct AssemblyTree {
     /// emits the NAUO line from here. Empty for kernel-built IR (the writer
     /// synthesises the NAUO from `Instance` instead — see `Instance::acu`).
     pub assembly_component_usages: Arena<NextAssemblyUsageOccurrence>,
+    /// `product_definition` arena — the blueprint-canonical flat store of
+    /// `PRODUCT_DEFINITION` entities. The `Product` tree node keeps denormalized
+    /// PD-view fields (`formation` / `pdef_context` / `associated_documents`) for
+    /// the ergonomic API and the kernel synthesis fallback; each reader-built
+    /// `Product` carries a `pdef` index back into this arena, the canonical
+    /// record. Empty for kernel-built IR (the writer synthesises the PD from
+    /// `Product` instead — see `Product::pdef`).
+    pub product_definitions: Arena<ProductDefinition>,
+}
+
+/// `PRODUCT_DEFINITION` arena entry — the canonical record of one product
+/// definition. The `id` / `description` are preserved verbatim (the writer's
+/// legacy synthesis hardcoded `'design'` / `''`); `documentation_ids` is empty
+/// for a plain `PRODUCT_DEFINITION` and non-empty for the
+/// `_WITH_ASSOCIATED_DOCUMENTS` subtype. `formation` / `context` mirror the
+/// `Product` fields the writer currently emits from.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductDefinition {
+    pub id: String,
+    pub description: String,
+    pub formation: Option<ProductDefinitionFormationId>,
+    pub context: Option<ProductDefinitionContextId>,
+    pub documentation_ids: Vec<DocumentId>,
 }
 
 /// `NEXT_ASSEMBLY_USAGE_OCCURRENCE` — the blueprint `assembly_component_usage`
@@ -250,6 +273,12 @@ pub struct Product {
     /// PD subtype instead of plain `PRODUCT_DEFINITION`. Empty for plain PD and
     /// for kernel-built IR (the common case).
     pub associated_documents: Vec<DocumentId>,
+    /// Index into [`AssemblyTree::product_definitions`] — the canonical
+    /// `PRODUCT_DEFINITION` arena entry this product's PD view mirrors. `Some`
+    /// for reader-built IR (the writer emits the PD's id/description from the
+    /// arena); `None` for kernel/hand-built IR (the writer synthesises the PD
+    /// from this product's `formation` / `pdef_context` / `associated_documents`).
+    pub pdef: Option<ProductDefinitionId>,
 }
 
 /// `PRODUCT_CATEGORY` chain attached to a [`Product`] — preserves the source

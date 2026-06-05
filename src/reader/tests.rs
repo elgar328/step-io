@@ -1448,3 +1448,35 @@ fn pdef_with_associated_documents_is_recognised_as_product_definition() {
         "documentation_ids survive a full round-trip"
     );
 }
+
+#[test]
+fn product_definition_id_description_materialised_in_arena() {
+    // PRODUCT_DEFINITION.id / .description were dropped on read and hardcoded
+    // to 'design' / '' by the writer. They are now preserved in the canonical
+    // `product_definition` arena (Commit A — reader side; the writer still
+    // synthesises until Commit B, so this asserts the arena on first read).
+    let source = minimal_step(
+        "#1 = APPLICATION_CONTEXT('test');\n\
+         #2 = PRODUCT_CONTEXT('',#1,'mechanical');\n\
+         #3 = PRODUCT_DEFINITION_CONTEXT('part definition',#1,'design');\n\
+         #4 = PRODUCT('P','P','',(#2));\n\
+         #5 = PRODUCT_DEFINITION_FORMATION('1','',#4);\n\
+         #6 = PRODUCT_DEFINITION('MyPart','rev A',#5,#3);",
+    );
+    let result = convert_source(&source);
+    let assembly = result.model.assembly.as_ref().expect("assembly present");
+    assert_eq!(assembly.product_definitions.iter().count(), 1);
+    let pd = assembly.product_definitions.iter().next().unwrap();
+    assert_eq!(pd.id, "MyPart");
+    assert_eq!(pd.description, "rev A");
+    assert!(pd.formation.is_some(), "formation resolved into the arena");
+    assert!(
+        pd.context.is_some(),
+        "context resolved via the resolve_product_contexts post-pass"
+    );
+    let product = assembly.products.iter().next().unwrap();
+    assert!(
+        product.pdef.is_some(),
+        "Product links to its canonical PD arena entry"
+    );
+}

@@ -279,6 +279,14 @@ pub struct ReaderContext {
     /// `resolve_nauo_instances` and `mem::take`-n into the `AssemblyTree` at
     /// finalize. Each entry is 1:1 with a built `Instance` (via `Instance::acu`).
     pub(crate) assembly_component_usages: Arena<crate::ir::NextAssemblyUsageOccurrence>,
+    /// Canonical `product_definition` arena, populated by the `PRODUCT_DEFINITION`
+    /// handler and `mem::take`-n into the `AssemblyTree` at finalize. Each
+    /// `Product.pdef` indexes here.
+    pub(crate) product_definitions: Arena<crate::ir::ProductDefinition>,
+    /// `PRODUCT_DEFINITION` STEP id → arena id, for consumers that need a typed
+    /// `ProductDefinitionId` (e.g. NAUO relating/related). `pdef_to_product`
+    /// (PD step id → `ProductId`) stays for the untouched consumers.
+    pub(crate) pdef_arena_map: HashMap<u64, crate::ir::ProductDefinitionId>,
     pub(crate) product_contexts: Arena<crate::ir::ProductContext>,
     pub(crate) product_definition_contexts: Arena<crate::ir::ProductDefinitionContext>,
     pub(crate) product_context_id_map: HashMap<u64, crate::ir::ProductContextId>,
@@ -955,6 +963,11 @@ impl ReaderContext {
         for (pid, pdc_step_id) in &self.product_pdc_step_refs {
             if let Some(&pdcid) = self.product_definition_context_id_map.get(pdc_step_id) {
                 self.assembly_products[*pid].pdef_context = Some(pdcid);
+                // Mirror onto the canonical PD arena entry (the context id map
+                // only fills after the PD pass, so resolve it here).
+                if let Some(pd_id) = self.assembly_products[*pid].pdef {
+                    self.product_definitions[pd_id].context = Some(pdcid);
+                }
             }
         }
     }
@@ -1157,6 +1170,7 @@ impl ReaderContext {
             std::mem::take(&mut self.product_category_relationships);
         let product_definition_formations = std::mem::take(&mut self.product_definition_formations);
         let assembly_component_usages = std::mem::take(&mut self.assembly_component_usages);
+        let product_definitions = std::mem::take(&mut self.product_definitions);
         self.assembly = Some(AssemblyTree {
             products,
             roots,
@@ -1169,6 +1183,7 @@ impl ReaderContext {
             product_category_relationships,
             product_definition_formations,
             assembly_component_usages,
+            product_definitions,
         });
     }
 

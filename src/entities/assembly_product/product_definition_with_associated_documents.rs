@@ -40,9 +40,10 @@ impl SimpleEntityHandler for ProductDefinitionWithAssociatedDocumentsHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        // Shared base read also records pdef -> product. On success the
-        // formation ref is known to resolve to a product.
-        read_product_definition_body(ctx, entity_id, attrs)?;
+        // Shared base read also records pdef -> product and pushes the
+        // canonical arena entry. On success the formation ref is known to
+        // resolve to a product.
+        let pd_id = read_product_definition_body(ctx, entity_id, attrs)?;
 
         // Capture documentation_ids (attr[4], a SET OF document) onto the
         // product so the writer re-emits the WITH_ASSOCIATED_DOCUMENTS subtype
@@ -68,6 +69,13 @@ impl SimpleEntityHandler for ProductDefinitionWithAssociatedDocumentsHandler {
         if docs.is_empty() {
             return Ok(()); // nothing resolved -> writer keeps plain PD
         }
+        // Canonical arena entry gets the docs (writer's plain-vs-WAD split
+        // mirrors `documentation_ids.is_empty()`).
+        ctx.product_definitions[pd_id]
+            .documentation_ids
+            .clone_from(&docs);
+        // Product view keeps `associated_documents` (the writer's discriminator
+        // and the existing round-trip test's source).
         let formation_ref = read_entity_ref(attrs, 2, entity_id, "formation")?;
         if let Some(&product_ref) = ctx.formation_to_product.get(&formation_ref)
             && let Some(&pid) = ctx.product_arena_map.get(&product_ref)

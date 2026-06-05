@@ -1,8 +1,9 @@
 use super::arena::{Arena, define_id};
 use super::assembly::{
     NextAssemblyUsageOccurrence, Product, ProductCategory, ProductCategoryRelationship,
-    ProductContext, ProductDefinitionContext, ProductDefinitionContextAssociation,
-    ProductDefinitionContextRole, ProductDefinitionFormation, ProductDefinitionRelationship,
+    ProductContext, ProductDefinition, ProductDefinitionContext,
+    ProductDefinitionContextAssociation, ProductDefinitionContextRole, ProductDefinitionFormation,
+    ProductDefinitionRelationship,
 };
 use super::geometry::{
     Axis1Placement, Axis2Placement2d, Axis2Placement3d, Curve, Curve2d, Direction2, Direction3,
@@ -92,6 +93,7 @@ define_id!(
     ProductDefinitionContextAssociation
 );
 define_id!(AssemblyComponentUsageId, NextAssemblyUsageOccurrence);
+define_id!(ProductDefinitionId, ProductDefinition);
 define_id!(
     ProductDefinitionRelationshipId,
     ProductDefinitionRelationship

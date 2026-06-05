@@ -11,10 +11,11 @@ pub use ir::{
     Edge, EdgeId, Ellipse2, Ellipse3, Face, FaceId, GeometryLeaf, GeometryPool, Instance,
     LengthUncertainty, LengthUnit, Line2, Line3, NextAssemblyUsageOccurrence, NurbsCurve,
     NurbsCurve2d, NurbsSurface, Orientation, OrientedEdge, Pcurve, Placement1dId, Placement2dId,
-    Placement3dId, Plane3, Point2, Point2dId, Point3, PointId, Product, ProductId, Shell, ShellId,
-    Solid, SolidAngleUnit, SolidId, SphericalSurface, StepModel, Surface, SurfaceForm, SurfaceId,
-    SurfaceOfLinearExtrusion, SurfaceOfRevolution, TopologyPool, ToroidalSurface, Transform3d,
-    UnitContext, Vertex, VertexId, Wire, WireId,
+    Placement3dId, Plane3, Point2, Point2dId, Point3, PointId, Product, ProductDefinition,
+    ProductDefinitionId, ProductId, Shell, ShellId, Solid, SolidAngleUnit, SolidId,
+    SphericalSurface, StepModel, Surface, SurfaceForm, SurfaceId, SurfaceOfLinearExtrusion,
+    SurfaceOfRevolution, TopologyPool, ToroidalSurface, Transform3d, UnitContext, Vertex, VertexId,
+    Wire, WireId,
 };
 pub use parser::{
     Attribute, EntityGraph, LexError, LexErrorKind, Lexer, ParseError, ParseWarning, Parser,
