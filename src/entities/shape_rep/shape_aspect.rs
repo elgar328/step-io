@@ -41,9 +41,23 @@ impl SimpleEntityHandler for ShapeAspectHandler {
         let product_definitional = read_bool(attrs, 3, entity_id, "product_definitional")?;
 
         // Lookup chain: SHAPE_ASPECT.of_shape → PRODUCT_DEFINITION_SHAPE
-        //   → PRODUCT_DEFINITION → ProductId
-        let Some(&pdef_step_id) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) else {
-            return Ok(()); // unresolved (rare — non-PDS targets)
+        //   → PRODUCT_DEFINITION → ProductId.
+        // of_shape is required to be a PRODUCT_DEFINITION_SHAPE, but the C3D
+        // kernel emits a PRODUCT_DEFINITION directly (non-standard). Accept it:
+        // resolve to the product and let the writer re-emit the standard PDS
+        // form (via the product's `product_def_shape_ids`).
+        let pdef_step_id = if let Some(&pd) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) {
+            pd
+        } else if ctx.pdef_to_product.contains_key(&of_shape_ref) {
+            ctx.warnings.push(ConvertError::NonStandardInput {
+                field: "SHAPE_ASPECT.of_shape".into(),
+                count: 1,
+                normalized_to: "PRODUCT_DEFINITION_SHAPE (of_shape was a PRODUCT_DEFINITION)"
+                    .into(),
+            });
+            of_shape_ref
+        } else {
+            return Ok(()); // unresolved (genuinely non-product target)
         };
         let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_step_id) else {
             return Ok(());

@@ -1662,3 +1662,57 @@ fn gisu_unset_used_representation_derived_from_identified_item() {
         result.warnings
     );
 }
+
+#[test]
+fn shape_aspect_of_shape_product_definition_normalised() {
+    // SHAPE_ASPECT.of_shape is required to be a PRODUCT_DEFINITION_SHAPE, but the
+    // C3D kernel emits a PRODUCT_DEFINITION directly (#6 below, not the PDS #7).
+    // The reader accepts it, resolves to the product, and surfaces a
+    // NonStandardInput normalization; the writer re-emits the standard PDS form.
+    let source = minimal_step(
+        "#1 = APPLICATION_CONTEXT('test');\n\
+         #2 = PRODUCT_CONTEXT('',#1,'mechanical');\n\
+         #3 = PRODUCT_DEFINITION_CONTEXT('part definition',#1,'design');\n\
+         #4 = PRODUCT('P','P','',(#2));\n\
+         #5 = PRODUCT_DEFINITION_FORMATION('1','',#4);\n\
+         #6 = PRODUCT_DEFINITION('part','',#5,#3);\n\
+         #7 = PRODUCT_DEFINITION_SHAPE('','',#6);\n\
+         #8 = SHAPE_ASPECT('feat','',#6,.F.);",
+    );
+    let result = convert_source(&source);
+
+    // The shape_aspect is recovered (target = the product), not dropped.
+    assert_eq!(
+        result.model.shape_aspects.iter().count(),
+        1,
+        "of_shape=PRODUCT_DEFINITION shape_aspect recovered"
+    );
+
+    // Surfaced as a NonStandardInput normalization (LOSS-exempt), no defect.
+    let norm = result
+        .warnings
+        .iter()
+        .filter(|w| {
+            matches!(w, ConvertError::NonStandardInput { field, .. }
+                if field == "SHAPE_ASPECT.of_shape")
+        })
+        .count();
+    assert_eq!(norm, 1, "{:#?}", result.warnings);
+    assert!(
+        !result.warnings.iter().any(|w| matches!(
+            w,
+            ConvertError::MissingReference { .. } | ConvertError::UnexpectedEntityForm { .. }
+        )),
+        "{:#?}",
+        result.warnings
+    );
+    // The target resolves to the single product (the writer re-emits the
+    // standard of_shape=PDS form from it). Standard-form round-trip idempotency
+    // is covered on real C3D data (input-shaft) by the reference-check run.
+    let sa = result.model.shape_aspects.iter().next().unwrap();
+    assert_eq!(
+        sa.target,
+        crate::ProductId(0),
+        "of_shape resolves to product"
+    );
+}
