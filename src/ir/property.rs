@@ -235,6 +235,14 @@ pub enum CharacterizedDefinition {
     /// `CHARACTERIZED_ITEM_WITHIN_REPRESENTATION` (a `characterized_object`
     /// subtype) — geometric-validation property shapes. No product binding.
     CharacterizedItemWithinRepresentation(CharacterizedObjectId),
+    /// `characterized_object` member resolved to a plain `CHARACTERIZED_OBJECT`
+    /// that is the MBD draughting-model complex MI facet
+    /// (`(CHARACTERIZED_OBJECT CHARACTERIZED_REPRESENTATION DRAUGHTING_MODEL
+    /// REPRESENTATION)`). The CO has no standalone STEP id — it is emitted
+    /// inline inside the `DraughtingModel` complex, whose single id the PD
+    /// forward-references (via the reserved `characterized_object_step_ids`
+    /// slot, shared with the representation).
+    CharacterizedObject(CharacterizedObjectId),
     /// `geometric_tolerance` member — `Plain` or `WithDatumReference` (the
     /// complex MI form). Both arenas live in the `pmi` pool.
     GeometricTolerance(crate::ir::pmi::GeometricToleranceRef),

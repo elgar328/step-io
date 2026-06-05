@@ -97,6 +97,25 @@ impl WriteBuffer<'_> {
             let step = self.fresh();
             self.characterized_object_step_ids[id.0 as usize] = step;
         }
+        // Reserve a step id for each inline-CO DM (Characterized /
+        // CharacterizedShapeTessellated) so a PROPERTY_DEFINITION targeting the
+        // plain CHARACTERIZED_OBJECT can forward-ref the (shared) DM complex id;
+        // `emit_draughting_models` emits the body later under this same id.
+        // Iterate in arena order (NOT `inline` set order) so the reserved #N —
+        // and therefore the round-tripped arena indices — are deterministic.
+        let inline_ids: Vec<_> = self
+            .model
+            .characterized_objects
+            .iter_with_ids()
+            .filter(|(id, _)| inline.contains(id))
+            .map(|(id, _)| id)
+            .collect();
+        for id in inline_ids {
+            if self.characterized_object_step_ids[id.0 as usize] == 0 {
+                let step = self.fresh();
+                self.characterized_object_step_ids[id.0 as usize] = step;
+            }
+        }
     }
 
     /// `CharacterizedObject` ids carried inline by a `DraughtingModel`'s

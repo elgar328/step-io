@@ -83,6 +83,7 @@ impl SimpleEntityHandler for DraughtingModelHandler {
         Ok(())
     }
 
+    #[allow(clippy::too_many_lines)]
     fn write(buf: &mut WriteBuffer, dm: DraughtingModel) -> Result<u64, WriteError> {
         let mut item_refs = Vec::with_capacity(dm.items.len());
         for item in dm.items {
@@ -91,14 +92,22 @@ impl SimpleEntityHandler for DraughtingModelHandler {
         }
         let ctx_attr = buf.repr_context_attr(dm.context);
         match dm.form {
-            DraughtingModelForm::Characterized(_) => {
+            DraughtingModelForm::Characterized(co_id) => {
                 // Complex MI form (phase dm-complex-mi): four-part entity
                 // wrapping CHARACTERIZED_OBJECT(*,*) + CHARACTERIZED_REPRESENTATION
                 // + DRAUGHTING_MODEL + REPRESENTATION. The CO part is emitted
                 // here inline; emit_characterized_objects skips the linked
                 // arena entry via dedup so it doesn't surface twice.
                 use crate::writer::entity::{WriterBody, WriterEntity};
-                let n = buf.fresh();
+                // Emit under the id reserved for the CO facet (so a PD targeting
+                // the CHARACTERIZED_OBJECT forward-refs this one shared id);
+                // fall back to a fresh id when nothing reserved it.
+                let reserved = buf
+                    .characterized_object_step_ids
+                    .get(co_id.0 as usize)
+                    .copied()
+                    .unwrap_or(0);
+                let n = if reserved != 0 { reserved } else { buf.fresh() };
                 buf.entities.push(WriterEntity {
                     id: n,
                     body: WriterBody::Complex {
@@ -122,13 +131,18 @@ impl SimpleEntityHandler for DraughtingModelHandler {
                 });
                 Ok(n)
             }
-            DraughtingModelForm::CharacterizedShapeTessellated(_) => {
+            DraughtingModelForm::CharacterizedShapeTessellated(co_id) => {
                 // 6-part MI form: the union of the Characterized and
                 // ShapeTessellated facets, parts in alphabetical order so
                 // re-read re-dispatches to the same case. CO emitted inline
                 // (DERIVE); the standalone CO pass dedups it.
                 use crate::writer::entity::{WriterBody, WriterEntity};
-                let n = buf.fresh();
+                let reserved = buf
+                    .characterized_object_step_ids
+                    .get(co_id.0 as usize)
+                    .copied()
+                    .unwrap_or(0);
+                let n = if reserved != 0 { reserved } else { buf.fresh() };
                 buf.entities.push(WriterEntity {
                     id: n,
                     body: WriterBody::Complex {

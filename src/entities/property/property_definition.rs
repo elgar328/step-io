@@ -156,15 +156,17 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
             }
             CharacterizedDefinition::Document(doc_id)
         } else if let Some(&co_id) = ctx.characterized_object_id_map.get(&target_ref) {
-            // CIWR is a characterized_object subtype (a valid
-            // characterized_definition member) — geometric-validation shapes.
-            if !matches!(
-                ctx.characterized_objects[co_id],
-                CharacterizedObject::CharacterizedItemWithinRepresentation(_)
-            ) {
-                return Ok(());
+            // Both characterized_object members of the SELECT: CIWR
+            // (geometric-validation shapes) and the plain CHARACTERIZED_OBJECT
+            // facet of the MBD draughting-model complex (pmi validation props).
+            match ctx.characterized_objects[co_id] {
+                CharacterizedObject::CharacterizedItemWithinRepresentation(_) => {
+                    CharacterizedDefinition::CharacterizedItemWithinRepresentation(co_id)
+                }
+                CharacterizedObject::Itself(_) => {
+                    CharacterizedDefinition::CharacterizedObject(co_id)
+                }
             }
-            CharacterizedDefinition::CharacterizedItemWithinRepresentation(co_id)
         } else if let Some(gt_ref) = resolve_geometric_tolerance_ref(ctx, target_ref) {
             // `geometric_tolerance` member (Plain or WithDatumReference complex
             // MI). Both arenas live in the round-trip-diffed pmi pool.

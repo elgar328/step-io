@@ -482,6 +482,20 @@ impl WriteBuffer<'_> {
                     }
                     s
                 }
+                CharacterizedDefinition::CharacterizedObject(co_id) => {
+                    // MBD draughting-model CO facet — reserved by
+                    // emit_characterized_objects_prepass; the DM complex body
+                    // emits later under this same shared id.
+                    let s = self
+                        .characterized_object_step_ids
+                        .get(co_id.0 as usize)
+                        .copied()
+                        .unwrap_or(0);
+                    if s == 0 {
+                        continue;
+                    }
+                    s
+                }
                 CharacterizedDefinition::GeometricTolerance(gt_ref) => {
                     // geometric_tolerance(_with_datum_reference) step ids are
                     // filled by emit_geometric_tolerances(+_with_datum), moved

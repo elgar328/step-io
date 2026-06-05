@@ -1716,3 +1716,49 @@ fn shape_aspect_of_shape_product_definition_normalised() {
         "of_shape resolves to product"
     );
 }
+
+#[test]
+fn pmi_validation_property_on_mbd_characterized_object_recovered() {
+    // A 'pmi validation property' PROPERTY_DEFINITION can target an MBD
+    // draughting-model complex `(CHARACTERIZED_OBJECT CHARACTERIZED_REPRESENTATION
+    // DRAUGHTING_MODEL REPRESENTATION)` via its CHARACTERIZED_OBJECT facet. step-io
+    // registers that facet so the PD resolves to a `CharacterizedObject` member
+    // instead of being dropped (which cascaded into its PDR + REPRESENTATION).
+    use crate::ir::property::{CharacterizedDefinition, PropertyDefinition};
+    let source = minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+         #3 = ( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n\
+         #4 = ( NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT() );\n\
+         #5 = ( GEOMETRIC_REPRESENTATION_CONTEXT(3)\n\
+         \t\tGLOBAL_UNIT_ASSIGNED_CONTEXT((#2,#3,#4))\n\
+         \t\tREPRESENTATION_CONTEXT('','') );\n\
+         #6 = ( CHARACTERIZED_OBJECT(*,*) CHARACTERIZED_REPRESENTATION()\n\
+         \t\tDRAUGHTING_MODEL() REPRESENTATION('MBD',(#1),#5) );\n\
+         #7 = PROPERTY_DEFINITION('pmi validation property','',#6);",
+    );
+    let result = convert_source(&source);
+
+    // The MBD complex registered a CHARACTERIZED_OBJECT facet (Itself).
+    assert_eq!(result.model.characterized_objects.iter().count(), 1);
+
+    // The PD is recovered into the property arena with a CharacterizedObject
+    // definition (not dropped).
+    let props = result.model.properties.as_ref().expect("properties");
+    let recovered = props.property_definitions.iter().any(|pd| {
+        matches!(
+            pd,
+            PropertyDefinition::Itself(d)
+                if matches!(d.definition, CharacterizedDefinition::CharacterizedObject(_))
+        )
+    });
+    assert!(recovered, "pmi validation property PD recovered");
+    assert!(
+        !result.warnings.iter().any(|w| matches!(
+            w,
+            ConvertError::MissingReference { .. } | ConvertError::UnexpectedEntityForm { .. }
+        )),
+        "{:#?}",
+        result.warnings
+    );
+}

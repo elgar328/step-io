@@ -98,6 +98,11 @@ impl ComplexEntityHandler for CharacterizedObjectComplexHandler {
                 form,
             }));
         ctx.repr_id_map.insert(entity_id, repr_id);
+        // Register the CHARACTERIZED_OBJECT facet so a PROPERTY_DEFINITION
+        // targeting this MBD model (as a characterized_object) resolves it.
+        if let Some(cid) = co_id {
+            ctx.characterized_object_id_map.insert(entity_id, cid);
+        }
         Ok(())
     }
 
