@@ -2246,7 +2246,7 @@ fn property_definition_with_document_file_target_round_trips() {
 fn pd_based_shape_definition_representation_round_trips() {
     use step_io::ir::property::{
         CharacterizedDefinition, GeneralProperty, PropertyDefinition, PropertyDefinitionData,
-        PropertyPool, ShapeDefinitionRepresentationLink,
+        PropertyPool, SdrDefinition, ShapeDefinitionRepresentationLink,
     };
     use step_io::ir::shape_rep::{PlainRepr, Representation, RepresentationContextRef};
     // A SHAPE_DEFINITION_REPRESENTATION whose `definition` is a
@@ -2278,7 +2278,7 @@ fn pd_based_shape_definition_representation_round_trips() {
             }));
     pool.shape_definition_representations
         .push(ShapeDefinitionRepresentationLink {
-            definition: pd_id,
+            definition: SdrDefinition::PropertyDefinition(pd_id),
             used_representation: rep,
         });
     model.properties = Some(pool);
@@ -2297,10 +2297,48 @@ fn pd_based_shape_definition_representation_round_trips() {
 }
 
 #[test]
+fn shape_aspect_based_shape_definition_representation_round_trips() {
+    use step_io::ir::property::{PropertyPool, SdrDefinition, ShapeDefinitionRepresentationLink};
+    use step_io::ir::shape_rep::{PlainRepr, Representation, RepresentationContextRef};
+    // A SHAPE_DEFINITION_REPRESENTATION whose `definition` is a SHAPE_ASPECT
+    // (C3D / grabcad pattern), not a property_definition — resolves through
+    // the shape_aspect arena and survives round-trip.
+    let (mut model, sa, _cg, _ds, _cs) = shape_aspect_relationship_fixture();
+    let rep = model.representations.push(Representation::Plain(PlainRepr {
+        name: "aspect shape".into(),
+        context: Some(RepresentationContextRef::Unitful(
+            step_io::ir::UnitContextId(0),
+        )),
+        frame: None,
+    }));
+    let mut pool = PropertyPool::default();
+    pool.shape_definition_representations
+        .push(ShapeDefinitionRepresentationLink {
+            definition: SdrDefinition::ShapeAspect(sa),
+            used_representation: rep,
+        });
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pool = re.properties.as_ref().expect("properties");
+    assert_eq!(re_pool.shape_definition_representations.len(), 1);
+    let link = re_pool
+        .shape_definition_representations
+        .iter()
+        .next()
+        .unwrap();
+    assert!(
+        matches!(link.definition, SdrDefinition::ShapeAspect(_)),
+        "the SHAPE_ASPECT definition round-trips as a ShapeAspect, not a PD"
+    );
+}
+
+#[test]
 fn product_with_additional_shape_representation_round_trips() {
     use step_io::ir::property::{
         CharacterizedDefinition, ProductDefinitionShape, PropertyDefinition,
-        PropertyDefinitionData, PropertyPool, ShapeDefinitionRepresentationLink,
+        PropertyDefinitionData, PropertyPool, SdrDefinition, ShapeDefinitionRepresentationLink,
     };
     use step_io::ir::shape_rep::{AdvancedBrepRepr, Representation, RepresentationContextRef};
     // One product PDS referencing TWO shape representations: the product's own
@@ -2365,7 +2403,7 @@ fn product_with_additional_shape_representation_round_trips() {
         ));
     pool.shape_definition_representations
         .push(ShapeDefinitionRepresentationLink {
-            definition: pds_id,
+            definition: SdrDefinition::PropertyDefinition(pds_id),
             used_representation: extra_rep,
         });
     model.properties = Some(pool);
@@ -3259,8 +3297,8 @@ fn mapped_item_round_trip() {
     // standalone (no container modelled yet).
     use step_io::ir::representation_item::RepresentationItemRef;
     use step_io::ir::shape_rep::{
-        MappedItem, MappedItemData, PlainRepr, Representation, RepresentationMap,
-        RepresentationMapData,
+        MappedItem, MappedItemData, MappedRepresentationRef, PlainRepr, Representation,
+        RepresentationMap, RepresentationMapData,
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
@@ -3290,7 +3328,7 @@ fn mapped_item_round_trip() {
         .representation_maps
         .push(RepresentationMap::Itself(RepresentationMapData {
             mapping_origin: RepresentationItemRef::Placement3d(placement),
-            mapped_representation: rep,
+            mapped_representation: MappedRepresentationRef::Representation(rep),
         }));
     model.mapped_items.push(MappedItem::Itself(MappedItemData {
         name: "inst".into(),
@@ -3330,8 +3368,8 @@ fn camera_origin_mapped_item_round_trip() {
     // proves the delayed-emit ordering is correct.
     use step_io::ir::representation_item::RepresentationItemRef;
     use step_io::ir::shape_rep::{
-        MappedItem, MappedItemData, PlainRepr, Representation, RepresentationMap,
-        RepresentationMapData,
+        MappedItem, MappedItemData, MappedRepresentationRef, PlainRepr, Representation,
+        RepresentationMap, RepresentationMapData,
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
@@ -3383,7 +3421,7 @@ fn camera_origin_mapped_item_round_trip() {
         .representation_maps
         .push(RepresentationMap::Itself(RepresentationMapData {
             mapping_origin: RepresentationItemRef::CameraModel(cam),
-            mapped_representation: rep,
+            mapped_representation: MappedRepresentationRef::Representation(rep),
         }));
     model.mapped_items.push(MappedItem::Itself(MappedItemData {
         name: "inst".into(),
@@ -3415,6 +3453,81 @@ fn camera_origin_mapped_item_round_trip() {
         panic!("expected Itself variant");
     };
     assert_eq!(mi.name, "inst");
+}
+
+#[test]
+fn presentation_mapped_representation_round_trips() {
+    // A REPRESENTATION_MAP whose mapped_representation is a PRESENTATION_VIEW
+    // (separate arena), instantiated by a MAPPED_ITEM whose target is an
+    // AXIS2_PLACEMENT_2D. Exercises the Placement2d RepresentationItemRef
+    // variant and the MappedRepresentationRef::Presentation member.
+    use step_io::ir::geometry::{Axis2Placement2d, Point2};
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{
+        MappedItem, MappedItemData, MappedRepresentationRef, RepresentationMap,
+        RepresentationMapData,
+    };
+    use step_io::ir::visualization::{
+        PresentationReprData, PresentationRepresentation, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+
+    let frame = model.geometry.identity_placement();
+    let loc2 = model.geometry.points_2d.push(Point2 { x: 0.0, y: 0.0 });
+    let placement2 = model.geometry.placements_2d.push(Axis2Placement2d {
+        location: loc2,
+        ref_direction: None,
+    });
+
+    let view = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .presentation_representations
+        .push(PresentationRepresentation::View(PresentationReprData {
+            name: "Default".into(),
+            items: vec![RepresentationItemRef::Placement3d(frame)],
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+        }));
+
+    let rmap = model
+        .representation_maps
+        .push(RepresentationMap::Itself(RepresentationMapData {
+            mapping_origin: RepresentationItemRef::Placement3d(frame),
+            mapped_representation: MappedRepresentationRef::Presentation(view),
+        }));
+    model.mapped_items.push(MappedItem::Itself(MappedItemData {
+        name: "inst".into(),
+        mapping_source: rmap,
+        mapping_target: RepresentationItemRef::Placement2d(placement2),
+    }));
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        !text.contains("#0,") && !text.contains("#0)") && !text.contains("(#0"),
+        "no dangling #0 ref in:\n{text}"
+    );
+    let re = reconvert(&text);
+    assert_eq!(re.representation_maps.len(), 1, "the rmap round-trips");
+    assert_eq!(re.mapped_items.len(), 1, "the mapped item round-trips");
+    let RepresentationMap::Itself(rm) = re.representation_maps.iter().next().unwrap() else {
+        panic!("expected Itself variant");
+    };
+    assert!(
+        matches!(
+            rm.mapped_representation,
+            MappedRepresentationRef::Presentation(_)
+        ),
+        "the mapped_representation points at the PRESENTATION_VIEW"
+    );
+    let MappedItem::Itself(mi) = re.mapped_items.iter().next().unwrap() else {
+        panic!("expected Itself variant");
+    };
+    assert!(
+        matches!(mi.mapping_target, RepresentationItemRef::Placement2d(_)),
+        "the 2D placement target round-trips"
+    );
 }
 
 #[test]
