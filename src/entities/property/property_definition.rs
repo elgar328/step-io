@@ -75,6 +75,7 @@ pub(crate) struct PropertyDefinitionHandler;
 impl SimpleEntityHandler for PropertyDefinitionHandler {
     type WriteInput = PropertyDefinitionWriteInput;
 
+    #[allow(clippy::too_many_lines)]
     fn read(
         ctx: &mut ReaderContext,
         entity_id: u64,
@@ -170,6 +171,16 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
             CharacterizedDefinition::GeometricTolerance(gt_ref)
         } else if let Some(&ds_id) = ctx.dimensional_size_id_map.get(&target_ref) {
             CharacterizedDefinition::DimensionalSize(ds_id)
+        } else if ctx.pdef_shape_to_nauo.contains_key(&target_ref) {
+            // Target is a NAUO-owned PRODUCT_DEFINITION_SHAPE (assembly placement
+            // shape). It is not in the `property_definitions` arena during
+            // dispatch — its ACU id only exists after `resolve_nauo_instances`.
+            // Defer; `materialize_nauo_owned_pds` replays this PD (and its
+            // descriptive Property) once the NAUO-PDS arena entry exists.
+            ctx.deferred_nauo_pds_pd
+                .push((entity_id, name, description, target_ref));
+            ctx.nauo_pds_pd_refs.insert(entity_id);
+            return Ok(());
         } else {
             eprintln!(
                 "warning: PROPERTY_DEFINITION #{entity_id} target #{target_ref} \

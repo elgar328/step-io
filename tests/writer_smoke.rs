@@ -1220,6 +1220,165 @@ fn nauo_arena_is_canonical_with_instance_view() {
 }
 
 #[test]
+#[allow(clippy::too_many_lines)]
+fn nauo_owned_pds_property_round_trips() {
+    // A "geometric validation property" (e.g. "centroid of X") can attach a
+    // PROPERTY_DEFINITION to the assembly-placement PDS — the NAUO-owned
+    // PRODUCT_DEFINITION_SHAPE whose `definition` is a NAUO. step-io
+    // materialises that PDS in the `property_definitions` arena
+    // (`ProductDefinitionRelationship` member) so the PD / PDR / wrapping
+    // REPRESENTATION round-trip, and the writer emits the PDS body under the
+    // reserved id with the SOURCE name (not the synthesised "Placement"). This
+    // guards both the recovery and re-read idempotency of the property arenas.
+    use step_io::ir::property::{
+        CharacterizedDefinition, ProductDefinitionShape, Property, PropertyDefinition,
+        PropertyDefinitionData, PropertyPool,
+    };
+    use step_io::ir::{NextAssemblyUsageOccurrence, ProductDefinition};
+
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let leaf_solid = push_minimal_solid(&mut model);
+    let transform = identity_transform(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let make_product = |id: &str, geometry| Product {
+        id: id.into(),
+        name: id.into(),
+        description: None,
+        geometry,
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    };
+    let leaf_pid = tree.products.push(make_product(
+        "Leaf",
+        Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![leaf_solid],
+        })),
+    ));
+    let root_pid = tree.products.push(make_product("Root", None));
+    let make_pd = |id: &str| ProductDefinition {
+        id: id.into(),
+        description: String::new(),
+        formation: None,
+        context: None,
+        documentation_ids: vec![],
+    };
+    let root_def = tree.product_definitions.push(make_pd("design"));
+    let leaf_def = tree.product_definitions.push(make_pd("design"));
+    let acu_id = tree
+        .assembly_component_usages
+        .push(NextAssemblyUsageOccurrence {
+            id: "1".into(),
+            name: "LeafInst".into(),
+            description: String::new(),
+            relating: root_def,
+            related: leaf_def,
+            reference_designator: None,
+        });
+    tree.products[root_pid].instances.push(Instance {
+        child: leaf_pid,
+        transform,
+        occurrence_id: "1".into(),
+        occurrence_name: "LeafInst".into(),
+        transform_rr: None,
+        acu: Some(acu_id),
+        placement_representation: vec![],
+    });
+    tree.roots = vec![root_pid];
+    model.assembly = Some(tree);
+
+    // The NAUO-owned PDS (arena entry 0) + the centroid PD that targets it
+    // (arena entry 1) + the descriptive Property.
+    let mut props = PropertyPool::default();
+    let nauo_pds_pd = props
+        .property_definitions
+        .push(PropertyDefinition::ProductDefinitionShape(
+            ProductDefinitionShape {
+                inherited: PropertyDefinitionData {
+                    name: "Placement #1".into(),
+                    description: "Placement of Leaf".into(),
+                    definition: CharacterizedDefinition::ProductDefinitionRelationship(acu_id),
+                },
+            },
+        ));
+    let centroid_pd =
+        props
+            .property_definitions
+            .push(PropertyDefinition::Itself(PropertyDefinitionData {
+                name: "geometric validation property".into(),
+                description: "centroid of Leaf".into(),
+                definition: CharacterizedDefinition::ProductDefinitionShape(nauo_pds_pd),
+            }));
+    props.properties.push(Property {
+        name: "geometric validation property".into(),
+        description: Some("centroid of Leaf".into()),
+        definition: centroid_pd,
+        representation_name: "centroid".into(),
+        context: Some(step_io::ir::shape_rep::RepresentationContextRef::Unitful(
+            UnitContextId(0),
+        )),
+        items: vec![],
+    });
+    model.properties = Some(props);
+
+    let text = model.write_to_string().expect("write");
+    // The NAUO-owned PDS body carries the SOURCE name, not "Placement of an item".
+    assert!(
+        text.contains("PRODUCT_DEFINITION_SHAPE('Placement #1','Placement of Leaf'"),
+        "NAUO-PDS source name preserved:\n{text}"
+    );
+
+    let re = reconvert(&text);
+    let re_props = re.properties.as_ref().expect("properties round-trip");
+    // The NAUO-owned PDS is recovered into the arena as a
+    // `ProductDefinitionRelationship` member, carrying the source name — exactly
+    // one such entry, materialised by `materialize_nauo_owned_pds`.
+    let pdrel: Vec<_> = re_props
+        .property_definitions
+        .iter()
+        .filter(|pd| matches!(
+            pd,
+            PropertyDefinition::ProductDefinitionShape(s)
+                if matches!(s.inherited.definition, CharacterizedDefinition::ProductDefinitionRelationship(_))
+        ))
+        .collect();
+    assert_eq!(pdrel.len(), 1, "exactly one NAUO-owned PDS materialised");
+    let PropertyDefinition::ProductDefinitionShape(s) = pdrel[0] else {
+        unreachable!()
+    };
+    assert_eq!(s.inherited.name, "Placement #1", "source name preserved");
+    // The centroid PD (targeting that PDS) and its descriptive Property survive
+    // the drop the legacy path inflicted.
+    let centroid_pd = re_props.property_definitions.iter().any(|pd| {
+        matches!(
+            pd,
+            PropertyDefinition::Itself(d)
+                if d.description == "centroid of Leaf"
+                    && matches!(d.definition, CharacterizedDefinition::ProductDefinitionShape(_))
+        )
+    });
+    assert!(centroid_pd, "centroid PD recovered (was a cascade drop)");
+    let centroid_prop = re_props.properties.iter().any(|p| {
+        p.description.as_deref() == Some("centroid of Leaf") && p.representation_name == "centroid"
+    });
+    assert!(centroid_prop, "centroid descriptive Property recovered");
+}
+
+#[test]
 fn instance_placement_representation_round_trips() {
     // Some exporters link the instance's NAUO-owned placement PDS to one or more
     // standalone placement SHAPE_REPRESENTATIONs via EXTRA

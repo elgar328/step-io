@@ -412,6 +412,34 @@ pub struct ReaderContext {
     /// the `pdef_shape` points at a `NAUO` (instance-tagged). Populated
     /// alongside `pdef_shape_to_pdef` and consumed during NAUO instance wiring.
     pub(crate) pdef_shape_to_nauo: HashMap<u64, u64>,
+    /// Source `(name, description)` of a NAUO-targeted `PRODUCT_DEFINITION_SHAPE`,
+    /// keyed by its `#N`. Captured so `materialize_nauo_owned_pds` preserves the
+    /// exporter's placement label (e.g. "Placement #462") instead of the
+    /// assembly chain's hard-coded "Placement" / "Placement of an item".
+    pub(crate) pdef_shape_nauo_name_desc: HashMap<u64, (String, String)>,
+    /// `NEXT_ASSEMBLY_USAGE_OCCURRENCE #N → AssemblyComponentUsageId`. Filled in
+    /// `resolve_nauo_instances` as each ACU arena entry is built; read by
+    /// `materialize_nauo_owned_pds` to resolve a NAUO-targeted PDS's
+    /// `definition` to its canonical arena id.
+    pub(crate) nauo_step_to_acu: HashMap<u64, crate::ir::id::AssemblyComponentUsageId>,
+    /// `PROPERTY_DEFINITION`s whose `definition` targets a NAUO-owned PDS,
+    /// deferred from the PD handler (the NAUO-PDS is not in the arena during
+    /// dispatch) and replayed by `materialize_nauo_owned_pds`. Each entry:
+    /// `(pd #N, name, description, pds_target #N)`.
+    pub(crate) deferred_nauo_pds_pd: Vec<(u64, String, Option<String>, u64)>,
+    /// PD `#N`s recorded in `deferred_nauo_pds_pd`, so the PDR handler knows to
+    /// stash its descriptive `Property` (rather than drop it) for replay.
+    pub(crate) nauo_pds_pd_refs: HashSet<u64>,
+    /// Descriptive `Property` payloads (REPRESENTATION items already resolved)
+    /// for deferred NAUO-PDS PDs, stashed by the PDR handler and pushed by
+    /// `materialize_nauo_owned_pds` once the PD arena entry exists. Each entry:
+    /// `(pd #N, representation_name, items, context)`.
+    pub(crate) deferred_nauo_property: Vec<(
+        u64,
+        String,
+        Vec<crate::ir::property::PropertyItem>,
+        Option<crate::ir::shape_rep::RepresentationContextRef>,
+    )>,
     /// Raw `(definition #N, used_representation #N)` of `SHAPE_DEFINITION_REPRESENTATION`s
     /// whose `definition` is not a product PDS (stashed by the SDR handler,
     /// resolved to a `ShapeDefinitionRepresentationLink` after all entities once
@@ -898,6 +926,7 @@ impl ReaderContext {
         ctx.resolve_sdr_product_geometry();
         ctx.ensure_product_ref_frames();
         ctx.resolve_nauo_instances();
+        ctx.materialize_nauo_owned_pds();
         ctx.resolve_cdorsi_style_contexts();
         ctx.finalize_assembly();
         ctx.resolve_sdr_links();
@@ -1045,6 +1074,9 @@ impl ReaderContext {
                     reference_designator: pending.reference_designator,
                 },
             );
+            // Record the NAUO → ACU id so `materialize_nauo_owned_pds` can resolve
+            // a NAUO-targeted PDS's `definition` to this canonical arena entry.
+            self.nauo_step_to_acu.insert(pending.nauo_id, acu_id);
             // The Instance is a denormalized view of the arena entry. `child` is
             // the resolved child ProductId (the arena's `related` is the
             // PRODUCT_DEFINITION ref); occurrence id/name mirror the arena.
@@ -1095,6 +1127,112 @@ impl ReaderContext {
                 self.assembly_products[pid].instances[idx].transform_rr = Some(rrid);
                 self.rrcomplex_to_rrid.insert(data.rr_complex_entity, rrid);
             }
+        }
+    }
+
+    /// Materialise NAUO-owned `PRODUCT_DEFINITION_SHAPE`s into the
+    /// `property_definitions` arena and replay the `PROPERTY_DEFINITION`s (and
+    /// descriptive `Property`s) that target them. Deferred from dispatch because
+    /// a NAUO-PDS's `definition` resolves to an `AssemblyComponentUsageId`, which
+    /// only exists after `resolve_nauo_instances`. Arena pushes are ordered by
+    /// source `#N` so the round-trip-diffed arenas reproduce identically on
+    /// re-read. A NAUO-PDS whose NAUO has no instance (transform-less, dropped)
+    /// has no ACU id and is skipped — keeping reader/writer symmetric (the
+    /// assembly chain emits a body only for instances).
+    ///
+    /// Scoped to assemblies that actually attach a property to a NAUO-PDS (the
+    /// `deferred_nauo_pds_pd` early-out): when nothing targets it, the NAUO-PDS
+    /// stays on the assembly chain's synthesis path, leaving the common
+    /// assembly's output untouched.
+    fn materialize_nauo_owned_pds(&mut self) {
+        use crate::ir::property::{
+            CharacterizedDefinition, ProductDefinitionShape, Property, PropertyDefinition,
+            PropertyDefinitionData, PropertyPool,
+        };
+
+        if self.deferred_nauo_pds_pd.is_empty() {
+            return;
+        }
+
+        // 1. NAUO-targeted PDS → arena entry (source-#N order).
+        let mut nauo_pds: Vec<(u64, u64)> = self
+            .pdef_shape_to_nauo
+            .iter()
+            .map(|(&pds, &nauo)| (pds, nauo))
+            .collect();
+        nauo_pds.sort_unstable_by_key(|&(pds, _)| pds);
+        for (pds_step, nauo_step) in nauo_pds {
+            let Some(&acu_id) = self.nauo_step_to_acu.get(&nauo_step) else {
+                continue; // NAUO without an instance — no ACU, skip (orphan-safe).
+            };
+            let (name, description) = self
+                .pdef_shape_nauo_name_desc
+                .get(&pds_step)
+                .cloned()
+                .unwrap_or_default();
+            let pd_id = self
+                .properties
+                .get_or_insert_with(PropertyPool::default)
+                .property_definitions
+                .push(PropertyDefinition::ProductDefinitionShape(
+                    ProductDefinitionShape {
+                        inherited: PropertyDefinitionData {
+                            name,
+                            description,
+                            definition: CharacterizedDefinition::ProductDefinitionRelationship(
+                                acu_id,
+                            ),
+                        },
+                    },
+                ));
+            self.property_def_step_to_id.insert(pds_step, pd_id);
+        }
+
+        // 2. Deferred centroid PDs → arena entry (source-#N order).
+        let mut deferred_pd = std::mem::take(&mut self.deferred_nauo_pds_pd);
+        deferred_pd.sort_unstable_by_key(|&(pd_step, ..)| pd_step);
+        for (pd_step, name, description, pds_target) in deferred_pd {
+            let Some(&pds_pd_id) = self.property_def_step_to_id.get(&pds_target) else {
+                continue; // NAUO-PDS was skipped above (no ACU) — drop this PD too.
+            };
+            let pd_id = self
+                .properties
+                .get_or_insert_with(PropertyPool::default)
+                .property_definitions
+                .push(PropertyDefinition::Itself(PropertyDefinitionData {
+                    name: name.clone(),
+                    description: description.clone().unwrap_or_default(),
+                    definition: CharacterizedDefinition::ProductDefinitionShape(pds_pd_id),
+                }));
+            self.property_def_step_to_id.insert(pd_step, pd_id);
+            self.property_def_map.insert(pd_step, (name, description));
+        }
+
+        // 3. Deferred descriptive Properties → arena entry (source-#N order).
+        let mut deferred_prop = std::mem::take(&mut self.deferred_nauo_property);
+        deferred_prop.sort_unstable_by_key(|&(pd_step, ..)| pd_step);
+        for (pd_step, representation_name, items, context) in deferred_prop {
+            let Some(&definition) = self.property_def_step_to_id.get(&pd_step) else {
+                continue;
+            };
+            let (name, description) = self
+                .property_def_map
+                .get(&pd_step)
+                .cloned()
+                .unwrap_or_default();
+            let prop_id = self
+                .properties
+                .get_or_insert_with(PropertyPool::default)
+                .properties
+                .push(Property {
+                    name,
+                    description,
+                    definition,
+                    representation_name,
+                    context,
+                    items,
+                });
+            self.property_step_to_id.insert(pd_step, prop_id);
         }
     }
 

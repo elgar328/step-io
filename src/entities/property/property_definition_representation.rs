@@ -36,9 +36,14 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
         let pd_ref = read_entity_ref(attrs, 0, entity_id, "definition")?;
         let repr_ref = read_entity_ref(attrs, 1, entity_id, "used_representation")?;
 
-        let Some((pd_name, pd_desc)) = ctx.property_def_map.get(&pd_ref).cloned() else {
+        let pd_entry = ctx.property_def_map.get(&pd_ref).cloned();
+        // A NAUO-owned-PDS PD is deferred (not yet in `property_def_map`); its
+        // descriptive Property is stashed below and pushed by
+        // `materialize_nauo_owned_pds` once the PD arena entry exists.
+        let is_deferred_nauo = ctx.nauo_pds_pd_refs.contains(&pd_ref);
+        if pd_entry.is_none() && !is_deferred_nauo {
             return Ok(()); // PD silently skipped (unresolved / unsupported target)
-        };
+        }
 
         // Walk the graph for the bound REPRESENTATION. Direct read — REPR
         // is shared with MDGPR / SR so a generic map would conflate them.
@@ -87,6 +92,15 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
                     .map(PropertyItem::Descriptive)
             })
             .collect();
+
+        if is_deferred_nauo {
+            // PD arena entry doesn't exist yet — stash the resolved descriptive
+            // payload for `materialize_nauo_owned_pds` to push as a Property.
+            ctx.deferred_nauo_property
+                .push((pd_ref, representation_name, items, context));
+            return Ok(());
+        }
+        let (pd_name, pd_desc) = pd_entry.expect("non-deferred PD resolved in property_def_map");
 
         // Resolve the source PD step ref to the new PropertyDefinition
         // arena id so the writer can fetch the cached PD step id during

@@ -12,9 +12,9 @@
 
 use super::arena::Arena;
 use super::id::{
-    AddressId, ApplicationContextId, CharacterizedObjectId, DerivedUnitId, DimensionalLocationId,
-    DocumentId, GeneralPropertyId, GroupId, NamedUnitId, PersonAndOrganizationId, ProductId,
-    PropertyDefinitionId,
+    AddressId, ApplicationContextId, AssemblyComponentUsageId, CharacterizedObjectId,
+    DerivedUnitId, DimensionalLocationId, DocumentId, GeneralPropertyId, GroupId, NamedUnitId,
+    PersonAndOrganizationId, ProductId, PropertyDefinitionId,
 };
 use super::shape_aspect_ref::ShapeAspectRef;
 use super::shape_rep::{DescriptiveItem, RepresentationContextRef};
@@ -195,16 +195,21 @@ pub struct ProductDefinitionShape {
 
 /// SELECT target for [`PropertyDefinitionData::definition`]. step-io
 /// flattens the nested `characterized_definition →
-/// characterized_product_definition → product_definition` chain to keep
-/// the enum shallow. Initial coverage: the `product_definition` member
-/// only — PDs whose target is a `PRODUCT_DEFINITION` (or
-/// `_WITH_ASSOCIATED_DOCUMENTS`) resolve to a [`ProductId`]. PDS instances
-/// whose target is a `NEXT_ASSEMBLY_USAGE_OCCURRENCE` are dropped from
-/// this arena (their classification still feeds the assembly chain's
-/// NAUO-owned PDS emit path).
+/// characterized_product_definition → (product_definition |
+/// product_definition_relationship)` chain to keep the enum shallow.
+/// A `PRODUCT_DEFINITION` (or `_WITH_ASSOCIATED_DOCUMENTS`) target resolves
+/// to a [`ProductId`]; a `NEXT_ASSEMBLY_USAGE_OCCURRENCE` (a
+/// `product_definition_relationship` subtype) target resolves to an
+/// [`AssemblyComponentUsageId`].
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CharacterizedDefinition {
     ProductDefinition(ProductId),
+    /// `product_definition_relationship` member of the nested
+    /// `characterized_product_definition` SELECT. The corpus only uses the
+    /// `NEXT_ASSEMBLY_USAGE_OCCURRENCE` subtype (assembly-placement
+    /// `PRODUCT_DEFINITION_SHAPE`), whose canonical arena is
+    /// `assembly_component_usages`.
+    ProductDefinitionRelationship(AssemblyComponentUsageId),
     /// Pattern B: `PROPERTY_DEFINITION` whose `definition` resolves to a
     /// `SHAPE_ASPECT` or any of its subtypes. The unified
     /// [`ShapeAspectRef`] enum carries the resolved subtype.

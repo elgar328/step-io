@@ -344,6 +344,20 @@ impl WriteBuffer<'_> {
                 continue;
             };
             let data = &pds.inherited;
+            // A NAUO-owned PDS is emitted by the assembly chain (it needs the
+            // freshly-minted NAUO step id). Record its arena slot + source
+            // name/desc here; `emit_instance_bundle` emits the body and fills the
+            // step-id slot. Leaving the slot 0 until then keeps reader/writer
+            // symmetric: a skipped instance ⇒ slot 0 ⇒ dependent centroid PD
+            // dropped (no dangling reference).
+            if let CharacterizedDefinition::ProductDefinitionRelationship(acu_id) = data.definition
+            {
+                self.nauo_pds_arena_slot.insert(
+                    acu_id,
+                    (idx.0 as usize, data.name.clone(), data.description.clone()),
+                );
+                continue;
+            }
             let CharacterizedDefinition::ProductDefinition(product_id) = data.definition else {
                 continue;
             };
@@ -392,6 +406,10 @@ impl WriteBuffer<'_> {
                     };
                     s
                 }
+                // An `Itself` PD never carries a `ProductDefinitionRelationship`
+                // definition (that member only labels the NAUO-owned
+                // `ProductDefinitionShape`, emitted by the assembly chain).
+                CharacterizedDefinition::ProductDefinitionRelationship(_) => continue,
                 CharacterizedDefinition::ShapeAspect(sa_ref) => {
                     let s = self.emit_shape_aspect_ref(sa_ref);
                     if s == 0 {

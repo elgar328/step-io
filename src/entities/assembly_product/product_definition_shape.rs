@@ -10,6 +10,7 @@
 //! Writer emits the standard three-attr form pointing at the PDEF.
 
 use crate::entities::SimpleEntityHandler;
+use crate::ir::attr::read_string_or_unset;
 use crate::ir::error::ConvertError;
 use crate::ir::property::{
     CharacterizedDefinition, ProductDefinitionShape, PropertyDefinition, PropertyDefinitionData,
@@ -43,16 +44,15 @@ impl SimpleEntityHandler for ProductDefinitionShapeHandler {
     fn read(
         ctx: &mut ReaderContext,
         entity_id: u64,
-        _attrs: &[Attribute],
+        attrs: &[Attribute],
         graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         if let Some(pdef_ref) = pdef_shape_target(graph, entity_id, PDEF_TARGET_NAMES) {
             ctx.pdef_shape_to_pdef.insert(entity_id, pdef_ref);
             // Mirror the product-targeted PDS into the schema-faithful
             // `property_definitions` arena so the writer's arena-driven
-            // emit sees it. NAUO-targeted PDS stays out of the arena
-            // (`CharacterizedDefinition` has no NAUO variant yet) and is
-            // emitted by the existing assembly chain's `emit_nauo_owned_pds`.
+            // emit sees it. The NAUO-targeted PDS is materialised later, in
+            // `materialize_nauo_owned_pds`, once the ACU arena exists.
             if let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_ref) {
                 if let Some(&product_id) = ctx.product_arena_map.get(&product_step_id) {
                     let pd_id = ctx
@@ -77,6 +77,13 @@ impl SimpleEntityHandler for ProductDefinitionShapeHandler {
             pdef_shape_target(graph, entity_id, &["NEXT_ASSEMBLY_USAGE_OCCURRENCE"])
         {
             ctx.pdef_shape_to_nauo.insert(entity_id, nauo_ref);
+            // Capture the source name/description so `materialize_nauo_owned_pds`
+            // and the assembly-chain emit preserve the exporter's placement
+            // label instead of the hard-coded "Placement" fallback.
+            let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+            let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
+            ctx.pdef_shape_nauo_name_desc
+                .insert(entity_id, (name, description));
         }
         Ok(())
     }

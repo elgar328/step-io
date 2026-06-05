@@ -1333,7 +1333,29 @@ impl WriteBuffer<'_> {
         let child_sr = product_sr[&inst.child];
         let idt = self.emit_item_defined_transformation(inst.transform)?;
         let nauo = self.emit_nauo(inst, parent_pdef, child_pdef);
-        let nauo_pds = self.emit_nauo_owned_pds(nauo);
+        // Reader-built IR materialises the NAUO-owned PDS in the
+        // `property_definitions` arena. Emit its body here (it needs the NAUO
+        // step id), preserving the source name/description, and fill the arena
+        // slot so the dependent centroid PD resolves it. Kernel-built IR (no
+        // arena slot) synthesises the PDS as before.
+        let arena_pds = inst
+            .acu
+            .and_then(|a| self.nauo_pds_arena_slot.get(&a).cloned());
+        let nauo_pds = match arena_pds {
+            Some((slot, name, description)) => {
+                let step = self.push_simple(
+                    "PRODUCT_DEFINITION_SHAPE",
+                    vec![
+                        Attribute::String(name),
+                        Attribute::String(description),
+                        Attribute::EntityRef(nauo),
+                    ],
+                );
+                self.property_definition_step_ids[slot] = step;
+                step
+            }
+            None => self.emit_nauo_owned_pds(nauo),
+        };
         // Extra placement SDRs: some exporters link the NAUO-owned PDS to one or
         // more standalone placement SHAPE_REPRESENTATIONs (besides the CDSR).
         // Re-emit one SDR per entry, all sharing the same `nauo_pds` the CDSR

@@ -433,6 +433,15 @@ pub(crate) struct WriteBuffer<'m> {
     /// `product_def_ids` but for the PDS sibling — consumed by the PMI
     /// emitter to resolve `ShapeAspect.target` (SAs reference PDS, not PD).
     pub(crate) product_def_shape_ids: std::collections::HashMap<ProductId, u64>,
+    /// `AssemblyComponentUsageId → (property_definitions arena index, source
+    /// name, source description)` for NAUO-owned `PRODUCT_DEFINITION_SHAPE`s.
+    /// Recorded by `emit_property_definitions_pds_only`; the assembly chain
+    /// (`emit_instance_bundle`) emits the PDS body and fills
+    /// `property_definition_step_ids[idx]`. If an instance is skipped, the slot
+    /// stays `0` and the dependent centroid PD is dropped symmetrically (no
+    /// dangling reference). Absent ⇒ kernel-built IR (synthesise instead).
+    pub(crate) nauo_pds_arena_slot:
+        std::collections::HashMap<crate::ir::id::AssemblyComponentUsageId, (usize, String, String)>,
     /// STEP entity id of every emitted `PROPERTY_DEFINITION`, indexed by
     /// `PropertyId.0`. Filled by `emit_properties_if_set`; consumed by the
     /// `GENERAL_PROPERTY_ASSOCIATION` emitter to resolve `derived_definition`.
@@ -578,6 +587,7 @@ impl<'m> WriteBuffer<'m> {
             product_category_step_ids: Vec::new(),
             product_definition_formation_step_ids: Vec::new(),
             product_def_shape_ids: std::collections::HashMap::new(),
+            nauo_pds_arena_slot: std::collections::HashMap::new(),
             property_step_ids: Vec::new(),
             property_definition_step_ids: Vec::new(),
             general_property_step_ids: Vec::new(),
