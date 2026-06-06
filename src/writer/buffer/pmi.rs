@@ -337,6 +337,40 @@ impl WriteBuffer<'_> {
         }
     }
 
+    /// Emit the `apll_points` arena (PMI leader-line waypoints). Must run
+    /// before `emit_annotation_placeholder_leader_lines` (which references
+    /// `apll_point_step_ids`).
+    pub(in crate::writer::buffer) fn emit_apll_points(&mut self) {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::pmi::ApllPointHandler;
+        let Some(pmi) = self.model.pmi.clone() else {
+            return;
+        };
+        self.apll_point_step_ids = Vec::with_capacity(pmi.apll_points.len());
+        for apll in pmi.apll_points.iter() {
+            let step = ApllPointHandler::write(self, apll.clone()).unwrap_or(0);
+            self.apll_point_step_ids.push(step);
+        }
+    }
+
+    /// Emit the `annotation_placeholder_leader_lines` arena. Runs after
+    /// `emit_apll_points` (`apll_point_step_ids`) and before
+    /// `emit_annotation_occurrences` (the `_WITH_LEADER_LINE` APO references
+    /// `annotation_placeholder_leader_line_step_ids`).
+    pub(in crate::writer::buffer) fn emit_annotation_placeholder_leader_lines(&mut self) {
+        use crate::entities::SimpleEntityHandler;
+        use crate::entities::pmi::AnnotationToModelLeaderLineHandler;
+        let Some(pmi) = self.model.pmi.clone() else {
+            return;
+        };
+        self.annotation_placeholder_leader_line_step_ids =
+            Vec::with_capacity(pmi.annotation_placeholder_leader_lines.len());
+        for leader in pmi.annotation_placeholder_leader_lines.iter() {
+            let step = AnnotationToModelLeaderLineHandler::write(self, leader.clone()).unwrap_or(0);
+            self.annotation_placeholder_leader_line_step_ids.push(step);
+        }
+    }
+
     /// Emit the `annotation_occurrence` arena (`ANNOTATION_PLANE` /
     /// `TESSELLATED_ANNOTATION_OCCURRENCE`). Called after
     /// `emit_visualization_if_set` (`styles` → `psa_step_ids`) and after
@@ -345,10 +379,10 @@ impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_annotation_occurrences(&mut self) {
         use crate::entities::pmi::{
             AnnotationOccurrenceHandler, AnnotationPlaceholderOccurrenceHandler,
-            AnnotationPlaneHandler, AnnotationSymbolOccurrenceHandler,
-            AnnotationTextOccurrenceHandler, DraughtingAnnotationOccurrenceHandler,
-            LeaderTerminatorHandler, TerminatorSymbolHandler,
-            TessellatedAnnotationOccurrenceHandler,
+            AnnotationPlaceholderOccurrenceWithLeaderLineHandler, AnnotationPlaneHandler,
+            AnnotationSymbolOccurrenceHandler, AnnotationTextOccurrenceHandler,
+            DraughtingAnnotationOccurrenceHandler, LeaderTerminatorHandler,
+            TerminatorSymbolHandler, TessellatedAnnotationOccurrenceHandler,
         };
         use crate::ir::pmi::AnnotationOccurrence;
         let Some(pmi) = self.model.pmi.clone() else {
@@ -382,6 +416,9 @@ impl WriteBuffer<'_> {
                 }
                 AnnotationOccurrence::AnnotationPlaceholderOccurrence(apo) => {
                     AnnotationPlaceholderOccurrenceHandler::write(self, apo.clone())
+                }
+                AnnotationOccurrence::AnnotationPlaceholderOccurrenceWithLeaderLine(apo) => {
+                    AnnotationPlaceholderOccurrenceWithLeaderLineHandler::write(self, apo.clone())
                 }
             };
             // Index by AnnotationOccurrenceId.0 — arena order matches enum

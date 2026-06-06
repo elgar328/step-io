@@ -8,12 +8,12 @@
 
 use super::arena::Arena;
 use super::id::{
-    AnnotationCurveOccurrenceId, AnnotationOccurrenceId, CurveId, DatumId, DatumSystemId,
-    DimensionalLocationId, DimensionalSizeId, DraughtingCalloutId, GeometricToleranceId,
-    GeometricToleranceWithDatumReferenceId, LimitsAndFitsId, MeasureWithUnitId,
-    PresentationStyleAssignmentId, ProductId, PropertyDefinitionId, RepresentationId,
-    TessellatedItemId, ToleranceValueId, ToleranceZoneId, TypeQualifierId,
-    ValueFormatTypeQualifierId,
+    AnnotationCurveOccurrenceId, AnnotationOccurrenceId, AnnotationPlaceholderLeaderLineId,
+    ApllPointId, CurveId, DatumId, DatumSystemId, DimensionalLocationId, DimensionalSizeId,
+    DraughtingCalloutId, GeometricToleranceId, GeometricToleranceWithDatumReferenceId,
+    LimitsAndFitsId, MeasureWithUnitId, PresentationStyleAssignmentId, ProductId,
+    PropertyDefinitionId, RepresentationId, TessellatedItemId, ToleranceValueId, ToleranceZoneId,
+    TypeQualifierId, ValueFormatTypeQualifierId,
 };
 use super::representation_item::RepresentationItemRef;
 use super::shape_aspect_ref::ShapeAspectRef;
@@ -31,6 +31,12 @@ pub struct PmiPool {
     /// `annotation_occurrence` `enum_base` arena. Phase annotation-plane
     /// fills the `AnnotationPlane` variant only.
     pub annotation_occurrences: Arena<AnnotationOccurrence>,
+    /// `apll_point` `enum_base` arena (phase leader-line). Dedicated arena
+    /// (blueprint `apll_point_standalone` recast) so cartesian points keep a
+    /// flat `Arena<Point3>`; holds PMI leader-line waypoints.
+    pub apll_points: Arena<ApllPointElement>,
+    /// `annotation_placeholder_leader_line` arena (phase leader-line).
+    pub annotation_placeholder_leader_lines: Arena<AnnotationPlaceholderLeaderLine>,
     /// `annotation_curve_occurrence` arena (phase annotation-curve-leader,
     /// `LeaderCurve` subtype) extended (phase plain-aco) with the plain
     /// supertype occurrence.
@@ -545,6 +551,7 @@ pub enum AnnotationOccurrence {
     TerminatorSymbol(TerminatorSymbol),
     LeaderTerminator(LeaderTerminator),
     AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrence),
+    AnnotationPlaceholderOccurrenceWithLeaderLine(AnnotationPlaceholderOccurrenceWithLeaderLine),
 }
 
 /// `ANNOTATION_OCCURRENCE(name, styles, item)` — the plain `styled_item`
@@ -704,6 +711,62 @@ pub struct AnnotationPlaceholderOccurrence {
     pub role: String,
     /// `positive_length_measure`.
     pub line_spacing: f64,
+}
+
+/// `ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE` — an
+/// `annotation_placeholder_occurrence` subtype adding a `leader_line` SET
+/// (`annotation_placeholder_leader_line` refs). Same base 5 attrs as
+/// [`AnnotationPlaceholderOccurrence`]; registers in `annotation_occurrence_id_map`
+/// so a `DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER` placeholder resolves
+/// it generically.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnnotationPlaceholderOccurrenceWithLeaderLine {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentId>,
+    pub item: RepresentationItemRef,
+    pub role: String,
+    pub line_spacing: f64,
+    /// `leader_line` SET [1:?] OF `annotation_placeholder_leader_line`.
+    pub leader_line: Vec<AnnotationPlaceholderLeaderLineId>,
+}
+
+/// `apll_point` `enum_base` (`des_apll_point_select` SELECT) — a PMI leader-line
+/// waypoint. Blueprint recast `apll_point_standalone` keeps these in a dedicated
+/// `apll_points` arena (not the hot `point` enum). `ApllPointWithSurface`
+/// (a `face_surface`-bound variant) lands in a later phase (`stc_06`).
+#[derive(Debug, Clone, PartialEq)]
+pub enum ApllPointElement {
+    /// `APLL_POINT(name, coordinates, symbol_applied)`.
+    ApllPoint(ApllPointData),
+}
+
+/// `APLL_POINT` body — a `cartesian_point` subtype. `coordinates` reuse the 3D
+/// [`Point3`]; `symbol_applied` keeps the `des_apll_point_symbol` enum token raw
+/// for lossless round-trip.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ApllPointData {
+    pub name: String,
+    pub coordinates: crate::ir::geometry::Point3,
+    pub symbol_applied: String,
+}
+
+/// `annotation_placeholder_leader_line` `enum_base` (abstract `geometric_representation_item`
+/// supertype) — a PMI leader line. `AnnotationToModelLeaderLine` is the only
+/// modelled subtype so far (`AuxiliaryLeaderLine` / `AnnotationToAnnotationLeaderLine`
+/// land later).
+#[derive(Debug, Clone, PartialEq)]
+pub enum AnnotationPlaceholderLeaderLine {
+    /// `ANNOTATION_TO_MODEL_LEADER_LINE(name, geometric_elements)`.
+    AnnotationToModelLeaderLine(AnnotationToModelLeaderLine),
+}
+
+/// `ANNOTATION_TO_MODEL_LEADER_LINE` body. `geometric_elements` is the inherited
+/// `LIST [2:?] OF des_apll_point_select`, resolved to the `apll_points` arena;
+/// unresolved members skip.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnnotationToModelLeaderLine {
+    pub name: String,
+    pub geometric_elements: Vec<ApllPointId>,
 }
 
 /// `value_qualifier` SELECT — step-io models only the two SELECT members

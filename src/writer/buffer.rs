@@ -104,6 +104,12 @@ pub(crate) struct WriteBuffer<'m> {
     /// order) before `emit_draughting_callouts` so its `contents` SELECT
     /// members resolve.
     pub(crate) ao_step_ids: Vec<u64>,
+    /// Emitted `APLL_POINT` step ids, indexed by `ApllPointId.0`. Filled by
+    /// `emit_apll_points` before leader lines / annotation occurrences.
+    pub(crate) apll_point_step_ids: Vec<u64>,
+    /// Emitted `ANNOTATION_TO_MODEL_LEADER_LINE` step ids, indexed by
+    /// `AnnotationPlaceholderLeaderLineId.0`.
+    pub(crate) annotation_placeholder_leader_line_step_ids: Vec<u64>,
     /// Emitted `draughting_callout` step ids, indexed by
     /// `DraughtingCalloutId.0`. Populated by `emit_draughting_callouts`
     /// before `emit_draughting_callout_relationships`.
@@ -499,6 +505,8 @@ impl<'m> WriteBuffer<'m> {
             tessellated_surface_set_step_ids: Vec::new(),
             acoc_step_ids: Vec::new(),
             ao_step_ids: Vec::new(),
+            apll_point_step_ids: Vec::new(),
+            annotation_placeholder_leader_line_step_ids: Vec::new(),
             draughting_callout_step_ids: Vec::new(),
             tolerance_zone_step_ids: Vec::new(),
             type_qualifier_step_ids: Vec::new(),
@@ -908,6 +916,11 @@ impl<'m> WriteBuffer<'m> {
         // `TERMINATOR_SYMBOL` / `LEADER_TERMINATOR` in
         // `emit_annotation_occurrences`.
         self.emit_annotation_curve_occurrences();
+        // APLL_POINT then ANNOTATION_TO_MODEL_LEADER_LINE before
+        // `emit_annotation_occurrences` so a `_WITH_LEADER_LINE` APO resolves
+        // its `leader_line` refs (leaf apll_point → leader_line → APO).
+        self.emit_apll_points();
+        self.emit_annotation_placeholder_leader_lines();
         self.emit_annotation_occurrences();
         // DRAUGHTING_CALLOUT — after annotation_occurrences (`ao_step_ids`)
         // and after `acoc_step_ids` so `contents` SELECT resolves.

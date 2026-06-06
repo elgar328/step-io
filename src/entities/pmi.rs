@@ -11,13 +11,16 @@ use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::PmiPool;
 use crate::ir::attr::{
     check_count, read_bool, read_entity_ref, read_entity_ref_list, read_enum, read_real,
-    read_string_or_unset,
+    read_real_list, read_string_or_unset,
 };
 use crate::ir::error::ConvertError;
+use crate::ir::geometry::Point3;
 use crate::ir::pmi::{
     AngleSelection, AngularLocationData, AnnotationCurveOccurrence, AnnotationOccurrence,
-    AnnotationOccurrenceAssociativity, AnnotationOccurrenceRef, AnnotationPlaceholderOccurrence,
-    AnnotationPlane, AnnotationSymbolOccurrence, AnnotationTextOccurrence, Datum, DatumFeature,
+    AnnotationOccurrenceAssociativity, AnnotationOccurrenceRef, AnnotationPlaceholderLeaderLine,
+    AnnotationPlaceholderOccurrence, AnnotationPlaceholderOccurrenceWithLeaderLine,
+    AnnotationPlane, AnnotationSymbolOccurrence, AnnotationTextOccurrence,
+    AnnotationToModelLeaderLine, ApllPointData, ApllPointElement, Datum, DatumFeature,
     DimensionalCharacteristic, DimensionalLocation, DimensionalLocationData, DimensionalSize,
     DimensionalSizeKind, DraughtingAnnotationOccurrence, DraughtingCallout, DraughtingCalloutData,
     DraughtingCalloutElement, DraughtingCalloutRelationship, DraughtingModelIdentifiedItem,
@@ -496,6 +499,123 @@ impl SimpleEntityHandler for DraughtingAnnotationOccurrenceHandler {
     }
 }
 
+pub(crate) struct ApllPointHandler;
+
+/// `APLL_POINT(name, coordinates, symbol_applied)` — a PMI leader-line waypoint
+/// (`cartesian_point` subtype). Kept in the dedicated `apll_points` arena
+/// (blueprint `apll_point_standalone` recast), not the hot `point` arena.
+#[step_entity(name = "APLL_POINT")]
+impl SimpleEntityHandler for ApllPointHandler {
+    type WriteInput = ApllPointElement;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 3, entity_id, "APLL_POINT")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let coords = read_real_list(attrs, 1, entity_id, "coordinates")?;
+        if coords.len() != 3 {
+            return Err(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!("APLL_POINT must have 3 coordinates, got {}", coords.len()),
+            });
+        }
+        let symbol_applied = read_enum(attrs, 2, entity_id, "symbol_applied")?.to_owned();
+        let id = ctx
+            .pmi
+            .get_or_insert_with(PmiPool::default)
+            .apll_points
+            .push(ApllPointElement::ApllPoint(ApllPointData {
+                name,
+                coordinates: Point3 {
+                    x: coords[0],
+                    y: coords[1],
+                    z: coords[2],
+                },
+                symbol_applied,
+            }));
+        ctx.apll_point_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, apll: ApllPointElement) -> Result<u64, WriteError> {
+        let ApllPointElement::ApllPoint(data) = apll;
+        Ok(buf.push_simple(
+            "APLL_POINT",
+            vec![
+                Attribute::String(data.name),
+                Attribute::List(vec![
+                    Attribute::Real(data.coordinates.x),
+                    Attribute::Real(data.coordinates.y),
+                    Attribute::Real(data.coordinates.z),
+                ]),
+                Attribute::Enum(data.symbol_applied),
+            ],
+        ))
+    }
+}
+
+pub(crate) struct AnnotationToModelLeaderLineHandler;
+
+/// `ANNOTATION_TO_MODEL_LEADER_LINE(name, geometric_elements)` — a PMI leader
+/// line. `geometric_elements` is the inherited `LIST [2:?] OF des_apll_point_select`
+/// resolved to the `apll_points` arena; unresolved members skip.
+#[step_entity(name = "ANNOTATION_TO_MODEL_LEADER_LINE")]
+impl SimpleEntityHandler for AnnotationToModelLeaderLineHandler {
+    type WriteInput = AnnotationPlaceholderLeaderLine;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 2, entity_id, "ANNOTATION_TO_MODEL_LEADER_LINE")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let elem_refs = read_entity_ref_list(attrs, 1, entity_id, "geometric_elements")?;
+        let mut geometric_elements = Vec::with_capacity(elem_refs.len());
+        for r in elem_refs {
+            if let Some(&id) = ctx.apll_point_id_map.get(&r) {
+                geometric_elements.push(id);
+            }
+        }
+        let id = ctx
+            .pmi
+            .get_or_insert_with(PmiPool::default)
+            .annotation_placeholder_leader_lines
+            .push(
+                AnnotationPlaceholderLeaderLine::AnnotationToModelLeaderLine(
+                    AnnotationToModelLeaderLine {
+                        name,
+                        geometric_elements,
+                    },
+                ),
+            );
+        ctx.annotation_placeholder_leader_line_id_map
+            .insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        leader: AnnotationPlaceholderLeaderLine,
+    ) -> Result<u64, WriteError> {
+        let AnnotationPlaceholderLeaderLine::AnnotationToModelLeaderLine(data) = leader;
+        let elem_refs = data
+            .geometric_elements
+            .iter()
+            .map(|id| Attribute::EntityRef(buf.apll_point_step_ids[id.0 as usize]))
+            .collect();
+        Ok(buf.push_simple(
+            "ANNOTATION_TO_MODEL_LEADER_LINE",
+            vec![Attribute::String(data.name), Attribute::List(elem_refs)],
+        ))
+    }
+}
+
 pub(crate) struct AnnotationPlaceholderOccurrenceHandler;
 
 /// `ANNOTATION_PLACEHOLDER_OCCURRENCE(name, styles, item, role, line_spacing)`
@@ -565,6 +685,102 @@ impl SimpleEntityHandler for AnnotationPlaceholderOccurrenceHandler {
                 Attribute::EntityRef(item_id),
                 Attribute::Enum(apo.role),
                 Attribute::Real(apo.line_spacing),
+            ],
+        ))
+    }
+}
+
+pub(crate) struct AnnotationPlaceholderOccurrenceWithLeaderLineHandler;
+
+/// `ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE(name, styles, item, role,
+/// line_spacing, leader_line)` — base APO + a `leader_line` SET. Mirrors
+/// [`AnnotationPlaceholderOccurrenceHandler`] plus the 6th attr (leader-line
+/// refs → `annotation_placeholder_leader_line_id_map`). Registers in
+/// `annotation_occurrence_id_map` so a `_WITH_PLACEHOLDER` DMIA resolves it.
+#[step_entity(name = "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE")]
+impl SimpleEntityHandler for AnnotationPlaceholderOccurrenceWithLeaderLineHandler {
+    type WriteInput = AnnotationPlaceholderOccurrenceWithLeaderLine;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(
+            attrs,
+            6,
+            entity_id,
+            "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
+        )?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
+        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
+        let role = read_enum(attrs, 3, entity_id, "role")?.to_owned();
+        let line_spacing = read_real(attrs, 4, entity_id, "line_spacing")?;
+        let leader_refs = read_entity_ref_list(attrs, 5, entity_id, "leader_line")?;
+
+        let mut styles = Vec::with_capacity(style_refs.len());
+        for r in style_refs {
+            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+                styles.push(psa_id);
+            }
+        }
+        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
+            return Ok(());
+        };
+        let mut leader_line = Vec::with_capacity(leader_refs.len());
+        for r in leader_refs {
+            if let Some(&id) = ctx.annotation_placeholder_leader_line_id_map.get(&r) {
+                leader_line.push(id);
+            }
+        }
+
+        let id = ctx
+            .pmi
+            .get_or_insert_with(PmiPool::default)
+            .annotation_occurrences
+            .push(
+                AnnotationOccurrence::AnnotationPlaceholderOccurrenceWithLeaderLine(
+                    AnnotationPlaceholderOccurrenceWithLeaderLine {
+                        name,
+                        styles,
+                        item,
+                        role,
+                        line_spacing,
+                        leader_line,
+                    },
+                ),
+            );
+        ctx.annotation_occurrence_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        apo: AnnotationPlaceholderOccurrenceWithLeaderLine,
+    ) -> Result<u64, WriteError> {
+        let item_id = buf.emit_representation_item_ref(apo.item)?;
+        let mut style_refs = Vec::with_capacity(apo.styles.len());
+        for psa_id in apo.styles {
+            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+        }
+        let leader_refs = apo
+            .leader_line
+            .iter()
+            .map(|id| {
+                Attribute::EntityRef(buf.annotation_placeholder_leader_line_step_ids[id.0 as usize])
+            })
+            .collect();
+        Ok(buf.push_simple(
+            "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
+            vec![
+                Attribute::String(apo.name),
+                Attribute::List(style_refs),
+                Attribute::EntityRef(item_id),
+                Attribute::Enum(apo.role),
+                Attribute::Real(apo.line_spacing),
+                Attribute::List(leader_refs),
             ],
         ))
     }

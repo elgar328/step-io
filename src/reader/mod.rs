@@ -768,6 +768,12 @@ pub struct ReaderContext {
     /// / `LeaderDirectedCalloutHandler` to resolve `contents` SELECT
     /// members.
     pub(crate) annotation_occurrence_id_map: HashMap<u64, crate::ir::id::AnnotationOccurrenceId>,
+    /// `APLL_POINT` step entity id → `ApllPointId` (phase leader-line).
+    pub(crate) apll_point_id_map: HashMap<u64, crate::ir::id::ApllPointId>,
+    /// `ANNOTATION_TO_MODEL_LEADER_LINE` step entity id →
+    /// `AnnotationPlaceholderLeaderLineId` (phase leader-line).
+    pub(crate) annotation_placeholder_leader_line_id_map:
+        HashMap<u64, crate::ir::id::AnnotationPlaceholderLeaderLineId>,
     /// `DRAUGHTING_CALLOUT` step entity id → `DraughtingCalloutId` (phase
     /// draughting-callout). Populated by `DraughtingCalloutHandler` /
     /// `LeaderDirectedCalloutHandler`; consumed by

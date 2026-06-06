@@ -20,13 +20,13 @@ use super::plm::{
     SecurityClassification, SecurityClassificationAssignment, SecurityClassificationLevel,
 };
 use super::pmi::{
-    AnnotationCurveOccurrence, AnnotationOccurrence, AnnotationOccurrenceAssociativity, Datum,
-    DatumFeature, DimensionalLocation, DimensionalSize, DraughtingCallout,
-    DraughtingCalloutRelationship, DraughtingModelItemAssociation, DraughtingPreDefinedTextFont,
-    GeneralDatumReference, GeometricTolerance, GeometricToleranceRelationship,
-    GeometricToleranceWithDatumReference, LimitsAndFits, MeasureQualification, PlusMinusTolerance,
-    ProjectedZoneDefinition, ToleranceValue, ToleranceZoneForm, TypeQualifier,
-    ValueFormatTypeQualifier,
+    AnnotationCurveOccurrence, AnnotationOccurrence, AnnotationOccurrenceAssociativity,
+    AnnotationPlaceholderLeaderLine, ApllPointElement, Datum, DatumFeature, DimensionalLocation,
+    DimensionalSize, DraughtingCallout, DraughtingCalloutRelationship,
+    DraughtingModelItemAssociation, DraughtingPreDefinedTextFont, GeneralDatumReference,
+    GeometricTolerance, GeometricToleranceRelationship, GeometricToleranceWithDatumReference,
+    LimitsAndFits, MeasureQualification, PlusMinusTolerance, ProjectedZoneDefinition,
+    ToleranceValue, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
 use super::property::{
     DescriptionAttribute, DimensionalCharacteristicRepresentation, GeneralProperty,
@@ -151,6 +151,16 @@ define_id!(ValueFormatTypeQualifierId, ValueFormatTypeQualifier);
 
 // annotation_occurrence enum_base arena (Phase annotation-plane).
 define_id!(AnnotationOccurrenceId, AnnotationOccurrence);
+
+// apll_point enum_base arena (phase leader-line). Dedicated arena (blueprint
+// recast apll_point_standalone) keeping cartesian points on a flat Arena<Point3>.
+define_id!(ApllPointId, ApllPointElement);
+
+// annotation_placeholder_leader_line arena (phase leader-line).
+define_id!(
+    AnnotationPlaceholderLeaderLineId,
+    AnnotationPlaceholderLeaderLine
+);
 
 // annotation_curve_occurrence arena (Phase annotation-curve-leader +
 // plain-aco) — holds the plain supertype occurrence and the LeaderCurve

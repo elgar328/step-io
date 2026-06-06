@@ -6363,6 +6363,98 @@ fn annotation_placeholder_occurrence_round_trip() {
 }
 
 #[test]
+fn leader_line_cluster_round_trip() {
+    // AP242-e3 leader-line cluster: APLL_POINT (dedicated arena) ->
+    // ANNOTATION_TO_MODEL_LEADER_LINE -> ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE.
+    use step_io::ir::PmiPool;
+    use step_io::ir::geometry::{Plane3, Point3, Surface};
+    use step_io::ir::pmi::{
+        AnnotationOccurrence, AnnotationPlaceholderLeaderLine,
+        AnnotationPlaceholderOccurrenceWithLeaderLine, AnnotationToModelLeaderLine, ApllPointData,
+        ApllPointElement,
+    };
+    use step_io::ir::representation_item::RepresentationItemRef;
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let placement = xyz_placement(&mut model);
+    let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
+        position: placement,
+    }));
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    // Two apll points (geometric_elements is LIST [2:?]).
+    let p0 = pmi
+        .apll_points
+        .push(ApllPointElement::ApllPoint(ApllPointData {
+            name: String::new(),
+            coordinates: Point3 {
+                x: 1.0,
+                y: 2.0,
+                z: 3.0,
+            },
+            symbol_applied: "NONE".into(),
+        }));
+    let p1 = pmi
+        .apll_points
+        .push(ApllPointElement::ApllPoint(ApllPointData {
+            name: String::new(),
+            coordinates: Point3 {
+                x: 4.0,
+                y: 5.0,
+                z: 6.0,
+            },
+            symbol_applied: "NONE".into(),
+        }));
+    let leader = pmi.annotation_placeholder_leader_lines.push(
+        AnnotationPlaceholderLeaderLine::AnnotationToModelLeaderLine(AnnotationToModelLeaderLine {
+            name: String::new(),
+            geometric_elements: vec![p0, p1],
+        }),
+    );
+    pmi.annotation_occurrences.push(
+        AnnotationOccurrence::AnnotationPlaceholderOccurrenceWithLeaderLine(
+            AnnotationPlaceholderOccurrenceWithLeaderLine {
+                name: "Flatness.1".into(),
+                styles: vec![],
+                item: RepresentationItemRef::Surface(surf),
+                role: "GPS_DATA".into(),
+                line_spacing: 7.0,
+                leader_line: vec![leader],
+            },
+        ),
+    );
+
+    let text = model.write_to_string().expect("write");
+    assert!(text.contains("APLL_POINT("), "APLL_POINT not emitted");
+    assert!(text.contains("ANNOTATION_TO_MODEL_LEADER_LINE("));
+    assert!(text.contains("ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE("));
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.apll_points.len(), 2);
+    assert_eq!(re_pmi.annotation_placeholder_leader_lines.len(), 1);
+    let AnnotationPlaceholderLeaderLine::AnnotationToModelLeaderLine(re_leader) = re_pmi
+        .annotation_placeholder_leader_lines
+        .iter()
+        .next()
+        .unwrap();
+    assert_eq!(re_leader.geometric_elements.len(), 2);
+    let ApllPointElement::ApllPoint(re_p0) = &re_pmi.apll_points[re_leader.geometric_elements[0]];
+    assert!((re_p0.coordinates.x - 1.0).abs() < 1e-12);
+    assert_eq!(re_p0.symbol_applied, "NONE");
+    let with_leader = re_pmi.annotation_occurrences.iter().any(|ao| {
+        matches!(
+            ao,
+            AnnotationOccurrence::AnnotationPlaceholderOccurrenceWithLeaderLine(a)
+                if a.leader_line.len() == 1 && a.name == "Flatness.1"
+        )
+    });
+    assert!(
+        with_leader,
+        "APO_WITH_LEADER_LINE should round-trip with its leader_line"
+    );
+}
+
+#[test]
 fn dmia_with_placeholder_round_trip() {
     // DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER (nested_field) —
     // annotation_placeholder Some -> subtype type name emitted -> re-read Some.
