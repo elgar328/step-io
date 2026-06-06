@@ -270,13 +270,11 @@ pub struct Property {
     /// occasionally empty. Empty / `$` source values both round-trip as
     /// `None`; non-empty strings as `Some(s)`.
     pub description: Option<String>,
-    /// Index into the [`PropertyPool::property_definitions`] arena for the
-    /// PD entry that pairs with this Property. Reader's PDR handler fills
-    /// it by resolving the source PD step ref through `property_def_step_to_id`;
-    /// writer's `emit_property` uses it to fetch the cached PD step id
-    /// (`property_definition_step_ids[definition.0]`) and emit the PDR
-    /// linking REPR ↔ PD without re-emitting the PD.
-    pub definition: PropertyDefinitionId,
+    /// The `property_definition_representation.definition` —
+    /// a `represented_definition` SELECT. Usually a `PROPERTY_DEFINITION`
+    /// (the typical descriptive-property case), but the c3d kernel also binds
+    /// a `GENERAL_PROPERTY` directly. See [`PropertyDefinitionRef`].
+    pub definition: PropertyDefinitionRef,
     /// `REPRESENTATION.name` (often `''`).
     pub representation_name: String,
     /// `REPRESENTATION.context_of_items` — a unit-bearing or unit-less
@@ -284,6 +282,22 @@ pub struct Property {
     pub context: Option<RepresentationContextRef>,
     /// `REPRESENTATION.items` — polymorphic items in source order.
     pub items: Vec<PropertyItem>,
+}
+
+/// `property_definition_representation.definition` SELECT target. The
+/// `represented_definition` SELECT admits both `property_definition` and
+/// `general_property` (EXPRESS `242_n8324_mim_lf.exp`); step-io models those
+/// two members. The PD member indexes [`PropertyPool::property_definitions`];
+/// the GP member indexes [`PropertyPool::general_properties`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PropertyDefinitionRef {
+    /// `PROPERTY_DEFINITION` — `emit_property` fetches the cached PD step id
+    /// (`property_definition_step_ids[id.0]`) and emits the PDR linking
+    /// REPR ↔ PD without re-emitting the PD.
+    PropertyDefinition(PropertyDefinitionId),
+    /// `GENERAL_PROPERTY` — `emit_property` fetches the cached GP step id
+    /// (`general_property_step_ids[id.0]`); the PDR binds REPR ↔ GP.
+    GeneralProperty(GeneralPropertyId),
 }
 
 /// Polymorphic container for `REPRESENTATION.items` entries reached

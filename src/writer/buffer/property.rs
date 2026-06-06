@@ -11,7 +11,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::entities::property::property_definition_representation::{
     PropertyDefinitionRepresentationHandler, PropertyDefinitionRepresentationWriteInput,
 };
-use crate::ir::property::{Property, PropertyItem, PropertyMeasureUnit};
+use crate::ir::property::{Property, PropertyDefinitionRef, PropertyItem, PropertyMeasureUnit};
 use crate::ir::shape_rep::DescriptiveItem;
 use crate::parser::entity::Attribute;
 
@@ -273,16 +273,25 @@ impl WriteBuffer<'_> {
     /// `PROPERTY_DEFINITION` step id, or 0 when the product chain was not
     /// emitted (the caller leaves a 0 slot in `property_step_ids`).
     fn emit_property(&mut self, prop: &Property) -> u64 {
-        // PD is emitted by `emit_property_definitions_if_set` (arena-driven)
-        // — here we only fetch its cached step id, then emit the items, the
-        // wrapping REPRESENTATION, and the PDR that ties them together. A
-        // 0 slot means the PD's product chain wasn't emitted (defensive
-        // for kernel-built IR); the GPA emitter skips 0 slots downstream.
-        let pd = self
-            .property_definition_step_ids
-            .get(prop.definition.0 as usize)
-            .copied()
-            .unwrap_or(0);
+        // The PDR `definition` is emitted elsewhere — a PROPERTY_DEFINITION by
+        // `emit_property_definitions_*` (arena-driven), a GENERAL_PROPERTY by
+        // `emit_general_properties` (both run before this pass). Here we only
+        // fetch the cached step id, then emit the items, the wrapping
+        // REPRESENTATION, and the PDR that ties them together. A 0 slot means
+        // the PD's product chain wasn't emitted (defensive for kernel-built
+        // IR); the GPA emitter skips 0 slots downstream.
+        let pd = match prop.definition {
+            PropertyDefinitionRef::PropertyDefinition(id) => self
+                .property_definition_step_ids
+                .get(id.0 as usize)
+                .copied()
+                .unwrap_or(0),
+            PropertyDefinitionRef::GeneralProperty(id) => self
+                .general_property_step_ids
+                .get(id.0 as usize)
+                .copied()
+                .unwrap_or(0),
+        };
         if pd == 0 {
             return 0;
         }

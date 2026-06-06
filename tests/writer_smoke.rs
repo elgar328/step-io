@@ -1329,7 +1329,7 @@ fn nauo_owned_pds_property_round_trips() {
     props.properties.push(Property {
         name: "geometric validation property".into(),
         description: Some("centroid of Leaf".into()),
-        definition: centroid_pd,
+        definition: step_io::ir::property::PropertyDefinitionRef::PropertyDefinition(centroid_pd),
         representation_name: "centroid".into(),
         context: Some(step_io::ir::shape_rep::RepresentationContextRef::Unitful(
             UnitContextId(0),
@@ -1993,7 +1993,7 @@ fn general_property_and_association_round_trip() {
     pool.properties.push(Property {
         name: "p1".into(),
         description: Some("user defined attribute".into()),
-        definition: pd_id,
+        definition: step_io::ir::property::PropertyDefinitionRef::PropertyDefinition(pd_id),
         representation_name: String::new(),
         context: Some(step_io::ir::RepresentationContextRef::Unitful(
             UnitContextId(0),
@@ -5044,7 +5044,7 @@ fn property_with_plain_context_round_trips() {
     pool.properties.push(Property {
         name: "document property".into(),
         description: None,
-        definition: pd_id,
+        definition: step_io::ir::property::PropertyDefinitionRef::PropertyDefinition(pd_id),
         representation_name: "document format".into(),
         context: Some(RepresentationContextRef::Unitless(uc_id)),
         items: vec![PropertyItem::Descriptive(DescriptiveItem {
@@ -6410,7 +6410,7 @@ fn property_item_references_arena_measure() {
     pool.properties.push(Property {
         name: "validation property".into(),
         description: None,
-        definition: pd_id,
+        definition: step_io::ir::property::PropertyDefinitionRef::PropertyDefinition(pd_id),
         representation_name: "gvp".into(),
         context: Some(RepresentationContextRef::Unitful(ctx_id)),
         items: vec![PropertyItem::MeasureItem(mri)],
@@ -8828,4 +8828,151 @@ fn tessellated_solid_shell_round_trip() {
         .expect("shell round-trips");
     assert_eq!(shell.name, "shell");
     assert_eq!(shell.items.len(), 1);
+}
+
+// ------------------------------------------------------------------
+// c3d property + units cluster (simple GUAC / RATIO_UNIT, GENERAL_PROPERTY
+// PDR, REPRESENTATION unset context)
+// ------------------------------------------------------------------
+
+/// A standalone simple `GLOBAL_UNIT_ASSIGNED_CONTEXT(identifier, type, units)`
+/// referencing a simple `RATIO_UNIT` round-trips as `UnitContextForm::Simple`
+/// (not forced into the geometric complex MI) with the ratio unit preserved.
+#[test]
+fn simple_global_unit_assigned_context_and_ratio_unit_round_trip() {
+    use step_io::ir::shape_rep::UnitContextForm;
+    use step_io::ir::units::{DimensionalExponents, RatioFlavor};
+
+    let mut model = empty_model();
+    let pool = model.units_pool.get_or_insert_with(UnitsPool::default);
+    // Dimensionless DIMENSIONAL_EXPONENTS so the simple RATIO_UNIT emits an
+    // explicit `dimensions` ref rather than the lenient `$` path.
+    let de_id = pool.dimensional_exponents.push(DimensionalExponents {
+        length_exponent: 0.0,
+        mass_exponent: 0.0,
+        time_exponent: 0.0,
+        electric_current_exponent: 0.0,
+        thermodynamic_temperature_exponent: 0.0,
+        amount_of_substance_exponent: 0.0,
+        luminous_intensity_exponent: 0.0,
+    });
+    let ratio_id = pool.named_units.push(NamedUnit::Ratio(RatioFlavor {
+        dim_exp: Some(de_id),
+        complex: false,
+    }));
+    let simple_form = UnitContextForm::Simple {
+        identifier: "NONE".into(),
+        context_type: "NONE".into(),
+    };
+    model.units.push(UnitContext {
+        units: vec![ratio_id],
+        length_uncertainty: None,
+        plane_angle_uncertainty: None,
+        solid_angle_uncertainty: None,
+        form: simple_form.clone(),
+    });
+
+    let re = reconvert(&model.write_to_string().expect("write"));
+    assert_eq!(re.units.len(), 1);
+    let ctx = re.units.iter().next().expect("unit context survived");
+    assert_eq!(ctx.form, simple_form);
+    assert_eq!(ctx.units.len(), 1);
+    let rpool = re.units_pool.as_ref().expect("units pool");
+    match rpool.named_units[ctx.units[0]] {
+        NamedUnit::Ratio(f) => {
+            assert!(!f.complex, "simple RATIO_UNIT must re-read as simple form");
+            assert!(f.dim_exp.is_some(), "explicit dimensions preserved");
+        }
+        other => panic!("expected Ratio, got {other:?}"),
+    }
+}
+
+/// A `PROPERTY_DEFINITION_REPRESENTATION` whose `definition` is a
+/// `GENERAL_PROPERTY` (c3d) survives write (PDR -> #gp ref) and read (resolve
+/// #gp back to a `PropertyDefinitionRef::GeneralProperty`).
+#[test]
+fn general_property_bound_pdr_round_trips() {
+    use step_io::ir::property::PropertyDefinitionRef;
+
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+
+    let mut pool = PropertyPool::default();
+    let gp_id = pool.general_properties.push(GeneralProperty {
+        id: String::new(),
+        name: "VALIDATION".into(),
+        description: Some("user defined attribute".into()),
+    });
+    pool.properties.push(Property {
+        name: String::new(),
+        description: None,
+        definition: PropertyDefinitionRef::GeneralProperty(gp_id),
+        representation_name: "gvp".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(
+            UnitContextId(0),
+        )),
+        items: Vec::new(),
+    });
+    model.properties = Some(pool);
+
+    let re = reconvert(&model.write_to_string().expect("write"));
+    let re_pool = re
+        .properties
+        .as_ref()
+        .expect("round-tripped has properties");
+    assert_eq!(re_pool.general_properties.len(), 1);
+    assert_eq!(re_pool.properties.len(), 1);
+    let prop = re_pool.properties.iter().next().expect("property survived");
+    assert_eq!(
+        prop.definition,
+        PropertyDefinitionRef::GeneralProperty(GeneralPropertyId(0)),
+    );
+    assert_eq!(prop.representation_name, "gvp");
+    assert!(matches!(
+        prop.context,
+        Some(step_io::ir::RepresentationContextRef::Unitful(_)),
+    ));
+}
+
+/// A descriptive property `REPRESENTATION` whose `context_of_items` is `$`
+/// (c3d) is accepted as `None` with a `NonStandardInput` normalization warning,
+/// not dropped.
+#[test]
+fn representation_unset_context_round_trips_as_none_with_warning() {
+    use step_io::ir::error::ConvertError;
+    use step_io::ir::property::PropertyDefinitionRef;
+
+    let mut model = empty_model();
+    let mut pool = PropertyPool::default();
+    let gp_id = pool.general_properties.push(GeneralProperty {
+        id: String::new(),
+        name: "VP".into(),
+        description: None,
+    });
+    pool.properties.push(Property {
+        name: String::new(),
+        description: None,
+        definition: PropertyDefinitionRef::GeneralProperty(gp_id),
+        representation_name: String::new(),
+        context: None, // -> REPRESENTATION emits `$` context_of_items
+        items: Vec::new(),
+    });
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    let graph = parse(&text).expect("writer output parses");
+    let result = ReaderContext::convert(&graph);
+
+    assert!(
+        result.warnings.iter().any(|w| matches!(
+            w,
+            ConvertError::NonStandardInput { field, .. } if field.contains("context_of_items")
+        )),
+        "expected context_of_items NonStandardInput, got {:#?}",
+        result.warnings,
+    );
+    let re_pool = result.model.properties.as_ref().expect("has properties");
+    let prop = re_pool.properties.iter().next().expect("property survived");
+    assert_eq!(prop.context, None);
 }

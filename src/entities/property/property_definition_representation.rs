@@ -11,7 +11,7 @@ use crate::ir::attr::{
     read_string_or_unset,
 };
 use crate::ir::error::ConvertError;
-use crate::ir::property::{Property, PropertyItem, PropertyPool};
+use crate::ir::property::{Property, PropertyDefinitionRef, PropertyItem, PropertyPool};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -44,8 +44,13 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
         // descriptive Property is stashed below and pushed by
         // `materialize_nauo_owned_pds` once the PD arena entry exists.
         let is_deferred_nauo = ctx.nauo_pds_pd_refs.contains(&pd_ref);
-        if pd_entry.is_none() && !is_deferred_nauo {
-            return Ok(()); // PD silently skipped (unresolved / unsupported target)
+        // `definition` is a `represented_definition` SELECT: usually a
+        // PROPERTY_DEFINITION, but the c3d kernel also binds a GENERAL_PROPERTY
+        // directly (the two SELECT members step-io models). The maps are
+        // disjoint, so a GP target means `pd_entry` is None.
+        let gp_id = ctx.general_property_id_map.get(&pd_ref).copied();
+        if pd_entry.is_none() && !is_deferred_nauo && gp_id.is_none() {
+            return Ok(()); // silently skipped (unresolved / unsupported target)
         }
 
         // Walk the graph for the bound REPRESENTATION. Direct read — REPR
@@ -108,6 +113,26 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
             })
             .collect();
 
+        if let Some(gp_id) = gp_id {
+            // GENERAL_PROPERTY-bound property: `definition` is the GP itself,
+            // not a PROPERTY_DEFINITION. The GP carries its own name/description
+            // (emitted via the general_properties arena), so the Property's
+            // name/description fields are unused here — `emit_property` only
+            // reads `definition`, `items`, `context`, `representation_name`.
+            ctx.properties
+                .get_or_insert_with(PropertyPool::default)
+                .properties
+                .push(Property {
+                    name: String::new(),
+                    description: None,
+                    definition: PropertyDefinitionRef::GeneralProperty(gp_id),
+                    representation_name,
+                    context,
+                    items,
+                });
+            return Ok(());
+        }
+
         if is_deferred_nauo {
             // PD arena entry doesn't exist yet — stash the resolved descriptive
             // payload for `materialize_nauo_owned_pds` to push as a Property.
@@ -133,7 +158,7 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
             .push(Property {
                 name: pd_name,
                 description: pd_desc,
-                definition,
+                definition: PropertyDefinitionRef::PropertyDefinition(definition),
                 representation_name,
                 context,
                 items,

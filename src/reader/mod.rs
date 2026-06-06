@@ -1255,7 +1255,9 @@ impl ReaderContext {
                 .push(Property {
                     name,
                     description,
-                    definition,
+                    definition: crate::ir::property::PropertyDefinitionRef::PropertyDefinition(
+                        definition,
+                    ),
                     representation_name,
                     context,
                     items,
