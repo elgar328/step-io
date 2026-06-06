@@ -16,6 +16,7 @@ use std::collections::HashMap;
 
 use super::WriteBuffer;
 use crate::ir::arena::Arena;
+use crate::ir::representation_item::RepresentationItemRef;
 use crate::ir::shape_rep::Representation;
 use crate::ir::{
     GeometryLeaf, Instance, Product, ProductId, Transform3d, WireframeContent, WireframeReprKind,
@@ -605,8 +606,62 @@ impl WriteBuffer<'_> {
             ) {
                 continue;
             }
+            // An assembly ABSR whose items include a MAPPED_ITEM forward-
+            // references entities emitted by `emit_mapped_items` (which runs
+            // after this pre-pass). Reserve its step id here so backward-refs
+            // (e.g. SDR.used_representation) resolve, and emit the body later
+            // in `emit_deferred_assembly_absr`.
+            if let Representation::AdvancedBrep(r) = repr {
+                if r.items
+                    .iter()
+                    .any(|it| matches!(it, RepresentationItemRef::MappedItem(_)))
+                {
+                    let reserved = self.fresh();
+                    self.representation_step_ids[id.0 as usize] = reserved;
+                    self.deferred_assembly_absr_ids.push((id, reserved));
+                    continue;
+                }
+            }
             let step_id = self.emit_representation(repr)?;
             self.representation_step_ids[id.0 as usize] = step_id;
+        }
+        Ok(())
+    }
+
+    /// Build the `[name, items, context]` attrs of an
+    /// `ADVANCED_BREP_SHAPE_REPRESENTATION` from its arena items, preserving
+    /// source order. Shared by the pre-pass (solid ABSR) and the deferred pass
+    /// (assembly ABSR whose MAPPED_ITEM items emit later).
+    fn advanced_brep_attrs(
+        &mut self,
+        r: &crate::ir::shape_rep::AdvancedBrepRepr,
+    ) -> Result<Vec<Attribute>, WriteError> {
+        let mut items = Vec::with_capacity(r.items.len());
+        for it in &r.items {
+            items.push(Attribute::EntityRef(
+                self.emit_representation_item_ref(*it)?,
+            ));
+        }
+        Ok(vec![
+            Attribute::String(r.name.clone()),
+            Attribute::List(items),
+            self.repr_context_attr(r.context),
+        ])
+    }
+
+    /// Emit the bodies of assembly ABSRs whose step ids were reserved in
+    /// `emit_representations_pre_pass`. Runs after `emit_mapped_items` so the
+    /// MAPPED_ITEM items resolve to non-zero step ids.
+    pub(in crate::writer::buffer) fn emit_deferred_assembly_absr(
+        &mut self,
+    ) -> Result<(), WriteError> {
+        let deferred = std::mem::take(&mut self.deferred_assembly_absr_ids);
+        let reprs = self.model.representations.clone();
+        for (rid, reserved) in deferred {
+            if let Representation::AdvancedBrep(r) = &reprs[rid] {
+                let attrs = self.advanced_brep_attrs(r)?;
+                self.push_simple_with_id(reserved, "ADVANCED_BREP_SHAPE_REPRESENTATION", attrs);
+            }
         }
         Ok(())
     }
@@ -627,21 +682,8 @@ impl WriteBuffer<'_> {
 
         match repr {
             Representation::AdvancedBrep(r) => {
-                let mut items = Vec::with_capacity(1 + r.solids.len());
-                if let Some(frame) = r.ref_frame {
-                    items.push(Attribute::EntityRef(self.emit_axis2_placement_3d(frame)?));
-                }
-                for sid in &r.solids {
-                    items.push(Attribute::EntityRef(self.emit_solid(*sid)?));
-                }
-                Ok(self.push_simple(
-                    "ADVANCED_BREP_SHAPE_REPRESENTATION",
-                    vec![
-                        Attribute::String(r.name.clone()),
-                        Attribute::List(items),
-                        self.repr_context_attr(r.context),
-                    ],
-                ))
+                let attrs = self.advanced_brep_attrs(r)?;
+                Ok(self.push_simple("ADVANCED_BREP_SHAPE_REPRESENTATION", attrs))
             }
             Representation::ManifoldSurface(r) => {
                 let mut items = Vec::with_capacity(2);

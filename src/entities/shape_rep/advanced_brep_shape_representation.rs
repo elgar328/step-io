@@ -1,15 +1,19 @@
 //! `ADVANCED_BREP_SHAPE_REPRESENTATION` handler.
 //!
-//! Reader collects every `MANIFOLD_SOLID_BREP` item (multi-body STEP files
-//! carry more than one) and binds the list to the ABSR id; the first
-//! `AXIS2_PLACEMENT_3D` becomes the coordinate reference frame. Writer
-//! emits the ABSR line with the per-product axis placement followed by all
-//! solid refs the chain orchestrator pre-emitted, and the bound unit context.
+//! Reader resolves every `items` ref into a typed `RepresentationItemRef`
+//! (usually `MANIFOLD_SOLID_BREP`s + an `AXIS2_PLACEMENT_3D` frame, but an
+//! assembly ABSR lists `MAPPED_ITEM`s) and stores them in source order on
+//! `AdvancedBrepRepr.items`; the legacy `absr_solid_map` / `absr_ref_frame_map`
+//! side maps are derived from the resolved items. The arena writer
+//! (`emit_representation`) re-emits items in order, deferring assembly ABSRs
+//! (`MAPPED_ITEM` forward-ref) via reserve-then-fill.
 
 use crate::entities::SimpleEntityHandler;
+use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::assembly::Product;
 use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
+use crate::ir::representation_item::RepresentationItemRef;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -43,25 +47,39 @@ impl SimpleEntityHandler for AdvancedBrepShapeRepresentationHandler {
             ctx.repr_context_map.insert(entity_id, ctx_id);
         }
 
-        let solid_ids: Vec<_> = items
+        // `items` is `SET OF representation_item`: usually MANIFOLD_SOLID_BREPs
+        // + an AXIS2_PLACEMENT_3D, but an assembly ABSR lists MAPPED_ITEMs.
+        // Resolve each into a typed ref, preserving source order.
+        let resolved: Vec<RepresentationItemRef> = items
             .iter()
-            .filter_map(|r| ctx.solid_map.get(r).copied())
+            .filter_map(|r| resolve_representation_item_ref(ctx, *r))
             .collect();
-        // Pick the first AXIS2_PLACEMENT_3D in the items list as the coordinate
-        // reference frame. In practice commercial CAD output places it first.
-        let ref_frame = items.iter().find_map(|r| ctx.placement_map.get(r).copied());
-        if let Some(placement_id) = ref_frame {
+
+        // Derive the legacy solid / ref-frame side maps (consumed by SDR
+        // product-geometry / SRR / GISU) from the resolved items.
+        let solid_ids: Vec<_> = resolved
+            .iter()
+            .filter_map(|it| match it {
+                RepresentationItemRef::Solid(id) => Some(*id),
+                _ => None,
+            })
+            .collect();
+        if let Some(placement_id) = resolved.iter().find_map(|it| match it {
+            RepresentationItemRef::Placement3d(id) => Some(*id),
+            _ => None,
+        }) {
             ctx.absr_ref_frame_map.insert(entity_id, placement_id);
         }
-        if solid_ids.is_empty() {
+        if !solid_ids.is_empty() {
+            ctx.absr_solid_map.insert(entity_id, solid_ids);
+        }
+        // Warn only when nothing resolved at all (a genuinely empty ABSR) —
+        // an assembly ABSR (MAPPED_ITEM items) is not a defect.
+        if resolved.is_empty() {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                 entity_id,
-                detail: String::from(
-                    "ADVANCED_BREP_SHAPE_REPRESENTATION without a MANIFOLD_SOLID_BREP item",
-                ),
+                detail: String::from("ADVANCED_BREP_SHAPE_REPRESENTATION with no resolvable items"),
             });
-        } else {
-            ctx.absr_solid_map.insert(entity_id, solid_ids.clone());
         }
 
         // representation-refactor A-1: dual-write into the unified arena.
@@ -71,8 +89,7 @@ impl SimpleEntityHandler for AdvancedBrepShapeRepresentationHandler {
                 crate::ir::shape_rep::AdvancedBrepRepr {
                     name,
                     context,
-                    ref_frame,
-                    solids: solid_ids,
+                    items: resolved,
                 },
             ));
         ctx.repr_id_map.insert(entity_id, repr_id);

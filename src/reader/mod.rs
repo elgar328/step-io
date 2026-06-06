@@ -1290,8 +1290,8 @@ impl ReaderContext {
         for (rid, repr) in self.representations.iter_with_ids() {
             match repr {
                 Representation::AdvancedBrep(r) => {
-                    for s in &r.solids {
-                        solid_to_rep.entry(*s).or_insert(rid);
+                    for s in r.solids() {
+                        solid_to_rep.entry(s).or_insert(rid);
                     }
                 }
                 Representation::Wireframe(r) => {

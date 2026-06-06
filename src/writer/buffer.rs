@@ -223,6 +223,11 @@ pub(crate) struct WriteBuffer<'m> {
     /// Emitted `PRESENTATION_LAYER_ASSIGNMENT` step ids, indexed by
     /// `PresentationLayerAssignmentId.0`. Consumed by `INVISIBILITY`.
     pub(crate) presentation_layer_assignment_step_ids: Vec<u64>,
+    /// Assembly `ADVANCED_BREP_SHAPE_REPRESENTATION`s (items include a
+    /// `MAPPED_ITEM`) whose step id was reserved in `emit_representations_pre_pass`
+    /// and whose body is emitted by `emit_deferred_assembly_absr` after
+    /// `emit_mapped_items`. `(RepresentationId, reserved step id)`.
+    pub(crate) deferred_assembly_absr_ids: Vec<(crate::ir::RepresentationId, u64)>,
     /// Emitted `AREA_IN_SET` step ids (phase pr-size), indexed by
     /// `AreaInSetId.0`. Consumed by `PRESENTATION_SIZE.unit` SELECT.
     pub(crate) area_in_set_step_ids: Vec<u64>,
@@ -522,6 +527,7 @@ impl<'m> WriteBuffer<'m> {
             presentation_set_step_ids: Vec::new(),
             applied_presented_item_step_ids: Vec::new(),
             presentation_layer_assignment_step_ids: Vec::new(),
+            deferred_assembly_absr_ids: Vec::new(),
             area_in_set_step_ids: Vec::new(),
             pre_defined_curve_font_step_ids: Vec::new(),
             pre_defined_symbol_step_ids: Vec::new(),
@@ -806,6 +812,9 @@ impl<'m> WriteBuffer<'m> {
         // STYLED_ITEM-target MAPPED_ITEMs are reader-cascade-dropped, so
         // the cache need not cover MDGPR slots.
         self.emit_mapped_items()?;
+        // Assembly ABSR bodies whose step ids were reserved in the pre-pass —
+        // their MAPPED_ITEM items now resolve (emit_mapped_items just ran).
+        self.emit_deferred_assembly_absr()?;
         self.emit_visualization_if_set()?;
         // Camera-origin plain REPRESENTATION_MAPs + their MAPPED_ITEMs, deferred
         // by `emit_mapped_items` until cameras are stepped. Must precede

@@ -2342,6 +2342,7 @@ fn product_with_additional_shape_representation_round_trips() {
         CharacterizedDefinition, ProductDefinitionShape, PropertyDefinition,
         PropertyDefinitionData, PropertyPool, SdrDefinition, ShapeDefinitionRepresentationLink,
     };
+    use step_io::ir::representation_item::RepresentationItemRef;
     use step_io::ir::shape_rep::{AdvancedBrepRepr, Representation, RepresentationContextRef};
     // One product PDS referencing TWO shape representations: the product's own
     // solid geometry (primary, folds into `Product.representation_id`) plus an
@@ -2360,8 +2361,10 @@ fn product_with_additional_shape_representation_round_trips() {
         .push(Representation::AdvancedBrep(AdvancedBrepRepr {
             name: "additional rep".into(),
             context: Some(RepresentationContextRef::Unitful(UnitContextId(0))),
-            ref_frame: Some(identity_frame),
-            solids: vec![extra_solid],
+            items: vec![
+                RepresentationItemRef::Placement3d(identity_frame),
+                RepresentationItemRef::Solid(extra_solid),
+            ],
         }));
     // The product with its own (primary) solid geometry.
     let primary_solid = push_minimal_solid(&mut model);
@@ -3530,6 +3533,75 @@ fn presentation_mapped_representation_round_trips() {
         matches!(mi.mapping_target, RepresentationItemRef::Placement2d(_)),
         "the 2D placement target round-trips"
     );
+}
+
+#[test]
+fn assembly_advanced_brep_with_mapped_item_round_trips() {
+    // An assembly ADVANCED_BREP_SHAPE_REPRESENTATION whose items are a
+    // MAPPED_ITEM (not a MANIFOLD_SOLID_BREP) + an AXIS2_PLACEMENT_3D frame.
+    // Exercises the items: Vec faithful preservation + the writer's
+    // reserve-then-fill deferral (ABSR forward-refs the MAPPED_ITEM).
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{
+        AdvancedBrepRepr, MappedItem, MappedItemData, MappedRepresentationRef, PlainRepr,
+        Representation, RepresentationContextRef, RepresentationMap, RepresentationMapData,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+    let frame = model.geometry.identity_placement();
+
+    // A target representation the MAPPED_ITEM's map points into.
+    let target = model.representations.push(Representation::Plain(PlainRepr {
+        name: "part".into(),
+        context: Some(RepresentationContextRef::Unitful(uc)),
+        frame: None,
+    }));
+    let rmap = model
+        .representation_maps
+        .push(RepresentationMap::Itself(RepresentationMapData {
+            mapping_origin: RepresentationItemRef::Placement3d(frame),
+            mapped_representation: MappedRepresentationRef::Representation(target),
+        }));
+    let mi = model.mapped_items.push(MappedItem::Itself(MappedItemData {
+        name: String::new(),
+        mapping_source: rmap,
+        mapping_target: RepresentationItemRef::Placement3d(frame),
+    }));
+    let absr = model
+        .representations
+        .push(Representation::AdvancedBrep(AdvancedBrepRepr {
+            name: "Assem1".into(),
+            context: Some(RepresentationContextRef::Unitful(uc)),
+            items: vec![
+                RepresentationItemRef::MappedItem(mi),
+                RepresentationItemRef::Placement3d(frame),
+            ],
+        }));
+    let _ = absr;
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        !text.contains("#0,") && !text.contains("#0)") && !text.contains("(#0"),
+        "no dangling #0 ref in:\n{text}"
+    );
+    let re = reconvert(&text);
+    // No "without a MANIFOLD_SOLID_BREP" defect — assembly ABSR is valid.
+    let asm = re
+        .representations
+        .iter()
+        .find_map(|r| match r {
+            Representation::AdvancedBrep(a) if a.name == "Assem1" => Some(a),
+            _ => None,
+        })
+        .expect("assembly ABSR round-trips");
+    assert!(
+        asm.items
+            .iter()
+            .any(|it| matches!(it, RepresentationItemRef::MappedItem(_))),
+        "the MAPPED_ITEM item is preserved, not dropped"
+    );
+    assert!(asm.solids().is_empty(), "assembly ABSR carries no solids");
 }
 
 #[test]

@@ -500,12 +500,39 @@ pub enum DimensionItem {
 }
 
 /// `ADVANCED_BREP_SHAPE_REPRESENTATION(name, items, context)`.
+///
+/// `items` is the schema's `SET OF representation_item` — usually
+/// `MANIFOLD_SOLID_BREP`s plus an `AXIS2_PLACEMENT_3D` frame, but an assembly
+/// ABSR lists `MAPPED_ITEM`s instead (a `representation_item` subtype). Stored
+/// faithfully in source order; `solids()` / `ref_frame()` derive the solid /
+/// placement views from it (single source of truth, no duplicate fields).
 #[derive(Debug, Clone, PartialEq)]
 pub struct AdvancedBrepRepr {
     pub name: String,
     pub context: Option<RepresentationContextRef>,
-    pub ref_frame: Option<Placement3dId>,
-    pub solids: Vec<SolidId>,
+    pub items: Vec<RepresentationItemRef>,
+}
+
+impl AdvancedBrepRepr {
+    /// The `MANIFOLD_SOLID_BREP` items (the modelled solids), in source order.
+    #[must_use]
+    pub fn solids(&self) -> Vec<SolidId> {
+        self.items
+            .iter()
+            .filter_map(|it| match it {
+                RepresentationItemRef::Solid(id) => Some(*id),
+                _ => None,
+            })
+            .collect()
+    }
+    /// The coordinate reference frame — the first `AXIS2_PLACEMENT_3D` item.
+    #[must_use]
+    pub fn ref_frame(&self) -> Option<Placement3dId> {
+        self.items.iter().find_map(|it| match it {
+            RepresentationItemRef::Placement3d(id) => Some(*id),
+            _ => None,
+        })
+    }
 }
 
 /// `MANIFOLD_SURFACE_SHAPE_REPRESENTATION(name, items, context)`.
