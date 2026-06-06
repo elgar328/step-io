@@ -278,15 +278,19 @@ pub struct GeneralDatumReferenceData {
     pub base: GeneralDatumBase,
 }
 
-/// `datum_or_common_datum` SELECT target for [`GeneralDatumReferenceData::base`].
-/// Initial coverage models the `datum` member only; `common_datum` has no
-/// step-io arena and is deferred. A `base` ref outside this set drops the
-/// owning `general_datum_reference` at read time — same expansion policy as
+/// `datum_or_common_datum` SELECT target for [`GeneralDatumReferenceData::base`]
+/// (the blueprint models `base` as `ty = "select"`). Both SELECT members are
+/// modelled. A `base` outside these forms drops the owning
+/// `general_datum_reference` at read time — same expansion policy as
 /// [`ShapeAspectRef`](crate::ir::ShapeAspectRef).
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum GeneralDatumBase {
     /// `DATUM`.
     Datum(DatumId),
+    /// `COMMON_DATUM_LIST` — `LIST [2:?] OF datum_reference_element` (an "A-B"
+    /// composite datum). Each id refers to a
+    /// [`GeneralDatumReference::Element`] in the same arena.
+    CommonDatumList(Vec<crate::ir::id::GeneralDatumReferenceId>),
 }
 
 /// `geometric_tolerance` `enum_base` — a GD&T tolerance applied to a shape

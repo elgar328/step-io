@@ -2226,7 +2226,6 @@ fn read_general_datum_reference_data(
     let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
     let of_shape_ref = read_entity_ref(attrs, 2, entity_id, "of_shape")?;
     let product_definitional = read_bool(attrs, 3, entity_id, "product_definitional")?;
-    let base_ref = read_entity_ref(attrs, 4, entity_id, "base")?;
     // attr 5 (`modifiers`) — datum_reference_modifier set, not modelled.
 
     // of_shape → PRODUCT_DEFINITION_SHAPE → PRODUCT_DEFINITION → ProductId.
@@ -2239,9 +2238,33 @@ fn read_general_datum_reference_data(
     let Some(&target) = ctx.product_arena_map.get(&product_step_id) else {
         return Ok(None);
     };
-    // base — `datum_or_common_datum`; only the `datum` member is modelled.
-    let Some(&datum_id) = ctx.datum_id_map.get(&base_ref) else {
-        return Ok(None);
+    // base — `datum_or_common_datum` SELECT: a single `DATUM` ref, or a
+    // `COMMON_DATUM_LIST` (a Typed list of `datum_reference_element`s, an "A-B"
+    // composite datum). A base outside these forms drops the owner.
+    let base = match attrs.get(4) {
+        Some(Attribute::EntityRef(r)) => {
+            let Some(&datum_id) = ctx.datum_id_map.get(r) else {
+                return Ok(None);
+            };
+            GeneralDatumBase::Datum(datum_id)
+        }
+        Some(Attribute::Typed { type_name, value }) if type_name == "COMMON_DATUM_LIST" => {
+            let Attribute::List(items) = value.as_ref() else {
+                return Ok(None);
+            };
+            let mut ids = Vec::with_capacity(items.len());
+            for item in items {
+                let Attribute::EntityRef(r) = item else {
+                    return Ok(None);
+                };
+                let Some(&gdr_id) = ctx.general_datum_reference_id_map.get(r) else {
+                    return Ok(None);
+                };
+                ids.push(gdr_id);
+            }
+            GeneralDatumBase::CommonDatumList(ids)
+        }
+        _ => return Ok(None),
     };
 
     Ok(Some(GeneralDatumReferenceData {
@@ -2249,7 +2272,7 @@ fn read_general_datum_reference_data(
         description,
         target,
         product_definitional,
-        base: GeneralDatumBase::Datum(datum_id),
+        base,
     }))
 }
 
@@ -2272,8 +2295,23 @@ pub(crate) fn write_general_datum_reference(
         .get(&data.target)
         .copied()
         .unwrap_or(0);
-    let base_step_id = match data.base {
-        GeneralDatumBase::Datum(id) => buf.datum_step_ids[id.0 as usize],
+    let base_attr = match data.base {
+        GeneralDatumBase::Datum(id) => Attribute::EntityRef(buf.datum_step_ids[id.0 as usize]),
+        GeneralDatumBase::CommonDatumList(ids) => Attribute::Typed {
+            type_name: "COMMON_DATUM_LIST".to_string(),
+            value: Box::new(Attribute::List(
+                ids.iter()
+                    .map(|id| {
+                        let step = buf.general_datum_reference_step_ids[id.0 as usize];
+                        // Invariant: list members (datum_reference_elements) are
+                        // referenced-before-referrer, so emitted first in the
+                        // arena-order loop — their step ids are non-zero here.
+                        debug_assert_ne!(step, 0, "common datum element emitted after compartment");
+                        Attribute::EntityRef(step)
+                    })
+                    .collect(),
+            )),
+        },
     };
     let bool_attr = if data.product_definitional { "T" } else { "F" };
     buf.push_simple(
@@ -2283,7 +2321,7 @@ pub(crate) fn write_general_datum_reference(
             Attribute::String(data.description),
             Attribute::EntityRef(pds_step_id),
             Attribute::Enum(bool_attr.into()),
-            Attribute::EntityRef(base_step_id),
+            base_attr,
             // modifiers — not modelled, always emitted as `$`.
             Attribute::Unset,
         ],

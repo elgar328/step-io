@@ -4619,8 +4619,103 @@ fn general_datum_reference_round_trip() {
     let GeneralDatumReference::Compartment(d0) = gdrs[0] else {
         unreachable!()
     };
-    let GeneralDatumBase::Datum(_) = d0.base;
+    assert!(matches!(d0.base, GeneralDatumBase::Datum(_)));
     assert_eq!(d0.target, step_io::ProductId(0));
+}
+
+/// A `DATUM_REFERENCE_COMPARTMENT` whose `base` is a `COMMON_DATUM_LIST` (an
+/// "A-B" composite datum) round-trips: the two `DATUM_REFERENCE_ELEMENT`s are
+/// emitted first (referenced-before-referrer), and the compartment re-reads
+/// its base as `CommonDatumList` with the two element ids in order.
+#[test]
+fn datum_reference_compartment_common_datum_list_round_trip() {
+    use step_io::ir::pmi::{
+        GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData, PmiPool,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let mut pmi = PmiPool::default();
+    let datum = pmi.datums.push(step_io::ir::pmi::Datum {
+        name: String::new(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        identification: "A".into(),
+    });
+    let elem = || GeneralDatumReferenceData {
+        name: String::new(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        base: GeneralDatumBase::Datum(datum),
+    };
+    // Two elements first (lower arena index → emitted before the compartment).
+    let e0 = pmi
+        .general_datum_references
+        .push(GeneralDatumReference::Element(elem()));
+    let e1 = pmi
+        .general_datum_references
+        .push(GeneralDatumReference::Element(elem()));
+    pmi.general_datum_references
+        .push(GeneralDatumReference::Compartment(
+            GeneralDatumReferenceData {
+                name: String::new(),
+                description: String::new(),
+                target: part_pid,
+                product_definitional: false,
+                base: GeneralDatumBase::CommonDatumList(vec![e0, e1]),
+            },
+        ));
+    model.pmi = Some(pmi);
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("COMMON_DATUM_LIST("),
+        "expected COMMON_DATUM_LIST base, got:\n{text}"
+    );
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    let comp = re_pmi
+        .general_datum_references
+        .iter()
+        .find_map(|g| match g {
+            GeneralDatumReference::Compartment(d) => Some(d),
+            GeneralDatumReference::Element(_) => None,
+        })
+        .expect("compartment survived");
+    match &comp.base {
+        GeneralDatumBase::CommonDatumList(ids) => assert_eq!(ids.len(), 2),
+        GeneralDatumBase::Datum(_) => panic!("expected CommonDatumList base, got Datum"),
+    }
 }
 
 #[test]

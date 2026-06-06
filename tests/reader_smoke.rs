@@ -1770,7 +1770,7 @@ fn nist_property_def_general_datum_references() {
         let GeneralDatumReference::Compartment(data) = gdr else {
             panic!("expected Compartment variant, got {gdr:?}");
         };
-        let GeneralDatumBase::Datum(_) = data.base;
+        assert!(matches!(data.base, GeneralDatumBase::Datum(_)));
     }
 }
 
