@@ -65,7 +65,7 @@ impl SimpleEntityHandler for LengthMeasureWithUnitHandler {
     }
 }
 
-pub(super) fn emit_mwu(
+pub(crate) fn emit_mwu(
     buf: &mut WriteBuffer,
     entity_name: &str,
     measure_type: &str,

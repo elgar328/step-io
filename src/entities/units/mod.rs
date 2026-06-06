@@ -21,6 +21,7 @@ pub mod length_measure_with_unit;
 pub mod length_unit;
 pub mod mass_measure_with_unit;
 pub mod mass_unit;
+pub mod measure_with_unit;
 pub mod plane_angle_measure_with_unit;
 pub mod plane_angle_unit;
 pub mod ratio_measure_with_unit;

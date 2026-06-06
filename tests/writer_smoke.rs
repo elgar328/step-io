@@ -8976,3 +8976,49 @@ fn representation_unset_context_round_trips_as_none_with_warning() {
     let prop = re_pool.properties.iter().next().expect("property survived");
     assert_eq!(prop.context, None);
 }
+
+/// A bare `MEASURE_WITH_UNIT(LENGTH_MEASURE(-0.3), unit)` (the carrier
+/// supertype, used for tolerance bounds) round-trips as
+/// `MeasureWithUnit::Itself` — preserving the generic entity name and the
+/// measure-type name, NOT coerced to a typed `LENGTH_MEASURE_WITH_UNIT`.
+#[test]
+fn bare_measure_with_unit_round_trips_as_itself() {
+    use step_io::ir::units::{MeasureWithUnit, MeasureWithUnitData};
+
+    let mut model = empty_model();
+    let mut pool = UnitsPool::default();
+    let unit = pool.push_plain_length(LengthUnit::Millimetre);
+    pool.measure_with_units
+        .push(MeasureWithUnit::Itself(MeasureWithUnitData {
+            measure_type: "LENGTH_MEASURE".into(),
+            value: -0.3,
+            unit,
+        }));
+    model.units_pool = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    // The emitted entity must be the bare supertype, not a typed subtype.
+    assert!(
+        text.contains("MEASURE_WITH_UNIT(LENGTH_MEASURE(-0.3"),
+        "expected bare MEASURE_WITH_UNIT, got:\n{text}"
+    );
+    assert!(
+        !text.contains("LENGTH_MEASURE_WITH_UNIT(LENGTH_MEASURE(-0.3"),
+        "must not coerce to a typed subtype:\n{text}"
+    );
+
+    let re = reconvert(&text);
+    let re_pool = re.units_pool.as_ref().expect("units pool round-tripped");
+    let mwu = re_pool
+        .measure_with_units
+        .iter()
+        .next()
+        .expect("MWU survived");
+    match mwu {
+        MeasureWithUnit::Itself(d) => {
+            assert_eq!(d.measure_type, "LENGTH_MEASURE");
+            assert!((d.value - (-0.3)).abs() < f64::EPSILON);
+        }
+        other => panic!("expected Itself carrier, got {other:?}"),
+    }
+}

@@ -202,10 +202,21 @@ pub enum MassUnit {
     Pound,
 }
 
-/// `MEASURE_WITH_UNIT` arena enum — one entry per concrete MWU subtype
-/// (`LENGTH` / `MASS` / `PLANE_ANGLE` / `RATIO`) observed in the source.
-#[derive(Debug, Clone, Copy, PartialEq)]
+/// `MEASURE_WITH_UNIT` arena enum.
+///
+/// Per the ir.toml blueprint `measure_with_unit` is a `concrete_supertype`
+/// (`shape = "carrier"`): the typed subtypes (`LENGTH_MEASURE_WITH_UNIT` etc.)
+/// are the `Length` / `Mass` / `PlaneAngle` / `Ratio` variants, and the bare
+/// supertype `MEASURE_WITH_UNIT(<measure_value>, <unit>)` — where the measure
+/// kind lives in the typed value (`LENGTH_MEASURE(..)`), so it can carry *any*
+/// measure kind — is the [`Self::Itself`] carrier variant (mirrors
+/// `RepresentationRelationship::Itself`).
+///
+/// `Copy` is intentionally not derived: the `Itself` carrier holds a `String`.
+#[derive(Debug, Clone, PartialEq)]
 pub enum MeasureWithUnit {
+    /// Bare `MEASURE_WITH_UNIT` supertype instance (carrier).
+    Itself(MeasureWithUnitData),
     Length {
         value: f64,
         unit: super::id::NamedUnitId,
@@ -222,6 +233,17 @@ pub enum MeasureWithUnit {
         value: f64,
         unit: super::id::NamedUnitId,
     },
+}
+
+/// Carrier body for the bare `MEASURE_WITH_UNIT` supertype instance.
+/// `measure_type` is the `value_component`'s `measure_value` SELECT member
+/// name (e.g. `"LENGTH_MEASURE"`) — the measure kind, preserved verbatim so
+/// the writer re-emits the same generic form rather than a typed subtype.
+#[derive(Debug, Clone, PartialEq)]
+pub struct MeasureWithUnitData {
+    pub measure_type: String,
+    pub value: f64,
+    pub unit: super::id::NamedUnitId,
 }
 
 /// `DERIVED_UNIT_ELEMENT(unit, exponent)` — STEP positional order is

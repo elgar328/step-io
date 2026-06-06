@@ -235,22 +235,29 @@ fn emit_measure_with_unit(
         plane_angle_measure_with_unit::PlaneAngleMeasureWithUnitHandler,
         ratio_measure_with_unit::RatioMeasureWithUnitHandler,
     };
-    match *mwu {
+    match mwu {
+        MeasureWithUnit::Itself(d) => {
+            use crate::entities::units::measure_with_unit::MeasureWithUnitHandler;
+            let unit_step = buf.named_unit_step_ids[d.unit.0 as usize];
+            // Bare supertype: re-emit `MEASURE_WITH_UNIT(<measure_type>(value), unit)`
+            // preserving the generic form (not a typed subtype).
+            MeasureWithUnitHandler::write(buf, (d.measure_type.clone(), d.value, unit_step))
+        }
         MeasureWithUnit::Length { value, unit } => {
             let unit_step = buf.named_unit_step_ids[unit.0 as usize];
-            LengthMeasureWithUnitHandler::write(buf, (value, unit_step))
+            LengthMeasureWithUnitHandler::write(buf, (*value, unit_step))
         }
         MeasureWithUnit::Mass { value, unit } => {
             let unit_step = buf.named_unit_step_ids[unit.0 as usize];
-            MassMeasureWithUnitHandler::write(buf, (value, unit_step))
+            MassMeasureWithUnitHandler::write(buf, (*value, unit_step))
         }
         MeasureWithUnit::PlaneAngle { value, unit } => {
             let unit_step = buf.named_unit_step_ids[unit.0 as usize];
-            PlaneAngleMeasureWithUnitHandler::write(buf, (value, unit_step))
+            PlaneAngleMeasureWithUnitHandler::write(buf, (*value, unit_step))
         }
         MeasureWithUnit::Ratio { value, unit } => {
             let unit_step = buf.named_unit_step_ids[unit.0 as usize];
-            RatioMeasureWithUnitHandler::write(buf, (value, unit_step))
+            RatioMeasureWithUnitHandler::write(buf, (*value, unit_step))
         }
     }
 }
