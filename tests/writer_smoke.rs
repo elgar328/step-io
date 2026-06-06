@@ -4519,16 +4519,31 @@ fn geometric_tolerance_form_tolerances_round_trip() {
         )));
     pmi.geometric_tolerances
         .push(GeometricTolerance::Cylindricity(data(measure())));
+    // Plain (datum-free) SURFACE_PROFILE_TOLERANCE — standalone form.
+    pmi.geometric_tolerances
+        .push(GeometricTolerance::SurfaceProfile(data(measure())));
 
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
     let gts: Vec<_> = re_pmi.geometric_tolerances.iter().collect();
-    assert_eq!(gts.len(), 4);
+    assert_eq!(gts.len(), 5);
     assert!(matches!(gts[0], GeometricTolerance::Flatness(_)));
     assert!(matches!(gts[1], GeometricTolerance::Straightness(_)));
     assert!(matches!(gts[2], GeometricTolerance::Roundness(_)));
     assert!(matches!(gts[3], GeometricTolerance::Cylindricity(_)));
+    assert!(matches!(gts[4], GeometricTolerance::SurfaceProfile(_)));
+    let GeometricTolerance::SurfaceProfile(d4) = gts[4] else {
+        unreachable!()
+    };
+    assert!(matches!(
+        d4.magnitude,
+        ToleranceMagnitude::MeasureWithUnit(_)
+    ));
+    assert!(matches!(
+        d4.toleranced_shape_aspect,
+        ShapeAspectRef::ShapeAspect(_)
+    ));
 
     let GeometricTolerance::Flatness(d0) = gts[0] else {
         unreachable!()

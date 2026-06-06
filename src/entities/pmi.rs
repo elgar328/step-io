@@ -2289,6 +2289,7 @@ pub(crate) fn write_geometric_tolerance(buf: &mut WriteBuffer, gt: GeometricTole
         GeometricTolerance::Straightness(d) => ("STRAIGHTNESS_TOLERANCE", d),
         GeometricTolerance::Roundness(d) => ("ROUNDNESS_TOLERANCE", d),
         GeometricTolerance::Cylindricity(d) => ("CYLINDRICITY_TOLERANCE", d),
+        GeometricTolerance::SurfaceProfile(d) => ("SURFACE_PROFILE_TOLERANCE", d),
     };
     // A `MeasureWithUnit` magnitude is already emitted by the units pass —
     // reference its cached step id. A `Measure` magnitude has no arena entry;
@@ -2417,6 +2418,39 @@ impl SimpleEntityHandler for FlatnessToleranceHandler {
             return Ok(());
         };
         push_geometric_tolerance(ctx, entity_id, GeometricTolerance::Flatness(data));
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, gt: GeometricTolerance) -> Result<u64, WriteError> {
+        Ok(write_geometric_tolerance(buf, gt))
+    }
+}
+
+pub(crate) struct SurfaceProfileToleranceSimpleHandler;
+
+/// Plain (datum-free) `SURFACE_PROFILE_TOLERANCE(name, description, magnitude,
+/// toleranced_shape_aspect)` — a standalone `geometric_tolerance` subtype
+/// (4 corpus standalone instances). Mirrors [`FlatnessToleranceHandler`];
+/// coexists with the complex datum-referencing form
+/// [`SurfaceProfileToleranceHandler`] (simple vs complex dispatch). Recovering
+/// it resolves `DRAUGHTING_MODEL_ITEM_ASSOCIATION` / `PROPERTY_DEFINITION`
+/// references (their cascades) via `resolve_geometric_tolerance_ref`.
+#[step_entity(name = "SURFACE_PROFILE_TOLERANCE")]
+impl SimpleEntityHandler for SurfaceProfileToleranceSimpleHandler {
+    type WriteInput = GeometricTolerance;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        let Some(data) =
+            read_geometric_tolerance_data(ctx, entity_id, attrs, "SURFACE_PROFILE_TOLERANCE")?
+        else {
+            return Ok(());
+        };
+        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::SurfaceProfile(data));
         Ok(())
     }
 

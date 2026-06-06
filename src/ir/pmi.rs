@@ -320,6 +320,11 @@ pub enum GeometricTolerance {
     Roundness(GeometricToleranceData),
     /// `CYLINDRICITY_TOLERANCE`.
     Cylindricity(GeometricToleranceData),
+    /// Plain (datum-free) `SURFACE_PROFILE_TOLERANCE` — the standalone form
+    /// (blueprint `in_enum` `geometric_tolerance`, 4 corpus standalone). The
+    /// datum-referencing form is the complex MI
+    /// [`GeometricToleranceWithDatumReference::SurfaceProfile`].
+    SurfaceProfile(GeometricToleranceData),
 }
 
 /// Shared 4-attr body of the form tolerances — inherited from
