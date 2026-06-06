@@ -130,11 +130,16 @@ pub enum NamedUnit {
 }
 
 /// `RATIO_UNIT` flavour — always dimensionless and without a CBU variant in
-/// the observed corpus. Zero-sized marker; presence in [`NamedUnit`] signals
-/// "ratio" to downstream consumers.
+/// the observed corpus. Presence in [`NamedUnit`] signals "ratio" to
+/// downstream consumers.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct RatioFlavor {
     pub dim_exp: Option<super::id::DimensionalExponentsId>,
+    /// `true` when read from the complex `(NAMED_UNIT()RATIO_UNIT()…)` form,
+    /// `false` for the standalone simple `RATIO_UNIT(dimensions)` entity (the
+    /// only form observed in the corpus). The writer reproduces the source
+    /// form so round-trip stays byte-faithful.
+    pub complex: bool,
 }
 
 /// `LENGTH_UNIT` complex flavour. `cbu_base` is `Some(id)` for

@@ -220,3 +220,14 @@
 //! - **Writer symmetry**: the descriptive REPRESENTATION is emitted by the PDR
 //!   writer; a `None` context re-emits `$`.
 //! - **Code**: `entities/property/property_definition_representation.rs`.
+//!
+//! ### NS-ratio-unit-dimensions-unset
+//! - **Source**: C3D kernel (input-shaft / shaft-238).
+//! - **Schema rule broken**: `named_unit.dimensions` is a required
+//!   `dimensional_exponents` (not OPTIONAL, not DERIVE in `ratio_unit`); the
+//!   standalone simple `RATIO_UNIT` entity is emitted with `$` (Unset).
+//! - **Acceptance**: accept as no explicit dimensions — the `ratio_unit` WHERE
+//!   clause fixes every exponent to zero regardless — rather than dropping the
+//!   unit; aggregated via `record_nonstandard`.
+//! - **Writer symmetry**: a `None` `dim_exp` on the simple form re-emits `$`.
+//! - **Code**: `entities/units/ratio_unit.rs` (`RatioUnitSimpleHandler`).

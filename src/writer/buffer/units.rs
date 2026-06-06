@@ -154,12 +154,12 @@ fn emit_named_unit_plain(
     named: NamedUnit,
     target_id: u64,
 ) -> Result<u64, WriteError> {
-    use crate::entities::ComplexEntityHandler;
     use crate::entities::units::length_unit::LengthUnitHandler;
     use crate::entities::units::mass_unit::MassUnitHandler;
     use crate::entities::units::plane_angle_unit::PlaneAngleUnitHandler;
-    use crate::entities::units::ratio_unit::RatioUnitHandler;
+    use crate::entities::units::ratio_unit::{RatioUnitHandler, RatioUnitSimpleHandler};
     use crate::entities::units::solid_angle_unit::SolidAngleUnitHandler;
+    use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
     let dim_exp_step = |de: Option<crate::ir::DimensionalExponentsId>| {
         de.map_or(0, |id| buf.dimensional_exponents_step_ids[id.0 as usize])
     };
@@ -176,7 +176,14 @@ fn emit_named_unit_plain(
         NamedUnit::Mass(f) => {
             MassUnitHandler::write(buf, (f.unit, target_id, dim_exp_step(f.dim_exp)))
         }
-        NamedUnit::Ratio(f) => RatioUnitHandler::write(buf, (target_id, dim_exp_step(f.dim_exp))),
+        // Reproduce the source form: complex `(NAMED_UNIT()RATIO_UNIT())` vs
+        // the standalone simple `RATIO_UNIT(dimensions)` entity.
+        NamedUnit::Ratio(f) if f.complex => {
+            RatioUnitHandler::write(buf, (target_id, dim_exp_step(f.dim_exp)))
+        }
+        NamedUnit::Ratio(f) => {
+            RatioUnitSimpleHandler::write(buf, (target_id, dim_exp_step(f.dim_exp)))
+        }
     }
 }
 
