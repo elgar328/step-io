@@ -52,6 +52,19 @@ impl SimpleEntityHandler for StyledItemHandler {
         }
 
         let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
+            // If the target was dropped as a dangling-reference cascade (its
+            // geometry transitively required an undefined entity), drop this
+            // STYLED_ITEM as the same normalization rather than a defect — the
+            // resolver returns `None` (not a `MissingReference`), so the
+            // dispatcher's general rule cannot see it. [NS-dangling-reference-drop]
+            if ctx.nonstandard_dropped_refs.contains(&item_ref) {
+                ctx.record_nonstandard(
+                    "STYLED_ITEM".to_string(),
+                    "dropped (dangling/cascade reference)",
+                );
+                ctx.nonstandard_dropped_refs.insert(entity_id);
+                return Ok(());
+            }
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                 entity_id,
                 detail: format!(

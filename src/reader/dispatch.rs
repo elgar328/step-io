@@ -315,18 +315,49 @@ impl ReaderContext {
                 },
             ) if name == entry.name => {
                 if let Err(e) = read(self, id, attributes, graph) {
-                    self.warnings.push(e);
+                    self.record_drop_or_warn(entry, id, e, graph);
                 }
             }
             (ReadKind::Complex { cases, read }, RawEntity::Complex { parts, .. })
                 if crate::reader::matches_any_case(parts, cases) =>
             {
                 if let Err(e) = read(self, id, parts, graph) {
-                    self.warnings.push(e);
+                    self.record_drop_or_warn(entry, id, e, graph);
                 }
             }
             _ => {}
         }
+    }
+
+    /// Classify a handler's read error: a `MissingReference` to an id the file
+    /// never defines (dangling), or to an entity already dropped as a dangling
+    /// cascade, is malformed *input* — not a step-io coverage gap. Record it as
+    /// a `NonStandardInput` normalization (LOSS-exempt) and seed
+    /// `nonstandard_dropped_refs` so dependents cascade the same way. Every
+    /// other error stays a defect. Gated to Simple handlers: `entry.name` is the
+    /// exact STEP type name there, whereas a complex handler's registered name
+    /// may not match the part-name a round-trip checker keys on.
+    /// See `reader::nonstandard` (`NS-dangling-reference-drop`).
+    fn record_drop_or_warn(
+        &mut self,
+        entry: &EntityHandlerEntry,
+        id: u64,
+        e: crate::ir::error::ConvertError,
+        graph: &EntityGraph,
+    ) {
+        if matches!(entry.kind, ReadKind::Simple { .. })
+            && let crate::ir::error::ConvertError::MissingReference { to, .. } = &e
+            && (graph.get(*to).is_none() || self.nonstandard_dropped_refs.contains(to))
+        {
+            // [NS-dangling-reference-drop]
+            self.record_nonstandard(
+                entry.name.to_string(),
+                "dropped (dangling/cascade reference)",
+            );
+            self.nonstandard_dropped_refs.insert(id);
+            return;
+        }
+        self.warnings.push(e);
     }
 
     /// Warn (once per distinct part-set per file) that a complex instance's

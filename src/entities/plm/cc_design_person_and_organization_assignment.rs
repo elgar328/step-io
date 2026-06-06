@@ -39,15 +39,15 @@ impl SimpleEntityHandler for CcDesignPersonAndOrganizationAssignmentHandler {
         let role_ref = read_entity_ref(attrs, 1, entity_id, "role")?;
         let item_refs = read_entity_ref_list(attrs, 2, entity_id, "items")?;
         let Some(&assigned_person_and_organization) = ctx.plm_p_and_o_id_map.get(&po_ref) else {
-            // [NS-dangling-person-org-cascade] the assigned P&O was dropped as a
-            // dangling-ref normalization (NS-dangling-person-org) → drop this
-            // assignment too. See reader::nonstandard.
-            if ctx.nonstd_person_org_refs.contains(&po_ref) {
-                ctx.warnings.push(ConvertError::NonStandardInput {
-                    field: "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT".into(),
-                    count: 1,
-                    normalized_to: "dropped (references non-standard PERSON_AND_ORGANIZATION)"
-                        .into(),
+            // The assigned P&O was dropped as a dangling-reference cascade →
+            // surface a MissingReference so the dispatcher reclassifies this
+            // assignment the same way (NS-dangling-reference-drop). Otherwise
+            // the ref is defined-but-unmodelled → silent skip.
+            if ctx.nonstandard_dropped_refs.contains(&po_ref) {
+                return Err(ConvertError::MissingReference {
+                    from: entity_id,
+                    to: po_ref,
+                    field_name: "assigned_person_and_organization",
                 });
             }
             return Ok(());

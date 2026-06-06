@@ -34,11 +34,18 @@ impl SimpleEntityHandler for EdgeCurveHandler {
         let start_ref = read_entity_ref(attrs, 1, entity_id, "edge_start")?;
         let end_ref = read_entity_ref(attrs, 2, entity_id, "edge_end")?;
         let curve_ref = read_entity_ref(attrs, 3, entity_id, "edge_geometry")?;
-        let same_sense = read_bool(attrs, 4, entity_id, "same_sense")?;
-
+        // Resolve the refs before reading `same_sense`. A few ABC-dataset
+        // exporters emit a malformed edge with `edge_geometry = #0` (undefined
+        // in the file) AND an empty `same_sense` slot. Resolving first makes the
+        // dangling `edge_geometry` surface as a `MissingReference`, so the
+        // dispatcher drops the EDGE_CURVE as a dangling-reference normalization
+        // (NS-dangling-reference-drop) instead of the empty `same_sense` raising
+        // an attribute defect that masks the real cause. Valid edges are
+        // unaffected (both reads are side-effect-free; only one error survives).
         let start = ctx.resolve_vertex(entity_id, start_ref, "edge_start")?;
         let end = ctx.resolve_vertex(entity_id, end_ref, "edge_end")?;
         let curve = ctx.resolve_curve(entity_id, curve_ref, "edge_geometry")?;
+        let same_sense = read_bool(attrs, 4, entity_id, "same_sense")?;
         // If edge_geometry referenced a SURFACE_CURVE / SEAM_CURVE, its
         // wrapper was captured by the `SURFACE_CURVE` / `SEAM_CURVE` handler keyed by that wrapper id. Direct
         // 3D-curve refs return None.

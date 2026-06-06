@@ -30,16 +30,15 @@ impl SimpleEntityHandler for ApprovalPersonOrganizationHandler {
         let approval_ref = read_entity_ref(attrs, 1, entity_id, "authorized_approval")?;
         let role_ref = read_entity_ref(attrs, 2, entity_id, "role")?;
         let Some(&po_id) = ctx.plm_p_and_o_id_map.get(&po_ref) else {
-            // [NS-dangling-person-org-cascade] the P&O was dropped as a
-            // dangling-ref normalization (NS-dangling-person-org) → drop this
-            // approval too; otherwise it is an unsupported SELECT variant
-            // (direct PERSON / ORGANIZATION). See reader::nonstandard.
-            if ctx.nonstd_person_org_refs.contains(&po_ref) {
-                ctx.warnings.push(ConvertError::NonStandardInput {
-                    field: "APPROVAL_PERSON_ORGANIZATION".into(),
-                    count: 1,
-                    normalized_to: "dropped (references non-standard PERSON_AND_ORGANIZATION)"
-                        .into(),
+            // The P&O was dropped as a dangling-reference cascade → surface a
+            // MissingReference so the dispatcher reclassifies this approval the
+            // same way (NS-dangling-reference-drop). Otherwise it is an
+            // unsupported SELECT variant (direct PERSON / ORGANIZATION) → silent.
+            if ctx.nonstandard_dropped_refs.contains(&po_ref) {
+                return Err(ConvertError::MissingReference {
+                    from: entity_id,
+                    to: po_ref,
+                    field_name: "person_organization",
                 });
             }
             return Ok(());

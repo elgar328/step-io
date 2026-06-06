@@ -357,14 +357,15 @@ pub struct ReaderContext {
     /// `PRODUCT_CATEGORY_RELATIONSHIP` whose `sub_category` points here is
     /// dropped as a normalization (relates a non-standard empty category).
     pub(crate) empty_prrpc_refs: HashSet<u64>,
-    /// STEP ids of `PERSON_AND_ORGANIZATION` entities dropped because a required
-    /// reference (`the_person` / `the_organization`) was dangling — points to no
-    /// defined entity (e.g. the `#18446744073709551615` sentinel some
-    /// anonymizers emit for a scrubbed person). A
-    /// `CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT` / `APPROVAL_PERSON_ORGANIZATION`
-    /// whose assigned person-and-organization points here drops as a
-    /// normalization too.
-    pub(crate) nonstd_person_org_refs: HashSet<u64>,
+    /// STEP ids of entities dropped (by a Simple handler) because a required
+    /// reference was *dangling* — it points to an id the file never defines
+    /// (e.g. `#0`, or the `#18446744073709551615` sentinel some anonymizers
+    /// emit for a scrubbed person). Such a drop is malformed *input*, not a
+    /// step-io coverage gap, so the dispatcher records it as a `NonStandardInput`
+    /// normalization rather than a `MissingReference` defect, and seeds this set
+    /// so anything transitively requiring the dropped entity cascades the same
+    /// way. See `reader::nonstandard` (`NS-dangling-reference-drop`).
+    pub(crate) nonstandard_dropped_refs: HashSet<u64>,
     pub(crate) product_arena_map: HashMap<u64, ProductId>,
     pub(crate) formation_to_product: HashMap<u64, u64>,
     /// `PRODUCT_DEFINITION_FORMATION` arena (carrier enum), `mem::take`-n into

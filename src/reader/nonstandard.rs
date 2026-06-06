@@ -121,18 +121,30 @@
 //! - **Code**: `entities/assembly_product/product_related_product_category.rs`.
 //! - **Fixtures**: CATIA / Autodesk (3 files).
 //!
-//! ### NS-dangling-person-org
-//! - **Source**: anonymizing tools / grabcad (scrub a person, leaving a
-//!   `#18446744073709551615` (u64::MAX) sentinel undefined in the file).
-//! - **Schema rule broken**: required `the_person` / `the_organization`
-//!   reference is dangling (points to no defined entity).
-//! - **Acceptance**: when the ref is genuinely dangling (vs. merely an
-//!   unmodelled but defined PERSON/ORGANIZATION, which stays a silent drop),
-//!   drop as a normalization and record `nonstd_person_org_refs` so
-//!   assignments / approvals cascade (see `NS-dangling-person-org-cascade`).
-//! - **Writer symmetry**: absent on re-read.
-//! - **Code**: `entities/plm/person_and_organization.rs`.
-//! - **Fixtures**: grabcad (2 files).
+//! ### NS-dangling-reference-drop
+//! - **Source**: malformed exports — ABC dataset (an `EDGE_CURVE` with
+//!   `edge_geometry = #0`, undefined), anonymizing tools / grabcad (a scrubbed
+//!   person leaves the `#18446744073709551615` (u64::MAX) sentinel), etc.
+//! - **Schema rule broken**: a required reference *dangles* — it points to an
+//!   id the file never defines.
+//! - **Acceptance**: handled generically in `reader/dispatch.rs`
+//!   (`record_drop_or_warn`): when a Simple handler returns a `MissingReference`
+//!   whose target is dangling (`graph.get(to).is_none()`) the drop is malformed
+//!   *input*, not a step-io coverage gap — record it as a `NonStandardInput`
+//!   normalization and seed `nonstandard_dropped_refs` so anything transitively
+//!   requiring it cascades the same way (its own `MissingReference` to a seeded
+//!   id is reclassified identically). A ref that *is* defined but unmodelled
+//!   (`graph.get` is `Some`, not seeded) stays a defect — that is a real gap.
+//!   Cascade propagates only through `MissingReference`-shaped drops; the one
+//!   `Option`-returning link (`STYLED_ITEM`) checks the set explicitly.
+//! - **Writer symmetry**: absent on re-read (the entity built nothing).
+//! - **Code**: `reader/dispatch.rs` (`record_drop_or_warn`); seed-surfacing in
+//!   `entities/topology/edge_curve.rs` (resolve before `same_sense`),
+//!   `entities/plm/person_and_organization.rs` (dangling person/org → Err),
+//!   `entities/plm/approval_person_organization.rs`,
+//!   `entities/plm/cc_design_person_and_organization_assignment.rs`,
+//!   `entities/visualization/styled_item.rs` (Option-path set check).
+//! - **Fixtures**: abc (2 files), grabcad person/org (2 files).
 //!
 //! # ③ Cascade cases (parent normalized → child drops with it)
 //!
@@ -144,16 +156,20 @@
 //! - **Writer symmetry**: absent on re-read.
 //! - **Code**: `entities/assembly_product/product_category_relationship.rs`.
 //!
-//! ### NS-dangling-person-org-cascade
-//! - **Source / rule**: parent of `NS-dangling-person-org`.
-//! - **Acceptance**: an `APPROVAL_PERSON_ORGANIZATION` or
-//!   `CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT` referencing a dropped
-//!   non-standard P&O (`nonstd_person_org_refs`) drops as a normalization too.
-//!   (A reference to a P&O dropped for *other* reasons stays a silent drop.)
+//! ### NS-dangling-reference-orphan
+//! - **Source / rule**: a refinement of `NS-dangling-reference-drop` for
+//!   `EDGE_LOOP`. Unlike faces / shells / solids (emitted from flat arenas, so a
+//!   dropped container does not orphan its built members), an `ORIENTED_EDGE` is
+//!   emitted *only* via its `EDGE_LOOP`. When a loop drops because one member is
+//!   a dangling-reference cascade, its other (successfully resolved) members are
+//!   good edges that now emit nowhere — they orphan.
+//! - **Acceptance**: `EDGE_LOOP` resolves all members; if any is a cascade drop
+//!   (and none is a genuine miss), it records each resolved member as a dropped
+//!   `ORIENTED_EDGE` (so a round-trip checker subtracts them) and returns a
+//!   `MissingReference` to the cascade member so the dispatcher reclassifies the
+//!   loop itself. A genuine missing member stays a defect (no orphan record).
 //! - **Writer symmetry**: absent on re-read.
-//! - **Code**: `entities/plm/approval_person_organization.rs`,
-//!   `entities/plm/cc_design_person_and_organization_assignment.rs` (two sites,
-//!   one slug).
+//! - **Code**: `entities/topology/edge_loop.rs`.
 //!
 //! # ④ Post-pass cases (recovered after the arena is fully built)
 //!

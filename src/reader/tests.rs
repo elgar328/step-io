@@ -391,7 +391,11 @@ fn convert_circle() {
 // --- Error cases ---
 
 #[test]
-fn missing_reference_produces_warning() {
+fn dangling_reference_drops_as_normalization() {
+    // `#99` is never defined in the file (dangling) → malformed input, not a
+    // step-io coverage gap. The dispatcher reclassifies the MissingReference as
+    // a `NonStandardInput` "dropped" normalization (NS-dangling-reference-drop),
+    // not a defect. The dropped LINE leaves no curve.
     let result = convert_source(&minimal_step(
         "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
          #2 = LINE('',#1,#99);",
@@ -399,9 +403,80 @@ fn missing_reference_produces_warning() {
     assert_eq!(result.warnings.len(), 1);
     assert!(matches!(
         &result.warnings[0],
+        ConvertError::NonStandardInput { field, normalized_to, .. }
+            if field == "LINE" && normalized_to.starts_with("dropped")
+    ));
+    assert_eq!(result.model.geometry.curves.len(), 0);
+}
+
+#[test]
+fn dangling_edge_geometry_cascades_through_loop_with_orphan_record() {
+    // #11 has a dangling `edge_geometry = #0`. It drops as a dangling-reference
+    // normalization, cascading to the ORIENTED_EDGE #21 that wraps it and the
+    // EDGE_LOOP #30 that contains it. #20 wraps the *good* edge #10 — it builds,
+    // but emits only via the dropped loop, so it orphans and is recorded as a
+    // dropped ORIENTED_EDGE (NS-dangling-reference-orphan). No defects.
+    let result = convert_source(&minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = CARTESIAN_POINT('',(1.,0.,0.));\n\
+         #3 = DIRECTION('',(1.,0.,0.));\n\
+         #4 = VECTOR('',#3,1.);\n\
+         #5 = LINE('',#1,#4);\n\
+         #6 = VERTEX_POINT('',#1);\n\
+         #7 = VERTEX_POINT('',#2);\n\
+         #10 = EDGE_CURVE('',#6,#7,#5,.T.);\n\
+         #11 = EDGE_CURVE('',#7,#6,#0,);\n\
+         #20 = ORIENTED_EDGE('',*,*,#10,.T.);\n\
+         #21 = ORIENTED_EDGE('',*,*,#11,.T.);\n\
+         #30 = EDGE_LOOP('',(#20,#21));",
+    ));
+
+    // No defects — every drop is a dangling-reference normalization.
+    assert!(
+        result
+            .warnings
+            .iter()
+            .all(|w| matches!(w, ConvertError::NonStandardInput { .. })),
+        "expected only NonStandardInput, got {:#?}",
+        result.warnings,
+    );
+    let dropped = |ty: &str| -> usize {
+        result
+            .warnings
+            .iter()
+            .filter_map(|w| match w {
+                ConvertError::NonStandardInput {
+                    field,
+                    count,
+                    normalized_to,
+                } if field == ty && normalized_to.starts_with("dropped") => Some(*count),
+                _ => None,
+            })
+            .sum()
+    };
+    assert_eq!(dropped("EDGE_CURVE"), 1, "the dangling #11");
+    assert_eq!(dropped("ORIENTED_EDGE"), 2, "cascade #21 + orphan #20");
+    assert_eq!(dropped("EDGE_LOOP"), 1, "the poisoned loop #30");
+    // The good edge #10 still built; the loop did not.
+    assert_eq!(result.model.topology.edges.len(), 1);
+}
+
+#[test]
+fn defined_but_unmodelled_reference_stays_defect() {
+    // `#1` IS defined (a CARTESIAN_POINT) but is the wrong kind for LINE.dir —
+    // step-io fails to resolve it as a direction. The ref is not dangling
+    // (`graph.get` is Some), so this is a genuine gap and stays a
+    // `MissingReference` defect, NOT a normalization.
+    let result = convert_source(&minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = LINE('',#1,#1);",
+    ));
+    assert_eq!(result.warnings.len(), 1);
+    assert!(matches!(
+        &result.warnings[0],
         ConvertError::MissingReference {
             from: 2,
-            to: 99,
+            to: 1,
             field_name: "dir",
         }
     ));

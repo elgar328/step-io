@@ -29,20 +29,26 @@ impl SimpleEntityHandler for PersonAndOrganizationHandler {
         let person = ctx.plm_person_id_map.get(&person_ref).copied();
         let org = ctx.plm_organization_id_map.get(&org_ref).copied();
         let (Some(the_person), Some(the_organization)) = (person, org) else {
-            // [NS-dangling-person-org] anonymizers / grabcad: a required person /
-            // organization ref dangles (e.g. the #18446744073709551615 sentinel
-            // a scrubbed person leaves, undefined in the file) → drop as a
-            // normalization and record the id so assignments / approvals cascade
-            // (NS-dangling-person-org-cascade). A ref that *is* defined but
-            // unmodelled is a separate gap (silent drop). See reader::nonstandard.
-            if graph.get(person_ref).is_none() || graph.get(org_ref).is_none() {
-                ctx.warnings.push(ConvertError::NonStandardInput {
-                    field: "PERSON_AND_ORGANIZATION".into(),
-                    count: 1,
-                    normalized_to: "dropped (dangling person/organization reference, non-standard)"
-                        .into(),
+            // anonymizers / grabcad: a required person / organization ref
+            // dangles (e.g. the #18446744073709551615 sentinel a scrubbed person
+            // leaves, undefined in the file). Surface it as a MissingReference
+            // so the dispatcher drops this as a dangling-reference normalization
+            // and cascades to dependent approvals / assignments
+            // (NS-dangling-reference-drop). A ref that *is* defined but
+            // unmodelled is a separate gap (silent skip).
+            if graph.get(person_ref).is_none() {
+                return Err(ConvertError::MissingReference {
+                    from: entity_id,
+                    to: person_ref,
+                    field_name: "the_person",
                 });
-                ctx.nonstd_person_org_refs.insert(entity_id);
+            }
+            if graph.get(org_ref).is_none() {
+                return Err(ConvertError::MissingReference {
+                    from: entity_id,
+                    to: org_ref,
+                    field_name: "the_organization",
+                });
             }
             return Ok(());
         };

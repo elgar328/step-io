@@ -33,10 +33,44 @@ impl SimpleEntityHandler for EdgeLoopHandler {
         let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
         let edge_refs = read_entity_ref_list(attrs, 1, entity_id, "edge_list")?;
 
+        // Resolve every member, classifying each: resolved (good), a
+        // dangling-reference cascade drop (in `nonstandard_dropped_refs`), or a
+        // genuine missing ref. A genuine miss stays a defect. If a member is a
+        // cascade drop (and no genuine miss), the whole loop drops — but its
+        // *resolved* members are good edges that emit only via this loop, so
+        // they orphan. Record those orphans, then return a MissingReference to
+        // the cascade member so the dispatcher reclassifies the loop and seeds
+        // it. [NS-dangling-reference-orphan]
         let mut edges = Vec::with_capacity(edge_refs.len());
+        let mut resolved_members = 0usize;
+        let mut cascade_member: Option<u64> = None;
         for &r in &edge_refs {
-            let oe = ctx.resolve_oriented_edge(entity_id, r, "edge_list")?;
-            edges.push(oe);
+            match ctx.resolve_oriented_edge(entity_id, r, "edge_list") {
+                Ok(oe) => {
+                    edges.push(oe);
+                    resolved_members += 1;
+                }
+                Err(e) => {
+                    if ctx.nonstandard_dropped_refs.contains(&r) {
+                        cascade_member = Some(r);
+                    } else {
+                        return Err(e); // genuine missing ref → defect, no orphan record
+                    }
+                }
+            }
+        }
+        if let Some(bad) = cascade_member {
+            for _ in 0..resolved_members {
+                ctx.record_nonstandard(
+                    "ORIENTED_EDGE".to_string(),
+                    "dropped (orphaned by dangling-dropped loop)",
+                );
+            }
+            return Err(ConvertError::MissingReference {
+                from: entity_id,
+                to: bad,
+                field_name: "edge_list",
+            });
         }
         ctx.edge_loop_map.insert(entity_id, edges);
         Ok(())
