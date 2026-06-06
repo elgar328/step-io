@@ -166,6 +166,21 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
                 CharacterizedObject::Itself(_) => {
                     CharacterizedDefinition::CharacterizedObject(co_id)
                 }
+                CharacterizedObject::ModelGeometricView(_) => {
+                    // A PROPERTY_DEFINITION targeting a MODEL_GEOMETRIC_VIEW is
+                    // not modelled as a characterized_definition (no corpus
+                    // instance — MGV is a leaf). Surface and skip rather than
+                    // silently mis-resolve.
+                    ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                        entity_id,
+                        detail: format!(
+                            "PROPERTY_DEFINITION target #{target_ref} resolves to a \
+                             MODEL_GEOMETRIC_VIEW, which is not a modelled \
+                             characterized_definition — skipping"
+                        ),
+                    });
+                    return Ok(());
+                }
             }
         } else if let Some(gt_ref) = resolve_geometric_tolerance_ref(ctx, target_ref) {
             // `geometric_tolerance` member (Plain or WithDatumReference complex

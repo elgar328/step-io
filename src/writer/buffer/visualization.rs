@@ -91,6 +91,7 @@ impl WriteBuffer<'_> {
                     && matches!(
                         obj,
                         CharacterizedObject::CharacterizedItemWithinRepresentation(_)
+                            | CharacterizedObject::ModelGeometricView(_)
                     )
             })
             .map(|(id, _)| id)
@@ -172,6 +173,27 @@ impl WriteBuffer<'_> {
                         "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
                         vec![
                             Attribute::String(ciwr.inherited.name),
+                            desc_attr,
+                            Attribute::EntityRef(item_step),
+                            Attribute::EntityRef(rep_step),
+                        ],
+                    );
+                }
+                CharacterizedObject::ModelGeometricView(mgv) => {
+                    // Emit under the reserved id (forward-ref by any PD that
+                    // targeted this MGV). camera/rep step caches are now filled.
+                    let reserved = self.characterized_object_step_ids[id.0 as usize];
+                    let item_step = self.viz_camera_model_step_ids[mgv.item.0 as usize];
+                    let rep_step = self.representation_step_ids[mgv.rep.0 as usize];
+                    let desc_attr = match mgv.inherited.description {
+                        Some(d) => Attribute::String(d),
+                        None => Attribute::Unset,
+                    };
+                    self.push_simple_with_id(
+                        reserved,
+                        "MODEL_GEOMETRIC_VIEW",
+                        vec![
+                            Attribute::String(mgv.inherited.name),
                             desc_attr,
                             Attribute::EntityRef(item_step),
                             Attribute::EntityRef(rep_step),

@@ -10,13 +10,14 @@ use crate::entities::visualization::styled_item::resolve_representation_item_ref
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::PmiPool;
 use crate::ir::attr::{
-    check_count, read_bool, read_entity_ref, read_entity_ref_list, read_enum, read_string_or_unset,
+    check_count, read_bool, read_entity_ref, read_entity_ref_list, read_enum, read_real,
+    read_string_or_unset,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::pmi::{
     AngleSelection, AngularLocationData, AnnotationCurveOccurrence, AnnotationOccurrence,
-    AnnotationOccurrenceAssociativity, AnnotationOccurrenceRef, AnnotationPlane,
-    AnnotationSymbolOccurrence, AnnotationTextOccurrence, Datum, DatumFeature,
+    AnnotationOccurrenceAssociativity, AnnotationOccurrenceRef, AnnotationPlaceholderOccurrence,
+    AnnotationPlane, AnnotationSymbolOccurrence, AnnotationTextOccurrence, Datum, DatumFeature,
     DimensionalCharacteristic, DimensionalLocation, DimensionalLocationData, DimensionalSize,
     DimensionalSizeKind, DraughtingAnnotationOccurrence, DraughtingCallout, DraughtingCalloutData,
     DraughtingCalloutElement, DraughtingCalloutRelationship, DraughtingModelIdentifiedItem,
@@ -490,6 +491,80 @@ impl SimpleEntityHandler for DraughtingAnnotationOccurrenceHandler {
                 Attribute::String(dao.name),
                 Attribute::List(style_refs),
                 Attribute::EntityRef(item_id),
+            ],
+        ))
+    }
+}
+
+pub(crate) struct AnnotationPlaceholderOccurrenceHandler;
+
+/// `ANNOTATION_PLACEHOLDER_OCCURRENCE(name, styles, item, role, line_spacing)`
+/// — an `annotation_occurrence` subtype reserving a placeholder for a PMI
+/// annotation. Mirrors [`DraughtingAnnotationOccurrenceHandler`] for the shared
+/// `(name, styles, item)` body, plus the `role` enum token and the
+/// `line_spacing` measure. `item` resolves through `resolve_representation_item_ref`
+/// (a `GEOMETRIC_SET`); unresolved drops the occurrence.
+#[step_entity(name = "ANNOTATION_PLACEHOLDER_OCCURRENCE")]
+impl SimpleEntityHandler for AnnotationPlaceholderOccurrenceHandler {
+    type WriteInput = AnnotationPlaceholderOccurrence;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 5, entity_id, "ANNOTATION_PLACEHOLDER_OCCURRENCE")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
+        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
+        let role = read_enum(attrs, 3, entity_id, "role")?.to_owned();
+        let line_spacing = read_real(attrs, 4, entity_id, "line_spacing")?;
+
+        let mut styles = Vec::with_capacity(style_refs.len());
+        for r in style_refs {
+            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+                styles.push(psa_id);
+            }
+        }
+        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
+            return Ok(());
+        };
+
+        let id = ctx
+            .pmi
+            .get_or_insert_with(PmiPool::default)
+            .annotation_occurrences
+            .push(AnnotationOccurrence::AnnotationPlaceholderOccurrence(
+                AnnotationPlaceholderOccurrence {
+                    name,
+                    styles,
+                    item,
+                    role,
+                    line_spacing,
+                },
+            ));
+        ctx.annotation_occurrence_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        apo: AnnotationPlaceholderOccurrence,
+    ) -> Result<u64, WriteError> {
+        let item_id = buf.emit_representation_item_ref(apo.item)?;
+        let mut style_refs = Vec::with_capacity(apo.styles.len());
+        for psa_id in apo.styles {
+            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+        }
+        Ok(buf.push_simple(
+            "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+            vec![
+                Attribute::String(apo.name),
+                Attribute::List(style_refs),
+                Attribute::EntityRef(item_id),
+                Attribute::Enum(apo.role),
+                Attribute::Real(apo.line_spacing),
             ],
         ))
     }
@@ -3548,6 +3623,70 @@ impl ComplexEntityHandler for CircularRunoutToleranceComplexHandler {
     }
 }
 
+/// Read the shared 5-attribute `draughting_model_item_association` body
+/// (`name, description, definition, used_representation, identified_item`),
+/// returning `annotation_placeholder: None`. Shared by the plain DMIA handler
+/// and the `_WITH_PLACEHOLDER` subtype handler (which overrides the placeholder).
+/// Returns `Ok(None)` on any unresolved ref (drop, symmetric on re-read).
+fn read_dmia_base(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    attrs: &[Attribute],
+) -> Result<Option<DraughtingModelItemAssociation>, ConvertError> {
+    let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let description = match &attrs[1] {
+        Attribute::Unset => None,
+        Attribute::String(s) => Some(s.clone()),
+        _ => return Ok(None),
+    };
+    let def_ref = read_entity_ref(attrs, 2, entity_id, "definition")?;
+    let definition = if let Some(&id) = ctx.repr_id_map.get(&def_ref) {
+        DraughtingModelItemDefinition::Representation(id)
+    } else if let Some(&id) = ctx.dimensional_size_id_map.get(&def_ref) {
+        DraughtingModelItemDefinition::DimensionalSize(id)
+    } else if let Some(sa_ref) = resolve_shape_aspect_ref(ctx, def_ref) {
+        // shape_aspect member — any concrete subtype (datum / all_around /
+        // datum_feature / …) via the shared ShapeAspectRef.
+        DraughtingModelItemDefinition::ShapeAspect(sa_ref)
+    } else if let Some(&id) = ctx.property_def_step_to_id.get(&def_ref) {
+        DraughtingModelItemDefinition::PropertyDefinition(id)
+    } else if let Some(&id) = ctx.dimensional_location_id_map.get(&def_ref) {
+        DraughtingModelItemDefinition::DimensionalLocation(id)
+    } else if let Some(gt_ref) = resolve_geometric_tolerance_ref(ctx, def_ref) {
+        // geometric_tolerance member — Plain or WithDatumReference complex MI.
+        DraughtingModelItemDefinition::GeometricTolerance(gt_ref)
+    } else {
+        ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: format!(
+                "DRAUGHTING_MODEL_ITEM_ASSOCIATION definition #{def_ref} \
+                 resolves to none of the 6 modelled SELECT members — skipping"
+            ),
+        });
+        return Ok(None);
+    };
+    let used_ref = read_entity_ref(attrs, 3, entity_id, "used_representation")?;
+    let Some(&used_representation) = ctx.repr_id_map.get(&used_ref) else {
+        return Ok(None);
+    };
+    let item_ref = read_entity_ref(attrs, 4, entity_id, "identified_item")?;
+    let identified_item = if let Some(&id) = ctx.annotation_occurrence_id_map.get(&item_ref) {
+        DraughtingModelIdentifiedItem::AnnotationOccurrence(id)
+    } else if let Some(&id) = ctx.draughting_callout_id_map.get(&item_ref) {
+        DraughtingModelIdentifiedItem::DraughtingCallout(id)
+    } else {
+        return Ok(None);
+    };
+    Ok(Some(DraughtingModelItemAssociation {
+        name,
+        description,
+        definition,
+        used_representation,
+        identified_item,
+        annotation_placeholder: None,
+    }))
+}
+
 pub(crate) struct DraughtingModelItemAssociationHandler;
 
 #[step_entity(name = "DRAUGHTING_MODEL_ITEM_ASSOCIATION")]
@@ -3561,61 +3700,14 @@ impl SimpleEntityHandler for DraughtingModelItemAssociationHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 5, entity_id, "DRAUGHTING_MODEL_ITEM_ASSOCIATION")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let description = match &attrs[1] {
-            Attribute::Unset => None,
-            Attribute::String(s) => Some(s.clone()),
-            _ => return Ok(()),
-        };
-        let def_ref = read_entity_ref(attrs, 2, entity_id, "definition")?;
-        let definition = if let Some(&id) = ctx.repr_id_map.get(&def_ref) {
-            DraughtingModelItemDefinition::Representation(id)
-        } else if let Some(&id) = ctx.dimensional_size_id_map.get(&def_ref) {
-            DraughtingModelItemDefinition::DimensionalSize(id)
-        } else if let Some(sa_ref) = resolve_shape_aspect_ref(ctx, def_ref) {
-            // shape_aspect member — any concrete subtype (datum / all_around /
-            // datum_feature / …) via the shared ShapeAspectRef.
-            DraughtingModelItemDefinition::ShapeAspect(sa_ref)
-        } else if let Some(&id) = ctx.property_def_step_to_id.get(&def_ref) {
-            DraughtingModelItemDefinition::PropertyDefinition(id)
-        } else if let Some(&id) = ctx.dimensional_location_id_map.get(&def_ref) {
-            DraughtingModelItemDefinition::DimensionalLocation(id)
-        } else if let Some(gt_ref) = resolve_geometric_tolerance_ref(ctx, def_ref) {
-            // geometric_tolerance member — Plain or WithDatumReference complex MI.
-            DraughtingModelItemDefinition::GeometricTolerance(gt_ref)
-        } else {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!(
-                    "DRAUGHTING_MODEL_ITEM_ASSOCIATION definition #{def_ref} \
-                     resolves to none of the 6 modelled SELECT members — skipping"
-                ),
-            });
-            return Ok(());
-        };
-        let used_ref = read_entity_ref(attrs, 3, entity_id, "used_representation")?;
-        let Some(&used_representation) = ctx.repr_id_map.get(&used_ref) else {
-            return Ok(());
-        };
-        let item_ref = read_entity_ref(attrs, 4, entity_id, "identified_item")?;
-        let identified_item = if let Some(&id) = ctx.annotation_occurrence_id_map.get(&item_ref) {
-            DraughtingModelIdentifiedItem::AnnotationOccurrence(id)
-        } else if let Some(&id) = ctx.draughting_callout_id_map.get(&item_ref) {
-            DraughtingModelIdentifiedItem::DraughtingCallout(id)
-        } else {
+        let Some(dmia) = read_dmia_base(ctx, entity_id, attrs)? else {
             return Ok(());
         };
         let id = ctx
             .pmi
             .get_or_insert_with(PmiPool::default)
             .draughting_model_item_associations
-            .push(DraughtingModelItemAssociation {
-                name,
-                description,
-                definition,
-                used_representation,
-                identified_item,
-            });
+            .push(dmia);
         ctx.dmia_id_map.insert(entity_id, id);
         Ok(())
     }
@@ -3658,15 +3750,73 @@ impl SimpleEntityHandler for DraughtingModelItemAssociationHandler {
             Some(s) => Attribute::String(s),
             None => Attribute::Unset,
         };
-        Ok(buf.push_simple(
-            "DRAUGHTING_MODEL_ITEM_ASSOCIATION",
-            vec![
-                Attribute::String(dmia.name),
-                description_attr,
-                Attribute::EntityRef(def_step),
-                Attribute::EntityRef(used_step),
-                Attribute::EntityRef(item_step),
-            ],
-        ))
+        let mut body = vec![
+            Attribute::String(dmia.name),
+            description_attr,
+            Attribute::EntityRef(def_step),
+            Attribute::EntityRef(used_step),
+            Attribute::EntityRef(item_step),
+        ];
+        // `nested_field`: the `_WITH_PLACEHOLDER` subtype appends the
+        // annotation_placeholder ref and emits under the subtype name.
+        match dmia.annotation_placeholder {
+            Some(ph) => {
+                body.push(Attribute::EntityRef(buf.ao_step_ids[ph.0 as usize]));
+                Ok(buf.push_simple("DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER", body))
+            }
+            None => Ok(buf.push_simple("DRAUGHTING_MODEL_ITEM_ASSOCIATION", body)),
+        }
+    }
+}
+
+pub(crate) struct DraughtingModelItemAssociationWithPlaceholderHandler;
+
+/// `DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER(name, description,
+/// definition, used_representation, identified_item, annotation_placeholder)`
+/// — blueprint `nested_field` subtype of `DRAUGHTING_MODEL_ITEM_ASSOCIATION`
+/// carrying an `ANNOTATION_PLACEHOLDER_OCCURRENCE`. Shares the base body via
+/// [`read_dmia_base`] and the same arena / `dmia_id_map`; the writer is on the
+/// base handler (it branches on `annotation_placeholder`).
+#[step_entity(name = "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER")]
+impl SimpleEntityHandler for DraughtingModelItemAssociationWithPlaceholderHandler {
+    type WriteInput = DraughtingModelItemAssociation;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(
+            attrs,
+            6,
+            entity_id,
+            "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER",
+        )?;
+        let Some(mut dmia) = read_dmia_base(ctx, entity_id, attrs)? else {
+            return Ok(());
+        };
+        let ph_ref = read_entity_ref(attrs, 5, entity_id, "annotation_placeholder")?;
+        let Some(&ph_id) = ctx.annotation_occurrence_id_map.get(&ph_ref) else {
+            return Ok(());
+        };
+        dmia.annotation_placeholder = Some(ph_id);
+        let id = ctx
+            .pmi
+            .get_or_insert_with(PmiPool::default)
+            .draughting_model_item_associations
+            .push(dmia);
+        ctx.dmia_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(
+        buf: &mut WriteBuffer,
+        dmia: DraughtingModelItemAssociation,
+    ) -> Result<u64, WriteError> {
+        // Unused: the arena emit (`emit_dmia`) always routes through the base
+        // handler, which branches on `annotation_placeholder`. Delegate for
+        // trait completeness.
+        DraughtingModelItemAssociationHandler::write(buf, dmia)
     }
 }

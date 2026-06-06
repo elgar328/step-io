@@ -93,6 +93,11 @@ pub struct DraughtingModelItemAssociation {
     /// step-io stores the unified `RepresentationId`.
     pub used_representation: RepresentationId,
     pub identified_item: DraughtingModelIdentifiedItem,
+    /// `DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER.annotation_placeholder`
+    /// — blueprint `nested_field`. `Some` when the source instance is the
+    /// `_WITH_PLACEHOLDER` subtype (the writer emits that type name then), `None`
+    /// for a plain `DRAUGHTING_MODEL_ITEM_ASSOCIATION`.
+    pub annotation_placeholder: Option<AnnotationOccurrenceId>,
 }
 
 /// `draughting_model_item_definition` SELECT — step-io models the six
@@ -539,6 +544,7 @@ pub enum AnnotationOccurrence {
     DraughtingAnnotationOccurrence(DraughtingAnnotationOccurrence),
     TerminatorSymbol(TerminatorSymbol),
     LeaderTerminator(LeaderTerminator),
+    AnnotationPlaceholderOccurrence(AnnotationPlaceholderOccurrence),
 }
 
 /// `ANNOTATION_OCCURRENCE(name, styles, item)` — the plain `styled_item`
@@ -678,6 +684,26 @@ pub struct DraughtingAnnotationOccurrence {
     pub name: String,
     pub styles: Vec<PresentationStyleAssignmentId>,
     pub item: RepresentationItemRef,
+}
+
+/// `ANNOTATION_PLACEHOLDER_OCCURRENCE(name, styles, item, role, line_spacing)`
+/// — an `annotation_occurrence` / `geometric_representation_item` subtype that
+/// reserves a placeholder for a PMI annotation. `item` is narrowed (EXPRESS) to
+/// a `geometric_set`, carried here as the family-uniform [`RepresentationItemRef`]
+/// (resolved through `resolve_representation_item_ref`'s `GEOMETRIC_SET` path).
+/// `role` is the `annotation_placeholder_occurrence_role` enum, kept as its raw
+/// token string for lossless round-trip; `line_spacing` is a
+/// `positive_length_measure`. Unresolved `item` drops the occurrence, symmetric
+/// on re-read.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AnnotationPlaceholderOccurrence {
+    pub name: String,
+    pub styles: Vec<PresentationStyleAssignmentId>,
+    pub item: RepresentationItemRef,
+    /// `annotation_placeholder_occurrence_role` enum token (e.g. `GPS_DATA`).
+    pub role: String,
+    /// `positive_length_measure`.
+    pub line_spacing: f64,
 }
 
 /// `value_qualifier` SELECT — step-io models only the two SELECT members

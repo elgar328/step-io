@@ -482,6 +482,10 @@ pub enum CharacterizedObject {
     /// 561 corpus instances — the other 48 are complex MI parts and are
     /// dropped on read in this phase).
     CharacterizedItemWithinRepresentation(CharacterizedItemWithinRepresentation),
+    /// `MODEL_GEOMETRIC_VIEW` — a `characterized_item_within_representation`
+    /// subtype that narrows `item` to a `camera_model` and `rep` to a
+    /// `draughting_model` (a saved view, e.g. `'Top'` / `'Isometric'`).
+    ModelGeometricView(ModelGeometricView),
 }
 
 /// Carrier body shared by every [`CharacterizedObject`] variant.
@@ -499,6 +503,22 @@ pub struct CharacterizedObjectData {
 pub struct CharacterizedItemWithinRepresentation {
     pub inherited: CharacterizedObjectData,
     pub item: RepresentationItemRef,
+    pub rep: RepresentationId,
+}
+
+/// `MODEL_GEOMETRIC_VIEW(name, description, item, rep)` — SUBTYPE OF
+/// `CHARACTERIZED_ITEM_WITHIN_REPRESENTATION` narrowing `item` to a
+/// `CAMERA_MODEL` and `rep` to a `DRAUGHTING_MODEL`. Pairs a saved camera view
+/// with the draughting model it belongs to. Either ref unresolved drops the
+/// occurrence, symmetric on re-read. A leaf in the corpus (nothing references
+/// it), but registered in `characterized_object_id_map` like the sibling CIWR.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ModelGeometricView {
+    pub inherited: CharacterizedObjectData,
+    /// `item` narrowed to `ref_camera_model` (a `CAMERA_MODEL_D3`).
+    pub item: crate::ir::id::CameraModelId,
+    /// `rep` narrowed to `ref_draughting_model` (stored as the unified
+    /// `RepresentationId`).
     pub rep: RepresentationId,
 }
 

@@ -344,7 +344,8 @@ impl WriteBuffer<'_> {
     /// `tessellated_item_step_ids`).
     pub(in crate::writer::buffer) fn emit_annotation_occurrences(&mut self) {
         use crate::entities::pmi::{
-            AnnotationOccurrenceHandler, AnnotationPlaneHandler, AnnotationSymbolOccurrenceHandler,
+            AnnotationOccurrenceHandler, AnnotationPlaceholderOccurrenceHandler,
+            AnnotationPlaneHandler, AnnotationSymbolOccurrenceHandler,
             AnnotationTextOccurrenceHandler, DraughtingAnnotationOccurrenceHandler,
             LeaderTerminatorHandler, TerminatorSymbolHandler,
             TessellatedAnnotationOccurrenceHandler,
@@ -378,6 +379,9 @@ impl WriteBuffer<'_> {
                 }
                 AnnotationOccurrence::LeaderTerminator(lt) => {
                     LeaderTerminatorHandler::write(self, lt.clone())
+                }
+                AnnotationOccurrence::AnnotationPlaceholderOccurrence(apo) => {
+                    AnnotationPlaceholderOccurrenceHandler::write(self, apo.clone())
                 }
             };
             // Index by AnnotationOccurrenceId.0 — arena order matches enum

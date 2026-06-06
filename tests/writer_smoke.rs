@@ -5336,6 +5336,7 @@ fn dmia_round_trip() {
             definition: DraughtingModelItemDefinition::Representation(def),
             used_representation: used,
             identified_item: DraughtingModelIdentifiedItem::AnnotationOccurrence(ap_id),
+            annotation_placeholder: None,
         });
 
     let text = model.write_to_string().expect("write");
@@ -5433,6 +5434,7 @@ fn dmia_shape_aspect_datum_definition_round_trip() {
             definition: DraughtingModelItemDefinition::ShapeAspect(ShapeAspectRef::Datum(datum)),
             used_representation: used,
             identified_item: DraughtingModelIdentifiedItem::AnnotationOccurrence(ap_id),
+            annotation_placeholder: None,
         });
 
     let text = model.write_to_string().expect("write");
@@ -5532,6 +5534,7 @@ fn dmia_geometric_tolerance_with_datum_reference_round_trip() {
             ),
             used_representation: used,
             identified_item: DraughtingModelIdentifiedItem::AnnotationOccurrence(ap),
+            annotation_placeholder: None,
         });
 
     let text = model.write_to_string().expect("write");
@@ -6149,6 +6152,206 @@ fn ciwr_round_trip() {
     assert_eq!(ciwr.inherited.name, "ciwr");
     assert_eq!(ciwr.inherited.description.as_deref(), Some("d"));
     assert!(matches!(ciwr.item, RepresentationItemRef::Surface(_)));
+}
+
+#[test]
+fn model_geometric_view_round_trip() {
+    // MODEL_GEOMETRIC_VIEW (phase model-geometric-view) — a CIWR subtype
+    // narrowing item -> CAMERA_MODEL, rep -> DRAUGHTING_MODEL.
+    use step_io::ir::shape_rep::{
+        CharacterizedObject, CharacterizedObjectData, ModelGeometricView, PlainRepr, Representation,
+    };
+
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let frame = model.geometry.identity_placement();
+    let pt = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let pb = model
+        .geometry
+        .planar_extents
+        .push(PlanarExtent::PlanarBox(PlanarBox {
+            name: "win".into(),
+            size_in_x: 1.0,
+            size_in_y: 2.0,
+            placement: PlanarBoxPlacement::Placement3d(frame),
+        }));
+    let rep_id = model.representations.push(Representation::Plain(PlainRepr {
+        name: "draughting_model".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(
+            UnitContextId(0),
+        )),
+        frame: None,
+    }));
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let vv = viz.founded_items.push(FoundedItem::ViewVolume(ViewVolume {
+        projection_type: Projection::Central,
+        projection_point: pt,
+        view_plane_distance: 100.0,
+        front_plane_distance: 0.0,
+        front_plane_clipping: false,
+        back_plane_distance: 0.0,
+        back_plane_clipping: false,
+        view_volume_sides_clipping: false,
+        view_window: pb,
+    }));
+    let cam = viz
+        .camera_models
+        .push(CameraModel::CameraModelD3(CameraModelD3 {
+            name: "cam".into(),
+            view_reference_system: frame,
+            perspective_of_volume: vv,
+        }));
+    model
+        .characterized_objects
+        .push(CharacterizedObject::ModelGeometricView(
+            ModelGeometricView {
+                inherited: CharacterizedObjectData {
+                    name: "Top".into(),
+                    description: Some(String::new()),
+                },
+                item: cam,
+                rep: rep_id,
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("MODEL_GEOMETRIC_VIEW("),
+        "expected MODEL_GEOMETRIC_VIEW in output"
+    );
+    let re = reconvert(&text);
+    assert_eq!(re.characterized_objects.len(), 1);
+    let CharacterizedObject::ModelGeometricView(mgv) =
+        re.characterized_objects.iter().next().unwrap()
+    else {
+        panic!("expected ModelGeometricView");
+    };
+    assert_eq!(mgv.inherited.name, "Top");
+    assert_eq!(mgv.rep, rep_id);
+}
+
+#[test]
+fn annotation_placeholder_occurrence_round_trip() {
+    // ANNOTATION_PLACEHOLDER_OCCURRENCE (phase model-geometric-view cluster) —
+    // role enum token + line_spacing measure preserved.
+    use step_io::ir::PmiPool;
+    use step_io::ir::geometry::{Plane3, Surface};
+    use step_io::ir::pmi::{AnnotationOccurrence, AnnotationPlaceholderOccurrence};
+    use step_io::ir::representation_item::RepresentationItemRef;
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let placement = xyz_placement(&mut model);
+    let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
+        position: placement,
+    }));
+    model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_occurrences
+        .push(AnnotationOccurrence::AnnotationPlaceholderOccurrence(
+            AnnotationPlaceholderOccurrence {
+                name: "Note (195)".into(),
+                styles: vec![],
+                item: RepresentationItemRef::Surface(surf),
+                role: "GPS_DATA".into(),
+                line_spacing: 4.889_495_205_134_15,
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    assert!(text.contains(".GPS_DATA."), "role enum token not emitted");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.annotation_occurrences.len(), 1);
+    let AnnotationOccurrence::AnnotationPlaceholderOccurrence(apo) =
+        re_pmi.annotation_occurrences.iter().next().unwrap()
+    else {
+        panic!("expected AnnotationPlaceholderOccurrence");
+    };
+    assert_eq!(apo.name, "Note (195)");
+    assert_eq!(apo.role, "GPS_DATA");
+    assert!((apo.line_spacing - 4.889_495_205_134_15).abs() < 1e-12);
+}
+
+#[test]
+fn dmia_with_placeholder_round_trip() {
+    // DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER (nested_field) —
+    // annotation_placeholder Some -> subtype type name emitted -> re-read Some.
+    use step_io::ir::PmiPool;
+    use step_io::ir::geometry::{Plane3, Surface};
+    use step_io::ir::pmi::{
+        AnnotationOccurrence, AnnotationPlaceholderOccurrence, DraughtingModelIdentifiedItem,
+        DraughtingModelItemAssociation, DraughtingModelItemDefinition,
+    };
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{PlainRepr, Representation};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let ctx_id = model.units.push(ctx);
+    let placement = xyz_placement(&mut model);
+    let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
+        position: placement,
+    }));
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    let ph =
+        pmi.annotation_occurrences
+            .push(AnnotationOccurrence::AnnotationPlaceholderOccurrence(
+                AnnotationPlaceholderOccurrence {
+                    name: "Note (195)".into(),
+                    styles: vec![],
+                    item: RepresentationItemRef::Surface(surf),
+                    role: "GPS_DATA".into(),
+                    line_spacing: 1.5,
+                },
+            ));
+    let used = model.representations.push(Representation::Plain(PlainRepr {
+        name: "draughting_model".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+        frame: None,
+    }));
+    let def = model.representations.push(Representation::Plain(PlainRepr {
+        name: "definition".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+        frame: None,
+    }));
+    model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .draughting_model_item_associations
+        .push(DraughtingModelItemAssociation {
+            name: "PMI link".into(),
+            description: None,
+            definition: DraughtingModelItemDefinition::Representation(def),
+            used_representation: used,
+            identified_item: DraughtingModelIdentifiedItem::AnnotationOccurrence(ph),
+            annotation_placeholder: Some(ph),
+        });
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER("),
+        "subtype type name not emitted"
+    );
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.draughting_model_item_associations.len(), 1);
+    let dmia = re_pmi
+        .draughting_model_item_associations
+        .iter()
+        .next()
+        .unwrap();
+    assert!(
+        dmia.annotation_placeholder.is_some(),
+        "placeholder lost on round-trip"
+    );
 }
 
 #[test]
