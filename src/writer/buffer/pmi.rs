@@ -4,6 +4,9 @@
 //! cached `PRODUCT_DEFINITION_SHAPE` step id populated by the assembly emitter.
 
 use super::WriteBuffer;
+use crate::entities::shape_rep::default_model_geometric_view::{
+    DefaultModelGeometricViewHandler, DefaultModelGeometricViewWriteInput,
+};
 use crate::entities::shape_rep::shape_aspect::{ShapeAspectHandler, ShapeAspectWriteInput};
 use crate::entities::shape_rep::shape_aspect_subtypes::{
     AllAroundShapeAspectHandler, CentreOfSymmetryHandler, CompositeDatumShapeAspectHandler,
@@ -16,6 +19,34 @@ use crate::ir::shape_rep::{CompositeShapeAspectKind, ShapeAspect};
 use crate::writer::WriteError;
 
 impl WriteBuffer<'_> {
+    /// Emit `DEFAULT_MODEL_GEOMETRIC_VIEW`s. A leaf, so no step-id cache. Runs
+    /// after `emit_draughting_models` (its `rep` is a `DraughtingModel`) and
+    /// after the visualization / product passes (its `item` is a camera, its
+    /// `of_shape` a PDS). Resolves `of_shape` via `product_def_shape_ids`.
+    pub(in crate::writer::buffer) fn emit_default_model_geometric_views(
+        &mut self,
+    ) -> Result<(), WriteError> {
+        let views: Vec<_> = self
+            .model
+            .default_model_geometric_views
+            .iter()
+            .cloned()
+            .collect();
+        for view in views {
+            let Some(&of_shape_step) = self.product_def_shape_ids.get(&view.target) else {
+                continue; // product chain absent (reader-symmetric)
+            };
+            DefaultModelGeometricViewHandler::write(
+                self,
+                DefaultModelGeometricViewWriteInput {
+                    view,
+                    of_shape_step,
+                },
+            )?;
+        }
+        Ok(())
+    }
+
     pub(in crate::writer::buffer) fn emit_pmi_if_set(&mut self) {
         // Snapshot to release the &model borrow before per-SA emission
         // (handler.write mutates self via push_simple).

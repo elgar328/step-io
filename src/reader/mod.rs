@@ -634,6 +634,8 @@ pub struct ReaderContext {
         crate::ir::Arena<crate::ir::CompositeGroupShapeAspect>,
     pub(crate) centre_of_symmetries: crate::ir::Arena<crate::ir::CentreOfSymmetry>,
     pub(crate) all_around_shape_aspects: crate::ir::Arena<crate::ir::AllAroundShapeAspect>,
+    pub(crate) default_model_geometric_views:
+        crate::ir::Arena<crate::ir::DefaultModelGeometricView>,
     /// `SHAPE_ASPECT` subtype `#N → …Id` maps (phase shape-aspect-ref).
     /// Populated by the `SHAPE_ASPECT` subtype handlers; consumed by
     /// `resolve_shape_aspect_ref` for `ShapeAspectRef` resolution.
@@ -985,6 +987,7 @@ impl ReaderContext {
                 composite_group_shape_aspects: ctx.composite_group_shape_aspects,
                 centre_of_symmetries: ctx.centre_of_symmetries,
                 all_around_shape_aspects: ctx.all_around_shape_aspects,
+                default_model_geometric_views: ctx.default_model_geometric_views,
                 datum_systems: ctx.datum_systems,
                 tolerance_zones: ctx.tolerance_zones,
                 datum_targets: ctx.datum_targets,

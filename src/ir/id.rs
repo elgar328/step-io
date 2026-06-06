@@ -36,10 +36,10 @@ use super::property::{
 use super::representation_item::RepresentationItem;
 use super::shape_rep::{
     AllAroundShapeAspect, CentreOfSymmetry, CharacterizedObject, CompositeGroupShapeAspect,
-    CompoundRepresentationItem, DatumSystem, DatumTarget, GeometricItemSpecificUsage, MappedItem,
-    NumericRepresentationItem, PlacedDatumTargetFeature, Representation, RepresentationMap,
-    RepresentationRelationship, ShapeAspect, ShapeAspectRelationship, ToleranceZone, UnitContext,
-    UnitlessContext,
+    CompoundRepresentationItem, DatumSystem, DatumTarget, DefaultModelGeometricView,
+    GeometricItemSpecificUsage, MappedItem, NumericRepresentationItem, PlacedDatumTargetFeature,
+    Representation, RepresentationMap, RepresentationRelationship, ShapeAspect,
+    ShapeAspectRelationship, ToleranceZone, UnitContext, UnitlessContext,
 };
 use super::tessellation::{
     ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, TessellatedItem,
@@ -127,6 +127,7 @@ define_id!(ShapeAspectId, ShapeAspect);
 define_id!(CompositeShapeAspectId, CompositeGroupShapeAspect);
 define_id!(DerivedShapeAspectId, CentreOfSymmetry);
 define_id!(ContinuousShapeAspectId, AllAroundShapeAspect);
+define_id!(DefaultModelGeometricViewId, DefaultModelGeometricView);
 
 // datum_system arena — SHAPE_ASPECT subtype (Phase datum-system).
 define_id!(DatumSystemId, DatumSystem);

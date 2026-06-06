@@ -18,6 +18,7 @@ pub mod compound_representation_item;
 pub mod constructive_geometry_representation;
 pub mod datum_system;
 pub mod datum_target;
+pub mod default_model_geometric_view;
 pub mod descriptive_representation_item;
 pub mod draughting_model;
 pub mod gbssr;

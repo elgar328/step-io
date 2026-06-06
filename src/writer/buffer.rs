@@ -937,6 +937,9 @@ impl<'m> WriteBuffer<'m> {
         // SHAPE_REPRESENTATION_WITH_PARAMETERS — delayed emit. After
         // CGR so representation_step_ids keeps arena order.
         self.emit_shape_representation_with_parameters()?;
+        // DEFAULT_MODEL_GEOMETRIC_VIEW — leaf; its `rep` is a DraughtingModel
+        // (stepped above), `item` a camera, `of_shape` a PDS — all now cached.
+        self.emit_default_model_geometric_views()?;
         // CHARACTERIZED_ITEM_WITHIN_REPRESENTATION bodies — deferred here
         // (from before emit_property_definitions_non_pds) so a CIWR resolves
         // its `rep` (DraughtingModel, stepped by emit_draughting_models above)

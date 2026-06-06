@@ -127,13 +127,14 @@ pub use shape_aspect_ref::ShapeAspectRef;
 pub use shape_rep::{
     AdvancedBrepRepr, AllAroundShapeAspect, AngleUnit, CentreOfSymmetry,
     CharacterizedItemWithinRepresentation, CharacterizedObject, CharacterizedObjectData,
-    CompositeGroupShapeAspect, DatumSystem, DatumTarget, DescriptiveItem, DraughtingModel,
-    GeometricItemSpecificUsage, IntegerRepresentationItem, LengthUncertainty, LengthUnit,
-    ManifoldSurfaceRepr, MappedItem, MappedItemData, Mdgpr, NumericRepresentationItem,
-    PlacedDatumTargetFeature, PlainRepr, RealRepresentationItem, Representation,
-    RepresentationContextRef, RepresentationMap, RepresentationMapData, ShapeAspect,
-    ShapeAspectRelationship, ShapeAspectRelationshipKind, ShapeDimensionRepresentation,
-    SolidAngleUnit, ToleranceZone, UnitContext, UnitlessContext, WireframeRepr,
+    CompositeGroupShapeAspect, DatumSystem, DatumTarget, DefaultModelGeometricView,
+    DescriptiveItem, DraughtingModel, GeometricItemSpecificUsage, IntegerRepresentationItem,
+    LengthUncertainty, LengthUnit, ManifoldSurfaceRepr, MappedItem, MappedItemData, Mdgpr,
+    NumericRepresentationItem, PlacedDatumTargetFeature, PlainRepr, RealRepresentationItem,
+    Representation, RepresentationContextRef, RepresentationMap, RepresentationMapData,
+    ShapeAspect, ShapeAspectRelationship, ShapeAspectRelationshipKind,
+    ShapeDimensionRepresentation, SolidAngleUnit, ToleranceZone, UnitContext, UnitlessContext,
+    WireframeRepr,
 };
 pub use tessellation::{
     ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, CoordinatesList, TessellatedCurveSet,

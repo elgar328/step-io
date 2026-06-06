@@ -7,8 +7,8 @@ use super::geometry::{
 use super::id::Placement3dId;
 use super::plm::PlmPool;
 use super::shape_rep::{
-    AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, DatumSystem, ShapeAspect,
-    ToleranceZone, UnitContext,
+    AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, DatumSystem,
+    DefaultModelGeometricView, ShapeAspect, ToleranceZone, UnitContext,
 };
 use super::topology::{Edge, Face, Shell, Solid, Wire};
 use super::units::UnitsPool;
@@ -215,6 +215,9 @@ pub struct StepModel {
     pub centre_of_symmetries: Arena<CentreOfSymmetry>,
     /// `ALL_AROUND_SHAPE_ASPECT` arena — `SHAPE_ASPECT` subtype.
     pub all_around_shape_aspects: Arena<AllAroundShapeAspect>,
+    /// `DEFAULT_MODEL_GEOMETRIC_VIEW` arena — `SHAPE_ASPECT` /
+    /// `MODEL_GEOMETRIC_VIEW` subtype (a saved-view leaf).
+    pub default_model_geometric_views: Arena<DefaultModelGeometricView>,
     /// `DATUM_SYSTEM` arena — `SHAPE_ASPECT` subtype. Phase datum-system.
     pub datum_systems: Arena<DatumSystem>,
     /// `TOLERANCE_ZONE` arena — `SHAPE_ASPECT` subtype. Phase tolerance-zone.

@@ -846,6 +846,29 @@ pub struct AllAroundShapeAspect {
     pub product_definitional: bool,
 }
 
+/// `DEFAULT_MODEL_GEOMETRIC_VIEW` — `SUBTYPE OF (model_geometric_view,
+/// shape_aspect)`, a flat 8-attribute simple entity. A leaf (no entity
+/// references it), so it lives in its own arena like the other `shape_aspect`
+/// subtypes. The `model_geometric_view` half binds a saved view (`item` →
+/// `CAMERA_MODEL`, `rep` → `DRAUGHTING_MODEL`); the `shape_aspect` half binds it
+/// to a product (`of_shape` → `PRODUCT_DEFINITION_SHAPE`, resolved to
+/// `ProductId` like `SHAPE_ASPECT`). `product_definitional` is DERIVE `false`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DefaultModelGeometricView {
+    /// `characterized_object.name` (always `''` per the WHERE rule tying it to
+    /// `shape_aspect.name`).
+    pub co_name: String,
+    pub co_description: String,
+    pub sa_name: String,
+    pub sa_description: String,
+    /// `item` → `CAMERA_MODEL` (a `CAMERA_MODEL_D3`).
+    pub item: crate::ir::id::CameraModelId,
+    /// `rep` → `DRAUGHTING_MODEL`.
+    pub rep: crate::ir::id::RepresentationId,
+    /// `of_shape` resolved to its product (mirrors `ShapeAspect::target`).
+    pub target: ProductId,
+}
+
 /// `DATUM_SYSTEM` — a `SHAPE_ASPECT` subtype carrying an ordered set of
 /// datum references. The first four attrs are the shared `shape_aspect`
 /// body (see [`CompositeGroupShapeAspect`]); `constituents` is the
