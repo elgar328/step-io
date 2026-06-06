@@ -6,7 +6,10 @@
 //! binding a `PROPERTY_DEFINITION` to a `REPRESENTATION`.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
+use crate::ir::attr::{
+    check_count, read_entity_ref, read_entity_ref_list, read_optional_entity_ref,
+    read_string_or_unset,
+};
 use crate::ir::error::ConvertError;
 use crate::ir::property::{Property, PropertyItem, PropertyPool};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
@@ -69,8 +72,20 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
         }
         let representation_name = read_string_or_unset(repr_attrs, 0, repr_ref, "name")?.to_owned();
         let item_refs = read_entity_ref_list(repr_attrs, 1, repr_ref, "items")?;
-        let ctx_ref = read_entity_ref(repr_attrs, 2, repr_ref, "context_of_items")?;
-        let context = ctx.resolve_repr_context(ctx_ref);
+        // [NS-repr-context-unset] c3d: REPRESENTATION.context_of_items is
+        // required by EXPRESS but emitted `$` (Unset) → accept as no context
+        // rather than dropping the whole REPRESENTATION. See reader::nonstandard.
+        let context = if let Some(ctx_ref) =
+            read_optional_entity_ref(repr_attrs, 2, repr_ref, "context_of_items")?
+        {
+            ctx.resolve_repr_context(ctx_ref)
+        } else {
+            ctx.record_nonstandard(
+                "REPRESENTATION.context_of_items (Unset)".into(),
+                "no context",
+            );
+            None
+        };
 
         let items: Vec<PropertyItem> = item_refs
             .into_iter()

@@ -207,3 +207,16 @@
 //! - **Writer symmetry**: emits the standard typed `NULL_STYLE(.NULL.)`.
 //! - **Code**: `entities/visualization/presentation_style_assignment.rs`
 //!   (`parse_psa_styles`).
+//!
+//! ### NS-repr-context-unset
+//! - **Source**: C3D kernel (input-shaft / shaft-238).
+//! - **Schema rule broken**: `representation.context_of_items` is required in
+//!   EXPRESS; the descriptive `REPRESENTATION` bound to a property is emitted
+//!   with `$` (Unset).
+//! - **Acceptance**: accept as no context (the descriptive representation
+//!   carries no geometry context) rather than dropping the whole
+//!   `REPRESENTATION` (and cascading its `PROPERTY_DEFINITION_REPRESENTATION`);
+//!   aggregated via `record_nonstandard`.
+//! - **Writer symmetry**: the descriptive REPRESENTATION is emitted by the PDR
+//!   writer; a `None` context re-emits `$`.
+//! - **Code**: `entities/property/property_definition_representation.rs`.
