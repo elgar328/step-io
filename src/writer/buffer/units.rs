@@ -342,6 +342,7 @@ mod tests {
                 length_uncertainty: self.length_uncertainty,
                 plane_angle_uncertainty: self.plane_angle_uncertainty,
                 solid_angle_uncertainty: self.solid_angle_uncertainty,
+                form: crate::ir::shape_rep::UnitContextForm::Complex,
             };
 
             let mut arena: Arena<UnitContext> = Arena::default();

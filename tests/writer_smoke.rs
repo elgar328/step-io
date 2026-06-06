@@ -62,6 +62,7 @@ fn mm_radian_steradian(model: &mut StepModel) -> UnitContext {
         length_uncertainty: None,
         plane_angle_uncertainty: None,
         solid_angle_uncertainty: None,
+        form: step_io::ir::shape_rep::UnitContextForm::Complex,
     }
 }
 

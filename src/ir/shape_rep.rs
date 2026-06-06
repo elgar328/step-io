@@ -49,6 +49,30 @@ pub struct UnitContext {
     pub plane_angle_uncertainty: Option<LengthUncertainty>,
     /// Optional solid-angle uncertainty. `None` for the typical case.
     pub solid_angle_uncertainty: Option<LengthUncertainty>,
+    /// Which source form this context was read from, so the writer
+    /// reproduces it. See [`UnitContextForm`].
+    pub form: UnitContextForm,
+}
+
+/// Source form of a unit-bearing context.
+///
+/// The geometry contexts use the complex MI
+/// `(GEOMETRIC_REPRESENTATION_CONTEXT(3) … GLOBAL_UNIT_ASSIGNED_CONTEXT(units)
+/// REPRESENTATION_CONTEXT('',''))`. A property's unit context (c3d kernel)
+/// uses the standalone simple `GLOBAL_UNIT_ASSIGNED_CONTEXT(identifier,
+/// context_type, units)` — no geometric / uncertainty parts. Preserving the
+/// `identifier` / `context_type` strings keeps round-trip byte- and
+/// IR-faithful (a complex GRC would distort a non-geometric ratio context).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum UnitContextForm {
+    /// Complex `(GEOMETRIC_REPRESENTATION_CONTEXT … REPRESENTATION_CONTEXT)`.
+    Complex,
+    /// Standalone simple `GLOBAL_UNIT_ASSIGNED_CONTEXT` with its inherited
+    /// `representation_context` strings.
+    Simple {
+        identifier: String,
+        context_type: String,
+    },
 }
 
 impl UnitContext {
