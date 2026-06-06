@@ -9596,3 +9596,54 @@ fn bare_measure_with_unit_round_trips_as_itself() {
         other => panic!("expected Itself carrier, got {other:?}"),
     }
 }
+
+#[test]
+fn bare_named_unit_count_round_trips_as_itself() {
+    // Bare NAMED_UNIT(#dimensions) (dimensionless/count unit) + a COUNT_MEASURE
+    // MEASURE_WITH_UNIT referencing it — the named-unit carrier analogue of
+    // bare MEASURE_WITH_UNIT. Both round-trip.
+    use step_io::ir::units::{MeasureWithUnit, MeasureWithUnitData, NamedUnit, NamedUnitData};
+
+    let mut model = empty_model();
+    let mut pool = UnitsPool::default();
+    let unit = pool
+        .named_units
+        .push(NamedUnit::Itself(NamedUnitData { dimensions: None }));
+    pool.measure_with_units
+        .push(MeasureWithUnit::Itself(MeasureWithUnitData {
+            measure_type: "COUNT_MEASURE".into(),
+            value: 1.0,
+            unit,
+        }));
+    model.units_pool = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    // Bare supertype NAMED_UNIT, not a typed subtype (no MASS_UNIT/SI_UNIT etc.).
+    assert!(
+        text.contains("= NAMED_UNIT("),
+        "expected bare NAMED_UNIT:\n{text}"
+    );
+    assert!(
+        text.contains("COUNT_MEASURE(1."),
+        "expected COUNT_MEASURE MWU"
+    );
+
+    let re = reconvert(&text);
+    let re_pool = re.units_pool.as_ref().expect("units pool round-tripped");
+    assert!(
+        re_pool
+            .named_units
+            .iter()
+            .any(|u| matches!(u, NamedUnit::Itself(_))),
+        "bare NAMED_UNIT should round-trip as Itself"
+    );
+    let mwu = re_pool
+        .measure_with_units
+        .iter()
+        .next()
+        .expect("MWU survived");
+    match mwu {
+        MeasureWithUnit::Itself(d) => assert_eq!(d.measure_type, "COUNT_MEASURE"),
+        other => panic!("expected Itself carrier, got {other:?}"),
+    }
+}

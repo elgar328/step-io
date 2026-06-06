@@ -122,11 +122,25 @@ impl UnitsPool {
 /// `area_unit` / `volume_unit` are deferred (tiny corpus footprint).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum NamedUnit {
+    /// Bare `NAMED_UNIT(#dimensions)` supertype instance (carrier) — a
+    /// dimensionless/count unit (e.g. all-zero `DIMENSIONAL_EXPONENTS`), the
+    /// direct instantiation of the abstract `named_unit`. Blueprint
+    /// `complex_supertype` + carrier (`type=NamedUnitData`, `variant=Itself`),
+    /// analogous to [`MeasureWithUnit::Itself`].
+    Itself(NamedUnitData),
     Length(LengthFlavor),
     PlaneAngle(PlaneAngleFlavor),
     SolidAngle(SolidAngleFlavor),
     Mass(MassFlavor),
     Ratio(RatioFlavor),
+}
+
+/// Carrier body of a bare `NAMED_UNIT` ([`NamedUnit::Itself`]). `dimensions`
+/// is the `DIMENSIONAL_EXPONENTS` ref (`None` → `*` Derived); the unit has no
+/// SI prefix or conversion factor.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub struct NamedUnitData {
+    pub dimensions: Option<super::id::DimensionalExponentsId>,
 }
 
 /// `RATIO_UNIT` flavour — always dimensionless and without a CBU variant in
