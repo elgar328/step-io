@@ -1,14 +1,12 @@
 //! `ID_ATTRIBUTE` handler.
 //!
-//! `(attribute_value, identified_item)` — SELECT target. Coverage: the
-//! round-trip-diffed `shape_aspect` family (plain `shape_aspect` /
-//! `composite_group_shape_aspect` / `centre_of_symmetry` / `all_around` /
-//! `datum` / `datum_feature`, via `resolve_shape_aspect_ref`),
-//! `property_definition`, and the plm-metadata targets (`Group` / `Address` /
-//! `ApplicationContext`). The non-diffed `shape_aspect` subtypes
-//! (`datum_system` / `datum_target` / `placed_datum_target_feature`),
-//! `tolerance_zone`, `datum_reference_compartment`, and other SELECT members
-//! are dropped at read time with a warning.
+//! `(attribute_value, identified_item)` — SELECT target. Coverage: the full
+//! `shape_aspect` family via `resolve_shape_aspect_ref` (plain `shape_aspect`
+//! plus every subtype `ShapeAspectRef` models — `datum*`, `datum_system`,
+//! `datum_target`, `placed_datum_target_feature`, `tolerance_zone`,
+//! `general_datum_reference`/`datum_reference_compartment`), `property_definition`,
+//! and the plm-metadata targets (`Group` / `Address` / `ApplicationContext`).
+//! SELECT members outside that set are dropped at read time with a warning.
 
 use crate::entities::SimpleEntityHandler;
 use crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_ref;
@@ -44,31 +42,13 @@ impl SimpleEntityHandler for IdAttributeHandler {
             read_string_or_unset(attrs, 0, entity_id, "attribute_value")?.to_owned();
         let item_ref = read_entity_ref(attrs, 1, entity_id, "identified_item")?;
 
+        // `identified_item` is a SELECT; its `shape_aspect` member covers every
+        // shape_aspect subtype (plain SHAPE_ASPECT, DATUM*, TOLERANCE_ZONE,
+        // GENERAL_DATUM_REFERENCE, ...), unified through `ShapeAspectRef`. Each
+        // subtype round-trips through its own arena and is verified by the
+        // merkle round-trip gate.
         let identified_item = if let Some(sa_ref) = resolve_shape_aspect_ref(ctx, item_ref) {
-            use crate::ir::ShapeAspectRef as R;
-            match sa_ref {
-                R::ShapeAspect(_)
-                | R::CompositeGroupShapeAspect(_)
-                | R::CentreOfSymmetry(_)
-                | R::AllAroundShapeAspect(_)
-                | R::Datum(_)
-                | R::DatumFeature(_) => IdAttributeItem::ShapeAspect(sa_ref),
-                // datum_system / datum_target / placed_datum_target_feature arenas
-                // are not compared by the round-trip diff, so a writer skip there
-                // would desync id_attributes without surfacing as a target FAIL.
-                // Keep them dropping until the diff covers them.
-                R::DatumSystem(_) | R::DatumTarget(_) | R::PlacedDatumTargetFeature(_) => {
-                    ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                        entity_id,
-                        detail: format!(
-                            "ID_ATTRIBUTE.identified_item #{item_ref} target \
-                             (datum_system / datum_target / placed_datum_target_feature) \
-                             not round-trip-verified — skipping"
-                        ),
-                    });
-                    return Ok(());
-                }
-            }
+            IdAttributeItem::ShapeAspect(sa_ref)
         } else if let Some(&pd_id) = ctx.property_def_step_to_id.get(&item_ref) {
             IdAttributeItem::PropertyDefinition(pd_id)
         } else if let Some(&g_id) = ctx.plm_group_id_map.get(&item_ref) {

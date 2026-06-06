@@ -17,7 +17,7 @@ use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::id::DimensionalLocationId;
 use crate::ir::plm::Document;
-use crate::ir::pmi::DimensionalLocation;
+use crate::ir::pmi::{DimensionalLocation, GeneralDatumReference};
 use crate::ir::property::{
     CharacterizedDefinition, PropertyDefinition, PropertyDefinitionData, PropertyPool,
 };
@@ -60,6 +60,12 @@ fn shape_aspect_ref_target(ctx: &ReaderContext, sa_ref: ShapeAspectRef) -> Optio
         ShapeAspectRef::PlacedDatumTargetFeature(id) => {
             Some(ctx.placed_datum_target_features[id].target)
         }
+        ShapeAspectRef::ToleranceZone(id) => Some(ctx.tolerance_zones[id].target),
+        ShapeAspectRef::GeneralDatumReference(id) => ctx.pmi.as_ref().map(|p| {
+            let (GeneralDatumReference::Compartment(d) | GeneralDatumReference::Element(d)) =
+                &p.general_datum_references[id];
+            d.target
+        }),
     }
 }
 
@@ -167,19 +173,11 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
                     CharacterizedDefinition::CharacterizedObject(co_id)
                 }
                 CharacterizedObject::ModelGeometricView(_) => {
-                    // A PROPERTY_DEFINITION targeting a MODEL_GEOMETRIC_VIEW is
-                    // not modelled as a characterized_definition (no corpus
-                    // instance — MGV is a leaf). Surface and skip rather than
-                    // silently mis-resolve.
-                    ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                        entity_id,
-                        detail: format!(
-                            "PROPERTY_DEFINITION target #{target_ref} resolves to a \
-                             MODEL_GEOMETRIC_VIEW, which is not a modelled \
-                             characterized_definition — skipping"
-                        ),
-                    });
-                    return Ok(());
+                    // MODEL_GEOMETRIC_VIEW is a characterized_item_within_representation
+                    // subtype, so it falls under the `characterized_item` member of
+                    // characterized_definition. The writer emits the (reserved) MGV
+                    // step id via the shared CIWR arm.
+                    CharacterizedDefinition::CharacterizedItemWithinRepresentation(co_id)
                 }
             }
         } else if let Some(gt_ref) = resolve_geometric_tolerance_ref(ctx, target_ref) {

@@ -10,13 +10,14 @@
 //! `GEOMETRIC_TOLERANCE.toleranced_shape_aspect`, ...) holds one
 //! `ShapeAspectRef`. New variants are added additively as real consumers
 //! and fixtures require them — `DATUM` / `DATUM_FEATURE` / `DATUM_SYSTEM` /
-//! `DATUM_TARGET` / `PLACED_DATUM_TARGET_FEATURE` are covered; the
-//! remaining subtypes (e.g. `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`) follow
-//! as their phases land.
+//! `DATUM_TARGET` / `PLACED_DATUM_TARGET_FEATURE` / `TOLERANCE_ZONE` /
+//! `GENERAL_DATUM_REFERENCE` are covered; the remaining subtypes (e.g.
+//! `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`) follow as their phases land.
 
 use super::id::{
     CompositeShapeAspectId, ContinuousShapeAspectId, DatumFeatureId, DatumId, DatumSystemId,
-    DatumTargetId, DerivedShapeAspectId, PlacedDatumTargetFeatureId, ShapeAspectId,
+    DatumTargetId, DerivedShapeAspectId, GeneralDatumReferenceId, PlacedDatumTargetFeatureId,
+    ShapeAspectId, ToleranceZoneId,
 };
 
 /// What a STEP `shape_aspect` reference resolved to in step-io's IR. Each
@@ -41,4 +42,9 @@ pub enum ShapeAspectRef {
     DatumTarget(DatumTargetId),
     /// `PLACED_DATUM_TARGET_FEATURE`.
     PlacedDatumTargetFeature(PlacedDatumTargetFeatureId),
+    /// `TOLERANCE_ZONE` — a `shape_aspect` subtype in its own arena.
+    ToleranceZone(ToleranceZoneId),
+    /// `GENERAL_DATUM_REFERENCE` — a `shape_aspect` subtype; the id covers both
+    /// `DATUM_REFERENCE_COMPARTMENT` and `DATUM_REFERENCE_ELEMENT`.
+    GeneralDatumReference(GeneralDatumReferenceId),
 }

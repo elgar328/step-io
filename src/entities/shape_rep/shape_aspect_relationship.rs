@@ -57,6 +57,12 @@ pub(crate) fn resolve_shape_aspect_ref(
     if let Some(&id) = ctx.placed_datum_target_feature_id_map.get(&item_ref) {
         return Some(ShapeAspectRef::PlacedDatumTargetFeature(id));
     }
+    if let Some(&id) = ctx.tolerance_zone_id_map.get(&item_ref) {
+        return Some(ShapeAspectRef::ToleranceZone(id));
+    }
+    if let Some(&id) = ctx.general_datum_reference_id_map.get(&item_ref) {
+        return Some(ShapeAspectRef::GeneralDatumReference(id));
+    }
     None
 }
 

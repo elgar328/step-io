@@ -4623,6 +4623,87 @@ fn general_datum_reference_round_trip() {
     assert_eq!(d0.target, step_io::ProductId(0));
 }
 
+#[test]
+fn id_attribute_general_datum_reference_round_trip() {
+    // ID_ATTRIBUTE.identified_item -> DATUM_REFERENCE_COMPARTMENT, a
+    // general_datum_reference (a shape_aspect subtype) carried through the
+    // ShapeAspectRef::GeneralDatumReference variant.
+    use step_io::ir::ShapeAspectRef;
+    use step_io::ir::pmi::{
+        Datum, GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData,
+    };
+    use step_io::ir::property::{IdAttribute, IdAttributeItem, PropertyPool};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let mut pmi = PmiPool::default();
+    let datum = pmi.datums.push(Datum {
+        name: String::new(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        identification: "A".into(),
+    });
+    let gdr = pmi
+        .general_datum_references
+        .push(GeneralDatumReference::Compartment(
+            GeneralDatumReferenceData {
+                name: String::new(),
+                description: String::new(),
+                target: part_pid,
+                product_definitional: false,
+                base: GeneralDatumBase::Datum(datum),
+            },
+        ));
+    model.pmi = Some(pmi);
+    model
+        .properties
+        .get_or_insert_with(PropertyPool::default)
+        .id_attributes
+        .push(IdAttribute {
+            attribute_value: "id-gdr".into(),
+            identified_item: IdAttributeItem::ShapeAspect(ShapeAspectRef::GeneralDatumReference(
+                gdr,
+            )),
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let pool = re.properties.as_ref().expect("properties pool survives");
+    assert_eq!(pool.id_attributes.len(), 1);
+    assert!(matches!(
+        pool.id_attributes.iter().next().unwrap().identified_item,
+        IdAttributeItem::ShapeAspect(ShapeAspectRef::GeneralDatumReference(_))
+    ));
+}
+
 /// A `DATUM_REFERENCE_COMPARTMENT` whose `base` is a `COMMON_DATUM_LIST` (an
 /// "A-B" composite datum) round-trips: the two `DATUM_REFERENCE_ELEMENT`s are
 /// emitted first (referenced-before-referrer), and the compartment re-reads
@@ -6439,6 +6520,109 @@ fn property_definition_with_ciwr_target_round_trips() {
     assert!(
         has_ciwr_pd,
         "PROPERTY_DEFINITION with a CIWR definition should round-trip"
+    );
+}
+
+#[test]
+fn property_definition_with_mgv_target_round_trips() {
+    // A PROPERTY_DEFINITION whose `definition` targets a MODEL_GEOMETRIC_VIEW
+    // (a characterized_item_within_representation subtype). It is tagged with
+    // the `characterized_item` member (CharacterizedItemWithinRepresentation)
+    // and emits the reserved MGV step id via the shared CIWR writer arm.
+    use step_io::ir::property::{
+        CharacterizedDefinition, PropertyDefinition, PropertyDefinitionData, PropertyPool,
+    };
+    use step_io::ir::shape_rep::{
+        CharacterizedObject, CharacterizedObjectData, ModelGeometricView, PlainRepr, Representation,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let frame = model.geometry.identity_placement();
+    let pt = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let pb = model
+        .geometry
+        .planar_extents
+        .push(PlanarExtent::PlanarBox(PlanarBox {
+            name: "win".into(),
+            size_in_x: 1.0,
+            size_in_y: 2.0,
+            placement: PlanarBoxPlacement::Placement3d(frame),
+        }));
+    let rep_id = model.representations.push(Representation::Plain(PlainRepr {
+        name: "draughting_model".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(
+            UnitContextId(0),
+        )),
+        frame: None,
+    }));
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let vv = viz.founded_items.push(FoundedItem::ViewVolume(ViewVolume {
+        projection_type: Projection::Central,
+        projection_point: pt,
+        view_plane_distance: 100.0,
+        front_plane_distance: 0.0,
+        front_plane_clipping: false,
+        back_plane_distance: 0.0,
+        back_plane_clipping: false,
+        view_volume_sides_clipping: false,
+        view_window: pb,
+    }));
+    let cam = viz
+        .camera_models
+        .push(CameraModel::CameraModelD3(CameraModelD3 {
+            name: "cam".into(),
+            view_reference_system: frame,
+            perspective_of_volume: vv,
+        }));
+    let co_id = model
+        .characterized_objects
+        .push(CharacterizedObject::ModelGeometricView(
+            ModelGeometricView {
+                inherited: CharacterizedObjectData {
+                    name: "Top".into(),
+                    description: Some(String::new()),
+                },
+                item: cam,
+                rep: rep_id,
+            },
+        ));
+
+    let mut pool = PropertyPool::default();
+    pool.property_definitions
+        .push(PropertyDefinition::Itself(PropertyDefinitionData {
+            name: "pmi validation property".into(),
+            description: String::new(),
+            definition: CharacterizedDefinition::CharacterizedItemWithinRepresentation(co_id),
+        }));
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    assert!(text.contains("MODEL_GEOMETRIC_VIEW("));
+    let re = reconvert(&text);
+    let re_pool = re.properties.as_ref().expect("properties pool survives");
+    assert!(
+        re_pool.property_definitions.iter().any(|pd| matches!(
+            pd,
+            PropertyDefinition::Itself(d)
+                if matches!(
+                    d.definition,
+                    CharacterizedDefinition::CharacterizedItemWithinRepresentation(_)
+                )
+        )),
+        "PROPERTY_DEFINITION targeting an MGV should round-trip"
+    );
+    assert!(
+        re.characterized_objects
+            .iter()
+            .any(|co| matches!(co, CharacterizedObject::ModelGeometricView(_))),
+        "the MODEL_GEOMETRIC_VIEW arena entry should survive"
     );
 }
 

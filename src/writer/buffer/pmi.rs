@@ -604,6 +604,10 @@ impl WriteBuffer<'_> {
             ShapeAspectRef::PlacedDatumTargetFeature(id) => {
                 self.placed_datum_target_feature_step_ids[id.0 as usize]
             }
+            ShapeAspectRef::ToleranceZone(id) => self.tolerance_zone_step_ids[id.0 as usize],
+            ShapeAspectRef::GeneralDatumReference(id) => {
+                self.general_datum_reference_step_ids[id.0 as usize]
+            }
         }
     }
 
