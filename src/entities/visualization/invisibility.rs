@@ -51,6 +51,11 @@ impl SimpleEntityHandler for InvisibilityHandler {
         for r in refs {
             if let Some(&id) = ctx.viz_styled_item_id_map.get(&r) {
                 invisible_items.push(InvisibleItem::StyledItem(id));
+            } else if let Some(&id) = ctx.annotation_occurrence_id_map.get(&r) {
+                // annotation_occurrence is an EXPRESS styled_item subtype but
+                // lives in a separate step-io arena — probe it alongside
+                // viz_styled_item.
+                invisible_items.push(InvisibleItem::AnnotationOccurrence(id));
             } else if let Some(&id) = ctx.repr_id_map.get(&r) {
                 invisible_items.push(InvisibleItem::Representation(id));
             } else if let Some(&id) = ctx.draughting_callout_id_map.get(&r) {
@@ -70,8 +75,8 @@ impl SimpleEntityHandler for InvisibilityHandler {
                 entity_id,
                 detail: String::from(
                     "INVISIBILITY invisible_items did not resolve to any modelled \
-                     styled_item / representation / draughting_callout / \
-                     presentation_layer_assignment — dropping",
+                     styled_item / annotation_occurrence / representation / \
+                     draughting_callout / presentation_layer_assignment — dropping",
                 ),
             });
             return Ok(());
@@ -93,6 +98,9 @@ impl SimpleEntityHandler for InvisibilityHandler {
             .invisible_items
             .into_iter()
             .map(|item| match item {
+                InvisibleItem::AnnotationOccurrence(id) => {
+                    Attribute::EntityRef(buf.ao_step_ids[id.0 as usize])
+                }
                 InvisibleItem::StyledItem(id) => {
                     Attribute::EntityRef(buf.styled_item_step_ids[id.0 as usize])
                 }

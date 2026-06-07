@@ -941,11 +941,17 @@ pub struct Invisibility {
     pub presentation_context: Option<InvisibilityContext>,
 }
 
-/// `invisible_item` SELECT — all four schema members
+/// `invisible_item` SELECT — the four schema members
 /// (`draughting_callout`, `presentation_layer_assignment`, `representation`,
-/// `styled_item`). Source refs to dropped target instances are skipped on read.
+/// `styled_item`), plus `AnnotationOccurrence`. The latter is an EXPRESS
+/// `styled_item` subtype (`annotation_occurrence SUBTYPE OF styled_item`) but
+/// step-io models annotation occurrences in a separate arena
+/// (`AnnotationOccurrenceId`) from plain styled items (`StyledItemId`), so the
+/// `styled_item` SELECT member is split into two variants here. Source refs to
+/// dropped target instances are skipped on read.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum InvisibleItem {
+    AnnotationOccurrence(crate::ir::id::AnnotationOccurrenceId),
     DraughtingCallout(crate::ir::id::DraughtingCalloutId),
     PresentationLayerAssignment(crate::ir::id::PresentationLayerAssignmentId),
     Representation(crate::ir::id::RepresentationId),

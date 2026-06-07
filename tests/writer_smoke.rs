@@ -5161,6 +5161,62 @@ fn invisibility_presentation_layer_assignment_round_trip() {
 }
 
 #[test]
+fn invisibility_annotation_occurrence_round_trip() {
+    // An INVISIBILITY whose invisible_items is an annotation_occurrence
+    // (a styled_item subtype that step-io keeps in a separate arena, NIST
+    // stc_06). Exercises the InvisibleItem::AnnotationOccurrence variant.
+    use step_io::ir::pmi::{AnnotationOccurrence, PmiPool, TessellatedAnnotationOccurrence};
+    use step_io::ir::tessellation::{TessellatedGeometricSet, TessellatedItem};
+    use step_io::ir::visualization::{Invisibility, InvisibleItem, VisualizationPool};
+    let mut model = empty_model();
+    let gset = model
+        .tessellated_items
+        .push(TessellatedItem::TessellatedGeometricSet(
+            TessellatedGeometricSet {
+                name: "gset".into(),
+                children: vec![],
+            },
+        ));
+    let ao = model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_occurrences
+        .push(AnnotationOccurrence::TessellatedAnnotationOccurrence(
+            TessellatedAnnotationOccurrence {
+                name: "anno".into(),
+                styles: vec![],
+                item: gset,
+            },
+        ));
+    model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .invisibilities
+        .push(Invisibility {
+            invisible_items: vec![InvisibleItem::AnnotationOccurrence(ao)],
+            presentation_context: None,
+        });
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        !text.contains("#0,") && !text.contains("#0)") && !text.contains("(#0"),
+        "no dangling #0 ref in:\n{text}"
+    );
+    let re = reconvert(&text);
+    let re_viz = re.visualization.as_ref().expect("viz pool");
+    assert_eq!(re_viz.invisibilities.len(), 1, "the INVISIBILITY survives");
+    let inv = re_viz.invisibilities.iter().next().unwrap();
+    assert_eq!(inv.invisible_items.len(), 1);
+    assert!(
+        matches!(
+            inv.invisible_items[0],
+            InvisibleItem::AnnotationOccurrence(_)
+        ),
+        "the annotation_occurrence invisible_item round-trips"
+    );
+}
+
+#[test]
 fn unitless_context_round_trip() {
     use step_io::ir::shape_rep::{
         DraughtingModel, DraughtingModelForm, Representation, RepresentationContextRef,
