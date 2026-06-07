@@ -1330,6 +1330,36 @@ fn empty_prrpc_and_its_relationship_dropped_as_normalization() {
 }
 
 #[test]
+fn product_category_relationship_accepts_prpc_category() {
+    // `product_category_relationship.category : product_category`, and
+    // PRODUCT_RELATED_PRODUCT_CATEGORY is a product_category subtype, so a PRPC
+    // is a valid `category` (NIST ctc_05). The reader must resolve it via
+    // prpc_arena_map, not drop it as a MissingReference.
+    let result = convert_source(&minimal_step(
+        "#1 = PRODUCT('P','P',' ',(#2));\n\
+         #2 = PRODUCT_CONTEXT('',#3,'mechanical');\n\
+         #3 = APPLICATION_CONTEXT('core');\n\
+         #4 = PRODUCT_RELATED_PRODUCT_CATEGORY('part','',(#1));\n\
+         #5 = PRODUCT_RELATED_PRODUCT_CATEGORY('detail','',(#1));\n\
+         #6 = PRODUCT_CATEGORY_RELATIONSHIP('','',#4,#5);",
+    ));
+    assert!(
+        !result
+            .warnings
+            .iter()
+            .any(|w| matches!(w, ConvertError::MissingReference { .. })),
+        "PRPC category must resolve, no MissingReference: {:#?}",
+        result.warnings
+    );
+    let asm = result.model.assembly.as_ref().expect("assembly");
+    assert_eq!(
+        asm.product_category_relationships.len(),
+        1,
+        "the relationship with a PRPC category is preserved"
+    );
+}
+
+#[test]
 fn empty_invisibility_dropped_as_normalization() {
     // `INVISIBILITY.invisible_items` is SET[1:?] in every schema; some grabcad
     // exports emit an empty `()` (hides nothing). The reader drops it as a

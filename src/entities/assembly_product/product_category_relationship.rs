@@ -51,16 +51,22 @@ impl SimpleEntityHandler for ProductCategoryRelationshipHandler {
             return Ok(());
         }
 
+        // `category` is typed `product_category`; PRODUCT_RELATED_PRODUCT_CATEGORY
+        // is a product_category subtype, so a PRPC is a valid `category` (NIST
+        // ctc_05). Both arenas yield ProductCategoryId into the unified
+        // product_categories arena, so probe pc_arena_map then prpc_arena_map.
         let (Some(&category_id), Some(&sub_category_id)) = (
-            ctx.pc_arena_map.get(&pc_ref),
+            ctx.pc_arena_map
+                .get(&pc_ref)
+                .or_else(|| ctx.prpc_arena_map.get(&pc_ref)),
             ctx.prpc_arena_map.get(&prpc_ref),
         ) else {
             ctx.warnings.push(ConvertError::MissingReference {
                 from: entity_id,
-                to: if ctx.pc_arena_map.contains_key(&pc_ref) {
-                    prpc_ref
-                } else {
+                to: if ctx.prpc_arena_map.contains_key(&prpc_ref) {
                     pc_ref
+                } else {
+                    prpc_ref
                 },
                 field_name: "category",
             });
