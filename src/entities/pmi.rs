@@ -2327,8 +2327,8 @@ pub(crate) fn write_geometric_tolerance(buf: &mut WriteBuffer, gt: GeometricTole
             Attribute::EntityRef(shape_aspect),
         ],
     ));
-    if let Some(unit_size_id) = data.unit_size {
-        let unit_size_step = buf.mwu_step_ids[unit_size_id.0 as usize];
+    if let Some(unit_size) = data.unit_size {
+        let unit_size_step = emit_tolerance_magnitude(buf, &unit_size);
         parts.push((
             "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT".into(),
             vec![Attribute::EntityRef(unit_size_step)],
@@ -2357,7 +2357,8 @@ pub(crate) fn write_geometric_tolerance(buf: &mut WriteBuffer, gt: GeometricTole
 
 /// Encode `DefinedAreaUnit` as the two-attr body of
 /// `GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT`. `second_unit_size`
-/// resolves through the writer's `mwu_step_ids` cache (None → `$`).
+/// resolves through `emit_tolerance_magnitude` (units-pool or repr-item
+/// arena; None → `$`).
 fn emit_defined_area_unit(
     buf: &WriteBuffer,
     area_unit: &crate::ir::DefinedAreaUnit,
@@ -2369,8 +2370,8 @@ fn emit_defined_area_unit(
         AreaUnitType::Square => "SQUARE",
         AreaUnitType::Other(s) => s.as_str(),
     };
-    let second = match area_unit.second_unit_size {
-        Some(id) => Attribute::EntityRef(buf.mwu_step_ids[id.0 as usize]),
+    let second = match &area_unit.second_unit_size {
+        Some(m) => Attribute::EntityRef(emit_tolerance_magnitude(buf, m)),
         None => Attribute::Unset,
     };
     vec![Attribute::Enum(area_token.into()), second]
@@ -2736,7 +2737,7 @@ fn build_gt_with_datum_reference_data(
     shape_aspect_ref: u64,
     datum_system_refs: &[u64],
     modifiers: Vec<crate::ir::GeometricToleranceModifier>,
-    displacement: Option<crate::ir::id::MeasureWithUnitId>,
+    displacement: Option<ToleranceMagnitude>,
 ) -> Option<GeometricToleranceWithDatumReferenceData> {
     let magnitude = resolve_tolerance_magnitude(ctx, magnitude_ref)?;
     let toleranced_shape_aspect = resolve_shape_aspect_ref(ctx, shape_aspect_ref)?;
@@ -2854,19 +2855,20 @@ fn read_optional_modifiers(
 }
 
 /// Read the `GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.unit_size` part —
-/// `ref_measure_with_unit`. Returns `None` when the part is absent or
-/// the ref does not resolve through `mwu_id_map`.
+/// `ref_measure_with_unit`. Returns `None` when the part is absent or the
+/// ref resolves to neither a units-pool `MEASURE_WITH_UNIT` nor a
+/// `MEASURE_REPRESENTATION_ITEM` (same 2-path resolution as `magnitude`).
 fn read_optional_unit_size(
     ctx: &ReaderContext,
     parts: &[RawEntityPart],
     entity_id: u64,
-) -> Result<Option<crate::ir::id::MeasureWithUnitId>, ConvertError> {
+) -> Result<Option<ToleranceMagnitude>, ConvertError> {
     let Some(attrs) = find_part_attrs(parts, "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT") else {
         return Ok(None);
     };
     check_count(attrs, 1, entity_id, "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT")?;
     let unit_ref = read_entity_ref(attrs, 0, entity_id, "unit_size")?;
-    Ok(ctx.mwu_id_map.get(&unit_ref).copied())
+    Ok(resolve_tolerance_magnitude(ctx, unit_ref))
 }
 
 /// Read the `GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT` part —
@@ -2899,7 +2901,7 @@ fn read_optional_defined_area_unit(
         _ => return Ok(None),
     };
     let second_unit_size = match attrs.get(1) {
-        Some(Attribute::EntityRef(n)) => ctx.mwu_id_map.get(n).copied(),
+        Some(Attribute::EntityRef(n)) => resolve_tolerance_magnitude(ctx, *n),
         _ => None,
     };
     Ok(Some(crate::ir::DefinedAreaUnit {
@@ -2909,13 +2911,14 @@ fn read_optional_defined_area_unit(
 }
 
 /// Read the `UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE.displacement` part —
-/// `ref_length_measure_with_unit`. Returns `None` when the part is
-/// absent or the ref does not resolve through `mwu_id_map`.
+/// `ref_length_measure_with_unit`. Returns `None` when the part is absent
+/// or the ref resolves to neither a units-pool `MEASURE_WITH_UNIT` nor a
+/// `MEASURE_REPRESENTATION_ITEM` (same 2-path resolution as `magnitude`).
 fn read_optional_displacement(
     ctx: &ReaderContext,
     parts: &[RawEntityPart],
     entity_id: u64,
-) -> Result<Option<crate::ir::id::MeasureWithUnitId>, ConvertError> {
+) -> Result<Option<ToleranceMagnitude>, ConvertError> {
     let Some(attrs) = find_part_attrs(parts, "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE") else {
         return Ok(None);
     };
@@ -2926,7 +2929,7 @@ fn read_optional_displacement(
         "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE",
     )?;
     let unit_ref = read_entity_ref(attrs, 0, entity_id, "displacement")?;
-    Ok(ctx.mwu_id_map.get(&unit_ref).copied())
+    Ok(resolve_tolerance_magnitude(ctx, unit_ref))
 }
 
 /// Read the form-tolerance complex form `(GEOMETRIC_TOLERANCE
@@ -3040,8 +3043,8 @@ pub(crate) fn write_geometric_tolerance_with_datum_reference(
                 vec![Attribute::List(emit_modifier_set(&data.modifiers))],
             ));
         }
-        if let Some(disp_id) = data.displacement {
-            let disp_step = buf.mwu_step_ids[disp_id.0 as usize];
+        if let Some(disp) = &data.displacement {
+            let disp_step = emit_tolerance_magnitude(buf, disp);
             parts.push((
                 "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE".into(),
                 vec![Attribute::EntityRef(disp_step)],
@@ -3438,8 +3441,9 @@ impl ComplexEntityHandler for LineProfileToleranceHandler {
 
 /// Emit a [`ToleranceMagnitude`] (`ref_measure_with_unit`) and return its
 /// STEP id — a `MeasureWithUnit` references the units-pool step id, a
-/// `Measure` is emitted inline as a `MEASURE_REPRESENTATION_ITEM`.
-fn emit_tolerance_magnitude(buf: &mut WriteBuffer, m: &ToleranceMagnitude) -> u64 {
+/// `RepresentationItem` references the `representation_item` arena's cached
+/// step id. Read-only: both step-id caches are populated by earlier passes.
+fn emit_tolerance_magnitude(buf: &WriteBuffer, m: &ToleranceMagnitude) -> u64 {
     match m {
         ToleranceMagnitude::MeasureWithUnit(id) => buf.mwu_step_ids[id.0 as usize],
         ToleranceMagnitude::RepresentationItem(id) => {

@@ -254,7 +254,9 @@ pub struct GeometricToleranceWithDatumReferenceData {
     /// `UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE.displacement` part — when
     /// `Some`, the writer emits an additional `UD` part between WM and
     /// the leaf. Corpus pairs UD with `SURFACE_PROFILE_TOLERANCE` only.
-    pub displacement: Option<MeasureWithUnitId>,
+    /// A [`ToleranceMagnitude`] (like `magnitude`): the displacement may be
+    /// a plain `*_MEASURE_WITH_UNIT` or a complex `MEASURE_REPRESENTATION_ITEM`.
+    pub displacement: Option<ToleranceMagnitude>,
 }
 
 /// `general_datum_reference` `enum_base` — a GD&T datum reference in the
@@ -346,7 +348,9 @@ pub struct GeometricToleranceData {
     /// `GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.unit_size` part — when
     /// `Some`, the writer emits the WDU part after GT. Corpus pairs WDU
     /// with `FLATNESS` / `STRAIGHTNESS` form tolerances.
-    pub unit_size: Option<MeasureWithUnitId>,
+    /// A [`ToleranceMagnitude`] (like `magnitude`): the `unit_size` may be a
+    /// plain `*_MEASURE_WITH_UNIT` or a complex `MEASURE_REPRESENTATION_ITEM`.
+    pub unit_size: Option<ToleranceMagnitude>,
     /// `GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT` part — cascades from
     /// WDU per EXPRESS schema (always `Some` only when `unit_size` is
     /// also `Some`).
@@ -362,7 +366,9 @@ pub struct DefinedAreaUnit {
     pub area_type: AreaUnitType,
     /// `second_unit_size` — `length_measure_with_unit`. `Some` only when
     /// `area_type == Rectangular` per the schema's WHERE clause.
-    pub second_unit_size: Option<MeasureWithUnitId>,
+    /// A [`ToleranceMagnitude`] (like `magnitude`): may be a plain
+    /// `*_MEASURE_WITH_UNIT` or a complex `MEASURE_REPRESENTATION_ITEM`.
+    pub second_unit_size: Option<ToleranceMagnitude>,
 }
 
 /// AP242 `area_unit_type` ENUMERATION — `circular`, `rectangular`,

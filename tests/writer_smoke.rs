@@ -7902,7 +7902,7 @@ fn gt_defined_unit_area_unit_displacement_round_trip() {
             magnitude: magnitude(),
             toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
             modifiers: Vec::new(),
-            unit_size: Some(mwu_id),
+            unit_size: Some(ToleranceMagnitude::MeasureWithUnit(mwu_id)),
             defined_area_unit: None,
         }));
     // Flatness + unit_size + rectangular area + second_unit_size
@@ -7913,10 +7913,10 @@ fn gt_defined_unit_area_unit_displacement_round_trip() {
             magnitude: magnitude(),
             toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
             modifiers: Vec::new(),
-            unit_size: Some(mwu_id),
+            unit_size: Some(ToleranceMagnitude::MeasureWithUnit(mwu_id)),
             defined_area_unit: Some(DefinedAreaUnit {
                 area_type: AreaUnitType::Rectangular,
-                second_unit_size: Some(mwu_id),
+                second_unit_size: Some(ToleranceMagnitude::MeasureWithUnit(mwu_id)),
             }),
         }));
     // SurfaceProfile + datum_system + displacement
@@ -7929,7 +7929,7 @@ fn gt_defined_unit_area_unit_displacement_round_trip() {
                 toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
                 datum_system: vec![ds],
                 modifiers: Vec::new(),
-                displacement: Some(mwu_id),
+                displacement: Some(ToleranceMagnitude::MeasureWithUnit(mwu_id)),
             },
         ),
     );
@@ -7982,6 +7982,141 @@ fn gt_defined_unit_area_unit_displacement_round_trip() {
         })
         .expect("SurfaceProfile present after round-trip");
     assert!(sp.displacement.is_some(), "SP displacement preserved");
+}
+
+#[test]
+#[allow(clippy::too_many_lines)]
+fn gt_defined_unit_displacement_reference_complex_measure() {
+    // Regression: unit_size / second_unit_size / displacement may reference a
+    // complex MEASURE_REPRESENTATION_ITEM (qualified measure), exactly like
+    // `magnitude`. The old `mwu_id_map`-only resolution silently dropped these
+    // to None, dropping the WDU / WDAU / UD complex parts on round-trip (the
+    // NIST ctc_02 / ctc_03 loss). They must now survive as RepresentationItem.
+    use step_io::ir::pmi::{
+        AreaUnitType, DefinedAreaUnit, GeometricTolerance, GeometricToleranceData,
+        GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData,
+        ToleranceMagnitude, ValueFormatTypeQualifier,
+    };
+    use step_io::ir::property::PropertyMeasureUnit;
+    use step_io::ir::representation_item::{
+        MeasureForm, MeasureRepresentationItem, MeasureValue, QualifierRef, RepresentationItem,
+    };
+    use step_io::ir::shape_rep::DatumSystem;
+
+    let (mut model, sa, ..) = shape_aspect_relationship_fixture();
+    let ctx = mm_radian_steradian(&mut model);
+    let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
+    model.units.push(ctx);
+    let target = model.shape_aspects[sa].target;
+    let ds = model.datum_systems.push(DatumSystem {
+        name: "DS".into(),
+        description: String::new(),
+        target,
+        product_definitional: false,
+        constituents: Vec::new(),
+    });
+    let vftq = model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .value_format_type_qualifiers
+        .push(ValueFormatTypeQualifier {
+            format_type: "NR2 1.1".into(),
+        });
+    // A complex qualified measure in the representation_item arena — the form
+    // that lives in repr_item_id_map, not mwu_id_map.
+    let mri = model
+        .representation_items
+        .push(RepresentationItem::MeasureRepresentationItem(
+            MeasureRepresentationItem {
+                form: MeasureForm::Complex,
+                name: String::new(),
+                value: MeasureValue::Real {
+                    type_name: "LENGTH_MEASURE".into(),
+                    value: 0.25,
+                },
+                unit_ref: Some(PropertyMeasureUnit::Named(length)),
+                qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
+                measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
+            },
+        ));
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    // Flatness + WDU(unit_size) + WDAU(second_unit_size), both complex measures.
+    pmi.geometric_tolerances
+        .push(GeometricTolerance::Flatness(GeometricToleranceData {
+            name: "F".into(),
+            description: String::new(),
+            magnitude: ToleranceMagnitude::RepresentationItem(mri),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            modifiers: Vec::new(),
+            unit_size: Some(ToleranceMagnitude::RepresentationItem(mri)),
+            defined_area_unit: Some(DefinedAreaUnit {
+                area_type: AreaUnitType::Rectangular,
+                second_unit_size: Some(ToleranceMagnitude::RepresentationItem(mri)),
+            }),
+        }));
+    // SurfaceProfile + WDR + UD(displacement), complex measure.
+    pmi.geometric_tolerance_with_datum_references.push(
+        GeometricToleranceWithDatumReference::SurfaceProfile(
+            GeometricToleranceWithDatumReferenceData {
+                name: "SP".into(),
+                description: String::new(),
+                magnitude: ToleranceMagnitude::RepresentationItem(mri),
+                toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+                datum_system: vec![ds],
+                modifiers: Vec::new(),
+                displacement: Some(ToleranceMagnitude::RepresentationItem(mri)),
+            },
+        ),
+    );
+
+    let text = model.write_to_string().expect("write");
+    assert!(text.contains("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT"));
+    assert!(text.contains("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT"));
+    assert!(text.contains("UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE"));
+
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    let flat = re_pmi
+        .geometric_tolerances
+        .iter()
+        .find_map(|gt| match gt {
+            GeometricTolerance::Flatness(d) => Some(d),
+            _ => None,
+        })
+        .expect("Flatness present");
+    assert!(
+        matches!(
+            flat.unit_size,
+            Some(ToleranceMagnitude::RepresentationItem(_))
+        ),
+        "unit_size complex measure must round-trip as a repr-item ref"
+    );
+    let area = flat
+        .defined_area_unit
+        .as_ref()
+        .expect("defined_area_unit preserved");
+    assert!(
+        matches!(
+            area.second_unit_size,
+            Some(ToleranceMagnitude::RepresentationItem(_))
+        ),
+        "second_unit_size complex measure must round-trip as a repr-item ref"
+    );
+    let sp = re_pmi
+        .geometric_tolerance_with_datum_references
+        .iter()
+        .find_map(|gt| match gt {
+            GeometricToleranceWithDatumReference::SurfaceProfile(d) => Some(d),
+            _ => None,
+        })
+        .expect("SurfaceProfile present");
+    assert!(
+        matches!(
+            sp.displacement,
+            Some(ToleranceMagnitude::RepresentationItem(_))
+        ),
+        "displacement complex measure must round-trip as a repr-item ref"
+    );
 }
 
 #[test]
