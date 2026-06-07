@@ -247,3 +247,26 @@
 //!   unit; aggregated via `record_nonstandard`.
 //! - **Writer symmetry**: a `None` `dim_exp` on the simple form re-emits `$`.
 //! - **Code**: `entities/units/ratio_unit.rs` (`RatioUnitSimpleHandler`).
+//!
+//! ### NS-pcurve-3d-in-pspace
+//! - **Source**: grabcad / OCCT (micromachines Axle Cut Tool, Jigsaw Tshank,
+//!   MicroRallyCar).
+//! - **Schema rule broken**: EXPRESS `pcurve.wr3` requires
+//!   `reference_to_curve.items[1].geometric_representation_item.dim = 2` — the
+//!   curve in a `PCURVE`'s parameter-space `DEFINITIONAL_REPRESENTATION` must be
+//!   2D. These files put a **3D** curve (e.g. a `TRIMMED_CURVE` on a 3D `CIRCLE`
+//!   / `AXIS2_PLACEMENT_3D` with 3D trim points) inside a 2D
+//!   `PARAMETRIC_REPRESENTATION_CONTEXT('pspace')`.
+//! - **Acceptance**: step-io's pcurve-subtree partition routes the subtree to
+//!   the 2D handlers, which cannot model the 3D geometry, so the `PCURVE` (and
+//!   its orphaned `DEFINITIONAL_REPRESENTATION` / `CIRCLE` / `TRIMMED_CURVE` /
+//!   `AXIS2_PLACEMENT_3D` subtree) is dropped. The drop is classified per
+//!   dropped type via `record_nonstandard` (`"dropped …"`), gated on
+//!   `is_geometry_registered` so genuine survivors (`CARTESIAN_POINT` /
+//!   `DIRECTION` / `VECTOR`, and curves shared from outside the subtree) are not
+//!   counted. The 3D `SURFACE_CURVE` that owns the pcurve survives on its 3D
+//!   `curve_3d`.
+//! - **Writer symmetry**: none — the subtree is dropped, output unchanged
+//!   (merkle-neutral).
+//! - **Code**: `reader/mod.rs` (`ReaderContext::record_pcurve_wr3_drop`),
+//!   `entities/geometry/surface_curve.rs` (drop site).

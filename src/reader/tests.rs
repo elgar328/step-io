@@ -410,6 +410,71 @@ fn dangling_reference_drops_as_normalization() {
 }
 
 #[test]
+fn pcurve_3d_in_parameter_space_dropped_as_normalization() {
+    // [NS-pcurve-3d-in-pspace] A PCURVE whose 2D parameter-space
+    // DEFINITIONAL_REPRESENTATION holds a 3D curve (TRIMMED_CURVE on a 3D
+    // CIRCLE / AXIS2_PLACEMENT_3D) violates EXPRESS pcurve.wr3 (dim must be 2).
+    // The dropped subtree is classified as NonStandardInput "dropped", not a
+    // defect; survivors (CARTESIAN_POINT / DIRECTION, and the PLANE's own
+    // placement #4) are not counted.
+    let result = convert_source(&minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = DIRECTION('',(0.,0.,1.));\n\
+         #3 = DIRECTION('',(1.,0.,0.));\n\
+         #4 = AXIS2_PLACEMENT_3D('',#1,#2,#3);\n\
+         #5 = PLANE('',#4);\n\
+         #6 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #7 = DIRECTION('',(1.,0.,0.));\n\
+         #8 = VECTOR('',#7,1.);\n\
+         #9 = LINE('',#6,#8);\n\
+         #10 = CARTESIAN_POINT('',(1.,1.,0.));\n\
+         #11 = DIRECTION('',(0.,0.,1.));\n\
+         #12 = DIRECTION('',(1.,0.,0.));\n\
+         #13 = AXIS2_PLACEMENT_3D('',#10,#11,#12);\n\
+         #14 = CIRCLE('',#13,0.5);\n\
+         #15 = CARTESIAN_POINT('',(1.5,1.,0.));\n\
+         #16 = CARTESIAN_POINT('',(0.5,1.,0.));\n\
+         #17 = TRIMMED_CURVE('',#14,(#15),(#16),.T.,.CARTESIAN.);\n\
+         #18 = ( GEOMETRIC_REPRESENTATION_CONTEXT(2) PARAMETRIC_REPRESENTATION_CONTEXT() REPRESENTATION_CONTEXT('pspace','') );\n\
+         #19 = DEFINITIONAL_REPRESENTATION('',(#17),#18);\n\
+         #20 = PCURVE('',#5,#19);\n\
+         #21 = SURFACE_CURVE('',#9,(#20),.PCURVE_S1.);",
+    ));
+    // No defects — every drop is a pcurve.wr3 normalization.
+    assert!(
+        result
+            .warnings
+            .iter()
+            .all(|w| matches!(w, ConvertError::NonStandardInput { .. })),
+        "expected only NonStandardInput, got {:#?}",
+        result.warnings,
+    );
+    let dropped = |ty: &str| -> usize {
+        result
+            .warnings
+            .iter()
+            .filter_map(|w| match w {
+                ConvertError::NonStandardInput {
+                    field,
+                    count,
+                    normalized_to,
+                } if field == ty && normalized_to.starts_with("dropped") => Some(*count),
+                _ => None,
+            })
+            .sum()
+    };
+    assert_eq!(dropped("PCURVE"), 1);
+    assert_eq!(dropped("DEFINITIONAL_REPRESENTATION"), 1);
+    assert_eq!(dropped("CIRCLE"), 1);
+    assert_eq!(dropped("TRIMMED_CURVE"), 1);
+    assert_eq!(dropped("AXIS2_PLACEMENT_3D"), 1);
+    // Survivors are not recorded: CARTESIAN_POINT / DIRECTION self-discriminate,
+    // and the PLANE's placement #4 is outside the pcurve subtree.
+    assert_eq!(dropped("CARTESIAN_POINT"), 0);
+    assert_eq!(dropped("DIRECTION"), 0);
+}
+
+#[test]
 fn dangling_edge_geometry_cascades_through_loop_with_orphan_record() {
     // #11 has a dangling `edge_geometry = #0`. It drops as a dangling-reference
     // normalization, cascading to the ORIENTED_EDGE #21 that wraps it and the

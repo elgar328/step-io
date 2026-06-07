@@ -110,13 +110,22 @@ pub(crate) fn collect_surface_curve(
         if member_name == "PCURVE" {
             match ctx.resolve_pcurve(member_ref, graph) {
                 Some(pc) => members.push(PCurveOrSurface::Pcurve(pc)),
-                None => ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                    entity_id,
-                    detail: format!(
-                        "SURFACE_CURVE.associated_geometry PCURVE #{member_ref} unresolved \
-                     (definitional curve not 2D, or basis_surface missing)"
-                    ),
-                }),
+                // [NS-pcurve-3d-in-pspace] grabcad/OCCT emit a 3D curve inside a
+                // PCURVE's 2D parameter-space DEFINITIONAL_REPRESENTATION — an
+                // EXPRESS `pcurve.wr3` violation (`reference_to_curve.items[1].dim
+                // = 2` required). Classify the dropped subtree as non-standard
+                // input rather than a step-io defect; otherwise keep the warning.
+                None => {
+                    if !ctx.record_pcurve_wr3_drop(member_ref, graph) {
+                        ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                            entity_id,
+                            detail: format!(
+                                "SURFACE_CURVE.associated_geometry PCURVE #{member_ref} unresolved \
+                                 (definitional curve not 2D, or basis_surface missing)"
+                            ),
+                        });
+                    }
+                }
             }
         } else if let Some(&surface_id) = ctx.surface_map.get(&member_ref) {
             members.push(PCurveOrSurface::Surface(surface_id));

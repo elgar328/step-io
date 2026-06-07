@@ -203,6 +203,13 @@ pub struct ReaderContext {
     /// the 2D arenas (`points_2d`, `directions_2d`, `curves_2d`).
     pub(crate) pcurve_subtree_ids: HashSet<u64>,
 
+    /// Ids already accounted for by the `[NS-pcurve-3d-in-pspace]`
+    /// normalization (see `surface_curve.rs`). A 3D curve in a 2D pcurve
+    /// parameter-space (EXPRESS `pcurve.wr3` violation) drops the whole
+    /// `DEFINITIONAL_REPRESENTATION` subtree; this set dedups the per-type
+    /// `record_nonstandard` accounting when several pcurves share a subtree id.
+    pub(crate) dropped_pcurve_recorded: HashSet<u64>,
+
     // Unit entity maps: STEP #N → resolved unit variant.
     pub(crate) length_unit_map: HashMap<u64, LengthUnit>,
     pub(crate) angle_unit_map: HashMap<u64, AngleUnit>,
@@ -943,6 +950,100 @@ impl ReaderContext {
             .nonstandard_normalizations
             .entry((field, normalized_to))
             .or_default() += 1;
+    }
+
+    /// `true` when `id` was registered into any geometry arena (so it survives
+    /// round-trip). Used by the `[NS-pcurve-3d-in-pspace]` accounting to record
+    /// only the genuinely-dropped subtree members, not survivors like
+    /// `CARTESIAN_POINT` / `DIRECTION` / `VECTOR` (which self-discriminate and
+    /// land in their 2D/3D arenas even inside a pcurve subtree).
+    fn is_geometry_registered(&self, id: u64) -> bool {
+        self.point_map.contains_key(&id)
+            || self.direction_map.contains_key(&id)
+            || self.vector_map.contains_key(&id)
+            || self.surface_map.contains_key(&id)
+            || self.curve_map.contains_key(&id)
+            || self.placement_map.contains_key(&id)
+            || self.point_2d_map.contains_key(&id)
+            || self.direction_2d_map.contains_key(&id)
+            || self.vector_2d_map.contains_key(&id)
+            || self.curve_2d_map.contains_key(&id)
+            || self.placement_2d_map.contains_key(&id)
+    }
+
+    /// Classify a dropped `PCURVE` (the `resolve_pcurve` returned `None` path).
+    /// Returns `true` and records `[NS-pcurve-3d-in-pspace]` normalizations for
+    /// the dropped `DEFINITIONAL_REPRESENTATION` subtree when the drop is an
+    /// EXPRESS `pcurve.wr3` violation (a 3D curve sitting in a 2D parameter
+    /// space); returns `false` for any other drop cause (missing
+    /// `basis_surface`, malformed structure) so the caller emits its defect
+    /// warning instead.
+    pub(crate) fn record_pcurve_wr3_drop(&mut self, pcurve_ref: u64, graph: &EntityGraph) -> bool {
+        // PCURVE(name, basis_surface, reference_to_curve).
+        let Some(RawEntity::Simple { attributes, .. }) = graph.get(pcurve_ref) else {
+            return false;
+        };
+        let Some(Attribute::EntityRef(basis_surface_ref)) = attributes.get(1) else {
+            return false;
+        };
+        // wr3 signature requires the basis_surface to resolve; a missing
+        // surface is a different defect (keep the warning).
+        if !self.surface_map.contains_key(basis_surface_ref) {
+            return false;
+        }
+        let Some(Attribute::EntityRef(def_repr_ref)) = attributes.get(2) else {
+            return false;
+        };
+        let Some(RawEntity::Simple {
+            name: def_name,
+            attributes: def_attrs,
+            ..
+        }) = graph.get(*def_repr_ref)
+        else {
+            return false;
+        };
+        if def_name != "DEFINITIONAL_REPRESENTATION" {
+            return false;
+        }
+        let Some(Attribute::List(items)) = def_attrs.get(1) else {
+            return false;
+        };
+        let Some(Attribute::EntityRef(first_item_ref)) = items.first() else {
+            return false;
+        };
+        // The wr3 violation: the parameter-space curve is NOT 2D — it never
+        // landed in `curve_2d_map`, yet it is a curve entity in the graph.
+        if self.curve_2d_map.contains_key(first_item_ref) {
+            return false; // genuinely 2D; not a wr3 violation
+        }
+        let is_curve = matches!(
+            graph.get(*first_item_ref),
+            Some(RawEntity::Simple { name, .. }) if is_curve_type(name)
+        );
+        if !is_curve {
+            return false;
+        }
+
+        // Walk the DEFINITIONAL_REPRESENTATION subtree and record one
+        // normalization per genuinely-dropped (unregistered) member, deduped
+        // across pcurves that share a subtree id.
+        let mut subtree = HashSet::new();
+        collect_refs_transitive(*def_repr_ref, graph, &mut subtree);
+        subtree.insert(pcurve_ref);
+        for id in subtree {
+            if self.dropped_pcurve_recorded.contains(&id) || self.is_geometry_registered(id) {
+                continue;
+            }
+            let Some(RawEntity::Simple { name, .. }) = graph.get(id) else {
+                continue;
+            };
+            self.dropped_pcurve_recorded.insert(id);
+            self.record_nonstandard(
+                name.clone(),
+                "dropped (3D curve in 2D pcurve parameter-space — EXPRESS pcurve.wr3)",
+            );
+        }
+        true
     }
 
     /// Convert an entire [`EntityGraph`] into a [`StepModel`].
@@ -1968,6 +2069,18 @@ pub(crate) fn collect_pcurve_subtree_ids(graph: &EntityGraph) -> HashSet<u64> {
         }
     }
     ids
+}
+
+/// Whether a STEP entity type name denotes a geometric curve — used to confirm
+/// the `pcurve.wr3` violation (a curve, not e.g. a point, sitting unresolved in
+/// the 2D parameter space). Covers the `bounded_curve` / `conic` / spline
+/// families plus the `*_CURVE` suffix.
+fn is_curve_type(name: &str) -> bool {
+    name.ends_with("CURVE")
+        || matches!(
+            name,
+            "CIRCLE" | "ELLIPSE" | "LINE" | "CONIC" | "PARABOLA" | "HYPERBOLA"
+        )
 }
 
 fn collect_refs_transitive(id: u64, graph: &EntityGraph, skip: &mut HashSet<u64>) {
