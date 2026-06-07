@@ -205,15 +205,26 @@ pub struct MassFlavor {
 }
 
 /// `MASS_UNIT` value variant. Corpus: kilogram (plain SI), gram (plain SI),
-/// pound (`CONVERSION_BASED_UNIT` wrapper). Unknown CBU names fall back to
+/// megagram (plain SI, `(MEGA, GRAM)` = tonne), pound
+/// (`CONVERSION_BASED_UNIT` wrapper). Unknown CBU names fall back to
 /// [`MassUnit::Kilogram`] (lossy round-trip) — observed names are added as
 /// variants when the corpus reveals them.
+///
+/// **Blueprint deviation (intentional):** the blueprint models `SI_UNIT` as a
+/// general `(prefix: opt si_prefix, name: si_unit_name)` pair, so any SI
+/// combination round-trips automatically. step-io instead absorbs each
+/// concrete `(prefix, name)` (and CBU units like Pound) into one closed enum,
+/// keeping unit semantics (e.g. CBU factors) directly in code. The trade-off
+/// is that a new SI spelling must be added as a variant here; `Megagram`
+/// = `(MEGA, GRAM)` is such an addition.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum MassUnit {
     #[default]
     Kilogram,
     Gram,
     Pound,
+    /// `(MEGA, GRAM)` — megagram (tonne). Plain SI, never a CBU.
+    Megagram,
 }
 
 /// `MEASURE_WITH_UNIT` arena enum.

@@ -2524,6 +2524,39 @@ fn gram_conversion_based_unit_round_trips() {
 }
 
 #[test]
+fn megagram_si_unit_round_trips() {
+    // A megagram (tonne) = plain SI `(MEGA, GRAM)`. The reader must accept the
+    // MEGA prefix (not drop it as an unsupported SI mass spelling), and the
+    // writer must emit `SI_UNIT(.MEGA.,.GRAM.)`. `reconvert` asserts zero
+    // reader warnings.
+    let mut model = empty_model();
+    let mut pool = UnitsPool::default();
+    pool.named_units.push(NamedUnit::Mass(MassFlavor {
+        unit: MassUnit::Megagram,
+        cbu_base: None,
+        dim_exp: None,
+    }));
+    model.units_pool = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("SI_UNIT(.MEGA.,.GRAM.)"),
+        "megagram must emit SI_UNIT(.MEGA.,.GRAM.); got:\n{text}"
+    );
+    let re = reconvert(&text);
+    let re_pool = re.units_pool.as_ref().expect("round-tripped units pool");
+    let mega = re_pool
+        .named_units
+        .iter()
+        .find_map(|n| match n {
+            NamedUnit::Mass(f) if f.unit == MassUnit::Megagram => Some(f),
+            _ => None,
+        })
+        .expect("megagram NamedUnit survived round-trip");
+    assert!(mega.cbu_base.is_none(), "megagram is plain SI, not a CBU");
+}
+
+#[test]
 fn shape_aspect_subtypes_round_trip() {
     // COMPOSITE_GROUP_SHAPE_ASPECT / CENTRE_OF_SYMMETRY /
     // ALL_AROUND_SHAPE_ASPECT — SHAPE_ASPECT subtypes, each its own arena.

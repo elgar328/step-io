@@ -64,6 +64,7 @@ impl ComplexEntityHandler for MassUnitHandler {
         let name = read_enum(si_attrs, 1, entity_id, "name")?;
         let unit = match (prefix, name) {
             (Some("KILO"), "GRAM") => MassUnit::Kilogram,
+            (Some("MEGA"), "GRAM") => MassUnit::Megagram,
             (None, "GRAM") => MassUnit::Gram,
             _ => {
                 // Unsupported SI mass spelling (e.g. (MEGA, GRAM)). Drop
@@ -92,6 +93,7 @@ impl ComplexEntityHandler for MassUnitHandler {
     ) -> Result<u64, WriteError> {
         let prefix = match unit {
             MassUnit::Gram => None,
+            MassUnit::Megagram => Some("MEGA"),
             // Kilogram / Pound fallback both emit KILO-GRAM.
             MassUnit::Kilogram | MassUnit::Pound => Some("KILO"),
         };
@@ -135,9 +137,10 @@ pub(crate) fn emit_mass_cbu_outer(
     let (name, factor) = match unit {
         MassUnit::Pound => ("POUND", 0.453_592_37),
         MassUnit::Gram => ("GRAM", 0.001),
-        // Kilogram reaching the CBU path is unexpected (kernel-built IR);
-        // fall back to the already-emitted base step id (no extra entity).
-        MassUnit::Kilogram => return Ok(base_step),
+        // Kilogram / Megagram reaching the CBU path is unexpected (both are
+        // plain SI; kernel-built IR) — fall back to the already-emitted base
+        // step id (no extra entity).
+        MassUnit::Kilogram | MassUnit::Megagram => return Ok(base_step),
     };
     // Reference the flavour's own DE (IR arena) when present so the round-trip
     // is idempotent; only synthesize for kernel-built IR. See

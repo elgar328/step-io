@@ -243,6 +243,9 @@ pub(super) fn read_conversion_based_unit_body(
                         MassUnit::Pound => "POUND",
                         MassUnit::Gram => "GRAM",
                         MassUnit::Kilogram => "KILOGRAM",
+                        // Megagram is plain SI only — never a CBU conversion
+                        // result; unreachable on this path.
+                        MassUnit::Megagram => "MEGAGRAM",
                     };
                     ctx.warnings.push(ConvertError::NonStandardInput {
                         field: format!("CONVERSION_BASED_UNIT.name ({name:?})"),
