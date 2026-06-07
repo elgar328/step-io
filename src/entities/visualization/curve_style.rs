@@ -43,7 +43,9 @@ impl SimpleEntityHandler for CurveStyleHandler {
             };
             Some(id)
         };
-        let curve_width = read_positive_length_measure(attrs, 2, entity_id)?;
+        let Some(curve_width) = read_curve_width(ctx, attrs, 2, entity_id)? else {
+            return Ok(()); // unsupported curve_width SELECT variant — drop
+        };
         let colour_ref = read_entity_ref(attrs, 3, entity_id, "curve_colour")?;
         let Some(&curve_colour) = ctx.viz_colour_id_map.get(&colour_ref) else {
             return Ok(()); // unsupported colour SELECT variant — drop
@@ -71,6 +73,13 @@ impl SimpleEntityHandler for CurveStyleHandler {
                 type_name: "POSITIVE_LENGTH_MEASURE".into(),
                 value: Box::new(Attribute::Real(v)),
             },
+            CurveWidth::MeasureWithUnit(id) => {
+                Attribute::EntityRef(buf.mwu_step_ids[id.0 as usize])
+            }
+            CurveWidth::Descriptive(s) => Attribute::Typed {
+                type_name: "DESCRIPTIVE_MEASURE".into(),
+                value: Box::new(Attribute::String(s)),
+            },
         };
         let colour_step_id = buf.colour_step_ids[cs.curve_colour.0 as usize];
         Ok(buf.push_simple(
@@ -85,14 +94,19 @@ impl SimpleEntityHandler for CurveStyleHandler {
     }
 }
 
-/// Extract the wrapped real from a `POSITIVE_LENGTH_MEASURE(x)` typed
-/// attribute. Other SELECT members (e.g. `DESCRIPTIVE_MEASURE`) are not
-/// modelled; encountering them yields a typed-mismatch error.
-fn read_positive_length_measure(
+/// Read the `curve_width` `size_select` — mirrors [`MarkerSize`] reading in
+/// `point_style`. Three members: inline `POSITIVE_LENGTH_MEASURE(real)` and
+/// `DESCRIPTIVE_MEASURE(text)`, plus an entity-ref `measure_with_unit`
+/// resolved through `mwu_id_map`. Returns `Ok(None)` when a `measure_with_unit`
+/// ref does not resolve (drops the whole `CURVE_STYLE`, consistent with the
+/// `curve_font` / colour SELECT-drop policy); other unmodelled forms still
+/// yield a typed-mismatch error for visibility.
+fn read_curve_width(
+    ctx: &ReaderContext,
     attrs: &[Attribute],
     index: usize,
     entity_id: u64,
-) -> Result<CurveWidth, ConvertError> {
+) -> Result<Option<CurveWidth>, ConvertError> {
     let attr = attrs.get(index).ok_or(ConvertError::AttributeIndex {
         entity_id,
         field_name: "curve_width",
@@ -100,23 +114,32 @@ fn read_positive_length_measure(
         len: attrs.len(),
     })?;
     match attr {
-        Attribute::Typed { type_name, value } if type_name == "POSITIVE_LENGTH_MEASURE" => {
-            match value.as_ref() {
-                Attribute::Real(v) => Ok(CurveWidth::PositiveLengthMeasure(*v)),
-                #[allow(clippy::cast_precision_loss)]
-                Attribute::Integer(v) => Ok(CurveWidth::PositiveLengthMeasure(*v as f64)),
-                other => Err(ConvertError::AttributeType {
-                    entity_id,
-                    field_name: "curve_width",
-                    expected: "Real inside POSITIVE_LENGTH_MEASURE",
-                    actual: AttributeKindTag::from_attribute(other),
-                }),
+        Attribute::Typed { type_name, value } => match (type_name.as_str(), value.as_ref()) {
+            ("POSITIVE_LENGTH_MEASURE", Attribute::Real(v)) => {
+                Ok(Some(CurveWidth::PositiveLengthMeasure(*v)))
             }
-        }
+            #[allow(clippy::cast_precision_loss)]
+            ("POSITIVE_LENGTH_MEASURE", Attribute::Integer(v)) => {
+                Ok(Some(CurveWidth::PositiveLengthMeasure(*v as f64)))
+            }
+            ("DESCRIPTIVE_MEASURE", Attribute::String(s)) => {
+                Ok(Some(CurveWidth::Descriptive(s.clone())))
+            }
+            (_, other) => Err(ConvertError::AttributeType {
+                entity_id,
+                field_name: "curve_width",
+                expected: "POSITIVE_LENGTH_MEASURE(Real) or DESCRIPTIVE_MEASURE(String)",
+                actual: AttributeKindTag::from_attribute(other),
+            }),
+        },
+        Attribute::EntityRef(n) => Ok(ctx
+            .mwu_id_map
+            .get(n)
+            .map(|&id| CurveWidth::MeasureWithUnit(id))),
         other => Err(ConvertError::AttributeType {
             entity_id,
             field_name: "curve_width",
-            expected: "POSITIVE_LENGTH_MEASURE(Real)",
+            expected: "POSITIVE_LENGTH_MEASURE(Real), DESCRIPTIVE_MEASURE(String), or measure_with_unit ref",
             actual: AttributeKindTag::from_attribute(other),
         }),
     }

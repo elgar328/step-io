@@ -418,12 +418,20 @@ pub struct PreDefinedTerminatorSymbol {
     pub name: String,
 }
 
-/// `curve_width_select` SELECT supertype. STEP TYPE alias members
-/// (typed-real syntax like `POSITIVE_LENGTH_MEASURE(0.13)`); not
-/// entities, so stored inline with no arena.
+/// `size_select` SELECT supertype (the `curve_width` attribute of
+/// `CURVE_STYLE`) — `(positive_length_measure, measure_with_unit,
+/// descriptive_measure)`. Mirrors [`MarkerSize`]: the inline TYPE-alias
+/// members (`POSITIVE_LENGTH_MEASURE(0.13)` / `DESCRIPTIVE_MEASURE('thick')`)
+/// are stored inline; `measure_with_unit` is an entity ref into the units
+/// pool (`mwu_id_map` on read, `mwu_step_ids` on write).
 #[derive(Debug, Clone, PartialEq)]
 pub enum CurveWidth {
+    /// `POSITIVE_LENGTH_MEASURE(real)`.
     PositiveLengthMeasure(f64),
+    /// `ref_measure_with_unit`.
+    MeasureWithUnit(MeasureWithUnitId),
+    /// `DESCRIPTIVE_MEASURE(text)`.
+    Descriptive(String),
 }
 
 /// `COLOUR` supertype per the AP214/AP242 schema. Only the variants

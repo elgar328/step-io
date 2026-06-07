@@ -1482,6 +1482,48 @@ fn curve_style_unset_curve_font_round_trips_as_none() {
     assert_eq!(re_cs.curve_font, None, "round-trip keeps None");
 }
 
+#[test]
+fn curve_style_measure_with_unit_width_round_trips() {
+    // CURVE_STYLE.curve_width is a `size_select`; besides the inline
+    // POSITIVE_LENGTH_MEASURE form, it may be a `measure_with_unit` entity ref
+    // (NIST ctc_04). The reader must resolve it through the units pool and the
+    // writer re-emit the ref — not drop the CURVE_STYLE.
+    use crate::ir::visualization::CurveWidth;
+    let source = minimal_step(
+        "#1 = COLOUR_RGB('',0.,1.,1.);\n\
+         #2 = (LENGTH_UNIT()NAMED_UNIT(*)SI_UNIT(.MILLI.,.METRE.));\n\
+         #3 = LENGTH_MEASURE_WITH_UNIT(POSITIVE_LENGTH_MEASURE(0.1),#2);\n\
+         #4 = CURVE_STYLE('',$,#3,#1);",
+    );
+    let result = convert_source(&source);
+    assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
+    let pool = result.model.visualization.as_ref().expect("viz pool");
+    assert_eq!(pool.curve_styles.len(), 1, "CURVE_STYLE preserved");
+    let cs = pool.curve_styles.iter().next().unwrap();
+    assert!(
+        matches!(cs.curve_width, CurveWidth::MeasureWithUnit(_)),
+        "curve_width resolves to a measure_with_unit ref, got {:?}",
+        cs.curve_width
+    );
+
+    // Writer re-emits the ref and re-reading preserves the variant.
+    let text = result.model.write_to_string().expect("write");
+    let re = convert_source(&text);
+    let re_cs = re
+        .model
+        .visualization
+        .as_ref()
+        .expect("viz pool")
+        .curve_styles
+        .iter()
+        .next()
+        .unwrap();
+    assert!(
+        matches!(re_cs.curve_width, CurveWidth::MeasureWithUnit(_)),
+        "measure_with_unit curve_width survives round-trip"
+    );
+}
+
 // ---------------------------------------------------------------------------
 // PCURVE skip-set + SURFACE_CURVE alias
 // ---------------------------------------------------------------------------
