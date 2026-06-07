@@ -9,7 +9,10 @@
 //! round-trip equality on the supported subset.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
+use crate::ir::attr::{
+    check_count, read_entity_ref, read_entity_ref_list, read_optional_entity_ref,
+    read_string_or_unset,
+};
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::{OverRidingStyledItem, StyledItem, VisualizationPool};
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -36,7 +39,19 @@ impl SimpleEntityHandler for OverRidingStyledItemHandler {
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
         let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-        let over_ridden_ref = read_entity_ref(attrs, 3, entity_id, "over_ridden_style")?;
+        // [NS-orsi-over-ridden-unset] `over_ridden_style` is mandatory
+        // (EXPRESS `over_riding_styled_item.over_ridden_style : styled_item`);
+        // some exporters emit `$`. Without an over-ridden target the entity
+        // carries no information → drop as a normalization, not a defect.
+        let Some(over_ridden_ref) =
+            read_optional_entity_ref(attrs, 3, entity_id, "over_ridden_style")?
+        else {
+            ctx.record_nonstandard(
+                "OVER_RIDING_STYLED_ITEM.over_ridden_style (Unset)".into(),
+                "dropped (no over-ridden style)",
+            );
+            return Ok(());
+        };
 
         let mut styles = Vec::with_capacity(style_refs.len());
         for r in style_refs {

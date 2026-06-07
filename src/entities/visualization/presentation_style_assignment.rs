@@ -67,6 +67,13 @@ pub(crate) fn parse_psa_styles(
     entity_id: u64,
     attr: &Attribute,
 ) -> Vec<PsaStyle> {
+    // [NS-psa-styles-unset] `styles` is a mandatory `SET[1:?]`; some exporters
+    // emit it as `$` (Unset). Accept as empty rather than a defect, matching the
+    // sibling NS-psa-bare-null-style policy. See reader::nonstandard.
+    if matches!(attr, Attribute::Unset | Attribute::Derived) {
+        ctx.record_nonstandard("PRESENTATION_STYLE_ASSIGNMENT.styles (Unset)".into(), "()");
+        return Vec::new();
+    }
     let Attribute::List(items) = attr else {
         ctx.warnings
             .push(crate::ir::error::ConvertError::UnexpectedEntityForm {

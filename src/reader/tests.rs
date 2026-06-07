@@ -410,6 +410,51 @@ fn dangling_reference_drops_as_normalization() {
 }
 
 #[test]
+fn psa_styles_unset_normalized_as_empty() {
+    // [NS-psa-styles-unset] mandatory `styles` SET[1:?] emitted as `$` → accept
+    // as empty (NonStandardInput, not a defect); the PSA survives.
+    let result = convert_source(&minimal_step("#1 = PRESENTATION_STYLE_ASSIGNMENT($);"));
+    assert!(
+        result.warnings.iter().all(|w| matches!(w,
+            ConvertError::NonStandardInput { field, normalized_to, .. }
+                if field.contains("styles (Unset)") && *normalized_to == "()")),
+        "expected only a styles-Unset normalization, got {:#?}",
+        result.warnings
+    );
+    let viz = result.model.visualization.as_ref().expect("viz pool");
+    assert_eq!(
+        viz.presentation_style_assignments.len(),
+        1,
+        "the PSA survives with empty styles"
+    );
+}
+
+#[test]
+fn orsi_over_ridden_style_unset_dropped_as_normalization() {
+    // [NS-orsi-over-ridden-unset] mandatory `over_ridden_style` emitted as `$` →
+    // drop as NonStandardInput (no over-ridden target to model), not a defect.
+    let result = convert_source(&minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = OVER_RIDING_STYLED_ITEM('',(),#1,$);",
+    ));
+    assert!(
+        result.warnings.iter().all(|w| matches!(w,
+            ConvertError::NonStandardInput { field, normalized_to, .. }
+                if field.contains("over_ridden_style (Unset)") && normalized_to.starts_with("dropped"))),
+        "expected only an over_ridden_style-Unset normalization, got {:#?}",
+        result.warnings
+    );
+    assert!(
+        result
+            .model
+            .visualization
+            .as_ref()
+            .is_none_or(|v| v.styled_items.is_empty()),
+        "the ORSI with no over-ridden style is dropped"
+    );
+}
+
+#[test]
 fn pcurve_3d_in_parameter_space_dropped_as_normalization() {
     // [NS-pcurve-3d-in-pspace] A PCURVE whose 2D parameter-space
     // DEFINITIONAL_REPRESENTATION holds a 3D curve (TRIMMED_CURVE on a 3D

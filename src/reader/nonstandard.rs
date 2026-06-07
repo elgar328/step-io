@@ -270,3 +270,22 @@
 //!   (merkle-neutral).
 //! - **Code**: `reader/mod.rs` (`ReaderContext::record_pcurve_wr3_drop`),
 //!   `entities/geometry/surface_curve.rs` (drop site).
+//!
+//! ### NS-psa-styles-unset
+//! - **Source**: NIST ctc_05.
+//! - **Schema rule broken**: `presentation_style_assignment.styles` is a
+//!   mandatory `SET[1:?] OF presentation_style_select`; emitted as `$` (Unset).
+//! - **Acceptance**: accept as an empty style set rather than a defect — the
+//!   PSA is still built and re-emits `()` (merkle-stable). Same spirit as the
+//!   sibling NS-psa-bare-null-style.
+//! - **Code**: `entities/visualization/presentation_style_assignment.rs`
+//!   (`parse_psa_styles`).
+//!
+//! ### NS-orsi-over-ridden-unset
+//! - **Source**: NIST ctc_05.
+//! - **Schema rule broken**: `over_riding_styled_item.over_ridden_style :
+//!   styled_item` is mandatory; emitted as `$` (Unset).
+//! - **Acceptance**: without an over-ridden target the entity carries no
+//!   information → drop as a `NonStandardInput` normalization (not a defect).
+//!   No cascade (nothing references the dropped ORSI).
+//! - **Code**: `entities/visualization/over_riding_styled_item.rs`.
