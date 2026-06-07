@@ -211,6 +211,7 @@ fn emit_named_unit_cbu(
             base_step,
             target_id,
             dim_exp_step(f.dim_exp),
+            f.cbu_factor_bare,
         )),
         NamedUnit::PlaneAngle(f) => Ok(emit_plane_angle_cbu_outer(
             buf,

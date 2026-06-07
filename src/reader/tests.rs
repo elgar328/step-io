@@ -410,6 +410,30 @@ fn dangling_reference_drops_as_normalization() {
 }
 
 #[test]
+fn inch_cbu_bare_measure_with_unit_factor_round_trips() {
+    // A CONVERSION_BASED_UNIT('inch') whose conversion_factor is a bare
+    // MEASURE_WITH_UNIT (supertype) carrying a typed LENGTH_MEASURE (NIST
+    // ctc_05), rather than the LENGTH_MEASURE_WITH_UNIT subtype. The writer must
+    // reproduce the bare form so the round-trip multiset is stable.
+    let result = convert_source(&minimal_step(
+        "#1 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+         #2 = MEASURE_WITH_UNIT(LENGTH_MEASURE(25.4),#1);\n\
+         #3 = DIMENSIONAL_EXPONENTS(1.,0.,0.,0.,0.,0.,0.);\n\
+         #4 = ( CONVERSION_BASED_UNIT('INCH',#2) LENGTH_UNIT() NAMED_UNIT(#3) );",
+    ));
+    assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
+    let out = result.model.write_to_string().expect("write");
+    assert!(
+        out.contains("MEASURE_WITH_UNIT(LENGTH_MEASURE(25.4)"),
+        "bare MEASURE_WITH_UNIT factor must be preserved, got:\n{out}"
+    );
+    assert!(
+        !out.contains("LENGTH_MEASURE_WITH_UNIT(25.4"),
+        "must not downgrade the bare factor to the typed subtype:\n{out}"
+    );
+}
+
+#[test]
 fn datum_reference_element_of_shape_unset_dropped_as_normalization() {
     // [NS-general-datum-reference-of-shape-unset] shape_aspect.of_shape is
     // mandatory (EXPRESS + UNIQUE); NIST ctc_05 emits `$`. Classify as a

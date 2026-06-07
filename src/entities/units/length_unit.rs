@@ -107,6 +107,7 @@ pub(crate) fn emit_length_cbu_outer(
     base_step: u64,
     target_id: u64,
     dim_exp_step: u64,
+    cbu_factor_bare: bool,
 ) -> u64 {
     let (name, factor) = match unit {
         LengthUnit::Millimetre => ("MILLIMETRE", 1.0),
@@ -115,7 +116,15 @@ pub(crate) fn emit_length_cbu_outer(
         LengthUnit::Inch => ("INCH", 25.4),
         LengthUnit::Foot => ("FOOT", 304.8),
     };
-    emit_conversion_based_length(buf, name, factor, base_step, target_id, dim_exp_step)
+    emit_conversion_based_length(
+        buf,
+        name,
+        factor,
+        base_step,
+        target_id,
+        dim_exp_step,
+        cbu_factor_bare,
+    )
 }
 
 /// Record this `LENGTH_UNIT` complex in the `NamedUnit` arena so that
@@ -134,6 +143,7 @@ fn register_named_length(
             unit,
             cbu_base,
             dim_exp,
+            cbu_factor_bare: ctx.length_cbu_factor_bare.contains(&entity_id),
         };
         let id = ctx.named_units_arena.push(NamedUnit::Length(flavor));
         ctx.named_unit_id_map.insert(entity_id, id);
@@ -183,6 +193,7 @@ fn emit_conversion_based_length(
     base_step: u64,
     target_id: u64,
     dim_exp_step: u64,
+    cbu_factor_bare: bool,
 ) -> u64 {
     // CBU outer always carries explicit DE per spec. Reference the flavour's
     // own DE (from the IR arena) when available so the CBU and its base SI
@@ -196,11 +207,25 @@ fn emit_conversion_based_length(
         emit_length_dim_exponents(buf)
     };
     let measure = buf.fresh();
+    // Reproduce the input entity form: a bare MEASURE_WITH_UNIT supertype with a
+    // typed LENGTH_MEASURE value (NIST ctc_05 inch), else the canonical
+    // LENGTH_MEASURE_WITH_UNIT subtype with a plain real.
+    let (measure_name, value_attr) = if cbu_factor_bare {
+        (
+            "MEASURE_WITH_UNIT",
+            Attribute::Typed {
+                type_name: "LENGTH_MEASURE".into(),
+                value: Box::new(Attribute::Real(factor)),
+            },
+        )
+    } else {
+        ("LENGTH_MEASURE_WITH_UNIT", Attribute::Real(factor))
+    };
     buf.entities.push(WriterEntity {
         id: measure,
         body: WriterBody::Simple {
-            name: "LENGTH_MEASURE_WITH_UNIT".into(),
-            attrs: vec![Attribute::Real(factor), Attribute::EntityRef(base_step)],
+            name: measure_name.into(),
+            attrs: vec![value_attr, Attribute::EntityRef(base_step)],
         },
     });
     buf.entities.push(WriterEntity {

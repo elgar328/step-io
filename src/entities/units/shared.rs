@@ -193,6 +193,14 @@ pub(super) fn read_conversion_based_unit_body(
     // `backfill_cbu_base` post-pass never chases a dead outer.
     if let Some(r) = mwu_ref {
         ctx.cbu_internal_mwu_refs.insert(r);
+        // For LENGTH CBUs, remember whether the conversion_factor used the bare
+        // MEASURE_WITH_UNIT supertype (vs the LENGTH_MEASURE_WITH_UNIT subtype)
+        // so the writer reproduces the input entity form (NIST ctc_05 inch).
+        if matches!(flavor, CbuFlavor::Length)
+            && matches!(graph.get(r), Some(RawEntity::Simple { name, .. }) if name == "MEASURE_WITH_UNIT")
+        {
+            ctx.length_cbu_factor_bare.insert(entity_id);
+        }
     }
     let factor = mwu_ref.and_then(|r| cbu_factor(graph, r));
 

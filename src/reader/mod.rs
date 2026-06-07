@@ -249,6 +249,12 @@ pub struct ReaderContext {
     /// chain, so adding them to `mwu_arena` would cause double-emit on
     /// round-trip.
     pub(crate) cbu_internal_mwu_refs: HashSet<u64>,
+    /// LENGTH `CONVERSION_BASED_UNIT` outer `entity_id`s whose
+    /// `conversion_factor` was a **bare** `MEASURE_WITH_UNIT` (supertype) rather
+    /// than the `LENGTH_MEASURE_WITH_UNIT` subtype (NIST `ctc_05` inch). Consumed
+    /// by `register_named_length` to set `LengthFlavor.cbu_factor_bare` so the
+    /// writer reproduces the input entity form (multiset-stable).
+    pub(crate) length_cbu_factor_bare: HashSet<u64>,
     /// units-2: `CBU outer entity_id → conversion_factor MWU entity_id`.
     /// Populated by `read_conversion_based_unit_body` (`LENGTH` / `PLANE_ANGLE`
     /// / `MASS` branches) and consumed by the `backfill_cbu_base` post-pass

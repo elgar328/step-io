@@ -50,6 +50,7 @@ impl UnitsPool {
             unit,
             cbu_base: None,
             dim_exp: None,
+            cbu_factor_bare: false,
         }))
     }
 
@@ -63,6 +64,7 @@ impl UnitsPool {
             unit: outer,
             cbu_base: Some(base_id),
             dim_exp: None,
+            cbu_factor_bare: false,
         }))
     }
 
@@ -174,6 +176,13 @@ pub struct LengthFlavor {
     /// the `*` (Derived) form. The CBU outer path still uses its dedicated
     /// `length_dim_exp_step` cache and ignores this field.
     pub dim_exp: Option<super::id::DimensionalExponentsId>,
+    /// `true` when this CBU outer's `conversion_factor` was a **bare**
+    /// `MEASURE_WITH_UNIT` (supertype) carrying a typed `LENGTH_MEASURE`, rather
+    /// than the `LENGTH_MEASURE_WITH_UNIT` subtype (NIST `ctc_05` inch). The
+    /// writer reproduces the input entity form so the round-trip multiset is
+    /// stable. `false` for plain SI and kernel-built IR (writer emits the
+    /// canonical `LENGTH_MEASURE_WITH_UNIT`).
+    pub cbu_factor_bare: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
