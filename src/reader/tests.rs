@@ -410,6 +410,32 @@ fn dangling_reference_drops_as_normalization() {
 }
 
 #[test]
+fn datum_reference_element_of_shape_unset_dropped_as_normalization() {
+    // [NS-general-datum-reference-of-shape-unset] shape_aspect.of_shape is
+    // mandatory (EXPRESS + UNIQUE); NIST ctc_05 emits `$`. Classify as a
+    // NonStandardInput drop rather than an AttributeType defect. (of_shape=$ is
+    // detected before base, so the dangling base ref is never read.)
+    let result = convert_source(&minimal_step(
+        "#1 = DATUM_REFERENCE_ELEMENT($,$,$,.F.,#99,$);",
+    ));
+    assert!(
+        result.warnings.iter().all(|w| matches!(w,
+            ConvertError::NonStandardInput { field, normalized_to, .. }
+                if field == "DATUM_REFERENCE_ELEMENT" && normalized_to.starts_with("dropped (of_shape Unset"))),
+        "expected only an of_shape-Unset normalization, got {:#?}",
+        result.warnings
+    );
+    assert!(
+        result
+            .model
+            .pmi
+            .as_ref()
+            .is_none_or(|p| p.general_datum_references.is_empty()),
+        "the of_shape=$ element is dropped"
+    );
+}
+
+#[test]
 fn psa_styles_unset_normalized_as_empty() {
     // [NS-psa-styles-unset] mandatory `styles` SET[1:?] emitted as `$` → accept
     // as empty (NonStandardInput, not a defect); the PSA survives.

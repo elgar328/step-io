@@ -34,7 +34,7 @@ use crate::ir::pmi::{
     TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue,
     ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier, ValueQualifier,
 };
-use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
+use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
 use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -2568,14 +2568,26 @@ impl SimpleEntityHandler for CylindricityToleranceHandler {
 /// `of_shape` or `base` does not resolve — the entry is dropped, symmetric
 /// on re-read. The 6th attr `modifiers` is not modelled and is ignored.
 fn read_general_datum_reference_data(
-    ctx: &ReaderContext,
+    ctx: &mut ReaderContext,
     entity_id: u64,
     attrs: &[Attribute],
+    graph: &EntityGraph,
     entity_name: &'static str,
 ) -> Result<Option<GeneralDatumReferenceData>, ConvertError> {
     check_count(attrs, 6, entity_id, entity_name)?;
     let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
     let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
+    // [NS-general-datum-reference-of-shape-unset] of_shape is a mandatory
+    // shape_aspect attribute (EXPRESS + UNIQUE constraint); some NIST exports
+    // (ctc_05) emit `$`. Classify as non-standard input rather than an
+    // AttributeType defect; the owning entity carries no resolvable product.
+    if matches!(attrs.get(2), Some(Attribute::Unset | Attribute::Derived)) {
+        ctx.record_nonstandard(
+            entity_name.into(),
+            "dropped (of_shape Unset — EXPRESS shape_aspect.of_shape required)",
+        );
+        return Ok(None);
+    }
     let of_shape_ref = read_entity_ref(attrs, 2, entity_id, "of_shape")?;
     let product_definitional = read_bool(attrs, 3, entity_id, "product_definitional")?;
     // attr 5 (`modifiers`) — datum_reference_modifier set, not modelled.
@@ -2610,6 +2622,24 @@ fn read_general_datum_reference_data(
                     return Ok(None);
                 };
                 let Some(&gdr_id) = ctx.general_datum_reference_id_map.get(r) else {
+                    // The member dropped. Record the cascade only when it is an
+                    // of_shape=$ sibling (NS-general-datum-reference-of-shape-unset);
+                    // a member dropped for a different reason (e.g. unmodelled
+                    // datum) stays a plain drop, not a normalization.
+                    let member_of_shape_unset = matches!(
+                        graph.get(*r),
+                        Some(RawEntity::Simple { attributes, .. })
+                            if matches!(
+                                attributes.get(2),
+                                Some(Attribute::Unset | Attribute::Derived)
+                            )
+                    );
+                    if member_of_shape_unset {
+                        ctx.record_nonstandard(
+                            entity_name.into(),
+                            "dropped (common_datum_list member of_shape Unset — cascade)",
+                        );
+                    }
                     return Ok(None);
                 };
                 ids.push(gdr_id);
@@ -2690,12 +2720,13 @@ impl SimpleEntityHandler for DatumReferenceCompartmentHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         let Some(data) = read_general_datum_reference_data(
             ctx,
             entity_id,
             attrs,
+            graph,
             "DATUM_REFERENCE_COMPARTMENT",
         )?
         else {
@@ -2725,10 +2756,15 @@ impl SimpleEntityHandler for DatumReferenceElementHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) =
-            read_general_datum_reference_data(ctx, entity_id, attrs, "DATUM_REFERENCE_ELEMENT")?
+        let Some(data) = read_general_datum_reference_data(
+            ctx,
+            entity_id,
+            attrs,
+            graph,
+            "DATUM_REFERENCE_ELEMENT",
+        )?
         else {
             return Ok(());
         };

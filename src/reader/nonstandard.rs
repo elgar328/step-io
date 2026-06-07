@@ -289,3 +289,15 @@
 //!   information → drop as a `NonStandardInput` normalization (not a defect).
 //!   No cascade (nothing references the dropped ORSI).
 //! - **Code**: `entities/visualization/over_riding_styled_item.rs`.
+//!
+//! ### NS-general-datum-reference-of-shape-unset
+//! - **Source**: NIST ctc_05.
+//! - **Schema rule broken**: `shape_aspect.of_shape : product_definition_shape`
+//!   is mandatory (and `UNIQUE id, of_shape`); a `DATUM_REFERENCE_ELEMENT` /
+//!   `DATUM_REFERENCE_COMPARTMENT` (general_datum_reference subtype) emits `$`.
+//! - **Acceptance**: the entity has no resolvable owning product → drop as a
+//!   `NonStandardInput` (not an AttributeType defect). A `COMMON_DATUM_LIST`
+//!   compartment whose member dropped for this reason cascades and is recorded
+//!   too (gated on the member's own of_shape=$ so an unrelated drop stays a
+//!   plain drop, not a normalization).
+//! - **Code**: `entities/pmi.rs` (`read_general_datum_reference_data`).
