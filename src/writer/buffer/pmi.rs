@@ -14,7 +14,7 @@ use crate::entities::shape_rep::shape_aspect_subtypes::{
     CompositeShapeAspectHandler, ShapeAspectSubtypeWriteInput,
 };
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
-use crate::ir::shape_aspect_ref::ShapeAspectRef;
+use crate::ir::shape_aspect_ref::{GeometricToleranceTarget, ShapeAspectRef};
 use crate::ir::shape_rep::{CompositeShapeAspectKind, ShapeAspect};
 use crate::writer::WriteError;
 
@@ -644,6 +644,21 @@ impl WriteBuffer<'_> {
             ShapeAspectRef::ToleranceZone(id) => self.tolerance_zone_step_ids[id.0 as usize],
             ShapeAspectRef::GeneralDatumReference(id) => {
                 self.general_datum_reference_step_ids[id.0 as usize]
+            }
+        }
+    }
+
+    /// Emit a `geometric_tolerance_target` SELECT (`toleranced_shape_aspect`)
+    /// and return its STEP id. `ShapeAspect` delegates to
+    /// [`Self::emit_shape_aspect_ref`]; `ProductDefinitionShape` resolves
+    /// through `property_definition_step_ids`, populated by
+    /// `emit_property_definitions_pds_only` which runs before
+    /// `emit_geometric_tolerances`.
+    pub(crate) fn emit_geometric_tolerance_target(&self, item: GeometricToleranceTarget) -> u64 {
+        match item {
+            GeometricToleranceTarget::ShapeAspect(r) => self.emit_shape_aspect_ref(r),
+            GeometricToleranceTarget::ProductDefinitionShape(id) => {
+                self.property_definition_step_ids[id.0 as usize]
             }
         }
     }

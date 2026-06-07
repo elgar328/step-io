@@ -8,6 +8,7 @@
 use crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_ref;
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
+use crate::ir::GeometricToleranceTarget;
 use crate::ir::PmiPool;
 use crate::ir::attr::{
     check_count, read_bool, read_entity_ref, read_entity_ref_list, read_enum, read_real,
@@ -2248,6 +2249,30 @@ pub(crate) fn resolve_geometric_tolerance_ref(
         .map(GeometricToleranceRef::WithDatumReference)
 }
 
+/// Resolve a `geometric_tolerance.toleranced_shape_aspect` ref — the
+/// `geometric_tolerance_target` SELECT. Tries `shape_aspect` (the common case)
+/// first, then `product_definition_shape` via `property_def_step_to_id`. The
+/// PDS branch is gated on the arena variant so a tolerance targeting a non-PDS
+/// `PROPERTY_DEFINITION` (which also lives in `property_def_step_to_id`) does
+/// not mis-resolve. `None` when the ref is neither.
+fn resolve_geometric_tolerance_target(
+    ctx: &ReaderContext,
+    item_ref: u64,
+) -> Option<GeometricToleranceTarget> {
+    if let Some(sa) = resolve_shape_aspect_ref(ctx, item_ref) {
+        return Some(GeometricToleranceTarget::ShapeAspect(sa));
+    }
+    let &pd_id = ctx.property_def_step_to_id.get(&item_ref)?;
+    let pool = ctx.properties.as_ref()?;
+    if matches!(
+        pool.property_definitions[pd_id],
+        crate::ir::property::PropertyDefinition::ProductDefinitionShape(_)
+    ) {
+        return Some(GeometricToleranceTarget::ProductDefinitionShape(pd_id));
+    }
+    None
+}
+
 /// Read the shared `geometric_tolerance` 4-attr form-tolerance body.
 /// `Ok(None)` when `magnitude` or `toleranced_shape_aspect` does not
 /// resolve — the tolerance is dropped, symmetric on re-read.
@@ -2266,7 +2291,8 @@ fn read_geometric_tolerance_data(
     let Some(magnitude) = resolve_tolerance_magnitude(ctx, magnitude_ref) else {
         return Ok(None);
     };
-    let Some(toleranced_shape_aspect) = resolve_shape_aspect_ref(ctx, shape_aspect_ref) else {
+    let Some(toleranced_shape_aspect) = resolve_geometric_tolerance_target(ctx, shape_aspect_ref)
+    else {
         return Ok(None);
     };
     Ok(Some(GeometricToleranceData {
@@ -2300,7 +2326,7 @@ pub(crate) fn write_geometric_tolerance(buf: &mut WriteBuffer, gt: GeometricTole
             buf.representation_item_step_ids[id.0 as usize]
         }
     };
-    let shape_aspect = buf.emit_shape_aspect_ref(data.toleranced_shape_aspect);
+    let shape_aspect = buf.emit_geometric_tolerance_target(data.toleranced_shape_aspect);
     let has_unit_size = data.unit_size.is_some();
     let has_area_unit = data.defined_area_unit.is_some();
     let has_modifiers = !data.modifiers.is_empty();
@@ -2740,7 +2766,7 @@ fn build_gt_with_datum_reference_data(
     displacement: Option<ToleranceMagnitude>,
 ) -> Option<GeometricToleranceWithDatumReferenceData> {
     let magnitude = resolve_tolerance_magnitude(ctx, magnitude_ref)?;
-    let toleranced_shape_aspect = resolve_shape_aspect_ref(ctx, shape_aspect_ref)?;
+    let toleranced_shape_aspect = resolve_geometric_tolerance_target(ctx, shape_aspect_ref)?;
     let mut datum_system = Vec::with_capacity(datum_system_refs.len());
     for &r in datum_system_refs {
         if let Some(&id) = ctx.datum_system_id_map.get(&r) {
@@ -2949,7 +2975,8 @@ fn read_gt_data_complex(
     let Some(magnitude) = resolve_tolerance_magnitude(ctx, magnitude_ref) else {
         return Ok(None);
     };
-    let Some(toleranced_shape_aspect) = resolve_shape_aspect_ref(ctx, shape_aspect_ref) else {
+    let Some(toleranced_shape_aspect) = resolve_geometric_tolerance_target(ctx, shape_aspect_ref)
+    else {
         return Ok(None);
     };
     let modifiers = read_optional_modifiers(parts, entity_id)?;
@@ -3014,7 +3041,7 @@ pub(crate) fn write_geometric_tolerance_with_datum_reference(
             buf.representation_item_step_ids[id.0 as usize]
         }
     };
-    let shape_aspect = buf.emit_shape_aspect_ref(data.toleranced_shape_aspect);
+    let shape_aspect = buf.emit_geometric_tolerance_target(data.toleranced_shape_aspect);
     let mut datum_system_refs = Vec::with_capacity(data.datum_system.len());
     for ds_id in &data.datum_system {
         datum_system_refs.push(Attribute::EntityRef(

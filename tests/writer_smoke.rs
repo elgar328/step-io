@@ -29,7 +29,7 @@ use step_io::ir::pmi::{
 use step_io::ir::property::{
     DerivedDefinitionItem, GeneralProperty, GeneralPropertyAssociation, Property, PropertyPool,
 };
-use step_io::ir::shape_aspect_ref::ShapeAspectRef;
+use step_io::ir::shape_aspect_ref::{GeometricToleranceTarget, ShapeAspectRef};
 use step_io::ir::shape_rep::{
     AllAroundShapeAspect, AngleUnit, CentreOfSymmetry, CompositeGroupShapeAspect,
     CompositeShapeAspectKind, LengthUnit, ShapeAspect, ShapeAspectRelationship,
@@ -2159,7 +2159,7 @@ fn property_definition_with_geometric_tolerance_target_round_trips() {
             name: "t".into(),
             description: String::new(),
             magnitude: ToleranceMagnitude::MeasureWithUnit(mwu),
-            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
             modifiers: Vec::new(),
             unit_size: None,
             defined_area_unit: None,
@@ -4281,7 +4281,7 @@ fn gt_relationship_round_trip() {
         name: "t".into(),
         description: String::new(),
         magnitude: measure(),
-        toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+        toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
         modifiers: Vec::new(),
         unit_size: None,
         defined_area_unit: None,
@@ -4590,7 +4590,7 @@ fn geometric_tolerance_form_tolerances_round_trip() {
         name: "t".into(),
         description: String::new(),
         magnitude,
-        toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+        toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
         modifiers: Vec::new(),
         unit_size: None,
         defined_area_unit: None,
@@ -4633,7 +4633,7 @@ fn geometric_tolerance_form_tolerances_round_trip() {
     ));
     assert!(matches!(
         d4.toleranced_shape_aspect,
-        ShapeAspectRef::ShapeAspect(_)
+        GeometricToleranceTarget::ShapeAspect(ShapeAspectRef::ShapeAspect(_))
     ));
 
     let GeometricTolerance::Flatness(d0) = gts[0] else {
@@ -4645,7 +4645,7 @@ fn geometric_tolerance_form_tolerances_round_trip() {
     ));
     assert!(matches!(
         d0.toleranced_shape_aspect,
-        ShapeAspectRef::ShapeAspect(_)
+        GeometricToleranceTarget::ShapeAspect(ShapeAspectRef::ShapeAspect(_))
     ));
     let GeometricTolerance::Straightness(d1) = gts[1] else {
         unreachable!()
@@ -4971,7 +4971,7 @@ fn tolerance_zone_round_trip() {
             name: "t".into(),
             description: String::new(),
             magnitude: ToleranceMagnitude::MeasureWithUnit(mwu),
-            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
             modifiers: Vec::new(),
             unit_size: None,
             defined_area_unit: None,
@@ -5741,7 +5741,7 @@ fn dmia_geometric_tolerance_with_datum_reference_round_trip() {
                 name: "t".into(),
                 description: String::new(),
                 magnitude: ToleranceMagnitude::MeasureWithUnit(mwu),
-                toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+                toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
                 datum_system: vec![ds],
                 modifiers: Vec::new(),
                 displacement: None,
@@ -7053,7 +7053,7 @@ fn tolerance_magnitude_references_arena_measure() {
             name: "t".into(),
             description: String::new(),
             magnitude: ToleranceMagnitude::RepresentationItem(mri),
-            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
             modifiers: Vec::new(),
             unit_size: None,
             defined_area_unit: None,
@@ -7374,7 +7374,7 @@ fn projected_zone_definition_round_trip() {
             name: "t".into(),
             description: String::new(),
             magnitude: ToleranceMagnitude::MeasureWithUnit(mwu),
-            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
             modifiers: Vec::new(),
             unit_size: None,
             defined_area_unit: None,
@@ -7665,7 +7665,7 @@ fn geometric_tolerance_with_datum_reference_round_trip() {
                 name: "t".into(),
                 description: String::new(),
                 magnitude: ToleranceMagnitude::MeasureWithUnit(mwu),
-                toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+                toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
                 datum_system: vec![ds],
                 modifiers: Vec::new(),
                 displacement: None,
@@ -7689,7 +7689,7 @@ fn geometric_tolerance_with_datum_reference_round_trip() {
     assert_eq!(d.datum_system.len(), 1, "datum_system round-trips");
     assert!(matches!(
         d.toleranced_shape_aspect,
-        ShapeAspectRef::ShapeAspect(_)
+        GeometricToleranceTarget::ShapeAspect(ShapeAspectRef::ShapeAspect(_))
     ));
 }
 
@@ -7766,7 +7766,7 @@ fn complex_datum_ref_tolerance_round_trip() {
             name: "t".into(),
             description: String::new(),
             magnitude: ToleranceMagnitude::MeasureWithUnit(mwu),
-            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
             datum_system: vec![ds],
             modifiers: Vec::new(),
             displacement: None,
@@ -7887,7 +7887,7 @@ fn geometric_tolerance_with_modifiers_round_trip() {
             name: "P".into(),
             description: String::new(),
             magnitude: magnitude(),
-            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
             datum_system: vec![ds],
             modifiers: vec![GeometricToleranceModifier::MaximumMaterialRequirement],
             displacement: None,
@@ -7898,7 +7898,7 @@ fn geometric_tolerance_with_modifiers_round_trip() {
             name: "R".into(),
             description: String::new(),
             magnitude: magnitude(),
-            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
             modifiers: vec![GeometricToleranceModifier::LeastMaterialRequirement],
             unit_size: None,
             defined_area_unit: None,
@@ -8047,7 +8047,7 @@ fn gt_defined_unit_area_unit_displacement_round_trip() {
             name: "F1".into(),
             description: String::new(),
             magnitude: magnitude(),
-            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
             modifiers: Vec::new(),
             unit_size: Some(ToleranceMagnitude::MeasureWithUnit(mwu_id)),
             defined_area_unit: None,
@@ -8058,7 +8058,7 @@ fn gt_defined_unit_area_unit_displacement_round_trip() {
             name: "F2".into(),
             description: String::new(),
             magnitude: magnitude(),
-            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
             modifiers: Vec::new(),
             unit_size: Some(ToleranceMagnitude::MeasureWithUnit(mwu_id)),
             defined_area_unit: Some(DefinedAreaUnit {
@@ -8073,7 +8073,7 @@ fn gt_defined_unit_area_unit_displacement_round_trip() {
                 name: "SP".into(),
                 description: String::new(),
                 magnitude: magnitude(),
-                toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+                toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
                 datum_system: vec![ds],
                 modifiers: Vec::new(),
                 displacement: Some(ToleranceMagnitude::MeasureWithUnit(mwu_id)),
@@ -8193,7 +8193,7 @@ fn gt_defined_unit_displacement_reference_complex_measure() {
             name: "F".into(),
             description: String::new(),
             magnitude: ToleranceMagnitude::RepresentationItem(mri),
-            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
             modifiers: Vec::new(),
             unit_size: Some(ToleranceMagnitude::RepresentationItem(mri)),
             defined_area_unit: Some(DefinedAreaUnit {
@@ -8208,7 +8208,7 @@ fn gt_defined_unit_displacement_reference_complex_measure() {
                 name: "SP".into(),
                 description: String::new(),
                 magnitude: ToleranceMagnitude::RepresentationItem(mri),
-                toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+                toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
                 datum_system: vec![ds],
                 modifiers: Vec::new(),
                 displacement: Some(ToleranceMagnitude::RepresentationItem(mri)),

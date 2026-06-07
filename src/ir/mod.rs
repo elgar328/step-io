@@ -123,7 +123,7 @@ pub use representation_item::{
     MeasureValue, QualifiedRepresentationItem, QualifierRef, RepresentationItem,
     RepresentationItemRef, ValueRepresentationItem,
 };
-pub use shape_aspect_ref::ShapeAspectRef;
+pub use shape_aspect_ref::{GeometricToleranceTarget, ShapeAspectRef};
 pub use shape_rep::{
     AdvancedBrepRepr, AllAroundShapeAspect, AngleUnit, CentreOfSymmetry,
     CharacterizedItemWithinRepresentation, CharacterizedObject, CharacterizedObjectData,

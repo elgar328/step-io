@@ -16,7 +16,7 @@ use super::id::{
     TypeQualifierId, ValueFormatTypeQualifierId,
 };
 use super::representation_item::RepresentationItemRef;
-use super::shape_aspect_ref::ShapeAspectRef;
+use super::shape_aspect_ref::{GeometricToleranceTarget, ShapeAspectRef};
 
 /// Top-level container for `pmi`-pool entities. `None` when the source
 /// file carried no PMI content.
@@ -243,8 +243,8 @@ pub struct GeometricToleranceWithDatumReferenceData {
     pub description: String,
     /// `magnitude` — a `ref_measure_with_unit`.
     pub magnitude: ToleranceMagnitude,
-    /// `toleranced_shape_aspect` — a `ref_shape_aspect`.
-    pub toleranced_shape_aspect: ShapeAspectRef,
+    /// `toleranced_shape_aspect` — a `geometric_tolerance_target` SELECT.
+    pub toleranced_shape_aspect: GeometricToleranceTarget,
     /// `datum_system` — `DATUM_SYSTEM` refs in source order.
     pub datum_system: Vec<DatumSystemId>,
     /// `GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers` part — empty when
@@ -339,8 +339,8 @@ pub struct GeometricToleranceData {
     pub description: String,
     /// `magnitude` — a `ref_measure_with_unit`.
     pub magnitude: ToleranceMagnitude,
-    /// `toleranced_shape_aspect` — a `ref_shape_aspect`.
-    pub toleranced_shape_aspect: ShapeAspectRef,
+    /// `toleranced_shape_aspect` — a `geometric_tolerance_target` SELECT.
+    pub toleranced_shape_aspect: GeometricToleranceTarget,
     /// `GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers` part — empty when
     /// the source instance is a plain form tolerance; non-empty values
     /// trigger 3-part complex MI emit (GT + WM + LEAF).

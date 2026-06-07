@@ -17,7 +17,7 @@
 use super::id::{
     CompositeShapeAspectId, ContinuousShapeAspectId, DatumFeatureId, DatumId, DatumSystemId,
     DatumTargetId, DerivedShapeAspectId, GeneralDatumReferenceId, PlacedDatumTargetFeatureId,
-    ShapeAspectId, ToleranceZoneId,
+    PropertyDefinitionId, ShapeAspectId, ToleranceZoneId,
 };
 
 /// What a STEP `shape_aspect` reference resolved to in step-io's IR. Each
@@ -47,4 +47,27 @@ pub enum ShapeAspectRef {
     /// `GENERAL_DATUM_REFERENCE` — a `shape_aspect` subtype; the id covers both
     /// `DATUM_REFERENCE_COMPARTMENT` and `DATUM_REFERENCE_ELEMENT`.
     GeneralDatumReference(GeneralDatumReferenceId),
+}
+
+/// `geometric_tolerance_target` SELECT — the target of
+/// `GEOMETRIC_TOLERANCE.toleranced_shape_aspect`. EXPRESS:
+/// `SELECT(dimensional_location, dimensional_size, product_definition_shape,
+/// shape_aspect)`. The blueprint collapses this to `ref_shape_aspect` because
+/// the corpus is shape_aspect-dominated; step-io adds members additively as
+/// fixtures require them. Only `shape_aspect` (the common case) and
+/// `product_definition_shape` (NIST `ftc_07` / `ftc_10`) are observed; the two
+/// dimensional members never appear as tolerance targets in the corpus.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum GeometricToleranceTarget {
+    /// A `shape_aspect` subtype (the dominant case).
+    ShapeAspect(ShapeAspectRef),
+    /// `PRODUCT_DEFINITION_SHAPE`, materialized in the `property_definitions`
+    /// arena as a `ProductDefinitionShape` variant.
+    ProductDefinitionShape(PropertyDefinitionId),
+}
+
+impl From<ShapeAspectRef> for GeometricToleranceTarget {
+    fn from(r: ShapeAspectRef) -> Self {
+        GeometricToleranceTarget::ShapeAspect(r)
+    }
 }

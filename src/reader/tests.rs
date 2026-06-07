@@ -1680,6 +1680,66 @@ fn pdef_with_associated_documents_is_recognised_as_product_definition() {
 }
 
 #[test]
+fn geometric_tolerance_targets_product_definition_shape() {
+    // GEOMETRIC_TOLERANCE.toleranced_shape_aspect is a geometric_tolerance_target
+    // SELECT that also admits product_definition_shape (not just shape_aspect),
+    // NIST ftc_07 / ftc_10. The reader must resolve a PDS target (#7) rather
+    // than dropping the tolerance.
+    use crate::ir::pmi::GeometricTolerance;
+    use crate::ir::shape_aspect_ref::GeometricToleranceTarget;
+    let source = minimal_step(
+        "#1 = APPLICATION_CONTEXT('test');\n\
+         #2 = PRODUCT_CONTEXT('',#1,'mechanical');\n\
+         #3 = PRODUCT_DEFINITION_CONTEXT('part definition',#1,'design');\n\
+         #4 = PRODUCT('P','P','',(#2));\n\
+         #5 = PRODUCT_DEFINITION_FORMATION('1','',#4);\n\
+         #6 = PRODUCT_DEFINITION('design','',#5,#3);\n\
+         #7 = PRODUCT_DEFINITION_SHAPE('','',#6);\n\
+         #10 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+         #11 = ( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n\
+         #12 = ( NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT() );\n\
+         #13 = ( GEOMETRIC_REPRESENTATION_CONTEXT(3)\n\
+         \t\tGLOBAL_UNIT_ASSIGNED_CONTEXT((#10,#11,#12))\n\
+         \t\tREPRESENTATION_CONTEXT('','') );\n\
+         #14 = SHAPE_REPRESENTATION('',(),#13);\n\
+         #15 = SHAPE_DEFINITION_REPRESENTATION(#7,#14);\n\
+         #20 = LENGTH_MEASURE_WITH_UNIT(LENGTH_MEASURE(0.1),#10);\n\
+         #21 = FLATNESS_TOLERANCE('Flatness.1','',#20,#7);",
+    );
+    let result = convert_source(&source);
+    assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
+    let pmi = result.model.pmi.as_ref().expect("pmi pool");
+    assert_eq!(pmi.geometric_tolerances.len(), 1, "tolerance preserved");
+    let GeometricTolerance::Flatness(d) = pmi.geometric_tolerances.iter().next().unwrap() else {
+        panic!("expected Flatness");
+    };
+    assert!(
+        matches!(
+            d.toleranced_shape_aspect,
+            GeometricToleranceTarget::ProductDefinitionShape(_)
+        ),
+        "toleranced_shape_aspect resolves to a PDS target, got {:?}",
+        d.toleranced_shape_aspect
+    );
+
+    // Writer re-emits the PDS ref and re-reading preserves the variant.
+    let out = result.model.write_to_string().expect("write");
+    let re = convert_source(&out);
+    let re_pmi = re.model.pmi.as_ref().expect("pmi pool");
+    let GeometricTolerance::Flatness(rd) = re_pmi.geometric_tolerances.iter().next().unwrap()
+    else {
+        panic!("expected Flatness after round-trip");
+    };
+    assert!(
+        matches!(
+            rd.toleranced_shape_aspect,
+            GeometricToleranceTarget::ProductDefinitionShape(_)
+        ),
+        "PDS target survives round-trip"
+    );
+}
+
+#[test]
 fn product_definition_id_description_materialised_in_arena() {
     // PRODUCT_DEFINITION.id / .description were dropped on read and hardcoded
     // to 'design' / '' by the writer. They are now preserved in the canonical
