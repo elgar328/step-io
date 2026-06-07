@@ -46,9 +46,11 @@ impl SimpleEntityHandler for OverRidingStyledItemHandler {
         let Some(over_ridden_ref) =
             read_optional_entity_ref(attrs, 3, entity_id, "over_ridden_style")?
         else {
+            // field must be the exact type name so reference-check's
+            // count-aware effective-missing deduction matches the dropped type.
             ctx.record_nonstandard(
-                "OVER_RIDING_STYLED_ITEM.over_ridden_style (Unset)".into(),
-                "dropped (no over-ridden style)",
+                "OVER_RIDING_STYLED_ITEM".into(),
+                "dropped (over_ridden_style Unset — no over-ridden style)",
             );
             return Ok(());
         };

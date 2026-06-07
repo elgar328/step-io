@@ -490,7 +490,7 @@ fn orsi_over_ridden_style_unset_dropped_as_normalization() {
     assert!(
         result.warnings.iter().all(|w| matches!(w,
             ConvertError::NonStandardInput { field, normalized_to, .. }
-                if field.contains("over_ridden_style (Unset)") && normalized_to.starts_with("dropped"))),
+                if field == "OVER_RIDING_STYLED_ITEM" && normalized_to.starts_with("dropped"))),
         "expected only an over_ridden_style-Unset normalization, got {:#?}",
         result.warnings
     );
