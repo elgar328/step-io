@@ -95,6 +95,8 @@ pub(super) fn match_mass_conversion(upper_name: &str) -> Option<MassUnit> {
         // gram defined as a CONVERSION_BASED_UNIT (0.001 of the SI kg) —
         // a genuine conversion, like INCH for length.
         "GRAM" => Some(MassUnit::Gram),
+        // metric tonne = 1000 × SI kg, in CBU form.
+        "TON" => Some(MassUnit::Ton),
         _ => None,
     }
 }
@@ -146,14 +148,16 @@ fn match_angle_by_factor(factor: f64) -> Option<AngleUnit> {
 }
 
 /// Identify a mass unit by its conversion factor to the SI base (kilogram).
-/// `0.453_592_37` → Pound, `0.001` → Gram. (Length is excluded from factor
-/// matching: its CBU base varies — millimetre vs metre — so the factor is not
-/// a base-free identity.)
+/// `0.453_592_37` → Pound, `0.001` → Gram, `1000.0` → Ton. (Length is excluded
+/// from factor matching: its CBU base varies — millimetre vs metre — so the
+/// factor is not a base-free identity.)
 fn match_mass_by_factor(factor: f64) -> Option<MassUnit> {
     if factor_eq(factor, 0.453_592_37) {
         Some(MassUnit::Pound)
     } else if factor_eq(factor, 0.001) {
         Some(MassUnit::Gram)
+    } else if factor_eq(factor, 1000.0) {
+        Some(MassUnit::Ton)
     } else {
         None
     }
@@ -242,6 +246,7 @@ pub(super) fn read_conversion_based_unit_body(
                     let normalized_to = match unit {
                         MassUnit::Pound => "POUND",
                         MassUnit::Gram => "GRAM",
+                        MassUnit::Ton => "TON",
                         MassUnit::Kilogram => "KILOGRAM",
                         // Megagram is plain SI only — never a CBU conversion
                         // result; unreachable on this path.

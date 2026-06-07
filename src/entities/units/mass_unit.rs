@@ -94,8 +94,10 @@ impl ComplexEntityHandler for MassUnitHandler {
         let prefix = match unit {
             MassUnit::Gram => None,
             MassUnit::Megagram => Some("MEGA"),
-            // Kilogram / Pound fallback both emit KILO-GRAM.
-            MassUnit::Kilogram | MassUnit::Pound => Some("KILO"),
+            // Kilogram / Pound / Ton fallback emit KILO-GRAM. Ton is a CBU
+            // (cbu_base = Some) so it never reaches this plain-SI path; the arm
+            // is compiler-required only.
+            MassUnit::Kilogram | MassUnit::Pound | MassUnit::Ton => Some("KILO"),
         };
         emit_plain_si_mass(buf, prefix, target_id, dim_exp_step);
         Ok(target_id)
@@ -137,6 +139,10 @@ pub(crate) fn emit_mass_cbu_outer(
     let (name, factor) = match unit {
         MassUnit::Pound => ("POUND", 0.453_592_37),
         MassUnit::Gram => ("GRAM", 0.001),
+        // Lowercase 'ton' matches the corpus spelling; the reader discards the
+        // CBU name string, so the writer must reproduce the source casing to
+        // keep the round-trip multiset stable (uppercase "TON" would differ).
+        MassUnit::Ton => ("ton", 1000.0),
         // Kilogram / Megagram reaching the CBU path is unexpected (both are
         // plain SI; kernel-built IR) — fall back to the already-emitted base
         // step id (no extra entity).

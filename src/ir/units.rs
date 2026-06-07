@@ -225,6 +225,11 @@ pub enum MassUnit {
     Pound,
     /// `(MEGA, GRAM)` — megagram (tonne). Plain SI, never a CBU.
     Megagram,
+    /// `CONVERSION_BASED_UNIT('ton', factor 1000.0 × SI kg)` — metric tonne in
+    /// CBU form. Distinct from [`MassUnit::Megagram`] (plain SI `(MEGA, GRAM)`):
+    /// both are 1000 kg, but the input form (CBU wrapper vs SI prefix) is
+    /// preserved so the round-trip multiset stays stable.
+    Ton,
 }
 
 /// `MEASURE_WITH_UNIT` arena enum.

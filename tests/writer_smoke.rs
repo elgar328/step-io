@@ -2557,6 +2557,64 @@ fn megagram_si_unit_round_trips() {
 }
 
 #[test]
+fn ton_conversion_based_unit_round_trips() {
+    // A metric tonne defined as a CONVERSION_BASED_UNIT (1000 × the SI kg) —
+    // CBU form, distinct from the plain-SI megagram. The reader recognizes the
+    // 'ton' name (and the 1000.0 factor), and the writer re-emits the CBU
+    // wrapper, not `(MEGA, GRAM)`. Ton and Megagram coexist.
+    let mut model = empty_model();
+    let mut pool = UnitsPool::default();
+    let kg = pool.named_units.push(NamedUnit::Mass(MassFlavor {
+        unit: MassUnit::Kilogram,
+        cbu_base: None,
+        dim_exp: None,
+    }));
+    pool.named_units.push(NamedUnit::Mass(MassFlavor {
+        unit: MassUnit::Ton,
+        cbu_base: Some(kg),
+        dim_exp: None,
+    }));
+    // A coexisting plain-SI megagram (also 1000 kg, different form).
+    pool.named_units.push(NamedUnit::Mass(MassFlavor {
+        unit: MassUnit::Megagram,
+        cbu_base: None,
+        dim_exp: None,
+    }));
+    model.units_pool = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("CONVERSION_BASED_UNIT('ton'"),
+        "ton must re-emit as a lowercase CBU wrapper; got:\n{text}"
+    );
+    assert!(
+        text.contains("SI_UNIT(.MEGA.,.GRAM.)"),
+        "megagram must still emit plain SI"
+    );
+    let re = reconvert(&text);
+    let re_pool = re.units_pool.as_ref().expect("round-tripped units pool");
+    let ton = re_pool
+        .named_units
+        .iter()
+        .find_map(|n| match n {
+            NamedUnit::Mass(f) if f.unit == MassUnit::Ton => Some(f),
+            _ => None,
+        })
+        .expect("ton NamedUnit survived round-trip");
+    assert!(
+        ton.cbu_base.is_some(),
+        "ton round-trips as a CBU-wrapped unit"
+    );
+    assert!(
+        re_pool
+            .named_units
+            .iter()
+            .any(|n| matches!(n, NamedUnit::Mass(f) if f.unit == MassUnit::Megagram)),
+        "megagram coexists after round-trip"
+    );
+}
+
+#[test]
 fn shape_aspect_subtypes_round_trip() {
     // COMPOSITE_GROUP_SHAPE_ASPECT / CENTRE_OF_SYMMETRY /
     // ALL_AROUND_SHAPE_ASPECT — SHAPE_ASPECT subtypes, each its own arena.
