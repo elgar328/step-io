@@ -266,10 +266,20 @@
 //!   `DIRECTION` / `VECTOR`, and curves shared from outside the subtree) are not
 //!   counted. The 3D `SURFACE_CURVE` that owns the pcurve survives on its 3D
 //!   `curve_3d`.
+//! - **All-wr3 wrapper**: when *every* `associated_geometry` member of a
+//!   `SURFACE_CURVE` / `SEAM_CURVE` is a wr3-dropped PCURVE (MicroRallyCar: 4
+//!   wrappers), the wrapper has no resolvable geometry and is not stored in
+//!   `surface_curve_map`. `collect_surface_curve` records this as the cascade
+//!   (`record_nonstandard("SURFACE_CURVE" / "SEAM_CURVE", "dropped … pcurve.wr3
+//!   cascade")`), gated on `wr3_dropped == member_refs.len()` so wrappers with a
+//!   surviving 2D member (or a non-wr3 failure) keep their defect warning. The
+//!   owned 3D `curve_3d` still survives, so the referencing `EDGE_CURVE` is not
+//!   affected.
 //! - **Writer symmetry**: none — the subtree is dropped, output unchanged
 //!   (merkle-neutral).
 //! - **Code**: `reader/mod.rs` (`ReaderContext::record_pcurve_wr3_drop`),
-//!   `entities/geometry/surface_curve.rs` (drop site).
+//!   `entities/geometry/surface_curve.rs` (per-pcurve and all-wr3 wrapper drop
+//!   sites).
 //!
 //! ### NS-psa-styles-unset
 //! - **Source**: NIST ctc_05.

@@ -99,6 +99,10 @@ pub(crate) fn collect_surface_curve(
     .unwrap_or(PreferredSurfaceCurveRepresentation::PcurveS1);
 
     let mut members = Vec::with_capacity(member_refs.len());
+    // Count members dropped as the [NS-pcurve-3d-in-pspace] normalization so a
+    // wrapper whose every member is a wr3-violating PCURVE can be classified as
+    // non-standard input rather than silently skipped.
+    let mut wr3_dropped = 0usize;
     for &member_ref in &member_refs {
         // `associated_geometry` is a `pcurve_or_surface` SELECT: a member is
         // either a PCURVE (resolve through its definitional 2D curve) or a
@@ -116,7 +120,9 @@ pub(crate) fn collect_surface_curve(
                 // = 2` required). Classify the dropped subtree as non-standard
                 // input rather than a step-io defect; otherwise keep the warning.
                 None => {
-                    if !ctx.record_pcurve_wr3_drop(member_ref, graph) {
+                    if ctx.record_pcurve_wr3_drop(member_ref, graph) {
+                        wr3_dropped += 1;
+                    } else {
                         ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                             entity_id,
                             detail: format!(
@@ -148,6 +154,23 @@ pub(crate) fn collect_surface_curve(
                 associated_geometry: members,
                 master_representation,
             },
+        );
+    } else if !member_refs.is_empty() && wr3_dropped == member_refs.len() {
+        // [NS-pcurve-3d-in-pspace] every associated_geometry member was a
+        // wr3-violating PCURVE (3D curve in a 2D parameter space). With no
+        // resolvable geometry the wrapper carries nothing to model — classify
+        // the whole SURFACE_CURVE / SEAM_CURVE as the natural cascade of the
+        // pcurve normalization instead of silently skipping it. field is the
+        // exact type name so reference-check's count-aware effective-missing
+        // deduction matches the dropped type.
+        ctx.record_nonstandard(
+            if is_seam {
+                "SEAM_CURVE"
+            } else {
+                "SURFACE_CURVE"
+            }
+            .into(),
+            "dropped (all pcurve members 3D-in-pspace — EXPRESS pcurve.wr3 cascade)",
         );
     }
 }

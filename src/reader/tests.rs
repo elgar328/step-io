@@ -563,10 +563,72 @@ fn pcurve_3d_in_parameter_space_dropped_as_normalization() {
     assert_eq!(dropped("CIRCLE"), 1);
     assert_eq!(dropped("TRIMMED_CURVE"), 1);
     assert_eq!(dropped("AXIS2_PLACEMENT_3D"), 1);
+    // #21's only associated_geometry member (#20) is the wr3-dropped pcurve, so
+    // the SURFACE_CURVE wrapper has no resolvable geometry and is itself dropped
+    // as the pcurve.wr3 cascade.
+    assert_eq!(dropped("SURFACE_CURVE"), 1);
     // Survivors are not recorded: CARTESIAN_POINT / DIRECTION self-discriminate,
     // and the PLANE's placement #4 is outside the pcurve subtree.
     assert_eq!(dropped("CARTESIAN_POINT"), 0);
     assert_eq!(dropped("DIRECTION"), 0);
+}
+
+#[test]
+fn surface_curve_mixed_members_not_dropped_as_normalization() {
+    // Over-count guard for the all-wr3 wrapper rule: a SURFACE_CURVE with one
+    // good 2D pcurve member and one wr3-violating pcurve member keeps a
+    // surviving member, so the wrapper is stored and NOT recorded as a dropped
+    // SURFACE_CURVE (only the wr3 pcurve subtree is normalized away).
+    let result = convert_source(&minimal_step(
+        // Surface + good 2D pcurve (#5 PLANE → #20 PCURVE over a 2D LINE).
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = DIRECTION('',(0.,0.,1.));\n\
+         #3 = DIRECTION('',(1.,0.,0.));\n\
+         #4 = AXIS2_PLACEMENT_3D('',#1,#2,#3);\n\
+         #5 = PLANE('',#4);\n\
+         #6 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #7 = DIRECTION('',(1.,0.,0.));\n\
+         #8 = VECTOR('',#7,1.);\n\
+         #9 = LINE('',#6,#8);\n\
+         #30 = CARTESIAN_POINT('',(0.,0.));\n\
+         #31 = DIRECTION('',(1.,0.));\n\
+         #32 = VECTOR('',#31,1.);\n\
+         #33 = LINE('',#30,#32);\n\
+         #34 = ( GEOMETRIC_REPRESENTATION_CONTEXT(2) PARAMETRIC_REPRESENTATION_CONTEXT() REPRESENTATION_CONTEXT('pspace','') );\n\
+         #35 = DEFINITIONAL_REPRESENTATION('',(#33),#34);\n\
+         #36 = PCURVE('',#5,#35);\n\
+         #10 = CARTESIAN_POINT('',(1.,1.,0.));\n\
+         #11 = DIRECTION('',(0.,0.,1.));\n\
+         #12 = DIRECTION('',(1.,0.,0.));\n\
+         #13 = AXIS2_PLACEMENT_3D('',#10,#11,#12);\n\
+         #14 = CIRCLE('',#13,0.5);\n\
+         #15 = CARTESIAN_POINT('',(1.5,1.,0.));\n\
+         #16 = CARTESIAN_POINT('',(0.5,1.,0.));\n\
+         #17 = TRIMMED_CURVE('',#14,(#15),(#16),.T.,.CARTESIAN.);\n\
+         #18 = ( GEOMETRIC_REPRESENTATION_CONTEXT(2) PARAMETRIC_REPRESENTATION_CONTEXT() REPRESENTATION_CONTEXT('pspace','') );\n\
+         #19 = DEFINITIONAL_REPRESENTATION('',(#17),#18);\n\
+         #20 = PCURVE('',#5,#19);\n\
+         #21 = SURFACE_CURVE('',#9,(#36,#20),.PCURVE_S1.);",
+    ));
+    let dropped = |ty: &str| -> usize {
+        result
+            .warnings
+            .iter()
+            .filter_map(|w| match w {
+                ConvertError::NonStandardInput {
+                    field,
+                    count,
+                    normalized_to,
+                } if field == ty && normalized_to.starts_with("dropped") => Some(*count),
+                _ => None,
+            })
+            .sum()
+    };
+    // The wr3 pcurve subtree is still normalized away...
+    assert_eq!(dropped("PCURVE"), 1);
+    assert_eq!(dropped("TRIMMED_CURVE"), 1);
+    // ...but the wrapper survives on its good member, so it is NOT recorded.
+    assert_eq!(dropped("SURFACE_CURVE"), 0);
 }
 
 #[test]
