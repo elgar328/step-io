@@ -149,7 +149,7 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
             CharacterizedDefinition::ProductDefinitionShape(pds_pd_id)
         } else if let Some(&gp_id) = ctx.general_property_id_map.get(&target_ref) {
             CharacterizedDefinition::GeneralProperty(gp_id)
-        } else if let Some(&doc_id) = ctx.plm_document_id_map.get(&target_ref) {
+        } else if let Some(doc_id) = ctx.id_cache.get::<crate::ir::DocumentId>(target_ref) {
             // DOCUMENT_FILE is a characterized_object subtype (a valid
             // characterized_definition member); plain DOCUMENT is not.
             let is_file = ctx

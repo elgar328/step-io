@@ -37,7 +37,7 @@ impl SimpleEntityHandler for ApplicationProtocolDefinitionHandler {
         .to_owned();
         let year = read_integer(attrs, 2, entity_id, "application_protocol_year")?;
         let app_ref = read_entity_ref(attrs, 3, entity_id, "application")?;
-        let Some(&application) = ctx.plm_application_context_id_map.get(&app_ref) else {
+        let Some(application) = ctx.id_cache.get::<crate::ir::ApplicationContextId>(app_ref) else {
             return Ok(()); // AC missing; drop silently
         };
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
@@ -49,8 +49,7 @@ impl SimpleEntityHandler for ApplicationProtocolDefinitionHandler {
                 application_protocol_year: year,
                 application,
             });
-        ctx.plm_application_protocol_definition_id_map
-            .insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

@@ -32,7 +32,7 @@ impl SimpleEntityHandler for CalendarDateHandler {
             month_component,
             day_component,
         });
-        ctx.plm_date_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

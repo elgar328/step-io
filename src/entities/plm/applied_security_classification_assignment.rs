@@ -36,8 +36,9 @@ impl SimpleEntityHandler for AppliedSecurityClassificationAssignmentHandler {
         )?;
         let sc_ref = read_entity_ref(attrs, 0, entity_id, "assigned_security_classification")?;
         let item_refs = read_entity_ref_list(attrs, 1, entity_id, "items")?;
-        let Some(&assigned_security_classification) =
-            ctx.plm_security_classification_id_map.get(&sc_ref)
+        let Some(assigned_security_classification) =
+            ctx.id_cache
+                .get::<crate::ir::SecurityClassificationId>(sc_ref)
         else {
             return Ok(());
         };
@@ -54,7 +55,7 @@ impl SimpleEntityHandler for AppliedSecurityClassificationAssignmentHandler {
                 items,
             }),
         );
-        ctx.plm_sca_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

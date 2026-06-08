@@ -40,7 +40,10 @@ impl SimpleEntityHandler for DescriptionAttributeHandler {
             read_string_or_unset(attrs, 0, entity_id, "attribute_value")?.to_owned();
         let item_ref = read_entity_ref(attrs, 1, entity_id, "described_item")?;
 
-        let described_item = if let Some(&pao_id) = ctx.plm_p_and_o_id_map.get(&item_ref) {
+        let described_item = if let Some(pao_id) = ctx
+            .id_cache
+            .get::<crate::ir::PersonAndOrganizationId>(item_ref)
+        {
             DescriptionAttributeItem::PersonAndOrganization(pao_id)
         } else if let Some(&repr_id) = ctx.repr_id_map.get(&item_ref) {
             DescriptionAttributeItem::Representation(repr_id)

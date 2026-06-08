@@ -31,7 +31,7 @@ impl SimpleEntityHandler for DocumentProductEquivalenceHandler {
         let description = read_optional_string(attrs, 1, entity_id, "description")?;
         let doc_ref = read_entity_ref(attrs, 2, entity_id, "relating_document")?;
         let product_ref = read_entity_ref(attrs, 3, entity_id, "related_product")?;
-        let Some(&relating_document) = ctx.plm_document_id_map.get(&doc_ref) else {
+        let Some(relating_document) = ctx.id_cache.get::<crate::ir::DocumentId>(doc_ref) else {
             return Ok(());
         };
         // `related_product` may reference a PRODUCT_DEFINITION_FORMATION
@@ -54,8 +54,7 @@ impl SimpleEntityHandler for DocumentProductEquivalenceHandler {
                 relating_document,
                 related_product,
             });
-        ctx.plm_document_product_equivalence_id_map
-            .insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

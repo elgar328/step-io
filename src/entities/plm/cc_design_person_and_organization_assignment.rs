@@ -38,7 +38,10 @@ impl SimpleEntityHandler for CcDesignPersonAndOrganizationAssignmentHandler {
         let po_ref = read_entity_ref(attrs, 0, entity_id, "assigned_person_and_organization")?;
         let role_ref = read_entity_ref(attrs, 1, entity_id, "role")?;
         let item_refs = read_entity_ref_list(attrs, 2, entity_id, "items")?;
-        let Some(&assigned_person_and_organization) = ctx.plm_p_and_o_id_map.get(&po_ref) else {
+        let Some(assigned_person_and_organization) = ctx
+            .id_cache
+            .get::<crate::ir::PersonAndOrganizationId>(po_ref)
+        else {
             // The assigned P&O was dropped as a dangling-reference cascade →
             // surface a MissingReference so the dispatcher reclassifies this
             // assignment the same way (NS-dangling-reference-drop). Otherwise
@@ -52,7 +55,10 @@ impl SimpleEntityHandler for CcDesignPersonAndOrganizationAssignmentHandler {
             }
             return Ok(());
         };
-        let Some(&role) = ctx.plm_p_and_o_role_id_map.get(&role_ref) else {
+        let Some(role) = ctx
+            .id_cache
+            .get::<crate::ir::PersonAndOrganizationRoleId>(role_ref)
+        else {
             return Ok(());
         };
         let mut items = Vec::with_capacity(item_refs.len());
@@ -69,7 +75,7 @@ impl SimpleEntityHandler for CcDesignPersonAndOrganizationAssignmentHandler {
                 items,
             }),
         );
-        ctx.plm_poa_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

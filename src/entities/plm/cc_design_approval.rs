@@ -29,7 +29,8 @@ impl SimpleEntityHandler for CcDesignApprovalHandler {
         check_count(attrs, 2, entity_id, "CC_DESIGN_APPROVAL")?;
         let approval_ref = read_entity_ref(attrs, 0, entity_id, "assigned_approval")?;
         let item_refs = read_entity_ref_list(attrs, 1, entity_id, "items")?;
-        let Some(&assigned_approval) = ctx.plm_approval_id_map.get(&approval_ref) else {
+        let Some(assigned_approval) = ctx.id_cache.get::<crate::ir::ApprovalId>(approval_ref)
+        else {
             return Ok(());
         };
         let mut items = Vec::with_capacity(item_refs.len());
@@ -45,7 +46,7 @@ impl SimpleEntityHandler for CcDesignApprovalHandler {
                 assigned_approval,
                 items,
             }));
-        ctx.plm_aa_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

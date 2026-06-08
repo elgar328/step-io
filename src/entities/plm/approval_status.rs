@@ -26,7 +26,7 @@ impl SimpleEntityHandler for ApprovalStatusHandler {
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
         let id = pool.approval_statuses.push(ApprovalStatus { name });
-        ctx.plm_approval_status_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

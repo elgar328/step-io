@@ -30,7 +30,10 @@ impl SimpleEntityHandler for LocalTimeHandler {
         let minute_component = read_optional_integer(attrs, 1, entity_id, "minute_component")?;
         let second_component = read_optional_real(attrs, 2, entity_id, "second_component")?;
         let zone_ref = read_entity_ref(attrs, 3, entity_id, "zone")?;
-        let Some(&zone) = ctx.plm_utc_id_map.get(&zone_ref) else {
+        let Some(zone) = ctx
+            .id_cache
+            .get::<crate::ir::CoordinatedUniversalTimeOffsetId>(zone_ref)
+        else {
             return Ok(());
         };
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
@@ -40,7 +43,7 @@ impl SimpleEntityHandler for LocalTimeHandler {
             second_component,
             zone,
         });
-        ctx.plm_local_time_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

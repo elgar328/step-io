@@ -29,7 +29,10 @@ impl SimpleEntityHandler for ApprovalPersonOrganizationHandler {
         let po_ref = read_entity_ref(attrs, 0, entity_id, "person_organization")?;
         let approval_ref = read_entity_ref(attrs, 1, entity_id, "authorized_approval")?;
         let role_ref = read_entity_ref(attrs, 2, entity_id, "role")?;
-        let Some(&po_id) = ctx.plm_p_and_o_id_map.get(&po_ref) else {
+        let Some(po_id) = ctx
+            .id_cache
+            .get::<crate::ir::PersonAndOrganizationId>(po_ref)
+        else {
             // The P&O was dropped as a dangling-reference cascade → surface a
             // MissingReference so the dispatcher reclassifies this approval the
             // same way (NS-dangling-reference-drop). Otherwise it is an
@@ -43,10 +46,11 @@ impl SimpleEntityHandler for ApprovalPersonOrganizationHandler {
             }
             return Ok(());
         };
-        let Some(&authorized_approval) = ctx.plm_approval_id_map.get(&approval_ref) else {
+        let Some(authorized_approval) = ctx.id_cache.get::<crate::ir::ApprovalId>(approval_ref)
+        else {
             return Ok(());
         };
-        let Some(&role) = ctx.plm_approval_role_id_map.get(&role_ref) else {
+        let Some(role) = ctx.id_cache.get::<crate::ir::ApprovalRoleId>(role_ref) else {
             return Ok(());
         };
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
@@ -57,8 +61,7 @@ impl SimpleEntityHandler for ApprovalPersonOrganizationHandler {
                 authorized_approval,
                 role,
             });
-        ctx.plm_approval_person_organization_id_map
-            .insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

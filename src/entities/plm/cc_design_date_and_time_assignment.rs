@@ -30,10 +30,11 @@ impl SimpleEntityHandler for CcDesignDateAndTimeAssignmentHandler {
         let dt_ref = read_entity_ref(attrs, 0, entity_id, "assigned_date_and_time")?;
         let role_ref = read_entity_ref(attrs, 1, entity_id, "role")?;
         let item_refs = read_entity_ref_list(attrs, 2, entity_id, "items")?;
-        let Some(&assigned_date_and_time) = ctx.plm_date_and_time_id_map.get(&dt_ref) else {
+        let Some(assigned_date_and_time) = ctx.id_cache.get::<crate::ir::DateAndTimeId>(dt_ref)
+        else {
             return Ok(());
         };
-        let Some(&role) = ctx.plm_date_time_role_id_map.get(&role_ref) else {
+        let Some(role) = ctx.id_cache.get::<crate::ir::DateTimeRoleId>(role_ref) else {
             return Ok(());
         };
         let mut items = Vec::with_capacity(item_refs.len());
@@ -52,7 +53,7 @@ impl SimpleEntityHandler for CcDesignDateAndTimeAssignmentHandler {
                     items,
                 },
             ));
-        ctx.plm_dta_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

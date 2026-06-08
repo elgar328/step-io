@@ -30,7 +30,7 @@ impl SimpleEntityHandler for AppliedDocumentReferenceHandler {
         let doc_ref = read_entity_ref(attrs, 0, entity_id, "assigned_document")?;
         let source = read_string_or_unset(attrs, 1, entity_id, "source")?.to_owned();
         let item_refs = read_entity_ref_list(attrs, 2, entity_id, "items")?;
-        let Some(&assigned_document) = ctx.plm_document_id_map.get(&doc_ref) else {
+        let Some(assigned_document) = ctx.id_cache.get::<crate::ir::DocumentId>(doc_ref) else {
             return Ok(());
         };
         let mut items = Vec::with_capacity(item_refs.len());
@@ -45,7 +45,7 @@ impl SimpleEntityHandler for AppliedDocumentReferenceHandler {
             source,
             items,
         });
-        ctx.plm_document_reference_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

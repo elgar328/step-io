@@ -40,7 +40,7 @@ impl SimpleEntityHandler for PersonHandler {
             prefix_titles,
             suffix_titles,
         });
-        ctx.plm_person_id_map.insert(entity_id, p_id);
+        ctx.id_cache.insert(entity_id, p_id);
         Ok(())
     }
 

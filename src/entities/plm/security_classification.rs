@@ -27,7 +27,10 @@ impl SimpleEntityHandler for SecurityClassificationHandler {
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let purpose = read_string_or_unset(attrs, 1, entity_id, "purpose")?.to_owned();
         let level_ref = read_entity_ref(attrs, 2, entity_id, "security_level")?;
-        let Some(&security_level) = ctx.plm_security_level_id_map.get(&level_ref) else {
+        let Some(security_level) = ctx
+            .id_cache
+            .get::<crate::ir::SecurityClassificationLevelId>(level_ref)
+        else {
             return Ok(());
         };
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
@@ -36,7 +39,7 @@ impl SimpleEntityHandler for SecurityClassificationHandler {
             purpose,
             security_level,
         });
-        ctx.plm_security_classification_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

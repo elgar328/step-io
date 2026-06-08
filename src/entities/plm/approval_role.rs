@@ -26,7 +26,7 @@ impl SimpleEntityHandler for ApprovalRoleHandler {
         let role = read_string_or_unset(attrs, 0, entity_id, "role")?.to_owned();
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
         let id = pool.approval_roles.push(ApprovalRole { role });
-        ctx.plm_approval_role_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

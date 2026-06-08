@@ -26,7 +26,7 @@ impl SimpleEntityHandler for DocumentRepresentationTypeHandler {
         check_count(attrs, 2, entity_id, "DOCUMENT_REPRESENTATION_TYPE")?;
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let doc_ref = read_entity_ref(attrs, 1, entity_id, "represented_document")?;
-        let Some(&represented_document) = ctx.plm_document_id_map.get(&doc_ref) else {
+        let Some(represented_document) = ctx.id_cache.get::<crate::ir::DocumentId>(doc_ref) else {
             return Ok(());
         };
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
@@ -36,8 +36,7 @@ impl SimpleEntityHandler for DocumentRepresentationTypeHandler {
                 name,
                 represented_document,
             });
-        ctx.plm_document_representation_type_id_map
-            .insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

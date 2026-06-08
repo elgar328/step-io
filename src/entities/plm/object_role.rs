@@ -27,7 +27,7 @@ impl SimpleEntityHandler for ObjectRoleHandler {
         let description = read_optional_string(attrs, 1, entity_id, "description")?;
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
         let id = pool.object_roles.push(ObjectRole { name, description });
-        ctx.plm_object_role_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

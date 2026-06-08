@@ -28,7 +28,7 @@ impl SimpleEntityHandler for SecurityClassificationLevelHandler {
         let id = pool
             .security_classification_levels
             .push(SecurityClassificationLevel { name });
-        ctx.plm_security_level_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

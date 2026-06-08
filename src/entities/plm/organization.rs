@@ -32,7 +32,7 @@ impl SimpleEntityHandler for OrganizationHandler {
             name,
             description,
         });
-        ctx.plm_organization_id_map.insert(entity_id, o_id);
+        ctx.id_cache.insert(entity_id, o_id);
         Ok(())
     }
 

@@ -50,7 +50,10 @@ pub(crate) fn read_product_context(
     let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
     let frame_ref = read_entity_ref(attrs, 1, entity_id, "frame_of_reference")?;
     let discipline_type = read_string_or_unset(attrs, 2, entity_id, "discipline_type")?.to_owned();
-    let Some(&frame_of_reference) = ctx.plm_application_context_id_map.get(&frame_ref) else {
+    let Some(frame_of_reference) = ctx
+        .id_cache
+        .get::<crate::ir::ApplicationContextId>(frame_ref)
+    else {
         return Ok(()); // frame_of_reference APPLICATION_CONTEXT unmapped — drop
     };
     let id = ctx.product_contexts.push(variant(ProductContextData {

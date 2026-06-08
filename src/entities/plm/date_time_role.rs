@@ -26,7 +26,7 @@ impl SimpleEntityHandler for DateTimeRoleHandler {
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
         let id = pool.date_time_roles.push(DateTimeRole { name });
-        ctx.plm_date_time_role_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

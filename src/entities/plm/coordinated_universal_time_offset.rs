@@ -38,7 +38,7 @@ impl SimpleEntityHandler for CoordinatedUniversalTimeOffsetHandler {
             minute_offset,
             sense,
         });
-        ctx.plm_utc_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

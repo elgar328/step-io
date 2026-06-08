@@ -28,7 +28,8 @@ impl SimpleEntityHandler for AppliedApprovalAssignmentHandler {
         check_count(attrs, 2, entity_id, "APPLIED_APPROVAL_ASSIGNMENT")?;
         let approval_ref = read_entity_ref(attrs, 0, entity_id, "assigned_approval")?;
         let item_refs = read_entity_ref_list(attrs, 1, entity_id, "items")?;
-        let Some(&assigned_approval) = ctx.plm_approval_id_map.get(&approval_ref) else {
+        let Some(assigned_approval) = ctx.id_cache.get::<crate::ir::ApprovalId>(approval_ref)
+        else {
             return Ok(());
         };
         let mut items = Vec::with_capacity(item_refs.len());
@@ -44,7 +45,7 @@ impl SimpleEntityHandler for AppliedApprovalAssignmentHandler {
                 items,
             },
         ));
-        ctx.plm_aa_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

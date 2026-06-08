@@ -28,21 +28,21 @@ impl SimpleEntityHandler for RoleAssociationHandler {
         check_count(attrs, 2, entity_id, "ROLE_ASSOCIATION")?;
         let role_ref = read_entity_ref(attrs, 0, entity_id, "role")?;
         let item_ref = read_entity_ref(attrs, 1, entity_id, "item_with_role")?;
-        let Some(&role) = ctx.plm_object_role_id_map.get(&role_ref) else {
+        let Some(role) = ctx.id_cache.get::<crate::ir::ObjectRoleId>(role_ref) else {
             return Ok(());
         };
-        let item_with_role = if let Some(&adr_id) = ctx.plm_document_reference_id_map.get(&item_ref)
-        {
-            RoleSelect::DocumentReference(adr_id)
-        } else {
-            return Ok(()); // unsupported SELECT variant (Approval/DTA/etc) — drop
-        };
+        let item_with_role =
+            if let Some(adr_id) = ctx.id_cache.get::<crate::ir::DocumentReferenceId>(item_ref) {
+                RoleSelect::DocumentReference(adr_id)
+            } else {
+                return Ok(()); // unsupported SELECT variant (Approval/DTA/etc) — drop
+            };
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
         let id = pool.role_associations.push(RoleAssociation {
             role,
             item_with_role,
         });
-        ctx.plm_role_association_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

@@ -51,7 +51,10 @@ pub(crate) fn read_product_definition_context(
     let frame_ref = read_entity_ref(attrs, 1, entity_id, "frame_of_reference")?;
     let life_cycle_stage =
         read_string_or_unset(attrs, 2, entity_id, "life_cycle_stage")?.to_owned();
-    let Some(&frame_of_reference) = ctx.plm_application_context_id_map.get(&frame_ref) else {
+    let Some(frame_of_reference) = ctx
+        .id_cache
+        .get::<crate::ir::ApplicationContextId>(frame_ref)
+    else {
         return Ok(());
     };
     let id = ctx

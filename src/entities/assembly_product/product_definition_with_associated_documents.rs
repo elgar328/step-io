@@ -56,7 +56,7 @@ impl SimpleEntityHandler for ProductDefinitionWithAssociatedDocumentsHandler {
         let doc_refs = read_entity_ref_list(attrs, 4, entity_id, "documentation_ids")?;
         let mut docs = Vec::with_capacity(doc_refs.len());
         for r in doc_refs {
-            if let Some(&id) = ctx.plm_document_id_map.get(&r) {
+            if let Some(id) = ctx.id_cache.get::<crate::ir::DocumentId>(r) {
                 docs.push(id);
             } else {
                 // Unsupported document subtype — surface and skip that ref;

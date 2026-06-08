@@ -29,7 +29,7 @@ impl SimpleEntityHandler for AppliedGroupAssignmentHandler {
         check_count(attrs, 2, entity_id, "APPLIED_GROUP_ASSIGNMENT")?;
         let group_ref = read_entity_ref(attrs, 0, entity_id, "assigned_group")?;
         let item_refs = read_entity_ref_list(attrs, 1, entity_id, "items")?;
-        let Some(&assigned_group) = ctx.plm_group_id_map.get(&group_ref) else {
+        let Some(assigned_group) = ctx.id_cache.get::<crate::ir::GroupId>(group_ref) else {
             return Ok(());
         };
         let mut items = Vec::with_capacity(item_refs.len());
@@ -43,7 +43,7 @@ impl SimpleEntityHandler for AppliedGroupAssignmentHandler {
             assigned_group,
             items,
         });
-        ctx.plm_ga_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

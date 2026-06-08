@@ -28,7 +28,7 @@ impl SimpleEntityHandler for DocumentHandler {
         let name = read_string_or_unset(attrs, 1, entity_id, "name")?.to_owned();
         let description = read_string_or_unset(attrs, 2, entity_id, "description")?.to_owned();
         let kind_ref = read_entity_ref(attrs, 3, entity_id, "kind")?;
-        let Some(&kind) = ctx.plm_document_type_id_map.get(&kind_ref) else {
+        let Some(kind) = ctx.id_cache.get::<crate::ir::DocumentTypeId>(kind_ref) else {
             return Ok(());
         };
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
@@ -38,7 +38,7 @@ impl SimpleEntityHandler for DocumentHandler {
             description,
             kind,
         }));
-        ctx.plm_document_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

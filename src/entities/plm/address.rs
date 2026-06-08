@@ -32,7 +32,7 @@ impl SimpleEntityHandler for AddressHandler {
         let data = read_address_data(attrs, 0, entity_id, "ADDRESS")?;
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
         let id = pool.addresses.push(Address::Itself(data));
-        ctx.plm_address_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

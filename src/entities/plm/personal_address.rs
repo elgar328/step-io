@@ -34,7 +34,7 @@ impl SimpleEntityHandler for PersonalAddressHandler {
         let description = read_string_or_unset(attrs, 13, entity_id, "description")?.to_owned();
         let people: Vec<PersonId> = people_refs
             .iter()
-            .filter_map(|r| ctx.plm_person_id_map.get(r).copied())
+            .filter_map(|r| ctx.id_cache.get::<crate::ir::PersonId>(*r))
             .collect();
         // Schema mandates SET[1:?]; an empty resolved set means no Person
         // ref survived (forward-ref drop or unsupported variant). Drop
@@ -49,7 +49,7 @@ impl SimpleEntityHandler for PersonalAddressHandler {
         };
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
         let id = pool.addresses.push(Address::PersonalAddress(pa));
-        ctx.plm_address_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

@@ -26,12 +26,12 @@ impl SimpleEntityHandler for ApprovalHandler {
         check_count(attrs, 2, entity_id, "APPROVAL")?;
         let status_ref = read_entity_ref(attrs, 0, entity_id, "status")?;
         let level = read_string_or_unset(attrs, 1, entity_id, "level")?.to_owned();
-        let Some(&status) = ctx.plm_approval_status_id_map.get(&status_ref) else {
+        let Some(status) = ctx.id_cache.get::<crate::ir::ApprovalStatusId>(status_ref) else {
             return Ok(());
         };
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
         let id = pool.approvals.push(Approval { status, level });
-        ctx.plm_approval_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

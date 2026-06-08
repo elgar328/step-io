@@ -26,8 +26,8 @@ impl SimpleEntityHandler for PersonAndOrganizationHandler {
         check_count(attrs, 2, entity_id, "PERSON_AND_ORGANIZATION")?;
         let person_ref = read_entity_ref(attrs, 0, entity_id, "the_person")?;
         let org_ref = read_entity_ref(attrs, 1, entity_id, "the_organization")?;
-        let person = ctx.plm_person_id_map.get(&person_ref).copied();
-        let org = ctx.plm_organization_id_map.get(&org_ref).copied();
+        let person = ctx.id_cache.get::<crate::ir::PersonId>(person_ref);
+        let org = ctx.id_cache.get::<crate::ir::OrganizationId>(org_ref);
         let (Some(the_person), Some(the_organization)) = (person, org) else {
             // anonymizers / grabcad: a required person / organization ref
             // dangles (e.g. the #18446744073709551615 sentinel a scrubbed person
@@ -57,7 +57,7 @@ impl SimpleEntityHandler for PersonAndOrganizationHandler {
             the_person,
             the_organization,
         });
-        ctx.plm_p_and_o_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

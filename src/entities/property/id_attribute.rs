@@ -51,11 +51,14 @@ impl SimpleEntityHandler for IdAttributeHandler {
             IdAttributeItem::ShapeAspect(sa_ref)
         } else if let Some(&pd_id) = ctx.property_def_step_to_id.get(&item_ref) {
             IdAttributeItem::PropertyDefinition(pd_id)
-        } else if let Some(&g_id) = ctx.plm_group_id_map.get(&item_ref) {
+        } else if let Some(g_id) = ctx.id_cache.get::<crate::ir::GroupId>(item_ref) {
             IdAttributeItem::Group(g_id)
-        } else if let Some(&a_id) = ctx.plm_address_id_map.get(&item_ref) {
+        } else if let Some(a_id) = ctx.id_cache.get::<crate::ir::AddressId>(item_ref) {
             IdAttributeItem::Address(a_id)
-        } else if let Some(&ac_id) = ctx.plm_application_context_id_map.get(&item_ref) {
+        } else if let Some(ac_id) = ctx
+            .id_cache
+            .get::<crate::ir::ApplicationContextId>(item_ref)
+        {
             IdAttributeItem::ApplicationContext(ac_id)
         } else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {

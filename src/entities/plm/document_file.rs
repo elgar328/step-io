@@ -35,7 +35,7 @@ impl SimpleEntityHandler for DocumentFileHandler {
             read_string_or_unset(attrs, 4, entity_id, "characterized_object.name")?.to_owned();
         let characterized_object_description =
             read_optional_string(attrs, 5, entity_id, "characterized_object.description")?;
-        let Some(&kind) = ctx.plm_document_type_id_map.get(&kind_ref) else {
+        let Some(kind) = ctx.id_cache.get::<crate::ir::DocumentTypeId>(kind_ref) else {
             return Ok(());
         };
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
@@ -47,7 +47,7 @@ impl SimpleEntityHandler for DocumentFileHandler {
             characterized_object_name,
             characterized_object_description,
         }));
-        ctx.plm_document_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

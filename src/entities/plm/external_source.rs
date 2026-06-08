@@ -36,7 +36,7 @@ impl SimpleEntityHandler for ExternalSourceHandler {
         };
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
         let id = pool.external_sources.push(ExternalSource { source_id });
-        ctx.plm_external_source_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

@@ -27,7 +27,7 @@ impl SimpleEntityHandler for DocumentTypeHandler {
             read_string_or_unset(attrs, 0, entity_id, "product_data_type")?.to_owned();
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
         let id = pool.document_types.push(DocumentType { product_data_type });
-        ctx.plm_document_type_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

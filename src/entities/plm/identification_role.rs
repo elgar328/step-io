@@ -29,7 +29,7 @@ impl SimpleEntityHandler for IdentificationRoleHandler {
         let id = pool
             .identification_roles
             .push(IdentificationRole { name, description });
-        ctx.plm_identification_role_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

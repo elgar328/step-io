@@ -27,11 +27,11 @@ impl SimpleEntityHandler for ApprovalDateTimeHandler {
         check_count(attrs, 2, entity_id, "APPROVAL_DATE_TIME")?;
         let dt_ref = read_entity_ref(attrs, 0, entity_id, "date_time")?;
         let approval_ref = read_entity_ref(attrs, 1, entity_id, "dated_approval")?;
-        let Some(&dt_id) = ctx.plm_date_and_time_id_map.get(&dt_ref) else {
+        let Some(dt_id) = ctx.id_cache.get::<crate::ir::DateAndTimeId>(dt_ref) else {
             // Unsupported SELECT variant (direct CALENDAR_DATE / LOCAL_TIME).
             return Ok(());
         };
-        let Some(&dated_approval) = ctx.plm_approval_id_map.get(&approval_ref) else {
+        let Some(dated_approval) = ctx.id_cache.get::<crate::ir::ApprovalId>(approval_ref) else {
             return Ok(());
         };
         let pool = ctx.plm.get_or_insert_with(PlmPool::default);
@@ -39,7 +39,7 @@ impl SimpleEntityHandler for ApprovalDateTimeHandler {
             date_time: ApprovalDateTimeSelect::DateAndTime(dt_id),
             dated_approval,
         });
-        ctx.plm_approval_date_time_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

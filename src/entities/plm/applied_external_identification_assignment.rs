@@ -36,10 +36,13 @@ impl SimpleEntityHandler for AppliedExternalIdentificationAssignmentHandler {
         let role_ref = read_entity_ref(attrs, 1, entity_id, "role")?;
         let source_ref = read_entity_ref(attrs, 2, entity_id, "source")?;
         let item_refs = read_entity_ref_list(attrs, 3, entity_id, "items")?;
-        let Some(&role) = ctx.plm_identification_role_id_map.get(&role_ref) else {
+        let Some(role) = ctx
+            .id_cache
+            .get::<crate::ir::IdentificationRoleId>(role_ref)
+        else {
             return Ok(());
         };
-        let Some(&source) = ctx.plm_external_source_id_map.get(&source_ref) else {
+        let Some(source) = ctx.id_cache.get::<crate::ir::ExternalSourceId>(source_ref) else {
             return Ok(());
         };
         let mut items = Vec::with_capacity(item_refs.len());
@@ -57,7 +60,7 @@ impl SimpleEntityHandler for AppliedExternalIdentificationAssignmentHandler {
                 source,
                 items,
             });
-        ctx.plm_ia_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

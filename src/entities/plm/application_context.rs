@@ -29,7 +29,7 @@ impl SimpleEntityHandler for ApplicationContextHandler {
         let id = pool
             .application_contexts
             .push(ApplicationContext { application });
-        ctx.plm_application_context_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
