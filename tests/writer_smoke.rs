@@ -6598,9 +6598,15 @@ fn leader_line_cluster_round_trip() {
         .annotation_placeholder_leader_lines
         .iter()
         .next()
-        .unwrap();
+        .unwrap()
+    else {
+        panic!("expected ANNOTATION_TO_MODEL_LEADER_LINE");
+    };
     assert_eq!(re_leader.geometric_elements.len(), 2);
-    let ApllPointElement::ApllPoint(re_p0) = &re_pmi.apll_points[re_leader.geometric_elements[0]];
+    let ApllPointElement::ApllPoint(re_p0) = &re_pmi.apll_points[re_leader.geometric_elements[0]]
+    else {
+        panic!("expected APLL_POINT");
+    };
     assert!((re_p0.coordinates.x - 1.0).abs() < 1e-12);
     assert_eq!(re_p0.symbol_applied, "NONE");
     let with_leader = re_pmi.annotation_occurrences.iter().any(|ao| {
@@ -6614,6 +6620,105 @@ fn leader_line_cluster_round_trip() {
         with_leader,
         "APO_WITH_LEADER_LINE should round-trip with its leader_line"
     );
+}
+
+#[test]
+fn apll_point_with_surface_and_auxiliary_leader_line_round_trips() {
+    // APLL_POINT_WITH_SURFACE carries a face_surface ref; AUXILIARY_LEADER_LINE
+    // follows a controlling ANNOTATION_TO_MODEL_LEADER_LINE in the same arena.
+    use step_io::ir::PmiPool;
+    use step_io::ir::geometry::Point3;
+    use step_io::ir::pmi::{
+        AnnotationPlaceholderLeaderLine, AnnotationToModelLeaderLine, ApllPointData,
+        ApllPointElement, ApllPointWithSurfaceData, AuxiliaryLeaderLineData,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    // A solid gives us an ADVANCED_FACE for the with-surface point to bind to.
+    let _solid = push_minimal_solid(&mut model);
+    let face = model.topology.faces.iter_with_ids().next().unwrap().0;
+
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    // free_space_end (plain) + model_end (with surface).
+    let p_plain = pmi
+        .apll_points
+        .push(ApllPointElement::ApllPoint(ApllPointData {
+            name: "Leader Point".into(),
+            coordinates: Point3 {
+                x: 1.0,
+                y: 2.0,
+                z: 3.0,
+            },
+            symbol_applied: "NONE".into(),
+        }));
+    let p_surf = pmi.apll_points.push(ApllPointElement::ApllPointWithSurface(
+        ApllPointWithSurfaceData {
+            name: "Leader Point".into(),
+            coordinates: Point3 {
+                x: 4.0,
+                y: 5.0,
+                z: 6.0,
+            },
+            symbol_applied: "POSITIVE_ARROWHEAD".into(),
+            associated_surface: face,
+        },
+    ));
+    let controlling = pmi.annotation_placeholder_leader_lines.push(
+        AnnotationPlaceholderLeaderLine::AnnotationToModelLeaderLine(AnnotationToModelLeaderLine {
+            name: "Perpendicular Dimension (59)".into(),
+            geometric_elements: vec![p_plain, p_surf],
+        }),
+    );
+    pmi.annotation_placeholder_leader_lines.push(
+        AnnotationPlaceholderLeaderLine::AuxiliaryLeaderLine(AuxiliaryLeaderLineData {
+            name: "Perpendicular Dimension (59)".into(),
+            geometric_elements: vec![p_plain, p_surf],
+            controlling_leader_line: controlling,
+        }),
+    );
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("APLL_POINT_WITH_SURFACE("),
+        "APLL_POINT_WITH_SURFACE not emitted"
+    );
+    assert!(
+        text.contains("AUXILIARY_LEADER_LINE("),
+        "AUXILIARY_LEADER_LINE not emitted"
+    );
+
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.apll_points.len(), 2);
+    assert_eq!(re_pmi.annotation_placeholder_leader_lines.len(), 2);
+    // The with-surface point resolves its associated_surface to a real face.
+    let with_surface = re_pmi.apll_points.iter().find_map(|p| match p {
+        ApllPointElement::ApllPointWithSurface(d) => Some(d),
+        ApllPointElement::ApllPoint(_) => None,
+    });
+    let with_surface = with_surface.expect("APLL_POINT_WITH_SURFACE round-trips");
+    assert!(
+        re.topology
+            .faces
+            .iter_with_ids()
+            .any(|(id, _)| id == with_surface.associated_surface),
+        "associated_surface should resolve to a known face"
+    );
+    // The auxiliary line resolves its controlling leader line to the ATMLL.
+    let aux = re_pmi
+        .annotation_placeholder_leader_lines
+        .iter()
+        .find_map(|l| match l {
+            AnnotationPlaceholderLeaderLine::AuxiliaryLeaderLine(d) => Some(d),
+            AnnotationPlaceholderLeaderLine::AnnotationToModelLeaderLine(_) => None,
+        });
+    let aux = aux.expect("AUXILIARY_LEADER_LINE round-trips");
+    assert!(matches!(
+        re_pmi.annotation_placeholder_leader_lines[aux.controlling_leader_line],
+        AnnotationPlaceholderLeaderLine::AnnotationToModelLeaderLine(_)
+    ));
+    assert_eq!(aux.geometric_elements.len(), 2);
 }
 
 #[test]

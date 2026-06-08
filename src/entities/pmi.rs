@@ -21,18 +21,19 @@ use crate::ir::pmi::{
     AnnotationOccurrenceAssociativity, AnnotationOccurrenceRef, AnnotationPlaceholderLeaderLine,
     AnnotationPlaceholderOccurrence, AnnotationPlaceholderOccurrenceWithLeaderLine,
     AnnotationPlane, AnnotationSymbolOccurrence, AnnotationTextOccurrence,
-    AnnotationToModelLeaderLine, ApllPointData, ApllPointElement, Datum, DatumFeature,
-    DimensionalCharacteristic, DimensionalLocation, DimensionalLocationData, DimensionalSize,
-    DimensionalSizeKind, DraughtingAnnotationOccurrence, DraughtingCallout, DraughtingCalloutData,
-    DraughtingCalloutElement, DraughtingCalloutRelationship, DraughtingModelIdentifiedItem,
-    DraughtingModelItemAssociation, DraughtingModelItemDefinition, DraughtingPreDefinedTextFont,
-    GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance,
-    GeometricToleranceData, GeometricToleranceRef, GeometricToleranceRelationship,
-    GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData, LeaderCurve,
-    LeaderTerminator, LimitsAndFits, MeasureQualification, PlainAnnotationCurveOccurrence,
-    PlainAnnotationOccurrence, PlusMinusTolerance, ProjectedZoneDefinition, TerminatorSymbol,
-    TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue,
-    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier, ValueQualifier,
+    AnnotationToModelLeaderLine, ApllPointData, ApllPointElement, ApllPointWithSurfaceData,
+    AuxiliaryLeaderLineData, Datum, DatumFeature, DimensionalCharacteristic, DimensionalLocation,
+    DimensionalLocationData, DimensionalSize, DimensionalSizeKind, DraughtingAnnotationOccurrence,
+    DraughtingCallout, DraughtingCalloutData, DraughtingCalloutElement,
+    DraughtingCalloutRelationship, DraughtingModelIdentifiedItem, DraughtingModelItemAssociation,
+    DraughtingModelItemDefinition, DraughtingPreDefinedTextFont, GeneralDatumBase,
+    GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
+    GeometricToleranceRef, GeometricToleranceRelationship, GeometricToleranceWithDatumReference,
+    GeometricToleranceWithDatumReferenceData, LeaderCurve, LeaderTerminator, LimitsAndFits,
+    MeasureQualification, PlainAnnotationCurveOccurrence, PlainAnnotationOccurrence,
+    PlusMinusTolerance, ProjectedZoneDefinition, TerminatorSymbol, TessellatedAnnotationOccurrence,
+    ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue, ToleranceZoneForm,
+    TypeQualifier, ValueFormatTypeQualifier, ValueQualifier,
 };
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
 use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
@@ -543,19 +544,108 @@ impl SimpleEntityHandler for ApllPointHandler {
     }
 
     fn write(buf: &mut WriteBuffer, apll: ApllPointElement) -> Result<u64, WriteError> {
-        let ApllPointElement::ApllPoint(data) = apll;
-        Ok(buf.push_simple(
-            "APLL_POINT",
-            vec![
-                Attribute::String(data.name),
-                Attribute::List(vec![
-                    Attribute::Real(data.coordinates.x),
-                    Attribute::Real(data.coordinates.y),
-                    Attribute::Real(data.coordinates.z),
-                ]),
-                Attribute::Enum(data.symbol_applied),
-            ],
-        ))
+        match apll {
+            ApllPointElement::ApllPoint(data) => Ok(buf.push_simple(
+                "APLL_POINT",
+                vec![
+                    Attribute::String(data.name),
+                    Attribute::List(vec![
+                        Attribute::Real(data.coordinates.x),
+                        Attribute::Real(data.coordinates.y),
+                        Attribute::Real(data.coordinates.z),
+                    ]),
+                    Attribute::Enum(data.symbol_applied),
+                ],
+            )),
+            ApllPointElement::ApllPointWithSurface(data) => {
+                // Surfaces (`face_surface`) are emitted in the topology pass,
+                // well before the PMI pass, so `face_ids` is populated here.
+                let surface_step = buf
+                    .face_ids
+                    .get(&data.associated_surface)
+                    .copied()
+                    .unwrap_or(0);
+                Ok(buf.push_simple(
+                    "APLL_POINT_WITH_SURFACE",
+                    vec![
+                        Attribute::String(data.name),
+                        Attribute::List(vec![
+                            Attribute::Real(data.coordinates.x),
+                            Attribute::Real(data.coordinates.y),
+                            Attribute::Real(data.coordinates.z),
+                        ]),
+                        Attribute::Enum(data.symbol_applied),
+                        Attribute::EntityRef(surface_step),
+                    ],
+                ))
+            }
+        }
+    }
+}
+
+pub(crate) struct ApllPointWithSurfaceHandler;
+
+/// `APLL_POINT_WITH_SURFACE(name, coordinates, symbol_applied, associated_surface)`
+/// — an `apll_point` projected onto a `face_surface`. Shares the `apll_points`
+/// arena (and `apll_point_id_map`) with [`ApllPointHandler`] so leader-line
+/// `geometric_elements` resolve uniformly; emission is handled by
+/// `ApllPointHandler::write`.
+#[step_entity(name = "APLL_POINT_WITH_SURFACE")]
+impl SimpleEntityHandler for ApllPointWithSurfaceHandler {
+    type WriteInput = ApllPointElement;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 4, entity_id, "APLL_POINT_WITH_SURFACE")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let coords = read_real_list(attrs, 1, entity_id, "coordinates")?;
+        if coords.len() != 3 {
+            return Err(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "APLL_POINT_WITH_SURFACE must have 3 coordinates, got {}",
+                    coords.len()
+                ),
+            });
+        }
+        let symbol_applied = read_enum(attrs, 2, entity_id, "symbol_applied")?.to_owned();
+        let surface_ref = read_entity_ref(attrs, 3, entity_id, "associated_surface")?;
+        let Some(&associated_surface) = ctx.face_map.get(&surface_ref) else {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "APLL_POINT_WITH_SURFACE.associated_surface #{surface_ref} did not resolve to \
+                     a known face_surface"
+                ),
+            });
+            return Ok(());
+        };
+        let id = ctx
+            .pmi
+            .get_or_insert_with(PmiPool::default)
+            .apll_points
+            .push(ApllPointElement::ApllPointWithSurface(
+                ApllPointWithSurfaceData {
+                    name,
+                    coordinates: Point3 {
+                        x: coords[0],
+                        y: coords[1],
+                        z: coords[2],
+                    },
+                    symbol_applied,
+                    associated_surface,
+                },
+            ));
+        ctx.apll_point_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(_buf: &mut WriteBuffer, _apll: ApllPointElement) -> Result<u64, WriteError> {
+        unreachable!("APLL_POINT_WITH_SURFACE is emitted via ApllPointHandler::write")
     }
 }
 
@@ -604,16 +694,110 @@ impl SimpleEntityHandler for AnnotationToModelLeaderLineHandler {
         buf: &mut WriteBuffer,
         leader: AnnotationPlaceholderLeaderLine,
     ) -> Result<u64, WriteError> {
-        let AnnotationPlaceholderLeaderLine::AnnotationToModelLeaderLine(data) = leader;
-        let elem_refs = data
-            .geometric_elements
-            .iter()
-            .map(|id| Attribute::EntityRef(buf.apll_point_step_ids[id.0 as usize]))
-            .collect();
-        Ok(buf.push_simple(
-            "ANNOTATION_TO_MODEL_LEADER_LINE",
-            vec![Attribute::String(data.name), Attribute::List(elem_refs)],
-        ))
+        match leader {
+            AnnotationPlaceholderLeaderLine::AnnotationToModelLeaderLine(data) => {
+                let elem_refs = data
+                    .geometric_elements
+                    .iter()
+                    .map(|id| Attribute::EntityRef(buf.apll_point_step_ids[id.0 as usize]))
+                    .collect();
+                Ok(buf.push_simple(
+                    "ANNOTATION_TO_MODEL_LEADER_LINE",
+                    vec![Attribute::String(data.name), Attribute::List(elem_refs)],
+                ))
+            }
+            AnnotationPlaceholderLeaderLine::AuxiliaryLeaderLine(data) => {
+                let elem_refs = data
+                    .geometric_elements
+                    .iter()
+                    .map(|id| Attribute::EntityRef(buf.apll_point_step_ids[id.0 as usize]))
+                    .collect();
+                // `controlling_leader_line` points at another member of the same
+                // arena. Topo order processes it first (lower arena index), so
+                // its step id is already in the partially-built cache; `.get`
+                // keeps any ordering violation a visible dangling 0, not a panic.
+                let controlling_step = buf
+                    .annotation_placeholder_leader_line_step_ids
+                    .get(data.controlling_leader_line.0 as usize)
+                    .copied()
+                    .unwrap_or(0);
+                Ok(buf.push_simple(
+                    "AUXILIARY_LEADER_LINE",
+                    vec![
+                        Attribute::String(data.name),
+                        Attribute::List(elem_refs),
+                        Attribute::EntityRef(controlling_step),
+                    ],
+                ))
+            }
+        }
+    }
+}
+
+pub(crate) struct AuxiliaryLeaderLineHandler;
+
+/// `AUXILIARY_LEADER_LINE(name, geometric_elements, controlling_leader_line)`
+/// — an `annotation_placeholder_leader_line` subtype following a
+/// `controlling_leader_line` (another member of the same arena). Shares the
+/// arena (and `annotation_placeholder_leader_line_id_map`) with
+/// [`AnnotationToModelLeaderLineHandler`]; emission is handled by that
+/// handler's `write`.
+#[step_entity(name = "AUXILIARY_LEADER_LINE")]
+impl SimpleEntityHandler for AuxiliaryLeaderLineHandler {
+    type WriteInput = AnnotationPlaceholderLeaderLine;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 3, entity_id, "AUXILIARY_LEADER_LINE")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let elem_refs = read_entity_ref_list(attrs, 1, entity_id, "geometric_elements")?;
+        let mut geometric_elements = Vec::with_capacity(elem_refs.len());
+        for r in elem_refs {
+            if let Some(&id) = ctx.apll_point_id_map.get(&r) {
+                geometric_elements.push(id);
+            }
+        }
+        let controlling_ref = read_entity_ref(attrs, 2, entity_id, "controlling_leader_line")?;
+        let Some(&controlling_leader_line) = ctx
+            .annotation_placeholder_leader_line_id_map
+            .get(&controlling_ref)
+        else {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "AUXILIARY_LEADER_LINE.controlling_leader_line #{controlling_ref} did not \
+                     resolve to a known leader line"
+                ),
+            });
+            return Ok(());
+        };
+        let id = ctx
+            .pmi
+            .get_or_insert_with(PmiPool::default)
+            .annotation_placeholder_leader_lines
+            .push(AnnotationPlaceholderLeaderLine::AuxiliaryLeaderLine(
+                AuxiliaryLeaderLineData {
+                    name,
+                    geometric_elements,
+                    controlling_leader_line,
+                },
+            ));
+        ctx.annotation_placeholder_leader_line_id_map
+            .insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(
+        _buf: &mut WriteBuffer,
+        _leader: AnnotationPlaceholderLeaderLine,
+    ) -> Result<u64, WriteError> {
+        unreachable!(
+            "AUXILIARY_LEADER_LINE is emitted via AnnotationToModelLeaderLineHandler::write"
+        )
     }
 }
 
