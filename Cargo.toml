@@ -1,3 +1,6 @@
+[workspace]
+members = [".", "step-io-macros"]
+
 [package]
 name = "step-io"
 version = "0.1.0-alpha.1"
@@ -12,10 +15,15 @@ categories = ["parser-implementations", "science", "encoding"]
 exclude = ["internal/"]
 
 [dependencies]
+linkme = "0.3"
 logos = "0.16"
+step-io-macros = { path = "./step-io-macros", version = "0.1.0" }
 
 [lints.rust]
-unsafe_code = "forbid"
+# `deny` (not `forbid`) so linkme's #[distributed_slice] can opt in via
+# #[allow(unsafe_code)] for the link_section attribute it generates. No
+# step-io code itself uses `unsafe`.
+unsafe_code = "deny"
 
 [lints.clippy]
 all = { level = "warn", priority = -1 }

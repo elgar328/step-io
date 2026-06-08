@@ -1,5 +1,5 @@
-use super::geometry::Pcurve;
-use super::id::{CurveId, EdgeId, FaceId, PointId, ShellId, SurfaceId, VertexId, WireId};
+use super::geometry::SurfaceCurveWrapper;
+use super::id::{CurveId, EdgeId, FaceId, ShellId, SurfaceId, VertexId, WireId};
 
 /// Direction agreement flag used throughout B-Rep topology.
 ///
@@ -9,12 +9,6 @@ use super::id::{CurveId, EdgeId, FaceId, PointId, ShellId, SurfaceId, VertexId, 
 pub enum Orientation {
     Forward,
     Reversed,
-}
-
-/// A topological vertex — a point in space.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Vertex {
-    pub point: PointId,
 }
 
 /// A topological edge — a bounded piece of a curve between two vertices.
@@ -27,9 +21,10 @@ pub struct Edge {
     /// which is a geometric operation deferred to the kernel adapter.
     pub trim: (f64, f64),
     pub orientation: Orientation,
-    /// Pcurves from the source `SURFACE_CURVE` / `SEAM_CURVE` wrapper.
-    /// Empty when the edge's `edge_geometry` pointed directly at a 3D curve.
-    pub pcurves: Vec<Pcurve>,
+    /// The `SURFACE_CURVE` / `SEAM_CURVE` wrapper the edge's `edge_geometry`
+    /// referenced, preserved verbatim. `None` when `edge_geometry` pointed
+    /// directly at a 3D curve.
+    pub surface_curve: Option<SurfaceCurveWrapper>,
 }
 
 /// A reference to an edge with an orientation flag.
@@ -41,7 +36,7 @@ pub struct OrientedEdge {
     pub orientation: Orientation,
 }
 
-/// A closed or open loop of oriented edges, forming a face boundary.
+/// The shared payload of a face boundary wire.
 ///
 /// Created from STEP `FACE_BOUND` / `FACE_OUTER_BOUND` whose loop is an
 /// `EDGE_LOOP` (normal case) or a `VERTEX_LOOP` (degenerate — a single
@@ -49,24 +44,68 @@ pub struct OrientedEdge {
 /// case `edges` is empty and [`vertex`](Self::vertex) carries the degenerate
 /// point; for edge-loop case the opposite holds.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Wire {
+pub struct WireData {
     pub edges: Vec<OrientedEdge>,
     /// Set when the boundary came from a STEP `VERTEX_LOOP`. `None` for
     /// the common `EDGE_LOOP` case.
     pub vertex: Option<VertexId>,
-    /// `true` when the source entity was `FACE_OUTER_BOUND`.
-    pub is_outer: bool,
-    /// Orientation from the `FACE_BOUND` entity — indicates whether this
-    /// wire's traversal direction agrees with the face's surface normal.
+    /// Orientation from the bound entity — indicates whether this wire's
+    /// traversal direction agrees with the face's surface normal.
     pub orientation: Orientation,
+}
+
+/// A closed or open loop of oriented edges, forming a face boundary.
+///
+/// The variant records the source STEP entity (`FACE_BOUND` /
+/// `FACE_OUTER_BOUND`) so the writer emits it back verbatim; the payload is
+/// identical between them.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Wire {
+    FaceBound(WireData),
+    FaceOuterBound(WireData),
+}
+
+impl Wire {
+    /// The shared boundary payload, regardless of bound kind.
+    #[must_use]
+    pub fn data(&self) -> &WireData {
+        match self {
+            Wire::FaceBound(d) | Wire::FaceOuterBound(d) => d,
+        }
+    }
 }
 
 /// A face — a bounded portion of a surface.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Face {
+pub struct FaceData {
     pub surface: SurfaceId,
     pub bounds: Vec<WireId>,
     pub orientation: Orientation,
+}
+
+/// A face, tagged with the source STEP entity.
+///
+/// `AdvancedFace` is a constrained subtype of `FACE_SURFACE` (pcurve
+/// required per edge, exactly one outer bound, etc.), but the data fields
+/// are identical. step-io does not enforce the `ADVANCED_FACE` WHERE
+/// clauses — it preserves whichever entity type the source file used so the
+/// writer emits it back verbatim. `FaceSurface` is the less constrained
+/// supertype, observed in parts of the ABC dataset and some legacy AP203
+/// files.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Face {
+    FaceSurface(FaceData),
+    AdvancedFace(FaceData),
+}
+
+impl Face {
+    /// The shared face payload, regardless of source entity.
+    #[must_use]
+    pub fn data(&self) -> &FaceData {
+        match self {
+            Face::FaceSurface(d) | Face::AdvancedFace(d) => d,
+        }
+    }
 }
 
 /// A connected set of faces forming a closed or open shell.
@@ -80,13 +119,49 @@ pub struct Shell {
     pub is_open: bool,
 }
 
-/// A solid bounded by one or more shells.
+/// A solid bounded by one or more shells, tagged with the source STEP
+/// entity. `ManifoldSolidBrep` has a single outer shell; `BrepWithVoids`
+/// adds inner void shells (each carrying `Orientation::Reversed` when
+/// imported from an `ORIENTED_CLOSED_SHELL('', *, cs, .F.)` wrapper) — so
+/// the "voids only on `BREP_WITH_VOIDS`" invariant is encoded in the type.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Solid {
-    /// `shells[0]` is the outer shell with `Orientation::Forward`.
-    /// `shells[1..]` are inner void shells from `BREP_WITH_VOIDS`; each
-    /// carries `Orientation::Reversed` when imported from an
-    /// `ORIENTED_CLOSED_SHELL('', *, cs, .F.)` wrapper.
-    pub shells: Vec<ShellId>,
-    pub name: Option<String>,
+pub enum Solid {
+    ManifoldSolidBrep {
+        outer: ShellId,
+        name: Option<String>,
+    },
+    BrepWithVoids {
+        outer: ShellId,
+        voids: Vec<ShellId>,
+        name: Option<String>,
+    },
+}
+
+impl Solid {
+    /// The outer bounding shell (`Orientation::Forward`).
+    #[must_use]
+    pub fn outer(&self) -> ShellId {
+        match self {
+            Solid::ManifoldSolidBrep { outer, .. } | Solid::BrepWithVoids { outer, .. } => *outer,
+        }
+    }
+
+    /// The inner void shells — empty for a `ManifoldSolidBrep`.
+    #[must_use]
+    pub fn voids(&self) -> &[ShellId] {
+        match self {
+            Solid::ManifoldSolidBrep { .. } => &[],
+            Solid::BrepWithVoids { voids, .. } => voids,
+        }
+    }
+
+    /// The optional solid name.
+    #[must_use]
+    pub fn name(&self) -> Option<&str> {
+        match self {
+            Solid::ManifoldSolidBrep { name, .. } | Solid::BrepWithVoids { name, .. } => {
+                name.as_deref()
+            }
+        }
+    }
 }

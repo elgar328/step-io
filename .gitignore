@@ -1,2 +1,3 @@
 /target
 /internal
+/.claude/scheduled_tasks.lock

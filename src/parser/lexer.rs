@@ -269,14 +269,15 @@ pub enum TokenKind {
     )]
     Integer(i64),
 
-    /// String literal enclosed in single quotes. The inner text is stored raw
-    /// (quotes stripped, but `''` escapes and Part 21 special sequences like
-    /// `\X\HH` remain unchanged). Decoding is deferred to a later stage.
+    /// String literal enclosed in single quotes. Outer quotes are stripped
+    /// and the `''` escape is decoded to a single `'`. Part 21 wide-char
+    /// escapes (`\X\HH`, `\X2\…\X0\`, `\X4\…\X0\`) remain raw — decoding
+    /// those is deferred to a later stage.
     #[regex(
         r"'([^']|'')*'",
         |lex| {
             let s = lex.slice();
-            s[1..s.len() - 1].to_string()
+            s[1..s.len() - 1].replace("''", "'")
         }
     )]
     String(String),
@@ -317,6 +318,13 @@ pub enum TokenKind {
         |lex| lex.slice().to_string()
     )]
     Keyword(String),
+
+    /// P21 edition 3 anchor reference (`<name>` or `<url#name>`). The
+    /// whole bracketed form is captured as a single token; the parser
+    /// currently discards these (ed.3 sections are skip-only — see
+    /// [`crate::parser::ParseWarning::Ed3SectionDiscarded`]).
+    #[regex(r"<[^>]+>", |lex| lex.slice().to_string())]
+    AnchorRef(String),
 }
 
 #[cfg(test)]
@@ -410,8 +418,14 @@ mod tests {
 
     #[test]
     fn lex_string_escaped_quote() {
-        // Part 21 uses `''` to embed a single quote; the raw form is preserved here.
-        assert_eq!(first_token("'a''b'"), TokenKind::String("a''b".into()));
+        // Part 21 uses `''` to embed a single quote; the lexer decodes it.
+        assert_eq!(first_token("'a''b'"), TokenKind::String("a'b".into()));
+    }
+
+    #[test]
+    fn lex_string_only_escaped_quote() {
+        // `''''` is a string containing a single `'` (one escape sequence).
+        assert_eq!(first_token("''''"), TokenKind::String("'".into()));
     }
 
     #[test]
@@ -433,6 +447,22 @@ mod tests {
     #[test]
     fn lex_string_multibyte_japanese() {
         assert_eq!(first_token("'日本語'"), TokenKind::String("日本語".into()));
+    }
+
+    #[test]
+    fn lex_anchor_ref_simple() {
+        assert_eq!(
+            first_token("<TestAnchor>"),
+            TokenKind::AnchorRef("<TestAnchor>".into())
+        );
+    }
+
+    #[test]
+    fn lex_anchor_ref_with_url() {
+        assert_eq!(
+            first_token("<testAnchorAndData.stp#TestAnchor>"),
+            TokenKind::AnchorRef("<testAnchorAndData.stp#TestAnchor>".into())
+        );
     }
 
     #[test]

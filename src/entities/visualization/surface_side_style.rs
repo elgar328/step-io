@@ -1,0 +1,71 @@
+//! `SURFACE_SIDE_STYLE` handler. Aggregates one or more
+//! `SURFACE_SIDE_STYLE` entries (each a fill-area or rendering style)
+//! into a named composite. Pushes into the shared `founded_item` arena
+//! as the `SurfaceSideStyle` variant.
+
+use crate::entities::SimpleEntityHandler;
+use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
+use crate::ir::error::ConvertError;
+use crate::ir::visualization::{
+    FoundedItem, SurfaceSideStyle, SurfaceSideStyleEntry, VisualizationPool,
+};
+use crate::parser::entity::{Attribute, EntityGraph};
+use crate::reader::ReaderContext;
+use crate::writer::WriteError;
+use crate::writer::buffer::WriteBuffer;
+
+use step_io_macros::step_entity;
+
+pub(crate) struct SurfaceSideStyleHandler;
+
+#[step_entity(name = "SURFACE_SIDE_STYLE")]
+impl SimpleEntityHandler for SurfaceSideStyleHandler {
+    type WriteInput = SurfaceSideStyle;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 2, entity_id, "SURFACE_SIDE_STYLE")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
+        let mut styles = Vec::with_capacity(style_refs.len());
+        for r in style_refs {
+            if let Some(&ssfa_id) = ctx.viz_ssfa_id_map.get(&r) {
+                styles.push(SurfaceSideStyleEntry::FillArea(ssfa_id));
+            } else if let Some(&ssr_id) = ctx.viz_ssr_id_map.get(&r) {
+                styles.push(SurfaceSideStyleEntry::Rendering(ssr_id));
+            }
+        }
+        let pool = ctx
+            .visualization
+            .get_or_insert_with(VisualizationPool::default);
+        let id = pool
+            .founded_items
+            .push(FoundedItem::SurfaceSideStyle(SurfaceSideStyle {
+                name,
+                styles,
+            }));
+        ctx.viz_sss_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, sss: SurfaceSideStyle) -> Result<u64, WriteError> {
+        let mut style_refs = Vec::with_capacity(sss.styles.len());
+        for entry in sss.styles {
+            let entry_id = match entry {
+                SurfaceSideStyleEntry::FillArea(ssfa_id) => {
+                    buf.founded_item_step_ids[ssfa_id.0 as usize]
+                }
+                SurfaceSideStyleEntry::Rendering(ssr_id) => buf.ssr_step_ids[ssr_id.0 as usize],
+            };
+            style_refs.push(Attribute::EntityRef(entry_id));
+        }
+        Ok(buf.push_simple(
+            "SURFACE_SIDE_STYLE",
+            vec![Attribute::String(sss.name), Attribute::List(style_refs)],
+        ))
+    }
+}

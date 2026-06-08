@@ -5,16 +5,41 @@
 //! result matches what we put in.
 
 use step_io::ir::arena::Arena;
-use step_io::ir::assembly::{AssemblyTree, Instance, Product, ProductContent, Transform3d};
-use step_io::ir::geometry::{
-    Axis1Placement, Axis2Placement3d, Circle3, ConicalSurface, Curve, CurveForm,
-    CylindricalSurface, Direction3, Ellipse3, Line3, NurbsCurve, NurbsSurface, Plane3, Point3,
-    SphericalSurface, Surface, SurfaceForm, SurfaceOfLinearExtrusion, SurfaceOfRevolution,
-    ToroidalSurface,
+use step_io::ir::assembly::{
+    AssemblyTree, GeometryLeaf, Instance, Product, SolidContent, Transform3d,
 };
-use step_io::ir::id::{DirectionId, Placement3dId, PointId, SolidId};
-use step_io::ir::model::{AngleUnit, LengthUnit, SolidAngleUnit, StepModel, UnitContext};
-use step_io::ir::topology::{Face, Orientation, Shell, Solid, Vertex, Wire};
+use step_io::ir::geometry::Vertex;
+use step_io::ir::geometry::{
+    Axis1Placement, Axis2Placement2d, Axis2Placement3d, Circle3, ConicalSurface, Curve, CurveForm,
+    CylindricalSurface, Direction3, Ellipse3, Line3, Logical, NurbsCurve, NurbsKind, NurbsSurface,
+    NurbsSurfaceKind, PlanarBox, PlanarBoxPlacement, PlanarExtent, PlanarExtentData, Plane3,
+    Point2, Point3, SphericalSurface, Surface, SurfaceForm, SurfaceOfLinearExtrusion,
+    SurfaceOfRevolution, ToroidalSurface,
+};
+use step_io::ir::id::{
+    CompositeShapeAspectId, ContinuousShapeAspectId, DerivedShapeAspectId, DirectionId,
+    GeneralPropertyId, Placement3dId, PointId, ShapeAspectId, SolidId, UnitContextId,
+};
+use step_io::ir::model::StepModel;
+use step_io::ir::pmi::{
+    AngleSelection, AngularLocationData, DimensionalLocation, DimensionalLocationData,
+    DimensionalSize, DimensionalSizeKind, PmiPool, ToleranceZoneForm, TypeQualifier,
+    ValueFormatTypeQualifier,
+};
+use step_io::ir::property::{
+    DerivedDefinitionItem, GeneralProperty, GeneralPropertyAssociation, Property, PropertyPool,
+};
+use step_io::ir::shape_aspect_ref::{GeometricToleranceTarget, ShapeAspectRef};
+use step_io::ir::shape_rep::{
+    AllAroundShapeAspect, AngleUnit, CentreOfSymmetry, CompositeGroupShapeAspect,
+    CompositeShapeAspectKind, LengthUnit, ShapeAspect, ShapeAspectRelationship,
+    ShapeAspectRelationshipKind, SolidAngleUnit, UnitContext,
+};
+use step_io::ir::topology::{Face, FaceData, Orientation, Shell, Solid, Wire, WireData};
+use step_io::ir::units::{MassFlavor, MassUnit, NamedUnit, UnitsPool};
+use step_io::ir::visualization::{
+    CameraModel, CameraModelD3, FoundedItem, Projection, ViewVolume, VisualizationPool,
+};
 use step_io::parser::schema::{SchemaClass, StepSchema};
 use step_io::reader::ReaderContext;
 use step_io::{WriteError, parse};
@@ -23,12 +48,21 @@ fn empty_model() -> StepModel {
     StepModel::default()
 }
 
-fn mm_radian_steradian() -> UnitContext {
+/// units-2: push mm / radian / steradian named-unit arena entries into
+/// the model's units pool and return a fully-populated `UnitContext`
+/// referencing them.
+fn mm_radian_steradian(model: &mut StepModel) -> UnitContext {
+    let pool = model.units_pool.get_or_insert_with(UnitsPool::default);
     UnitContext {
-        length: LengthUnit::Millimetre,
-        plane_angle: AngleUnit::Radian,
-        solid_angle: SolidAngleUnit::Steradian,
+        units: vec![
+            pool.push_plain_length(LengthUnit::Millimetre),
+            pool.push_plain_plane_angle(AngleUnit::Radian),
+            pool.push_plain_solid_angle(SolidAngleUnit::Steradian),
+        ],
         length_uncertainty: None,
+        plane_angle_uncertainty: None,
+        solid_angle_uncertainty: None,
+        form: step_io::ir::shape_rep::UnitContextForm::Complex,
     }
 }
 
@@ -236,10 +270,26 @@ fn unset_axis_directions_round_trip_as_none() {
 #[test]
 fn unit_context_mm_radian_steradian_round_trips() {
     let mut model = empty_model();
-    model.units = Some(mm_radian_steradian());
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.units, Some(mm_radian_steradian()));
+    // units-2: NamedUnitId may shift due to pool emit ordering — compare
+    // the resolved enum values via arena lookup.
+    let ctx_back = re.units.iter().next().expect("ctx");
+    let pool = re.units_pool.as_ref().expect("units pool");
+    match pool.named_units[ctx_back.length(pool).expect("length unit")] {
+        NamedUnit::Length(f) => assert_eq!(f.unit, LengthUnit::Millimetre),
+        _ => panic!("length not Length"),
+    }
+    match pool.named_units[ctx_back.plane_angle(pool).expect("plane_angle unit")] {
+        NamedUnit::PlaneAngle(f) => assert_eq!(f.unit, AngleUnit::Radian),
+        _ => panic!("plane_angle not PlaneAngle"),
+    }
+    match pool.named_units[ctx_back.solid_angle(pool).expect("solid_angle unit")] {
+        NamedUnit::SolidAngle(f) => assert_eq!(f.unit, SolidAngleUnit::Steradian),
+        _ => panic!("solid_angle not SolidAngle"),
+    }
 }
 
 #[test]
@@ -247,13 +297,14 @@ fn unit_context_absent_stays_none() {
     let model = empty_model();
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
-    assert!(re.units.is_none());
+    assert!(re.units.is_empty());
 }
 
 #[test]
 fn write_to_and_write_to_string_produce_identical_bytes() {
     let mut model = empty_model();
-    model.units = Some(mm_radian_steradian());
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
     let via_string = model.write_to_string().expect("string");
     let mut via_writer = Vec::new();
     model.write_to(&mut via_writer).expect("writer");
@@ -457,14 +508,15 @@ fn nurbs_surface_non_rational_round_trips() {
         u_degree: 1,
         v_degree: 1,
         control_points,
-        weights: None,
+        kind: NurbsSurfaceKind::NonRational,
         u_knot_multiplicities: vec![2, 2],
         v_knot_multiplicities: vec![2, 2],
         u_knots: vec![0.0, 1.0],
         v_knots: vec![0.0, 1.0],
-        u_closed: false,
-        v_closed: false,
+        u_closed: Logical::False,
+        v_closed: Logical::False,
         form: SurfaceForm::Unspecified,
+        self_intersect: Logical::Unknown,
     }));
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
@@ -472,9 +524,41 @@ fn nurbs_surface_non_rational_round_trips() {
         Surface::Nurbs(s) => {
             assert_eq!(s.u_degree, 1);
             assert_eq!(s.v_degree, 1);
-            assert!(s.weights.is_none());
+            assert!(s.weights().is_none());
             assert_eq!(s.control_points.len(), 2);
             assert_eq!(s.control_points[0].len(), 2);
+        }
+        other => panic!("expected Nurbs surface, got {other:?}"),
+    }
+}
+
+#[test]
+fn nurbs_surface_unknown_closedness_round_trips() {
+    // `u_closed` / `v_closed` are STEP LOGICAL; a freeform surface emits
+    // `.U.` (Unknown). It must survive write -> read as `Logical::Unknown`,
+    // not collapse to a boolean.
+    let mut model = empty_model();
+    let control_points = push_surface_control_grid(&mut model);
+    model.geometry.surfaces.push(Surface::Nurbs(NurbsSurface {
+        u_degree: 1,
+        v_degree: 1,
+        control_points,
+        kind: NurbsSurfaceKind::NonRational,
+        u_knot_multiplicities: vec![2, 2],
+        v_knot_multiplicities: vec![2, 2],
+        u_knots: vec![0.0, 1.0],
+        v_knots: vec![0.0, 1.0],
+        u_closed: Logical::Unknown,
+        v_closed: Logical::Unknown,
+        form: SurfaceForm::Unspecified,
+        self_intersect: Logical::Unknown,
+    }));
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    match re.geometry.surfaces.iter().next().unwrap() {
+        Surface::Nurbs(s) => {
+            assert_eq!(s.u_closed, Logical::Unknown);
+            assert_eq!(s.v_closed, Logical::Unknown);
         }
         other => panic!("expected Nurbs surface, got {other:?}"),
     }
@@ -488,20 +572,23 @@ fn nurbs_surface_rational_round_trips() {
         u_degree: 1,
         v_degree: 1,
         control_points,
-        weights: Some(vec![vec![1.0, 0.8], vec![0.8, 1.0]]),
+        kind: NurbsSurfaceKind::Rational {
+            weights: vec![vec![1.0, 0.8], vec![0.8, 1.0]],
+        },
         u_knot_multiplicities: vec![2, 2],
         v_knot_multiplicities: vec![2, 2],
         u_knots: vec![0.0, 1.0],
         v_knots: vec![0.0, 1.0],
-        u_closed: false,
-        v_closed: false,
+        u_closed: Logical::False,
+        v_closed: Logical::False,
         form: SurfaceForm::Unspecified,
+        self_intersect: Logical::Unknown,
     }));
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
     match re.geometry.surfaces.iter().next().unwrap() {
         Surface::Nurbs(s) => {
-            let weights = s.weights.as_ref().expect("rational surface has weights");
+            let weights = s.weights().expect("rational surface has weights");
             assert_eq!(weights.len(), 2);
             assert!((weights[0][1] - 0.8).abs() < f64::EPSILON);
             assert!((weights[1][0] - 0.8).abs() < f64::EPSILON);
@@ -537,11 +624,12 @@ fn nurbs_curve_non_rational_round_trips() {
     model.geometry.curves.push(Curve::Nurbs(NurbsCurve {
         degree: 2,
         control_points: control_points.clone(),
-        weights: None,
+        kind: NurbsKind::NonRational,
         knot_multiplicities: vec![3, 3],
         knots: vec![0.0, 1.0],
-        closed: false,
+        closed: Logical::False,
         form: CurveForm::Unspecified,
+        self_intersect: Logical::Unknown,
     }));
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
@@ -549,10 +637,10 @@ fn nurbs_curve_non_rational_round_trips() {
         Curve::Nurbs(c) => {
             assert_eq!(c.degree, 2);
             assert_eq!(c.control_points.len(), 3);
-            assert!(c.weights.is_none());
+            assert!(c.weights().is_none());
             assert_eq!(c.knot_multiplicities, vec![3, 3]);
             assert_eq!(c.knots, vec![0.0, 1.0]);
-            assert!(!c.closed);
+            assert_eq!(c.closed, Logical::False);
         }
         other => panic!("expected Nurbs curve, got {other:?}"),
     }
@@ -565,17 +653,20 @@ fn nurbs_curve_rational_round_trips() {
     model.geometry.curves.push(Curve::Nurbs(NurbsCurve {
         degree: 2,
         control_points,
-        weights: Some(vec![1.0, 0.7, 1.0]),
+        kind: NurbsKind::Rational {
+            weights: vec![1.0, 0.7, 1.0],
+        },
         knot_multiplicities: vec![3, 3],
         knots: vec![0.0, 1.0],
-        closed: false,
+        closed: Logical::False,
         form: CurveForm::Unspecified,
+        self_intersect: Logical::Unknown,
     }));
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
     match re.geometry.curves.iter().next().unwrap() {
         Curve::Nurbs(c) => {
-            let weights = c.weights.as_ref().expect("rational curve has weights");
+            let weights = c.weights().expect("rational curve has weights");
             assert_eq!(weights.len(), 3);
             assert!((weights[1] - 0.7).abs() < f64::EPSILON);
         }
@@ -590,11 +681,12 @@ fn nurbs_curve_form_hint_round_trips() {
     model.geometry.curves.push(Curve::Nurbs(NurbsCurve {
         degree: 2,
         control_points,
-        weights: None,
+        kind: NurbsKind::NonRational,
         knot_multiplicities: vec![3, 3],
         knots: vec![0.0, 1.0],
-        closed: false,
+        closed: Logical::False,
         form: CurveForm::CircularArc,
+        self_intersect: Logical::Unknown,
     }));
     let text = model.write_to_string().expect("write");
     assert!(text.contains(".CIRCULAR_ARC."), "writer emits STEP enum");
@@ -613,14 +705,15 @@ fn nurbs_surface_form_hint_round_trips() {
         u_degree: 1,
         v_degree: 1,
         control_points,
-        weights: None,
+        kind: NurbsSurfaceKind::NonRational,
         u_knot_multiplicities: vec![2, 2],
         v_knot_multiplicities: vec![2, 2],
         u_knots: vec![0.0, 1.0],
         v_knots: vec![0.0, 1.0],
-        u_closed: false,
-        v_closed: false,
+        u_closed: Logical::False,
+        v_closed: Logical::False,
         form: SurfaceForm::CylindricalSurf,
+        self_intersect: Logical::Unknown,
     }));
     let text = model.write_to_string().expect("write");
     assert!(
@@ -749,25 +842,24 @@ fn push_minimal_solid(model: &mut StepModel) -> SolidId {
         .geometry
         .surfaces
         .push(Surface::Plane(Plane3 { position }));
-    let vertex = model.topology.vertices.push(Vertex { point: pt });
-    let wire = model.topology.wires.push(Wire {
+    let vertex = model.geometry.vertices.push(Vertex { point: pt });
+    let wire = model.topology.wires.push(Wire::FaceOuterBound(WireData {
         edges: Vec::new(),
         vertex: Some(vertex),
-        is_outer: true,
         orientation: Orientation::Forward,
-    });
-    let face = model.topology.faces.push(Face {
+    }));
+    let face = model.topology.faces.push(Face::AdvancedFace(FaceData {
         surface: plane_surface,
         bounds: vec![wire],
         orientation: Orientation::Forward,
-    });
+    }));
     let shell = model.topology.shells.push(Shell {
         faces: vec![face],
         orientation: Orientation::Forward,
         is_open: false,
     });
-    model.topology.solids.push(Solid {
-        shells: vec![shell],
+    model.topology.solids.push(Solid::ManifoldSolidBrep {
+        outer: shell,
         name: None,
     })
 }
@@ -782,9 +874,9 @@ fn vertex_loop_wire_round_trips() {
     let re = reconvert(&text);
     assert_eq!(re.topology.wires.len(), 1);
     let roundtripped_wire = re.topology.wires.iter().next().unwrap();
-    assert!(roundtripped_wire.vertex.is_some());
-    assert!(roundtripped_wire.edges.is_empty());
-    assert!(roundtripped_wire.is_outer);
+    assert!(roundtripped_wire.data().vertex.is_some());
+    assert!(roundtripped_wire.data().edges.is_empty());
+    assert!(matches!(roundtripped_wire, Wire::FaceOuterBound(_)));
 }
 
 fn identity_transform(model: &mut StepModel) -> Transform3d {
@@ -814,7 +906,8 @@ fn identity_transform(model: &mut StepModel) -> Transform3d {
 fn simple_assembly_round_trips() {
     // Root Group holding one Instance that points at a Solid leaf product.
     let mut model = empty_model();
-    model.units = Some(mm_radian_steradian());
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let transform = identity_transform(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -824,50 +917,77 @@ fn simple_assembly_round_trips() {
         id: "Leaf".into(),
         name: "Leaf".into(),
         description: None,
-        content: ProductContent::Solid(solid_id),
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
     });
     let root_pid = tree.products.push(Product {
         id: "Root".into(),
         name: "Root".into(),
         description: None,
-        content: ProductContent::Group(vec![Instance {
+        geometry: None,
+        instances: vec![Instance {
             child: leaf_pid,
             transform,
             occurrence_id: "1".into(),
             occurrence_name: "LeafInst".into(),
-        }]),
+            transform_rr: None,
+            acu: None,
+            placement_representation: vec![],
+        }],
         shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
     });
-    tree.root = Some(root_pid);
+    tree.roots = vec![root_pid];
     model.assembly = Some(tree);
 
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
     let r_asm = re.assembly.as_ref().expect("round-tripped has assembly");
     assert_eq!(r_asm.products.len(), 2);
-    assert!(r_asm.root.is_some());
+    assert_eq!(r_asm.roots.len(), 1, "single-root assembly");
     let root_prod = r_asm
         .products
         .iter()
         .find(|p| p.id == "Root")
         .expect("Root product survived");
-    match &root_prod.content {
-        ProductContent::Group(insts) => {
-            assert_eq!(insts.len(), 1);
-            assert_eq!(insts[0].occurrence_id, "1");
-            assert_eq!(insts[0].occurrence_name, "LeafInst");
-        }
-        other @ (ProductContent::Solid(_) | ProductContent::SurfaceBody(_)) => {
-            panic!("expected Root Group, got {other:?}")
-        }
-    }
+    assert!(
+        root_prod.geometry.is_none(),
+        "expected Root Group (no geometry), got {:?}",
+        root_prod.geometry
+    );
+    assert_eq!(root_prod.instances.len(), 1);
+    assert_eq!(root_prod.instances[0].occurrence_id, "1");
+    assert_eq!(root_prod.instances[0].occurrence_name, "LeafInst");
     let leaf_prod = r_asm
         .products
         .iter()
         .find(|p| p.id == "Leaf")
         .expect("Leaf product survived");
-    assert!(matches!(leaf_prod.content, ProductContent::Solid(_)));
+    assert!(matches!(leaf_prod.geometry, Some(GeometryLeaf::Solid(_))));
 }
 
 #[test]
@@ -875,7 +995,8 @@ fn shared_child_assembly_round_trips() {
     // Same Leaf referenced twice from the Root Group with different
     // occurrence ids — the classic shared-instance case.
     let mut model = empty_model();
-    model.units = Some(mm_radian_steradian());
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let transform = identity_transform(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -885,50 +1006,592 @@ fn shared_child_assembly_round_trips() {
         id: "Leaf".into(),
         name: "Leaf".into(),
         description: None,
-        content: ProductContent::Solid(solid_id),
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
         shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
     });
     let root_pid = tree.products.push(Product {
         id: "Root".into(),
         name: "Root".into(),
         description: None,
-        content: ProductContent::Group(vec![
+        geometry: None,
+        instances: vec![
             Instance {
                 child: leaf_pid,
                 transform,
                 occurrence_id: "1".into(),
                 occurrence_name: "A".into(),
+                transform_rr: None,
+                acu: None,
+                placement_representation: vec![],
             },
             Instance {
                 child: leaf_pid,
                 transform,
                 occurrence_id: "2".into(),
                 occurrence_name: "B".into(),
+                transform_rr: None,
+                acu: None,
+                placement_representation: vec![],
             },
-        ]),
+        ],
         shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
     });
-    tree.root = Some(root_pid);
+    tree.roots = vec![root_pid];
     model.assembly = Some(tree);
 
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
     let r_asm = re.assembly.as_ref().unwrap();
     let root_prod = r_asm.products.iter().find(|p| p.id == "Root").unwrap();
-    match &root_prod.content {
-        ProductContent::Group(insts) => {
-            assert_eq!(insts.len(), 2);
-            assert_eq!(
-                insts[0].child, insts[1].child,
-                "both point at the same Leaf"
-            );
-            assert_eq!(insts[0].occurrence_id, "1");
-            assert_eq!(insts[1].occurrence_id, "2");
-        }
-        other @ (ProductContent::Solid(_) | ProductContent::SurfaceBody(_)) => {
-            panic!("expected Root Group, got {other:?}")
-        }
+    assert!(
+        root_prod.geometry.is_none(),
+        "expected Root Group (no geometry), got {:?}",
+        root_prod.geometry
+    );
+    assert_eq!(root_prod.instances.len(), 2);
+    assert_eq!(
+        root_prod.instances[0].child, root_prod.instances[1].child,
+        "both point at the same Leaf"
+    );
+    assert_eq!(root_prod.instances[0].occurrence_id, "1");
+    assert_eq!(root_prod.instances[1].occurrence_id, "2");
+}
+
+#[test]
+#[allow(clippy::too_many_lines)]
+fn nauo_arena_is_canonical_with_instance_view() {
+    // Direction-(b) prototype: the `assembly_component_usage` (NAUO) arena is
+    // the canonical store and `Product.instances` is a derived view (via
+    // `Instance.acu`). A reader-built instance carries `acu = Some`; the writer
+    // emits the NAUO from the arena entry — round-tripping `description` and
+    // `reference_designator`, which the legacy inline synthesis dropped. Also
+    // guards the arena↔instance 1:1 invariant (no orphan NAUO).
+    use step_io::ir::{NextAssemblyUsageOccurrence, ProductDefinition};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let transform = identity_transform(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let leaf_pid = tree.products.push(Product {
+        id: "Leaf".into(),
+        name: "Leaf".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    let root_pid = tree.products.push(Product {
+        id: "Root".into(),
+        name: "Root".into(),
+        description: None,
+        geometry: None,
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    // PRODUCT_DEFINITION arena endpoints (the NAUO's relating/related are PD
+    // refs). The writer emits the NAUO's parent/child from `product_def_ids`,
+    // so these are the canonical record, not the writer's working refs.
+    let make_pd = |id: &str| ProductDefinition {
+        id: id.into(),
+        description: String::new(),
+        formation: None,
+        context: None,
+        documentation_ids: vec![],
+    };
+    let root_def = tree.product_definitions.push(make_pd("design"));
+    let leaf_def = tree.product_definitions.push(make_pd("design"));
+    // Canonical NAUO arena entry with a non-empty description + reference
+    // designator (the fields the legacy path dropped).
+    let acu_id = tree
+        .assembly_component_usages
+        .push(NextAssemblyUsageOccurrence {
+            id: "7".into(),
+            name: "BoltInst".into(),
+            description: "component placement".into(),
+            relating: root_def,
+            related: leaf_def,
+            reference_designator: Some("=>[0:1:1:5]".into()),
+        });
+    // The Instance is the derived view: its occurrence fields mirror the arena
+    // entry, plus the `acu` link the writer follows.
+    tree.products[root_pid].instances.push(Instance {
+        child: leaf_pid,
+        transform,
+        occurrence_id: "7".into(),
+        occurrence_name: "BoltInst".into(),
+        transform_rr: None,
+        acu: Some(acu_id),
+        placement_representation: vec![],
+    });
+    tree.roots = vec![root_pid];
+    model.assembly = Some(tree);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let r_asm = re.assembly.as_ref().expect("assembly");
+
+    // Canonical arena round-tripped, including description + reference_designator.
+    assert_eq!(r_asm.assembly_component_usages.iter().count(), 1);
+    let acu = r_asm.assembly_component_usages.iter().next().unwrap();
+    assert_eq!(acu.id, "7");
+    assert_eq!(acu.name, "BoltInst");
+    assert_eq!(acu.description, "component placement");
+    assert_eq!(acu.reference_designator.as_deref(), Some("=>[0:1:1:5]"));
+
+    // Derived view intact and linked to the arena (acu = Some on re-read).
+    let root_prod = r_asm.products.iter().find(|p| p.id == "Root").unwrap();
+    assert_eq!(root_prod.instances.len(), 1);
+    let inst = &root_prod.instances[0];
+    assert_eq!(inst.occurrence_id, "7");
+    assert_eq!(inst.occurrence_name, "BoltInst");
+    assert!(
+        inst.acu.is_some(),
+        "reader-built instance links to the arena"
+    );
+
+    // Arena ↔ instance is strictly 1:1 (every entry has its view, no orphan NAUO).
+    let view_count: usize = r_asm
+        .products
+        .iter()
+        .flat_map(|p| p.instances.iter())
+        .filter(|i| i.acu.is_some())
+        .count();
+    assert_eq!(r_asm.assembly_component_usages.iter().count(), view_count);
+
+    // The NAUO endpoints are PRODUCT_DEFINITION refs — `related`'s PD (indexing
+    // validates it resolves) points at the same child product as the Instance.
+    let related_product = r_asm.product_definitions[acu.related]
+        .formation
+        .map(|fid| r_asm.product_definition_formations[fid].data().of_product);
+    assert_eq!(
+        related_product,
+        Some(inst.child),
+        "NAUO.related PD's product matches the Instance child"
+    );
+}
+
+#[test]
+#[allow(clippy::too_many_lines)]
+fn nauo_owned_pds_property_round_trips() {
+    // A "geometric validation property" (e.g. "centroid of X") can attach a
+    // PROPERTY_DEFINITION to the assembly-placement PDS — the NAUO-owned
+    // PRODUCT_DEFINITION_SHAPE whose `definition` is a NAUO. step-io
+    // materialises that PDS in the `property_definitions` arena
+    // (`ProductDefinitionRelationship` member) so the PD / PDR / wrapping
+    // REPRESENTATION round-trip, and the writer emits the PDS body under the
+    // reserved id with the SOURCE name (not the synthesised "Placement"). This
+    // guards both the recovery and re-read idempotency of the property arenas.
+    use step_io::ir::property::{
+        CharacterizedDefinition, ProductDefinitionShape, Property, PropertyDefinition,
+        PropertyDefinitionData, PropertyPool,
+    };
+    use step_io::ir::{NextAssemblyUsageOccurrence, ProductDefinition};
+
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let leaf_solid = push_minimal_solid(&mut model);
+    let transform = identity_transform(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let make_product = |id: &str, geometry| Product {
+        id: id.into(),
+        name: id.into(),
+        description: None,
+        geometry,
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    };
+    let leaf_pid = tree.products.push(make_product(
+        "Leaf",
+        Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![leaf_solid],
+        })),
+    ));
+    let root_pid = tree.products.push(make_product("Root", None));
+    let make_pd = |id: &str| ProductDefinition {
+        id: id.into(),
+        description: String::new(),
+        formation: None,
+        context: None,
+        documentation_ids: vec![],
+    };
+    let root_def = tree.product_definitions.push(make_pd("design"));
+    let leaf_def = tree.product_definitions.push(make_pd("design"));
+    let acu_id = tree
+        .assembly_component_usages
+        .push(NextAssemblyUsageOccurrence {
+            id: "1".into(),
+            name: "LeafInst".into(),
+            description: String::new(),
+            relating: root_def,
+            related: leaf_def,
+            reference_designator: None,
+        });
+    tree.products[root_pid].instances.push(Instance {
+        child: leaf_pid,
+        transform,
+        occurrence_id: "1".into(),
+        occurrence_name: "LeafInst".into(),
+        transform_rr: None,
+        acu: Some(acu_id),
+        placement_representation: vec![],
+    });
+    tree.roots = vec![root_pid];
+    model.assembly = Some(tree);
+
+    // The NAUO-owned PDS (arena entry 0) + the centroid PD that targets it
+    // (arena entry 1) + the descriptive Property.
+    let mut props = PropertyPool::default();
+    let nauo_pds_pd = props
+        .property_definitions
+        .push(PropertyDefinition::ProductDefinitionShape(
+            ProductDefinitionShape {
+                inherited: PropertyDefinitionData {
+                    name: "Placement #1".into(),
+                    description: "Placement of Leaf".into(),
+                    definition: CharacterizedDefinition::ProductDefinitionRelationship(acu_id),
+                },
+            },
+        ));
+    let centroid_pd =
+        props
+            .property_definitions
+            .push(PropertyDefinition::Itself(PropertyDefinitionData {
+                name: "geometric validation property".into(),
+                description: "centroid of Leaf".into(),
+                definition: CharacterizedDefinition::ProductDefinitionShape(nauo_pds_pd),
+            }));
+    props.properties.push(Property {
+        name: "geometric validation property".into(),
+        description: Some("centroid of Leaf".into()),
+        definition: step_io::ir::property::PropertyDefinitionRef::PropertyDefinition(centroid_pd),
+        representation_name: "centroid".into(),
+        context: Some(step_io::ir::shape_rep::RepresentationContextRef::Unitful(
+            UnitContextId(0),
+        )),
+        items: vec![],
+    });
+    model.properties = Some(props);
+
+    let text = model.write_to_string().expect("write");
+    // The NAUO-owned PDS body carries the SOURCE name, not "Placement of an item".
+    assert!(
+        text.contains("PRODUCT_DEFINITION_SHAPE('Placement #1','Placement of Leaf'"),
+        "NAUO-PDS source name preserved:\n{text}"
+    );
+
+    let re = reconvert(&text);
+    let re_props = re.properties.as_ref().expect("properties round-trip");
+    // The NAUO-owned PDS is recovered into the arena as a
+    // `ProductDefinitionRelationship` member, carrying the source name — exactly
+    // one such entry, materialised by `materialize_nauo_owned_pds`.
+    let pdrel: Vec<_> = re_props
+        .property_definitions
+        .iter()
+        .filter(|pd| matches!(
+            pd,
+            PropertyDefinition::ProductDefinitionShape(s)
+                if matches!(s.inherited.definition, CharacterizedDefinition::ProductDefinitionRelationship(_))
+        ))
+        .collect();
+    assert_eq!(pdrel.len(), 1, "exactly one NAUO-owned PDS materialised");
+    let PropertyDefinition::ProductDefinitionShape(s) = pdrel[0] else {
+        unreachable!()
+    };
+    assert_eq!(s.inherited.name, "Placement #1", "source name preserved");
+    // The centroid PD (targeting that PDS) and its descriptive Property survive
+    // the drop the legacy path inflicted.
+    let centroid_pd = re_props.property_definitions.iter().any(|pd| {
+        matches!(
+            pd,
+            PropertyDefinition::Itself(d)
+                if d.description == "centroid of Leaf"
+                    && matches!(d.definition, CharacterizedDefinition::ProductDefinitionShape(_))
+        )
+    });
+    assert!(centroid_pd, "centroid PD recovered (was a cascade drop)");
+    let centroid_prop = re_props.properties.iter().any(|p| {
+        p.description.as_deref() == Some("centroid of Leaf") && p.representation_name == "centroid"
+    });
+    assert!(centroid_prop, "centroid descriptive Property recovered");
+}
+
+#[test]
+fn instance_placement_representation_round_trips() {
+    // Some exporters link the instance's NAUO-owned placement PDS to one or more
+    // standalone placement SHAPE_REPRESENTATIONs via EXTRA
+    // SHAPE_DEFINITION_REPRESENTATIONs (besides the CDSR). A single placement PDS
+    // legally carries several (nema_23hs9430B does). step-io preserves them on
+    // Instance.placement_representation (a Vec); the writer re-emits one SDR per
+    // entry next to the NAUO-owned PDS, and the reader recovers them all (the PDS
+    // is NAUO-tagged). This test exercises the multi-SDR-per-instance case.
+    use step_io::ir::shape_rep::{PlainRepr, Representation, RepresentationContextRef};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let ctx_id = model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let transform = identity_transform(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    // Two standalone placement SHAPE_REPRESENTATIONs sharing the one placement
+    // PDS — the multi-SDR-per-instance shape a single Option would have dropped.
+    let mut placement_sr = |name: &str| {
+        model.representations.push(Representation::Plain(PlainRepr {
+            name: name.into(),
+            context: Some(RepresentationContextRef::Unitful(ctx_id)),
+            frame: None,
+        }))
+    };
+    let placement_sr_a = placement_sr("placement_a");
+    let placement_sr_b = placement_sr("placement_b");
+
+    let mut tree = AssemblyTree::default();
+    let leaf_pid = tree.products.push(Product {
+        id: "Leaf".into(),
+        name: "Leaf".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    let root_pid = tree.products.push(Product {
+        id: "Root".into(),
+        name: "Root".into(),
+        description: None,
+        geometry: None,
+        instances: vec![Instance {
+            child: leaf_pid,
+            transform,
+            occurrence_id: "1".into(),
+            occurrence_name: "Inst".into(),
+            transform_rr: None,
+            acu: None,
+            placement_representation: vec![placement_sr_a, placement_sr_b],
+        }],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![root_pid];
+    model.assembly = Some(tree);
+
+    let text = model.write_to_string().expect("write");
+    // The writer emitted BOTH extra placement SDRs (the Leaf product's own SDR
+    // plus these two → at least 3 SDRs).
+    assert!(
+        text.matches("SHAPE_DEFINITION_REPRESENTATION").count() >= 3,
+        "expected two extra placement SDRs, got:\n{text}"
+    );
+    let re = reconvert(&text);
+    let r_asm = re.assembly.as_ref().expect("assembly");
+    let root_prod = r_asm.products.iter().find(|p| p.id == "Root").unwrap();
+    let inst = &root_prod.instances[0];
+    assert_eq!(
+        inst.placement_representation.len(),
+        2,
+        "both placement SDRs recovered onto the instance (multi per PDS)"
+    );
+}
+
+#[test]
+fn assembly_placement_materialises_distinct_rrwt_per_instance() {
+    // Two instances of the same Leaf with the SAME transform must still gain
+    // DISTINCT RepresentationRelationshipWithTransformation arena ids on
+    // re-read — the disambiguation that lets a per-instance style override
+    // (CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.style_context) target one
+    // specific placement. Guards the canonical-order materialisation and its
+    // round-trip stability (the metric-insensitive core of the change).
+    use step_io::ir::shape_rep::RepresentationRelationship;
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let transform = identity_transform(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let leaf_pid = tree.products.push(Product {
+        id: "Leaf".into(),
+        name: "Leaf".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    let root_pid = tree.products.push(Product {
+        id: "Root".into(),
+        name: "Root".into(),
+        description: None,
+        geometry: None,
+        instances: vec![
+            Instance {
+                child: leaf_pid,
+                transform,
+                occurrence_id: "1".into(),
+                occurrence_name: "A".into(),
+                transform_rr: None,
+                acu: None,
+                placement_representation: vec![],
+            },
+            Instance {
+                child: leaf_pid,
+                transform,
+                occurrence_id: "2".into(),
+                occurrence_name: "B".into(),
+                transform_rr: None,
+                acu: None,
+                placement_representation: vec![],
+            },
+        ],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![root_pid];
+    model.assembly = Some(tree);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let r_asm = re.assembly.as_ref().unwrap();
+    let root = r_asm.products.iter().find(|p| p.id == "Root").unwrap();
+    assert_eq!(root.instances.len(), 2);
+    let rr0 = root.instances[0]
+        .transform_rr
+        .expect("instance 0 materialised its placement RR");
+    let rr1 = root.instances[1]
+        .transform_rr
+        .expect("instance 1 materialised its placement RR");
+    assert_ne!(
+        rr0, rr1,
+        "two placements of the same child must get distinct RR ids"
+    );
+    for rrid in [rr0, rr1] {
+        assert!(
+            matches!(
+                re.representation_relationships[rrid],
+                RepresentationRelationship::RepresentationRelationshipWithTransformation(_)
+            ),
+            "transform_rr must point at an RRWT arena entry"
+        );
     }
+
+    // Idempotent: two further read->write cycles produce identical output
+    // (the materialised RR ids are round-trip stable).
+    let text_b = re.write_to_string().expect("write b");
+    let text_c = reconvert(&text_b).write_to_string().expect("write c");
+    assert_eq!(
+        text_b, text_c,
+        "assembly placement round-trip must be idempotent"
+    );
 }
 
 #[test]
@@ -951,6 +1614,306 @@ fn default_schema_is_ap214_is() {
 }
 
 #[test]
+fn multi_body_solid_round_trips() {
+    // ABSR.items may carry more than one MANIFOLD_SOLID_BREP (multi-body
+    // STEP). The reader collects all of them into ProductContent::Solid;
+    // the writer emits one MSB ref per SolidId in the items list.
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let s1 = push_minimal_solid(&mut model);
+    let s2 = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let pid = tree.products.push(Product {
+        id: "MultiBody".into(),
+        name: "MultiBody".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent { ids: vec![s1, s2] })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![pid];
+    model.assembly = Some(tree);
+
+    let text = model.write_to_string().expect("write");
+    assert_eq!(
+        text.matches("MANIFOLD_SOLID_BREP").count(),
+        2,
+        "expected two MSB lines in output, got:\n{text}"
+    );
+
+    let re = reconvert(&text);
+    let r_asm = re.assembly.as_ref().expect("round-tripped has assembly");
+    let prod = r_asm
+        .products
+        .iter()
+        .find(|p| p.id == "MultiBody")
+        .expect("MultiBody product survived");
+    match &prod.geometry {
+        Some(GeometryLeaf::Solid(solid)) => {
+            assert_eq!(solid.ids.len(), 2, "two solids should round-trip");
+        }
+        other => panic!("expected Solid with 2 ids, got {other:?}"),
+    }
+}
+
+#[test]
+fn metadata_only_product_round_trips_with_none_geometry_context() {
+    // A second sibling product with no shape representation in source
+    // STEP (NIST "document" style: `Group([])` + `geometry_context:
+    // None`). The writer must skip its SR + SDR emission so the
+    // re-read IR keeps `geometry_context: None`; falling back to a
+    // default context would surface as `Some(UnitContextId(0))` and
+    // break round-trip equality.
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    tree.products.push(Product {
+        id: "Main".into(),
+        name: "Main".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.products.push(Product {
+        id: "MetadataDoc".into(),
+        name: "MetadataDoc".into(),
+        description: None,
+        geometry: None,
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: None,
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    model.assembly = Some(tree);
+
+    let text = model.write_to_string().expect("write");
+    // Skip the shared `reconvert` helper: two-root-candidate assemblies
+    // legitimately emit a non-fatal "using the first" warning that is
+    // unrelated to the geometry_context behaviour under test.
+    let graph = parse(&text).expect("writer output parses");
+    let re = ReaderContext::convert(&graph).model;
+    let r_asm = re.assembly.as_ref().expect("round-tripped has assembly");
+    assert_eq!(r_asm.products.len(), 2);
+    let meta = r_asm
+        .products
+        .iter()
+        .find(|p| p.id == "MetadataDoc")
+        .expect("metadata product survived");
+    assert!(
+        meta.geometry_context.is_none(),
+        "metadata product must keep geometry_context: None; got {:?}",
+        meta.geometry_context
+    );
+}
+
+#[test]
+fn formation_id_round_trips_faithfully() {
+    // A product whose arena formation carries a real version id/description
+    // must re-emit them verbatim (not the synthesised empty strings) and
+    // round-trip back to the same arena entry.
+    use step_io::ir::{ProductDefinitionFormation, ProductDefinitionFormationData};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let pid = tree.products.push(Product {
+        id: "P".into(),
+        name: "P".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    let fid = tree
+        .product_definition_formations
+        .push(ProductDefinitionFormation::Itself(
+            ProductDefinitionFormationData {
+                id: "LAST_VERSION".into(),
+                description: "rev".into(),
+                of_product: pid,
+            },
+        ));
+    tree.products[pid].formation = Some(fid);
+    model.assembly = Some(tree);
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("PRODUCT_DEFINITION_FORMATION('LAST_VERSION','rev',"),
+        "faithful formation id/description emitted, got:\n{text}"
+    );
+    let re = reconvert(&text);
+    let f = re
+        .assembly
+        .as_ref()
+        .expect("assembly")
+        .product_definition_formations
+        .iter()
+        .next()
+        .expect("formation round-trips into the arena");
+    assert_eq!(f.data().id, "LAST_VERSION");
+    assert_eq!(f.data().description, "rev");
+}
+
+#[test]
+fn empty_group_product_preserves_non_identity_shape_ref_frame() {
+    // Empty-Group child product (NIST-style raw-material / placeholder
+    // sub-assembly) carries its own placement via `shape_ref_frame`. The
+    // writer emits a plain SHAPE_REPRESENTATION with that axis; on re-read
+    // the SDR pass must pull the placement out of `plain_sr_frame_map`,
+    // not leave it at the PRODUCT-pass placeholder Placement3dId(0).
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+    let offset_loc = model.geometry.points.push(Point3 {
+        x: 4.0,
+        y: -2.0,
+        z: 7.5,
+    });
+    let offset_axis = model.geometry.directions.push(Direction3 {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+    });
+    let offset_ref = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let offset_frame = push_placement(&mut model, offset_loc, Some(offset_axis), Some(offset_ref));
+
+    let mut tree = AssemblyTree::default();
+    tree.products.push(Product {
+        id: "Main".into(),
+        name: "Main".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.products.push(Product {
+        id: "Placeholder".into(),
+        name: "Placeholder".into(),
+        description: None,
+        geometry: None,
+        instances: vec![],
+        shape_ref_frame: offset_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    model.assembly = Some(tree);
+
+    let text = model.write_to_string().expect("write");
+    let graph = parse(&text).expect("writer output parses");
+    let re = ReaderContext::convert(&graph).model;
+    let r_asm = re.assembly.as_ref().expect("round-tripped has assembly");
+    let ph = r_asm
+        .products
+        .iter()
+        .find(|p| p.id == "Placeholder")
+        .expect("placeholder product survived");
+    let frame = re
+        .geometry
+        .placements
+        .iter()
+        .nth(ph.shape_ref_frame.0 as usize)
+        .expect("frame id resolves");
+    let loc = re
+        .geometry
+        .points
+        .iter()
+        .nth(frame.location.0 as usize)
+        .expect("location point resolves");
+    assert!(
+        (loc.x - 4.0).abs() < 1e-9 && (loc.y + 2.0).abs() < 1e-9 && (loc.z - 7.5).abs() < 1e-9,
+        "expected offset (4, -2, 7.5), got ({}, {}, {})",
+        loc.x,
+        loc.y,
+        loc.z
+    );
+}
+
+#[test]
 fn explicit_ap203_schema_round_trips() {
     let mut model = empty_model();
     model.schema = StepSchema::canonical(SchemaClass::Ap203);
@@ -961,4 +1924,8240 @@ fn explicit_ap203_schema_round_trips() {
     );
     let re = reconvert(&text);
     assert_eq!(re.schema.class(), Some(SchemaClass::Ap203));
+}
+
+#[test]
+fn general_property_and_association_round_trip() {
+    // AP242 user-defined attribute: a GENERAL_PROPERTY defines the
+    // attribute, a GENERAL_PROPERTY_ASSOCIATION binds it to a product's
+    // PROPERTY_DEFINITION.
+    use step_io::ir::PropertyDefinitionId;
+    use step_io::ir::property::{
+        CharacterizedDefinition, ProductDefinitionShape, PropertyDefinition, PropertyDefinitionData,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let mut pool = PropertyPool::default();
+    // The product chain auto-mirrors PDS into property_definitions during
+    // assembly emit setup at reader time, but for a hand-built IR we have
+    // to push both the PDS variant (matching the assembly chain's PDS for
+    // this product) and the Itself variant (the property's own PD) in
+    // source-#N order: PDS first (assembly chain emits PDS during product
+    // emit, before user-defined property emit), Itself second.
+    pool.property_definitions
+        .push(PropertyDefinition::ProductDefinitionShape(
+            ProductDefinitionShape {
+                inherited: PropertyDefinitionData {
+                    name: String::new(),
+                    description: String::new(),
+                    definition: CharacterizedDefinition::ProductDefinition(part_pid),
+                },
+            },
+        ));
+    let pd_id =
+        pool.property_definitions
+            .push(PropertyDefinition::Itself(PropertyDefinitionData {
+                name: "p1".into(),
+                description: "user defined attribute".into(),
+                definition: CharacterizedDefinition::ProductDefinition(part_pid),
+            }));
+    pool.properties.push(Property {
+        name: "p1".into(),
+        description: Some("user defined attribute".into()),
+        definition: step_io::ir::property::PropertyDefinitionRef::PropertyDefinition(pd_id),
+        representation_name: String::new(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(
+            UnitContextId(0),
+        )),
+        items: Vec::new(),
+    });
+    pool.general_properties.push(GeneralProperty {
+        id: String::new(),
+        name: "SACHNUMMER".into(),
+        description: Some("user defined attribute".into()),
+    });
+    pool.general_property_associations
+        .push(GeneralPropertyAssociation {
+            name: "user defined attribute".into(),
+            description: None,
+            base_definition: GeneralPropertyId(0),
+            derived_definition: DerivedDefinitionItem::PropertyDefinition(pd_id),
+        });
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pool = re
+        .properties
+        .as_ref()
+        .expect("round-tripped has properties");
+    assert_eq!(re_pool.general_properties.len(), 1);
+    assert_eq!(re_pool.general_property_associations.len(), 1);
+
+    let gp = re_pool.general_properties.iter().next().unwrap();
+    assert_eq!(gp.name, "SACHNUMMER");
+    assert_eq!(gp.description.as_deref(), Some("user defined attribute"));
+
+    let gpa = re_pool.general_property_associations.iter().next().unwrap();
+    assert_eq!(gpa.name, "user defined attribute");
+    assert_eq!(gpa.description, None);
+    assert_eq!(gpa.base_definition, GeneralPropertyId(0));
+    // The re-read fills property_definitions with PDS first (assembly
+    // chain) then Itself (PD handler), so the Itself index is 1.
+    assert_eq!(
+        gpa.derived_definition,
+        DerivedDefinitionItem::PropertyDefinition(PropertyDefinitionId(1))
+    );
+}
+
+#[test]
+fn property_definition_with_general_property_target_round_trips() {
+    use step_io::ir::property::{
+        CharacterizedDefinition, GeneralProperty, PropertyDefinition, PropertyDefinitionData,
+        PropertyPool,
+    };
+    // A PROPERTY_DEFINITION whose `definition` is a GENERAL_PROPERTY (the
+    // general_property member of characterized_definition) — no product
+    // binding. Must survive both write (PD → #gp ref) and read (resolve
+    // #gp back to a GeneralProperty variant).
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+
+    let mut pool = PropertyPool::default();
+    let gp_id = pool.general_properties.push(GeneralProperty {
+        id: "GP1".into(),
+        name: "material".into(),
+        description: Some("user defined attribute".into()),
+    });
+    pool.property_definitions
+        .push(PropertyDefinition::Itself(PropertyDefinitionData {
+            name: "p_mat".into(),
+            description: "user defined attribute".into(),
+            definition: CharacterizedDefinition::GeneralProperty(gp_id),
+        }));
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pool = re
+        .properties
+        .as_ref()
+        .expect("round-tripped has properties");
+    assert_eq!(re_pool.general_properties.len(), 1);
+    let has_gp_pd = re_pool.property_definitions.iter().any(|pd| {
+        matches!(
+            pd,
+            PropertyDefinition::Itself(d)
+                if matches!(d.definition, CharacterizedDefinition::GeneralProperty(_))
+        )
+    });
+    assert!(
+        has_gp_pd,
+        "PROPERTY_DEFINITION with a GENERAL_PROPERTY definition should round-trip"
+    );
+}
+
+#[test]
+fn property_definition_with_dimensional_size_target_round_trips() {
+    // PROPERTY_DEFINITION whose definition is a DIMENSIONAL_SIZE (pmi pool).
+    use step_io::ir::pmi::DimensionalSize;
+    use step_io::ir::property::{
+        CharacterizedDefinition, PropertyDefinition, PropertyDefinitionData, PropertyPool,
+    };
+    let (mut model, sa, ..) = shape_aspect_relationship_fixture();
+    let ds_id = model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .dimensional_sizes
+        .push(DimensionalSize {
+            applies_to: ShapeAspectRef::ShapeAspect(sa),
+            name: "diameter".into(),
+            kind: DimensionalSizeKind::Plain,
+        });
+    model
+        .properties
+        .get_or_insert_with(PropertyPool::default)
+        .property_definitions
+        .push(PropertyDefinition::Itself(PropertyDefinitionData {
+            name: "p_ds".into(),
+            description: String::new(),
+            definition: CharacterizedDefinition::DimensionalSize(ds_id),
+        }));
+
+    // Write-side guard: the PD line is emitted only if the DimensionalSize
+    // definition step resolved (non-zero). dimensional_size emits before the
+    // PD pass, so the PD must reference it. (Full re-read symmetry is covered
+    // by reference-check on real fixtures, which carry the product-shape PDS
+    // this minimal model omits.)
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("PROPERTY_DEFINITION('p_ds'"),
+        "PD with DIMENSIONAL_SIZE definition must emit (writer arm fires): {text}"
+    );
+}
+
+#[test]
+fn property_definition_with_geometric_tolerance_target_round_trips() {
+    // PROPERTY_DEFINITION whose definition is a GEOMETRIC_TOLERANCE. Also
+    // guards the writer reorder: emit_geometric_tolerances must run before the
+    // PD pass, else the re-read drops this PD and the assertion fails.
+    use step_io::ir::pmi::{
+        GeometricTolerance, GeometricToleranceData, GeometricToleranceRef, ToleranceMagnitude,
+    };
+    use step_io::ir::property::{
+        CharacterizedDefinition, PropertyDefinition, PropertyDefinitionData, PropertyPool,
+    };
+    use step_io::ir::units::MeasureWithUnit;
+    let (mut model, sa, ..) = shape_aspect_relationship_fixture();
+    let ctx = mm_radian_steradian(&mut model);
+    let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
+    model.units.push(ctx);
+    let mwu = model
+        .units_pool
+        .as_mut()
+        .expect("units pool")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
+            value: 0.1,
+            unit: length,
+        });
+    let gt_id = model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .geometric_tolerances
+        .push(GeometricTolerance::Flatness(GeometricToleranceData {
+            name: "t".into(),
+            description: String::new(),
+            magnitude: ToleranceMagnitude::MeasureWithUnit(mwu),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+            modifiers: Vec::new(),
+            unit_size: None,
+            defined_area_unit: None,
+        }));
+    model
+        .properties
+        .get_or_insert_with(PropertyPool::default)
+        .property_definitions
+        .push(PropertyDefinition::Itself(PropertyDefinitionData {
+            name: "p_gt".into(),
+            description: String::new(),
+            definition: CharacterizedDefinition::GeometricTolerance(GeometricToleranceRef::Plain(
+                gt_id,
+            )),
+        }));
+
+    // Write-side guard for the new arm AND the GT-emit reorder: the PD line is
+    // emitted only if the geometric_tolerance definition step resolved
+    // (non-zero) at PD-emit time, which requires emit_geometric_tolerances to
+    // run before the PD pass (the reorder). Reverting the reorder leaves the GT
+    // step 0 → the PD arm skips → no PD line → this fails. (Full re-read
+    // symmetry is covered by reference-check on real fixtures.)
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("PROPERTY_DEFINITION('p_gt'"),
+        "PD with GEOMETRIC_TOLERANCE definition must emit (writer arm + GT reorder): {text}"
+    );
+}
+
+#[test]
+fn property_definition_with_document_file_target_round_trips() {
+    use step_io::ir::plm::{Document, DocumentFile, DocumentType, PlmPool};
+    use step_io::ir::property::{
+        CharacterizedDefinition, PropertyDefinition, PropertyDefinitionData, PropertyPool,
+    };
+    // A PROPERTY_DEFINITION whose `definition` is a DOCUMENT_FILE (a
+    // characterized_object subtype, hence a valid characterized_definition
+    // member) — no product binding. Must survive write (PD -> #doc ref) and
+    // read (resolve #doc back to a Document variant).
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+
+    let mut plm = PlmPool::default();
+    let dtype_id = plm.document_types.push(DocumentType {
+        product_data_type: "configuration controlled document".into(),
+    });
+    let doc_id = plm.documents.push(Document::DocumentFile(DocumentFile {
+        id: "DF1".into(),
+        name: "spec.pdf".into(),
+        description: String::new(),
+        kind: dtype_id,
+        characterized_object_name: String::new(),
+        characterized_object_description: None,
+    }));
+    model.plm = Some(plm);
+
+    let mut pool = PropertyPool::default();
+    pool.property_definitions
+        .push(PropertyDefinition::Itself(PropertyDefinitionData {
+            name: "doc_prop".into(),
+            description: String::new(),
+            definition: CharacterizedDefinition::Document(doc_id),
+        }));
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pool = re
+        .properties
+        .as_ref()
+        .expect("round-tripped has properties");
+    let has_doc_pd = re_pool.property_definitions.iter().any(|pd| {
+        matches!(
+            pd,
+            PropertyDefinition::Itself(d)
+                if matches!(d.definition, CharacterizedDefinition::Document(_))
+        )
+    });
+    assert!(
+        has_doc_pd,
+        "PROPERTY_DEFINITION with a DOCUMENT_FILE definition should round-trip"
+    );
+}
+
+#[test]
+fn pd_based_shape_definition_representation_round_trips() {
+    use step_io::ir::property::{
+        CharacterizedDefinition, GeneralProperty, PropertyDefinition, PropertyDefinitionData,
+        PropertyPool, SdrDefinition, ShapeDefinitionRepresentationLink,
+    };
+    use step_io::ir::shape_rep::{PlainRepr, Representation, RepresentationContextRef};
+    // A SHAPE_DEFINITION_REPRESENTATION whose `definition` is a
+    // PROPERTY_DEFINITION (the geometric-validation / CATIA-geometric-set PMI
+    // pattern), not a product PDS — captured in the new arena and emitted.
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let rep = model.representations.push(Representation::Plain(PlainRepr {
+        name: "validation shape".into(),
+        context: Some(RepresentationContextRef::Unitful(
+            step_io::ir::UnitContextId(0),
+        )),
+        frame: None,
+    }));
+
+    let mut pool = PropertyPool::default();
+    let gp_id = pool.general_properties.push(GeneralProperty {
+        id: "GP1".into(),
+        name: "gvp".into(),
+        description: None,
+    });
+    let pd_id =
+        pool.property_definitions
+            .push(PropertyDefinition::Itself(PropertyDefinitionData {
+                name: "shape for solid data".into(),
+                description: String::new(),
+                definition: CharacterizedDefinition::GeneralProperty(gp_id),
+            }));
+    pool.shape_definition_representations
+        .push(ShapeDefinitionRepresentationLink {
+            definition: SdrDefinition::PropertyDefinition(pd_id),
+            used_representation: rep,
+        });
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pool = re
+        .properties
+        .as_ref()
+        .expect("round-tripped has properties");
+    assert_eq!(
+        re_pool.shape_definition_representations.len(),
+        1,
+        "the PD-based SDR link survives round-trip"
+    );
+}
+
+#[test]
+fn description_attribute_targeting_shape_representation_round_trips() {
+    // AP242 "supplemental geometry" notes attach a DESCRIPTION_ATTRIBUTE to a
+    // SHAPE_REPRESENTATION (the `representation` member of
+    // description_attribute_select).
+    use step_io::ir::property::{DescriptionAttribute, DescriptionAttributeItem, PropertyPool};
+    use step_io::ir::shape_rep::{PlainRepr, Representation, RepresentationContextRef};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let rep = model.representations.push(Representation::Plain(PlainRepr {
+        name: "supplemental geometry".into(),
+        context: Some(RepresentationContextRef::Unitful(
+            step_io::ir::UnitContextId(0),
+        )),
+        frame: None,
+    }));
+
+    let mut pool = PropertyPool::default();
+    pool.description_attributes.push(DescriptionAttribute {
+        attribute_value: "supplemental geometry subset".into(),
+        described_item: DescriptionAttributeItem::Representation(rep),
+    });
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("DESCRIPTION_ATTRIBUTE("),
+        "DESCRIPTION_ATTRIBUTE not emitted"
+    );
+    let re = reconvert(&text);
+    let re_pool = re.properties.as_ref().expect("properties");
+    assert_eq!(re_pool.description_attributes.len(), 1);
+    let da = re_pool.description_attributes.iter().next().unwrap();
+    assert!(
+        matches!(
+            da.described_item,
+            DescriptionAttributeItem::Representation(_)
+        ),
+        "described_item should round-trip as a Representation"
+    );
+    assert_eq!(da.attribute_value, "supplemental geometry subset");
+}
+
+#[test]
+fn shape_aspect_based_shape_definition_representation_round_trips() {
+    use step_io::ir::property::{PropertyPool, SdrDefinition, ShapeDefinitionRepresentationLink};
+    use step_io::ir::shape_rep::{PlainRepr, Representation, RepresentationContextRef};
+    // A SHAPE_DEFINITION_REPRESENTATION whose `definition` is a SHAPE_ASPECT
+    // (C3D / grabcad pattern), not a property_definition — resolves through
+    // the shape_aspect arena and survives round-trip.
+    let (mut model, sa, _cg, _ds, _cs) = shape_aspect_relationship_fixture();
+    let rep = model.representations.push(Representation::Plain(PlainRepr {
+        name: "aspect shape".into(),
+        context: Some(RepresentationContextRef::Unitful(
+            step_io::ir::UnitContextId(0),
+        )),
+        frame: None,
+    }));
+    let mut pool = PropertyPool::default();
+    pool.shape_definition_representations
+        .push(ShapeDefinitionRepresentationLink {
+            definition: SdrDefinition::ShapeAspect(sa),
+            used_representation: rep,
+        });
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pool = re.properties.as_ref().expect("properties");
+    assert_eq!(re_pool.shape_definition_representations.len(), 1);
+    let link = re_pool
+        .shape_definition_representations
+        .iter()
+        .next()
+        .unwrap();
+    assert!(
+        matches!(link.definition, SdrDefinition::ShapeAspect(_)),
+        "the SHAPE_ASPECT definition round-trips as a ShapeAspect, not a PD"
+    );
+}
+
+#[test]
+fn product_with_additional_shape_representation_round_trips() {
+    use step_io::ir::property::{
+        CharacterizedDefinition, ProductDefinitionShape, PropertyDefinition,
+        PropertyDefinitionData, PropertyPool, SdrDefinition, ShapeDefinitionRepresentationLink,
+    };
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{AdvancedBrepRepr, Representation, RepresentationContextRef};
+    // One product PDS referencing TWO shape representations: the product's own
+    // solid geometry (primary, folds into `Product.representation_id`) plus an
+    // additional ADVANCED_BREP_SHAPE_REPRESENTATION preserved as a
+    // `ShapeDefinitionRepresentationLink` (the multi-representation-per-product
+    // case, e.g. a part whose solids are split across distinct ABSRs). Both
+    // SDRs share the single product PDS and must survive the round-trip.
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let identity_frame = model.geometry.identity_placement();
+    // The additional representation: a second ABSR over its own solid.
+    let extra_solid = push_minimal_solid(&mut model);
+    let extra_rep = model
+        .representations
+        .push(Representation::AdvancedBrep(AdvancedBrepRepr {
+            name: "additional rep".into(),
+            context: Some(RepresentationContextRef::Unitful(UnitContextId(0))),
+            items: vec![
+                RepresentationItemRef::Placement3d(identity_frame),
+                RepresentationItemRef::Solid(extra_solid),
+            ],
+        }));
+    // The product with its own (primary) solid geometry.
+    let primary_solid = push_minimal_solid(&mut model);
+    let mut tree = AssemblyTree::default();
+    let pid = tree.products.push(Product {
+        id: "Bearing".into(),
+        name: "Bearing".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![primary_solid],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![pid];
+    model.assembly = Some(tree);
+    // The product PDS in the property_definitions arena, plus the additional
+    // SDR link pointing at it.
+    let mut pool = PropertyPool::default();
+    let pds_id = pool
+        .property_definitions
+        .push(PropertyDefinition::ProductDefinitionShape(
+            ProductDefinitionShape {
+                inherited: PropertyDefinitionData {
+                    name: String::new(),
+                    description: String::new(),
+                    definition: CharacterizedDefinition::ProductDefinition(pid),
+                },
+            },
+        ));
+    pool.shape_definition_representations
+        .push(ShapeDefinitionRepresentationLink {
+            definition: SdrDefinition::PropertyDefinition(pds_id),
+            used_representation: extra_rep,
+        });
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    assert_eq!(
+        text.matches("SHAPE_DEFINITION_REPRESENTATION").count(),
+        2,
+        "primary + additional SDR both emitted against the one PDS"
+    );
+    let re = reconvert(&text);
+    let re_pool = re
+        .properties
+        .as_ref()
+        .expect("round-tripped has properties");
+    assert_eq!(
+        re_pool.shape_definition_representations.len(),
+        1,
+        "the additional SDR survives round-trip as a link"
+    );
+    let r_asm = re.assembly.as_ref().expect("round-tripped has assembly");
+    assert_eq!(r_asm.products.len(), 1);
+    assert!(
+        r_asm.products.iter().next().unwrap().geometry.is_some(),
+        "the product keeps its primary geometry"
+    );
+}
+
+#[test]
+fn multi_root_independent_products_round_trip() {
+    // A STEP file may hold several independent top-level products with no
+    // NAUO between them. `AssemblyTree.roots` lists all of them; the reader
+    // must not warn (the old "N root candidates" warning was a spurious
+    // LOSS trigger). `reconvert` asserts the reader produced no warnings.
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let mut pids = Vec::new();
+    for name in ["PartA", "PartB"] {
+        let solid_id = push_minimal_solid(&mut model);
+        let pid = tree.products.push(Product {
+            id: name.into(),
+            name: name.into(),
+            description: None,
+            geometry: Some(GeometryLeaf::Solid(SolidContent {
+                ids: vec![solid_id],
+            })),
+            instances: vec![],
+            shape_ref_frame: identity_frame,
+            outer_sr_frame: None,
+            category: None,
+            formation_with_source: false,
+            geometry_context: Some(UnitContextId(0)),
+            product_context: None,
+            pdef_context: None,
+            representation_id: None,
+            outer_representation_id: None,
+            associated_documents: Vec::new(),
+            formation: None,
+            pdef: None,
+        });
+        pids.push(pid);
+    }
+    tree.roots = pids.clone();
+    model.assembly = Some(tree);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let r_asm = re.assembly.as_ref().expect("round-tripped has assembly");
+    assert_eq!(r_asm.products.len(), 2);
+    assert_eq!(r_asm.roots, pids, "both independent products are roots");
+}
+
+#[test]
+fn gram_conversion_based_unit_round_trips() {
+    // A gram defined as a CONVERSION_BASED_UNIT (0.001 of the SI kilogram).
+    // The reader must recognize the 'GRAM' CBU name, not just 'POUND'.
+    // `reconvert` asserts the reader produced no warnings.
+    let mut model = empty_model();
+    let mut pool = UnitsPool::default();
+    let kg = pool.named_units.push(NamedUnit::Mass(MassFlavor {
+        unit: MassUnit::Kilogram,
+        cbu_base: None,
+        dim_exp: None,
+    }));
+    pool.named_units.push(NamedUnit::Mass(MassFlavor {
+        unit: MassUnit::Gram,
+        cbu_base: Some(kg),
+        dim_exp: None,
+    }));
+    model.units_pool = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pool = re.units_pool.as_ref().expect("round-tripped units pool");
+    assert_eq!(re_pool.named_units.len(), 2);
+    let gram = re_pool
+        .named_units
+        .iter()
+        .find_map(|n| match n {
+            NamedUnit::Mass(f) if f.unit == MassUnit::Gram => Some(f),
+            _ => None,
+        })
+        .expect("gram NamedUnit survived round-trip");
+    assert!(
+        gram.cbu_base.is_some(),
+        "gram round-trips as a CBU-wrapped unit"
+    );
+}
+
+#[test]
+fn megagram_si_unit_round_trips() {
+    // A megagram (tonne) = plain SI `(MEGA, GRAM)`. The reader must accept the
+    // MEGA prefix (not drop it as an unsupported SI mass spelling), and the
+    // writer must emit `SI_UNIT(.MEGA.,.GRAM.)`. `reconvert` asserts zero
+    // reader warnings.
+    let mut model = empty_model();
+    let mut pool = UnitsPool::default();
+    pool.named_units.push(NamedUnit::Mass(MassFlavor {
+        unit: MassUnit::Megagram,
+        cbu_base: None,
+        dim_exp: None,
+    }));
+    model.units_pool = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("SI_UNIT(.MEGA.,.GRAM.)"),
+        "megagram must emit SI_UNIT(.MEGA.,.GRAM.); got:\n{text}"
+    );
+    let re = reconvert(&text);
+    let re_pool = re.units_pool.as_ref().expect("round-tripped units pool");
+    let mega = re_pool
+        .named_units
+        .iter()
+        .find_map(|n| match n {
+            NamedUnit::Mass(f) if f.unit == MassUnit::Megagram => Some(f),
+            _ => None,
+        })
+        .expect("megagram NamedUnit survived round-trip");
+    assert!(mega.cbu_base.is_none(), "megagram is plain SI, not a CBU");
+}
+
+#[test]
+fn ton_conversion_based_unit_round_trips() {
+    // A metric tonne defined as a CONVERSION_BASED_UNIT (1000 × the SI kg) —
+    // CBU form, distinct from the plain-SI megagram. The reader recognizes the
+    // 'ton' name (and the 1000.0 factor), and the writer re-emits the CBU
+    // wrapper, not `(MEGA, GRAM)`. Ton and Megagram coexist.
+    let mut model = empty_model();
+    let mut pool = UnitsPool::default();
+    let kg = pool.named_units.push(NamedUnit::Mass(MassFlavor {
+        unit: MassUnit::Kilogram,
+        cbu_base: None,
+        dim_exp: None,
+    }));
+    pool.named_units.push(NamedUnit::Mass(MassFlavor {
+        unit: MassUnit::Ton,
+        cbu_base: Some(kg),
+        dim_exp: None,
+    }));
+    // A coexisting plain-SI megagram (also 1000 kg, different form).
+    pool.named_units.push(NamedUnit::Mass(MassFlavor {
+        unit: MassUnit::Megagram,
+        cbu_base: None,
+        dim_exp: None,
+    }));
+    model.units_pool = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("CONVERSION_BASED_UNIT('ton'"),
+        "ton must re-emit as a lowercase CBU wrapper; got:\n{text}"
+    );
+    assert!(
+        text.contains("SI_UNIT(.MEGA.,.GRAM.)"),
+        "megagram must still emit plain SI"
+    );
+    let re = reconvert(&text);
+    let re_pool = re.units_pool.as_ref().expect("round-tripped units pool");
+    let ton = re_pool
+        .named_units
+        .iter()
+        .find_map(|n| match n {
+            NamedUnit::Mass(f) if f.unit == MassUnit::Ton => Some(f),
+            _ => None,
+        })
+        .expect("ton NamedUnit survived round-trip");
+    assert!(
+        ton.cbu_base.is_some(),
+        "ton round-trips as a CBU-wrapped unit"
+    );
+    assert!(
+        re_pool
+            .named_units
+            .iter()
+            .any(|n| matches!(n, NamedUnit::Mass(f) if f.unit == MassUnit::Megagram)),
+        "megagram coexists after round-trip"
+    );
+}
+
+#[test]
+fn shape_aspect_subtypes_round_trip() {
+    // COMPOSITE_GROUP_SHAPE_ASPECT / CENTRE_OF_SYMMETRY /
+    // ALL_AROUND_SHAPE_ASPECT — SHAPE_ASPECT subtypes, each its own arena.
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    model
+        .composite_group_shape_aspects
+        .push(CompositeGroupShapeAspect {
+            name: "cg".into(),
+            description: String::new(),
+            target: part_pid,
+            product_definitional: false,
+            kind: CompositeShapeAspectKind::Group,
+            datum_feature: false,
+        });
+    model.centre_of_symmetries.push(CentreOfSymmetry {
+        name: "cs".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: true,
+    });
+    model.all_around_shape_aspects.push(AllAroundShapeAspect {
+        name: "aa".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.composite_group_shape_aspects.len(), 1);
+    assert_eq!(re.centre_of_symmetries.len(), 1);
+    assert_eq!(re.all_around_shape_aspects.len(), 1);
+
+    let cg = re.composite_group_shape_aspects.iter().next().unwrap();
+    assert_eq!(cg.name, "cg");
+    assert_eq!(cg.target, step_io::ProductId(0));
+    let cs = re.centre_of_symmetries.iter().next().unwrap();
+    assert_eq!(cs.name, "cs");
+    assert!(
+        cs.product_definitional,
+        "centre_of_symmetry .T. round-trips"
+    );
+    let aa = re.all_around_shape_aspects.iter().next().unwrap();
+    assert_eq!(aa.name, "aa");
+}
+
+/// Build a model with a part product and one of each shape-aspect-family
+/// arena entry (plain + 3 subtypes), returning their ids. Shared by the
+/// `SHAPE_ASPECT_RELATIONSHIP` round-trip tests.
+fn shape_aspect_relationship_fixture() -> (
+    StepModel,
+    ShapeAspectId,
+    CompositeShapeAspectId,
+    DerivedShapeAspectId,
+    ContinuousShapeAspectId,
+) {
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let sa = model.shape_aspects.push(ShapeAspect {
+        name: "sa".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+    let cg = model
+        .composite_group_shape_aspects
+        .push(CompositeGroupShapeAspect {
+            name: "cg".into(),
+            description: String::new(),
+            target: part_pid,
+            product_definitional: false,
+            kind: CompositeShapeAspectKind::Group,
+            datum_feature: false,
+        });
+    let cs = model.centre_of_symmetries.push(CentreOfSymmetry {
+        name: "cs".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+    let aa = model.all_around_shape_aspects.push(AllAroundShapeAspect {
+        name: "aa".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+    (model, sa, cg, cs, aa)
+}
+
+#[test]
+fn composite_shape_aspect_round_trips_under_its_own_name() {
+    // plain COMPOSITE_SHAPE_ASPECT (kind=Composite) shares the
+    // composite_group_shape_aspects arena with COMPOSITE_GROUP_SHAPE_ASPECT
+    // (kind=Group); the writer must re-emit each under its own STEP name and
+    // the round-trip must preserve the kind.
+    let (mut model, _sa, cg, _cs, _aa) = shape_aspect_relationship_fixture();
+    let target = model.composite_group_shape_aspects[cg].target;
+    model
+        .composite_group_shape_aspects
+        .push(CompositeGroupShapeAspect {
+            name: "plain".into(),
+            description: String::new(),
+            target,
+            product_definitional: false,
+            kind: CompositeShapeAspectKind::Composite,
+            datum_feature: false,
+        });
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("COMPOSITE_SHAPE_ASPECT("),
+        "emits the plain COMPOSITE_SHAPE_ASPECT name: {text}"
+    );
+    let re = reconvert(&text);
+    let kinds: Vec<_> = re
+        .composite_group_shape_aspects
+        .iter()
+        .map(|c| c.kind)
+        .collect();
+    assert!(
+        kinds.contains(&CompositeShapeAspectKind::Composite),
+        "Composite kind preserved across round-trip"
+    );
+    assert!(
+        kinds.contains(&CompositeShapeAspectKind::Group),
+        "Group kind preserved across round-trip"
+    );
+}
+
+#[test]
+fn shape_aspect_relationship_round_trip() {
+    // SHAPE_ASPECT_RELATIONSHIP — exercises all four ShapeAspectRef
+    // variants (plain shape_aspect + 3 subtypes) as relation endpoints.
+    let (mut model, sa, cg, cs, aa) = shape_aspect_relationship_fixture();
+    model
+        .shape_aspect_relationships
+        .push(ShapeAspectRelationship {
+            name: "r1".into(),
+            description: String::new(),
+            relating_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            related_shape_aspect: ShapeAspectRef::CompositeGroupShapeAspect(cg),
+            kind: ShapeAspectRelationshipKind::Plain,
+        });
+    model
+        .shape_aspect_relationships
+        .push(ShapeAspectRelationship {
+            name: "r2".into(),
+            description: String::new(),
+            relating_shape_aspect: ShapeAspectRef::CentreOfSymmetry(cs),
+            related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(aa),
+            kind: ShapeAspectRelationshipKind::Plain,
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.shape_aspect_relationships.len(), 2);
+    let rels: Vec<_> = re.shape_aspect_relationships.iter().collect();
+    assert!(matches!(
+        rels[0].relating_shape_aspect,
+        ShapeAspectRef::ShapeAspect(_)
+    ));
+    assert!(matches!(
+        rels[0].related_shape_aspect,
+        ShapeAspectRef::CompositeGroupShapeAspect(_)
+    ));
+    assert!(matches!(
+        rels[1].relating_shape_aspect,
+        ShapeAspectRef::CentreOfSymmetry(_)
+    ));
+    assert!(matches!(
+        rels[1].related_shape_aspect,
+        ShapeAspectRef::AllAroundShapeAspect(_)
+    ));
+}
+
+#[test]
+fn id_attribute_shape_aspect_round_trip() {
+    // ID_ATTRIBUTE.identified_item -> SHAPE_ASPECT. Guards the
+    // Pass9PlmAttributes dispatch order: it must run after Pass8ShapeAspect so
+    // shape_aspect_id_map is populated when the re-read resolves identified_item.
+    // If the pass is moved back before the PMI block, the re-read drops the
+    // id_attribute and this assertion fails.
+    use step_io::ir::ShapeAspectRef;
+    use step_io::ir::property::{IdAttribute, IdAttributeItem, PropertyPool};
+    let (mut model, sa, _cg, _cs, _aa) = shape_aspect_relationship_fixture();
+    model
+        .properties
+        .get_or_insert_with(PropertyPool::default)
+        .id_attributes
+        .push(IdAttribute {
+            attribute_value: "id1".into(),
+            identified_item: IdAttributeItem::ShapeAspect(ShapeAspectRef::ShapeAspect(sa)),
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let pool = re.properties.as_ref().expect("properties pool survives");
+    assert_eq!(
+        pool.id_attributes.len(),
+        1,
+        "ID_ATTRIBUTE->SHAPE_ASPECT survives round-trip"
+    );
+    assert!(matches!(
+        pool.id_attributes.iter().next().unwrap().identified_item,
+        IdAttributeItem::ShapeAspect(ShapeAspectRef::ShapeAspect(_))
+    ));
+}
+
+#[test]
+fn id_attribute_composite_shape_aspect_round_trip() {
+    // ID_ATTRIBUTE.identified_item -> COMPOSITE_GROUP_SHAPE_ASPECT, exercising
+    // the resolve_shape_aspect_ref family path + emit_shape_aspect_ref. The
+    // composite_group_shape_aspects arena is compared by the round-trip diff,
+    // so this target is FAIL-safe.
+    use step_io::ir::ShapeAspectRef;
+    use step_io::ir::property::{IdAttribute, IdAttributeItem, PropertyPool};
+    let (mut model, _sa, cg, _cs, _aa) = shape_aspect_relationship_fixture();
+    model
+        .properties
+        .get_or_insert_with(PropertyPool::default)
+        .id_attributes
+        .push(IdAttribute {
+            attribute_value: "id-cg".into(),
+            identified_item: IdAttributeItem::ShapeAspect(
+                ShapeAspectRef::CompositeGroupShapeAspect(cg),
+            ),
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let pool = re.properties.as_ref().expect("properties pool survives");
+    assert_eq!(pool.id_attributes.len(), 1);
+    assert!(matches!(
+        pool.id_attributes.iter().next().unwrap().identified_item,
+        IdAttributeItem::ShapeAspect(ShapeAspectRef::CompositeGroupShapeAspect(_))
+    ));
+}
+
+#[test]
+fn shape_aspect_relationship_subtypes_round_trip() {
+    // SHAPE_ASPECT_ASSOCIATIVITY / SHAPE_ASPECT_DERIVING_RELATIONSHIP —
+    // the two subtypes round-trip via the `kind` discriminant.
+    let (mut model, sa, ..) = shape_aspect_relationship_fixture();
+    model
+        .shape_aspect_relationships
+        .push(ShapeAspectRelationship {
+            name: "assoc".into(),
+            description: String::new(),
+            relating_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            related_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            kind: ShapeAspectRelationshipKind::Associativity,
+        });
+    model
+        .shape_aspect_relationships
+        .push(ShapeAspectRelationship {
+            name: "deriv".into(),
+            description: String::new(),
+            relating_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            related_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            kind: ShapeAspectRelationshipKind::DerivingRelationship,
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.shape_aspect_relationships.len(), 2);
+    let rels: Vec<_> = re.shape_aspect_relationships.iter().collect();
+    assert_eq!(rels[0].kind, ShapeAspectRelationshipKind::Associativity);
+    assert_eq!(
+        rels[1].kind,
+        ShapeAspectRelationshipKind::DerivingRelationship
+    );
+}
+
+#[test]
+fn dimensional_size_round_trip() {
+    // DIMENSIONAL_SIZE (plain) + ANGULAR_SIZE — `applies_to` through
+    // ShapeAspectRef, distinguished by the kind discriminant.
+    let (mut model, sa, ..) = shape_aspect_relationship_fixture();
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    pmi.dimensional_sizes.push(DimensionalSize {
+        applies_to: ShapeAspectRef::ShapeAspect(sa),
+        name: "diameter".into(),
+        kind: DimensionalSizeKind::Plain,
+    });
+    pmi.dimensional_sizes.push(DimensionalSize {
+        applies_to: ShapeAspectRef::ShapeAspect(sa),
+        name: "angle".into(),
+        kind: DimensionalSizeKind::Angular(AngleSelection::Equal),
+    });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let pmi = re.pmi.expect("pmi pool");
+    assert_eq!(pmi.dimensional_sizes.len(), 2);
+    let dss: Vec<_> = pmi.dimensional_sizes.iter().collect();
+    assert_eq!(dss[0].name, "diameter");
+    assert_eq!(dss[0].kind, DimensionalSizeKind::Plain);
+    assert_eq!(
+        dss[1].kind,
+        DimensionalSizeKind::Angular(AngleSelection::Equal)
+    );
+}
+
+#[test]
+fn dimensional_location_round_trip() {
+    // DIMENSIONAL_LOCATION + DIRECTED_DIMENSIONAL_LOCATION — both endpoints
+    // through ShapeAspectRef, distinguished by enum variant.
+    let (mut model, sa, cg, cs, aa) = shape_aspect_relationship_fixture();
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    pmi.dimensional_locations
+        .push(DimensionalLocation::Plain(DimensionalLocationData {
+            name: "linear distance".into(),
+            description: String::new(),
+            relating_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            related_shape_aspect: ShapeAspectRef::CompositeGroupShapeAspect(cg),
+        }));
+    pmi.dimensional_locations
+        .push(DimensionalLocation::Directed(DimensionalLocationData {
+            name: "directed".into(),
+            description: String::new(),
+            relating_shape_aspect: ShapeAspectRef::CentreOfSymmetry(cs),
+            related_shape_aspect: ShapeAspectRef::AllAroundShapeAspect(aa),
+        }));
+    pmi.dimensional_locations
+        .push(DimensionalLocation::Angular(AngularLocationData {
+            name: "angle".into(),
+            description: String::new(),
+            relating_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            related_shape_aspect: ShapeAspectRef::ShapeAspect(sa),
+            angle_selection: AngleSelection::Small,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let pmi = re.pmi.expect("pmi pool");
+    assert_eq!(pmi.dimensional_locations.len(), 3);
+    let dls: Vec<_> = pmi.dimensional_locations.iter().collect();
+    let DimensionalLocation::Plain(d0) = dls[0] else {
+        panic!("expected Plain");
+    };
+    assert_eq!(d0.name, "linear distance");
+    assert!(matches!(dls[1], DimensionalLocation::Directed(_)));
+    let DimensionalLocation::Angular(d2) = dls[2] else {
+        panic!("expected Angular");
+    };
+    assert_eq!(d2.angle_selection, AngleSelection::Small);
+}
+
+#[test]
+fn view_volume_round_trip() {
+    // VIEW_VOLUME — a founded_item referencing a cartesian point + planar box.
+    let mut model = empty_model();
+    let frame = model.geometry.identity_placement();
+    let pt = model.geometry.points.push(Point3 {
+        x: 1.0,
+        y: 2.0,
+        z: 3.0,
+    });
+    let pb = model
+        .geometry
+        .planar_extents
+        .push(PlanarExtent::PlanarBox(PlanarBox {
+            name: "win".into(),
+            size_in_x: 10.0,
+            size_in_y: 20.0,
+            placement: PlanarBoxPlacement::Placement3d(frame),
+        }));
+    model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .founded_items
+        .push(FoundedItem::ViewVolume(ViewVolume {
+            projection_type: Projection::Parallel,
+            projection_point: pt,
+            view_plane_distance: 1645.0,
+            front_plane_distance: 0.0,
+            front_plane_clipping: false,
+            back_plane_distance: 0.0,
+            back_plane_clipping: true,
+            view_volume_sides_clipping: false,
+            view_window: pb,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let viz = re.visualization.expect("viz pool");
+    let vv = viz
+        .founded_items
+        .iter()
+        .find_map(|f| match f {
+            FoundedItem::ViewVolume(v) => Some(v),
+            _ => None,
+        })
+        .expect("view volume round-trips");
+    assert_eq!(vv.projection_type, Projection::Parallel);
+    assert!((vv.view_plane_distance - 1645.0).abs() < f64::EPSILON);
+    assert!(!vv.front_plane_clipping);
+    assert!(vv.back_plane_clipping);
+}
+
+#[test]
+fn camera_model_d3_round_trip() {
+    // CAMERA_MODEL_D3 — references a VIEW_VOLUME (founded_item) + a placement.
+    let mut model = empty_model();
+    let frame = model.geometry.identity_placement();
+    let pt = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let pb = model
+        .geometry
+        .planar_extents
+        .push(PlanarExtent::PlanarBox(PlanarBox {
+            name: "win".into(),
+            size_in_x: 1.0,
+            size_in_y: 2.0,
+            placement: PlanarBoxPlacement::Placement3d(frame),
+        }));
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let vv = viz.founded_items.push(FoundedItem::ViewVolume(ViewVolume {
+        projection_type: Projection::Central,
+        projection_point: pt,
+        view_plane_distance: 100.0,
+        front_plane_distance: 0.0,
+        front_plane_clipping: false,
+        back_plane_distance: 0.0,
+        back_plane_clipping: false,
+        view_volume_sides_clipping: false,
+        view_window: pb,
+    }));
+    viz.camera_models
+        .push(CameraModel::CameraModelD3(CameraModelD3 {
+            name: "cam".into(),
+            view_reference_system: frame,
+            perspective_of_volume: vv,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let viz = re.visualization.expect("viz pool");
+    assert_eq!(viz.camera_models.len(), 1);
+    let CameraModel::CameraModelD3(cm) = viz.camera_models.iter().next().unwrap() else {
+        panic!("expected CameraModelD3");
+    };
+    assert_eq!(cm.name, "cam");
+}
+
+#[test]
+fn camera_usage_round_trip() {
+    // CAMERA_USAGE — representation_map SUBTYPE that pairs a camera_model
+    // origin with a target representation. Exercises the delayed-emit
+    // pathway through `emit_camera_usage_arena`.
+    use step_io::ir::shape_rep::{CameraUsage, PlainRepr, Representation, RepresentationMap};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+    let frame = model.geometry.identity_placement();
+    let pt = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let pb = model
+        .geometry
+        .planar_extents
+        .push(PlanarExtent::PlanarBox(PlanarBox {
+            name: "win".into(),
+            size_in_x: 1.0,
+            size_in_y: 2.0,
+            placement: PlanarBoxPlacement::Placement3d(frame),
+        }));
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let vv = viz.founded_items.push(FoundedItem::ViewVolume(ViewVolume {
+        projection_type: Projection::Central,
+        projection_point: pt,
+        view_plane_distance: 100.0,
+        front_plane_distance: 0.0,
+        front_plane_clipping: false,
+        back_plane_distance: 0.0,
+        back_plane_clipping: false,
+        view_volume_sides_clipping: false,
+        view_window: pb,
+    }));
+    let cam = viz
+        .camera_models
+        .push(CameraModel::CameraModelD3(CameraModelD3 {
+            name: "cam".into(),
+            view_reference_system: frame,
+            perspective_of_volume: vv,
+        }));
+    let rep = model.representations.push(Representation::Plain(PlainRepr {
+        name: "target".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+        frame: None,
+    }));
+    model
+        .representation_maps
+        .push(RepresentationMap::CameraUsage(CameraUsage {
+            mapping_origin: cam,
+            mapped_representation: rep,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.representation_maps.len(), 1);
+    let RepresentationMap::CameraUsage(cu) = re.representation_maps.iter().next().unwrap() else {
+        panic!("expected CameraUsage variant");
+    };
+    assert_eq!(cu.mapping_origin, cam);
+    assert_eq!(cu.mapped_representation, rep);
+}
+
+#[test]
+fn camera_image_round_trip() {
+    // CAMERA_IMAGE + CAMERA_IMAGE_3D_WITH_SCALE — mapped_item SUBTYPEs
+    // referencing a camera_usage source and a planar_box target.
+    use step_io::ir::shape_rep::{
+        CameraImage, CameraUsage, MappedItem, PlainRepr, Representation, RepresentationMap,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+    let frame = model.geometry.identity_placement();
+    let pt = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let pb = model
+        .geometry
+        .planar_extents
+        .push(PlanarExtent::PlanarBox(PlanarBox {
+            name: "win".into(),
+            size_in_x: 1.0,
+            size_in_y: 2.0,
+            placement: PlanarBoxPlacement::Placement3d(frame),
+        }));
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let vv = viz.founded_items.push(FoundedItem::ViewVolume(ViewVolume {
+        projection_type: Projection::Central,
+        projection_point: pt,
+        view_plane_distance: 100.0,
+        front_plane_distance: 0.0,
+        front_plane_clipping: false,
+        back_plane_distance: 0.0,
+        back_plane_clipping: false,
+        view_volume_sides_clipping: false,
+        view_window: pb,
+    }));
+    let cam = viz
+        .camera_models
+        .push(CameraModel::CameraModelD3(CameraModelD3 {
+            name: "cam".into(),
+            view_reference_system: frame,
+            perspective_of_volume: vv,
+        }));
+    let rep = model.representations.push(Representation::Plain(PlainRepr {
+        name: "target".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+        frame: None,
+    }));
+    let cu = model
+        .representation_maps
+        .push(RepresentationMap::CameraUsage(CameraUsage {
+            mapping_origin: cam,
+            mapped_representation: rep,
+        }));
+    model
+        .mapped_items
+        .push(MappedItem::CameraImage(CameraImage {
+            name: "img".into(),
+            mapping_source: cu,
+            mapping_target: pb,
+        }));
+    model
+        .mapped_items
+        .push(MappedItem::CameraImage3dWithScale(CameraImage {
+            name: "img3d".into(),
+            mapping_source: cu,
+            mapping_target: pb,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.mapped_items.len(), 2);
+    let mut iter = re.mapped_items.iter();
+    let MappedItem::CameraImage(ci) = iter.next().unwrap() else {
+        panic!("expected CameraImage");
+    };
+    assert_eq!(ci.name, "img");
+    let MappedItem::CameraImage3dWithScale(ci3) = iter.next().unwrap() else {
+        panic!("expected CameraImage3dWithScale");
+    };
+    assert_eq!(ci3.name, "img3d");
+}
+
+#[test]
+fn planar_extent_and_box_round_trip() {
+    // PLANAR_EXTENT (base) + PLANAR_BOX with a 3D placement and another
+    // with a 2D placement — one concrete_supertype arena.
+    let mut model = empty_model();
+    let frame3d = model.geometry.identity_placement();
+    let p2 = model.geometry.points_2d.push(Point2 { x: 0.0, y: 0.0 });
+    let frame2d = model.geometry.placements_2d.push(Axis2Placement2d {
+        location: p2,
+        ref_direction: None,
+    });
+
+    model
+        .geometry
+        .planar_extents
+        .push(PlanarExtent::Itself(PlanarExtentData {
+            name: "pe".into(),
+            size_in_x: 10.0,
+            size_in_y: 20.0,
+        }));
+    model
+        .geometry
+        .planar_extents
+        .push(PlanarExtent::PlanarBox(PlanarBox {
+            name: "pb3d".into(),
+            size_in_x: 1.0,
+            size_in_y: 2.0,
+            placement: PlanarBoxPlacement::Placement3d(frame3d),
+        }));
+    model
+        .geometry
+        .planar_extents
+        .push(PlanarExtent::PlanarBox(PlanarBox {
+            name: "pb2d".into(),
+            size_in_x: 3.0,
+            size_in_y: 4.0,
+            placement: PlanarBoxPlacement::Placement2d(frame2d),
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.geometry.planar_extents.len(), 3);
+    let mut it = re.geometry.planar_extents.iter();
+    match it.next().unwrap() {
+        PlanarExtent::Itself(d) => {
+            assert_eq!(d.name, "pe");
+            assert!((d.size_in_x - 10.0).abs() < f64::EPSILON);
+            assert!((d.size_in_y - 20.0).abs() < f64::EPSILON);
+        }
+        PlanarExtent::PlanarBox(pb) => panic!("expected Itself, got {pb:?}"),
+    }
+    match it.next().unwrap() {
+        PlanarExtent::PlanarBox(pb) => {
+            assert_eq!(pb.name, "pb3d");
+            assert!(matches!(pb.placement, PlanarBoxPlacement::Placement3d(_)));
+        }
+        PlanarExtent::Itself(d) => panic!("expected PlanarBox, got {d:?}"),
+    }
+    match it.next().unwrap() {
+        PlanarExtent::PlanarBox(pb) => {
+            assert_eq!(pb.name, "pb2d");
+            assert!(matches!(pb.placement, PlanarBoxPlacement::Placement2d(_)));
+        }
+        PlanarExtent::Itself(d) => panic!("expected PlanarBox, got {d:?}"),
+    }
+}
+
+#[test]
+fn pmi_primitives_round_trip() {
+    // TOLERANCE_ZONE_FORM / TYPE_QUALIFIER / VALUE_FORMAT_TYPE_QUALIFIER —
+    // the first pmi-pool entities, each a 1-attr string primitive.
+    let mut model = empty_model();
+    let mut pmi = PmiPool::default();
+    pmi.tolerance_zone_forms.push(ToleranceZoneForm {
+        name: "cylindrical".into(),
+    });
+    pmi.type_qualifiers.push(TypeQualifier {
+        name: "maximum".into(),
+    });
+    pmi.value_format_type_qualifiers
+        .push(ValueFormatTypeQualifier {
+            format_type: "NR2 1.3".into(),
+        });
+    model.pmi = Some(pmi);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("round-tripped pmi pool");
+    assert_eq!(re_pmi.tolerance_zone_forms.len(), 1);
+    assert_eq!(re_pmi.type_qualifiers.len(), 1);
+    assert_eq!(re_pmi.value_format_type_qualifiers.len(), 1);
+    assert_eq!(
+        re_pmi.tolerance_zone_forms.iter().next().unwrap().name,
+        "cylindrical"
+    );
+    assert_eq!(
+        re_pmi.type_qualifiers.iter().next().unwrap().name,
+        "maximum"
+    );
+    assert_eq!(
+        re_pmi
+            .value_format_type_qualifiers
+            .iter()
+            .next()
+            .unwrap()
+            .format_type,
+        "NR2 1.3"
+    );
+}
+
+#[test]
+fn mapped_item_round_trip() {
+    // REPRESENTATION_MAP + MAPPED_ITEM — orphan round-trip: a reusable map
+    // into a representation, instantiated by a mapped item. Both emit
+    // standalone (no container modelled yet).
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{
+        MappedItem, MappedItemData, MappedRepresentationRef, PlainRepr, Representation,
+        RepresentationMap, RepresentationMapData,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+    let loc = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let axis = model.geometry.directions.push(Direction3 {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+    });
+    let refd = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let placement = push_placement(&mut model, loc, Some(axis), Some(refd));
+    let rep = model.representations.push(Representation::Plain(PlainRepr {
+        name: "mapped".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+        frame: None,
+    }));
+    let rmap = model
+        .representation_maps
+        .push(RepresentationMap::Itself(RepresentationMapData {
+            mapping_origin: RepresentationItemRef::Placement3d(placement),
+            mapped_representation: MappedRepresentationRef::Representation(rep),
+        }));
+    model.mapped_items.push(MappedItem::Itself(MappedItemData {
+        name: "inst".into(),
+        mapping_source: rmap,
+        mapping_target: RepresentationItemRef::Placement3d(placement),
+    }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.representation_maps.len(), 1);
+    assert_eq!(re.mapped_items.len(), 1);
+    let MappedItem::Itself(mi) = re.mapped_items.iter().next().unwrap() else {
+        panic!("expected Itself variant");
+    };
+    assert_eq!(mi.name, "inst");
+    assert!(matches!(
+        mi.mapping_target,
+        RepresentationItemRef::Placement3d(_)
+    ));
+    let RepresentationMap::Itself(rm) = re.representation_maps.iter().next().unwrap() else {
+        panic!("expected Itself variant");
+    };
+    assert!(matches!(
+        rm.mapping_origin,
+        RepresentationItemRef::Placement3d(_)
+    ));
+}
+
+#[test]
+fn camera_origin_mapped_item_round_trip() {
+    // A plain REPRESENTATION_MAP whose mapping_origin is a CAMERA_MODEL_D3
+    // (schema-valid: CAMERA_MODEL is a representation_item subtype), plus the
+    // MAPPED_ITEM sourced from it. The reader keeps both; the writer emits the
+    // rmap and item in the delayed `emit_camera_origin_mapped_items` pass once
+    // the camera step ids exist. A dangling #0 origin would make the re-read
+    // drop the rmap (origin unresolved), so a surviving CameraModel origin
+    // proves the delayed-emit ordering is correct.
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{
+        MappedItem, MappedItemData, MappedRepresentationRef, PlainRepr, Representation,
+        RepresentationMap, RepresentationMapData,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+
+    let frame = model.geometry.identity_placement();
+    let pt = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let pb = model
+        .geometry
+        .planar_extents
+        .push(PlanarExtent::PlanarBox(PlanarBox {
+            name: "win".into(),
+            size_in_x: 1.0,
+            size_in_y: 2.0,
+            placement: PlanarBoxPlacement::Placement3d(frame),
+        }));
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let vv = viz.founded_items.push(FoundedItem::ViewVolume(ViewVolume {
+        projection_type: Projection::Central,
+        projection_point: pt,
+        view_plane_distance: 100.0,
+        front_plane_distance: 0.0,
+        front_plane_clipping: false,
+        back_plane_distance: 0.0,
+        back_plane_clipping: false,
+        view_volume_sides_clipping: false,
+        view_window: pb,
+    }));
+    let cam = viz
+        .camera_models
+        .push(CameraModel::CameraModelD3(CameraModelD3 {
+            name: "cam".into(),
+            view_reference_system: frame,
+            perspective_of_volume: vv,
+        }));
+
+    let rep = model.representations.push(Representation::Plain(PlainRepr {
+        name: "mapped".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+        frame: None,
+    }));
+    let rmap = model
+        .representation_maps
+        .push(RepresentationMap::Itself(RepresentationMapData {
+            mapping_origin: RepresentationItemRef::CameraModel(cam),
+            mapped_representation: MappedRepresentationRef::Representation(rep),
+        }));
+    model.mapped_items.push(MappedItem::Itself(MappedItemData {
+        name: "inst".into(),
+        mapping_source: rmap,
+        mapping_target: RepresentationItemRef::Placement3d(frame),
+    }));
+
+    let text = model.write_to_string().expect("write");
+    // No dangling forward-ref: a 0 step id would serialize as `#0`.
+    assert!(
+        !text.contains("#0,") && !text.contains("#0)") && !text.contains("(#0"),
+        "no dangling #0 ref in:\n{text}"
+    );
+    let re = reconvert(&text);
+    assert_eq!(
+        re.representation_maps.len(),
+        1,
+        "camera-origin REPRESENTATION_MAP survives instead of being dropped"
+    );
+    assert_eq!(re.mapped_items.len(), 1, "MAPPED_ITEM survives");
+    let RepresentationMap::Itself(rm) = re.representation_maps.iter().next().unwrap() else {
+        panic!("expected Itself variant");
+    };
+    assert!(
+        matches!(rm.mapping_origin, RepresentationItemRef::CameraModel(_)),
+        "the camera mapping_origin round-trips (no dangling drop)"
+    );
+    let MappedItem::Itself(mi) = re.mapped_items.iter().next().unwrap() else {
+        panic!("expected Itself variant");
+    };
+    assert_eq!(mi.name, "inst");
+}
+
+#[test]
+fn presentation_mapped_representation_round_trips() {
+    // A REPRESENTATION_MAP whose mapped_representation is a PRESENTATION_VIEW
+    // (separate arena), instantiated by a MAPPED_ITEM whose target is an
+    // AXIS2_PLACEMENT_2D. Exercises the Placement2d RepresentationItemRef
+    // variant and the MappedRepresentationRef::Presentation member.
+    use step_io::ir::geometry::{Axis2Placement2d, Point2};
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{
+        MappedItem, MappedItemData, MappedRepresentationRef, RepresentationMap,
+        RepresentationMapData,
+    };
+    use step_io::ir::visualization::{
+        PresentationReprData, PresentationRepresentation, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+
+    let frame = model.geometry.identity_placement();
+    let loc2 = model.geometry.points_2d.push(Point2 { x: 0.0, y: 0.0 });
+    let placement2 = model.geometry.placements_2d.push(Axis2Placement2d {
+        location: loc2,
+        ref_direction: None,
+    });
+
+    let view = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .presentation_representations
+        .push(PresentationRepresentation::View(PresentationReprData {
+            name: "Default".into(),
+            items: vec![RepresentationItemRef::Placement3d(frame)],
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+        }));
+
+    let rmap = model
+        .representation_maps
+        .push(RepresentationMap::Itself(RepresentationMapData {
+            mapping_origin: RepresentationItemRef::Placement3d(frame),
+            mapped_representation: MappedRepresentationRef::Presentation(view),
+        }));
+    model.mapped_items.push(MappedItem::Itself(MappedItemData {
+        name: "inst".into(),
+        mapping_source: rmap,
+        mapping_target: RepresentationItemRef::Placement2d(placement2),
+    }));
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        !text.contains("#0,") && !text.contains("#0)") && !text.contains("(#0"),
+        "no dangling #0 ref in:\n{text}"
+    );
+    let re = reconvert(&text);
+    assert_eq!(re.representation_maps.len(), 1, "the rmap round-trips");
+    assert_eq!(re.mapped_items.len(), 1, "the mapped item round-trips");
+    let RepresentationMap::Itself(rm) = re.representation_maps.iter().next().unwrap() else {
+        panic!("expected Itself variant");
+    };
+    assert!(
+        matches!(
+            rm.mapped_representation,
+            MappedRepresentationRef::Presentation(_)
+        ),
+        "the mapped_representation points at the PRESENTATION_VIEW"
+    );
+    let MappedItem::Itself(mi) = re.mapped_items.iter().next().unwrap() else {
+        panic!("expected Itself variant");
+    };
+    assert!(
+        matches!(mi.mapping_target, RepresentationItemRef::Placement2d(_)),
+        "the 2D placement target round-trips"
+    );
+}
+
+#[test]
+fn assembly_advanced_brep_with_mapped_item_round_trips() {
+    // An assembly ADVANCED_BREP_SHAPE_REPRESENTATION whose items are a
+    // MAPPED_ITEM (not a MANIFOLD_SOLID_BREP) + an AXIS2_PLACEMENT_3D frame.
+    // Exercises the items: Vec faithful preservation + the writer's
+    // reserve-then-fill deferral (ABSR forward-refs the MAPPED_ITEM).
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{
+        AdvancedBrepRepr, MappedItem, MappedItemData, MappedRepresentationRef, PlainRepr,
+        Representation, RepresentationContextRef, RepresentationMap, RepresentationMapData,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+    let frame = model.geometry.identity_placement();
+
+    // A target representation the MAPPED_ITEM's map points into.
+    let target = model.representations.push(Representation::Plain(PlainRepr {
+        name: "part".into(),
+        context: Some(RepresentationContextRef::Unitful(uc)),
+        frame: None,
+    }));
+    let rmap = model
+        .representation_maps
+        .push(RepresentationMap::Itself(RepresentationMapData {
+            mapping_origin: RepresentationItemRef::Placement3d(frame),
+            mapped_representation: MappedRepresentationRef::Representation(target),
+        }));
+    let mi = model.mapped_items.push(MappedItem::Itself(MappedItemData {
+        name: String::new(),
+        mapping_source: rmap,
+        mapping_target: RepresentationItemRef::Placement3d(frame),
+    }));
+    let absr = model
+        .representations
+        .push(Representation::AdvancedBrep(AdvancedBrepRepr {
+            name: "Assem1".into(),
+            context: Some(RepresentationContextRef::Unitful(uc)),
+            items: vec![
+                RepresentationItemRef::MappedItem(mi),
+                RepresentationItemRef::Placement3d(frame),
+            ],
+        }));
+    let _ = absr;
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        !text.contains("#0,") && !text.contains("#0)") && !text.contains("(#0"),
+        "no dangling #0 ref in:\n{text}"
+    );
+    let re = reconvert(&text);
+    // No "without a MANIFOLD_SOLID_BREP" defect — assembly ABSR is valid.
+    let asm = re
+        .representations
+        .iter()
+        .find_map(|r| match r {
+            Representation::AdvancedBrep(a) if a.name == "Assem1" => Some(a),
+            _ => None,
+        })
+        .expect("assembly ABSR round-trips");
+    assert!(
+        asm.items
+            .iter()
+            .any(|it| matches!(it, RepresentationItemRef::MappedItem(_))),
+        "the MAPPED_ITEM item is preserved, not dropped"
+    );
+    assert!(asm.solids().is_empty(), "assembly ABSR carries no solids");
+}
+
+#[test]
+fn annotation_plane_round_trip() {
+    // ANNOTATION_PLANE — a styled_item PMI subtype. orphan round-trip:
+    // name + styles + item(a PLANE surface); `elements` is not modelled.
+    use step_io::ir::pmi::{AnnotationOccurrence, AnnotationPlane};
+    use step_io::ir::representation_item::RepresentationItemRef;
+    let mut model = empty_model();
+    let loc = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let axis = model.geometry.directions.push(Direction3 {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+    });
+    let refd = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let position = push_placement(&mut model, loc, Some(axis), Some(refd));
+    let surf = model
+        .geometry
+        .surfaces
+        .push(Surface::Plane(Plane3 { position }));
+    let mut pmi = PmiPool::default();
+    pmi.annotation_occurrences
+        .push(AnnotationOccurrence::AnnotationPlane(AnnotationPlane {
+            name: "Linear Size.1".into(),
+            styles: vec![],
+            item: RepresentationItemRef::Surface(surf),
+        }));
+    model.pmi = Some(pmi);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    assert_eq!(re_pmi.annotation_occurrences.len(), 1);
+    let AnnotationOccurrence::AnnotationPlane(ap) =
+        re_pmi.annotation_occurrences.iter().next().unwrap()
+    else {
+        panic!("expected AnnotationPlane");
+    };
+    assert_eq!(ap.name, "Linear Size.1");
+    assert!(ap.styles.is_empty());
+    assert!(matches!(ap.item, RepresentationItemRef::Surface(_)));
+}
+
+#[test]
+fn tessellated_annotation_occurrence_round_trip() {
+    // TESSELLATED_ANNOTATION_OCCURRENCE — `item` points at a tessellated
+    // geometric set.
+    use step_io::ir::pmi::{AnnotationOccurrence, PmiPool, TessellatedAnnotationOccurrence};
+    use step_io::ir::tessellation::{TessellatedGeometricSet, TessellatedItem};
+    let mut model = empty_model();
+    let gset = model
+        .tessellated_items
+        .push(TessellatedItem::TessellatedGeometricSet(
+            TessellatedGeometricSet {
+                name: "gset".into(),
+                children: vec![],
+            },
+        ));
+    model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_occurrences
+        .push(AnnotationOccurrence::TessellatedAnnotationOccurrence(
+            TessellatedAnnotationOccurrence {
+                name: "anno".into(),
+                styles: vec![],
+                item: gset,
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.annotation_occurrences.len(), 1);
+    let AnnotationOccurrence::TessellatedAnnotationOccurrence(tao) =
+        re_pmi.annotation_occurrences.iter().next().unwrap()
+    else {
+        panic!("expected TessellatedAnnotationOccurrence");
+    };
+    assert_eq!(tao.name, "anno");
+    assert!(tao.styles.is_empty());
+}
+
+#[test]
+fn annotation_occurrence_associativity_round_trips() {
+    // ANNOTATION_OCCURRENCE_ASSOCIATIVITY pairs two annotation occurrences,
+    // each living in a different step-io arena: relating in the
+    // AnnotationOccurrence enum (AnnotationPlane), related in the separate
+    // annotation_curve_occurrence arena (Plain). The AOA must survive the
+    // round-trip with both ref variants intact.
+    use step_io::ir::pmi::{
+        AnnotationCurveOccurrence, AnnotationOccurrence, AnnotationOccurrenceAssociativity,
+        AnnotationOccurrenceRef, AnnotationPlane, PlainAnnotationCurveOccurrence, PmiPool,
+    };
+    use step_io::ir::representation_item::RepresentationItemRef;
+    let mut model = empty_model();
+    // relating: an ANNOTATION_PLANE over a PLANE surface.
+    let loc = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let axis = model.geometry.directions.push(Direction3 {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+    });
+    let refd = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let position = push_placement(&mut model, loc, Some(axis), Some(refd));
+    let surf = model
+        .geometry
+        .surfaces
+        .push(Surface::Plane(Plane3 { position }));
+    // related: a plain ANNOTATION_CURVE_OCCURRENCE over a LINE curve.
+    let cp = model.geometry.points.push(Point3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let cd = model.geometry.directions.push(Direction3 {
+        x: 0.0,
+        y: 1.0,
+        z: 0.0,
+    });
+    let curve = model.geometry.curves.push(Curve::Line(Line3 {
+        point: cp,
+        direction: cd,
+        magnitude: 1.0,
+    }));
+    let mut pmi = PmiPool::default();
+    let occ = pmi
+        .annotation_occurrences
+        .push(AnnotationOccurrence::AnnotationPlane(AnnotationPlane {
+            name: "occ".into(),
+            styles: vec![],
+            item: RepresentationItemRef::Surface(surf),
+        }));
+    let curve_occ = pmi
+        .annotation_curve_occurrences
+        .push(AnnotationCurveOccurrence::Plain(
+            PlainAnnotationCurveOccurrence {
+                name: "curve occ".into(),
+                styles: vec![],
+                item: RepresentationItemRef::Curve(curve),
+            },
+        ));
+    pmi.annotation_occurrence_associativities
+        .push(AnnotationOccurrenceAssociativity {
+            name: "assoc".into(),
+            description: "desc".into(),
+            relating: AnnotationOccurrenceRef::AnnotationOccurrence(occ),
+            related: AnnotationOccurrenceRef::AnnotationCurveOccurrence(curve_occ),
+        });
+    model.pmi = Some(pmi);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    assert_eq!(re_pmi.annotation_occurrence_associativities.len(), 1);
+    let aoa = re_pmi
+        .annotation_occurrence_associativities
+        .iter()
+        .next()
+        .unwrap();
+    assert_eq!(aoa.name, "assoc");
+    assert_eq!(aoa.description, "desc");
+    assert!(matches!(
+        aoa.relating,
+        AnnotationOccurrenceRef::AnnotationOccurrence(_)
+    ));
+    assert!(matches!(
+        aoa.related,
+        AnnotationOccurrenceRef::AnnotationCurveOccurrence(_)
+    ));
+}
+
+#[test]
+fn annotation_occurrence_subtypes_round_trip() {
+    // ANNOTATION_SYMBOL_OCCURRENCE / ANNOTATION_TEXT_OCCURRENCE /
+    // DRAUGHTING_ANNOTATION_OCCURRENCE — same shape as ANNOTATION_PLANE
+    // (name + styles + item), `item` resolved through the generic
+    // `representation_item` resolver.
+    use step_io::ir::RepresentationItemRef;
+    use step_io::ir::pmi::{
+        AnnotationOccurrence, AnnotationSymbolOccurrence, AnnotationTextOccurrence,
+        DraughtingAnnotationOccurrence, PmiPool,
+    };
+    let mut model = empty_model();
+    // Build a minimal Surface to serve as the `item` of each occurrence.
+    let loc = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let axis = model.geometry.directions.push(Direction3 {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+    });
+    let refd = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let position = push_placement(&mut model, loc, Some(axis), Some(refd));
+    let surf = model
+        .geometry
+        .surfaces
+        .push(Surface::Plane(Plane3 { position }));
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    pmi.annotation_occurrences
+        .push(AnnotationOccurrence::AnnotationSymbolOccurrence(
+            AnnotationSymbolOccurrence {
+                name: "sym".into(),
+                styles: vec![],
+                item: RepresentationItemRef::Surface(surf),
+            },
+        ));
+    pmi.annotation_occurrences
+        .push(AnnotationOccurrence::AnnotationTextOccurrence(
+            AnnotationTextOccurrence {
+                name: "txt".into(),
+                styles: vec![],
+                item: RepresentationItemRef::Surface(surf),
+            },
+        ));
+    pmi.annotation_occurrences
+        .push(AnnotationOccurrence::DraughtingAnnotationOccurrence(
+            DraughtingAnnotationOccurrence {
+                name: "drft".into(),
+                styles: vec![],
+                item: RepresentationItemRef::Surface(surf),
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.annotation_occurrences.len(), 3);
+    let mut iter = re_pmi.annotation_occurrences.iter();
+    let AnnotationOccurrence::AnnotationSymbolOccurrence(aso) = iter.next().unwrap() else {
+        panic!("expected AnnotationSymbolOccurrence");
+    };
+    assert_eq!(aso.name, "sym");
+    assert!(matches!(aso.item, RepresentationItemRef::Surface(_)));
+    let AnnotationOccurrence::AnnotationTextOccurrence(ato) = iter.next().unwrap() else {
+        panic!("expected AnnotationTextOccurrence");
+    };
+    assert_eq!(ato.name, "txt");
+    assert!(matches!(ato.item, RepresentationItemRef::Surface(_)));
+    let AnnotationOccurrence::DraughtingAnnotationOccurrence(dao) = iter.next().unwrap() else {
+        panic!("expected DraughtingAnnotationOccurrence");
+    };
+    assert_eq!(dao.name, "drft");
+    assert!(matches!(dao.item, RepresentationItemRef::Surface(_)));
+}
+
+#[test]
+fn leader_curve_terminator_round_trip() {
+    // LEADER_CURVE + TERMINATOR_SYMBOL + LEADER_TERMINATOR — phase
+    // annotation-curve-leader. TerminatorSymbol / LeaderTerminator carry
+    // an `annotated_curve` back-reference into the LeaderCurve arena.
+    use step_io::ir::RepresentationItemRef;
+    use step_io::ir::pmi::{
+        AnnotationCurveOccurrence, AnnotationOccurrence, LeaderCurve, LeaderTerminator, PmiPool,
+        TerminatorSymbol,
+    };
+    let mut model = empty_model();
+    // A minimal Line curve serves as LeaderCurve.item.
+    let p0 = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let dir = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let line = model
+        .geometry
+        .curves
+        .push(step_io::ir::geometry::Curve::Line(
+            step_io::ir::geometry::Line3 {
+                point: p0,
+                direction: dir,
+                magnitude: 1.0,
+            },
+        ));
+    // A Surface serves as the TerminatorSymbol / LeaderTerminator item.
+    let axis = model.geometry.directions.push(Direction3 {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+    });
+    let position = push_placement(&mut model, p0, Some(axis), Some(dir));
+    let surf = model
+        .geometry
+        .surfaces
+        .push(step_io::ir::geometry::Surface::Plane(
+            step_io::ir::geometry::Plane3 { position },
+        ));
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    let lc_id = pmi
+        .annotation_curve_occurrences
+        .push(AnnotationCurveOccurrence::LeaderCurve(LeaderCurve {
+            name: "lc".into(),
+            styles: vec![],
+            item: line,
+        }));
+    pmi.annotation_occurrences
+        .push(AnnotationOccurrence::TerminatorSymbol(TerminatorSymbol {
+            name: "ts".into(),
+            styles: vec![],
+            item: RepresentationItemRef::Surface(surf),
+            annotated_curve: lc_id,
+        }));
+    pmi.annotation_occurrences
+        .push(AnnotationOccurrence::LeaderTerminator(LeaderTerminator {
+            name: "lt".into(),
+            styles: vec![],
+            item: RepresentationItemRef::Surface(surf),
+            annotated_curve: lc_id,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.annotation_curve_occurrences.len(), 1);
+    assert_eq!(re_pmi.annotation_occurrences.len(), 2);
+    let mut iter = re_pmi.annotation_occurrences.iter();
+    let AnnotationOccurrence::TerminatorSymbol(ts) = iter.next().unwrap() else {
+        panic!("expected TerminatorSymbol");
+    };
+    assert_eq!(ts.name, "ts");
+    let AnnotationOccurrence::LeaderTerminator(lt) = iter.next().unwrap() else {
+        panic!("expected LeaderTerminator");
+    };
+    assert_eq!(lt.name, "lt");
+    // Both reference the same LeaderCurve id.
+    assert_eq!(ts.annotated_curve, lt.annotated_curve);
+}
+
+#[test]
+fn plain_annotation_curve_occurrence_round_trips() {
+    // Plain ANNOTATION_CURVE_OCCURRENCE (the instantiable supertype, not
+    // LEADER_CURVE) — item is the curve_or_curve_set SELECT carried as a
+    // RepresentationItemRef (phase plain-aco). Targeting it from a CIWR is
+    // what the datum-target PMI files rely on.
+    use step_io::ir::RepresentationItemRef;
+    use step_io::ir::pmi::{AnnotationCurveOccurrence, PlainAnnotationCurveOccurrence, PmiPool};
+    let mut model = empty_model();
+    let p0 = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let dir = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let line = model
+        .geometry
+        .curves
+        .push(step_io::ir::geometry::Curve::Line(
+            step_io::ir::geometry::Line3 {
+                point: p0,
+                direction: dir,
+                magnitude: 1.0,
+            },
+        ));
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    pmi.annotation_curve_occurrences
+        .push(AnnotationCurveOccurrence::Plain(
+            PlainAnnotationCurveOccurrence {
+                name: "Datum Target".into(),
+                styles: vec![],
+                item: RepresentationItemRef::Curve(line),
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    assert!(text.contains("ANNOTATION_CURVE_OCCURRENCE"));
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    assert_eq!(re_pmi.annotation_curve_occurrences.len(), 1);
+    let aco = re_pmi.annotation_curve_occurrences.iter().next().unwrap();
+    assert!(
+        matches!(aco, AnnotationCurveOccurrence::Plain(_)),
+        "plain ACO round-trips as Plain (not LeaderCurve)"
+    );
+}
+
+#[test]
+#[allow(clippy::too_many_lines)]
+fn draughting_callout_round_trip() {
+    // Plain DraughtingCallout + LeaderDirected variant + Relationship —
+    // phase draughting-callout. contents references both kinds of
+    // element (AnnotationOccurrence and AnnotationCurveOccurrence).
+    use step_io::ir::RepresentationItemRef;
+    use step_io::ir::pmi::{
+        AnnotationCurveOccurrence, AnnotationOccurrence, DraughtingCallout, DraughtingCalloutData,
+        DraughtingCalloutElement, DraughtingCalloutRelationship, LeaderCurve, LeaderTerminator,
+        PmiPool, TerminatorSymbol,
+    };
+    let mut model = empty_model();
+    let p0 = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let dir = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let line = model
+        .geometry
+        .curves
+        .push(step_io::ir::geometry::Curve::Line(
+            step_io::ir::geometry::Line3 {
+                point: p0,
+                direction: dir,
+                magnitude: 1.0,
+            },
+        ));
+    let axis = model.geometry.directions.push(Direction3 {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+    });
+    let position = push_placement(&mut model, p0, Some(axis), Some(dir));
+    let surf = model
+        .geometry
+        .surfaces
+        .push(step_io::ir::geometry::Surface::Plane(
+            step_io::ir::geometry::Plane3 { position },
+        ));
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    let lc_id = pmi
+        .annotation_curve_occurrences
+        .push(AnnotationCurveOccurrence::LeaderCurve(LeaderCurve {
+            name: "lc".into(),
+            styles: vec![],
+            item: line,
+        }));
+    let ts_id = pmi
+        .annotation_occurrences
+        .push(AnnotationOccurrence::TerminatorSymbol(TerminatorSymbol {
+            name: "ts".into(),
+            styles: vec![],
+            item: RepresentationItemRef::Surface(surf),
+            annotated_curve: lc_id,
+        }));
+    let _ = pmi
+        .annotation_occurrences
+        .push(AnnotationOccurrence::LeaderTerminator(LeaderTerminator {
+            name: "lt".into(),
+            styles: vec![],
+            item: RepresentationItemRef::Surface(surf),
+            annotated_curve: lc_id,
+        }));
+    let plain_id = pmi
+        .draughting_callouts
+        .push(DraughtingCallout::Plain(DraughtingCalloutData {
+            name: "plain".into(),
+            contents: vec![DraughtingCalloutElement::AnnotationOccurrence(ts_id)],
+        }));
+    let leader_id = pmi
+        .draughting_callouts
+        .push(DraughtingCallout::LeaderDirected(DraughtingCalloutData {
+            name: "leader".into(),
+            contents: vec![DraughtingCalloutElement::AnnotationCurveOccurrence(lc_id)],
+        }));
+    pmi.draughting_callout_relationships
+        .push(DraughtingCalloutRelationship {
+            name: "rel".into(),
+            description: String::new(),
+            relating: plain_id,
+            related: leader_id,
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.draughting_callouts.len(), 2);
+    assert_eq!(re_pmi.draughting_callout_relationships.len(), 1);
+    let mut iter = re_pmi.draughting_callouts.iter();
+    let DraughtingCallout::Plain(plain) = iter.next().unwrap() else {
+        panic!("expected Plain");
+    };
+    assert_eq!(plain.name, "plain");
+    assert_eq!(plain.contents.len(), 1);
+    assert!(matches!(
+        plain.contents[0],
+        DraughtingCalloutElement::AnnotationOccurrence(_)
+    ));
+    let DraughtingCallout::LeaderDirected(leader) = iter.next().unwrap() else {
+        panic!("expected LeaderDirected");
+    };
+    assert_eq!(leader.name, "leader");
+    assert!(matches!(
+        leader.contents[0],
+        DraughtingCalloutElement::AnnotationCurveOccurrence(_)
+    ));
+    let rel = re_pmi
+        .draughting_callout_relationships
+        .iter()
+        .next()
+        .unwrap();
+    assert_eq!(rel.name, "rel");
+}
+
+#[test]
+fn gt_relationship_round_trip() {
+    // GEOMETRIC_TOLERANCE_RELATIONSHIP — pairs two geometric_tolerance arena
+    // entries via GeometricToleranceRef (Plain / WithDatumReference branches).
+    use step_io::ir::pmi::{
+        GeometricTolerance, GeometricToleranceData, GeometricToleranceRef,
+        GeometricToleranceRelationship, ToleranceMagnitude,
+    };
+    use step_io::ir::units::MeasureWithUnit;
+
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+    let sa = model.shape_aspects.push(ShapeAspect {
+        name: "sa".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+    let mwu = model
+        .units_pool
+        .as_mut()
+        .expect("units pool")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
+            value: 0.1,
+            unit: length_unit,
+        });
+    let measure = || ToleranceMagnitude::MeasureWithUnit(mwu);
+    let data = || GeometricToleranceData {
+        name: "t".into(),
+        description: String::new(),
+        magnitude: measure(),
+        toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+        modifiers: Vec::new(),
+        unit_size: None,
+        defined_area_unit: None,
+    };
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    let gt1 = pmi
+        .geometric_tolerances
+        .push(GeometricTolerance::Flatness(data()));
+    let gt2 = pmi
+        .geometric_tolerances
+        .push(GeometricTolerance::Straightness(data()));
+    pmi.geometric_tolerance_relationships
+        .push(GeometricToleranceRelationship {
+            name: "rel".into(),
+            description: String::new(),
+            relating: GeometricToleranceRef::Plain(gt1),
+            related: GeometricToleranceRef::Plain(gt2),
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.geometric_tolerance_relationships.len(), 1);
+    let rel = re_pmi
+        .geometric_tolerance_relationships
+        .iter()
+        .next()
+        .unwrap();
+    assert_eq!(rel.name, "rel");
+    assert!(matches!(rel.relating, GeometricToleranceRef::Plain(_)));
+    assert!(matches!(rel.related, GeometricToleranceRef::Plain(_)));
+}
+
+#[test]
+fn datum_round_trip() {
+    // DATUM — a shape_aspect subtype + identification, resolving of_shape
+    // to a ProductId through the PRODUCT_DEFINITION_SHAPE chain.
+    use step_io::ir::pmi::Datum;
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let mut pmi = PmiPool::default();
+    pmi.datums.push(Datum {
+        name: String::new(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        identification: "A".into(),
+    });
+    model.pmi = Some(pmi);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    assert_eq!(re_pmi.datums.len(), 1);
+    let datum = re_pmi.datums.iter().next().unwrap();
+    assert_eq!(datum.identification, "A");
+    assert_eq!(datum.target, step_io::ProductId(0));
+    assert!(!datum.product_definitional);
+}
+
+#[test]
+fn datum_feature_round_trip() {
+    // DATUM_FEATURE — a shape_aspect subtype reading into the pmi pool.
+    // DATUM / DATUM_FEATURE resolve as ShapeAspectRef endpoints of a
+    // SHAPE_ASPECT_RELATIONSHIP, exercising the new resolver + emitter arms.
+    use step_io::ir::pmi::{Datum, DatumFeature};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let mut pmi = PmiPool::default();
+    let datum = pmi.datums.push(Datum {
+        name: String::new(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        identification: "A".into(),
+    });
+    let df = pmi
+        .datum_features
+        .push(DatumFeature::Itself(step_io::ir::DatumFeatureData {
+            name: "Datum Feature A".into(),
+            description: String::new(),
+            target: part_pid,
+            product_definitional: true,
+        }));
+    model.pmi = Some(pmi);
+
+    model
+        .shape_aspect_relationships
+        .push(ShapeAspectRelationship {
+            name: "r".into(),
+            description: String::new(),
+            relating_shape_aspect: ShapeAspectRef::DatumFeature(df),
+            related_shape_aspect: ShapeAspectRef::Datum(datum),
+            kind: ShapeAspectRelationshipKind::Plain,
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    assert_eq!(re_pmi.datum_features.len(), 1);
+    let re_df = re_pmi.datum_features.iter().next().unwrap().data();
+    assert_eq!(re_df.name, "Datum Feature A");
+    assert!(re_df.product_definitional);
+    assert_eq!(re_df.target, step_io::ProductId(0));
+
+    assert_eq!(re.shape_aspect_relationships.len(), 1);
+    let rel = re.shape_aspect_relationships.iter().next().unwrap();
+    assert!(matches!(
+        rel.relating_shape_aspect,
+        ShapeAspectRef::DatumFeature(_)
+    ));
+    assert!(matches!(rel.related_shape_aspect, ShapeAspectRef::Datum(_)));
+}
+
+#[test]
+fn dimensional_size_with_datum_feature_round_trip() {
+    // DIMENSIONAL_SIZE_WITH_DATUM_FEATURE — datum_feature arena's in_enum
+    // subtype (phase dsf-datum-feature). Shares the DatumFeatureId namespace
+    // with plain DATUM_FEATURE via the DatumFeature variant.
+    use step_io::ir::DatumFeatureId;
+    use step_io::ir::pmi::{DatumFeature, DatumFeatureData, DimensionalSizeWithDatumFeatureData};
+    use step_io::ir::shape_aspect_ref::ShapeAspectRef;
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let mut pmi = PmiPool::default();
+    pmi.datum_features
+        .push(DatumFeature::Itself(DatumFeatureData {
+            name: "df-plain".into(),
+            description: String::new(),
+            target: part_pid,
+            product_definitional: false,
+        }));
+    let dswdf_df_id = pmi
+        .datum_features
+        .push(DatumFeature::DimensionalSizeWithDatumFeature(
+            DimensionalSizeWithDatumFeatureData {
+                base: DatumFeatureData {
+                    name: "df-dswdf".into(),
+                    description: String::new(),
+                    target: part_pid,
+                    product_definitional: false,
+                },
+                applies_to: ShapeAspectRef::DatumFeature(DatumFeatureId(0)),
+                size_name: "diameter".into(),
+            },
+        ));
+    // WR1: applies_to :=: SELF.
+    if let DatumFeature::DimensionalSizeWithDatumFeature(d) = &mut pmi.datum_features[dswdf_df_id] {
+        d.applies_to = ShapeAspectRef::DatumFeature(dswdf_df_id);
+    }
+    model.pmi = Some(pmi);
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("DIMENSIONAL_SIZE_WITH_DATUM_FEATURE("),
+        "expected DIMENSIONAL_SIZE_WITH_DATUM_FEATURE in STEP output"
+    );
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    assert_eq!(re_pmi.datum_features.len(), 2);
+    let mut iter = re_pmi.datum_features.iter_with_ids();
+    assert!(matches!(iter.next().unwrap().1, DatumFeature::Itself(_)));
+    let (dswdf_id, dswdf) = iter.next().unwrap();
+    let DatumFeature::DimensionalSizeWithDatumFeature(d) = dswdf else {
+        panic!("expected DIMENSIONAL_SIZE_WITH_DATUM_FEATURE");
+    };
+    // dimensional_size.name round-trips.
+    assert_eq!(d.size_name, "diameter");
+    // WR1: applies_to :=: SELF — resolves back to this same datum_feature.
+    assert_eq!(
+        d.applies_to,
+        ShapeAspectRef::DatumFeature(dswdf_id),
+        "applies_to must round-trip as the self datum_feature"
+    );
+}
+
+#[test]
+#[allow(clippy::too_many_lines)]
+fn geometric_tolerance_form_tolerances_round_trip() {
+    // FLATNESS / STRAIGHTNESS / ROUNDNESS / CYLINDRICITY_TOLERANCE — datum-free
+    // form tolerances. Magnitudes: a units-pool MEASURE_WITH_UNIT and an inline
+    // `Measure` whose simple MRI re-reads through the arena (measure-arena-4).
+    use step_io::ir::pmi::{GeometricTolerance, GeometricToleranceData, ToleranceMagnitude};
+    use step_io::ir::units::MeasureWithUnit;
+
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let sa = model.shape_aspects.push(ShapeAspect {
+        name: "sa".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+
+    // A units-pool MEASURE_WITH_UNIT for the `MeasureWithUnit` magnitude.
+    let mwu = model
+        .units_pool
+        .as_mut()
+        .expect("units pool seeded by mm_radian_steradian")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
+            value: 0.05,
+            unit: length_unit,
+        });
+
+    let data = |magnitude| GeometricToleranceData {
+        name: "t".into(),
+        description: String::new(),
+        magnitude,
+        toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+        modifiers: Vec::new(),
+        unit_size: None,
+        defined_area_unit: None,
+    };
+    let measure = || ToleranceMagnitude::MeasureWithUnit(mwu);
+
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    pmi.geometric_tolerances
+        .push(GeometricTolerance::Flatness(data(
+            ToleranceMagnitude::MeasureWithUnit(mwu),
+        )));
+    pmi.geometric_tolerances
+        .push(GeometricTolerance::Straightness(data(measure())));
+    pmi.geometric_tolerances
+        .push(GeometricTolerance::Roundness(data(
+            ToleranceMagnitude::MeasureWithUnit(mwu),
+        )));
+    pmi.geometric_tolerances
+        .push(GeometricTolerance::Cylindricity(data(measure())));
+    // Plain (datum-free) SURFACE_PROFILE_TOLERANCE — standalone form.
+    pmi.geometric_tolerances
+        .push(GeometricTolerance::SurfaceProfile(data(measure())));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    let gts: Vec<_> = re_pmi.geometric_tolerances.iter().collect();
+    assert_eq!(gts.len(), 5);
+    assert!(matches!(gts[0], GeometricTolerance::Flatness(_)));
+    assert!(matches!(gts[1], GeometricTolerance::Straightness(_)));
+    assert!(matches!(gts[2], GeometricTolerance::Roundness(_)));
+    assert!(matches!(gts[3], GeometricTolerance::Cylindricity(_)));
+    assert!(matches!(gts[4], GeometricTolerance::SurfaceProfile(_)));
+    let GeometricTolerance::SurfaceProfile(d4) = gts[4] else {
+        unreachable!()
+    };
+    assert!(matches!(
+        d4.magnitude,
+        ToleranceMagnitude::MeasureWithUnit(_)
+    ));
+    assert!(matches!(
+        d4.toleranced_shape_aspect,
+        GeometricToleranceTarget::ShapeAspect(ShapeAspectRef::ShapeAspect(_))
+    ));
+
+    let GeometricTolerance::Flatness(d0) = gts[0] else {
+        unreachable!()
+    };
+    assert!(matches!(
+        d0.magnitude,
+        ToleranceMagnitude::MeasureWithUnit(_)
+    ));
+    assert!(matches!(
+        d0.toleranced_shape_aspect,
+        GeometricToleranceTarget::ShapeAspect(ShapeAspectRef::ShapeAspect(_))
+    ));
+    let GeometricTolerance::Straightness(d1) = gts[1] else {
+        unreachable!()
+    };
+    assert!(matches!(
+        d1.magnitude,
+        ToleranceMagnitude::MeasureWithUnit(_)
+    ));
+}
+
+#[test]
+fn general_datum_reference_round_trip() {
+    // DATUM_REFERENCE_COMPARTMENT / DATUM_REFERENCE_ELEMENT — the two
+    // general_datum_reference variants, each with a `base` pointing at a DATUM.
+    use step_io::ir::pmi::{
+        Datum, GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let mut pmi = PmiPool::default();
+    let datum = pmi.datums.push(Datum {
+        name: String::new(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        identification: "A".into(),
+    });
+    let data = || GeneralDatumReferenceData {
+        name: String::new(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        base: GeneralDatumBase::Datum(datum),
+    };
+    pmi.general_datum_references
+        .push(GeneralDatumReference::Compartment(data()));
+    pmi.general_datum_references
+        .push(GeneralDatumReference::Element(data()));
+    model.pmi = Some(pmi);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    let gdrs: Vec<_> = re_pmi.general_datum_references.iter().collect();
+    assert_eq!(gdrs.len(), 2);
+    assert!(matches!(gdrs[0], GeneralDatumReference::Compartment(_)));
+    assert!(matches!(gdrs[1], GeneralDatumReference::Element(_)));
+    let GeneralDatumReference::Compartment(d0) = gdrs[0] else {
+        unreachable!()
+    };
+    assert!(matches!(d0.base, GeneralDatumBase::Datum(_)));
+    assert_eq!(d0.target, step_io::ProductId(0));
+}
+
+#[test]
+fn id_attribute_general_datum_reference_round_trip() {
+    // ID_ATTRIBUTE.identified_item -> DATUM_REFERENCE_COMPARTMENT, a
+    // general_datum_reference (a shape_aspect subtype) carried through the
+    // ShapeAspectRef::GeneralDatumReference variant.
+    use step_io::ir::ShapeAspectRef;
+    use step_io::ir::pmi::{
+        Datum, GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData,
+    };
+    use step_io::ir::property::{IdAttribute, IdAttributeItem, PropertyPool};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let mut pmi = PmiPool::default();
+    let datum = pmi.datums.push(Datum {
+        name: String::new(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        identification: "A".into(),
+    });
+    let gdr = pmi
+        .general_datum_references
+        .push(GeneralDatumReference::Compartment(
+            GeneralDatumReferenceData {
+                name: String::new(),
+                description: String::new(),
+                target: part_pid,
+                product_definitional: false,
+                base: GeneralDatumBase::Datum(datum),
+            },
+        ));
+    model.pmi = Some(pmi);
+    model
+        .properties
+        .get_or_insert_with(PropertyPool::default)
+        .id_attributes
+        .push(IdAttribute {
+            attribute_value: "id-gdr".into(),
+            identified_item: IdAttributeItem::ShapeAspect(ShapeAspectRef::GeneralDatumReference(
+                gdr,
+            )),
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let pool = re.properties.as_ref().expect("properties pool survives");
+    assert_eq!(pool.id_attributes.len(), 1);
+    assert!(matches!(
+        pool.id_attributes.iter().next().unwrap().identified_item,
+        IdAttributeItem::ShapeAspect(ShapeAspectRef::GeneralDatumReference(_))
+    ));
+}
+
+/// A `DATUM_REFERENCE_COMPARTMENT` whose `base` is a `COMMON_DATUM_LIST` (an
+/// "A-B" composite datum) round-trips: the two `DATUM_REFERENCE_ELEMENT`s are
+/// emitted first (referenced-before-referrer), and the compartment re-reads
+/// its base as `CommonDatumList` with the two element ids in order.
+#[test]
+fn datum_reference_compartment_common_datum_list_round_trip() {
+    use step_io::ir::pmi::{
+        GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData, PmiPool,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let mut pmi = PmiPool::default();
+    let datum = pmi.datums.push(step_io::ir::pmi::Datum {
+        name: String::new(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        identification: "A".into(),
+    });
+    let elem = || GeneralDatumReferenceData {
+        name: String::new(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        base: GeneralDatumBase::Datum(datum),
+    };
+    // Two elements first (lower arena index → emitted before the compartment).
+    let e0 = pmi
+        .general_datum_references
+        .push(GeneralDatumReference::Element(elem()));
+    let e1 = pmi
+        .general_datum_references
+        .push(GeneralDatumReference::Element(elem()));
+    pmi.general_datum_references
+        .push(GeneralDatumReference::Compartment(
+            GeneralDatumReferenceData {
+                name: String::new(),
+                description: String::new(),
+                target: part_pid,
+                product_definitional: false,
+                base: GeneralDatumBase::CommonDatumList(vec![e0, e1]),
+            },
+        ));
+    model.pmi = Some(pmi);
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("COMMON_DATUM_LIST("),
+        "expected COMMON_DATUM_LIST base, got:\n{text}"
+    );
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    let comp = re_pmi
+        .general_datum_references
+        .iter()
+        .find_map(|g| match g {
+            GeneralDatumReference::Compartment(d) => Some(d),
+            GeneralDatumReference::Element(_) => None,
+        })
+        .expect("compartment survived");
+    match &comp.base {
+        GeneralDatumBase::CommonDatumList(ids) => assert_eq!(ids.len(), 2),
+        GeneralDatumBase::Datum(_) => panic!("expected CommonDatumList base, got Datum"),
+    }
+}
+
+#[test]
+fn tolerance_zone_round_trip() {
+    // TOLERANCE_ZONE — shape_aspect subtype binding a geometric_tolerance
+    // SET (`defining_tolerance`) to a TOLERANCE_ZONE_FORM (`form`).
+    use step_io::ir::pmi::{
+        GeometricTolerance, GeometricToleranceData, GeometricToleranceRef, ToleranceMagnitude,
+        ToleranceZoneForm,
+    };
+    use step_io::ir::shape_rep::ToleranceZone;
+    use step_io::ir::units::MeasureWithUnit;
+
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let sa = model.shape_aspects.push(ShapeAspect {
+        name: "sa".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+
+    let mwu = model
+        .units_pool
+        .as_mut()
+        .expect("units pool")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
+            value: 0.1,
+            unit: length_unit,
+        });
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    let gt = pmi
+        .geometric_tolerances
+        .push(GeometricTolerance::Flatness(GeometricToleranceData {
+            name: "t".into(),
+            description: String::new(),
+            magnitude: ToleranceMagnitude::MeasureWithUnit(mwu),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+            modifiers: Vec::new(),
+            unit_size: None,
+            defined_area_unit: None,
+        }));
+    let form = pmi.tolerance_zone_forms.push(ToleranceZoneForm {
+        name: "cylindrical".into(),
+    });
+
+    model.tolerance_zones.push(ToleranceZone {
+        name: "tz".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        defining_tolerance: vec![GeometricToleranceRef::Plain(gt)],
+        form,
+    });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.tolerance_zones.len(), 1, "TOLERANCE_ZONE round-trips");
+    let tz = re.tolerance_zones.iter().next().unwrap();
+    assert_eq!(tz.name, "tz");
+    assert_eq!(
+        tz.defining_tolerance.len(),
+        1,
+        "defining_tolerance preserved"
+    );
+    assert!(matches!(
+        tz.defining_tolerance[0],
+        GeometricToleranceRef::Plain(_)
+    ));
+}
+
+#[test]
+fn shape_dimension_repr_and_dim_char_repr_round_trip() {
+    // SHAPE_DIMENSION_REPRESENTATION (Representation enum variant) +
+    // DIMENSIONAL_CHARACTERISTIC_REPRESENTATION (PropertyPool single_struct).
+    use step_io::ir::pmi::{DimensionalCharacteristic, DimensionalSize, DimensionalSizeKind};
+    use step_io::ir::property::{DimensionalCharacteristicRepresentation, PropertyPool};
+    use step_io::ir::shape_rep::{Representation, ShapeDimensionRepresentation};
+
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+    let sa = model.shape_aspects.push(ShapeAspect {
+        name: "sa".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+    let sdr_id = model
+        .representations
+        .push(Representation::ShapeDimensionRepresentation(
+            ShapeDimensionRepresentation {
+                name: "sdr".into(),
+                context: Some(step_io::ir::RepresentationContextRef::Unitful(
+                    UnitContextId(0),
+                )),
+                items: vec![],
+            },
+        ));
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    let size_id = pmi.dimensional_sizes.push(DimensionalSize {
+        applies_to: ShapeAspectRef::ShapeAspect(sa),
+        name: String::new(),
+        kind: DimensionalSizeKind::Plain,
+    });
+    let property = model.properties.get_or_insert_with(PropertyPool::default);
+    property.dimensional_characteristic_representations.push(
+        DimensionalCharacteristicRepresentation {
+            dimension: DimensionalCharacteristic::Size(size_id),
+            representation: sdr_id,
+        },
+    );
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_property = re.properties.expect("property pool");
+    assert_eq!(
+        re_property.dimensional_characteristic_representations.len(),
+        1
+    );
+    let dcr = re_property
+        .dimensional_characteristic_representations
+        .iter()
+        .next()
+        .unwrap();
+    assert!(matches!(dcr.dimension, DimensionalCharacteristic::Size(_)));
+    let sdr_count = re
+        .representations
+        .iter()
+        .filter(|r| matches!(r, Representation::ShapeDimensionRepresentation(_)))
+        .count();
+    assert_eq!(sdr_count, 1);
+}
+
+#[test]
+fn pre_defined_marker_round_trip() {
+    use step_io::ir::visualization::{PreDefinedMarker, PreDefinedMarkerData, VisualizationPool};
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    viz.pre_defined_markers
+        .push(PreDefinedMarker::Plain(PreDefinedMarkerData {
+            name: "x".into(),
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    assert_eq!(re_viz.pre_defined_markers.len(), 1);
+    let PreDefinedMarker::Plain(d) = re_viz.pre_defined_markers.iter().next().unwrap() else {
+        panic!("expected Plain");
+    };
+    assert_eq!(d.name, "x");
+}
+
+#[test]
+fn text_style_for_defined_font_round_trip() {
+    use step_io::ir::visualization::{
+        Colour, ColourRgb, TextStyleForDefinedFont, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let colour_id = viz.colours.push(Colour::Rgb(ColourRgb {
+        name: String::new(),
+        red: 0.0,
+        green: 0.0,
+        blue: 1.0,
+    }));
+    viz.text_styles_for_defined_font
+        .push(TextStyleForDefinedFont {
+            text_colour: colour_id,
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    assert_eq!(re_viz.text_styles_for_defined_font.len(), 1);
+}
+
+#[test]
+fn invisibility_round_trip() {
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::visualization::{
+        Invisibility, InvisibleItem, PlainStyledItem, StyledItem, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let placement = xyz_placement(&mut model);
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let si = viz.styled_items.push(StyledItem::Plain(PlainStyledItem {
+        name: String::new(),
+        styles: vec![],
+        item: RepresentationItemRef::Placement3d(placement),
+    }));
+    viz.invisibilities.push(Invisibility {
+        invisible_items: vec![InvisibleItem::StyledItem(si)],
+        presentation_context: None,
+    });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    assert_eq!(re_viz.invisibilities.len(), 1);
+    let inv = re_viz.invisibilities.iter().next().unwrap();
+    assert_eq!(inv.invisible_items.len(), 1);
+    assert!(matches!(
+        inv.invisible_items[0],
+        InvisibleItem::StyledItem(_)
+    ));
+}
+
+#[test]
+fn invisibility_presentation_layer_assignment_round_trip() {
+    // An INVISIBILITY whose invisible_items is a PRESENTATION_LAYER_ASSIGNMENT
+    // (the fourth invisible_item SELECT member). Exercises the
+    // InvisibleItem::PresentationLayerAssignment variant.
+    use step_io::ir::visualization::{
+        Invisibility, InvisibleItem, PresentationLayerAssignment, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let pla = viz
+        .presentation_layer_assignments
+        .push(PresentationLayerAssignment {
+            name: "01_DATUM".into(),
+            description: String::new(),
+            assigned_items: vec![],
+        });
+    viz.invisibilities.push(Invisibility {
+        invisible_items: vec![InvisibleItem::PresentationLayerAssignment(pla)],
+        presentation_context: None,
+    });
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        !text.contains("#0,") && !text.contains("#0)") && !text.contains("(#0"),
+        "no dangling #0 ref in:\n{text}"
+    );
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    assert_eq!(re_viz.invisibilities.len(), 1, "the INVISIBILITY survives");
+    let inv = re_viz.invisibilities.iter().next().unwrap();
+    assert_eq!(inv.invisible_items.len(), 1);
+    assert!(
+        matches!(
+            inv.invisible_items[0],
+            InvisibleItem::PresentationLayerAssignment(_)
+        ),
+        "the PLA invisible_item round-trips"
+    );
+}
+
+#[test]
+fn invisibility_annotation_occurrence_round_trip() {
+    // An INVISIBILITY whose invisible_items is an annotation_occurrence
+    // (a styled_item subtype that step-io keeps in a separate arena, NIST
+    // stc_06). Exercises the InvisibleItem::AnnotationOccurrence variant.
+    use step_io::ir::pmi::{AnnotationOccurrence, PmiPool, TessellatedAnnotationOccurrence};
+    use step_io::ir::tessellation::{TessellatedGeometricSet, TessellatedItem};
+    use step_io::ir::visualization::{Invisibility, InvisibleItem, VisualizationPool};
+    let mut model = empty_model();
+    let gset = model
+        .tessellated_items
+        .push(TessellatedItem::TessellatedGeometricSet(
+            TessellatedGeometricSet {
+                name: "gset".into(),
+                children: vec![],
+            },
+        ));
+    let ao = model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_occurrences
+        .push(AnnotationOccurrence::TessellatedAnnotationOccurrence(
+            TessellatedAnnotationOccurrence {
+                name: "anno".into(),
+                styles: vec![],
+                item: gset,
+            },
+        ));
+    model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .invisibilities
+        .push(Invisibility {
+            invisible_items: vec![InvisibleItem::AnnotationOccurrence(ao)],
+            presentation_context: None,
+        });
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        !text.contains("#0,") && !text.contains("#0)") && !text.contains("(#0"),
+        "no dangling #0 ref in:\n{text}"
+    );
+    let re = reconvert(&text);
+    let re_viz = re.visualization.as_ref().expect("viz pool");
+    assert_eq!(re_viz.invisibilities.len(), 1, "the INVISIBILITY survives");
+    let inv = re_viz.invisibilities.iter().next().unwrap();
+    assert_eq!(inv.invisible_items.len(), 1);
+    assert!(
+        matches!(
+            inv.invisible_items[0],
+            InvisibleItem::AnnotationOccurrence(_)
+        ),
+        "the annotation_occurrence invisible_item round-trips"
+    );
+}
+
+#[test]
+fn unitless_context_round_trip() {
+    use step_io::ir::shape_rep::{
+        DraughtingModel, DraughtingModelForm, Representation, RepresentationContextRef,
+        UnitlessContext,
+    };
+    let mut model = empty_model();
+    let uc_id = model.unitless_contexts.push(UnitlessContext {
+        identifier: "2D coordinate system context".into(),
+        context_type: "2".into(),
+        coordinate_space_dimension: Some(2),
+    });
+    model
+        .representations
+        .push(Representation::DraughtingModel(DraughtingModel {
+            name: "Default".into(),
+            items: vec![],
+            context: Some(RepresentationContextRef::Unitless(uc_id)),
+            form: DraughtingModelForm::Simple,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.unitless_contexts.len(), 1);
+    let dm_count = re
+        .representations
+        .iter()
+        .filter(|r| matches!(r, Representation::DraughtingModel(_)))
+        .count();
+    // DraughtingModel with empty items drops the carrier on read (existing
+    // policy). Only assert the unitless context survives the round-trip.
+    let _ = dm_count;
+    let uc = re.unitless_contexts.iter().next().unwrap();
+    assert_eq!(uc.identifier, "2D coordinate system context");
+    assert_eq!(uc.coordinate_space_dimension, Some(2));
+}
+
+#[test]
+fn plain_representation_context_round_trips() {
+    use step_io::ir::shape_rep::{
+        DraughtingModel, DraughtingModelForm, Representation, RepresentationContextRef,
+        UnitlessContext,
+    };
+    // A plain simple REPRESENTATION_CONTEXT (no coordinate_space_dimension) —
+    // written as a simple entity, not the GRC+PRC complex.
+    let mut model = empty_model();
+    let uc_id = model.unitless_contexts.push(UnitlessContext {
+        identifier: String::new(),
+        context_type: "document parameters".into(),
+        coordinate_space_dimension: None,
+    });
+    model
+        .representations
+        .push(Representation::DraughtingModel(DraughtingModel {
+            name: "Default".into(),
+            items: vec![],
+            context: Some(RepresentationContextRef::Unitless(uc_id)),
+            form: DraughtingModelForm::Simple,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("REPRESENTATION_CONTEXT(''"),
+        "plain context emits as a simple REPRESENTATION_CONTEXT: {text}"
+    );
+    let re = reconvert(&text);
+    assert_eq!(re.unitless_contexts.len(), 1);
+    let uc = re.unitless_contexts.iter().next().unwrap();
+    assert_eq!(uc.context_type, "document parameters");
+    // `None` proves it round-tripped through the simple form (the complex
+    // form would carry `Some(dim)`).
+    assert_eq!(uc.coordinate_space_dimension, None);
+}
+
+#[test]
+fn property_with_plain_context_round_trips() {
+    use step_io::ir::property::{
+        CharacterizedDefinition, GeneralProperty, Property, PropertyDefinition,
+        PropertyDefinitionData, PropertyItem, PropertyPool,
+    };
+    use step_io::ir::shape_rep::{DescriptiveItem, RepresentationContextRef, UnitlessContext};
+    // A property whose REPRESENTATION uses a plain (unit-less)
+    // REPRESENTATION_CONTEXT and carries only a descriptive item — the shape
+    // of the document-property that previously FAILed round-trip. Now the
+    // context is modelled, so it survives both ways.
+    let mut model = empty_model();
+    let uc_id = model.unitless_contexts.push(UnitlessContext {
+        identifier: String::new(),
+        context_type: "document parameters".into(),
+        coordinate_space_dimension: None,
+    });
+
+    let mut pool = PropertyPool::default();
+    let gp_id = pool.general_properties.push(GeneralProperty {
+        id: "GP1".into(),
+        name: "doc".into(),
+        description: None,
+    });
+    let pd_id =
+        pool.property_definitions
+            .push(PropertyDefinition::Itself(PropertyDefinitionData {
+                name: "document property".into(),
+                description: String::new(),
+                definition: CharacterizedDefinition::GeneralProperty(gp_id),
+            }));
+    pool.properties.push(Property {
+        name: "document property".into(),
+        description: None,
+        definition: step_io::ir::property::PropertyDefinitionRef::PropertyDefinition(pd_id),
+        representation_name: "document format".into(),
+        context: Some(RepresentationContextRef::Unitless(uc_id)),
+        items: vec![PropertyItem::Descriptive(DescriptiveItem {
+            name: "data format".into(),
+            description: "STEP AP214".into(),
+        })],
+    });
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pool = re
+        .properties
+        .as_ref()
+        .expect("round-tripped has properties");
+    let prop = re_pool
+        .properties
+        .iter()
+        .find(|p| p.representation_name == "document format")
+        .expect("the document property survives round-trip");
+    assert!(
+        matches!(prop.context, Some(RepresentationContextRef::Unitless(_))),
+        "the plain context is preserved as Unitless, not dropped to None"
+    );
+}
+
+#[test]
+fn draughting_model_round_trip() {
+    use step_io::ir::PmiPool;
+    use step_io::ir::geometry::{Plane3, Surface};
+    use step_io::ir::pmi::{AnnotationOccurrence, AnnotationPlane};
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{DraughtingModel, DraughtingModelForm, Representation};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let ctx_id = model.units.push(ctx);
+    let placement = xyz_placement(&mut model);
+    let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
+        position: placement,
+    }));
+    model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_occurrences
+        .push(AnnotationOccurrence::AnnotationPlane(AnnotationPlane {
+            name: "ap".into(),
+            styles: vec![],
+            item: RepresentationItemRef::Surface(surf),
+        }));
+    model
+        .representations
+        .push(Representation::DraughtingModel(DraughtingModel {
+            name: "dm".into(),
+            items: vec![RepresentationItemRef::Surface(surf)],
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+            form: DraughtingModelForm::Simple,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let dm_count = re
+        .representations
+        .iter()
+        .filter(|r| matches!(r, Representation::DraughtingModel(_)))
+        .count();
+    assert_eq!(dm_count, 1);
+}
+
+#[test]
+fn draughting_model_shape_tessellated_complex_round_trips() {
+    // The geometric-validation draughting model is emitted as a four-part
+    // complex MI `(DRAUGHTING_MODEL REPRESENTATION SHAPE_REPRESENTATION
+    // TESSELLATED_SHAPE_REPRESENTATION)`. A PMI CIWR references it as `rep`,
+    // so it must read back into a DraughtingModel and survive the round-trip.
+    use step_io::ir::geometry::{Plane3, Surface};
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{
+        DraughtingModel, DraughtingModelForm, Representation, RepresentationContextRef,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let ctx_id = model.units.push(ctx);
+    let placement = xyz_placement(&mut model);
+    let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
+        position: placement,
+    }));
+    model
+        .representations
+        .push(Representation::DraughtingModel(DraughtingModel {
+            name: "gvp".into(),
+            items: vec![RepresentationItemRef::Surface(surf)],
+            context: Some(RepresentationContextRef::Unitful(ctx_id)),
+            form: DraughtingModelForm::ShapeTessellated,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("DRAUGHTING_MODEL()")
+            && text.contains("SHAPE_REPRESENTATION()")
+            && text.contains("TESSELLATED_SHAPE_REPRESENTATION()"),
+        "emits the four-part complex MI form: {text}"
+    );
+    let re = reconvert(&text);
+    let dm = re
+        .representations
+        .iter()
+        .find_map(|r| match r {
+            Representation::DraughtingModel(dm) => Some(dm),
+            _ => None,
+        })
+        .expect("draughting model survives round-trip");
+    assert_eq!(dm.form, DraughtingModelForm::ShapeTessellated);
+    assert_eq!(dm.items.len(), 1);
+}
+
+#[test]
+fn plain_annotation_occurrence_round_trips() {
+    // plain ANNOTATION_OCCURRENCE (the supertype) — must emit under its own
+    // name and read back as AnnotationOccurrence::Plain so that a DMIA /
+    // DRAUGHTING_CALLOUT referencing it resolves.
+    use step_io::ir::PmiPool;
+    use step_io::ir::geometry::{Plane3, Surface};
+    use step_io::ir::pmi::{AnnotationOccurrence, PlainAnnotationOccurrence};
+    use step_io::ir::representation_item::RepresentationItemRef;
+    let mut model = empty_model();
+    let placement = xyz_placement(&mut model);
+    let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
+        position: placement,
+    }));
+    model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_occurrences
+        .push(AnnotationOccurrence::Plain(PlainAnnotationOccurrence {
+            name: "datum".into(),
+            styles: vec![],
+            item: RepresentationItemRef::Surface(surf),
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let pmi = re.pmi.expect("pmi pool");
+    assert!(
+        pmi.annotation_occurrences
+            .iter()
+            .any(|a| matches!(a, AnnotationOccurrence::Plain(_))),
+        "plain ANNOTATION_OCCURRENCE should round-trip as AnnotationOccurrence::Plain"
+    );
+}
+
+#[test]
+fn dmia_round_trip() {
+    use step_io::ir::PmiPool;
+    use step_io::ir::geometry::{Plane3, Surface};
+    use step_io::ir::pmi::{
+        AnnotationOccurrence, AnnotationPlane, DraughtingModelIdentifiedItem,
+        DraughtingModelItemAssociation, DraughtingModelItemDefinition,
+    };
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{PlainRepr, Representation};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let ctx_id = model.units.push(ctx);
+    let placement = xyz_placement(&mut model);
+    let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
+        position: placement,
+    }));
+    let ap_id = model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_occurrences
+        .push(AnnotationOccurrence::AnnotationPlane(AnnotationPlane {
+            name: "anno".into(),
+            styles: vec![],
+            item: RepresentationItemRef::Surface(surf),
+        }));
+    let used = model.representations.push(Representation::Plain(PlainRepr {
+        name: "draughting_model".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+        frame: None,
+    }));
+    let def = model.representations.push(Representation::Plain(PlainRepr {
+        name: "definition".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+        frame: None,
+    }));
+    model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .draughting_model_item_associations
+        .push(DraughtingModelItemAssociation {
+            name: "link".into(),
+            description: None,
+            definition: DraughtingModelItemDefinition::Representation(def),
+            used_representation: used,
+            identified_item: DraughtingModelIdentifiedItem::AnnotationOccurrence(ap_id),
+            annotation_placeholder: None,
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.draughting_model_item_associations.len(), 1);
+    let dmia = re_pmi
+        .draughting_model_item_associations
+        .iter()
+        .next()
+        .unwrap();
+    assert_eq!(dmia.name, "link");
+    assert!(matches!(
+        dmia.identified_item,
+        DraughtingModelIdentifiedItem::AnnotationOccurrence(_)
+    ));
+}
+
+#[test]
+fn dmia_shape_aspect_datum_definition_round_trip() {
+    // DMIA whose definition is a DATUM — a shape_aspect subtype resolved through
+    // the shared ShapeAspectRef (the gap this phase fixes; DATUM / ALL_AROUND /
+    // … were previously dropped as "none of the modelled SELECT members").
+    use step_io::ir::PmiPool;
+    use step_io::ir::ShapeAspectRef;
+    use step_io::ir::geometry::{Plane3, Surface};
+    use step_io::ir::pmi::{
+        AnnotationOccurrence, AnnotationPlane, Datum, DraughtingModelIdentifiedItem,
+        DraughtingModelItemAssociation, DraughtingModelItemDefinition,
+    };
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{PlainRepr, Representation};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let ctx_id = model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let placement = xyz_placement(&mut model);
+    let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
+        position: placement,
+    }));
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    let datum = pmi.datums.push(Datum {
+        name: String::new(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        identification: "A".into(),
+    });
+    let ap_id = pmi
+        .annotation_occurrences
+        .push(AnnotationOccurrence::AnnotationPlane(AnnotationPlane {
+            name: "anno".into(),
+            styles: vec![],
+            item: RepresentationItemRef::Surface(surf),
+        }));
+    let used = model.representations.push(Representation::Plain(PlainRepr {
+        name: "draughting_model".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+        frame: None,
+    }));
+    model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .draughting_model_item_associations
+        .push(DraughtingModelItemAssociation {
+            name: "link".into(),
+            description: None,
+            definition: DraughtingModelItemDefinition::ShapeAspect(ShapeAspectRef::Datum(datum)),
+            used_representation: used,
+            identified_item: DraughtingModelIdentifiedItem::AnnotationOccurrence(ap_id),
+            annotation_placeholder: None,
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.draughting_model_item_associations.len(), 1);
+    let dmia = re_pmi
+        .draughting_model_item_associations
+        .iter()
+        .next()
+        .unwrap();
+    assert!(matches!(
+        dmia.definition,
+        DraughtingModelItemDefinition::ShapeAspect(ShapeAspectRef::Datum(_))
+    ));
+}
+
+#[test]
+fn dmia_geometric_tolerance_with_datum_reference_round_trip() {
+    // DMIA whose definition is a GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE complex
+    // MI — resolved via GeometricToleranceRef::WithDatumReference (the gap this
+    // phase fixes; previously dropped as "none of 8 modelled SELECT members").
+    use step_io::ir::geometry::{Plane3, Surface};
+    use step_io::ir::pmi::{
+        AnnotationOccurrence, AnnotationPlane, DraughtingModelIdentifiedItem,
+        DraughtingModelItemAssociation, DraughtingModelItemDefinition, GeometricToleranceRef,
+        GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData,
+        ToleranceMagnitude,
+    };
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{DatumSystem, PlainRepr, Representation};
+    use step_io::ir::units::MeasureWithUnit;
+    use step_io::ir::{PmiPool, ShapeAspectRef};
+    let (mut model, sa, ..) = shape_aspect_relationship_fixture();
+    let target = model.shape_aspects[sa].target;
+    let ctx = mm_radian_steradian(&mut model);
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
+    let ctx_id = model.units.push(ctx);
+    let ds = model.datum_systems.push(DatumSystem {
+        name: "DS".into(),
+        description: String::new(),
+        target,
+        product_definitional: false,
+        constituents: Vec::new(),
+    });
+    let mwu = model
+        .units_pool
+        .as_mut()
+        .expect("units pool")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
+            value: 0.1,
+            unit: length_unit,
+        });
+    let gt = model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .geometric_tolerance_with_datum_references
+        .push(GeometricToleranceWithDatumReference::Perpendicularity(
+            GeometricToleranceWithDatumReferenceData {
+                name: "t".into(),
+                description: String::new(),
+                magnitude: ToleranceMagnitude::MeasureWithUnit(mwu),
+                toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+                datum_system: vec![ds],
+                modifiers: Vec::new(),
+                displacement: None,
+            },
+        ));
+    let placement = xyz_placement(&mut model);
+    let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
+        position: placement,
+    }));
+    let ap = model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_occurrences
+        .push(AnnotationOccurrence::AnnotationPlane(AnnotationPlane {
+            name: "anno".into(),
+            styles: vec![],
+            item: RepresentationItemRef::Surface(surf),
+        }));
+    let used = model.representations.push(Representation::Plain(PlainRepr {
+        name: "dm".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+        frame: None,
+    }));
+    model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .draughting_model_item_associations
+        .push(DraughtingModelItemAssociation {
+            name: "link".into(),
+            description: None,
+            definition: DraughtingModelItemDefinition::GeometricTolerance(
+                GeometricToleranceRef::WithDatumReference(gt),
+            ),
+            used_representation: used,
+            identified_item: DraughtingModelIdentifiedItem::AnnotationOccurrence(ap),
+            annotation_placeholder: None,
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert!(
+        re_pmi
+            .draughting_model_item_associations
+            .iter()
+            .any(|d| matches!(
+                d.definition,
+                DraughtingModelItemDefinition::GeometricTolerance(
+                    GeometricToleranceRef::WithDatumReference(_)
+                )
+            )),
+        "DMIA with a GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE definition should round-trip"
+    );
+}
+
+#[test]
+fn text_literal_round_trip() {
+    use step_io::ir::pmi::{DraughtingPreDefinedTextFont, PmiPool};
+    use step_io::ir::visualization::{
+        Axis2Placement, FontSelect, TextLiteral, TextPath, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let placement = xyz_placement(&mut model);
+    let font_id = model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .draughting_pre_defined_text_fonts
+        .push(DraughtingPreDefinedTextFont {
+            name: "font_a".into(),
+        });
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    viz.text_literals.push(TextLiteral {
+        name: String::new(),
+        literal: "hello".into(),
+        placement: Axis2Placement::D3(placement),
+        alignment: "baseline left".into(),
+        path: TextPath::Right,
+        font: FontSelect::DraughtingPreDefined(font_id),
+    });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    assert_eq!(re_viz.text_literals.len(), 1);
+    let re_t = re_viz.text_literals.iter().next().unwrap();
+    assert_eq!(re_t.literal, "hello");
+    assert_eq!(re_t.alignment, "baseline left");
+    assert!(matches!(re_t.path, TextPath::Right));
+    assert!(matches!(re_t.placement, Axis2Placement::D3(_)));
+}
+
+#[test]
+fn composite_text_round_trip() {
+    use step_io::ir::pmi::{DraughtingPreDefinedTextFont, PmiPool};
+    use step_io::ir::visualization::{
+        Axis2Placement, CompositeText, FontSelect, TextLiteral, TextOrCharacter, TextPath,
+        VisualizationPool,
+    };
+    let mut model = empty_model();
+    let placement = xyz_placement(&mut model);
+    let font_id = model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .draughting_pre_defined_text_fonts
+        .push(DraughtingPreDefinedTextFont {
+            name: "font_a".into(),
+        });
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let tl1 = viz.text_literals.push(TextLiteral {
+        name: String::new(),
+        literal: "a".into(),
+        placement: Axis2Placement::D3(placement),
+        alignment: String::new(),
+        path: TextPath::Right,
+        font: FontSelect::DraughtingPreDefined(font_id),
+    });
+    let tl2 = viz.text_literals.push(TextLiteral {
+        name: String::new(),
+        literal: "b".into(),
+        placement: Axis2Placement::D3(placement),
+        alignment: String::new(),
+        path: TextPath::Right,
+        font: FontSelect::DraughtingPreDefined(font_id),
+    });
+    viz.composite_texts.push(CompositeText {
+        name: String::new(),
+        collected_text: vec![
+            TextOrCharacter::TextLiteral(tl1),
+            TextOrCharacter::TextLiteral(tl2),
+        ],
+    });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    assert_eq!(re_viz.text_literals.len(), 2);
+    assert_eq!(re_viz.composite_texts.len(), 1);
+    let re_ct = re_viz.composite_texts.iter().next().unwrap();
+    assert_eq!(re_ct.collected_text.len(), 2);
+}
+
+#[test]
+fn text_style_with_box_characteristics_round_trip() {
+    use step_io::ir::visualization::{
+        BoxCharacteristic, CharacterStyle, Colour, ColourRgb, TextStyle, TextStyleData,
+        TextStyleForDefinedFont, TextStyleWithBoxCharacteristics, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let colour_id = viz.colours.push(Colour::Rgb(ColourRgb {
+        name: String::new(),
+        red: 0.0,
+        green: 0.0,
+        blue: 0.0,
+    }));
+    let t4df_id = viz
+        .text_styles_for_defined_font
+        .push(TextStyleForDefinedFont {
+            text_colour: colour_id,
+        });
+    viz.text_styles.push(TextStyle::WithBoxCharacteristics(
+        TextStyleWithBoxCharacteristics {
+            inherited: TextStyleData {
+                name: String::new(),
+                character_appearance: CharacterStyle::TextStyleForDefinedFont(t4df_id),
+            },
+            characteristics: vec![
+                BoxCharacteristic::Height(3.0),
+                BoxCharacteristic::Width(2.001),
+                BoxCharacteristic::SlantAngle(0.0),
+                BoxCharacteristic::RotateAngle(0.0),
+            ],
+        },
+    ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    assert_eq!(re_viz.text_styles.len(), 1);
+    let TextStyle::WithBoxCharacteristics(re_t) = re_viz.text_styles.iter().next().unwrap() else {
+        panic!("expected WithBoxCharacteristics");
+    };
+    assert_eq!(re_t.characteristics.len(), 4);
+    assert!(matches!(
+        re_t.characteristics[0],
+        BoxCharacteristic::Height(v) if (v - 3.0).abs() < 1e-9
+    ));
+    assert!(matches!(
+        re_t.characteristics[1],
+        BoxCharacteristic::Width(v) if (v - 2.001).abs() < 1e-9
+    ));
+}
+
+#[test]
+fn point_style_round_trip() {
+    use step_io::ir::visualization::{
+        Colour, ColourRgb, FoundedItem, Marker, MarkerSize, PointStyle, PreDefinedMarker,
+        PreDefinedMarkerData, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let colour_id = viz.colours.push(Colour::Rgb(ColourRgb {
+        name: String::new(),
+        red: 0.0,
+        green: 1.0,
+        blue: 0.0,
+    }));
+    let marker_id = viz
+        .pre_defined_markers
+        .push(PreDefinedMarker::Plain(PreDefinedMarkerData {
+            name: "x".into(),
+        }));
+    viz.founded_items.push(FoundedItem::PointStyle(PointStyle {
+        name: String::new(),
+        marker: Marker::Predefined(marker_id),
+        marker_size: MarkerSize::PositiveLength(0.7),
+        marker_colour: colour_id,
+    }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    let count = re_viz
+        .founded_items
+        .iter()
+        .filter(|f| matches!(f, FoundedItem::PointStyle(_)))
+        .count();
+    assert_eq!(count, 1);
+}
+
+#[test]
+fn point_style_marker_type_in_psa_round_trips() {
+    // NIST fixtures use a type-tagged enum marker `MARKER_TYPE(.PLUS.)` and
+    // reference the POINT_STYLE from a PRESENTATION_STYLE_ASSIGNMENT. Verify
+    // the typed marker survives write -> read and the PSA keeps a Point ref.
+    use step_io::ir::visualization::{
+        Colour, ColourRgb, FoundedItem, Marker, MarkerSize, MarkerType, PointStyle,
+        PresentationStyleAssignment, PresentationStyleAssignmentData, PsaStyle, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let colour_id = viz.colours.push(Colour::Rgb(ColourRgb {
+        name: String::new(),
+        red: 0.6,
+        green: 0.4,
+        blue: 0.4,
+    }));
+    let ps_id = viz.founded_items.push(FoundedItem::PointStyle(PointStyle {
+        name: String::new(),
+        marker: Marker::Type(MarkerType::Plus),
+        marker_size: MarkerSize::PositiveLength(3.0),
+        marker_colour: colour_id,
+    }));
+    viz.presentation_style_assignments
+        .push(PresentationStyleAssignment::Itself(
+            PresentationStyleAssignmentData {
+                styles: vec![PsaStyle::Point(ps_id)],
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+
+    // POINT_STYLE round-trips with the typed marker preserved.
+    let ps = re_viz
+        .founded_items
+        .iter()
+        .find_map(|f| match f {
+            FoundedItem::PointStyle(p) => Some(p),
+            _ => None,
+        })
+        .expect("POINT_STYLE round-trips");
+    assert_eq!(ps.marker, Marker::Type(MarkerType::Plus));
+
+    // The PSA keeps a Point reference rather than dropping it.
+    let PresentationStyleAssignment::Itself(psa) = re_viz
+        .presentation_style_assignments
+        .iter()
+        .next()
+        .expect("PSA round-trips")
+    else {
+        panic!("expected Itself PSA variant");
+    };
+    assert!(
+        psa.styles.iter().any(|s| matches!(s, PsaStyle::Point(_))),
+        "PSA retains the POINT_STYLE reference"
+    );
+}
+
+#[test]
+fn defined_symbol_round_trip() {
+    // SYMBOL_TARGET + DEFINED_SYMBOL via the GeometricRepresentationItem
+    // arena. Definition is a PreDefinedSymbol, target is a SymbolTarget
+    // sharing the same arena.
+    use step_io::ir::visualization::{
+        DefinedSymbol, DefinedSymbolDefinition, GeometricRepresentationItem, PreDefinedSymbol,
+        PreDefinedSymbolData, SymbolPlacement, SymbolTarget, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let frame = model.geometry.identity_placement();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let pds_id = viz
+        .pre_defined_symbols
+        .push(PreDefinedSymbol::Plain(PreDefinedSymbolData {
+            name: "filled arrow".into(),
+        }));
+    let target_id =
+        model
+            .geometric_representation_items
+            .push(GeometricRepresentationItem::SymbolTarget(SymbolTarget {
+                name: "tgt".into(),
+                placement: SymbolPlacement::Placement3d(frame),
+                x_scale: 3.5,
+                y_scale: 3.5,
+            }));
+    model
+        .geometric_representation_items
+        .push(GeometricRepresentationItem::DefinedSymbol(DefinedSymbol {
+            name: "sym".into(),
+            definition: DefinedSymbolDefinition::PreDefinedSymbol(pds_id),
+            target: target_id,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let ds = re
+        .geometric_representation_items
+        .iter()
+        .find_map(|i| match i {
+            GeometricRepresentationItem::DefinedSymbol(d) => Some(d),
+            GeometricRepresentationItem::SymbolTarget(_)
+            | GeometricRepresentationItem::ShellBasedSurfaceModel(_)
+            | GeometricRepresentationItem::GeometricCurveSet(_)
+            | GeometricRepresentationItem::GeometricSet(_) => None,
+        })
+        .expect("defined_symbol round-trips");
+    assert_eq!(ds.name, "sym");
+    let st = re
+        .geometric_representation_items
+        .iter()
+        .find_map(|i| match i {
+            GeometricRepresentationItem::SymbolTarget(t) => Some(t),
+            GeometricRepresentationItem::DefinedSymbol(_)
+            | GeometricRepresentationItem::ShellBasedSurfaceModel(_)
+            | GeometricRepresentationItem::GeometricCurveSet(_)
+            | GeometricRepresentationItem::GeometricSet(_) => None,
+        })
+        .expect("symbol_target round-trips");
+    assert!((st.x_scale - 3.5).abs() < f64::EPSILON);
+    assert!((st.y_scale - 3.5).abs() < f64::EPSILON);
+}
+
+#[test]
+fn pre_defined_point_marker_symbol_round_trip() {
+    // PRE_DEFINED_POINT_MARKER_SYMBOL — pre_defined_marker subtype that
+    // appears as a simple instance in the corpus (`PRE_DEFINED_POINT_MARKER_SYMBOL('x')`),
+    // not as a complex MI.
+    use step_io::ir::visualization::{
+        PreDefinedMarker, PreDefinedPointMarkerSymbol, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    viz.pre_defined_markers
+        .push(PreDefinedMarker::PointMarkerSymbol(
+            PreDefinedPointMarkerSymbol { name: "x".into() },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    let p = re_viz
+        .pre_defined_markers
+        .iter()
+        .find_map(|m| match m {
+            PreDefinedMarker::PointMarkerSymbol(p) => Some(p),
+            PreDefinedMarker::Plain(_) => None,
+        })
+        .expect("PointMarkerSymbol round-trips");
+    assert_eq!(p.name, "x");
+}
+
+#[test]
+fn surface_style_boundary_round_trip() {
+    // SURFACE_STYLE_BOUNDARY — founded_item subtype with a curve_or_render
+    // SELECT. Uses the SurfaceStyleRendering branch to keep fixture
+    // setup minimal.
+    use step_io::ir::visualization::{
+        Colour, ColourRgb, CurveOrRender, FoundedItem, ShadingMethod, SurfaceStyleBoundary,
+        SurfaceStyleRendering, SurfaceStyleRenderingData, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let colour_id = viz.colours.push(Colour::Rgb(ColourRgb {
+        name: String::new(),
+        red: 0.2,
+        green: 0.3,
+        blue: 0.4,
+    }));
+    let ssr_id = viz
+        .surface_style_renderings
+        .push(SurfaceStyleRendering::Itself(SurfaceStyleRenderingData {
+            rendering_method: ShadingMethod::Constant,
+            surface_colour: colour_id,
+        }));
+    viz.founded_items
+        .push(FoundedItem::SurfaceStyleBoundary(SurfaceStyleBoundary {
+            style_of_boundary: CurveOrRender::SurfaceStyleRendering(ssr_id),
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    let count = re_viz
+        .founded_items
+        .iter()
+        .filter(|f| matches!(f, FoundedItem::SurfaceStyleBoundary(_)))
+        .count();
+    assert_eq!(count, 1);
+}
+
+#[test]
+fn surface_style_parameter_line_round_trip() {
+    // SURFACE_STYLE_PARAMETER_LINE — founded_item subtype with a
+    // curve_or_render SELECT plus a SET[1:2] of direction_count_select.
+    use step_io::ir::visualization::{
+        Colour, ColourRgb, CurveOrRender, DirectionCount, FoundedItem, ShadingMethod,
+        SurfaceStyleParameterLine, SurfaceStyleRendering, SurfaceStyleRenderingData,
+        VisualizationPool,
+    };
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let colour_id = viz.colours.push(Colour::Rgb(ColourRgb {
+        name: String::new(),
+        red: 0.1,
+        green: 0.2,
+        blue: 0.3,
+    }));
+    let ssr_id = viz
+        .surface_style_renderings
+        .push(SurfaceStyleRendering::Itself(SurfaceStyleRenderingData {
+            rendering_method: ShadingMethod::Constant,
+            surface_colour: colour_id,
+        }));
+    viz.founded_items
+        .push(FoundedItem::SurfaceStyleParameterLine(
+            SurfaceStyleParameterLine {
+                style_of_parameter_lines: CurveOrRender::SurfaceStyleRendering(ssr_id),
+                direction_counts: vec![DirectionCount::U(4), DirectionCount::V(7)],
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    let sspl = re_viz
+        .founded_items
+        .iter()
+        .find_map(|f| match f {
+            FoundedItem::SurfaceStyleParameterLine(s) => Some(s),
+            _ => None,
+        })
+        .expect("expected SurfaceStyleParameterLine");
+    assert_eq!(sspl.direction_counts.len(), 2);
+    assert_eq!(sspl.direction_counts[0], DirectionCount::U(4));
+    assert_eq!(sspl.direction_counts[1], DirectionCount::V(7));
+}
+
+#[test]
+fn symbol_style_round_trip() {
+    use step_io::ir::visualization::{
+        Colour, ColourRgb, FoundedItem, SymbolColour, SymbolStyle, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let colour_id = viz.colours.push(Colour::Rgb(ColourRgb {
+        name: String::new(),
+        red: 0.5,
+        green: 0.5,
+        blue: 0.5,
+    }));
+    let sc_id = viz.symbol_colours.push(SymbolColour {
+        colour_of_symbol: colour_id,
+    });
+    viz.founded_items
+        .push(FoundedItem::SymbolStyle(SymbolStyle {
+            name: "ss".into(),
+            style_of_symbol: sc_id,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    let count = re_viz
+        .founded_items
+        .iter()
+        .filter(|f| matches!(f, FoundedItem::SymbolStyle(_)))
+        .count();
+    assert_eq!(count, 1);
+}
+
+#[test]
+fn symbol_colour_round_trip() {
+    // SYMBOL_COLOUR (phase symbol-colour).
+    use step_io::ir::visualization::{Colour, ColourRgb, SymbolColour, VisualizationPool};
+
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let colour_id = viz.colours.push(Colour::Rgb(ColourRgb {
+        name: String::new(),
+        red: 1.0,
+        green: 0.0,
+        blue: 0.0,
+    }));
+    viz.symbol_colours.push(SymbolColour {
+        colour_of_symbol: colour_id,
+    });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    assert_eq!(re_viz.symbol_colours.len(), 1);
+}
+
+#[test]
+fn bare_colour_in_fill_area_style_round_trips() {
+    // Bare `COLOUR()` (Colour::Itself) referenced by a FILL_AREA_STYLE_COLOUR
+    // inside a FILL_AREA_STYLE. The writer emits `COLOUR()`; re-reading it
+    // exercises the COLOUR handler. Without it the colour ref would not
+    // resolve, the fill-style list would empty, and both FASC and COLOUR would
+    // drop. Verify the whole chain survives round-trip.
+    use step_io::ir::visualization::{
+        Colour, FillAreaStyle, FillAreaStyleColour, FoundedItem, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let colour_id = viz.colours.push(Colour::Itself);
+    viz.founded_items
+        .push(FoundedItem::FillAreaStyle(FillAreaStyle {
+            name: "NULL".into(),
+            fill_styles: vec![FillAreaStyleColour {
+                name: "NULL".into(),
+                colour: colour_id,
+            }],
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    // The bare COLOUR survives the round-trip as Colour::Itself.
+    assert!(
+        re_viz.colours.iter().any(|c| matches!(c, Colour::Itself)),
+        "bare COLOUR() round-trips as Colour::Itself"
+    );
+    // The FILL_AREA_STYLE keeps its FILL_AREA_STYLE_COLOUR (non-empty list).
+    let fas = re_viz
+        .founded_items
+        .iter()
+        .find_map(|f| match f {
+            FoundedItem::FillAreaStyle(f) => Some(f),
+            _ => None,
+        })
+        .expect("FILL_AREA_STYLE round-trips");
+    assert_eq!(fas.fill_styles.len(), 1, "FASC is not dropped");
+}
+
+#[test]
+fn ciwr_round_trip() {
+    // CHARACTERIZED_ITEM_WITHIN_REPRESENTATION (phase characterized-object-ciwr).
+    use step_io::ir::RepresentationItemRef;
+    use step_io::ir::shape_rep::{
+        CharacterizedItemWithinRepresentation, CharacterizedObject, CharacterizedObjectData,
+        PlainRepr, Representation,
+    };
+
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let p0 = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let axis = model.geometry.directions.push(Direction3 {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+    });
+    let refd = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let position = push_placement(&mut model, p0, Some(axis), Some(refd));
+    let surf = model
+        .geometry
+        .surfaces
+        .push(Surface::Plane(Plane3 { position }));
+    let rep_id = model.representations.push(Representation::Plain(PlainRepr {
+        name: "rep".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(
+            UnitContextId(0),
+        )),
+        frame: None,
+    }));
+    model
+        .characterized_objects
+        .push(CharacterizedObject::CharacterizedItemWithinRepresentation(
+            CharacterizedItemWithinRepresentation {
+                inherited: CharacterizedObjectData {
+                    name: "ciwr".into(),
+                    description: Some("d".into()),
+                },
+                item: RepresentationItemRef::Surface(surf),
+                rep: rep_id,
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.characterized_objects.len(), 1);
+    let CharacterizedObject::CharacterizedItemWithinRepresentation(ciwr) =
+        re.characterized_objects.iter().next().unwrap()
+    else {
+        panic!("expected CIWR");
+    };
+    assert_eq!(ciwr.inherited.name, "ciwr");
+    assert_eq!(ciwr.inherited.description.as_deref(), Some("d"));
+    assert!(matches!(ciwr.item, RepresentationItemRef::Surface(_)));
+}
+
+#[test]
+fn model_geometric_view_round_trip() {
+    // MODEL_GEOMETRIC_VIEW (phase model-geometric-view) — a CIWR subtype
+    // narrowing item -> CAMERA_MODEL, rep -> DRAUGHTING_MODEL.
+    use step_io::ir::shape_rep::{
+        CharacterizedObject, CharacterizedObjectData, ModelGeometricView, PlainRepr, Representation,
+    };
+
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let frame = model.geometry.identity_placement();
+    let pt = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let pb = model
+        .geometry
+        .planar_extents
+        .push(PlanarExtent::PlanarBox(PlanarBox {
+            name: "win".into(),
+            size_in_x: 1.0,
+            size_in_y: 2.0,
+            placement: PlanarBoxPlacement::Placement3d(frame),
+        }));
+    let rep_id = model.representations.push(Representation::Plain(PlainRepr {
+        name: "draughting_model".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(
+            UnitContextId(0),
+        )),
+        frame: None,
+    }));
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let vv = viz.founded_items.push(FoundedItem::ViewVolume(ViewVolume {
+        projection_type: Projection::Central,
+        projection_point: pt,
+        view_plane_distance: 100.0,
+        front_plane_distance: 0.0,
+        front_plane_clipping: false,
+        back_plane_distance: 0.0,
+        back_plane_clipping: false,
+        view_volume_sides_clipping: false,
+        view_window: pb,
+    }));
+    let cam = viz
+        .camera_models
+        .push(CameraModel::CameraModelD3(CameraModelD3 {
+            name: "cam".into(),
+            view_reference_system: frame,
+            perspective_of_volume: vv,
+        }));
+    model
+        .characterized_objects
+        .push(CharacterizedObject::ModelGeometricView(
+            ModelGeometricView {
+                inherited: CharacterizedObjectData {
+                    name: "Top".into(),
+                    description: Some(String::new()),
+                },
+                item: cam,
+                rep: rep_id,
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("MODEL_GEOMETRIC_VIEW("),
+        "expected MODEL_GEOMETRIC_VIEW in output"
+    );
+    let re = reconvert(&text);
+    assert_eq!(re.characterized_objects.len(), 1);
+    let CharacterizedObject::ModelGeometricView(mgv) =
+        re.characterized_objects.iter().next().unwrap()
+    else {
+        panic!("expected ModelGeometricView");
+    };
+    assert_eq!(mgv.inherited.name, "Top");
+    assert_eq!(mgv.rep, rep_id);
+}
+
+#[test]
+fn annotation_placeholder_occurrence_round_trip() {
+    // ANNOTATION_PLACEHOLDER_OCCURRENCE (phase model-geometric-view cluster) —
+    // role enum token + line_spacing measure preserved.
+    use step_io::ir::PmiPool;
+    use step_io::ir::geometry::{Plane3, Surface};
+    use step_io::ir::pmi::{AnnotationOccurrence, AnnotationPlaceholderOccurrence};
+    use step_io::ir::representation_item::RepresentationItemRef;
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let placement = xyz_placement(&mut model);
+    let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
+        position: placement,
+    }));
+    model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_occurrences
+        .push(AnnotationOccurrence::AnnotationPlaceholderOccurrence(
+            AnnotationPlaceholderOccurrence {
+                name: "Note (195)".into(),
+                styles: vec![],
+                item: RepresentationItemRef::Surface(surf),
+                role: "GPS_DATA".into(),
+                line_spacing: 4.889_495_205_134_15,
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    assert!(text.contains(".GPS_DATA."), "role enum token not emitted");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.annotation_occurrences.len(), 1);
+    let AnnotationOccurrence::AnnotationPlaceholderOccurrence(apo) =
+        re_pmi.annotation_occurrences.iter().next().unwrap()
+    else {
+        panic!("expected AnnotationPlaceholderOccurrence");
+    };
+    assert_eq!(apo.name, "Note (195)");
+    assert_eq!(apo.role, "GPS_DATA");
+    assert!((apo.line_spacing - 4.889_495_205_134_15).abs() < 1e-12);
+}
+
+#[test]
+fn leader_line_cluster_round_trip() {
+    // AP242-e3 leader-line cluster: APLL_POINT (dedicated arena) ->
+    // ANNOTATION_TO_MODEL_LEADER_LINE -> ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE.
+    use step_io::ir::PmiPool;
+    use step_io::ir::geometry::{Plane3, Point3, Surface};
+    use step_io::ir::pmi::{
+        AnnotationOccurrence, AnnotationPlaceholderLeaderLine,
+        AnnotationPlaceholderOccurrenceWithLeaderLine, AnnotationToModelLeaderLine, ApllPointData,
+        ApllPointElement,
+    };
+    use step_io::ir::representation_item::RepresentationItemRef;
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let placement = xyz_placement(&mut model);
+    let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
+        position: placement,
+    }));
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    // Two apll points (geometric_elements is LIST [2:?]).
+    let p0 = pmi
+        .apll_points
+        .push(ApllPointElement::ApllPoint(ApllPointData {
+            name: String::new(),
+            coordinates: Point3 {
+                x: 1.0,
+                y: 2.0,
+                z: 3.0,
+            },
+            symbol_applied: "NONE".into(),
+        }));
+    let p1 = pmi
+        .apll_points
+        .push(ApllPointElement::ApllPoint(ApllPointData {
+            name: String::new(),
+            coordinates: Point3 {
+                x: 4.0,
+                y: 5.0,
+                z: 6.0,
+            },
+            symbol_applied: "NONE".into(),
+        }));
+    let leader = pmi.annotation_placeholder_leader_lines.push(
+        AnnotationPlaceholderLeaderLine::AnnotationToModelLeaderLine(AnnotationToModelLeaderLine {
+            name: String::new(),
+            geometric_elements: vec![p0, p1],
+        }),
+    );
+    pmi.annotation_occurrences.push(
+        AnnotationOccurrence::AnnotationPlaceholderOccurrenceWithLeaderLine(
+            AnnotationPlaceholderOccurrenceWithLeaderLine {
+                name: "Flatness.1".into(),
+                styles: vec![],
+                item: RepresentationItemRef::Surface(surf),
+                role: "GPS_DATA".into(),
+                line_spacing: 7.0,
+                leader_line: vec![leader],
+            },
+        ),
+    );
+
+    let text = model.write_to_string().expect("write");
+    assert!(text.contains("APLL_POINT("), "APLL_POINT not emitted");
+    assert!(text.contains("ANNOTATION_TO_MODEL_LEADER_LINE("));
+    assert!(text.contains("ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE("));
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.apll_points.len(), 2);
+    assert_eq!(re_pmi.annotation_placeholder_leader_lines.len(), 1);
+    let AnnotationPlaceholderLeaderLine::AnnotationToModelLeaderLine(re_leader) = re_pmi
+        .annotation_placeholder_leader_lines
+        .iter()
+        .next()
+        .unwrap()
+    else {
+        panic!("expected ANNOTATION_TO_MODEL_LEADER_LINE");
+    };
+    assert_eq!(re_leader.geometric_elements.len(), 2);
+    let ApllPointElement::ApllPoint(re_p0) = &re_pmi.apll_points[re_leader.geometric_elements[0]]
+    else {
+        panic!("expected APLL_POINT");
+    };
+    assert!((re_p0.coordinates.x - 1.0).abs() < 1e-12);
+    assert_eq!(re_p0.symbol_applied, "NONE");
+    let with_leader = re_pmi.annotation_occurrences.iter().any(|ao| {
+        matches!(
+            ao,
+            AnnotationOccurrence::AnnotationPlaceholderOccurrenceWithLeaderLine(a)
+                if a.leader_line.len() == 1 && a.name == "Flatness.1"
+        )
+    });
+    assert!(
+        with_leader,
+        "APO_WITH_LEADER_LINE should round-trip with its leader_line"
+    );
+}
+
+#[test]
+fn apll_point_with_surface_and_auxiliary_leader_line_round_trips() {
+    // APLL_POINT_WITH_SURFACE carries a face_surface ref; AUXILIARY_LEADER_LINE
+    // follows a controlling ANNOTATION_TO_MODEL_LEADER_LINE in the same arena.
+    use step_io::ir::PmiPool;
+    use step_io::ir::geometry::Point3;
+    use step_io::ir::pmi::{
+        AnnotationPlaceholderLeaderLine, AnnotationToModelLeaderLine, ApllPointData,
+        ApllPointElement, ApllPointWithSurfaceData, AuxiliaryLeaderLineData,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    // A solid gives us an ADVANCED_FACE for the with-surface point to bind to.
+    let _solid = push_minimal_solid(&mut model);
+    let face = model.topology.faces.iter_with_ids().next().unwrap().0;
+
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    // free_space_end (plain) + model_end (with surface).
+    let p_plain = pmi
+        .apll_points
+        .push(ApllPointElement::ApllPoint(ApllPointData {
+            name: "Leader Point".into(),
+            coordinates: Point3 {
+                x: 1.0,
+                y: 2.0,
+                z: 3.0,
+            },
+            symbol_applied: "NONE".into(),
+        }));
+    let p_surf = pmi.apll_points.push(ApllPointElement::ApllPointWithSurface(
+        ApllPointWithSurfaceData {
+            name: "Leader Point".into(),
+            coordinates: Point3 {
+                x: 4.0,
+                y: 5.0,
+                z: 6.0,
+            },
+            symbol_applied: "POSITIVE_ARROWHEAD".into(),
+            associated_surface: face,
+        },
+    ));
+    let controlling = pmi.annotation_placeholder_leader_lines.push(
+        AnnotationPlaceholderLeaderLine::AnnotationToModelLeaderLine(AnnotationToModelLeaderLine {
+            name: "Perpendicular Dimension (59)".into(),
+            geometric_elements: vec![p_plain, p_surf],
+        }),
+    );
+    pmi.annotation_placeholder_leader_lines.push(
+        AnnotationPlaceholderLeaderLine::AuxiliaryLeaderLine(AuxiliaryLeaderLineData {
+            name: "Perpendicular Dimension (59)".into(),
+            geometric_elements: vec![p_plain, p_surf],
+            controlling_leader_line: controlling,
+        }),
+    );
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("APLL_POINT_WITH_SURFACE("),
+        "APLL_POINT_WITH_SURFACE not emitted"
+    );
+    assert!(
+        text.contains("AUXILIARY_LEADER_LINE("),
+        "AUXILIARY_LEADER_LINE not emitted"
+    );
+
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.apll_points.len(), 2);
+    assert_eq!(re_pmi.annotation_placeholder_leader_lines.len(), 2);
+    // The with-surface point resolves its associated_surface to a real face.
+    let with_surface = re_pmi.apll_points.iter().find_map(|p| match p {
+        ApllPointElement::ApllPointWithSurface(d) => Some(d),
+        ApllPointElement::ApllPoint(_) => None,
+    });
+    let with_surface = with_surface.expect("APLL_POINT_WITH_SURFACE round-trips");
+    assert!(
+        re.topology
+            .faces
+            .iter_with_ids()
+            .any(|(id, _)| id == with_surface.associated_surface),
+        "associated_surface should resolve to a known face"
+    );
+    // The auxiliary line resolves its controlling leader line to the ATMLL.
+    let aux = re_pmi
+        .annotation_placeholder_leader_lines
+        .iter()
+        .find_map(|l| match l {
+            AnnotationPlaceholderLeaderLine::AuxiliaryLeaderLine(d) => Some(d),
+            AnnotationPlaceholderLeaderLine::AnnotationToModelLeaderLine(_) => None,
+        });
+    let aux = aux.expect("AUXILIARY_LEADER_LINE round-trips");
+    assert!(matches!(
+        re_pmi.annotation_placeholder_leader_lines[aux.controlling_leader_line],
+        AnnotationPlaceholderLeaderLine::AnnotationToModelLeaderLine(_)
+    ));
+    assert_eq!(aux.geometric_elements.len(), 2);
+}
+
+#[test]
+fn dmia_with_placeholder_round_trip() {
+    // DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER (nested_field) —
+    // annotation_placeholder Some -> subtype type name emitted -> re-read Some.
+    use step_io::ir::PmiPool;
+    use step_io::ir::geometry::{Plane3, Surface};
+    use step_io::ir::pmi::{
+        AnnotationOccurrence, AnnotationPlaceholderOccurrence, DraughtingModelIdentifiedItem,
+        DraughtingModelItemAssociation, DraughtingModelItemDefinition,
+    };
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{PlainRepr, Representation};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let ctx_id = model.units.push(ctx);
+    let placement = xyz_placement(&mut model);
+    let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
+        position: placement,
+    }));
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    let ph =
+        pmi.annotation_occurrences
+            .push(AnnotationOccurrence::AnnotationPlaceholderOccurrence(
+                AnnotationPlaceholderOccurrence {
+                    name: "Note (195)".into(),
+                    styles: vec![],
+                    item: RepresentationItemRef::Surface(surf),
+                    role: "GPS_DATA".into(),
+                    line_spacing: 1.5,
+                },
+            ));
+    let used = model.representations.push(Representation::Plain(PlainRepr {
+        name: "draughting_model".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+        frame: None,
+    }));
+    let def = model.representations.push(Representation::Plain(PlainRepr {
+        name: "definition".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+        frame: None,
+    }));
+    model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .draughting_model_item_associations
+        .push(DraughtingModelItemAssociation {
+            name: "PMI link".into(),
+            description: None,
+            definition: DraughtingModelItemDefinition::Representation(def),
+            used_representation: used,
+            identified_item: DraughtingModelIdentifiedItem::AnnotationOccurrence(ph),
+            annotation_placeholder: Some(ph),
+        });
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER("),
+        "subtype type name not emitted"
+    );
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.draughting_model_item_associations.len(), 1);
+    let dmia = re_pmi
+        .draughting_model_item_associations
+        .iter()
+        .next()
+        .unwrap();
+    assert!(
+        dmia.annotation_placeholder.is_some(),
+        "placeholder lost on round-trip"
+    );
+}
+
+#[test]
+fn property_definition_with_ciwr_target_round_trips() {
+    use step_io::ir::RepresentationItemRef;
+    use step_io::ir::property::{
+        CharacterizedDefinition, PropertyDefinition, PropertyDefinitionData, PropertyPool,
+    };
+    use step_io::ir::shape_rep::{
+        CharacterizedItemWithinRepresentation, CharacterizedObject, CharacterizedObjectData,
+        PlainRepr, Representation,
+    };
+    // A geometric-validation-property PROPERTY_DEFINITION whose `definition`
+    // is a CHARACTERIZED_ITEM_WITHIN_REPRESENTATION (a characterized_object
+    // subtype). Must round-trip: write PD -> #ciwr (forward ref, CIWR body
+    // emits later under the reserved id) and read it back as the variant.
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let p0 = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let axis = model.geometry.directions.push(Direction3 {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+    });
+    let refd = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let position = push_placement(&mut model, p0, Some(axis), Some(refd));
+    let surf = model
+        .geometry
+        .surfaces
+        .push(Surface::Plane(Plane3 { position }));
+    let rep_id = model.representations.push(Representation::Plain(PlainRepr {
+        name: "validation".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(
+            UnitContextId(0),
+        )),
+        frame: None,
+    }));
+    let co_id = model.characterized_objects.push(
+        CharacterizedObject::CharacterizedItemWithinRepresentation(
+            CharacterizedItemWithinRepresentation {
+                inherited: CharacterizedObjectData {
+                    name: String::new(),
+                    description: None,
+                },
+                item: RepresentationItemRef::Surface(surf),
+                rep: rep_id,
+            },
+        ),
+    );
+
+    let mut pool = PropertyPool::default();
+    pool.property_definitions
+        .push(PropertyDefinition::Itself(PropertyDefinitionData {
+            name: "geometric validation property".into(),
+            description: String::new(),
+            definition: CharacterizedDefinition::CharacterizedItemWithinRepresentation(co_id),
+        }));
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pool = re
+        .properties
+        .as_ref()
+        .expect("round-tripped has properties");
+    let has_ciwr_pd = re_pool.property_definitions.iter().any(|pd| {
+        matches!(
+            pd,
+            PropertyDefinition::Itself(d)
+                if matches!(
+                    d.definition,
+                    CharacterizedDefinition::CharacterizedItemWithinRepresentation(_)
+                )
+        )
+    });
+    assert!(
+        has_ciwr_pd,
+        "PROPERTY_DEFINITION with a CIWR definition should round-trip"
+    );
+}
+
+#[test]
+fn property_definition_with_mgv_target_round_trips() {
+    // A PROPERTY_DEFINITION whose `definition` targets a MODEL_GEOMETRIC_VIEW
+    // (a characterized_item_within_representation subtype). It is tagged with
+    // the `characterized_item` member (CharacterizedItemWithinRepresentation)
+    // and emits the reserved MGV step id via the shared CIWR writer arm.
+    use step_io::ir::property::{
+        CharacterizedDefinition, PropertyDefinition, PropertyDefinitionData, PropertyPool,
+    };
+    use step_io::ir::shape_rep::{
+        CharacterizedObject, CharacterizedObjectData, ModelGeometricView, PlainRepr, Representation,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let frame = model.geometry.identity_placement();
+    let pt = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let pb = model
+        .geometry
+        .planar_extents
+        .push(PlanarExtent::PlanarBox(PlanarBox {
+            name: "win".into(),
+            size_in_x: 1.0,
+            size_in_y: 2.0,
+            placement: PlanarBoxPlacement::Placement3d(frame),
+        }));
+    let rep_id = model.representations.push(Representation::Plain(PlainRepr {
+        name: "draughting_model".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(
+            UnitContextId(0),
+        )),
+        frame: None,
+    }));
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let vv = viz.founded_items.push(FoundedItem::ViewVolume(ViewVolume {
+        projection_type: Projection::Central,
+        projection_point: pt,
+        view_plane_distance: 100.0,
+        front_plane_distance: 0.0,
+        front_plane_clipping: false,
+        back_plane_distance: 0.0,
+        back_plane_clipping: false,
+        view_volume_sides_clipping: false,
+        view_window: pb,
+    }));
+    let cam = viz
+        .camera_models
+        .push(CameraModel::CameraModelD3(CameraModelD3 {
+            name: "cam".into(),
+            view_reference_system: frame,
+            perspective_of_volume: vv,
+        }));
+    let co_id = model
+        .characterized_objects
+        .push(CharacterizedObject::ModelGeometricView(
+            ModelGeometricView {
+                inherited: CharacterizedObjectData {
+                    name: "Top".into(),
+                    description: Some(String::new()),
+                },
+                item: cam,
+                rep: rep_id,
+            },
+        ));
+
+    let mut pool = PropertyPool::default();
+    pool.property_definitions
+        .push(PropertyDefinition::Itself(PropertyDefinitionData {
+            name: "pmi validation property".into(),
+            description: String::new(),
+            definition: CharacterizedDefinition::CharacterizedItemWithinRepresentation(co_id),
+        }));
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    assert!(text.contains("MODEL_GEOMETRIC_VIEW("));
+    let re = reconvert(&text);
+    let re_pool = re.properties.as_ref().expect("properties pool survives");
+    assert!(
+        re_pool.property_definitions.iter().any(|pd| matches!(
+            pd,
+            PropertyDefinition::Itself(d)
+                if matches!(
+                    d.definition,
+                    CharacterizedDefinition::CharacterizedItemWithinRepresentation(_)
+                )
+        )),
+        "PROPERTY_DEFINITION targeting an MGV should round-trip"
+    );
+    assert!(
+        re.characterized_objects
+            .iter()
+            .any(|co| matches!(co, CharacterizedObject::ModelGeometricView(_))),
+        "the MODEL_GEOMETRIC_VIEW arena entry should survive"
+    );
+}
+
+#[test]
+fn qri_vri_round_trip() {
+    // QUALIFIED_REPRESENTATION_ITEM + VALUE_REPRESENTATION_ITEM in the new
+    // representation_item arena (phase repr-item-arena-1).
+    use step_io::ir::pmi::{TypeQualifier, ValueFormatTypeQualifier};
+    use step_io::ir::representation_item::{
+        MeasureValue, QualifiedRepresentationItem, QualifierRef, RepresentationItem,
+        ValueRepresentationItem,
+    };
+
+    let mut model = empty_model();
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    let tq = pmi.type_qualifiers.push(TypeQualifier {
+        name: "maximum".into(),
+    });
+    let vftq = pmi
+        .value_format_type_qualifiers
+        .push(ValueFormatTypeQualifier {
+            format_type: "NR2 1.3".into(),
+        });
+    model
+        .representation_items
+        .push(RepresentationItem::QualifiedRepresentationItem(
+            QualifiedRepresentationItem {
+                name: "q".into(),
+                qualifiers: vec![
+                    QualifierRef::TypeQualifier(tq),
+                    QualifierRef::ValueFormatTypeQualifier(vftq),
+                ],
+            },
+        ));
+    model
+        .representation_items
+        .push(RepresentationItem::ValueRepresentationItem(
+            ValueRepresentationItem {
+                name: "v".into(),
+                value_component: MeasureValue::Real {
+                    type_name: "POSITIVE_LENGTH_MEASURE".into(),
+                    value: 0.05,
+                },
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.representation_items.len(), 2);
+    let mut iter = re.representation_items.iter();
+    let RepresentationItem::QualifiedRepresentationItem(qri) = iter.next().unwrap() else {
+        panic!("expected QRI");
+    };
+    assert_eq!(qri.qualifiers.len(), 2);
+    let RepresentationItem::ValueRepresentationItem(vri) = iter.next().unwrap() else {
+        panic!("expected VRI");
+    };
+    let MeasureValue::Real { type_name, value } = &vri.value_component else {
+        panic!("expected Real");
+    };
+    assert_eq!(type_name, "POSITIVE_LENGTH_MEASURE");
+    assert!((value - 0.05).abs() < 1e-9);
+}
+
+#[test]
+fn measure_representation_item_round_trip() {
+    // Complex-MI MEASURE_REPRESENTATION_ITEM in the representation_item arena
+    // (phase measure-arena-1): typed value + unit + value qualifier + the
+    // typed <X>_MEASURE_WITH_UNIT supertype, emitted as the multi-part form.
+    use step_io::ir::pmi::ValueFormatTypeQualifier;
+    use step_io::ir::property::PropertyMeasureUnit;
+    use step_io::ir::representation_item::{
+        MeasureForm, MeasureRepresentationItem, MeasureValue, QualifierRef, RepresentationItem,
+    };
+
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
+    model.units.push(ctx);
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    let vftq = pmi
+        .value_format_type_qualifiers
+        .push(ValueFormatTypeQualifier {
+            format_type: "NR2 1.1".into(),
+        });
+    model
+        .representation_items
+        .push(RepresentationItem::MeasureRepresentationItem(
+            MeasureRepresentationItem {
+                form: MeasureForm::Complex,
+                name: "nominal value".into(),
+                value: MeasureValue::Real {
+                    type_name: "POSITIVE_LENGTH_MEASURE".into(),
+                    value: 1.2,
+                },
+                unit_ref: Some(PropertyMeasureUnit::Named(length_unit)),
+                qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
+                measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    assert!(text.contains("LENGTH_MEASURE_WITH_UNIT"));
+    assert!(text.contains("MEASURE_WITH_UNIT"));
+    assert!(text.contains("QUALIFIED_REPRESENTATION_ITEM"));
+
+    let re = reconvert(&text);
+    assert_eq!(re.representation_items.len(), 1);
+    let RepresentationItem::MeasureRepresentationItem(mri) =
+        re.representation_items.iter().next().unwrap()
+    else {
+        panic!("expected MeasureRepresentationItem");
+    };
+    assert_eq!(mri.name, "nominal value");
+    let MeasureValue::Real { type_name, value } = &mri.value else {
+        panic!("expected Real measure value");
+    };
+    assert_eq!(type_name, "POSITIVE_LENGTH_MEASURE");
+    assert!((value - 1.2).abs() < 1e-9);
+    assert_eq!(mri.qualifiers.len(), 1);
+    assert_eq!(
+        mri.measure_supertype.as_deref(),
+        Some("LENGTH_MEASURE_WITH_UNIT")
+    );
+    assert!(
+        mri.unit_ref.is_some(),
+        "explicit unit ref should round-trip"
+    );
+}
+
+#[test]
+fn tolerance_magnitude_references_arena_measure() {
+    // A geometric tolerance whose magnitude is a complex MEASURE_REPRESENTATION_ITEM
+    // references the representation_item arena entry (phase measure-arena-2)
+    // instead of re-emitting a downgraded simple measure — no duplicate MRI.
+    use step_io::ir::pmi::{
+        GeometricTolerance, GeometricToleranceData, ToleranceMagnitude, ValueFormatTypeQualifier,
+    };
+    use step_io::ir::property::PropertyMeasureUnit;
+    use step_io::ir::representation_item::{
+        MeasureForm, MeasureRepresentationItem, MeasureValue, QualifierRef, RepresentationItem,
+    };
+    let (mut model, sa, ..) = shape_aspect_relationship_fixture();
+    let ctx = mm_radian_steradian(&mut model);
+    let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
+    model.units.push(ctx);
+    let vftq = model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .value_format_type_qualifiers
+        .push(ValueFormatTypeQualifier {
+            format_type: "NR2 1.1".into(),
+        });
+    let mri = model
+        .representation_items
+        .push(RepresentationItem::MeasureRepresentationItem(
+            MeasureRepresentationItem {
+                form: MeasureForm::Complex,
+                name: "nominal value".into(),
+                value: MeasureValue::Real {
+                    type_name: "POSITIVE_LENGTH_MEASURE".into(),
+                    value: 0.1,
+                },
+                unit_ref: Some(PropertyMeasureUnit::Named(length)),
+                qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
+                measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
+            },
+        ));
+    model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .geometric_tolerances
+        .push(GeometricTolerance::Flatness(GeometricToleranceData {
+            name: "t".into(),
+            description: String::new(),
+            magnitude: ToleranceMagnitude::RepresentationItem(mri),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+            modifiers: Vec::new(),
+            unit_size: None,
+            defined_area_unit: None,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    // Complex MRI emitted once (arena), in full multi-part form.
+    assert!(text.contains("LENGTH_MEASURE_WITH_UNIT"));
+    assert!(text.contains("QUALIFIED_REPRESENTATION_ITEM"));
+    // No downgraded duplicate: exactly one MEASURE_REPRESENTATION_ITEM (the complex part).
+    assert_eq!(
+        text.matches("MEASURE_REPRESENTATION_ITEM").count(),
+        1,
+        "tolerance must reference the arena MRI, not emit a duplicate simple measure"
+    );
+
+    // Round-trip the resolver: the re-read tolerance magnitude resolves back
+    // to a representation_item arena ref (not a cloned simple measure).
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    let GeometricTolerance::Flatness(d) = re_pmi
+        .geometric_tolerances
+        .iter()
+        .next()
+        .expect("a geometric tolerance")
+    else {
+        panic!("expected Flatness");
+    };
+    assert!(
+        matches!(d.magnitude, ToleranceMagnitude::RepresentationItem(_)),
+        "magnitude should round-trip as a representation_item arena ref"
+    );
+}
+
+#[test]
+fn property_item_references_arena_measure() {
+    // A property whose REPRESENTATION item is a complex MEASURE_REPRESENTATION_ITEM
+    // references the representation_item arena (phase measure-arena-3) instead
+    // of re-emitting a downgraded simple measure — no duplicate MRI.
+    use step_io::ir::pmi::ValueFormatTypeQualifier;
+    use step_io::ir::property::{
+        CharacterizedDefinition, GeneralProperty, Property, PropertyDefinition,
+        PropertyDefinitionData, PropertyItem, PropertyMeasureUnit, PropertyPool,
+    };
+    use step_io::ir::representation_item::{
+        MeasureForm, MeasureRepresentationItem, MeasureValue, QualifierRef, RepresentationItem,
+    };
+    use step_io::ir::shape_rep::RepresentationContextRef;
+
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
+    let ctx_id = model.units.push(ctx);
+    let vftq = model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .value_format_type_qualifiers
+        .push(ValueFormatTypeQualifier {
+            format_type: "NR2 1.1".into(),
+        });
+    let mri = model
+        .representation_items
+        .push(RepresentationItem::MeasureRepresentationItem(
+            MeasureRepresentationItem {
+                form: MeasureForm::Complex,
+                name: "nominal value".into(),
+                value: MeasureValue::Real {
+                    type_name: "POSITIVE_LENGTH_MEASURE".into(),
+                    value: 0.1,
+                },
+                unit_ref: Some(PropertyMeasureUnit::Named(length)),
+                qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
+                measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
+            },
+        ));
+
+    let mut pool = PropertyPool::default();
+    let gp_id = pool.general_properties.push(GeneralProperty {
+        id: "GP1".into(),
+        name: "p".into(),
+        description: None,
+    });
+    let pd_id =
+        pool.property_definitions
+            .push(PropertyDefinition::Itself(PropertyDefinitionData {
+                name: "validation property".into(),
+                description: String::new(),
+                definition: CharacterizedDefinition::GeneralProperty(gp_id),
+            }));
+    pool.properties.push(Property {
+        name: "validation property".into(),
+        description: None,
+        definition: step_io::ir::property::PropertyDefinitionRef::PropertyDefinition(pd_id),
+        representation_name: "gvp".into(),
+        context: Some(RepresentationContextRef::Unitful(ctx_id)),
+        items: vec![PropertyItem::MeasureItem(mri)],
+    });
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    assert!(text.contains("QUALIFIED_REPRESENTATION_ITEM"));
+    // No downgraded duplicate: exactly one MEASURE_REPRESENTATION_ITEM (the complex part).
+    assert_eq!(
+        text.matches("MEASURE_REPRESENTATION_ITEM").count(),
+        1,
+        "property must reference the arena MRI, not emit a duplicate simple measure"
+    );
+
+    let re = reconvert(&text);
+    let re_pool = re.properties.as_ref().expect("properties pool survives");
+    let prop = re_pool
+        .properties
+        .iter()
+        .find(|p| p.representation_name == "gvp")
+        .expect("the validation property survives round-trip");
+    assert!(
+        prop.items
+            .iter()
+            .any(|i| matches!(i, PropertyItem::MeasureItem(_))),
+        "the measure item should round-trip as a representation_item arena ref"
+    );
+}
+
+#[test]
+fn simple_measure_representation_item_round_trips_via_arena() {
+    // A simple MEASURE_REPRESENTATION_ITEM is captured in the representation_item
+    // arena (phase measure-arena-4) and emitted as the bare 3-attr form. The
+    // verbatim measure_value preserves a type the old MeasureKind whitelist
+    // dropped (NUMERIC_MEASURE).
+    use step_io::ir::property::PropertyMeasureUnit;
+    use step_io::ir::representation_item::{
+        MeasureForm, MeasureRepresentationItem, MeasureValue, RepresentationItem,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
+    model.units.push(ctx);
+    model
+        .representation_items
+        .push(RepresentationItem::MeasureRepresentationItem(
+            MeasureRepresentationItem {
+                form: MeasureForm::Simple,
+                name: "numeric measure".into(),
+                value: MeasureValue::Real {
+                    type_name: "NUMERIC_MEASURE".into(),
+                    value: 3.5,
+                },
+                unit_ref: Some(PropertyMeasureUnit::Named(length)),
+                qualifiers: Vec::new(),
+                measure_supertype: None,
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    assert!(text.contains("NUMERIC_MEASURE"));
+    // Simple form, not the complex multi-part body.
+    assert!(!text.contains("QUALIFIED_REPRESENTATION_ITEM"));
+    assert_eq!(
+        text.matches("MEASURE_REPRESENTATION_ITEM").count(),
+        1,
+        "exactly one MRI line, no duplicate"
+    );
+
+    let re = reconvert(&text);
+    assert_eq!(re.representation_items.len(), 1);
+    let RepresentationItem::MeasureRepresentationItem(mri) =
+        re.representation_items.iter().next().unwrap()
+    else {
+        panic!("expected MeasureRepresentationItem");
+    };
+    assert!(
+        matches!(mri.form, MeasureForm::Simple),
+        "round-trips as the simple form"
+    );
+    let MeasureValue::Real { type_name, value } = &mri.value else {
+        panic!("expected Real measure value");
+    };
+    assert_eq!(
+        type_name, "NUMERIC_MEASURE",
+        "verbatim type preserved, not dropped"
+    );
+    assert!((value - 3.5).abs() < 1e-9);
+}
+
+#[test]
+fn measure_qualification_round_trip() {
+    // MEASURE_QUALIFICATION — qualifiers SET covers the two corpus-modelled
+    // value_qualifier variants (TypeQualifier, ValueFormatTypeQualifier).
+    use step_io::ir::pmi::{
+        MeasureQualification, TypeQualifier, ValueFormatTypeQualifier, ValueQualifier,
+    };
+    use step_io::ir::units::MeasureWithUnit;
+
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
+    model.units.push(ctx);
+
+    let mwu_id = model
+        .units_pool
+        .as_mut()
+        .expect("units pool seeded")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
+            value: 1.0,
+            unit: length_unit,
+        });
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    let tq = pmi.type_qualifiers.push(TypeQualifier {
+        name: "maximum".into(),
+    });
+    let vftq = pmi
+        .value_format_type_qualifiers
+        .push(ValueFormatTypeQualifier {
+            format_type: "NR2 1.3".into(),
+        });
+    pmi.measure_qualifications.push(MeasureQualification {
+        name: "mq".into(),
+        description: String::new(),
+        qualified_measure: mwu_id,
+        qualifiers: vec![
+            ValueQualifier::TypeQualifier(tq),
+            ValueQualifier::ValueFormatTypeQualifier(vftq),
+        ],
+    });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.measure_qualifications.len(), 1);
+    let mq = re_pmi.measure_qualifications.iter().next().unwrap();
+    assert_eq!(mq.name, "mq");
+    assert_eq!(mq.qualifiers.len(), 2);
+    assert!(matches!(mq.qualifiers[0], ValueQualifier::TypeQualifier(_)));
+    assert!(matches!(
+        mq.qualifiers[1],
+        ValueQualifier::ValueFormatTypeQualifier(_)
+    ));
+}
+
+#[test]
+#[allow(clippy::too_many_lines)]
+fn projected_zone_definition_round_trip() {
+    // PROJECTED_ZONE_DEFINITION — single_struct in the tolerance_zone_definition
+    // arena. Refs ToleranceZone + ShapeAspect (projection_end) +
+    // MeasureWithUnit (projected_length).
+    use step_io::ir::pmi::{
+        GeometricTolerance, GeometricToleranceData, GeometricToleranceRef, ProjectedZoneDefinition,
+        ToleranceMagnitude, ToleranceZoneForm,
+    };
+    use step_io::ir::shape_rep::ToleranceZone;
+    use step_io::ir::units::MeasureWithUnit;
+
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+    let sa = model.shape_aspects.push(ShapeAspect {
+        name: "sa".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+    let sa_end = model.shape_aspects.push(ShapeAspect {
+        name: "end".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+    let mwu_id = model
+        .units_pool
+        .as_mut()
+        .expect("units pool seeded")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
+            value: 5.0,
+            unit: length_unit,
+        });
+    let mwu = model
+        .units_pool
+        .as_mut()
+        .expect("units pool")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
+            value: 0.1,
+            unit: length_unit,
+        });
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    let gt = pmi
+        .geometric_tolerances
+        .push(GeometricTolerance::Flatness(GeometricToleranceData {
+            name: "t".into(),
+            description: String::new(),
+            magnitude: ToleranceMagnitude::MeasureWithUnit(mwu),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+            modifiers: Vec::new(),
+            unit_size: None,
+            defined_area_unit: None,
+        }));
+    let form = pmi.tolerance_zone_forms.push(ToleranceZoneForm {
+        name: "cylindrical".into(),
+    });
+    let tz_id = model.tolerance_zones.push(ToleranceZone {
+        name: "tz".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        defining_tolerance: vec![GeometricToleranceRef::Plain(gt)],
+        form,
+    });
+    model
+        .pmi
+        .as_mut()
+        .unwrap()
+        .tolerance_zone_definitions
+        .push(ProjectedZoneDefinition {
+            zone: tz_id,
+            boundaries: vec![ShapeAspectRef::ShapeAspect(sa)],
+            projection_end: ShapeAspectRef::ShapeAspect(sa_end),
+            projected_length: ToleranceMagnitude::MeasureWithUnit(mwu_id),
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.expect("pmi pool");
+    assert_eq!(re_pmi.tolerance_zone_definitions.len(), 1);
+    let pzd = re_pmi.tolerance_zone_definitions.iter().next().unwrap();
+    assert_eq!(pzd.boundaries.len(), 1);
+    assert!(matches!(pzd.projection_end, ShapeAspectRef::ShapeAspect(_)));
+}
+
+#[test]
+fn datum_system_round_trip() {
+    // DATUM_SYSTEM — a shape_aspect subtype whose `constituents` reference
+    // the general_datum_reference arena.
+    use step_io::ir::pmi::{
+        Datum, GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData,
+    };
+    use step_io::ir::shape_rep::DatumSystem;
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let mut pmi = PmiPool::default();
+    let datum = pmi.datums.push(Datum {
+        name: String::new(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        identification: "A".into(),
+    });
+    let gdr = pmi
+        .general_datum_references
+        .push(GeneralDatumReference::Compartment(
+            GeneralDatumReferenceData {
+                name: String::new(),
+                description: String::new(),
+                target: part_pid,
+                product_definitional: false,
+                base: GeneralDatumBase::Datum(datum),
+            },
+        ));
+    model.pmi = Some(pmi);
+
+    model.datum_systems.push(DatumSystem {
+        name: "DS".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        constituents: vec![gdr],
+    });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.datum_systems.len(), 1);
+    let ds = re.datum_systems.iter().next().unwrap();
+    assert_eq!(ds.name, "DS");
+    assert_eq!(ds.constituents.len(), 1, "constituent round-trips");
+    assert_eq!(ds.target, step_io::ProductId(0));
+}
+
+#[test]
+fn datum_target_cluster_round_trip() {
+    // DATUM_TARGET + PLACED_DATUM_TARGET_FEATURE + FEATURE_FOR_DATUM_TARGET_RELATIONSHIP.
+    // Three new shape_aspect-family entities sharing the same product chain.
+    use step_io::ir::shape_aspect_ref::ShapeAspectRef;
+    use step_io::ir::shape_rep::{
+        DatumTarget, PlacedDatumTargetFeature, ShapeAspect, ShapeAspectRelationship,
+        ShapeAspectRelationshipKind,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let sa_id = model.shape_aspects.push(ShapeAspect {
+        name: "feature".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+    let dt_id = model.datum_targets.push(DatumTarget {
+        name: "datum target".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        target_id: "A1".into(),
+    });
+    let _pdtf_id = model
+        .placed_datum_target_features
+        .push(PlacedDatumTargetFeature {
+            name: "placed target".into(),
+            description: String::new(),
+            target: part_pid,
+            product_definitional: false,
+            target_id: "B2".into(),
+        });
+    model
+        .shape_aspect_relationships
+        .push(ShapeAspectRelationship {
+            name: String::new(),
+            description: String::new(),
+            relating_shape_aspect: ShapeAspectRef::ShapeAspect(sa_id),
+            related_shape_aspect: ShapeAspectRef::DatumTarget(dt_id),
+            kind: ShapeAspectRelationshipKind::FeatureForDatumTarget,
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.datum_targets.len(), 1, "DATUM_TARGET round-trips");
+    assert_eq!(
+        re.datum_targets.iter().next().unwrap().target_id,
+        "A1",
+        "target_id preserved"
+    );
+    assert_eq!(
+        re.placed_datum_target_features.len(),
+        1,
+        "PLACED_DATUM_TARGET_FEATURE round-trips"
+    );
+    assert_eq!(
+        re.placed_datum_target_features
+            .iter()
+            .next()
+            .unwrap()
+            .target_id,
+        "B2"
+    );
+    assert_eq!(re.shape_aspect_relationships.len(), 1);
+    let rel = re.shape_aspect_relationships.iter().next().unwrap();
+    assert_eq!(rel.kind, ShapeAspectRelationshipKind::FeatureForDatumTarget);
+    assert!(matches!(
+        rel.related_shape_aspect,
+        ShapeAspectRef::DatumTarget(_)
+    ));
+}
+
+#[test]
+fn geometric_tolerance_with_datum_reference_round_trip() {
+    // PERPENDICULARITY_TOLERANCE — a geometric_tolerance_with_datum_reference
+    // simple variant: magnitude + toleranced_shape_aspect + datum_system list.
+    use step_io::ir::pmi::{
+        GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData,
+        ToleranceMagnitude,
+    };
+    use step_io::ir::shape_rep::DatumSystem;
+    use step_io::ir::units::MeasureWithUnit;
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let sa = model.shape_aspects.push(ShapeAspect {
+        name: "sa".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+
+    // DatumSystem with empty `constituents` — the constituent resolution is
+    // covered by `datum_system_round_trip`; this test exercises the tolerance.
+    let ds = model.datum_systems.push(DatumSystem {
+        name: "DS".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        constituents: Vec::new(),
+    });
+
+    let mwu = model
+        .units_pool
+        .as_mut()
+        .expect("units pool")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
+            value: 0.1,
+            unit: length_unit,
+        });
+    let mut pmi = PmiPool::default();
+    pmi.geometric_tolerance_with_datum_references.push(
+        GeometricToleranceWithDatumReference::Perpendicularity(
+            GeometricToleranceWithDatumReferenceData {
+                name: "t".into(),
+                description: String::new(),
+                magnitude: ToleranceMagnitude::MeasureWithUnit(mwu),
+                toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+                datum_system: vec![ds],
+                modifiers: Vec::new(),
+                displacement: None,
+            },
+        ),
+    );
+    model.pmi = Some(pmi);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    assert_eq!(re_pmi.geometric_tolerance_with_datum_references.len(), 1);
+    let gt = re_pmi
+        .geometric_tolerance_with_datum_references
+        .iter()
+        .next()
+        .unwrap();
+    let GeometricToleranceWithDatumReference::Perpendicularity(d) = gt else {
+        panic!("expected Perpendicularity, got {gt:?}");
+    };
+    assert_eq!(d.datum_system.len(), 1, "datum_system round-trips");
+    assert!(matches!(
+        d.toleranced_shape_aspect,
+        GeometricToleranceTarget::ShapeAspect(ShapeAspectRef::ShapeAspect(_))
+    ));
+}
+
+#[test]
+fn complex_datum_ref_tolerance_round_trip() {
+    // POSITION_TOLERANCE — emitted as the multiple-inheritance complex
+    // (GEOMETRIC_TOLERANCE GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE
+    // POSITION_TOLERANCE) and read back through the complex handler.
+    use step_io::ir::pmi::{
+        GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData,
+        ToleranceMagnitude,
+    };
+    use step_io::ir::shape_rep::DatumSystem;
+    use step_io::ir::units::MeasureWithUnit;
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let sa = model.shape_aspects.push(ShapeAspect {
+        name: "sa".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+    let ds = model.datum_systems.push(DatumSystem {
+        name: "DS".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        constituents: Vec::new(),
+    });
+
+    let mwu = model
+        .units_pool
+        .as_mut()
+        .expect("units pool")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
+            value: 0.1,
+            unit: length_unit,
+        });
+
+    let mut pmi = PmiPool::default();
+    pmi.geometric_tolerance_with_datum_references.push(
+        GeometricToleranceWithDatumReference::Position(GeometricToleranceWithDatumReferenceData {
+            name: "t".into(),
+            description: String::new(),
+            magnitude: ToleranceMagnitude::MeasureWithUnit(mwu),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+            datum_system: vec![ds],
+            modifiers: Vec::new(),
+            displacement: None,
+        }),
+    );
+    model.pmi = Some(pmi);
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE"),
+        "POSITION_TOLERANCE emits as the complex MI form"
+    );
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    assert_eq!(re_pmi.geometric_tolerance_with_datum_references.len(), 1);
+    let gt = re_pmi
+        .geometric_tolerance_with_datum_references
+        .iter()
+        .next()
+        .unwrap();
+    let GeometricToleranceWithDatumReference::Position(d) = gt else {
+        panic!("expected Position, got {gt:?}");
+    };
+    assert_eq!(d.datum_system.len(), 1, "datum_system round-trips");
+}
+
+#[test]
+#[allow(clippy::too_many_lines)]
+fn geometric_tolerance_with_modifiers_round_trip() {
+    // Phase gt-modifiers — GEOMETRIC_TOLERANCE_WITH_MODIFIERS part round-trip.
+    // Tests both:
+    // - datum-ref Position with modifier (4-part complex MI)
+    // - form-tolerance Roundness with modifier (3-part complex MI; the
+    //   simple form would be a standalone FLATNESS/ROUNDNESS).
+    use step_io::ir::pmi::{
+        Datum, GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData,
+        GeometricTolerance, GeometricToleranceData, GeometricToleranceModifier,
+        GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData,
+        ToleranceMagnitude,
+    };
+    use step_io::ir::shape_rep::{DatumSystem, ShapeAspect};
+    use step_io::ir::units::MeasureWithUnit;
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+    let sa = model.shape_aspects.push(ShapeAspect {
+        name: "feature".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+    let ds = model.datum_systems.push(DatumSystem {
+        name: "DS".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        constituents: Vec::new(),
+    });
+    let mut pmi = PmiPool::default();
+    let _datum = pmi.datums.push(Datum {
+        name: String::new(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        identification: "A".into(),
+    });
+    let _gdr = pmi
+        .general_datum_references
+        .push(GeneralDatumReference::Compartment(
+            GeneralDatumReferenceData {
+                name: String::new(),
+                description: String::new(),
+                target: part_pid,
+                product_definitional: false,
+                base: GeneralDatumBase::Datum(step_io::ir::DatumId(0)),
+            },
+        ));
+    let mwu = model
+        .units_pool
+        .as_mut()
+        .expect("units pool")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
+            value: 0.1,
+            unit: length_unit,
+        });
+    let magnitude = || ToleranceMagnitude::MeasureWithUnit(mwu);
+    pmi.geometric_tolerance_with_datum_references.push(
+        GeometricToleranceWithDatumReference::Position(GeometricToleranceWithDatumReferenceData {
+            name: "P".into(),
+            description: String::new(),
+            magnitude: magnitude(),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+            datum_system: vec![ds],
+            modifiers: vec![GeometricToleranceModifier::MaximumMaterialRequirement],
+            displacement: None,
+        }),
+    );
+    pmi.geometric_tolerances
+        .push(GeometricTolerance::Roundness(GeometricToleranceData {
+            name: "R".into(),
+            description: String::new(),
+            magnitude: magnitude(),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+            modifiers: vec![GeometricToleranceModifier::LeastMaterialRequirement],
+            unit_size: None,
+            defined_area_unit: None,
+        }));
+    model.pmi = Some(pmi);
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("GEOMETRIC_TOLERANCE_WITH_MODIFIERS"),
+        "expected WM part in complex MI output"
+    );
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    // datum-ref Position with modifier survives the round-trip.
+    let pos = re_pmi
+        .geometric_tolerance_with_datum_references
+        .iter()
+        .find_map(|gt| match gt {
+            GeometricToleranceWithDatumReference::Position(d) => Some(d),
+            _ => None,
+        })
+        .expect("Position variant present after round-trip");
+    assert_eq!(
+        pos.modifiers,
+        vec![GeometricToleranceModifier::MaximumMaterialRequirement],
+        "Position modifier preserved"
+    );
+    // Form-tolerance Roundness with modifier survives.
+    let round = re_pmi
+        .geometric_tolerances
+        .iter()
+        .find_map(|gt| match gt {
+            GeometricTolerance::Roundness(d) => Some(d),
+            _ => None,
+        })
+        .expect("Roundness variant present after round-trip");
+    assert_eq!(
+        round.modifiers,
+        vec![GeometricToleranceModifier::LeastMaterialRequirement],
+        "Roundness modifier preserved"
+    );
+}
+
+#[test]
+#[allow(clippy::too_many_lines)]
+fn gt_defined_unit_area_unit_displacement_round_trip() {
+    // Phase gt-defined-disposed — three new complex MI parts share the
+    // GT base struct:
+    // - WDU only (Flatness + unit_size)
+    // - WDU + WDAU (Flatness + unit_size + rectangular area + second_unit_size)
+    // - WDR + UD (SurfaceProfile + datum_system + displacement)
+    use step_io::ir::pmi::{
+        AreaUnitType, Datum, DefinedAreaUnit, GeneralDatumBase, GeneralDatumReference,
+        GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
+        GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData,
+        ToleranceMagnitude,
+    };
+    use step_io::ir::shape_rep::{DatumSystem, ShapeAspect};
+    use step_io::ir::units::MeasureWithUnit;
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
+    // Push an MWU into the units pool so unit_size / displacement refs
+    // have a valid step id after emit (mwu_step_ids[0]).
+    let mwu_id = {
+        let pool = model.units_pool.as_mut().expect("units pool exists");
+        pool.measure_with_units
+            .push(step_io::ir::units::MeasureWithUnit::Length {
+                value: 1.0,
+                unit: length_unit,
+            })
+    };
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+    let sa = model.shape_aspects.push(ShapeAspect {
+        name: "feature".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+    let ds = model.datum_systems.push(DatumSystem {
+        name: "DS".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        constituents: Vec::new(),
+    });
+    let mut pmi = PmiPool::default();
+    let _datum = pmi.datums.push(Datum {
+        name: String::new(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+        identification: "A".into(),
+    });
+    let _gdr = pmi
+        .general_datum_references
+        .push(GeneralDatumReference::Compartment(
+            GeneralDatumReferenceData {
+                name: String::new(),
+                description: String::new(),
+                target: part_pid,
+                product_definitional: false,
+                base: GeneralDatumBase::Datum(step_io::ir::DatumId(0)),
+            },
+        ));
+    let mwu = model
+        .units_pool
+        .as_mut()
+        .expect("units pool")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
+            value: 0.1,
+            unit: length_unit,
+        });
+    let magnitude = || ToleranceMagnitude::MeasureWithUnit(mwu);
+    // Flatness + unit_size only
+    pmi.geometric_tolerances
+        .push(GeometricTolerance::Flatness(GeometricToleranceData {
+            name: "F1".into(),
+            description: String::new(),
+            magnitude: magnitude(),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+            modifiers: Vec::new(),
+            unit_size: Some(ToleranceMagnitude::MeasureWithUnit(mwu_id)),
+            defined_area_unit: None,
+        }));
+    // Flatness + unit_size + rectangular area + second_unit_size
+    pmi.geometric_tolerances
+        .push(GeometricTolerance::Flatness(GeometricToleranceData {
+            name: "F2".into(),
+            description: String::new(),
+            magnitude: magnitude(),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+            modifiers: Vec::new(),
+            unit_size: Some(ToleranceMagnitude::MeasureWithUnit(mwu_id)),
+            defined_area_unit: Some(DefinedAreaUnit {
+                area_type: AreaUnitType::Rectangular,
+                second_unit_size: Some(ToleranceMagnitude::MeasureWithUnit(mwu_id)),
+            }),
+        }));
+    // SurfaceProfile + datum_system + displacement
+    pmi.geometric_tolerance_with_datum_references.push(
+        GeometricToleranceWithDatumReference::SurfaceProfile(
+            GeometricToleranceWithDatumReferenceData {
+                name: "SP".into(),
+                description: String::new(),
+                magnitude: magnitude(),
+                toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+                datum_system: vec![ds],
+                modifiers: Vec::new(),
+                displacement: Some(ToleranceMagnitude::MeasureWithUnit(mwu_id)),
+            },
+        ),
+    );
+    model.pmi = Some(pmi);
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT"),
+        "expected WDU part"
+    );
+    assert!(
+        text.contains("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT"),
+        "expected WDAU part"
+    );
+    assert!(
+        text.contains("UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE"),
+        "expected UD part"
+    );
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    // Two Flatness variants — first WDU-only, second WDU+WDAU.
+    let flats: Vec<_> = re_pmi
+        .geometric_tolerances
+        .iter()
+        .filter_map(|gt| match gt {
+            GeometricTolerance::Flatness(d) => Some(d),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(flats.len(), 2);
+    assert!(flats[0].unit_size.is_some(), "F1 unit_size preserved");
+    assert!(flats[0].defined_area_unit.is_none(), "F1 has no area unit");
+    assert!(flats[1].unit_size.is_some(), "F2 unit_size preserved");
+    let area = flats[1]
+        .defined_area_unit
+        .as_ref()
+        .expect("F2 area unit preserved");
+    assert_eq!(area.area_type, AreaUnitType::Rectangular);
+    assert!(
+        area.second_unit_size.is_some(),
+        "F2 second_unit_size preserved"
+    );
+    // SurfaceProfile with displacement.
+    let sp = re_pmi
+        .geometric_tolerance_with_datum_references
+        .iter()
+        .find_map(|gt| match gt {
+            GeometricToleranceWithDatumReference::SurfaceProfile(d) => Some(d),
+            _ => None,
+        })
+        .expect("SurfaceProfile present after round-trip");
+    assert!(sp.displacement.is_some(), "SP displacement preserved");
+}
+
+#[test]
+#[allow(clippy::too_many_lines)]
+fn gt_defined_unit_displacement_reference_complex_measure() {
+    // Regression: unit_size / second_unit_size / displacement may reference a
+    // complex MEASURE_REPRESENTATION_ITEM (qualified measure), exactly like
+    // `magnitude`. The old `mwu_id_map`-only resolution silently dropped these
+    // to None, dropping the WDU / WDAU / UD complex parts on round-trip (the
+    // NIST ctc_02 / ctc_03 loss). They must now survive as RepresentationItem.
+    use step_io::ir::pmi::{
+        AreaUnitType, DefinedAreaUnit, GeometricTolerance, GeometricToleranceData,
+        GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData,
+        ToleranceMagnitude, ValueFormatTypeQualifier,
+    };
+    use step_io::ir::property::PropertyMeasureUnit;
+    use step_io::ir::representation_item::{
+        MeasureForm, MeasureRepresentationItem, MeasureValue, QualifierRef, RepresentationItem,
+    };
+    use step_io::ir::shape_rep::DatumSystem;
+
+    let (mut model, sa, ..) = shape_aspect_relationship_fixture();
+    let ctx = mm_radian_steradian(&mut model);
+    let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
+    model.units.push(ctx);
+    let target = model.shape_aspects[sa].target;
+    let ds = model.datum_systems.push(DatumSystem {
+        name: "DS".into(),
+        description: String::new(),
+        target,
+        product_definitional: false,
+        constituents: Vec::new(),
+    });
+    let vftq = model
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .value_format_type_qualifiers
+        .push(ValueFormatTypeQualifier {
+            format_type: "NR2 1.1".into(),
+        });
+    // A complex qualified measure in the representation_item arena — the form
+    // that lives in repr_item_id_map, not mwu_id_map.
+    let mri = model
+        .representation_items
+        .push(RepresentationItem::MeasureRepresentationItem(
+            MeasureRepresentationItem {
+                form: MeasureForm::Complex,
+                name: String::new(),
+                value: MeasureValue::Real {
+                    type_name: "LENGTH_MEASURE".into(),
+                    value: 0.25,
+                },
+                unit_ref: Some(PropertyMeasureUnit::Named(length)),
+                qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
+                measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
+            },
+        ));
+    let pmi = model.pmi.get_or_insert_with(PmiPool::default);
+    // Flatness + WDU(unit_size) + WDAU(second_unit_size), both complex measures.
+    pmi.geometric_tolerances
+        .push(GeometricTolerance::Flatness(GeometricToleranceData {
+            name: "F".into(),
+            description: String::new(),
+            magnitude: ToleranceMagnitude::RepresentationItem(mri),
+            toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+            modifiers: Vec::new(),
+            unit_size: Some(ToleranceMagnitude::RepresentationItem(mri)),
+            defined_area_unit: Some(DefinedAreaUnit {
+                area_type: AreaUnitType::Rectangular,
+                second_unit_size: Some(ToleranceMagnitude::RepresentationItem(mri)),
+            }),
+        }));
+    // SurfaceProfile + WDR + UD(displacement), complex measure.
+    pmi.geometric_tolerance_with_datum_references.push(
+        GeometricToleranceWithDatumReference::SurfaceProfile(
+            GeometricToleranceWithDatumReferenceData {
+                name: "SP".into(),
+                description: String::new(),
+                magnitude: ToleranceMagnitude::RepresentationItem(mri),
+                toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+                datum_system: vec![ds],
+                modifiers: Vec::new(),
+                displacement: Some(ToleranceMagnitude::RepresentationItem(mri)),
+            },
+        ),
+    );
+
+    let text = model.write_to_string().expect("write");
+    assert!(text.contains("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT"));
+    assert!(text.contains("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT"));
+    assert!(text.contains("UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE"));
+
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    let flat = re_pmi
+        .geometric_tolerances
+        .iter()
+        .find_map(|gt| match gt {
+            GeometricTolerance::Flatness(d) => Some(d),
+            _ => None,
+        })
+        .expect("Flatness present");
+    assert!(
+        matches!(
+            flat.unit_size,
+            Some(ToleranceMagnitude::RepresentationItem(_))
+        ),
+        "unit_size complex measure must round-trip as a repr-item ref"
+    );
+    let area = flat
+        .defined_area_unit
+        .as_ref()
+        .expect("defined_area_unit preserved");
+    assert!(
+        matches!(
+            area.second_unit_size,
+            Some(ToleranceMagnitude::RepresentationItem(_))
+        ),
+        "second_unit_size complex measure must round-trip as a repr-item ref"
+    );
+    let sp = re_pmi
+        .geometric_tolerance_with_datum_references
+        .iter()
+        .find_map(|gt| match gt {
+            GeometricToleranceWithDatumReference::SurfaceProfile(d) => Some(d),
+            _ => None,
+        })
+        .expect("SurfaceProfile present");
+    assert!(
+        matches!(
+            sp.displacement,
+            Some(ToleranceMagnitude::RepresentationItem(_))
+        ),
+        "displacement complex measure must round-trip as a repr-item ref"
+    );
+}
+
+#[test]
+fn plus_minus_tolerance_round_trip() {
+    // PLUS_MINUS_TOLERANCE — range = TOLERANCE_VALUE, toleranced_dimension =
+    // DIMENSIONAL_SIZE. Exercises both SELECT reference enums.
+    use step_io::ir::pmi::{
+        DimensionalCharacteristic, DimensionalSize, DimensionalSizeKind, PlusMinusTolerance,
+        ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue,
+    };
+    use step_io::ir::units::MeasureWithUnit;
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
+    model.units.push(ctx);
+    let solid_id = push_minimal_solid(&mut model);
+    let identity_frame = model.geometry.identity_placement();
+
+    let mut tree = AssemblyTree::default();
+    let part_pid = tree.products.push(Product {
+        id: "Part".into(),
+        name: "Part".into(),
+        description: None,
+        geometry: Some(GeometryLeaf::Solid(SolidContent {
+            ids: vec![solid_id],
+        })),
+        instances: vec![],
+        shape_ref_frame: identity_frame,
+        outer_sr_frame: None,
+        category: None,
+        formation_with_source: false,
+        geometry_context: Some(UnitContextId(0)),
+        product_context: None,
+        pdef_context: None,
+        representation_id: None,
+        outer_representation_id: None,
+        associated_documents: Vec::new(),
+        formation: None,
+        pdef: None,
+    });
+    tree.roots = vec![part_pid];
+    model.assembly = Some(tree);
+
+    let sa = model.shape_aspects.push(ShapeAspect {
+        name: "sa".into(),
+        description: String::new(),
+        target: part_pid,
+        product_definitional: false,
+    });
+
+    let mwu = model
+        .units_pool
+        .as_mut()
+        .expect("units pool")
+        .measure_with_units
+        .push(MeasureWithUnit::Length {
+            value: 0.02,
+            unit: length_unit,
+        });
+    let bound = || ToleranceMagnitude::MeasureWithUnit(mwu);
+    let mut pmi = PmiPool::default();
+    let ds = pmi.dimensional_sizes.push(DimensionalSize {
+        applies_to: ShapeAspectRef::ShapeAspect(sa),
+        name: "diameter".into(),
+        kind: DimensionalSizeKind::Plain,
+    });
+    let tv = pmi.tolerance_values.push(ToleranceValue {
+        lower_bound: bound(),
+        upper_bound: bound(),
+    });
+    pmi.plus_minus_tolerances.push(PlusMinusTolerance {
+        range: ToleranceMethodDefinition::Value(tv),
+        toleranced_dimension: DimensionalCharacteristic::Size(ds),
+    });
+    model.pmi = Some(pmi);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    assert_eq!(re_pmi.tolerance_values.len(), 1);
+    assert_eq!(re_pmi.plus_minus_tolerances.len(), 1);
+    let pmt = re_pmi.plus_minus_tolerances.iter().next().unwrap();
+    assert!(matches!(pmt.range, ToleranceMethodDefinition::Value(_)));
+    assert!(matches!(
+        pmt.toleranced_dimension,
+        DimensionalCharacteristic::Size(_)
+    ));
+}
+
+#[test]
+fn draughting_pre_defined_text_font_round_trip() {
+    // DRAUGHTING_PRE_DEFINED_TEXT_FONT — a pmi-pool 1-string leaf primitive.
+    use step_io::ir::pmi::DraughtingPreDefinedTextFont;
+    let mut model = empty_model();
+    let mut pmi = PmiPool::default();
+    pmi.draughting_pre_defined_text_fonts
+        .push(DraughtingPreDefinedTextFont {
+            name: "standard".into(),
+        });
+    model.pmi = Some(pmi);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_pmi = re.pmi.as_ref().expect("pmi pool");
+    assert_eq!(re_pmi.draughting_pre_defined_text_fonts.len(), 1);
+    assert_eq!(
+        re_pmi
+            .draughting_pre_defined_text_fonts
+            .iter()
+            .next()
+            .unwrap()
+            .name,
+        "standard"
+    );
+}
+
+#[test]
+fn pre_defined_curve_font_family_round_trip() {
+    // Both PreDefinedCurveFont variants — Plain (corpus 0 self variant) and
+    // Draughting (corpus 104k) — share the visualization::pre_defined_curve_fonts
+    // arena per the ir.toml blueprint.
+    use step_io::ir::visualization::{
+        DraughtingPreDefinedCurveFont, PreDefinedCurveFont, PreDefinedCurveFontData,
+        VisualizationPool,
+    };
+    let mut model = empty_model();
+    let mut viz = VisualizationPool::default();
+    viz.pre_defined_curve_fonts
+        .push(PreDefinedCurveFont::Plain(PreDefinedCurveFontData {
+            name: "continuous".into(),
+        }));
+    viz.pre_defined_curve_fonts
+        .push(PreDefinedCurveFont::Draughting(
+            DraughtingPreDefinedCurveFont {
+                name: "dashed".into(),
+            },
+        ));
+    model.visualization = Some(viz);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.as_ref().expect("visualization pool");
+    assert_eq!(re_viz.pre_defined_curve_fonts.len(), 2);
+    let mut iter = re_viz.pre_defined_curve_fonts.iter();
+    match iter.next().unwrap() {
+        PreDefinedCurveFont::Plain(d) => assert_eq!(d.name, "continuous"),
+        PreDefinedCurveFont::Draughting(_) => panic!("expected Plain first"),
+    }
+    match iter.next().unwrap() {
+        PreDefinedCurveFont::Draughting(d) => assert_eq!(d.name, "dashed"),
+        PreDefinedCurveFont::Plain(_) => panic!("expected Draughting second"),
+    }
+}
+
+#[test]
+fn pre_defined_symbol_family_round_trip() {
+    // PreDefinedSymbol Plain (corpus 0) + Terminator (PRE_DEFINED_TERMINATOR_SYMBOL,
+    // corpus 116) share the visualization::pre_defined_symbols arena.
+    use step_io::ir::visualization::{
+        PreDefinedSymbol, PreDefinedSymbolData, PreDefinedTerminatorSymbol, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let mut viz = VisualizationPool::default();
+    viz.pre_defined_symbols
+        .push(PreDefinedSymbol::Plain(PreDefinedSymbolData {
+            name: "symbol".into(),
+        }));
+    viz.pre_defined_symbols
+        .push(PreDefinedSymbol::Terminator(PreDefinedTerminatorSymbol {
+            name: "filled arrow".into(),
+        }));
+    model.visualization = Some(viz);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.as_ref().expect("visualization pool");
+    assert_eq!(re_viz.pre_defined_symbols.len(), 2);
+    let mut iter = re_viz.pre_defined_symbols.iter();
+    match iter.next().unwrap() {
+        PreDefinedSymbol::Plain(s) => assert_eq!(s.name, "symbol"),
+        PreDefinedSymbol::Terminator(_) => panic!("expected Plain first"),
+    }
+    match iter.next().unwrap() {
+        PreDefinedSymbol::Terminator(s) => assert_eq!(s.name, "filled arrow"),
+        PreDefinedSymbol::Plain(_) => panic!("expected Terminator second"),
+    }
+}
+
+#[test]
+fn document_file_six_attributes_round_trip() {
+    // DOCUMENT_FILE is SUBTYPE OF (document, characterized_object) — STEP P21
+    // encodes 6 attributes. Regression guard for the check_count(4)->6 fix.
+    use step_io::ir::plm::{Document, DocumentFile, DocumentType, PlmPool};
+    let mut model = empty_model();
+    let mut plm = PlmPool::default();
+    let kind = plm.document_types.push(DocumentType {
+        product_data_type: "step file".into(),
+    });
+    plm.documents.push(Document::DocumentFile(DocumentFile {
+        id: "shell_prt.stp".into(),
+        name: "SHELL".into(),
+        description: String::new(),
+        kind,
+        characterized_object_name: "carrier".into(),
+        characterized_object_description: Some("desc".into()),
+    }));
+    model.plm = Some(plm);
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_plm = re.plm.as_ref().expect("plm pool");
+    assert_eq!(re_plm.documents.len(), 1);
+    let Document::DocumentFile(df) = re_plm.documents.iter().next().unwrap() else {
+        panic!("expected DocumentFile variant");
+    };
+    assert_eq!(df.id, "shell_prt.stp");
+    assert_eq!(df.characterized_object_name, "carrier");
+    assert_eq!(
+        df.characterized_object_description,
+        Some("desc".to_string())
+    );
+}
+
+#[test]
+fn numeric_representation_item_round_trip() {
+    // INTEGER_REPRESENTATION_ITEM / REAL_REPRESENTATION_ITEM — representation_item
+    // value-items, orphan round-trip in one interleaved arena.
+    use step_io::ir::shape_rep::{
+        IntegerRepresentationItem, NumericRepresentationItem, RealRepresentationItem,
+    };
+    let mut model = empty_model();
+    model
+        .numeric_representation_items
+        .push(NumericRepresentationItem::Integer(
+            IntegerRepresentationItem {
+                name: "number of segments".into(),
+                the_value: 19,
+            },
+        ));
+    model
+        .numeric_representation_items
+        .push(NumericRepresentationItem::Real(RealRepresentationItem {
+            name: "saved view scale".into(),
+            the_value: 2.5,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.numeric_representation_items.len(), 2);
+    let NumericRepresentationItem::Integer(i) =
+        re.numeric_representation_items.iter().next().unwrap()
+    else {
+        panic!("expected Integer variant first");
+    };
+    assert_eq!(i.name, "number of segments");
+    assert_eq!(i.the_value, 19);
+    let NumericRepresentationItem::Real(r) = re.numeric_representation_items.iter().nth(1).unwrap()
+    else {
+        panic!("expected Real variant second");
+    };
+    assert_eq!(r.name, "saved view scale");
+    assert!((r.the_value - 2.5).abs() < f64::EPSILON);
+}
+
+#[test]
+fn tessellation_round_trip() {
+    // COORDINATES_LIST + COMPLEX_TRIANGULATED_FACE — orphan tessellation
+    // cluster; the face references the coordinates list.
+    use step_io::ir::tessellation::{ComplexTriangulatedFace, CoordinatesList, TessellatedItem};
+    let mut model = empty_model();
+    let coords = model
+        .tessellated_items
+        .push(TessellatedItem::CoordinatesList(CoordinatesList {
+            name: "pts".into(),
+            npoints: 3,
+            position_coords: vec![
+                vec![0.0, 0.0, 0.0],
+                vec![1.0, 0.0, 0.0],
+                vec![0.0, 1.0, 0.0],
+            ],
+        }));
+    model.tessellated_faces.push(ComplexTriangulatedFace {
+        name: "face".into(),
+        coordinates: coords,
+        pnmax: 3,
+        normals: vec![vec![0.0, 0.0, 1.0]],
+        geometric_link: None,
+        pnindex: vec![1, 2, 3],
+        triangle_strips: vec![vec![1, 2, 3]],
+        triangle_fans: vec![],
+    });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.tessellated_items.len(), 1);
+    assert_eq!(re.tessellated_faces.len(), 1);
+    let Some(TessellatedItem::CoordinatesList(c)) = re.tessellated_items.iter().next() else {
+        panic!("expected CoordinatesList");
+    };
+    assert_eq!(c.npoints, 3);
+    assert_eq!(c.position_coords.len(), 3);
+    assert!((c.position_coords[1][0] - 1.0).abs() < f64::EPSILON);
+    let f = re.tessellated_faces.iter().next().unwrap();
+    assert_eq!(f.name, "face");
+    assert_eq!(f.pnmax, 3);
+    assert_eq!(f.pnindex, vec![1, 2, 3]);
+    assert_eq!(f.triangle_strips, vec![vec![1, 2, 3]]);
+    assert!(f.triangle_fans.is_empty());
+    assert!(f.geometric_link.is_none());
+}
+
+#[test]
+fn styled_item_tessellated_face_round_trips() {
+    // A STYLED_ITEM whose target is a COMPLEX_TRIANGULATED_FACE — a
+    // geometric_representation_item subtype, so it resolves through the
+    // tessellated_face arena rather than being dropped (phase
+    // styled-item-tess-face).
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::tessellation::{ComplexTriangulatedFace, CoordinatesList, TessellatedItem};
+    use step_io::ir::visualization::{PlainStyledItem, StyledItem, VisualizationPool};
+    let mut model = empty_model();
+    let coords = model
+        .tessellated_items
+        .push(TessellatedItem::CoordinatesList(CoordinatesList {
+            name: "pts".into(),
+            npoints: 3,
+            position_coords: vec![
+                vec![0.0, 0.0, 0.0],
+                vec![1.0, 0.0, 0.0],
+                vec![0.0, 1.0, 0.0],
+            ],
+        }));
+    let face = model.tessellated_faces.push(ComplexTriangulatedFace {
+        name: "face".into(),
+        coordinates: coords,
+        pnmax: 3,
+        normals: vec![vec![0.0, 0.0, 1.0]],
+        geometric_link: None,
+        pnindex: vec![1, 2, 3],
+        triangle_strips: vec![vec![1, 2, 3]],
+        triangle_fans: vec![],
+    });
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    viz.styled_items.push(StyledItem::Plain(PlainStyledItem {
+        name: String::new(),
+        styles: vec![],
+        item: RepresentationItemRef::TessellatedFace(face),
+    }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz pool");
+    assert_eq!(
+        re_viz.styled_items.len(),
+        1,
+        "styled_item targeting a tessellated face survives, not dropped"
+    );
+    let StyledItem::Plain(si) = re_viz.styled_items.iter().next().unwrap() else {
+        panic!("expected a plain styled_item");
+    };
+    assert!(
+        matches!(si.item, RepresentationItemRef::TessellatedFace(_)),
+        "item resolves to the tessellated_face arena"
+    );
+}
+
+#[test]
+fn draughting_model_with_styled_item_round_trips() {
+    // A DRAUGHTING_MODEL whose `items` are STYLED_ITEMs (the AP242 MBD
+    // pattern). STYLED_ITEM is itself a representation_item, so it must
+    // resolve through `viz_styled_item_id_map` (phase dm-styled-item) — without
+    // it the items list resolves empty and the whole model is silently dropped.
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{
+        DraughtingModel, DraughtingModelForm, Representation, RepresentationContextRef,
+        UnitlessContext,
+    };
+    use step_io::ir::visualization::{PlainStyledItem, StyledItem, VisualizationPool};
+    let mut model = empty_model();
+    let uc = model.unitless_contexts.push(UnitlessContext {
+        identifier: String::new(),
+        context_type: "document parameters".into(),
+        coordinate_space_dimension: None,
+    });
+    let frame = model.geometry.identity_placement();
+    let styled = {
+        let viz = model
+            .visualization
+            .get_or_insert_with(VisualizationPool::default);
+        viz.styled_items.push(StyledItem::Plain(PlainStyledItem {
+            name: String::new(),
+            styles: vec![],
+            item: RepresentationItemRef::Placement3d(frame),
+        }))
+    };
+    model
+        .representations
+        .push(Representation::DraughtingModel(DraughtingModel {
+            name: "Default".into(),
+            items: vec![RepresentationItemRef::StyledItem(styled)],
+            context: Some(RepresentationContextRef::Unitless(uc)),
+            form: DraughtingModelForm::Simple,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let dm = re
+        .representations
+        .iter()
+        .find_map(|r| match r {
+            Representation::DraughtingModel(d) => Some(d),
+            _ => None,
+        })
+        .expect("draughting model survives (not dropped on empty-resolve)");
+    assert!(
+        matches!(dm.items.as_slice(), [RepresentationItemRef::StyledItem(_)]),
+        "the model's STYLED_ITEM item resolves and round-trips, got {:?}",
+        dm.items
+    );
+}
+
+#[test]
+fn tessellation_2_round_trip() {
+    // COORDINATES_LIST + TESSELLATED_CURVE_SET + COMPLEX_TRIANGULATED_SURFACE_SET
+    // — both new entities reference the shared coordinates list.
+    use step_io::ir::tessellation::{
+        ComplexTriangulatedSurfaceSet, CoordinatesList, TessellatedCurveSet, TessellatedItem,
+    };
+    let mut model = empty_model();
+    let coords = model
+        .tessellated_items
+        .push(TessellatedItem::CoordinatesList(CoordinatesList {
+            name: "pts".into(),
+            npoints: 4,
+            position_coords: vec![
+                vec![0.0, 0.0, 0.0],
+                vec![1.0, 0.0, 0.0],
+                vec![0.0, 1.0, 0.0],
+                vec![1.0, 1.0, 0.0],
+            ],
+        }));
+    model
+        .tessellated_items
+        .push(TessellatedItem::TessellatedCurveSet(TessellatedCurveSet {
+            name: "curves".into(),
+            coordinates: coords,
+            line_strips: vec![vec![1, 2], vec![3, 4, 1]],
+        }));
+    model
+        .tessellated_surface_sets
+        .push(ComplexTriangulatedSurfaceSet {
+            name: "surf".into(),
+            coordinates: coords,
+            pnmax: 4,
+            normals: vec![vec![0.0, 0.0, 1.0]],
+            pnindex: vec![1, 2, 3, 4],
+            triangle_strips: vec![vec![1, 2, 3]],
+            triangle_fans: vec![],
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    assert_eq!(re.tessellated_items.len(), 2);
+    assert_eq!(re.tessellated_surface_sets.len(), 1);
+
+    let curve_set = re
+        .tessellated_items
+        .iter()
+        .find_map(|item| match item {
+            TessellatedItem::TessellatedCurveSet(t) => Some(t),
+            TessellatedItem::CoordinatesList(_)
+            | TessellatedItem::TessellatedGeometricSet(_)
+            | TessellatedItem::TessellatedSolid(_)
+            | TessellatedItem::TessellatedShell(_)
+            | TessellatedItem::RepositionedTessellatedItem(_)
+            | TessellatedItem::RepositionedTessellatedGeometricSet(_) => None,
+        })
+        .expect("curve set");
+    assert_eq!(curve_set.name, "curves");
+    assert_eq!(curve_set.line_strips, vec![vec![1, 2], vec![3, 4, 1]]);
+
+    let s = re.tessellated_surface_sets.iter().next().unwrap();
+    assert_eq!(s.name, "surf");
+    assert_eq!(s.pnmax, 4);
+    assert_eq!(s.pnindex, vec![1, 2, 3, 4]);
+    assert_eq!(s.triangle_strips, vec![vec![1, 2, 3]]);
+    assert!(s.triangle_fans.is_empty());
+    assert!((s.normals[0][2] - 1.0).abs() < f64::EPSILON);
+}
+
+#[test]
+fn repositioned_tessellated_geometric_set_complex_round_trips() {
+    // The (GEOMETRIC_REPRESENTATION_ITEM REPOSITIONED_TESSELLATED_ITEM
+    // REPRESENTATION_ITEM TESSELLATED_GEOMETRIC_SET TESSELLATED_ITEM) complex MI
+    // must emit the five-part form and read back as the combined variant.
+    use step_io::ir::tessellation::{RepositionedTessellatedGeometricSet, TessellatedItem};
+    let mut model = empty_model();
+    let placement = xyz_placement(&mut model);
+    model
+        .tessellated_items
+        .push(TessellatedItem::RepositionedTessellatedGeometricSet(
+            RepositionedTessellatedGeometricSet {
+                name: "note".into(),
+                location: placement,
+                children: vec![],
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("REPOSITIONED_TESSELLATED_ITEM(")
+            && text.contains("TESSELLATED_GEOMETRIC_SET("),
+        "emits the five-part complex MI: {text}"
+    );
+    let re = reconvert(&text);
+    assert!(
+        re.tessellated_items
+            .iter()
+            .any(|i| matches!(i, TessellatedItem::RepositionedTessellatedGeometricSet(_))),
+        "5-part tessellated complex MI should round-trip"
+    );
+}
+
+#[test]
+fn tessellated_geometric_set_round_trip() {
+    // TESSELLATED_GEOMETRIC_SET — children exercise all 3 TessellatedItemRef
+    // variants (Item / Face / SurfaceSet).
+    use step_io::ir::tessellation::{
+        ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, CoordinatesList,
+        TessellatedCurveSet, TessellatedGeometricSet, TessellatedItem, TessellatedItemRef,
+    };
+    let mut model = empty_model();
+    let coords = model
+        .tessellated_items
+        .push(TessellatedItem::CoordinatesList(CoordinatesList {
+            name: "pts".into(),
+            npoints: 3,
+            position_coords: vec![
+                vec![0.0, 0.0, 0.0],
+                vec![1.0, 0.0, 0.0],
+                vec![0.0, 1.0, 0.0],
+            ],
+        }));
+    let curve = model
+        .tessellated_items
+        .push(TessellatedItem::TessellatedCurveSet(TessellatedCurveSet {
+            name: "curve".into(),
+            coordinates: coords,
+            line_strips: vec![vec![1, 2, 3]],
+        }));
+    let face = model.tessellated_faces.push(ComplexTriangulatedFace {
+        name: "face".into(),
+        coordinates: coords,
+        pnmax: 3,
+        normals: vec![vec![0.0, 0.0, 1.0]],
+        geometric_link: None,
+        pnindex: vec![1, 2, 3],
+        triangle_strips: vec![vec![1, 2, 3]],
+        triangle_fans: vec![],
+    });
+    let ss = model
+        .tessellated_surface_sets
+        .push(ComplexTriangulatedSurfaceSet {
+            name: "ss".into(),
+            coordinates: coords,
+            pnmax: 3,
+            normals: vec![vec![0.0, 0.0, 1.0]],
+            pnindex: vec![1, 2, 3],
+            triangle_strips: vec![vec![1, 2, 3]],
+            triangle_fans: vec![],
+        });
+    model
+        .tessellated_items
+        .push(TessellatedItem::TessellatedGeometricSet(
+            TessellatedGeometricSet {
+                name: "gset".into(),
+                children: vec![
+                    TessellatedItemRef::Item(curve),
+                    TessellatedItemRef::Face(face),
+                    TessellatedItemRef::SurfaceSet(ss),
+                ],
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let gset = re
+        .tessellated_items
+        .iter()
+        .find_map(|item| match item {
+            TessellatedItem::TessellatedGeometricSet(g) => Some(g),
+            _ => None,
+        })
+        .expect("geometric set round-trips");
+    assert_eq!(gset.name, "gset");
+    assert_eq!(gset.children.len(), 3);
+    assert!(matches!(gset.children[0], TessellatedItemRef::Item(_)));
+    assert!(matches!(gset.children[1], TessellatedItemRef::Face(_)));
+    assert!(matches!(
+        gset.children[2],
+        TessellatedItemRef::SurfaceSet(_)
+    ));
+}
+
+#[test]
+fn psa_null_style_round_trip() {
+    // PRESENTATION_STYLE_ASSIGNMENT((NULL_STYLE(.NULL.))) — corpus NIST AP242.
+    use step_io::ir::visualization::{
+        PresentationStyleAssignment, PresentationStyleAssignmentData, PsaStyle, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    viz.presentation_style_assignments
+        .push(PresentationStyleAssignment::Itself(
+            PresentationStyleAssignmentData {
+                styles: vec![PsaStyle::Null],
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    assert!(text.contains("NULL_STYLE(.NULL.)"));
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz");
+    let psa = re_viz
+        .presentation_style_assignments
+        .iter()
+        .next()
+        .expect("psa");
+    let PresentationStyleAssignment::Itself(data) = psa else {
+        panic!("expected Itself");
+    };
+    assert_eq!(data.styles.len(), 1);
+    assert!(matches!(data.styles[0], PsaStyle::Null));
+}
+
+#[test]
+fn presentation_style_by_context_round_trip() {
+    // PRESENTATION_STYLE_BY_CONTEXT — PSA SUBTYPE with style_context.
+    use step_io::ir::shape_rep::{PlainRepr, Representation};
+    use step_io::ir::visualization::{
+        PresentationStyleAssignment, PresentationStyleByContext, StyleContext, VisualizationPool,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+    let rep = model.representations.push(Representation::Plain(PlainRepr {
+        name: "ctx".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+        frame: None,
+    }));
+    let viz = model
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    viz.presentation_style_assignments.push(
+        PresentationStyleAssignment::PresentationStyleByContext(PresentationStyleByContext {
+            styles: vec![],
+            style_context: StyleContext::Representation(rep),
+        }),
+    );
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_viz = re.visualization.expect("viz");
+    let psbc = re_viz
+        .presentation_style_assignments
+        .iter()
+        .find_map(|p| match p {
+            PresentationStyleAssignment::PresentationStyleByContext(c) => Some(c),
+            PresentationStyleAssignment::Itself(_) => None,
+        })
+        .expect("psbc round-trips");
+    assert!(matches!(
+        psbc.style_context,
+        StyleContext::Representation(_)
+    ));
+}
+
+#[test]
+fn surface_curve_subtypes_round_trip() {
+    // BOUNDED_SURFACE_CURVE + INTERSECTION_CURVE — corpus 0 inst.
+    // synthetic IR with surface + curve + associated_geometry → Surface.
+    use step_io::ir::geometry::{
+        Line3, PCurveOrSurface, Plane3, PreferredSurfaceCurveRepresentation, Surface, SurfaceCurve,
+        SurfaceCurveData,
+    };
+    let mut model = empty_model();
+    let frame = model.geometry.identity_placement();
+    let p1 = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let d1 = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let curve = model
+        .geometry
+        .curves
+        .push(step_io::ir::geometry::Curve::Line(Line3 {
+            point: p1,
+            direction: d1,
+            magnitude: 1.0,
+        }));
+    let plane = model
+        .geometry
+        .surfaces
+        .push(Surface::Plane(Plane3 { position: frame }));
+    let body = SurfaceCurveData {
+        name: "sc".into(),
+        curve_3d: curve,
+        associated_geometry: vec![PCurveOrSurface::Surface(plane)],
+        master_representation: PreferredSurfaceCurveRepresentation::Curve3d,
+    };
+    model
+        .geometry
+        .surface_curves
+        .push(SurfaceCurve::BoundedSurfaceCurve(body.clone()));
+    model
+        .geometry
+        .surface_curves
+        .push(SurfaceCurve::IntersectionCurve(SurfaceCurveData {
+            name: "ic".into(),
+            ..body
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let mut iter = re.geometry.surface_curves.iter();
+    let SurfaceCurve::BoundedSurfaceCurve(bsc) = iter.next().expect("bsc") else {
+        panic!("expected BoundedSurfaceCurve first");
+    };
+    assert_eq!(bsc.name, "sc");
+    let SurfaceCurve::IntersectionCurve(ic) = iter.next().expect("ic") else {
+        panic!("expected IntersectionCurve second");
+    };
+    assert_eq!(ic.name, "ic");
+}
+
+#[test]
+fn curve_bounded_surface_round_trip() {
+    // CURVE_BOUNDED_SURFACE — bounded_surface SUBTYPE. corpus 0 inst —
+    // synthetic IR only. references a basis surface + a generic Curve
+    // (boundary_curve is not yet modelled in step-io).
+    use step_io::ir::geometry::{CurveBoundedSurface, Line3, Plane3, Surface};
+    let mut model = empty_model();
+    let frame = model.geometry.identity_placement();
+    let plane = model
+        .geometry
+        .surfaces
+        .push(Surface::Plane(Plane3 { position: frame }));
+    let p1 = model.geometry.points.push(Point3 {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let d1 = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    let boundary = model
+        .geometry
+        .curves
+        .push(step_io::ir::geometry::Curve::Line(Line3 {
+            point: p1,
+            direction: d1,
+            magnitude: 1.0,
+        }));
+    model
+        .geometry
+        .surfaces
+        .push(Surface::CurveBounded(CurveBoundedSurface {
+            name: "cbs".into(),
+            basis_surface: plane,
+            boundaries: vec![boundary],
+            implicit_outer: true,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let cbs = re
+        .geometry
+        .surfaces
+        .iter()
+        .find_map(|s| match s {
+            Surface::CurveBounded(c) => Some(c),
+            _ => None,
+        })
+        .expect("cbs round-trips");
+    assert_eq!(cbs.name, "cbs");
+    assert!(cbs.implicit_outer);
+    assert_eq!(cbs.boundaries.len(), 1);
+}
+
+#[test]
+fn bounded_pcurve_round_trip() {
+    // BOUNDED_PCURVE — pcurve SUBTYPE. Orphan. corpus 0 inst — synthetic
+    // IR only. references a surface + a (definitional_)representation.
+    use step_io::ir::geometry::{BoundedPCurve, ParameterSpaceCurve};
+    use step_io::ir::shape_rep::{PlainRepr, Representation};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+    let frame = model.geometry.identity_placement();
+    let plane = model
+        .geometry
+        .surfaces
+        .push(step_io::ir::geometry::Surface::Plane(
+            step_io::ir::geometry::Plane3 { position: frame },
+        ));
+    let rep = model.representations.push(Representation::Plain(PlainRepr {
+        name: "defrepr".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+        frame: None,
+    }));
+    model
+        .geometry
+        .parameter_space_curves
+        .push(ParameterSpaceCurve::BoundedPCurve(BoundedPCurve {
+            name: "bpc".into(),
+            basis_surface: plane,
+            reference_to_curve: rep,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let psc = re
+        .geometry
+        .parameter_space_curves
+        .iter()
+        .next()
+        .expect("bpc round-trips");
+    let ParameterSpaceCurve::BoundedPCurve(b) = psc;
+    assert_eq!(b.name, "bpc");
+}
+
+#[test]
+fn circular_area_round_trip() {
+    // CIRCULAR_AREA — primitive_2d SUBTYPE. Orphan in step-io.
+    use step_io::ir::geometry::{CircularArea, CircularAreaCentre};
+    let mut model = empty_model();
+    let centre = model.geometry.points.push(Point3 {
+        x: 1.0,
+        y: 2.0,
+        z: 0.0,
+    });
+    model.geometry.circular_areas.push(CircularArea {
+        name: "testarea".into(),
+        centre: CircularAreaCentre::Point(centre),
+        radius: 2.0,
+    });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let ca = re
+        .geometry
+        .circular_areas
+        .iter()
+        .next()
+        .expect("cri round-trips");
+    assert_eq!(ca.name, "testarea");
+    assert!((ca.radius - 2.0).abs() < f64::EPSILON);
+}
+
+#[test]
+fn circular_area_with_external_reference_round_trips() {
+    // P21 edition 3: CIRCULAR_AREA.centre points at a REFERENCE-section
+    // external reference (#123=<file#anchor>), named by an ANCHOR. The whole
+    // chain must survive read -> write -> re-read.
+    use step_io::ir::geometry::CircularAreaCentre;
+    let src = "ISO-10303-21;\n\
+               HEADER;\n\
+               FILE_DESCRIPTION((''),'4;1');\n\
+               FILE_NAME('testRefAndAnchor','',(''),(''),'','','');\n\
+               FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\n\
+               ENDSEC;\n\
+               ANCHOR;\n\
+               <ParentAnchor>=#123;\n\
+               ENDSEC;\n\
+               REFERENCE;\n\
+               #123=<testAnchorAndData.stp#TestAnchor>;\n\
+               ENDSEC;\n\
+               DATA;\n\
+               #1=CIRCULAR_AREA('testarea',#123,2.);\n\
+               ENDSEC;\n\
+               END-ISO-10303-21;\n";
+    let model = ReaderContext::convert(&parse(src).expect("parse")).model;
+    // External reference + anchor materialized; CIRCULAR_AREA survives.
+    assert_eq!(model.external_references.len(), 1);
+    assert_eq!(model.anchors.len(), 1);
+    let ca = model
+        .geometry
+        .circular_areas
+        .iter()
+        .next()
+        .expect("CIRCULAR_AREA survives the external centre");
+    assert!(matches!(ca.centre, CircularAreaCentre::External(_)));
+
+    // Round-trip: the output re-emits the REFERENCE/ANCHOR sections and the
+    // CIRCULAR_AREA re-reads identically.
+    let text = model.write_to_string().expect("write");
+    assert!(text.contains("REFERENCE;"), "REFERENCE section re-emitted");
+    assert!(text.contains("ANCHOR;"), "ANCHOR section re-emitted");
+    assert!(text.contains("<testAnchorAndData.stp#TestAnchor>"));
+    assert!(text.contains("CIRCULAR_AREA("));
+    let re = ReaderContext::convert(&parse(&text).expect("re-parse")).model;
+    assert_eq!(re.external_references.len(), 1);
+    assert_eq!(re.anchors.len(), 1);
+    let re_ca = re.geometry.circular_areas.iter().next().expect("survives");
+    assert!(matches!(re_ca.centre, CircularAreaCentre::External(_)));
+    assert_eq!(re_ca.name, "testarea");
+}
+
+#[test]
+fn compound_representation_item_round_trip() {
+    // COMPOUND_REPRESENTATION_ITEM — typed wrapper carrying a child
+    // DESCRIPTIVE_REPRESENTATION_ITEM (the dominant fixture pattern).
+    use step_io::ir::shape_rep::{
+        CompoundItem, CompoundItemElement, CompoundItemKind, CompoundRepresentationItem,
+        DescriptiveItem,
+    };
+    let mut model = empty_model();
+    model
+        .compound_representation_items
+        .push(CompoundRepresentationItem {
+            name: "dimensional note".into(),
+            item_element: CompoundItemElement {
+                kind: CompoundItemKind::Set,
+                items: vec![CompoundItem::Descriptive(DescriptiveItem {
+                    name: "dimensional note".into(),
+                    description: "controlled radius".into(),
+                })],
+            },
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let cri = re
+        .compound_representation_items
+        .iter()
+        .next()
+        .expect("cri round-trips");
+    assert_eq!(cri.name, "dimensional note");
+    assert_eq!(cri.item_element.kind, CompoundItemKind::Set);
+    assert_eq!(cri.item_element.items.len(), 1);
+    let CompoundItem::Descriptive(d) = &cri.item_element.items[0] else {
+        panic!("expected Descriptive variant");
+    };
+    assert_eq!(d.description, "controlled radius");
+}
+
+#[test]
+fn characterized_object_simple_emit() {
+    // CharacterizedObject::Itself writes as simple
+    // `CHARACTERIZED_OBJECT(name, $)`. Reader rejects this form (it
+    // only accepts the complex MI form) — this test checks one-way
+    // write only.
+    use step_io::ir::shape_rep::{CharacterizedObject, CharacterizedObjectData};
+    let mut model = empty_model();
+    model
+        .characterized_objects
+        .push(CharacterizedObject::Itself(CharacterizedObjectData {
+            name: "Back".into(),
+            description: None,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    assert!(text.contains("CHARACTERIZED_OBJECT('Back',$)"));
+}
+
+#[test]
+fn srwp_round_trip() {
+    // SHAPE_REPRESENTATION_WITH_PARAMETERS — representation SUBTYPE
+    // with partial-narrow items SELECT (Direction / Placement /
+    // Descriptive only).
+    use step_io::ir::shape_rep::{
+        DescriptiveItem, Representation, ShapeRepresentationWithParameters, SrwpItem,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+    let frame = model.geometry.identity_placement();
+    let dir = model.geometry.directions.push(Direction3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    });
+    model
+        .representations
+        .push(Representation::ShapeRepresentationWithParameters(
+            ShapeRepresentationWithParameters {
+                name: "srwp".into(),
+                items: vec![
+                    SrwpItem::Placement(frame),
+                    SrwpItem::Direction(dir),
+                    SrwpItem::Descriptive(DescriptiveItem {
+                        name: "param".into(),
+                        description: "v".into(),
+                    }),
+                ],
+                context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let srwp = re
+        .representations
+        .iter()
+        .find_map(|r| match r {
+            Representation::ShapeRepresentationWithParameters(s) => Some(s),
+            _ => None,
+        })
+        .expect("srwp round-trips");
+    assert_eq!(srwp.name, "srwp");
+    assert_eq!(srwp.items.len(), 3);
+}
+
+#[test]
+fn srwp_measure_item_round_trip() {
+    // SHAPE_REPRESENTATION_WITH_PARAMETERS whose items include a
+    // measure_representation_item SELECT member — resolved through the
+    // representation_item arena (SrwpItem::MeasureItem) rather than dropped.
+    use step_io::ir::property::PropertyMeasureUnit;
+    use step_io::ir::representation_item::{
+        MeasureForm, MeasureRepresentationItem, MeasureValue, RepresentationItem,
+    };
+    use step_io::ir::shape_rep::{Representation, ShapeRepresentationWithParameters, SrwpItem};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
+    let uc = model.units.push(ctx);
+    let frame = model.geometry.identity_placement();
+    let mri = model
+        .representation_items
+        .push(RepresentationItem::MeasureRepresentationItem(
+            MeasureRepresentationItem {
+                form: MeasureForm::Simple,
+                name: "target width".into(),
+                value: MeasureValue::Real {
+                    type_name: "LENGTH_MEASURE".into(),
+                    value: 1.25,
+                },
+                unit_ref: Some(PropertyMeasureUnit::Named(length)),
+                qualifiers: Vec::new(),
+                measure_supertype: None,
+            },
+        ));
+    model
+        .representations
+        .push(Representation::ShapeRepresentationWithParameters(
+            ShapeRepresentationWithParameters {
+                name: "srwp".into(),
+                items: vec![SrwpItem::Placement(frame), SrwpItem::MeasureItem(mri)],
+                context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let srwp = re
+        .representations
+        .iter()
+        .find_map(|r| match r {
+            Representation::ShapeRepresentationWithParameters(s) => Some(s),
+            _ => None,
+        })
+        .expect("srwp round-trips");
+    assert_eq!(
+        srwp.items.len(),
+        2,
+        "both items survive, measure not dropped"
+    );
+    assert!(
+        srwp.items
+            .iter()
+            .any(|i| matches!(i, SrwpItem::MeasureItem(_))),
+        "the measure member resolves to a MeasureItem arena ref"
+    );
+}
+
+#[test]
+fn iiru_round_trip() {
+    // ITEM_IDENTIFIED_REPRESENTATION_USAGE — concrete base entity with
+    // 5 attrs. definition resolves to ShapeAspect; identified_item to
+    // a typed SET_REPRESENTATION_ITEM wrapper.
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{
+        CompoundItemKind, IiruDefinition, IiruIdentifiedItem, ItemIdentifiedRepresentationUsage,
+        PlainRepr, Representation,
+    };
+    let (mut model, sa, _, _, _) = shape_aspect_relationship_fixture();
+    let frame = model.geometry.identity_placement();
+    let rep = model.representations.push(Representation::Plain(PlainRepr {
+        name: "used".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(
+            step_io::ir::UnitContextId(0),
+        )),
+        frame: None,
+    }));
+    model
+        .item_identified_representation_usages
+        .push(ItemIdentifiedRepresentationUsage {
+            name: "iiru".into(),
+            description: Some("GDT".into()),
+            definition: IiruDefinition::ShapeAspect(sa),
+            used_representation: rep,
+            identified_item: IiruIdentifiedItem::Compound {
+                kind: CompoundItemKind::Set,
+                items: vec![RepresentationItemRef::Placement3d(frame)],
+            },
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let iiru = re
+        .item_identified_representation_usages
+        .iter()
+        .next()
+        .expect("iiru round-trips");
+    assert_eq!(iiru.name, "iiru");
+    assert_eq!(iiru.description.as_deref(), Some("GDT"));
+    assert!(matches!(iiru.definition, IiruDefinition::ShapeAspect(_)));
+}
+
+#[test]
+fn mddr_round_trip() {
+    // MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP — pairs two
+    // representations (DM | MDGPR | SR per mddr_select).
+    use step_io::ir::shape_rep::{
+        MechanicalDesignAndDraughtingRelationship, PlainRepr, Representation,
+        RepresentationRelationship,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+    let sr1 = model.representations.push(Representation::Plain(PlainRepr {
+        name: "sr1".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+        frame: None,
+    }));
+    let sr2 = model.representations.push(Representation::Plain(PlainRepr {
+        name: "sr2".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+        frame: None,
+    }));
+    model.representation_relationships.push(
+        RepresentationRelationship::MechanicalDesignAndDraughtingRelationship(
+            MechanicalDesignAndDraughtingRelationship {
+                name: "mddr".into(),
+                description: "test".into(),
+                rep_1: sr1,
+                rep_2: sr2,
+            },
+        ),
+    );
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let mddr = re
+        .representation_relationships
+        .iter()
+        .find_map(|r| match r {
+            RepresentationRelationship::MechanicalDesignAndDraughtingRelationship(m) => Some(m),
+            RepresentationRelationship::Itself(_)
+            | RepresentationRelationship::ConstructiveGeometryRepresentationRelationship(_)
+            | RepresentationRelationship::ShapeRepresentationRelationship(_)
+            | RepresentationRelationship::RepresentationRelationshipWithTransformation(_) => None,
+        })
+        .expect("mddr round-trips");
+    assert_eq!(mddr.name, "mddr");
+    assert_eq!(mddr.description, "test");
+}
+
+#[test]
+fn representation_relationship_itself_round_trip() {
+    // Base REPRESENTATION_RELATIONSHIP (the `Itself` carrier variant) relating
+    // two representations — used standalone by NIST AP203 PMI files.
+    use step_io::ir::shape_rep::{
+        PlainRepr, Representation, RepresentationRelationship, RepresentationRelationshipData,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+    let r1 = model.representations.push(Representation::Plain(PlainRepr {
+        name: "r1".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+        frame: None,
+    }));
+    let r2 = model.representations.push(Representation::Plain(PlainRepr {
+        name: "r2".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+        frame: None,
+    }));
+    model
+        .representation_relationships
+        .push(RepresentationRelationship::Itself(
+            RepresentationRelationshipData {
+                name: "rr".into(),
+                description: "test".into(),
+                rep_1: r1,
+                rep_2: r2,
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("= REPRESENTATION_RELATIONSHIP("),
+        "base subtype is emitted (not a SHAPE_/SUBTYPE form), got:\n{text}"
+    );
+    let re = reconvert(&text);
+    let rr = re
+        .representation_relationships
+        .iter()
+        .find_map(|r| match r {
+            RepresentationRelationship::Itself(d) => Some(d),
+            RepresentationRelationship::MechanicalDesignAndDraughtingRelationship(_)
+            | RepresentationRelationship::ConstructiveGeometryRepresentationRelationship(_)
+            | RepresentationRelationship::ShapeRepresentationRelationship(_)
+            | RepresentationRelationship::RepresentationRelationshipWithTransformation(_) => None,
+        })
+        .expect("base REPRESENTATION_RELATIONSHIP round-trips as Itself");
+    assert_eq!(rr.name, "rr");
+    assert_eq!(rr.description, "test");
+}
+
+#[test]
+fn cgr_relationship_round_trip() {
+    // CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP — pairs an SR
+    // (rep_1) with a CGR (rep_2). Exercises the new
+    // representation_relationships arena + delayed emit.
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{
+        ConstructiveGeometryRepr, ConstructiveGeometryRepresentationRelationship, PlainRepr,
+        Representation, RepresentationRelationship,
+    };
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+    let frame = model.geometry.identity_placement();
+    let sr = model.representations.push(Representation::Plain(PlainRepr {
+        name: "sr".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+        frame: None,
+    }));
+    let cgr = model
+        .representations
+        .push(Representation::ConstructiveGeometry(
+            ConstructiveGeometryRepr {
+                name: "cgr".into(),
+                items: vec![RepresentationItemRef::Placement3d(frame)],
+                context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            },
+        ));
+    model.representation_relationships.push(
+        RepresentationRelationship::ConstructiveGeometryRepresentationRelationship(
+            ConstructiveGeometryRepresentationRelationship {
+                name: "supplemental geometry".into(),
+                description: String::new(),
+                rep_1: sr,
+                rep_2: cgr,
+            },
+        ),
+    );
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let cgrr = re
+        .representation_relationships
+        .iter()
+        .find_map(|r| match r {
+            RepresentationRelationship::ConstructiveGeometryRepresentationRelationship(c) => {
+                Some(c)
+            }
+            RepresentationRelationship::Itself(_)
+            | RepresentationRelationship::MechanicalDesignAndDraughtingRelationship(_)
+            | RepresentationRelationship::ShapeRepresentationRelationship(_)
+            | RepresentationRelationship::RepresentationRelationshipWithTransformation(_) => None,
+        })
+        .expect("cgrr round-trips");
+    assert_eq!(cgrr.name, "supplemental geometry");
+}
+
+#[test]
+fn constructive_geometry_representation_round_trip() {
+    // CONSTRUCTIVE_GEOMETRY_REPRESENTATION — representation SUBTYPE with
+    // a SET of geometry items. Exercises the delayed-emit pathway
+    // through emit_constructive_geometry_representations.
+    use step_io::ir::representation_item::RepresentationItemRef;
+    use step_io::ir::shape_rep::{ConstructiveGeometryRepr, Representation};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+    let frame = model.geometry.identity_placement();
+    model
+        .representations
+        .push(Representation::ConstructiveGeometry(
+            ConstructiveGeometryRepr {
+                name: "supplemental geometry".into(),
+                items: vec![RepresentationItemRef::Placement3d(frame)],
+                context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let cgr = re
+        .representations
+        .iter()
+        .find_map(|r| match r {
+            Representation::ConstructiveGeometry(c) => Some(c),
+            _ => None,
+        })
+        .expect("cgr round-trips");
+    assert_eq!(cgr.name, "supplemental geometry");
+    assert_eq!(cgr.items.len(), 1);
+    assert!(matches!(
+        cgr.items[0],
+        RepresentationItemRef::Placement3d(_)
+    ));
+}
+
+#[test]
+fn tessellated_shape_representation_round_trip() {
+    // TESSELLATED_SHAPE_REPRESENTATION — representation SUBTYPE whose
+    // items are tessellated_item refs. Exercises the delayed-emit pathway
+    // through emit_tessellated_shape_representations.
+    use step_io::ir::shape_rep::{Representation, TessellatedShapeRepresentation};
+    use step_io::ir::tessellation::{CoordinatesList, TessellatedItem, TessellatedItemRef};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    let uc = model.units.push(ctx);
+    let coords = model
+        .tessellated_items
+        .push(TessellatedItem::CoordinatesList(CoordinatesList {
+            name: "pts".into(),
+            npoints: 3,
+            position_coords: vec![
+                vec![0.0, 0.0, 0.0],
+                vec![1.0, 0.0, 0.0],
+                vec![0.0, 1.0, 0.0],
+            ],
+        }));
+    model
+        .representations
+        .push(Representation::TessellatedShapeRepresentation(
+            TessellatedShapeRepresentation {
+                name: "tsr".into(),
+                items: vec![TessellatedItemRef::Item(coords)],
+                context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let tsr = re
+        .representations
+        .iter()
+        .find_map(|r| match r {
+            Representation::TessellatedShapeRepresentation(t) => Some(t),
+            _ => None,
+        })
+        .expect("tsr round-trips");
+    assert_eq!(tsr.name, "tsr");
+    assert_eq!(tsr.items.len(), 1);
+    assert!(matches!(tsr.items[0], TessellatedItemRef::Item(_)));
+}
+
+#[test]
+fn repositioned_tessellated_item_round_trip() {
+    // REPOSITIONED_TESSELLATED_ITEM — tessellated_item subtype carrying
+    // a per-instance axis2_placement_3d frame.
+    use step_io::ir::tessellation::{RepositionedTessellatedItem, TessellatedItem};
+    let mut model = empty_model();
+    let frame = model.geometry.identity_placement();
+    model
+        .tessellated_items
+        .push(TessellatedItem::RepositionedTessellatedItem(
+            RepositionedTessellatedItem {
+                name: "rti".into(),
+                location: frame,
+            },
+        ));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let rti = re
+        .tessellated_items
+        .iter()
+        .find_map(|item| match item {
+            TessellatedItem::RepositionedTessellatedItem(r) => Some(r),
+            _ => None,
+        })
+        .expect("repositioned tessellated item round-trips");
+    assert_eq!(rti.name, "rti");
+}
+
+#[test]
+fn tessellated_solid_shell_round_trip() {
+    // TESSELLATED_SOLID + TESSELLATED_SHELL — items reference structured
+    // tessellated items (face / surface set) via TessellatedItemRef.
+    use step_io::ir::tessellation::{
+        ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, CoordinatesList, TessellatedItem,
+        TessellatedItemRef, TessellatedShell, TessellatedSolid,
+    };
+    let mut model = empty_model();
+    let coords = model
+        .tessellated_items
+        .push(TessellatedItem::CoordinatesList(CoordinatesList {
+            name: "pts".into(),
+            npoints: 3,
+            position_coords: vec![
+                vec![0.0, 0.0, 0.0],
+                vec![1.0, 0.0, 0.0],
+                vec![0.0, 1.0, 0.0],
+            ],
+        }));
+    let face = model.tessellated_faces.push(ComplexTriangulatedFace {
+        name: "f".into(),
+        coordinates: coords,
+        pnmax: 3,
+        normals: vec![vec![0.0, 0.0, 1.0]],
+        geometric_link: None,
+        pnindex: vec![1, 2, 3],
+        triangle_strips: vec![vec![1, 2, 3]],
+        triangle_fans: vec![],
+    });
+    let ss = model
+        .tessellated_surface_sets
+        .push(ComplexTriangulatedSurfaceSet {
+            name: "ss".into(),
+            coordinates: coords,
+            pnmax: 3,
+            normals: vec![vec![0.0, 0.0, 1.0]],
+            pnindex: vec![1, 2, 3],
+            triangle_strips: vec![vec![1, 2, 3]],
+            triangle_fans: vec![],
+        });
+    model
+        .tessellated_items
+        .push(TessellatedItem::TessellatedSolid(TessellatedSolid {
+            name: "solid".into(),
+            items: vec![
+                TessellatedItemRef::Face(face),
+                TessellatedItemRef::SurfaceSet(ss),
+            ],
+            geometric_link: None,
+        }));
+    model
+        .tessellated_items
+        .push(TessellatedItem::TessellatedShell(TessellatedShell {
+            name: "shell".into(),
+            items: vec![TessellatedItemRef::Face(face)],
+            topological_link: None,
+        }));
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let solid = re
+        .tessellated_items
+        .iter()
+        .find_map(|i| match i {
+            TessellatedItem::TessellatedSolid(s) => Some(s),
+            _ => None,
+        })
+        .expect("solid round-trips");
+    assert_eq!(solid.name, "solid");
+    assert_eq!(solid.items.len(), 2);
+    let shell = re
+        .tessellated_items
+        .iter()
+        .find_map(|i| match i {
+            TessellatedItem::TessellatedShell(s) => Some(s),
+            _ => None,
+        })
+        .expect("shell round-trips");
+    assert_eq!(shell.name, "shell");
+    assert_eq!(shell.items.len(), 1);
+}
+
+// ------------------------------------------------------------------
+// c3d property + units cluster (simple GUAC / RATIO_UNIT, GENERAL_PROPERTY
+// PDR, REPRESENTATION unset context)
+// ------------------------------------------------------------------
+
+/// A standalone simple `GLOBAL_UNIT_ASSIGNED_CONTEXT(identifier, type, units)`
+/// referencing a simple `RATIO_UNIT` round-trips as `UnitContextForm::Simple`
+/// (not forced into the geometric complex MI) with the ratio unit preserved.
+#[test]
+fn simple_global_unit_assigned_context_and_ratio_unit_round_trip() {
+    use step_io::ir::shape_rep::UnitContextForm;
+    use step_io::ir::units::{DimensionalExponents, RatioFlavor};
+
+    let mut model = empty_model();
+    let pool = model.units_pool.get_or_insert_with(UnitsPool::default);
+    // Dimensionless DIMENSIONAL_EXPONENTS so the simple RATIO_UNIT emits an
+    // explicit `dimensions` ref rather than the lenient `$` path.
+    let de_id = pool.dimensional_exponents.push(DimensionalExponents {
+        length_exponent: 0.0,
+        mass_exponent: 0.0,
+        time_exponent: 0.0,
+        electric_current_exponent: 0.0,
+        thermodynamic_temperature_exponent: 0.0,
+        amount_of_substance_exponent: 0.0,
+        luminous_intensity_exponent: 0.0,
+    });
+    let ratio_id = pool.named_units.push(NamedUnit::Ratio(RatioFlavor {
+        dim_exp: Some(de_id),
+        complex: false,
+    }));
+    let simple_form = UnitContextForm::Simple {
+        identifier: "NONE".into(),
+        context_type: "NONE".into(),
+    };
+    model.units.push(UnitContext {
+        units: vec![ratio_id],
+        length_uncertainty: None,
+        plane_angle_uncertainty: None,
+        solid_angle_uncertainty: None,
+        form: simple_form.clone(),
+    });
+
+    let re = reconvert(&model.write_to_string().expect("write"));
+    assert_eq!(re.units.len(), 1);
+    let ctx = re.units.iter().next().expect("unit context survived");
+    assert_eq!(ctx.form, simple_form);
+    assert_eq!(ctx.units.len(), 1);
+    let rpool = re.units_pool.as_ref().expect("units pool");
+    match rpool.named_units[ctx.units[0]] {
+        NamedUnit::Ratio(f) => {
+            assert!(!f.complex, "simple RATIO_UNIT must re-read as simple form");
+            assert!(f.dim_exp.is_some(), "explicit dimensions preserved");
+        }
+        other => panic!("expected Ratio, got {other:?}"),
+    }
+}
+
+/// A `PROPERTY_DEFINITION_REPRESENTATION` whose `definition` is a
+/// `GENERAL_PROPERTY` (c3d) survives write (PDR -> #gp ref) and read (resolve
+/// #gp back to a `PropertyDefinitionRef::GeneralProperty`).
+#[test]
+fn general_property_bound_pdr_round_trips() {
+    use step_io::ir::property::PropertyDefinitionRef;
+
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+
+    let mut pool = PropertyPool::default();
+    let gp_id = pool.general_properties.push(GeneralProperty {
+        id: String::new(),
+        name: "VALIDATION".into(),
+        description: Some("user defined attribute".into()),
+    });
+    pool.properties.push(Property {
+        name: String::new(),
+        description: None,
+        definition: PropertyDefinitionRef::GeneralProperty(gp_id),
+        representation_name: "gvp".into(),
+        context: Some(step_io::ir::RepresentationContextRef::Unitful(
+            UnitContextId(0),
+        )),
+        items: Vec::new(),
+    });
+    model.properties = Some(pool);
+
+    let re = reconvert(&model.write_to_string().expect("write"));
+    let re_pool = re
+        .properties
+        .as_ref()
+        .expect("round-tripped has properties");
+    assert_eq!(re_pool.general_properties.len(), 1);
+    assert_eq!(re_pool.properties.len(), 1);
+    let prop = re_pool.properties.iter().next().expect("property survived");
+    assert_eq!(
+        prop.definition,
+        PropertyDefinitionRef::GeneralProperty(GeneralPropertyId(0)),
+    );
+    assert_eq!(prop.representation_name, "gvp");
+    assert!(matches!(
+        prop.context,
+        Some(step_io::ir::RepresentationContextRef::Unitful(_)),
+    ));
+}
+
+/// A descriptive property `REPRESENTATION` whose `context_of_items` is `$`
+/// (c3d) is accepted as `None` with a `NonStandardInput` normalization warning,
+/// not dropped.
+#[test]
+fn representation_unset_context_round_trips_as_none_with_warning() {
+    use step_io::ir::error::ConvertError;
+    use step_io::ir::property::PropertyDefinitionRef;
+
+    let mut model = empty_model();
+    let mut pool = PropertyPool::default();
+    let gp_id = pool.general_properties.push(GeneralProperty {
+        id: String::new(),
+        name: "VP".into(),
+        description: None,
+    });
+    pool.properties.push(Property {
+        name: String::new(),
+        description: None,
+        definition: PropertyDefinitionRef::GeneralProperty(gp_id),
+        representation_name: String::new(),
+        context: None, // -> REPRESENTATION emits `$` context_of_items
+        items: Vec::new(),
+    });
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    let graph = parse(&text).expect("writer output parses");
+    let result = ReaderContext::convert(&graph);
+
+    assert!(
+        result.warnings.iter().any(|w| matches!(
+            w,
+            ConvertError::NonStandardInput { field, .. } if field.contains("context_of_items")
+        )),
+        "expected context_of_items NonStandardInput, got {:#?}",
+        result.warnings,
+    );
+    let re_pool = result.model.properties.as_ref().expect("has properties");
+    let prop = re_pool.properties.iter().next().expect("property survived");
+    assert_eq!(prop.context, None);
+}
+
+/// A bare `MEASURE_WITH_UNIT(LENGTH_MEASURE(-0.3), unit)` (the carrier
+/// supertype, used for tolerance bounds) round-trips as
+/// `MeasureWithUnit::Itself` — preserving the generic entity name and the
+/// measure-type name, NOT coerced to a typed `LENGTH_MEASURE_WITH_UNIT`.
+#[test]
+fn bare_measure_with_unit_round_trips_as_itself() {
+    use step_io::ir::units::{MeasureWithUnit, MeasureWithUnitData};
+
+    let mut model = empty_model();
+    let mut pool = UnitsPool::default();
+    let unit = pool.push_plain_length(LengthUnit::Millimetre);
+    pool.measure_with_units
+        .push(MeasureWithUnit::Itself(MeasureWithUnitData {
+            measure_type: "LENGTH_MEASURE".into(),
+            value: -0.3,
+            unit,
+        }));
+    model.units_pool = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    // The emitted entity must be the bare supertype, not a typed subtype.
+    assert!(
+        text.contains("MEASURE_WITH_UNIT(LENGTH_MEASURE(-0.3"),
+        "expected bare MEASURE_WITH_UNIT, got:\n{text}"
+    );
+    assert!(
+        !text.contains("LENGTH_MEASURE_WITH_UNIT(LENGTH_MEASURE(-0.3"),
+        "must not coerce to a typed subtype:\n{text}"
+    );
+
+    let re = reconvert(&text);
+    let re_pool = re.units_pool.as_ref().expect("units pool round-tripped");
+    let mwu = re_pool
+        .measure_with_units
+        .iter()
+        .next()
+        .expect("MWU survived");
+    match mwu {
+        MeasureWithUnit::Itself(d) => {
+            assert_eq!(d.measure_type, "LENGTH_MEASURE");
+            assert!((d.value - (-0.3)).abs() < f64::EPSILON);
+        }
+        other => panic!("expected Itself carrier, got {other:?}"),
+    }
+}
+
+#[test]
+fn bare_named_unit_count_round_trips_as_itself() {
+    // Bare NAMED_UNIT(#dimensions) (dimensionless/count unit) + a COUNT_MEASURE
+    // MEASURE_WITH_UNIT referencing it — the named-unit carrier analogue of
+    // bare MEASURE_WITH_UNIT. Both round-trip.
+    use step_io::ir::units::{MeasureWithUnit, MeasureWithUnitData, NamedUnit, NamedUnitData};
+
+    let mut model = empty_model();
+    let mut pool = UnitsPool::default();
+    let unit = pool
+        .named_units
+        .push(NamedUnit::Itself(NamedUnitData { dimensions: None }));
+    pool.measure_with_units
+        .push(MeasureWithUnit::Itself(MeasureWithUnitData {
+            measure_type: "COUNT_MEASURE".into(),
+            value: 1.0,
+            unit,
+        }));
+    model.units_pool = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    // Bare supertype NAMED_UNIT, not a typed subtype (no MASS_UNIT/SI_UNIT etc.).
+    assert!(
+        text.contains("= NAMED_UNIT("),
+        "expected bare NAMED_UNIT:\n{text}"
+    );
+    assert!(
+        text.contains("COUNT_MEASURE(1."),
+        "expected COUNT_MEASURE MWU"
+    );
+
+    let re = reconvert(&text);
+    let re_pool = re.units_pool.as_ref().expect("units pool round-tripped");
+    assert!(
+        re_pool
+            .named_units
+            .iter()
+            .any(|u| matches!(u, NamedUnit::Itself(_))),
+        "bare NAMED_UNIT should round-trip as Itself"
+    );
+    let mwu = re_pool
+        .measure_with_units
+        .iter()
+        .next()
+        .expect("MWU survived");
+    match mwu {
+        MeasureWithUnit::Itself(d) => assert_eq!(d.measure_type, "COUNT_MEASURE"),
+        other => panic!("expected Itself carrier, got {other:?}"),
+    }
 }

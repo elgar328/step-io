@@ -9,8 +9,9 @@ use crate::parser::lexer::{LexError, Span};
 pub enum Attribute {
     Integer(i64),
     Real(f64),
-    /// Raw string with outer quotes stripped. Escape sequences (`''`, `\X\HH`,
-    /// `\X2\...\X0\`) are **not** decoded — decoding is deferred to the IR stage.
+    /// String with outer quotes stripped. The `''` escape is decoded to a
+    /// single `'` by the lexer. Wide-char escapes (`\X\HH`, `\X2\...\X0\`)
+    /// are **not** decoded — that step is deferred to a later stage.
     String(String),
     /// Enumeration value without the surrounding dots (e.g. `.T.` → `"T"`).
     Enum(String),
@@ -87,6 +88,45 @@ pub struct EntityGraph {
     /// DATA section entities keyed by their `#N` identifier.
     /// `BTreeMap` gives deterministic iteration order (useful for the writer stage).
     pub entities: BTreeMap<u64, RawEntity>,
+    /// P21 edition 3 `REFERENCE` section: `#N -> "<url#anchor>"`. Each entry
+    /// is an entity id resolved externally rather than in the DATA section.
+    /// `BTreeMap` keeps the deterministic id order the writer relies on.
+    pub external_references: BTreeMap<u64, String>,
+    /// P21 edition 3 `ANCHOR` section: `(<name>, #N)` pairs naming an entity
+    /// (in this corpus, always an external reference). Order-preserving.
+    pub anchors: Vec<(String, u64)>,
+    /// Non-fatal issues observed while parsing. Lenient recoveries
+    /// (missing semicolons, empty attribute slots) and P21 edition 3
+    /// sections that step-io does not yet model land here so callers can
+    /// surface them without aborting the parse.
+    pub warnings: Vec<ParseWarning>,
+}
+
+/// Non-fatal issues observed during parsing.
+///
+/// The parser admits a handful of spec-bending inputs to survive
+/// real-world STEP files; each tolerance pushes a [`ParseWarning`] so
+/// downstream stages can surface what was repaired or discarded. The
+/// IR itself never carries the non-standard form — input is normalised
+/// to a spec-conformant shape before it reaches [`EntityGraph`].
+#[derive(Debug, Clone, PartialEq)]
+pub enum ParseWarning {
+    /// A HEADER entity is missing its terminating `;`. The next keyword
+    /// is treated as the start of the next entity; the IR shows no trace.
+    MissingHeaderSemicolon {
+        entity_name: String,
+        span: super::lexer::Span,
+    },
+    /// An attribute position is blank — `(a, , b)` or trailing `(a, )`.
+    /// The slot is normalised to [`Attribute::Unset`] (the spec form `$`).
+    EmptyAttribute { span: super::lexer::Span },
+    /// A P21 edition 3 section was encountered (`ANCHOR`, `REFERENCE`,
+    /// or `SIGNATURE`) and discarded. step-io does not yet model these
+    /// sections in the IR.
+    Ed3SectionDiscarded {
+        section: String,
+        span: super::lexer::Span,
+    },
 }
 
 impl EntityGraph {
@@ -293,6 +333,9 @@ mod tests {
             schema: super::super::schema::StepSchema::default(),
             header: vec![],
             entities,
+            external_references: BTreeMap::new(),
+            anchors: vec![],
+            warnings: vec![],
         };
         assert_eq!(graph.get(1), Some(&entity));
         assert_eq!(graph.get(999), None);

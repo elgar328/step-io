@@ -1,9 +1,38 @@
 use super::*;
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Curve, Surface};
-use crate::ir::id::PointId;
-use crate::ir::model::{AngleUnit, LengthUnit, SolidAngleUnit, UnitContext};
+use crate::ir::id::{Point2dId, PointId};
+use crate::ir::model::StepModel;
+use crate::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit};
 use crate::ir::topology::Orientation;
+use crate::ir::units::NamedUnit;
+
+/// units-2 helpers: resolve the first `UnitContext`'s `length / plane_angle
+/// / solid_angle` `NamedUnitId` to its enum value via the units pool.
+fn first_length(model: &StepModel) -> Option<LengthUnit> {
+    let ctx = model.units.iter().next()?;
+    let pool = model.units_pool.as_ref()?;
+    match pool.named_units[ctx.length(pool)?] {
+        NamedUnit::Length(f) => Some(f.unit),
+        _ => None,
+    }
+}
+fn first_plane_angle(model: &StepModel) -> Option<AngleUnit> {
+    let ctx = model.units.iter().next()?;
+    let pool = model.units_pool.as_ref()?;
+    match pool.named_units[ctx.plane_angle(pool)?] {
+        NamedUnit::PlaneAngle(f) => Some(f.unit),
+        _ => None,
+    }
+}
+fn first_solid_angle(model: &StepModel) -> Option<SolidAngleUnit> {
+    let ctx = model.units.iter().next()?;
+    let pool = model.units_pool.as_ref()?;
+    match pool.named_units[ctx.solid_angle(pool)?] {
+        NamedUnit::SolidAngle(f) => Some(f.unit),
+        _ => None,
+    }
+}
 
 // ---------------------------------------------------------------------------
 // HEADER extraction
@@ -141,7 +170,7 @@ fn convert_empty_graph_produces_empty_model() {
     assert!(result.model.geometry.directions.is_empty());
     assert!(result.model.geometry.surfaces.is_empty());
     assert!(result.model.geometry.curves.is_empty());
-    assert!(result.model.topology.vertices.is_empty());
+    assert!(result.model.geometry.vertices.is_empty());
     assert!(result.model.topology.edges.is_empty());
     assert!(result.model.topology.wires.is_empty());
     assert!(result.model.topology.faces.is_empty());
@@ -163,18 +192,57 @@ fn convert_single_cartesian_point() {
 }
 
 #[test]
-fn convert_2d_point_produces_dimension_mismatch_warning() {
+fn convert_top_level_2d_point_lands_in_points_2d_arena() {
+    // A 2-coord CARTESIAN_POINT at the top level (no enclosing
+    // DEFINITIONAL_REPRESENTATION) is classified by coordinate count:
+    // the 3D handler skips silently, the 2D handler pushes to
+    // `points_2d`. Round-trip preservation depends on this.
     let result = convert_source(&minimal_step("#1 = CARTESIAN_POINT('',(10.,20.));"));
+    assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
+    assert!(result.model.geometry.points.is_empty());
+    assert_eq!(result.model.geometry.points_2d.len(), 1);
+    let pt = &result.model.geometry.points_2d[Point2dId(0)];
+    assert!((pt.x - 10.0).abs() < f64::EPSILON);
+    assert!((pt.y - 20.0).abs() < f64::EPSILON);
+}
+
+#[test]
+fn convert_malformed_cartesian_point_coord_count_emits_warning() {
+    // STEP allows only 2- or 3-coord CARTESIAN_POINT. Anything else is
+    // genuinely malformed; the 3D handler surfaces it as a warning so
+    // it does not vanish silently between the 2D and 3D sister
+    // handlers (both of which would otherwise return Ok(()) for an
+    // unrecognised arity).
+    let result = convert_source(&minimal_step("#1 = CARTESIAN_POINT('',(1.,2.,3.,4.));"));
+    assert!(result.model.geometry.points.is_empty());
+    assert!(result.model.geometry.points_2d.is_empty());
     assert_eq!(result.warnings.len(), 1);
     assert!(matches!(
         &result.warnings[0],
-        ConvertError::DimensionMismatch {
-            expected: 3,
-            actual: 2,
-            ..
-        }
+        ConvertError::UnexpectedEntityForm { entity_id: 1, detail } if detail.contains("got 4")
     ));
-    assert!(result.model.geometry.points.is_empty());
+}
+
+#[test]
+fn convert_top_level_2d_curve_chain_lands_in_curves_2d_arena() {
+    // A full 2D LINE chain (point + direction + vector + line) sits at
+    // the top level — no DEFINITIONAL_REPRESENTATION wraps it. Each
+    // handler discriminates 2D vs 3D by coordinate count or first
+    // cross-reference and pushes into the 2D arenas regardless of
+    // pcurve-subtree membership. Without this, an orphan 2D curve
+    // produced by a CAD kernel would be dropped on re-read, shifting
+    // arena IDs and breaking round-trip equality (see plan #5).
+    let src = minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.));\n\
+         #2 = DIRECTION('',(1.,0.));\n\
+         #3 = VECTOR('',#2,1.);\n\
+         #4 = LINE('',#1,#3);",
+    );
+    let result = convert_source(&src);
+    assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
+    assert_eq!(result.model.geometry.points_2d.len(), 1);
+    assert_eq!(result.model.geometry.directions_2d.len(), 1);
+    assert_eq!(result.model.geometry.curves_2d.len(), 1);
 }
 
 // --- DIRECTION ---
@@ -323,7 +391,11 @@ fn convert_circle() {
 // --- Error cases ---
 
 #[test]
-fn missing_reference_produces_warning() {
+fn dangling_reference_drops_as_normalization() {
+    // `#99` is never defined in the file (dangling) → malformed input, not a
+    // step-io coverage gap. The dispatcher reclassifies the MissingReference as
+    // a `NonStandardInput` "dropped" normalization (NS-dangling-reference-drop),
+    // not a defect. The dropped LINE leaves no curve.
     let result = convert_source(&minimal_step(
         "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
          #2 = LINE('',#1,#99);",
@@ -331,9 +403,302 @@ fn missing_reference_produces_warning() {
     assert_eq!(result.warnings.len(), 1);
     assert!(matches!(
         &result.warnings[0],
+        ConvertError::NonStandardInput { field, normalized_to, .. }
+            if field == "LINE" && normalized_to.starts_with("dropped")
+    ));
+    assert_eq!(result.model.geometry.curves.len(), 0);
+}
+
+#[test]
+fn inch_cbu_bare_measure_with_unit_factor_round_trips() {
+    // A CONVERSION_BASED_UNIT('inch') whose conversion_factor is a bare
+    // MEASURE_WITH_UNIT (supertype) carrying a typed LENGTH_MEASURE (NIST
+    // ctc_05), rather than the LENGTH_MEASURE_WITH_UNIT subtype. The writer must
+    // reproduce the bare form so the round-trip multiset is stable.
+    let result = convert_source(&minimal_step(
+        "#1 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+         #2 = MEASURE_WITH_UNIT(LENGTH_MEASURE(25.4),#1);\n\
+         #3 = DIMENSIONAL_EXPONENTS(1.,0.,0.,0.,0.,0.,0.);\n\
+         #4 = ( CONVERSION_BASED_UNIT('INCH',#2) LENGTH_UNIT() NAMED_UNIT(#3) );",
+    ));
+    assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
+    let out = result.model.write_to_string().expect("write");
+    assert!(
+        out.contains("MEASURE_WITH_UNIT(LENGTH_MEASURE(25.4)"),
+        "bare MEASURE_WITH_UNIT factor must be preserved, got:\n{out}"
+    );
+    assert!(
+        !out.contains("LENGTH_MEASURE_WITH_UNIT(25.4"),
+        "must not downgrade the bare factor to the typed subtype:\n{out}"
+    );
+}
+
+#[test]
+fn datum_reference_element_of_shape_unset_dropped_as_normalization() {
+    // [NS-general-datum-reference-of-shape-unset] shape_aspect.of_shape is
+    // mandatory (EXPRESS + UNIQUE); NIST ctc_05 emits `$`. Classify as a
+    // NonStandardInput drop rather than an AttributeType defect. (of_shape=$ is
+    // detected before base, so the dangling base ref is never read.)
+    let result = convert_source(&minimal_step(
+        "#1 = DATUM_REFERENCE_ELEMENT($,$,$,.F.,#99,$);",
+    ));
+    assert!(
+        result.warnings.iter().all(|w| matches!(w,
+            ConvertError::NonStandardInput { field, normalized_to, .. }
+                if field == "DATUM_REFERENCE_ELEMENT" && normalized_to.starts_with("dropped (of_shape Unset"))),
+        "expected only an of_shape-Unset normalization, got {:#?}",
+        result.warnings
+    );
+    assert!(
+        result
+            .model
+            .pmi
+            .as_ref()
+            .is_none_or(|p| p.general_datum_references.is_empty()),
+        "the of_shape=$ element is dropped"
+    );
+}
+
+#[test]
+fn psa_styles_unset_normalized_as_empty() {
+    // [NS-psa-styles-unset] mandatory `styles` SET[1:?] emitted as `$` → accept
+    // as empty (NonStandardInput, not a defect); the PSA survives.
+    let result = convert_source(&minimal_step("#1 = PRESENTATION_STYLE_ASSIGNMENT($);"));
+    assert!(
+        result.warnings.iter().all(|w| matches!(w,
+            ConvertError::NonStandardInput { field, normalized_to, .. }
+                if field.contains("styles (Unset)") && *normalized_to == "()")),
+        "expected only a styles-Unset normalization, got {:#?}",
+        result.warnings
+    );
+    let viz = result.model.visualization.as_ref().expect("viz pool");
+    assert_eq!(
+        viz.presentation_style_assignments.len(),
+        1,
+        "the PSA survives with empty styles"
+    );
+}
+
+#[test]
+fn orsi_over_ridden_style_unset_dropped_as_normalization() {
+    // [NS-orsi-over-ridden-unset] mandatory `over_ridden_style` emitted as `$` →
+    // drop as NonStandardInput (no over-ridden target to model), not a defect.
+    let result = convert_source(&minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = OVER_RIDING_STYLED_ITEM('',(),#1,$);",
+    ));
+    assert!(
+        result.warnings.iter().all(|w| matches!(w,
+            ConvertError::NonStandardInput { field, normalized_to, .. }
+                if field == "OVER_RIDING_STYLED_ITEM" && normalized_to.starts_with("dropped"))),
+        "expected only an over_ridden_style-Unset normalization, got {:#?}",
+        result.warnings
+    );
+    assert!(
+        result
+            .model
+            .visualization
+            .as_ref()
+            .is_none_or(|v| v.styled_items.is_empty()),
+        "the ORSI with no over-ridden style is dropped"
+    );
+}
+
+#[test]
+fn pcurve_3d_in_parameter_space_dropped_as_normalization() {
+    // [NS-pcurve-3d-in-pspace] A PCURVE whose 2D parameter-space
+    // DEFINITIONAL_REPRESENTATION holds a 3D curve (TRIMMED_CURVE on a 3D
+    // CIRCLE / AXIS2_PLACEMENT_3D) violates EXPRESS pcurve.wr3 (dim must be 2).
+    // The dropped subtree is classified as NonStandardInput "dropped", not a
+    // defect; survivors (CARTESIAN_POINT / DIRECTION, and the PLANE's own
+    // placement #4) are not counted.
+    let result = convert_source(&minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = DIRECTION('',(0.,0.,1.));\n\
+         #3 = DIRECTION('',(1.,0.,0.));\n\
+         #4 = AXIS2_PLACEMENT_3D('',#1,#2,#3);\n\
+         #5 = PLANE('',#4);\n\
+         #6 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #7 = DIRECTION('',(1.,0.,0.));\n\
+         #8 = VECTOR('',#7,1.);\n\
+         #9 = LINE('',#6,#8);\n\
+         #10 = CARTESIAN_POINT('',(1.,1.,0.));\n\
+         #11 = DIRECTION('',(0.,0.,1.));\n\
+         #12 = DIRECTION('',(1.,0.,0.));\n\
+         #13 = AXIS2_PLACEMENT_3D('',#10,#11,#12);\n\
+         #14 = CIRCLE('',#13,0.5);\n\
+         #15 = CARTESIAN_POINT('',(1.5,1.,0.));\n\
+         #16 = CARTESIAN_POINT('',(0.5,1.,0.));\n\
+         #17 = TRIMMED_CURVE('',#14,(#15),(#16),.T.,.CARTESIAN.);\n\
+         #18 = ( GEOMETRIC_REPRESENTATION_CONTEXT(2) PARAMETRIC_REPRESENTATION_CONTEXT() REPRESENTATION_CONTEXT('pspace','') );\n\
+         #19 = DEFINITIONAL_REPRESENTATION('',(#17),#18);\n\
+         #20 = PCURVE('',#5,#19);\n\
+         #21 = SURFACE_CURVE('',#9,(#20),.PCURVE_S1.);",
+    ));
+    // No defects — every drop is a pcurve.wr3 normalization.
+    assert!(
+        result
+            .warnings
+            .iter()
+            .all(|w| matches!(w, ConvertError::NonStandardInput { .. })),
+        "expected only NonStandardInput, got {:#?}",
+        result.warnings,
+    );
+    let dropped = |ty: &str| -> usize {
+        result
+            .warnings
+            .iter()
+            .filter_map(|w| match w {
+                ConvertError::NonStandardInput {
+                    field,
+                    count,
+                    normalized_to,
+                } if field == ty && normalized_to.starts_with("dropped") => Some(*count),
+                _ => None,
+            })
+            .sum()
+    };
+    assert_eq!(dropped("PCURVE"), 1);
+    assert_eq!(dropped("DEFINITIONAL_REPRESENTATION"), 1);
+    assert_eq!(dropped("CIRCLE"), 1);
+    assert_eq!(dropped("TRIMMED_CURVE"), 1);
+    assert_eq!(dropped("AXIS2_PLACEMENT_3D"), 1);
+    // #21's only associated_geometry member (#20) is the wr3-dropped pcurve, so
+    // the SURFACE_CURVE wrapper has no resolvable geometry and is itself dropped
+    // as the pcurve.wr3 cascade.
+    assert_eq!(dropped("SURFACE_CURVE"), 1);
+    // Survivors are not recorded: CARTESIAN_POINT / DIRECTION self-discriminate,
+    // and the PLANE's placement #4 is outside the pcurve subtree.
+    assert_eq!(dropped("CARTESIAN_POINT"), 0);
+    assert_eq!(dropped("DIRECTION"), 0);
+}
+
+#[test]
+fn surface_curve_mixed_members_not_dropped_as_normalization() {
+    // Over-count guard for the all-wr3 wrapper rule: a SURFACE_CURVE with one
+    // good 2D pcurve member and one wr3-violating pcurve member keeps a
+    // surviving member, so the wrapper is stored and NOT recorded as a dropped
+    // SURFACE_CURVE (only the wr3 pcurve subtree is normalized away).
+    let result = convert_source(&minimal_step(
+        // Surface + good 2D pcurve (#5 PLANE → #20 PCURVE over a 2D LINE).
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = DIRECTION('',(0.,0.,1.));\n\
+         #3 = DIRECTION('',(1.,0.,0.));\n\
+         #4 = AXIS2_PLACEMENT_3D('',#1,#2,#3);\n\
+         #5 = PLANE('',#4);\n\
+         #6 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #7 = DIRECTION('',(1.,0.,0.));\n\
+         #8 = VECTOR('',#7,1.);\n\
+         #9 = LINE('',#6,#8);\n\
+         #30 = CARTESIAN_POINT('',(0.,0.));\n\
+         #31 = DIRECTION('',(1.,0.));\n\
+         #32 = VECTOR('',#31,1.);\n\
+         #33 = LINE('',#30,#32);\n\
+         #34 = ( GEOMETRIC_REPRESENTATION_CONTEXT(2) PARAMETRIC_REPRESENTATION_CONTEXT() REPRESENTATION_CONTEXT('pspace','') );\n\
+         #35 = DEFINITIONAL_REPRESENTATION('',(#33),#34);\n\
+         #36 = PCURVE('',#5,#35);\n\
+         #10 = CARTESIAN_POINT('',(1.,1.,0.));\n\
+         #11 = DIRECTION('',(0.,0.,1.));\n\
+         #12 = DIRECTION('',(1.,0.,0.));\n\
+         #13 = AXIS2_PLACEMENT_3D('',#10,#11,#12);\n\
+         #14 = CIRCLE('',#13,0.5);\n\
+         #15 = CARTESIAN_POINT('',(1.5,1.,0.));\n\
+         #16 = CARTESIAN_POINT('',(0.5,1.,0.));\n\
+         #17 = TRIMMED_CURVE('',#14,(#15),(#16),.T.,.CARTESIAN.);\n\
+         #18 = ( GEOMETRIC_REPRESENTATION_CONTEXT(2) PARAMETRIC_REPRESENTATION_CONTEXT() REPRESENTATION_CONTEXT('pspace','') );\n\
+         #19 = DEFINITIONAL_REPRESENTATION('',(#17),#18);\n\
+         #20 = PCURVE('',#5,#19);\n\
+         #21 = SURFACE_CURVE('',#9,(#36,#20),.PCURVE_S1.);",
+    ));
+    let dropped = |ty: &str| -> usize {
+        result
+            .warnings
+            .iter()
+            .filter_map(|w| match w {
+                ConvertError::NonStandardInput {
+                    field,
+                    count,
+                    normalized_to,
+                } if field == ty && normalized_to.starts_with("dropped") => Some(*count),
+                _ => None,
+            })
+            .sum()
+    };
+    // The wr3 pcurve subtree is still normalized away...
+    assert_eq!(dropped("PCURVE"), 1);
+    assert_eq!(dropped("TRIMMED_CURVE"), 1);
+    // ...but the wrapper survives on its good member, so it is NOT recorded.
+    assert_eq!(dropped("SURFACE_CURVE"), 0);
+}
+
+#[test]
+fn dangling_edge_geometry_cascades_through_loop_with_orphan_record() {
+    // #11 has a dangling `edge_geometry = #0`. It drops as a dangling-reference
+    // normalization, cascading to the ORIENTED_EDGE #21 that wraps it and the
+    // EDGE_LOOP #30 that contains it. #20 wraps the *good* edge #10 — it builds,
+    // but emits only via the dropped loop, so it orphans and is recorded as a
+    // dropped ORIENTED_EDGE (NS-dangling-reference-orphan). No defects.
+    let result = convert_source(&minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = CARTESIAN_POINT('',(1.,0.,0.));\n\
+         #3 = DIRECTION('',(1.,0.,0.));\n\
+         #4 = VECTOR('',#3,1.);\n\
+         #5 = LINE('',#1,#4);\n\
+         #6 = VERTEX_POINT('',#1);\n\
+         #7 = VERTEX_POINT('',#2);\n\
+         #10 = EDGE_CURVE('',#6,#7,#5,.T.);\n\
+         #11 = EDGE_CURVE('',#7,#6,#0,);\n\
+         #20 = ORIENTED_EDGE('',*,*,#10,.T.);\n\
+         #21 = ORIENTED_EDGE('',*,*,#11,.T.);\n\
+         #30 = EDGE_LOOP('',(#20,#21));",
+    ));
+
+    // No defects — every drop is a dangling-reference normalization.
+    assert!(
+        result
+            .warnings
+            .iter()
+            .all(|w| matches!(w, ConvertError::NonStandardInput { .. })),
+        "expected only NonStandardInput, got {:#?}",
+        result.warnings,
+    );
+    let dropped = |ty: &str| -> usize {
+        result
+            .warnings
+            .iter()
+            .filter_map(|w| match w {
+                ConvertError::NonStandardInput {
+                    field,
+                    count,
+                    normalized_to,
+                } if field == ty && normalized_to.starts_with("dropped") => Some(*count),
+                _ => None,
+            })
+            .sum()
+    };
+    assert_eq!(dropped("EDGE_CURVE"), 1, "the dangling #11");
+    assert_eq!(dropped("ORIENTED_EDGE"), 2, "cascade #21 + orphan #20");
+    assert_eq!(dropped("EDGE_LOOP"), 1, "the poisoned loop #30");
+    // The good edge #10 still built; the loop did not.
+    assert_eq!(result.model.topology.edges.len(), 1);
+}
+
+#[test]
+fn defined_but_unmodelled_reference_stays_defect() {
+    // `#1` IS defined (a CARTESIAN_POINT) but is the wrong kind for LINE.dir —
+    // step-io fails to resolve it as a direction. The ref is not dangling
+    // (`graph.get` is Some), so this is a genuine gap and stays a
+    // `MissingReference` defect, NOT a normalization.
+    let result = convert_source(&minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = LINE('',#1,#1);",
+    ));
+    assert_eq!(result.warnings.len(), 1);
+    assert!(matches!(
+        &result.warnings[0],
         ConvertError::MissingReference {
             from: 2,
-            to: 99,
+            to: 1,
             field_name: "dir",
         }
     ));
@@ -374,12 +739,20 @@ fn convert_rational_bspline_curve_complex() {
         Curve::Nurbs(n) => {
             assert_eq!(n.degree, 2);
             assert_eq!(n.control_points.len(), 3);
-            assert!(n.weights.is_some());
-            let ws = n.weights.as_ref().unwrap();
+            assert!(n.weights().is_some());
+            let ws = n.weights().unwrap();
             assert_eq!(ws.len(), 3);
             assert!((ws[1] - 0.707).abs() < 0.001);
         }
-        Curve::Line(_) | Curve::Circle(_) | Curve::Ellipse(_) => panic!("expected Nurbs"),
+        Curve::Line(_)
+        | Curve::Circle(_)
+        | Curve::Ellipse(_)
+        | Curve::Trimmed(_)
+        | Curve::Composite(_)
+        | Curve::Polyline(_)
+        | Curve::Hyperbola(_)
+        | Curve::Parabola(_)
+        | Curve::OffsetCurve3d(_) => panic!("expected Nurbs"),
     }
 }
 
@@ -408,6 +781,145 @@ fn rational_bspline_curve_weight_count_mismatch_warning() {
     ));
 }
 
+// --- Quasi-uniform B-Spline curve (simple, derived knots) ---
+
+#[test]
+fn convert_quasi_uniform_curve_simple() {
+    // QUASI_UNIFORM_CURVE has 6 attrs (no knot list — derived).
+    // degree=3, 4 control points → mults=[4,4], knots=[0.,1.].
+    let result = convert_source(&minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = CARTESIAN_POINT('',(1.,0.,0.));\n\
+         #3 = CARTESIAN_POINT('',(2.,0.,0.));\n\
+         #4 = CARTESIAN_POINT('',(3.,0.,0.));\n\
+         #5 = QUASI_UNIFORM_CURVE('',3,(#1,#2,#3,#4),.UNSPECIFIED.,.F.,.F.);",
+    ));
+    assert!(
+        result.warnings.is_empty(),
+        "expected no warnings, got {:#?}",
+        result.warnings
+    );
+    assert_eq!(result.model.geometry.curves.len(), 1);
+    match &result.model.geometry.curves[crate::CurveId(0)] {
+        Curve::Nurbs(n) => {
+            assert_eq!(n.degree, 3);
+            assert_eq!(n.control_points.len(), 4);
+            assert!(n.weights().is_none());
+            assert_eq!(n.knot_multiplicities, vec![4, 4]);
+            assert_eq!(n.knots, vec![0.0, 1.0]);
+        }
+        _ => panic!("expected Nurbs"),
+    }
+}
+
+#[test]
+fn convert_rational_quasi_uniform_curve_complex() {
+    let result = convert_source(&minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = CARTESIAN_POINT('',(1.,0.,0.));\n\
+         #3 = CARTESIAN_POINT('',(2.,0.,0.));\n\
+         #4 = CARTESIAN_POINT('',(3.,0.,0.));\n\
+         #5 = ( BOUNDED_CURVE() \
+                B_SPLINE_CURVE(3,(#1,#2,#3,#4),.UNSPECIFIED.,.F.,.F.) \
+                CURVE() \
+                GEOMETRIC_REPRESENTATION_ITEM() \
+                QUASI_UNIFORM_CURVE() \
+                RATIONAL_B_SPLINE_CURVE((1.,0.5,0.5,1.)) \
+                REPRESENTATION_ITEM('') );",
+    ));
+    assert!(
+        result.warnings.is_empty(),
+        "expected no warnings, got {:#?}",
+        result.warnings
+    );
+    assert_eq!(result.model.geometry.curves.len(), 1);
+    match &result.model.geometry.curves[crate::CurveId(0)] {
+        Curve::Nurbs(n) => {
+            assert_eq!(n.degree, 3);
+            assert!(n.weights().is_some());
+            assert_eq!(n.knot_multiplicities, vec![4, 4]);
+            assert_eq!(n.knots, vec![0.0, 1.0]);
+        }
+        _ => panic!("expected Nurbs"),
+    }
+}
+
+// --- Quasi-uniform B-Spline surface (simple, derived knots) ---
+
+#[test]
+fn convert_quasi_uniform_surface_simple() {
+    // QUASI_UNIFORM_SURFACE has 8 attrs (no knot lists — derived).
+    // u_degree=3, v_degree=1, 4x2 control points (matches fixture shape).
+    let result = convert_source(&minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = CARTESIAN_POINT('',(1.,0.,0.));\n\
+         #3 = CARTESIAN_POINT('',(2.,0.,0.));\n\
+         #4 = CARTESIAN_POINT('',(3.,0.,0.));\n\
+         #5 = CARTESIAN_POINT('',(0.,1.,0.));\n\
+         #6 = CARTESIAN_POINT('',(1.,1.,0.));\n\
+         #7 = CARTESIAN_POINT('',(2.,1.,0.));\n\
+         #8 = CARTESIAN_POINT('',(3.,1.,0.));\n\
+         #9 = QUASI_UNIFORM_SURFACE('',3,1,((#1,#5),(#2,#6),(#3,#7),(#4,#8)),.UNSPECIFIED.,.F.,.F.,.U.);",
+    ));
+    assert!(
+        result.warnings.is_empty(),
+        "expected no warnings, got {:#?}",
+        result.warnings
+    );
+    assert_eq!(result.model.geometry.surfaces.len(), 1);
+    match &result.model.geometry.surfaces[crate::SurfaceId(0)] {
+        Surface::Nurbs(s) => {
+            assert_eq!(s.u_degree, 3);
+            assert_eq!(s.v_degree, 1);
+            assert_eq!(s.control_points.len(), 4);
+            assert_eq!(s.control_points[0].len(), 2);
+            assert!(s.weights().is_none());
+            assert_eq!(s.u_knot_multiplicities, vec![4, 4]);
+            assert_eq!(s.v_knot_multiplicities, vec![2, 2]);
+            assert_eq!(s.u_knots, vec![0.0, 1.0]);
+            assert_eq!(s.v_knots, vec![0.0, 1.0]);
+        }
+        _ => panic!("expected Nurbs"),
+    }
+}
+
+#[test]
+fn convert_rational_quasi_uniform_surface_complex() {
+    let result = convert_source(&minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = CARTESIAN_POINT('',(1.,0.,0.));\n\
+         #3 = CARTESIAN_POINT('',(2.,0.,0.));\n\
+         #4 = CARTESIAN_POINT('',(3.,0.,0.));\n\
+         #5 = CARTESIAN_POINT('',(0.,1.,0.));\n\
+         #6 = CARTESIAN_POINT('',(1.,1.,0.));\n\
+         #7 = CARTESIAN_POINT('',(2.,1.,0.));\n\
+         #8 = CARTESIAN_POINT('',(3.,1.,0.));\n\
+         #9 = ( BOUNDED_SURFACE() \
+                B_SPLINE_SURFACE(3,1,((#1,#5),(#2,#6),(#3,#7),(#4,#8)),.UNSPECIFIED.,.F.,.F.,.U.) \
+                GEOMETRIC_REPRESENTATION_ITEM() \
+                QUASI_UNIFORM_SURFACE() \
+                RATIONAL_B_SPLINE_SURFACE(((1.,1.),(0.5,0.5),(0.5,0.5),(1.,1.))) \
+                REPRESENTATION_ITEM('') \
+                SURFACE() );",
+    ));
+    assert!(
+        result.warnings.is_empty(),
+        "expected no warnings, got {:#?}",
+        result.warnings
+    );
+    assert_eq!(result.model.geometry.surfaces.len(), 1);
+    match &result.model.geometry.surfaces[crate::SurfaceId(0)] {
+        Surface::Nurbs(s) => {
+            assert_eq!(s.u_degree, 3);
+            assert_eq!(s.v_degree, 1);
+            assert!(s.weights().is_some());
+            assert_eq!(s.u_knot_multiplicities, vec![4, 4]);
+            assert_eq!(s.v_knot_multiplicities, vec![2, 2]);
+        }
+        _ => panic!("expected Nurbs"),
+    }
+}
+
 // --- Topology: VERTEX_POINT ---
 
 #[test]
@@ -417,8 +929,8 @@ fn convert_vertex_point() {
          #2 = VERTEX_POINT('',#1);",
     ));
     assert!(result.warnings.is_empty());
-    assert_eq!(result.model.topology.vertices.len(), 1);
-    let v = &result.model.topology.vertices[crate::VertexId(0)];
+    assert_eq!(result.model.geometry.vertices.len(), 1);
+    let v = &result.model.geometry.vertices[crate::VertexId(0)];
     assert_eq!(v.point, PointId(0));
 }
 
@@ -500,7 +1012,7 @@ fn full_topology_step() -> String {
 fn convert_full_topology_chain() {
     let result = convert_source(&full_topology_step());
     assert!(result.warnings.is_empty());
-    assert_eq!(result.model.topology.vertices.len(), 1);
+    assert_eq!(result.model.geometry.vertices.len(), 1);
     assert_eq!(result.model.topology.edges.len(), 1);
     assert_eq!(result.model.topology.wires.len(), 1);
     assert_eq!(result.model.topology.faces.len(), 1);
@@ -512,7 +1024,7 @@ fn convert_full_topology_chain() {
 fn convert_solid_name_preserved() {
     let result = convert_source(&full_topology_step());
     let solid = &result.model.topology.solids[crate::SolidId(0)];
-    assert_eq!(solid.name.as_deref(), Some("Test"));
+    assert_eq!(solid.name(), Some("Test"));
 }
 
 #[test]
@@ -535,14 +1047,14 @@ fn convert_solid_empty_name_is_none() {
          #17 = MANIFOLD_SOLID_BREP('',#16);",
     ));
     let solid = &result.model.topology.solids[crate::SolidId(0)];
-    assert_eq!(solid.name, None);
+    assert_eq!(solid.name(), None);
 }
 
 #[test]
 fn convert_face_bound_is_outer_false() {
     let result = convert_source(&full_topology_step());
     let wire = &result.model.topology.wires[crate::WireId(0)];
-    assert!(!wire.is_outer);
+    assert!(matches!(wire, crate::ir::Wire::FaceBound(_)));
 }
 
 #[test]
@@ -565,11 +1077,11 @@ fn convert_face_outer_bound_sets_is_outer() {
          #17 = MANIFOLD_SOLID_BREP('',#16);",
     ));
     let wire = &result.model.topology.wires[crate::WireId(0)];
-    assert!(wire.is_outer);
+    assert!(matches!(wire, crate::ir::Wire::FaceOuterBound(_)));
 }
 
 // ---------------------------------------------------------------------------
-// Unit context (Pass 0)
+// Unit context
 // ---------------------------------------------------------------------------
 
 /// Build the canonical mm / radian / steradian unit entities plus the
@@ -590,49 +1102,95 @@ fn unit_data(length_prefix: &str) -> String {
 fn unit_millimetre_radian_steradian() {
     let result = convert_source(&minimal_step(&unit_data(".MILLI.")));
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
+    assert_eq!(first_length(&result.model), Some(LengthUnit::Millimetre));
+    assert_eq!(first_plane_angle(&result.model), Some(AngleUnit::Radian));
     assert_eq!(
-        result.model.units,
-        Some(UnitContext {
-            length: LengthUnit::Millimetre,
-            plane_angle: AngleUnit::Radian,
-            solid_angle: SolidAngleUnit::Steradian,
-            length_uncertainty: None,
-        }),
+        first_solid_angle(&result.model),
+        Some(SolidAngleUnit::Steradian)
     );
+    let ctx = result.model.units.iter().next().expect("ctx");
+    assert!(ctx.length_uncertainty.is_none());
+    assert!(ctx.plane_angle_uncertainty.is_none());
+    assert!(ctx.solid_angle_uncertainty.is_none());
 }
 
 #[test]
 fn unit_centimetre_mapping() {
     let result = convert_source(&minimal_step(&unit_data(".CENTI.")));
     assert!(result.warnings.is_empty());
-    assert_eq!(
-        result.model.units.map(|u| u.length),
-        Some(LengthUnit::Centimetre),
-    );
+    assert_eq!(first_length(&result.model), Some(LengthUnit::Centimetre),);
 }
 
 #[test]
 fn unit_plain_metre_mapping() {
     let result = convert_source(&minimal_step(&unit_data("$")));
     assert!(result.warnings.is_empty());
-    assert_eq!(
-        result.model.units.map(|u| u.length),
-        Some(LengthUnit::Metre),
-    );
+    assert_eq!(first_length(&result.model), Some(LengthUnit::Metre),);
 }
 
 #[test]
-fn unit_unsupported_prefix_produces_warning_and_none() {
+fn unit_unsupported_prefix_produces_warning_and_default_length() {
     let result = convert_source(&minimal_step(&unit_data(".KILO.")));
     // Two warnings expected: (1) the leaf flagged .KILO. as unsupported,
-    // (2) the global context couldn't fill the length slot.
+    // (2) the GUAC `units` set carried an unresolved ref to it. The set model
+    // does NOT synthesize an SI default — the unsupported unit is simply
+    // absent from the set (no fabricated length).
     assert_eq!(result.warnings.len(), 2, "{:#?}", result.warnings);
     assert!(matches!(
         &result.warnings[0],
         ConvertError::UnexpectedEntityForm { detail, .. }
             if detail.contains("unsupported SI length unit")
     ));
-    assert_eq!(result.model.units, None);
+    assert!(matches!(
+        &result.warnings[1],
+        ConvertError::UnexpectedEntityForm { detail, .. }
+            if detail.contains("units ref") && detail.contains("unresolved")
+    ));
+    // The unit context still exists (downstream PRODUCT chain not lost), but
+    // carries only the resolvable units — no fabricated length.
+    let unit = result
+        .model
+        .units
+        .iter()
+        .next()
+        .expect("unit context pushed");
+    let _ = unit;
+    assert_eq!(first_length(&result.model), None);
+}
+
+#[test]
+fn partial_unit_context_omits_solid_angle_faithfully() {
+    // A GUAC with only LENGTH + PLANE_ANGLE (no SOLID_ANGLE_UNIT) is
+    // schema-valid (`units : SET[1:?]`). The set model keeps exactly those two
+    // units — no SI-default synthesis, no "incomplete" warning — and re-emits a
+    // 2-unit GUAC (no fabricated SOLID_ANGLE_UNIT).
+    let data = "#1 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+                #2 = ( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n\
+                #4 = ( GEOMETRIC_REPRESENTATION_CONTEXT(3)\n\
+                \t\tGLOBAL_UNIT_ASSIGNED_CONTEXT((#1,#2))\n\
+                \t\tREPRESENTATION_CONTEXT('','') );";
+    let result = convert_source(&minimal_step(data));
+    assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
+    let pool = result.model.units_pool.as_ref().expect("pool");
+    let ctx = result.model.units.iter().next().expect("ctx");
+    assert_eq!(ctx.units.len(), 2, "only the two source units are kept");
+    assert!(ctx.length(pool).is_some());
+    assert!(ctx.plane_angle(pool).is_some());
+    assert!(ctx.solid_angle(pool).is_none(), "no fabricated solid angle");
+
+    // Round-trip: re-emit keeps the 2-unit GUAC, no SOLID_ANGLE_UNIT.
+    let out = result.model.write_to_string().expect("write");
+    assert!(
+        !out.contains("SOLID_ANGLE_UNIT"),
+        "no fabricated SOLID_ANGLE_UNIT:\n{out}"
+    );
+    let re = convert_source(&out);
+    let re_ctx = re.model.units.iter().next().expect("re ctx");
+    assert_eq!(
+        re_ctx.units.len(),
+        2,
+        "2-unit set is stable across round-trip"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -664,7 +1222,7 @@ fn reads_inch_milli_untyped_convention() {
          #4 = ( CONVERSION_BASED_UNIT('INCH',#3) LENGTH_UNIT() NAMED_UNIT(#2) );";
     let result = convert_source(&cbu_unit_step(block, 4));
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
-    assert_eq!(result.model.units.map(|u| u.length), Some(LengthUnit::Inch),);
+    assert_eq!(first_length(&result.model), Some(LengthUnit::Inch),);
 }
 
 #[test]
@@ -677,7 +1235,7 @@ fn reads_inch_centi_typed_convention() {
          #4 = ( CONVERSION_BASED_UNIT('INCH',#3) LENGTH_UNIT() NAMED_UNIT(#2) );";
     let result = convert_source(&cbu_unit_step(block, 4));
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
-    assert_eq!(result.model.units.map(|u| u.length), Some(LengthUnit::Inch),);
+    assert_eq!(first_length(&result.model), Some(LengthUnit::Inch),);
 }
 
 #[test]
@@ -690,7 +1248,7 @@ fn reads_inch_lowercase_name() {
          #4 = ( CONVERSION_BASED_UNIT('inch',#3) LENGTH_UNIT() NAMED_UNIT(#2) );";
     let result = convert_source(&cbu_unit_step(block, 4));
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
-    assert_eq!(result.model.units.map(|u| u.length), Some(LengthUnit::Inch),);
+    assert_eq!(first_length(&result.model), Some(LengthUnit::Inch),);
 }
 
 #[test]
@@ -702,7 +1260,7 @@ fn reads_foot_standard() {
          #4 = ( CONVERSION_BASED_UNIT('FOOT',#3) LENGTH_UNIT() NAMED_UNIT(#2) );";
     let result = convert_source(&cbu_unit_step(block, 4));
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
-    assert_eq!(result.model.units.map(|u| u.length), Some(LengthUnit::Foot),);
+    assert_eq!(first_length(&result.model), Some(LengthUnit::Foot),);
 }
 
 #[test]
@@ -721,10 +1279,7 @@ fn reads_degree_uppercase() {
     );
     let result = convert_source(&step);
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
-    assert_eq!(
-        result.model.units.map(|u| u.plane_angle),
-        Some(AngleUnit::Degree),
-    );
+    assert_eq!(first_plane_angle(&result.model), Some(AngleUnit::Degree),);
 }
 
 #[test]
@@ -742,10 +1297,7 @@ fn reads_degree_lowercase() {
     );
     let result = convert_source(&step);
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
-    assert_eq!(
-        result.model.units.map(|u| u.plane_angle),
-        Some(AngleUnit::Degree),
-    );
+    assert_eq!(first_plane_angle(&result.model), Some(AngleUnit::Degree),);
 }
 
 #[test]
@@ -759,17 +1311,36 @@ fn reads_millimetre_cbu_wrap() {
          #4 = ( CONVERSION_BASED_UNIT('MILLIMETRE',#3) LENGTH_UNIT() NAMED_UNIT(#2) );";
     let result = convert_source(&cbu_unit_step(block, 4));
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
-    assert_eq!(
-        result.model.units.map(|u| u.length),
-        Some(LengthUnit::Millimetre),
+    assert_eq!(first_length(&result.model), Some(LengthUnit::Millimetre),);
+}
+
+#[test]
+fn reads_degrees_plural_cbu_name() {
+    // Some exporters (Rhino + ST-Developer observed in the wild) emit
+    // `CONVERSION_BASED_UNIT('DEGREES', ...)` — plural form. Reader should
+    // accept it as AngleUnit::Degree just like the singular `'DEGREE'`.
+    let source = minimal_step(
+        "#1 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+         #2 = DIMENSIONAL_EXPONENTS(0.,0.,0.,0.,0.,0.,0.);\n\
+         #3 = PLANE_ANGLE_MEASURE_WITH_UNIT(PLANE_ANGLE_MEASURE(0.01745329252),#4);\n\
+         #4 = ( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n\
+         #5 = ( CONVERSION_BASED_UNIT('DEGREES',#3) NAMED_UNIT(#2) PLANE_ANGLE_UNIT() );\n\
+         #6 = ( NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT() );\n\
+         #7 = ( GEOMETRIC_REPRESENTATION_CONTEXT(3)\n\
+         \t\tGLOBAL_UNIT_ASSIGNED_CONTEXT((#1,#5,#6))\n\
+         \t\tREPRESENTATION_CONTEXT('','') );",
     );
+    let result = convert_source(&source);
+    assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
+    assert_eq!(first_plane_angle(&result.model), Some(AngleUnit::Degree));
 }
 
 #[test]
 fn reads_unrecognized_cbu_name_warns() {
-    // An unknown name on a LENGTH_UNIT-flavoured CBU: reader should produce
-    // an UnexpectedEntityForm warning (not a silent skip), and leave units=None
-    // because the GUAC ref can't be resolved.
+    // An unknown name on a LENGTH_UNIT-flavoured CBU: reader emits an
+    // UnexpectedEntityForm warning, and the GUAC `units` set carries an
+    // unresolved ref to it (the CBU was not registered). The set model does
+    // not synthesize an SI default — the length is simply absent.
     let block = "\
          #1 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
          #2 = DIMENSIONAL_EXPONENTS(1.,0.,0.,0.,0.,0.,0.);\n\
@@ -785,7 +1356,71 @@ fn reads_unrecognized_cbu_name_warns() {
         "{:#?}",
         result.warnings,
     );
-    assert_eq!(result.model.units, None);
+    assert!(
+        result.warnings.iter().any(
+            |w| matches!(w, ConvertError::UnexpectedEntityForm { detail, .. }
+                if detail.contains("units ref") && detail.contains("unresolved"))
+        ),
+        "{:#?}",
+        result.warnings,
+    );
+    let unit = result
+        .model
+        .units
+        .iter()
+        .next()
+        .expect("unit context pushed");
+    let _ = unit;
+    assert_eq!(first_length(&result.model), None);
+}
+
+#[test]
+fn garbage_angle_cbu_recovered_as_degree_by_factor() {
+    // Anonymised fixtures occasionally carry a CONVERSION_BASED_UNIT with a
+    // nonsense angle name (the `interior-vehicle-hvac` grabcad fixtures
+    // replaced every string with the placeholder 'MIAU' before upload). The
+    // name is unrecognisable, but the conversion factor (0.01745329252 = π/180,
+    // relative to the only SI plane-angle base radian) unambiguously identifies
+    // the unit as a degree. The reader recovers it by factor and records a
+    // `NonStandardInput` normalization (not a defect) — so the plane-angle slot
+    // is filled, no "incomplete unit context" fallback fires, and the unit
+    // round-trips as a standard 'DEGREE'.
+    let source = minimal_step(
+        "#1 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+         #2 = DIMENSIONAL_EXPONENTS(0.,0.,0.,0.,0.,0.,0.);\n\
+         #3 = PLANE_ANGLE_MEASURE_WITH_UNIT(PLANE_ANGLE_MEASURE(0.01745329252),#4);\n\
+         #4 = ( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n\
+         #5 = ( CONVERSION_BASED_UNIT('NONSENSE',#3) NAMED_UNIT(#2) PLANE_ANGLE_UNIT() );\n\
+         #6 = ( NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT() );\n\
+         #7 = ( GEOMETRIC_REPRESENTATION_CONTEXT(3)\n\
+         \t\tGLOBAL_UNIT_ASSIGNED_CONTEXT((#1,#5,#6))\n\
+         \t\tREPRESENTATION_CONTEXT('','') );",
+    );
+    let result = convert_source(&source);
+    // The non-standard name is surfaced as a normalization, not a defect.
+    assert!(
+        result.warnings.iter().any(
+            |w| matches!(w, ConvertError::NonStandardInput { field, normalized_to, .. }
+            if field.contains("CONVERSION_BASED_UNIT.name") && field.contains("NONSENSE")
+                && normalized_to == "DEGREE")
+        ),
+        "{:#?}",
+        result.warnings,
+    );
+    // No "unsupported name" defect and no incomplete-context fallback: the unit
+    // was recovered, so the plane-angle slot is filled.
+    assert!(
+        !result.warnings.iter().any(
+            |w| matches!(w, ConvertError::UnexpectedEntityForm { detail, .. }
+            if detail.contains("incomplete unit context")
+                || (detail.contains("CONVERSION_BASED_UNIT") && detail.contains("NONSENSE")))
+        ),
+        "{:#?}",
+        result.warnings,
+    );
+    // The recovered unit is a degree (not the old radian fallback).
+    assert_eq!(first_plane_angle(&result.model), Some(AngleUnit::Degree));
+    assert_eq!(first_length(&result.model), Some(LengthUnit::Millimetre));
 }
 
 #[test]
@@ -795,7 +1430,350 @@ fn unit_no_global_context_is_silent() {
     // emit no warnings (silent skip).
     let result = convert_source(&minimal_step("#1 = CARTESIAN_POINT('',(0.,0.,0.));"));
     assert!(result.warnings.is_empty());
-    assert_eq!(result.model.units, None);
+    assert!(result.model.units.is_empty());
+}
+
+#[test]
+fn empty_prrpc_and_its_relationship_dropped_as_normalization() {
+    // `PRODUCT_RELATED_PRODUCT_CATEGORY.products` is SET[1:?] in every schema;
+    // some CATIA / Autodesk exports emit an empty `()`. The reader drops the
+    // empty PRRPC (and the PRODUCT_CATEGORY_RELATIONSHIP that references it) as
+    // a NonStandardInput normalization, not a MissingReference defect. A
+    // PRRPC with real products is preserved.
+    let result = convert_source(&minimal_step(
+        "#1 = PRODUCT('P','P',' ',(#2));\n\
+         #2 = PRODUCT_CONTEXT('',#3,'mechanical');\n\
+         #3 = APPLICATION_CONTEXT('core');\n\
+         #4 = PRODUCT_CATEGORY('part','');\n\
+         #5 = PRODUCT_RELATED_PRODUCT_CATEGORY('part',$,());\n\
+         #6 = PRODUCT_CATEGORY_RELATIONSHIP('','',#4,#5);\n\
+         #7 = PRODUCT_RELATED_PRODUCT_CATEGORY('part',$,(#1));",
+    ));
+    // Both `$`-empty entities surface as normalizations; no defect.
+    let norms = result
+        .warnings
+        .iter()
+        .filter(|w| {
+            matches!(w, ConvertError::NonStandardInput { normalized_to, .. }
+                if normalized_to.starts_with("dropped"))
+        })
+        .count();
+    assert_eq!(norms, 2, "{:#?}", result.warnings);
+    assert!(
+        !result
+            .warnings
+            .iter()
+            .any(|w| matches!(w, ConvertError::MissingReference { .. })),
+        "{:#?}",
+        result.warnings
+    );
+    // The empty PRRPC + its relationship are not in the IR; the real PRRPC is.
+    let asm = result.model.assembly.as_ref().expect("assembly");
+    assert!(
+        asm.product_category_relationships.is_empty(),
+        "the relationship to the empty PRRPC is dropped"
+    );
+    let prpc_count = asm
+        .product_categories
+        .iter()
+        .filter(|pc| {
+            matches!(
+                pc,
+                crate::ir::assembly::ProductCategory::ProductRelatedProductCategory(_)
+            )
+        })
+        .count();
+    assert_eq!(prpc_count, 1, "only the non-empty PRRPC survives");
+}
+
+#[test]
+fn product_category_relationship_accepts_prpc_category() {
+    // `product_category_relationship.category : product_category`, and
+    // PRODUCT_RELATED_PRODUCT_CATEGORY is a product_category subtype, so a PRPC
+    // is a valid `category` (NIST ctc_05). The reader must resolve it via
+    // prpc_arena_map, not drop it as a MissingReference.
+    let result = convert_source(&minimal_step(
+        "#1 = PRODUCT('P','P',' ',(#2));\n\
+         #2 = PRODUCT_CONTEXT('',#3,'mechanical');\n\
+         #3 = APPLICATION_CONTEXT('core');\n\
+         #4 = PRODUCT_RELATED_PRODUCT_CATEGORY('part','',(#1));\n\
+         #5 = PRODUCT_RELATED_PRODUCT_CATEGORY('detail','',(#1));\n\
+         #6 = PRODUCT_CATEGORY_RELATIONSHIP('','',#4,#5);",
+    ));
+    assert!(
+        !result
+            .warnings
+            .iter()
+            .any(|w| matches!(w, ConvertError::MissingReference { .. })),
+        "PRPC category must resolve, no MissingReference: {:#?}",
+        result.warnings
+    );
+    let asm = result.model.assembly.as_ref().expect("assembly");
+    assert_eq!(
+        asm.product_category_relationships.len(),
+        1,
+        "the relationship with a PRPC category is preserved"
+    );
+}
+
+#[test]
+fn empty_invisibility_dropped_as_normalization() {
+    // `INVISIBILITY.invisible_items` is SET[1:?] in every schema; some grabcad
+    // exports emit an empty `()` (hides nothing). The reader drops it as a
+    // NonStandardInput normalization, not a MissingReference defect. INVISIBILITY
+    // is a leaf, so there is no cascade.
+    let result = convert_source(&minimal_step("#1 = INVISIBILITY(());"));
+    let norms = result
+        .warnings
+        .iter()
+        .filter(|w| {
+            matches!(w, ConvertError::NonStandardInput { field, normalized_to, .. }
+                if field == "INVISIBILITY" && normalized_to.starts_with("dropped"))
+        })
+        .count();
+    assert_eq!(norms, 1, "{:#?}", result.warnings);
+    assert!(
+        !result.warnings.iter().any(|w| matches!(
+            w,
+            ConvertError::MissingReference { .. } | ConvertError::UnexpectedEntityForm { .. }
+        )),
+        "{:#?}",
+        result.warnings
+    );
+    // No empty invisibility entity is materialised.
+    assert!(
+        result
+            .model
+            .visualization
+            .as_ref()
+            .is_none_or(|v| v.invisibilities.is_empty()),
+        "the empty INVISIBILITY is not in the IR"
+    );
+}
+
+#[test]
+fn invisibility_with_all_items_unresolved_surfaces_a_warning() {
+    // A non-empty INVISIBILITY whose items resolve to no modelled
+    // styled_item / representation / draughting_callout (here a CARTESIAN_POINT,
+    // outside all three id_maps — the handler treats any non-target ref the same)
+    // is dropped, but surfaced as a defect warning rather than silently. These
+    // entities already count as missing, so this adds visibility, not loss.
+    let result = convert_source(&minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = INVISIBILITY((#1));",
+    ));
+    let unresolved = result
+        .warnings
+        .iter()
+        .filter(|w| {
+            matches!(w, ConvertError::UnexpectedEntityForm { detail, .. }
+                if detail.contains("INVISIBILITY") && detail.contains("did not resolve"))
+        })
+        .count();
+    assert_eq!(unresolved, 1, "{:#?}", result.warnings);
+    // It is not a NonStandardInput normalization (the set was non-empty).
+    assert!(
+        !result
+            .warnings
+            .iter()
+            .any(|w| matches!(w, ConvertError::NonStandardInput { field, .. }
+                if field == "INVISIBILITY")),
+        "{:#?}",
+        result.warnings
+    );
+    // No invisibility entity is materialised.
+    assert!(
+        result
+            .model
+            .visualization
+            .as_ref()
+            .is_none_or(|v| v.invisibilities.is_empty()),
+        "the unresolved INVISIBILITY is not in the IR"
+    );
+}
+
+#[test]
+fn dangling_person_and_organization_and_cascade_dropped_as_normalization() {
+    // `PERSON_AND_ORGANIZATION.the_person` is a required ref; some anonymizers
+    // (e.g. the GrabCAD badland-winch / fairlead fixtures) scrub the person and
+    // leave a dangling sentinel (#18446744073709551615 = u64::MAX) that points
+    // to no defined entity. The reader drops such a P&O — and the
+    // CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT / APPROVAL_PERSON_ORGANIZATION
+    // that reference it — as NonStandardInput normalizations, not defects. A P&O
+    // with real PERSON / ORGANIZATION refs is preserved.
+    let result = convert_source(&minimal_step(
+        "#1 = PERSON('id','last','first',$,$,$);\n\
+         #2 = ORGANIZATION($,'org','');\n\
+         #3 = PERSON_AND_ORGANIZATION(#1,#2);\n\
+         #4 = PERSON_AND_ORGANIZATION(#18446744073709551615,#2);\n\
+         #5 = PERSON_AND_ORGANIZATION_ROLE('creator');\n\
+         #6 = CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT(#4,#5,());\n\
+         #7 = APPROVAL_PERSON_ORGANIZATION(#4,#9998,#5);",
+    ));
+    // The dangling P&O and its two referencing entities each surface as a
+    // "dropped" normalization; no defect.
+    let dropped: Vec<&str> = result
+        .warnings
+        .iter()
+        .filter_map(|w| match w {
+            ConvertError::NonStandardInput {
+                field,
+                normalized_to,
+                ..
+            } if normalized_to.starts_with("dropped") => Some(field.as_str()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(dropped.len(), 3, "{:#?}", result.warnings);
+    assert!(dropped.contains(&"PERSON_AND_ORGANIZATION"));
+    assert!(dropped.contains(&"CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT"));
+    assert!(dropped.contains(&"APPROVAL_PERSON_ORGANIZATION"));
+    assert!(
+        !result
+            .warnings
+            .iter()
+            .any(|w| matches!(w, ConvertError::MissingReference { .. })),
+        "{:#?}",
+        result.warnings
+    );
+    // Only the P&O with real person + organization refs survives in the IR.
+    let plm = result.model.plm.as_ref().expect("plm pool");
+    assert_eq!(plm.person_and_organizations.iter().count(), 1);
+    assert!(plm.person_and_organization_assignments.iter().count() == 0);
+    assert!(plm.approval_person_organizations.iter().count() == 0);
+}
+
+#[test]
+fn file_name_unset_string_fields_normalized_to_empty() {
+    // Part 21 (ISO 10303-21) defines FILE_NAME scalar fields as required
+    // STRING; `$` is non-standard (`''` denotes unspecified). Some exporters
+    // (e.g. the SO14 sensor / centrifugal-fan grabcad fixtures) emit `$` for
+    // originating_system / authorization. The reader normalizes `$` to `''`
+    // and keeps the header rather than discarding it.
+    let source = "ISO-10303-21;\n\
+         HEADER;\n\
+         FILE_DESCRIPTION((''), '2;1');\n\
+         FILE_NAME('n', 't', (''), (''), 'pp', $, $);\n\
+         FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\n\
+         ENDSEC;\n\
+         DATA;\n\
+         #1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         ENDSEC;\n\
+         END-ISO-10303-21;\n";
+    let result = convert_source(source);
+    let header = result
+        .model
+        .header
+        .as_ref()
+        .expect("header kept, not discarded");
+    assert_eq!(header.originating_system, "");
+    assert_eq!(header.authorization, "");
+    // Both `$` fields surface as normalizations, and no defect warning.
+    let norm = result
+        .warnings
+        .iter()
+        .filter(|w| {
+            matches!(w, ConvertError::NonStandardInput { field, .. }
+                if field.contains("FILE_NAME") && field.contains("Unset"))
+        })
+        .count();
+    assert_eq!(norm, 2, "{:#?}", result.warnings);
+    assert!(
+        !result.warnings.iter().any(|w| matches!(
+            w,
+            ConvertError::AttributeType { .. } | ConvertError::UnexpectedEntityForm { .. }
+        )),
+        "{:#?}",
+        result.warnings
+    );
+
+    // Re-read of the written output keeps the header with no new normalization.
+    let text = result.model.write_to_string().expect("write");
+    let re = convert_source(&text);
+    assert!(re.model.header.is_some(), "header survives round-trip");
+}
+
+#[test]
+fn curve_style_unset_curve_font_round_trips_as_none() {
+    // CURVE_STYLE.curve_font is OPTIONAL in AP242 (required in AP203/AP214);
+    // Rhino 8 omits it as `$`. The reader preserves the omission as `None`
+    // (rather than dropping the whole CURVE_STYLE) and the writer re-emits `$`.
+    use crate::ir::visualization::CurveWidth;
+    let source = minimal_step(
+        "#1 = COLOUR_RGB('',0.,1.,1.);\n\
+         #2 = CURVE_STYLE('',$,POSITIVE_LENGTH_MEASURE(0.02),#1);",
+    );
+    let result = convert_source(&source);
+    assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
+    let pool = result.model.visualization.as_ref().expect("viz pool");
+    assert_eq!(
+        pool.curve_styles.len(),
+        1,
+        "CURVE_STYLE preserved, not dropped on $ curve_font"
+    );
+    let cs = pool.curve_styles.iter().next().unwrap();
+    assert_eq!(cs.curve_font, None, "$ curve_font preserved as None");
+    assert!(matches!(
+        cs.curve_width,
+        CurveWidth::PositiveLengthMeasure(_)
+    ));
+
+    // Writer re-emits `$`, and re-reading yields the same `None` (idempotent).
+    let text = result.model.write_to_string().expect("write");
+    assert!(text.contains("CURVE_STYLE("), "CURVE_STYLE emitted: {text}");
+    let re = convert_source(&text);
+    let re_cs = re
+        .model
+        .visualization
+        .as_ref()
+        .expect("viz pool")
+        .curve_styles
+        .iter()
+        .next()
+        .unwrap();
+    assert_eq!(re_cs.curve_font, None, "round-trip keeps None");
+}
+
+#[test]
+fn curve_style_measure_with_unit_width_round_trips() {
+    // CURVE_STYLE.curve_width is a `size_select`; besides the inline
+    // POSITIVE_LENGTH_MEASURE form, it may be a `measure_with_unit` entity ref
+    // (NIST ctc_04). The reader must resolve it through the units pool and the
+    // writer re-emit the ref — not drop the CURVE_STYLE.
+    use crate::ir::visualization::CurveWidth;
+    let source = minimal_step(
+        "#1 = COLOUR_RGB('',0.,1.,1.);\n\
+         #2 = (LENGTH_UNIT()NAMED_UNIT(*)SI_UNIT(.MILLI.,.METRE.));\n\
+         #3 = LENGTH_MEASURE_WITH_UNIT(POSITIVE_LENGTH_MEASURE(0.1),#2);\n\
+         #4 = CURVE_STYLE('',$,#3,#1);",
+    );
+    let result = convert_source(&source);
+    assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
+    let pool = result.model.visualization.as_ref().expect("viz pool");
+    assert_eq!(pool.curve_styles.len(), 1, "CURVE_STYLE preserved");
+    let cs = pool.curve_styles.iter().next().unwrap();
+    assert!(
+        matches!(cs.curve_width, CurveWidth::MeasureWithUnit(_)),
+        "curve_width resolves to a measure_with_unit ref, got {:?}",
+        cs.curve_width
+    );
+
+    // Writer re-emits the ref and re-reading preserves the variant.
+    let text = result.model.write_to_string().expect("write");
+    let re = convert_source(&text);
+    let re_cs = re
+        .model
+        .visualization
+        .as_ref()
+        .expect("viz pool")
+        .curve_styles
+        .iter()
+        .next()
+        .unwrap();
+    assert!(
+        matches!(re_cs.curve_width, CurveWidth::MeasureWithUnit(_)),
+        "measure_with_unit curve_width survives round-trip"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -847,7 +1825,15 @@ fn surface_curve_aliases_to_inner_curve_3d() {
          #15 = VERTEX_POINT('',#2);\n\
          #16 = EDGE_CURVE('',#14,#15,#13,.T.);",
     ));
-    assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
+    // The synthetic fixture uses a CARTESIAN_POINT as PCURVE.reference_to_curve
+    // for brevity, so `resolve_pcurve` legitimately reports it as unresolvable
+    // (phase pcurve-pass-order made the previously-silent drop into a warning).
+    assert_eq!(
+        result.warnings.len(),
+        1,
+        "expected exactly the PCURVE-unresolved warning, got {:#?}",
+        result.warnings
+    );
     // Only the 3D LINE should be in the curves pool.
     assert_eq!(result.model.geometry.curves.len(), 1);
     // The edge must point at that LINE via the SURFACE_CURVE alias.
@@ -857,4 +1843,437 @@ fn surface_curve_aliases_to_inner_curve_3d() {
         Curve::Line(_) => {}
         _ => panic!("edge.curve should resolve to the aliased LINE"),
     }
+}
+
+// ---------------------------------------------------------------------------
+// PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS (AP203 / AP242 subtype)
+// ---------------------------------------------------------------------------
+
+#[test]
+fn pdef_with_associated_documents_is_recognised_as_product_definition() {
+    // ashtray (grabcad) and similar AP203 fixtures emit
+    //   PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS(id, desc, formation, ctx, documentation_ids)
+    // in the PRODUCT chain instead of plain PRODUCT_DEFINITION. The reader
+    // must accept the subtype: the entity dispatch builds pdef_to_product,
+    // and the PDS classification (pdef_shape_to_pdef map) treats the subtype
+    // as a valid PDEF target. Without this, the SDR handler skips silently
+    // and the product ends up with `geometry_context = None` plus empty
+    // content - exactly the ashtray failure mode.
+    let source = minimal_step(
+        "#1 = APPLICATION_CONTEXT('test');\n\
+         #2 = PRODUCT_CONTEXT('',#1,'mechanical');\n\
+         #3 = PRODUCT_DEFINITION_CONTEXT('part definition',#1,'design');\n\
+         #4 = PRODUCT('P','P','',(#2));\n\
+         #5 = PRODUCT_DEFINITION_FORMATION('1','',#4);\n\
+         #16 = DOCUMENT_TYPE('');\n\
+         #6 = DOCUMENT('','','',#16);\n\
+         #7 = PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS('design','',#5,#3,(#6));\n\
+         #8 = PRODUCT_DEFINITION_SHAPE('','',#7);\n\
+         #10 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+         #11 = ( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n\
+         #12 = ( NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT() );\n\
+         #13 = ( GEOMETRIC_REPRESENTATION_CONTEXT(3)\n\
+         \t\tGLOBAL_UNIT_ASSIGNED_CONTEXT((#10,#11,#12))\n\
+         \t\tREPRESENTATION_CONTEXT('','') );\n\
+         #14 = SHAPE_REPRESENTATION('',(),#13);\n\
+         #15 = SHAPE_DEFINITION_REPRESENTATION(#8,#14);",
+    );
+    let result = convert_source(&source);
+    // No warnings about missing PDEF or unresolved SDR - PDWAD must be
+    // accepted just like PRODUCT_DEFINITION.
+    assert!(
+        result
+            .warnings
+            .iter()
+            .all(|w| !matches!(w, ConvertError::MissingReference { .. })),
+        "no MissingReference warnings expected: {:#?}",
+        result.warnings,
+    );
+    let assembly = result.model.assembly.as_ref().expect("assembly present");
+    assert_eq!(assembly.products.len(), 1);
+    let product = assembly
+        .products
+        .iter()
+        .next()
+        .expect("at least one product");
+    assert!(
+        product.geometry_context.is_some(),
+        "PDWAD product must get geometry_context bound via the SDR chain"
+    );
+    // The subtype's documentation_ids must be captured onto the product so the
+    // writer can re-emit the subtype rather than downgrading to plain PD.
+    assert_eq!(
+        product.associated_documents.len(),
+        1,
+        "documentation_ids must be recorded on the product"
+    );
+    // Write-back re-emits the subtype (not a downgraded plain PRODUCT_DEFINITION)
+    // and a full round-trip preserves the documentation_ids.
+    let out = result.model.write_to_string().expect("write");
+    assert!(
+        out.contains("PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS"),
+        "writer must re-emit the subtype, got:\n{out}"
+    );
+    let re = convert_source(&out);
+    let re_product = re
+        .model
+        .assembly
+        .as_ref()
+        .expect("round-tripped assembly")
+        .products
+        .iter()
+        .next()
+        .expect("round-tripped product");
+    assert_eq!(
+        re_product.associated_documents.len(),
+        1,
+        "documentation_ids survive a full round-trip"
+    );
+}
+
+#[test]
+fn geometric_tolerance_targets_product_definition_shape() {
+    // GEOMETRIC_TOLERANCE.toleranced_shape_aspect is a geometric_tolerance_target
+    // SELECT that also admits product_definition_shape (not just shape_aspect),
+    // NIST ftc_07 / ftc_10. The reader must resolve a PDS target (#7) rather
+    // than dropping the tolerance.
+    use crate::ir::pmi::GeometricTolerance;
+    use crate::ir::shape_aspect_ref::GeometricToleranceTarget;
+    let source = minimal_step(
+        "#1 = APPLICATION_CONTEXT('test');\n\
+         #2 = PRODUCT_CONTEXT('',#1,'mechanical');\n\
+         #3 = PRODUCT_DEFINITION_CONTEXT('part definition',#1,'design');\n\
+         #4 = PRODUCT('P','P','',(#2));\n\
+         #5 = PRODUCT_DEFINITION_FORMATION('1','',#4);\n\
+         #6 = PRODUCT_DEFINITION('design','',#5,#3);\n\
+         #7 = PRODUCT_DEFINITION_SHAPE('','',#6);\n\
+         #10 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+         #11 = ( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n\
+         #12 = ( NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT() );\n\
+         #13 = ( GEOMETRIC_REPRESENTATION_CONTEXT(3)\n\
+         \t\tGLOBAL_UNIT_ASSIGNED_CONTEXT((#10,#11,#12))\n\
+         \t\tREPRESENTATION_CONTEXT('','') );\n\
+         #14 = SHAPE_REPRESENTATION('',(),#13);\n\
+         #15 = SHAPE_DEFINITION_REPRESENTATION(#7,#14);\n\
+         #20 = LENGTH_MEASURE_WITH_UNIT(LENGTH_MEASURE(0.1),#10);\n\
+         #21 = FLATNESS_TOLERANCE('Flatness.1','',#20,#7);",
+    );
+    let result = convert_source(&source);
+    assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
+    let pmi = result.model.pmi.as_ref().expect("pmi pool");
+    assert_eq!(pmi.geometric_tolerances.len(), 1, "tolerance preserved");
+    let GeometricTolerance::Flatness(d) = pmi.geometric_tolerances.iter().next().unwrap() else {
+        panic!("expected Flatness");
+    };
+    assert!(
+        matches!(
+            d.toleranced_shape_aspect,
+            GeometricToleranceTarget::ProductDefinitionShape(_)
+        ),
+        "toleranced_shape_aspect resolves to a PDS target, got {:?}",
+        d.toleranced_shape_aspect
+    );
+
+    // Writer re-emits the PDS ref and re-reading preserves the variant.
+    let out = result.model.write_to_string().expect("write");
+    let re = convert_source(&out);
+    let re_pmi = re.model.pmi.as_ref().expect("pmi pool");
+    let GeometricTolerance::Flatness(rd) = re_pmi.geometric_tolerances.iter().next().unwrap()
+    else {
+        panic!("expected Flatness after round-trip");
+    };
+    assert!(
+        matches!(
+            rd.toleranced_shape_aspect,
+            GeometricToleranceTarget::ProductDefinitionShape(_)
+        ),
+        "PDS target survives round-trip"
+    );
+}
+
+#[test]
+fn product_definition_id_description_materialised_in_arena() {
+    // PRODUCT_DEFINITION.id / .description were dropped on read and hardcoded
+    // to 'design' / '' by the writer. They are now preserved in the canonical
+    // `product_definition` arena (Commit A — reader side; the writer still
+    // synthesises until Commit B, so this asserts the arena on first read).
+    let source = minimal_step(
+        "#1 = APPLICATION_CONTEXT('test');\n\
+         #2 = PRODUCT_CONTEXT('',#1,'mechanical');\n\
+         #3 = PRODUCT_DEFINITION_CONTEXT('part definition',#1,'design');\n\
+         #4 = PRODUCT('P','P','',(#2));\n\
+         #5 = PRODUCT_DEFINITION_FORMATION('1','',#4);\n\
+         #6 = PRODUCT_DEFINITION('MyPart','rev A',#5,#3);\n\
+         #8 = PRODUCT_DEFINITION_SHAPE('','',#6);\n\
+         #10 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+         #11 = ( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n\
+         #12 = ( NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT() );\n\
+         #13 = ( GEOMETRIC_REPRESENTATION_CONTEXT(3)\n\
+         \t\tGLOBAL_UNIT_ASSIGNED_CONTEXT((#10,#11,#12))\n\
+         \t\tREPRESENTATION_CONTEXT('','') );\n\
+         #14 = SHAPE_REPRESENTATION('',(),#13);\n\
+         #15 = SHAPE_DEFINITION_REPRESENTATION(#8,#14);",
+    );
+    let result = convert_source(&source);
+    let assembly = result.model.assembly.as_ref().expect("assembly present");
+    assert_eq!(assembly.product_definitions.iter().count(), 1);
+    let pd = assembly.product_definitions.iter().next().unwrap();
+    assert_eq!(pd.id, "MyPart");
+    assert_eq!(pd.description, "rev A");
+    assert!(pd.formation.is_some(), "formation resolved into the arena");
+    assert!(
+        pd.context.is_some(),
+        "context resolved via the resolve_product_contexts post-pass"
+    );
+    let product = assembly.products.iter().next().unwrap();
+    assert!(
+        product.pdef.is_some(),
+        "Product links to its canonical PD arena entry"
+    );
+
+    // Round-trip: the writer now emits id/description from the arena (Commit B),
+    // so they survive write -> read (the legacy hardcoded 'design'/'' would
+    // lose them).
+    let out = result.model.write_to_string().expect("write");
+    let re = convert_source(&out);
+    let re_pd = re
+        .model
+        .assembly
+        .as_ref()
+        .expect("round-tripped assembly")
+        .product_definitions
+        .iter()
+        .next()
+        .expect("round-tripped PD");
+    assert_eq!(re_pd.id, "MyPart", "PD id survives the round-trip");
+    assert_eq!(re_pd.description, "rev A", "PD description survives");
+}
+
+#[test]
+fn gisu_unset_used_representation_derived_from_identified_item() {
+    // `GEOMETRIC_ITEM_SPECIFIC_USAGE.used_representation` is required, but CATIA
+    // emits `$` for "Solid" GISUs. The reader derives it from the representation
+    // that contains `identified_item` (the schema's WHERE rule) and recovers the
+    // GISU instead of dropping it, surfacing a NonStandardInput normalization.
+    let source = minimal_step(
+        "#1 = APPLICATION_CONTEXT('test');\n\
+         #2 = PRODUCT_CONTEXT('',#1,'mechanical');\n\
+         #3 = PRODUCT_DEFINITION_CONTEXT('part definition',#1,'design');\n\
+         #4 = PRODUCT('P','P','',(#2));\n\
+         #5 = PRODUCT_DEFINITION_FORMATION('1','',#4);\n\
+         #6 = PRODUCT_DEFINITION('part','',#5,#3);\n\
+         #7 = PRODUCT_DEFINITION_SHAPE('','',#6);\n\
+         #10 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+         #11 = ( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n\
+         #12 = ( NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT() );\n\
+         #13 = ( GEOMETRIC_REPRESENTATION_CONTEXT(3)\n\
+         \t\tGLOBAL_UNIT_ASSIGNED_CONTEXT((#10,#11,#12))\n\
+         \t\tREPRESENTATION_CONTEXT('','') );\n\
+         #20 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #21 = DIRECTION('',(0.,0.,1.));\n\
+         #22 = DIRECTION('',(1.,0.,0.));\n\
+         #23 = VECTOR('',#21,1.);\n\
+         #24 = LINE('',#20,#23);\n\
+         #25 = AXIS2_PLACEMENT_3D('',#20,#21,#22);\n\
+         #26 = PLANE('',#25);\n\
+         #27 = VERTEX_POINT('',#20);\n\
+         #28 = EDGE_CURVE('',#27,#27,#24,.T.);\n\
+         #29 = ORIENTED_EDGE('',*,*,#28,.T.);\n\
+         #30 = EDGE_LOOP('',(#29));\n\
+         #31 = FACE_BOUND('',#30,.T.);\n\
+         #32 = ADVANCED_FACE('',(#31),#26,.T.);\n\
+         #33 = CLOSED_SHELL('',(#32));\n\
+         #34 = MANIFOLD_SOLID_BREP('',#33);\n\
+         #35 = ADVANCED_BREP_SHAPE_REPRESENTATION('',(#34),#13);\n\
+         #36 = SHAPE_ASPECT('','Solid',#7,.F.);\n\
+         #37 = GEOMETRIC_ITEM_SPECIFIC_USAGE('','Solid',#36,$,#34);",
+    );
+    let result = convert_source(&source);
+
+    // The GISU is recovered (not dropped); its used_representation resolves to
+    // the only representation in the model (the ABSR containing the solid).
+    assert_eq!(
+        result.model.geometric_item_specific_usages.iter().count(),
+        1,
+        "$-used_representation GISU recovered"
+    );
+    let gisu = result
+        .model
+        .geometric_item_specific_usages
+        .iter()
+        .next()
+        .unwrap();
+    assert_eq!(
+        gisu.used_representation,
+        crate::ir::RepresentationId(0),
+        "derived used_representation points at the ABSR"
+    );
+
+    // Surfaced as a NonStandardInput normalization (LOSS-exempt), not a defect.
+    let norm = result
+        .warnings
+        .iter()
+        .filter(|w| {
+            matches!(w, ConvertError::NonStandardInput { field, .. }
+                if field.contains("GEOMETRIC_ITEM_SPECIFIC_USAGE.used_representation"))
+        })
+        .count();
+    assert_eq!(norm, 1, "{:#?}", result.warnings);
+    assert!(
+        !result.warnings.iter().any(|w| matches!(
+            w,
+            ConvertError::MissingReference { .. } | ConvertError::UnexpectedEntityForm { .. }
+        )),
+        "{:#?}",
+        result.warnings
+    );
+}
+
+#[test]
+fn shape_aspect_of_shape_product_definition_normalised() {
+    // SHAPE_ASPECT.of_shape is required to be a PRODUCT_DEFINITION_SHAPE, but the
+    // C3D kernel emits a PRODUCT_DEFINITION directly (#6 below, not the PDS #7).
+    // The reader accepts it, resolves to the product, and surfaces a
+    // NonStandardInput normalization; the writer re-emits the standard PDS form.
+    let source = minimal_step(
+        "#1 = APPLICATION_CONTEXT('test');\n\
+         #2 = PRODUCT_CONTEXT('',#1,'mechanical');\n\
+         #3 = PRODUCT_DEFINITION_CONTEXT('part definition',#1,'design');\n\
+         #4 = PRODUCT('P','P','',(#2));\n\
+         #5 = PRODUCT_DEFINITION_FORMATION('1','',#4);\n\
+         #6 = PRODUCT_DEFINITION('part','',#5,#3);\n\
+         #7 = PRODUCT_DEFINITION_SHAPE('','',#6);\n\
+         #8 = SHAPE_ASPECT('feat','',#6,.F.);",
+    );
+    let result = convert_source(&source);
+
+    // The shape_aspect is recovered (target = the product), not dropped.
+    assert_eq!(
+        result.model.shape_aspects.iter().count(),
+        1,
+        "of_shape=PRODUCT_DEFINITION shape_aspect recovered"
+    );
+
+    // Surfaced as a NonStandardInput normalization (LOSS-exempt), no defect.
+    let norm = result
+        .warnings
+        .iter()
+        .filter(|w| {
+            matches!(w, ConvertError::NonStandardInput { field, .. }
+                if field == "SHAPE_ASPECT.of_shape")
+        })
+        .count();
+    assert_eq!(norm, 1, "{:#?}", result.warnings);
+    assert!(
+        !result.warnings.iter().any(|w| matches!(
+            w,
+            ConvertError::MissingReference { .. } | ConvertError::UnexpectedEntityForm { .. }
+        )),
+        "{:#?}",
+        result.warnings
+    );
+    // The target resolves to the single product (the writer re-emits the
+    // standard of_shape=PDS form from it). Standard-form round-trip idempotency
+    // is covered on real C3D data (input-shaft) by the reference-check run.
+    let sa = result.model.shape_aspects.iter().next().unwrap();
+    assert_eq!(
+        sa.target,
+        crate::ProductId(0),
+        "of_shape resolves to product"
+    );
+}
+
+#[test]
+fn pmi_validation_property_on_mbd_characterized_object_recovered() {
+    // A 'pmi validation property' PROPERTY_DEFINITION can target an MBD
+    // draughting-model complex `(CHARACTERIZED_OBJECT CHARACTERIZED_REPRESENTATION
+    // DRAUGHTING_MODEL REPRESENTATION)` via its CHARACTERIZED_OBJECT facet. step-io
+    // registers that facet so the PD resolves to a `CharacterizedObject` member
+    // instead of being dropped (which cascaded into its PDR + REPRESENTATION).
+    use crate::ir::property::{CharacterizedDefinition, PropertyDefinition};
+    let source = minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+         #3 = ( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n\
+         #4 = ( NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT() );\n\
+         #5 = ( GEOMETRIC_REPRESENTATION_CONTEXT(3)\n\
+         \t\tGLOBAL_UNIT_ASSIGNED_CONTEXT((#2,#3,#4))\n\
+         \t\tREPRESENTATION_CONTEXT('','') );\n\
+         #6 = ( CHARACTERIZED_OBJECT(*,*) CHARACTERIZED_REPRESENTATION()\n\
+         \t\tDRAUGHTING_MODEL() REPRESENTATION('MBD',(#1),#5) );\n\
+         #7 = PROPERTY_DEFINITION('pmi validation property','',#6);",
+    );
+    let result = convert_source(&source);
+
+    // The MBD complex registered a CHARACTERIZED_OBJECT facet (Itself).
+    assert_eq!(result.model.characterized_objects.iter().count(), 1);
+
+    // The PD is recovered into the property arena with a CharacterizedObject
+    // definition (not dropped).
+    let props = result.model.properties.as_ref().expect("properties");
+    let recovered = props.property_definitions.iter().any(|pd| {
+        matches!(
+            pd,
+            PropertyDefinition::Itself(d)
+                if matches!(d.definition, CharacterizedDefinition::CharacterizedObject(_))
+        )
+    });
+    assert!(recovered, "pmi validation property PD recovered");
+    assert!(
+        !result.warnings.iter().any(|w| matches!(
+            w,
+            ConvertError::MissingReference { .. } | ConvertError::UnexpectedEntityForm { .. }
+        )),
+        "{:#?}",
+        result.warnings
+    );
+}
+
+#[test]
+fn shape_dimension_representation_preserves_descriptive_item() {
+    // SHAPE_DIMENSION_REPRESENTATION.items is a SET of representation_item; a
+    // DESCRIPTIVE_REPRESENTATION_ITEM is a valid member (PMI dimension notes).
+    // step-io previously resolved items only through the geometry/measure
+    // resolver, silently dropping the descriptive note; now the items SET keeps
+    // both an `Item` and a `Descriptive` member.
+    use crate::ir::shape_rep::{DimensionItem, Representation};
+    let source = minimal_step(
+        "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
+         #2 = DESCRIPTIVE_REPRESENTATION_ITEM('dimensional note','auxiliary');\n\
+         #3 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+         #4 = ( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n\
+         #5 = ( NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT() );\n\
+         #6 = ( GEOMETRIC_REPRESENTATION_CONTEXT(3)\n\
+         \t\tGLOBAL_UNIT_ASSIGNED_CONTEXT((#3,#4,#5))\n\
+         \t\tREPRESENTATION_CONTEXT('','') );\n\
+         #7 = SHAPE_DIMENSION_REPRESENTATION('',(#1,#2),#6);",
+    );
+    let result = convert_source(&source);
+
+    let sdr_items = |m: &crate::StepModel| {
+        m.representations
+            .iter()
+            .find_map(|r| match r {
+                Representation::ShapeDimensionRepresentation(s) => Some(s.items.clone()),
+                _ => None,
+            })
+            .expect("SDR present")
+    };
+    let items = sdr_items(&result.model);
+    assert_eq!(items.len(), 2, "both the point item and the DRI are kept");
+    assert!(items.iter().any(|i| matches!(i, DimensionItem::Item(_))));
+    assert!(
+        items
+            .iter()
+            .any(|i| matches!(i, DimensionItem::Descriptive(d)
+                if d.name == "dimensional note" && d.description == "auxiliary")),
+        "the descriptive note is preserved, not dropped"
+    );
+
+    // Round-trip: the SDR is standalone (no product chain), so the descriptive
+    // item survives write -> read.
+    let out = result.model.write_to_string().expect("write");
+    let re = convert_source(&out);
+    let re_items = sdr_items(&re.model);
+    assert_eq!(items, re_items, "SDR items idempotent across round-trip");
 }

@@ -1,0 +1,56 @@
+//! `MASS_MEASURE_WITH_UNIT` handler (units-1).
+//!
+//! Sister of [`crate::entities::units::length_measure_with_unit`]; same
+//! attribute shape with `MASS_MEASURE(real)` as the typed value component.
+
+use crate::entities::SimpleEntityHandler;
+use crate::entities::units::length_measure_with_unit::emit_mwu;
+use crate::entities::units::shared::read_mwu_attrs;
+use crate::ir::error::ConvertError;
+use crate::ir::units::MeasureWithUnit;
+use crate::parser::entity::{Attribute, EntityGraph};
+use crate::reader::ReaderContext;
+use crate::writer::WriteError;
+use crate::writer::buffer::WriteBuffer;
+use step_io_macros::step_entity;
+
+pub(crate) struct MassMeasureWithUnitHandler;
+
+#[step_entity(name = "MASS_MEASURE_WITH_UNIT")]
+impl SimpleEntityHandler for MassMeasureWithUnitHandler {
+    type WriteInput = (f64, u64);
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        if ctx.cbu_internal_mwu_refs.contains(&entity_id) {
+            return Ok(());
+        }
+        let Some((value, unit_step)) = read_mwu_attrs(attrs, entity_id, "MASS_MEASURE_WITH_UNIT")?
+        else {
+            return Ok(());
+        };
+        let Some(&unit_id) = ctx.named_unit_id_map.get(&unit_step) else {
+            return Ok(());
+        };
+        let id = ctx.mwu_arena.push(MeasureWithUnit::Mass {
+            value,
+            unit: unit_id,
+        });
+        ctx.mwu_id_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, (value, unit_step): (f64, u64)) -> Result<u64, WriteError> {
+        Ok(emit_mwu(
+            buf,
+            "MASS_MEASURE_WITH_UNIT",
+            "MASS_MEASURE",
+            value,
+            unit_step,
+        ))
+    }
+}

@@ -46,6 +46,14 @@ const FIXTURES: &[(&str, &str)] = &[
         "assembly_ap214_is",
         include_str!("fixtures/assembly_ap214_is.step"),
     ),
+    (
+        "face_surface_ap214_is",
+        include_str!("fixtures/face_surface_ap214_is.step"),
+    ),
+    (
+        "offset_surface_ap214_is",
+        include_str!("fixtures/offset_surface_ap214_is.step"),
+    ),
 ];
 
 fn load(name: &str) -> EntityGraph {

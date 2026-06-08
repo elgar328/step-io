@@ -1,10 +1,61 @@
 use super::arena::{Arena, define_id};
-use super::assembly::Product;
+use super::assembly::{
+    NextAssemblyUsageOccurrence, Product, ProductCategory, ProductCategoryRelationship,
+    ProductContext, ProductDefinition, ProductDefinitionContext,
+    ProductDefinitionContextAssociation, ProductDefinitionContextRole, ProductDefinitionFormation,
+    ProductDefinitionRelationship,
+};
 use super::geometry::{
     Axis1Placement, Axis2Placement2d, Axis2Placement3d, Curve, Curve2d, Direction2, Direction3,
-    Point2, Point3, Surface,
+    PlanarExtent, Point2, Point3, Surface, Vertex,
 };
-use super::topology::{Edge, Face, Shell, Solid, Vertex, Wire};
+use super::plm::{
+    Address, ApplicationContext, ApplicationProtocolDefinition, AppliedDocumentReference,
+    AppliedExternalIdentificationAssignment, AppliedGroupAssignment, Approval, ApprovalAssignment,
+    ApprovalDateTime, ApprovalPersonOrganization, ApprovalRole, ApprovalStatus, CalendarDate,
+    CoordinatedUniversalTimeOffset, DateAndTime, DateAndTimeAssignment, DateTimeRole, Document,
+    DocumentProductEquivalence, DocumentRepresentationType, DocumentType, ExternalSource, Group,
+    IdentificationRole, LocalTime, ObjectRole, Organization, Person, PersonAndOrganization,
+    PersonAndOrganizationAssignment, PersonAndOrganizationRole, RoleAssociation,
+    SecurityClassification, SecurityClassificationAssignment, SecurityClassificationLevel,
+};
+use super::pmi::{
+    AnnotationCurveOccurrence, AnnotationOccurrence, AnnotationOccurrenceAssociativity,
+    AnnotationPlaceholderLeaderLine, ApllPointElement, Datum, DatumFeature, DimensionalLocation,
+    DimensionalSize, DraughtingCallout, DraughtingCalloutRelationship,
+    DraughtingModelItemAssociation, DraughtingPreDefinedTextFont, GeneralDatumReference,
+    GeometricTolerance, GeometricToleranceRelationship, GeometricToleranceWithDatumReference,
+    LimitsAndFits, MeasureQualification, PlusMinusTolerance, ProjectedZoneDefinition,
+    ToleranceValue, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
+};
+use super::property::{
+    DescriptionAttribute, DimensionalCharacteristicRepresentation, GeneralProperty,
+    GeneralPropertyAssociation, IdAttribute, NameAttribute, Property, PropertyDefinition,
+    PropertyDefinitionRepresentationLink, ShapeDefinitionRepresentationLink,
+};
+use super::representation_item::RepresentationItem;
+use super::shape_rep::{
+    AllAroundShapeAspect, CentreOfSymmetry, CharacterizedObject, CompositeGroupShapeAspect,
+    CompoundRepresentationItem, DatumSystem, DatumTarget, DefaultModelGeometricView,
+    GeometricItemSpecificUsage, MappedItem, NumericRepresentationItem, PlacedDatumTargetFeature,
+    Representation, RepresentationMap, RepresentationRelationship, ShapeAspect,
+    ShapeAspectRelationship, ToleranceZone, UnitContext, UnitlessContext,
+};
+use super::tessellation::{
+    ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, TessellatedItem,
+};
+use super::topology::{Edge, Face, Shell, Solid, Wire};
+use super::units::{
+    DerivedUnit, DerivedUnitElement, DimensionalExponents, MeasureWithUnit, NamedUnit,
+};
+use super::visualization::GeometricRepresentationItem;
+use super::visualization::{
+    AppliedPresentedItem, AreaInSet, CameraModel, Colour, CompositeText, CurveStyle, FoundedItem,
+    Invisibility, PreDefinedCurveFont, PreDefinedMarker, PreDefinedSymbol,
+    PresentationLayerAssignment, PresentationRepresentation, PresentationSet, PresentationSize,
+    PresentationStyleAssignment, PresentedItemRepresentation, StyledItem, SurfaceStyleRendering,
+    SymbolColour, TextLiteral, TextStyle, TextStyleForDefinedFont,
+};
 
 // Geometry Ids (3D)
 define_id!(PointId, Point3);
@@ -13,6 +64,7 @@ define_id!(SurfaceId, Surface);
 define_id!(CurveId, Curve);
 define_id!(Placement3dId, Axis2Placement3d);
 define_id!(Placement1dId, Axis1Placement);
+define_id!(PlanarExtentId, PlanarExtent);
 
 // Geometry Ids (2D — PCURVE parametric space)
 define_id!(Point2dId, Point2);
@@ -30,3 +82,374 @@ define_id!(SolidId, Solid);
 
 // Assembly Ids
 define_id!(ProductId, Product);
+define_id!(ProductCategoryId, ProductCategory);
+define_id!(ProductCategoryRelationshipId, ProductCategoryRelationship);
+define_id!(ProductDefinitionFormationId, ProductDefinitionFormation);
+define_id!(ProductContextId, ProductContext);
+define_id!(ProductDefinitionContextId, ProductDefinitionContext);
+define_id!(ProductDefinitionContextRoleId, ProductDefinitionContextRole);
+define_id!(
+    ProductDefinitionContextAssociationId,
+    ProductDefinitionContextAssociation
+);
+define_id!(AssemblyComponentUsageId, NextAssemblyUsageOccurrence);
+define_id!(ProductDefinitionId, ProductDefinition);
+define_id!(
+    ProductDefinitionRelationshipId,
+    ProductDefinitionRelationship
+);
+define_id!(NameAttributeId, NameAttribute);
+define_id!(DescriptionAttributeId, DescriptionAttribute);
+define_id!(IdAttributeId, IdAttribute);
+
+// Property Ids — `Property` (PD+PDR+REP collapsed) arena + the AP242
+// user-defined-attribute pair (Phase property-3).
+define_id!(PropertyId, Property);
+define_id!(GeneralPropertyId, GeneralProperty);
+define_id!(GeneralPropertyAssociationId, GeneralPropertyAssociation);
+
+// `property_definition` arena (Phase property-definition-2) — schema-faithful
+// surface for PROPERTY_DEFINITION + PRODUCT_DEFINITION_SHAPE. Writer emits
+// PD/PDS by iterating this arena (arena order == STEP output order); the
+// collapsed `PropertyId` arena coexists for PDR / REPRESENTATION emit.
+define_id!(PropertyDefinitionId, PropertyDefinition);
+
+// Unit context Ids — multi-context support (one entry per
+// REPRESENTATION_CONTEXT in the source file).
+define_id!(UnitContextId, UnitContext);
+// Unit-less context arena (phase unitless-context) — GRC+PRC complex MI.
+define_id!(UnitlessContextId, UnitlessContext);
+
+// PMI Ids — anchor for future Tolerance / Datum / GD&T work.
+define_id!(ShapeAspectId, ShapeAspect);
+
+// SHAPE_ASPECT subtype Ids — distinct arena per ir.toml blueprint.
+define_id!(CompositeShapeAspectId, CompositeGroupShapeAspect);
+define_id!(DerivedShapeAspectId, CentreOfSymmetry);
+define_id!(ContinuousShapeAspectId, AllAroundShapeAspect);
+define_id!(DefaultModelGeometricViewId, DefaultModelGeometricView);
+
+// datum_system arena — SHAPE_ASPECT subtype (Phase datum-system).
+define_id!(DatumSystemId, DatumSystem);
+
+// tolerance_zone arena — SHAPE_ASPECT subtype (Phase tolerance-zone).
+define_id!(ToleranceZoneId, ToleranceZone);
+
+// datum_target / placed_datum_target_feature arenas — SHAPE_ASPECT subtypes
+// (Phase datum-target). Both share the `ShapeAspectRef` enum as their
+// reference-type entry alongside DATUM / DATUM_FEATURE / DATUM_SYSTEM.
+define_id!(DatumTargetId, DatumTarget);
+define_id!(PlacedDatumTargetFeatureId, PlacedDatumTargetFeature);
+
+// SHAPE_ASPECT_RELATIONSHIP arena (phase shape-aspect-ref).
+define_id!(ShapeAspectRelationshipId, ShapeAspectRelationship);
+
+// pmi pool Ids — tolerance / qualifier primitives (Phase pmi-primitives).
+define_id!(ToleranceZoneFormId, ToleranceZoneForm);
+define_id!(TypeQualifierId, TypeQualifier);
+define_id!(ValueFormatTypeQualifierId, ValueFormatTypeQualifier);
+
+// annotation_occurrence enum_base arena (Phase annotation-plane).
+define_id!(AnnotationOccurrenceId, AnnotationOccurrence);
+
+// apll_point enum_base arena (phase leader-line). Dedicated arena (blueprint
+// recast apll_point_standalone) keeping cartesian points on a flat Arena<Point3>.
+define_id!(ApllPointId, ApllPointElement);
+
+// annotation_placeholder_leader_line arena (phase leader-line).
+define_id!(
+    AnnotationPlaceholderLeaderLineId,
+    AnnotationPlaceholderLeaderLine
+);
+
+// annotation_curve_occurrence arena (Phase annotation-curve-leader +
+// plain-aco) — holds the plain supertype occurrence and the LeaderCurve
+// subtype. dimension_curve / projection_curve variants may join later.
+define_id!(AnnotationCurveOccurrenceId, AnnotationCurveOccurrence);
+
+// draughting_callout complex_supertype arena (Phase draughting-callout).
+define_id!(DraughtingCalloutId, DraughtingCallout);
+// draughting_callout_relationship arena (Phase draughting-callout).
+define_id!(
+    DraughtingCalloutRelationshipId,
+    DraughtingCalloutRelationship
+);
+
+// annotation_occurrence_associativity arena (Phase aoa).
+define_id!(
+    AnnotationOccurrenceAssociativityId,
+    AnnotationOccurrenceAssociativity
+);
+
+// geometric_tolerance_relationship arena (Phase gt-relationship).
+define_id!(
+    GeometricToleranceRelationshipId,
+    GeometricToleranceRelationship
+);
+
+// tolerance_zone_definition arena (Phase projected-zone) — blueprint
+// uses `single_struct` (no enum). Currently holds ProjectedZoneDefinition;
+// non_uniform / runout variants may join in a future phase.
+define_id!(ToleranceZoneDefinitionId, ProjectedZoneDefinition);
+
+// measure_qualification arena (Phase measure-qualification).
+define_id!(MeasureQualificationId, MeasureQualification);
+
+// dimensional_characteristic_representation arena (Phase sdr-dcr).
+define_id!(
+    DimensionalCharacteristicRepresentationId,
+    DimensionalCharacteristicRepresentation
+);
+
+// PROPERTY_DEFINITION-based shape_definition_representation arena (phase sdr-arena-1).
+define_id!(
+    ShapeDefinitionRepresentationId,
+    ShapeDefinitionRepresentationLink
+);
+
+// PROPERTY_DEFINITION_REPRESENTATION → modelled representation link (phase pdr-shaperep-link).
+define_id!(
+    PropertyDefinitionRepresentationLinkId,
+    PropertyDefinitionRepresentationLink
+);
+
+// representation_item enum arena (Phase repr-item-arena-1).
+define_id!(RepresentationItemId, RepresentationItem);
+
+// characterized_object enum arena (Phase characterized-object-ciwr).
+define_id!(CharacterizedObjectId, CharacterizedObject);
+
+// symbol_colour arena (Phase symbol-colour).
+define_id!(SymbolColourId, SymbolColour);
+
+// text_style_for_defined_font arena (Phase text-style-font).
+define_id!(TextStyleForDefinedFontId, TextStyleForDefinedFont);
+
+// text_style enum arena (Phase text-style-box). Holds the base
+// `TEXT_STYLE` (corpus 0, abstract) and its
+// `TEXT_STYLE_WITH_BOX_CHARACTERISTICS` subtype.
+define_id!(TextStyleId, TextStyle);
+
+// text_literal arena (Phase text-literal).
+define_id!(TextLiteralId, TextLiteral);
+// composite_text arena (Phase text-literal).
+define_id!(CompositeTextId, CompositeText);
+
+// draughting_model_item_association arena (Phase dmia).
+define_id!(
+    DraughtingModelItemAssociationId,
+    DraughtingModelItemAssociation
+);
+
+// geometric_item_specific_usage arena (Phase gisu).
+define_id!(GeometricItemSpecificUsageId, GeometricItemSpecificUsage);
+
+// invisibility arena (Phase invisibility).
+define_id!(InvisibilityId, Invisibility);
+
+// presentation_representation enum arena (Phase pr-core).
+define_id!(PresentationRepresentationId, PresentationRepresentation);
+// presentation_set arena (Phase pr-core). 청사진 미정의 — minimal carrier
+// for area_in_set INVERSE reference resolution.
+define_id!(PresentationSetId, PresentationSet);
+
+// area_in_set arena (Phase pr-size).
+define_id!(AreaInSetId, AreaInSet);
+// presentation_size arena (Phase pr-size).
+define_id!(PresentationSizeId, PresentationSize);
+
+// presented_item_representation arena (Phase pr-item).
+define_id!(PresentedItemRepresentationId, PresentedItemRepresentation);
+// applied_presented_item arena (Phase pr-item).
+define_id!(AppliedPresentedItemId, AppliedPresentedItem);
+
+// pre_defined_marker enum arena (Phase pre-defined-marker).
+define_id!(PreDefinedMarkerId, PreDefinedMarker);
+
+// datum arena (Phase datum).
+define_id!(DatumId, Datum);
+
+// datum_feature arena (Phase datum-feature).
+define_id!(DatumFeatureId, DatumFeature);
+
+// dimensional_size arena (Phase dimensional-size).
+define_id!(DimensionalSizeId, DimensionalSize);
+
+// dimensional_location arena (Phase dimensional-location).
+define_id!(DimensionalLocationId, DimensionalLocation);
+
+// geometric_tolerance enum_base arena (Phase geometric-tolerance).
+define_id!(GeometricToleranceId, GeometricTolerance);
+
+// general_datum_reference enum_base arena (Phase general-datum-reference).
+define_id!(GeneralDatumReferenceId, GeneralDatumReference);
+
+// geometric_tolerance_with_datum_reference enum_base arena (Phase gt-datum-ref).
+define_id!(
+    GeometricToleranceWithDatumReferenceId,
+    GeometricToleranceWithDatumReference
+);
+
+// plus_minus_tolerance cluster arenas (Phase plus-minus-tolerance).
+define_id!(ToleranceValueId, ToleranceValue);
+define_id!(LimitsAndFitsId, LimitsAndFits);
+define_id!(PlusMinusToleranceId, PlusMinusTolerance);
+
+// draughting_pre_defined_text_font arena (Phase text-font).
+define_id!(DraughtingPreDefinedTextFontId, DraughtingPreDefinedTextFont);
+
+// REPRESENTATION arena — unified subtype storage (representation-refactor).
+define_id!(RepresentationId, Representation);
+
+// CIRCULAR_AREA arena (phase ca). Orphan.
+define_id!(CircularAreaId, crate::ir::geometry::CircularArea);
+
+// P21 edition 3 REFERENCE section (external references). Referenced by
+// CIRCULAR_AREA.centre and ANCHOR targets.
+define_id!(ExternalRefId, crate::ir::model::ExternalReference);
+
+// parameter_space_curve enum arena (phase bpc). Orphan.
+define_id!(
+    ParameterSpaceCurveId,
+    crate::ir::geometry::ParameterSpaceCurve
+);
+
+// surface_curve subtypes enum arena (phase scs). Orphan.
+define_id!(SurfaceCurveSubtypeId, crate::ir::geometry::SurfaceCurve);
+
+// REPRESENTATION_MAP + MAPPED_ITEM arenas (phase mapped-item).
+define_id!(RepresentationMapId, RepresentationMap);
+define_id!(MappedItemId, MappedItem);
+define_id!(DimensionalExponentsId, DimensionalExponents);
+
+// representation_relationship enum arena (phase cgrr). Currently holds
+// `ConstructiveGeometryRepresentationRelationship`. Future SUBTYPEs
+// (SHAPE_REPRESENTATION_RELATIONSHIP, MDDR, ...) may migrate here.
+define_id!(RepresentationRelationshipId, RepresentationRelationship);
+
+// item_identified_representation_usage arena (phase iiru). Orphan.
+define_id!(
+    ItemIdentifiedRepresentationUsageId,
+    crate::ir::shape_rep::ItemIdentifiedRepresentationUsage
+);
+
+// compound_representation_item arena (phase cri). Orphan round-trip.
+define_id!(CompoundRepresentationItemId, CompoundRepresentationItem);
+
+// representation_item value-items (phase numeric-representation-item).
+define_id!(NumericRepresentationItemId, NumericRepresentationItem);
+
+// tessellation arenas (phase tessellation / tessellation-2).
+define_id!(TessellatedItemId, TessellatedItem);
+define_id!(TessellatedFaceId, ComplexTriangulatedFace);
+define_id!(TessellatedSurfaceSetId, ComplexTriangulatedSurfaceSet);
+
+// Visualization Ids — Colour enum arena (ColourRgb + DraughtingPreDefinedColour).
+define_id!(ColourId, Colour);
+
+// Visualization Ids — CURVE_STYLE chain.
+define_id!(PreDefinedCurveFontId, PreDefinedCurveFont);
+define_id!(CurveStyleId, CurveStyle);
+define_id!(PreDefinedSymbolId, PreDefinedSymbol);
+
+// Visualization Ids — STYLED_ITEM enum arena (Plain + future variants).
+define_id!(StyledItemId, StyledItem);
+
+// Visualization Ids — PRESENTATION_STYLE_ASSIGNMENT enum arena
+// (Itself + PresentationStyleByContext).
+define_id!(PresentationStyleAssignmentId, PresentationStyleAssignment);
+
+// Visualization Ids — SURFACE_STYLE_RENDERING enum arena
+// (Itself + SurfaceStyleRenderingWithProperties).
+define_id!(SurfaceStyleRenderingId, SurfaceStyleRendering);
+
+// Visualization Ids — founded_item enum arena (AP214 founded-item
+// supertype; E1 covers FillAreaStyle + SurfaceStyleFillArea).
+define_id!(FoundedItemId, FoundedItem);
+
+// Visualization Ids — camera_model enum arena (phase camera-model-d3).
+define_id!(CameraModelId, CameraModel);
+
+// geometric_representation_item enum arena (phase ds-st). Currently holds
+// `DefinedSymbol` + `SymbolTarget` variants; the other 6 corpus in_enum
+// members of `geometric_representation_item` keep their dedicated arenas.
+define_id!(GeometricRepresentationItemId, GeometricRepresentationItem);
+
+// Visualization Ids — PRESENTATION_LAYER_ASSIGNMENT arena (top-level;
+// no other entity refs it, the id exists for blueprint symmetry).
+define_id!(PresentationLayerAssignmentId, PresentationLayerAssignment);
+
+// plm Ids — Date/Time primitives (Phase plm-1a).
+define_id!(DateId, CalendarDate);
+define_id!(LocalTimeId, LocalTime);
+define_id!(
+    CoordinatedUniversalTimeOffsetId,
+    CoordinatedUniversalTimeOffset
+);
+define_id!(DateAndTimeId, DateAndTime);
+define_id!(DateTimeRoleId, DateTimeRole);
+define_id!(DateAndTimeAssignmentId, DateAndTimeAssignment);
+define_id!(PersonId, Person);
+define_id!(OrganizationId, Organization);
+define_id!(PersonAndOrganizationId, PersonAndOrganization);
+define_id!(PersonAndOrganizationRoleId, PersonAndOrganizationRole);
+define_id!(
+    PersonAndOrganizationAssignmentId,
+    PersonAndOrganizationAssignment
+);
+
+// plm Ids — Approval primitives + linkers (Phase plm-3a).
+define_id!(ApprovalStatusId, ApprovalStatus);
+define_id!(ApprovalRoleId, ApprovalRole);
+define_id!(ApprovalId, Approval);
+define_id!(ApprovalDateTimeId, ApprovalDateTime);
+define_id!(ApprovalPersonOrganizationId, ApprovalPersonOrganization);
+define_id!(ApprovalAssignmentId, ApprovalAssignment);
+
+// plm Ids — Security cluster (Phase plm-4).
+define_id!(SecurityClassificationLevelId, SecurityClassificationLevel);
+define_id!(SecurityClassificationId, SecurityClassification);
+define_id!(
+    SecurityClassificationAssignmentId,
+    SecurityClassificationAssignment
+);
+
+// plm Ids — Identification cluster (Phase plm-5).
+define_id!(IdentificationRoleId, IdentificationRole);
+define_id!(ExternalSourceId, ExternalSource);
+define_id!(
+    IdentificationAssignmentId,
+    AppliedExternalIdentificationAssignment
+);
+
+// plm Ids — Document cluster (Phase plm-6).
+define_id!(DocumentTypeId, DocumentType);
+define_id!(DocumentId, Document);
+define_id!(DocumentRepresentationTypeId, DocumentRepresentationType);
+define_id!(DocumentProductEquivalenceId, DocumentProductEquivalence);
+define_id!(DocumentReferenceId, AppliedDocumentReference);
+
+// plm Ids — Group cluster (Phase plm-7).
+define_id!(GroupId, Group);
+define_id!(GroupAssignmentId, AppliedGroupAssignment);
+
+// plm Ids — Role cluster (Phase plm-8).
+define_id!(ObjectRoleId, ObjectRole);
+define_id!(RoleAssociationId, RoleAssociation);
+
+// plm Ids — Address cluster (Phase plm-9).
+define_id!(AddressId, Address);
+
+// plm Ids — Application cluster (Phase plm-10).
+define_id!(ApplicationContextId, ApplicationContext);
+define_id!(
+    ApplicationProtocolDefinitionId,
+    ApplicationProtocolDefinition
+);
+
+// units pool Ids (Phase units-1) — per-instance `NAMED_UNIT` complexes,
+// `MEASURE_WITH_UNIT` subtypes, and `DERIVED_UNIT_ELEMENT`.
+define_id!(NamedUnitId, NamedUnit);
+define_id!(MeasureWithUnitId, MeasureWithUnit);
+define_id!(DerivedUnitElementId, DerivedUnitElement);
+define_id!(DerivedUnitId, DerivedUnit);

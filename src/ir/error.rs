@@ -45,12 +45,32 @@ pub enum ConvertError {
     UnexpectedEntityForm { entity_id: u64, detail: String },
     /// An entity type that the reader does not handle.
     UnsupportedEntity { entity_id: u64, name: String },
+    /// A complex (multi-part AND) instance whose exact part-set matches no
+    /// complex handler's declared cases — dropped. A distinct variant (not
+    /// `UnexpectedEntityForm`) so it can be told apart from genuine defects:
+    /// it means "a complex shape we have not modelled appeared — investigate".
+    UnhandledComplex { entity_id: u64, parts: Vec<String> },
     /// Coordinate list has wrong dimensionality.
     DimensionMismatch {
         entity_id: u64,
         field_name: &'static str,
         expected: usize,
         actual: usize,
+    },
+    /// The input file violated the ISO 10303 schema — a required field was
+    /// Unset (or carried an unrecognized value) on `count` entities; the
+    /// reader normalized each to a standard default. Aggregated per file.
+    /// This is an INPUT defect, not a step-io defect.
+    ///
+    /// CONTRACT: emit this variant *only* when the source file is
+    /// non-standard and the reader recovered it by normalizing to a standard
+    /// default — never for a step-io-side defect or an unmodelled entity.
+    /// It marks a category that round-trip analysis must not count as data
+    /// loss (the entity is preserved, just normalized).
+    NonStandardInput {
+        field: String,
+        count: usize,
+        normalized_to: String,
     },
 }
 
@@ -164,6 +184,13 @@ impl std::fmt::Display for ConvertError {
             Self::UnsupportedEntity { entity_id, name } => {
                 write!(f, "entity #{entity_id}: unsupported type {name}")
             }
+            Self::UnhandledComplex { entity_id, parts } => {
+                write!(
+                    f,
+                    "entity #{entity_id}: complex matches no handler case — parts ({})",
+                    parts.join(" ")
+                )
+            }
             Self::DimensionMismatch {
                 entity_id,
                 field_name,
@@ -173,6 +200,16 @@ impl std::fmt::Display for ConvertError {
                 f,
                 "entity #{entity_id}: field '{field_name}' \
                  expected {expected}D, got {actual}D"
+            ),
+            Self::NonStandardInput {
+                field,
+                count,
+                normalized_to,
+            } => write!(
+                f,
+                "non-standard input: {count}× {field} violates ISO 10303 \
+                 (required field); reader normalized to {normalized_to}. \
+                 The source file is non-standard; this is not a step-io defect."
             ),
         }
     }

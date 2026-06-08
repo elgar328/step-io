@@ -2,10 +2,17 @@ use super::arena::Arena;
 use super::assembly::AssemblyTree;
 use super::geometry::{
     Axis1Placement, Axis2Placement2d, Axis2Placement3d, Curve, Curve2d, Direction2, Direction3,
-    Point2, Point3, Surface,
+    PlanarExtent, Point2, Point3, Surface, Vertex,
 };
 use super::id::Placement3dId;
-use super::topology::{Edge, Face, Shell, Solid, Vertex, Wire};
+use super::plm::PlmPool;
+use super::shape_rep::{
+    AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, DatumSystem,
+    DefaultModelGeometricView, ShapeAspect, ToleranceZone, UnitContext,
+};
+use super::topology::{Edge, Face, Shell, Solid, Wire};
+use super::units::UnitsPool;
+use super::visualization::VisualizationPool;
 use crate::parser::schema::StepSchema;
 
 /// A Part 21 `LIST[1:?] OF STRING` — guaranteed to hold at least one element.
@@ -148,14 +155,27 @@ pub struct FileHeader {
 pub struct StepModel {
     pub geometry: GeometryPool,
     pub topology: TopologyPool,
-    /// Units declared in the STEP file's `GLOBAL_UNIT_ASSIGNED_CONTEXT`.
-    /// `None` when the file has no such context or uses unsupported units
-    /// (e.g. `CONVERSION_BASED_UNIT` for inches).
-    pub units: Option<UnitContext>,
+    /// Unit / uncertainty contexts declared in the STEP file's
+    /// `GLOBAL_UNIT_ASSIGNED_CONTEXT` complex entities. One arena entry per
+    /// distinct `REPRESENTATION_CONTEXT` in the source — Fusion 360 typically
+    /// emits two (geometry vs. visualization, distinct uncertainties);
+    /// single-product files have one. Empty arena means no unit context (or
+    /// kernel-built IR with units unset).
+    pub units: Arena<UnitContext>,
+    /// `(GEOMETRIC_REPRESENTATION_CONTEXT PARAMETRIC_REPRESENTATION_CONTEXT
+    /// REPRESENTATION_CONTEXT)` complex MI — unit-less 2D draughting /
+    /// pcurve coordinate spaces. Referenced by representation
+    /// `context_of_items` via [`RepresentationContextRef::Unitless`].
+    pub unitless_contexts: Arena<crate::ir::shape_rep::UnitlessContext>,
+    /// `GEOMETRIC_ITEM_SPECIFIC_USAGE` arena (phase gisu). Binds a
+    /// shape-aspect-family `definition` and a `representation_item`
+    /// `identified_item` to a `SHAPE_REPRESENTATION` parent — sibling of
+    /// `DRAUGHTING_MODEL_ITEM_ASSOCIATION` (pmi pool).
+    pub geometric_item_specific_usages: Arena<crate::ir::shape_rep::GeometricItemSpecificUsage>,
     /// Assembly tree. `None` when the STEP file contains no `PRODUCT`
-    /// entities (single-part files). Phase A populates `products` but
-    /// leaves `AssemblyTree.root` as `None`; Phase B resolves the root
-    /// and wires instances.
+    /// entities (single-part files). `AssemblyTree.roots` lists every
+    /// top-level product (a forest for multi-part files); instances are
+    /// wired into each product's `Group` content.
     pub assembly: Option<AssemblyTree>,
     /// AP schema this model targets, including the raw `FILE_SCHEMA` text
     /// when preserved from a source file. `StepSchema::Known { raw: None }`
@@ -169,9 +189,142 @@ pub struct StepModel {
     /// `Some(_)` is emitted verbatim on round-trip so author / organisation /
     /// timestamp / description aren't overwritten with step-io's defaults.
     pub header: Option<FileHeader>,
+    /// Visualization data — `STYLED_ITEM` chain + `COLOUR_RGB` + style metadata.
+    /// `None` when the source file had no visualization or for kernel-built
+    /// IR. Stored as a tree-inline structure (no shared color references)
+    /// — see [`crate::ir::visualization`] for design notes.
+    pub visualization: Option<VisualizationPool>,
+    /// User-defined attribute chain
+    /// (`PROPERTY_DEFINITION` + `PROPERTY_DEFINITION_REPRESENTATION`).
+    /// `None` when the source file had none. Stored as a passive tree-inline
+    /// IR — see [`crate::ir::property`] for design notes. Geometric
+    /// validation properties (target = `SHAPE_ASPECT`) are dropped at read.
+    pub properties: Option<crate::ir::property::PropertyPool>,
+    /// `pmi` pool — GD&T / tolerance entities. `None` when the source had
+    /// no PMI content. See [`crate::ir::pmi`].
+    pub pmi: Option<crate::ir::pmi::PmiPool>,
+    /// `SHAPE_ASPECT` entries — empty for fixtures without PMI (most
+    /// non-NIST / non-stepcode files). Future PMI work (Tolerance /
+    /// Datum / GD&T per ROADMAP Phase 2) lands as additional arenas
+    /// alongside this one — all under the `shape_rep` pool per the
+    /// ir.toml blueprint.
+    pub shape_aspects: Arena<ShapeAspect>,
+    /// `COMPOSITE_GROUP_SHAPE_ASPECT` arena — `SHAPE_ASPECT` subtype.
+    pub composite_group_shape_aspects: Arena<CompositeGroupShapeAspect>,
+    /// `CENTRE_OF_SYMMETRY` arena — `SHAPE_ASPECT` subtype.
+    pub centre_of_symmetries: Arena<CentreOfSymmetry>,
+    /// `ALL_AROUND_SHAPE_ASPECT` arena — `SHAPE_ASPECT` subtype.
+    pub all_around_shape_aspects: Arena<AllAroundShapeAspect>,
+    /// `DEFAULT_MODEL_GEOMETRIC_VIEW` arena — `SHAPE_ASPECT` /
+    /// `MODEL_GEOMETRIC_VIEW` subtype (a saved-view leaf).
+    pub default_model_geometric_views: Arena<DefaultModelGeometricView>,
+    /// `DATUM_SYSTEM` arena — `SHAPE_ASPECT` subtype. Phase datum-system.
+    pub datum_systems: Arena<DatumSystem>,
+    /// `TOLERANCE_ZONE` arena — `SHAPE_ASPECT` subtype. Phase tolerance-zone.
+    pub tolerance_zones: Arena<ToleranceZone>,
+    /// `DATUM_TARGET` arena — `SHAPE_ASPECT` subtype. Phase datum-target.
+    pub datum_targets: Arena<crate::ir::shape_rep::DatumTarget>,
+    /// `PLACED_DATUM_TARGET_FEATURE` arena — `SHAPE_ASPECT` subtype.
+    /// Phase datum-target.
+    pub placed_datum_target_features: Arena<crate::ir::shape_rep::PlacedDatumTargetFeature>,
+    /// `SHAPE_ASPECT_RELATIONSHIP` arena (phase shape-aspect-ref). Orphan
+    /// round-trip — each endpoint is a [`crate::ir::ShapeAspectRef`].
+    pub shape_aspect_relationships: Arena<crate::ir::shape_rep::ShapeAspectRelationship>,
+    /// Product-lifecycle metadata (Person/Org/Date/Approval/Security).
+    /// `None` for files without plm content. Phase plm-1a populates the
+    /// Date/Time primitives; later phases add Person/Approval/Security
+    /// clusters alongside them in the same pool.
+    pub plm: Option<PlmPool>,
+    /// Per-instance units arena (named-unit / measure-with-unit /
+    /// derived-unit-element). `None` for files where no MWU / DUE / MASS
+    /// entity was observed. Coexists with [`Self::units`] (per-context
+    /// bundled enums) during the units-1 dual-tracking period.
+    pub units_pool: Option<UnitsPool>,
+    /// Unified `REPRESENTATION` arena (representation-refactor expand phase).
+    /// One entry per `ADVANCED_BREP` / `MANIFOLD_SURFACE` / plain `SHAPE` /
+    /// wireframe / `MDGPR` representation. Phase A-1 dual-writes here
+    /// alongside the legacy scattered storage.
+    pub representations: crate::ir::Arena<crate::ir::shape_rep::Representation>,
+    /// `representation_item` enum arena (phase repr-item-arena-1). Holds
+    /// `QualifiedRepresentationItem` / `ValueRepresentationItem`; MRI
+    /// migration is a follow-up sub-phase.
+    pub representation_items: crate::ir::Arena<crate::ir::representation_item::RepresentationItem>,
+    /// `characterized_object` arena (phase characterized-object-ciwr).
+    /// Holds `CharacterizedItemWithinRepresentation` simple instances;
+    /// `Itself` complex-MI instances are dropped on read in this phase.
+    pub characterized_objects: crate::ir::Arena<crate::ir::shape_rep::CharacterizedObject>,
+    /// `REPRESENTATION_MAP` arena (phase mapped-item). One entry per source
+    /// `REPRESENTATION_MAP` whose `mapping_origin` / `mapped_representation`
+    /// both resolve. Emitted standalone — the `MAPPED_ITEM` containers
+    /// (`DRAUGHTING_MODEL` / plain `REPRESENTATION`) are not modelled yet.
+    pub representation_maps: crate::ir::Arena<crate::ir::shape_rep::RepresentationMap>,
+    /// `MAPPED_ITEM` arena (phase mapped-item). Orphan round-trip — see
+    /// [`Self::representation_maps`].
+    pub mapped_items: crate::ir::Arena<crate::ir::shape_rep::MappedItem>,
+    /// `INTEGER_REPRESENTATION_ITEM` / `REAL_REPRESENTATION_ITEM` value-item
+    /// arena (phase numeric-representation-item). Orphan round-trip.
+    pub numeric_representation_items:
+        crate::ir::Arena<crate::ir::shape_rep::NumericRepresentationItem>,
+    /// `tessellated_item` arena — `COORDINATES_LIST` (phase tessellation).
+    /// Orphan round-trip.
+    pub tessellated_items: crate::ir::Arena<crate::ir::tessellation::TessellatedItem>,
+    /// `COMPLEX_TRIANGULATED_FACE` arena (phase tessellation). Orphan
+    /// round-trip — references [`Self::tessellated_items`] for coordinates.
+    pub tessellated_faces: crate::ir::Arena<crate::ir::tessellation::ComplexTriangulatedFace>,
+    /// `COMPLEX_TRIANGULATED_SURFACE_SET` arena (phase tessellation-2).
+    /// Orphan round-trip — references [`Self::tessellated_items`] for
+    /// coordinates.
+    pub tessellated_surface_sets:
+        crate::ir::Arena<crate::ir::tessellation::ComplexTriangulatedSurfaceSet>,
+    /// `geometric_representation_item` enum arena (phase ds-st). Holds
+    /// `DefinedSymbol` + `SymbolTarget` variants; other corpus `in_enum`
+    /// members of `geometric_representation_item` keep their dedicated
+    /// arenas. Orphan round-trip — no modelled external consumer.
+    pub geometric_representation_items:
+        crate::ir::Arena<crate::ir::visualization::GeometricRepresentationItem>,
+    /// `representation_relationship` enum arena (phase cgrr). Orphan
+    /// round-trip — no modelled external consumer.
+    pub representation_relationships:
+        crate::ir::Arena<crate::ir::shape_rep::RepresentationRelationship>,
+    /// `compound_representation_item` arena (phase cri). Orphan round-trip.
+    pub compound_representation_items:
+        crate::ir::Arena<crate::ir::shape_rep::CompoundRepresentationItem>,
+    /// `item_identified_representation_usage` arena (phase iiru). Orphan.
+    pub item_identified_representation_usages:
+        crate::ir::Arena<crate::ir::shape_rep::ItemIdentifiedRepresentationUsage>,
+    /// P21 edition 3 `REFERENCE` section — external references
+    /// (`#N=<url#anchor>`). Re-emitted in the output `REFERENCE` section;
+    /// entities resolving one (e.g. `CIRCULAR_AREA.centre`) point at it via
+    /// [`ExternalRefId`](crate::ir::ExternalRefId). Empty for the vast
+    /// majority of files (no edition-3 external references).
+    pub external_references: crate::ir::Arena<ExternalReference>,
+    /// P21 edition 3 `ANCHOR` section — names attached to external references.
+    pub anchors: Vec<ExternalAnchor>,
+}
+
+/// One P21 edition 3 `REFERENCE` entry: an entity resolved in an external
+/// resource rather than this file's DATA section. The `anchor` string is the
+/// verbatim `<url#name>` form.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExternalReference {
+    /// The verbatim resource reference, e.g. `<testAnchorAndData.stp#TestAnchor>`.
+    pub anchor: String,
+}
+
+/// One P21 edition 3 `ANCHOR` entry: `<name> = #N`, naming an external
+/// reference. (In the corpus, anchors always target an external reference.)
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExternalAnchor {
+    /// The verbatim anchor name, e.g. `<ParentAnchor>`.
+    pub name: String,
+    /// The external reference this anchor names.
+    pub target: crate::ir::ExternalRefId,
 }
 
 /// Arena-based storage for all topology objects.
+///
+/// `vertices` arena moved to [`GeometryPool`] per the ir.toml blueprint —
+/// `vertex_point` resolves to the `geometric_representation_item` arena.
 #[derive(Debug, Clone, Default)]
 pub struct TopologyPool {
     pub solids: Arena<Solid>,
@@ -179,7 +332,6 @@ pub struct TopologyPool {
     pub faces: Arena<Face>,
     pub wires: Arena<Wire>,
     pub edges: Arena<Edge>,
-    pub vertices: Arena<Vertex>,
 }
 
 /// Arena-based storage for all geometry objects.
@@ -192,6 +344,7 @@ pub struct GeometryPool {
     pub surfaces: Arena<Surface>,
     pub curves: Arena<Curve>,
     pub points: Arena<Point3>,
+    pub vertices: Arena<Vertex>,
     pub directions: Arena<Direction3>,
     pub placements: Arena<Axis2Placement3d>,
     pub placements_1d: Arena<Axis1Placement>,
@@ -199,6 +352,15 @@ pub struct GeometryPool {
     pub directions_2d: Arena<Direction2>,
     pub curves_2d: Arena<Curve2d>,
     pub placements_2d: Arena<Axis2Placement2d>,
+    /// `PLANAR_EXTENT` / `PLANAR_BOX` arena — rectangular planar regions.
+    pub planar_extents: Arena<PlanarExtent>,
+    /// `CIRCULAR_AREA` arena (phase ca). Orphan round-trip.
+    pub circular_areas: Arena<crate::ir::geometry::CircularArea>,
+    /// `parameter_space_curve` enum arena (phase bpc). Orphan round-trip.
+    pub parameter_space_curves: Arena<crate::ir::geometry::ParameterSpaceCurve>,
+    /// `surface_curve` subtypes arena (phase scs). Orphan round-trip.
+    /// Base `surface_curve` itself uses the alias path (`surface_curve.rs`).
+    pub surface_curves: Arena<crate::ir::geometry::SurfaceCurve>,
     /// Caches the arena id of a single identity `AXIS2_PLACEMENT_3D` for kernel
     /// callers that repeatedly request one via [`GeometryPool::identity_placement`].
     /// The reader never touches this cache — it pushes every on-disk placement
@@ -231,43 +393,6 @@ impl GeometryPool {
         self.identity_placement_cache = Some(id);
         id
     }
-}
-
-/// Units declared in the STEP file's HEADER section.
-///
-/// The IR preserves original units — numeric values are **not** normalized.
-/// Kernel adapters inspect `UnitContext` and convert if needed.
-///
-/// `length_uncertainty` is `Some` when the source file carried a
-/// `distance_accuracy_value` via `GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT`,
-/// `None` otherwise. The value is in the source's length unit (mm / inch
-/// / ...) — no normalization.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct UnitContext {
-    pub length: LengthUnit,
-    pub plane_angle: AngleUnit,
-    pub solid_angle: SolidAngleUnit,
-    pub length_uncertainty: Option<f64>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum LengthUnit {
-    Millimetre,
-    Metre,
-    Centimetre,
-    Inch,
-    Foot,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum AngleUnit {
-    Radian,
-    Degree,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SolidAngleUnit {
-    Steradian,
 }
 
 #[cfg(test)]

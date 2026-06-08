@@ -11,6 +11,18 @@ pub struct Point3 {
     pub z: f64,
 }
 
+/// A topological vertex — a point in space.
+///
+/// `vertex_point` in STEP carries multiple SUBTYPE OF (`vertex`,
+/// `geometric_representation_item`); ir.toml resolves its arena to
+/// `geometric_representation_item`, so the struct lives in the geometry
+/// module even though references flow from topology (edge, wire) and
+/// the arena is part of [`GeometryPool`](crate::ir::GeometryPool).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Vertex {
+    pub point: PointId,
+}
+
 /// A unit direction vector in 3D. Components are direction ratios
 /// (not necessarily normalized — normalization is the kernel's responsibility).
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -62,8 +74,39 @@ pub enum Surface {
     Torus(ToroidalSurface),
     Revolution(SurfaceOfRevolution),
     Extrusion(SurfaceOfLinearExtrusion),
+    Offset(SurfaceOfOffset),
     Nurbs(NurbsSurface),
-    // Future: Offset
+    RectangularTrimmed(RectangularTrimmedSurface),
+    DegenerateToroidal(DegenerateToroidalSurface),
+    /// `CURVE_BOUNDED_SURFACE` (phase cbs) — `bounded_surface` SUBTYPE.
+    /// `boundaries` narrowed to generic `CurveId` because step-io has no
+    /// `boundary_curve` / `composite_curve_on_surface` arena yet.
+    CurveBounded(CurveBoundedSurface),
+}
+
+/// `CURVE_BOUNDED_SURFACE(name, basis_surface, boundaries, implicit_outer)` —
+/// `bounded_surface` SUBTYPE. Corpus 0 instances per ir.toml; round-trip
+/// test only. `boundaries` SET narrows the EXPRESS `boundary_curve` to
+/// generic `CurveId` for now — proper narrow awaits a
+/// `composite_curve_on_surface` cluster.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CurveBoundedSurface {
+    pub name: String,
+    pub basis_surface: SurfaceId,
+    pub boundaries: Vec<CurveId>,
+    pub implicit_outer: bool,
+}
+
+/// `DEGENERATE_TOROIDAL_SURFACE(name, position, major_radius, minor_radius,
+/// select_outer)`. SUBTYPE OF `toroidal_surface` — covers degenerate cases
+/// where the minor radius produces self-intersection; `select_outer`
+/// chooses the outer or inner sheet of the resulting surface.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct DegenerateToroidalSurface {
+    pub position: Placement3dId,
+    pub major_radius: f64,
+    pub minor_radius: f64,
+    pub select_outer: bool,
 }
 
 /// An infinite plane defined by an axis placement.
@@ -104,6 +147,20 @@ pub struct SphericalSurface {
     pub radius: f64,
 }
 
+/// `RECTANGULAR_TRIMMED_SURFACE(name, basis_surface, u1, u2, usense, v1, v2, vsense)`.
+/// Parameter-space rectangle trimming a basis surface. `usense` / `vsense`
+/// select the trim direction along each parameter (`true` → increasing parameter).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct RectangularTrimmedSurface {
+    pub basis: SurfaceId,
+    pub u1: f64,
+    pub u2: f64,
+    pub usense: bool,
+    pub v1: f64,
+    pub v2: f64,
+    pub vsense: bool,
+}
+
 /// All curve variants.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Curve {
@@ -111,7 +168,44 @@ pub enum Curve {
     Circle(Circle3),
     Ellipse(Ellipse3),
     Nurbs(NurbsCurve),
-    // Future: Trimmed, Offset
+    Trimmed(TrimmedCurve),
+    Composite(CompositeCurve),
+    Polyline(Polyline),
+    Hyperbola(Hyperbola),
+    Parabola(Parabola),
+    OffsetCurve3d(OffsetCurve3d),
+}
+
+/// `OFFSET_CURVE_3D(name, basis_curve, distance, self_intersect, ref_direction)`.
+/// Offset of a basis 3D curve by `distance` along `ref_direction`.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct OffsetCurve3d {
+    pub basis: CurveId,
+    pub distance: f64,
+    pub self_intersect: Logical,
+    pub ref_direction: DirectionId,
+}
+
+/// `HYPERBOLA(name, position, semi_axis, semi_imag_axis)` — 3D conic.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Hyperbola {
+    pub position: Placement3dId,
+    pub semi_axis: f64,
+    pub semi_imag_axis: f64,
+}
+
+/// `PARABOLA(name, position, focal_dist)` — 3D conic. `focal_dist` is
+/// signed; the sign selects orientation along `position.axis`.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Parabola {
+    pub position: Placement3dId,
+    pub focal_dist: f64,
+}
+
+/// A 3D polyline: ordered list of point ids forming a piecewise-linear curve.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Polyline {
+    pub points: Vec<PointId>,
 }
 
 /// A circle defined by an axis placement and a radius.
@@ -248,27 +342,138 @@ impl SurfaceForm {
     }
 }
 
+/// SET element of a `TRIMMED_CURVE` trim slot — STEP SELECT
+/// `(PARAMETER_VALUE | CARTESIAN_POINT)`.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum TrimSelect {
+    Param(f64),
+    Point(PointId),
+}
+
+/// A trimmed curve — a portion of a basis curve bounded by two trim points.
+///
+/// STEP `TRIMMED_CURVE(basis, trim_1, trim_2, sense_agreement, master_repr)`.
+/// Each trim slot is a SET (cardinality 0~2) that may carry a `CARTESIAN_POINT`
+/// reference, a `PARAMETER_VALUE`, or both (redundant form). `master`
+/// indicates which form is authoritative when both are present.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TrimmedCurve {
+    pub basis: CurveId,
+    pub trim_1: Vec<TrimSelect>,
+    pub trim_2: Vec<TrimSelect>,
+    pub sense_agreement: bool,
+    pub master: TrimMaster,
+}
+
+/// `master_representation` of a `TRIMMED_CURVE` — which trim form is
+/// authoritative when both `cartesian` and `parameter` are present.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub enum TrimMaster {
+    Cartesian,
+    Parameter,
+    #[default]
+    Unspecified,
+}
+
+/// A composite curve — sequence of segments joined end-to-end.
+///
+/// STEP `COMPOSITE_CURVE(segments, self_intersect)`. Each segment carries its
+/// own transition continuity and orientation flag with a reference to a
+/// parent curve (line, arc, trimmed curve, etc.).
+#[derive(Debug, Clone, PartialEq)]
+pub struct CompositeCurve {
+    pub segments: Vec<CompositeSegment>,
+    /// `self_intersect : LOGICAL`.
+    pub self_intersect: Logical,
+}
+
+/// One segment of a `CompositeCurve`. Mirrors STEP `COMPOSITE_CURVE_SEGMENT`
+/// but inlined inside the parent — segments are not arena entries on their
+/// own.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct CompositeSegment {
+    pub transition: TransitionCode,
+    pub same_sense: bool,
+    pub parent_curve: CurveId,
+}
+
+/// STEP `LOGICAL` 3-state. `Unknown` corresponds to the `.U.` literal.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Logical {
+    True,
+    False,
+    #[default]
+    Unknown,
+}
+
+/// `transition_code` of a `COMPOSITE_CURVE_SEGMENT` — geometric continuity
+/// between consecutive segments.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub enum TransitionCode {
+    #[default]
+    Continuous,
+    Discontinuous,
+    ContSameGradient,
+    ContSameGradientSameCurvature,
+    Unspecified,
+}
+
+/// Rationality of a [`NurbsCurve`].
+///
+/// `NonRational` = `B_SPLINE_CURVE_WITH_KNOTS` (all weights implicitly 1.0).
+/// `Rational { weights }` = `RATIONAL_B_SPLINE_CURVE`; the writer expects
+/// `weights.len() == control_points.len()`.
+#[derive(Debug, Clone, PartialEq)]
+pub enum NurbsKind {
+    NonRational,
+    Rational { weights: Vec<f64> },
+}
+
+/// Rationality of a [`NurbsSurface`].
+///
+/// `Rational { weights }` carries a 2D grid matching the parent surface's
+/// `control_points` shape.
+#[derive(Debug, Clone, PartialEq)]
+pub enum NurbsSurfaceKind {
+    NonRational,
+    Rational { weights: Vec<Vec<f64>> },
+}
+
 /// A NURBS (Non-Uniform Rational B-Spline) curve.
 ///
-/// Unifies all B-Spline variants: `B_SPLINE_CURVE_WITH_KNOTS` (non-rational,
-/// `weights: None`) and `RATIONAL_B_SPLINE_CURVE` (rational, `weights: Some`).
+/// Unifies `B_SPLINE_CURVE_WITH_KNOTS` (non-rational) and
+/// `RATIONAL_B_SPLINE_CURVE` (rational) via [`NurbsKind`].
 // TODO: other B-Spline variants (UNIFORM_CURVE, BEZIER_CURVE) can also map here.
 #[derive(Debug, Clone, PartialEq)]
 pub struct NurbsCurve {
     pub degree: u32,
     pub control_points: Vec<PointId>,
-    /// `None` = non-rational (all weights implicitly 1.0).
-    /// `Some` = rational (NURBS) — populated from `RATIONAL_B_SPLINE_CURVE`.
-    pub weights: Option<Vec<f64>>,
+    pub kind: NurbsKind,
     pub knot_multiplicities: Vec<i64>,
     pub knots: Vec<f64>,
-    pub closed: bool,
+    /// `closed_curve : LOGICAL`.
+    pub closed: Logical,
     pub form: CurveForm,
+    /// `self_intersect : LOGICAL`.
+    pub self_intersect: Logical,
+}
+
+impl NurbsCurve {
+    /// Returns `Some(&weights)` for rational, `None` for non-rational.
+    /// Convenience accessor for sites that only need to check rationality
+    /// or read the weight slice.
+    #[must_use]
+    pub fn weights(&self) -> Option<&[f64]> {
+        match &self.kind {
+            NurbsKind::NonRational => None,
+            NurbsKind::Rational { weights } => Some(weights),
+        }
+    }
 }
 
 /// A NURBS (Non-Uniform Rational B-Spline) surface.
 ///
-/// Unifies all B-Spline surface variants.
+/// Unifies all B-Spline surface variants via [`NurbsSurfaceKind`].
 // TODO: other B-Spline variants (UNIFORM_SURFACE, BEZIER_SURFACE) can also map here.
 #[derive(Debug, Clone, PartialEq)]
 pub struct NurbsSurface {
@@ -276,15 +481,29 @@ pub struct NurbsSurface {
     pub v_degree: u32,
     /// Row-major 2D grid: `control_points[u][v]`.
     pub control_points: Vec<Vec<PointId>>,
-    /// `None` = non-rational. `Some` = rational — 2D grid matching `control_points`.
-    pub weights: Option<Vec<Vec<f64>>>,
+    pub kind: NurbsSurfaceKind,
     pub u_knot_multiplicities: Vec<i64>,
     pub v_knot_multiplicities: Vec<i64>,
     pub u_knots: Vec<f64>,
     pub v_knots: Vec<f64>,
-    pub u_closed: bool,
-    pub v_closed: bool,
+    /// `u_closed : LOGICAL`.
+    pub u_closed: Logical,
+    /// `v_closed : LOGICAL`.
+    pub v_closed: Logical,
     pub form: SurfaceForm,
+    /// `self_intersect : LOGICAL`.
+    pub self_intersect: Logical,
+}
+
+impl NurbsSurface {
+    /// Returns `Some(&weights)` for rational, `None` for non-rational.
+    #[must_use]
+    pub fn weights(&self) -> Option<&[Vec<f64>]> {
+        match &self.kind {
+            NurbsSurfaceKind::NonRational => None,
+            NurbsSurfaceKind::Rational { weights } => Some(weights),
+        }
+    }
 }
 
 /// A surface of revolution defined by rotating a curve around an axis.
@@ -302,6 +521,17 @@ pub struct SurfaceOfLinearExtrusion {
     pub swept_curve: CurveId,
     pub extrusion_direction: DirectionId,
     pub depth: f64,
+}
+
+/// A surface offset from a basis surface along its normal by a signed distance.
+///
+/// Corresponds to STEP `OFFSET_SURFACE`.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct SurfaceOfOffset {
+    pub basis: SurfaceId,
+    pub distance: f64,
+    /// `self_intersect : LOGICAL`.
+    pub self_intersect: Logical,
 }
 
 // ---------------------------------------------------------------------------
@@ -348,6 +578,13 @@ pub enum Curve2d {
     Circle(Circle2),
     Ellipse(Ellipse2),
     Nurbs(NurbsCurve2d),
+    Polyline(Polyline2d),
+}
+
+/// A 2D polyline: ordered list of 2D point ids forming a piecewise-linear curve.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Polyline2d {
+    pub points: Vec<Point2dId>,
 }
 
 /// A 2D line: point + direction + magnitude (2D VECTOR scalar).
@@ -375,18 +612,35 @@ pub struct Ellipse2 {
 
 /// A 2D NURBS curve. Structure mirrors the 3D [`NurbsCurve`] but with 2D
 /// control points. Rational 2D NURBS (complex entity `RATIONAL_B_SPLINE_CURVE`
-/// with 2D weights) is not yet produced by reader — `weights` stays `None`
-/// for all current fixtures. The field is kept for structural parity so a
-/// future rational converter can populate it without an IR change.
+/// with 2D weights) is not yet emitted by writer (see [`NurbsKind2d`]).
 #[derive(Debug, Clone, PartialEq)]
 pub struct NurbsCurve2d {
     pub degree: u32,
     pub control_points: Vec<Point2dId>,
-    pub weights: Option<Vec<f64>>,
+    pub kind: NurbsKind2d,
     pub knot_multiplicities: Vec<i64>,
     pub knots: Vec<f64>,
-    pub closed: bool,
+    /// `closed_curve : LOGICAL`.
+    pub closed: Logical,
     pub form: CurveForm,
+}
+
+/// Rationality of a [`NurbsCurve2d`]. Same shape as 3D [`NurbsKind`].
+#[derive(Debug, Clone, PartialEq)]
+pub enum NurbsKind2d {
+    NonRational,
+    Rational { weights: Vec<f64> },
+}
+
+impl NurbsCurve2d {
+    /// Returns `Some(&weights)` for rational, `None` for non-rational.
+    #[must_use]
+    pub fn weights(&self) -> Option<&[f64]> {
+        match &self.kind {
+            NurbsKind2d::NonRational => None,
+            NurbsKind2d::Rational { weights } => Some(weights),
+        }
+    }
 }
 
 /// A 2D curve mounted on a 3D surface — one entry in a `SURFACE_CURVE` /
@@ -396,4 +650,127 @@ pub struct NurbsCurve2d {
 pub struct Pcurve {
     pub basis_surface: SurfaceId,
     pub curve_2d: Curve2dId,
+}
+
+/// `PLANAR_EXTENT` / `PLANAR_BOX` — a rectangular planar region. The
+/// ir.toml blueprint models them as a `concrete_supertype`: one arena, an
+/// enum with the base `Itself` variant plus the `PlanarBox` subtype.
+#[derive(Debug, Clone, PartialEq)]
+pub enum PlanarExtent {
+    Itself(PlanarExtentData),
+    PlanarBox(PlanarBox),
+}
+
+/// `PLANAR_EXTENT(name, size_in_x, size_in_y)` — the base form.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlanarExtentData {
+    pub name: String,
+    pub size_in_x: f64,
+    pub size_in_y: f64,
+}
+
+/// `PLANAR_BOX(name, size_in_x, size_in_y, placement)` — a planar extent
+/// anchored by a coordinate placement.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlanarBox {
+    pub name: String,
+    pub size_in_x: f64,
+    pub size_in_y: f64,
+    pub placement: PlanarBoxPlacement,
+}
+
+/// `PLANAR_BOX.placement` — the STEP `axis2_placement` SELECT
+/// (`AXIS2_PLACEMENT_2D` | `AXIS2_PLACEMENT_3D`).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum PlanarBoxPlacement {
+    Placement2d(Placement2dId),
+    Placement3d(Placement3dId),
+}
+
+/// `CIRCULAR_AREA(name, centre, radius)` — `primitive_2d` SUBTYPE.
+/// Orphan in step-io; corpus 1 instance.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CircularArea {
+    pub name: String,
+    pub centre: CircularAreaCentre,
+    pub radius: f64,
+}
+
+/// `CIRCULAR_AREA.centre` — normally a local `cartesian_point`, but the corpus
+/// conformance fixture points it at a P21 edition 3 external reference.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum CircularAreaCentre {
+    /// A local `CARTESIAN_POINT` in the geometry pool.
+    Point(PointId),
+    /// A P21 edition 3 external reference (`REFERENCE` section `#N=<...>`).
+    External(crate::ir::ExternalRefId),
+}
+
+/// `surface_curve` enum — phase scs. Currently models the two SUBTYPE
+/// variants (`bounded_surface_curve` / `intersection_curve`). The base
+/// `SURFACE_CURVE` itself stays in the existing alias path (unwrap to
+/// `curve_3d` via `surface_curve.rs`); both subtypes are corpus 0 so
+/// the alias and this arena never overlap.
+#[derive(Debug, Clone, PartialEq)]
+pub enum SurfaceCurve {
+    BoundedSurfaceCurve(SurfaceCurveData),
+    IntersectionCurve(SurfaceCurveData),
+}
+
+/// Body shared by every [`SurfaceCurve`] variant.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceCurveData {
+    pub name: String,
+    pub curve_3d: CurveId,
+    pub associated_geometry: Vec<PCurveOrSurface>,
+    pub master_representation: PreferredSurfaceCurveRepresentation,
+}
+
+/// `pcurve_or_surface` SELECT — both branches modelled. The alias path
+/// (`surface_curve.rs`) populates the `Pcurve` branch from base
+/// `SURFACE_CURVE` / `SEAM_CURVE` wrappers; the `Surface` branch carries
+/// a surface directly associated with the curve.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum PCurveOrSurface {
+    Pcurve(Pcurve),
+    Surface(SurfaceId),
+}
+
+/// `preferred_surface_curve_representation` ENUMERATION.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PreferredSurfaceCurveRepresentation {
+    Curve3d,
+    PcurveS1,
+    PcurveS2,
+}
+
+/// Faithful image of a base `SURFACE_CURVE` / `SEAM_CURVE` wrapper carried by
+/// the edge whose `edge_geometry` referenced it. `curve_3d` lives on the edge
+/// (`Edge::curve`); this preserves the wrapper's other attributes verbatim so
+/// the writer reproduces the original entity kind and `master_representation`
+/// instead of reconstructing them by heuristic.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SurfaceCurveWrapper {
+    pub name: String,
+    /// `true` for `SEAM_CURVE`, `false` for `SURFACE_CURVE`.
+    pub is_seam: bool,
+    pub associated_geometry: Vec<PCurveOrSurface>,
+    pub master_representation: PreferredSurfaceCurveRepresentation,
+}
+
+/// `parameter_space_curve` `enum_base` — phase bpc. Currently models the
+/// `BOUNDED_PCURVE` SUBTYPE only; corpus 0 inst (round-trip test only).
+#[derive(Debug, Clone, PartialEq)]
+pub enum ParameterSpaceCurve {
+    BoundedPCurve(BoundedPCurve),
+}
+
+/// `BOUNDED_PCURVE(name, basis_surface, reference_to_curve)` — `pcurve`
+/// SUBTYPE that narrows `reference_to_curve` to a
+/// `definitional_representation` (stored as `RepresentationId`).
+#[derive(Debug, Clone, PartialEq)]
+pub struct BoundedPCurve {
+    pub name: String,
+    pub basis_surface: SurfaceId,
+    pub reference_to_curve: crate::ir::id::RepresentationId,
 }

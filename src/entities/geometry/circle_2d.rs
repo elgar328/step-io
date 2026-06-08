@@ -1,0 +1,60 @@
+//! `CIRCLE` handler (2D, pcurve subtree).
+
+use crate::entities::SimpleEntityHandler;
+use crate::entities::geometry::axis2_placement_2d::Axis2Placement2dHandler;
+use crate::ir::attr::{check_count, read_entity_ref, read_real, read_string_or_unset};
+use crate::ir::error::ConvertError;
+use crate::ir::geometry::{Circle2, Curve2d};
+use crate::parser::entity::{Attribute, EntityGraph};
+use crate::reader::ReaderContext;
+use crate::writer::WriteError;
+use crate::writer::buffer::WriteBuffer;
+use crate::writer::entity::{WriterBody, WriterEntity};
+use step_io_macros::step_entity;
+
+pub(crate) struct Circle2dHandler;
+
+#[step_entity(name = "CIRCLE", is_2d)]
+impl SimpleEntityHandler for Circle2dHandler {
+    type WriteInput = Circle2;
+
+    fn read(
+        ctx: &mut ReaderContext,
+        entity_id: u64,
+        attrs: &[Attribute],
+        _graph: &EntityGraph,
+    ) -> Result<(), ConvertError> {
+        check_count(attrs, 3, entity_id, "CIRCLE")?;
+        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
+        let pos_ref = read_entity_ref(attrs, 1, entity_id, "position")?;
+        let radius = read_real(attrs, 2, entity_id, "radius")?;
+        // First cross-ref discriminates 2D vs 3D: if the placement is
+        // absent from the 2D arena, this is the 3D CIRCLE.
+        let Some(&position) = ctx.placement_2d_map.get(&pos_ref) else {
+            return Ok(());
+        };
+        let id = ctx
+            .geometry
+            .curves_2d
+            .push(Curve2d::Circle(Circle2 { position, radius }));
+        ctx.curve_2d_map.insert(entity_id, id);
+        Ok(())
+    }
+
+    fn write(buf: &mut WriteBuffer, c: Circle2) -> Result<u64, WriteError> {
+        let pos = Axis2Placement2dHandler::write(buf, c.position)?;
+        let n = buf.fresh();
+        buf.entities.push(WriterEntity {
+            id: n,
+            body: WriterBody::Simple {
+                name: "CIRCLE".into(),
+                attrs: vec![
+                    Attribute::String(String::new()),
+                    Attribute::EntityRef(pos),
+                    Attribute::Real(c.radius),
+                ],
+            },
+        });
+        Ok(n)
+    }
+}

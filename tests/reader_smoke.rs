@@ -2,7 +2,8 @@
 
 use step_io::ir::geometry::{Curve, Surface};
 use step_io::ir::id::PointId;
-use step_io::ir::model::{AngleUnit, LengthUnit, SolidAngleUnit};
+use step_io::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit};
+use step_io::ir::units::NamedUnit;
 use step_io::reader::ReaderContext;
 
 // ------------------------------------------------------------------
@@ -186,7 +187,11 @@ fn box_fixtures_topology_pool_counts() {
         let result = ReaderContext::convert(&graph);
         let topo = &result.model.topology;
 
-        assert_eq!(topo.vertices.len(), 8, "fixture {name}: vertices");
+        assert_eq!(
+            result.model.geometry.vertices.len(),
+            8,
+            "fixture {name}: vertices"
+        );
         assert_eq!(topo.edges.len(), 12, "fixture {name}: edges");
         assert_eq!(topo.wires.len(), 6, "fixture {name}: wires");
         assert_eq!(topo.faces.len(), 6, "fixture {name}: faces");
@@ -203,7 +208,11 @@ fn cylinder_fixtures_topology_pool_counts() {
         let result = ReaderContext::convert(&graph);
         let topo = &result.model.topology;
 
-        assert_eq!(topo.vertices.len(), 2, "fixture {name}: vertices");
+        assert_eq!(
+            result.model.geometry.vertices.len(),
+            2,
+            "fixture {name}: vertices"
+        );
         assert_eq!(topo.edges.len(), 3, "fixture {name}: edges");
         assert_eq!(topo.wires.len(), 3, "fixture {name}: wires");
         assert_eq!(topo.faces.len(), 3, "fixture {name}: faces");
@@ -222,9 +231,9 @@ fn box_ap214_is_solid_structure() {
 
     assert_eq!(topo.solids.len(), 1);
     let solid = &topo.solids[step_io::SolidId(0)];
-    assert_eq!(solid.shells.len(), 1);
+    assert!(matches!(solid, step_io::Solid::ManifoldSolidBrep { .. }));
 
-    let shell = &topo.shells[solid.shells[0]];
+    let shell = &topo.shells[solid.outer()];
     assert_eq!(shell.faces.len(), 6);
 }
 
@@ -282,7 +291,11 @@ fn fillet_box_fixtures_topology_pool_counts() {
         let result = ReaderContext::convert(&graph);
         let topo = &result.model.topology;
 
-        assert_eq!(topo.vertices.len(), 24, "fixture {name}: vertices");
+        assert_eq!(
+            result.model.geometry.vertices.len(),
+            24,
+            "fixture {name}: vertices"
+        );
         assert_eq!(topo.edges.len(), 48, "fixture {name}: edges");
         assert_eq!(topo.wires.len(), 26, "fixture {name}: wires");
         assert_eq!(topo.faces.len(), 26, "fixture {name}: faces");
@@ -344,7 +357,11 @@ fn cone_fixtures_pool_counts() {
         assert_eq!(geo.directions.len(), 9, "fixture {name}: directions");
         assert_eq!(geo.curves.len(), 2, "fixture {name}: curves");
         assert_eq!(geo.surfaces.len(), 2, "fixture {name}: surfaces");
-        assert_eq!(topo.vertices.len(), 2, "fixture {name}: vertices");
+        assert_eq!(
+            result.model.geometry.vertices.len(),
+            2,
+            "fixture {name}: vertices"
+        );
         assert_eq!(topo.edges.len(), 2, "fixture {name}: edges");
         assert_eq!(topo.faces.len(), 2, "fixture {name}: faces");
         assert_eq!(topo.solids.len(), 1, "fixture {name}: solids");
@@ -405,7 +422,11 @@ fn torus_fixtures_pool_counts() {
         assert_eq!(geo.directions.len(), 8, "fixture {name}: directions");
         assert_eq!(geo.curves.len(), 2, "fixture {name}: curves");
         assert_eq!(geo.surfaces.len(), 1, "fixture {name}: surfaces");
-        assert_eq!(topo.vertices.len(), 1, "fixture {name}: vertices");
+        assert_eq!(
+            result.model.geometry.vertices.len(),
+            1,
+            "fixture {name}: vertices"
+        );
         assert_eq!(topo.edges.len(), 2, "fixture {name}: edges");
         assert_eq!(topo.faces.len(), 1, "fixture {name}: faces");
         assert_eq!(topo.solids.len(), 1, "fixture {name}: solids");
@@ -463,7 +484,11 @@ fn revolution_fixtures_pool_counts() {
         assert_eq!(geo.directions.len(), 11, "fixture {name}: directions");
         assert_eq!(geo.curves.len(), 4, "fixture {name}: curves");
         assert_eq!(geo.surfaces.len(), 3, "fixture {name}: surfaces");
-        assert_eq!(topo.vertices.len(), 2, "fixture {name}: vertices");
+        assert_eq!(
+            result.model.geometry.vertices.len(),
+            2,
+            "fixture {name}: vertices"
+        );
         assert_eq!(topo.edges.len(), 3, "fixture {name}: edges");
         assert_eq!(topo.faces.len(), 3, "fixture {name}: faces");
         assert_eq!(topo.solids.len(), 1, "fixture {name}: solids");
@@ -487,15 +512,14 @@ fn revolution_ap214_is_spot_check() {
     let rational_count = geo
         .curves
         .iter()
-        .filter(|c| matches!(c, Curve::Nurbs(n) if n.weights.is_some()))
+        .filter(|c| matches!(c, Curve::Nurbs(n) if n.weights().is_some()))
         .count();
     assert_eq!(rational_count, 2, "expected 2 rational NURBS curves");
 
     // Verify at least one weight is not 1.0 (true rational).
     let has_non_unit_weight = geo.curves.iter().any(|c| match c {
         Curve::Nurbs(n) => n
-            .weights
-            .as_ref()
+            .weights()
             .is_some_and(|ws| ws.iter().any(|&w| (w - 1.0).abs() > f64::EPSILON)),
         _ => false,
     });
@@ -557,7 +581,11 @@ fn loft_fixtures_topology_pool_counts() {
         let result = ReaderContext::convert(&graph);
         let topo = &result.model.topology;
 
-        assert_eq!(topo.vertices.len(), 10, "fixture {name}: vertices");
+        assert_eq!(
+            result.model.geometry.vertices.len(),
+            10,
+            "fixture {name}: vertices"
+        );
         assert_eq!(topo.edges.len(), 15, "fixture {name}: edges");
         assert_eq!(topo.wires.len(), 7, "fixture {name}: wires");
         assert_eq!(topo.faces.len(), 7, "fixture {name}: faces");
@@ -620,7 +648,11 @@ fn tapered_box_fixtures_topology_pool_counts() {
         let result = ReaderContext::convert(&graph);
         let topo = &result.model.topology;
 
-        assert_eq!(topo.vertices.len(), 8, "fixture {name}: vertices");
+        assert_eq!(
+            result.model.geometry.vertices.len(),
+            8,
+            "fixture {name}: vertices"
+        );
         assert_eq!(topo.edges.len(), 12, "fixture {name}: edges");
         assert_eq!(topo.wires.len(), 6, "fixture {name}: wires");
         assert_eq!(topo.faces.len(), 6, "fixture {name}: faces");
@@ -642,7 +674,7 @@ fn tapered_box_ap214_is_spot_check() {
     let rational_surface_count = geo
         .surfaces
         .iter()
-        .filter(|s| matches!(s, Surface::Nurbs(n) if n.weights.is_some()))
+        .filter(|s| matches!(s, Surface::Nurbs(n) if n.weights().is_some()))
         .count();
     assert_eq!(
         rational_surface_count, 1,
@@ -651,7 +683,7 @@ fn tapered_box_ap214_is_spot_check() {
     let simple_surface_count = geo
         .surfaces
         .iter()
-        .filter(|s| matches!(s, Surface::Nurbs(n) if n.weights.is_none()))
+        .filter(|s| matches!(s, Surface::Nurbs(n) if n.weights().is_none()))
         .count();
     assert_eq!(
         simple_surface_count, 3,
@@ -663,11 +695,11 @@ fn tapered_box_ap214_is_spot_check() {
         .surfaces
         .iter()
         .find_map(|s| match s {
-            Surface::Nurbs(n) if n.weights.is_some() => Some(n),
+            Surface::Nurbs(n) if n.weights().is_some() => Some(n),
             _ => None,
         })
         .expect("rational NURBS surface missing");
-    let weights = rational.weights.as_ref().unwrap();
+    let weights = rational.weights().unwrap();
     assert_eq!(weights.len(), rational.control_points.len());
     for (w_row, cp_row) in weights.iter().zip(rational.control_points.iter()) {
         assert_eq!(w_row.len(), cp_row.len());
@@ -703,7 +735,7 @@ fn loft_ap214_is_spot_check_nurbs() {
     for nc in &nurbs_curves {
         assert_eq!(nc.degree, 1);
         assert_eq!(nc.control_points.len(), 2);
-        assert!(nc.weights.is_none());
+        assert!(nc.weights().is_none());
         assert_eq!(nc.knots.len(), nc.knot_multiplicities.len());
     }
 
@@ -720,7 +752,7 @@ fn loft_ap214_is_spot_check_nurbs() {
     for ns in &nurbs_surfaces {
         assert!(ns.u_degree >= 7);
         assert_eq!(ns.v_degree, 1);
-        assert!(ns.weights.is_none());
+        assert!(ns.weights().is_none());
         assert_eq!(ns.u_knots.len(), ns.u_knot_multiplicities.len());
         assert_eq!(ns.v_knots.len(), ns.v_knot_multiplicities.len());
     }
@@ -780,7 +812,11 @@ fn ellipse_fixtures_topology_pool_counts() {
         let result = ReaderContext::convert(&graph);
         let topo = &result.model.topology;
 
-        assert_eq!(topo.vertices.len(), 2, "fixture {name}: vertices");
+        assert_eq!(
+            result.model.geometry.vertices.len(),
+            2,
+            "fixture {name}: vertices"
+        );
         assert_eq!(topo.edges.len(), 3, "fixture {name}: edges");
         assert_eq!(topo.wires.len(), 3, "fixture {name}: wires");
         assert_eq!(topo.faces.len(), 3, "fixture {name}: faces");
@@ -893,10 +929,10 @@ fn hollow_box_solid_has_outer_plus_one_void() {
         let result = ReaderContext::convert(&graph);
         let topo = &result.model.topology;
         let solid = topo.solids.iter().next().expect("one solid");
-        assert_eq!(solid.shells.len(), 2, "fixture {name}: 1 outer + 1 void");
+        assert_eq!(solid.voids().len(), 1, "fixture {name}: 1 outer + 1 void");
 
-        let outer = topo.shells.iter().nth(solid.shells[0].0 as usize).unwrap();
-        let inner = topo.shells.iter().nth(solid.shells[1].0 as usize).unwrap();
+        let outer = topo.shells.iter().nth(solid.outer().0 as usize).unwrap();
+        let inner = topo.shells.iter().nth(solid.voids()[0].0 as usize).unwrap();
         assert_eq!(
             outer.orientation,
             Orientation::Forward,
@@ -908,6 +944,221 @@ fn hollow_box_solid_has_outer_plus_one_void() {
             "fixture {name}: void Reversed"
         );
     }
+}
+
+// ------------------------------------------------------------------
+// Face surface fixtures — exercise Face::FaceSurface (FACE_SURFACE)
+// ------------------------------------------------------------------
+
+const FACE_SURFACE_FIXTURES: &[(&str, &str)] = &[(
+    "face_surface_ap214_is",
+    include_str!("fixtures/face_surface_ap214_is.step"),
+)];
+
+#[test]
+fn face_surface_fixtures_convert_without_warnings() {
+    for (name, source) in FACE_SURFACE_FIXTURES {
+        let graph = step_io::parse(source)
+            .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
+        let result = ReaderContext::convert(&graph);
+        assert!(
+            result.warnings.is_empty(),
+            "fixture {name}: expected no warnings, got {:#?}",
+            result.warnings,
+        );
+    }
+}
+
+#[test]
+fn face_surface_fixtures_geometry_pool_counts() {
+    for (name, source) in FACE_SURFACE_FIXTURES {
+        let graph = step_io::parse(source)
+            .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
+        let result = ReaderContext::convert(&graph);
+        let geo = &result.model.geometry;
+
+        assert_eq!(geo.points.len(), 17, "fixture {name}: points");
+        assert_eq!(geo.directions.len(), 2, "fixture {name}: directions");
+        assert_eq!(
+            geo.curves.len(),
+            4,
+            "fixture {name}: curves (4 simple nurbs edge curves)"
+        );
+        assert_eq!(geo.surfaces.len(), 1, "fixture {name}: surfaces (1 plane)");
+    }
+}
+
+#[test]
+fn face_surface_fixtures_topology_pool_counts() {
+    for (name, source) in FACE_SURFACE_FIXTURES {
+        let graph = step_io::parse(source)
+            .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
+        let result = ReaderContext::convert(&graph);
+        let topo = &result.model.topology;
+
+        assert_eq!(
+            result.model.geometry.vertices.len(),
+            4,
+            "fixture {name}: vertices"
+        );
+        assert_eq!(topo.edges.len(), 4, "fixture {name}: edges");
+        assert_eq!(topo.wires.len(), 1, "fixture {name}: wires");
+        assert_eq!(topo.faces.len(), 1, "fixture {name}: faces");
+        assert_eq!(topo.shells.len(), 1, "fixture {name}: shells");
+        assert_eq!(topo.solids.len(), 0, "fixture {name}: solids");
+    }
+}
+
+/// Spot-check `FACE_SURFACE` round-trip — verifies `Face::FaceSurface` is
+/// preserved on read and emitted back as `FACE_SURFACE(`, not downgraded to
+/// `ADVANCED_FACE(`.
+#[test]
+fn face_surface_ap214_is_spot_check() {
+    use step_io::ir::topology::Face;
+
+    let source = include_str!("fixtures/face_surface_ap214_is.step");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    let faces: Vec<_> = result.model.topology.faces.iter().collect();
+
+    assert_eq!(faces.len(), 1, "expected exactly 1 face");
+    assert!(
+        matches!(faces[0], Face::FaceSurface(_)),
+        "face should be FaceSurface (FACE_SURFACE origin)"
+    );
+
+    // Round-trip the IR through the writer and check the emitted text.
+    let written = result
+        .model
+        .write_to_string()
+        .expect("writer produced output");
+    let face_surface_count = written.matches("FACE_SURFACE(").count();
+    let advanced_face_count = written.matches("ADVANCED_FACE(").count();
+    assert_eq!(
+        face_surface_count, 1,
+        "expected 1 FACE_SURFACE( occurrence in round-trip output"
+    );
+    assert_eq!(
+        advanced_face_count, 0,
+        "expected 0 ADVANCED_FACE( occurrences in round-trip output"
+    );
+}
+
+// ------------------------------------------------------------------
+// Offset surface fixtures — exercise Surface::Offset (OFFSET_SURFACE)
+// ------------------------------------------------------------------
+
+const OFFSET_SURFACE_FIXTURES: &[(&str, &str)] = &[(
+    "offset_surface_ap214_is",
+    include_str!("fixtures/offset_surface_ap214_is.step"),
+)];
+
+#[test]
+fn offset_surface_fixtures_convert_without_warnings() {
+    for (name, source) in OFFSET_SURFACE_FIXTURES {
+        let graph = step_io::parse(source)
+            .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
+        let result = ReaderContext::convert(&graph);
+        assert!(
+            result.warnings.is_empty(),
+            "fixture {name}: expected no warnings, got {:#?}",
+            result.warnings,
+        );
+    }
+}
+
+#[test]
+fn offset_surface_fixtures_geometry_pool_counts() {
+    for (name, source) in OFFSET_SURFACE_FIXTURES {
+        let graph = step_io::parse(source)
+            .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
+        let result = ReaderContext::convert(&graph);
+        let geo = &result.model.geometry;
+
+        assert_eq!(geo.points.len(), 246, "fixture {name}: points");
+        assert_eq!(geo.directions.len(), 39, "fixture {name}: directions");
+        assert_eq!(
+            geo.curves.len(),
+            25,
+            "fixture {name}: curves (18 lines + 7 simple nurbs)"
+        );
+        assert_eq!(
+            geo.surfaces.len(),
+            12,
+            "fixture {name}: surfaces (9 planes + 1 simple nurbs + 1 extrusion + 1 offset)"
+        );
+    }
+}
+
+#[test]
+fn offset_surface_fixtures_topology_pool_counts() {
+    for (name, source) in OFFSET_SURFACE_FIXTURES {
+        let graph = step_io::parse(source)
+            .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
+        let result = ReaderContext::convert(&graph);
+        let topo = &result.model.topology;
+
+        assert_eq!(
+            result.model.geometry.vertices.len(),
+            16,
+            "fixture {name}: vertices"
+        );
+        assert_eq!(topo.edges.len(), 24, "fixture {name}: edges");
+        assert_eq!(topo.wires.len(), 12, "fixture {name}: wires");
+        assert_eq!(topo.faces.len(), 11, "fixture {name}: faces");
+        assert_eq!(topo.shells.len(), 1, "fixture {name}: shells");
+        assert_eq!(topo.solids.len(), 1, "fixture {name}: solids");
+    }
+}
+
+/// Spot-check `OFFSET_SURFACE` round-trip — `Surface::Offset` preserved,
+/// basis resolves to an already-interned surface, and writer emits the
+/// entity name back verbatim.
+#[test]
+fn offset_surface_ap214_is_spot_check() {
+    let source = include_str!("fixtures/offset_surface_ap214_is.step");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    let geo = &result.model.geometry;
+
+    let offset_count = geo
+        .surfaces
+        .iter()
+        .filter(|s| matches!(s, Surface::Offset(_)))
+        .count();
+    assert_eq!(offset_count, 1, "expected 1 Surface::Offset");
+
+    let offset = geo
+        .surfaces
+        .iter()
+        .find_map(|s| match s {
+            Surface::Offset(o) => Some(o),
+            _ => None,
+        })
+        .expect("offset surface missing");
+
+    assert!(
+        (offset.distance.abs() - 5.0).abs() < f64::EPSILON,
+        "expected |distance| == 5.0, got {}",
+        offset.distance,
+    );
+
+    let basis = &geo.surfaces[offset.basis];
+    assert!(
+        matches!(basis, Surface::Nurbs(_)),
+        "expected basis to resolve to a Surface::Nurbs"
+    );
+
+    // Round-trip: emitted text must preserve OFFSET_SURFACE entity name.
+    let written = result
+        .model
+        .write_to_string()
+        .expect("writer produced output");
+    let offset_surface_count = written.matches("OFFSET_SURFACE(").count();
+    assert_eq!(
+        offset_surface_count, 1,
+        "expected 1 OFFSET_SURFACE( occurrence in round-trip output"
+    );
 }
 
 // ------------------------------------------------------------------
@@ -926,6 +1177,8 @@ const ALL_FIXTURE_GROUPS: &[&[(&str, &str)]] = &[
     ELLIPSE_FIXTURES,
     HOLLOW_BOX_FIXTURES,
     ASSEMBLY_FIXTURES,
+    FACE_SURFACE_FIXTURES,
+    OFFSET_SURFACE_FIXTURES,
 ];
 
 // ------------------------------------------------------------------
@@ -963,13 +1216,13 @@ fn assembly_fixtures_have_seven_products() {
             .as_ref()
             .unwrap_or_else(|| panic!("fixture {name}: assembly should be Some"));
         assert_eq!(tree.products.len(), 7, "fixture {name}: product count");
-        assert!(tree.root.is_some(), "fixture {name}: root resolved");
+        assert!(!tree.roots.is_empty(), "fixture {name}: root resolved");
     }
 }
 
 #[test]
 fn assembly_fixtures_content_variants_split_three_solids_four_groups() {
-    use step_io::ProductContent;
+    use step_io::GeometryLeaf;
     for (name, source) in ASSEMBLY_FIXTURES {
         let graph = step_io::parse(source)
             .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
@@ -978,20 +1231,22 @@ fn assembly_fixtures_content_variants_split_three_solids_four_groups() {
         let (solid_count, group_count) =
             tree.products
                 .iter()
-                .fold((0_usize, 0_usize), |(sol, grp), p| match &p.content {
-                    ProductContent::Solid(_) | ProductContent::SurfaceBody(_) => (sol + 1, grp),
-                    ProductContent::Group(_) => (sol, grp + 1),
+                .fold((0_usize, 0_usize), |(sol, grp), p| match &p.geometry {
+                    Some(_) => (sol + 1, grp),
+                    None => (sol, grp + 1),
                 });
         assert_eq!(solid_count, 3, "fixture {name}: leaf solids");
         assert_eq!(group_count, 4, "fixture {name}: groups");
         // Every Solid's SolidId must live in the topology pool.
         for product in tree.products.iter() {
-            if let ProductContent::Solid(sid) = &product.content {
+            if let Some(GeometryLeaf::Solid(solid)) = &product.geometry {
                 let total = u32::try_from(result.model.topology.solids.len()).unwrap();
-                assert!(
-                    sid.0 < total,
-                    "fixture {name}: product solid id out of range"
-                );
+                for sid in &solid.ids {
+                    assert!(
+                        sid.0 < total,
+                        "fixture {name}: product solid id out of range"
+                    );
+                }
             }
         }
         // Expected names all present.
@@ -1021,7 +1276,7 @@ fn assembly_fixtures_preserve_sphere_vertex_loop() {
             .topology
             .wires
             .iter()
-            .filter(|w| w.vertex.is_some() && w.edges.is_empty())
+            .filter(|w| w.data().vertex.is_some() && w.data().edges.is_empty())
             .count();
         assert_eq!(
             vertex_wire_count, 1,
@@ -1032,7 +1287,7 @@ fn assembly_fixtures_preserve_sphere_vertex_loop() {
 
 #[test]
 fn single_part_fixtures_have_one_product() {
-    use step_io::ProductContent;
+    use step_io::GeometryLeaf;
     // Even single-part STEP files carry one PRODUCT; the assembly tree is
     // always Some(...) with `products.len() == 1` and the sole product
     // classified as a Solid leaf (root stays None until Phase B).
@@ -1058,13 +1313,13 @@ fn single_part_fixtures_have_one_product() {
             // The sole product — having never appeared as an Instance child
             // — is the automatic root.
             assert_eq!(
-                tree.root,
-                Some(step_io::ProductId(0)),
-                "fixture {name}: root should resolve to the only product"
+                tree.roots,
+                vec![step_io::ProductId(0)],
+                "fixture {name}: the only product is the sole root"
             );
             let product = tree.products.iter().next().unwrap();
             assert!(
-                matches!(product.content, ProductContent::Solid(_)),
+                matches!(product.geometry, Some(GeometryLeaf::Solid(_))),
                 "fixture {name}: single-part product should be Solid(_)"
             );
         }
@@ -1078,22 +1333,45 @@ fn every_fixture_has_expected_units() {
             let graph = step_io::parse(source)
                 .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
             let result = ReaderContext::convert(&graph);
-            let units = result.model.units.unwrap_or_else(|| {
-                panic!("fixture {name}: units missing");
-            });
+            let units = result
+                .model
+                .units
+                .iter()
+                .next()
+                .cloned()
+                .unwrap_or_else(|| panic!("fixture {name}: units missing"));
+            let pool = result
+                .model
+                .units_pool
+                .as_ref()
+                .unwrap_or_else(|| panic!("fixture {name}: units pool missing"));
+            let length = match pool.named_units[units.length(pool).expect("length unit")] {
+                NamedUnit::Length(f) => f.unit,
+                _ => panic!("fixture {name}: length slot is not Length"),
+            };
+            let plane_angle =
+                match pool.named_units[units.plane_angle(pool).expect("plane_angle unit")] {
+                    NamedUnit::PlaneAngle(f) => f.unit,
+                    _ => panic!("fixture {name}: plane_angle slot is not PlaneAngle"),
+                };
+            let solid_angle =
+                match pool.named_units[units.solid_angle(pool).expect("solid_angle unit")] {
+                    NamedUnit::SolidAngle(f) => f.unit,
+                    _ => panic!("fixture {name}: solid_angle slot is not SolidAngle"),
+                };
             let expected_length = if *name == "fillet_box_ap214_is" {
                 LengthUnit::Inch
             } else {
                 LengthUnit::Millimetre
             };
-            assert_eq!(units.length, expected_length, "fixture {name}: length");
+            assert_eq!(length, expected_length, "fixture {name}: length");
             assert_eq!(
-                units.plane_angle,
+                plane_angle,
                 AngleUnit::Radian,
-                "fixture {name}: plane_angle",
+                "fixture {name}: plane_angle"
             );
             assert_eq!(
-                units.solid_angle,
+                solid_angle,
                 SolidAngleUnit::Steradian,
                 "fixture {name}: solid_angle",
             );
@@ -1118,7 +1396,11 @@ fn assembly_fixtures_tree_root_is_assembly_product() {
             .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
         let result = ReaderContext::convert(&graph);
         let tree = result.model.assembly.as_ref().unwrap();
-        let root = tree.root.expect("root should be resolved");
+        let root = tree
+            .roots
+            .first()
+            .copied()
+            .expect("root should be resolved");
         let root_product = &tree.products[root];
         assert_eq!(
             root_product.name, "Assembly",
@@ -1129,49 +1411,59 @@ fn assembly_fixtures_tree_root_is_assembly_product() {
 
 #[test]
 fn assembly_fixtures_root_has_four_instances() {
-    use step_io::ProductContent;
     for (name, source) in ASSEMBLY_FIXTURES {
         let graph = step_io::parse(source)
             .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
         let result = ReaderContext::convert(&graph);
         let tree = result.model.assembly.as_ref().unwrap();
-        let root = tree.root.unwrap();
-        match &tree.products[root].content {
-            ProductContent::Group(instances) => {
-                assert_eq!(
-                    instances.len(),
-                    4,
-                    "fixture {name}: root should hold 4 instances"
-                );
-            }
-            ProductContent::Solid(_) | ProductContent::SurfaceBody(_) => {
-                panic!("fixture {name}: root should be a Group")
-            }
-        }
+        let root = tree
+            .roots
+            .first()
+            .copied()
+            .expect("root should be resolved");
+        let root_prod = &tree.products[root];
+        assert!(
+            root_prod.geometry.is_none(),
+            "fixture {name}: root should be a Group"
+        );
+        assert_eq!(
+            root_prod.instances.len(),
+            4,
+            "fixture {name}: root should hold 4 instances"
+        );
     }
 }
 
 #[test]
 fn assembly_fixtures_cube_wrapper_is_shared() {
-    use step_io::ProductContent;
     for (name, source) in ASSEMBLY_FIXTURES {
         let graph = step_io::parse(source)
             .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
         let result = ReaderContext::convert(&graph);
         let tree = result.model.assembly.as_ref().unwrap();
         // The Cube wrapper is a Group with a single inner Cube leaf.
-        let Some((idx, _)) = tree.products.iter().enumerate().find(|(_, p)| {
-            p.name == "Part" && matches!(&p.content, ProductContent::Group(v) if v.len() == 1)
-        }) else {
+        let Some((idx, _)) = tree
+            .products
+            .iter()
+            .enumerate()
+            .find(|(_, p)| p.name == "Part" && p.geometry.is_none() && p.instances.len() == 1)
+        else {
             panic!("fixture {name}: Cube wrapper 'Part' not found");
         };
         let cube_wrapper = step_io::ProductId(u32::try_from(idx).unwrap());
 
-        let root = tree.root.unwrap();
-        let ProductContent::Group(root_instances) = &tree.products[root].content else {
-            panic!("fixture {name}: root not Group");
-        };
-        let shared_count = root_instances
+        let root = tree
+            .roots
+            .first()
+            .copied()
+            .expect("root should be resolved");
+        let root_prod = &tree.products[root];
+        assert!(
+            root_prod.geometry.is_none(),
+            "fixture {name}: root not Group"
+        );
+        let shared_count = root_prod
+            .instances
             .iter()
             .filter(|inst| inst.child == cube_wrapper)
             .count();
@@ -1181,7 +1473,8 @@ fn assembly_fixtures_cube_wrapper_is_shared() {
         );
 
         // The two shared instances must have different transforms.
-        let mut targets = root_instances
+        let mut targets = root_prod
+            .instances
             .iter()
             .filter(|inst| inst.child == cube_wrapper)
             .map(|inst| inst.transform.target);
@@ -1196,7 +1489,6 @@ fn assembly_fixtures_cube_wrapper_is_shared() {
 
 #[test]
 fn assembly_fixtures_wrapper_holds_single_inner() {
-    use step_io::ProductContent;
     for (name, source) in ASSEMBLY_FIXTURES {
         let graph = step_io::parse(source)
             .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
@@ -1207,7 +1499,7 @@ fn assembly_fixtures_wrapper_holds_single_inner() {
         let wrapper_count = tree
             .products
             .iter()
-            .filter(|p| matches!(&p.content, ProductContent::Group(v) if v.len() == 1))
+            .filter(|p| p.geometry.is_none() && p.instances.len() == 1)
             .count();
         assert_eq!(
             wrapper_count, 3,
@@ -1218,7 +1510,6 @@ fn assembly_fixtures_wrapper_holds_single_inner() {
 
 #[test]
 fn assembly_fixtures_transform_target_is_non_origin() {
-    use step_io::ProductContent;
     for (name, source) in ASSEMBLY_FIXTURES {
         let graph = step_io::parse(source)
             .unwrap_or_else(|e| panic!("fixture {name} failed to parse: {e}"));
@@ -1229,8 +1520,8 @@ fn assembly_fixtures_transform_target_is_non_origin() {
         // coordinates to exercise the transform path.
         let mut found_non_origin = false;
         for product in tree.products.iter() {
-            if let ProductContent::Group(instances) = &product.content {
-                for inst in instances {
+            if product.geometry.is_none() {
+                for inst in &product.instances {
                     let target = result.model.geometry.placements[inst.transform.target];
                     let pt = &result.model.geometry.points[target.location];
                     if pt.x.abs() + pt.y.abs() + pt.z.abs() > f64::EPSILON {
@@ -1252,6 +1543,7 @@ fn assembly_fixtures_transform_target_is_non_origin() {
 
 #[test]
 fn cylinder_ap214_is_collects_pcurves() {
+    use step_io::ir::PCurveOrSurface;
     let src = include_str!("fixtures/cylinder_ap214_is.step");
     let graph = step_io::parse(src).expect("parse failed");
     let result = ReaderContext::convert(&graph);
@@ -1263,8 +1555,17 @@ fn cylinder_ap214_is_collects_pcurves() {
     let model = result.model;
 
     // Cylinder fixture has 6 PCURVE entities (2 on the seam, 2 on each of
-    // two surface curves). All six should land in Edge.pcurves.
-    let total_pcurves: usize = model.topology.edges.iter().map(|e| e.pcurves.len()).sum();
+    // two surface curves). All six should land in edge surface-curve wrappers.
+    let total_pcurves: usize = model
+        .topology
+        .edges
+        .iter()
+        .map(|e| {
+            e.surface_curve
+                .as_ref()
+                .map_or(0, |w| w.associated_geometry.len())
+        })
+        .sum();
     assert_eq!(total_pcurves, 6, "cylinder_ap214_is total pcurves");
 
     // 2D arenas populated.
@@ -1275,15 +1576,19 @@ fn cylinder_ap214_is_collects_pcurves() {
         "directions_2d empty"
     );
 
-    // Sanity: at least one edge has pcurves, and the basis_surface is a
-    // valid SurfaceId inside the 3D surface arena.
+    // Sanity: at least one edge has a surface-curve wrapper, and the
+    // basis_surface is a valid SurfaceId inside the 3D surface arena.
     let first = model
         .topology
         .edges
         .iter()
-        .find(|e| !e.pcurves.is_empty())
-        .expect("at least one edge has pcurves");
-    let basis = first.pcurves[0].basis_surface;
+        .find(|e| e.surface_curve.is_some())
+        .expect("at least one edge has a surface curve");
+    let wrapper = first.surface_curve.as_ref().unwrap();
+    let PCurveOrSurface::Pcurve(pc) = wrapper.associated_geometry[0] else {
+        panic!("cylinder_ap214_is: expected a pcurve member in associated_geometry");
+    };
+    let basis = pc.basis_surface;
     assert!(
         (basis.0 as usize) < model.geometry.surfaces.len(),
         "basis_surface out of range"
@@ -1304,7 +1609,16 @@ fn loft_ap214_is_collects_pcurves() {
 
     // Loft fixture is much richer; we just require "many" pcurves and a
     // non-empty 2D curve arena including NURBS 2D entries.
-    let total_pcurves: usize = model.topology.edges.iter().map(|e| e.pcurves.len()).sum();
+    let total_pcurves: usize = model
+        .topology
+        .edges
+        .iter()
+        .map(|e| {
+            e.surface_curve
+                .as_ref()
+                .map_or(0, |w| w.associated_geometry.len())
+        })
+        .sum();
     assert!(
         total_pcurves > 20,
         "loft should have many pcurves; got {total_pcurves}"
@@ -1317,6 +1631,36 @@ fn loft_ap214_is_collects_pcurves() {
         .iter()
         .any(|c| matches!(c, step_io::ir::geometry::Curve2d::Nurbs(_)));
     assert!(has_2d_nurbs, "loft should include 2D NURBS curves");
+}
+
+#[test]
+fn external_temp_screw_parses() {
+    // Sourced from an external sample (OCCT screw.step) as an
+    // `external_temp_` placeholder per the test-fixture policy. Replace
+    // with a hand-crafted fixture once one is available.
+    use step_io::ir::geometry::{Curve2d, NurbsKind2d};
+
+    let src = include_str!("fixtures/external_temp_screw.step");
+    let graph = step_io::parse(src).expect("external_temp_screw.step parses");
+    let result = ReaderContext::convert(&graph);
+
+    // Pass4aRational populates curves_2d with at least one rational NURBS.
+    let rational_2d_count = result
+        .model
+        .geometry
+        .curves_2d
+        .iter()
+        .filter(|c| {
+            matches!(
+                c,
+                Curve2d::Nurbs(n) if matches!(n.kind, NurbsKind2d::Rational { .. })
+            )
+        })
+        .count();
+    assert!(
+        rational_2d_count > 0,
+        "expected at least one 2D rational NURBS, got {rational_2d_count}"
+    );
 }
 
 #[test]
@@ -1342,11 +1686,282 @@ fn pcurve_fixtures_convert_without_warnings() {
             .topology
             .edges
             .iter()
-            .map(|e| e.pcurves.len())
+            .map(|e| {
+                e.surface_curve
+                    .as_ref()
+                    .map_or(0, |w| w.associated_geometry.len())
+            })
             .sum();
         assert!(
             total > 0,
             "fixture {name}: expected at least one pcurve collected"
+        );
+    }
+}
+
+/// `DATUM_FEATURE` reads into the `pmi` pool as a `shape_aspect` subtype.
+/// The NIST property fixture carries 4 `DATUM_FEATURE` and 6 `DATUM`, all
+/// with an `of_shape` that resolves through the product chain.
+#[test]
+fn nist_property_def_datum_feature_pool() {
+    let source = include_str!("fixtures/external_temp_nist_property_def.stp");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    let pmi = result
+        .model
+        .pmi
+        .as_ref()
+        .expect("fixture carries PMI content");
+    assert_eq!(pmi.datum_features.len(), 4, "DATUM_FEATURE count");
+    assert_eq!(pmi.datums.len(), 6, "DATUM count");
+}
+
+/// `geometric_tolerance` form tolerances read into the `pmi` pool. The NIST
+/// property fixture carries 3 `FLATNESS_TOLERANCE`, each with a plain
+/// `LENGTH_MEASURE_WITH_UNIT` magnitude and a `DATUM_FEATURE` target — both
+/// resolvable, so all three round-trip into the arena.
+#[test]
+fn nist_property_def_geometric_tolerances() {
+    use step_io::ir::pmi::{GeometricTolerance, ToleranceMagnitude};
+    let source = include_str!("fixtures/external_temp_nist_property_def.stp");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    let pmi = result
+        .model
+        .pmi
+        .as_ref()
+        .expect("fixture carries PMI content");
+    assert_eq!(
+        pmi.geometric_tolerances.len(),
+        3,
+        "FLATNESS_TOLERANCE count"
+    );
+    for gt in pmi.geometric_tolerances.iter() {
+        let GeometricTolerance::Flatness(data) = gt else {
+            panic!("expected Flatness variant, got {gt:?}");
+        };
+        assert!(
+            matches!(data.magnitude, ToleranceMagnitude::MeasureWithUnit(_)),
+            "NIST flatness magnitude is a plain LENGTH_MEASURE_WITH_UNIT"
+        );
+    }
+}
+
+/// `general_datum_reference` form entities read into the `pmi` pool. The
+/// NIST property fixture carries 19 `DATUM_REFERENCE_COMPARTMENT`, each with
+/// a `base` pointing at a `DATUM` and an empty `modifiers` set.
+#[test]
+fn nist_property_def_general_datum_references() {
+    use step_io::ir::pmi::{GeneralDatumBase, GeneralDatumReference};
+    let source = include_str!("fixtures/external_temp_nist_property_def.stp");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    let pmi = result
+        .model
+        .pmi
+        .as_ref()
+        .expect("fixture carries PMI content");
+    assert_eq!(
+        pmi.general_datum_references.len(),
+        19,
+        "DATUM_REFERENCE_COMPARTMENT count"
+    );
+    for gdr in pmi.general_datum_references.iter() {
+        let GeneralDatumReference::Compartment(data) = gdr else {
+            panic!("expected Compartment variant, got {gdr:?}");
+        };
+        assert!(matches!(data.base, GeneralDatumBase::Datum(_)));
+    }
+}
+
+/// `DATUM_SYSTEM` reads into its arena with `constituents` resolved to the
+/// `general_datum_reference` arena. The NIST property fixture carries 9.
+#[test]
+fn nist_property_def_datum_systems() {
+    let source = include_str!("fixtures/external_temp_nist_property_def.stp");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    assert_eq!(result.model.datum_systems.len(), 9, "DATUM_SYSTEM count");
+    for ds in result.model.datum_systems.iter() {
+        assert!(
+            !ds.constituents.is_empty(),
+            "DATUM_SYSTEM constituents should resolve"
+        );
+    }
+}
+
+/// `TOLERANCE_ZONE` reads into its arena with `defining_tolerance` resolved
+/// across the two `geometric_tolerance` arenas and `form` to a
+/// `TOLERANCE_ZONE_FORM`. The NIST property fixture carries 7; one zone's
+/// sole defining tolerance points at a tolerance step-io drops, leaving its
+/// `defining_tolerance` empty (symmetric on re-read).
+#[test]
+fn nist_property_def_tolerance_zones() {
+    let source = include_str!("fixtures/external_temp_nist_property_def.stp");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    assert_eq!(
+        result.model.tolerance_zones.len(),
+        7,
+        "TOLERANCE_ZONE count"
+    );
+    let resolved = result
+        .model
+        .tolerance_zones
+        .iter()
+        .filter(|tz| !tz.defining_tolerance.is_empty())
+        .count();
+    assert_eq!(resolved, 7, "zones with resolved defining_tolerance");
+}
+
+/// `geometric_tolerance_with_datum_reference` simple tolerances read into the
+/// `pmi` pool. The NIST property fixture has two `PERPENDICULARITY_TOLERANCE`;
+/// one (`#10307`) points at a simple `DATUM_FEATURE`, the other (`#10246`) at a
+/// composite-datum multi-inheritance shape aspect (`#8313`,
+/// `(COMPOSITE_GROUP_SHAPE_ASPECT COMPOSITE_SHAPE_ASPECT DATUM_FEATURE
+/// SHAPE_ASPECT)`). Both round-trip — the complex form is modelled in the
+/// `composite_shape_aspect` arena (`datum_feature = true`).
+#[test]
+fn nist_property_def_gt_with_datum_reference() {
+    use step_io::ir::pmi::GeometricToleranceWithDatumReference;
+    let source = include_str!("fixtures/external_temp_nist_property_def.stp");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    let pmi = result
+        .model
+        .pmi
+        .as_ref()
+        .expect("fixture carries PMI content");
+    let perpendicularity: Vec<_> = pmi
+        .geometric_tolerance_with_datum_references
+        .iter()
+        .filter_map(|gt| match gt {
+            GeometricToleranceWithDatumReference::Perpendicularity(d) => Some(d),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        perpendicularity.len(),
+        2,
+        "resolvable PERPENDICULARITY_TOLERANCE (both shape-aspect targets modelled)"
+    );
+    assert!(
+        perpendicularity.iter().all(|p| !p.datum_system.is_empty()),
+        "datum_system should resolve"
+    );
+}
+
+/// The multiple-inheritance complex datum-ref tolerances —
+/// `(GEOMETRIC_TOLERANCE GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE <leaf>)`.
+/// The NIST property fixture carries 9 `POSITION_TOLERANCE` and 11
+/// `SURFACE_PROFILE_TOLERANCE` in this complex form.
+#[test]
+fn nist_property_def_complex_datum_ref_tolerances() {
+    use step_io::ir::pmi::GeometricToleranceWithDatumReference;
+    let source = include_str!("fixtures/external_temp_nist_property_def.stp");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    let pmi = result
+        .model
+        .pmi
+        .as_ref()
+        .expect("fixture carries PMI content");
+    let mut position = 0;
+    let mut surface_profile = 0;
+    for gt in pmi.geometric_tolerance_with_datum_references.iter() {
+        match gt {
+            GeometricToleranceWithDatumReference::Position(d) => {
+                position += 1;
+                assert!(!d.datum_system.is_empty(), "position datum_system resolves");
+            }
+            GeometricToleranceWithDatumReference::SurfaceProfile(d) => {
+                surface_profile += 1;
+                assert!(!d.datum_system.is_empty(), "surface datum_system resolves");
+            }
+            _ => {}
+        }
+    }
+    assert!(position > 0, "POSITION_TOLERANCE complex form read");
+    assert!(
+        surface_profile > 0,
+        "SURFACE_PROFILE_TOLERANCE complex form read"
+    );
+}
+
+/// `TOLERANCE_VALUE` + `PLUS_MINUS_TOLERANCE` read into the `pmi` pool. The
+/// NIST property fixture carries 16 of each (no `LIMITS_AND_FITS`).
+#[test]
+fn nist_property_def_plus_minus_tolerances() {
+    use step_io::ir::pmi::ToleranceMethodDefinition;
+    let source = include_str!("fixtures/external_temp_nist_property_def.stp");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    let pmi = result
+        .model
+        .pmi
+        .as_ref()
+        .expect("fixture carries PMI content");
+    assert!(!pmi.tolerance_values.is_empty(), "TOLERANCE_VALUE read");
+    assert!(
+        !pmi.plus_minus_tolerances.is_empty(),
+        "PLUS_MINUS_TOLERANCE read"
+    );
+    for pmt in pmi.plus_minus_tolerances.iter() {
+        assert!(
+            matches!(pmt.range, ToleranceMethodDefinition::Value(_)),
+            "NIST plus-minus range is a TOLERANCE_VALUE"
+        );
+    }
+}
+
+#[test]
+fn nist_property_def_property_definition_arena() {
+    // Schema-faithful `property_definitions` arena (phase property-definition-2):
+    // reader mirrors PD into Itself, PDS into ProductDefinitionShape. The NIST
+    // fixture carries many of each; assert the arena is non-empty and contains
+    // both variant kinds.
+    use step_io::ir::property::PropertyDefinition;
+    let source = include_str!("fixtures/external_temp_nist_property_def.stp");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    let pool = result
+        .model
+        .properties
+        .as_ref()
+        .expect("fixture carries property content");
+    assert!(
+        !pool.property_definitions.is_empty(),
+        "property_definitions arena populated"
+    );
+    let (mut itself, mut pds) = (0_usize, 0_usize);
+    for pd in pool.property_definitions.iter() {
+        match pd {
+            PropertyDefinition::Itself(_) => itself += 1,
+            PropertyDefinition::ProductDefinitionShape(_) => pds += 1,
+        }
+    }
+    assert!(itself > 0, "Itself variant present");
+    assert!(pds > 0, "ProductDefinitionShape variant present");
+}
+
+#[test]
+fn external_temp_polyline_pre_defined_terminator_symbol() {
+    // external_temp_polyline.step carries 3 PRE_DEFINED_TERMINATOR_SYMBOL
+    // instances — exercise the new pre_defined_symbols arena reader path.
+    use step_io::ir::visualization::PreDefinedSymbol;
+    let source = include_str!("fixtures/external_temp_polyline.step");
+    let graph = step_io::parse(source).expect("parse failed");
+    let result = ReaderContext::convert(&graph);
+    let viz = result
+        .model
+        .visualization
+        .as_ref()
+        .expect("fixture carries visualization content");
+    assert_eq!(viz.pre_defined_symbols.len(), 3);
+    for sym in viz.pre_defined_symbols.iter() {
+        assert!(
+            matches!(sym, PreDefinedSymbol::Terminator(_)),
+            "every fixture instance is a PRE_DEFINED_TERMINATOR_SYMBOL"
         );
     }
 }
