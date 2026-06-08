@@ -101,9 +101,7 @@ impl SimpleEntityHandler for InvisibilityHandler {
                 InvisibleItem::AnnotationOccurrence(id) => {
                     Attribute::EntityRef(buf.ao_step_ids[id.0 as usize])
                 }
-                InvisibleItem::StyledItem(id) => {
-                    Attribute::EntityRef(buf.styled_item_step_ids[id.0 as usize])
-                }
+                InvisibleItem::StyledItem(id) => Attribute::EntityRef(buf.step_id(id)),
                 InvisibleItem::Representation(id) => {
                     Attribute::EntityRef(buf.representation_step_ids[id.0 as usize])
                 }
@@ -111,7 +109,7 @@ impl SimpleEntityHandler for InvisibilityHandler {
                     Attribute::EntityRef(buf.draughting_callout_step_ids[id.0 as usize])
                 }
                 InvisibleItem::PresentationLayerAssignment(id) => {
-                    Attribute::EntityRef(buf.presentation_layer_assignment_step_ids[id.0 as usize])
+                    Attribute::EntityRef(buf.step_id(id))
                 }
             })
             .collect();

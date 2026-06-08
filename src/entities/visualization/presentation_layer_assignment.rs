@@ -58,9 +58,7 @@ impl SimpleEntityHandler for PresentationLayerAssignmentHandler {
         let mut item_refs = Vec::with_capacity(pla.assigned_items.len());
         for item in pla.assigned_items {
             let step_id = match item {
-                PresentationLayerAssignmentItem::StyledItem(sid) => {
-                    buf.styled_item_step_ids[sid.0 as usize]
-                }
+                PresentationLayerAssignmentItem::StyledItem(sid) => buf.step_id(sid),
             };
             item_refs.push(Attribute::EntityRef(step_id));
         }

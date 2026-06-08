@@ -55,7 +55,7 @@ impl SimpleEntityHandler for CameraModelD3Handler {
 
     fn write(buf: &mut WriteBuffer, cm: CameraModelD3) -> Result<u64, WriteError> {
         let vrs = buf.emit_axis2_placement_3d(cm.view_reference_system)?;
-        let pov = buf.founded_item_step_ids[cm.perspective_of_volume.0 as usize];
+        let pov = buf.step_id(cm.perspective_of_volume);
         Ok(buf.push_simple(
             "CAMERA_MODEL_D3",
             vec![

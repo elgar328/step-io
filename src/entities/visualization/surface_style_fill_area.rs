@@ -42,7 +42,7 @@ impl SimpleEntityHandler for SurfaceStyleFillAreaHandler {
     }
 
     fn write(buf: &mut WriteBuffer, ssfa: SurfaceStyleFillArea) -> Result<u64, WriteError> {
-        let fas_step_id = buf.founded_item_step_ids[ssfa.fill_area.0 as usize];
+        let fas_step_id = buf.step_id(ssfa.fill_area);
         Ok(buf.push_simple(
             "SURFACE_STYLE_FILL_AREA",
             vec![Attribute::EntityRef(fas_step_id)],

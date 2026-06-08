@@ -131,12 +131,8 @@ pub(crate) fn emit_psa_styles(buf: &WriteBuffer, styles: Vec<PsaStyle>) -> Vec<A
     styles
         .into_iter()
         .map(|style| match style {
-            PsaStyle::Surface(ssu_id) => {
-                Attribute::EntityRef(buf.founded_item_step_ids[ssu_id.0 as usize])
-            }
-            PsaStyle::Point(ps_id) => {
-                Attribute::EntityRef(buf.founded_item_step_ids[ps_id.0 as usize])
-            }
+            PsaStyle::Surface(ssu_id) => Attribute::EntityRef(buf.step_id(ssu_id)),
+            PsaStyle::Point(ps_id) => Attribute::EntityRef(buf.step_id(ps_id)),
             PsaStyle::Curve(cs_id) => Attribute::EntityRef(buf.step_id(cs_id)),
             PsaStyle::Null => Attribute::Typed {
                 type_name: "NULL_STYLE".into(),

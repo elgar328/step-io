@@ -56,7 +56,7 @@ impl SimpleEntityHandler for CameraModelD3WithHlhsrHandler {
 
     fn write(buf: &mut WriteBuffer, c: CameraModelD3WithHlhsr) -> Result<u64, WriteError> {
         let vrs = buf.emit_axis2_placement_3d(c.inherited.view_reference_system)?;
-        let pov = buf.founded_item_step_ids[c.inherited.perspective_of_volume.0 as usize];
+        let pov = buf.step_id(c.inherited.perspective_of_volume);
         Ok(buf.push_simple(
             "CAMERA_MODEL_D3_WITH_HLHSR",
             vec![
@@ -119,7 +119,7 @@ impl SimpleEntityHandler for CameraModelD3MultiClippingHandler {
 
     fn write(buf: &mut WriteBuffer, c: CameraModelD3MultiClipping) -> Result<u64, WriteError> {
         let vrs = buf.emit_axis2_placement_3d(c.inherited.view_reference_system)?;
-        let pov = buf.founded_item_step_ids[c.inherited.perspective_of_volume.0 as usize];
+        let pov = buf.step_id(c.inherited.perspective_of_volume);
         let mut clipping = Vec::with_capacity(c.shape_clipping.len());
         for sc in c.shape_clipping {
             match sc {

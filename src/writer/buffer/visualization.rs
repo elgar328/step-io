@@ -5,6 +5,9 @@
 //! / `emit_face` wrappers in units / topology.
 
 use super::WriteBuffer;
+use crate::ir::id::{
+    FoundedItemId, GeometricRepresentationItemId, PresentationLayerAssignmentId, StyledItemId,
+};
 use crate::ir::representation_item::RepresentationItemRef;
 use crate::ir::visualization::{
     Colour, FoundedItem, PreDefinedCurveFont, PreDefinedSymbol, PresentationStyleAssignment,
@@ -12,6 +15,9 @@ use crate::ir::visualization::{
 };
 use crate::writer::WriteError;
 
+// Snapshot indices are arena indices, which fit u32 by the arena's own
+// overflow guard — the `idx as u32` id reconstructions are safe.
+#[allow(clippy::cast_possible_truncation)]
 impl WriteBuffer<'_> {
     /// Emit the entity behind a [`RepresentationItemRef`] and return its STEP
     /// id. Geometry / topology / placement variants delegate to the existing
@@ -42,9 +48,7 @@ impl WriteBuffer<'_> {
             RepresentationItemRef::RepresentationItem(id) => {
                 Ok(self.representation_item_step_ids[id.0 as usize])
             }
-            RepresentationItemRef::GeometricRepresentationItem(id) => {
-                Ok(self.geometric_representation_item_step_ids[id.0 as usize])
-            }
+            RepresentationItemRef::GeometricRepresentationItem(id) => Ok(self.step_id(id)),
             RepresentationItemRef::TessellatedItem(id) => Ok(self.step_id(id)),
             RepresentationItemRef::TessellatedFace(id) => Ok(self.step_id(id)),
             RepresentationItemRef::MappedItem(id) => Ok(self.step_id(id)),
@@ -58,7 +62,7 @@ impl WriteBuffer<'_> {
             RepresentationItemRef::CameraModel(id) => Ok(self.step_id(id)),
             RepresentationItemRef::TextLiteral(id) => Ok(self.step_id(id)),
             RepresentationItemRef::CompositeText(id) => Ok(self.step_id(id)),
-            RepresentationItemRef::StyledItem(id) => Ok(self.styled_item_step_ids[id.0 as usize]),
+            RepresentationItemRef::StyledItem(id) => Ok(self.step_id(id)),
         }
     }
 
@@ -72,8 +76,6 @@ impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_characterized_objects_prepass(&mut self) {
         use crate::ir::shape_rep::CharacterizedObject;
         let inline = self.inline_characterized_object_ids();
-        let n = self.model.characterized_objects.len();
-        self.characterized_object_step_ids = vec![0; n];
         let ciwr_ids: Vec<_> = self
             .model
             .characterized_objects
@@ -90,7 +92,7 @@ impl WriteBuffer<'_> {
             .collect();
         for id in ciwr_ids {
             let step = self.fresh();
-            self.characterized_object_step_ids[id.0 as usize] = step;
+            self.set_step_id(id, step);
         }
         // Reserve a step id for each inline-CO DM (Characterized /
         // CharacterizedShapeTessellated) so a PROPERTY_DEFINITION targeting the
@@ -106,9 +108,9 @@ impl WriteBuffer<'_> {
             .map(|(id, _)| id)
             .collect();
         for id in inline_ids {
-            if self.characterized_object_step_ids[id.0 as usize] == 0 {
+            if self.step_id(id) == 0 {
                 let step = self.fresh();
-                self.characterized_object_step_ids[id.0 as usize] = step;
+                self.set_step_id(id, step);
             }
         }
     }
@@ -151,7 +153,7 @@ impl WriteBuffer<'_> {
                 CharacterizedObject::CharacterizedItemWithinRepresentation(ciwr) => {
                     // Emit under the reserved id (forward-ref by any PD that
                     // targeted this CIWR). item/rep step caches are now filled.
-                    let reserved = self.characterized_object_step_ids[id.0 as usize];
+                    let reserved = self.step_id(id);
                     let Ok(item_step) = self.emit_representation_item_ref(ciwr.item) else {
                         continue;
                     };
@@ -174,7 +176,7 @@ impl WriteBuffer<'_> {
                 CharacterizedObject::ModelGeometricView(mgv) => {
                     // Emit under the reserved id (forward-ref by any PD that
                     // targeted this MGV). camera/rep step caches are now filled.
-                    let reserved = self.characterized_object_step_ids[id.0 as usize];
+                    let reserved = self.step_id(id);
                     let item_step = self.step_id(mgv.item);
                     let rep_step = self.representation_step_ids[mgv.rep.0 as usize];
                     let desc_attr = match mgv.inherited.description {
@@ -323,9 +325,7 @@ impl WriteBuffer<'_> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::visualization::draughting_pre_defined_curve_font::DraughtingPreDefinedCurveFontHandler;
         use crate::entities::visualization::pre_defined_curve_font::PreDefinedCurveFontHandler;
-        self.pre_defined_curve_font_step_ids =
-            Vec::with_capacity(viz.pre_defined_curve_fonts.len());
-        for font in viz.pre_defined_curve_fonts.iter() {
+        for (__aid, font) in viz.pre_defined_curve_fonts.iter_with_ids() {
             let id = match font {
                 PreDefinedCurveFont::Plain(f) => {
                     PreDefinedCurveFontHandler::write(self, f.clone())?
@@ -334,7 +334,7 @@ impl WriteBuffer<'_> {
                     DraughtingPreDefinedCurveFontHandler::write(self, f.clone())?
                 }
             };
-            self.pre_defined_curve_font_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
         Ok(())
     }
@@ -348,15 +348,14 @@ impl WriteBuffer<'_> {
             PreDefinedMarkerHandler, PreDefinedPointMarkerSymbolHandler,
         };
         use crate::ir::visualization::PreDefinedMarker;
-        self.pre_defined_marker_step_ids = Vec::with_capacity(viz.pre_defined_markers.len());
-        for m in viz.pre_defined_markers.iter() {
+        for (__aid, m) in viz.pre_defined_markers.iter_with_ids() {
             let id = match m {
                 PreDefinedMarker::Plain(d) => PreDefinedMarkerHandler::write(self, d.clone())?,
                 PreDefinedMarker::PointMarkerSymbol(p) => {
                     PreDefinedPointMarkerSymbolHandler::write(self, p.clone())?
                 }
             };
-            self.pre_defined_marker_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
         Ok(())
     }
@@ -368,15 +367,14 @@ impl WriteBuffer<'_> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::visualization::pre_defined_symbol::PreDefinedSymbolHandler;
         use crate::entities::visualization::pre_defined_terminator_symbol::PreDefinedTerminatorSymbolHandler;
-        self.pre_defined_symbol_step_ids = Vec::with_capacity(viz.pre_defined_symbols.len());
-        for sym in viz.pre_defined_symbols.iter() {
+        for (__aid, sym) in viz.pre_defined_symbols.iter_with_ids() {
             let id = match sym {
                 PreDefinedSymbol::Plain(s) => PreDefinedSymbolHandler::write(self, s.clone())?,
                 PreDefinedSymbol::Terminator(s) => {
                     PreDefinedTerminatorSymbolHandler::write(self, s.clone())?
                 }
             };
-            self.pre_defined_symbol_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
         Ok(())
     }
@@ -523,23 +521,25 @@ impl WriteBuffer<'_> {
         // `over_ridden_style`. The vec is pre-sized to viz.styled_items.len()
         // and each pass writes into its variant's slot; downstream
         // consumers (MDGPR, PSA) read `styled_item_step_ids[id.0]`.
-        self.styled_item_step_ids = vec![0; viz.styled_items.len()];
         for (idx, si) in viz.styled_items.iter().enumerate() {
             if let StyledItem::Plain(p) = si {
                 let id = StyledItemHandler::write(self, p.clone())?;
-                self.styled_item_step_ids[idx] = id;
+                let __sid = id;
+                self.set_step_id(StyledItemId(idx as u32), __sid);
             }
         }
         for (idx, si) in viz.styled_items.iter().enumerate() {
             if let StyledItem::OverRiding(o) = si {
                 let id = OverRidingStyledItemHandler::write(self, o.clone())?;
-                self.styled_item_step_ids[idx] = id;
+                let __sid = id;
+                self.set_step_id(StyledItemId(idx as u32), __sid);
             }
         }
         for (idx, si) in viz.styled_items.iter().enumerate() {
             if let StyledItem::ContextDependent(cd) = si {
                 let id = ContextDependentOverRidingStyledItemHandler::write(self, cd.clone())?;
-                self.styled_item_step_ids[idx] = id;
+                let __sid = id;
+                self.set_step_id(StyledItemId(idx as u32), __sid);
             }
         }
         // MDGPR — iterate the unified `representations` arena so each
@@ -554,11 +554,9 @@ impl WriteBuffer<'_> {
         }
         // Cache the step ids (indexed by PresentationLayerAssignmentId) so a
         // later INVISIBILITY (delayed emit) can reference the PLA.
-        self.presentation_layer_assignment_step_ids =
-            vec![0; viz.presentation_layer_assignments.len()];
         for (idx, pla) in viz.presentation_layer_assignments.iter().enumerate() {
-            self.presentation_layer_assignment_step_ids[idx] =
-                PresentationLayerAssignmentHandler::write(self, pla.clone())?;
+            let __sid = PresentationLayerAssignmentHandler::write(self, pla.clone())?;
+            self.set_step_id(PresentationLayerAssignmentId(idx as u32), __sid);
         }
         Ok(())
     }
@@ -579,59 +577,62 @@ impl WriteBuffer<'_> {
         use crate::entities::visualization::surface_style_fill_area::SurfaceStyleFillAreaHandler;
         use crate::entities::visualization::surface_style_usage::SurfaceStyleUsageHandler;
         use crate::entities::visualization::view_volume::ViewVolumeHandler;
-        self.founded_item_step_ids = vec![0; founded_items.len()];
         for (idx, item) in founded_items.iter().enumerate() {
             if let FoundedItem::FillAreaStyle(fas) = item {
-                self.founded_item_step_ids[idx] = FillAreaStyleHandler::write(self, fas.clone())?;
+                let __sid = FillAreaStyleHandler::write(self, fas.clone())?;
+                self.set_step_id(FoundedItemId(idx as u32), __sid);
             }
         }
         for (idx, item) in founded_items.iter().enumerate() {
             if let FoundedItem::SurfaceStyleFillArea(ssfa) = item {
-                self.founded_item_step_ids[idx] =
-                    SurfaceStyleFillAreaHandler::write(self, ssfa.clone())?;
+                let __sid = SurfaceStyleFillAreaHandler::write(self, ssfa.clone())?;
+                self.set_step_id(FoundedItemId(idx as u32), __sid);
             }
         }
         for (idx, item) in founded_items.iter().enumerate() {
             if let FoundedItem::SurfaceSideStyle(sss) = item {
-                self.founded_item_step_ids[idx] =
-                    SurfaceSideStyleHandler::write(self, sss.clone())?;
+                let __sid = SurfaceSideStyleHandler::write(self, sss.clone())?;
+                self.set_step_id(FoundedItemId(idx as u32), __sid);
             }
         }
         for (idx, item) in founded_items.iter().enumerate() {
             if let FoundedItem::SurfaceStyleUsage(ssu) = item {
-                self.founded_item_step_ids[idx] =
-                    SurfaceStyleUsageHandler::write(self, ssu.clone())?;
+                let __sid = SurfaceStyleUsageHandler::write(self, ssu.clone())?;
+                self.set_step_id(FoundedItemId(idx as u32), __sid);
             }
         }
         for (idx, item) in founded_items.iter().enumerate() {
             if let FoundedItem::ViewVolume(vv) = item {
-                self.founded_item_step_ids[idx] = ViewVolumeHandler::write(self, vv.clone())?;
+                let __sid = ViewVolumeHandler::write(self, vv.clone())?;
+                self.set_step_id(FoundedItemId(idx as u32), __sid);
             }
         }
         for (idx, item) in founded_items.iter().enumerate() {
             if let FoundedItem::SymbolStyle(ss) = item {
                 use crate::entities::visualization::symbol_style::SymbolStyleHandler;
-                self.founded_item_step_ids[idx] = SymbolStyleHandler::write(self, ss.clone())?;
+                let __sid = SymbolStyleHandler::write(self, ss.clone())?;
+                self.set_step_id(FoundedItemId(idx as u32), __sid);
             }
         }
         for (idx, item) in founded_items.iter().enumerate() {
             if let FoundedItem::PointStyle(ps) = item {
                 use crate::entities::visualization::point_style::PointStyleHandler;
-                self.founded_item_step_ids[idx] = PointStyleHandler::write(self, ps.clone())?;
+                let __sid = PointStyleHandler::write(self, ps.clone())?;
+                self.set_step_id(FoundedItemId(idx as u32), __sid);
             }
         }
         for (idx, item) in founded_items.iter().enumerate() {
             if let FoundedItem::SurfaceStyleBoundary(ssb) = item {
                 use crate::entities::visualization::surface_style_boundary::SurfaceStyleBoundaryHandler;
-                self.founded_item_step_ids[idx] =
-                    SurfaceStyleBoundaryHandler::write(self, ssb.clone())?;
+                let __sid = SurfaceStyleBoundaryHandler::write(self, ssb.clone())?;
+                self.set_step_id(FoundedItemId(idx as u32), __sid);
             }
         }
         for (idx, item) in founded_items.iter().enumerate() {
             if let FoundedItem::SurfaceStyleParameterLine(sspl) = item {
                 use crate::entities::visualization::surface_style_parameter_line::SurfaceStyleParameterLineHandler;
-                self.founded_item_step_ids[idx] =
-                    SurfaceStyleParameterLineHandler::write(self, sspl.clone())?;
+                let __sid = SurfaceStyleParameterLineHandler::write(self, sspl.clone())?;
+                self.set_step_id(FoundedItemId(idx as u32), __sid);
             }
         }
         Ok(())
@@ -680,14 +681,14 @@ impl WriteBuffer<'_> {
         // below only fill their own slots and leave SBSM slots intact.
         for (idx, item) in items.iter().enumerate() {
             if let GRI::SymbolTarget(t) = item {
-                self.geometric_representation_item_step_ids[idx] =
-                    SymbolTargetHandler::write(self, t.clone())?;
+                let __sid = SymbolTargetHandler::write(self, t.clone())?;
+                self.set_step_id(GeometricRepresentationItemId(idx as u32), __sid);
             }
         }
         for (idx, item) in items.iter().enumerate() {
             if let GRI::DefinedSymbol(d) = item {
-                self.geometric_representation_item_step_ids[idx] =
-                    DefinedSymbolHandler::write(self, d.clone())?;
+                let __sid = DefinedSymbolHandler::write(self, d.clone())?;
+                self.set_step_id(GeometricRepresentationItemId(idx as u32), __sid);
             }
         }
         Ok(())
@@ -713,31 +714,31 @@ impl WriteBuffer<'_> {
             .iter()
             .cloned()
             .collect();
-        self.geometric_representation_item_step_ids = vec![0; items.len()];
         for (idx, item) in items.iter().enumerate() {
             match item {
                 GRI::ShellBasedSurfaceModel(sbsm) => {
-                    self.geometric_representation_item_step_ids[idx] =
-                        ShellBasedSurfaceModelHandler::write(self, sbsm.shells.clone())?;
+                    let __sid = ShellBasedSurfaceModelHandler::write(self, sbsm.shells.clone())?;
+                    self.set_step_id(GeometricRepresentationItemId(idx as u32), __sid);
                 }
                 GRI::GeometricCurveSet(gcs) => {
-                    self.geometric_representation_item_step_ids[idx] =
-                        GeometricCurveSetHandler::write(
-                            self,
-                            CurveSetWriteInput {
-                                curves: gcs.curves.clone(),
-                                points: gcs.points.clone(),
-                            },
-                        )?;
+                    let __sid = GeometricCurveSetHandler::write(
+                        self,
+                        CurveSetWriteInput {
+                            curves: gcs.curves.clone(),
+                            points: gcs.points.clone(),
+                        },
+                    )?;
+                    self.set_step_id(GeometricRepresentationItemId(idx as u32), __sid);
                 }
                 GRI::GeometricSet(gs) => {
-                    self.geometric_representation_item_step_ids[idx] = GeometricSetHandler::write(
+                    let __sid = GeometricSetHandler::write(
                         self,
                         CurveSetWriteInput {
                             curves: gs.curves.clone(),
                             points: gs.points.clone(),
                         },
                     )?;
+                    self.set_step_id(GeometricRepresentationItemId(idx as u32), __sid);
                 }
                 GRI::DefinedSymbol(_) | GRI::SymbolTarget(_) => {
                     // Symbol-domain entries are emitted after the

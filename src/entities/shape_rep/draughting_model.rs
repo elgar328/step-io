@@ -102,11 +102,7 @@ impl SimpleEntityHandler for DraughtingModelHandler {
                 // Emit under the id reserved for the CO facet (so a PD targeting
                 // the CHARACTERIZED_OBJECT forward-refs this one shared id);
                 // fall back to a fresh id when nothing reserved it.
-                let reserved = buf
-                    .characterized_object_step_ids
-                    .get(co_id.0 as usize)
-                    .copied()
-                    .unwrap_or(0);
+                let reserved = buf.step_id(co_id);
                 let n = if reserved != 0 { reserved } else { buf.fresh() };
                 buf.entities.push(WriterEntity {
                     id: n,
@@ -137,11 +133,7 @@ impl SimpleEntityHandler for DraughtingModelHandler {
                 // re-read re-dispatches to the same case. CO emitted inline
                 // (DERIVE); the standalone CO pass dedups it.
                 use crate::writer::entity::{WriterBody, WriterEntity};
-                let reserved = buf
-                    .characterized_object_step_ids
-                    .get(co_id.0 as usize)
-                    .copied()
-                    .unwrap_or(0);
+                let reserved = buf.step_id(co_id);
                 let n = if reserved != 0 { reserved } else { buf.fresh() };
                 buf.entities.push(WriterEntity {
                     id: n,

@@ -84,9 +84,7 @@ impl SimpleEntityHandler for PointStyleHandler {
 
     fn write(buf: &mut WriteBuffer, ps: PointStyle) -> Result<u64, WriteError> {
         let marker_attr = match ps.marker {
-            Marker::Predefined(id) => {
-                Attribute::EntityRef(buf.pre_defined_marker_step_ids[id.0 as usize])
-            }
+            Marker::Predefined(id) => Attribute::EntityRef(buf.step_id(id)),
             // Type-tag the enum SELECT member: `MARKER_TYPE(.PLUS.)`.
             Marker::Type(t) => Attribute::Typed {
                 type_name: "MARKER_TYPE".into(),

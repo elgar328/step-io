@@ -139,9 +139,6 @@ pub(crate) struct WriteBuffer<'m> {
     /// Lazily emitted `DIMENSIONAL_EXPONENTS(0, 0, 1, ...)` step id, shared
     /// by every mass CBU outer.
     pub(crate) mass_dim_exp_step: Option<u64>,
-    /// Emitted `PRE_DEFINED_MARKER` step ids (phase pre-defined-marker),
-    /// indexed by `PreDefinedMarkerId.0`.
-    pub(crate) pre_defined_marker_step_ids: Vec<u64>,
     /// Emitted `DRAUGHTING_PRE_DEFINED_TEXT_FONT` step ids (phase
     /// text-literal — cache added retroactively for the `text_literal.font`
     /// SELECT). Indexed by `DraughtingPreDefinedTextFontId.0`.
@@ -174,9 +171,6 @@ pub(crate) struct WriteBuffer<'m> {
     /// Emitted `APPLIED_PRESENTED_ITEM` step ids (phase pr-item), indexed by
     /// `AppliedPresentedItemId.0`. Consumed by `presented_item_representation.item`.
     pub(crate) applied_presented_item_step_ids: Vec<u64>,
-    /// Emitted `PRESENTATION_LAYER_ASSIGNMENT` step ids, indexed by
-    /// `PresentationLayerAssignmentId.0`. Consumed by `INVISIBILITY`.
-    pub(crate) presentation_layer_assignment_step_ids: Vec<u64>,
     /// Assembly `ADVANCED_BREP_SHAPE_REPRESENTATION`s (items include a
     /// `MAPPED_ITEM`) whose step id was reserved in `emit_representations_pre_pass`
     /// and whose body is emitted by `emit_deferred_assembly_absr` after
@@ -185,39 +179,6 @@ pub(crate) struct WriteBuffer<'m> {
     /// Emitted `AREA_IN_SET` step ids (phase pr-size), indexed by
     /// `AreaInSetId.0`. Consumed by `PRESENTATION_SIZE.unit` SELECT.
     pub(crate) area_in_set_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted curve-font entity
-    /// (`PRE_DEFINED_CURVE_FONT` / `DRAUGHTING_PRE_DEFINED_CURVE_FONT`),
-    /// indexed by `PreDefinedCurveFontId.0`. Consumed by the `CURVE_STYLE`
-    /// writer.
-    pub(crate) pre_defined_curve_font_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted pre-defined-symbol entity
-    /// (`PRE_DEFINED_SYMBOL` / `PRE_DEFINED_TERMINATOR_SYMBOL`), indexed by
-    /// `PreDefinedSymbolId.0`. No step-io consumer reads this cache yet —
-    /// it exists for round-trip symmetry with the arena.
-    pub(crate) pre_defined_symbol_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `GeometricRepresentationItem`
-    /// arena entry, indexed by `GeometricRepresentationItemId.0`.
-    /// Populated by `emit_geometric_representation_items` (phase ds-st)
-    /// in two passes — `SymbolTarget` first so `DefinedSymbol` can resolve
-    /// its `target` ref through this cache.
-    pub(crate) geometric_representation_item_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `STYLED_ITEM` entity, indexed by
-    /// `StyledItemId.0`. Populated by `emit_visualization_if_set` before
-    /// MDGPR emission so each MDGPR can resolve its `items` list to
-    /// cached STEP ids with one index lookup per entry.
-    pub(crate) styled_item_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `FoundedItem` arena entry, indexed
-    /// by `FoundedItemId.0`. Populated by `emit_visualization_if_set` in a
-    /// 2-pass walk (`FillAreaStyle` first so `SurfaceStyleFillArea` can
-    /// resolve its `fill_area` ref); consumed by
-    /// `SurfaceStyleFillAreaHandler` and downstream styled-side writers.
-    pub(crate) founded_item_step_ids: Vec<u64>,
-    /// Reserved STEP ids for `characterized_objects`, indexed by
-    /// `CharacterizedObjectId.0`. Filled by `emit_characterized_objects_prepass`
-    /// before the PD-definition pass so a `PROPERTY_DEFINITION` targeting a
-    /// CIWR resolves the forward ref; the CO bodies emit later under these ids.
-    /// 0 = no reserved id (inline-DM CO or absent).
-    pub(crate) characterized_object_step_ids: Vec<u64>,
     /// IR `ApplicationContext` index → emitted `APPLICATION_CONTEXT` step id.
     pub(crate) ac_step_ids: Vec<u64>,
     /// IR `ShapeAspectId.0` index → emitted `SHAPE_ASPECT` step id.
@@ -382,7 +343,6 @@ impl<'m> WriteBuffer<'m> {
             length_dim_exp_step: None,
             dimensionless_dim_exp_step: None,
             mass_dim_exp_step: None,
-            pre_defined_marker_step_ids: Vec::new(),
             dptf_step_ids: Vec::new(),
             dmia_step_ids: Vec::new(),
             unitless_context_step_ids: Vec::new(),
@@ -391,15 +351,8 @@ impl<'m> WriteBuffer<'m> {
             presentation_representation_step_ids: Vec::new(),
             presentation_set_step_ids: Vec::new(),
             applied_presented_item_step_ids: Vec::new(),
-            presentation_layer_assignment_step_ids: Vec::new(),
             deferred_assembly_absr_ids: Vec::new(),
             area_in_set_step_ids: Vec::new(),
-            pre_defined_curve_font_step_ids: Vec::new(),
-            pre_defined_symbol_step_ids: Vec::new(),
-            geometric_representation_item_step_ids: Vec::new(),
-            styled_item_step_ids: Vec::new(),
-            founded_item_step_ids: Vec::new(),
-            characterized_object_step_ids: Vec::new(),
             ac_step_ids: Vec::new(),
             shape_aspect_step_ids: Vec::new(),
             composite_shape_aspect_step_ids: Vec::new(),

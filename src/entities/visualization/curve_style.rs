@@ -65,7 +65,7 @@ impl SimpleEntityHandler for CurveStyleHandler {
 
     fn write(buf: &mut WriteBuffer, cs: CurveStyle) -> Result<u64, WriteError> {
         let font_attr = match cs.curve_font {
-            Some(id) => Attribute::EntityRef(buf.pre_defined_curve_font_step_ids[id.0 as usize]),
+            Some(id) => Attribute::EntityRef(buf.step_id(id)),
             None => Attribute::Unset,
         };
         let width_attr = match cs.curve_width {

@@ -49,7 +49,7 @@ impl SimpleEntityHandler for SurfaceStyleUsageHandler {
     }
 
     fn write(buf: &mut WriteBuffer, ssu: SurfaceStyleUsage) -> Result<u64, WriteError> {
-        let style_ref = buf.founded_item_step_ids[ssu.style.0 as usize];
+        let style_ref = buf.step_id(ssu.style);
         let side = match ssu.side {
             SurfaceSide::Front => "POSITIVE",
             SurfaceSide::Back => "NEGATIVE",

@@ -65,7 +65,7 @@ impl SimpleEntityHandler for MdgprHandler {
     fn write(buf: &mut WriteBuffer, mdgpr: Mdgpr) -> Result<u64, WriteError> {
         let mut item_refs = Vec::with_capacity(mdgpr.items.len());
         for id in mdgpr.items {
-            let step_id = buf.styled_item_step_ids[id.0 as usize];
+            let step_id = buf.step_id(id);
             item_refs.push(Attribute::EntityRef(step_id));
         }
         // MDGPR's `context_of_items` is required by the spec but the IR

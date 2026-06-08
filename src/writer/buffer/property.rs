@@ -488,11 +488,7 @@ impl WriteBuffer<'_> {
                     // CIWR step ids are reserved by emit_characterized_objects_prepass
                     // before this pass; the CO body emits later under the reserved id.
                     // 0 = inline-DM CO (out of scope) → skip symmetrically.
-                    let s = self
-                        .characterized_object_step_ids
-                        .get(co_id.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                    let s = self.step_id(co_id);
                     if s == 0 {
                         continue;
                     }
@@ -502,11 +498,7 @@ impl WriteBuffer<'_> {
                     // MBD draughting-model CO facet — reserved by
                     // emit_characterized_objects_prepass; the DM complex body
                     // emits later under this same shared id.
-                    let s = self
-                        .characterized_object_step_ids
-                        .get(co_id.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                    let s = self.step_id(co_id);
                     if s == 0 {
                         continue;
                     }

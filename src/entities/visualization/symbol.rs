@@ -105,11 +105,9 @@ impl SimpleEntityHandler for DefinedSymbolHandler {
 
     fn write(buf: &mut WriteBuffer, d: DefinedSymbol) -> Result<u64, WriteError> {
         let definition_step = match d.definition {
-            DefinedSymbolDefinition::PreDefinedSymbol(id) => {
-                buf.pre_defined_symbol_step_ids[id.0 as usize]
-            }
+            DefinedSymbolDefinition::PreDefinedSymbol(id) => buf.step_id(id),
         };
-        let target_step = buf.geometric_representation_item_step_ids[d.target.0 as usize];
+        let target_step = buf.step_id(d.target);
         Ok(buf.push_simple(
             "DEFINED_SYMBOL",
             vec![

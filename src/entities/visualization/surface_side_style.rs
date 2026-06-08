@@ -56,9 +56,7 @@ impl SimpleEntityHandler for SurfaceSideStyleHandler {
         let mut style_refs = Vec::with_capacity(sss.styles.len());
         for entry in sss.styles {
             let entry_id = match entry {
-                SurfaceSideStyleEntry::FillArea(ssfa_id) => {
-                    buf.founded_item_step_ids[ssfa_id.0 as usize]
-                }
+                SurfaceSideStyleEntry::FillArea(ssfa_id) => buf.step_id(ssfa_id),
                 SurfaceSideStyleEntry::Rendering(ssr_id) => buf.step_id(ssr_id),
             };
             style_refs.push(Attribute::EntityRef(entry_id));
