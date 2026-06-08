@@ -50,7 +50,7 @@ impl SimpleEntityHandler for CircularAreaHandler {
     fn write(buf: &mut WriteBuffer, ca: CircularArea) -> Result<u64, WriteError> {
         let centre_step = match ca.centre {
             CircularAreaCentre::Point(point) => buf.emit_point(point)?,
-            CircularAreaCentre::External(ext) => buf.external_ref_step_ids[ext.0 as usize],
+            CircularAreaCentre::External(ext) => buf.step_id(ext),
         };
         Ok(buf.push_simple(
             "CIRCULAR_AREA",

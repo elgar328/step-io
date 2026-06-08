@@ -64,11 +64,6 @@ pub(crate) struct WriteBuffer<'m> {
     /// so every representation emitter can resolve its `Option<UnitContextId>`
     /// to a cached id.
     pub(crate) unit_context_ids: Vec<u64>,
-    /// Reserved STEP id of every P21 edition 3 external reference, indexed by
-    /// `ExternalRefId.0`. Reserved up-front in `emit_all` (before any DATA
-    /// entity that resolves one, e.g. `CIRCULAR_AREA.centre`) and emitted in
-    /// the `REFERENCE` section by `write_file`.
-    pub(crate) external_ref_step_ids: Vec<u64>,
     // tessellated_item / tessellated_face / tessellated_surface_set step ids
     // now live in `step_ids` keyed by their arena-id type.
     // units-pool step ids (NAMED_UNIT / MEASURE_WITH_UNIT / DERIVED_UNIT_ELEMENT
@@ -161,7 +156,6 @@ impl<'m> WriteBuffer<'m> {
             curve_2d_ids: HashMap::new(),
             planar_extent_ids: HashMap::new(),
             unit_context_ids: Vec::new(),
-            external_ref_step_ids: Vec::new(),
             length_dim_exp_step: None,
             dimensionless_dim_exp_step: None,
             mass_dim_exp_step: None,
@@ -191,9 +185,10 @@ impl<'m> WriteBuffer<'m> {
         // order) so any DATA entity resolving one — e.g. CIRCULAR_AREA.centre —
         // emits a consistent `#N`, and write_file can emit the REFERENCE
         // section. Deterministic: same arena → same ids across round-trips.
-        self.external_ref_step_ids = (0..self.model.external_references.len())
-            .map(|_| self.fresh())
-            .collect();
+        for id in self.model.external_references.iter_ids() {
+            let reserved = self.fresh();
+            self.set_step_id(id, reserved);
+        }
         for id in self.model.geometry.points.iter_ids() {
             self.emit_point(id)?;
         }
