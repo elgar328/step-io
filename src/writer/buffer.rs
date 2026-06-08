@@ -15,7 +15,6 @@ use super::entity::WriterEntity;
 use crate::ir::{
     Curve2dId, CurveId, Direction2dId, DirectionId, EdgeId, FaceId, Placement1dId, Placement2dId,
     Placement3dId, Point2dId, PointId, ProductId, ShellId, SolidId, StepModel, SurfaceId, VertexId,
-    WireId,
 };
 
 pub(crate) mod assembly;
@@ -47,7 +46,6 @@ pub(crate) struct WriteBuffer<'m> {
     pub(crate) surface_ids: HashMap<SurfaceId, u64>,
     pub(crate) vertex_ids: HashMap<VertexId, u64>,
     pub(crate) edge_ids: HashMap<EdgeId, u64>,
-    pub(crate) wire_ids: HashMap<WireId, u64>,
     pub(crate) face_ids: HashMap<FaceId, u64>,
     pub(crate) shell_ids: HashMap<ShellId, u64>,
     pub(crate) solid_ids: HashMap<SolidId, u64>,
@@ -147,7 +145,6 @@ impl<'m> WriteBuffer<'m> {
             surface_ids: HashMap::new(),
             vertex_ids: HashMap::new(),
             edge_ids: HashMap::new(),
-            wire_ids: HashMap::new(),
             face_ids: HashMap::new(),
             shell_ids: HashMap::new(),
             solid_ids: HashMap::new(),

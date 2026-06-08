@@ -22,8 +22,9 @@ impl WriteBuffer<'_> {
 
     pub(crate) fn emit_wire(&mut self, id: WireId) -> Result<u64, WriteError> {
         use crate::entities::SimpleEntityHandler;
-        if let Some(&n) = self.wire_ids.get(&id) {
-            return Ok(n);
+        let cached = self.step_id(id);
+        if cached != 0 {
+            return Ok(cached);
         }
         let w: Wire = self
             .model
@@ -60,7 +61,7 @@ impl WriteBuffer<'_> {
                 (loop_id, data.orientation),
             )?
         };
-        self.wire_ids.insert(id, bound_id);
+        self.set_step_id(id, bound_id);
         Ok(bound_id)
     }
 
