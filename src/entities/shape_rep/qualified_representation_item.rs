@@ -29,9 +29,12 @@ impl SimpleEntityHandler for QualifiedRepresentationItemHandler {
         let q_refs = read_entity_ref_list(attrs, 1, entity_id, "qualifiers")?;
         let mut qualifiers = Vec::with_capacity(q_refs.len());
         for r in q_refs {
-            if let Some(&id) = ctx.type_qualifier_id_map.get(&r) {
+            if let Some(id) = ctx.id_cache.get::<crate::ir::id::TypeQualifierId>(r) {
                 qualifiers.push(QualifierRef::TypeQualifier(id));
-            } else if let Some(&id) = ctx.value_format_type_qualifier_id_map.get(&r) {
+            } else if let Some(id) = ctx
+                .id_cache
+                .get::<crate::ir::id::ValueFormatTypeQualifierId>(r)
+            {
                 qualifiers.push(QualifierRef::ValueFormatTypeQualifier(id));
             }
             // else: precision_qualifier / uncertainty_qualifier (corpus 0,

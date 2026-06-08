@@ -115,7 +115,10 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
                 return Ok(());
             }
             CharacterizedDefinition::ShapeAspect(sa_ref)
-        } else if let Some(&dl_id) = ctx.dimensional_location_id_map.get(&target_ref) {
+        } else if let Some(dl_id) = ctx
+            .id_cache
+            .get::<crate::ir::DimensionalLocationId>(target_ref)
+        {
             if dimensional_location_target(ctx, dl_id).is_none() {
                 return Ok(());
             }
@@ -184,7 +187,7 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
             // `geometric_tolerance` member (Plain or WithDatumReference complex
             // MI). Both arenas live in the round-trip-diffed pmi pool.
             CharacterizedDefinition::GeometricTolerance(gt_ref)
-        } else if let Some(&ds_id) = ctx.dimensional_size_id_map.get(&target_ref) {
+        } else if let Some(ds_id) = ctx.id_cache.get::<crate::ir::DimensionalSizeId>(target_ref) {
             CharacterizedDefinition::DimensionalSize(ds_id)
         } else if ctx.pdef_shape_to_nauo.contains_key(&target_ref) {
             // Target is a NAUO-owned PRODUCT_DEFINITION_SHAPE (assembly placement

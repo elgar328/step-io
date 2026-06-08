@@ -26,6 +26,7 @@ use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
 
 mod dispatch;
 mod header;
+mod id_map_cache;
 /// Catalogue of non-standard input normalizations (documentation only).
 mod nonstandard;
 
@@ -140,6 +141,11 @@ pub(crate) struct DeferredGisu {
 // `SolidAngleUnit` variants.
 #[allow(clippy::zero_sized_map_values)]
 pub struct ReaderContext {
+    /// Type-keyed `file_id (#N) → arena id` cache. Replaces the former
+    /// per-type `*_id_map: HashMap<u64, XId>` fields for every simple arena-id
+    /// map (see [`id_map_cache`]). Maps with non-id values or a shared arena-id
+    /// type keep their own named fields below.
+    pub(crate) id_cache: id_map_cache::IdMapCache,
     pub(crate) geometry: GeometryPool,
     pub(crate) topology: TopologyPool,
     /// Unit / uncertainty contexts — one entry per `REPRESENTATION_CONTEXT`
@@ -637,10 +643,6 @@ pub struct ReaderContext {
     /// `SHAPE_ASPECT` arena — the `SHAPE_ASPECT` converter pushes
     /// here. Empty when no PMI entities were seen.
     pub(crate) shape_aspects: crate::ir::Arena<crate::ir::ShapeAspect>,
-    /// `SHAPE_ASPECT` `#N → ShapeAspectId`. Populated by the `SHAPE_ASPECT`
-    /// handler; consumed by `id_attribute` and future PMI
-    /// handlers that resolve shape-aspect refs.
-    pub(crate) shape_aspect_id_map: HashMap<u64, crate::ir::ShapeAspectId>,
     /// `SHAPE_ASPECT` subtype arenas. No STEP-id map (no consumer
     /// yet; the entities round-trip as standalone arena entries).
     pub(crate) composite_group_shape_aspects:
@@ -649,52 +651,18 @@ pub struct ReaderContext {
     pub(crate) all_around_shape_aspects: crate::ir::Arena<crate::ir::AllAroundShapeAspect>,
     pub(crate) default_model_geometric_views:
         crate::ir::Arena<crate::ir::DefaultModelGeometricView>,
-    /// `SHAPE_ASPECT` subtype `#N → …Id` maps (phase shape-aspect-ref).
-    /// Populated by the `SHAPE_ASPECT` subtype handlers; consumed by
-    /// `resolve_shape_aspect_ref` for `ShapeAspectRef` resolution.
-    pub(crate) composite_shape_aspect_id_map: HashMap<u64, crate::ir::CompositeShapeAspectId>,
-    pub(crate) centre_of_symmetry_id_map: HashMap<u64, crate::ir::DerivedShapeAspectId>,
-    pub(crate) all_around_shape_aspect_id_map: HashMap<u64, crate::ir::ContinuousShapeAspectId>,
-    /// `DATUM` / `DATUM_FEATURE` `#N → …Id` maps (phase datum-feature). The
-    /// `Datum` / `DatumFeature` arenas live in [`PmiPool`]; these maps let
-    /// `resolve_shape_aspect_ref` resolve a `shape_aspect` ref onto them.
-    pub(crate) datum_id_map: HashMap<u64, crate::ir::DatumId>,
-    pub(crate) datum_feature_id_map: HashMap<u64, crate::ir::DatumFeatureId>,
     /// `DATUM_SYSTEM` arena + `#N → DatumSystemId` map (phase datum-system).
     /// Populated by the `DATUM_SYSTEM` handler; the map lets `resolve_shape_aspect_ref`
     /// resolve a `shape_aspect` ref onto a datum system.
     pub(crate) datum_systems: crate::ir::Arena<crate::ir::DatumSystem>,
-    pub(crate) datum_system_id_map: HashMap<u64, crate::ir::DatumSystemId>,
-    /// `general_datum_reference` `#N → GeneralDatumReferenceId` map (phase
-    /// datum-system). Populated by the `DATUM_REFERENCE_*` handlers; consumed
-    /// by `DATUM_SYSTEM`'s `constituents` resolution.
-    pub(crate) general_datum_reference_id_map: HashMap<u64, crate::ir::GeneralDatumReferenceId>,
-    /// `#N → …Id` maps for the plus-minus-tolerance cluster. `tolerance_value`
-    /// / `limits_and_fits` feed `PLUS_MINUS_TOLERANCE.range`; the dimensional
-    /// maps feed its `toleranced_dimension` (the `dimensional_location` /
-    /// `dimensional_size` handlers populate those — added this phase).
-    pub(crate) tolerance_value_id_map: HashMap<u64, crate::ir::ToleranceValueId>,
     pub(crate) limits_and_fits_id_map: HashMap<u64, crate::ir::LimitsAndFitsId>,
-    pub(crate) dimensional_location_id_map: HashMap<u64, crate::ir::DimensionalLocationId>,
-    pub(crate) dimensional_size_id_map: HashMap<u64, crate::ir::DimensionalSizeId>,
-    /// `TOLERANCE_ZONE` arena + `#N → …Id` maps it depends on (phase
-    /// tolerance-zone). The two geometric-tolerance maps feed
-    /// `TOLERANCE_ZONE.defining_tolerance`, `tolerance_zone_form_id_map` its
-    /// `form`. The handlers for those entities populate the maps this phase.
-    pub(crate) geometric_tolerance_id_map: HashMap<u64, crate::ir::GeometricToleranceId>,
-    pub(crate) geometric_tolerance_with_datum_reference_id_map:
-        HashMap<u64, crate::ir::GeometricToleranceWithDatumReferenceId>,
-    pub(crate) tolerance_zone_form_id_map: HashMap<u64, crate::ir::ToleranceZoneFormId>,
     pub(crate) tolerance_zones: crate::ir::Arena<crate::ir::ToleranceZone>,
     /// `DATUM_TARGET` arena + step entity id → `DatumTargetId` map.
     /// Phase datum-target.
     pub(crate) datum_targets: crate::ir::Arena<crate::ir::shape_rep::DatumTarget>,
-    pub(crate) datum_target_id_map: HashMap<u64, crate::ir::DatumTargetId>,
     /// `PLACED_DATUM_TARGET_FEATURE` arena + id map.
     pub(crate) placed_datum_target_features:
         crate::ir::Arena<crate::ir::shape_rep::PlacedDatumTargetFeature>,
-    pub(crate) placed_datum_target_feature_id_map:
-        HashMap<u64, crate::ir::PlacedDatumTargetFeatureId>,
     /// `SHAPE_ASPECT_RELATIONSHIP` arena (phase shape-aspect-ref) — orphan.
     pub(crate) shape_aspect_relationships:
         crate::ir::Arena<crate::ir::shape_rep::ShapeAspectRelationship>,
@@ -793,25 +761,11 @@ pub struct ReaderContext {
     /// `DraughtingCalloutRelationshipHandler` to resolve relating / related
     /// refs.
     pub(crate) draughting_callout_id_map: HashMap<u64, crate::ir::id::DraughtingCalloutId>,
-    /// `TOLERANCE_ZONE` step entity id → `ToleranceZoneId` (phase
-    /// projected-zone). Populated by `ToleranceZoneHandler`; consumed by
-    /// `ProjectedZoneDefinitionHandler` for the `zone` ref.
-    pub(crate) tolerance_zone_id_map: HashMap<u64, crate::ir::id::ToleranceZoneId>,
-    /// `TYPE_QUALIFIER` step entity id → `TypeQualifierId` (phase
-    /// measure-qualification). Consumed by `MeasureQualificationHandler`
-    /// to resolve a `qualifiers` SET member.
-    pub(crate) type_qualifier_id_map: HashMap<u64, crate::ir::id::TypeQualifierId>,
     /// `VALUE_FORMAT_TYPE_QUALIFIER` step entity id →
     /// `ValueFormatTypeQualifierId` (phase measure-qualification). Same
-    /// role as `type_qualifier_id_map`.
-    pub(crate) value_format_type_qualifier_id_map:
-        HashMap<u64, crate::ir::id::ValueFormatTypeQualifierId>,
     /// `DIMENSIONAL_CHARACTERISTIC_REPRESENTATION` step entity id →
     /// `DimensionalCharacteristicRepresentationId` (phase sdr-dcr).
     /// Populated by `DimensionalCharacteristicRepresentationHandler`;
-    /// currently no consumer.
-    pub(crate) dimensional_characteristic_representation_id_map:
-        HashMap<u64, crate::ir::id::DimensionalCharacteristicRepresentationId>,
     /// `COMPLEX_TRIANGULATED_FACE` arena (phase tessellation).
     pub(crate) tessellated_faces:
         crate::ir::Arena<crate::ir::tessellation::ComplexTriangulatedFace>,
@@ -1619,7 +1573,7 @@ impl ReaderContext {
             // shape aspect's shape directly).
             let definition = if let Some(&pd) = self.property_def_step_to_id.get(&def_ref) {
                 SdrDefinition::PropertyDefinition(pd)
-            } else if let Some(&sa) = self.shape_aspect_id_map.get(&def_ref) {
+            } else if let Some(sa) = self.id_cache.get::<crate::ir::ShapeAspectId>(def_ref) {
                 SdrDefinition::ShapeAspect(sa)
             } else {
                 continue;

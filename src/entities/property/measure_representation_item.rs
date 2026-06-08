@@ -179,12 +179,11 @@ fn insert_measure_repr_item(
             .unwrap_or_default()
             .into_iter()
             .filter_map(|r| {
-                if let Some(&id) = ctx.type_qualifier_id_map.get(&r) {
+                if let Some(id) = ctx.id_cache.get::<crate::ir::id::TypeQualifierId>(r) {
                     Some(QualifierRef::TypeQualifier(id))
                 } else {
-                    ctx.value_format_type_qualifier_id_map
-                        .get(&r)
-                        .copied()
+                    ctx.id_cache
+                        .get::<crate::ir::id::ValueFormatTypeQualifierId>(r)
                         .map(QualifierRef::ValueFormatTypeQualifier)
                 }
             })

@@ -51,8 +51,7 @@ impl SimpleEntityHandler for DimensionalCharacteristicRepresentationHandler {
                 representation,
             },
         );
-        ctx.dimensional_characteristic_representation_id_map
-            .insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

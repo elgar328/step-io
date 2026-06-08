@@ -102,7 +102,7 @@ impl SimpleEntityHandler for CompositeGroupShapeAspectHandler {
                 kind: CompositeShapeAspectKind::Group,
                 datum_feature: false,
             });
-        ctx.composite_shape_aspect_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -152,7 +152,7 @@ impl SimpleEntityHandler for CompositeShapeAspectHandler {
                 kind: CompositeShapeAspectKind::Composite,
                 datum_feature: false,
             });
-        ctx.composite_shape_aspect_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -191,7 +191,7 @@ impl SimpleEntityHandler for CentreOfSymmetryHandler {
             target,
             product_definitional,
         });
-        ctx.centre_of_symmetry_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -226,7 +226,7 @@ impl SimpleEntityHandler for AllAroundShapeAspectHandler {
             target,
             product_definitional,
         });
-        ctx.all_around_shape_aspect_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -300,7 +300,7 @@ impl ComplexEntityHandler for CompositeDatumShapeAspectHandler {
                 kind,
                 datum_feature: true,
             });
-        ctx.composite_shape_aspect_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

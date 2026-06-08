@@ -52,7 +52,7 @@ impl SimpleEntityHandler for DatumSystemHandler {
         // ref that does not resolve is skipped (symmetric on re-read).
         let mut constituents = Vec::with_capacity(constituent_refs.len());
         for r in constituent_refs {
-            if let Some(&id) = ctx.general_datum_reference_id_map.get(&r) {
+            if let Some(id) = ctx.id_cache.get::<crate::ir::GeneralDatumReferenceId>(r) {
                 constituents.push(id);
             }
         }
@@ -64,7 +64,7 @@ impl SimpleEntityHandler for DatumSystemHandler {
             product_definitional,
             constituents,
         });
-        ctx.datum_system_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

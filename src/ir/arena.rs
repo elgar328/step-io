@@ -41,6 +41,9 @@ impl<T> Default for Arena<T> {
 /// `StepIdCache`) key by arena-id type without naming each one.
 pub(crate) trait ArenaId: Copy + 'static {
     fn index(&self) -> usize;
+    /// Reconstruct an id from its arena index. Inverse of [`index`](Self::index).
+    /// Lets the reader's `IdMapCache` restore a typed id from a stored `u32`.
+    fn from_index(index: u32) -> Self;
 }
 
 /// Accepts an arena id by value or by reference, so step-id lookups read
@@ -73,6 +76,9 @@ macro_rules! define_id {
         impl $crate::ir::arena::ArenaId for $id {
             fn index(&self) -> usize {
                 self.0 as usize
+            }
+            fn from_index(index: u32) -> Self {
+                $id(index)
             }
         }
 

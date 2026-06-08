@@ -53,7 +53,7 @@ impl SimpleEntityHandler for PlacedDatumTargetFeatureHandler {
                 product_definitional,
                 target_id,
             });
-        ctx.placed_datum_target_feature_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

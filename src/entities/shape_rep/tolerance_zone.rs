@@ -51,7 +51,7 @@ impl SimpleEntityHandler for ToleranceZoneHandler {
             return Ok(());
         };
         // form — a TOLERANCE_ZONE_FORM; an unresolved form drops the zone.
-        let Some(&form) = ctx.tolerance_zone_form_id_map.get(&form_ref) else {
+        let Some(form) = ctx.id_cache.get::<crate::ir::ToleranceZoneFormId>(form_ref) else {
             return Ok(());
         };
 
@@ -72,7 +72,7 @@ impl SimpleEntityHandler for ToleranceZoneHandler {
             defining_tolerance,
             form,
         });
-        ctx.tolerance_zone_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

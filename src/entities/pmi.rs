@@ -63,7 +63,7 @@ impl SimpleEntityHandler for ToleranceZoneFormHandler {
             .get_or_insert_with(PmiPool::default)
             .tolerance_zone_forms
             .push(ToleranceZoneForm { name });
-        ctx.tolerance_zone_form_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -91,7 +91,7 @@ impl SimpleEntityHandler for TypeQualifierHandler {
             .get_or_insert_with(PmiPool::default)
             .type_qualifiers
             .push(TypeQualifier { name });
-        ctx.type_qualifier_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -119,7 +119,7 @@ impl SimpleEntityHandler for ValueFormatTypeQualifierHandler {
             .get_or_insert_with(PmiPool::default)
             .value_format_type_qualifiers
             .push(ValueFormatTypeQualifier { format_type });
-        ctx.value_format_type_qualifier_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -1666,9 +1666,12 @@ impl SimpleEntityHandler for MeasureQualificationHandler {
         };
         let mut qualifiers = Vec::with_capacity(qualifier_refs.len());
         for r in qualifier_refs {
-            if let Some(&id) = ctx.type_qualifier_id_map.get(&r) {
+            if let Some(id) = ctx.id_cache.get::<crate::ir::id::TypeQualifierId>(r) {
                 qualifiers.push(ValueQualifier::TypeQualifier(id));
-            } else if let Some(&id) = ctx.value_format_type_qualifier_id_map.get(&r) {
+            } else if let Some(id) = ctx
+                .id_cache
+                .get::<crate::ir::id::ValueFormatTypeQualifierId>(r)
+            {
                 qualifiers.push(ValueQualifier::ValueFormatTypeQualifier(id));
             }
             // else: precision_qualifier / uncertainty_qualifier (corpus 0,
@@ -1731,7 +1734,7 @@ impl SimpleEntityHandler for ProjectedZoneDefinitionHandler {
         let boundary_refs = read_entity_ref_list(attrs, 1, entity_id, "boundaries")?;
         let projection_end_ref = read_entity_ref(attrs, 2, entity_id, "projection_end")?;
         let projected_length_ref = read_entity_ref(attrs, 3, entity_id, "projected_length")?;
-        let Some(&zone) = ctx.tolerance_zone_id_map.get(&zone_ref) else {
+        let Some(zone) = ctx.id_cache.get::<crate::ir::id::ToleranceZoneId>(zone_ref) else {
             return Ok(());
         };
         let Some(projection_end) = resolve_shape_aspect_ref(ctx, projection_end_ref) else {
@@ -1902,7 +1905,7 @@ impl SimpleEntityHandler for DatumHandler {
                 product_definitional,
                 identification,
             });
-        ctx.datum_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -2027,7 +2030,7 @@ impl SimpleEntityHandler for DimensionalSizeWithDatumFeatureHandler {
                     size_name,
                 },
             ));
-        ctx.datum_feature_id_map.insert(entity_id, df_id);
+        ctx.id_cache.insert(entity_id, df_id);
         let applies_to = resolve_shape_aspect_ref(ctx, applies_to_ref)
             .unwrap_or(ShapeAspectRef::DatumFeature(df_id));
         if let DatumFeature::DimensionalSizeWithDatumFeature(d) =
@@ -2080,7 +2083,7 @@ fn read_datum_feature_variant(
             target,
             product_definitional,
         }));
-    ctx.datum_feature_id_map.insert(entity_id, id);
+    ctx.id_cache.insert(entity_id, id);
     Ok(())
 }
 
@@ -2172,7 +2175,7 @@ impl SimpleEntityHandler for DimensionalSizeHandler {
                 name,
                 kind: DimensionalSizeKind::Plain,
             });
-        ctx.dimensional_size_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -2211,7 +2214,7 @@ impl SimpleEntityHandler for AngularSizeHandler {
                 name,
                 kind: DimensionalSizeKind::Angular(angle_selection),
             });
-        ctx.dimensional_size_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -2317,7 +2320,7 @@ impl SimpleEntityHandler for DimensionalLocationHandler {
             .get_or_insert_with(PmiPool::default)
             .dimensional_locations
             .push(DimensionalLocation::Plain(data));
-        ctx.dimensional_location_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -2348,7 +2351,7 @@ impl SimpleEntityHandler for DirectedDimensionalLocationHandler {
             .get_or_insert_with(PmiPool::default)
             .dimensional_locations
             .push(DimensionalLocation::Directed(data));
-        ctx.dimensional_location_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -2394,7 +2397,7 @@ impl SimpleEntityHandler for AngularLocationHandler {
                 related_shape_aspect,
                 angle_selection,
             }));
-        ctx.dimensional_location_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -2434,7 +2437,7 @@ fn push_geometric_tolerance(ctx: &mut ReaderContext, entity_id: u64, gt: Geometr
         .get_or_insert_with(PmiPool::default)
         .geometric_tolerances
         .push(gt);
-    ctx.geometric_tolerance_id_map.insert(entity_id, id);
+    ctx.id_cache.insert(entity_id, id);
 }
 
 /// Push a `GeometricToleranceWithDatumReference` into the `pmi` pool and
@@ -2450,8 +2453,7 @@ fn push_gt_with_datum_reference(
         .get_or_insert_with(PmiPool::default)
         .geometric_tolerance_with_datum_references
         .push(gt);
-    ctx.geometric_tolerance_with_datum_reference_id_map
-        .insert(entity_id, id);
+    ctx.id_cache.insert(entity_id, id);
 }
 
 /// Resolve a `ref_geometric_tolerance` (`TOLERANCE_ZONE.defining_tolerance`)
@@ -2461,12 +2463,14 @@ pub(crate) fn resolve_geometric_tolerance_ref(
     ctx: &ReaderContext,
     item_ref: u64,
 ) -> Option<GeometricToleranceRef> {
-    if let Some(&id) = ctx.geometric_tolerance_id_map.get(&item_ref) {
+    if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::GeometricToleranceId>(item_ref)
+    {
         return Some(GeometricToleranceRef::Plain(id));
     }
-    ctx.geometric_tolerance_with_datum_reference_id_map
-        .get(&item_ref)
-        .copied()
+    ctx.id_cache
+        .get::<crate::ir::GeometricToleranceWithDatumReferenceId>(item_ref)
         .map(GeometricToleranceRef::WithDatumReference)
 }
 
@@ -2826,7 +2830,7 @@ fn read_general_datum_reference_data(
     // composite datum). A base outside these forms drops the owner.
     let base = match attrs.get(4) {
         Some(Attribute::EntityRef(r)) => {
-            let Some(&datum_id) = ctx.datum_id_map.get(r) else {
+            let Some(datum_id) = ctx.id_cache.get::<crate::ir::DatumId>(*r) else {
                 return Ok(None);
             };
             GeneralDatumBase::Datum(datum_id)
@@ -2840,7 +2844,8 @@ fn read_general_datum_reference_data(
                 let Attribute::EntityRef(r) = item else {
                     return Ok(None);
                 };
-                let Some(&gdr_id) = ctx.general_datum_reference_id_map.get(r) else {
+                let Some(gdr_id) = ctx.id_cache.get::<crate::ir::GeneralDatumReferenceId>(*r)
+                else {
                     // The member dropped. Record the cascade only when it is an
                     // of_shape=$ sibling (NS-general-datum-reference-of-shape-unset);
                     // a member dropped for a different reason (e.g. unmodelled
@@ -2956,7 +2961,7 @@ impl SimpleEntityHandler for DatumReferenceCompartmentHandler {
             .get_or_insert_with(PmiPool::default)
             .general_datum_references
             .push(GeneralDatumReference::Compartment(data));
-        ctx.general_datum_reference_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -2992,7 +2997,7 @@ impl SimpleEntityHandler for DatumReferenceElementHandler {
             .get_or_insert_with(PmiPool::default)
             .general_datum_references
             .push(GeneralDatumReference::Element(data));
-        ctx.general_datum_reference_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -3024,7 +3029,7 @@ fn build_gt_with_datum_reference_data(
     let toleranced_shape_aspect = resolve_geometric_tolerance_target(ctx, shape_aspect_ref)?;
     let mut datum_system = Vec::with_capacity(datum_system_refs.len());
     for &r in datum_system_refs {
-        if let Some(&id) = ctx.datum_system_id_map.get(&r) {
+        if let Some(id) = ctx.id_cache.get::<crate::ir::DatumSystemId>(r) {
             datum_system.push(id);
         }
     }
@@ -3757,7 +3762,7 @@ impl SimpleEntityHandler for ToleranceValueHandler {
                 lower_bound,
                 upper_bound,
             });
-        ctx.tolerance_value_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -3831,7 +3836,7 @@ fn resolve_tolerance_method_definition(
     ctx: &ReaderContext,
     item_ref: u64,
 ) -> Option<ToleranceMethodDefinition> {
-    if let Some(&id) = ctx.tolerance_value_id_map.get(&item_ref) {
+    if let Some(id) = ctx.id_cache.get::<crate::ir::ToleranceValueId>(item_ref) {
         return Some(ToleranceMethodDefinition::Value(id));
     }
     ctx.limits_and_fits_id_map
@@ -3850,13 +3855,16 @@ pub(crate) fn resolve_dimensional_characteristic(
     ctx: &ReaderContext,
     item_ref: u64,
 ) -> Option<DimensionalCharacteristic> {
-    if let Some(&id) = ctx.dimensional_location_id_map.get(&item_ref) {
+    if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::DimensionalLocationId>(item_ref)
+    {
         return Some(DimensionalCharacteristic::Location(id));
     }
-    if let Some(&id) = ctx.dimensional_size_id_map.get(&item_ref) {
+    if let Some(id) = ctx.id_cache.get::<crate::ir::DimensionalSizeId>(item_ref) {
         return Some(DimensionalCharacteristic::Size(id));
     }
-    if let Some(&df_id) = ctx.datum_feature_id_map.get(&item_ref)
+    if let Some(df_id) = ctx.id_cache.get::<crate::ir::DatumFeatureId>(item_ref)
         && let Some(pmi) = ctx.pmi.as_ref()
         && matches!(
             pmi.datum_features[df_id],
@@ -4186,7 +4194,7 @@ fn read_dmia_base(
     let def_ref = read_entity_ref(attrs, 2, entity_id, "definition")?;
     let definition = if let Some(&id) = ctx.repr_id_map.get(&def_ref) {
         DraughtingModelItemDefinition::Representation(id)
-    } else if let Some(&id) = ctx.dimensional_size_id_map.get(&def_ref) {
+    } else if let Some(id) = ctx.id_cache.get::<crate::ir::DimensionalSizeId>(def_ref) {
         DraughtingModelItemDefinition::DimensionalSize(id)
     } else if let Some(sa_ref) = resolve_shape_aspect_ref(ctx, def_ref) {
         // shape_aspect member — any concrete subtype (datum / all_around /
@@ -4194,7 +4202,10 @@ fn read_dmia_base(
         DraughtingModelItemDefinition::ShapeAspect(sa_ref)
     } else if let Some(&id) = ctx.property_def_step_to_id.get(&def_ref) {
         DraughtingModelItemDefinition::PropertyDefinition(id)
-    } else if let Some(&id) = ctx.dimensional_location_id_map.get(&def_ref) {
+    } else if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::DimensionalLocationId>(def_ref)
+    {
         DraughtingModelItemDefinition::DimensionalLocation(id)
     } else if let Some(gt_ref) = resolve_geometric_tolerance_ref(ctx, def_ref) {
         // geometric_tolerance member — Plain or WithDatumReference complex MI.

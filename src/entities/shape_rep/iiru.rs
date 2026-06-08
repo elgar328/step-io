@@ -94,19 +94,19 @@ impl SimpleEntityHandler for ItemIdentifiedRepresentationUsageHandler {
 }
 
 fn resolve_iiru_definition(ctx: &ReaderContext, ref_id: u64) -> Option<IiruDefinition> {
-    if let Some(&id) = ctx.shape_aspect_id_map.get(&ref_id) {
+    if let Some(id) = ctx.id_cache.get::<crate::ir::ShapeAspectId>(ref_id) {
         return Some(IiruDefinition::ShapeAspect(id));
     }
-    if let Some(&id) = ctx.datum_feature_id_map.get(&ref_id) {
+    if let Some(id) = ctx.id_cache.get::<crate::ir::DatumFeatureId>(ref_id) {
         return Some(IiruDefinition::DatumFeature(id));
     }
-    if let Some(&id) = ctx.datum_id_map.get(&ref_id) {
+    if let Some(id) = ctx.id_cache.get::<crate::ir::DatumId>(ref_id) {
         return Some(IiruDefinition::Datum(id));
     }
-    if let Some(&id) = ctx.dimensional_size_id_map.get(&ref_id) {
+    if let Some(id) = ctx.id_cache.get::<crate::ir::DimensionalSizeId>(ref_id) {
         return Some(IiruDefinition::DimensionalSize(id));
     }
-    if let Some(&id) = ctx.geometric_tolerance_id_map.get(&ref_id) {
+    if let Some(id) = ctx.id_cache.get::<crate::ir::GeometricToleranceId>(ref_id) {
         return Some(IiruDefinition::GeometricTolerance(id));
     }
     None
