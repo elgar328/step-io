@@ -67,7 +67,7 @@ impl SimpleEntityHandler for DocumentProductEquivalenceHandler {
                 // The faithful formation step id, filled by the assembly chain
                 // (which runs before the plm cluster). A `0` slot means the
                 // formation wasn't emitted — fall back to its product ref.
-                let step = buf.product_definition_formation_step_ids[fid.0 as usize];
+                let step = buf.step_id(fid);
                 if step != 0 {
                     step
                 } else {

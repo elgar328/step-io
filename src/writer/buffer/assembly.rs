@@ -20,7 +20,8 @@ use crate::ir::arena::Arena;
 use crate::ir::representation_item::RepresentationItemRef;
 use crate::ir::shape_rep::Representation;
 use crate::ir::{
-    GeometryLeaf, Instance, Product, ProductId, Transform3d, WireframeContent, WireframeReprKind,
+    GeometryLeaf, Instance, Product, ProductCategoryId, ProductId, Transform3d, WireframeContent,
+    WireframeReprKind,
 };
 use crate::parser::entity::Attribute;
 use crate::parser::schema::{SchemaClass, StepSchema};
@@ -176,15 +177,6 @@ impl WriteBuffer<'_> {
         schema: &StepSchema,
     ) -> Result<(), WriteError> {
         let fallback_ctx = self.emit_application_context(schema);
-
-        // Size the formation step-id cache to the arena so `emit_formation`
-        // can record each faithful formation's step id by `FormationId`.
-        let formation_arena_len = self
-            .model
-            .assembly
-            .as_ref()
-            .map_or(0, |a| a.product_definition_formations.len());
-        self.product_definition_formation_step_ids = vec![0; formation_arena_len];
 
         // Emit PRODUCT chain + shape representation + SDR for every product;
         // collect each product's PDEF and SR entity ids for later instance
@@ -406,9 +398,13 @@ impl WriteBuffer<'_> {
         use crate::entities::shape_rep::parametric_representation_context::ParametricRepresentationContextHandler;
         use crate::entities::shape_rep::representation_context::RepresentationContextHandler;
         use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
-        let entries: Vec<_> = self.model.unitless_contexts.iter().cloned().collect();
-        self.unitless_context_step_ids = Vec::with_capacity(entries.len());
-        for uc in entries {
+        let entries: Vec<_> = self
+            .model
+            .unitless_contexts
+            .iter_with_ids()
+            .map(|(__id, v)| (__id, v.clone()))
+            .collect();
+        for (__id, uc) in entries {
             // `Some(dim)` → GRC+PRC+RC complex; `None` → plain simple
             // REPRESENTATION_CONTEXT.
             let step_id = if uc.coordinate_space_dimension.is_some() {
@@ -416,7 +412,7 @@ impl WriteBuffer<'_> {
             } else {
                 RepresentationContextHandler::write(self, uc)?
             };
-            self.unitless_context_step_ids.push(step_id);
+            self.set_step_id(__id, step_id);
         }
         Ok(())
     }
@@ -824,9 +820,7 @@ impl WriteBuffer<'_> {
         use crate::ir::shape_rep::RepresentationContextRef as R;
         match context {
             Some(R::Unitful(id)) => Attribute::EntityRef(self.unit_context_ids[id.0 as usize]),
-            Some(R::Unitless(id)) => {
-                Attribute::EntityRef(self.unitless_context_step_ids[id.0 as usize])
-            }
+            Some(R::Unitless(id)) => Attribute::EntityRef(self.step_id(id)),
             None => Attribute::Unset,
         }
     }
@@ -874,11 +868,11 @@ impl WriteBuffer<'_> {
                     ],
                 );
             }
-            // 2) Emit all APD entries (refs AC via cache).
-            self.apd_step_ids = Vec::with_capacity(plm.application_protocol_definitions.len());
+            // 2) Emit all APD entries (refs AC via cache). APD is top-level
+            // (no consumer), so its step id is not cached.
             for apd in plm.application_protocol_definitions.iter() {
                 let ac_step = self.ac_step_ids[apd.application.0 as usize];
-                let id = self.push_simple(
+                self.push_simple(
                     "APPLICATION_PROTOCOL_DEFINITION",
                     vec![
                         Attribute::String(apd.status.clone()),
@@ -887,7 +881,6 @@ impl WriteBuffer<'_> {
                         Attribute::EntityRef(ac_step),
                     ],
                 );
-                self.apd_step_ids.push(id);
             }
             // 3) Emit all PC entries (refs AC via cache).
             let assembly = self.model.assembly.clone().unwrap_or_default();
@@ -1052,7 +1045,7 @@ impl WriteBuffer<'_> {
                 }
             }
             .expect("formation write only pushes one simple entity");
-            self.product_definition_formation_step_ids[fid.0 as usize] = step;
+            self.set_step_id(fid, step);
             return step;
         }
 
@@ -1085,6 +1078,9 @@ impl WriteBuffer<'_> {
     /// arena order, emitting PC `Itself` and PRPC variants in turn.
     /// Slot id of every emit is cached in `product_category_step_ids`
     /// for the PCR emitter to consume.
+    // `idx` is an arena index, which fits u32 by the arena's own overflow
+    // guard — the `idx as u32` id reconstruction is safe.
+    #[allow(clippy::cast_possible_truncation)]
     pub(in crate::writer::buffer) fn emit_product_categories_arena(&mut self) {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::assembly_product::product_category::{
@@ -1098,7 +1094,6 @@ impl WriteBuffer<'_> {
         let pool = self.model.assembly.as_ref();
         let Some(pool) = pool else { return };
         let pcs: Vec<ProductCategory> = pool.product_categories.iter().cloned().collect();
-        self.product_category_step_ids = vec![0; pcs.len()];
         for (idx, pc) in pcs.iter().enumerate() {
             let step = match pc {
                 ProductCategory::Itself(data) => ProductCategoryHandler::write(
@@ -1129,7 +1124,7 @@ impl WriteBuffer<'_> {
                     .expect("PRPC write only pushes one simple entity")
                 }
             };
-            self.product_category_step_ids[idx] = step;
+            self.set_step_id(ProductCategoryId(idx as u32), step);
         }
     }
 
@@ -1149,16 +1144,8 @@ impl WriteBuffer<'_> {
             .cloned()
             .collect();
         for pcr in pcrs {
-            let pc = self
-                .product_category_step_ids
-                .get(pcr.category.0 as usize)
-                .copied()
-                .unwrap_or(0);
-            let prpc = self
-                .product_category_step_ids
-                .get(pcr.sub_category.0 as usize)
-                .copied()
-                .unwrap_or(0);
+            let pc = self.step_id(pcr.category);
+            let prpc = self.step_id(pcr.sub_category);
             if pc == 0 || prpc == 0 {
                 continue;
             }

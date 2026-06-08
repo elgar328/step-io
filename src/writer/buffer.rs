@@ -105,11 +105,6 @@ pub(crate) struct WriteBuffer<'m> {
     /// Lazily emitted `DIMENSIONAL_EXPONENTS(0, 0, 1, ...)` step id, shared
     /// by every mass CBU outer.
     pub(crate) mass_dim_exp_step: Option<u64>,
-    /// Emitted `(GRC PRC REP_CONTEXT)` complex step ids (phase
-    /// unitless-context), indexed by `UnitlessContextId.0`. Consumed by
-    /// `repr_context_attr` when a representation's `context_of_items`
-    /// resolves to a `RepresentationContextRef::Unitless`.
-    pub(crate) unitless_context_step_ids: Vec<u64>,
     /// Assembly `ADVANCED_BREP_SHAPE_REPRESENTATION`s (items include a
     /// `MAPPED_ITEM`) whose step id was reserved in `emit_representations_pre_pass`
     /// and whose body is emitted by `emit_deferred_assembly_absr` after
@@ -117,9 +112,6 @@ pub(crate) struct WriteBuffer<'m> {
     pub(crate) deferred_assembly_absr_ids: Vec<(crate::ir::RepresentationId, u64)>,
     /// IR `ApplicationContext` index → emitted `APPLICATION_CONTEXT` step id.
     pub(crate) ac_step_ids: Vec<u64>,
-    /// IR `ApplicationProtocolDefinition` index → emitted
-    /// `APPLICATION_PROTOCOL_DEFINITION` step id.
-    pub(crate) apd_step_ids: Vec<u64>,
     /// IR `ProductContext` index → emitted `PRODUCT_CONTEXT`
     /// (or `MECHANICAL_CONTEXT`) step id.
     pub(crate) pc_step_ids: Vec<u64>,
@@ -149,15 +141,6 @@ pub(crate) struct WriteBuffer<'m> {
     /// refs land on the right entity (PDEF doesn't match the schema
     /// here — PRPC.products narrows to PRODUCT itself).
     pub(crate) product_step_ids: std::collections::HashMap<ProductId, u64>,
-    /// `ProductCategoryId → step id` (PC or PRPC). Filled by
-    /// `emit_product_categories_arena`, consumed by
-    /// `emit_product_category_relationships_arena`.
-    pub(crate) product_category_step_ids: Vec<u64>,
-    /// `ProductDefinitionFormationId → PRODUCT_DEFINITION_FORMATION step id`.
-    /// Filled by `emit_formation` (arena path); consumed by the DPE writer when
-    /// its `related_product` was a formation. Sized to the arena before the
-    /// per-product loop; `0` means "not emitted".
-    pub(crate) product_definition_formation_step_ids: Vec<u64>,
     /// `ProductId → PRODUCT_DEFINITION_SHAPE step id`. Same role as
     /// `product_def_ids` but for the PDS sibling — consumed by the PMI
     /// emitter to resolve `ShapeAspect.target` (SAs reference PDS, not PD).
@@ -206,16 +189,12 @@ impl<'m> WriteBuffer<'m> {
             length_dim_exp_step: None,
             dimensionless_dim_exp_step: None,
             mass_dim_exp_step: None,
-            unitless_context_step_ids: Vec::new(),
             deferred_assembly_absr_ids: Vec::new(),
             ac_step_ids: Vec::new(),
-            apd_step_ids: Vec::new(),
             pc_step_ids: Vec::new(),
             pdc_step_ids: Vec::new(),
             product_def_ids: std::collections::HashMap::new(),
             product_step_ids: std::collections::HashMap::new(),
-            product_category_step_ids: Vec::new(),
-            product_definition_formation_step_ids: Vec::new(),
             product_def_shape_ids: std::collections::HashMap::new(),
             nauo_pds_arena_slot: std::collections::HashMap::new(),
         }
