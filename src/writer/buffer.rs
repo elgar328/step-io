@@ -139,39 +139,13 @@ pub(crate) struct WriteBuffer<'m> {
     /// Lazily emitted `DIMENSIONAL_EXPONENTS(0, 0, 1, ...)` step id, shared
     /// by every mass CBU outer.
     pub(crate) mass_dim_exp_step: Option<u64>,
-    /// STEP entity id of every emitted `COLOUR_RGB` /
-    /// `DRAUGHTING_PRE_DEFINED_COLOUR` entity, indexed by `ColourId.0`.
-    /// Populated by `emit_visualization_if_set` before any consumer
-    /// (`FILL_AREA_STYLE_COLOUR`, `SURFACE_STYLE_RENDERING_WITH_PROPERTIES`)
-    /// needs to resolve a colour ref.
-    pub(crate) colour_step_ids: Vec<u64>,
-    /// Emitted `SYMBOL_COLOUR` step ids, indexed by `SymbolColourId.0`
-    /// (phase symbol-colour). Future `SYMBOL_STYLE` writers consume this.
-    pub(crate) symbol_colour_step_ids: Vec<u64>,
-    /// Emitted `TEXT_STYLE_FOR_DEFINED_FONT` step ids, indexed by
-    /// `TextStyleForDefinedFontId.0` (phase text-style-font). Future
-    /// `text_style.character_appearance` SELECT writers consume this.
-    pub(crate) text_style_for_defined_font_step_ids: Vec<u64>,
     /// Emitted `PRE_DEFINED_MARKER` step ids (phase pre-defined-marker),
     /// indexed by `PreDefinedMarkerId.0`.
     pub(crate) pre_defined_marker_step_ids: Vec<u64>,
-    /// Emitted `text_style` enum-arena step ids (phase text-style-box),
-    /// indexed by `TextStyleId.0`. Reserved for future consumers
-    /// (`presentation_style_select` SELECT) — no step-io entity references
-    /// this cache today.
-    pub(crate) text_style_step_ids: Vec<u64>,
     /// Emitted `DRAUGHTING_PRE_DEFINED_TEXT_FONT` step ids (phase
     /// text-literal — cache added retroactively for the `text_literal.font`
     /// SELECT). Indexed by `DraughtingPreDefinedTextFontId.0`.
     pub(crate) dptf_step_ids: Vec<u64>,
-    /// Emitted `TEXT_LITERAL` step ids (phase text-literal), indexed by
-    /// `TextLiteralId.0`. Consumed by the `COMPOSITE_TEXT` emitter for the
-    /// `text_or_character` SELECT.
-    pub(crate) text_literal_step_ids: Vec<u64>,
-    /// Emitted `COMPOSITE_TEXT` step ids, indexed by `CompositeTextId.0`.
-    /// Populated by `emit_visualization_if_set` so an annotation occurrence's
-    /// `item` can resolve to a `COMPOSITE_TEXT`.
-    pub(crate) composite_text_step_ids: Vec<u64>,
     /// Emitted `DRAUGHTING_MODEL_ITEM_ASSOCIATION` step ids (phase dmia),
     /// indexed by `DraughtingModelItemAssociationId.0`. No other entity
     /// currently references the cache; retained for symmetry.
@@ -227,38 +201,17 @@ pub(crate) struct WriteBuffer<'m> {
     /// in two passes — `SymbolTarget` first so `DefinedSymbol` can resolve
     /// its `target` ref through this cache.
     pub(crate) geometric_representation_item_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `CURVE_STYLE` entity, indexed by
-    /// `CurveStyleId.0`. Consumed by the PSA writer when dispatching a
-    /// `PsaStyle::Curve(...)` entry.
-    pub(crate) curve_style_step_ids: Vec<u64>,
     /// STEP entity id of every emitted `STYLED_ITEM` entity, indexed by
     /// `StyledItemId.0`. Populated by `emit_visualization_if_set` before
     /// MDGPR emission so each MDGPR can resolve its `items` list to
     /// cached STEP ids with one index lookup per entry.
     pub(crate) styled_item_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `PRESENTATION_STYLE_ASSIGNMENT`
-    /// entity, indexed by `PresentationStyleAssignmentId.0`. Populated by
-    /// `emit_visualization_if_set` before any `STYLED_ITEM` /
-    /// `OVER_RIDING_STYLED_ITEM` emission so each styled item resolves its
-    /// `styles` ref list with one index lookup per entry.
-    pub(crate) psa_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `SURFACE_STYLE_RENDERING` /
-    /// `SURFACE_STYLE_RENDERING_WITH_PROPERTIES` entity, indexed by
-    /// `SurfaceStyleRenderingId.0`. Populated by `emit_visualization_if_set`
-    /// before `SURFACE_SIDE_STYLE` emission so each
-    /// `SurfaceSideStyleEntry::Rendering` resolves with one index lookup.
-    pub(crate) ssr_step_ids: Vec<u64>,
     /// STEP entity id of every emitted `FoundedItem` arena entry, indexed
     /// by `FoundedItemId.0`. Populated by `emit_visualization_if_set` in a
     /// 2-pass walk (`FillAreaStyle` first so `SurfaceStyleFillArea` can
     /// resolve its `fill_area` ref); consumed by
     /// `SurfaceStyleFillAreaHandler` and downstream styled-side writers.
     pub(crate) founded_item_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `CameraModel` arena entry, indexed
-    /// by `CameraModelId.0`. Populated by `emit_visualization_if_set`
-    /// after `founded_item_step_ids`; consumed by `emit_camera_usage_arena`
-    /// to resolve `CameraUsage.mapping_origin`.
-    pub(crate) viz_camera_model_step_ids: Vec<u64>,
     /// Reserved STEP ids for `characterized_objects`, indexed by
     /// `CharacterizedObjectId.0`. Filled by `emit_characterized_objects_prepass`
     /// before the PD-definition pass so a `PROPERTY_DEFINITION` targeting a
@@ -429,14 +382,8 @@ impl<'m> WriteBuffer<'m> {
             length_dim_exp_step: None,
             dimensionless_dim_exp_step: None,
             mass_dim_exp_step: None,
-            colour_step_ids: Vec::new(),
-            symbol_colour_step_ids: Vec::new(),
-            text_style_for_defined_font_step_ids: Vec::new(),
             pre_defined_marker_step_ids: Vec::new(),
-            text_style_step_ids: Vec::new(),
             dptf_step_ids: Vec::new(),
-            text_literal_step_ids: Vec::new(),
-            composite_text_step_ids: Vec::new(),
             dmia_step_ids: Vec::new(),
             unitless_context_step_ids: Vec::new(),
             gisu_step_ids: Vec::new(),
@@ -450,12 +397,8 @@ impl<'m> WriteBuffer<'m> {
             pre_defined_curve_font_step_ids: Vec::new(),
             pre_defined_symbol_step_ids: Vec::new(),
             geometric_representation_item_step_ids: Vec::new(),
-            curve_style_step_ids: Vec::new(),
             styled_item_step_ids: Vec::new(),
-            psa_step_ids: Vec::new(),
-            ssr_step_ids: Vec::new(),
             founded_item_step_ids: Vec::new(),
-            viz_camera_model_step_ids: Vec::new(),
             characterized_object_step_ids: Vec::new(),
             ac_step_ids: Vec::new(),
             shape_aspect_step_ids: Vec::new(),

@@ -59,7 +59,7 @@ impl SimpleEntityHandler for ModelGeometricViewHandler {
     fn write(buf: &mut WriteBuffer, mgv: ModelGeometricView) -> Result<u64, WriteError> {
         // Standalone arena emit goes through `emit_characterized_objects` (under a
         // reserved id); this trait method mirrors that body for completeness.
-        let item_step = buf.viz_camera_model_step_ids[mgv.item.0 as usize];
+        let item_step = buf.step_id(mgv.item);
         let rep_step = buf.representation_step_ids[mgv.rep.0 as usize];
         let desc_attr = match mgv.inherited.description {
             Some(d) => Attribute::String(d),

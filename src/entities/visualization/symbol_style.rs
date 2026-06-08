@@ -40,7 +40,7 @@ impl SimpleEntityHandler for SymbolStyleHandler {
     }
 
     fn write(buf: &mut WriteBuffer, ss: SymbolStyle) -> Result<u64, WriteError> {
-        let colour_step = buf.symbol_colour_step_ids[ss.style_of_symbol.0 as usize];
+        let colour_step = buf.step_id(ss.style_of_symbol);
         Ok(buf.push_simple(
             "SYMBOL_STYLE",
             vec![

@@ -64,7 +64,7 @@ impl SimpleEntityHandler for TextStyleWithBoxCharacteristicsHandler {
 
     fn write(buf: &mut WriteBuffer, t: TextStyleWithBoxCharacteristics) -> Result<u64, WriteError> {
         let CharacterStyle::TextStyleForDefinedFont(t4df_id) = t.inherited.character_appearance;
-        let appearance_step = buf.text_style_for_defined_font_step_ids[t4df_id.0 as usize];
+        let appearance_step = buf.step_id(t4df_id);
         let chars = t
             .characteristics
             .into_iter()

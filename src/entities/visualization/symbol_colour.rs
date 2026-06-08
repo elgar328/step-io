@@ -36,7 +36,7 @@ impl SimpleEntityHandler for SymbolColourHandler {
     }
 
     fn write(buf: &mut WriteBuffer, sc: SymbolColour) -> Result<u64, WriteError> {
-        let colour_step = buf.colour_step_ids[sc.colour_of_symbol.0 as usize];
+        let colour_step = buf.step_id(sc.colour_of_symbol);
         Ok(buf.push_simple("SYMBOL_COLOUR", vec![Attribute::EntityRef(colour_step)]))
     }
 }

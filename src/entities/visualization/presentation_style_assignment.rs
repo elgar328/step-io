@@ -137,9 +137,7 @@ pub(crate) fn emit_psa_styles(buf: &WriteBuffer, styles: Vec<PsaStyle>) -> Vec<A
             PsaStyle::Point(ps_id) => {
                 Attribute::EntityRef(buf.founded_item_step_ids[ps_id.0 as usize])
             }
-            PsaStyle::Curve(cs_id) => {
-                Attribute::EntityRef(buf.curve_style_step_ids[cs_id.0 as usize])
-            }
+            PsaStyle::Curve(cs_id) => Attribute::EntityRef(buf.step_id(cs_id)),
             PsaStyle::Null => Attribute::Typed {
                 type_name: "NULL_STYLE".into(),
                 value: Box::new(Attribute::Enum("NULL".into())),

@@ -60,9 +60,7 @@ impl SimpleEntityHandler for CompositeTextHandler {
             .collected_text
             .into_iter()
             .map(|tc| match tc {
-                TextOrCharacter::TextLiteral(id) => {
-                    Attribute::EntityRef(buf.text_literal_step_ids[id.0 as usize])
-                }
+                TextOrCharacter::TextLiteral(id) => Attribute::EntityRef(buf.step_id(id)),
             })
             .collect();
         Ok(buf.push_simple(

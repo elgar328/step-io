@@ -213,7 +213,7 @@ impl SimpleEntityHandler for AnnotationPlaneHandler {
         let item_id = buf.emit_representation_item_ref(ap.item)?;
         let mut style_refs = Vec::with_capacity(ap.styles.len());
         for psa_id in ap.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
         }
         Ok(buf.push_simple(
             "ANNOTATION_PLANE",
@@ -277,7 +277,7 @@ impl SimpleEntityHandler for TessellatedAnnotationOccurrenceHandler {
         let item = buf.step_id(tao.item);
         let mut style_refs = Vec::with_capacity(tao.styles.len());
         for psa_id in tao.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
         }
         Ok(buf.push_simple(
             "TESSELLATED_ANNOTATION_OCCURRENCE",
@@ -338,7 +338,7 @@ impl SimpleEntityHandler for AnnotationSymbolOccurrenceHandler {
         let item_id = buf.emit_representation_item_ref(aso.item)?;
         let mut style_refs = Vec::with_capacity(aso.styles.len());
         for psa_id in aso.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
         }
         Ok(buf.push_simple(
             "ANNOTATION_SYMBOL_OCCURRENCE",
@@ -412,7 +412,7 @@ impl ComplexEntityHandler for AnnotationTextOccurrenceHandler {
         let item_id = buf.emit_representation_item_ref(ato.item)?;
         let mut style_refs = Vec::with_capacity(ato.styles.len());
         for psa_id in ato.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
         }
         // Re-emit the AND-combined complex form (alphabetical parts); data only
         // on REPRESENTATION_ITEM (name) + STYLED_ITEM (styles, item).
@@ -490,7 +490,7 @@ impl SimpleEntityHandler for DraughtingAnnotationOccurrenceHandler {
         let item_id = buf.emit_representation_item_ref(dao.item)?;
         let mut style_refs = Vec::with_capacity(dao.styles.len());
         for psa_id in dao.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
         }
         Ok(buf.push_simple(
             "DRAUGHTING_ANNOTATION_OCCURRENCE",
@@ -862,7 +862,7 @@ impl SimpleEntityHandler for AnnotationPlaceholderOccurrenceHandler {
         let item_id = buf.emit_representation_item_ref(apo.item)?;
         let mut style_refs = Vec::with_capacity(apo.styles.len());
         for psa_id in apo.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
         }
         Ok(buf.push_simple(
             "ANNOTATION_PLACEHOLDER_OCCURRENCE",
@@ -950,7 +950,7 @@ impl SimpleEntityHandler for AnnotationPlaceholderOccurrenceWithLeaderLineHandle
         let item_id = buf.emit_representation_item_ref(apo.item)?;
         let mut style_refs = Vec::with_capacity(apo.styles.len());
         for psa_id in apo.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
         }
         let leader_refs = apo
             .leader_line
@@ -1021,7 +1021,7 @@ impl SimpleEntityHandler for AnnotationOccurrenceHandler {
         let item_id = buf.emit_representation_item_ref(ao.item)?;
         let mut style_refs = Vec::with_capacity(ao.styles.len());
         for psa_id in ao.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
         }
         Ok(buf.push_simple(
             "ANNOTATION_OCCURRENCE",
@@ -1100,7 +1100,7 @@ impl ComplexEntityHandler for LeaderCurveHandler {
         let curve_step = buf.emit_curve(lc.item)?;
         let mut style_refs = Vec::with_capacity(lc.styles.len());
         for psa_id in lc.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
         }
         // Re-emit the AND-combined complex form (alphabetical parts, matching the
         // source); data only on REPRESENTATION_ITEM (name) + STYLED_ITEM
@@ -1185,7 +1185,7 @@ impl SimpleEntityHandler for AnnotationCurveOccurrenceHandler {
         let item_step = buf.emit_representation_item_ref(aco.item)?;
         let mut style_refs = Vec::with_capacity(aco.styles.len());
         for psa_id in aco.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
         }
         Ok(buf.push_simple(
             "ANNOTATION_CURVE_OCCURRENCE",
@@ -1254,7 +1254,7 @@ impl SimpleEntityHandler for TerminatorSymbolHandler {
         let ac_step = buf.acoc_step_ids[ts.annotated_curve.0 as usize];
         let mut style_refs = Vec::with_capacity(ts.styles.len());
         for psa_id in ts.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
         }
         Ok(buf.push_simple(
             "TERMINATOR_SYMBOL",
@@ -1340,7 +1340,7 @@ impl ComplexEntityHandler for LeaderTerminatorHandler {
         let ac_step = buf.acoc_step_ids[lt.annotated_curve.0 as usize];
         let mut style_refs = Vec::with_capacity(lt.styles.len());
         for psa_id in lt.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
         }
         // Re-emit the AND-combined complex form (alphabetical parts); data on
         // REPRESENTATION_ITEM (name), STYLED_ITEM (styles, item), TERMINATOR_SYMBOL

@@ -72,7 +72,7 @@ pub(crate) fn resolve_curve_or_render(ctx: &ReaderContext, ref_id: u64) -> Optio
 /// (e.g. `SURFACE_STYLE_PARAMETER_LINE`).
 pub(crate) fn emit_curve_or_render(buf: &WriteBuffer, cor: CurveOrRender) -> u64 {
     match cor {
-        CurveOrRender::CurveStyle(id) => buf.curve_style_step_ids[id.0 as usize],
-        CurveOrRender::SurfaceStyleRendering(id) => buf.ssr_step_ids[id.0 as usize],
+        CurveOrRender::CurveStyle(id) => buf.step_id(id),
+        CurveOrRender::SurfaceStyleRendering(id) => buf.step_id(id),
     }
 }

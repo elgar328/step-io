@@ -86,7 +86,7 @@ impl SimpleEntityHandler for SurfaceStyleRenderingWithPropertiesHandler {
         buf: &mut WriteBuffer,
         ssr: SurfaceStyleRenderingWithProperties,
     ) -> Result<u64, WriteError> {
-        let colour_step_id = buf.colour_step_ids[ssr.surface_colour.0 as usize];
+        let colour_step_id = buf.step_id(ssr.surface_colour);
         let mut prop_refs = Vec::with_capacity(ssr.properties.len());
         for prop in ssr.properties {
             let prop_id = match prop {

@@ -104,7 +104,7 @@ impl SimpleEntityHandler for PointStyleHandler {
                 value: Box::new(Attribute::String(s)),
             },
         };
-        let colour_step = buf.colour_step_ids[ps.marker_colour.0 as usize];
+        let colour_step = buf.step_id(ps.marker_colour);
         Ok(buf.push_simple(
             "POINT_STYLE",
             vec![

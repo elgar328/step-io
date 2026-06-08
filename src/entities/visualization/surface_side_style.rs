@@ -59,7 +59,7 @@ impl SimpleEntityHandler for SurfaceSideStyleHandler {
                 SurfaceSideStyleEntry::FillArea(ssfa_id) => {
                     buf.founded_item_step_ids[ssfa_id.0 as usize]
                 }
-                SurfaceSideStyleEntry::Rendering(ssr_id) => buf.ssr_step_ids[ssr_id.0 as usize],
+                SurfaceSideStyleEntry::Rendering(ssr_id) => buf.step_id(ssr_id),
             };
             style_refs.push(Attribute::EntityRef(entry_id));
         }

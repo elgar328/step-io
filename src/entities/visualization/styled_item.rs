@@ -89,7 +89,7 @@ impl SimpleEntityHandler for StyledItemHandler {
         let item_id = buf.emit_representation_item_ref(si.item)?;
         let mut style_refs = Vec::with_capacity(si.styles.len());
         for psa_id in si.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
         }
         Ok(buf.push_simple(
             "STYLED_ITEM",

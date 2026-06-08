@@ -52,7 +52,7 @@ impl SimpleEntityHandler for SurfaceStyleRenderingHandler {
     }
 
     fn write(buf: &mut WriteBuffer, data: SurfaceStyleRenderingData) -> Result<u64, WriteError> {
-        let colour_step_id = buf.colour_step_ids[data.surface_colour.0 as usize];
+        let colour_step_id = buf.step_id(data.surface_colour);
         Ok(buf.push_simple(
             "SURFACE_STYLE_RENDERING",
             vec![

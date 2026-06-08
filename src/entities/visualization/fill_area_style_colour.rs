@@ -38,7 +38,7 @@ impl SimpleEntityHandler for FillAreaStyleColourHandler {
     }
 
     fn write(buf: &mut WriteBuffer, fasc: FillAreaStyleColour) -> Result<u64, WriteError> {
-        let colour_step_id = buf.colour_step_ids[fasc.colour.0 as usize];
+        let colour_step_id = buf.step_id(fasc.colour);
         Ok(buf.push_simple(
             "FILL_AREA_STYLE_COLOUR",
             vec![

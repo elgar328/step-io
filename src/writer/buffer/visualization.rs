@@ -55,13 +55,9 @@ impl WriteBuffer<'_> {
             RepresentationItemRef::DraughtingCallout(id) => {
                 Ok(self.draughting_callout_step_ids[id.0 as usize])
             }
-            RepresentationItemRef::CameraModel(id) => {
-                Ok(self.viz_camera_model_step_ids[id.0 as usize])
-            }
-            RepresentationItemRef::TextLiteral(id) => Ok(self.text_literal_step_ids[id.0 as usize]),
-            RepresentationItemRef::CompositeText(id) => {
-                Ok(self.composite_text_step_ids[id.0 as usize])
-            }
+            RepresentationItemRef::CameraModel(id) => Ok(self.step_id(id)),
+            RepresentationItemRef::TextLiteral(id) => Ok(self.step_id(id)),
+            RepresentationItemRef::CompositeText(id) => Ok(self.step_id(id)),
             RepresentationItemRef::StyledItem(id) => Ok(self.styled_item_step_ids[id.0 as usize]),
         }
     }
@@ -179,7 +175,7 @@ impl WriteBuffer<'_> {
                     // Emit under the reserved id (forward-ref by any PD that
                     // targeted this MGV). camera/rep step caches are now filled.
                     let reserved = self.characterized_object_step_ids[id.0 as usize];
-                    let item_step = self.viz_camera_model_step_ids[mgv.item.0 as usize];
+                    let item_step = self.step_id(mgv.item);
                     let rep_step = self.representation_step_ids[mgv.rep.0 as usize];
                     let desc_attr = match mgv.inherited.description {
                         Some(d) => Attribute::String(d),
@@ -411,35 +407,30 @@ impl WriteBuffer<'_> {
         // every downstream consumer (FILL_AREA_STYLE_COLOUR, SSRWP,
         // CURVE_STYLE, PSA) can resolve an arena reference to a cached
         // STEP id with one index lookup.
-        self.colour_step_ids = Vec::with_capacity(viz.colours.len());
-        for colour in viz.colours.iter() {
+        for (__aid, colour) in viz.colours.iter_with_ids() {
             let id = match colour {
                 Colour::Rgb(c) => ColourRgbHandler::write(self, c.clone())?,
                 Colour::PreDefined(c) => DraughtingPreDefinedColourHandler::write(self, c.clone())?,
                 Colour::Itself => ColourHandler::write(self, ())?,
             };
-            self.colour_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
         // SYMBOL_COLOUR — after colour cache, before symbol_style (future
         // phase) emits.
-        self.symbol_colour_step_ids = Vec::with_capacity(viz.symbol_colours.len());
-        for sc in viz.symbol_colours.iter() {
+        for (__aid, sc) in viz.symbol_colours.iter_with_ids() {
             use crate::entities::visualization::symbol_colour::SymbolColourHandler;
             let id = SymbolColourHandler::write(self, sc.clone())?;
-            self.symbol_colour_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
         // TEXT_STYLE_FOR_DEFINED_FONT — same timing.
-        self.text_style_for_defined_font_step_ids =
-            Vec::with_capacity(viz.text_styles_for_defined_font.len());
-        for t in viz.text_styles_for_defined_font.iter() {
+        for (__aid, t) in viz.text_styles_for_defined_font.iter_with_ids() {
             use crate::entities::visualization::text_style_for_defined_font::TextStyleForDefinedFontHandler;
             let id = TextStyleForDefinedFontHandler::write(self, t.clone())?;
-            self.text_style_for_defined_font_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
         // TEXT_STYLE / TEXT_STYLE_WITH_BOX_CHARACTERISTICS — depends on
         // text_style_for_defined_font_step_ids for `character_appearance`.
-        self.text_style_step_ids = Vec::with_capacity(viz.text_styles.len());
-        for ts in viz.text_styles.iter() {
+        for (__aid, ts) in viz.text_styles.iter_with_ids() {
             use crate::entities::visualization::text_style_with_box_characteristics::TextStyleWithBoxCharacteristicsHandler;
             let step = match ts {
                 TextStyle::WithBoxCharacteristics(t) => {
@@ -449,31 +440,28 @@ impl WriteBuffer<'_> {
                 // produced by the reader. Unreachable in practice.
                 TextStyle::Itself(_) => 0,
             };
-            self.text_style_step_ids.push(step);
+            self.set_step_id(__aid, step);
         }
         // TEXT_LITERAL — depends on placement caches (emit-on-demand) and
         // dptf_step_ids (populated by `emit_pmi_if_set` which runs before
         // this method via `WriteBuffer::emit_pools`).
-        self.text_literal_step_ids = Vec::with_capacity(viz.text_literals.len());
-        for tl in viz.text_literals.iter() {
+        for (__aid, tl) in viz.text_literals.iter_with_ids() {
             use crate::entities::visualization::text_literal::TextLiteralHandler;
             let step = TextLiteralHandler::write(self, tl.clone())?;
-            self.text_literal_step_ids.push(step);
+            self.set_step_id(__aid, step);
         }
         // COMPOSITE_TEXT — depends on text_literal_step_ids just filled.
-        self.composite_text_step_ids = Vec::with_capacity(viz.composite_texts.len());
-        for ct in viz.composite_texts.iter() {
+        for (__aid, ct) in viz.composite_texts.iter_with_ids() {
             use crate::entities::visualization::composite_text::CompositeTextHandler;
             let step = CompositeTextHandler::write(self, ct.clone())?;
-            self.composite_text_step_ids.push(step);
+            self.set_step_id(__aid, step);
         }
         self.emit_pre_defined_curve_fonts(&viz)?;
         self.emit_pre_defined_symbols(&viz)?;
         self.emit_pre_defined_markers(&viz)?;
-        self.curve_style_step_ids = Vec::with_capacity(viz.curve_styles.len());
-        for cs in viz.curve_styles.iter() {
+        for (__aid, cs) in viz.curve_styles.iter_with_ids() {
             let id = CurveStyleHandler::write(self, cs.clone())?;
-            self.curve_style_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
         // SURFACE_STYLE_RENDERING arena — emit every entry up-front so the
         // downstream SURFACE_SIDE_STYLE writer (invoked transitively from
@@ -481,8 +469,7 @@ impl WriteBuffer<'_> {
         // through ssr_step_ids[id.0]. Pre-emit runs before the PSA cache
         // population so the SSU/SSS chain inside each PSA can hit the
         // cache.
-        self.ssr_step_ids = Vec::with_capacity(viz.surface_style_renderings.len());
-        for ssr in viz.surface_style_renderings.iter() {
+        for (__aid, ssr) in viz.surface_style_renderings.iter_with_ids() {
             let id = match ssr {
                 SurfaceStyleRendering::Itself(data) => {
                     SurfaceStyleRenderingHandler::write(self, data.clone())?
@@ -491,15 +478,14 @@ impl WriteBuffer<'_> {
                     SurfaceStyleRenderingWithPropertiesHandler::write(self, data.clone())?
                 }
             };
-            self.ssr_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
         self.emit_founded_item_arena(&viz.founded_items)?;
         // CAMERA_MODEL_D3 — after emit_founded_item_arena so
         // `perspective_of_volume` resolves through `founded_item_step_ids`.
         // Populates `viz_camera_model_step_ids` so `CAMERA_USAGE` can
         // resolve `mapping_origin` through one index lookup later.
-        self.viz_camera_model_step_ids = Vec::with_capacity(viz.camera_models.len());
-        for cm in viz.camera_models.iter() {
+        for (__aid, cm) in viz.camera_models.iter_with_ids() {
             use crate::ir::visualization::CameraModel as CM;
             let step = match cm {
                 CM::CameraModelD3(d3) => CameraModelD3Handler::write(self, d3.clone())?,
@@ -512,7 +498,7 @@ impl WriteBuffer<'_> {
                     CameraModelD3MultiClippingHandler::write(self, c.clone())?
                 }
             };
-            self.viz_camera_model_step_ids.push(step);
+            self.set_step_id(__aid, step);
         }
         // PRESENTATION_STYLE_ASSIGNMENT arena — emit every PSA up-front so
         // STYLED_ITEM / OVER_RIDING_STYLED_ITEM writers can resolve their
@@ -520,8 +506,7 @@ impl WriteBuffer<'_> {
         // never produced by the current reader (handler unregistered
         // pending Representation IR phase); placeholder 0 keeps the
         // indexing aligned should one ever appear from a kernel adapter.
-        self.psa_step_ids = Vec::with_capacity(viz.presentation_style_assignments.len());
-        for psa in viz.presentation_style_assignments.iter() {
+        for (__aid, psa) in viz.presentation_style_assignments.iter_with_ids() {
             let id = match psa {
                 PresentationStyleAssignment::Itself(data) => {
                     PresentationStyleAssignmentHandler::write(self, data.clone())?
@@ -531,7 +516,7 @@ impl WriteBuffer<'_> {
                     PresentationStyleByContextHandler::write(self, psbc.clone())?
                 }
             };
-            self.psa_step_ids.push(id);
+            self.set_step_id(__aid, id);
         }
         // STYLED_ITEM arena — emit Plain entries first so their STEP ids
         // are cached when OverRiding entries reference them through

@@ -38,7 +38,7 @@ impl SimpleEntityHandler for TextStyleForDefinedFontHandler {
     }
 
     fn write(buf: &mut WriteBuffer, t: TextStyleForDefinedFont) -> Result<u64, WriteError> {
-        let colour_step = buf.colour_step_ids[t.text_colour.0 as usize];
+        let colour_step = buf.step_id(t.text_colour);
         Ok(buf.push_simple(
             "TEXT_STYLE_FOR_DEFINED_FONT",
             vec![Attribute::EntityRef(colour_step)],

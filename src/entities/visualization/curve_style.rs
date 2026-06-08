@@ -79,7 +79,7 @@ impl SimpleEntityHandler for CurveStyleHandler {
                 value: Box::new(Attribute::String(s)),
             },
         };
-        let colour_step_id = buf.colour_step_ids[cs.curve_colour.0 as usize];
+        let colour_step_id = buf.step_id(cs.curve_colour);
         Ok(buf.push_simple(
             "CURVE_STYLE",
             vec![

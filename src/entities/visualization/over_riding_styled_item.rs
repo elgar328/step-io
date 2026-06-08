@@ -101,7 +101,7 @@ impl SimpleEntityHandler for OverRidingStyledItemHandler {
         let item_id = buf.emit_representation_item_ref(osi.item)?;
         let mut style_refs = Vec::with_capacity(osi.styles.len());
         for psa_id in osi.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
         }
         let over_ridden_step_id = buf.styled_item_step_ids[osi.over_ridden_style.0 as usize];
         Ok(buf.push_simple(

@@ -108,7 +108,7 @@ impl SimpleEntityHandler for ContextDependentOverRidingStyledItemHandler {
         let item_id = buf.emit_representation_item_ref(cd.item)?;
         let mut style_refs = Vec::with_capacity(cd.styles.len());
         for psa_id in cd.styles {
-            style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
+            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
         }
         let over_ridden_step_id = buf.styled_item_step_ids[cd.over_ridden_style.0 as usize];
         let mut context_refs = Vec::with_capacity(cd.style_context.len());

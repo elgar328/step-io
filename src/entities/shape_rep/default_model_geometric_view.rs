@@ -83,7 +83,7 @@ impl SimpleEntityHandler for DefaultModelGeometricViewHandler {
             of_shape_step,
         }: DefaultModelGeometricViewWriteInput,
     ) -> Result<u64, WriteError> {
-        let item_step = buf.viz_camera_model_step_ids[view.item.0 as usize];
+        let item_step = buf.step_id(view.item);
         let rep_step = buf.representation_step_ids[view.rep.0 as usize];
         Ok(buf.push_simple(
             "DEFAULT_MODEL_GEOMETRIC_VIEW",
