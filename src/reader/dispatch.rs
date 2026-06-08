@@ -63,10 +63,11 @@ fn direct_refs_attr(a: &Attribute, out: &mut Vec<u64>) {
 }
 
 /// Topological order of the DATA-section instances (dependencies first) via
-/// Kahn's algorithm with a `#N` tie-break (deterministic). Returns the order
-/// of all *acyclic* nodes; nodes in a reference cycle never reach in-degree 0
-/// and are **excluded** (the caller flags them — see the error-on-cycle
-/// policy). The corpus is a verified DAG, so this is purely defensive.
+/// Kahn's algorithm with a `#N` tie-break (deterministic). Self-edges are
+/// skipped (a schema-mandated self-reference is resolved by the handler, not
+/// by ordering), so a self-referential instance is ordered normally. Nodes in
+/// a genuine *multi-node* cycle never reach in-degree 0 and are **excluded**
+/// (the caller flags them — see the error-on-cycle policy).
 fn topo_order(graph: &EntityGraph) -> Vec<u64> {
     let n = graph.entities.len();
     let mut in_degree: HashMap<u64, usize> = HashMap::with_capacity(n);
@@ -79,9 +80,17 @@ fn topo_order(graph: &EntityGraph) -> Vec<u64> {
         refs.dedup();
         let mut deg = 0usize;
         for &t in &refs {
-            // Edge t -> id (t must precede id). Self-refs and refs to absent
-            // instances are kept in the degree so a self-loop is treated as a
-            // cycle (node excluded) rather than silently processed.
+            // A self-reference (`t == id`) cannot be an ordering dependency —
+            // an instance can't be built before itself. Schema-mandated
+            // self-refs (EXPRESS `dimensional_size_with_datum_feature.WR1:
+            // applies_to :=: SELF`) are resolved by the handler, not by topo
+            // ordering, so skip the self-edge. Multi-node cycles still leave
+            // their nodes excluded (the caller flags them).
+            if t == id {
+                continue;
+            }
+            // Edge t -> id (t must precede id). Refs to absent instances are
+            // ignored (a dangling ref doesn't constrain ordering).
             if graph.entities.contains_key(&t) {
                 dependents.entry(t).or_default().push(id);
                 deg += 1;
@@ -195,10 +204,10 @@ impl ReaderContext {
         validate_registry_no_ambiguity();
         let order = topo_order(graph);
         if order.len() < graph.entities.len() {
-            // Reference cycle / self-loop: the unprocessed nodes can't be built
+            // Multi-node reference cycle: the unprocessed nodes can't be built
             // by the resolve-then-construct reader (chicken-and-egg). Flag as
-            // malformed (error-on-cycle policy). Corpus is a verified DAG, so
-            // this never triggers in practice.
+            // malformed (error-on-cycle policy). Self-edges are skipped by
+            // `topo_order`, so this only triggers for genuine multi-node cycles.
             let unresolved = graph.entities.len() - order.len();
             self.warnings
                 .push(crate::ir::error::ConvertError::UnexpectedEntityForm {
@@ -477,5 +486,25 @@ mod topo_tests {
         let order = topo_order(&g);
         // #3 is acyclic and processable; #1/#2 (cycle) are excluded.
         assert_eq!(order, vec![3], "only the acyclic leaf is ordered");
+    }
+
+    #[test]
+    fn self_reference_is_ordered_not_excluded() {
+        // #2 references itself (the EXPRESS WR1 `applies_to :=: SELF` shape,
+        // e.g. DIMENSIONAL_SIZE_WITH_DATUM_FEATURE). The self-edge must be
+        // skipped so #2 is ordered after its real dependency #1, and the
+        // dependent #3 follows — not dropped as a cycle.
+        let g = graph("#1=A('');\n#2=B('',#1,#2);\n#3=C('',#2);");
+        let order = topo_order(&g);
+        assert_eq!(
+            order.len(),
+            3,
+            "self-ref node and its dependent are ordered"
+        );
+        assert!(pos(&order, 1) < pos(&order, 2), "real dependency precedes");
+        assert!(
+            pos(&order, 2) < pos(&order, 3),
+            "self-ref node precedes dependent"
+        );
     }
 }
