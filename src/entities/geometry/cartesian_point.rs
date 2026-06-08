@@ -56,8 +56,9 @@ impl SimpleEntityHandler for CartesianPointHandler {
     }
 
     fn write(buf: &mut WriteBuffer, id: PointId) -> Result<u64, WriteError> {
-        if let Some(&n) = buf.point_ids.get(&id) {
-            return Ok(n);
+        let cached = buf.step_id(id);
+        if cached != 0 {
+            return Ok(cached);
         }
         let p = buf
             .model
@@ -84,7 +85,7 @@ impl SimpleEntityHandler for CartesianPointHandler {
                 ],
             },
         });
-        buf.point_ids.insert(id, n);
+        buf.set_step_id(id, n);
         Ok(n)
     }
 }

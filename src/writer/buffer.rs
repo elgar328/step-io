@@ -8,14 +8,9 @@
 //! - [`units`] — `SI_UNIT`-based unit context
 //! - [`assembly`] — single-part PRODUCT chain + ABSR + SDR
 
-use std::collections::HashMap;
-
 use super::WriteError;
 use super::entity::WriterEntity;
-use crate::ir::{
-    CurveId, DirectionId, Placement1dId, Placement3dId, PointId, ProductId, StepModel, SurfaceId,
-    VertexId,
-};
+use crate::ir::{ProductId, StepModel};
 
 pub(crate) mod assembly;
 pub(crate) mod geometry;
@@ -37,13 +32,6 @@ pub(crate) struct WriteBuffer<'m> {
     /// Emitted STEP id per arena entry, keyed by arena-id type. Replaces the
     /// former hand-declared `*_step_ids: Vec<u64>` fields (arena-1:1 caches).
     pub(crate) step_ids: step_id_cache::StepIdCache,
-    pub(crate) point_ids: HashMap<PointId, u64>,
-    pub(crate) direction_ids: HashMap<DirectionId, u64>,
-    pub(crate) placement_ids: HashMap<Placement3dId, u64>,
-    pub(crate) placement_1d_ids: HashMap<Placement1dId, u64>,
-    pub(crate) curve_ids: HashMap<CurveId, u64>,
-    pub(crate) surface_ids: HashMap<SurfaceId, u64>,
-    pub(crate) vertex_ids: HashMap<VertexId, u64>,
     /// STEP entity ids of every emitted `REPRESENTATION_CONTEXT` complex
     /// entity, indexed by `UnitContextId.0`. Populated up-front in `emit_all`
     /// so every representation emitter can resolve its `Option<UnitContextId>`
@@ -123,13 +111,6 @@ impl<'m> WriteBuffer<'m> {
             next_id: 0,
             entities: Vec::new(),
             step_ids: step_id_cache::StepIdCache::default(),
-            point_ids: HashMap::new(),
-            direction_ids: HashMap::new(),
-            placement_ids: HashMap::new(),
-            placement_1d_ids: HashMap::new(),
-            curve_ids: HashMap::new(),
-            surface_ids: HashMap::new(),
-            vertex_ids: HashMap::new(),
             unit_context_ids: Vec::new(),
             length_dim_exp_step: None,
             dimensionless_dim_exp_step: None,

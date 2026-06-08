@@ -42,8 +42,9 @@ impl SimpleEntityHandler for VertexPointHandler {
     }
 
     fn write(buf: &mut WriteBuffer, id: VertexId) -> Result<u64, WriteError> {
-        if let Some(&n) = buf.vertex_ids.get(&id) {
-            return Ok(n);
+        let cached = buf.step_id(id);
+        if cached != 0 {
+            return Ok(cached);
         }
         let v = buf
             .model
@@ -67,7 +68,7 @@ impl SimpleEntityHandler for VertexPointHandler {
                 ],
             },
         });
-        buf.vertex_ids.insert(id, n);
+        buf.set_step_id(id, n);
         Ok(n)
     }
 }

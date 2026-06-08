@@ -53,8 +53,9 @@ impl SimpleEntityHandler for DirectionHandler {
     }
 
     fn write(buf: &mut WriteBuffer, id: DirectionId) -> Result<u64, WriteError> {
-        if let Some(&n) = buf.direction_ids.get(&id) {
-            return Ok(n);
+        let cached = buf.step_id(id);
+        if cached != 0 {
+            return Ok(cached);
         }
         let d = direction_at(buf.model, id)?;
         let n = buf.fresh();
@@ -72,7 +73,7 @@ impl SimpleEntityHandler for DirectionHandler {
                 ],
             },
         });
-        buf.direction_ids.insert(id, n);
+        buf.set_step_id(id, n);
         Ok(n)
     }
 }

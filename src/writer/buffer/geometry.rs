@@ -38,8 +38,9 @@ impl WriteBuffer<'_> {
     }
 
     pub(crate) fn emit_curve(&mut self, id: CurveId) -> Result<u64, WriteError> {
-        if let Some(&n) = self.curve_ids.get(&id) {
-            return Ok(n);
+        let cached = self.step_id(id);
+        if cached != 0 {
+            return Ok(cached);
         }
         let curve = curve_at(self.model, id)?.clone();
         let n = match curve {
@@ -54,7 +55,7 @@ impl WriteBuffer<'_> {
             Curve::Parabola(p) => self.emit_parabola(p)?,
             Curve::OffsetCurve3d(oc) => self.emit_offset_curve_3d(oc)?,
         };
-        self.curve_ids.insert(id, n);
+        self.set_step_id(id, n);
         Ok(n)
     }
 
@@ -111,8 +112,9 @@ impl WriteBuffer<'_> {
     }
 
     pub(crate) fn emit_surface(&mut self, id: SurfaceId) -> Result<u64, WriteError> {
-        if let Some(&n) = self.surface_ids.get(&id) {
-            return Ok(n);
+        let cached = self.step_id(id);
+        if cached != 0 {
+            return Ok(cached);
         }
         let surface = surface_at(self.model, id)?.clone();
         let n = match surface {
@@ -133,7 +135,7 @@ impl WriteBuffer<'_> {
                 CurveBoundedSurfaceHandler::write(self, cbs)?
             }
         };
-        self.surface_ids.insert(id, n);
+        self.set_step_id(id, n);
         Ok(n)
     }
 

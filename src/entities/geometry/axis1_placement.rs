@@ -44,8 +44,9 @@ impl SimpleEntityHandler for Axis1PlacementHandler {
     }
 
     fn write(buf: &mut WriteBuffer, id: Placement1dId) -> Result<u64, WriteError> {
-        if let Some(&n) = buf.placement_1d_ids.get(&id) {
-            return Ok(n);
+        let cached = buf.step_id(id);
+        if cached != 0 {
+            return Ok(cached);
         }
         let placement = buf.model.geometry.placements_1d[id];
         let loc = CartesianPointHandler::write(buf, placement.location)?;
@@ -62,7 +63,7 @@ impl SimpleEntityHandler for Axis1PlacementHandler {
                 ],
             },
         });
-        buf.placement_1d_ids.insert(id, n);
+        buf.set_step_id(id, n);
         Ok(n)
     }
 }
