@@ -28,7 +28,7 @@ impl SimpleEntityHandler for PointStyleHandler {
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let marker = match &attrs[1] {
             Attribute::EntityRef(n) => {
-                let Some(&id) = ctx.viz_pre_defined_marker_id_map.get(n) else {
+                let Some(id) = ctx.id_cache.get::<crate::ir::id::PreDefinedMarkerId>(*n) else {
                     return Ok(());
                 };
                 Marker::Predefined(id)
@@ -58,7 +58,7 @@ impl SimpleEntityHandler for PointStyleHandler {
                 _ => return Ok(()),
             },
             Attribute::EntityRef(n) => {
-                let Some(&id) = ctx.mwu_id_map.get(n) else {
+                let Some(id) = ctx.id_cache.get::<crate::ir::id::MeasureWithUnitId>(*n) else {
                     return Ok(());
                 };
                 MarkerSize::MeasureWithUnit(id)
@@ -66,7 +66,7 @@ impl SimpleEntityHandler for PointStyleHandler {
             _ => return Ok(()),
         };
         let colour_ref = read_entity_ref(attrs, 3, entity_id, "marker_colour")?;
-        let Some(&marker_colour) = ctx.viz_colour_id_map.get(&colour_ref) else {
+        let Some(marker_colour) = ctx.id_cache.get::<crate::ir::id::ColourId>(colour_ref) else {
             return Ok(());
         };
         let viz = ctx

@@ -41,7 +41,7 @@ impl SimpleEntityHandler for CameraImageHandler {
             return Ok(());
         };
         let mi_id = ctx.mapped_items.push(MappedItem::CameraImage(body));
-        ctx.mapped_item_id_map.insert(entity_id, mi_id);
+        ctx.id_cache.insert(entity_id, mi_id);
         Ok(())
     }
 
@@ -90,7 +90,7 @@ impl ComplexEntityHandler for CameraImage3dWithScaleHandler {
         let mi_id = ctx
             .mapped_items
             .push(MappedItem::CameraImage3dWithScale(body));
-        ctx.mapped_item_id_map.insert(entity_id, mi_id);
+        ctx.id_cache.insert(entity_id, mi_id);
         Ok(())
     }
 
@@ -132,8 +132,12 @@ fn resolve_camera_image_body(
     source_ref: u64,
     target_ref: u64,
 ) -> Option<CameraImage> {
-    let &mapping_source = ctx.representation_map_id_map.get(&source_ref)?;
-    let &mapping_target = ctx.planar_extent_id_map.get(&target_ref)?;
+    let mapping_source = ctx
+        .id_cache
+        .get::<crate::ir::id::RepresentationMapId>(source_ref)?;
+    let mapping_target = ctx
+        .id_cache
+        .get::<crate::ir::id::PlanarExtentId>(target_ref)?;
     Some(CameraImage {
         name,
         mapping_source,

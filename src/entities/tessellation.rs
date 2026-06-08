@@ -50,7 +50,7 @@ impl SimpleEntityHandler for CoordinatesListHandler {
                 npoints,
                 position_coords,
             }));
-        ctx.tessellated_item_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -88,7 +88,10 @@ impl SimpleEntityHandler for ComplexTriangulatedFaceHandler {
         let triangle_strips = read_integer_grid(attrs, 6, entity_id, "triangle_strips")?;
         let triangle_fans = read_integer_grid(attrs, 7, entity_id, "triangle_fans")?;
 
-        let Some(&coordinates) = ctx.tessellated_item_id_map.get(&coordinates_ref) else {
+        let Some(coordinates) = ctx
+            .id_cache
+            .get::<crate::ir::id::TessellatedItemId>(coordinates_ref)
+        else {
             return Ok(()); // coordinates_list dropped — drop the face too
         };
         let geometric_link =
@@ -104,7 +107,7 @@ impl SimpleEntityHandler for ComplexTriangulatedFaceHandler {
             triangle_strips,
             triangle_fans,
         });
-        ctx.tessellated_face_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -147,7 +150,10 @@ impl SimpleEntityHandler for TessellatedCurveSetHandler {
         let coordinates_ref = read_entity_ref(attrs, 1, entity_id, "coordinates")?;
         let line_strips = read_integer_grid(attrs, 2, entity_id, "line_strips")?;
 
-        let Some(&coordinates) = ctx.tessellated_item_id_map.get(&coordinates_ref) else {
+        let Some(coordinates) = ctx
+            .id_cache
+            .get::<crate::ir::id::TessellatedItemId>(coordinates_ref)
+        else {
             return Ok(()); // coordinates_list dropped — drop the curve set too
         };
 
@@ -158,7 +164,7 @@ impl SimpleEntityHandler for TessellatedCurveSetHandler {
                 coordinates,
                 line_strips,
             }));
-        ctx.tessellated_item_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -196,7 +202,10 @@ impl SimpleEntityHandler for ComplexTriangulatedSurfaceSetHandler {
         let triangle_strips = read_integer_grid(attrs, 5, entity_id, "triangle_strips")?;
         let triangle_fans = read_integer_grid(attrs, 6, entity_id, "triangle_fans")?;
 
-        let Some(&coordinates) = ctx.tessellated_item_id_map.get(&coordinates_ref) else {
+        let Some(coordinates) = ctx
+            .id_cache
+            .get::<crate::ir::id::TessellatedItemId>(coordinates_ref)
+        else {
             return Ok(()); // coordinates_list dropped — drop the surface set too
         };
 
@@ -211,7 +220,7 @@ impl SimpleEntityHandler for ComplexTriangulatedSurfaceSetHandler {
                 triangle_strips,
                 triangle_fans,
             });
-        ctx.tessellated_surface_set_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -239,13 +248,22 @@ pub(crate) fn resolve_tessellated_item_ref(
     ctx: &ReaderContext,
     item_ref: u64,
 ) -> Option<TessellatedItemRef> {
-    if let Some(&id) = ctx.tessellated_item_id_map.get(&item_ref) {
+    if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::id::TessellatedItemId>(item_ref)
+    {
         return Some(TessellatedItemRef::Item(id));
     }
-    if let Some(&id) = ctx.tessellated_face_id_map.get(&item_ref) {
+    if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::id::TessellatedFaceId>(item_ref)
+    {
         return Some(TessellatedItemRef::Face(id));
     }
-    if let Some(&id) = ctx.tessellated_surface_set_id_map.get(&item_ref) {
+    if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::id::TessellatedSurfaceSetId>(item_ref)
+    {
         return Some(TessellatedItemRef::SurfaceSet(id));
     }
     None
@@ -278,7 +296,7 @@ impl SimpleEntityHandler for TessellatedGeometricSetHandler {
             .push(TessellatedItem::TessellatedGeometricSet(
                 TessellatedGeometricSet { name, children },
             ));
-        ctx.tessellated_item_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -316,7 +334,8 @@ impl SimpleEntityHandler for TessellatedSolidHandler {
             .iter()
             .filter_map(|&r| resolve_tessellated_item_ref(ctx, r))
             .collect();
-        let geometric_link = geometric_link_ref.and_then(|r| ctx.solid_map.get(&r).copied());
+        let geometric_link =
+            geometric_link_ref.and_then(|r| ctx.id_cache.get::<crate::ir::id::SolidId>(r));
 
         let id = ctx
             .tessellated_items
@@ -325,7 +344,7 @@ impl SimpleEntityHandler for TessellatedSolidHandler {
                 items,
                 geometric_link,
             }));
-        ctx.tessellated_item_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -381,7 +400,7 @@ impl SimpleEntityHandler for TessellatedShellHandler {
                 items,
                 topological_link,
             }));
-        ctx.tessellated_item_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -455,7 +474,7 @@ impl SimpleEntityHandler for RepositionedTessellatedItemHandler {
             .push(TessellatedItem::RepositionedTessellatedItem(
                 RepositionedTessellatedItem { name, location },
             ));
-        ctx.tessellated_item_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -522,7 +541,7 @@ impl ComplexEntityHandler for RepositionedTessellatedGeometricSetHandler {
                     children,
                 },
             ));
-        ctx.tessellated_item_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

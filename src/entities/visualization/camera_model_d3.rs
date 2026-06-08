@@ -49,7 +49,7 @@ impl SimpleEntityHandler for CameraModelD3Handler {
                 view_reference_system,
                 perspective_of_volume,
             }));
-        ctx.viz_camera_model_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

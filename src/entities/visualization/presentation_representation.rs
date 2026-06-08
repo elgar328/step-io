@@ -40,7 +40,7 @@ impl SimpleEntityHandler for PresentationViewHandler {
             .get_or_insert_with(VisualizationPool::default)
             .presentation_representations
             .push(PresentationRepresentation::View(data));
-        ctx.presentation_representation_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -70,7 +70,7 @@ impl SimpleEntityHandler for PresentationAreaHandler {
             .get_or_insert_with(VisualizationPool::default)
             .presentation_representations
             .push(PresentationRepresentation::Area(data));
-        ctx.presentation_representation_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -97,7 +97,7 @@ impl SimpleEntityHandler for PresentationSetHandler {
             .get_or_insert_with(VisualizationPool::default)
             .presentation_sets
             .push(PresentationSet);
-        ctx.presentation_set_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

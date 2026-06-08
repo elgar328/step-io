@@ -36,10 +36,10 @@ impl SimpleEntityHandler for ModelGeometricViewHandler {
         };
         let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
         let rep_ref = read_entity_ref(attrs, 3, entity_id, "rep")?;
-        let Some(&item) = ctx.viz_camera_model_id_map.get(&item_ref) else {
+        let Some(item) = ctx.id_cache.get::<crate::ir::id::CameraModelId>(item_ref) else {
             return Ok(());
         };
-        let Some(&rep) = ctx.repr_id_map.get(&rep_ref) else {
+        let Some(rep) = ctx.id_cache.get::<crate::ir::id::RepresentationId>(rep_ref) else {
             return Ok(());
         };
         let co_id = ctx
@@ -52,7 +52,7 @@ impl SimpleEntityHandler for ModelGeometricViewHandler {
                 },
             ));
         // Let PROPERTY_DEFINITION.definition resolve an MGV target (mirrors CIWR).
-        ctx.characterized_object_id_map.insert(entity_id, co_id);
+        ctx.id_cache.insert(entity_id, co_id);
         Ok(())
     }
 

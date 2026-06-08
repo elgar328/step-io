@@ -44,7 +44,7 @@ impl SimpleEntityHandler for ManifoldSolidBrepHandler {
             name,
         };
         let id = ctx.topology.solids.push(solid);
-        ctx.solid_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

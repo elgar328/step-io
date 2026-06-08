@@ -24,14 +24,14 @@ impl SimpleEntityHandler for SymbolColourHandler {
     ) -> Result<(), ConvertError> {
         check_count(attrs, 1, entity_id, "SYMBOL_COLOUR")?;
         let colour_ref = read_entity_ref(attrs, 0, entity_id, "colour_of_symbol")?;
-        let Some(&colour_of_symbol) = ctx.viz_colour_id_map.get(&colour_ref) else {
+        let Some(colour_of_symbol) = ctx.id_cache.get::<crate::ir::id::ColourId>(colour_ref) else {
             return Ok(());
         };
         let viz = ctx
             .visualization
             .get_or_insert_with(VisualizationPool::default);
         let id = viz.symbol_colours.push(SymbolColour { colour_of_symbol });
-        ctx.symbol_colour_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

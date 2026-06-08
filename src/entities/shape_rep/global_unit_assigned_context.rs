@@ -237,7 +237,7 @@ fn resolve_unit_refs(
 ) -> Vec<NamedUnitId> {
     let mut units = Vec::with_capacity(unit_refs.len());
     for r in unit_refs {
-        if let Some(&nu_id) = ctx.named_unit_id_map.get(r) {
+        if let Some(nu_id) = ctx.id_cache.get::<crate::ir::id::NamedUnitId>(*r) {
             units.push(nu_id);
         } else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {

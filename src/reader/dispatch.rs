@@ -147,10 +147,13 @@ impl ReaderContext {
             let Some(base_entity_id) = base_entity else {
                 continue;
             };
-            let Some(&base_nuid) = self.named_unit_id_map.get(&base_entity_id) else {
+            let Some(base_nuid) = self
+                .id_cache
+                .get::<crate::ir::id::NamedUnitId>(base_entity_id)
+            else {
                 continue;
             };
-            let Some(&outer_nuid) = self.named_unit_id_map.get(&outer_id) else {
+            let Some(outer_nuid) = self.id_cache.get::<crate::ir::id::NamedUnitId>(outer_id) else {
                 continue;
             };
             match &mut self.named_units_arena.items[outer_nuid.0 as usize] {

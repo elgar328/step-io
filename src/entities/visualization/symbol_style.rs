@@ -25,7 +25,10 @@ impl SimpleEntityHandler for SymbolStyleHandler {
         check_count(attrs, 2, entity_id, "SYMBOL_STYLE")?;
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let colour_ref = read_entity_ref(attrs, 1, entity_id, "style_of_symbol")?;
-        let Some(&style_of_symbol) = ctx.symbol_colour_id_map.get(&colour_ref) else {
+        let Some(style_of_symbol) = ctx
+            .id_cache
+            .get::<crate::ir::id::SymbolColourId>(colour_ref)
+        else {
             return Ok(());
         };
         let viz = ctx

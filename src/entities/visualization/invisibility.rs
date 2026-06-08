@@ -49,18 +49,21 @@ impl SimpleEntityHandler for InvisibilityHandler {
         }
         let mut invisible_items = Vec::with_capacity(refs.len());
         for r in refs {
-            if let Some(&id) = ctx.viz_styled_item_id_map.get(&r) {
+            if let Some(id) = ctx.id_cache.get::<crate::ir::id::StyledItemId>(r) {
                 invisible_items.push(InvisibleItem::StyledItem(id));
-            } else if let Some(&id) = ctx.annotation_occurrence_id_map.get(&r) {
+            } else if let Some(id) = ctx.id_cache.get::<crate::ir::id::AnnotationOccurrenceId>(r) {
                 // annotation_occurrence is an EXPRESS styled_item subtype but
                 // lives in a separate step-io arena — probe it alongside
                 // viz_styled_item.
                 invisible_items.push(InvisibleItem::AnnotationOccurrence(id));
-            } else if let Some(&id) = ctx.repr_id_map.get(&r) {
+            } else if let Some(id) = ctx.id_cache.get::<crate::ir::id::RepresentationId>(r) {
                 invisible_items.push(InvisibleItem::Representation(id));
-            } else if let Some(&id) = ctx.draughting_callout_id_map.get(&r) {
+            } else if let Some(id) = ctx.id_cache.get::<crate::ir::id::DraughtingCalloutId>(r) {
                 invisible_items.push(InvisibleItem::DraughtingCallout(id));
-            } else if let Some(&id) = ctx.presentation_layer_assignment_id_map.get(&r) {
+            } else if let Some(id) = ctx
+                .id_cache
+                .get::<crate::ir::id::PresentationLayerAssignmentId>(r)
+            {
                 invisible_items.push(InvisibleItem::PresentationLayerAssignment(id));
             }
             // Dropped item instances are skipped per-item — the entity survives
@@ -89,7 +92,7 @@ impl SimpleEntityHandler for InvisibilityHandler {
                 invisible_items,
                 presentation_context: None,
             });
-        ctx.invisibility_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

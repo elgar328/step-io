@@ -24,7 +24,7 @@ impl SimpleEntityHandler for TextStyleForDefinedFontHandler {
     ) -> Result<(), ConvertError> {
         check_count(attrs, 1, entity_id, "TEXT_STYLE_FOR_DEFINED_FONT")?;
         let colour_ref = read_entity_ref(attrs, 0, entity_id, "text_colour")?;
-        let Some(&text_colour) = ctx.viz_colour_id_map.get(&colour_ref) else {
+        let Some(text_colour) = ctx.id_cache.get::<crate::ir::id::ColourId>(colour_ref) else {
             return Ok(());
         };
         let viz = ctx
@@ -33,7 +33,7 @@ impl SimpleEntityHandler for TextStyleForDefinedFontHandler {
         let id = viz
             .text_styles_for_defined_font
             .push(TextStyleForDefinedFont { text_colour });
-        ctx.text_style_for_defined_font_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

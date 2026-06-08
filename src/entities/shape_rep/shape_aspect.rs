@@ -62,7 +62,10 @@ impl SimpleEntityHandler for ShapeAspectHandler {
         let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_step_id) else {
             return Ok(());
         };
-        let Some(&product_id) = ctx.product_arena_map.get(&product_step_id) else {
+        let Some(product_id) = ctx
+            .id_cache
+            .get::<crate::ir::id::ProductId>(product_step_id)
+        else {
             return Ok(());
         };
 

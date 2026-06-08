@@ -38,7 +38,7 @@ impl SimpleEntityHandler for DraughtingPreDefinedColourHandler {
         let id = pool
             .colours
             .push(Colour::PreDefined(DraughtingPreDefinedColour { name }));
-        ctx.viz_colour_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

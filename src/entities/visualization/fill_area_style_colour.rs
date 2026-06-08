@@ -29,7 +29,7 @@ impl SimpleEntityHandler for FillAreaStyleColourHandler {
         check_count(attrs, 2, entity_id, "FILL_AREA_STYLE_COLOUR")?;
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let colour_ref = read_entity_ref(attrs, 1, entity_id, "fill_colour")?;
-        let Some(&colour) = ctx.viz_colour_id_map.get(&colour_ref) else {
+        let Some(colour) = ctx.id_cache.get::<crate::ir::id::ColourId>(colour_ref) else {
             return Ok(()); // symmetric ignorance — unknown ref skipped
         };
         ctx.viz_fasc_map

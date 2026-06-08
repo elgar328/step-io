@@ -28,7 +28,10 @@ impl SimpleEntityHandler for TextStyleWithBoxCharacteristicsHandler {
         check_count(attrs, 3, entity_id, "TEXT_STYLE_WITH_BOX_CHARACTERISTICS")?;
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let appearance_ref = read_entity_ref(attrs, 1, entity_id, "character_appearance")?;
-        let Some(&t4df_id) = ctx.text_style_for_defined_font_id_map.get(&appearance_ref) else {
+        let Some(t4df_id) = ctx
+            .id_cache
+            .get::<crate::ir::id::TextStyleForDefinedFontId>(appearance_ref)
+        else {
             // SELECT may target an unmodelled `character_glyph_style_*`
             // member; silently drop the occurrence.
             return Ok(());
@@ -58,7 +61,7 @@ impl SimpleEntityHandler for TextStyleWithBoxCharacteristicsHandler {
                 characteristics,
             },
         ));
-        ctx.text_style_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

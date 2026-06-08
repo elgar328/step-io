@@ -55,7 +55,10 @@ impl SimpleEntityHandler for MakeFromUsageOptionHandler {
             ctx.resolve_product_by_pdef(entity_id, relating_pdef, "relating_product_definition")?;
         let related =
             ctx.resolve_product_by_pdef(entity_id, related_pdef, "related_product_definition")?;
-        let Some(&quantity) = ctx.mwu_id_map.get(&quantity_ref) else {
+        let Some(quantity) = ctx
+            .id_cache
+            .get::<crate::ir::id::MeasureWithUnitId>(quantity_ref)
+        else {
             // Unsupported MWU subtype — silently drop, matching other MWU consumers.
             return Ok(());
         };
@@ -74,7 +77,7 @@ impl SimpleEntityHandler for MakeFromUsageOptionHandler {
                         quantity,
                     },
                 ));
-        ctx.pdr_id_map.insert(entity_id, arena_id);
+        ctx.id_cache.insert(entity_id, arena_id);
         Ok(())
     }
 

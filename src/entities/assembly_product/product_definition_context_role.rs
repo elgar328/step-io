@@ -29,7 +29,7 @@ impl SimpleEntityHandler for ProductDefinitionContextRoleHandler {
         let id = ctx
             .product_definition_context_roles
             .push(ProductDefinitionContextRole { name, description });
-        ctx.pdc_role_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

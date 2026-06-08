@@ -79,7 +79,7 @@ impl SimpleEntityHandler for DraughtingModelHandler {
                 context,
                 form: DraughtingModelForm::Simple,
             }));
-        ctx.repr_id_map.insert(entity_id, repr_id);
+        ctx.id_cache.insert(entity_id, repr_id);
         Ok(())
     }
 

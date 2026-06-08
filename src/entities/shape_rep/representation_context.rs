@@ -40,7 +40,7 @@ impl SimpleEntityHandler for RepresentationContextHandler {
             context_type,
             coordinate_space_dimension: None,
         });
-        ctx.unitless_context_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

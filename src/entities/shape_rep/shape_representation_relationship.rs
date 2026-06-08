@@ -59,9 +59,10 @@ impl SimpleEntityHandler for ShapeRepresentationRelationshipHandler {
             _ => {}
         }
 
-        let (Some(&r1_id), Some(&r2_id)) =
-            (ctx.repr_id_map.get(&rep_1), ctx.repr_id_map.get(&rep_2))
-        else {
+        let (Some(r1_id), Some(r2_id)) = (
+            ctx.id_cache.get::<crate::ir::id::RepresentationId>(rep_1),
+            ctx.id_cache.get::<crate::ir::id::RepresentationId>(rep_2),
+        ) else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                 entity_id,
                 detail: format!(

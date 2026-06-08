@@ -146,7 +146,7 @@ fn register_named_length(
             cbu_factor_bare: ctx.length_cbu_factor_bare.contains(&entity_id),
         };
         let id = ctx.named_units_arena.push(NamedUnit::Length(flavor));
-        ctx.named_unit_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
     }
 }
 

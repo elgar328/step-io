@@ -42,7 +42,7 @@ impl SimpleEntityHandler for DraughtingPreDefinedCurveFontHandler {
             .push(PreDefinedCurveFont::Draughting(
                 DraughtingPreDefinedCurveFont { name },
             ));
-        ctx.viz_pre_defined_curve_font_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

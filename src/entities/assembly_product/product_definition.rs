@@ -58,7 +58,9 @@ pub(crate) fn read_product_definition_body(
     // resolves inline (the formation handler ran first under topo dispatch);
     // `context` is filled later by `resolve_product_contexts` (the context id
     // maps populate after this pass — same deferral as `Product.pdef_context`).
-    let formation = ctx.formation_arena_map.get(&formation_ref).copied();
+    let formation = ctx
+        .id_cache
+        .get::<crate::ir::id::ProductDefinitionFormationId>(formation_ref);
     let pd_id = ctx.product_definitions.push(ProductDefinition {
         id,
         description,
@@ -66,8 +68,8 @@ pub(crate) fn read_product_definition_body(
         context: None,
         documentation_ids: Vec::new(),
     });
-    ctx.pdef_arena_map.insert(entity_id, pd_id);
-    if let Some(&pid) = ctx.product_arena_map.get(&product_ref) {
+    ctx.id_cache.insert(entity_id, pd_id);
+    if let Some(pid) = ctx.id_cache.get::<crate::ir::id::ProductId>(product_ref) {
         ctx.assembly_products[pid].pdef = Some(pd_id);
         if let Some(pdc_ref) = pdc_step_ref {
             ctx.product_pdc_step_refs.insert(pid, pdc_ref);

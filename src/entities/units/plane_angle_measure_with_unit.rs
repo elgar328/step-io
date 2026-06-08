@@ -31,14 +31,14 @@ impl SimpleEntityHandler for PlaneAngleMeasureWithUnitHandler {
         else {
             return Ok(());
         };
-        let Some(&unit_id) = ctx.named_unit_id_map.get(&unit_step) else {
+        let Some(unit_id) = ctx.id_cache.get::<crate::ir::id::NamedUnitId>(unit_step) else {
             return Ok(());
         };
         let id = ctx.mwu_arena.push(MeasureWithUnit::PlaneAngle {
             value,
             unit: unit_id,
         });
-        ctx.mwu_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

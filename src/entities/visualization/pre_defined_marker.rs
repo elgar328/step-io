@@ -41,7 +41,7 @@ impl SimpleEntityHandler for PreDefinedMarkerHandler {
         let id = viz
             .pre_defined_markers
             .push(PreDefinedMarker::Plain(PreDefinedMarkerData { name }));
-        ctx.viz_pre_defined_marker_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -72,7 +72,7 @@ impl SimpleEntityHandler for PreDefinedPointMarkerSymbolHandler {
             .push(PreDefinedMarker::PointMarkerSymbol(
                 PreDefinedPointMarkerSymbol { name },
             ));
-        ctx.viz_pre_defined_marker_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

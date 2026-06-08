@@ -54,7 +54,10 @@ impl SimpleEntityHandler for ProductDefinitionShapeHandler {
             // emit sees it. The NAUO-targeted PDS is materialised later, in
             // `materialize_nauo_owned_pds`, once the ACU arena exists.
             if let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_ref) {
-                if let Some(&product_id) = ctx.product_arena_map.get(&product_step_id) {
+                if let Some(product_id) = ctx
+                    .id_cache
+                    .get::<crate::ir::id::ProductId>(product_step_id)
+                {
                     let pd_id = ctx
                         .properties
                         .get_or_insert_with(PropertyPool::default)

@@ -117,7 +117,7 @@ fn register_named_plane_angle(
             dim_exp,
         };
         let id = ctx.named_units_arena.push(NamedUnit::PlaneAngle(flavor));
-        ctx.named_unit_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
     }
 }
 

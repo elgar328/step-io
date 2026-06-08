@@ -43,7 +43,7 @@ impl SimpleEntityHandler for ColourRgbHandler {
             green,
             blue,
         }));
-        ctx.viz_colour_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

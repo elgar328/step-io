@@ -58,10 +58,13 @@ impl SimpleEntityHandler for SurfaceStyleBoundaryHandler {
 /// id maps that supply the SELECT's members. Returns `None` if neither
 /// map covers the ref — caller drops the carrier entity.
 pub(crate) fn resolve_curve_or_render(ctx: &ReaderContext, ref_id: u64) -> Option<CurveOrRender> {
-    if let Some(&id) = ctx.viz_curve_style_id_map.get(&ref_id) {
+    if let Some(id) = ctx.id_cache.get::<crate::ir::id::CurveStyleId>(ref_id) {
         return Some(CurveOrRender::CurveStyle(id));
     }
-    if let Some(&id) = ctx.viz_ssr_id_map.get(&ref_id) {
+    if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::id::SurfaceStyleRenderingId>(ref_id)
+    {
         return Some(CurveOrRender::SurfaceStyleRendering(id));
     }
     None

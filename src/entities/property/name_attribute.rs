@@ -42,7 +42,7 @@ impl SimpleEntityHandler for NameAttributeHandler {
 
         let named_item = if let Some(product_id) = resolve_product_definition(ctx, item_ref) {
             NameAttributeItem::ProductDefinition(product_id)
-        } else if let Some(&du_id) = ctx.derived_unit_id_map.get(&item_ref) {
+        } else if let Some(du_id) = ctx.id_cache.get::<crate::ir::id::DerivedUnitId>(item_ref) {
             NameAttributeItem::DerivedUnit(du_id)
         } else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
@@ -76,5 +76,5 @@ impl SimpleEntityHandler for NameAttributeHandler {
 
 fn resolve_product_definition(ctx: &ReaderContext, item_ref: u64) -> Option<ProductId> {
     let product_step = ctx.pdef_to_product.get(&item_ref).copied()?;
-    ctx.product_arena_map.get(&product_step).copied()
+    ctx.id_cache.get::<crate::ir::id::ProductId>(product_step)
 }

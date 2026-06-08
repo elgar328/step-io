@@ -66,7 +66,7 @@ impl ComplexEntityHandler for SolidAngleUnitHandler {
             let dim_exp = super::shared::read_named_unit_dim_exp(ctx, parts);
             let flavor = SolidAngleFlavor { unit, dim_exp };
             let id = ctx.named_units_arena.push(NamedUnit::SolidAngle(flavor));
-            ctx.named_unit_id_map.insert(entity_id, id);
+            ctx.id_cache.insert(entity_id, id);
         } else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                 entity_id,

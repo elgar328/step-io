@@ -41,7 +41,7 @@ impl SimpleEntityHandler for PresentationStyleAssignmentHandler {
             .push(PresentationStyleAssignment::Itself(
                 PresentationStyleAssignmentData { styles },
             ));
-        ctx.viz_psa_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -90,7 +90,7 @@ pub(crate) fn parse_psa_styles(
                     styles.push(PsaStyle::Surface(ssu_id));
                 } else if let Some(&ps_id) = ctx.viz_point_style_id_map.get(r) {
                     styles.push(PsaStyle::Point(ps_id));
-                } else if let Some(&cs_id) = ctx.viz_curve_style_id_map.get(r) {
+                } else if let Some(cs_id) = ctx.id_cache.get::<crate::ir::id::CurveStyleId>(*r) {
                     styles.push(PsaStyle::Curve(cs_id));
                 }
                 // Remaining style flavours (FILL_AREA_STYLE direct, SYMBOL_STYLE,

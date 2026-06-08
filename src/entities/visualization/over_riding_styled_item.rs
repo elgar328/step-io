@@ -57,7 +57,10 @@ impl SimpleEntityHandler for OverRidingStyledItemHandler {
 
         let mut styles = Vec::with_capacity(style_refs.len());
         for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+            if let Some(psa_id) = ctx
+                .id_cache
+                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
+            {
                 styles.push(psa_id);
             }
         }
@@ -71,7 +74,10 @@ impl SimpleEntityHandler for OverRidingStyledItemHandler {
             });
             return Ok(());
         };
-        let Some(&over_ridden_style) = ctx.viz_styled_item_id_map.get(&over_ridden_ref) else {
+        let Some(over_ridden_style) = ctx
+            .id_cache
+            .get::<crate::ir::id::StyledItemId>(over_ridden_ref)
+        else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                 entity_id,
                 detail: format!(
@@ -93,7 +99,7 @@ impl SimpleEntityHandler for OverRidingStyledItemHandler {
                 item,
                 over_ridden_style,
             }));
-        ctx.viz_styled_item_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

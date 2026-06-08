@@ -45,10 +45,10 @@ impl SimpleEntityHandler for DefaultModelGeometricViewHandler {
         let of_shape_ref = read_entity_ref(attrs, 6, entity_id, "of_shape")?;
         // attr[7] product_definitional is DERIVE `*` — not read.
 
-        let Some(&item) = ctx.viz_camera_model_id_map.get(&item_ref) else {
+        let Some(item) = ctx.id_cache.get::<crate::ir::id::CameraModelId>(item_ref) else {
             return Ok(());
         };
-        let Some(&rep) = ctx.repr_id_map.get(&rep_ref) else {
+        let Some(rep) = ctx.id_cache.get::<crate::ir::id::RepresentationId>(rep_ref) else {
             return Ok(());
         };
         // of_shape → PRODUCT_DEFINITION_SHAPE → PRODUCT_DEFINITION → ProductId
@@ -59,7 +59,7 @@ impl SimpleEntityHandler for DefaultModelGeometricViewHandler {
         let Some(&product_step) = ctx.pdef_to_product.get(&pdef_step) else {
             return Ok(());
         };
-        let Some(&target) = ctx.product_arena_map.get(&product_step) else {
+        let Some(target) = ctx.id_cache.get::<crate::ir::id::ProductId>(product_step) else {
             return Ok(());
         };
 

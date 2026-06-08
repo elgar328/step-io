@@ -35,7 +35,10 @@ impl SimpleEntityHandler for SurfaceSideStyleHandler {
         for r in style_refs {
             if let Some(&ssfa_id) = ctx.viz_ssfa_id_map.get(&r) {
                 styles.push(SurfaceSideStyleEntry::FillArea(ssfa_id));
-            } else if let Some(&ssr_id) = ctx.viz_ssr_id_map.get(&r) {
+            } else if let Some(ssr_id) = ctx
+                .id_cache
+                .get::<crate::ir::id::SurfaceStyleRenderingId>(r)
+            {
                 styles.push(SurfaceSideStyleEntry::Rendering(ssr_id));
             }
         }

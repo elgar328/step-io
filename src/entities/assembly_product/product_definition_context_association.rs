@@ -38,13 +38,22 @@ impl SimpleEntityHandler for ProductDefinitionContextAssociationHandler {
         let Some(&pdef_product_eid) = ctx.pdef_to_product.get(&def_ref) else {
             return Ok(());
         };
-        let Some(&pid) = ctx.product_arena_map.get(&pdef_product_eid) else {
+        let Some(pid) = ctx
+            .id_cache
+            .get::<crate::ir::id::ProductId>(pdef_product_eid)
+        else {
             return Ok(());
         };
-        let Some(&pdcid) = ctx.product_definition_context_id_map.get(&frame_ref) else {
+        let Some(pdcid) = ctx
+            .id_cache
+            .get::<crate::ir::id::ProductDefinitionContextId>(frame_ref)
+        else {
             return Ok(());
         };
-        let Some(&roleid) = ctx.pdc_role_id_map.get(&role_ref) else {
+        let Some(roleid) = ctx
+            .id_cache
+            .get::<crate::ir::id::ProductDefinitionContextRoleId>(role_ref)
+        else {
             return Ok(());
         };
         let id =
@@ -54,7 +63,7 @@ impl SimpleEntityHandler for ProductDefinitionContextAssociationHandler {
                     frame_of_reference: pdcid,
                     role: roleid,
                 });
-        ctx.pdca_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

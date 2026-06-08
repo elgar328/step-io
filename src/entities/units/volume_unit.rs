@@ -31,7 +31,7 @@ impl SimpleEntityHandler for VolumeUnitHandler {
         let refs = read_entity_ref_list(attrs, 0, entity_id, "elements")?;
         let mut elements = Vec::with_capacity(refs.len());
         for r in refs {
-            if let Some(&due_id) = ctx.due_id_map.get(&r) {
+            if let Some(due_id) = ctx.id_cache.get::<crate::ir::id::DerivedUnitElementId>(r) {
                 elements.push(due_id);
             }
         }
@@ -46,7 +46,7 @@ impl SimpleEntityHandler for VolumeUnitHandler {
             elements,
             kind: DerivedUnitKind::VolumeUnit,
         });
-        ctx.derived_unit_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

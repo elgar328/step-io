@@ -54,7 +54,7 @@ impl ComplexEntityHandler for ParametricRepresentationContextHandler {
             context_type,
             coordinate_space_dimension: Some(coordinate_space_dimension),
         });
-        ctx.unitless_context_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

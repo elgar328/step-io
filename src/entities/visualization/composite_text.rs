@@ -30,7 +30,7 @@ impl SimpleEntityHandler for CompositeTextHandler {
         let mut collected_text = Vec::with_capacity(items.len());
         for item in items {
             if let Attribute::EntityRef(n) = item {
-                if let Some(&id) = ctx.text_literal_id_map.get(n) {
+                if let Some(id) = ctx.id_cache.get::<crate::ir::id::TextLiteralId>(*n) {
                     collected_text.push(TextOrCharacter::TextLiteral(id));
                 }
                 // non-text_literal SELECT members (annotation_text_character,
@@ -51,7 +51,7 @@ impl SimpleEntityHandler for CompositeTextHandler {
                 name,
                 collected_text,
             });
-        ctx.composite_text_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

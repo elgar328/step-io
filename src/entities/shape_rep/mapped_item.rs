@@ -52,9 +52,15 @@ impl SimpleEntityHandler for RepresentationMapHandler {
         // `mapped_representation` is the `representation` supertype: a plain
         // representation, or a PRESENTATION_VIEW/AREA (separate arena). Probe
         // both; presentation-mapped rmaps emit in a delayed pass too.
-        let mapped_representation = if let Some(&rid) = ctx.repr_id_map.get(&mapped_ref) {
+        let mapped_representation = if let Some(rid) = ctx
+            .id_cache
+            .get::<crate::ir::id::RepresentationId>(mapped_ref)
+        {
             MappedRepresentationRef::Representation(rid)
-        } else if let Some(&pid) = ctx.presentation_representation_id_map.get(&mapped_ref) {
+        } else if let Some(pid) = ctx
+            .id_cache
+            .get::<crate::ir::id::PresentationRepresentationId>(mapped_ref)
+        {
             MappedRepresentationRef::Presentation(pid)
         } else {
             return Ok(());
@@ -66,7 +72,7 @@ impl SimpleEntityHandler for RepresentationMapHandler {
                 mapping_origin,
                 mapped_representation,
             }));
-        ctx.representation_map_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -107,7 +113,10 @@ impl SimpleEntityHandler for MappedItemHandler {
         let source_ref = read_entity_ref(attrs, 1, entity_id, "mapping_source")?;
         let target_ref = read_entity_ref(attrs, 2, entity_id, "mapping_target")?;
 
-        let Some(&mapping_source) = ctx.representation_map_id_map.get(&source_ref) else {
+        let Some(mapping_source) = ctx
+            .id_cache
+            .get::<crate::ir::id::RepresentationMapId>(source_ref)
+        else {
             return Ok(()); // mapping_source's REPRESENTATION_MAP was dropped
         };
         let Some(mapping_target) = resolve_representation_item_ref(ctx, target_ref) else {
@@ -119,7 +128,7 @@ impl SimpleEntityHandler for MappedItemHandler {
             mapping_source,
             mapping_target,
         }));
-        ctx.mapped_item_id_map.insert(entity_id, mi_id);
+        ctx.id_cache.insert(entity_id, mi_id);
         Ok(())
     }
 

@@ -46,7 +46,10 @@ impl SimpleEntityHandler for ItemIdentifiedRepresentationUsageHandler {
             return Ok(());
         };
         let used_ref = read_entity_ref(attrs, 3, entity_id, "used_representation")?;
-        let Some(&used_representation) = ctx.repr_id_map.get(&used_ref) else {
+        let Some(used_representation) = ctx
+            .id_cache
+            .get::<crate::ir::id::RepresentationId>(used_ref)
+        else {
             return Ok(());
         };
         let Some(identified_item) = parse_iiru_identified_item(ctx, &attrs[4]) else {

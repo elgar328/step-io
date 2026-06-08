@@ -80,7 +80,7 @@ impl SimpleEntityHandler for BrepWithVoidsHandler {
         };
         let solid = Solid::BrepWithVoids { outer, voids, name };
         let id = ctx.topology.solids.push(solid);
-        ctx.solid_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

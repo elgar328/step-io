@@ -32,10 +32,15 @@ impl SimpleEntityHandler for PresentedItemRepresentationHandler {
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "PRESENTED_ITEM_REPRESENTATION")?;
         let pres_ref = read_entity_ref(attrs, 0, entity_id, "presentation")?;
-        let presentation = if let Some(&id) = ctx.presentation_representation_id_map.get(&pres_ref)
+        let presentation = if let Some(id) = ctx
+            .id_cache
+            .get::<crate::ir::id::PresentationRepresentationId>(pres_ref)
         {
             PresentationReprSelect::Representation(id)
-        } else if let Some(&id) = ctx.presentation_set_id_map.get(&pres_ref) {
+        } else if let Some(id) = ctx
+            .id_cache
+            .get::<crate::ir::id::PresentationSetId>(pres_ref)
+        {
             PresentationReprSelect::Set(id)
         } else {
             return Ok(());
@@ -44,7 +49,10 @@ impl SimpleEntityHandler for PresentedItemRepresentationHandler {
         // `item` is a `presented_item` (abstract; concrete subtype
         // `applied_presented_item`), so it resolves through the
         // applied-presented-item arena, not a `presented_item_select` member.
-        let Some(&item) = ctx.applied_presented_item_id_map.get(&item_ref) else {
+        let Some(item) = ctx
+            .id_cache
+            .get::<crate::ir::id::AppliedPresentedItemId>(item_ref)
+        else {
             return Ok(());
         };
         let _id = ctx
@@ -99,7 +107,7 @@ impl SimpleEntityHandler for AppliedPresentedItemHandler {
             .get_or_insert_with(VisualizationPool::default)
             .applied_presented_items
             .push(AppliedPresentedItem { items });
-        ctx.applied_presented_item_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

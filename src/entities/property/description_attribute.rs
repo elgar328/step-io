@@ -45,7 +45,10 @@ impl SimpleEntityHandler for DescriptionAttributeHandler {
             .get::<crate::ir::PersonAndOrganizationId>(item_ref)
         {
             DescriptionAttributeItem::PersonAndOrganization(pao_id)
-        } else if let Some(&repr_id) = ctx.repr_id_map.get(&item_ref) {
+        } else if let Some(repr_id) = ctx
+            .id_cache
+            .get::<crate::ir::id::RepresentationId>(item_ref)
+        {
             DescriptionAttributeItem::Representation(repr_id)
         } else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {

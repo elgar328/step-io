@@ -45,7 +45,10 @@ impl SimpleEntityHandler for GeneralPropertyAssociationHandler {
         let base_ref = read_entity_ref(attrs, 2, entity_id, "base_definition")?;
         let derived_ref = read_entity_ref(attrs, 3, entity_id, "derived_definition")?;
 
-        let Some(&base_definition) = ctx.general_property_id_map.get(&base_ref) else {
+        let Some(base_definition) = ctx
+            .id_cache
+            .get::<crate::ir::id::GeneralPropertyId>(base_ref)
+        else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                 entity_id,
                 detail: format!(

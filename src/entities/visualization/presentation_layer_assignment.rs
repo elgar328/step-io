@@ -35,7 +35,7 @@ impl SimpleEntityHandler for PresentationLayerAssignmentHandler {
         let item_refs = read_entity_ref_list(attrs, 2, entity_id, "assigned_items")?;
         let mut assigned_items = Vec::with_capacity(item_refs.len());
         for r in item_refs {
-            if let Some(&sid) = ctx.viz_styled_item_id_map.get(&r) {
+            if let Some(sid) = ctx.id_cache.get::<crate::ir::id::StyledItemId>(r) {
                 assigned_items.push(PresentationLayerAssignmentItem::StyledItem(sid));
             }
         }
@@ -49,8 +49,7 @@ impl SimpleEntityHandler for PresentationLayerAssignmentHandler {
                 description,
                 assigned_items,
             });
-        ctx.presentation_layer_assignment_id_map
-            .insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

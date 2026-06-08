@@ -41,7 +41,10 @@ impl SimpleEntityHandler for TextLiteralHandler {
             _ => return Ok(()),
         };
         let font_ref = read_entity_ref(attrs, 5, entity_id, "font")?;
-        let Some(&font_id) = ctx.dptf_id_map.get(&font_ref) else {
+        let Some(font_id) = ctx
+            .id_cache
+            .get::<crate::ir::id::DraughtingPreDefinedTextFontId>(font_ref)
+        else {
             // SELECT member may target `externally_defined_text_font` —
             // not modelled in step-io; drop the carrier.
             return Ok(());
@@ -58,7 +61,7 @@ impl SimpleEntityHandler for TextLiteralHandler {
             path,
             font,
         });
-        ctx.text_literal_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

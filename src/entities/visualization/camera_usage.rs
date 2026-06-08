@@ -38,10 +38,14 @@ impl SimpleEntityHandler for CameraUsageHandler {
         let origin_ref = read_entity_ref(attrs, 0, entity_id, "mapping_origin")?;
         let mapped_ref = read_entity_ref(attrs, 1, entity_id, "mapped_representation")?;
 
-        let Some(&mapping_origin) = ctx.viz_camera_model_id_map.get(&origin_ref) else {
+        let Some(mapping_origin) = ctx.id_cache.get::<crate::ir::id::CameraModelId>(origin_ref)
+        else {
             return Ok(());
         };
-        let Some(&mapped_representation) = ctx.repr_id_map.get(&mapped_ref) else {
+        let Some(mapped_representation) = ctx
+            .id_cache
+            .get::<crate::ir::id::RepresentationId>(mapped_ref)
+        else {
             return Ok(());
         };
 
@@ -51,7 +55,7 @@ impl SimpleEntityHandler for CameraUsageHandler {
                 mapping_origin,
                 mapped_representation,
             }));
-        ctx.representation_map_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

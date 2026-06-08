@@ -76,7 +76,10 @@ impl SimpleEntityHandler for ViewVolumeHandler {
         let Some(&projection_point) = ctx.point_map.get(&projection_point_ref) else {
             return Ok(()); // projection_point unresolved — drop the view volume
         };
-        let Some(&view_window) = ctx.planar_extent_id_map.get(&view_window_ref) else {
+        let Some(view_window) = ctx
+            .id_cache
+            .get::<crate::ir::id::PlanarExtentId>(view_window_ref)
+        else {
             return Ok(());
         };
 

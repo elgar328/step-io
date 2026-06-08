@@ -80,7 +80,7 @@ impl SimpleEntityHandler for ProductDefinitionWithAssociatedDocumentsHandler {
         // and the existing round-trip test's source).
         let formation_ref = read_entity_ref(attrs, 2, entity_id, "formation")?;
         if let Some(&product_ref) = ctx.formation_to_product.get(&formation_ref)
-            && let Some(&pid) = ctx.product_arena_map.get(&product_ref)
+            && let Some(pid) = ctx.id_cache.get::<crate::ir::id::ProductId>(product_ref)
         {
             ctx.assembly_products[pid].associated_documents = docs;
         }

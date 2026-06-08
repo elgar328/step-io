@@ -39,7 +39,7 @@ impl SimpleEntityHandler for PlanarExtentHandler {
                 size_in_x,
                 size_in_y,
             }));
-        ctx.planar_extent_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -97,7 +97,7 @@ impl SimpleEntityHandler for PlanarBoxHandler {
                 size_in_y,
                 placement,
             }));
-        ctx.planar_extent_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

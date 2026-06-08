@@ -48,7 +48,7 @@ impl SimpleEntityHandler for GeneralPropertyHandler {
                 name,
                 description,
             });
-        ctx.general_property_id_map.insert(entity_id, gp_id);
+        ctx.id_cache.insert(entity_id, gp_id);
         Ok(())
     }
 

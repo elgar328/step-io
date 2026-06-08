@@ -47,7 +47,7 @@ impl SimpleEntityHandler for ShapeRepresentationWithParametersHandler {
                 items.push(SrwpItem::Placement(pid));
             } else if let Some(d) = ctx.descriptive_item_map.get(&r).cloned() {
                 items.push(SrwpItem::Descriptive(d));
-            } else if let Some(&id) = ctx.repr_item_id_map.get(&r) {
+            } else if let Some(id) = ctx.id_cache.get::<crate::ir::id::RepresentationItemId>(r) {
                 // MEASURE_REPRESENTATION_ITEM lives in the representation_item
                 // arena. Guard on the variant: repr_item_id_map also holds
                 // QRI / VRI.
@@ -73,7 +73,7 @@ impl SimpleEntityHandler for ShapeRepresentationWithParametersHandler {
                     context,
                 },
             ));
-        ctx.repr_id_map.insert(entity_id, repr_id);
+        ctx.id_cache.insert(entity_id, repr_id);
         Ok(())
     }
 

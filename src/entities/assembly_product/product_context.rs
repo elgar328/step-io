@@ -61,6 +61,6 @@ pub(crate) fn read_product_context(
         frame_of_reference,
         discipline_type,
     }));
-    ctx.product_context_id_map.insert(entity_id, id);
+    ctx.id_cache.insert(entity_id, id);
     Ok(())
 }

@@ -34,13 +34,14 @@ impl SimpleEntityHandler for PresentationStyleByContextHandler {
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "PRESENTATION_STYLE_BY_CONTEXT")?;
         let ctx_ref = read_entity_ref(attrs, 1, entity_id, "style_context")?;
-        let style_context = if let Some(&rid) = ctx.repr_id_map.get(&ctx_ref) {
-            StyleContext::Representation(rid)
-        } else if let Some(item) = resolve_representation_item_ref(ctx, ctx_ref) {
-            StyleContext::Item(item)
-        } else {
-            return Ok(());
-        };
+        let style_context =
+            if let Some(rid) = ctx.id_cache.get::<crate::ir::id::RepresentationId>(ctx_ref) {
+                StyleContext::Representation(rid)
+            } else if let Some(item) = resolve_representation_item_ref(ctx, ctx_ref) {
+                StyleContext::Item(item)
+            } else {
+                return Ok(());
+            };
         let styles =
             crate::entities::visualization::presentation_style_assignment::parse_psa_styles(
                 ctx, entity_id, &attrs[0],
@@ -54,7 +55,7 @@ impl SimpleEntityHandler for PresentationStyleByContextHandler {
                 style_context,
             }),
         );
-        ctx.viz_psa_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

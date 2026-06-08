@@ -39,7 +39,7 @@ impl SimpleEntityHandler for MdgprHandler {
 
         let mut items = Vec::with_capacity(item_refs.len());
         for r in item_refs {
-            if let Some(&id) = ctx.viz_styled_item_id_map.get(&r) {
+            if let Some(id) = ctx.id_cache.get::<crate::ir::id::StyledItemId>(r) {
                 items.push(id);
             }
         }
@@ -58,7 +58,7 @@ impl SimpleEntityHandler for MdgprHandler {
         let repr_id = ctx
             .representations
             .push(crate::ir::shape_rep::Representation::Mdgpr(mdgpr));
-        ctx.repr_id_map.insert(entity_id, repr_id);
+        ctx.id_cache.insert(entity_id, repr_id);
         Ok(())
     }
 

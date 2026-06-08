@@ -83,7 +83,7 @@ impl SimpleEntityHandler for ProductHandler {
             pdef: None,
         };
         let pid = ctx.assembly_products.push(product);
-        ctx.product_arena_map.insert(entity_id, pid);
+        ctx.id_cache.insert(entity_id, pid);
         if let Some(r) = pc_step_ref {
             ctx.product_pc_step_refs.insert(pid, r);
         }

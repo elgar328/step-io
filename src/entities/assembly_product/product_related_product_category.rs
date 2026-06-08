@@ -61,7 +61,7 @@ impl SimpleEntityHandler for ProductRelatedProductCategoryHandler {
         let mut resolved_products: Vec<crate::ir::ProductId> =
             Vec::with_capacity(product_refs.len());
         for prod_ref in &product_refs {
-            if let Some(&pid) = ctx.product_arena_map.get(prod_ref) {
+            if let Some(pid) = ctx.id_cache.get::<crate::ir::id::ProductId>(*prod_ref) {
                 resolved_products.push(pid);
             }
         }

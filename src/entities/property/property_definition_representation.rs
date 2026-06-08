@@ -48,7 +48,7 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
         // PROPERTY_DEFINITION, but the c3d kernel also binds a GENERAL_PROPERTY
         // directly (the two SELECT members step-io models). The maps are
         // disjoint, so a GP target means `pd_entry` is None.
-        let gp_id = ctx.general_property_id_map.get(&pd_ref).copied();
+        let gp_id = ctx.id_cache.get::<crate::ir::id::GeneralPropertyId>(pd_ref);
         if pd_entry.is_none() && !is_deferred_nauo && gp_id.is_none() {
             return Ok(()); // silently skipped (unresolved / unsupported target)
         }
@@ -70,7 +70,10 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
             // reference the existing representation; resolve_pdr_links filters
             // by `property_def_step_to_id` / `repr_id_map`. (PD already gated
             // resolved above.)
-            if ctx.repr_id_map.contains_key(&repr_ref) {
+            if ctx
+                .id_cache
+                .contains::<crate::ir::id::RepresentationId>(repr_ref)
+            {
                 ctx.pdr_link_refs.push((pd_ref, repr_ref));
             }
             return Ok(());
@@ -98,7 +101,7 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
                 // MEASURE_REPRESENTATION_ITEM lives in the representation_item
                 // arena — reference it so the writer emits it once. Guard on the
                 // variant: repr_item_id_map also holds QRI / VRI.
-                if let Some(&id) = ctx.repr_item_id_map.get(&r) {
+                if let Some(id) = ctx.id_cache.get::<crate::ir::id::RepresentationItemId>(r) {
                     if matches!(
                         ctx.representation_items[id],
                         crate::ir::representation_item::RepresentationItem::MeasureRepresentationItem(_)

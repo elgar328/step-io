@@ -53,7 +53,7 @@ impl SimpleEntityHandler for DimensionalExponentsHandler {
             )?,
         };
         let id = ctx.dimensional_exponents.push(dim_exp);
-        ctx.dim_exp_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

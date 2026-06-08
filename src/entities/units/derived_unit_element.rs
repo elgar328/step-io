@@ -30,14 +30,14 @@ impl SimpleEntityHandler for DerivedUnitElementHandler {
         check_count(attrs, 2, entity_id, "DERIVED_UNIT_ELEMENT")?;
         let unit_step = read_entity_ref(attrs, 0, entity_id, "unit")?;
         let exponent = read_real(attrs, 1, entity_id, "exponent")?;
-        let Some(&unit_id) = ctx.named_unit_id_map.get(&unit_step) else {
+        let Some(unit_id) = ctx.id_cache.get::<crate::ir::id::NamedUnitId>(unit_step) else {
             return Ok(());
         };
         let id = ctx.due_arena.push(DerivedUnitElement {
             unit: unit_id,
             exponent,
         });
-        ctx.due_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

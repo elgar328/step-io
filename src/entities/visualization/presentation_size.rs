@@ -31,11 +31,14 @@ impl SimpleEntityHandler for AreaInSetHandler {
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "AREA_IN_SET")?;
         let area_ref = read_entity_ref(attrs, 0, entity_id, "area")?;
-        let Some(&area) = ctx.presentation_representation_id_map.get(&area_ref) else {
+        let Some(area) = ctx
+            .id_cache
+            .get::<crate::ir::id::PresentationRepresentationId>(area_ref)
+        else {
             return Ok(());
         };
         let in_ref = read_entity_ref(attrs, 1, entity_id, "in_set")?;
-        let Some(&in_set) = ctx.presentation_set_id_map.get(&in_ref) else {
+        let Some(in_set) = ctx.id_cache.get::<crate::ir::id::PresentationSetId>(in_ref) else {
             return Ok(());
         };
         let id = ctx
@@ -43,7 +46,7 @@ impl SimpleEntityHandler for AreaInSetHandler {
             .get_or_insert_with(VisualizationPool::default)
             .area_in_sets
             .push(AreaInSet { area, in_set });
-        ctx.area_in_set_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -74,9 +77,12 @@ impl SimpleEntityHandler for PresentationSizeHandler {
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "PRESENTATION_SIZE")?;
         let unit_ref = read_entity_ref(attrs, 0, entity_id, "unit")?;
-        let unit = if let Some(&id) = ctx.area_in_set_id_map.get(&unit_ref) {
+        let unit = if let Some(id) = ctx.id_cache.get::<crate::ir::id::AreaInSetId>(unit_ref) {
             PresentationSizeAssignment::AreaInSet(id)
-        } else if let Some(&id) = ctx.presentation_representation_id_map.get(&unit_ref) {
+        } else if let Some(id) = ctx
+            .id_cache
+            .get::<crate::ir::id::PresentationRepresentationId>(unit_ref)
+        {
             // Spec narrows to View / Area variants — read1 cannot tell
             // which without inspecting the arena entry. Default to View;
             // emit reconstructs via the cached step id either way.
@@ -85,7 +91,7 @@ impl SimpleEntityHandler for PresentationSizeHandler {
             return Ok(());
         };
         let size_ref = read_entity_ref(attrs, 1, entity_id, "size")?;
-        let Some(&size) = ctx.planar_extent_id_map.get(&size_ref) else {
+        let Some(size) = ctx.id_cache.get::<crate::ir::id::PlanarExtentId>(size_ref) else {
             return Ok(());
         };
         let _id = ctx

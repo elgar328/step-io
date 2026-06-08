@@ -62,7 +62,10 @@ impl SimpleEntityHandler for GeometricItemSpecificUsageHandler {
             return Ok(());
         }
         let used_ref = read_entity_ref(attrs, 3, entity_id, "used_representation")?;
-        let Some(&used_representation) = ctx.repr_id_map.get(&used_ref) else {
+        let Some(used_representation) = ctx
+            .id_cache
+            .get::<crate::ir::id::RepresentationId>(used_ref)
+        else {
             return Ok(());
         };
         let id = ctx
@@ -74,7 +77,7 @@ impl SimpleEntityHandler for GeometricItemSpecificUsageHandler {
                 used_representation,
                 identified_item,
             });
-        ctx.gisu_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

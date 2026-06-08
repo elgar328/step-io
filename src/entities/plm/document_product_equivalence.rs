@@ -37,7 +37,10 @@ impl SimpleEntityHandler for DocumentProductEquivalenceHandler {
         // `related_product` may reference a PRODUCT_DEFINITION_FORMATION
         // directly (common for document-equivalence links). Preserve that so
         // the formation ref round-trips; otherwise collapse to the product.
-        let related_product = if let Some(&fid) = ctx.formation_arena_map.get(&product_ref) {
+        let related_product = if let Some(fid) =
+            ctx.id_cache
+                .get::<crate::ir::id::ProductDefinitionFormationId>(product_ref)
+        {
             DocumentProductItem::Formation(fid)
         } else {
             let Some(pid) = resolve_date_time_item(ctx, product_ref) else {

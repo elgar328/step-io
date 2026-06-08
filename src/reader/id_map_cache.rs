@@ -56,6 +56,13 @@ impl IdMapCache {
             .is_some_and(|m| m.contains_key(&file_id))
     }
 
+    /// `true` when no file id is registered under arena-id type `K`.
+    pub(crate) fn is_empty<K: ArenaId>(&self) -> bool {
+        self.by_type
+            .get(&TypeId::of::<K>())
+            .is_none_or(HashMap::is_empty)
+    }
+
     /// Resolve `to` to its arena id of type `K`, or a `MissingReference` error.
     /// Mirrors the free function [`resolve_in_map`](super::resolve_in_map).
     // Used once the geometry batch migrates the `resolve_X` wrappers.

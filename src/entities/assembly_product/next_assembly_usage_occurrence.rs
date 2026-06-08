@@ -53,9 +53,11 @@ impl SimpleEntityHandler for NextAssemblyUsageOccurrenceHandler {
         // Canonical NAUO endpoints are PRODUCT_DEFINITION refs — resolve them to
         // `product_definitions` arena ids (the `Instance` view keeps the
         // ProductId child above). Missing = drop, mirroring resolve_product_by_pdef.
-        let (Some(&relating_pd), Some(&related_pd)) = (
-            ctx.pdef_arena_map.get(&relating_pdef),
-            ctx.pdef_arena_map.get(&related_pdef),
+        let (Some(relating_pd), Some(related_pd)) = (
+            ctx.id_cache
+                .get::<crate::ir::id::ProductDefinitionId>(relating_pdef),
+            ctx.id_cache
+                .get::<crate::ir::id::ProductDefinitionId>(related_pdef),
         ) else {
             return Err(ConvertError::MissingReference {
                 from: entity_id,

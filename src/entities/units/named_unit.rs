@@ -34,13 +34,15 @@ impl SimpleEntityHandler for NamedUnitSimpleHandler {
     ) -> Result<(), ConvertError> {
         check_count(attrs, 1, entity_id, "NAMED_UNIT")?;
         let dimensions = match attrs.first() {
-            Some(Attribute::EntityRef(n)) => ctx.dim_exp_id_map.get(n).copied(),
+            Some(Attribute::EntityRef(n)) => ctx
+                .id_cache
+                .get::<crate::ir::id::DimensionalExponentsId>(*n),
             _ => None, // `$` (Unset) / `*` (Derived) — no explicit dimensions
         };
         let id = ctx
             .named_units_arena
             .push(NamedUnit::Itself(NamedUnitData { dimensions }));
-        ctx.named_unit_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

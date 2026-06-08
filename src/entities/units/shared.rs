@@ -364,7 +364,9 @@ pub(crate) fn read_named_unit_dim_exp(
 ) -> Option<crate::ir::DimensionalExponentsId> {
     let attrs = find_part_attrs(parts, "NAMED_UNIT")?;
     match attrs.first()? {
-        Attribute::EntityRef(n) => ctx.dim_exp_id_map.get(n).copied(),
+        Attribute::EntityRef(n) => ctx
+            .id_cache
+            .get::<crate::ir::id::DimensionalExponentsId>(*n),
         _ => None,
     }
 }

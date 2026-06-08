@@ -48,7 +48,7 @@ pub(crate) fn read_product_definition_formation_body(
     // metadata) and link it onto the product. If the product hasn't been read
     // (malformed input), keep the chain map but skip the arena entry — the
     // writer then synthesises, matching the legacy leniency.
-    let Some(&pid) = ctx.product_arena_map.get(&product_ref) else {
+    let Some(pid) = ctx.id_cache.get::<crate::ir::id::ProductId>(product_ref) else {
         return Ok(());
     };
     let data = ProductDefinitionFormationData {
@@ -71,7 +71,7 @@ pub(crate) fn read_product_definition_formation_body(
         ProductDefinitionFormation::Itself(data)
     };
     let fid = ctx.product_definition_formations.push(formation);
-    ctx.formation_arena_map.insert(entity_id, fid);
+    ctx.id_cache.insert(entity_id, fid);
     ctx.assembly_products[pid].formation = Some(fid);
     Ok(())
 }

@@ -47,7 +47,7 @@ impl SimpleEntityHandler for SurfaceStyleRenderingHandler {
                 rendering_method,
                 surface_colour,
             }));
-        ctx.viz_ssr_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -125,7 +125,7 @@ pub(crate) fn read_surface_colour(
         Ok(Some(pool.colours.push(Colour::Itself)))
     } else {
         let colour_ref = read_entity_ref(attrs, 1, entity_id, "surface_colour")?;
-        Ok(ctx.viz_colour_id_map.get(&colour_ref).copied())
+        Ok(ctx.id_cache.get::<crate::ir::id::ColourId>(colour_ref))
     }
 }
 

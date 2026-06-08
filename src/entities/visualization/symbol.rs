@@ -86,7 +86,10 @@ impl SimpleEntityHandler for DefinedSymbolHandler {
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let def_ref = read_entity_ref(attrs, 1, entity_id, "definition")?;
         let target_ref = read_entity_ref(attrs, 2, entity_id, "target")?;
-        let Some(&pds_id) = ctx.viz_pre_defined_symbol_id_map.get(&def_ref) else {
+        let Some(pds_id) = ctx
+            .id_cache
+            .get::<crate::ir::id::PreDefinedSymbolId>(def_ref)
+        else {
             return Ok(());
         };
         let Some(&target) = ctx.symbol_target_id_map.get(&target_ref) else {

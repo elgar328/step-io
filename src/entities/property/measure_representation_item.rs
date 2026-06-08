@@ -60,7 +60,7 @@ impl SimpleEntityHandler for MeasureRepresentationItemHandler {
                     measure_supertype: None,
                 },
             ));
-        ctx.repr_item_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -117,14 +117,12 @@ fn resolve_unit_ref(
 ) -> Option<PropertyMeasureUnit> {
     match unit_attr {
         Some(Attribute::EntityRef(uref)) => ctx
-            .named_unit_id_map
-            .get(uref)
-            .copied()
+            .id_cache
+            .get::<crate::ir::id::NamedUnitId>(*uref)
             .map(PropertyMeasureUnit::Named)
             .or_else(|| {
-                ctx.derived_unit_id_map
-                    .get(uref)
-                    .copied()
+                ctx.id_cache
+                    .get::<crate::ir::id::DerivedUnitId>(*uref)
                     .map(PropertyMeasureUnit::Derived)
             }),
         _ => None,
@@ -209,5 +207,5 @@ fn insert_measure_repr_item(
                 measure_supertype,
             },
         ));
-    ctx.repr_item_id_map.insert(entity_id, id);
+    ctx.id_cache.insert(entity_id, id);
 }

@@ -55,7 +55,7 @@ impl SimpleEntityHandler for ProductDefinitionRelationshipHandler {
                         related,
                     },
                 ));
-        ctx.pdr_id_map.insert(entity_id, arena_id);
+        ctx.id_cache.insert(entity_id, arena_id);
         Ok(())
     }
 

@@ -35,7 +35,7 @@ impl SimpleEntityHandler for PreDefinedSymbolHandler {
         let id = pool
             .pre_defined_symbols
             .push(PreDefinedSymbol::Plain(PreDefinedSymbolData { name }));
-        ctx.viz_pre_defined_symbol_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

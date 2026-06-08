@@ -46,7 +46,10 @@ impl SimpleEntityHandler for StyledItemHandler {
 
         let mut styles = Vec::with_capacity(style_refs.len());
         for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+            if let Some(psa_id) = ctx
+                .id_cache
+                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
+            {
                 styles.push(psa_id);
             }
         }
@@ -81,7 +84,7 @@ impl SimpleEntityHandler for StyledItemHandler {
         let id = pool
             .styled_items
             .push(StyledItem::Plain(PlainStyledItem { name, styles, item }));
-        ctx.viz_styled_item_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -112,11 +115,12 @@ impl SimpleEntityHandler for StyledItemHandler {
 /// MDGPR guard: `repr_id_map` also holds `MDGPR` entries, but only
 /// non-`Mdgpr` representations become a `Representation` ref; an MDGPR
 /// target falls through to `None`.
+#[allow(clippy::too_many_lines)]
 pub(crate) fn resolve_representation_item_ref(
     ctx: &ReaderContext,
     item_ref: u64,
 ) -> Option<RepresentationItemRef> {
-    if let Some(&sid) = ctx.solid_map.get(&item_ref) {
+    if let Some(sid) = ctx.id_cache.get::<crate::ir::id::SolidId>(item_ref) {
         return Some(RepresentationItemRef::Solid(sid));
     }
     if let Some(&fid) = ctx.face_map.get(&item_ref) {
@@ -146,17 +150,23 @@ pub(crate) fn resolve_representation_item_ref(
     if let Some(&pl2id) = ctx.placement_2d_map.get(&item_ref) {
         return Some(RepresentationItemRef::Placement2d(pl2id));
     }
-    if let Some(&peid) = ctx.planar_extent_id_map.get(&item_ref) {
+    if let Some(peid) = ctx.id_cache.get::<crate::ir::id::PlanarExtentId>(item_ref) {
         return Some(RepresentationItemRef::PlanarExtent(peid));
     }
-    if let Some(&rid) = ctx.repr_id_map.get(&item_ref) {
+    if let Some(rid) = ctx
+        .id_cache
+        .get::<crate::ir::id::RepresentationId>(item_ref)
+    {
         if !matches!(ctx.representations[rid], Representation::Mdgpr(_)) {
             return Some(RepresentationItemRef::Representation(rid));
         }
     }
     // representation_item arena (phase repr-item-arena-1) — last-resort
     // fallback after the typed per-type arenas above.
-    if let Some(&rid) = ctx.repr_item_id_map.get(&item_ref) {
+    if let Some(rid) = ctx
+        .id_cache
+        .get::<crate::ir::id::RepresentationItemId>(item_ref)
+    {
         return Some(RepresentationItemRef::RepresentationItem(rid));
     }
     // geometric_representation_item arena (phase sbsm-cluster) — covers
@@ -178,48 +188,63 @@ pub(crate) fn resolve_representation_item_ref(
     }
     // tessellated_item arena — STYLED_ITEM can target a TESSELLATED_SOLID
     // (or any tessellation item) directly (phase tessellation-repr-item).
-    if let Some(&tid) = ctx.tessellated_item_id_map.get(&item_ref) {
+    if let Some(tid) = ctx
+        .id_cache
+        .get::<crate::ir::id::TessellatedItemId>(item_ref)
+    {
         return Some(RepresentationItemRef::TessellatedItem(tid));
     }
     // tessellated_face arena — STYLED_ITEM styles a COMPLEX_TRIANGULATED_FACE
     // per-face (phase styled-item-tess-face).
-    if let Some(&fid) = ctx.tessellated_face_id_map.get(&item_ref) {
+    if let Some(fid) = ctx
+        .id_cache
+        .get::<crate::ir::id::TessellatedFaceId>(item_ref)
+    {
         return Some(RepresentationItemRef::TessellatedFace(fid));
     }
     // mapped_items arena (phase si-mapped-item) — STYLED_ITEM / CDORSI
     // routinely target a MAPPED_ITEM in grabcad-style assemblies (PMI
     // annotation instance entry point).
-    if let Some(&mi_id) = ctx.mapped_item_id_map.get(&item_ref) {
+    if let Some(mi_id) = ctx.id_cache.get::<crate::ir::id::MappedItemId>(item_ref) {
         return Some(RepresentationItemRef::MappedItem(mi_id));
     }
     // PMI entries reachable from DRAUGHTING_MODEL.items (phase
     // rir-pmi-variants): AP242 MBD pattern.
-    if let Some(&id) = ctx.annotation_occurrence_id_map.get(&item_ref) {
+    if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::id::AnnotationOccurrenceId>(item_ref)
+    {
         return Some(RepresentationItemRef::AnnotationOccurrence(id));
     }
     // annotation_curve_occurrence arena (plain ACO / LEADER_CURVE) — CIWR /
     // STYLED_ITEM can target it (phase plain-aco).
-    if let Some(&id) = ctx.annotation_curve_occurrence_id_map.get(&item_ref) {
+    if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::id::AnnotationCurveOccurrenceId>(item_ref)
+    {
         return Some(RepresentationItemRef::AnnotationCurveOccurrence(id));
     }
-    if let Some(&id) = ctx.draughting_callout_id_map.get(&item_ref) {
+    if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::id::DraughtingCalloutId>(item_ref)
+    {
         return Some(RepresentationItemRef::DraughtingCallout(id));
     }
-    if let Some(&id) = ctx.viz_camera_model_id_map.get(&item_ref) {
+    if let Some(id) = ctx.id_cache.get::<crate::ir::id::CameraModelId>(item_ref) {
         return Some(RepresentationItemRef::CameraModel(id));
     }
     // text content (annotation_text_occurrence_item SELECT) — a styled
     // ANNOTATION_TEXT_OCCURRENCE targets these (phase styled-annotation-text).
-    if let Some(&id) = ctx.text_literal_id_map.get(&item_ref) {
+    if let Some(id) = ctx.id_cache.get::<crate::ir::id::TextLiteralId>(item_ref) {
         return Some(RepresentationItemRef::TextLiteral(id));
     }
-    if let Some(&id) = ctx.composite_text_id_map.get(&item_ref) {
+    if let Some(id) = ctx.id_cache.get::<crate::ir::id::CompositeTextId>(item_ref) {
         return Some(RepresentationItemRef::CompositeText(id));
     }
     // STYLED_ITEM is itself a representation_item — DRAUGHTING_MODEL.items lists
     // styled annotations directly (phase dm-styled-item). Probed last so a
     // styled item never shadows a more specific geometry/annotation target.
-    if let Some(&id) = ctx.viz_styled_item_id_map.get(&item_ref) {
+    if let Some(id) = ctx.id_cache.get::<crate::ir::id::StyledItemId>(item_ref) {
         return Some(RepresentationItemRef::StyledItem(id));
     }
     None

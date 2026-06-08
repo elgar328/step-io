@@ -33,7 +33,10 @@ impl SimpleEntityHandler for RepresentationRelationshipHandler {
         let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
         let rep_1_ref = read_entity_ref(attrs, 2, entity_id, "rep_1")?;
         let rep_2_ref = read_entity_ref(attrs, 3, entity_id, "rep_2")?;
-        let Some(&rep_1) = ctx.repr_id_map.get(&rep_1_ref) else {
+        let Some(rep_1) = ctx
+            .id_cache
+            .get::<crate::ir::id::RepresentationId>(rep_1_ref)
+        else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                 entity_id,
                 detail: format!(
@@ -43,7 +46,10 @@ impl SimpleEntityHandler for RepresentationRelationshipHandler {
             });
             return Ok(());
         };
-        let Some(&rep_2) = ctx.repr_id_map.get(&rep_2_ref) else {
+        let Some(rep_2) = ctx
+            .id_cache
+            .get::<crate::ir::id::RepresentationId>(rep_2_ref)
+        else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                 entity_id,
                 detail: format!(

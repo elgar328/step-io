@@ -34,7 +34,7 @@ impl SimpleEntityHandler for ColourHandler {
             .visualization
             .get_or_insert_with(VisualizationPool::default);
         let id = pool.colours.push(Colour::Itself);
-        ctx.viz_colour_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

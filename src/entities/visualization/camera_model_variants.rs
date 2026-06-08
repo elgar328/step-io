@@ -50,7 +50,7 @@ impl SimpleEntityHandler for CameraModelD3WithHlhsrHandler {
                     hidden_line_surface_removal,
                 },
             ));
-        ctx.viz_camera_model_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -113,7 +113,7 @@ impl SimpleEntityHandler for CameraModelD3MultiClippingHandler {
                     shape_clipping,
                 },
             ));
-        ctx.viz_camera_model_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

@@ -45,7 +45,7 @@ impl SimpleEntityHandler for QualifiedRepresentationItemHandler {
             .push(RepresentationItem::QualifiedRepresentationItem(
                 QualifiedRepresentationItem { name, qualifiers },
             ));
-        ctx.repr_item_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

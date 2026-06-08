@@ -53,7 +53,10 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
             // it falls to `sdr_link_refs` and `resolve_sdr_links` drops it, since
             // the NAUO-owned PDS is never a modelled property_definition.)
             if let Some(&nauo_ref) = ctx.pdef_shape_to_nauo.get(&pdef_shape_ref) {
-                if let Some(&sr_id) = ctx.repr_id_map.get(&shape_rep_ref) {
+                if let Some(sr_id) = ctx
+                    .id_cache
+                    .get::<crate::ir::id::RepresentationId>(shape_rep_ref)
+                {
                     ctx.nauo_placement_sr
                         .entry(nauo_ref)
                         .or_default()
@@ -71,7 +74,10 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
                 field_name: "definition.definition",
             });
         };
-        let Some(&pid) = ctx.product_arena_map.get(&product_step_id) else {
+        let Some(pid) = ctx
+            .id_cache
+            .get::<crate::ir::id::ProductId>(product_step_id)
+        else {
             return Err(ConvertError::MissingReference {
                 from: entity_id,
                 to: product_step_id,
@@ -142,9 +148,10 @@ impl ReaderContext {
                 // it against the same single PDS step id). Resolve the PDS to its
                 // `property_definitions` slot and the SDR's literal
                 // `used_representation` to its arena entry.
-                if let (Some(&definition), Some(&used_representation)) = (
+                if let (Some(&definition), Some(used_representation)) = (
                     ctx.property_def_step_to_id.get(&pdef_shape_ref),
-                    ctx.repr_id_map.get(&shape_rep_ref),
+                    ctx.id_cache
+                        .get::<crate::ir::id::RepresentationId>(shape_rep_ref),
                 ) {
                     ctx.properties
                         .get_or_insert_with(crate::ir::property::PropertyPool::default)
@@ -269,9 +276,12 @@ fn classify_sdr_geometry(
     // (ABSR/MSSR/wireframe/plain). `outer_representation_id` is the outer
     // plain SR wrapper when the indirect pattern was taken — the writer
     // re-uses both cached step ids instead of re-emitting.
-    ctx.assembly_products[pid].representation_id = ctx.repr_id_map.get(&effective_ref).copied();
+    ctx.assembly_products[pid].representation_id = ctx
+        .id_cache
+        .get::<crate::ir::id::RepresentationId>(effective_ref);
     if effective_ref != shape_rep_ref {
         ctx.assembly_products[pid].outer_representation_id =
-            ctx.repr_id_map.get(&shape_rep_ref).copied();
+            ctx.id_cache
+                .get::<crate::ir::id::RepresentationId>(shape_rep_ref);
     }
 }

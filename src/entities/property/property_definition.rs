@@ -106,7 +106,10 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
         // product binding. Product-bound patterns still gate on a resolvable
         // product (drop when unresolved); the resolved id is not stored.
         let definition = if let Some(&product_step_id) = ctx.pdef_to_product.get(&target_ref) {
-            let Some(&pid) = ctx.product_arena_map.get(&product_step_id) else {
+            let Some(pid) = ctx
+                .id_cache
+                .get::<crate::ir::id::ProductId>(product_step_id)
+            else {
                 return Ok(());
             };
             CharacterizedDefinition::ProductDefinition(pid)
@@ -142,12 +145,15 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
                 .pdef_shape_to_pdef
                 .get(&target_ref)
                 .and_then(|pdef_ref| ctx.pdef_to_product.get(pdef_ref).copied())
-                .and_then(|prod_step| ctx.product_arena_map.get(&prod_step).copied());
+                .and_then(|prod_step| ctx.id_cache.get::<crate::ir::id::ProductId>(prod_step));
             if resolved.is_none() {
                 return Ok(());
             }
             CharacterizedDefinition::ProductDefinitionShape(pds_pd_id)
-        } else if let Some(&gp_id) = ctx.general_property_id_map.get(&target_ref) {
+        } else if let Some(gp_id) = ctx
+            .id_cache
+            .get::<crate::ir::id::GeneralPropertyId>(target_ref)
+        {
             CharacterizedDefinition::GeneralProperty(gp_id)
         } else if let Some(doc_id) = ctx.id_cache.get::<crate::ir::DocumentId>(target_ref) {
             // DOCUMENT_FILE is a characterized_object subtype (a valid
@@ -164,7 +170,10 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
                 return Ok(());
             }
             CharacterizedDefinition::Document(doc_id)
-        } else if let Some(&co_id) = ctx.characterized_object_id_map.get(&target_ref) {
+        } else if let Some(co_id) = ctx
+            .id_cache
+            .get::<crate::ir::id::CharacterizedObjectId>(target_ref)
+        {
             // Both characterized_object members of the SELECT: CIWR
             // (geometric-validation shapes) and the plain CHARACTERIZED_OBJECT
             // facet of the MBD draughting-model complex (pmi validation props).

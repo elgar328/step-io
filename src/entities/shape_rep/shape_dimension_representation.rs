@@ -50,7 +50,7 @@ impl SimpleEntityHandler for ShapeDimensionRepresentationHandler {
                     items: Vec::new(),
                 },
             ));
-        ctx.repr_id_map.insert(entity_id, repr_id);
+        ctx.id_cache.insert(entity_id, repr_id);
         ctx.sdr_raw_items.insert(repr_id, item_refs);
         Ok(())
     }

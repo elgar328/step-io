@@ -51,7 +51,7 @@ impl SimpleEntityHandler for MeasureWithUnitHandler {
             _ => return Ok(()),
         };
         let unit_step = read_entity_ref(attrs, 1, entity_id, "unit_component")?;
-        let Some(&unit) = ctx.named_unit_id_map.get(&unit_step) else {
+        let Some(unit) = ctx.id_cache.get::<crate::ir::id::NamedUnitId>(unit_step) else {
             return Ok(());
         };
         let id = ctx
@@ -61,7 +61,7 @@ impl SimpleEntityHandler for MeasureWithUnitHandler {
                 value,
                 unit,
             }));
-        ctx.mwu_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

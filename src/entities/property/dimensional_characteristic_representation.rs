@@ -41,7 +41,10 @@ impl SimpleEntityHandler for DimensionalCharacteristicRepresentationHandler {
         let Some(dimension) = resolve_dimensional_characteristic(ctx, dim_ref) else {
             return Ok(());
         };
-        let Some(&representation) = ctx.repr_id_map.get(&repr_ref) else {
+        let Some(representation) = ctx
+            .id_cache
+            .get::<crate::ir::id::RepresentationId>(repr_ref)
+        else {
             return Ok(());
         };
         let property = ctx.properties.get_or_insert_with(PropertyPool::default);

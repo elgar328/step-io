@@ -45,7 +45,7 @@ impl SimpleEntityHandler for CharacterizedItemWithinRepresentationHandler {
         let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
             return Ok(());
         };
-        let Some(&rep) = ctx.repr_id_map.get(&rep_ref) else {
+        let Some(rep) = ctx.id_cache.get::<crate::ir::id::RepresentationId>(rep_ref) else {
             return Ok(());
         };
         let co_id = ctx.characterized_objects.push(
@@ -58,7 +58,7 @@ impl SimpleEntityHandler for CharacterizedItemWithinRepresentationHandler {
             ),
         );
         // Let PROPERTY_DEFINITION.definition resolve a CIWR target.
-        ctx.characterized_object_id_map.insert(entity_id, co_id);
+        ctx.id_cache.insert(entity_id, co_id);
         Ok(())
     }
 

@@ -95,7 +95,7 @@ pub(crate) fn read_wireframe_representation_body(
                 gcs_ids,
             },
         ));
-    ctx.repr_id_map.insert(entity_id, repr_id);
+    ctx.id_cache.insert(entity_id, repr_id);
     Ok(())
 }
 

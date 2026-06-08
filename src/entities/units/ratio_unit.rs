@@ -51,7 +51,7 @@ impl ComplexEntityHandler for RatioUnitHandler {
             dim_exp,
             complex: true,
         }));
-        ctx.named_unit_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -98,7 +98,9 @@ impl SimpleEntityHandler for RatioUnitSimpleHandler {
     ) -> Result<(), ConvertError> {
         check_count(attrs, 1, entity_id, "RATIO_UNIT")?;
         let dim_exp = match attrs.first() {
-            Some(Attribute::EntityRef(n)) => ctx.dim_exp_id_map.get(n).copied(),
+            Some(Attribute::EntityRef(n)) => ctx
+                .id_cache
+                .get::<crate::ir::id::DimensionalExponentsId>(*n),
             Some(Attribute::Unset) => {
                 // [NS-ratio-unit-dimensions-unset] c3d: RATIO_UNIT.dimensions is
                 // required by EXPRESS but emitted `$` (Unset). Accept as no
@@ -113,7 +115,7 @@ impl SimpleEntityHandler for RatioUnitSimpleHandler {
             dim_exp,
             complex: false,
         }));
-        ctx.named_unit_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

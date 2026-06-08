@@ -89,9 +89,11 @@ impl SimpleEntityHandler for ContextDependentShapeRepresentationHandler {
         let description = read_string_or_unset(rr_attrs, 1, rr_ref, "description")?.to_owned();
         let rep_1_ref = read_entity_ref(rr_attrs, 2, rr_ref, "rep_1")?;
         let rep_2_ref = read_entity_ref(rr_attrs, 3, rr_ref, "rep_2")?;
-        if let (Some(&rep_1), Some(&rep_2)) = (
-            ctx.repr_id_map.get(&rep_1_ref),
-            ctx.repr_id_map.get(&rep_2_ref),
+        if let (Some(rep_1), Some(rep_2)) = (
+            ctx.id_cache
+                .get::<crate::ir::id::RepresentationId>(rep_1_ref),
+            ctx.id_cache
+                .get::<crate::ir::id::RepresentationId>(rep_2_ref),
         ) {
             ctx.nauo_assembly_rr.insert(
                 nauo_ref,

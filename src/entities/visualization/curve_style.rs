@@ -38,7 +38,10 @@ impl SimpleEntityHandler for CurveStyleHandler {
             None
         } else {
             let font_ref = read_entity_ref(attrs, 1, entity_id, "curve_font")?;
-            let Some(&id) = ctx.viz_pre_defined_curve_font_id_map.get(&font_ref) else {
+            let Some(id) = ctx
+                .id_cache
+                .get::<crate::ir::id::PreDefinedCurveFontId>(font_ref)
+            else {
                 return Ok(()); // unsupported curve_font SELECT variant — drop
             };
             Some(id)
@@ -47,7 +50,7 @@ impl SimpleEntityHandler for CurveStyleHandler {
             return Ok(()); // unsupported curve_width SELECT variant — drop
         };
         let colour_ref = read_entity_ref(attrs, 3, entity_id, "curve_colour")?;
-        let Some(&curve_colour) = ctx.viz_colour_id_map.get(&colour_ref) else {
+        let Some(curve_colour) = ctx.id_cache.get::<crate::ir::id::ColourId>(colour_ref) else {
             return Ok(()); // unsupported colour SELECT variant — drop
         };
         let pool = ctx
@@ -59,7 +62,7 @@ impl SimpleEntityHandler for CurveStyleHandler {
             curve_width,
             curve_colour,
         });
-        ctx.viz_curve_style_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -131,9 +134,9 @@ fn read_curve_width(
             }),
         },
         Attribute::EntityRef(n) => Ok(ctx
-            .mwu_id_map
-            .get(n)
-            .map(|&id| CurveWidth::MeasureWithUnit(id))),
+            .id_cache
+            .get::<crate::ir::id::MeasureWithUnitId>(*n)
+            .map(CurveWidth::MeasureWithUnit)),
         other => Err(ConvertError::AttributeType {
             entity_id,
             field_name: "curve_width",

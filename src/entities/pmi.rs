@@ -150,7 +150,7 @@ impl SimpleEntityHandler for DraughtingPreDefinedTextFontHandler {
             .get_or_insert_with(PmiPool::default)
             .draughting_pre_defined_text_fonts
             .push(DraughtingPreDefinedTextFont { name });
-        ctx.dptf_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -188,7 +188,10 @@ impl SimpleEntityHandler for AnnotationPlaneHandler {
 
         let mut styles = Vec::with_capacity(style_refs.len());
         for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+            if let Some(psa_id) = ctx
+                .id_cache
+                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
+            {
                 styles.push(psa_id);
             }
         }
@@ -205,7 +208,7 @@ impl SimpleEntityHandler for AnnotationPlaneHandler {
                 styles,
                 item,
             }));
-        ctx.annotation_occurrence_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -251,11 +254,17 @@ impl SimpleEntityHandler for TessellatedAnnotationOccurrenceHandler {
 
         let mut styles = Vec::with_capacity(style_refs.len());
         for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+            if let Some(psa_id) = ctx
+                .id_cache
+                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
+            {
                 styles.push(psa_id);
             }
         }
-        let Some(&item) = ctx.tessellated_item_id_map.get(&item_ref) else {
+        let Some(item) = ctx
+            .id_cache
+            .get::<crate::ir::id::TessellatedItemId>(item_ref)
+        else {
             return Ok(()); // item unresolved — drop the occurrence
         };
 
@@ -266,7 +275,7 @@ impl SimpleEntityHandler for TessellatedAnnotationOccurrenceHandler {
             .push(AnnotationOccurrence::TessellatedAnnotationOccurrence(
                 TessellatedAnnotationOccurrence { name, styles, item },
             ));
-        ctx.annotation_occurrence_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -315,7 +324,10 @@ impl SimpleEntityHandler for AnnotationSymbolOccurrenceHandler {
 
         let mut styles = Vec::with_capacity(style_refs.len());
         for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+            if let Some(psa_id) = ctx
+                .id_cache
+                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
+            {
                 styles.push(psa_id);
             }
         }
@@ -330,7 +342,7 @@ impl SimpleEntityHandler for AnnotationSymbolOccurrenceHandler {
             .push(AnnotationOccurrence::AnnotationSymbolOccurrence(
                 AnnotationSymbolOccurrence { name, styles, item },
             ));
-        ctx.annotation_occurrence_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -389,7 +401,10 @@ impl ComplexEntityHandler for AnnotationTextOccurrenceHandler {
 
         let mut styles = Vec::with_capacity(style_refs.len());
         for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+            if let Some(psa_id) = ctx
+                .id_cache
+                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
+            {
                 styles.push(psa_id);
             }
         }
@@ -404,7 +419,7 @@ impl ComplexEntityHandler for AnnotationTextOccurrenceHandler {
             .push(AnnotationOccurrence::AnnotationTextOccurrence(
                 AnnotationTextOccurrence { name, styles, item },
             ));
-        ctx.annotation_occurrence_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -464,7 +479,10 @@ impl SimpleEntityHandler for DraughtingAnnotationOccurrenceHandler {
 
         let mut styles = Vec::with_capacity(style_refs.len());
         for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+            if let Some(psa_id) = ctx
+                .id_cache
+                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
+            {
                 styles.push(psa_id);
             }
         }
@@ -479,7 +497,7 @@ impl SimpleEntityHandler for DraughtingAnnotationOccurrenceHandler {
             .push(AnnotationOccurrence::DraughtingAnnotationOccurrence(
                 DraughtingAnnotationOccurrence { name, styles, item },
             ));
-        ctx.annotation_occurrence_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -541,7 +559,7 @@ impl SimpleEntityHandler for ApllPointHandler {
                 },
                 symbol_applied,
             }));
-        ctx.apll_point_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -642,7 +660,7 @@ impl SimpleEntityHandler for ApllPointWithSurfaceHandler {
                     associated_surface,
                 },
             ));
-        ctx.apll_point_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -671,7 +689,7 @@ impl SimpleEntityHandler for AnnotationToModelLeaderLineHandler {
         let elem_refs = read_entity_ref_list(attrs, 1, entity_id, "geometric_elements")?;
         let mut geometric_elements = Vec::with_capacity(elem_refs.len());
         for r in elem_refs {
-            if let Some(&id) = ctx.apll_point_id_map.get(&r) {
+            if let Some(id) = ctx.id_cache.get::<crate::ir::id::ApllPointId>(r) {
                 geometric_elements.push(id);
             }
         }
@@ -687,8 +705,7 @@ impl SimpleEntityHandler for AnnotationToModelLeaderLineHandler {
                     },
                 ),
             );
-        ctx.annotation_placeholder_leader_line_id_map
-            .insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -755,14 +772,14 @@ impl SimpleEntityHandler for AuxiliaryLeaderLineHandler {
         let elem_refs = read_entity_ref_list(attrs, 1, entity_id, "geometric_elements")?;
         let mut geometric_elements = Vec::with_capacity(elem_refs.len());
         for r in elem_refs {
-            if let Some(&id) = ctx.apll_point_id_map.get(&r) {
+            if let Some(id) = ctx.id_cache.get::<crate::ir::id::ApllPointId>(r) {
                 geometric_elements.push(id);
             }
         }
         let controlling_ref = read_entity_ref(attrs, 2, entity_id, "controlling_leader_line")?;
-        let Some(&controlling_leader_line) = ctx
-            .annotation_placeholder_leader_line_id_map
-            .get(&controlling_ref)
+        let Some(controlling_leader_line) =
+            ctx.id_cache
+                .get::<crate::ir::id::AnnotationPlaceholderLeaderLineId>(controlling_ref)
         else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                 entity_id,
@@ -784,8 +801,7 @@ impl SimpleEntityHandler for AuxiliaryLeaderLineHandler {
                     controlling_leader_line,
                 },
             ));
-        ctx.annotation_placeholder_leader_line_id_map
-            .insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -826,7 +842,10 @@ impl SimpleEntityHandler for AnnotationPlaceholderOccurrenceHandler {
 
         let mut styles = Vec::with_capacity(style_refs.len());
         for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+            if let Some(psa_id) = ctx
+                .id_cache
+                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
+            {
                 styles.push(psa_id);
             }
         }
@@ -847,7 +866,7 @@ impl SimpleEntityHandler for AnnotationPlaceholderOccurrenceHandler {
                     line_spacing,
                 },
             ));
-        ctx.annotation_occurrence_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -905,7 +924,10 @@ impl SimpleEntityHandler for AnnotationPlaceholderOccurrenceWithLeaderLineHandle
 
         let mut styles = Vec::with_capacity(style_refs.len());
         for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+            if let Some(psa_id) = ctx
+                .id_cache
+                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
+            {
                 styles.push(psa_id);
             }
         }
@@ -914,7 +936,10 @@ impl SimpleEntityHandler for AnnotationPlaceholderOccurrenceWithLeaderLineHandle
         };
         let mut leader_line = Vec::with_capacity(leader_refs.len());
         for r in leader_refs {
-            if let Some(&id) = ctx.annotation_placeholder_leader_line_id_map.get(&r) {
+            if let Some(id) = ctx
+                .id_cache
+                .get::<crate::ir::id::AnnotationPlaceholderLeaderLineId>(r)
+            {
                 leader_line.push(id);
             }
         }
@@ -935,7 +960,7 @@ impl SimpleEntityHandler for AnnotationPlaceholderOccurrenceWithLeaderLineHandle
                     },
                 ),
             );
-        ctx.annotation_occurrence_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -990,7 +1015,10 @@ impl SimpleEntityHandler for AnnotationOccurrenceHandler {
 
         let mut styles = Vec::with_capacity(style_refs.len());
         for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+            if let Some(psa_id) = ctx
+                .id_cache
+                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
+            {
                 styles.push(psa_id);
             }
         }
@@ -1007,7 +1035,7 @@ impl SimpleEntityHandler for AnnotationOccurrenceHandler {
                 styles,
                 item,
             }));
-        ctx.annotation_occurrence_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -1069,7 +1097,10 @@ impl ComplexEntityHandler for LeaderCurveHandler {
 
         let mut styles = Vec::with_capacity(style_refs.len());
         for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+            if let Some(psa_id) = ctx
+                .id_cache
+                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
+            {
                 styles.push(psa_id);
             }
         }
@@ -1086,7 +1117,7 @@ impl ComplexEntityHandler for LeaderCurveHandler {
                 styles,
                 item,
             }));
-        ctx.annotation_curve_occurrence_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -1153,7 +1184,10 @@ impl SimpleEntityHandler for AnnotationCurveOccurrenceHandler {
 
         let mut styles = Vec::with_capacity(style_refs.len());
         for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+            if let Some(psa_id) = ctx
+                .id_cache
+                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
+            {
                 styles.push(psa_id);
             }
         }
@@ -1168,7 +1202,7 @@ impl SimpleEntityHandler for AnnotationCurveOccurrenceHandler {
             .push(AnnotationCurveOccurrence::Plain(
                 PlainAnnotationCurveOccurrence { name, styles, item },
             ));
-        ctx.annotation_curve_occurrence_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -1218,14 +1252,20 @@ impl SimpleEntityHandler for TerminatorSymbolHandler {
 
         let mut styles = Vec::with_capacity(style_refs.len());
         for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+            if let Some(psa_id) = ctx
+                .id_cache
+                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
+            {
                 styles.push(psa_id);
             }
         }
         let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
             return Ok(());
         };
-        let Some(&annotated_curve) = ctx.annotation_curve_occurrence_id_map.get(&ac_ref) else {
+        let Some(annotated_curve) = ctx
+            .id_cache
+            .get::<crate::ir::id::AnnotationCurveOccurrenceId>(ac_ref)
+        else {
             return Ok(());
         };
 
@@ -1239,7 +1279,7 @@ impl SimpleEntityHandler for TerminatorSymbolHandler {
                 item,
                 annotated_curve,
             }));
-        ctx.annotation_occurrence_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -1304,14 +1344,20 @@ impl ComplexEntityHandler for LeaderTerminatorHandler {
 
         let mut styles = Vec::with_capacity(style_refs.len());
         for r in style_refs {
-            if let Some(&psa_id) = ctx.viz_psa_id_map.get(&r) {
+            if let Some(psa_id) = ctx
+                .id_cache
+                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
+            {
                 styles.push(psa_id);
             }
         }
         let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
             return Ok(());
         };
-        let Some(&annotated_curve) = ctx.annotation_curve_occurrence_id_map.get(&ac_ref) else {
+        let Some(annotated_curve) = ctx
+            .id_cache
+            .get::<crate::ir::id::AnnotationCurveOccurrenceId>(ac_ref)
+        else {
             return Ok(());
         };
 
@@ -1325,7 +1371,7 @@ impl ComplexEntityHandler for LeaderTerminatorHandler {
                 item,
                 annotated_curve,
             }));
-        ctx.annotation_occurrence_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -1378,9 +1424,15 @@ fn read_draughting_callout_contents(
 ) -> Vec<DraughtingCalloutElement> {
     let mut contents = Vec::with_capacity(content_refs.len());
     for r in content_refs {
-        if let Some(&id) = ctx.annotation_curve_occurrence_id_map.get(r) {
+        if let Some(id) = ctx
+            .id_cache
+            .get::<crate::ir::id::AnnotationCurveOccurrenceId>(*r)
+        {
             contents.push(DraughtingCalloutElement::AnnotationCurveOccurrence(id));
-        } else if let Some(&id) = ctx.annotation_occurrence_id_map.get(r) {
+        } else if let Some(id) = ctx
+            .id_cache
+            .get::<crate::ir::id::AnnotationOccurrenceId>(*r)
+        {
             contents.push(DraughtingCalloutElement::AnnotationOccurrence(id));
         }
         // else: unmodelled select member (e.g. annotation_fill_area_occurrence)
@@ -1433,7 +1485,7 @@ impl SimpleEntityHandler for DraughtingCalloutHandler {
                 name,
                 contents,
             }));
-        ctx.draughting_callout_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -1473,7 +1525,7 @@ impl SimpleEntityHandler for LeaderDirectedCalloutHandler {
                 name,
                 contents,
             }));
-        ctx.draughting_callout_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -1506,10 +1558,16 @@ impl SimpleEntityHandler for DraughtingCalloutRelationshipHandler {
         let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
         let relating_ref = read_entity_ref(attrs, 2, entity_id, "relating_draughting_callout")?;
         let related_ref = read_entity_ref(attrs, 3, entity_id, "related_draughting_callout")?;
-        let Some(&relating) = ctx.draughting_callout_id_map.get(&relating_ref) else {
+        let Some(relating) = ctx
+            .id_cache
+            .get::<crate::ir::id::DraughtingCalloutId>(relating_ref)
+        else {
             return Ok(());
         };
-        let Some(&related) = ctx.draughting_callout_id_map.get(&related_ref) else {
+        let Some(related) = ctx
+            .id_cache
+            .get::<crate::ir::id::DraughtingCalloutId>(related_ref)
+        else {
             return Ok(());
         };
         ctx.pmi
@@ -1549,12 +1607,15 @@ fn resolve_annotation_occurrence_ref(
     ctx: &ReaderContext,
     entity_ref: u64,
 ) -> Option<AnnotationOccurrenceRef> {
-    if let Some(&id) = ctx.annotation_occurrence_id_map.get(&entity_ref) {
+    if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::id::AnnotationOccurrenceId>(entity_ref)
+    {
         Some(AnnotationOccurrenceRef::AnnotationOccurrence(id))
     } else {
-        ctx.annotation_curve_occurrence_id_map
-            .get(&entity_ref)
-            .map(|&id| AnnotationOccurrenceRef::AnnotationCurveOccurrence(id))
+        ctx.id_cache
+            .get::<crate::ir::id::AnnotationCurveOccurrenceId>(entity_ref)
+            .map(AnnotationOccurrenceRef::AnnotationCurveOccurrence)
     }
 }
 
@@ -1661,7 +1722,8 @@ impl SimpleEntityHandler for MeasureQualificationHandler {
         let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
         let qm_ref = read_entity_ref(attrs, 2, entity_id, "qualified_measure")?;
         let qualifier_refs = read_entity_ref_list(attrs, 3, entity_id, "qualifiers")?;
-        let Some(&qualified_measure) = ctx.mwu_id_map.get(&qm_ref) else {
+        let Some(qualified_measure) = ctx.id_cache.get::<crate::ir::id::MeasureWithUnitId>(qm_ref)
+        else {
             return Ok(());
         };
         let mut qualifiers = Vec::with_capacity(qualifier_refs.len());
@@ -1890,7 +1952,10 @@ impl SimpleEntityHandler for DatumHandler {
         let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_step_id) else {
             return Ok(());
         };
-        let Some(&target) = ctx.product_arena_map.get(&product_step_id) else {
+        let Some(target) = ctx
+            .id_cache
+            .get::<crate::ir::id::ProductId>(product_step_id)
+        else {
             return Ok(());
         };
 
@@ -2005,7 +2070,10 @@ impl SimpleEntityHandler for DimensionalSizeWithDatumFeatureHandler {
         let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_step_id) else {
             return Ok(());
         };
-        let Some(&target) = ctx.product_arena_map.get(&product_step_id) else {
+        let Some(target) = ctx
+            .id_cache
+            .get::<crate::ir::id::ProductId>(product_step_id)
+        else {
             return Ok(());
         };
 
@@ -2069,7 +2137,10 @@ fn read_datum_feature_variant(
     let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_step_id) else {
         return Ok(());
     };
-    let Some(&target) = ctx.product_arena_map.get(&product_step_id) else {
+    let Some(target) = ctx
+        .id_cache
+        .get::<crate::ir::id::ProductId>(product_step_id)
+    else {
         return Ok(());
     };
 
@@ -2412,12 +2483,18 @@ impl SimpleEntityHandler for AngularLocationHandler {
 /// `representation_item` arena (`repr_item_id_map`). `None` when the ref
 /// resolves to neither.
 fn resolve_tolerance_magnitude(ctx: &ReaderContext, item_ref: u64) -> Option<ToleranceMagnitude> {
-    if let Some(&id) = ctx.mwu_id_map.get(&item_ref) {
+    if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::id::MeasureWithUnitId>(item_ref)
+    {
         return Some(ToleranceMagnitude::MeasureWithUnit(id));
     }
     // MEASURE_REPRESENTATION_ITEM lives in the representation_item arena.
     // Guard on the variant: repr_item_id_map also holds QRI / VRI.
-    if let Some(&id) = ctx.repr_item_id_map.get(&item_ref) {
+    if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::id::RepresentationItemId>(item_ref)
+    {
         if matches!(
             ctx.representation_items[id],
             crate::ir::representation_item::RepresentationItem::MeasureRepresentationItem(_)
@@ -2822,7 +2899,10 @@ fn read_general_datum_reference_data(
     let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_step_id) else {
         return Ok(None);
     };
-    let Some(&target) = ctx.product_arena_map.get(&product_step_id) else {
+    let Some(target) = ctx
+        .id_cache
+        .get::<crate::ir::id::ProductId>(product_step_id)
+    else {
         return Ok(None);
     };
     // base — `datum_or_common_datum` SELECT: a single `DATUM` ref, or a
@@ -3808,7 +3888,7 @@ impl SimpleEntityHandler for LimitsAndFitsHandler {
                 grade,
                 source,
             });
-        ctx.limits_and_fits_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -3839,9 +3919,8 @@ fn resolve_tolerance_method_definition(
     if let Some(id) = ctx.id_cache.get::<crate::ir::ToleranceValueId>(item_ref) {
         return Some(ToleranceMethodDefinition::Value(id));
     }
-    ctx.limits_and_fits_id_map
-        .get(&item_ref)
-        .copied()
+    ctx.id_cache
+        .get::<crate::ir::id::LimitsAndFitsId>(item_ref)
         .map(ToleranceMethodDefinition::LimitsAndFits)
 }
 
@@ -4192,7 +4271,8 @@ fn read_dmia_base(
         _ => return Ok(None),
     };
     let def_ref = read_entity_ref(attrs, 2, entity_id, "definition")?;
-    let definition = if let Some(&id) = ctx.repr_id_map.get(&def_ref) {
+    let definition = if let Some(id) = ctx.id_cache.get::<crate::ir::id::RepresentationId>(def_ref)
+    {
         DraughtingModelItemDefinition::Representation(id)
     } else if let Some(id) = ctx.id_cache.get::<crate::ir::DimensionalSizeId>(def_ref) {
         DraughtingModelItemDefinition::DimensionalSize(id)
@@ -4221,13 +4301,22 @@ fn read_dmia_base(
         return Ok(None);
     };
     let used_ref = read_entity_ref(attrs, 3, entity_id, "used_representation")?;
-    let Some(&used_representation) = ctx.repr_id_map.get(&used_ref) else {
+    let Some(used_representation) = ctx
+        .id_cache
+        .get::<crate::ir::id::RepresentationId>(used_ref)
+    else {
         return Ok(None);
     };
     let item_ref = read_entity_ref(attrs, 4, entity_id, "identified_item")?;
-    let identified_item = if let Some(&id) = ctx.annotation_occurrence_id_map.get(&item_ref) {
+    let identified_item = if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::id::AnnotationOccurrenceId>(item_ref)
+    {
         DraughtingModelIdentifiedItem::AnnotationOccurrence(id)
-    } else if let Some(&id) = ctx.draughting_callout_id_map.get(&item_ref) {
+    } else if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::id::DraughtingCalloutId>(item_ref)
+    {
         DraughtingModelIdentifiedItem::DraughtingCallout(id)
     } else {
         return Ok(None);
@@ -4263,7 +4352,7 @@ impl SimpleEntityHandler for DraughtingModelItemAssociationHandler {
             .get_or_insert_with(PmiPool::default)
             .draughting_model_item_associations
             .push(dmia);
-        ctx.dmia_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -4338,7 +4427,10 @@ impl SimpleEntityHandler for DraughtingModelItemAssociationWithPlaceholderHandle
             return Ok(());
         };
         let ph_ref = read_entity_ref(attrs, 5, entity_id, "annotation_placeholder")?;
-        let Some(&ph_id) = ctx.annotation_occurrence_id_map.get(&ph_ref) else {
+        let Some(ph_id) = ctx
+            .id_cache
+            .get::<crate::ir::id::AnnotationOccurrenceId>(ph_ref)
+        else {
             return Ok(());
         };
         dmia.annotation_placeholder = Some(ph_id);
@@ -4347,7 +4439,7 @@ impl SimpleEntityHandler for DraughtingModelItemAssociationWithPlaceholderHandle
             .get_or_insert_with(PmiPool::default)
             .draughting_model_item_associations
             .push(dmia);
-        ctx.dmia_id_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

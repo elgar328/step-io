@@ -34,7 +34,8 @@ impl SimpleEntityHandler for BoundedPCurveHandler {
         let Some(&basis_surface) = ctx.surface_map.get(&basis_ref) else {
             return Ok(());
         };
-        let Some(&reference_to_curve) = ctx.repr_id_map.get(&ref_ref) else {
+        let Some(reference_to_curve) = ctx.id_cache.get::<crate::ir::id::RepresentationId>(ref_ref)
+        else {
             return Ok(());
         };
         ctx.geometry
