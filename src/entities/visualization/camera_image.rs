@@ -97,7 +97,7 @@ impl ComplexEntityHandler for CameraImage3dWithScaleHandler {
     fn write(buf: &mut WriteBuffer, ci: CameraImage) -> Result<u64, WriteError> {
         // Re-emit the AND-combined complex form (alphabetical parts); data only on
         // MAPPED_ITEM (mapping_source, mapping_target) + REPRESENTATION_ITEM (name).
-        let source = buf.representation_map_step_ids[ci.mapping_source.0 as usize];
+        let source = buf.step_id(ci.mapping_source);
         let target = buf.emit_planar_extent(ci.mapping_target)?;
         let n = buf.fresh();
         buf.entities.push(WriterEntity {
@@ -147,7 +147,7 @@ fn emit_camera_image(
     ci: CameraImage,
     derive_scale: bool,
 ) -> Result<u64, WriteError> {
-    let source = buf.representation_map_step_ids[ci.mapping_source.0 as usize];
+    let source = buf.step_id(ci.mapping_source);
     let target = buf.emit_planar_extent(ci.mapping_target)?;
     let mut attrs = vec![
         Attribute::String(ci.name),

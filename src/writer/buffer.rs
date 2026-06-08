@@ -86,10 +86,6 @@ pub(crate) struct WriteBuffer<'m> {
     /// variants leave their slot `0` since nothing references them. Consumed by
     /// `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.style_context`.
     pub(crate) representation_relationship_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `REPRESENTATION_MAP`, indexed by
-    /// `RepresentationMapId.0`. Populated by `emit_mapped_items` before the
-    /// `MAPPED_ITEM` loop so each item resolves its `mapping_source` ref.
-    pub(crate) representation_map_step_ids: Vec<u64>,
     // tessellated_item / tessellated_face / tessellated_surface_set step ids
     // now live in `step_ids` keyed by their arena-id type.
     /// Emitted `LEADER_CURVE` step ids, indexed by
@@ -345,11 +341,6 @@ pub(crate) struct WriteBuffer<'m> {
     /// Empty when the model has no assembly (kernel-built IR with
     /// properties only — the property emitter silently skips in that case).
     pub(crate) product_def_ids: std::collections::HashMap<ProductId, u64>,
-    /// `MappedItemId → MAPPED_ITEM` (or `CAMERA_IMAGE` /
-    /// `CAMERA_IMAGE_3D_WITH_SCALE`) step id. Filled by `emit_mapped_items`
-    /// (`Itself`) and `emit_camera_image_arena` (`CameraImage` variants);
-    /// consumed by `emit_representation_item_ref` for the `MappedItem` variant.
-    pub(crate) mapped_item_step_ids: Vec<u64>,
     /// `ProductId → PRODUCT entity step id`. Phase pc-unify-a:
     /// consumed by `emit_product_categories_arena` so PRPC.products
     /// refs land on the right entity (PDEF doesn't match the schema
@@ -426,7 +417,6 @@ impl<'m> WriteBuffer<'m> {
             representation_step_ids: Vec::new(),
             external_ref_step_ids: Vec::new(),
             representation_relationship_step_ids: Vec::new(),
-            representation_map_step_ids: Vec::new(),
             acoc_step_ids: Vec::new(),
             ao_step_ids: Vec::new(),
             apll_point_step_ids: Vec::new(),
@@ -489,7 +479,6 @@ impl<'m> WriteBuffer<'m> {
             pc_step_ids: Vec::new(),
             pdc_step_ids: Vec::new(),
             product_def_ids: std::collections::HashMap::new(),
-            mapped_item_step_ids: Vec::new(),
             product_step_ids: std::collections::HashMap::new(),
             product_category_step_ids: Vec::new(),
             product_definition_formation_step_ids: Vec::new(),

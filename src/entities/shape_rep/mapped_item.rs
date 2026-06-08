@@ -134,7 +134,7 @@ impl SimpleEntityHandler for MappedItemHandler {
         let MappedItem::Itself(d) = mi else {
             return Ok(0);
         };
-        let source = buf.representation_map_step_ids[d.mapping_source.0 as usize];
+        let source = buf.step_id(d.mapping_source);
         let target = buf.emit_representation_item_ref(d.mapping_target)?;
         Ok(buf.push_simple(
             "MAPPED_ITEM",
