@@ -49,8 +49,9 @@ impl SimpleEntityHandler for CartesianPoint2dHandler {
     }
 
     fn write(buf: &mut WriteBuffer, id: Point2dId) -> Result<u64, WriteError> {
-        if let Some(&n) = buf.point_2d_ids.get(&id) {
-            return Ok(n);
+        let cached = buf.step_id(id);
+        if cached != 0 {
+            return Ok(cached);
         }
         let p = buf
             .model
@@ -73,7 +74,7 @@ impl SimpleEntityHandler for CartesianPoint2dHandler {
                 ],
             },
         });
-        buf.point_2d_ids.insert(id, n);
+        buf.set_step_id(id, n);
         Ok(n)
     }
 }

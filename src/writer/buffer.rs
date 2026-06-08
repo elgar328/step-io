@@ -13,8 +13,8 @@ use std::collections::HashMap;
 use super::WriteError;
 use super::entity::WriterEntity;
 use crate::ir::{
-    Curve2dId, CurveId, Direction2dId, DirectionId, EdgeId, FaceId, Placement1dId, Placement2dId,
-    Placement3dId, Point2dId, PointId, ProductId, ShellId, SolidId, StepModel, SurfaceId, VertexId,
+    CurveId, DirectionId, Placement1dId, Placement3dId, PointId, ProductId, StepModel, SurfaceId,
+    VertexId,
 };
 
 pub(crate) mod assembly;
@@ -41,22 +41,9 @@ pub(crate) struct WriteBuffer<'m> {
     pub(crate) direction_ids: HashMap<DirectionId, u64>,
     pub(crate) placement_ids: HashMap<Placement3dId, u64>,
     pub(crate) placement_1d_ids: HashMap<Placement1dId, u64>,
-    pub(crate) placement_2d_ids: HashMap<Placement2dId, u64>,
     pub(crate) curve_ids: HashMap<CurveId, u64>,
     pub(crate) surface_ids: HashMap<SurfaceId, u64>,
     pub(crate) vertex_ids: HashMap<VertexId, u64>,
-    pub(crate) edge_ids: HashMap<EdgeId, u64>,
-    pub(crate) face_ids: HashMap<FaceId, u64>,
-    pub(crate) shell_ids: HashMap<ShellId, u64>,
-    pub(crate) solid_ids: HashMap<SolidId, u64>,
-    pub(crate) point_2d_ids: HashMap<Point2dId, u64>,
-    pub(crate) direction_2d_ids: HashMap<Direction2dId, u64>,
-    pub(crate) curve_2d_ids: HashMap<Curve2dId, u64>,
-    /// Emitted `PLANAR_EXTENT` / `PLANAR_BOX` step ids, indexed by
-    /// `PlanarExtentId` — keeps `emit_planar_extent` idempotent so the
-    /// standalone arena loop and a `VIEW_VOLUME`'s `view_window` ref emit
-    /// the entity exactly once.
-    pub(crate) planar_extent_ids: HashMap<crate::ir::PlanarExtentId, u64>,
     /// STEP entity ids of every emitted `REPRESENTATION_CONTEXT` complex
     /// entity, indexed by `UnitContextId.0`. Populated up-front in `emit_all`
     /// so every representation emitter can resolve its `Option<UnitContextId>`
@@ -140,18 +127,9 @@ impl<'m> WriteBuffer<'m> {
             direction_ids: HashMap::new(),
             placement_ids: HashMap::new(),
             placement_1d_ids: HashMap::new(),
-            placement_2d_ids: HashMap::new(),
             curve_ids: HashMap::new(),
             surface_ids: HashMap::new(),
             vertex_ids: HashMap::new(),
-            edge_ids: HashMap::new(),
-            face_ids: HashMap::new(),
-            shell_ids: HashMap::new(),
-            solid_ids: HashMap::new(),
-            point_2d_ids: HashMap::new(),
-            direction_2d_ids: HashMap::new(),
-            curve_2d_ids: HashMap::new(),
-            planar_extent_ids: HashMap::new(),
             unit_context_ids: Vec::new(),
             length_dim_exp_step: None,
             dimensionless_dim_exp_step: None,

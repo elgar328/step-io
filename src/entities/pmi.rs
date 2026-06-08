@@ -580,11 +580,7 @@ impl SimpleEntityHandler for ApllPointHandler {
             ApllPointElement::ApllPointWithSurface(data) => {
                 // Surfaces (`face_surface`) are emitted in the topology pass,
                 // well before the PMI pass, so `face_ids` is populated here.
-                let surface_step = buf
-                    .face_ids
-                    .get(&data.associated_surface)
-                    .copied()
-                    .unwrap_or(0);
+                let surface_step = buf.step_id(data.associated_surface);
                 Ok(buf.push_simple(
                     "APLL_POINT_WITH_SURFACE",
                     vec![

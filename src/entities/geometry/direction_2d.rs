@@ -44,8 +44,9 @@ impl SimpleEntityHandler for Direction2dHandler {
     }
 
     fn write(buf: &mut WriteBuffer, id: Direction2dId) -> Result<u64, WriteError> {
-        if let Some(&n) = buf.direction_2d_ids.get(&id) {
-            return Ok(n);
+        let cached = buf.step_id(id);
+        if cached != 0 {
+            return Ok(cached);
         }
         let d = buf
             .model
@@ -68,7 +69,7 @@ impl SimpleEntityHandler for Direction2dHandler {
                 ],
             },
         });
-        buf.direction_2d_ids.insert(id, n);
+        buf.set_step_id(id, n);
         Ok(n)
     }
 }

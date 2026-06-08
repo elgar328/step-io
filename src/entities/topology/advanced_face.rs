@@ -57,8 +57,9 @@ pub(super) fn read_face_body(
 /// the IR `Face` and emits with the entity name selected by the IR's
 /// stored variant (so callers can dispatch by id alone).
 pub(super) fn write_face_body(buf: &mut WriteBuffer, id: FaceId) -> Result<u64, WriteError> {
-    if let Some(&n) = buf.face_ids.get(&id) {
-        return Ok(n);
+    let cached = buf.step_id(id);
+    if cached != 0 {
+        return Ok(cached);
     }
     let f: Face = buf
         .model
@@ -94,7 +95,7 @@ pub(super) fn write_face_body(buf: &mut WriteBuffer, id: FaceId) -> Result<u64, 
             ],
         },
     });
-    buf.face_ids.insert(id, n);
+    buf.set_step_id(id, n);
     Ok(n)
 }
 

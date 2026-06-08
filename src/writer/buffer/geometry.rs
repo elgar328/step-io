@@ -303,20 +303,22 @@ impl WriteBuffer<'_> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::geometry::planar_extent::{PlanarBoxHandler, PlanarExtentHandler};
         use crate::ir::PlanarExtent;
-        if let Some(&n) = self.planar_extent_ids.get(&id) {
-            return Ok(n);
+        let cached = self.step_id(id);
+        if cached != 0 {
+            return Ok(cached);
         }
         let n = match self.model.geometry.planar_extents[id].clone() {
             PlanarExtent::Itself(data) => PlanarExtentHandler::write(self, data)?,
             PlanarExtent::PlanarBox(pb) => PlanarBoxHandler::write(self, pb)?,
         };
-        self.planar_extent_ids.insert(id, n);
+        self.set_step_id(id, n);
         Ok(n)
     }
 
     pub(crate) fn emit_curve_2d(&mut self, id: Curve2dId) -> Result<u64, WriteError> {
-        if let Some(&n) = self.curve_2d_ids.get(&id) {
-            return Ok(n);
+        let cached = self.step_id(id);
+        if cached != 0 {
+            return Ok(cached);
         }
         let curve = curve_2d_at(self.model, id)?.clone();
         let n = match curve {
@@ -326,7 +328,7 @@ impl WriteBuffer<'_> {
             Curve2d::Nurbs(nu) => self.emit_nurbs_curve_2d(&nu)?,
             Curve2d::Polyline(polyline) => self.emit_polyline_2d(polyline)?,
         };
-        self.curve_2d_ids.insert(id, n);
+        self.set_step_id(id, n);
         Ok(n)
     }
 

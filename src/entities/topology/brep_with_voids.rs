@@ -85,8 +85,9 @@ impl SimpleEntityHandler for BrepWithVoidsHandler {
     }
 
     fn write(buf: &mut WriteBuffer, id: SolidId) -> Result<u64, WriteError> {
-        if let Some(&n) = buf.solid_ids.get(&id) {
-            return Ok(n);
+        let cached = buf.step_id(id);
+        if cached != 0 {
+            return Ok(cached);
         }
         let s: Solid = buf
             .model
@@ -129,7 +130,7 @@ impl SimpleEntityHandler for BrepWithVoidsHandler {
                 ],
             },
         });
-        buf.solid_ids.insert(id, n);
+        buf.set_step_id(id, n);
         Ok(n)
     }
 }

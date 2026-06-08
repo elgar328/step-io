@@ -64,8 +64,9 @@ impl SimpleEntityHandler for EdgeCurveHandler {
     }
 
     fn write(buf: &mut WriteBuffer, id: EdgeId) -> Result<u64, WriteError> {
-        if let Some(&n) = buf.edge_ids.get(&id) {
-            return Ok(n);
+        let cached = buf.step_id(id);
+        if cached != 0 {
+            return Ok(cached);
         }
         let e: Edge = buf
             .model
@@ -100,7 +101,7 @@ impl SimpleEntityHandler for EdgeCurveHandler {
                 ],
             },
         });
-        buf.edge_ids.insert(id, n);
+        buf.set_step_id(id, n);
         Ok(n)
     }
 }

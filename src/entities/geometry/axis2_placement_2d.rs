@@ -62,8 +62,9 @@ impl SimpleEntityHandler for Axis2Placement2dHandler {
     }
 
     fn write(buf: &mut WriteBuffer, id: Placement2dId) -> Result<u64, WriteError> {
-        if let Some(&n) = buf.placement_2d_ids.get(&id) {
-            return Ok(n);
+        let cached = buf.step_id(id);
+        if cached != 0 {
+            return Ok(cached);
         }
         let placement = buf.model.geometry.placements_2d[id];
         let loc = CartesianPoint2dHandler::write(buf, placement.location)?;
@@ -83,7 +84,7 @@ impl SimpleEntityHandler for Axis2Placement2dHandler {
                 ],
             },
         });
-        buf.placement_2d_ids.insert(id, n);
+        buf.set_step_id(id, n);
         Ok(n)
     }
 }

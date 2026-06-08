@@ -49,8 +49,9 @@ pub(super) fn read_shell_body(
 /// IR `Shell`, emits the matching entity name from `Shell::is_open`,
 /// and caches the freshly emitted id in `shell_ids`.
 pub(super) fn write_shell_body(buf: &mut WriteBuffer, id: ShellId) -> Result<u64, WriteError> {
-    if let Some(&n) = buf.shell_ids.get(&id) {
-        return Ok(n);
+    let cached = buf.step_id(id);
+    if cached != 0 {
+        return Ok(cached);
     }
     let s: Shell = buf
         .model
@@ -85,7 +86,7 @@ pub(super) fn write_shell_body(buf: &mut WriteBuffer, id: ShellId) -> Result<u64
             ],
         },
     });
-    buf.shell_ids.insert(id, n);
+    buf.set_step_id(id, n);
     Ok(n)
 }
 
