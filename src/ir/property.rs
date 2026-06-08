@@ -14,7 +14,7 @@ use super::arena::Arena;
 use super::id::{
     AddressId, ApplicationContextId, AssemblyComponentUsageId, CharacterizedObjectId,
     DerivedUnitId, DimensionalLocationId, DocumentId, GeneralPropertyId, GroupId, NamedUnitId,
-    PersonAndOrganizationId, ProductId, PropertyDefinitionId,
+    PersonAndOrganizationId, ProductId, PropertyDefinitionId, RepresentationId,
 };
 use super::shape_aspect_ref::ShapeAspectRef;
 use super::shape_rep::{DescriptiveItem, RepresentationContextRef};
@@ -147,6 +147,9 @@ pub struct DescriptionAttribute {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DescriptionAttributeItem {
     PersonAndOrganization(PersonAndOrganizationId),
+    /// `description_attribute_select` includes `representation`; AP242
+    /// "supplemental geometry" notes describe a `SHAPE_REPRESENTATION`.
+    Representation(RepresentationId),
 }
 
 /// `ID_ATTRIBUTE(attribute_value, identified_item)` — AP242 identifier

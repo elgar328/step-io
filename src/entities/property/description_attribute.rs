@@ -1,9 +1,10 @@
 //! `DESCRIPTION_ATTRIBUTE` handler.
 //!
-//! `(attribute_value, described_item)` — SELECT target. Initial coverage:
-//! `person_and_organization` only. Other variants
-//! (`representation`, `application_context`, `approval_role`, …) are
-//! silently dropped with a warning; future phases expand
+//! `(attribute_value, described_item)` — SELECT target. Covers
+//! `person_and_organization` and `representation` (AP242 "supplemental
+//! geometry" notes target a `SHAPE_REPRESENTATION`). Other variants
+//! (`application_context`, `approval_role`, …) are dropped with a warning;
+//! future phases expand
 //! [`DescriptionAttributeItem`](crate::ir::DescriptionAttributeItem).
 
 use crate::entities::SimpleEntityHandler;
@@ -41,6 +42,8 @@ impl SimpleEntityHandler for DescriptionAttributeHandler {
 
         let described_item = if let Some(&pao_id) = ctx.plm_p_and_o_id_map.get(&item_ref) {
             DescriptionAttributeItem::PersonAndOrganization(pao_id)
+        } else if let Some(&repr_id) = ctx.repr_id_map.get(&item_ref) {
+            DescriptionAttributeItem::Representation(repr_id)
         } else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                 entity_id,

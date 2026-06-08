@@ -2300,6 +2300,50 @@ fn pd_based_shape_definition_representation_round_trips() {
 }
 
 #[test]
+fn description_attribute_targeting_shape_representation_round_trips() {
+    // AP242 "supplemental geometry" notes attach a DESCRIPTION_ATTRIBUTE to a
+    // SHAPE_REPRESENTATION (the `representation` member of
+    // description_attribute_select).
+    use step_io::ir::property::{DescriptionAttribute, DescriptionAttributeItem, PropertyPool};
+    use step_io::ir::shape_rep::{PlainRepr, Representation, RepresentationContextRef};
+    let mut model = empty_model();
+    let ctx = mm_radian_steradian(&mut model);
+    model.units.push(ctx);
+    let rep = model.representations.push(Representation::Plain(PlainRepr {
+        name: "supplemental geometry".into(),
+        context: Some(RepresentationContextRef::Unitful(
+            step_io::ir::UnitContextId(0),
+        )),
+        frame: None,
+    }));
+
+    let mut pool = PropertyPool::default();
+    pool.description_attributes.push(DescriptionAttribute {
+        attribute_value: "supplemental geometry subset".into(),
+        described_item: DescriptionAttributeItem::Representation(rep),
+    });
+    model.properties = Some(pool);
+
+    let text = model.write_to_string().expect("write");
+    assert!(
+        text.contains("DESCRIPTION_ATTRIBUTE("),
+        "DESCRIPTION_ATTRIBUTE not emitted"
+    );
+    let re = reconvert(&text);
+    let re_pool = re.properties.as_ref().expect("properties");
+    assert_eq!(re_pool.description_attributes.len(), 1);
+    let da = re_pool.description_attributes.iter().next().unwrap();
+    assert!(
+        matches!(
+            da.described_item,
+            DescriptionAttributeItem::Representation(_)
+        ),
+        "described_item should round-trip as a Representation"
+    );
+    assert_eq!(da.attribute_value, "supplemental geometry subset");
+}
+
+#[test]
 fn shape_aspect_based_shape_definition_representation_round_trips() {
     use step_io::ir::property::{PropertyPool, SdrDefinition, ShapeDefinitionRepresentationLink};
     use step_io::ir::shape_rep::{PlainRepr, Representation, RepresentationContextRef};

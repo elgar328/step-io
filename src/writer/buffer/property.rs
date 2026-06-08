@@ -258,6 +258,12 @@ impl WriteBuffer<'_> {
                     };
                     step
                 }
+                DescriptionAttributeItem::Representation(repr_id) => {
+                    let Some(&step) = self.representation_step_ids.get(repr_id.0 as usize) else {
+                        continue;
+                    };
+                    step
+                }
             };
             let _ = DescriptionAttributeHandler::write(
                 self,
