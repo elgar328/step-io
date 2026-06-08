@@ -49,7 +49,7 @@ impl SimpleEntityHandler for BoundedPCurveHandler {
 
     fn write(buf: &mut WriteBuffer, b: BoundedPCurve) -> Result<u64, WriteError> {
         let basis_step = buf.emit_surface(b.basis_surface)?;
-        let ref_step = buf.representation_step_ids[b.reference_to_curve.0 as usize];
+        let ref_step = buf.step_id(b.reference_to_curve);
         Ok(buf.push_simple(
             "BOUNDED_PCURVE",
             vec![

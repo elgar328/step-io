@@ -64,34 +64,13 @@ pub(crate) struct WriteBuffer<'m> {
     /// so every representation emitter can resolve its `Option<UnitContextId>`
     /// to a cached id.
     pub(crate) unit_context_ids: Vec<u64>,
-    /// STEP entity id of every emitted representation (`ABSR` / `MSSR` /
-    /// plain `SR` / `GBWSR` / `GBSSR` / `MDGPR`), indexed by
-    /// `RepresentationId.0`. Geometry representations are filled by
-    /// `emit_representations_pre_pass` in `representations` arena order
-    /// before the product chain runs; `MDGPR` slots are appended by
-    /// `emit_visualization_if_set`. The product chain resolves each
-    /// product's `representation_id` / `outer_representation_id` to a
-    /// cached id instead of re-emitting the representation inline. Empty
-    /// for hand/kernel-built IR (the arena is reader-populated only).
-    pub(crate) representation_step_ids: Vec<u64>,
     /// Reserved STEP id of every P21 edition 3 external reference, indexed by
     /// `ExternalRefId.0`. Reserved up-front in `emit_all` (before any DATA
     /// entity that resolves one, e.g. `CIRCULAR_AREA.centre`) and emitted in
     /// the `REFERENCE` section by `write_file`.
     pub(crate) external_ref_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `RepresentationRelationship`, indexed by
-    /// `RepresentationRelationshipId.0`. Only the assembly
-    /// `RepresentationRelationshipWithTransformation` slots are populated (by
-    /// `emit_instance_bundle`, inline with each placement); standalone RR
-    /// variants leave their slot `0` since nothing references them. Consumed by
-    /// `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.style_context`.
-    pub(crate) representation_relationship_step_ids: Vec<u64>,
     // tessellated_item / tessellated_face / tessellated_surface_set step ids
     // now live in `step_ids` keyed by their arena-id type.
-    /// Emitted `representation_item` arena step ids (phase
-    /// repr-item-arena-1), indexed by `RepresentationItemId.0`. Consumed
-    /// by `emit_representation_item_ref` 의 11번째 variant.
-    pub(crate) representation_item_step_ids: Vec<u64>,
     // units-pool step ids (NAMED_UNIT / MEASURE_WITH_UNIT / DERIVED_UNIT_ELEMENT
     // / DERIVED_UNIT) now live in `step_ids` keyed by their arena-id type.
     /// Lazily emitted `DIMENSIONAL_EXPONENTS(1, 0, ...)` step id, shared by
@@ -182,10 +161,7 @@ impl<'m> WriteBuffer<'m> {
             curve_2d_ids: HashMap::new(),
             planar_extent_ids: HashMap::new(),
             unit_context_ids: Vec::new(),
-            representation_step_ids: Vec::new(),
             external_ref_step_ids: Vec::new(),
-            representation_relationship_step_ids: Vec::new(),
-            representation_item_step_ids: Vec::new(),
             length_dim_exp_step: None,
             dimensionless_dim_exp_step: None,
             mass_dim_exp_step: None,
@@ -211,9 +187,6 @@ impl<'m> WriteBuffer<'m> {
         // all cross-pool references backward (parent after children).
         // Arena iteration yields the original Id order, so dedup maps set
         // in one pass are reused in the next.
-        self.representation_step_ids = vec![0u64; self.model.representations.len()];
-        self.representation_relationship_step_ids =
-            vec![0u64; self.model.representation_relationships.len()];
         // Reserve an id per P21 edition 3 external reference up front (in arena
         // order) so any DATA entity resolving one — e.g. CIRCULAR_AREA.centre —
         // emits a consistent `#N`, and write_file can emit the REFERENCE

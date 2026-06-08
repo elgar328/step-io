@@ -74,7 +74,7 @@ impl SimpleEntityHandler for ItemIdentifiedRepresentationUsageHandler {
             IiruDefinition::DimensionalSize(id) => buf.step_id(id),
             IiruDefinition::GeometricTolerance(id) => buf.step_id(id),
         };
-        let used_step = buf.representation_step_ids[iiru.used_representation.0 as usize];
+        let used_step = buf.step_id(iiru.used_representation);
         let identified_attr = emit_iiru_identified_item(buf, iiru.identified_item)?;
         let desc_attr = match iiru.description {
             Some(d) => Attribute::String(d),

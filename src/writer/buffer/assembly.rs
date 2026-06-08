@@ -291,7 +291,7 @@ impl WriteBuffer<'_> {
                 // Reader-built IR: the representation was pre-emitted in
                 // arena order by `emit_representations_pre_pass`. Reuse the
                 // cached step id rather than re-emitting inline.
-                let geo_sr = self.representation_step_ids[rep_id.0 as usize];
+                let geo_sr = self.step_id(rep_id);
                 match product.outer_representation_id {
                     // Fusion 360 / CATIA indirect form: the outer plain SR
                     // wrapper is a separate pre-emitted arena entry. The
@@ -299,7 +299,7 @@ impl WriteBuffer<'_> {
                     // emitted from the `representation_relationships`
                     // arena (phase srr-unify-b), so we only need to point
                     // the SDR at the outer SR here.
-                    Some(outer_id) => self.representation_step_ids[outer_id.0 as usize],
+                    Some(outer_id) => self.step_id(outer_id),
                     None => geo_sr,
                 }
             } else {
@@ -432,7 +432,7 @@ impl WriteBuffer<'_> {
         for (id, repr) in reprs.iter_with_ids() {
             if let Representation::DraughtingModel(dm) = repr {
                 let step_id = DraughtingModelHandler::write(self, dm.clone())?;
-                self.representation_step_ids[id.0 as usize] = step_id;
+                self.set_step_id(id, step_id);
             }
         }
         Ok(())
@@ -455,7 +455,7 @@ impl WriteBuffer<'_> {
         for (id, repr) in reprs.iter_with_ids() {
             if let Representation::TessellatedShapeRepresentation(tsr) = repr {
                 let step_id = TessellatedShapeRepresentationHandler::write(self, tsr.clone())?;
-                self.representation_step_ids[id.0 as usize] = step_id;
+                self.set_step_id(id, step_id);
             }
         }
         Ok(())
@@ -477,7 +477,7 @@ impl WriteBuffer<'_> {
         for (id, repr) in reprs.iter_with_ids() {
             if let Representation::ConstructiveGeometry(cgr) = repr {
                 let step_id = ConstructiveGeometryRepresentationHandler::write(self, cgr.clone())?;
-                self.representation_step_ids[id.0 as usize] = step_id;
+                self.set_step_id(id, step_id);
             }
         }
         Ok(())
@@ -496,7 +496,7 @@ impl WriteBuffer<'_> {
         for (id, repr) in reprs.iter_with_ids() {
             if let Representation::ShapeRepresentationWithParameters(srwp) = repr {
                 let step_id = ShapeRepresentationWithParametersHandler::write(self, srwp.clone())?;
-                self.representation_step_ids[id.0 as usize] = step_id;
+                self.set_step_id(id, step_id);
             }
         }
         Ok(())
@@ -522,16 +522,8 @@ impl WriteBuffer<'_> {
             match rr {
                 RepresentationRelationship::Itself(data) => {
                     use crate::entities::shape_rep::representation_relationship::RepresentationRelationshipHandler;
-                    let r1 = self
-                        .representation_step_ids
-                        .get(data.rep_1.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
-                    let r2 = self
-                        .representation_step_ids
-                        .get(data.rep_2.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                    let r1 = self.step_id(data.rep_1);
+                    let r2 = self.step_id(data.rep_2);
                     if r1 == 0 || r2 == 0 {
                         continue;
                     }
@@ -544,32 +536,16 @@ impl WriteBuffer<'_> {
                 }
                 RepresentationRelationship::MechanicalDesignAndDraughtingRelationship(mddr) => {
                     use crate::entities::shape_rep::mddr::MechanicalDesignAndDraughtingRelationshipHandler;
-                    let r1 = self
-                        .representation_step_ids
-                        .get(mddr.rep_1.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
-                    let r2 = self
-                        .representation_step_ids
-                        .get(mddr.rep_2.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                    let r1 = self.step_id(mddr.rep_1);
+                    let r2 = self.step_id(mddr.rep_2);
                     if r1 == 0 || r2 == 0 {
                         continue;
                     }
                     MechanicalDesignAndDraughtingRelationshipHandler::write(self, mddr)?;
                 }
                 RepresentationRelationship::ShapeRepresentationRelationship(srr) => {
-                    let r1 = self
-                        .representation_step_ids
-                        .get(srr.rep_1.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
-                    let r2 = self
-                        .representation_step_ids
-                        .get(srr.rep_2.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                    let r1 = self.step_id(srr.rep_1);
+                    let r2 = self.step_id(srr.rep_2);
                     if r1 == 0 || r2 == 0 {
                         continue;
                     }
@@ -614,13 +590,13 @@ impl WriteBuffer<'_> {
                     .any(|it| matches!(it, RepresentationItemRef::MappedItem(_)))
                 {
                     let reserved = self.fresh();
-                    self.representation_step_ids[id.0 as usize] = reserved;
+                    self.set_step_id(id, reserved);
                     self.deferred_assembly_absr_ids.push((id, reserved));
                     continue;
                 }
             }
             let step_id = self.emit_representation(repr)?;
-            self.representation_step_ids[id.0 as usize] = step_id;
+            self.set_step_id(id, step_id);
         }
         Ok(())
     }
@@ -1394,9 +1370,8 @@ impl WriteBuffer<'_> {
         // Re-emit one SDR per entry, all sharing the same `nauo_pds` the CDSR
         // uses (so every SDR references the one placement PDS, as in the source).
         for &sr_id in &inst.placement_representation {
-            if let Some(&sr_step) = self.representation_step_ids.get(sr_id.0 as usize)
-                && sr_step != 0
-            {
+            let sr_step = self.step_id(sr_id);
+            if sr_step != 0 {
                 self.emit_sdr(nauo_pds, sr_step);
             }
         }
@@ -1414,24 +1389,20 @@ impl WriteBuffer<'_> {
                     .representation_relationships[rrid]
                 {
                     RepresentationRelationship::RepresentationRelationshipWithTransformation(d) => {
-                        let p = self
-                            .representation_step_ids
-                            .get(d.rep_1.0 as usize)
-                            .copied()
-                            .filter(|&s| s != 0)
-                            .unwrap_or(parent_sr);
-                        let c = self
-                            .representation_step_ids
-                            .get(d.rep_2.0 as usize)
-                            .copied()
-                            .filter(|&s| s != 0)
-                            .unwrap_or(child_sr);
+                        let p = match self.step_id(d.rep_1) {
+                            0 => parent_sr,
+                            s => s,
+                        };
+                        let c = match self.step_id(d.rep_2) {
+                            0 => child_sr,
+                            s => s,
+                        };
                         (d.name.clone(), d.description.clone(), p, c)
                     }
                     _ => (String::new(), String::new(), parent_sr, child_sr),
                 };
                 let rrwt = self.emit_rrwt_complex(&name, &description, p_step, c_step, idt);
-                self.representation_relationship_step_ids[rrid.0 as usize] = rrwt;
+                self.set_step_id(rrid, rrwt);
                 rrwt
             }
             None => self.emit_rrwt_complex("", "", parent_sr, child_sr, idt),

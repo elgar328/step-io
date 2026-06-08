@@ -75,8 +75,8 @@ impl SimpleEntityHandler for MechanicalDesignAndDraughtingRelationshipHandler {
         buf: &mut WriteBuffer,
         mddr: MechanicalDesignAndDraughtingRelationship,
     ) -> Result<u64, WriteError> {
-        let rep_1_step = buf.representation_step_ids[mddr.rep_1.0 as usize];
-        let rep_2_step = buf.representation_step_ids[mddr.rep_2.0 as usize];
+        let rep_1_step = buf.step_id(mddr.rep_1);
+        let rep_2_step = buf.step_id(mddr.rep_2);
         Ok(buf.push_simple(
             "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP",
             vec![

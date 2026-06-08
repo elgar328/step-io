@@ -119,11 +119,7 @@ impl SimpleEntityHandler for ContextDependentOverRidingStyledItemHandler {
                     context_refs.push(Attribute::EntityRef(step_id));
                 }
                 StyleContextRef::RepresentationRelationship(rrid) => {
-                    let step_id = buf
-                        .representation_relationship_step_ids
-                        .get(rrid.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                    let step_id = buf.step_id(rrid);
                     if step_id == 0 {
                         // The placement's RR complex was never emitted (its
                         // parent product chain was skipped). Surface rather than

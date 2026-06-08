@@ -66,8 +66,8 @@ impl SimpleEntityHandler for RepresentationRelationshipHandler {
     }
 
     fn write(buf: &mut WriteBuffer, rr: RepresentationRelationshipData) -> Result<u64, WriteError> {
-        let rep_1_step = buf.representation_step_ids[rr.rep_1.0 as usize];
-        let rep_2_step = buf.representation_step_ids[rr.rep_2.0 as usize];
+        let rep_1_step = buf.step_id(rr.rep_1);
+        let rep_2_step = buf.step_id(rr.rep_2);
         Ok(buf.push_simple(
             "REPRESENTATION_RELATIONSHIP",
             vec![

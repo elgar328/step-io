@@ -67,8 +67,8 @@ impl SimpleEntityHandler for ConstructiveGeometryRepresentationRelationshipHandl
         buf: &mut WriteBuffer,
         cgrr: ConstructiveGeometryRepresentationRelationship,
     ) -> Result<u64, WriteError> {
-        let rep_1_step = buf.representation_step_ids[cgrr.rep_1.0 as usize];
-        let rep_2_step = buf.representation_step_ids[cgrr.rep_2.0 as usize];
+        let rep_1_step = buf.step_id(cgrr.rep_1);
+        let rep_2_step = buf.step_id(cgrr.rep_2);
         Ok(buf.push_simple(
             "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP",
             vec![

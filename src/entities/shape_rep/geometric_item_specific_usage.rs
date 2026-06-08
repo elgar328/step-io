@@ -80,7 +80,7 @@ impl SimpleEntityHandler for GeometricItemSpecificUsageHandler {
 
     fn write(buf: &mut WriteBuffer, gisu: GeometricItemSpecificUsage) -> Result<u64, WriteError> {
         let def_step = buf.emit_shape_aspect_ref(gisu.definition);
-        let used_step = buf.representation_step_ids[gisu.used_representation.0 as usize];
+        let used_step = buf.step_id(gisu.used_representation);
         let item_step = buf.emit_representation_item_ref(gisu.identified_item)?;
         let description_attr = match gisu.description {
             Some(s) => Attribute::String(s),

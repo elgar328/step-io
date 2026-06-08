@@ -57,7 +57,7 @@ impl SimpleEntityHandler for CameraUsageHandler {
 
     fn write(buf: &mut WriteBuffer, cu: CameraUsage) -> Result<u64, WriteError> {
         let origin = buf.step_id(cu.mapping_origin);
-        let mapped = buf.representation_step_ids[cu.mapped_representation.0 as usize];
+        let mapped = buf.step_id(cu.mapped_representation);
         Ok(buf.push_simple(
             "CAMERA_USAGE",
             vec![Attribute::EntityRef(origin), Attribute::EntityRef(mapped)],

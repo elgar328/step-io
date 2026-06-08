@@ -84,7 +84,7 @@ impl SimpleEntityHandler for DefaultModelGeometricViewHandler {
         }: DefaultModelGeometricViewWriteInput,
     ) -> Result<u64, WriteError> {
         let item_step = buf.step_id(view.item);
-        let rep_step = buf.representation_step_ids[view.rep.0 as usize];
+        let rep_step = buf.step_id(view.rep);
         Ok(buf.push_simple(
             "DEFAULT_MODEL_GEOMETRIC_VIEW",
             vec![

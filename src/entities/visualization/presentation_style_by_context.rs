@@ -65,7 +65,7 @@ impl SimpleEntityHandler for PresentationStyleByContextHandler {
                 psbc.styles,
             );
         let ctx_step = match psbc.style_context {
-            StyleContext::Representation(rid) => buf.representation_step_ids[rid.0 as usize],
+            StyleContext::Representation(rid) => buf.step_id(rid),
             StyleContext::Item(item) => buf.emit_representation_item_ref(item)?,
         };
         Ok(buf.push_simple(

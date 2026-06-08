@@ -2543,9 +2543,7 @@ pub(crate) fn write_geometric_tolerance(buf: &mut WriteBuffer, gt: GeometricTole
     // emit the (simple) MRI inline here.
     let magnitude = match data.magnitude {
         ToleranceMagnitude::MeasureWithUnit(id) => buf.step_id(id),
-        ToleranceMagnitude::RepresentationItem(id) => {
-            buf.representation_item_step_ids[id.0 as usize]
-        }
+        ToleranceMagnitude::RepresentationItem(id) => buf.step_id(id),
     };
     let shape_aspect = buf.emit_geometric_tolerance_target(data.toleranced_shape_aspect);
     let has_unit_size = data.unit_size.is_some();
@@ -3294,9 +3292,7 @@ pub(crate) fn write_geometric_tolerance_with_datum_reference(
     };
     let magnitude = match data.magnitude {
         ToleranceMagnitude::MeasureWithUnit(id) => buf.step_id(id),
-        ToleranceMagnitude::RepresentationItem(id) => {
-            buf.representation_item_step_ids[id.0 as usize]
-        }
+        ToleranceMagnitude::RepresentationItem(id) => buf.step_id(id),
     };
     let shape_aspect = buf.emit_geometric_tolerance_target(data.toleranced_shape_aspect);
     let mut datum_system_refs = Vec::with_capacity(data.datum_system.len());
@@ -3728,9 +3724,7 @@ impl ComplexEntityHandler for LineProfileToleranceHandler {
 fn emit_tolerance_magnitude(buf: &WriteBuffer, m: &ToleranceMagnitude) -> u64 {
     match m {
         ToleranceMagnitude::MeasureWithUnit(id) => buf.step_id(id),
-        ToleranceMagnitude::RepresentationItem(id) => {
-            buf.representation_item_step_ids[id.0 as usize]
-        }
+        ToleranceMagnitude::RepresentationItem(id) => buf.step_id(id),
     }
 }
 
@@ -4267,9 +4261,7 @@ impl SimpleEntityHandler for DraughtingModelItemAssociationHandler {
         dmia: DraughtingModelItemAssociation,
     ) -> Result<u64, WriteError> {
         let def_step = match dmia.definition {
-            DraughtingModelItemDefinition::Representation(id) => {
-                buf.representation_step_ids[id.0 as usize]
-            }
+            DraughtingModelItemDefinition::Representation(id) => buf.step_id(id),
             DraughtingModelItemDefinition::DimensionalSize(id) => buf.step_id(id),
             DraughtingModelItemDefinition::ShapeAspect(sa_ref) => buf.emit_shape_aspect_ref(sa_ref),
             DraughtingModelItemDefinition::PropertyDefinition(id) => buf.step_id(id),
@@ -4279,7 +4271,7 @@ impl SimpleEntityHandler for DraughtingModelItemAssociationHandler {
                 GeometricToleranceRef::WithDatumReference(id) => buf.step_id(id),
             },
         };
-        let used_step = buf.representation_step_ids[dmia.used_representation.0 as usize];
+        let used_step = buf.step_id(dmia.used_representation);
         let item_step = match dmia.identified_item {
             DraughtingModelIdentifiedItem::AnnotationOccurrence(id) => buf.step_id(id),
             DraughtingModelIdentifiedItem::DraughtingCallout(id) => buf.step_id(id),

@@ -29,11 +29,7 @@ impl WriteBuffer<'_> {
                 crate::ir::property::SdrDefinition::PropertyDefinition(id) => self.step_id(id),
                 crate::ir::property::SdrDefinition::ShapeAspect(id) => self.step_id(id),
             };
-            let sr_step = self
-                .representation_step_ids
-                .get(link.used_representation.0 as usize)
-                .copied()
-                .unwrap_or(0);
+            let sr_step = self.step_id(link.used_representation);
             if def_step == 0 || sr_step == 0 {
                 continue;
             }
@@ -52,11 +48,7 @@ impl WriteBuffer<'_> {
         };
         for link in pool.property_definition_representations.iter() {
             let pd = self.step_id(link.definition);
-            let repr = self
-                .representation_step_ids
-                .get(link.used_representation.0 as usize)
-                .copied()
-                .unwrap_or(0);
+            let repr = self.step_id(link.used_representation);
             if pd == 0 || repr == 0 {
                 continue;
             }
@@ -235,9 +227,10 @@ impl WriteBuffer<'_> {
                     step
                 }
                 DescriptionAttributeItem::Representation(repr_id) => {
-                    let Some(&step) = self.representation_step_ids.get(repr_id.0 as usize) else {
+                    let step = self.step_id(repr_id);
+                    if step == 0 {
                         continue;
-                    };
+                    }
                     step
                 }
             };
@@ -276,7 +269,7 @@ impl WriteBuffer<'_> {
             .iter()
             .map(|item| match item {
                 PropertyItem::Descriptive(d) => self.emit_descriptive_item(d.clone()),
-                PropertyItem::MeasureItem(id) => self.representation_item_step_ids[id.0 as usize],
+                PropertyItem::MeasureItem(id) => self.step_id(id),
             })
             .collect();
 

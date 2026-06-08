@@ -42,12 +42,8 @@ impl WriteBuffer<'_> {
             RepresentationItemRef::Placement3d(id) => self.emit_axis2_placement_3d(id),
             RepresentationItemRef::Placement2d(id) => self.emit_axis2_placement_2d(id),
             RepresentationItemRef::PlanarExtent(id) => self.emit_planar_extent(id),
-            RepresentationItemRef::Representation(id) => {
-                Ok(self.representation_step_ids[id.0 as usize])
-            }
-            RepresentationItemRef::RepresentationItem(id) => {
-                Ok(self.representation_item_step_ids[id.0 as usize])
-            }
+            RepresentationItemRef::Representation(id) => Ok(self.step_id(id)),
+            RepresentationItemRef::RepresentationItem(id) => Ok(self.step_id(id)),
             RepresentationItemRef::GeometricRepresentationItem(id) => Ok(self.step_id(id)),
             RepresentationItemRef::TessellatedItem(id) => Ok(self.step_id(id)),
             RepresentationItemRef::TessellatedFace(id) => Ok(self.step_id(id)),
@@ -153,7 +149,7 @@ impl WriteBuffer<'_> {
                     let Ok(item_step) = self.emit_representation_item_ref(ciwr.item) else {
                         continue;
                     };
-                    let rep_step = self.representation_step_ids[ciwr.rep.0 as usize];
+                    let rep_step = self.step_id(ciwr.rep);
                     let desc_attr = match ciwr.inherited.description {
                         Some(d) => Attribute::String(d),
                         None => Attribute::Unset,
@@ -174,7 +170,7 @@ impl WriteBuffer<'_> {
                     // targeted this MGV). camera/rep step caches are now filled.
                     let reserved = self.step_id(id);
                     let item_step = self.step_id(mgv.item);
-                    let rep_step = self.representation_step_ids[mgv.rep.0 as usize];
+                    let rep_step = self.step_id(mgv.rep);
                     let desc_attr = match mgv.inherited.description {
                         Some(d) => Attribute::String(d),
                         None => Attribute::Unset,
@@ -211,8 +207,13 @@ impl WriteBuffer<'_> {
         use crate::entities::shape_rep::qualified_representation_item::QualifiedRepresentationItemHandler;
         use crate::entities::shape_rep::value_representation_item::ValueRepresentationItemHandler;
         use crate::ir::representation_item::RepresentationItem;
-        let items: Vec<_> = self.model.representation_items.iter().cloned().collect();
-        for item in items {
+        let items: Vec<_> = self
+            .model
+            .representation_items
+            .iter_with_ids()
+            .map(|(__id, v)| (__id, v.clone()))
+            .collect();
+        for (__id, item) in items {
             let step = match item {
                 RepresentationItem::QualifiedRepresentationItem(qri) => {
                     QualifiedRepresentationItemHandler::write(self, qri)
@@ -224,7 +225,7 @@ impl WriteBuffer<'_> {
                     Ok(self.emit_measure_repr_item(mri))
                 }
             };
-            self.representation_item_step_ids.push(step.unwrap_or(0));
+            self.set_step_id(__id, step.unwrap_or(0));
         }
     }
 
@@ -541,7 +542,7 @@ impl WriteBuffer<'_> {
         for (id, repr) in reprs.iter_with_ids() {
             if let crate::ir::shape_rep::Representation::Mdgpr(mdgpr) = repr {
                 let step_id = MdgprHandler::write(self, mdgpr.clone())?;
-                self.representation_step_ids[id.0 as usize] = step_id;
+                self.set_step_id(id, step_id);
             }
         }
         // Cache the step ids (indexed by PresentationLayerAssignmentId) so a

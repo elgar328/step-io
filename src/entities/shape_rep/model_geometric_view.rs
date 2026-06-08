@@ -60,7 +60,7 @@ impl SimpleEntityHandler for ModelGeometricViewHandler {
         // Standalone arena emit goes through `emit_characterized_objects` (under a
         // reserved id); this trait method mirrors that body for completeness.
         let item_step = buf.step_id(mgv.item);
-        let rep_step = buf.representation_step_ids[mgv.rep.0 as usize];
+        let rep_step = buf.step_id(mgv.rep);
         let desc_attr = match mgv.inherited.description {
             Some(d) => Attribute::String(d),
             None => Attribute::Unset,

@@ -87,7 +87,7 @@ impl SimpleEntityHandler for ShapeRepresentationWithParametersHandler {
                 SrwpItem::Direction(id) => buf.emit_direction(id)?,
                 SrwpItem::Placement(id) => buf.emit_axis2_placement_3d(id)?,
                 SrwpItem::Descriptive(d) => DescriptiveRepresentationItemHandler::write(buf, d)?,
-                SrwpItem::MeasureItem(id) => buf.representation_item_step_ids[id.0 as usize],
+                SrwpItem::MeasureItem(id) => buf.step_id(id),
             };
             item_refs.push(Attribute::EntityRef(step));
         }

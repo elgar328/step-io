@@ -67,7 +67,7 @@ impl SimpleEntityHandler for CharacterizedItemWithinRepresentationHandler {
         ciwr: CharacterizedItemWithinRepresentation,
     ) -> Result<u64, WriteError> {
         let item_step = buf.emit_representation_item_ref(ciwr.item)?;
-        let rep_step = buf.representation_step_ids[ciwr.rep.0 as usize];
+        let rep_step = buf.step_id(ciwr.rep);
         let desc_attr = match ciwr.inherited.description {
             Some(d) => Attribute::String(d),
             None => Attribute::Unset,

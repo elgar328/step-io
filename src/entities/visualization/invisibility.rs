@@ -100,9 +100,7 @@ impl SimpleEntityHandler for InvisibilityHandler {
             .map(|item| match item {
                 InvisibleItem::AnnotationOccurrence(id) => Attribute::EntityRef(buf.step_id(id)),
                 InvisibleItem::StyledItem(id) => Attribute::EntityRef(buf.step_id(id)),
-                InvisibleItem::Representation(id) => {
-                    Attribute::EntityRef(buf.representation_step_ids[id.0 as usize])
-                }
+                InvisibleItem::Representation(id) => Attribute::EntityRef(buf.step_id(id)),
                 InvisibleItem::DraughtingCallout(id) => Attribute::EntityRef(buf.step_id(id)),
                 InvisibleItem::PresentationLayerAssignment(id) => {
                     Attribute::EntityRef(buf.step_id(id))

@@ -80,9 +80,7 @@ impl SimpleEntityHandler for RepresentationMapHandler {
         };
         let origin = buf.emit_representation_item_ref(d.mapping_origin)?;
         let mapped = match d.mapped_representation {
-            MappedRepresentationRef::Representation(id) => {
-                buf.representation_step_ids[id.0 as usize]
-            }
+            MappedRepresentationRef::Representation(id) => buf.step_id(id),
             MappedRepresentationRef::Presentation(id) => buf.step_id(id),
         };
         Ok(buf.push_simple(
