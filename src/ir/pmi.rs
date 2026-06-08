@@ -866,7 +866,11 @@ pub struct ProjectedZoneDefinition {
     pub zone: ToleranceZoneId,
     pub boundaries: Vec<ShapeAspectRef>,
     pub projection_end: ShapeAspectRef,
-    pub projected_length: MeasureWithUnitId,
+    /// `projected_length` — a `measure_with_unit`. Like a tolerance magnitude,
+    /// it can be a plain `*_MEASURE_WITH_UNIT` or a complex
+    /// `MEASURE_REPRESENTATION_ITEM`, so it shares [`ToleranceMagnitude`]'s
+    /// two-path resolution.
+    pub projected_length: ToleranceMagnitude,
 }
 
 /// `GEOMETRIC_TOLERANCE_RELATIONSHIP(name, description, relating, related)`

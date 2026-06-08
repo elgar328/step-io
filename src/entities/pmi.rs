@@ -1747,7 +1747,10 @@ impl SimpleEntityHandler for ProjectedZoneDefinitionHandler {
         let Some(projection_end) = resolve_shape_aspect_ref(ctx, projection_end_ref) else {
             return Ok(());
         };
-        let Some(&projected_length) = ctx.mwu_id_map.get(&projected_length_ref) else {
+        // projected_length is a measure_with_unit but exporters also emit the
+        // complex MEASURE_REPRESENTATION_ITEM form (in repr_item_id_map, not
+        // mwu_id_map) — resolve through both paths like a tolerance magnitude.
+        let Some(projected_length) = resolve_tolerance_magnitude(ctx, projected_length_ref) else {
             return Ok(());
         };
         let mut boundaries = Vec::with_capacity(boundary_refs.len());
@@ -1771,7 +1774,7 @@ impl SimpleEntityHandler for ProjectedZoneDefinitionHandler {
     fn write(buf: &mut WriteBuffer, pzd: ProjectedZoneDefinition) -> Result<u64, WriteError> {
         let zone_step = buf.tolerance_zone_step_ids[pzd.zone.0 as usize];
         let projection_end_step = buf.emit_shape_aspect_ref(pzd.projection_end);
-        let projected_length_step = buf.mwu_step_ids[pzd.projected_length.0 as usize];
+        let projected_length_step = emit_tolerance_magnitude(buf, &pzd.projected_length);
         let mut boundary_refs = Vec::with_capacity(pzd.boundaries.len());
         for sar in pzd.boundaries {
             boundary_refs.push(Attribute::EntityRef(buf.emit_shape_aspect_ref(sar)));

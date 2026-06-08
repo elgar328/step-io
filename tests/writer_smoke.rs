@@ -7567,7 +7567,7 @@ fn projected_zone_definition_round_trip() {
             zone: tz_id,
             boundaries: vec![ShapeAspectRef::ShapeAspect(sa)],
             projection_end: ShapeAspectRef::ShapeAspect(sa_end),
-            projected_length: mwu_id,
+            projected_length: ToleranceMagnitude::MeasureWithUnit(mwu_id),
         });
 
     let text = model.write_to_string().expect("write");
