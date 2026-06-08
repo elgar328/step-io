@@ -656,9 +656,7 @@ impl WriteBuffer<'_> {
     pub(crate) fn emit_geometric_tolerance_target(&self, item: GeometricToleranceTarget) -> u64 {
         match item {
             GeometricToleranceTarget::ShapeAspect(r) => self.emit_shape_aspect_ref(r),
-            GeometricToleranceTarget::ProductDefinitionShape(id) => {
-                self.property_definition_step_ids[id.0 as usize]
-            }
+            GeometricToleranceTarget::ProductDefinitionShape(id) => self.step_id(id),
         }
     }
 

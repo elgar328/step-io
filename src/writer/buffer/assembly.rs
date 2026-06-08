@@ -15,6 +15,7 @@
 use std::collections::HashMap;
 
 use super::WriteBuffer;
+use crate::ir::PropertyDefinitionId;
 use crate::ir::arena::Arena;
 use crate::ir::representation_item::RepresentationItemRef;
 use crate::ir::shape_rep::Representation;
@@ -1363,6 +1364,9 @@ impl WriteBuffer<'_> {
     // Per-instance emitters
     // ----------------------------------------------------------------
 
+    // `slot` is an arena index, which fits u32 by the arena's own overflow
+    // guard — the `slot as u32` id reconstruction is safe.
+    #[allow(clippy::cast_possible_truncation)]
     fn emit_instance_bundle(
         &mut self,
         inst: &Instance,
@@ -1393,7 +1397,7 @@ impl WriteBuffer<'_> {
                         Attribute::EntityRef(nauo),
                     ],
                 );
-                self.property_definition_step_ids[slot] = step;
+                self.set_step_id(PropertyDefinitionId(slot as u32), step);
                 step
             }
             None => self.emit_nauo_owned_pds(nauo),

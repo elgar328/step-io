@@ -26,11 +26,7 @@ impl WriteBuffer<'_> {
         };
         for link in pool.shape_definition_representations.iter() {
             let def_step = match link.definition {
-                crate::ir::property::SdrDefinition::PropertyDefinition(id) => self
-                    .property_definition_step_ids
-                    .get(id.0 as usize)
-                    .copied()
-                    .unwrap_or(0),
+                crate::ir::property::SdrDefinition::PropertyDefinition(id) => self.step_id(id),
                 crate::ir::property::SdrDefinition::ShapeAspect(id) => self.step_id(id),
             };
             let sr_step = self
@@ -55,11 +51,7 @@ impl WriteBuffer<'_> {
             return;
         };
         for link in pool.property_definition_representations.iter() {
-            let pd = self
-                .property_definition_step_ids
-                .get(link.definition.0 as usize)
-                .copied()
-                .unwrap_or(0);
+            let pd = self.step_id(link.definition);
             let repr = self
                 .representation_step_ids
                 .get(link.used_representation.0 as usize)
@@ -79,10 +71,9 @@ impl WriteBuffer<'_> {
         let Some(pool) = self.model.properties.clone() else {
             return;
         };
-        self.property_step_ids = vec![0; pool.properties.len()];
         for (id, prop) in pool.properties.iter_with_ids() {
             let pd = self.emit_property(prop);
-            self.property_step_ids[id.0 as usize] = pd;
+            self.set_step_id(id, pd);
         }
         self.emit_name_attributes(&pool);
         self.emit_description_attributes(&pool);
@@ -116,11 +107,10 @@ impl WriteBuffer<'_> {
         pool: &crate::ir::PropertyPool,
     ) {
         use crate::entities::property::general_property::GeneralPropertyHandler;
-        self.general_property_step_ids = vec![0; pool.general_properties.len()];
         for (id, gp) in pool.general_properties.iter_with_ids() {
             let step = GeneralPropertyHandler::write(self, gp.clone())
                 .expect("GENERAL_PROPERTY write only pushes one simple entity");
-            self.general_property_step_ids[id.0 as usize] = step;
+            self.set_step_id(id, step);
         }
     }
 
@@ -134,13 +124,9 @@ impl WriteBuffer<'_> {
         };
         use crate::ir::DerivedDefinitionItem;
         for gpa in pool.general_property_associations.iter() {
-            let base_step = self.general_property_step_ids[gpa.base_definition.0 as usize];
+            let base_step = self.step_id(gpa.base_definition);
             let derived_step = match gpa.derived_definition {
-                DerivedDefinitionItem::PropertyDefinition(pd_id) => self
-                    .property_definition_step_ids
-                    .get(pd_id.0 as usize)
-                    .copied()
-                    .unwrap_or(0),
+                DerivedDefinitionItem::PropertyDefinition(pd_id) => self.step_id(pd_id),
             };
             if base_step == 0 || derived_step == 0 {
                 continue;
@@ -170,11 +156,7 @@ impl WriteBuffer<'_> {
                     step
                 }
                 IdAttributeItem::PropertyDefinition(pd_id) => {
-                    let step = self
-                        .property_definition_step_ids
-                        .get(pd_id.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                    let step = self.step_id(pd_id);
                     if step == 0 {
                         continue;
                     }
@@ -281,16 +263,8 @@ impl WriteBuffer<'_> {
         // the PD's product chain wasn't emitted (defensive for kernel-built
         // IR); the GPA emitter skips 0 slots downstream.
         let pd = match prop.definition {
-            PropertyDefinitionRef::PropertyDefinition(id) => self
-                .property_definition_step_ids
-                .get(id.0 as usize)
-                .copied()
-                .unwrap_or(0),
-            PropertyDefinitionRef::GeneralProperty(id) => self
-                .general_property_step_ids
-                .get(id.0 as usize)
-                .copied()
-                .unwrap_or(0),
+            PropertyDefinitionRef::PropertyDefinition(id) => self.step_id(id),
+            PropertyDefinitionRef::GeneralProperty(id) => self.step_id(id),
         };
         if pd == 0 {
             return 0;
@@ -354,7 +328,6 @@ impl WriteBuffer<'_> {
                 return;
             }
         };
-        self.property_definition_step_ids = vec![0; pool.property_definitions.len()];
         for (idx, pd) in pool.property_definitions.iter_with_ids() {
             let PropertyDefinition::ProductDefinitionShape(pds) = pd else {
                 continue;
@@ -388,7 +361,7 @@ impl WriteBuffer<'_> {
                     Attribute::EntityRef(pdef_step),
                 ],
             );
-            self.property_definition_step_ids[idx.0 as usize] = step;
+            self.set_step_id(idx, step);
             self.product_def_shape_ids.insert(product_id, step);
         }
     }
@@ -406,10 +379,6 @@ impl WriteBuffer<'_> {
         };
         if pool.property_definitions.is_empty() {
             return;
-        }
-        if self.property_definition_step_ids.len() != pool.property_definitions.len() {
-            self.property_definition_step_ids
-                .resize(pool.property_definitions.len(), 0);
         }
         for (idx, pd) in pool.property_definitions.iter_with_ids() {
             let PropertyDefinition::Itself(data) = pd else {
@@ -444,11 +413,7 @@ impl WriteBuffer<'_> {
                     // PDS arena entry's step id was cached in Pass A
                     // (emit_property_definitions_pds_only). Slot 0 means the
                     // PDS itself failed to emit — skip this PD too.
-                    let s = self
-                        .property_definition_step_ids
-                        .get(pds_pd_id.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                    let s = self.step_id(pds_pd_id);
                     if s == 0 {
                         continue;
                     }
@@ -457,11 +422,7 @@ impl WriteBuffer<'_> {
                 CharacterizedDefinition::GeneralProperty(gp_id) => {
                     // GENERAL_PROPERTY step ids are filled by
                     // emit_general_properties, which must run before this pass.
-                    let s = self
-                        .general_property_step_ids
-                        .get(gp_id.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                    let s = self.step_id(gp_id);
                     if s == 0 {
                         continue;
                     }
@@ -528,7 +489,7 @@ impl WriteBuffer<'_> {
                     Attribute::EntityRef(target_step),
                 ],
             );
-            self.property_definition_step_ids[idx.0 as usize] = step;
+            self.set_step_id(idx, step);
         }
     }
 

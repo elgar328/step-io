@@ -4272,9 +4272,7 @@ impl SimpleEntityHandler for DraughtingModelItemAssociationHandler {
             }
             DraughtingModelItemDefinition::DimensionalSize(id) => buf.step_id(id),
             DraughtingModelItemDefinition::ShapeAspect(sa_ref) => buf.emit_shape_aspect_ref(sa_ref),
-            DraughtingModelItemDefinition::PropertyDefinition(id) => {
-                buf.property_definition_step_ids[id.0 as usize]
-            }
+            DraughtingModelItemDefinition::PropertyDefinition(id) => buf.step_id(id),
             DraughtingModelItemDefinition::DimensionalLocation(id) => buf.step_id(id),
             DraughtingModelItemDefinition::GeometricTolerance(r) => match r {
                 GeometricToleranceRef::Plain(id) => buf.step_id(id),
