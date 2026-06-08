@@ -31,11 +31,7 @@ impl WriteBuffer<'_> {
                     .get(id.0 as usize)
                     .copied()
                     .unwrap_or(0),
-                crate::ir::property::SdrDefinition::ShapeAspect(id) => self
-                    .shape_aspect_step_ids
-                    .get(id.0 as usize)
-                    .copied()
-                    .unwrap_or(0),
+                crate::ir::property::SdrDefinition::ShapeAspect(id) => self.step_id(id),
             };
             let sr_step = self
                 .representation_step_ids
@@ -438,11 +434,7 @@ impl WriteBuffer<'_> {
                     s
                 }
                 CharacterizedDefinition::DimensionalLocation(dl_id) => {
-                    let s = self
-                        .dimensional_location_step_ids
-                        .get(dl_id.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                    let s = self.step_id(dl_id);
                     if s == 0 {
                         continue;
                     }
@@ -510,15 +502,9 @@ impl WriteBuffer<'_> {
                     // before this pass.
                     use crate::ir::pmi::GeometricToleranceRef;
                     let s = match gt_ref {
-                        GeometricToleranceRef::Plain(id) => {
-                            self.geometric_tolerance_step_ids.get(id.0 as usize)
-                        }
-                        GeometricToleranceRef::WithDatumReference(id) => self
-                            .geometric_tolerance_with_datum_reference_step_ids
-                            .get(id.0 as usize),
-                    }
-                    .copied()
-                    .unwrap_or(0);
+                        GeometricToleranceRef::Plain(id) => self.step_id(id),
+                        GeometricToleranceRef::WithDatumReference(id) => self.step_id(id),
+                    };
                     if s == 0 {
                         continue;
                     }
@@ -527,11 +513,7 @@ impl WriteBuffer<'_> {
                 CharacterizedDefinition::DimensionalSize(ds_id) => {
                     // dimensional_size step ids are filled by
                     // emit_dimensional_sizes, which runs before this pass.
-                    let s = self
-                        .dimensional_size_step_ids
-                        .get(ds_id.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                    let s = self.step_id(ds_id);
                     if s == 0 {
                         continue;
                     }

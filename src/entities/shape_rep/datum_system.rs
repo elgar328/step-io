@@ -78,9 +78,7 @@ impl SimpleEntityHandler for DatumSystemHandler {
             .unwrap_or(0);
         let mut constituent_refs = Vec::with_capacity(ds.constituents.len());
         for gdr_id in &ds.constituents {
-            constituent_refs.push(Attribute::EntityRef(
-                buf.general_datum_reference_step_ids[gdr_id.0 as usize],
-            ));
+            constituent_refs.push(Attribute::EntityRef(buf.step_id(gdr_id)));
         }
         let bool_attr = if ds.product_definitional { "T" } else { "F" };
         Ok(buf.push_simple(

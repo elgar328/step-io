@@ -83,9 +83,7 @@ impl SimpleEntityHandler for RepresentationMapHandler {
             MappedRepresentationRef::Representation(id) => {
                 buf.representation_step_ids[id.0 as usize]
             }
-            MappedRepresentationRef::Presentation(id) => {
-                buf.presentation_representation_step_ids[id.0 as usize]
-            }
+            MappedRepresentationRef::Presentation(id) => buf.step_id(id),
         };
         Ok(buf.push_simple(
             "REPRESENTATION_MAP",

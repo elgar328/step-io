@@ -48,8 +48,8 @@ impl SimpleEntityHandler for AreaInSetHandler {
     }
 
     fn write(buf: &mut WriteBuffer, ais: AreaInSet) -> Result<u64, WriteError> {
-        let area_step = buf.presentation_representation_step_ids[ais.area.0 as usize];
-        let set_step = buf.presentation_set_step_ids[ais.in_set.0 as usize];
+        let area_step = buf.step_id(ais.area);
+        let set_step = buf.step_id(ais.in_set);
         Ok(buf.push_simple(
             "AREA_IN_SET",
             vec![
@@ -99,9 +99,9 @@ impl SimpleEntityHandler for PresentationSizeHandler {
     fn write(buf: &mut WriteBuffer, ps: PresentationSize) -> Result<u64, WriteError> {
         let unit_step = match ps.unit {
             PresentationSizeAssignment::View(id) | PresentationSizeAssignment::Area(id) => {
-                buf.presentation_representation_step_ids[id.0 as usize]
+                buf.step_id(id)
             }
-            PresentationSizeAssignment::AreaInSet(id) => buf.area_in_set_step_ids[id.0 as usize],
+            PresentationSizeAssignment::AreaInSet(id) => buf.step_id(id),
         };
         let size_step = buf.emit_planar_extent(ps.size)?;
         Ok(buf.push_simple(

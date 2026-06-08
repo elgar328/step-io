@@ -88,40 +88,6 @@ pub(crate) struct WriteBuffer<'m> {
     pub(crate) representation_relationship_step_ids: Vec<u64>,
     // tessellated_item / tessellated_face / tessellated_surface_set step ids
     // now live in `step_ids` keyed by their arena-id type.
-    /// Emitted `LEADER_CURVE` step ids, indexed by
-    /// `AnnotationCurveOccurrenceId.0`. Populated by
-    /// `emit_annotation_curve_occurrences` before `emit_annotation_occurrences`
-    /// so `TERMINATOR_SYMBOL` / `LEADER_TERMINATOR` can resolve their
-    /// `annotated_curve` back-reference.
-    pub(crate) acoc_step_ids: Vec<u64>,
-    /// Emitted `annotation_occurrence` enum step ids, indexed by
-    /// `AnnotationOccurrenceId.0`. Populated by
-    /// `emit_annotation_occurrences` (one push per enum entry, in arena
-    /// order) before `emit_draughting_callouts` so its `contents` SELECT
-    /// members resolve.
-    pub(crate) ao_step_ids: Vec<u64>,
-    /// Emitted `APLL_POINT` step ids, indexed by `ApllPointId.0`. Filled by
-    /// `emit_apll_points` before leader lines / annotation occurrences.
-    pub(crate) apll_point_step_ids: Vec<u64>,
-    /// Emitted `ANNOTATION_TO_MODEL_LEADER_LINE` step ids, indexed by
-    /// `AnnotationPlaceholderLeaderLineId.0`.
-    pub(crate) annotation_placeholder_leader_line_step_ids: Vec<u64>,
-    /// Emitted `draughting_callout` step ids, indexed by
-    /// `DraughtingCalloutId.0`. Populated by `emit_draughting_callouts`
-    /// before `emit_draughting_callout_relationships`.
-    pub(crate) draughting_callout_step_ids: Vec<u64>,
-    /// Emitted `TOLERANCE_ZONE` step ids, indexed by `ToleranceZoneId.0`.
-    /// Populated by `emit_tolerance_zones` so
-    /// `ProjectedZoneDefinitionHandler::write` can resolve `zone`.
-    pub(crate) tolerance_zone_step_ids: Vec<u64>,
-    /// Emitted `TYPE_QUALIFIER` step ids, indexed by `TypeQualifierId.0`.
-    /// Populated by `emit_pmi_if_set` so `MeasureQualificationHandler::write`
-    /// can resolve a `qualifiers` SET member.
-    pub(crate) type_qualifier_step_ids: Vec<u64>,
-    /// Emitted `VALUE_FORMAT_TYPE_QUALIFIER` step ids, indexed by
-    /// `ValueFormatTypeQualifierId.0`. Same role as
-    /// `type_qualifier_step_ids`.
-    pub(crate) value_format_type_qualifier_step_ids: Vec<u64>,
     /// Emitted `representation_item` arena step ids (phase
     /// repr-item-arena-1), indexed by `RepresentationItemId.0`. Consumed
     /// by `emit_representation_item_ref` 의 11번째 variant.
@@ -139,95 +105,18 @@ pub(crate) struct WriteBuffer<'m> {
     /// Lazily emitted `DIMENSIONAL_EXPONENTS(0, 0, 1, ...)` step id, shared
     /// by every mass CBU outer.
     pub(crate) mass_dim_exp_step: Option<u64>,
-    /// Emitted `DRAUGHTING_PRE_DEFINED_TEXT_FONT` step ids (phase
-    /// text-literal — cache added retroactively for the `text_literal.font`
-    /// SELECT). Indexed by `DraughtingPreDefinedTextFontId.0`.
-    pub(crate) dptf_step_ids: Vec<u64>,
-    /// Emitted `DRAUGHTING_MODEL_ITEM_ASSOCIATION` step ids (phase dmia),
-    /// indexed by `DraughtingModelItemAssociationId.0`. No other entity
-    /// currently references the cache; retained for symmetry.
-    pub(crate) dmia_step_ids: Vec<u64>,
     /// Emitted `(GRC PRC REP_CONTEXT)` complex step ids (phase
     /// unitless-context), indexed by `UnitlessContextId.0`. Consumed by
     /// `repr_context_attr` when a representation's `context_of_items`
     /// resolves to a `RepresentationContextRef::Unitless`.
     pub(crate) unitless_context_step_ids: Vec<u64>,
-    /// Emitted `GEOMETRIC_ITEM_SPECIFIC_USAGE` step ids (phase gisu),
-    /// indexed by `GeometricItemSpecificUsageId.0`. No other entity
-    /// currently references the cache; retained for symmetry with DMIA.
-    pub(crate) gisu_step_ids: Vec<u64>,
-    /// Emitted `INVISIBILITY` step ids (phase invisibility), indexed by
-    /// `InvisibilityId.0`. Retained for symmetry — no other entity
-    /// references this cache.
-    pub(crate) invisibility_step_ids: Vec<u64>,
-    /// Emitted `PRESENTATION_VIEW` / `PRESENTATION_AREA` step ids (phase
-    /// pr-core), indexed by `PresentationRepresentationId.0`. Consumed by
-    /// `AREA_IN_SET` and `PRESENTATION_SIZE` emitters in subsequent
-    /// sub-phases.
-    pub(crate) presentation_representation_step_ids: Vec<u64>,
-    /// Emitted `PRESENTATION_SET` step ids (phase pr-core), indexed by
-    /// `PresentationSetId.0`. Consumed by `AREA_IN_SET.in_set`.
-    pub(crate) presentation_set_step_ids: Vec<u64>,
-    /// Emitted `APPLIED_PRESENTED_ITEM` step ids (phase pr-item), indexed by
-    /// `AppliedPresentedItemId.0`. Consumed by `presented_item_representation.item`.
-    pub(crate) applied_presented_item_step_ids: Vec<u64>,
     /// Assembly `ADVANCED_BREP_SHAPE_REPRESENTATION`s (items include a
     /// `MAPPED_ITEM`) whose step id was reserved in `emit_representations_pre_pass`
     /// and whose body is emitted by `emit_deferred_assembly_absr` after
     /// `emit_mapped_items`. `(RepresentationId, reserved step id)`.
     pub(crate) deferred_assembly_absr_ids: Vec<(crate::ir::RepresentationId, u64)>,
-    /// Emitted `AREA_IN_SET` step ids (phase pr-size), indexed by
-    /// `AreaInSetId.0`. Consumed by `PRESENTATION_SIZE.unit` SELECT.
-    pub(crate) area_in_set_step_ids: Vec<u64>,
     /// IR `ApplicationContext` index → emitted `APPLICATION_CONTEXT` step id.
     pub(crate) ac_step_ids: Vec<u64>,
-    /// IR `ShapeAspectId.0` index → emitted `SHAPE_ASPECT` step id.
-    /// Populated by `emit_pmi_if_set`; consumed by `id_attribute` writer.
-    pub(crate) shape_aspect_step_ids: Vec<u64>,
-    /// `SHAPE_ASPECT` subtype index → emitted step id (phase shape-aspect-ref).
-    /// Populated by `emit_shape_aspect_subtypes`; consumed by
-    /// `emit_shape_aspect_ref`.
-    pub(crate) composite_shape_aspect_step_ids: Vec<u64>,
-    pub(crate) centre_of_symmetry_step_ids: Vec<u64>,
-    pub(crate) all_around_shape_aspect_step_ids: Vec<u64>,
-    /// IR `DatumId.0` / `DatumFeatureId.0` index → emitted step id (phase
-    /// datum-feature). Populated by `emit_datums` / `emit_datum_features`;
-    /// consumed by `emit_shape_aspect_ref`.
-    pub(crate) datum_step_ids: Vec<u64>,
-    pub(crate) datum_feature_step_ids: Vec<u64>,
-    /// IR `GeneralDatumReferenceId.0` index → emitted step id (phase
-    /// datum-system). Populated by `emit_general_datum_references`; consumed
-    /// by `emit_datum_systems` to resolve a `DATUM_SYSTEM`'s `constituents`.
-    pub(crate) general_datum_reference_step_ids: Vec<u64>,
-    /// IR `DatumSystemId.0` index → emitted `DATUM_SYSTEM` step id (phase
-    /// datum-system). Populated by `emit_datum_systems`; consumed by
-    /// `emit_shape_aspect_ref`.
-    pub(crate) datum_system_step_ids: Vec<u64>,
-    /// Step-id cache for `datum_targets` (phase datum-target). Indexed by
-    /// `DatumTargetId.0`. Consumed by `emit_shape_aspect_ref` when a
-    /// `ShapeAspectRef::DatumTarget(_)` reaches the writer
-    /// (e.g. `feature_for_datum_target_relationship.related_shape_aspect`).
-    pub(crate) datum_target_step_ids: Vec<u64>,
-    /// Step-id cache for `placed_datum_target_features` (phase
-    /// datum-target). Indexed by `PlacedDatumTargetFeatureId.0`.
-    pub(crate) placed_datum_target_feature_step_ids: Vec<u64>,
-    /// Step-id caches for the plus-minus-tolerance cluster (phase
-    /// plus-minus-tolerance). The `tolerance_value` / `limits_and_fits`
-    /// caches feed `PLUS_MINUS_TOLERANCE.range`; the dimensional caches feed
-    /// its `toleranced_dimension` (`emit_dimensional_locations` /
-    /// `emit_dimensional_sizes` fill those — index-cached this phase).
-    pub(crate) tolerance_value_step_ids: Vec<u64>,
-    pub(crate) limits_and_fits_step_ids: Vec<u64>,
-    pub(crate) dimensional_location_step_ids: Vec<u64>,
-    pub(crate) dimensional_size_step_ids: Vec<u64>,
-    /// Step-id caches for the tolerance-zone phase. The two
-    /// `geometric_tolerance` caches feed `TOLERANCE_ZONE.defining_tolerance`
-    /// (`emit_geometric_tolerances` / `emit_geometric_tolerance_with_datum_references`
-    /// index-fill them); `tolerance_zone_form_step_ids` feeds its `form`
-    /// (`emit_pmi_pool`'s `tolerance_zone_forms` loop fills it).
-    pub(crate) geometric_tolerance_step_ids: Vec<u64>,
-    pub(crate) geometric_tolerance_with_datum_reference_step_ids: Vec<u64>,
-    pub(crate) tolerance_zone_form_step_ids: Vec<u64>,
     /// IR `ApplicationProtocolDefinition` index → emitted
     /// `APPLICATION_PROTOCOL_DEFINITION` step id.
     pub(crate) apd_step_ids: Vec<u64>,
@@ -331,46 +220,13 @@ impl<'m> WriteBuffer<'m> {
             representation_step_ids: Vec::new(),
             external_ref_step_ids: Vec::new(),
             representation_relationship_step_ids: Vec::new(),
-            acoc_step_ids: Vec::new(),
-            ao_step_ids: Vec::new(),
-            apll_point_step_ids: Vec::new(),
-            annotation_placeholder_leader_line_step_ids: Vec::new(),
-            draughting_callout_step_ids: Vec::new(),
-            tolerance_zone_step_ids: Vec::new(),
-            type_qualifier_step_ids: Vec::new(),
-            value_format_type_qualifier_step_ids: Vec::new(),
             representation_item_step_ids: Vec::new(),
             length_dim_exp_step: None,
             dimensionless_dim_exp_step: None,
             mass_dim_exp_step: None,
-            dptf_step_ids: Vec::new(),
-            dmia_step_ids: Vec::new(),
             unitless_context_step_ids: Vec::new(),
-            gisu_step_ids: Vec::new(),
-            invisibility_step_ids: Vec::new(),
-            presentation_representation_step_ids: Vec::new(),
-            presentation_set_step_ids: Vec::new(),
-            applied_presented_item_step_ids: Vec::new(),
             deferred_assembly_absr_ids: Vec::new(),
-            area_in_set_step_ids: Vec::new(),
             ac_step_ids: Vec::new(),
-            shape_aspect_step_ids: Vec::new(),
-            composite_shape_aspect_step_ids: Vec::new(),
-            centre_of_symmetry_step_ids: Vec::new(),
-            all_around_shape_aspect_step_ids: Vec::new(),
-            datum_step_ids: Vec::new(),
-            datum_feature_step_ids: Vec::new(),
-            general_datum_reference_step_ids: Vec::new(),
-            datum_system_step_ids: Vec::new(),
-            datum_target_step_ids: Vec::new(),
-            placed_datum_target_feature_step_ids: Vec::new(),
-            tolerance_value_step_ids: Vec::new(),
-            geometric_tolerance_step_ids: Vec::new(),
-            geometric_tolerance_with_datum_reference_step_ids: Vec::new(),
-            tolerance_zone_form_step_ids: Vec::new(),
-            limits_and_fits_step_ids: Vec::new(),
-            dimensional_location_step_ids: Vec::new(),
-            dimensional_size_step_ids: Vec::new(),
             apd_step_ids: Vec::new(),
             pc_step_ids: Vec::new(),
             pdc_step_ids: Vec::new(),

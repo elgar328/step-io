@@ -68,13 +68,11 @@ impl SimpleEntityHandler for ItemIdentifiedRepresentationUsageHandler {
         iiru: ItemIdentifiedRepresentationUsage,
     ) -> Result<u64, WriteError> {
         let def_step = match iiru.definition {
-            IiruDefinition::ShapeAspect(id) => buf.shape_aspect_step_ids[id.0 as usize],
-            IiruDefinition::Datum(id) => buf.datum_step_ids[id.0 as usize],
-            IiruDefinition::DatumFeature(id) => buf.datum_feature_step_ids[id.0 as usize],
-            IiruDefinition::DimensionalSize(id) => buf.dimensional_size_step_ids[id.0 as usize],
-            IiruDefinition::GeometricTolerance(id) => {
-                buf.geometric_tolerance_step_ids[id.0 as usize]
-            }
+            IiruDefinition::ShapeAspect(id) => buf.step_id(id),
+            IiruDefinition::Datum(id) => buf.step_id(id),
+            IiruDefinition::DatumFeature(id) => buf.step_id(id),
+            IiruDefinition::DimensionalSize(id) => buf.step_id(id),
+            IiruDefinition::GeometricTolerance(id) => buf.step_id(id),
         };
         let used_step = buf.representation_step_ids[iiru.used_representation.0 as usize];
         let identified_attr = emit_iiru_identified_item(buf, iiru.identified_item)?;

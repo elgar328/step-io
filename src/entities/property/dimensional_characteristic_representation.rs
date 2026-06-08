@@ -61,13 +61,9 @@ impl SimpleEntityHandler for DimensionalCharacteristicRepresentationHandler {
         dcr: DimensionalCharacteristicRepresentation,
     ) -> Result<u64, WriteError> {
         let dim_step = match dcr.dimension {
-            DimensionalCharacteristic::Size(id) => buf.dimensional_size_step_ids[id.0 as usize],
-            DimensionalCharacteristic::Location(id) => {
-                buf.dimensional_location_step_ids[id.0 as usize]
-            }
-            DimensionalCharacteristic::SizeWithDatumFeature(id) => {
-                buf.datum_feature_step_ids[id.0 as usize]
-            }
+            DimensionalCharacteristic::Size(id) => buf.step_id(id),
+            DimensionalCharacteristic::Location(id) => buf.step_id(id),
+            DimensionalCharacteristic::SizeWithDatumFeature(id) => buf.step_id(id),
         };
         let repr_step = buf.representation_step_ids[dcr.representation.0 as usize];
         Ok(buf.push_simple(

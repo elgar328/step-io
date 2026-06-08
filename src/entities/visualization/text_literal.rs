@@ -68,7 +68,7 @@ impl SimpleEntityHandler for TextLiteralHandler {
             Axis2Placement::D3(id) => buf.emit_axis2_placement_3d(id)?,
         };
         let FontSelect::DraughtingPreDefined(font_id) = t.font;
-        let font_step = buf.dptf_step_ids[font_id.0 as usize];
+        let font_step = buf.step_id(font_id);
         Ok(buf.push_simple(
             "TEXT_LITERAL",
             vec![

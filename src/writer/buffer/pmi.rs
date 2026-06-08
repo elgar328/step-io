@@ -14,10 +14,20 @@ use crate::entities::shape_rep::shape_aspect_subtypes::{
     CompositeShapeAspectHandler, ShapeAspectSubtypeWriteInput,
 };
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
+use crate::ir::id::{
+    CompositeShapeAspectId, ContinuousShapeAspectId, DatumFeatureId, DatumId, DatumSystemId,
+    DatumTargetId, DerivedShapeAspectId, DimensionalLocationId, DimensionalSizeId,
+    GeneralDatumReferenceId, GeometricToleranceId, GeometricToleranceWithDatumReferenceId,
+    LimitsAndFitsId, PlacedDatumTargetFeatureId, ShapeAspectId, ToleranceValueId,
+    ToleranceZoneFormId,
+};
 use crate::ir::shape_aspect_ref::{GeometricToleranceTarget, ShapeAspectRef};
 use crate::ir::shape_rep::{CompositeShapeAspectKind, ShapeAspect};
 use crate::writer::WriteError;
 
+// Snapshot indices are arena indices, which fit u32 by the arena's own
+// overflow guard — the `idx as u32` id reconstructions are safe.
+#[allow(clippy::cast_possible_truncation)]
 impl WriteBuffer<'_> {
     /// Emit `DEFAULT_MODEL_GEOMETRIC_VIEW`s. A leaf, so no step-id cache. Runs
     /// after `emit_draughting_models` (its `rep` is a `DraughtingModel`) and
@@ -51,7 +61,6 @@ impl WriteBuffer<'_> {
         // Snapshot to release the &model borrow before per-SA emission
         // (handler.write mutates self via push_simple).
         let entries: Vec<ShapeAspect> = self.model.shape_aspects.iter().cloned().collect();
-        self.shape_aspect_step_ids.resize(entries.len(), 0);
         for (index, sa) in entries.iter().enumerate() {
             // Defensive: silent skip when product chain wasn't emitted (e.g.
             // kernel-built IR with PMI only, or model.units empty so the
@@ -69,7 +78,7 @@ impl WriteBuffer<'_> {
                     product_definitional: sa.product_definitional,
                 },
             ) {
-                self.shape_aspect_step_ids[index] = step_id;
+                self.set_step_id(ShapeAspectId(index as u32), step_id);
             }
         }
         self.emit_shape_aspect_subtypes();
@@ -89,7 +98,6 @@ impl WriteBuffer<'_> {
         let Some(pmi) = self.model.pmi.clone() else {
             return;
         };
-        self.datum_step_ids.resize(pmi.datums.len(), 0);
         for (index, datum) in pmi.datums.iter().enumerate() {
             let Some(&pds_step_id) = self.product_def_shape_ids.get(&datum.target) else {
                 continue;
@@ -104,7 +112,7 @@ impl WriteBuffer<'_> {
                     identification: datum.identification.clone(),
                 },
             ) {
-                self.datum_step_ids[index] = step_id;
+                self.set_step_id(DatumId(index as u32), step_id);
             }
         }
     }
@@ -118,8 +126,6 @@ impl WriteBuffer<'_> {
         let Some(pmi) = self.model.pmi.clone() else {
             return;
         };
-        self.datum_feature_step_ids
-            .resize(pmi.datum_features.len(), 0);
         for (index, df) in pmi.datum_features.iter().enumerate() {
             let d = df.data();
             let Some(&pds_step_id) = self.product_def_shape_ids.get(&d.target) else {
@@ -137,7 +143,7 @@ impl WriteBuffer<'_> {
                             entity_name: "DATUM_FEATURE",
                         },
                     ) {
-                        self.datum_feature_step_ids[index] = step_id;
+                        self.set_step_id(DatumFeatureId(index as u32), step_id);
                     }
                 }
                 crate::ir::DatumFeature::DimensionalSizeWithDatumFeature(dswdf) => {
@@ -148,7 +154,7 @@ impl WriteBuffer<'_> {
                     // first and emit it back through emit_shape_aspect_ref.
                     let bool_attr = if d.product_definitional { "T" } else { "F" };
                     let id = self.fresh();
-                    self.datum_feature_step_ids[index] = id;
+                    self.set_step_id(DatumFeatureId(index as u32), id);
                     let applies_to_step = self.emit_shape_aspect_ref(dswdf.applies_to);
                     self.push_simple_with_id(
                         id,
@@ -179,13 +185,13 @@ impl WriteBuffer<'_> {
         let Some(pmi) = self.model.pmi.clone() else {
             return;
         };
-        for tq in pmi.type_qualifiers.iter() {
+        for (__id, tq) in pmi.type_qualifiers.iter_with_ids() {
             let step = TypeQualifierHandler::write(self, tq.clone()).unwrap_or(0);
-            self.type_qualifier_step_ids.push(step);
+            self.set_step_id(__id, step);
         }
-        for vftq in pmi.value_format_type_qualifiers.iter() {
+        for (__id, vftq) in pmi.value_format_type_qualifiers.iter_with_ids() {
             let step = ValueFormatTypeQualifierHandler::write(self, vftq.clone()).unwrap_or(0);
-            self.value_format_type_qualifier_step_ids.push(step);
+            self.set_step_id(__id, step);
         }
     }
 
@@ -197,17 +203,14 @@ impl WriteBuffer<'_> {
         let Some(pmi) = self.model.pmi.clone() else {
             return;
         };
-        self.tolerance_zone_form_step_ids
-            .resize(pmi.tolerance_zone_forms.len(), 0);
         for (index, tzf) in pmi.tolerance_zone_forms.iter().enumerate() {
             if let Ok(step_id) = ToleranceZoneFormHandler::write(self, tzf.clone()) {
-                self.tolerance_zone_form_step_ids[index] = step_id;
+                self.set_step_id(ToleranceZoneFormId(index as u32), step_id);
             }
         }
-        self.dptf_step_ids = Vec::with_capacity(pmi.draughting_pre_defined_text_fonts.len());
-        for font in pmi.draughting_pre_defined_text_fonts.iter() {
+        for (__id, font) in pmi.draughting_pre_defined_text_fonts.iter_with_ids() {
             let step = DraughtingPreDefinedTextFontHandler::write(self, font.clone()).unwrap_or(0);
-            self.dptf_step_ids.push(step);
+            self.set_step_id(__id, step);
         }
     }
 
@@ -222,11 +225,10 @@ impl WriteBuffer<'_> {
         let Some(pmi) = self.model.pmi.clone() else {
             return;
         };
-        self.dmia_step_ids = Vec::with_capacity(pmi.draughting_model_item_associations.len());
-        for dmia in pmi.draughting_model_item_associations.iter() {
+        for (__id, dmia) in pmi.draughting_model_item_associations.iter_with_ids() {
             let step =
                 DraughtingModelItemAssociationHandler::write(self, dmia.clone()).unwrap_or(0);
-            self.dmia_step_ids.push(step);
+            self.set_step_id(__id, step);
         }
     }
 
@@ -251,24 +253,22 @@ impl WriteBuffer<'_> {
         // stepped). Then AREAs, whose `items` reference those MAPPED_ITEMs.
         // Orders VIEW -> rmap -> mapped_item -> AREA without a cyclic
         // forward-ref (a rmap never maps a PRESENTATION_AREA in the corpus).
-        self.presentation_representation_step_ids = vec![0; viz.presentation_representations.len()];
-        for (idx, repr) in viz.presentation_representations.iter().enumerate() {
+        for (__id, repr) in viz.presentation_representations.iter_with_ids() {
             if let PresentationRepresentation::View(d) = repr {
-                self.presentation_representation_step_ids[idx] =
-                    PresentationViewHandler::write(self, d.clone())?;
+                let __sid = PresentationViewHandler::write(self, d.clone())?;
+                self.set_step_id(__id, __sid);
             }
         }
         self.emit_presentation_mapped_items()?;
-        for (idx, repr) in viz.presentation_representations.iter().enumerate() {
+        for (__id, repr) in viz.presentation_representations.iter_with_ids() {
             if let PresentationRepresentation::Area(d) = repr {
-                self.presentation_representation_step_ids[idx] =
-                    PresentationAreaHandler::write(self, d.clone())?;
+                let __sid = PresentationAreaHandler::write(self, d.clone())?;
+                self.set_step_id(__id, __sid);
             }
         }
-        self.presentation_set_step_ids = Vec::with_capacity(viz.presentation_sets.len());
-        for set in viz.presentation_sets.iter() {
+        for (__id, set) in viz.presentation_sets.iter_with_ids() {
             let step = PresentationSetHandler::write(self, set.clone())?;
-            self.presentation_set_step_ids.push(step);
+            self.set_step_id(__id, step);
         }
         Ok(())
     }
@@ -285,10 +285,9 @@ impl WriteBuffer<'_> {
         };
         // APPLIED_PRESENTED_ITEM first — PRESENTED_ITEM_REPRESENTATION.item
         // forward-references it through `applied_presented_item_step_ids`.
-        self.applied_presented_item_step_ids = vec![0; viz.applied_presented_items.len()];
-        for (idx, api) in viz.applied_presented_items.iter().enumerate() {
-            self.applied_presented_item_step_ids[idx] =
-                AppliedPresentedItemHandler::write(self, api.clone())?;
+        for (__id, api) in viz.applied_presented_items.iter_with_ids() {
+            let __sid = AppliedPresentedItemHandler::write(self, api.clone())?;
+            self.set_step_id(__id, __sid);
         }
         for pir in viz.presented_item_representations.iter() {
             let _ = PresentedItemRepresentationHandler::write(self, *pir)?;
@@ -307,10 +306,9 @@ impl WriteBuffer<'_> {
         let Some(viz) = self.model.visualization.clone() else {
             return Ok(());
         };
-        self.area_in_set_step_ids = Vec::with_capacity(viz.area_in_sets.len());
-        for ais in viz.area_in_sets.iter() {
+        for (__id, ais) in viz.area_in_sets.iter_with_ids() {
             let step = AreaInSetHandler::write(self, *ais)?;
-            self.area_in_set_step_ids.push(step);
+            self.set_step_id(__id, step);
         }
         for ps in viz.presentation_sizes.iter() {
             let _ = PresentationSizeHandler::write(self, *ps)?;
@@ -329,10 +327,9 @@ impl WriteBuffer<'_> {
         let Some(viz) = self.model.visualization.clone() else {
             return Ok(());
         };
-        self.invisibility_step_ids = Vec::with_capacity(viz.invisibilities.len());
-        for inv in viz.invisibilities.iter() {
+        for (__id, inv) in viz.invisibilities.iter_with_ids() {
             let step = InvisibilityHandler::write(self, inv.clone())?;
-            self.invisibility_step_ids.push(step);
+            self.set_step_id(__id, step);
         }
         Ok(())
     }
@@ -346,13 +343,12 @@ impl WriteBuffer<'_> {
         let entries: Vec<_> = self
             .model
             .geometric_item_specific_usages
-            .iter()
-            .cloned()
+            .iter_with_ids()
+            .map(|(__id, v)| (__id, v.clone()))
             .collect();
-        self.gisu_step_ids = Vec::with_capacity(entries.len());
-        for gisu in entries {
+        for (__id, gisu) in entries {
             let step = GeometricItemSpecificUsageHandler::write(self, gisu).unwrap_or(0);
-            self.gisu_step_ids.push(step);
+            self.set_step_id(__id, step);
         }
     }
 
@@ -365,10 +361,9 @@ impl WriteBuffer<'_> {
         let Some(pmi) = self.model.pmi.clone() else {
             return;
         };
-        self.apll_point_step_ids = Vec::with_capacity(pmi.apll_points.len());
-        for apll in pmi.apll_points.iter() {
+        for (__id, apll) in pmi.apll_points.iter_with_ids() {
             let step = ApllPointHandler::write(self, apll.clone()).unwrap_or(0);
-            self.apll_point_step_ids.push(step);
+            self.set_step_id(__id, step);
         }
     }
 
@@ -382,11 +377,9 @@ impl WriteBuffer<'_> {
         let Some(pmi) = self.model.pmi.clone() else {
             return;
         };
-        self.annotation_placeholder_leader_line_step_ids =
-            Vec::with_capacity(pmi.annotation_placeholder_leader_lines.len());
-        for leader in pmi.annotation_placeholder_leader_lines.iter() {
+        for (__id, leader) in pmi.annotation_placeholder_leader_lines.iter_with_ids() {
             let step = AnnotationToModelLeaderLineHandler::write(self, leader.clone()).unwrap_or(0);
-            self.annotation_placeholder_leader_line_step_ids.push(step);
+            self.set_step_id(__id, step);
         }
     }
 
@@ -407,7 +400,7 @@ impl WriteBuffer<'_> {
         let Some(pmi) = self.model.pmi.clone() else {
             return;
         };
-        for ao in pmi.annotation_occurrences.iter() {
+        for (__id, ao) in pmi.annotation_occurrences.iter_with_ids() {
             let step = match ao {
                 AnnotationOccurrence::Plain(p) => {
                     AnnotationOccurrenceHandler::write(self, p.clone())
@@ -442,7 +435,7 @@ impl WriteBuffer<'_> {
             };
             // Index by AnnotationOccurrenceId.0 — arena order matches enum
             // iteration order. Drop errors (push 0) to keep the index aligned.
-            self.ao_step_ids.push(step.unwrap_or(0));
+            self.set_step_id(__id, step.unwrap_or(0));
         }
     }
 
@@ -457,7 +450,7 @@ impl WriteBuffer<'_> {
         let Some(pmi) = self.model.pmi.clone() else {
             return;
         };
-        for dc in pmi.draughting_callouts.iter() {
+        for (__id, dc) in pmi.draughting_callouts.iter_with_ids() {
             let step = match dc {
                 DraughtingCallout::Plain(data) => {
                     DraughtingCalloutHandler::write(self, data.clone())
@@ -466,7 +459,7 @@ impl WriteBuffer<'_> {
                     LeaderDirectedCalloutHandler::write(self, data.clone())
                 }
             };
-            self.draughting_callout_step_ids.push(step.unwrap_or(0));
+            self.set_step_id(__id, step.unwrap_or(0));
         }
     }
 
@@ -522,7 +515,7 @@ impl WriteBuffer<'_> {
         let Some(pmi) = self.model.pmi.clone() else {
             return;
         };
-        for aco in pmi.annotation_curve_occurrences.iter() {
+        for (__id, aco) in pmi.annotation_curve_occurrences.iter_with_ids() {
             let result = match aco.clone() {
                 AnnotationCurveOccurrence::LeaderCurve(lc) => LeaderCurveHandler::write(self, lc),
                 AnnotationCurveOccurrence::Plain(p) => {
@@ -530,8 +523,8 @@ impl WriteBuffer<'_> {
                 }
             };
             match result {
-                Ok(n) => self.acoc_step_ids.push(n),
-                Err(_) => self.acoc_step_ids.push(0),
+                Ok(n) => self.set_step_id(__id, n),
+                Err(_) => self.set_step_id(__id, 0),
             }
         }
     }
@@ -551,8 +544,6 @@ impl WriteBuffer<'_> {
             .iter()
             .cloned()
             .collect();
-        self.composite_shape_aspect_step_ids
-            .resize(composite.len(), 0);
         for (index, sa) in composite.into_iter().enumerate() {
             let Some(&pds_step_id) = self.product_def_shape_ids.get(&sa.target) else {
                 continue;
@@ -590,11 +581,10 @@ impl WriteBuffer<'_> {
                 }
             };
             if let Ok(step_id) = written {
-                self.composite_shape_aspect_step_ids[index] = step_id;
+                self.set_step_id(CompositeShapeAspectId(index as u32), step_id);
             }
         }
         let centre: Vec<_> = self.model.centre_of_symmetries.iter().cloned().collect();
-        self.centre_of_symmetry_step_ids.resize(centre.len(), 0);
         for (index, sa) in centre.into_iter().enumerate() {
             let Some(&pds_step_id) = self.product_def_shape_ids.get(&sa.target) else {
                 continue;
@@ -608,7 +598,7 @@ impl WriteBuffer<'_> {
                     product_definitional: sa.product_definitional,
                 },
             ) {
-                self.centre_of_symmetry_step_ids[index] = step_id;
+                self.set_step_id(DerivedShapeAspectId(index as u32), step_id);
             }
         }
         let all_around: Vec<_> = self
@@ -617,8 +607,6 @@ impl WriteBuffer<'_> {
             .iter()
             .cloned()
             .collect();
-        self.all_around_shape_aspect_step_ids
-            .resize(all_around.len(), 0);
         for (index, sa) in all_around.into_iter().enumerate() {
             let Some(&pds_step_id) = self.product_def_shape_ids.get(&sa.target) else {
                 continue;
@@ -632,7 +620,7 @@ impl WriteBuffer<'_> {
                     product_definitional: sa.product_definitional,
                 },
             ) {
-                self.all_around_shape_aspect_step_ids[index] = step_id;
+                self.set_step_id(ContinuousShapeAspectId(index as u32), step_id);
             }
         }
     }
@@ -645,25 +633,17 @@ impl WriteBuffer<'_> {
     /// also writes successfully (symmetric product-chain resolution).
     pub(crate) fn emit_shape_aspect_ref(&self, item: ShapeAspectRef) -> u64 {
         match item {
-            ShapeAspectRef::ShapeAspect(id) => self.shape_aspect_step_ids[id.0 as usize],
-            ShapeAspectRef::CompositeGroupShapeAspect(id) => {
-                self.composite_shape_aspect_step_ids[id.0 as usize]
-            }
-            ShapeAspectRef::CentreOfSymmetry(id) => self.centre_of_symmetry_step_ids[id.0 as usize],
-            ShapeAspectRef::AllAroundShapeAspect(id) => {
-                self.all_around_shape_aspect_step_ids[id.0 as usize]
-            }
-            ShapeAspectRef::Datum(id) => self.datum_step_ids[id.0 as usize],
-            ShapeAspectRef::DatumFeature(id) => self.datum_feature_step_ids[id.0 as usize],
-            ShapeAspectRef::DatumSystem(id) => self.datum_system_step_ids[id.0 as usize],
-            ShapeAspectRef::DatumTarget(id) => self.datum_target_step_ids[id.0 as usize],
-            ShapeAspectRef::PlacedDatumTargetFeature(id) => {
-                self.placed_datum_target_feature_step_ids[id.0 as usize]
-            }
-            ShapeAspectRef::ToleranceZone(id) => self.tolerance_zone_step_ids[id.0 as usize],
-            ShapeAspectRef::GeneralDatumReference(id) => {
-                self.general_datum_reference_step_ids[id.0 as usize]
-            }
+            ShapeAspectRef::ShapeAspect(id) => self.step_id(id),
+            ShapeAspectRef::CompositeGroupShapeAspect(id) => self.step_id(id),
+            ShapeAspectRef::CentreOfSymmetry(id) => self.step_id(id),
+            ShapeAspectRef::AllAroundShapeAspect(id) => self.step_id(id),
+            ShapeAspectRef::Datum(id) => self.step_id(id),
+            ShapeAspectRef::DatumFeature(id) => self.step_id(id),
+            ShapeAspectRef::DatumSystem(id) => self.step_id(id),
+            ShapeAspectRef::DatumTarget(id) => self.step_id(id),
+            ShapeAspectRef::PlacedDatumTargetFeature(id) => self.step_id(id),
+            ShapeAspectRef::ToleranceZone(id) => self.step_id(id),
+            ShapeAspectRef::GeneralDatumReference(id) => self.step_id(id),
         }
     }
 
@@ -709,11 +689,9 @@ impl WriteBuffer<'_> {
         let Some(pmi) = self.model.pmi.clone() else {
             return Ok(());
         };
-        self.dimensional_size_step_ids
-            .resize(pmi.dimensional_sizes.len(), 0);
         for (index, ds) in pmi.dimensional_sizes.iter().enumerate() {
             let step_id = DimensionalSizeHandler::write(self, ds.clone())?;
-            self.dimensional_size_step_ids[index] = step_id;
+            self.set_step_id(DimensionalSizeId(index as u32), step_id);
         }
         Ok(())
     }
@@ -729,11 +707,9 @@ impl WriteBuffer<'_> {
         let Some(pmi) = self.model.pmi.clone() else {
             return Ok(());
         };
-        self.dimensional_location_step_ids
-            .resize(pmi.dimensional_locations.len(), 0);
         for (index, dl) in pmi.dimensional_locations.iter().enumerate() {
             let step_id = DimensionalLocationHandler::write(self, dl.clone())?;
-            self.dimensional_location_step_ids[index] = step_id;
+            self.set_step_id(DimensionalLocationId(index as u32), step_id);
         }
         Ok(())
     }
@@ -747,11 +723,9 @@ impl WriteBuffer<'_> {
         let Some(pmi) = self.model.pmi.clone() else {
             return;
         };
-        self.geometric_tolerance_step_ids
-            .resize(pmi.geometric_tolerances.len(), 0);
         for (index, gt) in pmi.geometric_tolerances.iter().enumerate() {
             let step_id = write_geometric_tolerance(self, gt.clone());
-            self.geometric_tolerance_step_ids[index] = step_id;
+            self.set_step_id(GeometricToleranceId(index as u32), step_id);
         }
     }
 
@@ -766,11 +740,9 @@ impl WriteBuffer<'_> {
         let Some(pmi) = self.model.pmi.clone() else {
             return;
         };
-        self.general_datum_reference_step_ids
-            .resize(pmi.general_datum_references.len(), 0);
         for (index, gdr) in pmi.general_datum_references.iter().enumerate() {
             let step_id = write_general_datum_reference(self, gdr.clone());
-            self.general_datum_reference_step_ids[index] = step_id;
+            self.set_step_id(GeneralDatumReferenceId(index as u32), step_id);
         }
     }
 
@@ -782,10 +754,9 @@ impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_datum_systems(&mut self) {
         use crate::entities::shape_rep::datum_system::DatumSystemHandler;
         let systems: Vec<_> = self.model.datum_systems.iter().cloned().collect();
-        self.datum_system_step_ids.resize(systems.len(), 0);
         for (index, ds) in systems.into_iter().enumerate() {
             if let Ok(step_id) = DatumSystemHandler::write(self, ds) {
-                self.datum_system_step_ids[index] = step_id;
+                self.set_step_id(DatumSystemId(index as u32), step_id);
             }
         }
     }
@@ -797,10 +768,9 @@ impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_datum_targets(&mut self) {
         use crate::entities::shape_rep::datum_target::DatumTargetHandler;
         let targets: Vec<_> = self.model.datum_targets.iter().cloned().collect();
-        self.datum_target_step_ids.resize(targets.len(), 0);
         for (index, dt) in targets.into_iter().enumerate() {
             if let Ok(step_id) = DatumTargetHandler::write(self, dt) {
-                self.datum_target_step_ids[index] = step_id;
+                self.set_step_id(DatumTargetId(index as u32), step_id);
             }
         }
     }
@@ -814,11 +784,9 @@ impl WriteBuffer<'_> {
             .iter()
             .cloned()
             .collect();
-        self.placed_datum_target_feature_step_ids
-            .resize(entries.len(), 0);
         for (index, p) in entries.into_iter().enumerate() {
             if let Ok(step_id) = PlacedDatumTargetFeatureHandler::write(self, p) {
-                self.placed_datum_target_feature_step_ids[index] = step_id;
+                self.set_step_id(PlacedDatumTargetFeatureId(index as u32), step_id);
             }
         }
     }
@@ -831,10 +799,15 @@ impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_tolerance_zones(&mut self) {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::shape_rep::tolerance_zone::ToleranceZoneHandler;
-        let zones: Vec<_> = self.model.tolerance_zones.iter().cloned().collect();
-        for tz in zones {
+        let zones: Vec<_> = self
+            .model
+            .tolerance_zones
+            .iter_with_ids()
+            .map(|(__id, v)| (__id, v.clone()))
+            .collect();
+        for (__id, tz) in zones {
             let step = ToleranceZoneHandler::write(self, tz).unwrap_or(0);
-            self.tolerance_zone_step_ids.push(step);
+            self.set_step_id(__id, step);
         }
     }
 
@@ -879,15 +852,16 @@ impl WriteBuffer<'_> {
         let Some(pmi) = self.model.pmi.clone() else {
             return;
         };
-        self.geometric_tolerance_with_datum_reference_step_ids
-            .resize(pmi.geometric_tolerance_with_datum_references.len(), 0);
         for (index, gt) in pmi
             .geometric_tolerance_with_datum_references
             .iter()
             .enumerate()
         {
             let step_id = write_geometric_tolerance_with_datum_reference(self, gt.clone());
-            self.geometric_tolerance_with_datum_reference_step_ids[index] = step_id;
+            self.set_step_id(
+                GeometricToleranceWithDatumReferenceId(index as u32),
+                step_id,
+            );
         }
     }
 
@@ -898,11 +872,9 @@ impl WriteBuffer<'_> {
         let Some(pmi) = self.model.pmi.clone() else {
             return;
         };
-        self.tolerance_value_step_ids
-            .resize(pmi.tolerance_values.len(), 0);
         for (index, tv) in pmi.tolerance_values.iter().enumerate() {
             let step_id = write_tolerance_value(self, tv);
-            self.tolerance_value_step_ids[index] = step_id;
+            self.set_step_id(ToleranceValueId(index as u32), step_id);
         }
     }
 
@@ -913,11 +885,9 @@ impl WriteBuffer<'_> {
         let Some(pmi) = self.model.pmi.clone() else {
             return;
         };
-        self.limits_and_fits_step_ids
-            .resize(pmi.limits_and_fits.len(), 0);
         for (index, lf) in pmi.limits_and_fits.iter().enumerate() {
             let step_id = write_limits_and_fits(self, lf.clone());
-            self.limits_and_fits_step_ids[index] = step_id;
+            self.set_step_id(LimitsAndFitsId(index as u32), step_id);
         }
     }
 

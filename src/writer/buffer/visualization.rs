@@ -52,13 +52,9 @@ impl WriteBuffer<'_> {
             RepresentationItemRef::TessellatedItem(id) => Ok(self.step_id(id)),
             RepresentationItemRef::TessellatedFace(id) => Ok(self.step_id(id)),
             RepresentationItemRef::MappedItem(id) => Ok(self.step_id(id)),
-            RepresentationItemRef::AnnotationOccurrence(id) => Ok(self.ao_step_ids[id.0 as usize]),
-            RepresentationItemRef::AnnotationCurveOccurrence(id) => {
-                Ok(self.acoc_step_ids[id.0 as usize])
-            }
-            RepresentationItemRef::DraughtingCallout(id) => {
-                Ok(self.draughting_callout_step_ids[id.0 as usize])
-            }
+            RepresentationItemRef::AnnotationOccurrence(id) => Ok(self.step_id(id)),
+            RepresentationItemRef::AnnotationCurveOccurrence(id) => Ok(self.step_id(id)),
+            RepresentationItemRef::DraughtingCallout(id) => Ok(self.step_id(id)),
             RepresentationItemRef::CameraModel(id) => Ok(self.step_id(id)),
             RepresentationItemRef::TextLiteral(id) => Ok(self.step_id(id)),
             RepresentationItemRef::CompositeText(id) => Ok(self.step_id(id)),
@@ -291,12 +287,8 @@ impl WriteBuffer<'_> {
                 .iter()
                 .map(|q| {
                     let step = match q {
-                        QualifierRef::TypeQualifier(id) => {
-                            self.type_qualifier_step_ids[id.0 as usize]
-                        }
-                        QualifierRef::ValueFormatTypeQualifier(id) => {
-                            self.value_format_type_qualifier_step_ids[id.0 as usize]
-                        }
+                        QualifierRef::TypeQualifier(id) => self.step_id(id),
+                        QualifierRef::ValueFormatTypeQualifier(id) => self.step_id(id),
                     };
                     Attribute::EntityRef(step)
                 })

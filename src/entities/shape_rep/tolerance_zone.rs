@@ -87,14 +87,12 @@ impl SimpleEntityHandler for ToleranceZoneHandler {
         let mut tolerance_refs = Vec::with_capacity(tz.defining_tolerance.len());
         for gtr in &tz.defining_tolerance {
             let step_id = match gtr {
-                GeometricToleranceRef::Plain(id) => buf.geometric_tolerance_step_ids[id.0 as usize],
-                GeometricToleranceRef::WithDatumReference(id) => {
-                    buf.geometric_tolerance_with_datum_reference_step_ids[id.0 as usize]
-                }
+                GeometricToleranceRef::Plain(id) => buf.step_id(id),
+                GeometricToleranceRef::WithDatumReference(id) => buf.step_id(id),
             };
             tolerance_refs.push(Attribute::EntityRef(step_id));
         }
-        let form = buf.tolerance_zone_form_step_ids[tz.form.0 as usize];
+        let form = buf.step_id(tz.form);
         let bool_attr = if tz.product_definitional { "T" } else { "F" };
         Ok(buf.push_simple(
             "TOLERANCE_ZONE",

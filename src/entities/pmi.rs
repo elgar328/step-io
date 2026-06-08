@@ -701,7 +701,7 @@ impl SimpleEntityHandler for AnnotationToModelLeaderLineHandler {
                 let elem_refs = data
                     .geometric_elements
                     .iter()
-                    .map(|id| Attribute::EntityRef(buf.apll_point_step_ids[id.0 as usize]))
+                    .map(|id| Attribute::EntityRef(buf.step_id(id)))
                     .collect();
                 Ok(buf.push_simple(
                     "ANNOTATION_TO_MODEL_LEADER_LINE",
@@ -712,17 +712,13 @@ impl SimpleEntityHandler for AnnotationToModelLeaderLineHandler {
                 let elem_refs = data
                     .geometric_elements
                     .iter()
-                    .map(|id| Attribute::EntityRef(buf.apll_point_step_ids[id.0 as usize]))
+                    .map(|id| Attribute::EntityRef(buf.step_id(id)))
                     .collect();
                 // `controlling_leader_line` points at another member of the same
                 // arena. Topo order processes it first (lower arena index), so
                 // its step id is already in the partially-built cache; `.get`
                 // keeps any ordering violation a visible dangling 0, not a panic.
-                let controlling_step = buf
-                    .annotation_placeholder_leader_line_step_ids
-                    .get(data.controlling_leader_line.0 as usize)
-                    .copied()
-                    .unwrap_or(0);
+                let controlling_step = buf.step_id(data.controlling_leader_line);
                 Ok(buf.push_simple(
                     "AUXILIARY_LEADER_LINE",
                     vec![
@@ -955,9 +951,7 @@ impl SimpleEntityHandler for AnnotationPlaceholderOccurrenceWithLeaderLineHandle
         let leader_refs = apo
             .leader_line
             .iter()
-            .map(|id| {
-                Attribute::EntityRef(buf.annotation_placeholder_leader_line_step_ids[id.0 as usize])
-            })
+            .map(|id| Attribute::EntityRef(buf.step_id(id)))
             .collect();
         Ok(buf.push_simple(
             "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
@@ -1251,7 +1245,7 @@ impl SimpleEntityHandler for TerminatorSymbolHandler {
 
     fn write(buf: &mut WriteBuffer, ts: TerminatorSymbol) -> Result<u64, WriteError> {
         let item_id = buf.emit_representation_item_ref(ts.item)?;
-        let ac_step = buf.acoc_step_ids[ts.annotated_curve.0 as usize];
+        let ac_step = buf.step_id(ts.annotated_curve);
         let mut style_refs = Vec::with_capacity(ts.styles.len());
         for psa_id in ts.styles {
             style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
@@ -1337,7 +1331,7 @@ impl ComplexEntityHandler for LeaderTerminatorHandler {
 
     fn write(buf: &mut WriteBuffer, lt: LeaderTerminator) -> Result<u64, WriteError> {
         let item_id = buf.emit_representation_item_ref(lt.item)?;
-        let ac_step = buf.acoc_step_ids[lt.annotated_curve.0 as usize];
+        let ac_step = buf.step_id(lt.annotated_curve);
         let mut style_refs = Vec::with_capacity(lt.styles.len());
         for psa_id in lt.styles {
             style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
@@ -1404,10 +1398,8 @@ fn emit_draughting_callout_contents(
     let mut refs = Vec::with_capacity(contents.len());
     for elem in contents {
         let step = match elem {
-            DraughtingCalloutElement::AnnotationCurveOccurrence(id) => {
-                buf.acoc_step_ids[id.0 as usize]
-            }
-            DraughtingCalloutElement::AnnotationOccurrence(id) => buf.ao_step_ids[id.0 as usize],
+            DraughtingCalloutElement::AnnotationCurveOccurrence(id) => buf.step_id(id),
+            DraughtingCalloutElement::AnnotationOccurrence(id) => buf.step_id(id),
         };
         refs.push(Attribute::EntityRef(step));
     }
@@ -1533,8 +1525,8 @@ impl SimpleEntityHandler for DraughtingCalloutRelationshipHandler {
     }
 
     fn write(buf: &mut WriteBuffer, rel: DraughtingCalloutRelationship) -> Result<u64, WriteError> {
-        let relating = buf.draughting_callout_step_ids[rel.relating.0 as usize];
-        let related = buf.draughting_callout_step_ids[rel.related.0 as usize];
+        let relating = buf.step_id(rel.relating);
+        let related = buf.step_id(rel.related);
         Ok(buf.push_simple(
             "DRAUGHTING_CALLOUT_RELATIONSHIP",
             vec![
@@ -1641,8 +1633,8 @@ impl SimpleEntityHandler for AnnotationOccurrenceAssociativityHandler {
 /// (`ao_step_ids` / `acoc_step_ids`).
 fn emit_annotation_occurrence_ref(buf: &WriteBuffer, r: AnnotationOccurrenceRef) -> u64 {
     match r {
-        AnnotationOccurrenceRef::AnnotationOccurrence(id) => buf.ao_step_ids[id.0 as usize],
-        AnnotationOccurrenceRef::AnnotationCurveOccurrence(id) => buf.acoc_step_ids[id.0 as usize],
+        AnnotationOccurrenceRef::AnnotationOccurrence(id) => buf.step_id(id),
+        AnnotationOccurrenceRef::AnnotationCurveOccurrence(id) => buf.step_id(id),
     }
 }
 
@@ -1699,10 +1691,8 @@ impl SimpleEntityHandler for MeasureQualificationHandler {
         let mut qualifier_refs = Vec::with_capacity(mq.qualifiers.len());
         for q in mq.qualifiers {
             let step = match q {
-                ValueQualifier::TypeQualifier(id) => buf.type_qualifier_step_ids[id.0 as usize],
-                ValueQualifier::ValueFormatTypeQualifier(id) => {
-                    buf.value_format_type_qualifier_step_ids[id.0 as usize]
-                }
+                ValueQualifier::TypeQualifier(id) => buf.step_id(id),
+                ValueQualifier::ValueFormatTypeQualifier(id) => buf.step_id(id),
             };
             qualifier_refs.push(Attribute::EntityRef(step));
         }
@@ -1772,7 +1762,7 @@ impl SimpleEntityHandler for ProjectedZoneDefinitionHandler {
     }
 
     fn write(buf: &mut WriteBuffer, pzd: ProjectedZoneDefinition) -> Result<u64, WriteError> {
-        let zone_step = buf.tolerance_zone_step_ids[pzd.zone.0 as usize];
+        let zone_step = buf.step_id(pzd.zone);
         let projection_end_step = buf.emit_shape_aspect_ref(pzd.projection_end);
         let projected_length_step = emit_tolerance_magnitude(buf, &pzd.projected_length);
         let mut boundary_refs = Vec::with_capacity(pzd.boundaries.len());
@@ -1835,16 +1825,12 @@ impl SimpleEntityHandler for GeometricToleranceRelationshipHandler {
         rel: GeometricToleranceRelationship,
     ) -> Result<u64, WriteError> {
         let relating_step = match rel.relating {
-            GeometricToleranceRef::Plain(id) => buf.geometric_tolerance_step_ids[id.0 as usize],
-            GeometricToleranceRef::WithDatumReference(id) => {
-                buf.geometric_tolerance_with_datum_reference_step_ids[id.0 as usize]
-            }
+            GeometricToleranceRef::Plain(id) => buf.step_id(id),
+            GeometricToleranceRef::WithDatumReference(id) => buf.step_id(id),
         };
         let related_step = match rel.related {
-            GeometricToleranceRef::Plain(id) => buf.geometric_tolerance_step_ids[id.0 as usize],
-            GeometricToleranceRef::WithDatumReference(id) => {
-                buf.geometric_tolerance_with_datum_reference_step_ids[id.0 as usize]
-            }
+            GeometricToleranceRef::Plain(id) => buf.step_id(id),
+            GeometricToleranceRef::WithDatumReference(id) => buf.step_id(id),
         };
         Ok(buf.push_simple(
             "GEOMETRIC_TOLERANCE_RELATIONSHIP",
@@ -2913,13 +2899,13 @@ pub(crate) fn write_general_datum_reference(
         .copied()
         .unwrap_or(0);
     let base_attr = match data.base {
-        GeneralDatumBase::Datum(id) => Attribute::EntityRef(buf.datum_step_ids[id.0 as usize]),
+        GeneralDatumBase::Datum(id) => Attribute::EntityRef(buf.step_id(id)),
         GeneralDatumBase::CommonDatumList(ids) => Attribute::Typed {
             type_name: "COMMON_DATUM_LIST".to_string(),
             value: Box::new(Attribute::List(
                 ids.iter()
                     .map(|id| {
-                        let step = buf.general_datum_reference_step_ids[id.0 as usize];
+                        let step = buf.step_id(id);
                         // Invariant: list members (datum_reference_elements) are
                         // referenced-before-referrer, so emitted first in the
                         // arena-order loop — their step ids are non-zero here.
@@ -3315,9 +3301,7 @@ pub(crate) fn write_geometric_tolerance_with_datum_reference(
     let shape_aspect = buf.emit_geometric_tolerance_target(data.toleranced_shape_aspect);
     let mut datum_system_refs = Vec::with_capacity(data.datum_system.len());
     for ds_id in &data.datum_system {
-        datum_system_refs.push(Attribute::EntityRef(
-            buf.datum_system_step_ids[ds_id.0 as usize],
-        ));
+        datum_system_refs.push(Attribute::EntityRef(buf.step_id(ds_id)));
     }
     let force_complex = is_complex || !data.modifiers.is_empty() || data.displacement.is_some();
     if force_complex {
@@ -3930,15 +3914,13 @@ impl SimpleEntityHandler for PlusMinusToleranceHandler {
 /// Emit a `PLUS_MINUS_TOLERANCE`, returning the STEP id.
 pub(crate) fn write_plus_minus_tolerance(buf: &mut WriteBuffer, pmt: &PlusMinusTolerance) -> u64 {
     let range = match pmt.range {
-        ToleranceMethodDefinition::Value(id) => buf.tolerance_value_step_ids[id.0 as usize],
-        ToleranceMethodDefinition::LimitsAndFits(id) => buf.limits_and_fits_step_ids[id.0 as usize],
+        ToleranceMethodDefinition::Value(id) => buf.step_id(id),
+        ToleranceMethodDefinition::LimitsAndFits(id) => buf.step_id(id),
     };
     let dimension = match pmt.toleranced_dimension {
-        DimensionalCharacteristic::Location(id) => buf.dimensional_location_step_ids[id.0 as usize],
-        DimensionalCharacteristic::Size(id) => buf.dimensional_size_step_ids[id.0 as usize],
-        DimensionalCharacteristic::SizeWithDatumFeature(id) => {
-            buf.datum_feature_step_ids[id.0 as usize]
-        }
+        DimensionalCharacteristic::Location(id) => buf.step_id(id),
+        DimensionalCharacteristic::Size(id) => buf.step_id(id),
+        DimensionalCharacteristic::SizeWithDatumFeature(id) => buf.step_id(id),
     };
     buf.push_simple(
         "PLUS_MINUS_TOLERANCE",
@@ -4288,31 +4270,21 @@ impl SimpleEntityHandler for DraughtingModelItemAssociationHandler {
             DraughtingModelItemDefinition::Representation(id) => {
                 buf.representation_step_ids[id.0 as usize]
             }
-            DraughtingModelItemDefinition::DimensionalSize(id) => {
-                buf.dimensional_size_step_ids[id.0 as usize]
-            }
+            DraughtingModelItemDefinition::DimensionalSize(id) => buf.step_id(id),
             DraughtingModelItemDefinition::ShapeAspect(sa_ref) => buf.emit_shape_aspect_ref(sa_ref),
             DraughtingModelItemDefinition::PropertyDefinition(id) => {
                 buf.property_definition_step_ids[id.0 as usize]
             }
-            DraughtingModelItemDefinition::DimensionalLocation(id) => {
-                buf.dimensional_location_step_ids[id.0 as usize]
-            }
+            DraughtingModelItemDefinition::DimensionalLocation(id) => buf.step_id(id),
             DraughtingModelItemDefinition::GeometricTolerance(r) => match r {
-                GeometricToleranceRef::Plain(id) => buf.geometric_tolerance_step_ids[id.0 as usize],
-                GeometricToleranceRef::WithDatumReference(id) => {
-                    buf.geometric_tolerance_with_datum_reference_step_ids[id.0 as usize]
-                }
+                GeometricToleranceRef::Plain(id) => buf.step_id(id),
+                GeometricToleranceRef::WithDatumReference(id) => buf.step_id(id),
             },
         };
         let used_step = buf.representation_step_ids[dmia.used_representation.0 as usize];
         let item_step = match dmia.identified_item {
-            DraughtingModelIdentifiedItem::AnnotationOccurrence(id) => {
-                buf.ao_step_ids[id.0 as usize]
-            }
-            DraughtingModelIdentifiedItem::DraughtingCallout(id) => {
-                buf.draughting_callout_step_ids[id.0 as usize]
-            }
+            DraughtingModelIdentifiedItem::AnnotationOccurrence(id) => buf.step_id(id),
+            DraughtingModelIdentifiedItem::DraughtingCallout(id) => buf.step_id(id),
         };
         let description_attr = match dmia.description {
             Some(s) => Attribute::String(s),
@@ -4329,7 +4301,7 @@ impl SimpleEntityHandler for DraughtingModelItemAssociationHandler {
         // annotation_placeholder ref and emits under the subtype name.
         match dmia.annotation_placeholder {
             Some(ph) => {
-                body.push(Attribute::EntityRef(buf.ao_step_ids[ph.0 as usize]));
+                body.push(Attribute::EntityRef(buf.step_id(ph)));
                 Ok(buf.push_simple("DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER", body))
             }
             None => Ok(buf.push_simple("DRAUGHTING_MODEL_ITEM_ASSOCIATION", body)),

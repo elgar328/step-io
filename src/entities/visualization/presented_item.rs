@@ -57,12 +57,10 @@ impl SimpleEntityHandler for PresentedItemRepresentationHandler {
 
     fn write(buf: &mut WriteBuffer, pir: PresentedItemRepresentation) -> Result<u64, WriteError> {
         let pres_step = match pir.presentation {
-            PresentationReprSelect::Representation(id) => {
-                buf.presentation_representation_step_ids[id.0 as usize]
-            }
-            PresentationReprSelect::Set(id) => buf.presentation_set_step_ids[id.0 as usize],
+            PresentationReprSelect::Representation(id) => buf.step_id(id),
+            PresentationReprSelect::Set(id) => buf.step_id(id),
         };
-        let item_step = buf.applied_presented_item_step_ids[pir.item.0 as usize];
+        let item_step = buf.step_id(pir.item);
         Ok(buf.push_simple(
             "PRESENTED_ITEM_REPRESENTATION",
             vec![

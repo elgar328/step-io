@@ -50,10 +50,8 @@ impl SimpleEntityHandler for QualifiedRepresentationItemHandler {
         let mut q_refs = Vec::with_capacity(qri.qualifiers.len());
         for q in qri.qualifiers {
             let step = match q {
-                QualifierRef::TypeQualifier(id) => buf.type_qualifier_step_ids[id.0 as usize],
-                QualifierRef::ValueFormatTypeQualifier(id) => {
-                    buf.value_format_type_qualifier_step_ids[id.0 as usize]
-                }
+                QualifierRef::TypeQualifier(id) => buf.step_id(id),
+                QualifierRef::ValueFormatTypeQualifier(id) => buf.step_id(id),
             };
             q_refs.push(Attribute::EntityRef(step));
         }
