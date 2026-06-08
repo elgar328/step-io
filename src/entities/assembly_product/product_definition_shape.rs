@@ -73,7 +73,7 @@ impl SimpleEntityHandler for ProductDefinitionShapeHandler {
                                 },
                             },
                         ));
-                    ctx.property_def_step_to_id.insert(entity_id, pd_id);
+                    ctx.id_cache.insert(entity_id, pd_id);
                 }
             }
         } else if let Some(nauo_ref) =

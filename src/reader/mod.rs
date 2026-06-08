@@ -401,11 +401,7 @@ pub struct ReaderContext {
     /// exporter's placement label (e.g. "Placement #462") instead of the
     /// assembly chain's hard-coded "Placement" / "Placement of an item".
     pub(crate) pdef_shape_nauo_name_desc: HashMap<u64, (String, String)>,
-    /// `NEXT_ASSEMBLY_USAGE_OCCURRENCE #N → AssemblyComponentUsageId`. Filled in
-    /// `resolve_nauo_instances` as each ACU arena entry is built; read by
-    /// `materialize_nauo_owned_pds` to resolve a NAUO-targeted PDS's
-    /// `definition` to its canonical arena id.
-    pub(crate) nauo_step_to_acu: HashMap<u64, crate::ir::id::AssemblyComponentUsageId>,
+
     /// `PROPERTY_DEFINITION`s whose `definition` targets a NAUO-owned PDS,
     /// deferred from the PD handler (the NAUO-PDS is not in the arena during
     /// dispatch) and replayed by `materialize_nauo_owned_pds`. Each entry:
@@ -441,10 +437,7 @@ pub struct ReaderContext {
     /// canonical (product, instance-index) order by `resolve_nauo_instances` so
     /// the resulting `RepresentationRelationshipId` is round-trip stable.
     pub(crate) nauo_assembly_rr: HashMap<u64, AssemblyRrData>,
-    /// Assembly RR-complex #N → its materialised `RepresentationRelationshipId`.
-    /// Built by `resolve_nauo_instances`; consumed by
-    /// `resolve_cdorsi_style_contexts` to resolve `style_context` targets.
-    pub(crate) rrcomplex_to_rrid: HashMap<u64, crate::ir::id::RepresentationRelationshipId>,
+
     /// `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM`s awaiting `style_context`
     /// resolution (post-pass, after `rrcomplex_to_rrid` is populated).
     pub(crate) pending_cdorsi: Vec<PendingCdorsiStyleContext>,
@@ -514,19 +507,6 @@ pub struct ReaderContext {
     /// PDs whose target ref does not resolve to a Product
     /// (e.g. `SHAPE_ASPECT`) are silently dropped — no map entry.
     pub(crate) property_def_map: HashMap<u64, (String, Option<String>)>,
-    /// `PROPERTY_DEFINITION #N → PropertyId`. Recorded by the
-    /// PDR reader when it pushes a `Property`; consumed by the GPA reader
-    /// to resolve `derived_definition`. Temp; discarded after the property handlers run.
-    pub(crate) property_step_to_id: HashMap<u64, crate::ir::PropertyId>,
-    /// `PROPERTY_DEFINITION` / `PRODUCT_DEFINITION_SHAPE` #N →
-    /// `PropertyDefinitionId`. Recorded by the PD /
-    /// PDS handlers when they push into the schema-faithful
-    /// `property_definitions` arena. Consumed by:
-    /// - the PDR handler — fills the new `Property.definition` field;
-    /// - the GPA handler — resolves `derived_definition` to a
-    ///   `PropertyDefinitionId` (replacing the legacy `property_step_to_id`
-    ///   lookup for that purpose). Phase property-definition-2.
-    pub(crate) property_def_step_to_id: HashMap<u64, crate::ir::PropertyDefinitionId>,
 
     /// `pmi` pool — populated by the PMI handlers. `None` until the
     /// first PMI entity is seen.
@@ -947,7 +927,7 @@ impl ReaderContext {
             );
             // Record the NAUO → ACU id so `materialize_nauo_owned_pds` can resolve
             // a NAUO-targeted PDS's `definition` to this canonical arena entry.
-            self.nauo_step_to_acu.insert(pending.nauo_id, acu_id);
+            self.id_cache.insert(pending.nauo_id, acu_id);
             // The Instance is a denormalized view of the arena entry. `child` is
             // the resolved child ProductId (the arena's `related` is the
             // PRODUCT_DEFINITION ref); occurrence id/name mirror the arena.
@@ -996,7 +976,7 @@ impl ReaderContext {
                     ),
                 );
                 self.assembly_products[pid].instances[idx].transform_rr = Some(rrid);
-                self.rrcomplex_to_rrid.insert(data.rr_complex_entity, rrid);
+                self.id_cache.insert(data.rr_complex_entity, rrid);
             }
         }
     }
@@ -1033,7 +1013,10 @@ impl ReaderContext {
             .collect();
         nauo_pds.sort_unstable_by_key(|&(pds, _)| pds);
         for (pds_step, nauo_step) in nauo_pds {
-            let Some(&acu_id) = self.nauo_step_to_acu.get(&nauo_step) else {
+            let Some(acu_id) = self
+                .id_cache
+                .get::<crate::ir::id::AssemblyComponentUsageId>(nauo_step)
+            else {
                 continue; // NAUO without an instance — no ACU, skip (orphan-safe).
             };
             let (name, description) = self
@@ -1056,14 +1039,17 @@ impl ReaderContext {
                         },
                     },
                 ));
-            self.property_def_step_to_id.insert(pds_step, pd_id);
+            self.id_cache.insert(pds_step, pd_id);
         }
 
         // 2. Deferred centroid PDs → arena entry (source-#N order).
         let mut deferred_pd = std::mem::take(&mut self.deferred_nauo_pds_pd);
         deferred_pd.sort_unstable_by_key(|&(pd_step, ..)| pd_step);
         for (pd_step, name, description, pds_target) in deferred_pd {
-            let Some(&pds_pd_id) = self.property_def_step_to_id.get(&pds_target) else {
+            let Some(pds_pd_id) = self
+                .id_cache
+                .get::<crate::ir::id::PropertyDefinitionId>(pds_target)
+            else {
                 continue; // NAUO-PDS was skipped above (no ACU) — drop this PD too.
             };
             let pd_id = self
@@ -1075,7 +1061,7 @@ impl ReaderContext {
                     description: description.clone().unwrap_or_default(),
                     definition: CharacterizedDefinition::ProductDefinitionShape(pds_pd_id),
                 }));
-            self.property_def_step_to_id.insert(pd_step, pd_id);
+            self.id_cache.insert(pd_step, pd_id);
             self.property_def_map.insert(pd_step, (name, description));
         }
 
@@ -1083,7 +1069,10 @@ impl ReaderContext {
         let mut deferred_prop = std::mem::take(&mut self.deferred_nauo_property);
         deferred_prop.sort_unstable_by_key(|&(pd_step, ..)| pd_step);
         for (pd_step, representation_name, items, context) in deferred_prop {
-            let Some(&definition) = self.property_def_step_to_id.get(&pd_step) else {
+            let Some(definition) = self
+                .id_cache
+                .get::<crate::ir::id::PropertyDefinitionId>(pd_step)
+            else {
                 continue;
             };
             let (name, description) = self
@@ -1105,7 +1094,7 @@ impl ReaderContext {
                     context,
                     items,
                 });
-            self.property_step_to_id.insert(pd_step, prop_id);
+            self.id_cache.insert(pd_step, prop_id);
         }
     }
 
@@ -1213,7 +1202,10 @@ impl ReaderContext {
             for &r in &pending.context_refs {
                 if let Some(target) = resolve_representation_item_ref(self, r) {
                     resolved.push(StyleContextRef::RepresentationItem(target));
-                } else if let Some(&rrid) = self.rrcomplex_to_rrid.get(&r) {
+                } else if let Some(rrid) = self
+                    .id_cache
+                    .get::<crate::ir::id::RepresentationRelationshipId>(r)
+                {
                     resolved.push(StyleContextRef::RepresentationRelationship(rrid));
                 } else {
                     warnings.push(ConvertError::UnexpectedEntityForm {
@@ -1317,7 +1309,10 @@ impl ReaderContext {
             // `definition` is a `represented_definition` SELECT: a
             // property_definition, or a SHAPE_ASPECT (C3D / grabcad define a
             // shape aspect's shape directly).
-            let definition = if let Some(&pd) = self.property_def_step_to_id.get(&def_ref) {
+            let definition = if let Some(pd) = self
+                .id_cache
+                .get::<crate::ir::id::PropertyDefinitionId>(def_ref)
+            {
                 SdrDefinition::PropertyDefinition(pd)
             } else if let Some(sa) = self.id_cache.get::<crate::ir::ShapeAspectId>(def_ref) {
                 SdrDefinition::ShapeAspect(sa)
@@ -1358,8 +1353,9 @@ impl ReaderContext {
         let mut links = Vec::new();
         for (def_ref, rep_ref) in std::mem::take(&mut self.pdr_link_refs) {
             let effective = self.srr_equiv_map.get(&rep_ref).copied().unwrap_or(rep_ref);
-            if let (Some(&definition), Some(used_representation)) = (
-                self.property_def_step_to_id.get(&def_ref),
+            if let (Some(definition), Some(used_representation)) = (
+                self.id_cache
+                    .get::<crate::ir::id::PropertyDefinitionId>(def_ref),
                 self.id_cache
                     .get::<crate::ir::id::RepresentationId>(effective),
             ) {

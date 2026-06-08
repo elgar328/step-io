@@ -126,7 +126,10 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
                 return Ok(());
             }
             CharacterizedDefinition::DimensionalLocation(dl_id)
-        } else if let Some(&pds_pd_id) = ctx.property_def_step_to_id.get(&target_ref) {
+        } else if let Some(pds_pd_id) = ctx
+            .id_cache
+            .get::<crate::ir::id::PropertyDefinitionId>(target_ref)
+        {
             let Some(pool) = ctx.properties.as_ref() else {
                 return Ok(());
             };
@@ -234,7 +237,7 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
                 description: arena_description,
                 definition,
             }));
-        ctx.property_def_step_to_id.insert(entity_id, pd_id);
+        ctx.id_cache.insert(entity_id, pd_id);
         Ok(())
     }
 

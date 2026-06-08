@@ -151,7 +151,10 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
         // pushes when its target resolves to a Product, matching the
         // gate above, so this lookup never misses in practice — but stay
         // defensive on kernel-built IR.
-        let Some(&definition) = ctx.property_def_step_to_id.get(&pd_ref) else {
+        let Some(definition) = ctx
+            .id_cache
+            .get::<crate::ir::id::PropertyDefinitionId>(pd_ref)
+        else {
             return Ok(());
         };
         let prop_id = ctx
@@ -168,7 +171,7 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
             });
         // Record PD `#N → PropertyId` so the GPA reader can resolve a
         // `derived_definition` pointing at this PROPERTY_DEFINITION.
-        ctx.property_step_to_id.insert(pd_ref, prop_id);
+        ctx.id_cache.insert(pd_ref, prop_id);
         Ok(())
     }
 

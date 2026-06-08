@@ -148,8 +148,9 @@ impl ReaderContext {
                 // it against the same single PDS step id). Resolve the PDS to its
                 // `property_definitions` slot and the SDR's literal
                 // `used_representation` to its arena entry.
-                if let (Some(&definition), Some(used_representation)) = (
-                    ctx.property_def_step_to_id.get(&pdef_shape_ref),
+                if let (Some(definition), Some(used_representation)) = (
+                    ctx.id_cache
+                        .get::<crate::ir::id::PropertyDefinitionId>(pdef_shape_ref),
                     ctx.id_cache
                         .get::<crate::ir::id::RepresentationId>(shape_rep_ref),
                 ) {

@@ -61,7 +61,10 @@ impl SimpleEntityHandler for GeneralPropertyAssociationHandler {
         // `property_definition` member, resolved through the
         // schema-faithful `property_definitions` arena (writer's PD step-id
         // cache shares that index space).
-        let Some(&pd_id) = ctx.property_def_step_to_id.get(&derived_ref) else {
+        let Some(pd_id) = ctx
+            .id_cache
+            .get::<crate::ir::id::PropertyDefinitionId>(derived_ref)
+        else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                 entity_id,
                 detail: format!(

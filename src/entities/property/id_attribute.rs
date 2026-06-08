@@ -49,7 +49,10 @@ impl SimpleEntityHandler for IdAttributeHandler {
         // merkle round-trip gate.
         let identified_item = if let Some(sa_ref) = resolve_shape_aspect_ref(ctx, item_ref) {
             IdAttributeItem::ShapeAspect(sa_ref)
-        } else if let Some(&pd_id) = ctx.property_def_step_to_id.get(&item_ref) {
+        } else if let Some(pd_id) = ctx
+            .id_cache
+            .get::<crate::ir::id::PropertyDefinitionId>(item_ref)
+        {
             IdAttributeItem::PropertyDefinition(pd_id)
         } else if let Some(g_id) = ctx.id_cache.get::<crate::ir::GroupId>(item_ref) {
             IdAttributeItem::Group(g_id)

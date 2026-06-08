@@ -2565,7 +2565,9 @@ fn resolve_geometric_tolerance_target(
     if let Some(sa) = resolve_shape_aspect_ref(ctx, item_ref) {
         return Some(GeometricToleranceTarget::ShapeAspect(sa));
     }
-    let &pd_id = ctx.property_def_step_to_id.get(&item_ref)?;
+    let pd_id = ctx
+        .id_cache
+        .get::<crate::ir::id::PropertyDefinitionId>(item_ref)?;
     let pool = ctx.properties.as_ref()?;
     if matches!(
         pool.property_definitions[pd_id],
@@ -4281,7 +4283,10 @@ fn read_dmia_base(
         // shape_aspect member — any concrete subtype (datum / all_around /
         // datum_feature / …) via the shared ShapeAspectRef.
         DraughtingModelItemDefinition::ShapeAspect(sa_ref)
-    } else if let Some(&id) = ctx.property_def_step_to_id.get(&def_ref) {
+    } else if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::id::PropertyDefinitionId>(def_ref)
+    {
         DraughtingModelItemDefinition::PropertyDefinition(id)
     } else if let Some(id) = ctx
         .id_cache
