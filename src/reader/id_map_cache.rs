@@ -48,8 +48,6 @@ impl IdMapCache {
     }
 
     /// `true` when `file_id` is registered under arena-id type `K`.
-    // Used once the geometry batch migrates `is_geometry_registered`.
-    #[allow(dead_code)]
     pub(crate) fn contains<K: ArenaId>(&self, file_id: u64) -> bool {
         self.by_type
             .get(&TypeId::of::<K>())
@@ -65,8 +63,6 @@ impl IdMapCache {
 
     /// Resolve `to` to its arena id of type `K`, or a `MissingReference` error.
     /// Mirrors the free function [`resolve_in_map`](super::resolve_in_map).
-    // Used once the geometry batch migrates the `resolve_X` wrappers.
-    #[allow(dead_code)]
     pub(crate) fn resolve<K: ArenaId>(
         &self,
         from: u64,
