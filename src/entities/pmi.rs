@@ -10,6 +10,7 @@ use crate::entities::visualization::styled_item::resolve_representation_item_ref
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::GeometricToleranceTarget;
 use crate::ir::PmiPool;
+use crate::ir::ShapeAspectRef;
 use crate::ir::attr::{
     check_count, read_bool, read_entity_ref, read_entity_ref_list, read_enum, read_real,
     read_real_list, read_string_or_unset,
@@ -23,12 +24,13 @@ use crate::ir::pmi::{
     AnnotationPlane, AnnotationSymbolOccurrence, AnnotationTextOccurrence,
     AnnotationToModelLeaderLine, ApllPointData, ApllPointElement, ApllPointWithSurfaceData,
     AuxiliaryLeaderLineData, Datum, DatumFeature, DimensionalCharacteristic, DimensionalLocation,
-    DimensionalLocationData, DimensionalSize, DimensionalSizeKind, DraughtingAnnotationOccurrence,
-    DraughtingCallout, DraughtingCalloutData, DraughtingCalloutElement,
-    DraughtingCalloutRelationship, DraughtingModelIdentifiedItem, DraughtingModelItemAssociation,
-    DraughtingModelItemDefinition, DraughtingPreDefinedTextFont, GeneralDatumBase,
-    GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
-    GeometricToleranceRef, GeometricToleranceRelationship, GeometricToleranceWithDatumReference,
+    DimensionalLocationData, DimensionalSize, DimensionalSizeKind,
+    DimensionalSizeWithDatumFeatureData, DraughtingAnnotationOccurrence, DraughtingCallout,
+    DraughtingCalloutData, DraughtingCalloutElement, DraughtingCalloutRelationship,
+    DraughtingModelIdentifiedItem, DraughtingModelItemAssociation, DraughtingModelItemDefinition,
+    DraughtingPreDefinedTextFont, GeneralDatumBase, GeneralDatumReference,
+    GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData, GeometricToleranceRef,
+    GeometricToleranceRelationship, GeometricToleranceWithDatumReference,
     GeometricToleranceWithDatumReferenceData, LeaderCurve, LeaderTerminator, LimitsAndFits,
     MeasureQualification, PlainAnnotationCurveOccurrence, PlainAnnotationOccurrence,
     PlusMinusTolerance, ProjectedZoneDefinition, TerminatorSymbol, TessellatedAnnotationOccurrence,
@@ -1977,11 +1979,14 @@ impl SimpleEntityHandler for DatumFeatureHandler {
 
 pub(crate) struct DimensionalSizeWithDatumFeatureHandler;
 
-/// `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` — `datum_feature` arena's
-/// `in_enum` subtype per the ir.toml blueprint. Shares the 4-attr
-/// `shape_aspect` body
-/// and the [`DatumFeatureId`](crate::ir::DatumFeatureId) namespace with
-/// plain `DATUM_FEATURE`; the `DatumFeature` variant captures the subtype.
+/// `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` — `datum_feature` arena's `in_enum`
+/// subtype per the ir.toml blueprint. Multiple-inheritance entity (both
+/// `datum_feature` and `dimensional_size`): the 6 flattened attrs are the
+/// 4-attr `shape_aspect` body + `dimensional_size.applies_to` (EXPRESS WR1
+/// `:=: SELF`) + `dimensional_size.name`. Registered in both
+/// `datum_feature_id_map` (`shape_aspect` references) and resolvable as a
+/// `dimensional_characteristic` (`resolve_dimensional_characteristic` probes
+/// the arena). Emitted by `emit_datum_features`.
 #[step_entity(name = "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE")]
 impl SimpleEntityHandler for DimensionalSizeWithDatumFeatureHandler {
     type WriteInput = DatumFeatureWriteInput;
@@ -1992,17 +1997,60 @@ impl SimpleEntityHandler for DimensionalSizeWithDatumFeatureHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        read_datum_feature_variant(
-            ctx,
-            entity_id,
-            attrs,
-            "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
-            crate::ir::DatumFeature::DimensionalSizeWithDatumFeature,
-        )
+        check_count(attrs, 6, entity_id, "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE")?;
+        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
+        let of_shape_ref = read_entity_ref(attrs, 2, entity_id, "of_shape")?;
+        let product_definitional = read_bool(attrs, 3, entity_id, "product_definitional")?;
+        // attrs[4] = applies_to (WR1: SELF), resolved after self-registration.
+        let applies_to_ref = read_entity_ref(attrs, 4, entity_id, "applies_to")?;
+        let size_name = read_string_or_unset(attrs, 5, entity_id, "size_name")?.to_owned();
+
+        // of_shape → PRODUCT_DEFINITION_SHAPE → PRODUCT_DEFINITION → ProductId.
+        let Some(&pdef_step_id) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) else {
+            return Ok(());
+        };
+        let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_step_id) else {
+            return Ok(());
+        };
+        let Some(&target) = ctx.product_arena_map.get(&product_step_id) else {
+            return Ok(());
+        };
+
+        // Push and register first so the WR1 self-reference resolves, then fill
+        // applies_to (chicken-and-egg: the id only exists after the push).
+        let df_id = ctx
+            .pmi
+            .get_or_insert_with(PmiPool::default)
+            .datum_features
+            .push(DatumFeature::DimensionalSizeWithDatumFeature(
+                DimensionalSizeWithDatumFeatureData {
+                    base: crate::ir::DatumFeatureData {
+                        name,
+                        description,
+                        target,
+                        product_definitional,
+                    },
+                    applies_to: ShapeAspectRef::DatumFeature(
+                        // placeholder, overwritten below once the id is known
+                        crate::ir::DatumFeatureId(0),
+                    ),
+                    size_name,
+                },
+            ));
+        ctx.datum_feature_id_map.insert(entity_id, df_id);
+        let applies_to = resolve_shape_aspect_ref(ctx, applies_to_ref)
+            .unwrap_or(ShapeAspectRef::DatumFeature(df_id));
+        if let DatumFeature::DimensionalSizeWithDatumFeature(d) =
+            &mut ctx.pmi.get_or_insert_with(PmiPool::default).datum_features[df_id]
+        {
+            d.applies_to = applies_to;
+        }
+        Ok(())
     }
 
-    fn write(buf: &mut WriteBuffer, input: DatumFeatureWriteInput) -> Result<u64, WriteError> {
-        Ok(write_datum_feature(buf, input))
+    fn write(_buf: &mut WriteBuffer, _input: DatumFeatureWriteInput) -> Result<u64, WriteError> {
+        unreachable!("DIMENSIONAL_SIZE_WITH_DATUM_FEATURE is emitted via emit_datum_features")
     }
 }
 
@@ -3812,18 +3860,31 @@ fn resolve_tolerance_method_definition(
 }
 
 /// Resolve a `dimensional_characteristic` SELECT ref (`PLUS_MINUS_TOLERANCE`'s
-/// `toleranced_dimension`) — a `dimensional_location` or `dimensional_size`.
-fn resolve_dimensional_characteristic(
+/// `toleranced_dimension`, `DIMENSIONAL_CHARACTERISTIC_REPRESENTATION`'s
+/// `dimension`) — a `dimensional_location` or `dimensional_size`. A
+/// `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` is a `dimensional_size` that lives in
+/// the `datum_feature` arena, so probe that too (only when the entry is the
+/// DSWDF variant, never a plain `DATUM_FEATURE`).
+pub(crate) fn resolve_dimensional_characteristic(
     ctx: &ReaderContext,
     item_ref: u64,
 ) -> Option<DimensionalCharacteristic> {
     if let Some(&id) = ctx.dimensional_location_id_map.get(&item_ref) {
         return Some(DimensionalCharacteristic::Location(id));
     }
-    ctx.dimensional_size_id_map
-        .get(&item_ref)
-        .copied()
-        .map(DimensionalCharacteristic::Size)
+    if let Some(&id) = ctx.dimensional_size_id_map.get(&item_ref) {
+        return Some(DimensionalCharacteristic::Size(id));
+    }
+    if let Some(&df_id) = ctx.datum_feature_id_map.get(&item_ref)
+        && let Some(pmi) = ctx.pmi.as_ref()
+        && matches!(
+            pmi.datum_features[df_id],
+            DatumFeature::DimensionalSizeWithDatumFeature(_)
+        )
+    {
+        return Some(DimensionalCharacteristic::SizeWithDatumFeature(df_id));
+    }
+    None
 }
 
 pub(crate) struct PlusMinusToleranceHandler;
@@ -3872,6 +3933,9 @@ pub(crate) fn write_plus_minus_tolerance(buf: &mut WriteBuffer, pmt: &PlusMinusT
     let dimension = match pmt.toleranced_dimension {
         DimensionalCharacteristic::Location(id) => buf.dimensional_location_step_ids[id.0 as usize],
         DimensionalCharacteristic::Size(id) => buf.dimensional_size_step_ids[id.0 as usize],
+        DimensionalCharacteristic::SizeWithDatumFeature(id) => {
+            buf.datum_feature_step_ids[id.0 as usize]
+        }
     };
     buf.push_simple(
         "PLUS_MINUS_TOLERANCE",

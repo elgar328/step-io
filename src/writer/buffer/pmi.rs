@@ -125,25 +125,44 @@ impl WriteBuffer<'_> {
             let Some(&pds_step_id) = self.product_def_shape_ids.get(&d.target) else {
                 continue;
             };
-            // The STEP entity name follows the IR variant
-            // (`DATUM_FEATURE` vs `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`).
-            let entity_name = match df {
-                crate::ir::DatumFeature::Itself(_) => "DATUM_FEATURE",
-                crate::ir::DatumFeature::DimensionalSizeWithDatumFeature(_) => {
-                    "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE"
+            match df {
+                crate::ir::DatumFeature::Itself(_) => {
+                    if let Ok(step_id) = DatumFeatureHandler::write(
+                        self,
+                        DatumFeatureWriteInput {
+                            name: d.name.clone(),
+                            description: d.description.clone(),
+                            pds_step_id,
+                            product_definitional: d.product_definitional,
+                            entity_name: "DATUM_FEATURE",
+                        },
+                    ) {
+                        self.datum_feature_step_ids[index] = step_id;
+                    }
                 }
-            };
-            if let Ok(step_id) = DatumFeatureHandler::write(
-                self,
-                DatumFeatureWriteInput {
-                    name: d.name.clone(),
-                    description: d.description.clone(),
-                    pds_step_id,
-                    product_definitional: d.product_definitional,
-                    entity_name,
-                },
-            ) {
-                self.datum_feature_step_ids[index] = step_id;
+                crate::ir::DatumFeature::DimensionalSizeWithDatumFeature(dswdf) => {
+                    use crate::parser::entity::Attribute;
+                    // Dual-faceted: 6 attrs (4-attr shape_aspect body +
+                    // dimensional_size.applies_to + dimensional_size.name).
+                    // applies_to is the WR1 self-reference, so reserve the id
+                    // first and emit it back through emit_shape_aspect_ref.
+                    let bool_attr = if d.product_definitional { "T" } else { "F" };
+                    let id = self.fresh();
+                    self.datum_feature_step_ids[index] = id;
+                    let applies_to_step = self.emit_shape_aspect_ref(dswdf.applies_to);
+                    self.push_simple_with_id(
+                        id,
+                        "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
+                        vec![
+                            Attribute::String(d.name.clone()),
+                            Attribute::String(d.description.clone()),
+                            Attribute::EntityRef(pds_step_id),
+                            Attribute::Enum(bool_attr.into()),
+                            Attribute::EntityRef(applies_to_step),
+                            Attribute::String(dswdf.size_name.clone()),
+                        ],
+                    );
+                }
             }
         }
     }

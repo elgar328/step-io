@@ -4504,7 +4504,9 @@ fn dimensional_size_with_datum_feature_round_trip() {
     // DIMENSIONAL_SIZE_WITH_DATUM_FEATURE — datum_feature arena's in_enum
     // subtype (phase dsf-datum-feature). Shares the DatumFeatureId namespace
     // with plain DATUM_FEATURE via the DatumFeature variant.
-    use step_io::ir::pmi::{DatumFeature, DatumFeatureData};
+    use step_io::ir::DatumFeatureId;
+    use step_io::ir::pmi::{DatumFeature, DatumFeatureData, DimensionalSizeWithDatumFeatureData};
+    use step_io::ir::shape_aspect_ref::ShapeAspectRef;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     model.units.push(ctx);
@@ -4544,15 +4546,24 @@ fn dimensional_size_with_datum_feature_round_trip() {
             target: part_pid,
             product_definitional: false,
         }));
-    pmi.datum_features
+    let dswdf_df_id = pmi
+        .datum_features
         .push(DatumFeature::DimensionalSizeWithDatumFeature(
-            DatumFeatureData {
-                name: "df-dswdf".into(),
-                description: String::new(),
-                target: part_pid,
-                product_definitional: false,
+            DimensionalSizeWithDatumFeatureData {
+                base: DatumFeatureData {
+                    name: "df-dswdf".into(),
+                    description: String::new(),
+                    target: part_pid,
+                    product_definitional: false,
+                },
+                applies_to: ShapeAspectRef::DatumFeature(DatumFeatureId(0)),
+                size_name: "diameter".into(),
             },
         ));
+    // WR1: applies_to :=: SELF.
+    if let DatumFeature::DimensionalSizeWithDatumFeature(d) = &mut pmi.datum_features[dswdf_df_id] {
+        d.applies_to = ShapeAspectRef::DatumFeature(dswdf_df_id);
+    }
     model.pmi = Some(pmi);
 
     let text = model.write_to_string().expect("write");
@@ -4563,12 +4574,20 @@ fn dimensional_size_with_datum_feature_round_trip() {
     let re = reconvert(&text);
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
     assert_eq!(re_pmi.datum_features.len(), 2);
-    let mut iter = re_pmi.datum_features.iter();
-    assert!(matches!(iter.next().unwrap(), DatumFeature::Itself(_)));
-    assert!(matches!(
-        iter.next().unwrap(),
-        DatumFeature::DimensionalSizeWithDatumFeature(_)
-    ));
+    let mut iter = re_pmi.datum_features.iter_with_ids();
+    assert!(matches!(iter.next().unwrap().1, DatumFeature::Itself(_)));
+    let (dswdf_id, dswdf) = iter.next().unwrap();
+    let DatumFeature::DimensionalSizeWithDatumFeature(d) = dswdf else {
+        panic!("expected DIMENSIONAL_SIZE_WITH_DATUM_FEATURE");
+    };
+    // dimensional_size.name round-trips.
+    assert_eq!(d.size_name, "diameter");
+    // WR1: applies_to :=: SELF — resolves back to this same datum_feature.
+    assert_eq!(
+        d.applies_to,
+        ShapeAspectRef::DatumFeature(dswdf_id),
+        "applies_to must round-trip as the self datum_feature"
+    );
 }
 
 #[test]

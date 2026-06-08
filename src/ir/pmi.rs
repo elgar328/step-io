@@ -9,11 +9,12 @@
 use super::arena::Arena;
 use super::id::{
     AnnotationCurveOccurrenceId, AnnotationOccurrenceId, AnnotationPlaceholderLeaderLineId,
-    ApllPointId, CurveId, DatumId, DatumSystemId, DimensionalLocationId, DimensionalSizeId,
-    DraughtingCalloutId, FaceId, GeometricToleranceId, GeometricToleranceWithDatumReferenceId,
-    LimitsAndFitsId, MeasureWithUnitId, PresentationStyleAssignmentId, ProductId,
-    PropertyDefinitionId, RepresentationId, TessellatedItemId, ToleranceValueId, ToleranceZoneId,
-    TypeQualifierId, ValueFormatTypeQualifierId,
+    ApllPointId, CurveId, DatumFeatureId, DatumId, DatumSystemId, DimensionalLocationId,
+    DimensionalSizeId, DraughtingCalloutId, FaceId, GeometricToleranceId,
+    GeometricToleranceWithDatumReferenceId, LimitsAndFitsId, MeasureWithUnitId,
+    PresentationStyleAssignmentId, ProductId, PropertyDefinitionId, RepresentationId,
+    TessellatedItemId, ToleranceValueId, ToleranceZoneId, TypeQualifierId,
+    ValueFormatTypeQualifierId,
 };
 use super::representation_item::RepresentationItemRef;
 use super::shape_aspect_ref::{GeometricToleranceTarget, ShapeAspectRef};
@@ -173,6 +174,10 @@ pub enum DimensionalCharacteristic {
     Location(DimensionalLocationId),
     /// A `dimensional_size` family entry.
     Size(DimensionalSizeId),
+    /// A `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` — a `dimensional_size` that
+    /// lives in the `datum_feature` arena (dual-faceted), referenced here by
+    /// its [`DatumFeatureId`].
+    SizeWithDatumFeature(DatumFeatureId),
 }
 
 /// `PLUS_MINUS_TOLERANCE(range, toleranced_dimension)` — a ± value tolerance
@@ -526,15 +531,15 @@ pub struct DatumFeatureData {
 }
 
 /// A datum feature, tagged with the source STEP entity. AP242 declares
-/// `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` as the only subtype and it adds no
-/// own attributes over the 4-attr `shape_aspect` body, so the variant alone
-/// round-trips the source entity name.
+/// `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` as the only subtype; it is also a
+/// `dimensional_size` (multiple inheritance) and so carries `applies_to` and
+/// the `dimensional_size.name` on top of the 4-attr `shape_aspect` body.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DatumFeature {
     /// Plain `DATUM_FEATURE`.
     Itself(DatumFeatureData),
     /// `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`.
-    DimensionalSizeWithDatumFeature(DatumFeatureData),
+    DimensionalSizeWithDatumFeature(DimensionalSizeWithDatumFeatureData),
 }
 
 impl DatumFeature {
@@ -542,9 +547,24 @@ impl DatumFeature {
     #[must_use]
     pub fn data(&self) -> &DatumFeatureData {
         match self {
-            DatumFeature::Itself(d) | DatumFeature::DimensionalSizeWithDatumFeature(d) => d,
+            DatumFeature::Itself(d) => d,
+            DatumFeature::DimensionalSizeWithDatumFeature(d) => &d.base,
         }
     }
+}
+
+/// `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` body. It is both a `datum_feature`
+/// (the shared `shape_aspect` body in `base`) and a `dimensional_size`. EXPRESS
+/// `WR1: applies_to :=: SELF` means `applies_to` always points back at this
+/// entity's own `datum_feature` facet.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DimensionalSizeWithDatumFeatureData {
+    /// The shared 4-attr `shape_aspect` / `datum_feature` body.
+    pub base: DatumFeatureData,
+    /// `dimensional_size.applies_to` — by WR1 this is the entity itself.
+    pub applies_to: ShapeAspectRef,
+    /// `dimensional_size.name`.
+    pub size_name: String,
 }
 
 /// `annotation_occurrence` `enum_base` — STEP `styled_item` PMI subtypes that

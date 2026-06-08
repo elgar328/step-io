@@ -1,11 +1,13 @@
 //! `DIMENSIONAL_CHARACTERISTIC_REPRESENTATION` handler — phase sdr-dcr.
 //!
-//! Pairs a `dimensional_characteristic` SELECT (resolved through the
-//! `dimensional_size_id_map` / `dimensional_location_id_map`) with a
-//! `RepresentationId` (resolved through `repr_id_map`). Either ref
-//! unresolved drops the occurrence, symmetric on re-read.
+//! Pairs a `dimensional_characteristic` SELECT (resolved through the shared
+//! `resolve_dimensional_characteristic`, which also reaches the
+//! `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` in the `datum_feature` arena) with a
+//! `RepresentationId` (resolved through `repr_id_map`). Either ref unresolved
+//! drops the occurrence, symmetric on re-read.
 
 use crate::entities::SimpleEntityHandler;
+use crate::entities::pmi::resolve_dimensional_characteristic;
 use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
 use crate::ir::pmi::DimensionalCharacteristic;
@@ -36,11 +38,7 @@ impl SimpleEntityHandler for DimensionalCharacteristicRepresentationHandler {
         )?;
         let dim_ref = read_entity_ref(attrs, 0, entity_id, "dimension")?;
         let repr_ref = read_entity_ref(attrs, 1, entity_id, "representation")?;
-        let dimension = if let Some(&id) = ctx.dimensional_size_id_map.get(&dim_ref) {
-            DimensionalCharacteristic::Size(id)
-        } else if let Some(&id) = ctx.dimensional_location_id_map.get(&dim_ref) {
-            DimensionalCharacteristic::Location(id)
-        } else {
+        let Some(dimension) = resolve_dimensional_characteristic(ctx, dim_ref) else {
             return Ok(());
         };
         let Some(&representation) = ctx.repr_id_map.get(&repr_ref) else {
@@ -66,6 +64,9 @@ impl SimpleEntityHandler for DimensionalCharacteristicRepresentationHandler {
             DimensionalCharacteristic::Size(id) => buf.dimensional_size_step_ids[id.0 as usize],
             DimensionalCharacteristic::Location(id) => {
                 buf.dimensional_location_step_ids[id.0 as usize]
+            }
+            DimensionalCharacteristic::SizeWithDatumFeature(id) => {
+                buf.datum_feature_step_ids[id.0 as usize]
             }
         };
         let repr_step = buf.representation_step_ids[dcr.representation.0 as usize];
