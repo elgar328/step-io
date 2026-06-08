@@ -98,9 +98,7 @@ impl SimpleEntityHandler for PointStyleHandler {
                 type_name: "POSITIVE_LENGTH_MEASURE".into(),
                 value: Box::new(Attribute::Real(v)),
             },
-            MarkerSize::MeasureWithUnit(id) => {
-                Attribute::EntityRef(buf.mwu_step_ids[id.0 as usize])
-            }
+            MarkerSize::MeasureWithUnit(id) => Attribute::EntityRef(buf.step_id(id)),
             MarkerSize::Descriptive(s) => Attribute::Typed {
                 type_name: "DESCRIPTIVE_MEASURE".into(),
                 value: Box::new(Attribute::String(s)),

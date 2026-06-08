@@ -25,6 +25,7 @@ pub(crate) mod numeric_representation_item;
 pub(crate) mod plm;
 pub(crate) mod pmi;
 pub(crate) mod property;
+pub(crate) mod step_id_cache;
 pub(crate) mod tessellation;
 pub(crate) mod topology;
 pub(crate) mod units;
@@ -34,6 +35,9 @@ pub(crate) struct WriteBuffer<'m> {
     pub(crate) model: &'m StepModel,
     pub(crate) next_id: u64,
     pub(crate) entities: Vec<WriterEntity>,
+    /// Emitted STEP id per arena entry, keyed by arena-id type. Replaces the
+    /// former hand-declared `*_step_ids: Vec<u64>` fields (arena-1:1 caches).
+    pub(crate) step_ids: step_id_cache::StepIdCache,
     pub(crate) point_ids: HashMap<PointId, u64>,
     pub(crate) direction_ids: HashMap<DirectionId, u64>,
     pub(crate) placement_ids: HashMap<Placement3dId, u64>,
@@ -86,17 +90,8 @@ pub(crate) struct WriteBuffer<'m> {
     /// `RepresentationMapId.0`. Populated by `emit_mapped_items` before the
     /// `MAPPED_ITEM` loop so each item resolves its `mapping_source` ref.
     pub(crate) representation_map_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `COORDINATES_LIST`, indexed by
-    /// `TessellatedItemId.0`. Populated by `emit_tessellation` before the
-    /// `COMPLEX_TRIANGULATED_FACE` loop so each face resolves its
-    /// `coordinates` ref.
-    pub(crate) tessellated_item_step_ids: Vec<u64>,
-    /// Emitted `COMPLEX_TRIANGULATED_FACE` / `COMPLEX_TRIANGULATED_SURFACE_SET`
-    /// step ids, indexed by `TessellatedFaceId.0` / `TessellatedSurfaceSetId.0`.
-    /// Populated by `emit_tessellation` so a `TESSELLATED_GEOMETRIC_SET`
-    /// child resolves through `emit_tessellated_item_ref`.
-    pub(crate) tessellated_face_step_ids: Vec<u64>,
-    pub(crate) tessellated_surface_set_step_ids: Vec<u64>,
+    // tessellated_item / tessellated_face / tessellated_surface_set step ids
+    // now live in `step_ids` keyed by their arena-id type.
     /// Emitted `LEADER_CURVE` step ids, indexed by
     /// `AnnotationCurveOccurrenceId.0`. Populated by
     /// `emit_annotation_curve_occurrences` before `emit_annotation_occurrences`
@@ -135,30 +130,8 @@ pub(crate) struct WriteBuffer<'m> {
     /// repr-item-arena-1), indexed by `RepresentationItemId.0`. Consumed
     /// by `emit_representation_item_ref` 의 11번째 variant.
     pub(crate) representation_item_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `NAMED_UNIT` complex from
-    /// [`crate::ir::UnitsPool::named_units`], indexed by `NamedUnitId.0`.
-    /// Populated by `emit_units_pool_if_set` before GUAC + MWU + DUE emit,
-    /// so every consumer (including the GUAC writer that resolves
-    /// `UnitContext.{length, plane_angle, solid_angle}`) resolves its
-    /// `NamedUnitId` ref with a single index lookup.
-    pub(crate) named_unit_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `MEASURE_WITH_UNIT` subtype, indexed
-    /// by `MeasureWithUnitId.0`. Currently unused by downstream emitters
-    /// (no entity in this phase consumes an MWU ref through the units
-    /// pool — the existing `UMU` / `PROPERTY_DEFINITION_REPRESENTATION`
-    /// paths predate units-1 and route through the legacy ctx caches).
-    /// The vec is populated for parity with the other arenas and to
-    /// support post-units-1 consumers (e.g. MFUO `quantity`).
-    pub(crate) mwu_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `DERIVED_UNIT_ELEMENT`, indexed by
-    /// `DerivedUnitElementId.0`. Consumed by `DERIVED_UNIT` emission
-    /// (units-1b) to resolve `elements` refs.
-    pub(crate) due_step_ids: Vec<u64>,
-    /// STEP entity id of every emitted `DERIVED_UNIT`, indexed by
-    /// `DerivedUnitId.0`. Currently unused by downstream emitters; kept
-    /// for parity with the other units-pool caches and for any future
-    /// consumer that wires a `ref_derived_unit` field.
-    pub(crate) derived_unit_step_ids: Vec<u64>,
+    // units-pool step ids (NAMED_UNIT / MEASURE_WITH_UNIT / DERIVED_UNIT_ELEMENT
+    // / DERIVED_UNIT) now live in `step_ids` keyed by their arena-id type.
     /// Lazily emitted `DIMENSIONAL_EXPONENTS(1, 0, ...)` step id, shared by
     /// every length-flavour CBU outer in this file. `None` until the first
     /// length CBU is emitted (units-3c dedup).
@@ -426,10 +399,6 @@ pub(crate) struct WriteBuffer<'m> {
     /// (`Itself`) and `emit_camera_image_arena` (`CameraImage` variants);
     /// consumed by `emit_representation_item_ref` for the `MappedItem` variant.
     pub(crate) mapped_item_step_ids: Vec<u64>,
-    /// `DimensionalExponentsId → DIMENSIONAL_EXPONENTS step id` (phase
-    /// dim-exp-arena-a). Filled by `emit_units_pool_if_set`; consumed by
-    /// `NAMED_UNIT` subtype writers in phase dim-exp-arena-b.
-    pub(crate) dimensional_exponents_step_ids: Vec<u64>,
     /// `ProductId → PRODUCT entity step id`. Phase pc-unify-a:
     /// consumed by `emit_product_categories_arena` so PRPC.products
     /// refs land on the right entity (PDEF doesn't match the schema
@@ -484,6 +453,7 @@ impl<'m> WriteBuffer<'m> {
             model,
             next_id: 0,
             entities: Vec::new(),
+            step_ids: step_id_cache::StepIdCache::default(),
             point_ids: HashMap::new(),
             direction_ids: HashMap::new(),
             placement_ids: HashMap::new(),
@@ -506,9 +476,6 @@ impl<'m> WriteBuffer<'m> {
             external_ref_step_ids: Vec::new(),
             representation_relationship_step_ids: Vec::new(),
             representation_map_step_ids: Vec::new(),
-            tessellated_item_step_ids: Vec::new(),
-            tessellated_face_step_ids: Vec::new(),
-            tessellated_surface_set_step_ids: Vec::new(),
             acoc_step_ids: Vec::new(),
             ao_step_ids: Vec::new(),
             apll_point_step_ids: Vec::new(),
@@ -518,10 +485,6 @@ impl<'m> WriteBuffer<'m> {
             type_qualifier_step_ids: Vec::new(),
             value_format_type_qualifier_step_ids: Vec::new(),
             representation_item_step_ids: Vec::new(),
-            named_unit_step_ids: Vec::new(),
-            mwu_step_ids: Vec::new(),
-            due_step_ids: Vec::new(),
-            derived_unit_step_ids: Vec::new(),
             length_dim_exp_step: None,
             dimensionless_dim_exp_step: None,
             mass_dim_exp_step: None,
@@ -602,7 +565,6 @@ impl<'m> WriteBuffer<'m> {
             pdc_step_ids: Vec::new(),
             product_def_ids: std::collections::HashMap::new(),
             mapped_item_step_ids: Vec::new(),
-            dimensional_exponents_step_ids: Vec::new(),
             product_step_ids: std::collections::HashMap::new(),
             product_category_step_ids: Vec::new(),
             product_definition_formation_step_ids: Vec::new(),
@@ -1024,5 +986,19 @@ impl<'m> WriteBuffer<'m> {
     pub(crate) fn fresh(&mut self) -> u64 {
         self.next_id += 1;
         self.next_id
+    }
+
+    /// Emitted STEP id for an arena entry, or `0` if not yet emitted. Accepts
+    /// an id by value or by reference (`id` is taken by value so a `&Id` from
+    /// list iteration binds without an extra deref at the call site).
+    #[allow(clippy::needless_pass_by_value)]
+    pub(crate) fn step_id<I: crate::ir::arena::AsArenaId>(&self, id: I) -> u64 {
+        self.step_ids.get(id.as_arena_id())
+    }
+
+    /// Record the emitted STEP id for an arena entry.
+    #[allow(clippy::needless_pass_by_value)]
+    pub(crate) fn set_step_id<I: crate::ir::arena::AsArenaId>(&mut self, id: I, step: u64) {
+        self.step_ids.set(id.as_arena_id(), step);
     }
 }

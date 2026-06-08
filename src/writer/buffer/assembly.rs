@@ -105,7 +105,7 @@ impl WriteBuffer<'_> {
                     ) else {
                         continue;
                     };
-                    let quantity_step = self.mwu_step_ids[mfu.quantity.0 as usize];
+                    let quantity_step = self.step_id(mfu.quantity);
                     let _ = MakeFromUsageOptionHandler::write(
                         self,
                         MakeFromUsageOptionWriteInput {

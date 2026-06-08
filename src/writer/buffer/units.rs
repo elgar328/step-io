@@ -38,14 +38,12 @@ impl WriteBuffer<'_> {
         };
         // DIMENSIONAL_EXPONENTS arena (phase dim-exp-arena-c) emits first
         // so NAMED_UNIT subtype writers below can resolve flavor.dim_exp
-        // through `dimensional_exponents_step_ids`.
-        self.dimensional_exponents_step_ids
-            .resize(pool.dimensional_exponents.len(), 0);
+        // through the `DimensionalExponentsId` step-id cache.
         for (id, de) in pool.dimensional_exponents.iter_with_ids() {
             use crate::entities::SimpleEntityHandler;
             use crate::entities::units::dimensional_exponents::DimensionalExponentsHandler;
             let step = DimensionalExponentsHandler::write(self, *de)?;
-            self.dimensional_exponents_step_ids[id.0 as usize] = step;
+            self.set_step_id(id, step);
         }
         // units-2: pre-reserve step ids for all NamedUnit entries in arena
         // order. The emit then writes each entry at its reserved id. This
@@ -53,9 +51,9 @@ impl WriteBuffer<'_> {
         // (so re-read produces an identical arena), and CBU outers can
         // reference their base's pre-reserved id even if the base appears
         // later in arena order (forward-ref).
-        self.named_unit_step_ids.resize(pool.named_units.len(), 0);
         for (id, _) in pool.named_units.iter_with_ids() {
-            self.named_unit_step_ids[id.0 as usize] = self.fresh();
+            let reserved = self.fresh();
+            self.set_step_id(id, reserved);
         }
         // Now emit each entry at its reserved id. Sub-entities (DE, MWU)
         // use `fresh()` and get ids after the reservation block.
@@ -65,44 +63,35 @@ impl WriteBuffer<'_> {
             .map(|(id, n)| (id, *n))
             .collect();
         for (id, named) in entries {
-            let target = self.named_unit_step_ids[id.0 as usize];
+            let target = self.step_id(id);
             if let Some(base_id) = cbu_base_of(&named) {
-                let base_step = self.named_unit_step_ids[base_id.0 as usize];
+                let base_step = self.step_id(base_id);
                 emit_named_unit_cbu(self, named, base_step, target)?;
             } else {
                 emit_named_unit_plain(self, named, target)?;
             }
         }
-        self.mwu_step_ids.resize(pool.measure_with_units.len(), 0);
         for (id, mwu) in pool.measure_with_units.iter_with_ids() {
             let step = emit_measure_with_unit(self, mwu)?;
-            self.mwu_step_ids[id.0 as usize] = step;
+            self.set_step_id(id, step);
         }
-        self.due_step_ids
-            .resize(pool.derived_unit_elements.len(), 0);
         for (id, due) in pool.derived_unit_elements.iter_with_ids() {
-            let unit_step = self.named_unit_step_ids[due.unit.0 as usize];
+            let unit_step = self.step_id(due.unit);
             let step = emit_derived_unit_element(self, unit_step, due.exponent)?;
-            self.due_step_ids[id.0 as usize] = step;
+            self.set_step_id(id, step);
         }
         // units-1b / units-3a: DERIVED_UNIT and its dimension-constrained
         // subtypes (AREA_UNIT / VOLUME_UNIT) wrap DUE refs — emit after the
-        // DUE loop so `due_step_ids` is fully populated.
-        self.derived_unit_step_ids
-            .resize(pool.derived_units.len(), 0);
+        // DUE loop so the DUE step-id cache is fully populated.
         let du_entries: Vec<(crate::ir::id::DerivedUnitId, crate::ir::units::DerivedUnit)> = pool
             .derived_units
             .iter_with_ids()
             .map(|(id, du)| (id, du.clone()))
             .collect();
         for (id, du) in du_entries {
-            let element_steps: Vec<u64> = du
-                .elements
-                .iter()
-                .map(|e| self.due_step_ids[e.0 as usize])
-                .collect();
+            let element_steps: Vec<u64> = du.elements.iter().map(|e| self.step_id(e)).collect();
             let step = emit_derived_unit_by_kind(self, du.kind, element_steps)?;
-            self.derived_unit_step_ids[id.0 as usize] = step;
+            self.set_step_id(id, step);
         }
         Ok(())
     }
@@ -161,9 +150,8 @@ fn emit_named_unit_plain(
     use crate::entities::units::ratio_unit::{RatioUnitHandler, RatioUnitSimpleHandler};
     use crate::entities::units::solid_angle_unit::SolidAngleUnitHandler;
     use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
-    let dim_exp_step = |de: Option<crate::ir::DimensionalExponentsId>| {
-        de.map_or(0, |id| buf.dimensional_exponents_step_ids[id.0 as usize])
-    };
+    let dim_exp_step =
+        |de: Option<crate::ir::DimensionalExponentsId>| de.map_or(0, |id| buf.step_id(id));
     match named {
         NamedUnit::Length(f) => {
             LengthUnitHandler::write(buf, (f.unit, target_id, dim_exp_step(f.dim_exp)))
@@ -201,9 +189,8 @@ fn emit_named_unit_cbu(
     use crate::entities::units::length_unit::emit_length_cbu_outer;
     use crate::entities::units::mass_unit::emit_mass_cbu_outer;
     use crate::entities::units::plane_angle_unit::emit_plane_angle_cbu_outer;
-    let dim_exp_step = |de: Option<crate::ir::DimensionalExponentsId>| {
-        de.map_or(0, |id| buf.dimensional_exponents_step_ids[id.0 as usize])
-    };
+    let dim_exp_step =
+        |de: Option<crate::ir::DimensionalExponentsId>| de.map_or(0, |id| buf.step_id(id));
     match named {
         NamedUnit::Length(f) => Ok(emit_length_cbu_outer(
             buf,
@@ -244,25 +231,25 @@ fn emit_measure_with_unit(
     match mwu {
         MeasureWithUnit::Itself(d) => {
             use crate::entities::units::measure_with_unit::MeasureWithUnitHandler;
-            let unit_step = buf.named_unit_step_ids[d.unit.0 as usize];
+            let unit_step = buf.step_id(d.unit);
             // Bare supertype: re-emit `MEASURE_WITH_UNIT(<measure_type>(value), unit)`
             // preserving the generic form (not a typed subtype).
             MeasureWithUnitHandler::write(buf, (d.measure_type.clone(), d.value, unit_step))
         }
         MeasureWithUnit::Length { value, unit } => {
-            let unit_step = buf.named_unit_step_ids[unit.0 as usize];
+            let unit_step = buf.step_id(unit);
             LengthMeasureWithUnitHandler::write(buf, (*value, unit_step))
         }
         MeasureWithUnit::Mass { value, unit } => {
-            let unit_step = buf.named_unit_step_ids[unit.0 as usize];
+            let unit_step = buf.step_id(unit);
             MassMeasureWithUnitHandler::write(buf, (*value, unit_step))
         }
         MeasureWithUnit::PlaneAngle { value, unit } => {
-            let unit_step = buf.named_unit_step_ids[unit.0 as usize];
+            let unit_step = buf.step_id(unit);
             PlaneAngleMeasureWithUnitHandler::write(buf, (*value, unit_step))
         }
         MeasureWithUnit::Ratio { value, unit } => {
-            let unit_step = buf.named_unit_step_ids[unit.0 as usize];
+            let unit_step = buf.step_id(unit);
             RatioMeasureWithUnitHandler::write(buf, (*value, unit_step))
         }
     }

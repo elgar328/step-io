@@ -227,12 +227,7 @@ impl WriteBuffer<'_> {
                     };
                     step
                 }
-                NameAttributeItem::DerivedUnit(du_id) => {
-                    let Some(&step) = self.derived_unit_step_ids.get(du_id.0 as usize) else {
-                        continue;
-                    };
-                    step
-                }
+                NameAttributeItem::DerivedUnit(du_id) => self.step_id(du_id),
             };
             let _ = NameAttributeHandler::write(
                 self,
@@ -602,10 +597,8 @@ impl WriteBuffer<'_> {
         unit_ref: Option<PropertyMeasureUnit>,
     ) -> Option<u64> {
         match unit_ref? {
-            PropertyMeasureUnit::Named(id) => self.named_unit_step_ids.get(id.0 as usize).copied(),
-            PropertyMeasureUnit::Derived(id) => {
-                self.derived_unit_step_ids.get(id.0 as usize).copied()
-            }
+            PropertyMeasureUnit::Named(id) => Some(self.step_id(id)),
+            PropertyMeasureUnit::Derived(id) => Some(self.step_id(id)),
         }
     }
 }

@@ -58,11 +58,7 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
         // units-2: leaf entities are emitted once by `emit_units_pool_if_set`
         // before `emit_all` reaches the GUAC loop. Resolve each `NamedUnitId`
         // to the emitted step id, preserving the source `units` set order.
-        let unit_steps: Vec<u64> = units
-            .units
-            .iter()
-            .map(|id| buf.named_unit_step_ids[id.0 as usize])
-            .collect();
+        let unit_steps: Vec<u64> = units.units.iter().map(|id| buf.step_id(id)).collect();
 
         // A simple GUAC carries no geometric / uncertainty parts — emit the
         // standalone `GLOBAL_UNIT_ASSIGNED_CONTEXT(identifier, type, units)`
@@ -97,7 +93,7 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
                 .units
                 .iter()
                 .find(|id| want(&pool.named_units[**id]))
-                .map(|id| buf.named_unit_step_ids[id.0 as usize])
+                .map(|id| buf.step_id(id))
         };
         let length_step = kind_step(|u| matches!(u, NamedUnit::Length(_)));
         let angle_step = kind_step(|u| matches!(u, NamedUnit::PlaneAngle(_)));

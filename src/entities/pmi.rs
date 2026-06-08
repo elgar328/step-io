@@ -274,7 +274,7 @@ impl SimpleEntityHandler for TessellatedAnnotationOccurrenceHandler {
         buf: &mut WriteBuffer,
         tao: TessellatedAnnotationOccurrence,
     ) -> Result<u64, WriteError> {
-        let item = buf.tessellated_item_step_ids[tao.item.0 as usize];
+        let item = buf.step_id(tao.item);
         let mut style_refs = Vec::with_capacity(tao.styles.len());
         for psa_id in tao.styles {
             style_refs.push(Attribute::EntityRef(buf.psa_step_ids[psa_id.0 as usize]));
@@ -1695,7 +1695,7 @@ impl SimpleEntityHandler for MeasureQualificationHandler {
     }
 
     fn write(buf: &mut WriteBuffer, mq: MeasureQualification) -> Result<u64, WriteError> {
-        let qm_step = buf.mwu_step_ids[mq.qualified_measure.0 as usize];
+        let qm_step = buf.step_id(mq.qualified_measure);
         let mut qualifier_refs = Vec::with_capacity(mq.qualifiers.len());
         for q in mq.qualifiers {
             let step = match q {
@@ -2556,7 +2556,7 @@ pub(crate) fn write_geometric_tolerance(buf: &mut WriteBuffer, gt: GeometricTole
     // reference its cached step id. A `Measure` magnitude has no arena entry;
     // emit the (simple) MRI inline here.
     let magnitude = match data.magnitude {
-        ToleranceMagnitude::MeasureWithUnit(id) => buf.mwu_step_ids[id.0 as usize],
+        ToleranceMagnitude::MeasureWithUnit(id) => buf.step_id(id),
         ToleranceMagnitude::RepresentationItem(id) => {
             buf.representation_item_step_ids[id.0 as usize]
         }
@@ -3307,7 +3307,7 @@ pub(crate) fn write_geometric_tolerance_with_datum_reference(
         GeometricToleranceWithDatumReference::LineProfile(d) => ("LINE_PROFILE_TOLERANCE", true, d),
     };
     let magnitude = match data.magnitude {
-        ToleranceMagnitude::MeasureWithUnit(id) => buf.mwu_step_ids[id.0 as usize],
+        ToleranceMagnitude::MeasureWithUnit(id) => buf.step_id(id),
         ToleranceMagnitude::RepresentationItem(id) => {
             buf.representation_item_step_ids[id.0 as usize]
         }
@@ -3743,7 +3743,7 @@ impl ComplexEntityHandler for LineProfileToleranceHandler {
 /// step id. Read-only: both step-id caches are populated by earlier passes.
 fn emit_tolerance_magnitude(buf: &WriteBuffer, m: &ToleranceMagnitude) -> u64 {
     match m {
-        ToleranceMagnitude::MeasureWithUnit(id) => buf.mwu_step_ids[id.0 as usize],
+        ToleranceMagnitude::MeasureWithUnit(id) => buf.step_id(id),
         ToleranceMagnitude::RepresentationItem(id) => {
             buf.representation_item_step_ids[id.0 as usize]
         }

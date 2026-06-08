@@ -73,9 +73,7 @@ impl SimpleEntityHandler for CurveStyleHandler {
                 type_name: "POSITIVE_LENGTH_MEASURE".into(),
                 value: Box::new(Attribute::Real(v)),
             },
-            CurveWidth::MeasureWithUnit(id) => {
-                Attribute::EntityRef(buf.mwu_step_ids[id.0 as usize])
-            }
+            CurveWidth::MeasureWithUnit(id) => Attribute::EntityRef(buf.step_id(id)),
             CurveWidth::Descriptive(s) => Attribute::Typed {
                 type_name: "DESCRIPTIVE_MEASURE".into(),
                 value: Box::new(Attribute::String(s)),

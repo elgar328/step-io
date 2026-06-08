@@ -109,7 +109,7 @@ impl SimpleEntityHandler for ComplexTriangulatedFaceHandler {
     }
 
     fn write(buf: &mut WriteBuffer, face: ComplexTriangulatedFace) -> Result<u64, WriteError> {
-        let coordinates_step = buf.tessellated_item_step_ids[face.coordinates.0 as usize];
+        let coordinates_step = buf.step_id(face.coordinates);
         let geometric_link = match face.geometric_link {
             Some(link) => Attribute::EntityRef(buf.emit_representation_item_ref(link)?),
             None => Attribute::Unset,
@@ -163,7 +163,7 @@ impl SimpleEntityHandler for TessellatedCurveSetHandler {
     }
 
     fn write(buf: &mut WriteBuffer, item: TessellatedCurveSet) -> Result<u64, WriteError> {
-        let coordinates_step = buf.tessellated_item_step_ids[item.coordinates.0 as usize];
+        let coordinates_step = buf.step_id(item.coordinates);
         Ok(buf.push_simple(
             "TESSELLATED_CURVE_SET",
             vec![
@@ -216,7 +216,7 @@ impl SimpleEntityHandler for ComplexTriangulatedSurfaceSetHandler {
     }
 
     fn write(buf: &mut WriteBuffer, set: ComplexTriangulatedSurfaceSet) -> Result<u64, WriteError> {
-        let coordinates_step = buf.tessellated_item_step_ids[set.coordinates.0 as usize];
+        let coordinates_step = buf.step_id(set.coordinates);
         Ok(buf.push_simple(
             "COMPLEX_TRIANGULATED_SURFACE_SET",
             vec![
