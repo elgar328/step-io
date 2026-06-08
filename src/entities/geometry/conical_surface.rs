@@ -38,7 +38,7 @@ impl SimpleEntityHandler for ConicalSurfaceHandler {
             semi_angle,
         };
         let id = ctx.geometry.surfaces.push(Surface::Cone(surface));
-        ctx.surface_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

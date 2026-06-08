@@ -40,7 +40,7 @@ impl SimpleEntityHandler for SurfaceOfRevolutionHandler {
             axis_placement,
         };
         let id = ctx.geometry.surfaces.push(Surface::Revolution(surface));
-        ctx.surface_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

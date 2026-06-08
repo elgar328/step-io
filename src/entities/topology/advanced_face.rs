@@ -49,7 +49,7 @@ pub(super) fn read_face_body(
         orientation: bool_to_orientation(same_sense),
     });
     let id = ctx.topology.faces.push(face);
-    ctx.face_map.insert(entity_id, id);
+    ctx.id_cache.insert(entity_id, id);
     Ok(())
 }
 

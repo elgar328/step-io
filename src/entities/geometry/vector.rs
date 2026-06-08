@@ -40,7 +40,10 @@ impl SimpleEntityHandler for VectorHandler {
 
         // If the referenced DIRECTION is a known 2D direction, this
         // VECTOR is the 2D sister variant — silently skip.
-        if ctx.direction_2d_map.contains_key(&dir_ref) {
+        if ctx
+            .id_cache
+            .contains::<crate::ir::id::Direction2dId>(dir_ref)
+        {
             return Ok(());
         }
         let dir_id = ctx.resolve_direction(entity_id, dir_ref, "orientation")?;

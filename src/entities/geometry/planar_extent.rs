@@ -77,7 +77,10 @@ impl SimpleEntityHandler for PlanarBoxHandler {
         // 3D then 2D placement maps.
         let placement = if let Some(&id) = ctx.placement_map.get(&placement_ref) {
             PlanarBoxPlacement::Placement3d(id)
-        } else if let Some(&id) = ctx.placement_2d_map.get(&placement_ref) {
+        } else if let Some(id) = ctx
+            .id_cache
+            .get::<crate::ir::id::Placement2dId>(placement_ref)
+        {
             PlanarBoxPlacement::Placement2d(id)
         } else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {

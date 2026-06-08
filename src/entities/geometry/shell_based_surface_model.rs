@@ -34,7 +34,7 @@ impl SimpleEntityHandler for ShellBasedSurfaceModelHandler {
         let shell_refs = read_entity_ref_list(attrs, 1, entity_id, "sbsm_boundary")?;
         let shells: Vec<ShellId> = shell_refs
             .iter()
-            .filter_map(|r| ctx.shell_map.get(r).copied())
+            .filter_map(|r| ctx.id_cache.get::<crate::ir::id::ShellId>(*r))
             .collect();
         ctx.sbsm_shells_map.insert(entity_id, shells.clone());
         // Also push into the unified `geometric_representation_item` arena so

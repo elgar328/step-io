@@ -32,7 +32,7 @@ impl SimpleEntityHandler for PlaneHandler {
 
         let plane = Plane3 { position };
         let id = ctx.geometry.surfaces.push(Surface::Plane(plane));
-        ctx.surface_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

@@ -60,7 +60,7 @@ impl SimpleEntityHandler for CompositeCurveHandler {
             self_intersect,
         };
         let id = ctx.geometry.curves.push(Curve::Composite(composite));
-        ctx.curve_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

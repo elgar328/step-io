@@ -53,7 +53,7 @@ impl SimpleEntityHandler for QuasiUniformCurveHandler {
         // 3D handler should silently skip. (No 2D QUC handler exists yet;
         // such entries currently fall through to the warning path below.)
         if let Some(&first_ref) = cp_refs.first()
-            && ctx.point_2d_map.contains_key(&first_ref)
+            && ctx.id_cache.contains::<crate::ir::id::Point2dId>(first_ref)
         {
             return Ok(());
         }
@@ -84,7 +84,7 @@ impl SimpleEntityHandler for QuasiUniformCurveHandler {
             self_intersect,
         };
         let id = ctx.geometry.curves.push(Curve::Nurbs(curve));
-        ctx.curve_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

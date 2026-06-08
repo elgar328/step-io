@@ -63,7 +63,7 @@ impl ComplexEntityHandler for RationalBsplineCurve2dHandler {
         // this entity. Silent skip — mirrors the same pattern in
         // `b_spline_curve_with_knots.rs:51-55`.
         if let Some(&first_ref) = cp_refs.first()
-            && !ctx.point_2d_map.contains_key(&first_ref)
+            && !ctx.id_cache.contains::<crate::ir::id::Point2dId>(first_ref)
         {
             return Ok(());
         }
@@ -89,14 +89,13 @@ impl ComplexEntityHandler for RationalBsplineCurve2dHandler {
 
         let mut control_points = Vec::with_capacity(cp_refs.len());
         for &r in &cp_refs {
-            let pt = *ctx
-                .point_2d_map
-                .get(&r)
-                .ok_or(ConvertError::MissingReference {
+            let pt = ctx.id_cache.get::<crate::ir::id::Point2dId>(r).ok_or(
+                ConvertError::MissingReference {
                     from: entity_id,
                     to: r,
                     field_name: "control_points_list",
-                })?;
+                },
+            )?;
             control_points.push(pt);
         }
 
@@ -109,7 +108,7 @@ impl ComplexEntityHandler for RationalBsplineCurve2dHandler {
             closed,
             form,
         }));
-        ctx.curve_2d_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

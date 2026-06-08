@@ -38,7 +38,7 @@ impl SimpleEntityHandler for ToroidalSurfaceHandler {
             minor_radius,
         };
         let id = ctx.geometry.surfaces.push(Surface::Torus(surface));
-        ctx.surface_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

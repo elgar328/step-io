@@ -39,7 +39,7 @@ impl SimpleEntityHandler for Axis2Placement3dHandler {
 
         // If the location is a known 2D point, this is the 2D sister
         // placement variant — silently skip.
-        if ctx.point_2d_map.contains_key(&loc_ref) {
+        if ctx.id_cache.contains::<crate::ir::id::Point2dId>(loc_ref) {
             return Ok(());
         }
         let location = ctx.resolve_point(entity_id, loc_ref, "location")?;

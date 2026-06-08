@@ -49,7 +49,7 @@ impl SimpleEntityHandler for BSplineCurveWithKnotsHandler {
         // If the first control point is a known 2D point, this is the
         // 2D sister B_SPLINE_CURVE_WITH_KNOTS — silently skip.
         if let Some(&first_ref) = cp_refs.first()
-            && ctx.point_2d_map.contains_key(&first_ref)
+            && ctx.id_cache.contains::<crate::ir::id::Point2dId>(first_ref)
         {
             return Ok(());
         }
@@ -70,7 +70,7 @@ impl SimpleEntityHandler for BSplineCurveWithKnotsHandler {
             self_intersect,
         };
         let id = ctx.geometry.curves.push(Curve::Nurbs(curve));
-        ctx.curve_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

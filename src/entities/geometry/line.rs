@@ -34,7 +34,7 @@ impl SimpleEntityHandler for LineHandler {
 
         // If the referenced point is a known 2D point, this LINE is
         // the 2D sister variant — silently skip.
-        if ctx.point_2d_map.contains_key(&pnt_ref) {
+        if ctx.id_cache.contains::<crate::ir::id::Point2dId>(pnt_ref) {
             return Ok(());
         }
         let point = ctx.resolve_point(entity_id, pnt_ref, "pnt")?;
@@ -46,7 +46,7 @@ impl SimpleEntityHandler for LineHandler {
             magnitude,
         };
         let id = ctx.geometry.curves.push(Curve::Line(line));
-        ctx.curve_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

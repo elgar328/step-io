@@ -59,7 +59,7 @@ impl SimpleEntityHandler for EdgeCurveHandler {
             surface_curve,
         };
         let id = ctx.topology.edges.push(edge);
-        ctx.edge_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

@@ -123,31 +123,31 @@ pub(crate) fn resolve_representation_item_ref(
     if let Some(sid) = ctx.id_cache.get::<crate::ir::id::SolidId>(item_ref) {
         return Some(RepresentationItemRef::Solid(sid));
     }
-    if let Some(&fid) = ctx.face_map.get(&item_ref) {
+    if let Some(fid) = ctx.id_cache.get::<crate::ir::id::FaceId>(item_ref) {
         return Some(RepresentationItemRef::Face(fid));
     }
-    if let Some(&eid) = ctx.edge_map.get(&item_ref) {
+    if let Some(eid) = ctx.id_cache.get::<crate::ir::id::EdgeId>(item_ref) {
         return Some(RepresentationItemRef::Edge(eid));
     }
-    if let Some(&cid) = ctx.curve_map.get(&item_ref) {
+    if let Some(cid) = ctx.id_cache.get::<crate::ir::id::CurveId>(item_ref) {
         return Some(RepresentationItemRef::Curve(cid));
     }
-    if let Some(&pid) = ctx.point_map.get(&item_ref) {
+    if let Some(pid) = ctx.id_cache.get::<crate::ir::id::PointId>(item_ref) {
         return Some(RepresentationItemRef::Point(pid));
     }
-    if let Some(&sid) = ctx.surface_map.get(&item_ref) {
+    if let Some(sid) = ctx.id_cache.get::<crate::ir::id::SurfaceId>(item_ref) {
         return Some(RepresentationItemRef::Surface(sid));
     }
     if let Some(&vid) = ctx.vertex_map.get(&item_ref) {
         return Some(RepresentationItemRef::Vertex(vid));
     }
-    if let Some(&shid) = ctx.shell_map.get(&item_ref) {
+    if let Some(shid) = ctx.id_cache.get::<crate::ir::id::ShellId>(item_ref) {
         return Some(RepresentationItemRef::Shell(shid));
     }
     if let Some(&plid) = ctx.placement_map.get(&item_ref) {
         return Some(RepresentationItemRef::Placement3d(plid));
     }
-    if let Some(&pl2id) = ctx.placement_2d_map.get(&item_ref) {
+    if let Some(pl2id) = ctx.id_cache.get::<crate::ir::id::Placement2dId>(item_ref) {
         return Some(RepresentationItemRef::Placement2d(pl2id));
     }
     if let Some(peid) = ctx.id_cache.get::<crate::ir::id::PlanarExtentId>(item_ref) {

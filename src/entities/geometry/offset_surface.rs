@@ -34,7 +34,7 @@ impl SimpleEntityHandler for OffsetSurfaceHandler {
     ) -> Result<(), ConvertError> {
         // Skip entities already interned through another resolution path
         // so the arena does not accumulate duplicates.
-        if ctx.surface_map.contains_key(&entity_id) {
+        if ctx.id_cache.contains::<crate::ir::id::SurfaceId>(entity_id) {
             return Ok(());
         }
         check_count(attrs, 4, entity_id, "OFFSET_SURFACE")?;
@@ -50,7 +50,7 @@ impl SimpleEntityHandler for OffsetSurfaceHandler {
             distance,
             self_intersect,
         }));
-        ctx.surface_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

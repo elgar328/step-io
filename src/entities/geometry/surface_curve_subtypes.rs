@@ -93,15 +93,14 @@ fn read_surface_curve_body(
     let Some(master_representation) = parse_master_representation(token) else {
         return Ok(None);
     };
-    let Some(&curve_3d) = ctx.curve_map.get(&curve_3d_ref) else {
+    let Some(curve_3d) = ctx.id_cache.get::<crate::ir::id::CurveId>(curve_3d_ref) else {
         return Ok(None);
     };
     let associated_geometry: Vec<_> = assoc_refs
         .iter()
         .filter_map(|r| {
-            ctx.surface_map
-                .get(r)
-                .copied()
+            ctx.id_cache
+                .get::<crate::ir::id::SurfaceId>(*r)
                 .map(PCurveOrSurface::Surface)
         })
         .collect();

@@ -33,7 +33,7 @@ impl SimpleEntityHandler for CylindricalSurfaceHandler {
 
         let surface = CylindricalSurface { position, radius };
         let id = ctx.geometry.surfaces.push(Surface::Cylinder(surface));
-        ctx.surface_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

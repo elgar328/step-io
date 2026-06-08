@@ -34,12 +34,12 @@ impl SimpleEntityHandler for CurveBoundedSurfaceHandler {
         let basis_ref = read_entity_ref(attrs, 1, entity_id, "basis_surface")?;
         let bdry_refs = read_entity_ref_list(attrs, 2, entity_id, "boundaries")?;
         let implicit_outer = read_bool(attrs, 3, entity_id, "implicit_outer")?;
-        let Some(&basis_surface) = ctx.surface_map.get(&basis_ref) else {
+        let Some(basis_surface) = ctx.id_cache.get::<crate::ir::id::SurfaceId>(basis_ref) else {
             return Ok(());
         };
         let boundaries: Vec<_> = bdry_refs
             .iter()
-            .filter_map(|r| ctx.curve_map.get(r).copied())
+            .filter_map(|r| ctx.id_cache.get::<crate::ir::id::CurveId>(*r))
             .collect();
         if boundaries.is_empty() {
             return Ok(());
@@ -53,7 +53,7 @@ impl SimpleEntityHandler for CurveBoundedSurfaceHandler {
                 boundaries,
                 implicit_outer,
             }));
-        ctx.surface_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

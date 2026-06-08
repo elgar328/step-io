@@ -73,7 +73,10 @@ impl SimpleEntityHandler for ViewVolumeHandler {
             read_bool(attrs, 7, entity_id, "view_volume_sides_clipping")?;
         let view_window_ref = read_entity_ref(attrs, 8, entity_id, "view_window")?;
 
-        let Some(&projection_point) = ctx.point_map.get(&projection_point_ref) else {
+        let Some(projection_point) = ctx
+            .id_cache
+            .get::<crate::ir::id::PointId>(projection_point_ref)
+        else {
             return Ok(()); // projection_point unresolved — drop the view volume
         };
         let Some(view_window) = ctx

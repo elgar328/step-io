@@ -34,7 +34,10 @@ impl SimpleEntityHandler for ParabolaHandler {
         let pos_ref = read_entity_ref(attrs, 1, entity_id, "position")?;
         let focal_dist = read_real(attrs, 2, entity_id, "focal_dist")?;
 
-        if ctx.placement_2d_map.contains_key(&pos_ref) {
+        if ctx
+            .id_cache
+            .contains::<crate::ir::id::Placement2dId>(pos_ref)
+        {
             return Ok(());
         }
         let position = ctx.resolve_placement(entity_id, pos_ref, "position")?;
@@ -43,7 +46,7 @@ impl SimpleEntityHandler for ParabolaHandler {
             position,
             focal_dist,
         }));
-        ctx.curve_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

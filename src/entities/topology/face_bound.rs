@@ -60,7 +60,7 @@ pub(super) fn read_face_bound_body(
         Wire::FaceBound(data)
     };
     let id = ctx.topology.wires.push(wire);
-    ctx.face_bound_map.insert(entity_id, id);
+    ctx.id_cache.insert(entity_id, id);
     Ok(())
 }
 

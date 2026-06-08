@@ -41,7 +41,7 @@ impl SimpleEntityHandler for ShapeRepresentationWithParametersHandler {
         }
         let mut items = Vec::with_capacity(item_refs.len());
         for r in item_refs {
-            if let Some(&did) = ctx.direction_map.get(&r) {
+            if let Some(did) = ctx.id_cache.get::<crate::ir::id::DirectionId>(r) {
                 items.push(SrwpItem::Direction(did));
             } else if let Some(&pid) = ctx.placement_map.get(&r) {
                 items.push(SrwpItem::Placement(pid));

@@ -36,7 +36,7 @@ impl SimpleEntityHandler for Vector2dHandler {
         // First cross-ref is the 2D-vs-3D discriminator: if the
         // referenced DIRECTION is not in the 2D direction map, this
         // VECTOR is the 3D variant — handled by the sister handler.
-        let Some(&dir) = ctx.direction_2d_map.get(&dir_ref) else {
+        let Some(dir) = ctx.id_cache.get::<crate::ir::id::Direction2dId>(dir_ref) else {
             return Ok(());
         };
         ctx.vector_2d_map.insert(entity_id, (dir, magnitude));

@@ -49,7 +49,7 @@ impl SimpleEntityHandler for TrimmedCurveHandler {
             master,
         };
         let id = ctx.geometry.curves.push(Curve::Trimmed(trimmed));
-        ctx.curve_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
@@ -109,7 +109,7 @@ fn read_trim_select(
     for el in elements {
         match el {
             Attribute::EntityRef(r) => {
-                if let Some(&pid) = ctx.point_map.get(r) {
+                if let Some(pid) = ctx.id_cache.get::<crate::ir::id::PointId>(*r) {
                     out.push(TrimSelect::Point(pid));
                 }
             }

@@ -95,7 +95,7 @@ impl ComplexEntityHandler for RationalQuasiUniformCurveHandler {
             self_intersect,
         };
         let id = ctx.geometry.curves.push(Curve::Nurbs(curve));
-        ctx.curve_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

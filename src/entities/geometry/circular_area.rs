@@ -32,7 +32,7 @@ impl SimpleEntityHandler for CircularAreaHandler {
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let centre_ref = read_entity_ref(attrs, 1, entity_id, "centre")?;
         let radius = read_real(attrs, 2, entity_id, "radius")?;
-        let centre = if let Some(&point) = ctx.point_map.get(&centre_ref) {
+        let centre = if let Some(point) = ctx.id_cache.get::<crate::ir::id::PointId>(centre_ref) {
             CircularAreaCentre::Point(point)
         } else if let Some(ext) = ctx.id_cache.get::<crate::ir::id::ExternalRefId>(centre_ref) {
             CircularAreaCentre::External(ext)

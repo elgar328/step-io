@@ -30,7 +30,7 @@ impl SimpleEntityHandler for OffsetCurve3dHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        if ctx.curve_map.contains_key(&entity_id) {
+        if ctx.id_cache.contains::<crate::ir::id::CurveId>(entity_id) {
             return Ok(());
         }
         check_count(attrs, 5, entity_id, "OFFSET_CURVE_3D")?;
@@ -52,7 +52,7 @@ impl SimpleEntityHandler for OffsetCurve3dHandler {
                 self_intersect,
                 ref_direction,
             }));
-        ctx.curve_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

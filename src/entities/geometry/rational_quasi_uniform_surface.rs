@@ -132,7 +132,7 @@ impl ComplexEntityHandler for RationalQuasiUniformSurfaceHandler {
             self_intersect,
         };
         let id = ctx.geometry.surfaces.push(Surface::Nurbs(surface));
-        ctx.surface_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

@@ -30,7 +30,7 @@ impl SimpleEntityHandler for RectangularTrimmedSurfaceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        if ctx.surface_map.contains_key(&entity_id) {
+        if ctx.id_cache.contains::<crate::ir::id::SurfaceId>(entity_id) {
             return Ok(());
         }
         check_count(attrs, 8, entity_id, "RECTANGULAR_TRIMMED_SURFACE")?;
@@ -56,7 +56,7 @@ impl SimpleEntityHandler for RectangularTrimmedSurfaceHandler {
                     v2,
                     vsense,
                 }));
-        ctx.surface_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

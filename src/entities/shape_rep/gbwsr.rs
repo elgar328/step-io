@@ -60,7 +60,7 @@ pub(crate) fn read_wireframe_representation_body(
         if let Some((c, p)) = ctx.curve_set_map.get(r) {
             curves.extend_from_slice(c);
             points.extend_from_slice(p);
-        } else if let Some(&cid) = ctx.curve_map.get(r) {
+        } else if let Some(cid) = ctx.id_cache.get::<crate::ir::id::CurveId>(*r) {
             // Some producers attach curves directly without a wrapping
             // GEOMETRIC_CURVE_SET — accept that form too.
             curves.push(cid);

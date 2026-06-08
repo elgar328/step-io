@@ -46,7 +46,7 @@ impl SimpleEntityHandler for DegenerateToroidalSurfaceHandler {
                     minor_radius,
                     select_outer,
                 }));
-        ctx.surface_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

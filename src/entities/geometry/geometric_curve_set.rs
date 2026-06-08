@@ -39,9 +39,9 @@ pub(crate) fn read_geometric_curve_set_body(
     let mut curves = Vec::new();
     let mut points = Vec::new();
     for r in item_refs {
-        if let Some(&cid) = ctx.curve_map.get(&r) {
+        if let Some(cid) = ctx.id_cache.get::<crate::ir::id::CurveId>(r) {
             curves.push(cid);
-        } else if let Some(&pid) = ctx.point_map.get(&r) {
+        } else if let Some(pid) = ctx.id_cache.get::<crate::ir::id::PointId>(r) {
             points.push(pid);
         }
     }

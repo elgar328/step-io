@@ -41,7 +41,7 @@ pub(super) fn read_shell_body(
         is_open,
     };
     let id = ctx.topology.shells.push(shell);
-    ctx.shell_map.insert(entity_id, id);
+    ctx.id_cache.insert(entity_id, id);
     Ok(())
 }
 

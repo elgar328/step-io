@@ -34,7 +34,7 @@ impl SimpleEntityHandler for PolylineHandler {
         // If the first referenced point is a known 2D point, this POLYLINE
         // is the 2D sister variant — silently skip (Polyline2dHandler picks it up).
         if let Some(first) = pt_refs.first()
-            && ctx.point_2d_map.contains_key(first)
+            && ctx.id_cache.contains::<crate::ir::id::Point2dId>(*first)
         {
             return Ok(());
         }
@@ -47,7 +47,7 @@ impl SimpleEntityHandler for PolylineHandler {
             .geometry
             .curves
             .push(Curve::Polyline(Polyline { points }));
-        ctx.curve_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

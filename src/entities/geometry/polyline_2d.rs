@@ -35,13 +35,13 @@ impl SimpleEntityHandler for Polyline2dHandler {
         let Some(first) = pt_refs.first() else {
             return Ok(());
         };
-        if !ctx.point_2d_map.contains_key(first) {
+        if !ctx.id_cache.contains::<crate::ir::id::Point2dId>(*first) {
             return Ok(());
         }
 
         let mut points = Vec::with_capacity(pt_refs.len());
         for r in &pt_refs {
-            let Some(&pid) = ctx.point_2d_map.get(r) else {
+            let Some(pid) = ctx.id_cache.get::<crate::ir::id::Point2dId>(*r) else {
                 return Err(ConvertError::MissingReference {
                     from: entity_id,
                     to: *r,
@@ -54,7 +54,7 @@ impl SimpleEntityHandler for Polyline2dHandler {
             .geometry
             .curves_2d
             .push(Curve2d::Polyline(Polyline2d { points }));
-        ctx.curve_2d_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

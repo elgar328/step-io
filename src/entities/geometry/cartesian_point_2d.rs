@@ -44,7 +44,7 @@ impl SimpleEntityHandler for CartesianPoint2dHandler {
             x: coords[0],
             y: coords[1],
         });
-        ctx.point_2d_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

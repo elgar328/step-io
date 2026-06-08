@@ -94,7 +94,7 @@ impl SimpleEntityHandler for CameraModelD3MultiClippingHandler {
         let refs = read_entity_ref_list(attrs, 3, entity_id, "shape_clipping")?;
         let mut shape_clipping = Vec::with_capacity(refs.len());
         for r in refs {
-            if let Some(&sid) = ctx.surface_map.get(&r) {
+            if let Some(sid) = ctx.id_cache.get::<crate::ir::id::SurfaceId>(r) {
                 shape_clipping.push(ShapeClipping::Plane(sid));
             }
             // camera_model_d3_multi_clipping_union members: not modelled,

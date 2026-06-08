@@ -30,14 +30,14 @@ impl SimpleEntityHandler for Circle2dHandler {
         let radius = read_real(attrs, 2, entity_id, "radius")?;
         // First cross-ref discriminates 2D vs 3D: if the placement is
         // absent from the 2D arena, this is the 3D CIRCLE.
-        let Some(&position) = ctx.placement_2d_map.get(&pos_ref) else {
+        let Some(position) = ctx.id_cache.get::<crate::ir::id::Placement2dId>(pos_ref) else {
             return Ok(());
         };
         let id = ctx
             .geometry
             .curves_2d
             .push(Curve2d::Circle(Circle2 { position, radius }));
-        ctx.curve_2d_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

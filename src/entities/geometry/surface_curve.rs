@@ -38,7 +38,7 @@ pub(super) fn read_surface_or_seam_curve_body(
     // the writer reproduces OCCT's `.PCURVE_S1.` convention.
 
     let curve_3d = ctx.resolve_curve(entity_id, curve_3d_ref, "curve_3d")?;
-    ctx.curve_map.insert(entity_id, curve_3d);
+    ctx.id_cache.insert(entity_id, curve_3d);
     Ok(())
 }
 
@@ -133,7 +133,7 @@ pub(crate) fn collect_surface_curve(
                     }
                 }
             }
-        } else if let Some(&surface_id) = ctx.surface_map.get(&member_ref) {
+        } else if let Some(surface_id) = ctx.id_cache.get::<crate::ir::id::SurfaceId>(member_ref) {
             members.push(PCurveOrSurface::Surface(surface_id));
         } else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
@@ -200,7 +200,9 @@ impl ReaderContext {
             return None;
         };
 
-        let basis_surface = *self.surface_map.get(basis_surface_ref)?;
+        let basis_surface = self
+            .id_cache
+            .get::<crate::ir::id::SurfaceId>(*basis_surface_ref)?;
 
         let RawEntity::Simple {
             name: def_name,
@@ -219,7 +221,9 @@ impl ReaderContext {
         let Attribute::EntityRef(first_item_ref) = items.first()? else {
             return None;
         };
-        let curve_2d = *self.curve_2d_map.get(first_item_ref)?;
+        let curve_2d = self
+            .id_cache
+            .get::<crate::ir::id::Curve2dId>(*first_item_ref)?;
 
         Some(Pcurve {
             basis_surface,

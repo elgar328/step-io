@@ -31,7 +31,7 @@ impl SimpleEntityHandler for Line2dHandler {
         let vec_ref = read_entity_ref(attrs, 2, entity_id, "dir")?;
         // First cross-ref discriminates 2D vs 3D: if the referenced
         // point is absent from the 2D arena, this is the 3D LINE.
-        let Some(&point) = ctx.point_2d_map.get(&pnt_ref) else {
+        let Some(point) = ctx.id_cache.get::<crate::ir::id::Point2dId>(pnt_ref) else {
             return Ok(());
         };
         let (direction, magnitude) =
@@ -47,7 +47,7 @@ impl SimpleEntityHandler for Line2dHandler {
             direction,
             magnitude,
         }));
-        ctx.curve_2d_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

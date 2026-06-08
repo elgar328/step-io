@@ -51,7 +51,7 @@ impl SimpleEntityHandler for CartesianPointHandler {
             z: coords[2],
         };
         let id = ctx.geometry.points.push(point);
-        ctx.point_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

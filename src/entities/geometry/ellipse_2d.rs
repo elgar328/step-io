@@ -31,7 +31,7 @@ impl SimpleEntityHandler for Ellipse2dHandler {
         let semi_axis_2 = read_real(attrs, 3, entity_id, "semi_axis_2")?;
         // First cross-ref discriminates 2D vs 3D: if the placement is
         // absent from the 2D arena, this is the 3D ELLIPSE.
-        let Some(&position) = ctx.placement_2d_map.get(&pos_ref) else {
+        let Some(position) = ctx.id_cache.get::<crate::ir::id::Placement2dId>(pos_ref) else {
             return Ok(());
         };
         let id = ctx.geometry.curves_2d.push(Curve2d::Ellipse(Ellipse2 {
@@ -39,7 +39,7 @@ impl SimpleEntityHandler for Ellipse2dHandler {
             semi_axis_1,
             semi_axis_2,
         }));
-        ctx.curve_2d_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

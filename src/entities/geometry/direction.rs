@@ -48,7 +48,7 @@ impl SimpleEntityHandler for DirectionHandler {
             z: ratios[2],
         };
         let id = ctx.geometry.directions.push(dir);
-        ctx.direction_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

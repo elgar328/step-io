@@ -39,7 +39,7 @@ impl SimpleEntityHandler for Axis1PlacementHandler {
 
         let placement = Axis1Placement { location, axis };
         let id = ctx.geometry.placements_1d.push(placement);
-        ctx.axis1_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

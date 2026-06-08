@@ -11,9 +11,9 @@ use crate::ir::assembly::{AssemblyTree, Product, Transform3d, WireframeContent};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{SurfaceCurveWrapper, TransitionCode};
 use crate::ir::id::{
-    Curve2dId, CurveId, Direction2dId, DirectionId, EdgeId, FaceId, FoundedItemId, Placement1dId,
-    Placement2dId, Placement3dId, Point2dId, PointId, ProductId, ShellId, SolidId, SurfaceId,
-    UnitContextId, VertexId, WireId,
+    CurveId, Direction2dId, DirectionId, EdgeId, FaceId, FoundedItemId, Placement1dId,
+    Placement3dId, PointId, ProductId, ShellId, SolidId, SurfaceId, UnitContextId, VertexId,
+    WireId,
 };
 use crate::ir::model::{GeometryPool, StepModel, TopologyPool};
 use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit, SolidAngleUnit, UnitContext};
@@ -240,22 +240,14 @@ pub struct ReaderContext {
     pub(crate) solid_angle_uncertainty_map: HashMap<u64, LengthUncertainty>,
 
     // Geometry maps: STEP #N → typed Id.
-    pub(crate) point_map: HashMap<u64, PointId>,
-    pub(crate) direction_map: HashMap<u64, DirectionId>,
-    pub(crate) surface_map: HashMap<u64, SurfaceId>,
-    pub(crate) curve_map: HashMap<u64, CurveId>,
 
     // Geometry intermediate maps.
     pub(crate) placement_map: HashMap<u64, Placement3dId>,
     pub(crate) vector_map: HashMap<u64, (DirectionId, f64)>,
-    pub(crate) axis1_map: HashMap<u64, Placement1dId>,
 
     // 2D geometry (PCURVE parametric space) maps.
-    pub(crate) point_2d_map: HashMap<u64, Point2dId>,
-    pub(crate) direction_2d_map: HashMap<u64, Direction2dId>,
-    pub(crate) curve_2d_map: HashMap<u64, Curve2dId>,
     pub(crate) vector_2d_map: HashMap<u64, (Direction2dId, f64)>,
-    pub(crate) placement_2d_map: HashMap<u64, Placement2dId>,
+
     /// `SURFACE_CURVE / SEAM_CURVE #N → SurfaceCurveWrapper`. Populated by the
     /// `SURFACE_CURVE` / `SEAM_CURVE` handler and consumed by `convert_edge_curve`
     /// to attach the wrapper (entity kind, associated geometry,
@@ -264,10 +256,6 @@ pub struct ReaderContext {
 
     // Topology maps: STEP #N → typed Id.
     pub(crate) vertex_map: HashMap<u64, VertexId>,
-    pub(crate) edge_map: HashMap<u64, EdgeId>,
-    pub(crate) face_bound_map: HashMap<u64, WireId>,
-    pub(crate) face_map: HashMap<u64, FaceId>,
-    pub(crate) shell_map: HashMap<u64, ShellId>,
 
     // Topology intermediate maps.
     pub(crate) oriented_edge_map: HashMap<u64, OrientedEdge>,
@@ -672,17 +660,17 @@ impl ReaderContext {
     /// `CARTESIAN_POINT` / `DIRECTION` / `VECTOR` (which self-discriminate and
     /// land in their 2D/3D arenas even inside a pcurve subtree).
     fn is_geometry_registered(&self, id: u64) -> bool {
-        self.point_map.contains_key(&id)
-            || self.direction_map.contains_key(&id)
+        self.id_cache.contains::<crate::ir::id::PointId>(id)
+            || self.id_cache.contains::<crate::ir::id::DirectionId>(id)
             || self.vector_map.contains_key(&id)
-            || self.surface_map.contains_key(&id)
-            || self.curve_map.contains_key(&id)
+            || self.id_cache.contains::<crate::ir::id::SurfaceId>(id)
+            || self.id_cache.contains::<crate::ir::id::CurveId>(id)
             || self.placement_map.contains_key(&id)
-            || self.point_2d_map.contains_key(&id)
-            || self.direction_2d_map.contains_key(&id)
+            || self.id_cache.contains::<crate::ir::id::Point2dId>(id)
+            || self.id_cache.contains::<crate::ir::id::Direction2dId>(id)
             || self.vector_2d_map.contains_key(&id)
-            || self.curve_2d_map.contains_key(&id)
-            || self.placement_2d_map.contains_key(&id)
+            || self.id_cache.contains::<crate::ir::id::Curve2dId>(id)
+            || self.id_cache.contains::<crate::ir::id::Placement2dId>(id)
     }
 
     /// Classify a dropped `PCURVE` (the `resolve_pcurve` returned `None` path).
@@ -702,7 +690,10 @@ impl ReaderContext {
         };
         // wr3 signature requires the basis_surface to resolve; a missing
         // surface is a different defect (keep the warning).
-        if !self.surface_map.contains_key(basis_surface_ref) {
+        if !self
+            .id_cache
+            .contains::<crate::ir::id::SurfaceId>(*basis_surface_ref)
+        {
             return false;
         }
         let Some(Attribute::EntityRef(def_repr_ref)) = attributes.get(2) else {
@@ -727,7 +718,10 @@ impl ReaderContext {
         };
         // The wr3 violation: the parameter-space curve is NOT 2D — it never
         // landed in `curve_2d_map`, yet it is a curve entity in the graph.
-        if self.curve_2d_map.contains_key(first_item_ref) {
+        if self
+            .id_cache
+            .contains::<crate::ir::id::Curve2dId>(*first_item_ref)
+        {
             return false; // genuinely 2D; not a wr3 violation
         }
         let is_curve = matches!(
@@ -1418,7 +1412,8 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<PointId, ConvertError> {
-        resolve_in_map(&self.point_map, from, to, field_name)
+        self.id_cache
+            .resolve::<crate::ir::id::PointId>(from, to, field_name)
     }
 
     pub(crate) fn resolve_direction(
@@ -1427,7 +1422,8 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<DirectionId, ConvertError> {
-        resolve_in_map(&self.direction_map, from, to, field_name)
+        self.id_cache
+            .resolve::<crate::ir::id::DirectionId>(from, to, field_name)
     }
 
     pub(crate) fn resolve_curve(
@@ -1436,7 +1432,8 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<CurveId, ConvertError> {
-        resolve_in_map(&self.curve_map, from, to, field_name)
+        self.id_cache
+            .resolve::<crate::ir::id::CurveId>(from, to, field_name)
     }
 
     pub(crate) fn resolve_surface(
@@ -1445,7 +1442,8 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<SurfaceId, ConvertError> {
-        resolve_in_map(&self.surface_map, from, to, field_name)
+        self.id_cache
+            .resolve::<crate::ir::id::SurfaceId>(from, to, field_name)
     }
 
     pub(crate) fn resolve_vertex(
@@ -1463,7 +1461,8 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<EdgeId, ConvertError> {
-        resolve_in_map(&self.edge_map, from, to, field_name)
+        self.id_cache
+            .resolve::<crate::ir::id::EdgeId>(from, to, field_name)
     }
 
     pub(crate) fn resolve_face_bound(
@@ -1472,7 +1471,8 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<WireId, ConvertError> {
-        resolve_in_map(&self.face_bound_map, from, to, field_name)
+        self.id_cache
+            .resolve::<crate::ir::id::WireId>(from, to, field_name)
     }
 
     pub(crate) fn resolve_face(
@@ -1481,7 +1481,8 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<FaceId, ConvertError> {
-        resolve_in_map(&self.face_map, from, to, field_name)
+        self.id_cache
+            .resolve::<crate::ir::id::FaceId>(from, to, field_name)
     }
 
     pub(crate) fn resolve_shell(
@@ -1490,7 +1491,8 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<ShellId, ConvertError> {
-        resolve_in_map(&self.shell_map, from, to, field_name)
+        self.id_cache
+            .resolve::<crate::ir::id::ShellId>(from, to, field_name)
     }
 
     /// Two-step lookup `PRODUCT_DEFINITION #N → PRODUCT #N → ProductId`
@@ -1543,7 +1545,8 @@ impl ReaderContext {
         to: u64,
         field_name: &'static str,
     ) -> Result<Placement1dId, ConvertError> {
-        resolve_in_map(&self.axis1_map, from, to, field_name)
+        self.id_cache
+            .resolve::<crate::ir::id::Placement1dId>(from, to, field_name)
     }
 
     pub(crate) fn resolve_oriented_edge(

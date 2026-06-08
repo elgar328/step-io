@@ -391,7 +391,8 @@ impl SimpleEntityHandler for TessellatedShellHandler {
             .iter()
             .filter_map(|&r| resolve_tessellated_item_ref(ctx, r))
             .collect();
-        let topological_link = topological_link_ref.and_then(|r| ctx.shell_map.get(&r).copied());
+        let topological_link =
+            topological_link_ref.and_then(|r| ctx.id_cache.get::<crate::ir::id::ShellId>(r));
 
         let id = ctx
             .tessellated_items

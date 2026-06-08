@@ -28,7 +28,10 @@ impl SimpleEntityHandler for TextLiteralHandler {
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let literal = read_string_or_unset(attrs, 1, entity_id, "literal")?.to_owned();
         let placement_ref = read_entity_ref(attrs, 2, entity_id, "placement")?;
-        let placement = if let Some(&id) = ctx.placement_2d_map.get(&placement_ref) {
+        let placement = if let Some(id) = ctx
+            .id_cache
+            .get::<crate::ir::id::Placement2dId>(placement_ref)
+        {
             Axis2Placement::D2(id)
         } else if let Some(&id) = ctx.placement_map.get(&placement_ref) {
             Axis2Placement::D3(id)

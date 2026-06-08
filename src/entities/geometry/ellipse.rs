@@ -32,7 +32,10 @@ impl SimpleEntityHandler for EllipseHandler {
 
         // If the placement is a known 2D placement, this ELLIPSE is
         // the 2D sister variant — silently skip.
-        if ctx.placement_2d_map.contains_key(&pos_ref) {
+        if ctx
+            .id_cache
+            .contains::<crate::ir::id::Placement2dId>(pos_ref)
+        {
             return Ok(());
         }
         let position = ctx.resolve_placement(entity_id, pos_ref, "position")?;
@@ -43,7 +46,7 @@ impl SimpleEntityHandler for EllipseHandler {
             semi_axis_2,
         };
         let id = ctx.geometry.curves.push(Curve::Ellipse(ellipse));
-        ctx.curve_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 

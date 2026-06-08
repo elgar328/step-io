@@ -634,7 +634,8 @@ impl SimpleEntityHandler for ApllPointWithSurfaceHandler {
         }
         let symbol_applied = read_enum(attrs, 2, entity_id, "symbol_applied")?.to_owned();
         let surface_ref = read_entity_ref(attrs, 3, entity_id, "associated_surface")?;
-        let Some(&associated_surface) = ctx.face_map.get(&surface_ref) else {
+        let Some(associated_surface) = ctx.id_cache.get::<crate::ir::id::FaceId>(surface_ref)
+        else {
             ctx.warnings.push(ConvertError::UnexpectedEntityForm {
                 entity_id,
                 detail: format!(
@@ -1104,7 +1105,7 @@ impl ComplexEntityHandler for LeaderCurveHandler {
                 styles.push(psa_id);
             }
         }
-        let Some(&item) = ctx.curve_map.get(&item_ref) else {
+        let Some(item) = ctx.id_cache.get::<crate::ir::id::CurveId>(item_ref) else {
             return Ok(()); // item unresolved — drop the occurrence
         };
 

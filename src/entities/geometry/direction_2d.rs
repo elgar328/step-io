@@ -39,7 +39,7 @@ impl SimpleEntityHandler for Direction2dHandler {
             x: coords[0],
             y: coords[1],
         });
-        ctx.direction_2d_map.insert(entity_id, id);
+        ctx.id_cache.insert(entity_id, id);
         Ok(())
     }
 
