@@ -65,8 +65,8 @@ impl SimpleEntityHandler for AppliedPersonAndOrganizationAssignmentHandler {
         buf: &mut WriteBuffer,
         a: AppliedPersonAndOrganizationAssignment,
     ) -> Result<u64, WriteError> {
-        let po_step = buf.plm_p_and_o_step_ids[a.assigned_person_and_organization.0 as usize];
-        let role_step = buf.plm_p_and_o_role_step_ids[a.role.0 as usize];
+        let po_step = buf.step_id(a.assigned_person_and_organization);
+        let role_step = buf.step_id(a.role);
         let mut item_refs = Vec::with_capacity(a.items.len());
         for item in a.items {
             let step_id = match item {

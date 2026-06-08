@@ -65,7 +65,7 @@ impl SimpleEntityHandler for PersonalAddressHandler {
         let people_refs: Vec<Attribute> = pa
             .people
             .iter()
-            .map(|pid| Attribute::EntityRef(buf.plm_person_step_ids[pid.0 as usize]))
+            .map(|pid| Attribute::EntityRef(buf.step_id(pid)))
             .collect();
         attrs.push(Attribute::List(people_refs));
         attrs.push(Attribute::String(pa.description));

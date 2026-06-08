@@ -62,8 +62,8 @@ impl SimpleEntityHandler for PersonAndOrganizationHandler {
     }
 
     fn write(buf: &mut WriteBuffer, p: PersonAndOrganization) -> Result<u64, WriteError> {
-        let person_step = buf.plm_person_step_ids[p.the_person.0 as usize];
-        let org_step = buf.plm_organization_step_ids[p.the_organization.0 as usize];
+        let person_step = buf.step_id(p.the_person);
+        let org_step = buf.step_id(p.the_organization);
         Ok(buf.push_simple(
             "PERSON_AND_ORGANIZATION",
             vec![

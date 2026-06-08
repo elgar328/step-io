@@ -185,15 +185,17 @@ impl WriteBuffer<'_> {
                     step
                 }
                 IdAttributeItem::Group(g_id) => {
-                    let Some(&step) = self.plm_group_step_ids.get(g_id.0 as usize) else {
+                    let step = self.step_id(g_id);
+                    if step == 0 {
                         continue;
-                    };
+                    }
                     step
                 }
                 IdAttributeItem::Address(a_id) => {
-                    let Some(&step) = self.plm_address_step_ids.get(a_id.0 as usize) else {
+                    let step = self.step_id(a_id);
+                    if step == 0 {
                         continue;
-                    };
+                    }
                     step
                 }
                 IdAttributeItem::ApplicationContext(ac_id) => {
@@ -248,9 +250,10 @@ impl WriteBuffer<'_> {
         for attr in pool.description_attributes.iter() {
             let item_step = match attr.described_item {
                 DescriptionAttributeItem::PersonAndOrganization(pao_id) => {
-                    let Some(&step) = self.plm_p_and_o_step_ids.get(pao_id.0 as usize) else {
+                    let step = self.step_id(pao_id);
+                    if step == 0 {
                         continue;
-                    };
+                    }
                     step
                 }
                 DescriptionAttributeItem::Representation(repr_id) => {
@@ -475,11 +478,7 @@ impl WriteBuffer<'_> {
                 CharacterizedDefinition::Document(doc_id) => {
                     // DOCUMENT_FILE step ids are filled by emit_documents_prepass,
                     // which must run before this pass.
-                    let s = self
-                        .plm_document_step_ids
-                        .get(doc_id.0 as usize)
-                        .copied()
-                        .unwrap_or(0);
+                    let s = self.step_id(doc_id);
                     if s == 0 {
                         continue;
                     }

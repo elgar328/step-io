@@ -47,9 +47,9 @@ impl SimpleEntityHandler for RoleAssociationHandler {
     }
 
     fn write(buf: &mut WriteBuffer, ra: RoleAssociation) -> Result<u64, WriteError> {
-        let role_step = buf.plm_object_role_step_ids[ra.role.0 as usize];
+        let role_step = buf.step_id(ra.role);
         let item_step = match ra.item_with_role {
-            RoleSelect::DocumentReference(id) => buf.plm_document_reference_step_ids[id.0 as usize],
+            RoleSelect::DocumentReference(id) => buf.step_id(id),
         };
         Ok(buf.push_simple(
             "ROLE_ASSOCIATION",

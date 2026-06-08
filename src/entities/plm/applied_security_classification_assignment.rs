@@ -62,8 +62,7 @@ impl SimpleEntityHandler for AppliedSecurityClassificationAssignmentHandler {
         buf: &mut WriteBuffer,
         a: AppliedSecurityClassificationAssignment,
     ) -> Result<u64, WriteError> {
-        let sc_step =
-            buf.plm_security_classification_step_ids[a.assigned_security_classification.0 as usize];
+        let sc_step = buf.step_id(a.assigned_security_classification);
         let mut item_refs = Vec::with_capacity(a.items.len());
         for item in a.items {
             let step_id = match item {

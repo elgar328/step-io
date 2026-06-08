@@ -50,7 +50,7 @@ impl SimpleEntityHandler for AppliedDocumentReferenceHandler {
     }
 
     fn write(buf: &mut WriteBuffer, a: AppliedDocumentReference) -> Result<u64, WriteError> {
-        let doc_step = buf.plm_document_step_ids[a.assigned_document.0 as usize];
+        let doc_step = buf.step_id(a.assigned_document);
         let mut item_refs = Vec::with_capacity(a.items.len());
         for item in a.items {
             let step_id = match item {

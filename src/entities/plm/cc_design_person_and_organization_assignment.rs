@@ -77,8 +77,8 @@ impl SimpleEntityHandler for CcDesignPersonAndOrganizationAssignmentHandler {
         buf: &mut WriteBuffer,
         c: CcDesignPersonAndOrganizationAssignment,
     ) -> Result<u64, WriteError> {
-        let po_step = buf.plm_p_and_o_step_ids[c.assigned_person_and_organization.0 as usize];
-        let role_step = buf.plm_p_and_o_role_step_ids[c.role.0 as usize];
+        let po_step = buf.step_id(c.assigned_person_and_organization);
+        let role_step = buf.step_id(c.role);
         let mut item_refs = Vec::with_capacity(c.items.len());
         for item in c.items {
             let step_id = match item {

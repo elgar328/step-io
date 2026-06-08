@@ -42,7 +42,7 @@ impl SimpleEntityHandler for DocumentRepresentationTypeHandler {
     }
 
     fn write(buf: &mut WriteBuffer, d: DocumentRepresentationType) -> Result<u64, WriteError> {
-        let doc_step = buf.plm_document_step_ids[d.represented_document.0 as usize];
+        let doc_step = buf.step_id(d.represented_document);
         Ok(buf.push_simple(
             "DOCUMENT_REPRESENTATION_TYPE",
             vec![Attribute::String(d.name), Attribute::EntityRef(doc_step)],

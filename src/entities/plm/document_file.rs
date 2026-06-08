@@ -52,7 +52,7 @@ impl SimpleEntityHandler for DocumentFileHandler {
     }
 
     fn write(buf: &mut WriteBuffer, d: DocumentFile) -> Result<u64, WriteError> {
-        let kind_step = buf.plm_document_type_step_ids[d.kind.0 as usize];
+        let kind_step = buf.step_id(d.kind);
         let co_description = match d.characterized_object_description {
             Some(s) => Attribute::String(s),
             None => Attribute::Unset,

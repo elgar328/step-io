@@ -45,11 +45,9 @@ impl SimpleEntityHandler for ApprovalDateTimeHandler {
 
     fn write(buf: &mut WriteBuffer, a: ApprovalDateTime) -> Result<u64, WriteError> {
         let dt_step = match a.date_time {
-            ApprovalDateTimeSelect::DateAndTime(id) => {
-                buf.plm_date_and_time_step_ids[id.0 as usize]
-            }
+            ApprovalDateTimeSelect::DateAndTime(id) => buf.step_id(id),
         };
-        let approval_step = buf.plm_approval_step_ids[a.dated_approval.0 as usize];
+        let approval_step = buf.step_id(a.dated_approval);
         Ok(buf.push_simple(
             "APPROVAL_DATE_TIME",
             vec![

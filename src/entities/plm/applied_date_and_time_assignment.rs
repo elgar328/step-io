@@ -59,8 +59,8 @@ impl SimpleEntityHandler for AppliedDateAndTimeAssignmentHandler {
         buf: &mut WriteBuffer,
         applied: AppliedDateAndTimeAssignment,
     ) -> Result<u64, WriteError> {
-        let dt_step = buf.plm_date_and_time_step_ids[applied.assigned_date_and_time.0 as usize];
-        let role_step = buf.plm_date_time_role_step_ids[applied.role.0 as usize];
+        let dt_step = buf.step_id(applied.assigned_date_and_time);
+        let role_step = buf.step_id(applied.role);
         let mut item_refs = Vec::with_capacity(applied.items.len());
         for item in applied.items {
             let step_id = match item {

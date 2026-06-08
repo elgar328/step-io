@@ -36,7 +36,7 @@ impl SimpleEntityHandler for ApprovalHandler {
     }
 
     fn write(buf: &mut WriteBuffer, a: Approval) -> Result<u64, WriteError> {
-        let status_step = buf.plm_approval_status_step_ids[a.status.0 as usize];
+        let status_step = buf.step_id(a.status);
         Ok(buf.push_simple(
             "APPROVAL",
             vec![

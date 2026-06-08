@@ -55,8 +55,7 @@ impl SimpleEntityHandler for CcDesignSecurityClassificationHandler {
     }
 
     fn write(buf: &mut WriteBuffer, c: CcDesignSecurityClassification) -> Result<u64, WriteError> {
-        let sc_step =
-            buf.plm_security_classification_step_ids[c.assigned_security_classification.0 as usize];
+        let sc_step = buf.step_id(c.assigned_security_classification);
         let mut item_refs = Vec::with_capacity(c.items.len());
         for item in c.items {
             let step_id = match item {

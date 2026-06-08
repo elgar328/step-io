@@ -247,7 +247,7 @@ impl WriteBuffer<'_> {
             let doc_refs: Vec<u64> = product
                 .associated_documents
                 .iter()
-                .map(|d| self.plm_document_step_ids[d.0 as usize])
+                .map(|d| self.step_id(d))
                 .collect();
             // Reader-built products carry the canonical PD id/description in the
             // arena (the legacy synthesis hardcoded "design"/""). Kernel-built

@@ -60,7 +60,7 @@ impl SimpleEntityHandler for DocumentProductEquivalenceHandler {
     }
 
     fn write(buf: &mut WriteBuffer, d: DocumentProductEquivalence) -> Result<u64, WriteError> {
-        let doc_step = buf.plm_document_step_ids[d.relating_document.0 as usize];
+        let doc_step = buf.step_id(d.relating_document);
         let product_step = match d.related_product {
             DocumentProductItem::Product(pid) => buf.product_def_ids[&pid],
             DocumentProductItem::Formation(fid) => {

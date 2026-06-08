@@ -50,7 +50,7 @@ impl SimpleEntityHandler for CcDesignApprovalHandler {
     }
 
     fn write(buf: &mut WriteBuffer, c: CcDesignApproval) -> Result<u64, WriteError> {
-        let approval_step = buf.plm_approval_step_ids[c.assigned_approval.0 as usize];
+        let approval_step = buf.step_id(c.assigned_approval);
         let mut item_refs = Vec::with_capacity(c.items.len());
         for item in c.items {
             let step_id = match item {

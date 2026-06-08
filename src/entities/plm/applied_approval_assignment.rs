@@ -49,7 +49,7 @@ impl SimpleEntityHandler for AppliedApprovalAssignmentHandler {
     }
 
     fn write(buf: &mut WriteBuffer, a: AppliedApprovalAssignment) -> Result<u64, WriteError> {
-        let approval_step = buf.plm_approval_step_ids[a.assigned_approval.0 as usize];
+        let approval_step = buf.step_id(a.assigned_approval);
         let mut item_refs = Vec::with_capacity(a.items.len());
         for item in a.items {
             let step_id = match item {

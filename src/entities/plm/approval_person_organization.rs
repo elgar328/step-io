@@ -64,12 +64,10 @@ impl SimpleEntityHandler for ApprovalPersonOrganizationHandler {
 
     fn write(buf: &mut WriteBuffer, a: ApprovalPersonOrganization) -> Result<u64, WriteError> {
         let po_step = match a.person_organization {
-            PersonOrganizationSelect::PersonAndOrganization(id) => {
-                buf.plm_p_and_o_step_ids[id.0 as usize]
-            }
+            PersonOrganizationSelect::PersonAndOrganization(id) => buf.step_id(id),
         };
-        let approval_step = buf.plm_approval_step_ids[a.authorized_approval.0 as usize];
-        let role_step = buf.plm_approval_role_step_ids[a.role.0 as usize];
+        let approval_step = buf.step_id(a.authorized_approval);
+        let role_step = buf.step_id(a.role);
         Ok(buf.push_simple(
             "APPROVAL_PERSON_ORGANIZATION",
             vec![

@@ -43,7 +43,7 @@ impl SimpleEntityHandler for DocumentHandler {
     }
 
     fn write(buf: &mut WriteBuffer, d: DocumentData) -> Result<u64, WriteError> {
-        let kind_step = buf.plm_document_type_step_ids[d.kind.0 as usize];
+        let kind_step = buf.step_id(d.kind);
         Ok(buf.push_simple(
             "DOCUMENT",
             vec![

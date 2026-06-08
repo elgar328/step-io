@@ -41,7 +41,7 @@ impl SimpleEntityHandler for SecurityClassificationHandler {
     }
 
     fn write(buf: &mut WriteBuffer, s: SecurityClassification) -> Result<u64, WriteError> {
-        let level_step = buf.plm_security_level_step_ids[s.security_level.0 as usize];
+        let level_step = buf.step_id(s.security_level);
         Ok(buf.push_simple(
             "SECURITY_CLASSIFICATION",
             vec![

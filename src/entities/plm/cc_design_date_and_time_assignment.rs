@@ -57,8 +57,8 @@ impl SimpleEntityHandler for CcDesignDateAndTimeAssignmentHandler {
     }
 
     fn write(buf: &mut WriteBuffer, cc: CcDesignDateAndTimeAssignment) -> Result<u64, WriteError> {
-        let dt_step = buf.plm_date_and_time_step_ids[cc.assigned_date_and_time.0 as usize];
-        let role_step = buf.plm_date_time_role_step_ids[cc.role.0 as usize];
+        let dt_step = buf.step_id(cc.assigned_date_and_time);
+        let role_step = buf.step_id(cc.role);
         let mut item_refs = Vec::with_capacity(cc.items.len());
         for item in cc.items {
             let step_id = match item {

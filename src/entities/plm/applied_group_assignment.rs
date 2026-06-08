@@ -48,7 +48,7 @@ impl SimpleEntityHandler for AppliedGroupAssignmentHandler {
     }
 
     fn write(buf: &mut WriteBuffer, a: AppliedGroupAssignment) -> Result<u64, WriteError> {
-        let group_step = buf.plm_group_step_ids[a.assigned_group.0 as usize];
+        let group_step = buf.step_id(a.assigned_group);
         let mut item_refs = Vec::with_capacity(a.items.len());
         for item in a.items {
             let step_id = match item {

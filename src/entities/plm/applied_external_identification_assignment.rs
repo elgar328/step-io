@@ -65,8 +65,8 @@ impl SimpleEntityHandler for AppliedExternalIdentificationAssignmentHandler {
         buf: &mut WriteBuffer,
         a: AppliedExternalIdentificationAssignment,
     ) -> Result<u64, WriteError> {
-        let role_step = buf.plm_identification_role_step_ids[a.role.0 as usize];
-        let source_step = buf.plm_external_source_step_ids[a.source.0 as usize];
+        let role_step = buf.step_id(a.role);
+        let source_step = buf.step_id(a.source);
         let mut item_refs = Vec::with_capacity(a.items.len());
         for item in a.items {
             let step_id = match item {

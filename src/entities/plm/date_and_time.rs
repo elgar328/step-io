@@ -42,8 +42,8 @@ impl SimpleEntityHandler for DateAndTimeHandler {
     }
 
     fn write(buf: &mut WriteBuffer, dt: DateAndTime) -> Result<u64, WriteError> {
-        let date_step_id = buf.plm_date_step_ids[dt.date_component.0 as usize];
-        let time_step_id = buf.plm_local_time_step_ids[dt.time_component.0 as usize];
+        let date_step_id = buf.step_id(dt.date_component);
+        let time_step_id = buf.step_id(dt.time_component);
         Ok(buf.push_simple(
             "DATE_AND_TIME",
             vec![

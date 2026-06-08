@@ -45,7 +45,7 @@ impl SimpleEntityHandler for LocalTimeHandler {
     }
 
     fn write(buf: &mut WriteBuffer, lt: LocalTime) -> Result<u64, WriteError> {
-        let zone_step_id = buf.plm_utc_step_ids[lt.zone.0 as usize];
+        let zone_step_id = buf.step_id(lt.zone);
         let minute_attr = match lt.minute_component {
             Some(v) => Attribute::Integer(v),
             None => Attribute::Unset,

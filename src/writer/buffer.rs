@@ -263,61 +263,12 @@ pub(crate) struct WriteBuffer<'m> {
     /// after `founded_item_step_ids`; consumed by `emit_camera_usage_arena`
     /// to resolve `CameraUsage.mapping_origin`.
     pub(crate) viz_camera_model_step_ids: Vec<u64>,
-    /// plm Date/Time caches — populated by `emit_plm_if_set` in
-    /// dependency order so downstream entities (`LocalTime`, `DateAndTime`)
-    /// resolve refs through one index lookup.
-    pub(crate) plm_utc_step_ids: Vec<u64>,
-    pub(crate) plm_date_step_ids: Vec<u64>,
-    pub(crate) plm_date_time_role_step_ids: Vec<u64>,
-    pub(crate) plm_local_time_step_ids: Vec<u64>,
-    pub(crate) plm_date_and_time_step_ids: Vec<u64>,
-    /// plm Person/Org caches — populated by `emit_plm_if_set`.
-    pub(crate) plm_person_step_ids: Vec<u64>,
-    pub(crate) plm_organization_step_ids: Vec<u64>,
-    pub(crate) plm_p_and_o_role_step_ids: Vec<u64>,
-    pub(crate) plm_p_and_o_step_ids: Vec<u64>,
-    /// plm Approval caches — populated by `emit_plm_if_set` in dependency
-    /// order: leaves (status / role) → `Approval` → linkers.
-    pub(crate) plm_approval_status_step_ids: Vec<u64>,
-    pub(crate) plm_approval_role_step_ids: Vec<u64>,
-    pub(crate) plm_approval_step_ids: Vec<u64>,
-    pub(crate) plm_approval_date_time_step_ids: Vec<u64>,
-    pub(crate) plm_approval_person_organization_step_ids: Vec<u64>,
-    /// plm Security caches — populated by `emit_plm_if_set` in
-    /// dependency order: level → classification → assignments.
-    /// SCA itself has no consumers and is not cached.
-    pub(crate) plm_security_level_step_ids: Vec<u64>,
-    pub(crate) plm_security_classification_step_ids: Vec<u64>,
-    /// plm Identification caches — populated by `emit_plm_if_set`.
-    /// `AppliedExternalIdentificationAssignment` itself has no consumers
-    /// and is not cached.
-    pub(crate) plm_identification_role_step_ids: Vec<u64>,
-    pub(crate) plm_external_source_step_ids: Vec<u64>,
-    /// plm Document caches — populated by `emit_plm_if_set`. `Applied`
-    /// `DocumentReference` is top-level (no consumer) and not cached.
-    pub(crate) plm_document_type_step_ids: Vec<u64>,
-    pub(crate) plm_document_step_ids: Vec<u64>,
     /// Reserved STEP ids for `characterized_objects`, indexed by
     /// `CharacterizedObjectId.0`. Filled by `emit_characterized_objects_prepass`
     /// before the PD-definition pass so a `PROPERTY_DEFINITION` targeting a
     /// CIWR resolves the forward ref; the CO bodies emit later under these ids.
     /// 0 = no reserved id (inline-DM CO or absent).
     pub(crate) characterized_object_step_ids: Vec<u64>,
-    pub(crate) plm_document_representation_type_step_ids: Vec<u64>,
-    pub(crate) plm_document_product_equivalence_step_ids: Vec<u64>,
-    /// plm Group cache — `AppliedGroupAssignment` is top-level (no
-    /// consumer) and not cached.
-    pub(crate) plm_group_step_ids: Vec<u64>,
-    /// plm `APPLIED_DOCUMENT_REFERENCE` cache — populated alongside the
-    /// Document cluster emit so the Role cluster can resolve
-    /// `RoleSelect::DocumentReference` step ids.
-    pub(crate) plm_document_reference_step_ids: Vec<u64>,
-    /// plm Role cache — `RoleAssociation` is top-level (no consumer)
-    /// and not cached.
-    pub(crate) plm_object_role_step_ids: Vec<u64>,
-    /// plm `address` arena — top-level (no current consumer); cache
-    /// reserved for future enhancement phases.
-    pub(crate) plm_address_step_ids: Vec<u64>,
     /// IR `ApplicationContext` index → emitted `APPLICATION_CONTEXT` step id.
     pub(crate) ac_step_ids: Vec<u64>,
     /// IR `ShapeAspectId.0` index → emitted `SHAPE_ASPECT` step id.
@@ -515,33 +466,7 @@ impl<'m> WriteBuffer<'m> {
             ssr_step_ids: Vec::new(),
             founded_item_step_ids: Vec::new(),
             viz_camera_model_step_ids: Vec::new(),
-            plm_utc_step_ids: Vec::new(),
-            plm_date_step_ids: Vec::new(),
-            plm_date_time_role_step_ids: Vec::new(),
-            plm_local_time_step_ids: Vec::new(),
-            plm_date_and_time_step_ids: Vec::new(),
-            plm_person_step_ids: Vec::new(),
-            plm_organization_step_ids: Vec::new(),
-            plm_p_and_o_role_step_ids: Vec::new(),
-            plm_p_and_o_step_ids: Vec::new(),
-            plm_approval_status_step_ids: Vec::new(),
-            plm_approval_role_step_ids: Vec::new(),
-            plm_approval_step_ids: Vec::new(),
-            plm_approval_date_time_step_ids: Vec::new(),
-            plm_approval_person_organization_step_ids: Vec::new(),
-            plm_security_level_step_ids: Vec::new(),
-            plm_security_classification_step_ids: Vec::new(),
-            plm_identification_role_step_ids: Vec::new(),
-            plm_external_source_step_ids: Vec::new(),
-            plm_document_type_step_ids: Vec::new(),
-            plm_document_step_ids: Vec::new(),
             characterized_object_step_ids: Vec::new(),
-            plm_document_representation_type_step_ids: Vec::new(),
-            plm_document_product_equivalence_step_ids: Vec::new(),
-            plm_group_step_ids: Vec::new(),
-            plm_document_reference_step_ids: Vec::new(),
-            plm_object_role_step_ids: Vec::new(),
-            plm_address_step_ids: Vec::new(),
             ac_step_ids: Vec::new(),
             shape_aspect_step_ids: Vec::new(),
             composite_shape_aspect_step_ids: Vec::new(),
