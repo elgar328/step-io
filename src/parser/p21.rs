@@ -77,11 +77,14 @@ impl<'src> Parser<'src> {
         self.expect_token_kind(&TokenKind::EndSec, "ENDSEC")?;
         self.expect_semicolon()?;
 
-        // Optional P21 edition 3 sections (ANCHOR / REFERENCE /
-        // SIGNATURE). step-io does not yet model these in the IR, so
-        // their content is discarded — a ParseWarning records the loss.
+        // Optional P21 edition 3 sections (ANCHOR / REFERENCE / SIGNATURE).
+        // ANCHOR / REFERENCE are parsed (so external references survive);
+        // SIGNATURE and any unrecognised line shape fall back to a discard +
+        // ParseWarning.
+        let mut external_references: BTreeMap<u64, String> = BTreeMap::new();
+        let mut anchors: Vec<(String, u64)> = Vec::new();
         while self.peek_is_ed3_section()? {
-            self.skip_ed3_section()?;
+            self.parse_or_skip_ed3_section(&mut external_references, &mut anchors)?;
         }
 
         // DATA; ... ENDSEC;
@@ -109,6 +112,8 @@ impl<'src> Parser<'src> {
             schema,
             header,
             entities,
+            external_references,
+            anchors,
             warnings: std::mem::take(&mut self.warnings),
         })
     }
@@ -126,7 +131,14 @@ impl<'src> Parser<'src> {
         ))
     }
 
-    fn skip_ed3_section(&mut self) -> Result<(), ParseError> {
+    /// Parse an ANCHOR or REFERENCE section into `external_references` /
+    /// `anchors`; SIGNATURE (and any line shape we don't recognise) falls back
+    /// to a discard + `Ed3SectionDiscarded` warning so the parse never fails.
+    fn parse_or_skip_ed3_section(
+        &mut self,
+        external_references: &mut BTreeMap<u64, String>,
+        anchors: &mut Vec<(String, u64)>,
+    ) -> Result<(), ParseError> {
         let tok = self.next_token()?;
         let section = match &tok.kind {
             TokenKind::Keyword(k) => k.to_uppercase(),
@@ -134,13 +146,40 @@ impl<'src> Parser<'src> {
         };
         let span = tok.span;
         self.expect_semicolon()?;
+
+        let mut discarded = false;
         while !matches!(self.peek_kind()?, TokenKind::EndSec) {
-            self.next_token()?;
+            // Each entry is one `lhs = rhs ;` line. REFERENCE lines are
+            // `#N = <anchor>`; ANCHOR lines are `<name> = #N`. Anything else
+            // (SIGNATURE bodies, unexpected shapes) is consumed and the whole
+            // section is flagged as discarded.
+            let lhs = self.next_token()?;
+            if !matches!(self.peek_kind()?, TokenKind::Equals) {
+                discarded = true;
+                continue;
+            }
+            self.next_token()?; // consume `=`
+            let rhs = self.next_token()?;
+            match (section.as_str(), lhs.kind, rhs.kind) {
+                ("REFERENCE", TokenKind::EntityRef(id), TokenKind::AnchorRef(s)) => {
+                    external_references.insert(id, s);
+                }
+                ("ANCHOR", TokenKind::AnchorRef(name), TokenKind::EntityRef(id)) => {
+                    anchors.push((name, id));
+                }
+                _ => discarded = true,
+            }
+            // Consume the line's terminating `;` (tolerate its absence).
+            if matches!(self.peek_kind()?, TokenKind::Semicolon) {
+                self.next_token()?;
+            }
         }
         self.expect_token_kind(&TokenKind::EndSec, "ENDSEC")?;
         self.expect_semicolon()?;
-        self.warnings
-            .push(ParseWarning::Ed3SectionDiscarded { section, span });
+        if discarded || section == "SIGNATURE" {
+            self.warnings
+                .push(ParseWarning::Ed3SectionDiscarded { section, span });
+        }
         Ok(())
     }
 
@@ -997,7 +1036,7 @@ mod tests {
     // --- ParseWarning: lenient acceptance of non-spec / ed.3 inputs ---
 
     #[test]
-    fn parse_warns_and_skips_ed3_anchor_section() {
+    fn parse_records_ed3_anchor_and_reference_sections() {
         let src = "ISO-10303-21;\n\
                    HEADER;\n\
                    FILE_DESCRIPTION((''),'2;1');\n\
@@ -1005,19 +1044,55 @@ mod tests {
                    FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\n\
                    ENDSEC;\n\
                    ANCHOR;\n\
-                   <TestAnchor>=#1;\n\
+                   <ParentAnchor>=#123;\n\
+                   ENDSEC;\n\
+                   REFERENCE;\n\
+                   #123=<testAnchorAndData.stp#TestAnchor>;\n\
+                   ENDSEC;\n\
+                   DATA;\n\
+                   #1=CIRCULAR_AREA('testarea',#123,2.);\n\
+                   ENDSEC;\n\
+                   END-ISO-10303-21;\n";
+        let graph = parse(src).expect("ed.3 ANCHOR/REFERENCE must be tolerated");
+        assert_eq!(graph.entities.len(), 1);
+        // REFERENCE recorded: #123 -> external anchor string.
+        assert_eq!(
+            graph.external_references.get(&123).map(String::as_str),
+            Some("<testAnchorAndData.stp#TestAnchor>")
+        );
+        // ANCHOR recorded: <ParentAnchor> -> #123.
+        assert_eq!(graph.anchors, vec![("<ParentAnchor>".to_string(), 123)]);
+        // Both sections parsed cleanly — no discard warning.
+        assert!(
+            !graph
+                .warnings
+                .iter()
+                .any(|w| matches!(w, ParseWarning::Ed3SectionDiscarded { .. }))
+        );
+    }
+
+    #[test]
+    fn parse_discards_unrecognised_ed3_signature_section() {
+        let src = "ISO-10303-21;\n\
+                   HEADER;\n\
+                   FILE_DESCRIPTION((''),'2;1');\n\
+                   FILE_NAME('n','t',(''),(''),'p','o','a');\n\
+                   FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\n\
+                   ENDSEC;\n\
+                   SIGNATURE;\n\
+                   some opaque signature payload;\n\
                    ENDSEC;\n\
                    DATA;\n\
                    #1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
                    ENDSEC;\n\
                    END-ISO-10303-21;\n";
-        let graph = parse(src).expect("ed.3 ANCHOR must be tolerated");
+        let graph = parse(src).expect("ed.3 SIGNATURE must be tolerated");
         assert_eq!(graph.entities.len(), 1);
         assert!(
             graph
                 .warnings
                 .iter()
-                .any(|w| matches!(w, ParseWarning::Ed3SectionDiscarded { section, .. } if section == "ANCHOR"))
+                .any(|w| matches!(w, ParseWarning::Ed3SectionDiscarded { section, .. } if section == "SIGNATURE"))
         );
     }
 

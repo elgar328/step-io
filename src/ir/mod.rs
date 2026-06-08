@@ -45,10 +45,10 @@ pub use id::{
     DateAndTimeAssignmentId, DateAndTimeId, DateId, DateTimeRoleId, DerivedUnitElementId,
     DerivedUnitId, DescriptionAttributeId, DimensionalExponentsId, Direction2dId, DirectionId,
     DocumentId, DocumentProductEquivalenceId, DocumentReferenceId, DocumentRepresentationTypeId,
-    DocumentTypeId, EdgeId, ExternalSourceId, FaceId, FoundedItemId, GeneralPropertyAssociationId,
-    GeneralPropertyId, GroupAssignmentId, GroupId, IdAttributeId, IdentificationAssignmentId,
-    IdentificationRoleId, LocalTimeId, MappedItemId, MeasureWithUnitId, NameAttributeId,
-    NamedUnitId, NumericRepresentationItemId, ObjectRoleId, OrganizationId,
+    DocumentTypeId, EdgeId, ExternalRefId, ExternalSourceId, FaceId, FoundedItemId,
+    GeneralPropertyAssociationId, GeneralPropertyId, GroupAssignmentId, GroupId, IdAttributeId,
+    IdentificationAssignmentId, IdentificationRoleId, LocalTimeId, MappedItemId, MeasureWithUnitId,
+    NameAttributeId, NamedUnitId, NumericRepresentationItemId, ObjectRoleId, OrganizationId,
     PersonAndOrganizationAssignmentId, PersonAndOrganizationId, PersonAndOrganizationRoleId,
     PersonId, Placement1dId, Placement2dId, Placement3dId, PlanarExtentId, Point2dId, PointId,
     ProductCategoryId, ProductCategoryRelationshipId, ProductContextId,
@@ -77,7 +77,8 @@ pub use id::{
     },
 };
 pub use model::{
-    FileHeader, GeometryPool, ImplementationLevel, NonEmptyStringList, StepModel, TopologyPool,
+    ExternalAnchor, ExternalReference, FileHeader, GeometryPool, ImplementationLevel,
+    NonEmptyStringList, StepModel, TopologyPool,
 };
 pub use plm::{
     Address, AddressData, AheadOrBehind, ApplicationContext, ApplicationProtocolDefinition,

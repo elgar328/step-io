@@ -1,13 +1,15 @@
 //! `CIRCULAR_AREA` handler — phase ca.
 //!
 //! `primitive_2d` SUBTYPE — orphan in step-io (no inbound refs).
-//! 3 attr (name + centre + radius). centre ref resolves through
-//! `point_map`; unresolved drops the carrier.
+//! 3 attr (name + centre + radius). `centre` resolves through `point_map`
+//! (a local `cartesian_point`) or, for the P21 edition 3 conformance
+//! fixture, through `external_ref_id_map` (a `REFERENCE`-section external
+//! reference); unresolved drops the carrier.
 
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref, read_real, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::geometry::CircularArea;
+use crate::ir::geometry::{CircularArea, CircularAreaCentre};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -30,7 +32,11 @@ impl SimpleEntityHandler for CircularAreaHandler {
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let centre_ref = read_entity_ref(attrs, 1, entity_id, "centre")?;
         let radius = read_real(attrs, 2, entity_id, "radius")?;
-        let Some(&centre) = ctx.point_map.get(&centre_ref) else {
+        let centre = if let Some(&point) = ctx.point_map.get(&centre_ref) {
+            CircularAreaCentre::Point(point)
+        } else if let Some(&ext) = ctx.external_ref_id_map.get(&centre_ref) {
+            CircularAreaCentre::External(ext)
+        } else {
             return Ok(());
         };
         ctx.geometry.circular_areas.push(CircularArea {
@@ -42,7 +48,10 @@ impl SimpleEntityHandler for CircularAreaHandler {
     }
 
     fn write(buf: &mut WriteBuffer, ca: CircularArea) -> Result<u64, WriteError> {
-        let centre_step = buf.emit_point(ca.centre)?;
+        let centre_step = match ca.centre {
+            CircularAreaCentre::Point(point) => buf.emit_point(point)?,
+            CircularAreaCentre::External(ext) => buf.external_ref_step_ids[ext.0 as usize],
+        };
         Ok(buf.push_simple(
             "CIRCULAR_AREA",
             vec![

@@ -692,8 +692,18 @@ pub enum PlanarBoxPlacement {
 #[derive(Debug, Clone, PartialEq)]
 pub struct CircularArea {
     pub name: String,
-    pub centre: PointId,
+    pub centre: CircularAreaCentre,
     pub radius: f64,
+}
+
+/// `CIRCULAR_AREA.centre` — normally a local `cartesian_point`, but the corpus
+/// conformance fixture points it at a P21 edition 3 external reference.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum CircularAreaCentre {
+    /// A local `CARTESIAN_POINT` in the geometry pool.
+    Point(PointId),
+    /// A P21 edition 3 external reference (`REFERENCE` section `#N=<...>`).
+    External(crate::ir::ExternalRefId),
 }
 
 /// `surface_curve` enum — phase scs. Currently models the two SUBTYPE

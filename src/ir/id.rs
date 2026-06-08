@@ -304,6 +304,10 @@ define_id!(RepresentationId, Representation);
 // CIRCULAR_AREA arena (phase ca). Orphan.
 define_id!(CircularAreaId, crate::ir::geometry::CircularArea);
 
+// P21 edition 3 REFERENCE section (external references). Referenced by
+// CIRCULAR_AREA.centre and ANCHOR targets.
+define_id!(ExternalRefId, crate::ir::model::ExternalReference);
+
 // parameter_space_curve enum arena (phase bpc). Orphan.
 define_id!(
     ParameterSpaceCurveId,

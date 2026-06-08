@@ -292,6 +292,33 @@ pub struct StepModel {
     /// `item_identified_representation_usage` arena (phase iiru). Orphan.
     pub item_identified_representation_usages:
         crate::ir::Arena<crate::ir::shape_rep::ItemIdentifiedRepresentationUsage>,
+    /// P21 edition 3 `REFERENCE` section — external references
+    /// (`#N=<url#anchor>`). Re-emitted in the output `REFERENCE` section;
+    /// entities resolving one (e.g. `CIRCULAR_AREA.centre`) point at it via
+    /// [`ExternalRefId`](crate::ir::ExternalRefId). Empty for the vast
+    /// majority of files (no edition-3 external references).
+    pub external_references: crate::ir::Arena<ExternalReference>,
+    /// P21 edition 3 `ANCHOR` section — names attached to external references.
+    pub anchors: Vec<ExternalAnchor>,
+}
+
+/// One P21 edition 3 `REFERENCE` entry: an entity resolved in an external
+/// resource rather than this file's DATA section. The `anchor` string is the
+/// verbatim `<url#name>` form.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExternalReference {
+    /// The verbatim resource reference, e.g. `<testAnchorAndData.stp#TestAnchor>`.
+    pub anchor: String,
+}
+
+/// One P21 edition 3 `ANCHOR` entry: `<name> = #N`, naming an external
+/// reference. (In the corpus, anchors always target an external reference.)
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExternalAnchor {
+    /// The verbatim anchor name, e.g. `<ParentAnchor>`.
+    pub name: String,
+    /// The external reference this anchor names.
+    pub target: crate::ir::ExternalRefId,
 }
 
 /// Arena-based storage for all topology objects.

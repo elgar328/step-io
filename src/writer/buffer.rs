@@ -70,6 +70,11 @@ pub(crate) struct WriteBuffer<'m> {
     /// cached id instead of re-emitting the representation inline. Empty
     /// for hand/kernel-built IR (the arena is reader-populated only).
     pub(crate) representation_step_ids: Vec<u64>,
+    /// Reserved STEP id of every P21 edition 3 external reference, indexed by
+    /// `ExternalRefId.0`. Reserved up-front in `emit_all` (before any DATA
+    /// entity that resolves one, e.g. `CIRCULAR_AREA.centre`) and emitted in
+    /// the `REFERENCE` section by `write_file`.
+    pub(crate) external_ref_step_ids: Vec<u64>,
     /// STEP entity id of every emitted `RepresentationRelationship`, indexed by
     /// `RepresentationRelationshipId.0`. Only the assembly
     /// `RepresentationRelationshipWithTransformation` slots are populated (by
@@ -498,6 +503,7 @@ impl<'m> WriteBuffer<'m> {
             planar_extent_ids: HashMap::new(),
             unit_context_ids: Vec::new(),
             representation_step_ids: Vec::new(),
+            external_ref_step_ids: Vec::new(),
             representation_relationship_step_ids: Vec::new(),
             representation_map_step_ids: Vec::new(),
             tessellated_item_step_ids: Vec::new(),
@@ -622,6 +628,13 @@ impl<'m> WriteBuffer<'m> {
         self.representation_step_ids = vec![0u64; self.model.representations.len()];
         self.representation_relationship_step_ids =
             vec![0u64; self.model.representation_relationships.len()];
+        // Reserve an id per P21 edition 3 external reference up front (in arena
+        // order) so any DATA entity resolving one — e.g. CIRCULAR_AREA.centre —
+        // emits a consistent `#N`, and write_file can emit the REFERENCE
+        // section. Deterministic: same arena → same ids across round-trips.
+        self.external_ref_step_ids = (0..self.model.external_references.len())
+            .map(|_| self.fresh())
+            .collect();
         for id in self.model.geometry.points.iter_ids() {
             self.emit_point(id)?;
         }

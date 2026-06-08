@@ -9277,7 +9277,7 @@ fn bounded_pcurve_round_trip() {
 #[test]
 fn circular_area_round_trip() {
     // CIRCULAR_AREA — primitive_2d SUBTYPE. Orphan in step-io.
-    use step_io::ir::geometry::CircularArea;
+    use step_io::ir::geometry::{CircularArea, CircularAreaCentre};
     let mut model = empty_model();
     let centre = model.geometry.points.push(Point3 {
         x: 1.0,
@@ -9286,7 +9286,7 @@ fn circular_area_round_trip() {
     });
     model.geometry.circular_areas.push(CircularArea {
         name: "testarea".into(),
-        centre,
+        centre: CircularAreaCentre::Point(centre),
         radius: 2.0,
     });
 
@@ -9300,6 +9300,55 @@ fn circular_area_round_trip() {
         .expect("cri round-trips");
     assert_eq!(ca.name, "testarea");
     assert!((ca.radius - 2.0).abs() < f64::EPSILON);
+}
+
+#[test]
+fn circular_area_with_external_reference_round_trips() {
+    // P21 edition 3: CIRCULAR_AREA.centre points at a REFERENCE-section
+    // external reference (#123=<file#anchor>), named by an ANCHOR. The whole
+    // chain must survive read -> write -> re-read.
+    use step_io::ir::geometry::CircularAreaCentre;
+    let src = "ISO-10303-21;\n\
+               HEADER;\n\
+               FILE_DESCRIPTION((''),'4;1');\n\
+               FILE_NAME('testRefAndAnchor','',(''),(''),'','','');\n\
+               FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\n\
+               ENDSEC;\n\
+               ANCHOR;\n\
+               <ParentAnchor>=#123;\n\
+               ENDSEC;\n\
+               REFERENCE;\n\
+               #123=<testAnchorAndData.stp#TestAnchor>;\n\
+               ENDSEC;\n\
+               DATA;\n\
+               #1=CIRCULAR_AREA('testarea',#123,2.);\n\
+               ENDSEC;\n\
+               END-ISO-10303-21;\n";
+    let model = ReaderContext::convert(&parse(src).expect("parse")).model;
+    // External reference + anchor materialized; CIRCULAR_AREA survives.
+    assert_eq!(model.external_references.len(), 1);
+    assert_eq!(model.anchors.len(), 1);
+    let ca = model
+        .geometry
+        .circular_areas
+        .iter()
+        .next()
+        .expect("CIRCULAR_AREA survives the external centre");
+    assert!(matches!(ca.centre, CircularAreaCentre::External(_)));
+
+    // Round-trip: the output re-emits the REFERENCE/ANCHOR sections and the
+    // CIRCULAR_AREA re-reads identically.
+    let text = model.write_to_string().expect("write");
+    assert!(text.contains("REFERENCE;"), "REFERENCE section re-emitted");
+    assert!(text.contains("ANCHOR;"), "ANCHOR section re-emitted");
+    assert!(text.contains("<testAnchorAndData.stp#TestAnchor>"));
+    assert!(text.contains("CIRCULAR_AREA("));
+    let re = ReaderContext::convert(&parse(&text).expect("re-parse")).model;
+    assert_eq!(re.external_references.len(), 1);
+    assert_eq!(re.anchors.len(), 1);
+    let re_ca = re.geometry.circular_areas.iter().next().expect("survives");
+    assert!(matches!(re_ca.centre, CircularAreaCentre::External(_)));
+    assert_eq!(re_ca.name, "testarea");
 }
 
 #[test]

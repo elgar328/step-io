@@ -72,9 +72,13 @@ impl crate::ir::StepModel {
     pub fn write_to<W: std::io::Write>(&self, mut writer: W) -> Result<(), WriteError> {
         let mut buffer = buffer::WriteBuffer::new(self);
         buffer.emit_all()?;
+        // Build the P21 edition 3 ANCHOR / REFERENCE section lines from the
+        // model + the ids reserved in `emit_all` (grabbed before
+        // `finish_entities` consumes the buffer).
+        let ed3 = serialize::Ed3Sections::build(self, &buffer.external_ref_step_ids);
         let entities = buffer.finish_entities();
         let headers = header::header_for(self);
-        serialize::write_file(&mut writer, &headers, &entities)
+        serialize::write_file(&mut writer, &headers, &ed3, &entities)
     }
 
     /// Serialize Part 21 text to an owned `String`.

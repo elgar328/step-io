@@ -836,6 +836,14 @@ pub struct ReaderContext {
     /// `item_identified_representation_usage` arena (phase iiru).
     pub(crate) item_identified_representation_usages:
         crate::ir::Arena<crate::ir::shape_rep::ItemIdentifiedRepresentationUsage>,
+    /// P21 edition 3 `REFERENCE` section, materialized into the model arena.
+    pub(crate) external_references: crate::ir::Arena<crate::ir::ExternalReference>,
+    /// P21 edition 3 `ANCHOR` section.
+    pub(crate) anchors: Vec<crate::ir::ExternalAnchor>,
+    /// Source `#N` of an external reference → its `ExternalRefId`. Seeded from
+    /// `graph.external_references` before dispatch so `CIRCULAR_AREA.centre`
+    /// (and other consumers) resolve an external centre.
+    pub(crate) external_ref_id_map: HashMap<u64, crate::ir::ExternalRefId>,
     /// `SYMBOL_TARGET` step entity id → `GeometricRepresentationItemId`.
     /// Populated by the `SymbolTarget` reader so `DEFINED_SYMBOL.target`
     /// can resolve.
@@ -1064,6 +1072,22 @@ impl ReaderContext {
             pcurve_subtree_ids: collect_pcurve_subtree_ids(graph),
             ..Self::default()
         };
+        // Materialize P21 edition 3 external references before dispatch so
+        // entities (e.g. CIRCULAR_AREA.centre) can resolve an external centre.
+        for (&src_id, anchor) in &graph.external_references {
+            let id = ctx.external_references.push(crate::ir::ExternalReference {
+                anchor: anchor.clone(),
+            });
+            ctx.external_ref_id_map.insert(src_id, id);
+        }
+        for (name, src_id) in &graph.anchors {
+            if let Some(&target) = ctx.external_ref_id_map.get(src_id) {
+                ctx.anchors.push(crate::ir::ExternalAnchor {
+                    name: name.clone(),
+                    target,
+                });
+            }
+        }
         ctx.run_topo(graph);
         ctx.resolve_deferred_gisu_used_representation();
         ctx.resolve_product_contexts();
@@ -1127,6 +1151,8 @@ impl ReaderContext {
                 representation_relationships: ctx.representation_relationships,
                 compound_representation_items: ctx.compound_representation_items,
                 item_identified_representation_usages: ctx.item_identified_representation_usages,
+                external_references: ctx.external_references,
+                anchors: ctx.anchors,
             },
             warnings: ctx.warnings,
             parse_warnings: graph.warnings.clone(),

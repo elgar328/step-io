@@ -88,6 +88,13 @@ pub struct EntityGraph {
     /// DATA section entities keyed by their `#N` identifier.
     /// `BTreeMap` gives deterministic iteration order (useful for the writer stage).
     pub entities: BTreeMap<u64, RawEntity>,
+    /// P21 edition 3 `REFERENCE` section: `#N -> "<url#anchor>"`. Each entry
+    /// is an entity id resolved externally rather than in the DATA section.
+    /// `BTreeMap` keeps the deterministic id order the writer relies on.
+    pub external_references: BTreeMap<u64, String>,
+    /// P21 edition 3 `ANCHOR` section: `(<name>, #N)` pairs naming an entity
+    /// (in this corpus, always an external reference). Order-preserving.
+    pub anchors: Vec<(String, u64)>,
     /// Non-fatal issues observed while parsing. Lenient recoveries
     /// (missing semicolons, empty attribute slots) and P21 edition 3
     /// sections that step-io does not yet model land here so callers can
@@ -326,6 +333,8 @@ mod tests {
             schema: super::super::schema::StepSchema::default(),
             header: vec![],
             entities,
+            external_references: BTreeMap::new(),
+            anchors: vec![],
             warnings: vec![],
         };
         assert_eq!(graph.get(1), Some(&entity));

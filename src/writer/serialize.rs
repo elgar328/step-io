@@ -5,7 +5,50 @@ use std::io::Write;
 use super::WriteError;
 use super::entity::{HeaderEntity, WriterBody, WriterEntity};
 use super::lexical::{format_enum, format_real, format_ref, format_string};
+use crate::ir::StepModel;
 use crate::parser::entity::Attribute;
+
+/// Pre-rendered P21 edition 3 `ANCHOR` / `REFERENCE` section body lines, built
+/// from the model's external references and the ids reserved for them in the
+/// writer pass. Empty when the model carries no edition-3 sections (the
+/// overwhelmingly common case).
+pub(super) struct Ed3Sections {
+    /// `<name>=#N;` lines for the ANCHOR section.
+    anchor_lines: Vec<String>,
+    /// `#N=<url#anchor>;` lines for the REFERENCE section.
+    reference_lines: Vec<String>,
+}
+
+impl Ed3Sections {
+    pub(super) fn build(model: &StepModel, external_ref_step_ids: &[u64]) -> Self {
+        let reference_lines = model
+            .external_references
+            .iter_with_ids()
+            .map(|(id, ext)| {
+                format!(
+                    "{}={};",
+                    format_ref(external_ref_step_ids[id.0 as usize]),
+                    ext.anchor
+                )
+            })
+            .collect();
+        let anchor_lines = model
+            .anchors
+            .iter()
+            .map(|a| {
+                format!(
+                    "{}={};",
+                    a.name,
+                    format_ref(external_ref_step_ids[a.target.0 as usize])
+                )
+            })
+            .collect();
+        Self {
+            anchor_lines,
+            reference_lines,
+        }
+    }
+}
 
 /// Render a single attribute value. Lists recurse through this function.
 pub(super) fn serialize_attr(attr: &Attribute) -> Result<String, WriteError> {
@@ -88,6 +131,7 @@ pub(super) fn serialize_header_entity(entity: &HeaderEntity) -> Result<String, W
 pub(super) fn write_file<W: Write>(
     writer: &mut W,
     headers: &[HeaderEntity],
+    ed3: &Ed3Sections,
     entities: &[WriterEntity],
 ) -> Result<(), WriteError> {
     writer.write_all(b"ISO-10303-21;\n")?;
@@ -97,6 +141,23 @@ pub(super) fn write_file<W: Write>(
         writer.write_all(b"\n")?;
     }
     writer.write_all(b"ENDSEC;\n")?;
+    // P21 edition 3 ANCHOR / REFERENCE sections (only when present).
+    if !ed3.anchor_lines.is_empty() {
+        writer.write_all(b"ANCHOR;\n")?;
+        for line in &ed3.anchor_lines {
+            writer.write_all(line.as_bytes())?;
+            writer.write_all(b"\n")?;
+        }
+        writer.write_all(b"ENDSEC;\n")?;
+    }
+    if !ed3.reference_lines.is_empty() {
+        writer.write_all(b"REFERENCE;\n")?;
+        for line in &ed3.reference_lines {
+            writer.write_all(line.as_bytes())?;
+            writer.write_all(b"\n")?;
+        }
+        writer.write_all(b"ENDSEC;\n")?;
+    }
     writer.write_all(b"DATA;\n")?;
     for e in entities {
         writer.write_all(serialize_entity(e)?.as_bytes())?;
@@ -254,7 +315,11 @@ mod tests {
     #[test]
     fn empty_file_still_emits_wrapper() {
         let mut buf = Vec::new();
-        write_file(&mut buf, &[], &[]).unwrap();
+        let ed3 = Ed3Sections {
+            anchor_lines: vec![],
+            reference_lines: vec![],
+        };
+        write_file(&mut buf, &[], &ed3, &[]).unwrap();
         let text = String::from_utf8(buf).unwrap();
         assert_eq!(
             text,
@@ -276,7 +341,11 @@ mod tests {
             },
         }];
         let mut buf = Vec::new();
-        write_file(&mut buf, &headers, &entities).unwrap();
+        let ed3 = Ed3Sections {
+            anchor_lines: vec![],
+            reference_lines: vec![],
+        };
+        write_file(&mut buf, &headers, &ed3, &entities).unwrap();
         let text = String::from_utf8(buf).unwrap();
         assert!(text.contains("FILE_SCHEMA(('X'));\n"));
         assert!(text.contains("#1 = POINT(0.);\n"));
