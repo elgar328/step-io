@@ -17,6 +17,7 @@ use super::id::{
     ShellId, SolidId, StyledItemId, SurfaceId, TessellatedFaceId, TessellatedItemId, TextLiteralId,
     TypeQualifierId, ValueFormatTypeQualifierId, VertexId,
 };
+use step_io_macros::StepSelect;
 
 /// What a STEP `representation_item` reference resolved to in step-io's IR.
 /// Each variant wraps the id of an existing typed arena entry. The geometry
@@ -154,7 +155,7 @@ pub struct QualifiedRepresentationItem {
 /// [`crate::ir::pmi::ValueQualifier`] because `QualifiedRepresentationItem`
 /// lives in `shape_rep` while `MeasureQualification` lives in `pmi`. Same
 /// 2-variant corpus subset.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, StepSelect)]
 pub enum QualifierRef {
     TypeQualifier(TypeQualifierId),
     ValueFormatTypeQualifier(ValueFormatTypeQualifierId),

@@ -58,24 +58,13 @@ impl SimpleEntityHandler for SurfaceStyleBoundaryHandler {
 /// id maps that supply the SELECT's members. Returns `None` if neither
 /// map covers the ref — caller drops the carrier entity.
 pub(crate) fn resolve_curve_or_render(ctx: &ReaderContext, ref_id: u64) -> Option<CurveOrRender> {
-    if let Some(id) = ctx.id_cache.get::<crate::ir::id::CurveStyleId>(ref_id) {
-        return Some(CurveOrRender::CurveStyle(id));
-    }
-    if let Some(id) = ctx
-        .id_cache
-        .get::<crate::ir::id::SurfaceStyleRenderingId>(ref_id)
-    {
-        return Some(CurveOrRender::SurfaceStyleRendering(id));
-    }
-    None
+    // Members + probe order are generated from the enum by `StepSelect`.
+    CurveOrRender::resolve_select(ctx, ref_id)
 }
 
 /// Look up the STEP id of a [`CurveOrRender`] member by dispatching to
 /// the appropriate writer cache. Reused by sibling SELECT consumers
 /// (e.g. `SURFACE_STYLE_PARAMETER_LINE`).
 pub(crate) fn emit_curve_or_render(buf: &WriteBuffer, cor: CurveOrRender) -> u64 {
-    match cor {
-        CurveOrRender::CurveStyle(id) => buf.step_id(id),
-        CurveOrRender::SurfaceStyleRendering(id) => buf.step_id(id),
-    }
+    cor.emit_select(buf)
 }

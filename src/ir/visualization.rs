@@ -14,6 +14,7 @@ use super::id::{
 };
 use super::representation_item::RepresentationItemRef;
 use super::shape_rep::Mdgpr;
+use step_io_macros::StepSelect;
 
 /// Top-level container for visualization data extracted from
 /// `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION` (MDGPR)
@@ -208,7 +209,10 @@ pub struct SurfaceStyleBoundary {
 
 /// `curve_or_render` SELECT — picks between a `curve_style` and a
 /// `curve_style_rendering` (a `SurfaceStyleRendering` variant). Phase ssb.
-#[derive(Debug, Clone, Copy, PartialEq)]
+///
+/// Simple SELECT (all variants `Variant(XId)`) — `StepSelect` generates the
+/// reader `resolve_select` / writer `emit_select`.
+#[derive(Debug, Clone, Copy, PartialEq, StepSelect)]
 pub enum CurveOrRender {
     CurveStyle(CurveStyleId),
     SurfaceStyleRendering(SurfaceStyleRenderingId),

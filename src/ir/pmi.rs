@@ -18,6 +18,7 @@ use super::id::{
 };
 use super::representation_item::RepresentationItemRef;
 use super::shape_aspect_ref::{GeometricToleranceTarget, ShapeAspectRef};
+use step_io_macros::StepSelect;
 
 /// Top-level container for `pmi`-pool entities. `None` when the source
 /// file carried no PMI content.
@@ -127,7 +128,9 @@ pub enum DraughtingModelItemDefinition {
 
 /// `draughting_model_item_association_select` SELECT — both members are
 /// modelled in step-io.
-#[derive(Debug, Clone, Copy, PartialEq)]
+///
+/// Simple SELECT — `StepSelect` generates `resolve_select` / `emit_select`.
+#[derive(Debug, Clone, Copy, PartialEq, StepSelect)]
 pub enum DraughtingModelIdentifiedItem {
     AnnotationOccurrence(AnnotationOccurrenceId),
     DraughtingCallout(DraughtingCalloutId),
@@ -832,7 +835,7 @@ pub struct AuxiliaryLeaderLineData {
 /// `precision_qualifier` / `uncertainty_qualifier` — have corpus count 0
 /// and are intentionally pruned from `ir.toml`; references to them are
 /// silently dropped on read, mirroring the [`ApprovalItem`] precedent.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, StepSelect)]
 pub enum ValueQualifier {
     TypeQualifier(TypeQualifierId),
     ValueFormatTypeQualifier(ValueFormatTypeQualifierId),
@@ -909,7 +912,7 @@ pub struct DraughtingCalloutData {
 /// `draughting_callout_element` SELECT member, narrowed to the kinds
 /// step-io currently models. `annotation_fill_area_occurrence` is not
 /// represented and is silently dropped on read.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, StepSelect)]
 pub enum DraughtingCalloutElement {
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
     AnnotationOccurrence(AnnotationOccurrenceId),
@@ -933,7 +936,7 @@ pub struct DraughtingCalloutRelationship {
 /// `annotation_curve_occurrence` is a separate arena
 /// (`annotation_curve_occurrence_id_map`). An unmodelled member
 /// (`annotation_fill_area_occurrence`) is not represented.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, StepSelect)]
 pub enum AnnotationOccurrenceRef {
     AnnotationOccurrence(AnnotationOccurrenceId),
     AnnotationCurveOccurrence(AnnotationCurveOccurrenceId),
