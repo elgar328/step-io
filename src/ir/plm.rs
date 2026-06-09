@@ -17,6 +17,7 @@ use super::id::{
     PersonAndOrganizationRoleId, PersonId, ProductId, SecurityClassificationId,
     SecurityClassificationLevelId,
 };
+use step_io_macros::StepSelect;
 
 /// Top-level container for plm-domain entities. `None` on
 /// [`crate::ir::StepModel`] means the source file had no plm metadata
@@ -145,7 +146,7 @@ pub struct RoleAssociation {
 /// AP214 `role_select` SELECT — currently scoped to
 /// `APPLIED_DOCUMENT_REFERENCE`. Other variants (Approval / DTA / POA
 /// 등) drop on read; future enhancement phase may extend.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, StepSelect)]
 pub enum RoleSelect {
     DocumentReference(DocumentReferenceId),
 }
@@ -408,7 +409,7 @@ pub struct ApprovalDateTime {
 /// AP214 `date_time_select` — step-io currently models the
 /// `DATE_AND_TIME` variant only. Direct `CALENDAR_DATE` / `LOCAL_TIME`
 /// targets drop silently at read.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, StepSelect)]
 pub enum ApprovalDateTimeSelect {
     DateAndTime(DateAndTimeId),
 }

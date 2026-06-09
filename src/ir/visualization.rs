@@ -149,7 +149,7 @@ pub struct PresentationLayerAssignment {
 /// One element of [`PresentationLayerAssignment::assigned_items`].
 /// Scoped to `STYLED_ITEM` today; future kernel adapters that produce
 /// direct-geometry layered items can grow this enum.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, StepSelect)]
 pub enum PresentationLayerAssignmentItem {
     StyledItem(StyledItemId),
 }
@@ -822,7 +822,7 @@ pub struct TextStyleWithBoxCharacteristics {
 /// `text_style_for_defined_font` member; the two glyph-style members
 /// (`character_glyph_style_stroke`, `character_glyph_style_outline`) are
 /// not modelled and are silently dropped on read (`ApprovalItem` precedent).
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, StepSelect)]
 pub enum CharacterStyle {
     TextStyleForDefinedFont(TextStyleForDefinedFontId),
 }
@@ -995,7 +995,7 @@ pub enum Axis2Placement {
 /// `draughting_pre_defined_text_font` member; the
 /// `externally_defined_text_font` member is silently dropped on read
 /// (`ApprovalItem` precedent, `feedback_partial_select_enum`).
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, StepSelect)]
 pub enum FontSelect {
     DraughtingPreDefined(DraughtingPreDefinedTextFontId),
 }
@@ -1023,7 +1023,7 @@ pub struct CompositeText {
 /// `annotation_text_character` / `composite_text` / `character_glyph` are
 /// not modelled in step-io (`feedback_partial_select_enum`); element
 /// references to those types are silently dropped on read.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, StepSelect)]
 pub enum TextOrCharacter {
     TextLiteral(TextLiteralId),
 }
