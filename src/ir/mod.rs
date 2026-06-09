@@ -9,6 +9,7 @@ pub mod plm;
 pub mod pmi;
 pub mod property;
 pub mod representation_item;
+pub mod select;
 pub mod shape_aspect_ref;
 pub mod shape_rep;
 pub mod tessellation;

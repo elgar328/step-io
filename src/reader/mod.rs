@@ -620,6 +620,14 @@ pub struct ReaderContext {
     pub(crate) warnings: Vec<ConvertError>,
 }
 
+/// Reader seam for `#[derive(StepSelect)]`-generated `resolve_select`: probe
+/// the type-keyed id cache for a member arena id.
+impl crate::ir::select::IdResolver for ReaderContext {
+    fn resolve_arena_id<K: crate::ir::arena::ArenaId>(&self, file_id: u64) -> Option<K> {
+        self.id_cache.get::<K>(file_id)
+    }
+}
+
 impl ReaderContext {
     /// Record that a required field was non-standard (Unset / unrecognized)
     /// and the reader normalized it to `normalized_to`. Aggregated per file

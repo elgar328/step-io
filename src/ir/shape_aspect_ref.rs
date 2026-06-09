@@ -14,6 +14,8 @@
 //! `GENERAL_DATUM_REFERENCE` are covered; the remaining subtypes (e.g.
 //! `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`) follow as their phases land.
 
+use step_io_macros::StepSelect;
+
 use super::id::{
     CompositeShapeAspectId, ContinuousShapeAspectId, DatumFeatureId, DatumId, DatumSystemId,
     DatumTargetId, DerivedShapeAspectId, GeneralDatumReferenceId, PlacedDatumTargetFeatureId,
@@ -22,7 +24,12 @@ use super::id::{
 
 /// What a STEP `shape_aspect` reference resolved to in step-io's IR. Each
 /// variant wraps the id of an existing typed shape-aspect arena entry.
-#[derive(Debug, Clone, Copy, PartialEq)]
+///
+/// All variants are `Variant(XId)`, so `#[derive(StepSelect)]` generates the
+/// reader `resolve_select` (probes each member id map in declaration order)
+/// and writer `emit_select` (match on the variant) — the member list lives
+/// only here, keeping read and write sides from drifting.
+#[derive(Debug, Clone, Copy, PartialEq, StepSelect)]
 pub enum ShapeAspectRef {
     /// Plain `SHAPE_ASPECT`.
     ShapeAspect(ShapeAspectId),

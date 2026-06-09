@@ -30,55 +30,8 @@ pub(crate) fn resolve_shape_aspect_ref(
     ctx: &ReaderContext,
     item_ref: u64,
 ) -> Option<ShapeAspectRef> {
-    if let Some(id) = ctx.id_cache.get::<crate::ir::ShapeAspectId>(item_ref) {
-        return Some(ShapeAspectRef::ShapeAspect(id));
-    }
-    if let Some(id) = ctx
-        .id_cache
-        .get::<crate::ir::CompositeShapeAspectId>(item_ref)
-    {
-        return Some(ShapeAspectRef::CompositeGroupShapeAspect(id));
-    }
-    if let Some(id) = ctx
-        .id_cache
-        .get::<crate::ir::DerivedShapeAspectId>(item_ref)
-    {
-        return Some(ShapeAspectRef::CentreOfSymmetry(id));
-    }
-    if let Some(id) = ctx
-        .id_cache
-        .get::<crate::ir::ContinuousShapeAspectId>(item_ref)
-    {
-        return Some(ShapeAspectRef::AllAroundShapeAspect(id));
-    }
-    if let Some(id) = ctx.id_cache.get::<crate::ir::DatumId>(item_ref) {
-        return Some(ShapeAspectRef::Datum(id));
-    }
-    if let Some(id) = ctx.id_cache.get::<crate::ir::DatumFeatureId>(item_ref) {
-        return Some(ShapeAspectRef::DatumFeature(id));
-    }
-    if let Some(id) = ctx.id_cache.get::<crate::ir::DatumSystemId>(item_ref) {
-        return Some(ShapeAspectRef::DatumSystem(id));
-    }
-    if let Some(id) = ctx.id_cache.get::<crate::ir::DatumTargetId>(item_ref) {
-        return Some(ShapeAspectRef::DatumTarget(id));
-    }
-    if let Some(id) = ctx
-        .id_cache
-        .get::<crate::ir::PlacedDatumTargetFeatureId>(item_ref)
-    {
-        return Some(ShapeAspectRef::PlacedDatumTargetFeature(id));
-    }
-    if let Some(id) = ctx.id_cache.get::<crate::ir::id::ToleranceZoneId>(item_ref) {
-        return Some(ShapeAspectRef::ToleranceZone(id));
-    }
-    if let Some(id) = ctx
-        .id_cache
-        .get::<crate::ir::GeneralDatumReferenceId>(item_ref)
-    {
-        return Some(ShapeAspectRef::GeneralDatumReference(id));
-    }
-    None
+    // Members + probe order are generated from the enum by `StepSelect`.
+    ShapeAspectRef::resolve_select(ctx, item_ref)
 }
 
 /// Read the shared `SHAPE_ASPECT_RELATIONSHIP` 4-attr body and push a

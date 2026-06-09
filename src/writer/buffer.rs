@@ -619,6 +619,14 @@ impl<'m> WriteBuffer<'m> {
     }
 }
 
+/// Writer seam for `#[derive(StepSelect)]`-generated `emit_select`: delegate to
+/// [`WriteBuffer::step_id`].
+impl crate::ir::select::StepResolver for WriteBuffer<'_> {
+    fn step_of<K: crate::ir::arena::AsArenaId>(&self, id: K) -> u64 {
+        self.step_id(id)
+    }
+}
+
 #[cfg(all(test, debug_assertions))]
 mod phase_guard_tests {
     use super::{EmitPhase, WriteBuffer};
