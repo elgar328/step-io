@@ -18,6 +18,7 @@ use super::id::{
 };
 use super::shape_aspect_ref::ShapeAspectRef;
 use super::shape_rep::{DescriptiveItem, RepresentationContextRef};
+use step_io_macros::StepSelect;
 
 /// Top-level container for property data extracted from
 /// `PROPERTY_DEFINITION_REPRESENTATION` chains. Empty when the source file
@@ -127,6 +128,8 @@ pub struct NameAttribute {
 /// SELECT target for [`NameAttribute::named_item`]. Initial coverage of
 /// the broad `name_attribute_select` SELECT — unsupported variants are
 /// dropped at read time with a warning; future phases expand the enum.
+// Not `StepSelect`: `ProductDefinition` resolves 2-hop via `pdef_to_product`
+// (pdef ref → product step id → ProductId), not `id_cache.get`. See `ir::select`.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum NameAttributeItem {
     ProductDefinition(ProductId),
@@ -323,7 +326,10 @@ pub enum PropertyItem {
 /// Source of a measure's unit. `Named` for simple units (length, mass, ...),
 /// `Derived` for composite units (e.g. kg/m³). Carried by a
 /// [`crate::ir::representation_item::MeasureRepresentationItem`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+///
+/// Simple SELECT (both members `id_cache.get`) — `StepSelect` generates
+/// `resolve_select` / `emit_select`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, StepSelect)]
 pub enum PropertyMeasureUnit {
     Named(NamedUnitId),
     Derived(DerivedUnitId),

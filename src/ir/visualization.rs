@@ -601,6 +601,8 @@ pub struct SurfaceSideStyle {
 /// style entry types here; this scope covers `SURFACE_STYLE_FILL_AREA`
 /// (color fill) and the `SURFACE_STYLE_RENDERING` arena
 /// (color + transparency / other rendering hints).
+// Not `StepSelect`: `FillArea` resolves via the `viz_ssfa_id_map` named field
+// (TypeId-collision with `id_cache`), not `id_cache.get`. See `ir::select`.
 #[derive(Debug, Clone, PartialEq)]
 pub enum SurfaceSideStyleEntry {
     FillArea(FoundedItemId),
@@ -985,6 +987,8 @@ pub struct TextLiteral {
 
 /// `axis2_placement` SELECT — either a 2D or 3D axis placement.
 /// Unresolved refs drop the carrier instance, symmetric on re-read.
+// Not `StepSelect`: `D3` resolves via the `placement_map` named field
+// (TypeId-collision with `id_cache`), not `id_cache.get`. See `ir::select`.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Axis2Placement {
     D2(Placement2dId),

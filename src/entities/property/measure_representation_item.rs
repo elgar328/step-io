@@ -116,15 +116,8 @@ fn resolve_unit_ref(
     unit_attr: Option<&Attribute>,
 ) -> Option<PropertyMeasureUnit> {
     match unit_attr {
-        Some(Attribute::EntityRef(uref)) => ctx
-            .id_cache
-            .get::<crate::ir::id::NamedUnitId>(*uref)
-            .map(PropertyMeasureUnit::Named)
-            .or_else(|| {
-                ctx.id_cache
-                    .get::<crate::ir::id::DerivedUnitId>(*uref)
-                    .map(PropertyMeasureUnit::Derived)
-            }),
+        // Members + probe order are generated from the enum by `StepSelect`.
+        Some(Attribute::EntityRef(uref)) => PropertyMeasureUnit::resolve_select(ctx, *uref),
         _ => None,
     }
 }

@@ -12,6 +12,32 @@
 //! generated impl lives next to the enum (in `ir`) and only ever names these
 //! traits, while [`ReaderContext`](crate::reader::ReaderContext) and
 //! [`WriteBuffer`](crate::writer::buffer::WriteBuffer) provide the impls.
+//!
+//! # Why some `Variant(XId)` SELECTs are NOT derived
+//!
+//! A few enums *look* derivable (every variant is `Variant(XId)`) but their
+//! reader does more than sequential `id_cache.get::<XId>` probes, so the macro
+//! would silently change behaviour. They keep hand-written resolvers:
+//!
+//! - **TypeId-collision named maps** — a member resolves through a named
+//!   `HashMap<u64, XId>` field on `ReaderContext` (not `id_cache`) because its
+//!   value type collides with a sibling map's in one `TypeId` bucket. The value
+//!   *is* a plain arena id, so these are derivable only if `StepSelect` grows a
+//!   per-variant "resolve via this map" escape. Affected:
+//!   `Axis2Placement` / `PlanarBoxPlacement` (`placement_map`),
+//!   `SurfaceSideStyleEntry` (`viz_ssfa_id_map`).
+//! - **2-hop indirection** — a member resolves through an intermediate STEP id
+//!   (`pdef_to_product` / `formation_to_product`: pdef ref → product step id →
+//!   `ProductId`), not a single lookup. Not expressible as a simple probe.
+//!   Affected: `NameAttributeItem` (the `ProductDefinition` member) and the plm
+//!   `Product(ProductId)` SELECTs (`GroupItem`, `ApprovalItem`, `DateTimeItem`,
+//!   `IdentificationItem`, `DocumentReferenceItem`, `PersonOrganizationItem`,
+//!   `SecurityClassificationItem`).
+//! - **Resolver-side logic / no benefit** — single-variant SELECTs carry no
+//!   drift risk (nothing to forget), so deriving them is pure churn; some also
+//!   wrap extra logic (`warnings.push`, dangling-ref checks). Affected:
+//!   `PersonOrganizationSelect`, `DerivedDefinitionItem`, and the single-variant
+//!   plm SELECTs above.
 
 use crate::ir::arena::{ArenaId, AsArenaId};
 

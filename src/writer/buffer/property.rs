@@ -523,9 +523,6 @@ impl WriteBuffer<'_> {
         &self,
         unit_ref: Option<PropertyMeasureUnit>,
     ) -> Option<u64> {
-        match unit_ref? {
-            PropertyMeasureUnit::Named(id) => Some(self.step_id(id)),
-            PropertyMeasureUnit::Derived(id) => Some(self.step_id(id)),
-        }
+        Some(unit_ref?.emit_select(self))
     }
 }

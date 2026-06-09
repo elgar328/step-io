@@ -681,6 +681,8 @@ pub struct PlanarBox {
 
 /// `PLANAR_BOX.placement` — the STEP `axis2_placement` SELECT
 /// (`AXIS2_PLACEMENT_2D` | `AXIS2_PLACEMENT_3D`).
+// Not `StepSelect`: `Placement3d` resolves via the `placement_map` named field
+// (TypeId-collision with `id_cache`), not `id_cache.get`. See `ir::select`.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PlanarBoxPlacement {
     Placement2d(Placement2dId),
