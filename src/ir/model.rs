@@ -150,18 +150,12 @@ pub struct FileHeader {
     pub authorization: String,
 }
 
-/// The complete result of converting a STEP file into typed IR.
+/// Shape-representation domain pool — `REPRESENTATION` / `SHAPE_ASPECT`
+/// family / mapping / tessellation arenas, grouped per the `shape_rep`
+/// pool in the ir.toml blueprint. Always present (representations exist in
+/// nearly every file); empty arenas for files lacking a given entity.
 #[derive(Debug, Clone, Default)]
-pub struct StepModel {
-    pub geometry: GeometryPool,
-    pub topology: TopologyPool,
-    /// Unit / uncertainty contexts declared in the STEP file's
-    /// `GLOBAL_UNIT_ASSIGNED_CONTEXT` complex entities. One arena entry per
-    /// distinct `REPRESENTATION_CONTEXT` in the source — Fusion 360 typically
-    /// emits two (geometry vs. visualization, distinct uncertainties);
-    /// single-product files have one. Empty arena means no unit context (or
-    /// kernel-built IR with units unset).
-    pub units: Arena<UnitContext>,
+pub struct ShapeRepPool {
     /// `(GEOMETRIC_REPRESENTATION_CONTEXT PARAMETRIC_REPRESENTATION_CONTEXT
     /// REPRESENTATION_CONTEXT)` complex MI — unit-less 2D draughting /
     /// pcurve coordinate spaces. Referenced by representation
@@ -172,37 +166,6 @@ pub struct StepModel {
     /// `identified_item` to a `SHAPE_REPRESENTATION` parent — sibling of
     /// `DRAUGHTING_MODEL_ITEM_ASSOCIATION` (pmi pool).
     pub geometric_item_specific_usages: Arena<crate::ir::shape_rep::GeometricItemSpecificUsage>,
-    /// Assembly tree. `None` when the STEP file contains no `PRODUCT`
-    /// entities (single-part files). `AssemblyTree.roots` lists every
-    /// top-level product (a forest for multi-part files); instances are
-    /// wired into each product's `Group` content.
-    pub assembly: Option<AssemblyTree>,
-    /// AP schema this model targets, including the raw `FILE_SCHEMA` text
-    /// when preserved from a source file. `StepSchema::Known { raw: None }`
-    /// marks synthetic IR — the writer emits a canonical string for the
-    /// `class`; `StepSchema::Known { raw: Some(_) }` or
-    /// `StepSchema::Unknown { raw }` carry the original text, which the
-    /// writer emits verbatim. Defaults to canonical AP214 IS.
-    pub schema: StepSchema,
-    /// HEADER-section metadata preserved from the source file. `None` for
-    /// synthetic IR (writer substitutes a step-io-branded signature);
-    /// `Some(_)` is emitted verbatim on round-trip so author / organisation /
-    /// timestamp / description aren't overwritten with step-io's defaults.
-    pub header: Option<FileHeader>,
-    /// Visualization data — `STYLED_ITEM` chain + `COLOUR_RGB` + style metadata.
-    /// `None` when the source file had no visualization or for kernel-built
-    /// IR. Stored as a tree-inline structure (no shared color references)
-    /// — see [`crate::ir::visualization`] for design notes.
-    pub visualization: Option<VisualizationPool>,
-    /// User-defined attribute chain
-    /// (`PROPERTY_DEFINITION` + `PROPERTY_DEFINITION_REPRESENTATION`).
-    /// `None` when the source file had none. Stored as a passive tree-inline
-    /// IR — see [`crate::ir::property`] for design notes. Geometric
-    /// validation properties (target = `SHAPE_ASPECT`) are dropped at read.
-    pub properties: Option<crate::ir::property::PropertyPool>,
-    /// `pmi` pool — GD&T / tolerance entities. `None` when the source had
-    /// no PMI content. See [`crate::ir::pmi`].
-    pub pmi: Option<crate::ir::pmi::PmiPool>,
     /// `SHAPE_ASPECT` entries — empty for fixtures without PMI (most
     /// non-NIST / non-stepcode files). Future PMI work (Tolerance /
     /// Datum / GD&T per ROADMAP Phase 2) lands as additional arenas
@@ -230,16 +193,6 @@ pub struct StepModel {
     /// `SHAPE_ASPECT_RELATIONSHIP` arena (phase shape-aspect-ref). Orphan
     /// round-trip — each endpoint is a [`crate::ir::ShapeAspectRef`].
     pub shape_aspect_relationships: Arena<crate::ir::shape_rep::ShapeAspectRelationship>,
-    /// Product-lifecycle metadata (Person/Org/Date/Approval/Security).
-    /// `None` for files without plm content. Phase plm-1a populates the
-    /// Date/Time primitives; later phases add Person/Approval/Security
-    /// clusters alongside them in the same pool.
-    pub plm: Option<PlmPool>,
-    /// Per-instance units arena (named-unit / measure-with-unit /
-    /// derived-unit-element). `None` for files where no MWU / DUE / MASS
-    /// entity was observed. Coexists with [`Self::units`] (per-context
-    /// bundled enums) during the units-1 dual-tracking period.
-    pub units_pool: Option<UnitsPool>,
     /// Unified `REPRESENTATION` arena (representation-refactor expand phase).
     /// One entry per `ADVANCED_BREP` / `MANIFOLD_SURFACE` / plain `SHAPE` /
     /// wireframe / `MDGPR` representation. Phase A-1 dual-writes here
@@ -276,12 +229,6 @@ pub struct StepModel {
     /// coordinates.
     pub tessellated_surface_sets:
         crate::ir::Arena<crate::ir::tessellation::ComplexTriangulatedSurfaceSet>,
-    /// `geometric_representation_item` enum arena (phase ds-st). Holds
-    /// `DefinedSymbol` + `SymbolTarget` variants; other corpus `in_enum`
-    /// members of `geometric_representation_item` keep their dedicated
-    /// arenas. Orphan round-trip — no modelled external consumer.
-    pub geometric_representation_items:
-        crate::ir::Arena<crate::ir::visualization::GeometricRepresentationItem>,
     /// `representation_relationship` enum arena (phase cgrr). Orphan
     /// round-trip — no modelled external consumer.
     pub representation_relationships:
@@ -292,6 +239,70 @@ pub struct StepModel {
     /// `item_identified_representation_usage` arena (phase iiru). Orphan.
     pub item_identified_representation_usages:
         crate::ir::Arena<crate::ir::shape_rep::ItemIdentifiedRepresentationUsage>,
+}
+
+/// The complete result of converting a STEP file into typed IR.
+#[derive(Debug, Clone, Default)]
+pub struct StepModel {
+    pub geometry: GeometryPool,
+    pub topology: TopologyPool,
+    /// Unit / uncertainty contexts declared in the STEP file's
+    /// `GLOBAL_UNIT_ASSIGNED_CONTEXT` complex entities. One arena entry per
+    /// distinct `REPRESENTATION_CONTEXT` in the source — Fusion 360 typically
+    /// emits two (geometry vs. visualization, distinct uncertainties);
+    /// single-product files have one. Empty arena means no unit context (or
+    /// kernel-built IR with units unset).
+    pub units: Arena<UnitContext>,
+    /// Shape-representation domain pool (representation / shape-aspect
+    /// family / mapping / tessellation). See [`ShapeRepPool`].
+    pub shape_rep: ShapeRepPool,
+    /// Assembly tree. `None` when the STEP file contains no `PRODUCT`
+    /// entities (single-part files). `AssemblyTree.roots` lists every
+    /// top-level product (a forest for multi-part files); instances are
+    /// wired into each product's `Group` content.
+    pub assembly: Option<AssemblyTree>,
+    /// AP schema this model targets, including the raw `FILE_SCHEMA` text
+    /// when preserved from a source file. `StepSchema::Known { raw: None }`
+    /// marks synthetic IR — the writer emits a canonical string for the
+    /// `class`; `StepSchema::Known { raw: Some(_) }` or
+    /// `StepSchema::Unknown { raw }` carry the original text, which the
+    /// writer emits verbatim. Defaults to canonical AP214 IS.
+    pub schema: StepSchema,
+    /// HEADER-section metadata preserved from the source file. `None` for
+    /// synthetic IR (writer substitutes a step-io-branded signature);
+    /// `Some(_)` is emitted verbatim on round-trip so author / organisation /
+    /// timestamp / description aren't overwritten with step-io's defaults.
+    pub header: Option<FileHeader>,
+    /// Visualization data — `STYLED_ITEM` chain + `COLOUR_RGB` + style metadata.
+    /// `None` when the source file had no visualization or for kernel-built
+    /// IR. Stored as a tree-inline structure (no shared color references)
+    /// — see [`crate::ir::visualization`] for design notes.
+    pub visualization: Option<VisualizationPool>,
+    /// User-defined attribute chain
+    /// (`PROPERTY_DEFINITION` + `PROPERTY_DEFINITION_REPRESENTATION`).
+    /// `None` when the source file had none. Stored as a passive tree-inline
+    /// IR — see [`crate::ir::property`] for design notes. Geometric
+    /// validation properties (target = `SHAPE_ASPECT`) are dropped at read.
+    pub properties: Option<crate::ir::property::PropertyPool>,
+    /// `pmi` pool — GD&T / tolerance entities. `None` when the source had
+    /// no PMI content. See [`crate::ir::pmi`].
+    pub pmi: Option<crate::ir::pmi::PmiPool>,
+    /// Product-lifecycle metadata (Person/Org/Date/Approval/Security).
+    /// `None` for files without plm content. Phase plm-1a populates the
+    /// Date/Time primitives; later phases add Person/Approval/Security
+    /// clusters alongside them in the same pool.
+    pub plm: Option<PlmPool>,
+    /// Per-instance units arena (named-unit / measure-with-unit /
+    /// derived-unit-element). `None` for files where no MWU / DUE / MASS
+    /// entity was observed. Coexists with [`Self::units`] (per-context
+    /// bundled enums) during the units-1 dual-tracking period.
+    pub units_pool: Option<UnitsPool>,
+    /// `geometric_representation_item` enum arena (phase ds-st). Holds
+    /// `DefinedSymbol` + `SymbolTarget` variants; other corpus `in_enum`
+    /// members of `geometric_representation_item` keep their dedicated
+    /// arenas. Orphan round-trip — no modelled external consumer.
+    pub geometric_representation_items:
+        crate::ir::Arena<crate::ir::visualization::GeometricRepresentationItem>,
     /// P21 edition 3 `REFERENCE` section — external references
     /// (`#N=<url#anchor>`). Re-emitted in the output `REFERENCE` section;
     /// entities resolving one (e.g. `CIRCULAR_AREA.centre`) point at it via

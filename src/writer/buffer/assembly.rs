@@ -400,6 +400,7 @@ impl WriteBuffer<'_> {
         use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
         let entries: Vec<_> = self
             .model
+            .shape_rep
             .unitless_contexts
             .iter_with_ids()
             .map(|(__id, v)| (__id, v.clone()))
@@ -428,7 +429,7 @@ impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_draughting_models(&mut self) -> Result<(), WriteError> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::shape_rep::draughting_model::DraughtingModelHandler;
-        let reprs = self.model.representations.clone();
+        let reprs = self.model.shape_rep.representations.clone();
         for (id, repr) in reprs.iter_with_ids() {
             if let Representation::DraughtingModel(dm) = repr {
                 let step_id = DraughtingModelHandler::write(self, dm.clone())?;
@@ -451,7 +452,7 @@ impl WriteBuffer<'_> {
     ) -> Result<(), WriteError> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::shape_rep::tessellated_shape_representation::TessellatedShapeRepresentationHandler;
-        let reprs = self.model.representations.clone();
+        let reprs = self.model.shape_rep.representations.clone();
         for (id, repr) in reprs.iter_with_ids() {
             if let Representation::TessellatedShapeRepresentation(tsr) = repr {
                 let step_id = TessellatedShapeRepresentationHandler::write(self, tsr.clone())?;
@@ -473,7 +474,7 @@ impl WriteBuffer<'_> {
     ) -> Result<(), WriteError> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::shape_rep::constructive_geometry_representation::ConstructiveGeometryRepresentationHandler;
-        let reprs = self.model.representations.clone();
+        let reprs = self.model.shape_rep.representations.clone();
         for (id, repr) in reprs.iter_with_ids() {
             if let Representation::ConstructiveGeometry(cgr) = repr {
                 let step_id = ConstructiveGeometryRepresentationHandler::write(self, cgr.clone())?;
@@ -492,7 +493,7 @@ impl WriteBuffer<'_> {
     ) -> Result<(), WriteError> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::shape_rep::srwp::ShapeRepresentationWithParametersHandler;
-        let reprs = self.model.representations.clone();
+        let reprs = self.model.shape_rep.representations.clone();
         for (id, repr) in reprs.iter_with_ids() {
             if let Representation::ShapeRepresentationWithParameters(srwp) = repr {
                 let step_id = ShapeRepresentationWithParametersHandler::write(self, srwp.clone())?;
@@ -514,6 +515,7 @@ impl WriteBuffer<'_> {
         use crate::ir::shape_rep::RepresentationRelationship;
         let rrs: Vec<_> = self
             .model
+            .shape_rep
             .representation_relationships
             .iter()
             .cloned()
@@ -564,7 +566,7 @@ impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_representations_pre_pass(
         &mut self,
     ) -> Result<(), WriteError> {
-        let reprs = self.model.representations.clone();
+        let reprs = self.model.shape_rep.representations.clone();
         for (id, repr) in reprs.iter_with_ids() {
             // Mdgpr (visualization pass) and DraughtingModel (post-callout
             // pass) are emitted later — their `items` refs depend on
@@ -629,7 +631,7 @@ impl WriteBuffer<'_> {
         &mut self,
     ) -> Result<(), WriteError> {
         let deferred = std::mem::take(&mut self.deferred_assembly_absr_ids);
-        let reprs = self.model.representations.clone();
+        let reprs = self.model.shape_rep.representations.clone();
         for (rid, reserved) in deferred {
             if let Representation::AdvancedBrep(r) = &reprs[rid] {
                 let attrs = self.advanced_brep_attrs(r)?;
@@ -1386,6 +1388,7 @@ impl WriteBuffer<'_> {
                 use crate::ir::shape_rep::RepresentationRelationship;
                 let (name, description, p_step, c_step) = match &self
                     .model
+                    .shape_rep
                     .representation_relationships[rrid]
                 {
                     RepresentationRelationship::RepresentationRelationshipWithTransformation(d) => {

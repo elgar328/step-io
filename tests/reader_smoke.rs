@@ -1781,8 +1781,12 @@ fn nist_property_def_datum_systems() {
     let source = include_str!("fixtures/external_temp_nist_property_def.stp");
     let graph = step_io::parse(source).expect("parse failed");
     let result = ReaderContext::convert(&graph);
-    assert_eq!(result.model.datum_systems.len(), 9, "DATUM_SYSTEM count");
-    for ds in result.model.datum_systems.iter() {
+    assert_eq!(
+        result.model.shape_rep.datum_systems.len(),
+        9,
+        "DATUM_SYSTEM count"
+    );
+    for ds in result.model.shape_rep.datum_systems.iter() {
         assert!(
             !ds.constituents.is_empty(),
             "DATUM_SYSTEM constituents should resolve"
@@ -1801,12 +1805,13 @@ fn nist_property_def_tolerance_zones() {
     let graph = step_io::parse(source).expect("parse failed");
     let result = ReaderContext::convert(&graph);
     assert_eq!(
-        result.model.tolerance_zones.len(),
+        result.model.shape_rep.tolerance_zones.len(),
         7,
         "TOLERANCE_ZONE count"
     );
     let resolved = result
         .model
+        .shape_rep
         .tolerance_zones
         .iter()
         .filter(|tz| !tz.defining_tolerance.is_empty())

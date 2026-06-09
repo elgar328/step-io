@@ -22,10 +22,16 @@ use crate::writer::WriteError;
 impl WriteBuffer<'_> {
     // Snapshot indices are arena indices, which fit u32 by the arena's own
     // overflow guard — the `idx as u32` id reconstructions are safe.
-    #[allow(clippy::cast_possible_truncation)]
+    #[allow(clippy::cast_possible_truncation, clippy::too_many_lines)]
     pub(in crate::writer::buffer) fn emit_tessellation(&mut self) -> Result<(), WriteError> {
         // Snapshot to release the &model borrow before per-entity emission.
-        let items: Vec<_> = self.model.tessellated_items.iter().cloned().collect();
+        let items: Vec<_> = self
+            .model
+            .shape_rep
+            .tessellated_items
+            .iter()
+            .cloned()
+            .collect();
         // Phase 1: base items — faces depend on their `coordinates`.
         for (idx, item) in items.iter().enumerate() {
             match item {
@@ -49,13 +55,20 @@ impl WriteBuffer<'_> {
             }
         }
         // Phase 2: faces + surface-sets — geometric sets reference these.
-        let faces: Vec<_> = self.model.tessellated_faces.iter().cloned().collect();
+        let faces: Vec<_> = self
+            .model
+            .shape_rep
+            .tessellated_faces
+            .iter()
+            .cloned()
+            .collect();
         for (idx, face) in faces.into_iter().enumerate() {
             let __sid = ComplexTriangulatedFaceHandler::write(self, face)?;
             self.set_step_id(crate::ir::id::TessellatedFaceId(idx as u32), __sid);
         }
         let surface_sets: Vec<_> = self
             .model
+            .shape_rep
             .tessellated_surface_sets
             .iter()
             .cloned()

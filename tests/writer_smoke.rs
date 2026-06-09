@@ -1401,11 +1401,14 @@ fn instance_placement_representation_round_trips() {
     // Two standalone placement SHAPE_REPRESENTATIONs sharing the one placement
     // PDS — the multi-SDR-per-instance shape a single Option would have dropped.
     let mut placement_sr = |name: &str| {
-        model.representations.push(Representation::Plain(PlainRepr {
-            name: name.into(),
-            context: Some(RepresentationContextRef::Unitful(ctx_id)),
-            frame: None,
-        }))
+        model
+            .shape_rep
+            .representations
+            .push(Representation::Plain(PlainRepr {
+                name: name.into(),
+                context: Some(RepresentationContextRef::Unitful(ctx_id)),
+                frame: None,
+            }))
     };
     let placement_sr_a = placement_sr("placement_a");
     let placement_sr_b = placement_sr("placement_b");
@@ -1577,7 +1580,7 @@ fn assembly_placement_materialises_distinct_rrwt_per_instance() {
     for rrid in [rr0, rr1] {
         assert!(
             matches!(
-                re.representation_relationships[rrid],
+                re.shape_rep.representation_relationships[rrid],
                 RepresentationRelationship::RepresentationRelationshipWithTransformation(_)
             ),
             "transform_rr must point at an RRWT arena entry"
@@ -2258,13 +2261,16 @@ fn pd_based_shape_definition_representation_round_trips() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     model.units.push(ctx);
-    let rep = model.representations.push(Representation::Plain(PlainRepr {
-        name: "validation shape".into(),
-        context: Some(RepresentationContextRef::Unitful(
-            step_io::ir::UnitContextId(0),
-        )),
-        frame: None,
-    }));
+    let rep = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "validation shape".into(),
+            context: Some(RepresentationContextRef::Unitful(
+                step_io::ir::UnitContextId(0),
+            )),
+            frame: None,
+        }));
 
     let mut pool = PropertyPool::default();
     let gp_id = pool.general_properties.push(GeneralProperty {
@@ -2309,13 +2315,16 @@ fn description_attribute_targeting_shape_representation_round_trips() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     model.units.push(ctx);
-    let rep = model.representations.push(Representation::Plain(PlainRepr {
-        name: "supplemental geometry".into(),
-        context: Some(RepresentationContextRef::Unitful(
-            step_io::ir::UnitContextId(0),
-        )),
-        frame: None,
-    }));
+    let rep = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "supplemental geometry".into(),
+            context: Some(RepresentationContextRef::Unitful(
+                step_io::ir::UnitContextId(0),
+            )),
+            frame: None,
+        }));
 
     let mut pool = PropertyPool::default();
     pool.description_attributes.push(DescriptionAttribute {
@@ -2351,13 +2360,16 @@ fn shape_aspect_based_shape_definition_representation_round_trips() {
     // (C3D / grabcad pattern), not a property_definition — resolves through
     // the shape_aspect arena and survives round-trip.
     let (mut model, sa, _cg, _ds, _cs) = shape_aspect_relationship_fixture();
-    let rep = model.representations.push(Representation::Plain(PlainRepr {
-        name: "aspect shape".into(),
-        context: Some(RepresentationContextRef::Unitful(
-            step_io::ir::UnitContextId(0),
-        )),
-        frame: None,
-    }));
+    let rep = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "aspect shape".into(),
+            context: Some(RepresentationContextRef::Unitful(
+                step_io::ir::UnitContextId(0),
+            )),
+            frame: None,
+        }));
     let mut pool = PropertyPool::default();
     pool.shape_definition_representations
         .push(ShapeDefinitionRepresentationLink {
@@ -2402,6 +2414,7 @@ fn product_with_additional_shape_representation_round_trips() {
     // The additional representation: a second ABSR over its own solid.
     let extra_solid = push_minimal_solid(&mut model);
     let extra_rep = model
+        .shape_rep
         .representations
         .push(Representation::AdvancedBrep(AdvancedBrepRepr {
             name: "additional rep".into(),
@@ -2694,6 +2707,7 @@ fn shape_aspect_subtypes_round_trip() {
     model.assembly = Some(tree);
 
     model
+        .shape_rep
         .composite_group_shape_aspects
         .push(CompositeGroupShapeAspect {
             name: "cg".into(),
@@ -2703,35 +2717,43 @@ fn shape_aspect_subtypes_round_trip() {
             kind: CompositeShapeAspectKind::Group,
             datum_feature: false,
         });
-    model.centre_of_symmetries.push(CentreOfSymmetry {
+    model.shape_rep.centre_of_symmetries.push(CentreOfSymmetry {
         name: "cs".into(),
         description: String::new(),
         target: part_pid,
         product_definitional: true,
     });
-    model.all_around_shape_aspects.push(AllAroundShapeAspect {
-        name: "aa".into(),
-        description: String::new(),
-        target: part_pid,
-        product_definitional: false,
-    });
+    model
+        .shape_rep
+        .all_around_shape_aspects
+        .push(AllAroundShapeAspect {
+            name: "aa".into(),
+            description: String::new(),
+            target: part_pid,
+            product_definitional: false,
+        });
 
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.composite_group_shape_aspects.len(), 1);
-    assert_eq!(re.centre_of_symmetries.len(), 1);
-    assert_eq!(re.all_around_shape_aspects.len(), 1);
+    assert_eq!(re.shape_rep.composite_group_shape_aspects.len(), 1);
+    assert_eq!(re.shape_rep.centre_of_symmetries.len(), 1);
+    assert_eq!(re.shape_rep.all_around_shape_aspects.len(), 1);
 
-    let cg = re.composite_group_shape_aspects.iter().next().unwrap();
+    let cg = re
+        .shape_rep
+        .composite_group_shape_aspects
+        .iter()
+        .next()
+        .unwrap();
     assert_eq!(cg.name, "cg");
     assert_eq!(cg.target, step_io::ProductId(0));
-    let cs = re.centre_of_symmetries.iter().next().unwrap();
+    let cs = re.shape_rep.centre_of_symmetries.iter().next().unwrap();
     assert_eq!(cs.name, "cs");
     assert!(
         cs.product_definitional,
         "centre_of_symmetry .T. round-trips"
     );
-    let aa = re.all_around_shape_aspects.iter().next().unwrap();
+    let aa = re.shape_rep.all_around_shape_aspects.iter().next().unwrap();
     assert_eq!(aa.name, "aa");
 }
 
@@ -2776,13 +2798,14 @@ fn shape_aspect_relationship_fixture() -> (
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
 
-    let sa = model.shape_aspects.push(ShapeAspect {
+    let sa = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "sa".into(),
         description: String::new(),
         target: part_pid,
         product_definitional: false,
     });
     let cg = model
+        .shape_rep
         .composite_group_shape_aspects
         .push(CompositeGroupShapeAspect {
             name: "cg".into(),
@@ -2792,18 +2815,21 @@ fn shape_aspect_relationship_fixture() -> (
             kind: CompositeShapeAspectKind::Group,
             datum_feature: false,
         });
-    let cs = model.centre_of_symmetries.push(CentreOfSymmetry {
+    let cs = model.shape_rep.centre_of_symmetries.push(CentreOfSymmetry {
         name: "cs".into(),
         description: String::new(),
         target: part_pid,
         product_definitional: false,
     });
-    let aa = model.all_around_shape_aspects.push(AllAroundShapeAspect {
-        name: "aa".into(),
-        description: String::new(),
-        target: part_pid,
-        product_definitional: false,
-    });
+    let aa = model
+        .shape_rep
+        .all_around_shape_aspects
+        .push(AllAroundShapeAspect {
+            name: "aa".into(),
+            description: String::new(),
+            target: part_pid,
+            product_definitional: false,
+        });
     (model, sa, cg, cs, aa)
 }
 
@@ -2814,8 +2840,9 @@ fn composite_shape_aspect_round_trips_under_its_own_name() {
     // (kind=Group); the writer must re-emit each under its own STEP name and
     // the round-trip must preserve the kind.
     let (mut model, _sa, cg, _cs, _aa) = shape_aspect_relationship_fixture();
-    let target = model.composite_group_shape_aspects[cg].target;
+    let target = model.shape_rep.composite_group_shape_aspects[cg].target;
     model
+        .shape_rep
         .composite_group_shape_aspects
         .push(CompositeGroupShapeAspect {
             name: "plain".into(),
@@ -2833,6 +2860,7 @@ fn composite_shape_aspect_round_trips_under_its_own_name() {
     );
     let re = reconvert(&text);
     let kinds: Vec<_> = re
+        .shape_rep
         .composite_group_shape_aspects
         .iter()
         .map(|c| c.kind)
@@ -2853,6 +2881,7 @@ fn shape_aspect_relationship_round_trip() {
     // variants (plain shape_aspect + 3 subtypes) as relation endpoints.
     let (mut model, sa, cg, cs, aa) = shape_aspect_relationship_fixture();
     model
+        .shape_rep
         .shape_aspect_relationships
         .push(ShapeAspectRelationship {
             name: "r1".into(),
@@ -2862,6 +2891,7 @@ fn shape_aspect_relationship_round_trip() {
             kind: ShapeAspectRelationshipKind::Plain,
         });
     model
+        .shape_rep
         .shape_aspect_relationships
         .push(ShapeAspectRelationship {
             name: "r2".into(),
@@ -2873,8 +2903,8 @@ fn shape_aspect_relationship_round_trip() {
 
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.shape_aspect_relationships.len(), 2);
-    let rels: Vec<_> = re.shape_aspect_relationships.iter().collect();
+    assert_eq!(re.shape_rep.shape_aspect_relationships.len(), 2);
+    let rels: Vec<_> = re.shape_rep.shape_aspect_relationships.iter().collect();
     assert!(matches!(
         rels[0].relating_shape_aspect,
         ShapeAspectRef::ShapeAspect(_)
@@ -2962,6 +2992,7 @@ fn shape_aspect_relationship_subtypes_round_trip() {
     // the two subtypes round-trip via the `kind` discriminant.
     let (mut model, sa, ..) = shape_aspect_relationship_fixture();
     model
+        .shape_rep
         .shape_aspect_relationships
         .push(ShapeAspectRelationship {
             name: "assoc".into(),
@@ -2971,6 +3002,7 @@ fn shape_aspect_relationship_subtypes_round_trip() {
             kind: ShapeAspectRelationshipKind::Associativity,
         });
     model
+        .shape_rep
         .shape_aspect_relationships
         .push(ShapeAspectRelationship {
             name: "deriv".into(),
@@ -2982,8 +3014,8 @@ fn shape_aspect_relationship_subtypes_round_trip() {
 
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.shape_aspect_relationships.len(), 2);
-    let rels: Vec<_> = re.shape_aspect_relationships.iter().collect();
+    assert_eq!(re.shape_rep.shape_aspect_relationships.len(), 2);
+    let rels: Vec<_> = re.shape_rep.shape_aspect_relationships.iter().collect();
     assert_eq!(rels[0].kind, ShapeAspectRelationshipKind::Associativity);
     assert_eq!(
         rels[1].kind,
@@ -3213,12 +3245,16 @@ fn camera_usage_round_trip() {
             view_reference_system: frame,
             perspective_of_volume: vv,
         }));
-    let rep = model.representations.push(Representation::Plain(PlainRepr {
-        name: "target".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
+    let rep = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "target".into(),
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            frame: None,
+        }));
     model
+        .shape_rep
         .representation_maps
         .push(RepresentationMap::CameraUsage(CameraUsage {
             mapping_origin: cam,
@@ -3227,8 +3263,10 @@ fn camera_usage_round_trip() {
 
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.representation_maps.len(), 1);
-    let RepresentationMap::CameraUsage(cu) = re.representation_maps.iter().next().unwrap() else {
+    assert_eq!(re.shape_rep.representation_maps.len(), 1);
+    let RepresentationMap::CameraUsage(cu) =
+        re.shape_rep.representation_maps.iter().next().unwrap()
+    else {
         panic!("expected CameraUsage variant");
     };
     assert_eq!(cu.mapping_origin, cam);
@@ -3281,18 +3319,23 @@ fn camera_image_round_trip() {
             view_reference_system: frame,
             perspective_of_volume: vv,
         }));
-    let rep = model.representations.push(Representation::Plain(PlainRepr {
-        name: "target".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
+    let rep = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "target".into(),
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            frame: None,
+        }));
     let cu = model
+        .shape_rep
         .representation_maps
         .push(RepresentationMap::CameraUsage(CameraUsage {
             mapping_origin: cam,
             mapped_representation: rep,
         }));
     model
+        .shape_rep
         .mapped_items
         .push(MappedItem::CameraImage(CameraImage {
             name: "img".into(),
@@ -3300,6 +3343,7 @@ fn camera_image_round_trip() {
             mapping_target: pb,
         }));
     model
+        .shape_rep
         .mapped_items
         .push(MappedItem::CameraImage3dWithScale(CameraImage {
             name: "img3d".into(),
@@ -3309,8 +3353,8 @@ fn camera_image_round_trip() {
 
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.mapped_items.len(), 2);
-    let mut iter = re.mapped_items.iter();
+    assert_eq!(re.shape_rep.mapped_items.len(), 2);
+    let mut iter = re.shape_rep.mapped_items.iter();
     let MappedItem::CameraImage(ci) = iter.next().unwrap() else {
         panic!("expected CameraImage");
     };
@@ -3460,28 +3504,35 @@ fn mapped_item_round_trip() {
         z: 0.0,
     });
     let placement = push_placement(&mut model, loc, Some(axis), Some(refd));
-    let rep = model.representations.push(Representation::Plain(PlainRepr {
-        name: "mapped".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
+    let rep = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "mapped".into(),
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            frame: None,
+        }));
     let rmap = model
+        .shape_rep
         .representation_maps
         .push(RepresentationMap::Itself(RepresentationMapData {
             mapping_origin: RepresentationItemRef::Placement3d(placement),
             mapped_representation: MappedRepresentationRef::Representation(rep),
         }));
-    model.mapped_items.push(MappedItem::Itself(MappedItemData {
-        name: "inst".into(),
-        mapping_source: rmap,
-        mapping_target: RepresentationItemRef::Placement3d(placement),
-    }));
+    model
+        .shape_rep
+        .mapped_items
+        .push(MappedItem::Itself(MappedItemData {
+            name: "inst".into(),
+            mapping_source: rmap,
+            mapping_target: RepresentationItemRef::Placement3d(placement),
+        }));
 
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.representation_maps.len(), 1);
-    assert_eq!(re.mapped_items.len(), 1);
-    let MappedItem::Itself(mi) = re.mapped_items.iter().next().unwrap() else {
+    assert_eq!(re.shape_rep.representation_maps.len(), 1);
+    assert_eq!(re.shape_rep.mapped_items.len(), 1);
+    let MappedItem::Itself(mi) = re.shape_rep.mapped_items.iter().next().unwrap() else {
         panic!("expected Itself variant");
     };
     assert_eq!(mi.name, "inst");
@@ -3489,7 +3540,8 @@ fn mapped_item_round_trip() {
         mi.mapping_target,
         RepresentationItemRef::Placement3d(_)
     ));
-    let RepresentationMap::Itself(rm) = re.representation_maps.iter().next().unwrap() else {
+    let RepresentationMap::Itself(rm) = re.shape_rep.representation_maps.iter().next().unwrap()
+    else {
         panic!("expected Itself variant");
     };
     assert!(matches!(
@@ -3553,22 +3605,29 @@ fn camera_origin_mapped_item_round_trip() {
             perspective_of_volume: vv,
         }));
 
-    let rep = model.representations.push(Representation::Plain(PlainRepr {
-        name: "mapped".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
+    let rep = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "mapped".into(),
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            frame: None,
+        }));
     let rmap = model
+        .shape_rep
         .representation_maps
         .push(RepresentationMap::Itself(RepresentationMapData {
             mapping_origin: RepresentationItemRef::CameraModel(cam),
             mapped_representation: MappedRepresentationRef::Representation(rep),
         }));
-    model.mapped_items.push(MappedItem::Itself(MappedItemData {
-        name: "inst".into(),
-        mapping_source: rmap,
-        mapping_target: RepresentationItemRef::Placement3d(frame),
-    }));
+    model
+        .shape_rep
+        .mapped_items
+        .push(MappedItem::Itself(MappedItemData {
+            name: "inst".into(),
+            mapping_source: rmap,
+            mapping_target: RepresentationItemRef::Placement3d(frame),
+        }));
 
     let text = model.write_to_string().expect("write");
     // No dangling forward-ref: a 0 step id would serialize as `#0`.
@@ -3578,19 +3637,20 @@ fn camera_origin_mapped_item_round_trip() {
     );
     let re = reconvert(&text);
     assert_eq!(
-        re.representation_maps.len(),
+        re.shape_rep.representation_maps.len(),
         1,
         "camera-origin REPRESENTATION_MAP survives instead of being dropped"
     );
-    assert_eq!(re.mapped_items.len(), 1, "MAPPED_ITEM survives");
-    let RepresentationMap::Itself(rm) = re.representation_maps.iter().next().unwrap() else {
+    assert_eq!(re.shape_rep.mapped_items.len(), 1, "MAPPED_ITEM survives");
+    let RepresentationMap::Itself(rm) = re.shape_rep.representation_maps.iter().next().unwrap()
+    else {
         panic!("expected Itself variant");
     };
     assert!(
         matches!(rm.mapping_origin, RepresentationItemRef::CameraModel(_)),
         "the camera mapping_origin round-trips (no dangling drop)"
     );
-    let MappedItem::Itself(mi) = re.mapped_items.iter().next().unwrap() else {
+    let MappedItem::Itself(mi) = re.shape_rep.mapped_items.iter().next().unwrap() else {
         panic!("expected Itself variant");
     };
     assert_eq!(mi.name, "inst");
@@ -3633,16 +3693,20 @@ fn presentation_mapped_representation_round_trips() {
         }));
 
     let rmap = model
+        .shape_rep
         .representation_maps
         .push(RepresentationMap::Itself(RepresentationMapData {
             mapping_origin: RepresentationItemRef::Placement3d(frame),
             mapped_representation: MappedRepresentationRef::Presentation(view),
         }));
-    model.mapped_items.push(MappedItem::Itself(MappedItemData {
-        name: "inst".into(),
-        mapping_source: rmap,
-        mapping_target: RepresentationItemRef::Placement2d(placement2),
-    }));
+    model
+        .shape_rep
+        .mapped_items
+        .push(MappedItem::Itself(MappedItemData {
+            name: "inst".into(),
+            mapping_source: rmap,
+            mapping_target: RepresentationItemRef::Placement2d(placement2),
+        }));
 
     let text = model.write_to_string().expect("write");
     assert!(
@@ -3650,9 +3714,18 @@ fn presentation_mapped_representation_round_trips() {
         "no dangling #0 ref in:\n{text}"
     );
     let re = reconvert(&text);
-    assert_eq!(re.representation_maps.len(), 1, "the rmap round-trips");
-    assert_eq!(re.mapped_items.len(), 1, "the mapped item round-trips");
-    let RepresentationMap::Itself(rm) = re.representation_maps.iter().next().unwrap() else {
+    assert_eq!(
+        re.shape_rep.representation_maps.len(),
+        1,
+        "the rmap round-trips"
+    );
+    assert_eq!(
+        re.shape_rep.mapped_items.len(),
+        1,
+        "the mapped item round-trips"
+    );
+    let RepresentationMap::Itself(rm) = re.shape_rep.representation_maps.iter().next().unwrap()
+    else {
         panic!("expected Itself variant");
     };
     assert!(
@@ -3662,7 +3735,7 @@ fn presentation_mapped_representation_round_trips() {
         ),
         "the mapped_representation points at the PRESENTATION_VIEW"
     );
-    let MappedItem::Itself(mi) = re.mapped_items.iter().next().unwrap() else {
+    let MappedItem::Itself(mi) = re.shape_rep.mapped_items.iter().next().unwrap() else {
         panic!("expected Itself variant");
     };
     assert!(
@@ -3688,23 +3761,31 @@ fn assembly_advanced_brep_with_mapped_item_round_trips() {
     let frame = model.geometry.identity_placement();
 
     // A target representation the MAPPED_ITEM's map points into.
-    let target = model.representations.push(Representation::Plain(PlainRepr {
-        name: "part".into(),
-        context: Some(RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
+    let target = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "part".into(),
+            context: Some(RepresentationContextRef::Unitful(uc)),
+            frame: None,
+        }));
     let rmap = model
+        .shape_rep
         .representation_maps
         .push(RepresentationMap::Itself(RepresentationMapData {
             mapping_origin: RepresentationItemRef::Placement3d(frame),
             mapped_representation: MappedRepresentationRef::Representation(target),
         }));
-    let mi = model.mapped_items.push(MappedItem::Itself(MappedItemData {
-        name: String::new(),
-        mapping_source: rmap,
-        mapping_target: RepresentationItemRef::Placement3d(frame),
-    }));
+    let mi = model
+        .shape_rep
+        .mapped_items
+        .push(MappedItem::Itself(MappedItemData {
+            name: String::new(),
+            mapping_source: rmap,
+            mapping_target: RepresentationItemRef::Placement3d(frame),
+        }));
     let absr = model
+        .shape_rep
         .representations
         .push(Representation::AdvancedBrep(AdvancedBrepRepr {
             name: "Assem1".into(),
@@ -3724,6 +3805,7 @@ fn assembly_advanced_brep_with_mapped_item_round_trips() {
     let re = reconvert(&text);
     // No "without a MANIFOLD_SOLID_BREP" defect — assembly ABSR is valid.
     let asm = re
+        .shape_rep
         .representations
         .iter()
         .find_map(|r| match r {
@@ -3798,6 +3880,7 @@ fn tessellated_annotation_occurrence_round_trip() {
     use step_io::ir::tessellation::{TessellatedGeometricSet, TessellatedItem};
     let mut model = empty_model();
     let gset = model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::TessellatedGeometricSet(
             TessellatedGeometricSet {
@@ -4305,7 +4388,7 @@ fn gt_relationship_round_trip() {
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
-    let sa = model.shape_aspects.push(ShapeAspect {
+    let sa = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "sa".into(),
         description: String::new(),
         target: part_pid,
@@ -4471,6 +4554,7 @@ fn datum_feature_round_trip() {
     model.pmi = Some(pmi);
 
     model
+        .shape_rep
         .shape_aspect_relationships
         .push(ShapeAspectRelationship {
             name: "r".into(),
@@ -4490,8 +4574,13 @@ fn datum_feature_round_trip() {
     assert!(re_df.product_definitional);
     assert_eq!(re_df.target, step_io::ProductId(0));
 
-    assert_eq!(re.shape_aspect_relationships.len(), 1);
-    let rel = re.shape_aspect_relationships.iter().next().unwrap();
+    assert_eq!(re.shape_rep.shape_aspect_relationships.len(), 1);
+    let rel = re
+        .shape_rep
+        .shape_aspect_relationships
+        .iter()
+        .next()
+        .unwrap();
     assert!(matches!(
         rel.relating_shape_aspect,
         ShapeAspectRef::DatumFeature(_)
@@ -4631,7 +4720,7 @@ fn geometric_tolerance_form_tolerances_round_trip() {
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
 
-    let sa = model.shape_aspects.push(ShapeAspect {
+    let sa = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "sa".into(),
         description: String::new(),
         target: part_pid,
@@ -5011,7 +5100,7 @@ fn tolerance_zone_round_trip() {
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
 
-    let sa = model.shape_aspects.push(ShapeAspect {
+    let sa = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "sa".into(),
         description: String::new(),
         target: part_pid,
@@ -5043,7 +5132,7 @@ fn tolerance_zone_round_trip() {
         name: "cylindrical".into(),
     });
 
-    model.tolerance_zones.push(ToleranceZone {
+    model.shape_rep.tolerance_zones.push(ToleranceZone {
         name: "tz".into(),
         description: String::new(),
         target: part_pid,
@@ -5054,8 +5143,12 @@ fn tolerance_zone_round_trip() {
 
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.tolerance_zones.len(), 1, "TOLERANCE_ZONE round-trips");
-    let tz = re.tolerance_zones.iter().next().unwrap();
+    assert_eq!(
+        re.shape_rep.tolerance_zones.len(),
+        1,
+        "TOLERANCE_ZONE round-trips"
+    );
+    let tz = re.shape_rep.tolerance_zones.iter().next().unwrap();
     assert_eq!(tz.name, "tz");
     assert_eq!(
         tz.defining_tolerance.len(),
@@ -5105,23 +5198,25 @@ fn shape_dimension_repr_and_dim_char_repr_round_trip() {
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
-    let sa = model.shape_aspects.push(ShapeAspect {
+    let sa = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "sa".into(),
         description: String::new(),
         target: part_pid,
         product_definitional: false,
     });
-    let sdr_id = model
-        .representations
-        .push(Representation::ShapeDimensionRepresentation(
-            ShapeDimensionRepresentation {
-                name: "sdr".into(),
-                context: Some(step_io::ir::RepresentationContextRef::Unitful(
-                    UnitContextId(0),
-                )),
-                items: vec![],
-            },
-        ));
+    let sdr_id =
+        model
+            .shape_rep
+            .representations
+            .push(Representation::ShapeDimensionRepresentation(
+                ShapeDimensionRepresentation {
+                    name: "sdr".into(),
+                    context: Some(step_io::ir::RepresentationContextRef::Unitful(
+                        UnitContextId(0),
+                    )),
+                    items: vec![],
+                },
+            ));
     let pmi = model.pmi.get_or_insert_with(PmiPool::default);
     let size_id = pmi.dimensional_sizes.push(DimensionalSize {
         applies_to: ShapeAspectRef::ShapeAspect(sa),
@@ -5150,6 +5245,7 @@ fn shape_dimension_repr_and_dim_char_repr_round_trip() {
         .unwrap();
     assert!(matches!(dcr.dimension, DimensionalCharacteristic::Size(_)));
     let sdr_count = re
+        .shape_rep
         .representations
         .iter()
         .filter(|r| matches!(r, Representation::ShapeDimensionRepresentation(_)))
@@ -5291,6 +5387,7 @@ fn invisibility_annotation_occurrence_round_trip() {
     use step_io::ir::visualization::{Invisibility, InvisibleItem, VisualizationPool};
     let mut model = empty_model();
     let gset = model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::TessellatedGeometricSet(
             TessellatedGeometricSet {
@@ -5344,12 +5441,13 @@ fn unitless_context_round_trip() {
         UnitlessContext,
     };
     let mut model = empty_model();
-    let uc_id = model.unitless_contexts.push(UnitlessContext {
+    let uc_id = model.shape_rep.unitless_contexts.push(UnitlessContext {
         identifier: "2D coordinate system context".into(),
         context_type: "2".into(),
         coordinate_space_dimension: Some(2),
     });
     model
+        .shape_rep
         .representations
         .push(Representation::DraughtingModel(DraughtingModel {
             name: "Default".into(),
@@ -5360,8 +5458,9 @@ fn unitless_context_round_trip() {
 
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.unitless_contexts.len(), 1);
+    assert_eq!(re.shape_rep.unitless_contexts.len(), 1);
     let dm_count = re
+        .shape_rep
         .representations
         .iter()
         .filter(|r| matches!(r, Representation::DraughtingModel(_)))
@@ -5369,7 +5468,7 @@ fn unitless_context_round_trip() {
     // DraughtingModel with empty items drops the carrier on read (existing
     // policy). Only assert the unitless context survives the round-trip.
     let _ = dm_count;
-    let uc = re.unitless_contexts.iter().next().unwrap();
+    let uc = re.shape_rep.unitless_contexts.iter().next().unwrap();
     assert_eq!(uc.identifier, "2D coordinate system context");
     assert_eq!(uc.coordinate_space_dimension, Some(2));
 }
@@ -5383,12 +5482,13 @@ fn plain_representation_context_round_trips() {
     // A plain simple REPRESENTATION_CONTEXT (no coordinate_space_dimension) —
     // written as a simple entity, not the GRC+PRC complex.
     let mut model = empty_model();
-    let uc_id = model.unitless_contexts.push(UnitlessContext {
+    let uc_id = model.shape_rep.unitless_contexts.push(UnitlessContext {
         identifier: String::new(),
         context_type: "document parameters".into(),
         coordinate_space_dimension: None,
     });
     model
+        .shape_rep
         .representations
         .push(Representation::DraughtingModel(DraughtingModel {
             name: "Default".into(),
@@ -5403,8 +5503,8 @@ fn plain_representation_context_round_trips() {
         "plain context emits as a simple REPRESENTATION_CONTEXT: {text}"
     );
     let re = reconvert(&text);
-    assert_eq!(re.unitless_contexts.len(), 1);
-    let uc = re.unitless_contexts.iter().next().unwrap();
+    assert_eq!(re.shape_rep.unitless_contexts.len(), 1);
+    let uc = re.shape_rep.unitless_contexts.iter().next().unwrap();
     assert_eq!(uc.context_type, "document parameters");
     // `None` proves it round-tripped through the simple form (the complex
     // form would carry `Some(dim)`).
@@ -5423,7 +5523,7 @@ fn property_with_plain_context_round_trips() {
     // of the document-property that previously FAILed round-trip. Now the
     // context is modelled, so it survives both ways.
     let mut model = empty_model();
-    let uc_id = model.unitless_contexts.push(UnitlessContext {
+    let uc_id = model.shape_rep.unitless_contexts.push(UnitlessContext {
         identifier: String::new(),
         context_type: "document parameters".into(),
         coordinate_space_dimension: None,
@@ -5496,6 +5596,7 @@ fn draughting_model_round_trip() {
             item: RepresentationItemRef::Surface(surf),
         }));
     model
+        .shape_rep
         .representations
         .push(Representation::DraughtingModel(DraughtingModel {
             name: "dm".into(),
@@ -5507,6 +5608,7 @@ fn draughting_model_round_trip() {
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
     let dm_count = re
+        .shape_rep
         .representations
         .iter()
         .filter(|r| matches!(r, Representation::DraughtingModel(_)))
@@ -5533,6 +5635,7 @@ fn draughting_model_shape_tessellated_complex_round_trips() {
         position: placement,
     }));
     model
+        .shape_rep
         .representations
         .push(Representation::DraughtingModel(DraughtingModel {
             name: "gvp".into(),
@@ -5550,6 +5653,7 @@ fn draughting_model_shape_tessellated_complex_round_trips() {
     );
     let re = reconvert(&text);
     let dm = re
+        .shape_rep
         .representations
         .iter()
         .find_map(|r| match r {
@@ -5622,16 +5726,22 @@ fn dmia_round_trip() {
             styles: vec![],
             item: RepresentationItemRef::Surface(surf),
         }));
-    let used = model.representations.push(Representation::Plain(PlainRepr {
-        name: "draughting_model".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
-        frame: None,
-    }));
-    let def = model.representations.push(Representation::Plain(PlainRepr {
-        name: "definition".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
-        frame: None,
-    }));
+    let used = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "draughting_model".into(),
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+            frame: None,
+        }));
+    let def = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "definition".into(),
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+            frame: None,
+        }));
     model
         .pmi
         .get_or_insert_with(PmiPool::default)
@@ -5725,11 +5835,14 @@ fn dmia_shape_aspect_datum_definition_round_trip() {
             styles: vec![],
             item: RepresentationItemRef::Surface(surf),
         }));
-    let used = model.representations.push(Representation::Plain(PlainRepr {
-        name: "draughting_model".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
-        frame: None,
-    }));
+    let used = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "draughting_model".into(),
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+            frame: None,
+        }));
     model
         .pmi
         .get_or_insert_with(PmiPool::default)
@@ -5775,11 +5888,11 @@ fn dmia_geometric_tolerance_with_datum_reference_round_trip() {
     use step_io::ir::units::MeasureWithUnit;
     use step_io::ir::{PmiPool, ShapeAspectRef};
     let (mut model, sa, ..) = shape_aspect_relationship_fixture();
-    let target = model.shape_aspects[sa].target;
+    let target = model.shape_rep.shape_aspects[sa].target;
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
     let ctx_id = model.units.push(ctx);
-    let ds = model.datum_systems.push(DatumSystem {
+    let ds = model.shape_rep.datum_systems.push(DatumSystem {
         name: "DS".into(),
         description: String::new(),
         target,
@@ -5823,11 +5936,14 @@ fn dmia_geometric_tolerance_with_datum_reference_round_trip() {
             styles: vec![],
             item: RepresentationItemRef::Surface(surf),
         }));
-    let used = model.representations.push(Representation::Plain(PlainRepr {
-        name: "dm".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
-        frame: None,
-    }));
+    let used = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "dm".into(),
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+            frame: None,
+        }));
     model
         .pmi
         .get_or_insert_with(PmiPool::default)
@@ -6427,16 +6543,18 @@ fn ciwr_round_trip() {
         .geometry
         .surfaces
         .push(Surface::Plane(Plane3 { position }));
-    let rep_id = model.representations.push(Representation::Plain(PlainRepr {
-        name: "rep".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(
-            UnitContextId(0),
-        )),
-        frame: None,
-    }));
-    model
-        .characterized_objects
-        .push(CharacterizedObject::CharacterizedItemWithinRepresentation(
+    let rep_id = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "rep".into(),
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(
+                UnitContextId(0),
+            )),
+            frame: None,
+        }));
+    model.shape_rep.characterized_objects.push(
+        CharacterizedObject::CharacterizedItemWithinRepresentation(
             CharacterizedItemWithinRepresentation {
                 inherited: CharacterizedObjectData {
                     name: "ciwr".into(),
@@ -6445,13 +6563,14 @@ fn ciwr_round_trip() {
                 item: RepresentationItemRef::Surface(surf),
                 rep: rep_id,
             },
-        ));
+        ),
+    );
 
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.characterized_objects.len(), 1);
+    assert_eq!(re.shape_rep.characterized_objects.len(), 1);
     let CharacterizedObject::CharacterizedItemWithinRepresentation(ciwr) =
-        re.characterized_objects.iter().next().unwrap()
+        re.shape_rep.characterized_objects.iter().next().unwrap()
     else {
         panic!("expected CIWR");
     };
@@ -6486,13 +6605,16 @@ fn model_geometric_view_round_trip() {
             size_in_y: 2.0,
             placement: PlanarBoxPlacement::Placement3d(frame),
         }));
-    let rep_id = model.representations.push(Representation::Plain(PlainRepr {
-        name: "draughting_model".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(
-            UnitContextId(0),
-        )),
-        frame: None,
-    }));
+    let rep_id = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "draughting_model".into(),
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(
+                UnitContextId(0),
+            )),
+            frame: None,
+        }));
     let viz = model
         .visualization
         .get_or_insert_with(VisualizationPool::default);
@@ -6515,6 +6637,7 @@ fn model_geometric_view_round_trip() {
             perspective_of_volume: vv,
         }));
     model
+        .shape_rep
         .characterized_objects
         .push(CharacterizedObject::ModelGeometricView(
             ModelGeometricView {
@@ -6533,9 +6656,9 @@ fn model_geometric_view_round_trip() {
         "expected MODEL_GEOMETRIC_VIEW in output"
     );
     let re = reconvert(&text);
-    assert_eq!(re.characterized_objects.len(), 1);
+    assert_eq!(re.shape_rep.characterized_objects.len(), 1);
     let CharacterizedObject::ModelGeometricView(mgv) =
-        re.characterized_objects.iter().next().unwrap()
+        re.shape_rep.characterized_objects.iter().next().unwrap()
     else {
         panic!("expected ModelGeometricView");
     };
@@ -6815,16 +6938,22 @@ fn dmia_with_placeholder_round_trip() {
                     line_spacing: 1.5,
                 },
             ));
-    let used = model.representations.push(Representation::Plain(PlainRepr {
-        name: "draughting_model".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
-        frame: None,
-    }));
-    let def = model.representations.push(Representation::Plain(PlainRepr {
-        name: "definition".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
-        frame: None,
-    }));
+    let used = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "draughting_model".into(),
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+            frame: None,
+        }));
+    let def = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "definition".into(),
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+            frame: None,
+        }));
     model
         .pmi
         .get_or_insert_with(PmiPool::default)
@@ -6894,14 +7023,17 @@ fn property_definition_with_ciwr_target_round_trips() {
         .geometry
         .surfaces
         .push(Surface::Plane(Plane3 { position }));
-    let rep_id = model.representations.push(Representation::Plain(PlainRepr {
-        name: "validation".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(
-            UnitContextId(0),
-        )),
-        frame: None,
-    }));
-    let co_id = model.characterized_objects.push(
+    let rep_id = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "validation".into(),
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(
+                UnitContextId(0),
+            )),
+            frame: None,
+        }));
+    let co_id = model.shape_rep.characterized_objects.push(
         CharacterizedObject::CharacterizedItemWithinRepresentation(
             CharacterizedItemWithinRepresentation {
                 inherited: CharacterizedObjectData {
@@ -6975,13 +7107,16 @@ fn property_definition_with_mgv_target_round_trips() {
             size_in_y: 2.0,
             placement: PlanarBoxPlacement::Placement3d(frame),
         }));
-    let rep_id = model.representations.push(Representation::Plain(PlainRepr {
-        name: "draughting_model".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(
-            UnitContextId(0),
-        )),
-        frame: None,
-    }));
+    let rep_id = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "draughting_model".into(),
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(
+                UnitContextId(0),
+            )),
+            frame: None,
+        }));
     let viz = model
         .visualization
         .get_or_insert_with(VisualizationPool::default);
@@ -7003,18 +7138,20 @@ fn property_definition_with_mgv_target_round_trips() {
             view_reference_system: frame,
             perspective_of_volume: vv,
         }));
-    let co_id = model
-        .characterized_objects
-        .push(CharacterizedObject::ModelGeometricView(
-            ModelGeometricView {
-                inherited: CharacterizedObjectData {
-                    name: "Top".into(),
-                    description: Some(String::new()),
+    let co_id =
+        model
+            .shape_rep
+            .characterized_objects
+            .push(CharacterizedObject::ModelGeometricView(
+                ModelGeometricView {
+                    inherited: CharacterizedObjectData {
+                        name: "Top".into(),
+                        description: Some(String::new()),
+                    },
+                    item: cam,
+                    rep: rep_id,
                 },
-                item: cam,
-                rep: rep_id,
-            },
-        ));
+            ));
 
     let mut pool = PropertyPool::default();
     pool.property_definitions
@@ -7041,7 +7178,8 @@ fn property_definition_with_mgv_target_round_trips() {
         "PROPERTY_DEFINITION targeting an MGV should round-trip"
     );
     assert!(
-        re.characterized_objects
+        re.shape_rep
+            .characterized_objects
             .iter()
             .any(|co| matches!(co, CharacterizedObject::ModelGeometricView(_))),
         "the MODEL_GEOMETRIC_VIEW arena entry should survive"
@@ -7069,6 +7207,7 @@ fn qri_vri_round_trip() {
             format_type: "NR2 1.3".into(),
         });
     model
+        .shape_rep
         .representation_items
         .push(RepresentationItem::QualifiedRepresentationItem(
             QualifiedRepresentationItem {
@@ -7080,6 +7219,7 @@ fn qri_vri_round_trip() {
             },
         ));
     model
+        .shape_rep
         .representation_items
         .push(RepresentationItem::ValueRepresentationItem(
             ValueRepresentationItem {
@@ -7093,8 +7233,8 @@ fn qri_vri_round_trip() {
 
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.representation_items.len(), 2);
-    let mut iter = re.representation_items.iter();
+    assert_eq!(re.shape_rep.representation_items.len(), 2);
+    let mut iter = re.shape_rep.representation_items.iter();
     let RepresentationItem::QualifiedRepresentationItem(qri) = iter.next().unwrap() else {
         panic!("expected QRI");
     };
@@ -7131,6 +7271,7 @@ fn measure_representation_item_round_trip() {
             format_type: "NR2 1.1".into(),
         });
     model
+        .shape_rep
         .representation_items
         .push(RepresentationItem::MeasureRepresentationItem(
             MeasureRepresentationItem {
@@ -7152,9 +7293,9 @@ fn measure_representation_item_round_trip() {
     assert!(text.contains("QUALIFIED_REPRESENTATION_ITEM"));
 
     let re = reconvert(&text);
-    assert_eq!(re.representation_items.len(), 1);
+    assert_eq!(re.shape_rep.representation_items.len(), 1);
     let RepresentationItem::MeasureRepresentationItem(mri) =
-        re.representation_items.iter().next().unwrap()
+        re.shape_rep.representation_items.iter().next().unwrap()
     else {
         panic!("expected MeasureRepresentationItem");
     };
@@ -7198,21 +7339,23 @@ fn tolerance_magnitude_references_arena_measure() {
         .push(ValueFormatTypeQualifier {
             format_type: "NR2 1.1".into(),
         });
-    let mri = model
-        .representation_items
-        .push(RepresentationItem::MeasureRepresentationItem(
-            MeasureRepresentationItem {
-                form: MeasureForm::Complex,
-                name: "nominal value".into(),
-                value: MeasureValue::Real {
-                    type_name: "POSITIVE_LENGTH_MEASURE".into(),
-                    value: 0.1,
+    let mri =
+        model
+            .shape_rep
+            .representation_items
+            .push(RepresentationItem::MeasureRepresentationItem(
+                MeasureRepresentationItem {
+                    form: MeasureForm::Complex,
+                    name: "nominal value".into(),
+                    value: MeasureValue::Real {
+                        type_name: "POSITIVE_LENGTH_MEASURE".into(),
+                        value: 0.1,
+                    },
+                    unit_ref: Some(PropertyMeasureUnit::Named(length)),
+                    qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
+                    measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
                 },
-                unit_ref: Some(PropertyMeasureUnit::Named(length)),
-                qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
-                measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
-            },
-        ));
+            ));
     model
         .pmi
         .get_or_insert_with(PmiPool::default)
@@ -7282,21 +7425,23 @@ fn property_item_references_arena_measure() {
         .push(ValueFormatTypeQualifier {
             format_type: "NR2 1.1".into(),
         });
-    let mri = model
-        .representation_items
-        .push(RepresentationItem::MeasureRepresentationItem(
-            MeasureRepresentationItem {
-                form: MeasureForm::Complex,
-                name: "nominal value".into(),
-                value: MeasureValue::Real {
-                    type_name: "POSITIVE_LENGTH_MEASURE".into(),
-                    value: 0.1,
+    let mri =
+        model
+            .shape_rep
+            .representation_items
+            .push(RepresentationItem::MeasureRepresentationItem(
+                MeasureRepresentationItem {
+                    form: MeasureForm::Complex,
+                    name: "nominal value".into(),
+                    value: MeasureValue::Real {
+                        type_name: "POSITIVE_LENGTH_MEASURE".into(),
+                        value: 0.1,
+                    },
+                    unit_ref: Some(PropertyMeasureUnit::Named(length)),
+                    qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
+                    measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
                 },
-                unit_ref: Some(PropertyMeasureUnit::Named(length)),
-                qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
-                measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
-            },
-        ));
+            ));
 
     let mut pool = PropertyPool::default();
     let gp_id = pool.general_properties.push(GeneralProperty {
@@ -7360,6 +7505,7 @@ fn simple_measure_representation_item_round_trips_via_arena() {
     let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
     model.units.push(ctx);
     model
+        .shape_rep
         .representation_items
         .push(RepresentationItem::MeasureRepresentationItem(
             MeasureRepresentationItem {
@@ -7386,9 +7532,9 @@ fn simple_measure_representation_item_round_trips_via_arena() {
     );
 
     let re = reconvert(&text);
-    assert_eq!(re.representation_items.len(), 1);
+    assert_eq!(re.shape_rep.representation_items.len(), 1);
     let RepresentationItem::MeasureRepresentationItem(mri) =
-        re.representation_items.iter().next().unwrap()
+        re.shape_rep.representation_items.iter().next().unwrap()
     else {
         panic!("expected MeasureRepresentationItem");
     };
@@ -7505,13 +7651,13 @@ fn projected_zone_definition_round_trip() {
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
-    let sa = model.shape_aspects.push(ShapeAspect {
+    let sa = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "sa".into(),
         description: String::new(),
         target: part_pid,
         product_definitional: false,
     });
-    let sa_end = model.shape_aspects.push(ShapeAspect {
+    let sa_end = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "end".into(),
         description: String::new(),
         target: part_pid,
@@ -7550,7 +7696,7 @@ fn projected_zone_definition_round_trip() {
     let form = pmi.tolerance_zone_forms.push(ToleranceZoneForm {
         name: "cylindrical".into(),
     });
-    let tz_id = model.tolerance_zones.push(ToleranceZone {
+    let tz_id = model.shape_rep.tolerance_zones.push(ToleranceZone {
         name: "tz".into(),
         description: String::new(),
         target: part_pid,
@@ -7639,7 +7785,7 @@ fn datum_system_round_trip() {
         ));
     model.pmi = Some(pmi);
 
-    model.datum_systems.push(DatumSystem {
+    model.shape_rep.datum_systems.push(DatumSystem {
         name: "DS".into(),
         description: String::new(),
         target: part_pid,
@@ -7649,14 +7795,15 @@ fn datum_system_round_trip() {
 
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.datum_systems.len(), 1);
-    let ds = re.datum_systems.iter().next().unwrap();
+    assert_eq!(re.shape_rep.datum_systems.len(), 1);
+    let ds = re.shape_rep.datum_systems.iter().next().unwrap();
     assert_eq!(ds.name, "DS");
     assert_eq!(ds.constituents.len(), 1, "constituent round-trips");
     assert_eq!(ds.target, step_io::ProductId(0));
 }
 
 #[test]
+#[allow(clippy::too_many_lines)]
 fn datum_target_cluster_round_trip() {
     // DATUM_TARGET + PLACED_DATUM_TARGET_FEATURE + FEATURE_FOR_DATUM_TARGET_RELATIONSHIP.
     // Three new shape_aspect-family entities sharing the same product chain.
@@ -7696,13 +7843,13 @@ fn datum_target_cluster_round_trip() {
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
 
-    let sa_id = model.shape_aspects.push(ShapeAspect {
+    let sa_id = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "feature".into(),
         description: String::new(),
         target: part_pid,
         product_definitional: false,
     });
-    let dt_id = model.datum_targets.push(DatumTarget {
+    let dt_id = model.shape_rep.datum_targets.push(DatumTarget {
         name: "datum target".into(),
         description: String::new(),
         target: part_pid,
@@ -7710,6 +7857,7 @@ fn datum_target_cluster_round_trip() {
         target_id: "A1".into(),
     });
     let _pdtf_id = model
+        .shape_rep
         .placed_datum_target_features
         .push(PlacedDatumTargetFeature {
             name: "placed target".into(),
@@ -7719,6 +7867,7 @@ fn datum_target_cluster_round_trip() {
             target_id: "B2".into(),
         });
     model
+        .shape_rep
         .shape_aspect_relationships
         .push(ShapeAspectRelationship {
             name: String::new(),
@@ -7730,27 +7879,37 @@ fn datum_target_cluster_round_trip() {
 
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.datum_targets.len(), 1, "DATUM_TARGET round-trips");
     assert_eq!(
-        re.datum_targets.iter().next().unwrap().target_id,
+        re.shape_rep.datum_targets.len(),
+        1,
+        "DATUM_TARGET round-trips"
+    );
+    assert_eq!(
+        re.shape_rep.datum_targets.iter().next().unwrap().target_id,
         "A1",
         "target_id preserved"
     );
     assert_eq!(
-        re.placed_datum_target_features.len(),
+        re.shape_rep.placed_datum_target_features.len(),
         1,
         "PLACED_DATUM_TARGET_FEATURE round-trips"
     );
     assert_eq!(
-        re.placed_datum_target_features
+        re.shape_rep
+            .placed_datum_target_features
             .iter()
             .next()
             .unwrap()
             .target_id,
         "B2"
     );
-    assert_eq!(re.shape_aspect_relationships.len(), 1);
-    let rel = re.shape_aspect_relationships.iter().next().unwrap();
+    assert_eq!(re.shape_rep.shape_aspect_relationships.len(), 1);
+    let rel = re
+        .shape_rep
+        .shape_aspect_relationships
+        .iter()
+        .next()
+        .unwrap();
     assert_eq!(rel.kind, ShapeAspectRelationshipKind::FeatureForDatumTarget);
     assert!(matches!(
         rel.related_shape_aspect,
@@ -7800,7 +7959,7 @@ fn geometric_tolerance_with_datum_reference_round_trip() {
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
 
-    let sa = model.shape_aspects.push(ShapeAspect {
+    let sa = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "sa".into(),
         description: String::new(),
         target: part_pid,
@@ -7809,7 +7968,7 @@ fn geometric_tolerance_with_datum_reference_round_trip() {
 
     // DatumSystem with empty `constituents` — the constituent resolution is
     // covered by `datum_system_round_trip`; this test exercises the tolerance.
-    let ds = model.datum_systems.push(DatumSystem {
+    let ds = model.shape_rep.datum_systems.push(DatumSystem {
         name: "DS".into(),
         description: String::new(),
         target: part_pid,
@@ -7904,13 +8063,13 @@ fn complex_datum_ref_tolerance_round_trip() {
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
 
-    let sa = model.shape_aspects.push(ShapeAspect {
+    let sa = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "sa".into(),
         description: String::new(),
         target: part_pid,
         product_definitional: false,
     });
-    let ds = model.datum_systems.push(DatumSystem {
+    let ds = model.shape_rep.datum_systems.push(DatumSystem {
         name: "DS".into(),
         description: String::new(),
         target: part_pid,
@@ -8008,13 +8167,13 @@ fn geometric_tolerance_with_modifiers_round_trip() {
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
-    let sa = model.shape_aspects.push(ShapeAspect {
+    let sa = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "feature".into(),
         description: String::new(),
         target: part_pid,
         product_definitional: false,
     });
-    let ds = model.datum_systems.push(DatumSystem {
+    let ds = model.shape_rep.datum_systems.push(DatumSystem {
         name: "DS".into(),
         description: String::new(),
         target: part_pid,
@@ -8167,13 +8326,13 @@ fn gt_defined_unit_area_unit_displacement_round_trip() {
     });
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
-    let sa = model.shape_aspects.push(ShapeAspect {
+    let sa = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "feature".into(),
         description: String::new(),
         target: part_pid,
         product_definitional: false,
     });
-    let ds = model.datum_systems.push(DatumSystem {
+    let ds = model.shape_rep.datum_systems.push(DatumSystem {
         name: "DS".into(),
         description: String::new(),
         target: part_pid,
@@ -8322,8 +8481,8 @@ fn gt_defined_unit_displacement_reference_complex_measure() {
     let ctx = mm_radian_steradian(&mut model);
     let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
     model.units.push(ctx);
-    let target = model.shape_aspects[sa].target;
-    let ds = model.datum_systems.push(DatumSystem {
+    let target = model.shape_rep.shape_aspects[sa].target;
+    let ds = model.shape_rep.datum_systems.push(DatumSystem {
         name: "DS".into(),
         description: String::new(),
         target,
@@ -8339,21 +8498,23 @@ fn gt_defined_unit_displacement_reference_complex_measure() {
         });
     // A complex qualified measure in the representation_item arena — the form
     // that lives in repr_item_id_map, not mwu_id_map.
-    let mri = model
-        .representation_items
-        .push(RepresentationItem::MeasureRepresentationItem(
-            MeasureRepresentationItem {
-                form: MeasureForm::Complex,
-                name: String::new(),
-                value: MeasureValue::Real {
-                    type_name: "LENGTH_MEASURE".into(),
-                    value: 0.25,
+    let mri =
+        model
+            .shape_rep
+            .representation_items
+            .push(RepresentationItem::MeasureRepresentationItem(
+                MeasureRepresentationItem {
+                    form: MeasureForm::Complex,
+                    name: String::new(),
+                    value: MeasureValue::Real {
+                        type_name: "LENGTH_MEASURE".into(),
+                        value: 0.25,
+                    },
+                    unit_ref: Some(PropertyMeasureUnit::Named(length)),
+                    qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
+                    measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
                 },
-                unit_ref: Some(PropertyMeasureUnit::Named(length)),
-                qualifiers: vec![QualifierRef::ValueFormatTypeQualifier(vftq)],
-                measure_supertype: Some("LENGTH_MEASURE_WITH_UNIT".into()),
-            },
-        ));
+            ));
     let pmi = model.pmi.get_or_insert_with(PmiPool::default);
     // Flatness + WDU(unit_size) + WDAU(second_unit_size), both complex measures.
     pmi.geometric_tolerances
@@ -8475,7 +8636,7 @@ fn plus_minus_tolerance_round_trip() {
     tree.roots = vec![part_pid];
     model.assembly = Some(tree);
 
-    let sa = model.shape_aspects.push(ShapeAspect {
+    let sa = model.shape_rep.shape_aspects.push(ShapeAspect {
         name: "sa".into(),
         description: String::new(),
         target: part_pid,
@@ -8664,6 +8825,7 @@ fn numeric_representation_item_round_trip() {
     };
     let mut model = empty_model();
     model
+        .shape_rep
         .numeric_representation_items
         .push(NumericRepresentationItem::Integer(
             IntegerRepresentationItem {
@@ -8672,6 +8834,7 @@ fn numeric_representation_item_round_trip() {
             },
         ));
     model
+        .shape_rep
         .numeric_representation_items
         .push(NumericRepresentationItem::Real(RealRepresentationItem {
             name: "saved view scale".into(),
@@ -8680,15 +8843,24 @@ fn numeric_representation_item_round_trip() {
 
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.numeric_representation_items.len(), 2);
-    let NumericRepresentationItem::Integer(i) =
-        re.numeric_representation_items.iter().next().unwrap()
+    assert_eq!(re.shape_rep.numeric_representation_items.len(), 2);
+    let NumericRepresentationItem::Integer(i) = re
+        .shape_rep
+        .numeric_representation_items
+        .iter()
+        .next()
+        .unwrap()
     else {
         panic!("expected Integer variant first");
     };
     assert_eq!(i.name, "number of segments");
     assert_eq!(i.the_value, 19);
-    let NumericRepresentationItem::Real(r) = re.numeric_representation_items.iter().nth(1).unwrap()
+    let NumericRepresentationItem::Real(r) = re
+        .shape_rep
+        .numeric_representation_items
+        .iter()
+        .nth(1)
+        .unwrap()
     else {
         panic!("expected Real variant second");
     };
@@ -8703,6 +8875,7 @@ fn tessellation_round_trip() {
     use step_io::ir::tessellation::{ComplexTriangulatedFace, CoordinatesList, TessellatedItem};
     let mut model = empty_model();
     let coords = model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::CoordinatesList(CoordinatesList {
             name: "pts".into(),
@@ -8713,28 +8886,32 @@ fn tessellation_round_trip() {
                 vec![0.0, 1.0, 0.0],
             ],
         }));
-    model.tessellated_faces.push(ComplexTriangulatedFace {
-        name: "face".into(),
-        coordinates: coords,
-        pnmax: 3,
-        normals: vec![vec![0.0, 0.0, 1.0]],
-        geometric_link: None,
-        pnindex: vec![1, 2, 3],
-        triangle_strips: vec![vec![1, 2, 3]],
-        triangle_fans: vec![],
-    });
+    model
+        .shape_rep
+        .tessellated_faces
+        .push(ComplexTriangulatedFace {
+            name: "face".into(),
+            coordinates: coords,
+            pnmax: 3,
+            normals: vec![vec![0.0, 0.0, 1.0]],
+            geometric_link: None,
+            pnindex: vec![1, 2, 3],
+            triangle_strips: vec![vec![1, 2, 3]],
+            triangle_fans: vec![],
+        });
 
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.tessellated_items.len(), 1);
-    assert_eq!(re.tessellated_faces.len(), 1);
-    let Some(TessellatedItem::CoordinatesList(c)) = re.tessellated_items.iter().next() else {
+    assert_eq!(re.shape_rep.tessellated_items.len(), 1);
+    assert_eq!(re.shape_rep.tessellated_faces.len(), 1);
+    let Some(TessellatedItem::CoordinatesList(c)) = re.shape_rep.tessellated_items.iter().next()
+    else {
         panic!("expected CoordinatesList");
     };
     assert_eq!(c.npoints, 3);
     assert_eq!(c.position_coords.len(), 3);
     assert!((c.position_coords[1][0] - 1.0).abs() < f64::EPSILON);
-    let f = re.tessellated_faces.iter().next().unwrap();
+    let f = re.shape_rep.tessellated_faces.iter().next().unwrap();
     assert_eq!(f.name, "face");
     assert_eq!(f.pnmax, 3);
     assert_eq!(f.pnindex, vec![1, 2, 3]);
@@ -8754,6 +8931,7 @@ fn styled_item_tessellated_face_round_trips() {
     use step_io::ir::visualization::{PlainStyledItem, StyledItem, VisualizationPool};
     let mut model = empty_model();
     let coords = model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::CoordinatesList(CoordinatesList {
             name: "pts".into(),
@@ -8764,16 +8942,19 @@ fn styled_item_tessellated_face_round_trips() {
                 vec![0.0, 1.0, 0.0],
             ],
         }));
-    let face = model.tessellated_faces.push(ComplexTriangulatedFace {
-        name: "face".into(),
-        coordinates: coords,
-        pnmax: 3,
-        normals: vec![vec![0.0, 0.0, 1.0]],
-        geometric_link: None,
-        pnindex: vec![1, 2, 3],
-        triangle_strips: vec![vec![1, 2, 3]],
-        triangle_fans: vec![],
-    });
+    let face = model
+        .shape_rep
+        .tessellated_faces
+        .push(ComplexTriangulatedFace {
+            name: "face".into(),
+            coordinates: coords,
+            pnmax: 3,
+            normals: vec![vec![0.0, 0.0, 1.0]],
+            geometric_link: None,
+            pnindex: vec![1, 2, 3],
+            triangle_strips: vec![vec![1, 2, 3]],
+            triangle_fans: vec![],
+        });
     let viz = model
         .visualization
         .get_or_insert_with(VisualizationPool::default);
@@ -8813,7 +8994,7 @@ fn draughting_model_with_styled_item_round_trips() {
     };
     use step_io::ir::visualization::{PlainStyledItem, StyledItem, VisualizationPool};
     let mut model = empty_model();
-    let uc = model.unitless_contexts.push(UnitlessContext {
+    let uc = model.shape_rep.unitless_contexts.push(UnitlessContext {
         identifier: String::new(),
         context_type: "document parameters".into(),
         coordinate_space_dimension: None,
@@ -8830,6 +9011,7 @@ fn draughting_model_with_styled_item_round_trips() {
         }))
     };
     model
+        .shape_rep
         .representations
         .push(Representation::DraughtingModel(DraughtingModel {
             name: "Default".into(),
@@ -8841,6 +9023,7 @@ fn draughting_model_with_styled_item_round_trips() {
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
     let dm = re
+        .shape_rep
         .representations
         .iter()
         .find_map(|r| match r {
@@ -8864,6 +9047,7 @@ fn tessellation_2_round_trip() {
     };
     let mut model = empty_model();
     let coords = model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::CoordinatesList(CoordinatesList {
             name: "pts".into(),
@@ -8876,6 +9060,7 @@ fn tessellation_2_round_trip() {
             ],
         }));
     model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::TessellatedCurveSet(TessellatedCurveSet {
             name: "curves".into(),
@@ -8883,6 +9068,7 @@ fn tessellation_2_round_trip() {
             line_strips: vec![vec![1, 2], vec![3, 4, 1]],
         }));
     model
+        .shape_rep
         .tessellated_surface_sets
         .push(ComplexTriangulatedSurfaceSet {
             name: "surf".into(),
@@ -8896,10 +9082,11 @@ fn tessellation_2_round_trip() {
 
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
-    assert_eq!(re.tessellated_items.len(), 2);
-    assert_eq!(re.tessellated_surface_sets.len(), 1);
+    assert_eq!(re.shape_rep.tessellated_items.len(), 2);
+    assert_eq!(re.shape_rep.tessellated_surface_sets.len(), 1);
 
     let curve_set = re
+        .shape_rep
         .tessellated_items
         .iter()
         .find_map(|item| match item {
@@ -8915,7 +9102,7 @@ fn tessellation_2_round_trip() {
     assert_eq!(curve_set.name, "curves");
     assert_eq!(curve_set.line_strips, vec![vec![1, 2], vec![3, 4, 1]]);
 
-    let s = re.tessellated_surface_sets.iter().next().unwrap();
+    let s = re.shape_rep.tessellated_surface_sets.iter().next().unwrap();
     assert_eq!(s.name, "surf");
     assert_eq!(s.pnmax, 4);
     assert_eq!(s.pnindex, vec![1, 2, 3, 4]);
@@ -8933,6 +9120,7 @@ fn repositioned_tessellated_geometric_set_complex_round_trips() {
     let mut model = empty_model();
     let placement = xyz_placement(&mut model);
     model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::RepositionedTessellatedGeometricSet(
             RepositionedTessellatedGeometricSet {
@@ -8950,7 +9138,8 @@ fn repositioned_tessellated_geometric_set_complex_round_trips() {
     );
     let re = reconvert(&text);
     assert!(
-        re.tessellated_items
+        re.shape_rep
+            .tessellated_items
             .iter()
             .any(|i| matches!(i, TessellatedItem::RepositionedTessellatedGeometricSet(_))),
         "5-part tessellated complex MI should round-trip"
@@ -8967,6 +9156,7 @@ fn tessellated_geometric_set_round_trip() {
     };
     let mut model = empty_model();
     let coords = model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::CoordinatesList(CoordinatesList {
             name: "pts".into(),
@@ -8978,23 +9168,28 @@ fn tessellated_geometric_set_round_trip() {
             ],
         }));
     let curve = model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::TessellatedCurveSet(TessellatedCurveSet {
             name: "curve".into(),
             coordinates: coords,
             line_strips: vec![vec![1, 2, 3]],
         }));
-    let face = model.tessellated_faces.push(ComplexTriangulatedFace {
-        name: "face".into(),
-        coordinates: coords,
-        pnmax: 3,
-        normals: vec![vec![0.0, 0.0, 1.0]],
-        geometric_link: None,
-        pnindex: vec![1, 2, 3],
-        triangle_strips: vec![vec![1, 2, 3]],
-        triangle_fans: vec![],
-    });
+    let face = model
+        .shape_rep
+        .tessellated_faces
+        .push(ComplexTriangulatedFace {
+            name: "face".into(),
+            coordinates: coords,
+            pnmax: 3,
+            normals: vec![vec![0.0, 0.0, 1.0]],
+            geometric_link: None,
+            pnindex: vec![1, 2, 3],
+            triangle_strips: vec![vec![1, 2, 3]],
+            triangle_fans: vec![],
+        });
     let ss = model
+        .shape_rep
         .tessellated_surface_sets
         .push(ComplexTriangulatedSurfaceSet {
             name: "ss".into(),
@@ -9006,6 +9201,7 @@ fn tessellated_geometric_set_round_trip() {
             triangle_fans: vec![],
         });
     model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::TessellatedGeometricSet(
             TessellatedGeometricSet {
@@ -9021,6 +9217,7 @@ fn tessellated_geometric_set_round_trip() {
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
     let gset = re
+        .shape_rep
         .tessellated_items
         .iter()
         .find_map(|item| match item {
@@ -9081,11 +9278,14 @@ fn presentation_style_by_context_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let uc = model.units.push(ctx);
-    let rep = model.representations.push(Representation::Plain(PlainRepr {
-        name: "ctx".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
+    let rep = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "ctx".into(),
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            frame: None,
+        }));
     let viz = model
         .visualization
         .get_or_insert_with(VisualizationPool::default);
@@ -9248,11 +9448,14 @@ fn bounded_pcurve_round_trip() {
         .push(step_io::ir::geometry::Surface::Plane(
             step_io::ir::geometry::Plane3 { position: frame },
         ));
-    let rep = model.representations.push(Representation::Plain(PlainRepr {
-        name: "defrepr".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
+    let rep = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "defrepr".into(),
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            frame: None,
+        }));
     model
         .geometry
         .parameter_space_curves
@@ -9361,6 +9564,7 @@ fn compound_representation_item_round_trip() {
     };
     let mut model = empty_model();
     model
+        .shape_rep
         .compound_representation_items
         .push(CompoundRepresentationItem {
             name: "dimensional note".into(),
@@ -9376,6 +9580,7 @@ fn compound_representation_item_round_trip() {
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
     let cri = re
+        .shape_rep
         .compound_representation_items
         .iter()
         .next()
@@ -9398,6 +9603,7 @@ fn characterized_object_simple_emit() {
     use step_io::ir::shape_rep::{CharacterizedObject, CharacterizedObjectData};
     let mut model = empty_model();
     model
+        .shape_rep
         .characterized_objects
         .push(CharacterizedObject::Itself(CharacterizedObjectData {
             name: "Back".into(),
@@ -9426,6 +9632,7 @@ fn srwp_round_trip() {
         z: 0.0,
     });
     model
+        .shape_rep
         .representations
         .push(Representation::ShapeRepresentationWithParameters(
             ShapeRepresentationWithParameters {
@@ -9445,6 +9652,7 @@ fn srwp_round_trip() {
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
     let srwp = re
+        .shape_rep
         .representations
         .iter()
         .find_map(|r| match r {
@@ -9471,22 +9679,25 @@ fn srwp_measure_item_round_trip() {
     let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
     let uc = model.units.push(ctx);
     let frame = model.geometry.identity_placement();
-    let mri = model
-        .representation_items
-        .push(RepresentationItem::MeasureRepresentationItem(
-            MeasureRepresentationItem {
-                form: MeasureForm::Simple,
-                name: "target width".into(),
-                value: MeasureValue::Real {
-                    type_name: "LENGTH_MEASURE".into(),
-                    value: 1.25,
+    let mri =
+        model
+            .shape_rep
+            .representation_items
+            .push(RepresentationItem::MeasureRepresentationItem(
+                MeasureRepresentationItem {
+                    form: MeasureForm::Simple,
+                    name: "target width".into(),
+                    value: MeasureValue::Real {
+                        type_name: "LENGTH_MEASURE".into(),
+                        value: 1.25,
+                    },
+                    unit_ref: Some(PropertyMeasureUnit::Named(length)),
+                    qualifiers: Vec::new(),
+                    measure_supertype: None,
                 },
-                unit_ref: Some(PropertyMeasureUnit::Named(length)),
-                qualifiers: Vec::new(),
-                measure_supertype: None,
-            },
-        ));
+            ));
     model
+        .shape_rep
         .representations
         .push(Representation::ShapeRepresentationWithParameters(
             ShapeRepresentationWithParameters {
@@ -9499,6 +9710,7 @@ fn srwp_measure_item_round_trip() {
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
     let srwp = re
+        .shape_rep
         .representations
         .iter()
         .find_map(|r| match r {
@@ -9531,14 +9743,18 @@ fn iiru_round_trip() {
     };
     let (mut model, sa, _, _, _) = shape_aspect_relationship_fixture();
     let frame = model.geometry.identity_placement();
-    let rep = model.representations.push(Representation::Plain(PlainRepr {
-        name: "used".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(
-            step_io::ir::UnitContextId(0),
-        )),
-        frame: None,
-    }));
+    let rep = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "used".into(),
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(
+                step_io::ir::UnitContextId(0),
+            )),
+            frame: None,
+        }));
     model
+        .shape_rep
         .item_identified_representation_usages
         .push(ItemIdentifiedRepresentationUsage {
             name: "iiru".into(),
@@ -9554,6 +9770,7 @@ fn iiru_round_trip() {
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
     let iiru = re
+        .shape_rep
         .item_identified_representation_usages
         .iter()
         .next()
@@ -9574,17 +9791,23 @@ fn mddr_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let uc = model.units.push(ctx);
-    let sr1 = model.representations.push(Representation::Plain(PlainRepr {
-        name: "sr1".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
-    let sr2 = model.representations.push(Representation::Plain(PlainRepr {
-        name: "sr2".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
-    model.representation_relationships.push(
+    let sr1 = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "sr1".into(),
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            frame: None,
+        }));
+    let sr2 = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "sr2".into(),
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            frame: None,
+        }));
+    model.shape_rep.representation_relationships.push(
         RepresentationRelationship::MechanicalDesignAndDraughtingRelationship(
             MechanicalDesignAndDraughtingRelationship {
                 name: "mddr".into(),
@@ -9598,6 +9821,7 @@ fn mddr_round_trip() {
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
     let mddr = re
+        .shape_rep
         .representation_relationships
         .iter()
         .find_map(|r| match r {
@@ -9622,17 +9846,24 @@ fn representation_relationship_itself_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let uc = model.units.push(ctx);
-    let r1 = model.representations.push(Representation::Plain(PlainRepr {
-        name: "r1".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
-    let r2 = model.representations.push(Representation::Plain(PlainRepr {
-        name: "r2".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
+    let r1 = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "r1".into(),
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            frame: None,
+        }));
+    let r2 = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "r2".into(),
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            frame: None,
+        }));
     model
+        .shape_rep
         .representation_relationships
         .push(RepresentationRelationship::Itself(
             RepresentationRelationshipData {
@@ -9650,6 +9881,7 @@ fn representation_relationship_itself_round_trip() {
     );
     let re = reconvert(&text);
     let rr = re
+        .shape_rep
         .representation_relationships
         .iter()
         .find_map(|r| match r {
@@ -9678,12 +9910,16 @@ fn cgr_relationship_round_trip() {
     let ctx = mm_radian_steradian(&mut model);
     let uc = model.units.push(ctx);
     let frame = model.geometry.identity_placement();
-    let sr = model.representations.push(Representation::Plain(PlainRepr {
-        name: "sr".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
-        frame: None,
-    }));
+    let sr = model
+        .shape_rep
+        .representations
+        .push(Representation::Plain(PlainRepr {
+            name: "sr".into(),
+            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            frame: None,
+        }));
     let cgr = model
+        .shape_rep
         .representations
         .push(Representation::ConstructiveGeometry(
             ConstructiveGeometryRepr {
@@ -9692,7 +9928,7 @@ fn cgr_relationship_round_trip() {
                 context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
             },
         ));
-    model.representation_relationships.push(
+    model.shape_rep.representation_relationships.push(
         RepresentationRelationship::ConstructiveGeometryRepresentationRelationship(
             ConstructiveGeometryRepresentationRelationship {
                 name: "supplemental geometry".into(),
@@ -9706,6 +9942,7 @@ fn cgr_relationship_round_trip() {
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
     let cgrr = re
+        .shape_rep
         .representation_relationships
         .iter()
         .find_map(|r| match r {
@@ -9733,6 +9970,7 @@ fn constructive_geometry_representation_round_trip() {
     let uc = model.units.push(ctx);
     let frame = model.geometry.identity_placement();
     model
+        .shape_rep
         .representations
         .push(Representation::ConstructiveGeometry(
             ConstructiveGeometryRepr {
@@ -9745,6 +9983,7 @@ fn constructive_geometry_representation_round_trip() {
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
     let cgr = re
+        .shape_rep
         .representations
         .iter()
         .find_map(|r| match r {
@@ -9771,6 +10010,7 @@ fn tessellated_shape_representation_round_trip() {
     let ctx = mm_radian_steradian(&mut model);
     let uc = model.units.push(ctx);
     let coords = model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::CoordinatesList(CoordinatesList {
             name: "pts".into(),
@@ -9782,6 +10022,7 @@ fn tessellated_shape_representation_round_trip() {
             ],
         }));
     model
+        .shape_rep
         .representations
         .push(Representation::TessellatedShapeRepresentation(
             TessellatedShapeRepresentation {
@@ -9794,6 +10035,7 @@ fn tessellated_shape_representation_round_trip() {
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
     let tsr = re
+        .shape_rep
         .representations
         .iter()
         .find_map(|r| match r {
@@ -9814,6 +10056,7 @@ fn repositioned_tessellated_item_round_trip() {
     let mut model = empty_model();
     let frame = model.geometry.identity_placement();
     model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::RepositionedTessellatedItem(
             RepositionedTessellatedItem {
@@ -9825,6 +10068,7 @@ fn repositioned_tessellated_item_round_trip() {
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
     let rti = re
+        .shape_rep
         .tessellated_items
         .iter()
         .find_map(|item| match item {
@@ -9845,6 +10089,7 @@ fn tessellated_solid_shell_round_trip() {
     };
     let mut model = empty_model();
     let coords = model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::CoordinatesList(CoordinatesList {
             name: "pts".into(),
@@ -9855,17 +10100,21 @@ fn tessellated_solid_shell_round_trip() {
                 vec![0.0, 1.0, 0.0],
             ],
         }));
-    let face = model.tessellated_faces.push(ComplexTriangulatedFace {
-        name: "f".into(),
-        coordinates: coords,
-        pnmax: 3,
-        normals: vec![vec![0.0, 0.0, 1.0]],
-        geometric_link: None,
-        pnindex: vec![1, 2, 3],
-        triangle_strips: vec![vec![1, 2, 3]],
-        triangle_fans: vec![],
-    });
+    let face = model
+        .shape_rep
+        .tessellated_faces
+        .push(ComplexTriangulatedFace {
+            name: "f".into(),
+            coordinates: coords,
+            pnmax: 3,
+            normals: vec![vec![0.0, 0.0, 1.0]],
+            geometric_link: None,
+            pnindex: vec![1, 2, 3],
+            triangle_strips: vec![vec![1, 2, 3]],
+            triangle_fans: vec![],
+        });
     let ss = model
+        .shape_rep
         .tessellated_surface_sets
         .push(ComplexTriangulatedSurfaceSet {
             name: "ss".into(),
@@ -9877,6 +10126,7 @@ fn tessellated_solid_shell_round_trip() {
             triangle_fans: vec![],
         });
     model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::TessellatedSolid(TessellatedSolid {
             name: "solid".into(),
@@ -9887,6 +10137,7 @@ fn tessellated_solid_shell_round_trip() {
             geometric_link: None,
         }));
     model
+        .shape_rep
         .tessellated_items
         .push(TessellatedItem::TessellatedShell(TessellatedShell {
             name: "shell".into(),
@@ -9897,6 +10148,7 @@ fn tessellated_solid_shell_round_trip() {
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
     let solid = re
+        .shape_rep
         .tessellated_items
         .iter()
         .find_map(|i| match i {
@@ -9907,6 +10159,7 @@ fn tessellated_solid_shell_round_trip() {
     assert_eq!(solid.name, "solid");
     assert_eq!(solid.items.len(), 2);
     let shell = re
+        .shape_rep
         .tessellated_items
         .iter()
         .find_map(|i| match i {

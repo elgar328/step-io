@@ -70,6 +70,7 @@ impl WriteBuffer<'_> {
         let inline = self.inline_characterized_object_ids();
         let ciwr_ids: Vec<_> = self
             .model
+            .shape_rep
             .characterized_objects
             .iter_with_ids()
             .filter(|(id, obj)| {
@@ -94,6 +95,7 @@ impl WriteBuffer<'_> {
         // and therefore the round-tripped arena indices — are deterministic.
         let inline_ids: Vec<_> = self
             .model
+            .shape_rep
             .characterized_objects
             .iter_with_ids()
             .filter(|(id, _)| inline.contains(id))
@@ -114,6 +116,7 @@ impl WriteBuffer<'_> {
     ) -> std::collections::HashSet<crate::ir::CharacterizedObjectId> {
         use crate::ir::shape_rep::{DraughtingModelForm, Representation};
         self.model
+            .shape_rep
             .representations
             .iter()
             .filter_map(|r| match r {
@@ -133,6 +136,7 @@ impl WriteBuffer<'_> {
         let inline_co_ids = self.inline_characterized_object_ids();
         let entries: Vec<_> = self
             .model
+            .shape_rep
             .characterized_objects
             .iter_with_ids()
             .map(|(id, obj)| (id, obj.clone()))
@@ -209,6 +213,7 @@ impl WriteBuffer<'_> {
         use crate::ir::representation_item::RepresentationItem;
         let items: Vec<_> = self
             .model
+            .shape_rep
             .representation_items
             .iter_with_ids()
             .map(|(__id, v)| (__id, v.clone()))
@@ -538,7 +543,7 @@ impl WriteBuffer<'_> {
         // MDGPR — iterate the unified `representations` arena so each
         // step id lands in its `RepresentationId` slot. `viz.mdgprs` is a
         // dual-write of the same data and is intentionally ignored here.
-        let reprs = self.model.representations.clone();
+        let reprs = self.model.shape_rep.representations.clone();
         for (id, repr) in reprs.iter_with_ids() {
             if let crate::ir::shape_rep::Representation::Mdgpr(mdgpr) = repr {
                 let step_id = MdgprHandler::write(self, mdgpr.clone())?;
@@ -640,6 +645,7 @@ impl WriteBuffer<'_> {
     ) -> Result<(), WriteError> {
         let items: Vec<_> = self
             .model
+            .shape_rep
             .compound_representation_items
             .iter()
             .cloned()

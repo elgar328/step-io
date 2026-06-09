@@ -78,7 +78,7 @@ pub use id::{
 };
 pub use model::{
     ExternalAnchor, ExternalReference, FileHeader, GeometryPool, ImplementationLevel,
-    NonEmptyStringList, StepModel, TopologyPool,
+    NonEmptyStringList, ShapeRepPool, StepModel, TopologyPool,
 };
 pub use plm::{
     Address, AddressData, AheadOrBehind, ApplicationContext, ApplicationProtocolDefinition,

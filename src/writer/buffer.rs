@@ -363,6 +363,7 @@ impl<'m> WriteBuffer<'m> {
         // PMI / shape_aspect / representation step-id caches populated.
         for iiru in self
             .model
+            .shape_rep
             .item_identified_representation_usages
             .iter()
             .cloned()

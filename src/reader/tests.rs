@@ -2093,12 +2093,18 @@ fn gisu_unset_used_representation_derived_from_identified_item() {
     // The GISU is recovered (not dropped); its used_representation resolves to
     // the only representation in the model (the ABSR containing the solid).
     assert_eq!(
-        result.model.geometric_item_specific_usages.iter().count(),
+        result
+            .model
+            .shape_rep
+            .geometric_item_specific_usages
+            .iter()
+            .count(),
         1,
         "$-used_representation GISU recovered"
     );
     let gisu = result
         .model
+        .shape_rep
         .geometric_item_specific_usages
         .iter()
         .next()
@@ -2149,7 +2155,7 @@ fn shape_aspect_of_shape_product_definition_normalised() {
 
     // The shape_aspect is recovered (target = the product), not dropped.
     assert_eq!(
-        result.model.shape_aspects.iter().count(),
+        result.model.shape_rep.shape_aspects.iter().count(),
         1,
         "of_shape=PRODUCT_DEFINITION shape_aspect recovered"
     );
@@ -2175,7 +2181,7 @@ fn shape_aspect_of_shape_product_definition_normalised() {
     // The target resolves to the single product (the writer re-emits the
     // standard of_shape=PDS form from it). Standard-form round-trip idempotency
     // is covered on real C3D data (input-shaft) by the reference-check run.
-    let sa = result.model.shape_aspects.iter().next().unwrap();
+    let sa = result.model.shape_rep.shape_aspects.iter().next().unwrap();
     assert_eq!(
         sa.target,
         crate::ProductId(0),
@@ -2206,7 +2212,10 @@ fn pmi_validation_property_on_mbd_characterized_object_recovered() {
     let result = convert_source(&source);
 
     // The MBD complex registered a CHARACTERIZED_OBJECT facet (Itself).
-    assert_eq!(result.model.characterized_objects.iter().count(), 1);
+    assert_eq!(
+        result.model.shape_rep.characterized_objects.iter().count(),
+        1
+    );
 
     // The PD is recovered into the property arena with a CharacterizedObject
     // definition (not dropped).
@@ -2251,7 +2260,8 @@ fn shape_dimension_representation_preserves_descriptive_item() {
     let result = convert_source(&source);
 
     let sdr_items = |m: &crate::StepModel| {
-        m.representations
+        m.shape_rep
+            .representations
             .iter()
             .find_map(|r| match r {
                 Representation::ShapeDimensionRepresentation(s) => Some(s.items.clone()),

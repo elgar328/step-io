@@ -38,6 +38,7 @@ impl WriteBuffer<'_> {
     ) -> Result<(), WriteError> {
         let views: Vec<_> = self
             .model
+            .shape_rep
             .default_model_geometric_views
             .iter()
             .cloned()
@@ -60,7 +61,8 @@ impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_pmi_if_set(&mut self) {
         // Snapshot to release the &model borrow before per-SA emission
         // (handler.write mutates self via push_simple).
-        let entries: Vec<ShapeAspect> = self.model.shape_aspects.iter().cloned().collect();
+        let entries: Vec<ShapeAspect> =
+            self.model.shape_rep.shape_aspects.iter().cloned().collect();
         for (index, sa) in entries.iter().enumerate() {
             // Defensive: silent skip when product chain wasn't emitted (e.g.
             // kernel-built IR with PMI only, or model.units empty so the
@@ -342,6 +344,7 @@ impl WriteBuffer<'_> {
         use crate::entities::shape_rep::geometric_item_specific_usage::GeometricItemSpecificUsageHandler;
         let entries: Vec<_> = self
             .model
+            .shape_rep
             .geometric_item_specific_usages
             .iter_with_ids()
             .map(|(__id, v)| (__id, v.clone()))
@@ -540,6 +543,7 @@ impl WriteBuffer<'_> {
         // `emit_shape_aspect_ref` can resolve a `ShapeAspectRef`.
         let composite: Vec<_> = self
             .model
+            .shape_rep
             .composite_group_shape_aspects
             .iter()
             .cloned()
@@ -584,7 +588,13 @@ impl WriteBuffer<'_> {
                 self.set_step_id(CompositeShapeAspectId(index as u32), step_id);
             }
         }
-        let centre: Vec<_> = self.model.centre_of_symmetries.iter().cloned().collect();
+        let centre: Vec<_> = self
+            .model
+            .shape_rep
+            .centre_of_symmetries
+            .iter()
+            .cloned()
+            .collect();
         for (index, sa) in centre.into_iter().enumerate() {
             let Some(&pds_step_id) = self.product_def_shape_ids.get(&sa.target) else {
                 continue;
@@ -603,6 +613,7 @@ impl WriteBuffer<'_> {
         }
         let all_around: Vec<_> = self
             .model
+            .shape_rep
             .all_around_shape_aspects
             .iter()
             .cloned()
@@ -669,6 +680,7 @@ impl WriteBuffer<'_> {
         use crate::entities::shape_rep::shape_aspect_relationship::ShapeAspectRelationshipHandler;
         let rels: Vec<_> = self
             .model
+            .shape_rep
             .shape_aspect_relationships
             .iter()
             .cloned()
@@ -751,7 +763,7 @@ impl WriteBuffer<'_> {
     /// `emit_shape_aspect_ref` runs.
     pub(in crate::writer::buffer) fn emit_datum_systems(&mut self) {
         use crate::entities::shape_rep::datum_system::DatumSystemHandler;
-        let systems: Vec<_> = self.model.datum_systems.iter().cloned().collect();
+        let systems: Vec<_> = self.model.shape_rep.datum_systems.iter().cloned().collect();
         for (index, ds) in systems.into_iter().enumerate() {
             if let Ok(step_id) = DatumSystemHandler::write(self, ds) {
                 self.set_step_id(DatumSystemId(index as u32), step_id);
@@ -765,7 +777,7 @@ impl WriteBuffer<'_> {
     /// consumers see a filled `datum_target_step_ids` cache.
     pub(in crate::writer::buffer) fn emit_datum_targets(&mut self) {
         use crate::entities::shape_rep::datum_target::DatumTargetHandler;
-        let targets: Vec<_> = self.model.datum_targets.iter().cloned().collect();
+        let targets: Vec<_> = self.model.shape_rep.datum_targets.iter().cloned().collect();
         for (index, dt) in targets.into_iter().enumerate() {
             if let Ok(step_id) = DatumTargetHandler::write(self, dt) {
                 self.set_step_id(DatumTargetId(index as u32), step_id);
@@ -778,6 +790,7 @@ impl WriteBuffer<'_> {
         use crate::entities::shape_rep::placed_datum_target_feature::PlacedDatumTargetFeatureHandler;
         let entries: Vec<_> = self
             .model
+            .shape_rep
             .placed_datum_target_features
             .iter()
             .cloned()
@@ -799,6 +812,7 @@ impl WriteBuffer<'_> {
         use crate::entities::shape_rep::tolerance_zone::ToleranceZoneHandler;
         let zones: Vec<_> = self
             .model
+            .shape_rep
             .tolerance_zones
             .iter_with_ids()
             .map(|(__id, v)| (__id, v.clone()))
