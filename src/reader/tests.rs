@@ -58,7 +58,7 @@ fn reads_file_header_from_fixture_pattern() {
     let src = step_with_full_header("2;1", "Author", "Acme");
     let result = convert_source(&src);
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
-    let h = result.model.header.expect("header preserved");
+    let h = result.model.metadata.header.expect("header preserved");
     assert_eq!(h.description.as_slice(), &["FreeCAD Model".to_string()]);
     assert_eq!(h.implementation_level.as_str(), "2;1");
     assert_eq!(h.name, "Open CASCADE Shape Model");
@@ -82,7 +82,7 @@ fn reads_file_header_empty_description_list_returns_none() {
                ENDSEC;\n\
                END-ISO-10303-21;\n";
     let result = convert_source(src);
-    assert!(result.model.header.is_none());
+    assert!(result.model.metadata.header.is_none());
     assert!(
         result.warnings.iter().any(|w| matches!(
             w,
@@ -98,7 +98,7 @@ fn reads_file_header_empty_description_list_returns_none() {
 fn reads_file_header_empty_implementation_level_returns_none() {
     let src = step_with_full_header("", "Author", "Acme");
     let result = convert_source(&src);
-    assert!(result.model.header.is_none());
+    assert!(result.model.metadata.header.is_none());
     assert!(
         result.warnings.iter().any(|w| matches!(
             w,
@@ -127,8 +127,11 @@ fn preserves_ap203_ed2_schema_raw_through_convert() {
                ENDSEC;\n\
                END-ISO-10303-21;\n";
     let result = convert_source(src);
-    assert_eq!(result.model.schema.class(), Some(SchemaClass::Ap203));
-    let raw = result.model.schema.raw().expect("raw preserved");
+    assert_eq!(
+        result.model.metadata.schema.class(),
+        Some(SchemaClass::Ap203)
+    );
+    let raw = result.model.metadata.schema.raw().expect("raw preserved");
     assert_eq!(
         raw.as_slice(),
         &[
@@ -1663,6 +1666,7 @@ fn file_name_unset_string_fields_normalized_to_empty() {
     let result = convert_source(source);
     let header = result
         .model
+        .metadata
         .header
         .as_ref()
         .expect("header kept, not discarded");
@@ -1690,7 +1694,10 @@ fn file_name_unset_string_fields_normalized_to_empty() {
     // Re-read of the written output keeps the header with no new normalization.
     let text = result.model.write_to_string().expect("write");
     let re = convert_source(&text);
-    assert!(re.model.header.is_some(), "header survives round-trip");
+    assert!(
+        re.model.metadata.header.is_some(),
+        "header survives round-trip"
+    );
 }
 
 #[test]

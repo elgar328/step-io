@@ -176,8 +176,14 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
     }
 
     assert_unit_contexts_equivalent(name, &re, &original);
-    assert_eq!(re.schema, original.schema, "{name}: schema preserved");
-    assert_eq!(re.header, original.header, "{name}: header");
+    assert_eq!(
+        re.metadata.schema, original.metadata.schema,
+        "{name}: schema preserved"
+    );
+    assert_eq!(
+        re.metadata.header, original.metadata.header,
+        "{name}: header"
+    );
 
     // Idempotency of the order-incidental pools (visualization, properties,
     // shape_aspects, units, ...) via a serialization fixed point rather than

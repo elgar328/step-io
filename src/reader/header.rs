@@ -6,7 +6,7 @@
 //! the header is missing, structurally unexpected, or violates Part 21's
 //! type constraints (empty `LIST[1:?]` fields or empty
 //! `implementation_level`), the function returns `None` after pushing a
-//! warning — the caller sets `model.header = None`, and the writer falls
+//! warning — the caller sets `model.metadata.header = None`, and the writer falls
 //! back to step-io's synthetic signature.
 
 use crate::ir::attr::{read_string, read_string_list};

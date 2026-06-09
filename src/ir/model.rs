@@ -241,6 +241,33 @@ pub struct ShapeRepPool {
         crate::ir::Arena<crate::ir::shape_rep::ItemIdentifiedRepresentationUsage>,
 }
 
+/// Part21 file-level metadata and non-DATA sections (schema / HEADER /
+/// edition-3 ANCHOR + REFERENCE). Not geometric data — grouped to keep
+/// `StepModel` focused on domain pools.
+#[derive(Debug, Clone, Default)]
+pub struct FileMetadata {
+    /// AP schema this model targets, including the raw `FILE_SCHEMA` text
+    /// when preserved from a source file. `StepSchema::Known { raw: None }`
+    /// marks synthetic IR — the writer emits a canonical string for the
+    /// `class`; `StepSchema::Known { raw: Some(_) }` or
+    /// `StepSchema::Unknown { raw }` carry the original text, which the
+    /// writer emits verbatim. Defaults to canonical AP214 IS.
+    pub schema: StepSchema,
+    /// HEADER-section metadata preserved from the source file. `None` for
+    /// synthetic IR (writer substitutes a step-io-branded signature);
+    /// `Some(_)` is emitted verbatim on round-trip so author / organisation /
+    /// timestamp / description aren't overwritten with step-io's defaults.
+    pub header: Option<FileHeader>,
+    /// P21 edition 3 `REFERENCE` section — external references
+    /// (`#N=<url#anchor>`). Re-emitted in the output `REFERENCE` section;
+    /// entities resolving one (e.g. `CIRCULAR_AREA.centre`) point at it via
+    /// [`ExternalRefId`](crate::ir::ExternalRefId). Empty for the vast
+    /// majority of files (no edition-3 external references).
+    pub external_references: crate::ir::Arena<ExternalReference>,
+    /// P21 edition 3 `ANCHOR` section — names attached to external references.
+    pub anchors: Vec<ExternalAnchor>,
+}
+
 /// The complete result of converting a STEP file into typed IR.
 #[derive(Debug, Clone, Default)]
 pub struct StepModel {
@@ -261,18 +288,9 @@ pub struct StepModel {
     /// top-level product (a forest for multi-part files); instances are
     /// wired into each product's `Group` content.
     pub assembly: Option<AssemblyTree>,
-    /// AP schema this model targets, including the raw `FILE_SCHEMA` text
-    /// when preserved from a source file. `StepSchema::Known { raw: None }`
-    /// marks synthetic IR — the writer emits a canonical string for the
-    /// `class`; `StepSchema::Known { raw: Some(_) }` or
-    /// `StepSchema::Unknown { raw }` carry the original text, which the
-    /// writer emits verbatim. Defaults to canonical AP214 IS.
-    pub schema: StepSchema,
-    /// HEADER-section metadata preserved from the source file. `None` for
-    /// synthetic IR (writer substitutes a step-io-branded signature);
-    /// `Some(_)` is emitted verbatim on round-trip so author / organisation /
-    /// timestamp / description aren't overwritten with step-io's defaults.
-    pub header: Option<FileHeader>,
+    /// Part21 file metadata — schema / HEADER section / edition-3
+    /// ANCHOR+REFERENCE sections. See [`FileMetadata`].
+    pub metadata: FileMetadata,
     /// Visualization data — `STYLED_ITEM` chain + `COLOUR_RGB` + style metadata.
     /// `None` when the source file had no visualization or for kernel-built
     /// IR. Stored as a tree-inline structure (no shared color references)
@@ -297,20 +315,6 @@ pub struct StepModel {
     /// entity was observed. Coexists with [`Self::units`] (per-context
     /// bundled enums) during the units-1 dual-tracking period.
     pub units_pool: Option<UnitsPool>,
-    /// `geometric_representation_item` enum arena (phase ds-st). Holds
-    /// `DefinedSymbol` + `SymbolTarget` variants; other corpus `in_enum`
-    /// members of `geometric_representation_item` keep their dedicated
-    /// arenas. Orphan round-trip — no modelled external consumer.
-    pub geometric_representation_items:
-        crate::ir::Arena<crate::ir::visualization::GeometricRepresentationItem>,
-    /// P21 edition 3 `REFERENCE` section — external references
-    /// (`#N=<url#anchor>`). Re-emitted in the output `REFERENCE` section;
-    /// entities resolving one (e.g. `CIRCULAR_AREA.centre`) point at it via
-    /// [`ExternalRefId`](crate::ir::ExternalRefId). Empty for the vast
-    /// majority of files (no edition-3 external references).
-    pub external_references: crate::ir::Arena<ExternalReference>,
-    /// P21 edition 3 `ANCHOR` section — names attached to external references.
-    pub anchors: Vec<ExternalAnchor>,
 }
 
 /// One P21 edition 3 `REFERENCE` entry: an entity resolved in an external
@@ -377,6 +381,12 @@ pub struct GeometryPool {
     /// The reader never touches this cache — it pushes every on-disk placement
     /// as a distinct entry to stay loyal to the source file.
     identity_placement_cache: Option<Placement3dId>,
+    /// `geometric_representation_item` enum arena (phase ds-st). Holds
+    /// `DefinedSymbol` + `SymbolTarget` variants; other corpus `in_enum`
+    /// members of `geometric_representation_item` keep their dedicated
+    /// arenas. Orphan round-trip — no modelled external consumer.
+    pub geometric_representation_items:
+        crate::ir::Arena<crate::ir::visualization::GeometricRepresentationItem>,
 }
 
 impl GeometryPool {

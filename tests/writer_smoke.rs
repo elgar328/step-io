@@ -1600,9 +1600,9 @@ fn assembly_placement_materialises_distinct_rrwt_per_instance() {
 #[test]
 fn default_schema_is_ap214_is() {
     let model = empty_model();
-    assert_eq!(model.schema.class(), Some(SchemaClass::Ap214Is));
+    assert_eq!(model.metadata.schema.class(), Some(SchemaClass::Ap214Is));
     assert!(
-        model.schema.raw().is_none(),
+        model.metadata.schema.raw().is_none(),
         "synthetic IR must not carry raw FILE_SCHEMA text"
     );
     let text = model.write_to_string().expect("write");
@@ -1613,7 +1613,7 @@ fn default_schema_is_ap214_is() {
     );
     // Round-trip through the reader recognises the class.
     let re = reconvert(&text);
-    assert_eq!(re.schema.class(), Some(SchemaClass::Ap214Is));
+    assert_eq!(re.metadata.schema.class(), Some(SchemaClass::Ap214Is));
 }
 
 #[test]
@@ -1919,14 +1919,14 @@ fn empty_group_product_preserves_non_identity_shape_ref_frame() {
 #[test]
 fn explicit_ap203_schema_round_trips() {
     let mut model = empty_model();
-    model.schema = StepSchema::canonical(SchemaClass::Ap203);
+    model.metadata.schema = StepSchema::canonical(SchemaClass::Ap203);
     let text = model.write_to_string().expect("write");
     assert!(
         text.contains("CONFIG_CONTROL_DESIGN"),
         "expected AP203 FILE_SCHEMA string, got: {text}"
     );
     let re = reconvert(&text);
-    assert_eq!(re.schema.class(), Some(SchemaClass::Ap203));
+    assert_eq!(re.metadata.schema.class(), Some(SchemaClass::Ap203));
 }
 
 #[test]
@@ -6240,16 +6240,16 @@ fn defined_symbol_round_trip() {
         .push(PreDefinedSymbol::Plain(PreDefinedSymbolData {
             name: "filled arrow".into(),
         }));
-    let target_id =
-        model
-            .geometric_representation_items
-            .push(GeometricRepresentationItem::SymbolTarget(SymbolTarget {
-                name: "tgt".into(),
-                placement: SymbolPlacement::Placement3d(frame),
-                x_scale: 3.5,
-                y_scale: 3.5,
-            }));
+    let target_id = model.geometry.geometric_representation_items.push(
+        GeometricRepresentationItem::SymbolTarget(SymbolTarget {
+            name: "tgt".into(),
+            placement: SymbolPlacement::Placement3d(frame),
+            x_scale: 3.5,
+            y_scale: 3.5,
+        }),
+    );
     model
+        .geometry
         .geometric_representation_items
         .push(GeometricRepresentationItem::DefinedSymbol(DefinedSymbol {
             name: "sym".into(),
@@ -6260,6 +6260,7 @@ fn defined_symbol_round_trip() {
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
     let ds = re
+        .geometry
         .geometric_representation_items
         .iter()
         .find_map(|i| match i {
@@ -6272,6 +6273,7 @@ fn defined_symbol_round_trip() {
         .expect("defined_symbol round-trips");
     assert_eq!(ds.name, "sym");
     let st = re
+        .geometry
         .geometric_representation_items
         .iter()
         .find_map(|i| match i {
@@ -9529,8 +9531,8 @@ fn circular_area_with_external_reference_round_trips() {
                END-ISO-10303-21;\n";
     let model = ReaderContext::convert(&parse(src).expect("parse")).model;
     // External reference + anchor materialized; CIRCULAR_AREA survives.
-    assert_eq!(model.external_references.len(), 1);
-    assert_eq!(model.anchors.len(), 1);
+    assert_eq!(model.metadata.external_references.len(), 1);
+    assert_eq!(model.metadata.anchors.len(), 1);
     let ca = model
         .geometry
         .circular_areas
@@ -9547,8 +9549,8 @@ fn circular_area_with_external_reference_round_trips() {
     assert!(text.contains("<testAnchorAndData.stp#TestAnchor>"));
     assert!(text.contains("CIRCULAR_AREA("));
     let re = ReaderContext::convert(&parse(&text).expect("re-parse")).model;
-    assert_eq!(re.external_references.len(), 1);
-    assert_eq!(re.anchors.len(), 1);
+    assert_eq!(re.metadata.external_references.len(), 1);
+    assert_eq!(re.metadata.anchors.len(), 1);
     let re_ca = re.geometry.circular_areas.iter().next().expect("survives");
     assert!(matches!(re_ca.centre, CircularAreaCentre::External(_)));
     assert_eq!(re_ca.name, "testarea");

@@ -20,6 +20,7 @@ use crate::parser::schema::{SchemaClass, StepSchema};
 
 pub(super) fn header_for(model: &StepModel) -> Vec<HeaderEntity> {
     let header_values = model
+        .metadata
         .header
         .clone()
         .unwrap_or_else(step_io_signature_header);
@@ -28,7 +29,7 @@ pub(super) fn header_for(model: &StepModel) -> Vec<HeaderEntity> {
         file_name_entity(&header_values),
         HeaderEntity {
             name: "FILE_SCHEMA".into(),
-            attrs: vec![Attribute::List(file_schema_strings(&model.schema))],
+            attrs: vec![Attribute::List(file_schema_strings(&model.metadata.schema))],
         },
     ]
 }
@@ -118,7 +119,10 @@ mod tests {
 
     fn model_for_schema(schema: StepSchema) -> StepModel {
         StepModel {
-            schema,
+            metadata: crate::ir::FileMetadata {
+                schema,
+                ..Default::default()
+            },
             ..StepModel::default()
         }
     }
@@ -254,17 +258,20 @@ mod tests {
     #[test]
     fn writes_preserved_file_header_when_some() {
         let model = StepModel {
-            header: Some(FileHeader {
-                description: NonEmptyStringList::single("User Description".into()),
-                implementation_level: ImplementationLevel::v2_1(),
-                name: "user_part.step".into(),
-                time_stamp: "2024-08-15T12:34:56".into(),
-                author: NonEmptyStringList::single("Alice".into()),
-                organization: NonEmptyStringList::single("Acme".into()),
-                preprocessor_version: "CAD 2024".into(),
-                originating_system: "AcmeCAD".into(),
-                authorization: "manager".into(),
-            }),
+            metadata: crate::ir::FileMetadata {
+                header: Some(FileHeader {
+                    description: NonEmptyStringList::single("User Description".into()),
+                    implementation_level: ImplementationLevel::v2_1(),
+                    name: "user_part.step".into(),
+                    time_stamp: "2024-08-15T12:34:56".into(),
+                    author: NonEmptyStringList::single("Alice".into()),
+                    organization: NonEmptyStringList::single("Acme".into()),
+                    preprocessor_version: "CAD 2024".into(),
+                    originating_system: "AcmeCAD".into(),
+                    authorization: "manager".into(),
+                }),
+                ..Default::default()
+            },
             ..StepModel::default()
         };
         let headers = header_for(&model);

@@ -141,7 +141,7 @@ impl<'m> WriteBuffer<'m> {
         // order) so any DATA entity resolving one — e.g. CIRCULAR_AREA.centre —
         // emits a consistent `#N`, and write_file can emit the REFERENCE
         // section. Deterministic: same arena → same ids across round-trips.
-        for id in self.model.external_references.iter_ids() {
+        for id in self.model.metadata.external_references.iter_ids() {
             let reserved = self.fresh();
             self.set_step_id(id, reserved);
         }

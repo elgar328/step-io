@@ -41,7 +41,7 @@ impl SimpleEntityHandler for ShellBasedSurfaceModelHandler {
         // a `STYLED_ITEM` (or any other representation_item consumer) can
         // resolve the SBSM as a single id. MSSR continues to flatten through
         // `sbsm_shells_map` so the dual storage stays consistent.
-        let gri_id = ctx.geometric_representation_items.push(
+        let gri_id = ctx.geometry.geometric_representation_items.push(
             GeometricRepresentationItem::ShellBasedSurfaceModel(ShellBasedSurfaceModel {
                 name,
                 shells,

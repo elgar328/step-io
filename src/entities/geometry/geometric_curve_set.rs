@@ -63,7 +63,7 @@ pub(crate) fn read_geometric_curve_set_body(
             points,
         })
     };
-    let gri_id = ctx.geometric_representation_items.push(variant);
+    let gri_id = ctx.geometry.geometric_representation_items.push(variant);
     ctx.curve_set_id_map.insert(entity_id, gri_id);
     Ok(())
 }

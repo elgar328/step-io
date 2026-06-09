@@ -58,7 +58,7 @@ impl WriteBuffer<'_> {
         }
         // Clone out of `self.model` so the pass is free to call `&mut self`
         // methods without keeping a borrow on the model.
-        let schema = self.model.schema.clone();
+        let schema = self.model.metadata.schema.clone();
         let products = assembly.products.clone();
         self.emit_assembly_chain(&products, &schema)?;
         self.emit_pdca_cluster();

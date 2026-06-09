@@ -579,9 +579,6 @@ pub struct ReaderContext {
     pub(crate) tessellated_surface_sets:
         crate::ir::Arena<crate::ir::tessellation::ComplexTriangulatedSurfaceSet>,
 
-    /// `geometric_representation_item` enum arena (phase ds-st).
-    pub(crate) geometric_representation_items:
-        crate::ir::Arena<crate::ir::visualization::GeometricRepresentationItem>,
     /// `representation_relationship` enum arena (phase cgrr).
     pub(crate) representation_relationships:
         crate::ir::Arena<crate::ir::shape_rep::RepresentationRelationship>,
@@ -814,8 +811,6 @@ impl ReaderContext {
                         .item_identified_representation_usages,
                 },
                 assembly: ctx.assembly,
-                schema: graph.schema.clone(),
-                header,
                 visualization: ctx.visualization,
                 properties: ctx.properties,
                 pmi: ctx.pmi,
@@ -827,9 +822,12 @@ impl ReaderContext {
                     ctx.derived_unit_arena,
                     ctx.dimensional_exponents,
                 ),
-                geometric_representation_items: ctx.geometric_representation_items,
-                external_references: ctx.external_references,
-                anchors: ctx.anchors,
+                metadata: crate::ir::FileMetadata {
+                    schema: graph.schema.clone(),
+                    header,
+                    external_references: ctx.external_references,
+                    anchors: ctx.anchors,
+                },
             },
             warnings: ctx.warnings,
             parse_warnings: graph.warnings.clone(),

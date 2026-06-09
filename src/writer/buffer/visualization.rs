@@ -669,6 +669,7 @@ impl WriteBuffer<'_> {
         use crate::ir::visualization::GeometricRepresentationItem as GRI;
         let items: Vec<_> = self
             .model
+            .geometry
             .geometric_representation_items
             .iter()
             .cloned()
@@ -709,6 +710,7 @@ impl WriteBuffer<'_> {
         use crate::ir::visualization::GeometricRepresentationItem as GRI;
         let items: Vec<_> = self
             .model
+            .geometry
             .geometric_representation_items
             .iter()
             .cloned()

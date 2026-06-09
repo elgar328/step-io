@@ -43,14 +43,14 @@ impl SimpleEntityHandler for SymbolTargetHandler {
         let Some(&placement_id) = ctx.placement_map.get(&placement_ref) else {
             return Ok(());
         };
-        let id =
-            ctx.geometric_representation_items
-                .push(GeometricRepresentationItem::SymbolTarget(SymbolTarget {
-                    name,
-                    placement: SymbolPlacement::Placement3d(placement_id),
-                    x_scale,
-                    y_scale,
-                }));
+        let id = ctx.geometry.geometric_representation_items.push(
+            GeometricRepresentationItem::SymbolTarget(SymbolTarget {
+                name,
+                placement: SymbolPlacement::Placement3d(placement_id),
+                x_scale,
+                y_scale,
+            }),
+        );
         ctx.symbol_target_id_map.insert(entity_id, id);
         Ok(())
     }
@@ -95,13 +95,13 @@ impl SimpleEntityHandler for DefinedSymbolHandler {
         let Some(&target) = ctx.symbol_target_id_map.get(&target_ref) else {
             return Ok(());
         };
-        let id =
-            ctx.geometric_representation_items
-                .push(GeometricRepresentationItem::DefinedSymbol(DefinedSymbol {
-                    name,
-                    definition: DefinedSymbolDefinition::PreDefinedSymbol(pds_id),
-                    target,
-                }));
+        let id = ctx.geometry.geometric_representation_items.push(
+            GeometricRepresentationItem::DefinedSymbol(DefinedSymbol {
+                name,
+                definition: DefinedSymbolDefinition::PreDefinedSymbol(pds_id),
+                target,
+            }),
+        );
         ctx.defined_symbol_id_map.insert(entity_id, id);
         Ok(())
     }

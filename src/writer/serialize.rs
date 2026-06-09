@@ -23,11 +23,13 @@ pub(super) struct Ed3Sections {
 impl Ed3Sections {
     pub(super) fn build(model: &StepModel, step_ids: &StepIdCache) -> Self {
         let reference_lines = model
+            .metadata
             .external_references
             .iter_with_ids()
             .map(|(id, ext)| format!("{}={};", format_ref(step_ids.get(id)), ext.anchor))
             .collect();
         let anchor_lines = model
+            .metadata
             .anchors
             .iter()
             .map(|a| format!("{}={};", a.name, format_ref(step_ids.get(a.target))))
