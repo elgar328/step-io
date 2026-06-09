@@ -429,6 +429,10 @@ impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_draughting_models(&mut self) -> Result<(), WriteError> {
         use crate::entities::SimpleEntityHandler;
         use crate::entities::shape_rep::draughting_model::DraughtingModelHandler;
+        self.assert_phase(
+            super::EmitPhase::Annotations,
+            "emit_draughting_models (indexes annotation_occurrence/draughting_callout step ids)",
+        );
         let reprs = self.model.shape_rep.representations.clone();
         for (id, repr) in reprs.iter_with_ids() {
             if let Representation::DraughtingModel(dm) = repr {
@@ -566,6 +570,10 @@ impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_representations_pre_pass(
         &mut self,
     ) -> Result<(), WriteError> {
+        self.assert_phase(
+            super::EmitPhase::Representations,
+            "emit_representations_pre_pass (indexes geometry/topology/representation_item step ids)",
+        );
         let reprs = self.model.shape_rep.representations.clone();
         for (id, repr) in reprs.iter_with_ids() {
             // Mdgpr (visualization pass) and DraughtingModel (post-callout

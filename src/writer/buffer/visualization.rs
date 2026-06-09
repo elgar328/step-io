@@ -133,6 +133,10 @@ impl WriteBuffer<'_> {
     pub(in crate::writer::buffer) fn emit_characterized_objects(&mut self) {
         use crate::ir::shape_rep::CharacterizedObject;
         use crate::parser::entity::Attribute;
+        self.assert_phase(
+            super::EmitPhase::DraughtingModels,
+            "emit_characterized_objects (indexes draughting_model step ids)",
+        );
         let inline_co_ids = self.inline_characterized_object_ids();
         let entries: Vec<_> = self
             .model
@@ -395,6 +399,10 @@ impl WriteBuffer<'_> {
         use crate::entities::visualization::styled_item::StyledItemHandler;
         use crate::entities::visualization::surface_style_rendering::SurfaceStyleRenderingHandler;
         use crate::entities::visualization::surface_style_rendering_with_properties::SurfaceStyleRenderingWithPropertiesHandler;
+        self.assert_phase(
+            super::EmitPhase::MappedItems,
+            "emit_visualization_if_set (indexes tessellated/mapped item step ids)",
+        );
         let Some(viz) = self.model.visualization.clone() else {
             return Ok(());
         };

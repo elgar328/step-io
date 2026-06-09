@@ -25,6 +25,33 @@ pub(crate) mod topology;
 pub(crate) mod units;
 pub(crate) mod visualization;
 
+/// Coarse emit phase for `emit_all`'s ordering guard. `emit_all` advances this
+/// monotonically (it is the master) at each coarse block; cross-phase emit
+/// helpers assert `phase >= EmitPhase::<dependency>` on entry. The variant
+/// declaration order *is* `emit_all`'s intended call order, so a block moved
+/// out of order trips `set_phase`'s monotonic `debug_assert` (or a dependent's
+/// `assert_phase`) in debug builds. All of this is `debug_assert!` only — a
+/// no-op in release, so output is unaffected.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
+pub(crate) enum EmitPhase {
+    Init,
+    Geometry,
+    Topology,
+    Units,
+    Representations,
+    Product,
+    Pmi,
+    Tessellation,
+    MappedItems,
+    Visualization,
+    Annotations,
+    DraughtingModels,
+    CharacterizedObjects,
+    ReprRelationships,
+    Presentation,
+    PlmProperties,
+}
+
 pub(crate) struct WriteBuffer<'m> {
     pub(crate) model: &'m StepModel,
     pub(crate) next_id: u64,
@@ -101,6 +128,9 @@ pub(crate) struct WriteBuffer<'m> {
     /// dangling reference). Absent ⇒ kernel-built IR (synthesise instead).
     pub(crate) nauo_pds_arena_slot:
         std::collections::HashMap<crate::ir::id::AssemblyComponentUsageId, (usize, String, String)>,
+    /// Coarse emit phase — `emit_all`'s ordering-guard state (master). See
+    /// [`EmitPhase`]. Debug-only guard; no effect on output.
+    phase: EmitPhase,
 }
 
 impl<'m> WriteBuffer<'m> {
@@ -123,11 +153,33 @@ impl<'m> WriteBuffer<'m> {
             product_step_ids: std::collections::HashMap::new(),
             product_def_shape_ids: std::collections::HashMap::new(),
             nauo_pds_arena_slot: std::collections::HashMap::new(),
+            phase: EmitPhase::Init,
         }
     }
 
     pub(crate) fn finish_entities(self) -> Vec<WriterEntity> {
         self.entities
+    }
+
+    /// Advance the coarse emit phase (monotonic). A non-increasing transition
+    /// means an `emit_all` block was reordered — caught in debug builds.
+    pub(in crate::writer::buffer) fn set_phase(&mut self, p: EmitPhase) {
+        debug_assert!(
+            p > self.phase,
+            "emit order: phase regressed {:?} -> {p:?} (block swap?)",
+            self.phase
+        );
+        self.phase = p;
+    }
+
+    /// Guard a cross-phase dependency: the caller requires every cache from
+    /// phases up to `min` to be populated. Debug-only.
+    pub(in crate::writer::buffer) fn assert_phase(&self, min: EmitPhase, ctx: &str) {
+        debug_assert!(
+            self.phase >= min,
+            "emit order guard: {ctx} requires phase >= {min:?}, got {:?}",
+            self.phase
+        );
     }
 
     #[allow(clippy::too_many_lines)]
@@ -145,6 +197,7 @@ impl<'m> WriteBuffer<'m> {
             let reserved = self.fresh();
             self.set_step_id(id, reserved);
         }
+        self.set_phase(EmitPhase::Geometry);
         for id in self.model.geometry.points.iter_ids() {
             self.emit_point(id)?;
         }
@@ -188,6 +241,7 @@ impl<'m> WriteBuffer<'m> {
         for id in self.model.geometry.vertices.iter_ids() {
             self.emit_vertex(id)?;
         }
+        self.set_phase(EmitPhase::Topology);
         for id in self.model.topology.edges.iter_ids() {
             self.emit_edge(id)?;
         }
@@ -206,6 +260,7 @@ impl<'m> WriteBuffer<'m> {
         // units-2: emit the units pool first so `named_unit_step_ids` is
         // populated before GUAC emit (which now looks up its leaf step
         // ids from that cache instead of producing fresh entities).
+        self.set_phase(EmitPhase::Units);
         self.emit_units_pool_if_set()?;
         // Emit one REPRESENTATION_CONTEXT per IR `UnitContext`. The cached
         // STEP ids land in `unit_context_ids` so each downstream emitter can
@@ -231,6 +286,7 @@ impl<'m> WriteBuffer<'m> {
         // resolve its child SBSMs through the GRI cache (phase
         // sbsm-cluster). The symbol-domain GRI entries still emit after
         // visualization (`emit_geometric_representation_items`).
+        self.set_phase(EmitPhase::Representations);
         self.emit_sbsm_in_gri_arena()?;
         // Emit the value-qualifier pools and the representation_item arena
         // before the representation pre-pass (phase measure-arena-1): a
@@ -250,12 +306,14 @@ impl<'m> WriteBuffer<'m> {
         if let Some(plm) = self.model.plm.clone() {
             self.emit_documents_prepass(&plm)?;
         }
+        self.set_phase(EmitPhase::Product);
         self.emit_product_chain_if_eligible()?;
         // PC cluster (phase pc-unify-a) — arena-driven emit. Coexists with
         // the legacy `emit_product_category_chain` inline path until phase
         // pc-unify-b removes the latter.
         self.emit_product_categories_arena();
         self.emit_product_category_relationships_arena();
+        self.set_phase(EmitPhase::Pmi);
         self.emit_pmi_if_set();
         // general_datum_reference + DATUM_SYSTEM — emitted before the
         // ShapeAspectRef consumers below so `datum_system_step_ids` is
@@ -336,16 +394,19 @@ impl<'m> WriteBuffer<'m> {
         // `tessellated_item_step_ids` during visualization. Only the
         // `tessellated_items` arena is filled here; annotation_occurrence
         // and related orphans still emit after visualization.
+        self.set_phase(EmitPhase::Tessellation);
         self.emit_tessellation()?;
         // REPRESENTATION_MAP + MAPPED_ITEM (phase si-mapped-item) — moved
         // before visualization so STYLED_ITEM / CDORSI can resolve a
         // MAPPED_ITEM target through `mapped_item_step_ids`. MDGPR /
         // STYLED_ITEM-target MAPPED_ITEMs are reader-cascade-dropped, so
         // the cache need not cover MDGPR slots.
+        self.set_phase(EmitPhase::MappedItems);
         self.emit_mapped_items()?;
         // Assembly ABSR bodies whose step ids were reserved in the pre-pass —
         // their MAPPED_ITEM items now resolve (emit_mapped_items just ran).
         self.emit_deferred_assembly_absr()?;
+        self.set_phase(EmitPhase::Visualization);
         self.emit_visualization_if_set()?;
         // Camera-origin plain REPRESENTATION_MAPs + their MAPPED_ITEMs, deferred
         // by `emit_mapped_items` until cameras are stepped. Must precede
@@ -439,6 +500,7 @@ impl<'m> WriteBuffer<'m> {
         // LEADER_CURVE first — fills `acoc_step_ids` consumed by
         // `TERMINATOR_SYMBOL` / `LEADER_TERMINATOR` in
         // `emit_annotation_occurrences`.
+        self.set_phase(EmitPhase::Annotations);
         self.emit_annotation_curve_occurrences();
         // APLL_POINT then ANNOTATION_TO_MODEL_LEADER_LINE before
         // `emit_annotation_occurrences` so a `_WITH_LEADER_LINE` APO resolves
@@ -459,6 +521,7 @@ impl<'m> WriteBuffer<'m> {
         // every items ref cache (styled_item, ao, draughting_callout,
         // representation_item, per-geometry placements) is populated, so
         // the items refs serialise to valid step ids.
+        self.set_phase(EmitPhase::DraughtingModels);
         self.emit_draughting_models()?;
         // TESSELLATED_SHAPE_REPRESENTATION — delayed emit (Mdgpr / DM
         // pattern). Runs after `emit_tessellation` (line 687) so the
@@ -483,10 +546,12 @@ impl<'m> WriteBuffer<'m> {
         // and `item` (DRAUGHTING_CALLOUT, stepped by emit_draughting_callouts
         // above). The step ids were reserved by emit_characterized_objects_prepass
         // so the PD-definition forward refs already point at them.
+        self.set_phase(EmitPhase::CharacterizedObjects);
         self.emit_characterized_objects();
         // CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP — runs after
         // every Representation delayed emit so rep_1 / rep_2 resolve
         // through the fully populated representation_step_ids cache.
+        self.set_phase(EmitPhase::ReprRelationships);
         self.emit_representation_relationships()?;
         // PD-based SHAPE_DEFINITION_REPRESENTATIONs — after BOTH
         // emit_property_definitions_non_pds (definition PD step id) AND every
@@ -518,6 +583,7 @@ impl<'m> WriteBuffer<'m> {
         // emit (Mdgpr / DraughtingModel pattern) — placing this inside
         // `emit_visualization_if_set` panics on corpora that reference
         // `DRAUGHTING_CALLOUT` since that cache is filled later.
+        self.set_phase(EmitPhase::Presentation);
         self.emit_invisibilities()?;
         // PRESENTATION_VIEW / AREA / SET — depends on repr_item and per-
         // geometry placement caches (all populated above).
@@ -527,6 +593,7 @@ impl<'m> WriteBuffer<'m> {
         // PRESENTED_ITEM_REPRESENTATION + APPLIED_PRESENTED_ITEM — depends
         // on pr-core caches + product chain (`product_def_ids`).
         self.emit_pr_item()?;
+        self.set_phase(EmitPhase::PlmProperties);
         self.emit_plm_if_set()?;
         self.emit_properties_if_set();
         Ok(())
@@ -549,5 +616,32 @@ impl<'m> WriteBuffer<'m> {
     #[allow(clippy::needless_pass_by_value)]
     pub(crate) fn set_step_id<I: crate::ir::arena::AsArenaId>(&mut self, id: I, step: u64) {
         self.step_ids.set(id.as_arena_id(), step);
+    }
+}
+
+#[cfg(all(test, debug_assertions))]
+mod phase_guard_tests {
+    use super::{EmitPhase, WriteBuffer};
+    use crate::ir::StepModel;
+
+    // A cross-phase emit helper called before its dependency phase must trip
+    // the order guard (debug build only — the guard is `debug_assert!`).
+    #[test]
+    #[should_panic(expected = "emit order guard")]
+    fn visualization_before_mapped_items_panics() {
+        let model = StepModel::default();
+        let mut buf = WriteBuffer::new(&model);
+        // phase is `Init` (< MappedItems); the assert fires before any work.
+        let _ = buf.emit_visualization_if_set();
+    }
+
+    // A non-increasing `set_phase` (a reordered emit_all block) must panic.
+    #[test]
+    #[should_panic(expected = "phase regressed")]
+    fn set_phase_regression_panics() {
+        let model = StepModel::default();
+        let mut buf = WriteBuffer::new(&model);
+        buf.set_phase(EmitPhase::Topology);
+        buf.set_phase(EmitPhase::Geometry);
     }
 }
