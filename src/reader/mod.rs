@@ -782,8 +782,8 @@ impl ReaderContext {
             model: StepModel {
                 geometry: ctx.geometry,
                 topology: ctx.topology,
-                units: ctx.units,
                 shape_rep: crate::ir::ShapeRepPool {
+                    unit_contexts: ctx.units,
                     unitless_contexts: ctx.unitless_contexts,
                     geometric_item_specific_usages: ctx.geometric_item_specific_usages,
                     shape_aspects: ctx.shape_aspects,

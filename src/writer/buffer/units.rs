@@ -348,7 +348,10 @@ mod tests {
             let mut arena: Arena<UnitContext> = Arena::default();
             arena.push(ctx);
             StepModel {
-                units: arena,
+                shape_rep: crate::ir::ShapeRepPool {
+                    unit_contexts: arena,
+                    ..Default::default()
+                },
                 units_pool: Some(pool),
                 ..StepModel::default()
             }
@@ -361,7 +364,7 @@ mod tests {
 
     /// Lookup the resolved `LengthUnit` for the first context's `length` ref.
     fn first_length(model: &StepModel) -> Option<LengthUnit> {
-        let ctx = model.units.iter().next()?;
+        let ctx = model.shape_rep.unit_contexts.iter().next()?;
         let pool = model.units_pool.as_ref()?;
         match pool.named_units[ctx.length(pool)?] {
             NamedUnit::Length(f) => Some(f.unit),
@@ -369,7 +372,7 @@ mod tests {
         }
     }
     fn first_plane_angle(model: &StepModel) -> Option<AngleUnit> {
-        let ctx = model.units.iter().next()?;
+        let ctx = model.shape_rep.unit_contexts.iter().next()?;
         let pool = model.units_pool.as_ref()?;
         match pool.named_units[ctx.plane_angle(pool)?] {
             NamedUnit::PlaneAngle(f) => Some(f.unit),
@@ -377,7 +380,7 @@ mod tests {
         }
     }
     fn first_solid_angle(model: &StepModel) -> Option<SolidAngleUnit> {
-        let ctx = model.units.iter().next()?;
+        let ctx = model.shape_rep.unit_contexts.iter().next()?;
         let pool = model.units_pool.as_ref()?;
         match pool.named_units[ctx.solid_angle(pool)?] {
             NamedUnit::SolidAngle(f) => Some(f.unit),
@@ -385,7 +388,7 @@ mod tests {
         }
     }
     fn first_ctx(model: &StepModel) -> Option<&UnitContext> {
-        model.units.iter().next()
+        model.shape_rep.unit_contexts.iter().next()
     }
 
     #[test]

@@ -211,8 +211,8 @@ impl<'m> WriteBuffer<'m> {
         // STEP ids land in `unit_context_ids` so each downstream emitter can
         // resolve `Option<UnitContextId>` with a single index lookup. Leaf
         // entities are reused from the units pool — see GUAC writer.
-        self.unit_context_ids = Vec::with_capacity(self.model.units.len());
-        for ctx in self.model.units.iter() {
+        self.unit_context_ids = Vec::with_capacity(self.model.shape_rep.unit_contexts.len());
+        for ctx in self.model.shape_rep.unit_contexts.iter() {
             let id = self.emit_unit_context(ctx.clone())?;
             self.unit_context_ids.push(id);
         }

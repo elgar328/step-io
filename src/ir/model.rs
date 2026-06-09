@@ -160,6 +160,13 @@ pub struct ShapeRepPool {
     /// REPRESENTATION_CONTEXT)` complex MI — unit-less 2D draughting /
     /// pcurve coordinate spaces. Referenced by representation
     /// `context_of_items` via [`RepresentationContextRef::Unitless`].
+    /// Unit / uncertainty contexts declared in the STEP file's
+    /// `GLOBAL_UNIT_ASSIGNED_CONTEXT` complex entities. One arena entry per
+    /// distinct `REPRESENTATION_CONTEXT` in the source — Fusion 360 typically
+    /// emits two (geometry vs. visualization, distinct uncertainties);
+    /// single-product files have one. Empty arena means no unit context (or
+    /// kernel-built IR with units unset).
+    pub unit_contexts: Arena<UnitContext>,
     pub unitless_contexts: Arena<crate::ir::shape_rep::UnitlessContext>,
     /// `GEOMETRIC_ITEM_SPECIFIC_USAGE` arena (phase gisu). Binds a
     /// shape-aspect-family `definition` and a `representation_item`
@@ -273,13 +280,6 @@ pub struct FileMetadata {
 pub struct StepModel {
     pub geometry: GeometryPool,
     pub topology: TopologyPool,
-    /// Unit / uncertainty contexts declared in the STEP file's
-    /// `GLOBAL_UNIT_ASSIGNED_CONTEXT` complex entities. One arena entry per
-    /// distinct `REPRESENTATION_CONTEXT` in the source — Fusion 360 typically
-    /// emits two (geometry vs. visualization, distinct uncertainties);
-    /// single-product files have one. Empty arena means no unit context (or
-    /// kernel-built IR with units unset).
-    pub units: Arena<UnitContext>,
     /// Shape-representation domain pool (representation / shape-aspect
     /// family / mapping / tessellation). See [`ShapeRepPool`].
     pub shape_rep: ShapeRepPool,

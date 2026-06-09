@@ -65,7 +65,7 @@ impl WriteBuffer<'_> {
             self.model.shape_rep.shape_aspects.iter().cloned().collect();
         for (index, sa) in entries.iter().enumerate() {
             // Defensive: silent skip when product chain wasn't emitted (e.g.
-            // kernel-built IR with PMI only, or model.units empty so the
+            // kernel-built IR with PMI only, or model.shape_rep.unit_contexts empty so the
             // assembly pass bailed out). Reader symmetry — reader silent
             // skips SAs whose target ref doesn't resolve.
             let Some(&pds_step_id) = self.product_def_shape_ids.get(&sa.target) else {

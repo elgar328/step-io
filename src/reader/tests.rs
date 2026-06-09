@@ -10,7 +10,7 @@ use crate::ir::units::NamedUnit;
 /// units-2 helpers: resolve the first `UnitContext`'s `length / plane_angle
 /// / solid_angle` `NamedUnitId` to its enum value via the units pool.
 fn first_length(model: &StepModel) -> Option<LengthUnit> {
-    let ctx = model.units.iter().next()?;
+    let ctx = model.shape_rep.unit_contexts.iter().next()?;
     let pool = model.units_pool.as_ref()?;
     match pool.named_units[ctx.length(pool)?] {
         NamedUnit::Length(f) => Some(f.unit),
@@ -18,7 +18,7 @@ fn first_length(model: &StepModel) -> Option<LengthUnit> {
     }
 }
 fn first_plane_angle(model: &StepModel) -> Option<AngleUnit> {
-    let ctx = model.units.iter().next()?;
+    let ctx = model.shape_rep.unit_contexts.iter().next()?;
     let pool = model.units_pool.as_ref()?;
     match pool.named_units[ctx.plane_angle(pool)?] {
         NamedUnit::PlaneAngle(f) => Some(f.unit),
@@ -26,7 +26,7 @@ fn first_plane_angle(model: &StepModel) -> Option<AngleUnit> {
     }
 }
 fn first_solid_angle(model: &StepModel) -> Option<SolidAngleUnit> {
-    let ctx = model.units.iter().next()?;
+    let ctx = model.shape_rep.unit_contexts.iter().next()?;
     let pool = model.units_pool.as_ref()?;
     match pool.named_units[ctx.solid_angle(pool)?] {
         NamedUnit::SolidAngle(f) => Some(f.unit),
@@ -1111,7 +1111,13 @@ fn unit_millimetre_radian_steradian() {
         first_solid_angle(&result.model),
         Some(SolidAngleUnit::Steradian)
     );
-    let ctx = result.model.units.iter().next().expect("ctx");
+    let ctx = result
+        .model
+        .shape_rep
+        .unit_contexts
+        .iter()
+        .next()
+        .expect("ctx");
     assert!(ctx.length_uncertainty.is_none());
     assert!(ctx.plane_angle_uncertainty.is_none());
     assert!(ctx.solid_angle_uncertainty.is_none());
@@ -1153,7 +1159,8 @@ fn unit_unsupported_prefix_produces_warning_and_default_length() {
     // carries only the resolvable units — no fabricated length.
     let unit = result
         .model
-        .units
+        .shape_rep
+        .unit_contexts
         .iter()
         .next()
         .expect("unit context pushed");
@@ -1175,7 +1182,13 @@ fn partial_unit_context_omits_solid_angle_faithfully() {
     let result = convert_source(&minimal_step(data));
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
     let pool = result.model.units_pool.as_ref().expect("pool");
-    let ctx = result.model.units.iter().next().expect("ctx");
+    let ctx = result
+        .model
+        .shape_rep
+        .unit_contexts
+        .iter()
+        .next()
+        .expect("ctx");
     assert_eq!(ctx.units.len(), 2, "only the two source units are kept");
     assert!(ctx.length(pool).is_some());
     assert!(ctx.plane_angle(pool).is_some());
@@ -1188,7 +1201,13 @@ fn partial_unit_context_omits_solid_angle_faithfully() {
         "no fabricated SOLID_ANGLE_UNIT:\n{out}"
     );
     let re = convert_source(&out);
-    let re_ctx = re.model.units.iter().next().expect("re ctx");
+    let re_ctx = re
+        .model
+        .shape_rep
+        .unit_contexts
+        .iter()
+        .next()
+        .expect("re ctx");
     assert_eq!(
         re_ctx.units.len(),
         2,
@@ -1369,7 +1388,8 @@ fn reads_unrecognized_cbu_name_warns() {
     );
     let unit = result
         .model
-        .units
+        .shape_rep
+        .unit_contexts
         .iter()
         .next()
         .expect("unit context pushed");
@@ -1433,7 +1453,7 @@ fn unit_no_global_context_is_silent() {
     // emit no warnings (silent skip).
     let result = convert_source(&minimal_step("#1 = CARTESIAN_POINT('',(0.,0.,0.));"));
     assert!(result.warnings.is_empty());
-    assert!(result.model.units.is_empty());
+    assert!(result.model.shape_rep.unit_contexts.is_empty());
 }
 
 #[test]

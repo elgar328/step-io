@@ -271,12 +271,12 @@ fn unset_axis_directions_round_trip_as_none() {
 fn unit_context_mm_radian_steradian_round_trips() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
     // units-2: NamedUnitId may shift due to pool emit ordering — compare
     // the resolved enum values via arena lookup.
-    let ctx_back = re.units.iter().next().expect("ctx");
+    let ctx_back = re.shape_rep.unit_contexts.iter().next().expect("ctx");
     let pool = re.units_pool.as_ref().expect("units pool");
     match pool.named_units[ctx_back.length(pool).expect("length unit")] {
         NamedUnit::Length(f) => assert_eq!(f.unit, LengthUnit::Millimetre),
@@ -297,14 +297,14 @@ fn unit_context_absent_stays_none() {
     let model = empty_model();
     let text = model.write_to_string().expect("write");
     let re = reconvert(&text);
-    assert!(re.units.is_empty());
+    assert!(re.shape_rep.unit_contexts.is_empty());
 }
 
 #[test]
 fn write_to_and_write_to_string_produce_identical_bytes() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let via_string = model.write_to_string().expect("string");
     let mut via_writer = Vec::new();
     model.write_to(&mut via_writer).expect("writer");
@@ -907,7 +907,7 @@ fn simple_assembly_round_trips() {
     // Root Group holding one Instance that points at a Solid leaf product.
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let transform = identity_transform(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -996,7 +996,7 @@ fn shared_child_assembly_round_trips() {
     // occurrence ids — the classic shared-instance case.
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let transform = identity_transform(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -1094,7 +1094,7 @@ fn nauo_arena_is_canonical_with_instance_view() {
     use step_io::ir::{NextAssemblyUsageOccurrence, ProductDefinition};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let transform = identity_transform(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -1241,7 +1241,7 @@ fn nauo_owned_pds_property_round_trips() {
 
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let leaf_solid = push_minimal_solid(&mut model);
     let transform = identity_transform(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -1393,7 +1393,7 @@ fn instance_placement_representation_round_trips() {
     use step_io::ir::shape_rep::{PlainRepr, Representation, RepresentationContextRef};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let ctx_id = model.units.push(ctx);
+    let ctx_id = model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let transform = identity_transform(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -1494,7 +1494,7 @@ fn assembly_placement_materialises_distinct_rrwt_per_instance() {
     use step_io::ir::shape_rep::RepresentationRelationship;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let transform = identity_transform(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -1623,7 +1623,7 @@ fn multi_body_solid_round_trips() {
     // the writer emits one MSB ref per SolidId in the items list.
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let s1 = push_minimal_solid(&mut model);
     let s2 = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
@@ -1683,7 +1683,7 @@ fn metadata_only_product_round_trips_with_none_geometry_context() {
     // break round-trip equality.
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -1758,7 +1758,7 @@ fn formation_id_round_trips_faithfully() {
     use step_io::ir::{ProductDefinitionFormation, ProductDefinitionFormationData};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -1823,7 +1823,7 @@ fn empty_group_product_preserves_non_identity_shape_ref_frame() {
     // not leave it at the PRODUCT-pass placeholder Placement3dId(0).
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
     let offset_loc = model.geometry.points.push(Point3 {
@@ -1940,7 +1940,7 @@ fn general_property_and_association_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -2054,7 +2054,7 @@ fn property_definition_with_general_property_target_round_trips() {
     // #gp back to a GeneralProperty variant).
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
 
     let mut pool = PropertyPool::default();
     let gp_id = pool.general_properties.push(GeneralProperty {
@@ -2144,7 +2144,7 @@ fn property_definition_with_geometric_tolerance_target_round_trips() {
     let (mut model, sa, ..) = shape_aspect_relationship_fixture();
     let ctx = mm_radian_steradian(&mut model);
     let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let mwu = model
         .units_pool
         .as_mut()
@@ -2204,7 +2204,7 @@ fn property_definition_with_document_file_target_round_trips() {
     // read (resolve #doc back to a Document variant).
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
 
     let mut plm = PlmPool::default();
     let dtype_id = plm.document_types.push(DocumentType {
@@ -2260,7 +2260,7 @@ fn pd_based_shape_definition_representation_round_trips() {
     // pattern), not a product PDS — captured in the new arena and emitted.
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let rep = model
         .shape_rep
         .representations
@@ -2314,7 +2314,7 @@ fn description_attribute_targeting_shape_representation_round_trips() {
     use step_io::ir::shape_rep::{PlainRepr, Representation, RepresentationContextRef};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let rep = model
         .shape_rep
         .representations
@@ -2409,7 +2409,7 @@ fn product_with_additional_shape_representation_round_trips() {
     // SDRs share the single product PDS and must survive the round-trip.
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let identity_frame = model.geometry.identity_placement();
     // The additional representation: a second ABSR over its own solid.
     let extra_solid = push_minimal_solid(&mut model);
@@ -2503,7 +2503,7 @@ fn multi_root_independent_products_round_trip() {
     // LOSS trigger). `reconvert` asserts the reader produced no warnings.
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let identity_frame = model.geometry.identity_placement();
 
     let mut tree = AssemblyTree::default();
@@ -2677,7 +2677,7 @@ fn shape_aspect_subtypes_round_trip() {
     // ALL_AROUND_SHAPE_ASPECT — SHAPE_ASPECT subtypes, each its own arena.
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -2769,7 +2769,7 @@ fn shape_aspect_relationship_fixture() -> (
 ) {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -3208,7 +3208,7 @@ fn camera_usage_round_trip() {
     use step_io::ir::shape_rep::{CameraUsage, PlainRepr, Representation, RepresentationMap};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
     let frame = model.geometry.identity_placement();
     let pt = model.geometry.points.push(Point3 {
         x: 0.0,
@@ -3282,7 +3282,7 @@ fn camera_image_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
     let frame = model.geometry.identity_placement();
     let pt = model.geometry.points.push(Point3 {
         x: 0.0,
@@ -3487,7 +3487,7 @@ fn mapped_item_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
     let loc = model.geometry.points.push(Point3 {
         x: 0.0,
         y: 0.0,
@@ -3566,7 +3566,7 @@ fn camera_origin_mapped_item_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
 
     let frame = model.geometry.identity_placement();
     let pt = model.geometry.points.push(Point3 {
@@ -3673,7 +3673,7 @@ fn presentation_mapped_representation_round_trips() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
 
     let frame = model.geometry.identity_placement();
     let loc2 = model.geometry.points_2d.push(Point2 { x: 0.0, y: 0.0 });
@@ -3757,7 +3757,7 @@ fn assembly_advanced_brep_with_mapped_item_round_trips() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
     let frame = model.geometry.identity_placement();
 
     // A target representation the MAPPED_ITEM's map points into.
@@ -4361,7 +4361,7 @@ fn gt_relationship_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
     let mut tree = AssemblyTree::default();
@@ -4449,7 +4449,7 @@ fn datum_round_trip() {
     use step_io::ir::pmi::Datum;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -4506,7 +4506,7 @@ fn datum_feature_round_trip() {
     use step_io::ir::pmi::{Datum, DatumFeature};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -4598,7 +4598,7 @@ fn dimensional_size_with_datum_feature_round_trip() {
     use step_io::ir::shape_aspect_ref::ShapeAspectRef;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -4691,7 +4691,7 @@ fn geometric_tolerance_form_tolerances_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -4817,7 +4817,7 @@ fn general_datum_reference_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -4893,7 +4893,7 @@ fn id_attribute_general_datum_reference_round_trip() {
     use step_io::ir::property::{IdAttribute, IdAttributeItem, PropertyPool};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
     let mut tree = AssemblyTree::default();
@@ -4973,7 +4973,7 @@ fn datum_reference_compartment_common_datum_list_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -5071,7 +5071,7 @@ fn tolerance_zone_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -5171,7 +5171,7 @@ fn shape_dimension_repr_and_dim_char_repr_round_trip() {
 
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
     let mut tree = AssemblyTree::default();
@@ -5581,7 +5581,7 @@ fn draughting_model_round_trip() {
     use step_io::ir::shape_rep::{DraughtingModel, DraughtingModelForm, Representation};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let ctx_id = model.units.push(ctx);
+    let ctx_id = model.shape_rep.unit_contexts.push(ctx);
     let placement = xyz_placement(&mut model);
     let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
         position: placement,
@@ -5629,7 +5629,7 @@ fn draughting_model_shape_tessellated_complex_round_trips() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let ctx_id = model.units.push(ctx);
+    let ctx_id = model.shape_rep.unit_contexts.push(ctx);
     let placement = xyz_placement(&mut model);
     let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
         position: placement,
@@ -5712,7 +5712,7 @@ fn dmia_round_trip() {
     use step_io::ir::shape_rep::{PlainRepr, Representation};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let ctx_id = model.units.push(ctx);
+    let ctx_id = model.shape_rep.unit_contexts.push(ctx);
     let placement = xyz_placement(&mut model);
     let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
         position: placement,
@@ -5787,7 +5787,7 @@ fn dmia_shape_aspect_datum_definition_round_trip() {
     use step_io::ir::shape_rep::{PlainRepr, Representation};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let ctx_id = model.units.push(ctx);
+    let ctx_id = model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -5891,7 +5891,7 @@ fn dmia_geometric_tolerance_with_datum_reference_round_trip() {
     let target = model.shape_rep.shape_aspects[sa].target;
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    let ctx_id = model.units.push(ctx);
+    let ctx_id = model.shape_rep.unit_contexts.push(ctx);
     let ds = model.shape_rep.datum_systems.push(DatumSystem {
         name: "DS".into(),
         description: String::new(),
@@ -6524,7 +6524,7 @@ fn ciwr_round_trip() {
 
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let p0 = model.geometry.points.push(Point3 {
         x: 0.0,
         y: 0.0,
@@ -6591,7 +6591,7 @@ fn model_geometric_view_round_trip() {
 
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let frame = model.geometry.identity_placement();
     let pt = model.geometry.points.push(Point3 {
         x: 0.0,
@@ -6678,7 +6678,7 @@ fn annotation_placeholder_occurrence_round_trip() {
     use step_io::ir::representation_item::RepresentationItemRef;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let placement = xyz_placement(&mut model);
     let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
         position: placement,
@@ -6726,7 +6726,7 @@ fn leader_line_cluster_round_trip() {
     use step_io::ir::representation_item::RepresentationItemRef;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let placement = xyz_placement(&mut model);
     let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
         position: placement,
@@ -6822,7 +6822,7 @@ fn apll_point_with_surface_and_auxiliary_leader_line_round_trips() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     // A solid gives us an ADVANCED_FACE for the with-surface point to bind to.
     let _solid = push_minimal_solid(&mut model);
     let face = model.topology.faces.iter_with_ids().next().unwrap().0;
@@ -6923,7 +6923,7 @@ fn dmia_with_placeholder_round_trip() {
     use step_io::ir::shape_rep::{PlainRepr, Representation};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let ctx_id = model.units.push(ctx);
+    let ctx_id = model.shape_rep.unit_contexts.push(ctx);
     let placement = xyz_placement(&mut model);
     let surf = model.geometry.surfaces.push(Surface::Plane(Plane3 {
         position: placement,
@@ -7004,7 +7004,7 @@ fn property_definition_with_ciwr_target_round_trips() {
     // emits later under the reserved id) and read it back as the variant.
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let p0 = model.geometry.points.push(Point3 {
         x: 0.0,
         y: 0.0,
@@ -7093,7 +7093,7 @@ fn property_definition_with_mgv_target_round_trips() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let frame = model.geometry.identity_placement();
     let pt = model.geometry.points.push(Point3 {
         x: 0.0,
@@ -7265,7 +7265,7 @@ fn measure_representation_item_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let pmi = model.pmi.get_or_insert_with(PmiPool::default);
     let vftq = pmi
         .value_format_type_qualifiers
@@ -7333,7 +7333,7 @@ fn tolerance_magnitude_references_arena_measure() {
     let (mut model, sa, ..) = shape_aspect_relationship_fixture();
     let ctx = mm_radian_steradian(&mut model);
     let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let vftq = model
         .pmi
         .get_or_insert_with(PmiPool::default)
@@ -7419,7 +7419,7 @@ fn property_item_references_arena_measure() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    let ctx_id = model.units.push(ctx);
+    let ctx_id = model.shape_rep.unit_contexts.push(ctx);
     let vftq = model
         .pmi
         .get_or_insert_with(PmiPool::default)
@@ -7505,7 +7505,7 @@ fn simple_measure_representation_item_round_trips_via_arena() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     model
         .shape_rep
         .representation_items
@@ -7566,7 +7566,7 @@ fn measure_qualification_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
 
     let mwu_id = model
         .units_pool
@@ -7626,7 +7626,7 @@ fn projected_zone_definition_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
     let mut tree = AssemblyTree::default();
@@ -7737,7 +7737,7 @@ fn datum_system_round_trip() {
     use step_io::ir::shape_rep::DatumSystem;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -7816,7 +7816,7 @@ fn datum_target_cluster_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -7932,7 +7932,7 @@ fn geometric_tolerance_with_datum_reference_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -8036,7 +8036,7 @@ fn complex_datum_ref_tolerance_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -8141,7 +8141,7 @@ fn geometric_tolerance_with_modifiers_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -8300,7 +8300,7 @@ fn gt_defined_unit_area_unit_displacement_round_trip() {
                 unit: length_unit,
             })
     };
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -8482,7 +8482,7 @@ fn gt_defined_unit_displacement_reference_complex_measure() {
     let (mut model, sa, ..) = shape_aspect_relationship_fixture();
     let ctx = mm_radian_steradian(&mut model);
     let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let target = model.shape_rep.shape_aspects[sa].target;
     let ds = model.shape_rep.datum_systems.push(DatumSystem {
         name: "DS".into(),
@@ -8609,7 +8609,7 @@ fn plus_minus_tolerance_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length_unit = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
     let solid_id = push_minimal_solid(&mut model);
     let identity_frame = model.geometry.identity_placement();
 
@@ -9279,7 +9279,7 @@ fn presentation_style_by_context_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
     let rep = model
         .shape_rep
         .representations
@@ -9442,7 +9442,7 @@ fn bounded_pcurve_round_trip() {
     use step_io::ir::shape_rep::{PlainRepr, Representation};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
     let frame = model.geometry.identity_placement();
     let plane = model
         .geometry
@@ -9626,7 +9626,7 @@ fn srwp_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
     let frame = model.geometry.identity_placement();
     let dir = model.geometry.directions.push(Direction3 {
         x: 1.0,
@@ -9679,7 +9679,7 @@ fn srwp_measure_item_round_trip() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     let length = ctx.length(model.units_pool.as_ref().unwrap()).unwrap();
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
     let frame = model.geometry.identity_placement();
     let mri =
         model
@@ -9792,7 +9792,7 @@ fn mddr_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
     let sr1 = model
         .shape_rep
         .representations
@@ -9847,7 +9847,7 @@ fn representation_relationship_itself_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
     let r1 = model
         .shape_rep
         .representations
@@ -9910,7 +9910,7 @@ fn cgr_relationship_round_trip() {
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
     let frame = model.geometry.identity_placement();
     let sr = model
         .shape_rep
@@ -9969,7 +9969,7 @@ fn constructive_geometry_representation_round_trip() {
     use step_io::ir::shape_rep::{ConstructiveGeometryRepr, Representation};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
     let frame = model.geometry.identity_placement();
     model
         .shape_rep
@@ -10010,7 +10010,7 @@ fn tessellated_shape_representation_round_trip() {
     use step_io::ir::tessellation::{CoordinatesList, TessellatedItem, TessellatedItemRef};
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    let uc = model.units.push(ctx);
+    let uc = model.shape_rep.unit_contexts.push(ctx);
     let coords = model
         .shape_rep
         .tessellated_items
@@ -10207,7 +10207,7 @@ fn simple_global_unit_assigned_context_and_ratio_unit_round_trip() {
         identifier: "NONE".into(),
         context_type: "NONE".into(),
     };
-    model.units.push(UnitContext {
+    model.shape_rep.unit_contexts.push(UnitContext {
         units: vec![ratio_id],
         length_uncertainty: None,
         plane_angle_uncertainty: None,
@@ -10216,8 +10216,13 @@ fn simple_global_unit_assigned_context_and_ratio_unit_round_trip() {
     });
 
     let re = reconvert(&model.write_to_string().expect("write"));
-    assert_eq!(re.units.len(), 1);
-    let ctx = re.units.iter().next().expect("unit context survived");
+    assert_eq!(re.shape_rep.unit_contexts.len(), 1);
+    let ctx = re
+        .shape_rep
+        .unit_contexts
+        .iter()
+        .next()
+        .expect("unit context survived");
     assert_eq!(ctx.form, simple_form);
     assert_eq!(ctx.units.len(), 1);
     let rpool = re.units_pool.as_ref().expect("units pool");
@@ -10239,7 +10244,7 @@ fn general_property_bound_pdr_round_trips() {
 
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
-    model.units.push(ctx);
+    model.shape_rep.unit_contexts.push(ctx);
 
     let mut pool = PropertyPool::default();
     let gp_id = pool.general_properties.push(GeneralProperty {

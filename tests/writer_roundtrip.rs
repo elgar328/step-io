@@ -23,10 +23,19 @@ fn assert_unit_contexts_equivalent(
     lhs: &step_io::ir::model::StepModel,
     rhs: &step_io::ir::model::StepModel,
 ) {
-    assert_eq!(lhs.units.len(), rhs.units.len(), "{name}: units count");
+    assert_eq!(
+        lhs.shape_rep.unit_contexts.len(),
+        rhs.shape_rep.unit_contexts.len(),
+        "{name}: units count"
+    );
     let lpool = lhs.units_pool.as_ref().expect("lhs units pool");
     let rpool = rhs.units_pool.as_ref().expect("rhs units pool");
-    for (lc, rc) in lhs.units.iter().zip(rhs.units.iter()) {
+    for (lc, rc) in lhs
+        .shape_rep
+        .unit_contexts
+        .iter()
+        .zip(rhs.shape_rep.unit_contexts.iter())
+    {
         // Compare semantic content (unit enum + flag bits); skip `cbu_base`
         // since it's an arena ref whose absolute value depends on emit order.
         let l_len = match lpool.named_units[lc.length(lpool).expect("length unit")] {
@@ -758,14 +767,14 @@ fn external_temp_fusion360_two_context_round_trip() {
     let src = include_str!("fixtures/external_temp_fusion360_two_context.stp");
     let model = ReaderContext::convert(&parse(src).expect("parse")).model;
     assert_eq!(
-        model.units.len(),
+        model.shape_rep.unit_contexts.len(),
         2,
         "fusion fixture must yield two distinct unit contexts"
     );
     let text = model.write_to_string().expect("write");
     let back = ReaderContext::convert(&parse(&text).expect("re-parse")).model;
     assert_eq!(
-        back.units.len(),
+        back.shape_rep.unit_contexts.len(),
         2,
         "writer must emit both unit contexts, re-read should see two"
     );
@@ -851,7 +860,7 @@ fn external_temp_nist_shape_aspect_reader_only() {
 ///
 /// This fixture's `GLOBAL_UNIT_ASSIGNED_CONTEXT` carries only two unit
 /// refs (length + `plane_angle`, no `solid_angle`) so step-io's strict unit
-/// context builder rejects it — `model.units` ends up empty and the
+/// context builder rejects it — `model.shape_rep.unit_contexts` ends up empty and the
 /// product chain is silently skipped on emit. As a result this test
 /// exercises only the reader: it confirms user-defined attributes flow
 /// from the source file into `model.properties`. Round-trip preservation

@@ -1335,7 +1335,8 @@ fn every_fixture_has_expected_units() {
             let result = ReaderContext::convert(&graph);
             let units = result
                 .model
-                .units
+                .shape_rep
+                .unit_contexts
                 .iter()
                 .next()
                 .cloned()
