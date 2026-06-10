@@ -473,22 +473,12 @@ pub struct ReaderContext {
     // instead of a bespoke `FoundedItemId`-valued named map. See `crate::early`.
     /// `SURFACE_STYLE_TRANSPARENT #N → transparency value`.
     pub(crate) viz_transparent_map: HashMap<u64, f64>,
-    /// `SURFACE_SIDE_STYLE` step entity id → `FoundedItemId`. Populated by
-    /// the SSS handler after pushing the `FoundedItem::SurfaceSideStyle`
-    /// variant; consumed by the `SURFACE_STYLE_USAGE` reader for its
-    /// `style` ref.
-    pub(crate) viz_sss_id_map: HashMap<u64, FoundedItemId>,
-    /// `SURFACE_STYLE_USAGE` step entity id → `FoundedItemId`. Populated by
-    /// the SSU handler after pushing the `FoundedItem::SurfaceStyleUsage`
-    /// variant; consumed by the PSA reader for `PsaStyle::Surface(...)`.
-    pub(crate) viz_ssu_id_map: HashMap<u64, FoundedItemId>,
-    /// `POINT_STYLE` step entity id → `FoundedItemId`. Populated by the
-    /// `POINT_STYLE` handler after pushing the `FoundedItem::PointStyle`
-    /// variant; consumed by the PSA reader for `PsaStyle::Point(...)`.
-    pub(crate) viz_point_style_id_map: HashMap<u64, FoundedItemId>,
-    // `viz_view_volume_id_map` removed: `view_volume` migrated to the 2-layer
-    // path, so the camera-model handlers resolve `perspective_of_volume` via the
-    // typed `EarlyViewVolumeId` cache bucket. See `crate::early`.
+    // `viz_sss_id_map` / `viz_ssu_id_map` / `viz_point_style_id_map` /
+    // `viz_view_volume_id_map` removed: `surface_side_style` / `surface_style_usage`
+    // / `point_style` / `view_volume` migrated to the 2-layer path, so their
+    // consumers (`surface_style_usage`, `presentation_style_assignment`,
+    // camera-model handlers) resolve via the typed `Early*Id` cache buckets. See
+    // `crate::early`.
     /// `SURFACE_STYLE_BOUNDARY` step entity id → `FoundedItemId` (phase ssb).
     pub(crate) viz_ssb_id_map: HashMap<u64, FoundedItemId>,
 

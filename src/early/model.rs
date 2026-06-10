@@ -8,7 +8,7 @@ use std::collections::HashMap;
 
 use crate::ir::arena::ArenaId;
 use crate::ir::id::FoundedItemId;
-use crate::ir::visualization::Projection;
+use crate::ir::visualization::{MarkerType, Projection, SurfaceSide};
 
 /// Declare an L1 id newtype that is a **pure `id_cache` key** (no backing
 /// arena — unlike `define_id!`). Used by migrated founded-item producers to
@@ -87,6 +87,64 @@ early_id! {
     /// Typed `id_cache` key for migrated `VIEW_VOLUME` (replaces
     /// `viz_view_volume_id_map`; consumed by the camera-model handlers).
     EarlyViewVolumeId
+}
+
+early_id! {
+    /// Typed `id_cache` key for migrated `SURFACE_SIDE_STYLE` (replaces
+    /// `viz_sss_id_map`; consumed by `surface_style_usage`). `surface_side_style`
+    /// itself already migrated (read slice 1); this only adds the typed bucket so
+    /// its consumer can resolve by L1 type.
+    EarlySurfaceSideStyleId
+}
+
+/// L1 `SURFACE_STYLE_USAGE(side, style)`. `style` is a raw ref to a
+/// `SURFACE_SIDE_STYLE` founded item ([`lower`](super::lower) resolves it via
+/// the typed [`EarlySurfaceSideStyleId`] bucket).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlySurfaceStyleUsage {
+    pub(crate) side: SurfaceSide,
+    pub(crate) style: u64,
+}
+
+early_id! {
+    /// Typed `id_cache` key for migrated `SURFACE_STYLE_USAGE` (replaces
+    /// `viz_ssu_id_map`; consumed by `presentation_style_assignment`).
+    EarlySurfaceStyleUsageId
+}
+
+/// L1 `marker_select`: a `pre_defined_marker` ref (`#N`) or an inline
+/// `marker_type` enum.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum EarlyMarker {
+    Predefined(u64),
+    Type(MarkerType),
+}
+
+/// L1 `size_select` for a marker: an inline positive-length / descriptive
+/// measure, or a `measure_with_unit` ref (`#N`).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum EarlyMarkerSize {
+    PositiveLength(f64),
+    Descriptive(String),
+    MeasureWithUnit(u64),
+}
+
+/// L1 `POINT_STYLE(name, marker, marker_size, marker_colour)`. `marker_colour`
+/// is a raw `colour` ref; the marker / size SELECTs carry raw refs in their ref
+/// variants. [`lower`](super::lower) resolves all refs via the existing
+/// `id_cache`.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPointStyle {
+    pub(crate) name: String,
+    pub(crate) marker: EarlyMarker,
+    pub(crate) marker_size: EarlyMarkerSize,
+    pub(crate) marker_colour: u64,
+}
+
+early_id! {
+    /// Typed `id_cache` key for migrated `POINT_STYLE` (replaces
+    /// `viz_point_style_id_map`; consumed by `presentation_style_assignment`).
+    EarlyPointStyleId
 }
 
 /// Transient L1 store, held on [`ReaderContext`](crate::reader::ReaderContext)

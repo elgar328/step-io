@@ -6,6 +6,7 @@
 //! are silently dropped at read time so the writer's symmetric drop
 //! preserves round-trip equality on the supported subset.
 
+use crate::early::model::{EarlyPointStyleId, EarlySurfaceStyleUsageId};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::check_count;
 use crate::ir::error::ConvertError;
@@ -86,9 +87,17 @@ pub(crate) fn parse_psa_styles(
     for item in items {
         match item {
             Attribute::EntityRef(r) => {
-                if let Some(&ssu_id) = ctx.viz_ssu_id_map.get(r) {
+                if let Some(ssu_id) = ctx
+                    .id_cache
+                    .get::<EarlySurfaceStyleUsageId>(*r)
+                    .map(|e| ctx.early.lookup_lowered(e))
+                {
                     styles.push(PsaStyle::Surface(ssu_id));
-                } else if let Some(&ps_id) = ctx.viz_point_style_id_map.get(r) {
+                } else if let Some(ps_id) = ctx
+                    .id_cache
+                    .get::<EarlyPointStyleId>(*r)
+                    .map(|e| ctx.early.lookup_lowered(e))
+                {
                     styles.push(PsaStyle::Point(ps_id));
                 } else if let Some(cs_id) = ctx.id_cache.get::<crate::ir::id::CurveStyleId>(*r) {
                     styles.push(PsaStyle::Curve(cs_id));

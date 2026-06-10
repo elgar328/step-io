@@ -5,13 +5,17 @@
 //! corpus output stays byte-identical.
 
 use crate::early::model::{
-    EarlySurfaceSideStyle, EarlySurfaceStyleFillArea, EarlySurfaceStyleFillAreaId, EarlyViewVolume,
-    EarlyViewVolumeId,
+    EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlyPointStyleId, EarlySurfaceSideStyle,
+    EarlySurfaceSideStyleId, EarlySurfaceStyleFillArea, EarlySurfaceStyleFillAreaId,
+    EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId, EarlyViewVolume, EarlyViewVolumeId,
 };
-use crate::ir::id::{PlanarExtentId, PointId, SurfaceStyleRenderingId};
+use crate::ir::id::{
+    ColourId, MeasureWithUnitId, PlanarExtentId, PointId, PreDefinedMarkerId,
+    SurfaceStyleRenderingId,
+};
 use crate::ir::visualization::{
-    FoundedItem, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea, ViewVolume,
-    VisualizationPool,
+    FoundedItem, Marker, MarkerSize, PointStyle, SurfaceSideStyle, SurfaceSideStyleEntry,
+    SurfaceStyleFillArea, SurfaceStyleUsage, ViewVolume, VisualizationPool,
 };
 use crate::reader::ReaderContext;
 
@@ -73,9 +77,79 @@ pub(crate) fn lower_surface_side_style(
             name: early.name,
             styles,
         }));
-    // Dual-write the still-present sss map for the un-migrated consumer
-    // (surface_style_usage). Dropped once ssu migrates (Phase 5 scale-out).
-    ctx.viz_sss_id_map.insert(entity_id, id);
+    // Register the typed cache key so the migrated surface_style_usage resolves
+    // this by L1 type (replaces viz_sss_id_map, now removed).
+    let early_id: EarlySurfaceSideStyleId = ctx.early.record_lowered(id);
+    ctx.id_cache.insert(entity_id, early_id);
+}
+
+/// Lower one `SURFACE_STYLE_USAGE`. `style` resolves through the typed
+/// [`EarlySurfaceSideStyleId`] bucket (no `viz_sss_id_map`); an unresolved ref
+/// drops the entity, matching the previous handler. Registers the typed
+/// [`EarlySurfaceStyleUsageId`] key for the PSA consumer.
+pub(crate) fn lower_surface_style_usage(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlySurfaceStyleUsage,
+) {
+    let Some(style) = ctx
+        .id_cache
+        .get::<EarlySurfaceSideStyleId>(early.style)
+        .map(|e| ctx.early.lookup_lowered(e))
+    else {
+        return;
+    };
+    let id = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .founded_items
+        .push(FoundedItem::SurfaceStyleUsage(SurfaceStyleUsage {
+            side: early.side,
+            style,
+        }));
+    let early_id: EarlySurfaceStyleUsageId = ctx.early.record_lowered(id);
+    ctx.id_cache.insert(entity_id, early_id);
+}
+
+/// Lower one `POINT_STYLE`. Marker / size / colour refs resolve through the
+/// existing `id_cache` (`PreDefinedMarkerId` / `MeasureWithUnitId` / `ColourId`);
+/// any unresolved ref drops the entity, matching the previous handler.
+/// Registers the typed [`EarlyPointStyleId`] key for the PSA consumer.
+pub(crate) fn lower_point_style(ctx: &mut ReaderContext, entity_id: u64, early: EarlyPointStyle) {
+    let marker = match early.marker {
+        EarlyMarker::Predefined(n) => {
+            let Some(id) = ctx.id_cache.get::<PreDefinedMarkerId>(n) else {
+                return;
+            };
+            Marker::Predefined(id)
+        }
+        EarlyMarker::Type(t) => Marker::Type(t),
+    };
+    let marker_size = match early.marker_size {
+        EarlyMarkerSize::PositiveLength(v) => MarkerSize::PositiveLength(v),
+        EarlyMarkerSize::Descriptive(s) => MarkerSize::Descriptive(s),
+        EarlyMarkerSize::MeasureWithUnit(n) => {
+            let Some(id) = ctx.id_cache.get::<MeasureWithUnitId>(n) else {
+                return;
+            };
+            MarkerSize::MeasureWithUnit(id)
+        }
+    };
+    let Some(marker_colour) = ctx.id_cache.get::<ColourId>(early.marker_colour) else {
+        return;
+    };
+    let id = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .founded_items
+        .push(FoundedItem::PointStyle(PointStyle {
+            name: early.name,
+            marker,
+            marker_size,
+            marker_colour,
+        }));
+    let early_id: EarlyPointStyleId = ctx.early.record_lowered(id);
+    ctx.id_cache.insert(entity_id, early_id);
 }
 
 /// Lower one `VIEW_VOLUME` into the `founded_items` arena and record the
