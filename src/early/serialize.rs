@@ -3,7 +3,8 @@
 //! resolution already happened in [`lift`](super::lift), so this layer makes
 //! no arena/cache lookups.
 
-use crate::early::model::{EarlySurfaceSideStyle, EarlySurfaceStyleFillArea};
+use crate::early::model::{EarlySurfaceSideStyle, EarlySurfaceStyleFillArea, EarlyViewVolume};
+use crate::ir::visualization::Projection;
 use crate::parser::entity::Attribute;
 use crate::writer::buffer::WriteBuffer;
 
@@ -29,6 +30,40 @@ pub(crate) fn serialize_surface_side_style(
         vec![
             Attribute::String(l1.name.clone()),
             Attribute::List(style_refs),
+        ],
+    )
+}
+
+/// [`Projection`] → a STEP `central_or_parallel` enum `Attribute`.
+fn projection_attr(p: Projection) -> Attribute {
+    Attribute::Enum(
+        match p {
+            Projection::Central => "CENTRAL",
+            Projection::Parallel => "PARALLEL",
+        }
+        .into(),
+    )
+}
+
+/// `bool` → a STEP boolean enum `Attribute` (`.T.` / `.F.`).
+fn bool_attr(b: bool) -> Attribute {
+    Attribute::Enum(if b { "T" } else { "F" }.into())
+}
+
+/// `VIEW_VOLUME(...)` (9 attrs). Refs already resolved to step ids by `lift`.
+pub(crate) fn serialize_view_volume(buf: &mut WriteBuffer, l1: &EarlyViewVolume) -> u64 {
+    buf.push_simple(
+        "VIEW_VOLUME",
+        vec![
+            projection_attr(l1.projection_type),
+            Attribute::EntityRef(l1.projection_point),
+            Attribute::Real(l1.view_plane_distance),
+            Attribute::Real(l1.front_plane_distance),
+            bool_attr(l1.front_plane_clipping),
+            Attribute::Real(l1.back_plane_distance),
+            bool_attr(l1.back_plane_clipping),
+            bool_attr(l1.view_volume_sides_clipping),
+            Attribute::EntityRef(l1.view_window),
         ],
     )
 }

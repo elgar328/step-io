@@ -6,31 +6,15 @@
 //! `projection_point` / `view_window` ref does not resolve is silently
 //! dropped, symmetric on re-read.
 
-use crate::early::{bind, lower};
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::{Projection, ViewVolume};
+use crate::ir::visualization::ViewVolume;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use step_io_macros::step_entity;
-
-/// [`Projection`] → a STEP enum `Attribute`.
-fn projection_attr(p: Projection) -> Attribute {
-    Attribute::Enum(
-        match p {
-            Projection::Central => "CENTRAL",
-            Projection::Parallel => "PARALLEL",
-        }
-        .into(),
-    )
-}
-
-/// `bool` → a STEP boolean enum `Attribute` (`.T.` / `.F.`).
-fn bool_attr(b: bool) -> Attribute {
-    Attribute::Enum(if b { "T" } else { "F" }.into())
-}
 
 pub(crate) struct ViewVolumeHandler;
 
@@ -53,21 +37,9 @@ impl SimpleEntityHandler for ViewVolumeHandler {
     }
 
     fn write(buf: &mut WriteBuffer, vv: ViewVolume) -> Result<u64, WriteError> {
-        let projection_point = buf.emit_point(vv.projection_point)?;
-        let view_window = buf.emit_planar_extent(vv.view_window)?;
-        Ok(buf.push_simple(
-            "VIEW_VOLUME",
-            vec![
-                projection_attr(vv.projection_type),
-                Attribute::EntityRef(projection_point),
-                Attribute::Real(vv.view_plane_distance),
-                Attribute::Real(vv.front_plane_distance),
-                bool_attr(vv.front_plane_clipping),
-                Attribute::Real(vv.back_plane_distance),
-                bool_attr(vv.back_plane_clipping),
-                bool_attr(vv.view_volume_sides_clipping),
-                Attribute::EntityRef(view_window),
-            ],
-        ))
+        // 2-layer write path: lift L2 → L1 (emitting the geometry sub-refs),
+        // then serialize L1 → Part21 text.
+        let early = lift::lift_view_volume(buf, &vv)?;
+        Ok(serialize::serialize_view_volume(buf, &early))
     }
 }

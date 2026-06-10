@@ -9,8 +9,11 @@
 //! (read = input `#N`, write = output `#N`). [`serialize`](super::serialize)
 //! then emits Part21 text mechanically.
 
-use crate::early::model::{EarlySurfaceSideStyle, EarlySurfaceStyleFillArea};
-use crate::ir::visualization::{SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea};
+use crate::early::model::{EarlySurfaceSideStyle, EarlySurfaceStyleFillArea, EarlyViewVolume};
+use crate::ir::visualization::{
+    SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea, ViewVolume,
+};
+use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
 /// Lift L2 `SurfaceStyleFillArea` → L1. `fill_area` is resolved to the output
@@ -43,4 +46,27 @@ pub(crate) fn lift_surface_side_style(
         name: l2.name.clone(),
         styles,
     }
+}
+
+/// Lift L2 `ViewVolume` → L1. Unlike the founded-item refs above,
+/// `projection_point` / `view_window` are geometry refs emitted on demand
+/// (`emit_point` / `emit_planar_extent`), so this lift takes `&mut` and the L1
+/// node carries their output step ids. Field order matches the entity's
+/// positional encoding so the two sub-entities emit in the same order as the
+/// previous handler.
+pub(crate) fn lift_view_volume(
+    buf: &mut WriteBuffer,
+    l2: &ViewVolume,
+) -> Result<EarlyViewVolume, WriteError> {
+    Ok(EarlyViewVolume {
+        projection_type: l2.projection_type,
+        projection_point: buf.emit_point(l2.projection_point)?,
+        view_plane_distance: l2.view_plane_distance,
+        front_plane_distance: l2.front_plane_distance,
+        front_plane_clipping: l2.front_plane_clipping,
+        back_plane_distance: l2.back_plane_distance,
+        back_plane_clipping: l2.back_plane_clipping,
+        view_volume_sides_clipping: l2.view_volume_sides_clipping,
+        view_window: buf.emit_planar_extent(l2.view_window)?,
+    })
 }
