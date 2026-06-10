@@ -11,9 +11,8 @@ use crate::ir::assembly::{AssemblyTree, Product, Transform3d, WireframeContent};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{SurfaceCurveWrapper, TransitionCode};
 use crate::ir::id::{
-    CurveId, Direction2dId, DirectionId, EdgeId, FaceId, FoundedItemId, Placement1dId,
-    Placement3dId, PointId, ProductId, ShellId, SolidId, SurfaceId, UnitContextId, VertexId,
-    WireId,
+    CurveId, Direction2dId, DirectionId, EdgeId, FaceId, Placement1dId, Placement3dId, PointId,
+    ProductId, ShellId, SolidId, SurfaceId, UnitContextId, VertexId, WireId,
 };
 use crate::ir::model::{GeometryPool, StepModel, TopologyPool};
 use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit, SolidAngleUnit, UnitContext};
@@ -479,9 +478,9 @@ pub struct ReaderContext {
     // consumers (`surface_style_usage`, `presentation_style_assignment`,
     // camera-model handlers) resolve via the typed `Early*Id` cache buckets. See
     // `crate::early`.
-    /// `SURFACE_STYLE_BOUNDARY` step entity id → `FoundedItemId` (phase ssb).
-    pub(crate) viz_ssb_id_map: HashMap<u64, FoundedItemId>,
-
+    // `viz_ssb_id_map` removed: it was write-only — `surface_style_boundary`
+    // round-trips through the founded-item arena and nothing resolves it via a
+    // named map, so the field served no purpose.
     /// Lazily-built property pool — populated by the PDR converter.
     /// `None` if the source had no `PROPERTY_DEFINITION_REPRESENTATION`.
     pub(crate) properties: Option<crate::ir::property::PropertyPool>,

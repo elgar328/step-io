@@ -36,15 +36,15 @@ impl SimpleEntityHandler for SurfaceStyleBoundaryHandler {
         let Some(style) = resolve_curve_or_render(ctx, ref_id) else {
             return Ok(());
         };
-        let pool = ctx
-            .visualization
-            .get_or_insert_with(VisualizationPool::default);
-        let id = pool
+        // `SurfaceStyleBoundary` is round-tripped via the arena only — nothing
+        // consumes it through a named map, so no id is registered (the former
+        // write-only `viz_ssb_id_map` was removed).
+        ctx.visualization
+            .get_or_insert_with(VisualizationPool::default)
             .founded_items
             .push(FoundedItem::SurfaceStyleBoundary(SurfaceStyleBoundary {
                 style_of_boundary: style,
             }));
-        ctx.viz_ssb_id_map.insert(entity_id, id);
         Ok(())
     }
 
