@@ -3,8 +3,11 @@
 //! resolution already happened in [`lift`](super::lift), so this layer makes
 //! no arena/cache lookups.
 
-use crate::early::model::{EarlySurfaceSideStyle, EarlySurfaceStyleFillArea, EarlyViewVolume};
-use crate::ir::visualization::Projection;
+use crate::early::model::{
+    EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlySurfaceSideStyle,
+    EarlySurfaceStyleFillArea, EarlySurfaceStyleUsage, EarlyViewVolume,
+};
+use crate::ir::visualization::{MarkerType, Projection, SurfaceSide};
 use crate::parser::entity::Attribute;
 use crate::writer::buffer::WriteBuffer;
 
@@ -48,6 +51,69 @@ fn projection_attr(p: Projection) -> Attribute {
 /// `bool` → a STEP boolean enum `Attribute` (`.T.` / `.F.`).
 fn bool_attr(b: bool) -> Attribute {
     Attribute::Enum(if b { "T" } else { "F" }.into())
+}
+
+/// `SURFACE_STYLE_USAGE(side, style)`.
+pub(crate) fn serialize_surface_style_usage(
+    buf: &mut WriteBuffer,
+    l1: &EarlySurfaceStyleUsage,
+) -> u64 {
+    let side = match l1.side {
+        SurfaceSide::Front => "POSITIVE",
+        SurfaceSide::Back => "NEGATIVE",
+        SurfaceSide::Both => "BOTH",
+    };
+    buf.push_simple(
+        "SURFACE_STYLE_USAGE",
+        vec![Attribute::Enum(side.into()), Attribute::EntityRef(l1.style)],
+    )
+}
+
+/// [`MarkerType`] → STEP `marker_type` enum token.
+fn marker_type_to_token(t: &MarkerType) -> String {
+    match t {
+        MarkerType::Dot => "DOT".into(),
+        MarkerType::X => "X".into(),
+        MarkerType::Plus => "PLUS".into(),
+        MarkerType::Asterisk => "ASTERISK".into(),
+        MarkerType::Ring => "RING".into(),
+        MarkerType::Square => "SQUARE".into(),
+        MarkerType::Triangle => "TRIANGLE".into(),
+        MarkerType::Other(s) => s.clone(),
+    }
+}
+
+/// `POINT_STYLE(name, marker, marker_size, marker_colour)`. Refs already
+/// resolved to step ids by `lift`; the marker / size SELECT members re-emit
+/// their P21 type tags.
+pub(crate) fn serialize_point_style(buf: &mut WriteBuffer, l1: &EarlyPointStyle) -> u64 {
+    let marker_attr = match &l1.marker {
+        EarlyMarker::Predefined(step) => Attribute::EntityRef(*step),
+        EarlyMarker::Type(t) => Attribute::Typed {
+            type_name: "MARKER_TYPE".into(),
+            value: Box::new(Attribute::Enum(marker_type_to_token(t))),
+        },
+    };
+    let size_attr = match &l1.marker_size {
+        EarlyMarkerSize::PositiveLength(v) => Attribute::Typed {
+            type_name: "POSITIVE_LENGTH_MEASURE".into(),
+            value: Box::new(Attribute::Real(*v)),
+        },
+        EarlyMarkerSize::MeasureWithUnit(step) => Attribute::EntityRef(*step),
+        EarlyMarkerSize::Descriptive(s) => Attribute::Typed {
+            type_name: "DESCRIPTIVE_MEASURE".into(),
+            value: Box::new(Attribute::String(s.clone())),
+        },
+    };
+    buf.push_simple(
+        "POINT_STYLE",
+        vec![
+            Attribute::String(l1.name.clone()),
+            marker_attr,
+            size_attr,
+            Attribute::EntityRef(l1.marker_colour),
+        ],
+    )
 }
 
 /// `VIEW_VOLUME(...)` (9 attrs). Refs already resolved to step ids by `lift`.

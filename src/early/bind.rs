@@ -1,8 +1,8 @@
 //! `bind`: `EntityGraph` (late-bound) → `EarlyModel` (L1). Mechanical
 //! attribute extraction only — no SELECT resolution, no flatten, no arena
 //! lookups (those are [`lower`](super::lower)'s job). In the fully-migrated
-//! design this layer is codegen output; here it is hand-written for the two
-//! pilot entities.
+//! design this layer is codegen output; here it is hand-written for the
+//! founded-item entities migrated so far.
 
 use crate::early::model::{
     EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlySurfaceSideStyle,

@@ -2,10 +2,10 @@
 //! arena ref with a side enum (Front / Back / Both). Pushes into the
 //! shared `founded_item` arena as the `SurfaceStyleUsage` variant.
 
-use crate::early::{bind, lower};
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::{SurfaceSide, SurfaceStyleUsage};
+use crate::ir::visualization::SurfaceStyleUsage;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -33,18 +33,8 @@ impl SimpleEntityHandler for SurfaceStyleUsageHandler {
     }
 
     fn write(buf: &mut WriteBuffer, ssu: SurfaceStyleUsage) -> Result<u64, WriteError> {
-        let style_ref = buf.step_id(ssu.style);
-        let side = match ssu.side {
-            SurfaceSide::Front => "POSITIVE",
-            SurfaceSide::Back => "NEGATIVE",
-            SurfaceSide::Both => "BOTH",
-        };
-        Ok(buf.push_simple(
-            "SURFACE_STYLE_USAGE",
-            vec![
-                Attribute::Enum(side.into()),
-                Attribute::EntityRef(style_ref),
-            ],
-        ))
+        // 2-layer write path: lift L2 → L1, then serialize L1 → Part21 text.
+        let early = lift::lift_surface_style_usage(buf, &ssu);
+        Ok(serialize::serialize_surface_style_usage(buf, &early))
     }
 }

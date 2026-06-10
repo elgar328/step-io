@@ -9,9 +9,13 @@
 //! (read = input `#N`, write = output `#N`). [`serialize`](super::serialize)
 //! then emits Part21 text mechanically.
 
-use crate::early::model::{EarlySurfaceSideStyle, EarlySurfaceStyleFillArea, EarlyViewVolume};
+use crate::early::model::{
+    EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlySurfaceSideStyle,
+    EarlySurfaceStyleFillArea, EarlySurfaceStyleUsage, EarlyViewVolume,
+};
 use crate::ir::visualization::{
-    SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea, ViewVolume,
+    Marker, MarkerSize, PointStyle, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea,
+    SurfaceStyleUsage, ViewVolume,
 };
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -69,4 +73,36 @@ pub(crate) fn lift_view_volume(
         view_volume_sides_clipping: l2.view_volume_sides_clipping,
         view_window: buf.emit_planar_extent(l2.view_window)?,
     })
+}
+
+/// Lift L2 `SurfaceStyleUsage` → L1. `style` resolves to the output step id of
+/// the referenced founded item.
+pub(crate) fn lift_surface_style_usage(
+    buf: &WriteBuffer,
+    l2: &SurfaceStyleUsage,
+) -> EarlySurfaceStyleUsage {
+    EarlySurfaceStyleUsage {
+        side: l2.side,
+        style: buf.step_id(l2.style),
+    }
+}
+
+/// Lift L2 `PointStyle` → L1. The marker / size ref variants and the colour
+/// resolve to output step ids; the inline enum / measure variants pass through.
+pub(crate) fn lift_point_style(buf: &WriteBuffer, l2: &PointStyle) -> EarlyPointStyle {
+    let marker = match &l2.marker {
+        Marker::Predefined(id) => EarlyMarker::Predefined(buf.step_id(*id)),
+        Marker::Type(t) => EarlyMarker::Type(t.clone()),
+    };
+    let marker_size = match &l2.marker_size {
+        MarkerSize::PositiveLength(v) => EarlyMarkerSize::PositiveLength(*v),
+        MarkerSize::MeasureWithUnit(id) => EarlyMarkerSize::MeasureWithUnit(buf.step_id(*id)),
+        MarkerSize::Descriptive(s) => EarlyMarkerSize::Descriptive(s.clone()),
+    };
+    EarlyPointStyle {
+        name: l2.name.clone(),
+        marker,
+        marker_size,
+        marker_colour: buf.step_id(l2.marker_colour),
+    }
 }

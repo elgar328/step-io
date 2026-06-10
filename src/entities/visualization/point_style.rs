@@ -1,9 +1,9 @@
 //! `POINT_STYLE` handler — phase point-style.
 
-use crate::early::{bind, lower};
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::{Marker, MarkerSize, MarkerType, PointStyle};
+use crate::ir::visualization::PointStyle;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -33,47 +33,8 @@ impl SimpleEntityHandler for PointStyleHandler {
     }
 
     fn write(buf: &mut WriteBuffer, ps: PointStyle) -> Result<u64, WriteError> {
-        let marker_attr = match ps.marker {
-            Marker::Predefined(id) => Attribute::EntityRef(buf.step_id(id)),
-            // Type-tag the enum SELECT member: `MARKER_TYPE(.PLUS.)`.
-            Marker::Type(t) => Attribute::Typed {
-                type_name: "MARKER_TYPE".into(),
-                value: Box::new(Attribute::Enum(marker_type_to_token(&t))),
-            },
-        };
-        let size_attr = match ps.marker_size {
-            MarkerSize::PositiveLength(v) => Attribute::Typed {
-                type_name: "POSITIVE_LENGTH_MEASURE".into(),
-                value: Box::new(Attribute::Real(v)),
-            },
-            MarkerSize::MeasureWithUnit(id) => Attribute::EntityRef(buf.step_id(id)),
-            MarkerSize::Descriptive(s) => Attribute::Typed {
-                type_name: "DESCRIPTIVE_MEASURE".into(),
-                value: Box::new(Attribute::String(s)),
-            },
-        };
-        let colour_step = buf.step_id(ps.marker_colour);
-        Ok(buf.push_simple(
-            "POINT_STYLE",
-            vec![
-                Attribute::String(ps.name),
-                marker_attr,
-                size_attr,
-                Attribute::EntityRef(colour_step),
-            ],
-        ))
-    }
-}
-
-fn marker_type_to_token(t: &MarkerType) -> String {
-    match t {
-        MarkerType::Dot => "DOT".into(),
-        MarkerType::X => "X".into(),
-        MarkerType::Plus => "PLUS".into(),
-        MarkerType::Asterisk => "ASTERISK".into(),
-        MarkerType::Ring => "RING".into(),
-        MarkerType::Square => "SQUARE".into(),
-        MarkerType::Triangle => "TRIANGLE".into(),
-        MarkerType::Other(s) => s.clone(),
+        // 2-layer write path: lift L2 → L1, then serialize L1 → Part21 text.
+        let early = lift::lift_point_style(buf, &ps);
+        Ok(serialize::serialize_point_style(buf, &early))
     }
 }
