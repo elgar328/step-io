@@ -14,7 +14,8 @@
 //! - [`bind`] : `EntityGraph` → L1 (mechanical attribute extraction).
 //! - [`lower`]: L1 → L2 (the hand-written semantic glue; flatten / SELECT
 //!   resolution / normalization live here).
-//! - `serialize` / `lift` (write path) arrive in the Phase 4 write slice.
+//! - [`lift`]: L2 → L1 (write-side synthesis, the inverse of `lower`).
+//! - [`serialize`]: L1 → Part21 text (mechanical).
 //!
 //! **Status: first read slice — `{surface_style_fill_area, surface_side_style}`.**
 //! These two entities migrate to the L1 path so that `surface_side_style` can
@@ -31,7 +32,9 @@
 //! in the same topological pass needs. It is not a persistent store.
 
 pub(crate) mod bind;
+pub(crate) mod lift;
 pub(crate) mod lower;
 pub(crate) mod model;
+pub(crate) mod serialize;
 
 pub(crate) use model::EarlyModel;

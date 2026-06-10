@@ -3,10 +3,10 @@
 //! into a named composite. Pushes into the shared `founded_item` arena
 //! as the `SurfaceSideStyle` variant.
 
-use crate::early::{bind, lower};
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::{SurfaceSideStyle, SurfaceSideStyleEntry};
+use crate::ir::visualization::SurfaceSideStyle;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -36,17 +36,8 @@ impl SimpleEntityHandler for SurfaceSideStyleHandler {
     }
 
     fn write(buf: &mut WriteBuffer, sss: SurfaceSideStyle) -> Result<u64, WriteError> {
-        let mut style_refs = Vec::with_capacity(sss.styles.len());
-        for entry in sss.styles {
-            let entry_id = match entry {
-                SurfaceSideStyleEntry::FillArea(ssfa_id) => buf.step_id(ssfa_id),
-                SurfaceSideStyleEntry::Rendering(ssr_id) => buf.step_id(ssr_id),
-            };
-            style_refs.push(Attribute::EntityRef(entry_id));
-        }
-        Ok(buf.push_simple(
-            "SURFACE_SIDE_STYLE",
-            vec![Attribute::String(sss.name), Attribute::List(style_refs)],
-        ))
+        // 2-layer write path: lift L2 → L1, then serialize L1 → Part21 text.
+        let early = lift::lift_surface_side_style(buf, &sss);
+        Ok(serialize::serialize_surface_side_style(buf, &early))
     }
 }

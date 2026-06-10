@@ -2,7 +2,7 @@
 //! into one of the `SURFACE_SIDE_STYLE` entry variants. Pushes into the
 //! shared `founded_item` arena as the `SurfaceStyleFillArea` variant.
 
-use crate::early::{bind, lower};
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::SurfaceStyleFillArea;
@@ -33,10 +33,8 @@ impl SimpleEntityHandler for SurfaceStyleFillAreaHandler {
     }
 
     fn write(buf: &mut WriteBuffer, ssfa: SurfaceStyleFillArea) -> Result<u64, WriteError> {
-        let fas_step_id = buf.step_id(ssfa.fill_area);
-        Ok(buf.push_simple(
-            "SURFACE_STYLE_FILL_AREA",
-            vec![Attribute::EntityRef(fas_step_id)],
-        ))
+        // 2-layer write path: lift L2 → L1, then serialize L1 → Part21 text.
+        let early = lift::lift_surface_style_fill_area(buf, &ssfa);
+        Ok(serialize::serialize_surface_style_fill_area(buf, &early))
     }
 }
