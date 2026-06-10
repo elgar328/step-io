@@ -32,6 +32,7 @@
 //! in the same topological pass needs. It is not a persistent store.
 
 pub(crate) mod bind;
+pub(crate) mod generated;
 pub(crate) mod lift;
 pub(crate) mod lower;
 pub(crate) mod model;
