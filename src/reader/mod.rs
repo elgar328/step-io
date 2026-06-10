@@ -460,13 +460,13 @@ pub struct ReaderContext {
     /// `Mdgpr` records here. `None` if no visualization entities were seen.
     pub(crate) visualization: Option<VisualizationPool>,
 
-    /// `FILL_AREA_STYLE_COLOUR #N → FillAreaStyleColour`.
+    /// `FILL_AREA_STYLE_COLOUR #N → FillAreaStyleColour`. A value-cache (not a
+    /// founded-item map) populated by the FASC handler and read by
+    /// `lower_fill_area_style` to inline the colours.
     pub(crate) viz_fasc_map: HashMap<u64, FillAreaStyleColour>,
-    /// `FILL_AREA_STYLE` step entity id → `FoundedItemId`. Populated by the
-    /// FAS handler after pushing the `FoundedItem::FillAreaStyle` variant
-    /// into `VisualizationPool::founded_items`; consumed by the
-    /// `SURFACE_STYLE_FILL_AREA` reader to resolve its `fill_area` ref.
-    pub(crate) viz_fas_id_map: HashMap<u64, FoundedItemId>,
+    // `viz_fas_id_map` removed: `fill_area_style` migrated to the 2-layer path,
+    // so `surface_style_fill_area` resolves its `fill_area` via the typed
+    // `EarlyFillAreaStyleId` cache bucket. See `crate::early`.
     // `viz_ssfa_id_map` removed: `surface_style_fill_area` / `surface_side_style`
     // migrated to the 2-layer (`EarlyModel`) path, so the `FillArea` member is
     // disambiguated by the typed `EarlySurfaceStyleFillAreaId` cache bucket

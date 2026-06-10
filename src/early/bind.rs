@@ -5,7 +5,7 @@
 //! founded-item entities migrated so far.
 
 use crate::early::model::{
-    EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlySurfaceSideStyle,
+    EarlyFillAreaStyle, EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlySurfaceSideStyle,
     EarlySurfaceStyleFillArea, EarlySurfaceStyleUsage, EarlyViewVolume,
 };
 use crate::ir::attr::{
@@ -15,6 +15,17 @@ use crate::ir::attr::{
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::{MarkerType, Projection, SurfaceSide};
 use crate::parser::entity::Attribute;
+
+/// `FILL_AREA_STYLE(name, fill_styles)` → L1.
+pub(crate) fn bind_fill_area_style(
+    entity_id: u64,
+    attrs: &[Attribute],
+) -> Result<EarlyFillAreaStyle, ConvertError> {
+    check_count(attrs, 2, entity_id, "FILL_AREA_STYLE")?;
+    let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let fill_styles = read_entity_ref_list(attrs, 1, entity_id, "fill_styles")?;
+    Ok(EarlyFillAreaStyle { name, fill_styles })
+}
 
 /// `SURFACE_STYLE_FILL_AREA(fill_area)` → L1.
 pub(crate) fn bind_surface_style_fill_area(

@@ -33,14 +33,27 @@ macro_rules! early_id {
 
 /// L1 `SURFACE_STYLE_FILL_AREA(fill_area)`.
 ///
-/// `fill_area` is the raw file id (`#N`) of the referenced `FILL_AREA_STYLE`.
-/// It is a typed `EarlyFillAreaStyleId` in the fully-migrated design; during
-/// this transition slice `fill_area_style` is not yet migrated, so the ref
-/// stays a raw `#N` that [`lower`](super::lower) resolves through the reader's
-/// still-present `viz_fas_id_map`.
+/// `fill_area` is the raw file id (`#N`) of the referenced `FILL_AREA_STYLE`;
+/// [`lower`](super::lower) resolves it through the typed
+/// [`EarlyFillAreaStyleId`] bucket (`fill_area_style` is also migrated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlySurfaceStyleFillArea {
     pub(crate) fill_area: u64,
+}
+
+/// L1 `FILL_AREA_STYLE(name, fill_styles)`. `fill_styles` are raw file refs to
+/// `FILL_AREA_STYLE_COLOUR` entities, which the L2 inlines; [`lower`](super::lower)
+/// resolves each through the reader's `viz_fasc_map` value-cache.
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyFillAreaStyle {
+    pub(crate) name: String,
+    pub(crate) fill_styles: Vec<u64>,
+}
+
+early_id! {
+    /// Typed `id_cache` key for migrated `FILL_AREA_STYLE` (replaces
+    /// `viz_fas_id_map`; consumed by `surface_style_fill_area`).
+    EarlyFillAreaStyleId
 }
 
 /// L1 `SURFACE_SIDE_STYLE(name, styles)`.

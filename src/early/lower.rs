@@ -5,32 +5,65 @@
 //! corpus output stays byte-identical.
 
 use crate::early::model::{
-    EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlyPointStyleId, EarlySurfaceSideStyle,
-    EarlySurfaceSideStyleId, EarlySurfaceStyleFillArea, EarlySurfaceStyleFillAreaId,
-    EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId, EarlyViewVolume, EarlyViewVolumeId,
+    EarlyFillAreaStyle, EarlyFillAreaStyleId, EarlyMarker, EarlyMarkerSize, EarlyPointStyle,
+    EarlyPointStyleId, EarlySurfaceSideStyle, EarlySurfaceSideStyleId, EarlySurfaceStyleFillArea,
+    EarlySurfaceStyleFillAreaId, EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId, EarlyViewVolume,
+    EarlyViewVolumeId,
 };
 use crate::ir::id::{
     ColourId, MeasureWithUnitId, PlanarExtentId, PointId, PreDefinedMarkerId,
     SurfaceStyleRenderingId,
 };
 use crate::ir::visualization::{
-    FoundedItem, Marker, MarkerSize, PointStyle, SurfaceSideStyle, SurfaceSideStyleEntry,
-    SurfaceStyleFillArea, SurfaceStyleUsage, ViewVolume, VisualizationPool,
+    FillAreaStyle, FoundedItem, Marker, MarkerSize, PointStyle, SurfaceSideStyle,
+    SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleUsage, ViewVolume, VisualizationPool,
 };
 use crate::reader::ReaderContext;
+
+/// Lower one `FILL_AREA_STYLE` into the `founded_items` arena. Each
+/// `fill_styles` member resolves through the reader's `viz_fasc_map`
+/// value-cache (the L2 inlines `FILL_AREA_STYLE_COLOUR`); unresolved members
+/// are skipped, matching the previous handler. Registers the typed
+/// [`EarlyFillAreaStyleId`] key for the `surface_style_fill_area` consumer.
+pub(crate) fn lower_fill_area_style(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyFillAreaStyle,
+) {
+    let mut fill_styles = Vec::with_capacity(early.fill_styles.len());
+    for r in early.fill_styles {
+        if let Some(fasc) = ctx.viz_fasc_map.get(&r).cloned() {
+            fill_styles.push(fasc);
+        }
+    }
+    let id = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .founded_items
+        .push(FoundedItem::FillAreaStyle(FillAreaStyle {
+            name: early.name,
+            fill_styles,
+        }));
+    let early_id: EarlyFillAreaStyleId = ctx.early.record_lowered(id);
+    ctx.id_cache.insert(entity_id, early_id);
+}
 
 /// Lower one `SURFACE_STYLE_FILL_AREA` into the `founded_items` arena and
 /// record the read-side L1→L2 correspondence keyed by a typed
 /// [`EarlySurfaceStyleFillAreaId`] (replacing `viz_ssfa_id_map`).
 ///
-/// `fill_area` is resolved through the (un-migrated) `viz_fas_id_map`; an
-/// unresolved ref drops the entity, matching the previous handler.
+/// `fill_area` resolves through the typed [`EarlyFillAreaStyleId`] bucket;
+/// an unresolved ref drops the entity, matching the previous handler.
 pub(crate) fn lower_surface_style_fill_area(
     ctx: &mut ReaderContext,
     entity_id: u64,
     early: &EarlySurfaceStyleFillArea,
 ) {
-    let Some(&fill_area) = ctx.viz_fas_id_map.get(&early.fill_area) else {
+    let Some(fill_area) = ctx
+        .id_cache
+        .get::<EarlyFillAreaStyleId>(early.fill_area)
+        .map(|e| ctx.early.lookup_lowered(e))
+    else {
         return;
     };
     let pool = ctx
