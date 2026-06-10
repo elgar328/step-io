@@ -5,12 +5,13 @@
 //! corpus output stays byte-identical.
 
 use crate::early::model::{
-    EarlySurfaceSideStyle, EarlySurfaceStyleFillArea, EarlySurfaceStyleFillAreaId,
+    EarlySurfaceSideStyle, EarlySurfaceStyleFillArea, EarlySurfaceStyleFillAreaId, EarlyViewVolume,
+    EarlyViewVolumeId,
 };
-use crate::ir::arena::ArenaId;
-use crate::ir::id::SurfaceStyleRenderingId;
+use crate::ir::id::{PlanarExtentId, PointId, SurfaceStyleRenderingId};
 use crate::ir::visualization::{
-    FoundedItem, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea, VisualizationPool,
+    FoundedItem, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea, ViewVolume,
+    VisualizationPool,
 };
 use crate::reader::ReaderContext;
 
@@ -37,11 +38,9 @@ pub(crate) fn lower_surface_style_fill_area(
             fill_area,
         }));
 
-    let idx = ctx.early.ssfa_lowered.len();
-    ctx.early.ssfa_lowered.push(l2);
-    let early_id = EarlySurfaceStyleFillAreaId(
-        u32::try_from(idx).expect("early surface_style_fill_area overflow"),
-    );
+    // Record the L1→L2 correspondence + register the typed cache key so
+    // surface_side_style can resolve this member by L1 type (no viz_ssfa_id_map).
+    let early_id: EarlySurfaceStyleFillAreaId = ctx.early.record_lowered(l2);
     ctx.id_cache.insert(entity_id, early_id);
 }
 
@@ -59,7 +58,7 @@ pub(crate) fn lower_surface_side_style(
     for r in early.styles {
         if let Some(ssfa_id) = ctx.id_cache.get::<EarlySurfaceStyleFillAreaId>(r) {
             styles.push(SurfaceSideStyleEntry::FillArea(
-                ctx.early.ssfa_lowered[ssfa_id.index()],
+                ctx.early.lookup_lowered(ssfa_id),
             ));
         } else if let Some(ssr_id) = ctx.id_cache.get::<SurfaceStyleRenderingId>(r) {
             styles.push(SurfaceSideStyleEntry::Rendering(ssr_id));
@@ -77,4 +76,37 @@ pub(crate) fn lower_surface_side_style(
     // Dual-write the still-present sss map for the un-migrated consumer
     // (surface_style_usage). Dropped once ssu migrates (Phase 5 scale-out).
     ctx.viz_sss_id_map.insert(entity_id, id);
+}
+
+/// Lower one `VIEW_VOLUME` into the `founded_items` arena and record the
+/// read-side L1→L2 correspondence keyed by [`EarlyViewVolumeId`] (replacing
+/// `viz_view_volume_id_map`; the camera-model handlers consult it).
+///
+/// `projection_point` (`PointId`) and `view_window` (`PlanarExtentId`) resolve
+/// through the existing `id_cache`; an unresolved ref drops the entity,
+/// matching the previous handler.
+pub(crate) fn lower_view_volume(ctx: &mut ReaderContext, entity_id: u64, early: &EarlyViewVolume) {
+    let Some(projection_point) = ctx.id_cache.get::<PointId>(early.projection_point) else {
+        return;
+    };
+    let Some(view_window) = ctx.id_cache.get::<PlanarExtentId>(early.view_window) else {
+        return;
+    };
+    let l2 = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .founded_items
+        .push(FoundedItem::ViewVolume(ViewVolume {
+            projection_type: early.projection_type,
+            projection_point,
+            view_plane_distance: early.view_plane_distance,
+            front_plane_distance: early.front_plane_distance,
+            front_plane_clipping: early.front_plane_clipping,
+            back_plane_distance: early.back_plane_distance,
+            back_plane_clipping: early.back_plane_clipping,
+            view_volume_sides_clipping: early.view_volume_sides_clipping,
+            view_window,
+        }));
+    let early_id: EarlyViewVolumeId = ctx.early.record_lowered(l2);
+    ctx.id_cache.insert(entity_id, early_id);
 }

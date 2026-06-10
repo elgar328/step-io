@@ -36,7 +36,11 @@ impl SimpleEntityHandler for CameraModelD3Handler {
         let Some(&view_reference_system) = ctx.placement_map.get(&vrs_ref) else {
             return Ok(()); // view_reference_system unresolved — drop the camera
         };
-        let Some(&perspective_of_volume) = ctx.viz_view_volume_id_map.get(&pov_ref) else {
+        let Some(perspective_of_volume) = ctx
+            .id_cache
+            .get::<crate::early::model::EarlyViewVolumeId>(pov_ref)
+            .map(|v| ctx.early.lookup_lowered(v))
+        else {
             return Ok(());
         };
 

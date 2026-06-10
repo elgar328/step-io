@@ -486,10 +486,9 @@ pub struct ReaderContext {
     /// `POINT_STYLE` handler after pushing the `FoundedItem::PointStyle`
     /// variant; consumed by the PSA reader for `PsaStyle::Point(...)`.
     pub(crate) viz_point_style_id_map: HashMap<u64, FoundedItemId>,
-    /// `VIEW_VOLUME` step entity id → `FoundedItemId` (phase camera-model-d3).
-    /// Populated by the `VIEW_VOLUME` handler; consumed by `CAMERA_MODEL_D3`
-    /// for its `perspective_of_volume` ref.
-    pub(crate) viz_view_volume_id_map: HashMap<u64, FoundedItemId>,
+    // `viz_view_volume_id_map` removed: `view_volume` migrated to the 2-layer
+    // path, so the camera-model handlers resolve `perspective_of_volume` via the
+    // typed `EarlyViewVolumeId` cache bucket. See `crate::early`.
     /// `SURFACE_STYLE_BOUNDARY` step entity id → `FoundedItemId` (phase ssb).
     pub(crate) viz_ssb_id_map: HashMap<u64, FoundedItemId>,
 
