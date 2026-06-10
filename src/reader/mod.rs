@@ -145,6 +145,11 @@ pub struct ReaderContext {
     /// map (see [`id_map_cache`]). Maps with non-id values or a shared arena-id
     /// type keep their own named fields below.
     pub(crate) id_cache: id_map_cache::IdMapCache,
+    /// Transient L1 (`EarlyModel`) store for entities migrated to the 2-layer
+    /// path (currently `surface_style_fill_area` / `surface_side_style`). Holds
+    /// the read-side L1→L2 correspondence consulted during `lower`. See
+    /// [`crate::early`].
+    pub(crate) early: crate::early::EarlyModel,
     pub(crate) geometry: GeometryPool,
     pub(crate) topology: TopologyPool,
     /// Unit / uncertainty contexts — one entry per `REPRESENTATION_CONTEXT`
@@ -462,12 +467,10 @@ pub struct ReaderContext {
     /// into `VisualizationPool::founded_items`; consumed by the
     /// `SURFACE_STYLE_FILL_AREA` reader to resolve its `fill_area` ref.
     pub(crate) viz_fas_id_map: HashMap<u64, FoundedItemId>,
-    /// `SURFACE_STYLE_FILL_AREA` step entity id → `FoundedItemId`.
-    /// Populated by the SSFA handler after pushing the
-    /// `FoundedItem::SurfaceStyleFillArea` variant; consumed by the
-    /// `SURFACE_SIDE_STYLE` reader for `SurfaceSideStyleEntry::FillArea`.
-    pub(crate) viz_ssfa_id_map: HashMap<u64, FoundedItemId>,
-
+    // `viz_ssfa_id_map` removed: `surface_style_fill_area` / `surface_side_style`
+    // migrated to the 2-layer (`EarlyModel`) path, so the `FillArea` member is
+    // disambiguated by the typed `EarlySurfaceStyleFillAreaId` cache bucket
+    // instead of a bespoke `FoundedItemId`-valued named map. See `crate::early`.
     /// `SURFACE_STYLE_TRANSPARENT #N → transparency value`.
     pub(crate) viz_transparent_map: HashMap<u64, f64>,
     /// `SURFACE_SIDE_STYLE` step entity id → `FoundedItemId`. Populated by

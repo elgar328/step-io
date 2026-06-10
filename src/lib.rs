@@ -1,3 +1,4 @@
+pub(crate) mod early;
 pub mod entities;
 pub mod ir;
 pub mod parser;

@@ -601,8 +601,10 @@ pub struct SurfaceSideStyle {
 /// style entry types here; this scope covers `SURFACE_STYLE_FILL_AREA`
 /// (color fill) and the `SURFACE_STYLE_RENDERING` arena
 /// (color + transparency / other rendering hints).
-// Not `StepSelect`: `FillArea` resolves via the `viz_ssfa_id_map` named field
-// (TypeId-collision with `id_cache`), not `id_cache.get`. See `ir::select`.
+// Read via the 2-layer (`EarlyModel`) path: `FillArea` is disambiguated by the
+// typed `EarlySurfaceStyleFillAreaId` cache bucket and `Rendering` by
+// `SurfaceStyleRenderingId` (both `id_cache.get`), so the former TypeId-value
+// collision that blocked `StepSelect` is gone. See `crate::early`.
 #[derive(Debug, Clone, PartialEq)]
 pub enum SurfaceSideStyleEntry {
     FillArea(FoundedItemId),
