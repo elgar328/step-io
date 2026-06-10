@@ -20,3 +20,24 @@ pub(crate) struct EarlyViewVolume {
     pub(crate) view_volume_sides_clipping: bool,
     pub(crate) view_window: u64,
 }
+
+/// L1 `FILL_AREA_STYLE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyFillAreaStyle {
+    pub(crate) name: String,
+    pub(crate) fill_styles: Vec<u64>,
+}
+
+/// L1 `SURFACE_SIDE_STYLE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlySurfaceSideStyle {
+    pub(crate) name: String,
+    pub(crate) styles: Vec<u64>,
+}
+
+/// L1 `SURFACE_STYLE_USAGE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlySurfaceStyleUsage {
+    pub(crate) side: crate::ir::visualization::SurfaceSide,
+    pub(crate) style: u64,
+}

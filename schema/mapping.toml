@@ -3,7 +3,13 @@
 # `generate`: the migrated entity set whose model/bind/serialize gen-early emits
 # into src/early/generated/. Grows as clusters migrate (lower/lift stay hand-
 # written). v0 = the two simplest founded-item entities (no SELECT/Option/inherit).
-generate = ["surface_style_fill_area", "view_volume"]
+generate = [
+    "surface_style_fill_area",
+    "view_volume",
+    "fill_area_style",
+    "surface_side_style",
+    "surface_style_usage",
+]
 
 # `[enum.<alias>]`: reuse an existing L2 enum for a STEP ENUM type-alias instead
 # of synthesizing an `Early*` enum. `variants` maps each early.toml ENUM member
@@ -12,3 +18,10 @@ generate = ["surface_style_fill_area", "view_volume"]
 [enum.central_or_parallel]
 rust_type = "crate::ir::visualization::Projection"
 variants = { central = "Central", parallel = "Parallel" }
+
+# `default`: unknown enum token -> this variant (matches a hand-written catch-all
+# `_ => …`); omit to instead error on unknown (like central_or_parallel above).
+[enum.surface_side]
+rust_type = "crate::ir::visualization::SurfaceSide"
+variants = { positive = "Front", negative = "Back", both = "Both" }
+default = "Both"

@@ -55,17 +55,40 @@ struct EnumHint {
     rust_type: String,
     /// early.toml ENUM member -> L2 variant. STEP token = member upper-cased.
     variants: BTreeMap<String, String>,
+    /// Unknown STEP token -> this variant (matches a hand-written `_ => …`
+    /// catch-all). `None` => error on unknown.
+    #[serde(default)]
+    default: Option<String>,
 }
 
 // ---- classification ----
 
 /// How an attribute's resolved `ty` maps to Rust / bind / serialize.
 enum Kind {
-    Ref,          // entity ref -> u64
+    Ref,          // entity ref (incl. all-entity SELECT) -> u64
+    VecRef,       // aggregation of refs -> Vec<u64>
     Real,         // -> f64
     Bool,         // -> bool
     Str,          // -> String
     Enum(String), // ENUM type-alias name (looked up in mapping.enums)
+}
+
+const MAX_DEPTH: u32 = 32;
+
+/// Inner element of a `LIST/SET/BAG/ARRAY OF X` aggregation, or `None`.
+fn agg_inner(ty: &str) -> Option<&str> {
+    ["LIST OF ", "SET OF ", "BAG OF ", "ARRAY OF "]
+        .iter()
+        .find_map(|p| ty.strip_prefix(p))
+        .map(str::trim)
+}
+
+/// Members of an inline `SELECT(a, b, …)` aliased type, or `None`.
+fn select_members(aliased: &str) -> Option<Vec<&str>> {
+    aliased
+        .strip_prefix("SELECT(")
+        .and_then(|s| s.strip_suffix(')'))
+        .map(|inner| inner.split(',').map(str::trim).collect())
 }
 
 struct Ctx {
@@ -74,18 +97,51 @@ struct Ctx {
 }
 
 impl Ctx {
-    /// Resolve a `ty` token to a [`Kind`]. v0 handles bare tokens only
-    /// (primitive after alias resolution / entity ref / ENUM alias); SELECT,
-    /// OPTIONAL and aggregations are out of scope and panic loudly.
-    fn classify(&self, ty: &str) -> Kind {
+    /// True when `ty` is (or resolves through aliases / all-entity SELECTs to)
+    /// an entity reference — i.e. encodes in Part21 as a bare `#N`.
+    fn ref_like(&self, ty: &str, depth: u32) -> bool {
+        assert!(
+            depth < MAX_DEPTH,
+            "gen-early: ty `{ty}` resolution too deep (cycle?)"
+        );
+        let t = ty.trim();
+        if self.schema.entity.contains_key(t) {
+            return true;
+        }
+        let Some(td) = self.schema.types.get(t) else {
+            return false; // primitive keyword or unknown
+        };
+        let a = td.aliased.trim();
+        if let Some(members) = select_members(a) {
+            return members.iter().all(|m| self.ref_like(m, depth + 1));
+        }
+        if a.starts_with("ENUM(") {
+            return false;
+        }
+        self.ref_like(a, depth + 1)
+    }
+
+    /// Resolve a `ty` token to a [`Kind`]. Handles entity refs, primitives
+    /// (after alias resolution), reused ENUMs, all-entity SELECTs (-> ref) and
+    /// aggregations of refs (-> `Vec<u64>`). OPTIONAL and mixed SELECTs are out
+    /// of scope (v2) and panic loudly.
+    fn classify(&self, ty: &str, depth: u32) -> Kind {
+        assert!(
+            depth < MAX_DEPTH,
+            "gen-early: ty `{ty}` resolution too deep (cycle?)"
+        );
         let t = ty.trim();
         assert!(
-            !(t.starts_with("OPTIONAL ")
-                || t.contains(" OF ")
-                || t.starts_with("SELECT(")
-                || t.starts_with("ENUM(")),
-            "gen-early v0 cannot handle ty `{t}` (SELECT/OPTIONAL/aggregation/inline-enum) yet"
+            !t.starts_with("OPTIONAL "),
+            "gen-early v1 cannot handle OPTIONAL ty `{t}` yet (v2)"
         );
+        if let Some(inner) = agg_inner(t) {
+            assert!(
+                self.ref_like(inner, 0),
+                "gen-early v1: aggregation of non-ref `{inner}` not supported yet"
+            );
+            return Kind::VecRef;
+        }
         match t {
             "real" | "number" => return Kind::Real,
             "boolean" => return Kind::Bool,
@@ -100,7 +156,14 @@ impl Ctx {
             if a.starts_with("ENUM(") {
                 return Kind::Enum(t.to_string());
             }
-            return self.classify(a);
+            if let Some(members) = select_members(a) {
+                assert!(
+                    members.iter().all(|m| self.ref_like(m, 0)),
+                    "gen-early v1: mixed SELECT `{t}` not supported yet (v2)"
+                );
+                return Kind::Ref; // all-entity SELECT -> bare ref
+            }
+            return self.classify(a, depth + 1);
         }
         panic!("gen-early: cannot resolve ty token `{t}`");
     }
@@ -157,7 +220,7 @@ fn main() {
         let attrs: Vec<(&Attr, Kind)> = ent
             .own_attrs
             .iter()
-            .map(|a| (a, ctx.classify(&a.ty)))
+            .map(|a| (a, ctx.classify(&a.ty, 0)))
             .collect();
 
         // model struct
@@ -222,6 +285,11 @@ fn main() {
         )
         .unwrap();
         for (member, variant) in &h.variants {
+            // Skip members whose variant is the default — the catch-all below
+            // already covers them (avoids a `match_same_arms` duplicate).
+            if h.default.as_ref() == Some(variant) {
+                continue;
+            }
             writeln!(
                 bind,
                 "        \"{}\" => Ok({}::{variant}),",
@@ -230,11 +298,15 @@ fn main() {
             )
             .unwrap();
         }
-        writeln!(
-            bind,
-            "        other => Err(crate::ir::error::ConvertError::UnexpectedEntityForm {{ entity_id, detail: format!(\"{{field}}: unknown {alias} '.{{other}}.'\") }}),"
-        )
-        .unwrap();
+        if let Some(default) = &h.default {
+            writeln!(bind, "        _ => Ok({}::{default}),", h.rust_type).unwrap();
+        } else {
+            writeln!(
+                bind,
+                "        other => Err(crate::ir::error::ConvertError::UnexpectedEntityForm {{ entity_id, detail: format!(\"{{field}}: unknown {alias} '.{{other}}.'\") }}),"
+            )
+            .unwrap();
+        }
         writeln!(bind, "    }}\n}}\n").unwrap();
 
         // serialize helper
@@ -289,6 +361,7 @@ fn main() {
 fn field_ty(ctx: &Ctx, k: &Kind) -> String {
     match k {
         Kind::Ref => "u64".into(),
+        Kind::VecRef => "Vec<u64>".into(),
         Kind::Real => "f64".into(),
         Kind::Bool => "bool".into(),
         Kind::Str => "String".into(),
@@ -300,6 +373,9 @@ fn bind_expr(k: &Kind, i: usize, field: &str) -> String {
     match k {
         Kind::Ref => {
             format!("crate::ir::attr::read_entity_ref(attrs, {i}, entity_id, \"{field}\")?")
+        }
+        Kind::VecRef => {
+            format!("crate::ir::attr::read_entity_ref_list(attrs, {i}, entity_id, \"{field}\")?")
         }
         Kind::Real => format!("crate::ir::attr::read_real(attrs, {i}, entity_id, \"{field}\")?"),
         Kind::Bool => format!("crate::ir::attr::read_bool(attrs, {i}, entity_id, \"{field}\")?"),
@@ -315,6 +391,9 @@ fn bind_expr(k: &Kind, i: usize, field: &str) -> String {
 fn serialize_expr(k: &Kind, field: &str) -> String {
     match k {
         Kind::Ref => format!("crate::parser::entity::Attribute::EntityRef(l1.{field})"),
+        Kind::VecRef => format!(
+            "crate::parser::entity::Attribute::List(l1.{field}.iter().map(|&s| crate::parser::entity::Attribute::EntityRef(s)).collect())"
+        ),
         Kind::Real => format!("crate::parser::entity::Attribute::Real(l1.{field})"),
         Kind::Bool => format!("bool_attr(l1.{field})"),
         Kind::Str => format!("crate::parser::entity::Attribute::String(l1.{field}.clone())"),

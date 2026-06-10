@@ -31,6 +31,55 @@ pub(crate) fn serialize_view_volume(
     )
 }
 
+pub(crate) fn serialize_fill_area_style(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyFillAreaStyle,
+) -> u64 {
+    buf.push_simple(
+        "FILL_AREA_STYLE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.fill_styles
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_surface_side_style(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlySurfaceSideStyle,
+) -> u64 {
+    buf.push_simple(
+        "SURFACE_SIDE_STYLE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.styles
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_surface_style_usage(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlySurfaceStyleUsage,
+) -> u64 {
+    buf.push_simple(
+        "SURFACE_STYLE_USAGE",
+        vec![
+            surface_side_attr(l1.side),
+            crate::parser::entity::Attribute::EntityRef(l1.style),
+        ],
+    )
+}
+
 fn central_or_parallel_attr(
     v: crate::ir::visualization::Projection,
 ) -> crate::parser::entity::Attribute {
@@ -38,6 +87,17 @@ fn central_or_parallel_attr(
         match v {
             crate::ir::visualization::Projection::Central => "CENTRAL",
             crate::ir::visualization::Projection::Parallel => "PARALLEL",
+        }
+        .into(),
+    )
+}
+
+fn surface_side_attr(v: crate::ir::visualization::SurfaceSide) -> crate::parser::entity::Attribute {
+    crate::parser::entity::Attribute::Enum(
+        match v {
+            crate::ir::visualization::SurfaceSide::Both => "BOTH",
+            crate::ir::visualization::SurfaceSide::Back => "NEGATIVE",
+            crate::ir::visualization::SurfaceSide::Front => "POSITIVE",
         }
         .into(),
     )

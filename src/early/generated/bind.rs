@@ -64,6 +64,39 @@ pub(crate) fn bind_view_volume(
     })
 }
 
+pub(crate) fn bind_fill_area_style(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyFillAreaStyle, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "FILL_AREA_STYLE")?;
+    Ok(super::model::EarlyFillAreaStyle {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        fill_styles: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "fill_styles")?,
+    })
+}
+
+pub(crate) fn bind_surface_side_style(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlySurfaceSideStyle, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "SURFACE_SIDE_STYLE")?;
+    Ok(super::model::EarlySurfaceSideStyle {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        styles: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "styles")?,
+    })
+}
+
+pub(crate) fn bind_surface_style_usage(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlySurfaceStyleUsage, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "SURFACE_STYLE_USAGE")?;
+    Ok(super::model::EarlySurfaceStyleUsage {
+        side: bind_surface_side(attrs, 0, entity_id, "side")?,
+        style: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "style")?,
+    })
+}
+
 fn bind_central_or_parallel(
     attrs: &[crate::parser::entity::Attribute],
     index: usize,
@@ -77,5 +110,18 @@ fn bind_central_or_parallel(
             entity_id,
             detail: format!("{field}: unknown central_or_parallel '.{other}.'"),
         }),
+    }
+}
+
+fn bind_surface_side(
+    attrs: &[crate::parser::entity::Attribute],
+    index: usize,
+    entity_id: u64,
+    field: &'static str,
+) -> Result<crate::ir::visualization::SurfaceSide, crate::ir::error::ConvertError> {
+    match crate::ir::attr::read_enum(attrs, index, entity_id, field)? {
+        "NEGATIVE" => Ok(crate::ir::visualization::SurfaceSide::Back),
+        "POSITIVE" => Ok(crate::ir::visualization::SurfaceSide::Front),
+        _ => Ok(crate::ir::visualization::SurfaceSide::Both),
     }
 }
