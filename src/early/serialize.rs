@@ -4,12 +4,26 @@
 //! no arena/cache lookups.
 
 use crate::early::model::{
-    EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlySurfaceSideStyle,
+    EarlyFillAreaStyle, EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlySurfaceSideStyle,
     EarlySurfaceStyleFillArea, EarlySurfaceStyleUsage, EarlyViewVolume,
 };
 use crate::ir::visualization::{MarkerType, Projection, SurfaceSide};
 use crate::parser::entity::Attribute;
 use crate::writer::buffer::WriteBuffer;
+
+/// `FILL_AREA_STYLE(name, fill_styles)`. The colour refs are already emitted /
+/// resolved to step ids by `lift`.
+pub(crate) fn serialize_fill_area_style(buf: &mut WriteBuffer, l1: &EarlyFillAreaStyle) -> u64 {
+    let refs = l1
+        .fill_styles
+        .iter()
+        .map(|&s| Attribute::EntityRef(s))
+        .collect();
+    buf.push_simple(
+        "FILL_AREA_STYLE",
+        vec![Attribute::String(l1.name.clone()), Attribute::List(refs)],
+    )
+}
 
 /// `SURFACE_STYLE_FILL_AREA(fill_area)`.
 pub(crate) fn serialize_surface_style_fill_area(

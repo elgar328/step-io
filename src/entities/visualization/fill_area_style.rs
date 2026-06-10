@@ -2,7 +2,7 @@
 //! `FILL_AREA_STYLE_COLOUR` entries into a named fill-area style. Pushes
 //! into the shared `founded_item` arena as the `FillAreaStyle` variant.
 
-use crate::early::{bind, lower};
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::FillAreaStyle;
@@ -11,7 +11,6 @@ use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
-use super::fill_area_style_colour::FillAreaStyleColourHandler;
 use step_io_macros::step_entity;
 
 pub(crate) struct FillAreaStyleHandler;
@@ -35,15 +34,9 @@ impl SimpleEntityHandler for FillAreaStyleHandler {
     }
 
     fn write(buf: &mut WriteBuffer, fas: FillAreaStyle) -> Result<u64, WriteError> {
-        let mut style_refs = Vec::with_capacity(fas.fill_styles.len());
-        for fasc in fas.fill_styles {
-            style_refs.push(Attribute::EntityRef(FillAreaStyleColourHandler::write(
-                buf, fasc,
-            )?));
-        }
-        Ok(buf.push_simple(
-            "FILL_AREA_STYLE",
-            vec![Attribute::String(fas.name), Attribute::List(style_refs)],
-        ))
+        // 2-layer write path: lift L2 → L1 (emitting the inlined colours), then
+        // serialize L1 → Part21 text.
+        let early = lift::lift_fill_area_style(buf, &fas)?;
+        Ok(serialize::serialize_fill_area_style(buf, &early))
     }
 }

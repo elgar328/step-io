@@ -10,15 +10,34 @@
 //! then emits Part21 text mechanically.
 
 use crate::early::model::{
-    EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlySurfaceSideStyle,
+    EarlyFillAreaStyle, EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlySurfaceSideStyle,
     EarlySurfaceStyleFillArea, EarlySurfaceStyleUsage, EarlyViewVolume,
 };
+use crate::entities::SimpleEntityHandler;
+use crate::entities::visualization::fill_area_style_colour::FillAreaStyleColourHandler;
 use crate::ir::visualization::{
-    Marker, MarkerSize, PointStyle, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea,
-    SurfaceStyleUsage, ViewVolume,
+    FillAreaStyle, Marker, MarkerSize, PointStyle, SurfaceSideStyle, SurfaceSideStyleEntry,
+    SurfaceStyleFillArea, SurfaceStyleUsage, ViewVolume,
 };
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
+
+/// Lift L2 `FillAreaStyle` → L1. The inlined `FILL_AREA_STYLE_COLOUR` members
+/// are emitted on demand (so `lift` takes `&mut`); the L1 node carries their
+/// output step ids, matching the previous handler's emission order.
+pub(crate) fn lift_fill_area_style(
+    buf: &mut WriteBuffer,
+    l2: &FillAreaStyle,
+) -> Result<EarlyFillAreaStyle, WriteError> {
+    let mut fill_styles = Vec::with_capacity(l2.fill_styles.len());
+    for fasc in &l2.fill_styles {
+        fill_styles.push(FillAreaStyleColourHandler::write(buf, fasc.clone())?);
+    }
+    Ok(EarlyFillAreaStyle {
+        name: l2.name.clone(),
+        fill_styles,
+    })
+}
 
 /// Lift L2 `SurfaceStyleFillArea` → L1. `fill_area` is resolved to the output
 /// step id of the referenced `FILL_AREA_STYLE`.
