@@ -7,7 +7,8 @@
 //! dev tool, not a `build.rs`. Generates the entities in the `generate` list
 //! (mapping.toml). Supports entity refs / primitives (real, integer, bool,
 //! string) / ENUMs (hinted L2-reuse or auto-synthesized `Early*` when hint-less)
-//! / all-entity & mixed SELECTs / OPTIONAL (faithful `Option<T>`; `lower` decides
+//! / SELECTs (all-entity -> ref; mixed -> hinted or auto-synthesized `Early*`
+//! for scalar+ENUM members) / OPTIONAL (faithful `Option<T>`; `lower` decides
 //! any collapse) and **inheritance flattening** (supertype attrs prepended in
 //! Part21 order, see [`EarlyToml::flattened_attrs`]).
 
@@ -248,10 +249,8 @@ impl Ctx {
                 if members.iter().all(|m| self.ref_like(m, 0)) {
                     return Kind::Ref; // all-entity SELECT -> bare ref
                 }
-                assert!(
-                    self.mapping.selects.contains_key(t),
-                    "gen-early: mixed SELECT `{t}` needs a [select.{t}] hint"
-                );
+                // Mixed SELECT: hinted -> `emit_select`, hint-less -> auto-synth
+                // via `emit_select_synth` (decided at emit time).
                 return Kind::Select(t.to_string());
             }
             return self.classify(a, depth + 1);
@@ -450,18 +449,32 @@ fn main() {
         writeln!(serialize, "    ])\n}}\n").unwrap();
     }
 
-    // generated mixed-SELECT helpers (synthesized enum + bind/serialize). Enum
-    // members need token-based helpers, collected here and emitted once below.
+    // generated mixed-SELECT helpers. Hinted SELECTs use `emit_select` (token-
+    // based enum helpers, collected in `token_enums`); hint-less SELECTs use
+    // `emit_select_synth` (inline enum maps). Synth enum *models* are deduped
+    // across selects and standalone fields via `emitted_models`.
     let mut token_enums: BTreeSet<String> = BTreeSet::new();
+    let mut emitted_models: BTreeSet<String> = BTreeSet::new();
     for sel in &used_selects {
-        emit_select(
-            &ctx,
-            sel,
-            &mut model,
-            &mut bind,
-            &mut serialize,
-            &mut token_enums,
-        );
+        if ctx.mapping.selects.contains_key(sel) {
+            emit_select(
+                &ctx,
+                sel,
+                &mut model,
+                &mut bind,
+                &mut serialize,
+                &mut token_enums,
+            );
+        } else {
+            emit_select_synth(
+                &ctx,
+                sel,
+                &mut model,
+                &mut bind,
+                &mut serialize,
+                &mut emitted_models,
+            );
+        }
     }
     for alias in &token_enums {
         emit_token_enum(&ctx, alias, &mut bind, &mut serialize);
@@ -471,7 +484,14 @@ fn main() {
     for alias in &used_enums {
         // Hint-less ENUM -> synthesize an `Early*` enum (model def + helpers).
         let Some(h) = ctx.mapping.enums.get(alias) else {
-            emit_synth_enum(&ctx, alias, &mut model, &mut bind, &mut serialize);
+            emit_synth_enum(
+                &ctx,
+                alias,
+                &mut model,
+                &mut bind,
+                &mut serialize,
+                &mut emitted_models,
+            );
             continue;
         };
         // bind helper
@@ -712,6 +732,186 @@ fn emit_select(
     writeln!(serialize, "    }}\n}}\n").unwrap();
 }
 
+/// Emit a synthesized `Early*` enum + `bind_<sel>` / `<sel>_emit` for a
+/// **hint-less** mixed SELECT (no `[select.*]`). Variant = `pascal(member)`,
+/// member kind = [`Ctx::classify`]. Supported members: entity (≤1, bare `#N`),
+/// scalar (real/int/str/bool), and hint-less ENUM (synth enum, token map inlined
+/// so no `from_token` helper). Deferred shapes panic loudly (none reached by the
+/// current generate-list): ≥2 entity (combined-ref), aggregation member, nested
+/// mixed SELECT, or a hinted ENUM member.
+fn emit_select_synth(
+    ctx: &Ctx,
+    sel: &str,
+    model: &mut String,
+    bind: &mut String,
+    serialize: &mut String,
+    emitted_models: &mut BTreeSet<String>,
+) {
+    let rt = format!("Early{}", pascal(sel));
+    let rtq = format!("super::model::{rt}");
+    let aliased = ctx
+        .schema
+        .types
+        .get(sel)
+        .unwrap_or_else(|| panic!("gen-early: select `{sel}` not a type alias"))
+        .aliased
+        .clone();
+    let members = select_members(aliased.trim())
+        .unwrap_or_else(|| panic!("gen-early: select `{sel}` not a SELECT"));
+    // (member name, L1 variant, member kind)
+    let mems: Vec<(&str, String, Kind)> = members
+        .iter()
+        .map(|&m| (m, pascal(m), ctx.classify(m, 0)))
+        .collect();
+
+    let count = |pred: fn(&Kind) -> bool| mems.iter().filter(|(_, _, k)| pred(k)).count();
+    assert!(
+        count(|k| matches!(k, Kind::Ref)) <= 1,
+        "gen-early: select `{sel}` has >=2 entity members (multi-entity combined-ref: v4.x)"
+    );
+    for (m, _, k) in &mems {
+        match k {
+            Kind::VecRef => {
+                panic!("gen-early: select `{sel}` member `{m}` is an aggregation (v4.4)")
+            }
+            Kind::Select(_) => {
+                panic!("gen-early: select `{sel}` member `{m}` is a nested mixed select (v4.x)")
+            }
+            Kind::Enum(a) if ctx.mapping.enums.contains_key(a) => panic!(
+                "gen-early: select `{sel}` member `{m}` is a hinted enum in a hint-less select (v4.x)"
+            ),
+            _ => {}
+        }
+    }
+
+    let payload = |k: &Kind| -> String {
+        match k {
+            Kind::Ref => "u64".into(),
+            Kind::Real => "f64".into(),
+            Kind::Int => "i64".into(),
+            Kind::Bool => "bool".into(),
+            Kind::Str => "String".into(),
+            Kind::Enum(a) => format!("super::model::Early{}", pascal(a)),
+            _ => unreachable!("filtered by the deferred-shape checks above"),
+        }
+    };
+
+    // synth enum models for ENUM members (deduped across selects / fields).
+    for (_, _, k) in &mems {
+        if let Kind::Enum(a) = k {
+            write_synth_enum_model(ctx, a, model, emitted_models);
+        }
+    }
+
+    // model enum
+    writeln!(model, "/// L1 mixed SELECT `{sel}` (generated, hint-less).").unwrap();
+    writeln!(model, "#[derive(Debug, Clone, PartialEq)]").unwrap();
+    writeln!(model, "pub(crate) enum {rt} {{").unwrap();
+    for (_, v, k) in &mems {
+        writeln!(model, "    {v}({}),", payload(k)).unwrap();
+    }
+    writeln!(model, "}}\n").unwrap();
+
+    // bind_<sel>
+    if mems.iter().any(|(_, _, k)| matches!(k, Kind::Real)) {
+        writeln!(bind, "#[allow(clippy::cast_precision_loss)]").unwrap();
+    }
+    writeln!(
+        bind,
+        "fn bind_{sel}(attr: &crate::parser::entity::Attribute) -> Option<{rtq}> {{"
+    )
+    .unwrap();
+    writeln!(bind, "    match attr {{").unwrap();
+    for (_, v, k) in &mems {
+        if matches!(k, Kind::Ref) {
+            writeln!(
+                bind,
+                "        crate::parser::entity::Attribute::EntityRef(n) => Some({rtq}::{v}(*n)),"
+            )
+            .unwrap();
+        }
+    }
+    if mems.iter().any(|(_, _, k)| !matches!(k, Kind::Ref)) {
+        writeln!(
+            bind,
+            "        crate::parser::entity::Attribute::Typed {{ type_name, value }} => match (type_name.as_str(), value.as_ref()) {{"
+        )
+        .unwrap();
+        for (m, v, k) in &mems {
+            let tag = m.to_uppercase();
+            match k {
+                Kind::Real => {
+                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Real(x)) => Some({rtq}::{v}(*x)),").unwrap();
+                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Integer(x)) => Some({rtq}::{v}(*x as f64)),").unwrap();
+                }
+                Kind::Int => {
+                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Integer(x)) => Some({rtq}::{v}(*x)),").unwrap();
+                }
+                Kind::Str => {
+                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::String(s)) => Some({rtq}::{v}(s.clone())),").unwrap();
+                }
+                Kind::Bool => {
+                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Enum(t)) => Some({rtq}::{v}(t.as_str() == \"T\")),").unwrap();
+                }
+                Kind::Enum(a) => {
+                    let etype = format!("super::model::Early{}", pascal(a));
+                    write!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Enum(t)) => match t.as_str() {{").unwrap();
+                    for (etag, evar) in synth_enum_members(ctx, a) {
+                        write!(bind, " \"{etag}\" => Some({rtq}::{v}({etype}::{evar})),").unwrap();
+                    }
+                    writeln!(bind, " _ => None }},").unwrap();
+                }
+                _ => {}
+            }
+        }
+        writeln!(bind, "            _ => None,").unwrap();
+        writeln!(bind, "        }},").unwrap();
+    }
+    writeln!(bind, "        _ => None,").unwrap();
+    writeln!(bind, "    }}\n}}\n").unwrap();
+
+    // <sel>_emit
+    writeln!(
+        serialize,
+        "fn {sel}_emit(v: &{rtq}) -> crate::parser::entity::Attribute {{"
+    )
+    .unwrap();
+    writeln!(serialize, "    match v {{").unwrap();
+    for (m, v, k) in &mems {
+        let tag = m.to_uppercase();
+        let arm = match k {
+            Kind::Ref => {
+                format!("{rtq}::{v}(step) => crate::parser::entity::Attribute::EntityRef(*step),")
+            }
+            Kind::Real => format!(
+                "{rtq}::{v}(x) => crate::parser::entity::Attribute::Typed {{ type_name: \"{tag}\".into(), value: Box::new(crate::parser::entity::Attribute::Real(*x)) }},"
+            ),
+            Kind::Int => format!(
+                "{rtq}::{v}(x) => crate::parser::entity::Attribute::Typed {{ type_name: \"{tag}\".into(), value: Box::new(crate::parser::entity::Attribute::Integer(*x)) }},"
+            ),
+            Kind::Str => format!(
+                "{rtq}::{v}(s) => crate::parser::entity::Attribute::Typed {{ type_name: \"{tag}\".into(), value: Box::new(crate::parser::entity::Attribute::String(s.clone())) }},"
+            ),
+            Kind::Bool => format!(
+                "{rtq}::{v}(b) => crate::parser::entity::Attribute::Typed {{ type_name: \"{tag}\".into(), value: Box::new(crate::parser::entity::Attribute::Enum(if *b {{ \"T\" }} else {{ \"F\" }}.into())) }},"
+            ),
+            Kind::Enum(a) => {
+                let etype = format!("super::model::Early{}", pascal(a));
+                let mut arms = String::new();
+                for (etag, evar) in synth_enum_members(ctx, a) {
+                    write!(arms, " {etype}::{evar} => \"{etag}\",").unwrap();
+                }
+                format!(
+                    "{rtq}::{v}(e) => crate::parser::entity::Attribute::Typed {{ type_name: \"{tag}\".into(), value: Box::new(crate::parser::entity::Attribute::Enum(match e {{{arms} }}.into())) }},"
+                )
+            }
+            _ => unreachable!("filtered by the deferred-shape checks above"),
+        };
+        writeln!(serialize, "        {arm}").unwrap();
+    }
+    writeln!(serialize, "    }}\n}}\n").unwrap();
+}
+
 /// Emit token-based helpers (`<enum>_from_token` in bind, `<enum>_to_token` in
 /// serialize) for a `catch_all` ENUM used as a SELECT member.
 fn emit_token_enum(ctx: &Ctx, alias: &str, bind: &mut String, serialize: &mut String) {
@@ -748,7 +948,45 @@ fn emit_token_enum(ctx: &Ctx, alias: &str, bind: &mut String, serialize: &mut St
     writeln!(serialize, "    }}\n}}\n").unwrap();
 }
 
-/// Emit a synthesized `Early*` enum (model def) + `bind_<alias>` / `<alias>_attr`
+/// Resolve a hint-less ENUM alias to its `(STEP token, Rust variant)` members.
+fn synth_enum_members(ctx: &Ctx, alias: &str) -> Vec<(String, String)> {
+    let aliased = ctx
+        .schema
+        .types
+        .get(alias)
+        .unwrap_or_else(|| panic!("gen-early: enum `{alias}` not a type alias"))
+        .aliased
+        .clone();
+    enum_members(aliased.trim())
+        .unwrap_or_else(|| panic!("gen-early: enum `{alias}` not an ENUM"))
+        .iter()
+        .map(|m| (m.to_uppercase(), pascal(m)))
+        .collect()
+}
+
+/// Emit the synthesized `Early*` enum *model definition* once (deduped via
+/// `emitted_models`). Shared by standalone-field ENUMs and hint-less SELECT
+/// members so a model used both ways is defined exactly once.
+fn write_synth_enum_model(
+    ctx: &Ctx,
+    alias: &str,
+    model: &mut String,
+    emitted_models: &mut BTreeSet<String>,
+) {
+    if !emitted_models.insert(alias.to_string()) {
+        return;
+    }
+    let rt = format!("Early{}", pascal(alias));
+    writeln!(model, "/// L1 ENUM `{alias}` (generated).").unwrap();
+    writeln!(model, "#[derive(Debug, Clone, PartialEq)]").unwrap();
+    writeln!(model, "pub(crate) enum {rt} {{").unwrap();
+    for (_, v) in synth_enum_members(ctx, alias) {
+        writeln!(model, "    {v},").unwrap();
+    }
+    writeln!(model, "}}\n").unwrap();
+}
+
+/// Emit a synthesized `Early*` enum (model def + `bind_<alias>` / `<alias>_attr`)
 /// for a hint-less standalone-field ENUM. Variant = `pascal(member)`, STEP token
 /// = `member.to_uppercase()`. Strict: an unknown token errors (EXPRESS ENUMs are
 /// closed). Mirrors the hinted path but with a generated type instead of L2 reuse.
@@ -758,31 +996,11 @@ fn emit_synth_enum(
     model: &mut String,
     bind: &mut String,
     serialize: &mut String,
+    emitted_models: &mut BTreeSet<String>,
 ) {
-    let aliased = ctx
-        .schema
-        .types
-        .get(alias)
-        .unwrap_or_else(|| panic!("gen-early: enum `{alias}` not a type alias"))
-        .aliased
-        .clone();
-    let members = enum_members(aliased.trim())
-        .unwrap_or_else(|| panic!("gen-early: enum `{alias}` not an ENUM"));
     let rt = format!("Early{}", pascal(alias));
-    // (STEP token, Rust variant)
-    let mems: Vec<(String, String)> = members
-        .iter()
-        .map(|m| (m.to_uppercase(), pascal(m)))
-        .collect();
-
-    // model enum
-    writeln!(model, "/// L1 ENUM `{alias}` (generated).").unwrap();
-    writeln!(model, "#[derive(Debug, Clone, PartialEq)]").unwrap();
-    writeln!(model, "pub(crate) enum {rt} {{").unwrap();
-    for (_, v) in &mems {
-        writeln!(model, "    {v},").unwrap();
-    }
-    writeln!(model, "}}\n").unwrap();
+    let mems = synth_enum_members(ctx, alias);
+    write_synth_enum_model(ctx, alias, model, emitted_models);
 
     // bind helper
     writeln!(
@@ -836,7 +1054,12 @@ fn field_ty(ctx: &Ctx, k: &Kind) -> String {
             Some(h) => h.rust_type.clone(),
             None => format!("Early{}", pascal(alias)),
         },
-        Kind::Select(alias) => ctx.select_hint(alias).rust_type.clone(),
+        // Hinted SELECT reuses the hint's type; hint-less SELECT uses the
+        // synthesized `Early*` (parallel to the ENUM branch).
+        Kind::Select(alias) => match ctx.mapping.selects.get(alias) {
+            Some(h) => h.rust_type.clone(),
+            None => format!("Early{}", pascal(alias)),
+        },
     }
 }
 
@@ -1115,7 +1338,14 @@ mod tests {
         // `actuated_direction` is hint-less (no [enum.*] in mapping.toml).
         let ctx = ctx_from(schema());
         let (mut m, mut b, mut s) = (String::new(), String::new(), String::new());
-        emit_synth_enum(&ctx, "actuated_direction", &mut m, &mut b, &mut s);
+        emit_synth_enum(
+            &ctx,
+            "actuated_direction",
+            &mut m,
+            &mut b,
+            &mut s,
+            &mut BTreeSet::new(),
+        );
         assert!(m.contains("pub(crate) enum EarlyActuatedDirection"));
         assert!(m.contains("Bidirectional"));
         assert!(m.contains("NotActuated"));
@@ -1157,5 +1387,61 @@ mod tests {
         let s = serialize_expr_full(&Kind::Ref, "c", true);
         assert!(s.contains("Some(v) => crate::parser::entity::Attribute::EntityRef(v)"));
         assert!(s.contains("None => crate::parser::entity::Attribute::Unset"));
+    }
+
+    fn synth_select(sel: &str) -> (String, String, String) {
+        let ctx = ctx_from(schema());
+        let (mut m, mut b, mut s) = (String::new(), String::new(), String::new());
+        emit_select_synth(&ctx, sel, &mut m, &mut b, &mut s, &mut BTreeSet::new());
+        (m, b, s)
+    }
+
+    /// Hint-less SELECT with two string members — each disambiguated by its tag.
+    #[test]
+    fn synth_select_strings() {
+        let (m, b, s) = synth_select("source_item");
+        assert!(m.contains("pub(crate) enum EarlySourceItem"));
+        assert!(m.contains("Identifier(String)"));
+        assert!(m.contains("Message(String)"));
+        assert!(b.contains(
+            "(\"IDENTIFIER\", crate::parser::entity::Attribute::String(s)) => Some(super::model::EarlySourceItem::Identifier(s.clone())),"
+        ));
+        assert!(s.contains("EarlySourceItem::Message(s) =>"));
+    }
+
+    /// Hint-less SELECT with real members (measures) — `Real`/`Integer` accepted.
+    #[test]
+    fn synth_select_reals() {
+        let (m, b, _) = synth_select("tolerance_deviation_select");
+        assert!(m.contains("CurveToleranceDeviation(f64)"));
+        assert!(b.contains("#[allow(clippy::cast_precision_loss)]"));
+        assert!(b.contains("crate::parser::entity::Attribute::Integer(x)) => Some(super::model::EarlyToleranceDeviationSelect::"));
+    }
+
+    /// Hint-less SELECT with an ENUM member — synth enum model + inlined token map.
+    #[test]
+    fn synth_select_enum_member() {
+        let (m, b, s) = synth_select("gps_filtration_type");
+        // the member enum's model is emitted...
+        assert!(m.contains("pub(crate) enum EarlyGeometricToleranceModifier"));
+        // ...and the token map is inlined into the select's bind/serialize.
+        assert!(b.contains("=> match t.as_str() {"));
+        assert!(b.contains("=> Some(super::model::EarlyGpsFiltrationType::"));
+        assert!(s.contains("super::model::EarlyGeometricToleranceModifier::"));
+    }
+
+    /// ≥2 entity members can't be disambiguated from bare `#N` — deferred (panic).
+    #[test]
+    #[should_panic(expected = "multi-entity")]
+    fn synth_select_multi_entity_panics() {
+        synth_select("trim_condition_select");
+    }
+
+    /// An aggregation member (LIST/SET) is deferred to v4.4 (panic). Uses a
+    /// ≤1-entity select so the multi-entity assert doesn't fire first.
+    #[test]
+    #[should_panic(expected = "aggregation")]
+    fn synth_select_aggregation_member_panics() {
+        synth_select("item_identified_representation_usage_select");
     }
 }
