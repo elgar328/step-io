@@ -1,9 +1,9 @@
 gen-early coverage (generate_all)
-supported: 2032 / 2195
-skipped:   163
+supported: 2061 / 2195
+skipped:   134
 
 -- skipped by reason --
-  nested-agg       36
+  nested-agg       7
   opt-enum         19
   select-edge      77
   unresolved-token 6
@@ -22,13 +22,10 @@ skipped:   163
   approximation_tolerance_parameter                vec-select
   atom_based_literal                               select-edge
   atomic_formula                                   select-edge
-  b_spline_surface                                 nested-agg
-  b_spline_surface_with_knots                      nested-agg
   b_spline_volume                                  nested-agg
   b_spline_volume_with_knots                       nested-agg
   banded_matrix                                    select-edge
   basic_sparse_matrix                              select-edge
-  bezier_surface                                   nested-agg
   bezier_volume                                    nested-agg
   binary_assembly_constraint                       select-edge
   binary_literal                                   unresolved-token
@@ -41,14 +38,9 @@ skipped:   163
   complex_clause                                   select-edge
   complex_conjunctive_clause                       select-edge
   complex_disjunctive_clause                       select-edge
-  complex_shelled_solid                            nested-agg
-  complex_triangulated_face                        nested-agg
-  complex_triangulated_surface_set                 nested-agg
   compound_representation_item                     select-edge
   constant_function                                select-edge
   constrained_kinematic_motion_representation      select-edge
-  coordinates_list                                 nested-agg
-  cubic_bezier_triangulated_face                   nested-agg
   datum_reference_compartment                      select-edge
   datum_reference_element                          select-edge
   default_tolerance_table_cell                     select-edge
@@ -81,8 +73,6 @@ skipped:   163
   listed_logical_data                              vec-logical
   literal_conjunction                              select-edge
   literal_disjunction                              select-edge
-  locally_refined_spline_surface                   nested-agg
-  locally_refined_spline_volume                    nested-agg
   location_in_aggregate_representation_item        select-edge
   mathematical_description                         select-edge
   maths_tuple_literal                              vec-select
@@ -98,10 +88,6 @@ skipped:   163
   pmi_requirement_item_association                 select-edge
   point_and_vector                                 select-edge
   point_array                                      select-edge
-  point_cloud_dataset                              nested-agg
-  point_cloud_dataset_with_colours                 nested-agg
-  point_cloud_dataset_with_intensities             nested-agg
-  point_cloud_dataset_with_normals                 nested-agg
   point_on_planar_curve_pair_value                 select-edge
   point_on_surface_pair_value                      select-edge
   point_path                                       select-edge
@@ -110,13 +96,8 @@ skipped:   163
   presentation_style_assignment                    vec-select
   presentation_style_by_context                    vec-select
   primitive_2d_with_inner_boundary                 select-edge
-  quasi_uniform_surface                            nested-agg
   quasi_uniform_volume                             nested-agg
-  rational_b_spline_surface                        nested-agg
   rational_b_spline_volume                         nested-agg
-  rational_locally_refined_spline_surface          nested-agg
-  rational_locally_refined_spline_volume           nested-agg
-  rectangular_composite_surface                    nested-agg
   representation_relationship_with_transformation  select-edge
   revolved_face_solid_with_trim_conditions         select-edge
   row_representation_item                          select-edge
@@ -144,9 +125,7 @@ skipped:   163
   si_resistance_unit                               opt-enum
   si_unit                                          opt-enum
   simple_clause                                    select-edge
-  single_texture_style_tessellation_specification  nested-agg
   solid_with_curved_slot                           vec-logical
-  solid_with_incomplete_rectangular_pattern        nested-agg
   solid_with_slot                                  vec-logical
   solid_with_straight_slot                         vec-logical
   solid_with_tee_section_slot                      vec-logical
@@ -154,25 +133,17 @@ skipped:   163
   spherical_pair_value                             select-edge
   strict_triangular_matrix                         select-edge
   structured_text_composition                      select-edge
-  styled_tessellated_item_with_colours             nested-agg
   surface_distance_assembly_constraint_with_dimension select-edge
   surface_style_parameter_line                     vec-select
   symmetric_banded_matrix                          select-edge
   table_representation_item                        select-edge
   tangent_assembly_constraint                      select-edge
-  tessellated_curve_set                            nested-agg
-  tessellated_face                                 nested-agg
   tessellated_shape_representation_with_accuracy_parameters vec-select
-  tessellated_surface_set                          nested-agg
   text_style_with_box_characteristics              vec-select
   topology_to_geometry_model_association           select-edge
   triangular_matrix                                select-edge
-  triangulated_face                                nested-agg
-  triangulated_point_cloud_dataset                 nested-agg
-  triangulated_surface_set                         nested-agg
   trimmed_curve                                    vec-select
   unbound_variational_parameter                    select-edge
-  uniform_surface                                  nested-agg
   uniform_volume                                   nested-agg
   value_range                                      select-edge
   variational_parameter                            select-edge

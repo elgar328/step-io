@@ -316,13 +316,15 @@ impl Ctx {
             Kind::Ref | Kind::Real | Kind::Int | Kind::Str => true,
             // scalar bind exists; optional deferred (no read_optional_*).
             Kind::Bool | Kind::Logical | Kind::Enum(_) => !optional,
-            // ref / scalar / enum element; optional aggregation deferred.
+            // ref / scalar / enum element (single list), or a `Vec<Vec<ref/real/
+            // int>>` grid; optional aggregation deferred.
             Kind::Vec(inner) => {
                 !optional
-                    && matches!(
-                        **inner,
-                        Kind::Ref | Kind::Real | Kind::Int | Kind::Str | Kind::Enum(_)
-                    )
+                    && match &**inner {
+                        Kind::Ref | Kind::Real | Kind::Int | Kind::Str | Kind::Enum(_) => true,
+                        Kind::Vec(i2) => matches!(**i2, Kind::Ref | Kind::Real | Kind::Int),
+                        _ => false,
+                    }
             }
             // optional select is handled by the v4.2 let-form; both need a
             // supported select.
@@ -1378,6 +1380,16 @@ fn bind_expr(k: &Kind, i: usize, field: &str) -> String {
                 };
                 format!("crate::ir::attr::{list}(attrs, {i}, entity_id, \"{field}\")?")
             }
+            // `Vec<Vec<ref/real/int>>` -> grid helper (List of Lists).
+            Kind::Vec(i2) => {
+                let grid = match &**i2 {
+                    Kind::Ref => "read_entity_ref_grid",
+                    Kind::Real => "read_real_grid",
+                    Kind::Int => "read_integer_grid",
+                    other => panic!("gen-early: grid of {other:?} not yet supported"),
+                };
+                format!("crate::ir::attr::{grid}(attrs, {i}, entity_id, \"{field}\")?")
+            }
             other => panic!("gen-early: aggregation of {other:?} not yet supported"),
         },
         Kind::Real => format!("crate::ir::attr::read_real(attrs, {i}, entity_id, \"{field}\")?"),
@@ -1401,6 +1413,21 @@ fn bind_expr(k: &Kind, i: usize, field: &str) -> String {
 fn serialize_expr(k: &Kind, field: &str) -> String {
     match k {
         Kind::Ref => format!("crate::parser::entity::Attribute::EntityRef(l1.{field})"),
+        // `Vec<Vec<ref/real/int>>` grid -> nested `List(List(..))`.
+        Kind::Vec(inner) if matches!(&**inner, Kind::Vec(_)) => {
+            let Kind::Vec(i2) = &**inner else {
+                unreachable!()
+            };
+            let elem2 = match &**i2 {
+                Kind::Ref => "|&s| crate::parser::entity::Attribute::EntityRef(s)",
+                Kind::Real => "|&x| crate::parser::entity::Attribute::Real(x)",
+                Kind::Int => "|&x| crate::parser::entity::Attribute::Integer(x)",
+                other => panic!("gen-early: grid of {other:?} not yet supported"),
+            };
+            format!(
+                "crate::parser::entity::Attribute::List(l1.{field}.iter().map(|row| crate::parser::entity::Attribute::List(row.iter().map({elem2}).collect())).collect())"
+            )
+        }
         Kind::Vec(inner) => {
             // Ref arm reproduces the previous `VecRef` output byte-for-byte.
             // ENUM reuses the standalone `<alias>_attr` helper per element.
@@ -1841,14 +1868,25 @@ mod tests {
         );
     }
 
+    /// `Vec<Vec<ref/real/int>>` grid -> `read_*_grid` + nested `List(List(..))`.
     #[test]
-    #[should_panic(expected = "not yet supported")]
-    fn vec_nested_bind_panics() {
-        bind_expr(
-            &Kind::Vec(Box::new(Kind::Vec(Box::new(Kind::Real)))),
-            1,
-            "x",
+    fn vec_grid_codegen() {
+        let ctx = empty_ctx();
+        let grid = |k| Kind::Vec(Box::new(Kind::Vec(Box::new(k))));
+        assert!(ctx.emittable(&grid(Kind::Real), false));
+        assert!(ctx.emittable(&grid(Kind::Ref), false));
+        // inner-inner must be ref/real/int (no string/enum grid helper).
+        assert!(!ctx.emittable(&grid(Kind::Str), false));
+        assert!(!ctx.emittable(&grid(Kind::Enum("x".into())), false));
+        assert!(bind_expr(&grid(Kind::Real), 1, "x").contains("read_real_grid"));
+        assert!(bind_expr(&grid(Kind::Int), 1, "x").contains("read_integer_grid"));
+        assert!(bind_expr(&grid(Kind::Ref), 1, "x").contains("read_entity_ref_grid"));
+        let s = serialize_expr(&grid(Kind::Int), "g");
+        assert_eq!(
+            s.matches("crate::parser::entity::Attribute::List(").count(),
+            2
         );
+        assert!(s.contains("Integer(x)"));
     }
 
     /// STEP `logical` (.T./.F./.U.) -> `crate::ir::geometry::Logical`.
