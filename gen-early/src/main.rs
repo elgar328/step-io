@@ -5,7 +5,8 @@
 //!
 //! Run from anywhere: `cargo run -p gen-early`. Output is committed; this is a
 //! dev tool, not a `build.rs`. Generates the entities in the `generate` list
-//! (mapping.toml). Supports entity refs / primitives / reused & catch-all ENUMs
+//! (mapping.toml). Supports entity refs / primitives (real, integer, bool,
+//! string) / ENUMs (hinted L2-reuse or auto-synthesized `Early*` when hint-less)
 //! / all-entity & mixed SELECTs / OPTIONAL (required+drop) and **inheritance
 //! flattening** (supertype attrs prepended in Part21 order, see
 //! [`EarlyToml::flattened_attrs`]).
@@ -131,9 +132,10 @@ enum Kind {
     Ref,            // entity ref (incl. all-entity SELECT) -> u64
     VecRef,         // aggregation of refs -> Vec<u64>
     Real,           // -> f64
+    Int,            // -> i64
     Bool,           // -> bool
     Str,            // -> String
-    Enum(String),   // ENUM type-alias name (looked up in mapping.enums)
+    Enum(String),   // ENUM type-alias name (hinted -> L2 reuse, else synth Early*)
     Select(String), // mixed SELECT type-alias name (looked up in mapping.selects)
 }
 
@@ -151,6 +153,14 @@ fn agg_inner(ty: &str) -> Option<&str> {
 fn select_members(aliased: &str) -> Option<Vec<&str>> {
     aliased
         .strip_prefix("SELECT(")
+        .and_then(|s| s.strip_suffix(')'))
+        .map(|inner| inner.split(',').map(str::trim).collect())
+}
+
+/// Members of an inline `ENUM(a, b, …)` aliased type, or `None`.
+fn enum_members(aliased: &str) -> Option<Vec<&str>> {
+    aliased
+        .strip_prefix("ENUM(")
         .and_then(|s| s.strip_suffix(')'))
         .map(|inner| inner.split(',').map(str::trim).collect())
 }
@@ -211,6 +221,7 @@ impl Ctx {
         }
         match t {
             "real" | "number" => return Kind::Real,
+            "integer" => return Kind::Int,
             "boolean" => return Kind::Bool,
             "string" => return Kind::Str,
             _ => {}
@@ -400,7 +411,11 @@ fn main() {
 
     // generated standalone-field ENUM helpers
     for alias in &used_enums {
-        let h = ctx.enum_hint(alias);
+        // Hint-less ENUM -> synthesize an `Early*` enum (model def + helpers).
+        let Some(h) = ctx.mapping.enums.get(alias) else {
+            emit_synth_enum(&ctx, alias, &mut model, &mut bind, &mut serialize);
+            continue;
+        };
         // bind helper
         writeln!(
             bind,
@@ -675,14 +690,94 @@ fn emit_token_enum(ctx: &Ctx, alias: &str, bind: &mut String, serialize: &mut St
     writeln!(serialize, "    }}\n}}\n").unwrap();
 }
 
+/// Emit a synthesized `Early*` enum (model def) + `bind_<alias>` / `<alias>_attr`
+/// for a hint-less standalone-field ENUM. Variant = `pascal(member)`, STEP token
+/// = `member.to_uppercase()`. Strict: an unknown token errors (EXPRESS ENUMs are
+/// closed). Mirrors the hinted path but with a generated type instead of L2 reuse.
+fn emit_synth_enum(
+    ctx: &Ctx,
+    alias: &str,
+    model: &mut String,
+    bind: &mut String,
+    serialize: &mut String,
+) {
+    let aliased = ctx
+        .schema
+        .types
+        .get(alias)
+        .unwrap_or_else(|| panic!("gen-early: enum `{alias}` not a type alias"))
+        .aliased
+        .clone();
+    let members = enum_members(aliased.trim())
+        .unwrap_or_else(|| panic!("gen-early: enum `{alias}` not an ENUM"));
+    let rt = format!("Early{}", pascal(alias));
+    // (STEP token, Rust variant)
+    let mems: Vec<(String, String)> = members
+        .iter()
+        .map(|m| (m.to_uppercase(), pascal(m)))
+        .collect();
+
+    // model enum
+    writeln!(model, "/// L1 ENUM `{alias}` (generated).").unwrap();
+    writeln!(model, "#[derive(Debug, Clone, PartialEq)]").unwrap();
+    writeln!(model, "pub(crate) enum {rt} {{").unwrap();
+    for (_, v) in &mems {
+        writeln!(model, "    {v},").unwrap();
+    }
+    writeln!(model, "}}\n").unwrap();
+
+    // bind helper
+    writeln!(
+        bind,
+        "fn bind_{alias}(attrs: &[crate::parser::entity::Attribute], index: usize, entity_id: u64, field: &'static str) -> Result<super::model::{rt}, crate::ir::error::ConvertError> {{"
+    )
+    .unwrap();
+    writeln!(
+        bind,
+        "    match crate::ir::attr::read_enum(attrs, index, entity_id, field)? {{"
+    )
+    .unwrap();
+    for (tag, v) in &mems {
+        writeln!(bind, "        \"{tag}\" => Ok(super::model::{rt}::{v}),").unwrap();
+    }
+    writeln!(
+        bind,
+        "        other => Err(crate::ir::error::ConvertError::UnexpectedEntityForm {{ entity_id, detail: format!(\"{{field}}: unknown {alias} '.{{other}}.'\") }}),"
+    )
+    .unwrap();
+    writeln!(bind, "    }}\n}}\n").unwrap();
+
+    // serialize helper
+    writeln!(
+        serialize,
+        "fn {alias}_attr(v: super::model::{rt}) -> crate::parser::entity::Attribute {{"
+    )
+    .unwrap();
+    writeln!(
+        serialize,
+        "    crate::parser::entity::Attribute::Enum(match v {{"
+    )
+    .unwrap();
+    for (tag, v) in &mems {
+        writeln!(serialize, "        super::model::{rt}::{v} => \"{tag}\",").unwrap();
+    }
+    writeln!(serialize, "    }}.into())\n}}\n").unwrap();
+}
+
 fn field_ty(ctx: &Ctx, k: &Kind) -> String {
     match k {
         Kind::Ref => "u64".into(),
         Kind::VecRef => "Vec<u64>".into(),
         Kind::Real => "f64".into(),
+        Kind::Int => "i64".into(),
         Kind::Bool => "bool".into(),
         Kind::Str => "String".into(),
-        Kind::Enum(alias) => ctx.enum_hint(alias).rust_type.clone(),
+        // Hinted ENUM reuses the L2 type; hint-less ENUM uses the synthesized
+        // `Early*` (defined in the same generated/model.rs, so referenced bare).
+        Kind::Enum(alias) => match ctx.mapping.enums.get(alias) {
+            Some(h) => h.rust_type.clone(),
+            None => format!("Early{}", pascal(alias)),
+        },
         Kind::Select(alias) => ctx.select_hint(alias).rust_type.clone(),
     }
 }
@@ -696,6 +791,7 @@ fn bind_expr(k: &Kind, i: usize, field: &str) -> String {
             format!("crate::ir::attr::read_entity_ref_list(attrs, {i}, entity_id, \"{field}\")?")
         }
         Kind::Real => format!("crate::ir::attr::read_real(attrs, {i}, entity_id, \"{field}\")?"),
+        Kind::Int => format!("crate::ir::attr::read_integer(attrs, {i}, entity_id, \"{field}\")?"),
         Kind::Bool => format!("crate::ir::attr::read_bool(attrs, {i}, entity_id, \"{field}\")?"),
         Kind::Str => {
             format!(
@@ -716,6 +812,7 @@ fn serialize_expr(k: &Kind, field: &str) -> String {
             "crate::parser::entity::Attribute::List(l1.{field}.iter().map(|&s| crate::parser::entity::Attribute::EntityRef(s)).collect())"
         ),
         Kind::Real => format!("crate::parser::entity::Attribute::Real(l1.{field})"),
+        Kind::Int => format!("crate::parser::entity::Attribute::Integer(l1.{field})"),
         Kind::Bool => format!("bool_attr(l1.{field})"),
         Kind::Str => format!("crate::parser::entity::Attribute::String(l1.{field}.clone())"),
         Kind::Enum(alias) => format!("{alias}_attr(l1.{field})"),
@@ -831,5 +928,63 @@ mod tests {
         };
         // gp's `g` appears once (via a's chain), not twice.
         assert_eq!(names(&s, "leaf"), ["g", "x", "y", "z"]);
+    }
+
+    fn ctx_from(schema: EarlyToml) -> Ctx {
+        Ctx {
+            schema,
+            mapping: Mapping {
+                generate: vec![],
+                enums: BTreeMap::new(),
+                selects: BTreeMap::new(),
+            },
+        }
+    }
+
+    /// `integer` (and aliases resolving to it) classify as `Int`.
+    #[test]
+    fn classify_integer_and_aliases() {
+        let mut types = BTreeMap::new();
+        types.insert(
+            "positive_integer".to_string(),
+            TypeDef {
+                aliased: "integer".to_string(),
+            },
+        );
+        let ctx = ctx_from(EarlyToml {
+            entity: BTreeMap::new(),
+            types,
+        });
+        assert!(matches!(ctx.classify("integer", 0), Kind::Int));
+        assert!(matches!(ctx.classify("positive_integer", 0), Kind::Int));
+    }
+
+    /// ENUM member parsing + variant naming.
+    #[test]
+    fn enum_members_and_pascal() {
+        assert_eq!(
+            enum_members("ENUM(ahead, exact, behind)").unwrap(),
+            ["ahead", "exact", "behind"]
+        );
+        assert_eq!(pascal("not_actuated"), "NotActuated");
+        assert!(enum_members("SELECT(a, b)").is_none());
+    }
+
+    /// Hint-less ENUM auto-synthesis: model enum + strict bind/serialize helpers.
+    #[test]
+    fn synth_enum_emits_expected() {
+        // `actuated_direction` is hint-less (no [enum.*] in mapping.toml).
+        let ctx = ctx_from(schema());
+        let (mut m, mut b, mut s) = (String::new(), String::new(), String::new());
+        emit_synth_enum(&ctx, "actuated_direction", &mut m, &mut b, &mut s);
+        assert!(m.contains("pub(crate) enum EarlyActuatedDirection"));
+        assert!(m.contains("Bidirectional"));
+        assert!(m.contains("NotActuated"));
+        assert!(
+            b.contains("\"NOT_ACTUATED\" => Ok(super::model::EarlyActuatedDirection::NotActuated)")
+        );
+        assert!(
+            s.contains("super::model::EarlyActuatedDirection::NotActuated => \"NOT_ACTUATED\"")
+        );
     }
 }
