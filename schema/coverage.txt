@@ -1,12 +1,11 @@
 gen-early coverage (generate_all)
-supported: 2087 / 2195
-skipped:   108
+supported: 2093 / 2195
+skipped:   102
 
 -- skipped by reason --
   nested-agg       7
   select-edge      77
   unresolved-token 6
-  vec-logical      6
   vec-ref          2
   vec-select       9
   vec-str          1
@@ -65,7 +64,6 @@ skipped:   108
   kinematic_frame_background_representation_association select-edge
   link_motion_relationship                         select-edge
   listed_data                                      vec-select
-  listed_logical_data                              vec-logical
   literal_conjunction                              select-edge
   literal_disjunction                              select-edge
   location_in_aggregate_representation_item        select-edge
@@ -102,11 +100,6 @@ skipped:   108
   shape_data_quality_inspection_instance_report_item select-edge
   shape_data_quality_value_range                   select-edge
   simple_clause                                    select-edge
-  solid_with_curved_slot                           vec-logical
-  solid_with_slot                                  vec-logical
-  solid_with_straight_slot                         vec-logical
-  solid_with_tee_section_slot                      vec-logical
-  solid_with_trapezoidal_section_slot              vec-logical
   spherical_pair_value                             select-edge
   strict_triangular_matrix                         select-edge
   structured_text_composition                      select-edge
