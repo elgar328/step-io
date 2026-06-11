@@ -1,13 +1,13 @@
 gen-early coverage (generate_all)
-supported: 2093 / 2195
-skipped:   102
+supported: 2100 / 2195
+skipped:   95
 
 -- skipped by reason --
   nested-agg       7
-  select-edge      77
+  select-edge      73
   unresolved-token 6
   vec-ref          2
-  vec-select       9
+  vec-select       6
   vec-str          1
 
 -- skipped entities --
@@ -41,12 +41,8 @@ skipped:   102
   default_tolerance_table_cell                     select-edge
   draughting_model_item_association                select-edge
   draughting_model_item_association_with_placeholder select-edge
-  equivalence_notable_instance                     vec-select
   externally_defined_picture_representation_item   unresolved-token
   extreme_instance                                 select-edge
-  extruded_face_solid_with_draft_angle             select-edge
-  extruded_face_solid_with_multiple_draft_angles   select-edge
-  extruded_face_solid_with_trim_conditions         select-edge
   finite_function                                  nested-agg
   finite_space                                     vec-select
   free_kinematic_motion_representation             select-edge
@@ -86,13 +82,10 @@ skipped:   102
   point_path                                       select-edge
   predefined_picture_representation_item           unresolved-token
   prescribed_path                                  vec-ref
-  presentation_style_assignment                    vec-select
-  presentation_style_by_context                    vec-select
   primitive_2d_with_inner_boundary                 select-edge
   quasi_uniform_volume                             nested-agg
   rational_b_spline_volume                         nested-agg
   representation_relationship_with_transformation  select-edge
-  revolved_face_solid_with_trim_conditions         select-edge
   row_representation_item                          select-edge
   row_value                                        select-edge
   rule_condition                                   select-edge

@@ -352,13 +352,14 @@ impl Ctx {
         let Some(members) = select_members(td.aliased.trim()) else {
             return false;
         };
-        let mut entity_members = 0;
         for m in members {
             let Some(k) = self.try_classify(m, 0) else {
                 return false; // unresolved member
             };
             match k {
-                Kind::Ref => entity_members += 1,
+                // Any number of entity members is fine: they collapse into one
+                // combined `EntityRef(u64)` variant (`lower` resolves the type).
+                Kind::Ref => {}
                 Kind::Real | Kind::Int | Kind::Str | Kind::Bool => {}
                 // hinted enum member -> dual representation, deferred.
                 Kind::Enum(a) if self.mapping.enums.contains_key(&a) => return false,
@@ -367,7 +368,7 @@ impl Ctx {
                 Kind::Logical | Kind::Vec(_) | Kind::Select(_) => return false,
             }
         }
-        entity_members <= 1
+        true
     }
 
     /// `Ok` if every flattened attribute of `ent` is emittable, else the first
@@ -1024,11 +1025,10 @@ fn emit_select_synth(
         .map(|&m| (m, pascal(m), ctx.classify(m, 0)))
         .collect();
 
-    let count = |pred: fn(&Kind) -> bool| mems.iter().filter(|(_, _, k)| pred(k)).count();
-    assert!(
-        count(|k| matches!(k, Kind::Ref)) <= 1,
-        "gen-early: select `{sel}` has >=2 entity members (multi-entity combined-ref: v4.x)"
-    );
+    // Entity members can't be told apart from a bare `#N` at bind time, so all
+    // of them collapse into one combined `EntityRef(u64)` variant; `lower`
+    // resolves the actual entity type. (Scalar / enum members stay per-variant.)
+    let has_ref = mems.iter().any(|(_, _, k)| matches!(k, Kind::Ref));
     for (m, _, k) in &mems {
         match k {
             Kind::Vec(_) => {
@@ -1070,7 +1070,13 @@ fn emit_select_synth(
     writeln!(model, "/// L1 mixed SELECT `{sel}` (generated, hint-less).").unwrap();
     writeln!(model, "#[derive(Debug, Clone, PartialEq)]").unwrap();
     writeln!(model, "pub(crate) enum {rt} {{").unwrap();
+    if has_ref {
+        writeln!(model, "    EntityRef(u64),").unwrap();
+    }
     for (_, v, k) in &mems {
+        if matches!(k, Kind::Ref) {
+            continue; // collapsed into the combined `EntityRef` variant above.
+        }
         writeln!(model, "    {v}({}),", payload(k)).unwrap();
     }
     writeln!(model, "}}\n").unwrap();
@@ -1085,14 +1091,13 @@ fn emit_select_synth(
     )
     .unwrap();
     writeln!(bind, "    match attr {{").unwrap();
-    for (_, v, k) in &mems {
-        if matches!(k, Kind::Ref) {
-            writeln!(
-                bind,
-                "        crate::parser::entity::Attribute::EntityRef(n) => Some({rtq}::{v}(*n)),"
-            )
-            .unwrap();
-        }
+    if has_ref {
+        // All entity members share this one arm; `lower` resolves the type.
+        writeln!(
+            bind,
+            "        crate::parser::entity::Attribute::EntityRef(n) => Some({rtq}::EntityRef(*n)),"
+        )
+        .unwrap();
     }
     if mems.iter().any(|(_, _, k)| !matches!(k, Kind::Ref)) {
         writeln!(
@@ -1140,12 +1145,20 @@ fn emit_select_synth(
     )
     .unwrap();
     writeln!(serialize, "    match v {{").unwrap();
+    if has_ref {
+        // The combined entity-ref variant emits the bare `#N` back.
+        writeln!(
+            serialize,
+            "        {rtq}::EntityRef(step) => crate::parser::entity::Attribute::EntityRef(*step),"
+        )
+        .unwrap();
+    }
     for (m, v, k) in &mems {
+        if matches!(k, Kind::Ref) {
+            continue; // handled by the combined `EntityRef` arm above.
+        }
         let tag = m.to_uppercase();
         let arm = match k {
-            Kind::Ref => {
-                format!("{rtq}::{v}(step) => crate::parser::entity::Attribute::EntityRef(*step),")
-            }
             Kind::Real => format!(
                 "{rtq}::{v}(x) => crate::parser::entity::Attribute::Typed {{ type_name: \"{tag}\".into(), value: Box::new(crate::parser::entity::Attribute::Real(*x)) }},"
             ),
@@ -1905,15 +1918,34 @@ mod tests {
         assert!(s.contains("super::model::EarlyGeometricToleranceModifier::"));
     }
 
-    /// ≥2 entity members can't be disambiguated from bare `#N` — deferred (panic).
+    /// ≥2 entity members can't be told apart from a bare `#N`, so they collapse
+    /// into one combined `EntityRef(u64)` variant (`lower` resolves the type);
+    /// scalar members stay per-variant. `trim_condition_select` =
+    /// SELECT(generalized_surface_select [all-entity → ref], length_measure,
+    /// plane_angle_measure, solid_model [ref]) — two entity members.
     #[test]
-    #[should_panic(expected = "multi-entity")]
-    fn synth_select_multi_entity_panics() {
-        synth_select("trim_condition_select");
+    fn synth_select_multi_entity_combined() {
+        let (m, b, s) = synth_select("trim_condition_select");
+        // the two entity members merge into one combined variant...
+        assert!(m.contains("pub(crate) enum EarlyTrimConditionSelect"));
+        assert!(m.contains("EntityRef(u64)"));
+        // ...and the scalar members keep their own variants.
+        assert!(m.contains("LengthMeasure(f64)"));
+        assert!(m.contains("PlaneAngleMeasure(f64)"));
+        // no per-entity variant survives (collapsed).
+        assert!(!m.contains("GeneralizedSurfaceSelect("));
+        assert!(!m.contains("SolidModel("));
+        // exactly one bind arm consumes the bare `#N`.
+        let arm = "crate::parser::entity::Attribute::EntityRef(n) => Some(super::model::EarlyTrimConditionSelect::EntityRef(*n))";
+        assert_eq!(b.matches(arm).count(), 1);
+        assert!(s.contains(
+            "super::model::EarlyTrimConditionSelect::EntityRef(step) => crate::parser::entity::Attribute::EntityRef(*step)"
+        ));
     }
 
-    /// An aggregation member (LIST/SET) is deferred to v4.4 (panic). Uses a
-    /// ≤1-entity select so the multi-entity assert doesn't fire first.
+    /// An aggregation member (LIST/SET) is deferred to v4.4 (panic). (The select
+    /// also has entity members, but those now collapse to a combined ref — the
+    /// aggregation panic is what fires.)
     #[test]
     #[should_panic(expected = "aggregation")]
     fn synth_select_aggregation_member_panics() {
