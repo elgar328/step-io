@@ -41,3 +41,27 @@ pub(crate) struct EarlySurfaceStyleUsage {
     pub(crate) side: crate::ir::visualization::SurfaceSide,
     pub(crate) style: u64,
 }
+
+/// L1 `POINT_STYLE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPointStyle {
+    pub(crate) name: String,
+    pub(crate) marker: EarlyMarker,
+    pub(crate) marker_size: EarlyMarkerSize,
+    pub(crate) marker_colour: u64,
+}
+
+/// L1 mixed SELECT `marker_select` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum EarlyMarker {
+    Type(crate::ir::visualization::MarkerType),
+    Predefined(u64),
+}
+
+/// L1 mixed SELECT `size_select` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum EarlyMarkerSize {
+    Descriptive(String),
+    MeasureWithUnit(u64),
+    PositiveLength(f64),
+}

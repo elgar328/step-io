@@ -9,6 +9,7 @@ generate = [
     "fill_area_style",
     "surface_side_style",
     "surface_style_usage",
+    "point_style",
 ]
 
 # `[enum.<alias>]`: reuse an existing L2 enum for a STEP ENUM type-alias instead
@@ -25,3 +26,23 @@ variants = { central = "Central", parallel = "Parallel" }
 rust_type = "crate::ir::visualization::SurfaceSide"
 variants = { positive = "Front", negative = "Back", both = "Both" }
 default = "Both"
+
+# `catch_all`: a variant carrying the raw token `String` for unknown values
+# (round-trips them) — e.g. `MarkerType::Other(token)`. Only used token-based,
+# inside a SELECT member.
+[enum.marker_type]
+rust_type = "crate::ir::visualization::MarkerType"
+variants = { dot = "Dot", x = "X", plus = "Plus", asterisk = "Asterisk", ring = "Ring", square = "Square", triangle = "Triangle" }
+catch_all = "Other"
+
+# `[select.<name>]`: synthesize an `Early*` enum for a *mixed* SELECT (members
+# span entity / enum / primitive). `variants` names the L1 variant per member;
+# the member kind (ref / enum / real / string) and any enum hint are auto-
+# derived from early.toml (e.g. member `marker_type` resolves to `[enum.marker_type]`).
+[select.marker_select]
+rust_type = "EarlyMarker"
+variants = { marker_type = "Type", pre_defined_marker = "Predefined" }
+
+[select.size_select]
+rust_type = "EarlyMarkerSize"
+variants = { descriptive_measure = "Descriptive", measure_with_unit = "MeasureWithUnit", positive_length_measure = "PositiveLength" }

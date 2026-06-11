@@ -97,6 +97,88 @@ pub(crate) fn bind_surface_style_usage(
     })
 }
 
+pub(crate) fn bind_point_style(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<Option<super::model::EarlyPointStyle>, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "POINT_STYLE")?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let Some(marker) = bind_marker_select(&attrs[1]) else {
+        return Ok(None);
+    };
+    let Some(marker_size) = bind_size_select(&attrs[2]) else {
+        return Ok(None);
+    };
+    let marker_colour = crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "marker_colour")?;
+    Ok(Some(super::model::EarlyPointStyle {
+        name,
+        marker,
+        marker_size,
+        marker_colour,
+    }))
+}
+
+fn bind_marker_select(
+    attr: &crate::parser::entity::Attribute,
+) -> Option<super::model::EarlyMarker> {
+    match attr {
+        crate::parser::entity::Attribute::EntityRef(n) => {
+            Some(super::model::EarlyMarker::Predefined(*n))
+        }
+        crate::parser::entity::Attribute::Typed { type_name, value } => {
+            match (type_name.as_str(), value.as_ref()) {
+                ("MARKER_TYPE", crate::parser::entity::Attribute::Enum(t)) => {
+                    Some(super::model::EarlyMarker::Type(marker_type_from_token(t)))
+                }
+                _ => None,
+            }
+        }
+        crate::parser::entity::Attribute::Enum(t) => {
+            Some(super::model::EarlyMarker::Type(marker_type_from_token(t)))
+        }
+        _ => None,
+    }
+}
+
+#[allow(clippy::cast_precision_loss)]
+fn bind_size_select(
+    attr: &crate::parser::entity::Attribute,
+) -> Option<super::model::EarlyMarkerSize> {
+    match attr {
+        crate::parser::entity::Attribute::EntityRef(n) => {
+            Some(super::model::EarlyMarkerSize::MeasureWithUnit(*n))
+        }
+        crate::parser::entity::Attribute::Typed { type_name, value } => {
+            match (type_name.as_str(), value.as_ref()) {
+                ("DESCRIPTIVE_MEASURE", crate::parser::entity::Attribute::String(s)) => {
+                    Some(super::model::EarlyMarkerSize::Descriptive(s.clone()))
+                }
+                ("POSITIVE_LENGTH_MEASURE", crate::parser::entity::Attribute::Real(x)) => {
+                    Some(super::model::EarlyMarkerSize::PositiveLength(*x))
+                }
+                ("POSITIVE_LENGTH_MEASURE", crate::parser::entity::Attribute::Integer(x)) => {
+                    Some(super::model::EarlyMarkerSize::PositiveLength(*x as f64))
+                }
+                _ => None,
+            }
+        }
+        _ => None,
+    }
+}
+
+fn marker_type_from_token(t: &str) -> crate::ir::visualization::MarkerType {
+    match t {
+        "ASTERISK" => crate::ir::visualization::MarkerType::Asterisk,
+        "DOT" => crate::ir::visualization::MarkerType::Dot,
+        "PLUS" => crate::ir::visualization::MarkerType::Plus,
+        "RING" => crate::ir::visualization::MarkerType::Ring,
+        "SQUARE" => crate::ir::visualization::MarkerType::Square,
+        "TRIANGLE" => crate::ir::visualization::MarkerType::Triangle,
+        "X" => crate::ir::visualization::MarkerType::X,
+        other => crate::ir::visualization::MarkerType::Other(other.to_owned()),
+    }
+}
+
 fn bind_central_or_parallel(
     attrs: &[crate::parser::entity::Attribute],
     index: usize,

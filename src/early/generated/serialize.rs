@@ -80,6 +80,66 @@ pub(crate) fn serialize_surface_style_usage(
     )
 }
 
+pub(crate) fn serialize_point_style(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPointStyle,
+) -> u64 {
+    buf.push_simple(
+        "POINT_STYLE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            marker_select_emit(&l1.marker),
+            size_select_emit(&l1.marker_size),
+            crate::parser::entity::Attribute::EntityRef(l1.marker_colour),
+        ],
+    )
+}
+
+fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
+    match v {
+        super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {
+            type_name: "MARKER_TYPE".into(),
+            value: Box::new(crate::parser::entity::Attribute::Enum(
+                marker_type_to_token(t),
+            )),
+        },
+        super::model::EarlyMarker::Predefined(step) => {
+            crate::parser::entity::Attribute::EntityRef(*step)
+        }
+    }
+}
+
+fn size_select_emit(v: &super::model::EarlyMarkerSize) -> crate::parser::entity::Attribute {
+    match v {
+        super::model::EarlyMarkerSize::Descriptive(s) => crate::parser::entity::Attribute::Typed {
+            type_name: "DESCRIPTIVE_MEASURE".into(),
+            value: Box::new(crate::parser::entity::Attribute::String(s.clone())),
+        },
+        super::model::EarlyMarkerSize::MeasureWithUnit(step) => {
+            crate::parser::entity::Attribute::EntityRef(*step)
+        }
+        super::model::EarlyMarkerSize::PositiveLength(x) => {
+            crate::parser::entity::Attribute::Typed {
+                type_name: "POSITIVE_LENGTH_MEASURE".into(),
+                value: Box::new(crate::parser::entity::Attribute::Real(*x)),
+            }
+        }
+    }
+}
+
+fn marker_type_to_token(v: &crate::ir::visualization::MarkerType) -> String {
+    match v {
+        crate::ir::visualization::MarkerType::Asterisk => "ASTERISK".into(),
+        crate::ir::visualization::MarkerType::Dot => "DOT".into(),
+        crate::ir::visualization::MarkerType::Plus => "PLUS".into(),
+        crate::ir::visualization::MarkerType::Ring => "RING".into(),
+        crate::ir::visualization::MarkerType::Square => "SQUARE".into(),
+        crate::ir::visualization::MarkerType::Triangle => "TRIANGLE".into(),
+        crate::ir::visualization::MarkerType::X => "X".into(),
+        crate::ir::visualization::MarkerType::Other(s) => s.clone(),
+    }
+}
+
 fn central_or_parallel_attr(
     v: crate::ir::visualization::Projection,
 ) -> crate::parser::entity::Attribute {
