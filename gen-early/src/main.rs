@@ -359,18 +359,10 @@ impl Ctx {
     /// `Ok` if every flattened attribute of `ent` is emittable, else the first
     /// failure's reason tag (for the coverage report).
     fn entity_supported(&self, ent: &str) -> Result<(), String> {
-        let attrs = self.schema.flattened_attrs(ent);
-        // Multiple inheritance can yield two attrs sharing a name (e.g. both a
-        // `document` and a `characterized_object` parent declare `name`); a Rust
-        // struct can't have duplicate fields. Deferred (would need qualified
-        // field names).
-        let mut seen = BTreeSet::new();
-        for a in &attrs {
-            if !seen.insert(a.name.as_str()) {
-                return Err("dup-attr".to_string());
-            }
-        }
-        for a in &attrs {
+        // Duplicate flattened attr names (multiple inheritance) are handled by
+        // disambiguating the Rust field identifier in the emit loop, so they no
+        // longer block an entity — only unsupported attr *shapes* do.
+        for a in self.schema.flattened_attrs(ent) {
             let (optional, inner) = strip_optional(&a.ty);
             match self.try_classify(inner, 0) {
                 None => return Err("unresolved-token".to_string()),
@@ -475,7 +467,7 @@ fn main() {
         // serialize fns don't read `l1`, and big entities trip pedantic style
         // lints. All flip-only — the committed (off) output keeps a bare header.
         format!(
-            "{HEADER}#![allow(dead_code, unused_variables, clippy::too_many_lines, clippy::enum_variant_names, clippy::struct_field_names)]\n\n"
+            "{HEADER}#![allow(dead_code, unused_variables, clippy::too_many_lines, clippy::enum_variant_names, clippy::struct_field_names, clippy::struct_excessive_bools)]\n\n"
         )
     } else {
         HEADER.to_string()
@@ -496,28 +488,44 @@ fn main() {
         let type_name = format!("Early{}", pascal(ent_name));
         let step_name = ent_name.to_uppercase();
         // Full Part21 positional attribute list (inherited supertype attrs
-        // prepended, then own); see `EarlyToml::flattened_attrs`. Each entry also
-        // carries whether the attr is `OPTIONAL` (-> faithful `Option<T>` in L1).
-        let attrs: Vec<(&Attr, Kind, bool)> = ctx
+        // prepended, then own); see `EarlyToml::flattened_attrs`. Each entry is
+        // (struct field name, kind, is-optional).
+        let mut attrs: Vec<(String, Kind, bool)> = ctx
             .schema
             .flattened_attrs(ent_name)
             .into_iter()
             .map(|a| {
                 let (optional, inner) = strip_optional(&a.ty);
-                (a, ctx.classify(inner, 0), optional)
+                (a.name.clone(), ctx.classify(inner, 0), optional)
             })
             .collect();
+        // Multiple inheritance can produce two distinct attrs sharing a name
+        // (e.g. `document`'s `name` and `characterized_object`'s `name`); both are
+        // faithful positional fields, so disambiguate the Rust field identifier
+        // (`name`, `name_2`, …) — deterministic, first occurrence keeps the name.
+        let mut used: BTreeSet<String> = BTreeSet::new();
+        for (field, _, _) in attrs.iter_mut() {
+            if used.contains(field) {
+                let base = field.clone();
+                let mut n = 2;
+                while used.contains(&format!("{base}_{n}")) {
+                    n += 1;
+                }
+                *field = format!("{base}_{n}");
+            }
+            used.insert(field.clone());
+        }
         let has_select = attrs.iter().any(|(_, k, _)| matches!(k, Kind::Select(_)));
 
         // model struct
         writeln!(model, "/// L1 `{step_name}` (generated).").unwrap();
         writeln!(model, "#[derive(Debug, Clone, PartialEq)]").unwrap();
         writeln!(model, "pub(crate) struct {type_name} {{").unwrap();
-        for (a, k, opt) in &attrs {
+        for (field, k, opt) in &attrs {
             writeln!(
                 model,
                 "    pub(crate) {}: {},",
-                a.name,
+                field,
                 field_ty_full(&ctx, k, *opt)
             )
             .unwrap();
@@ -544,13 +552,13 @@ fn main() {
         )
         .unwrap();
         if has_select {
-            for (i, (a, k, opt)) in attrs.iter().enumerate() {
+            for (i, (field, k, opt)) in attrs.iter().enumerate() {
                 match (k, opt) {
                     // Optional SELECT: `$`/`*` -> None (entity survives); a present
                     // but unrecognized form -> drop the whole entity (preserving
                     // the required-select behavior for malformed input).
                     (Kind::Select(sel), true) => {
-                        writeln!(bind, "    let {} = match &attrs[{i}] {{", a.name).unwrap();
+                        writeln!(bind, "    let {field} = match &attrs[{i}] {{").unwrap();
                         writeln!(
                             bind,
                             "        crate::parser::entity::Attribute::Unset | crate::parser::entity::Attribute::Derived => None,"
@@ -567,35 +575,32 @@ fn main() {
                     (Kind::Select(sel), false) => {
                         writeln!(
                             bind,
-                            "    let Some({}) = bind_{sel}(&attrs[{i}]) else {{ return Ok(None); }};",
-                            a.name
+                            "    let Some({field}) = bind_{sel}(&attrs[{i}]) else {{ return Ok(None); }};"
                         )
                         .unwrap();
                     }
                     _ => {
                         writeln!(
                             bind,
-                            "    let {} = {};",
-                            a.name,
-                            bind_expr_full(k, i, &a.name, *opt)
+                            "    let {field} = {};",
+                            bind_expr_full(k, i, field, *opt)
                         )
                         .unwrap();
                     }
                 }
             }
             writeln!(bind, "    Ok(Some(super::model::{type_name} {{").unwrap();
-            for (a, _, _) in &attrs {
-                writeln!(bind, "        {},", a.name).unwrap();
+            for (field, _, _) in &attrs {
+                writeln!(bind, "        {field},").unwrap();
             }
             writeln!(bind, "    }}))\n}}\n").unwrap();
         } else {
             writeln!(bind, "    Ok(super::model::{type_name} {{").unwrap();
-            for (i, (a, k, opt)) in attrs.iter().enumerate() {
+            for (i, (field, k, opt)) in attrs.iter().enumerate() {
                 writeln!(
                     bind,
-                    "        {}: {},",
-                    a.name,
-                    bind_expr_full(k, i, &a.name, *opt)
+                    "        {field}: {},",
+                    bind_expr_full(k, i, field, *opt)
                 )
                 .unwrap();
             }
@@ -609,11 +614,11 @@ fn main() {
         )
         .unwrap();
         writeln!(serialize, "    buf.push_simple(\"{step_name}\", vec![").unwrap();
-        for (a, k, opt) in &attrs {
+        for (field, k, opt) in &attrs {
             writeln!(
                 serialize,
                 "        {},",
-                serialize_expr_full(k, &a.name, *opt)
+                serialize_expr_full(k, field, *opt)
             )
             .unwrap();
             match k {
