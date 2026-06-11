@@ -314,8 +314,10 @@ impl Ctx {
         match k {
             // read_optional_* exist for these, so optional is fine too.
             Kind::Ref | Kind::Real | Kind::Int | Kind::Str => true,
+            // optional enum wraps the standalone enum decode (v4.10).
+            Kind::Enum(_) => true,
             // scalar bind exists; optional deferred (no read_optional_*).
-            Kind::Bool | Kind::Logical | Kind::Enum(_) => !optional,
+            Kind::Bool | Kind::Logical => !optional,
             // ref / scalar / enum element (single list), or a `Vec<Vec<ref/real/
             // int>>` grid; optional aggregation deferred.
             Kind::Vec(inner) => {
@@ -1495,7 +1497,11 @@ fn bind_expr_opt(k: &Kind, i: usize, field: &str) -> String {
         Kind::Str => {
             format!("crate::ir::attr::read_optional_string(attrs, {i}, entity_id, \"{field}\")?")
         }
-        Kind::Bool | Kind::Logical | Kind::Enum(_) | Kind::Vec(_) => {
+        // Optional enum: `$`/`*` -> None, else the standalone `bind_<alias>`.
+        Kind::Enum(alias) => format!(
+            "match attrs.get({i}) {{ Some(crate::parser::entity::Attribute::Unset | crate::parser::entity::Attribute::Derived) => None, _ => Some(bind_{alias}(attrs, {i}, entity_id, \"{field}\")?) }}"
+        ),
+        Kind::Bool | Kind::Logical | Kind::Vec(_) => {
             panic!("gen-early: OPTIONAL {k:?} not yet supported (v4.x)")
         }
         Kind::Select(_) => unreachable!("optional Select handled in the let-form bind path"),
@@ -1530,7 +1536,10 @@ fn serialize_expr_opt(k: &Kind, field: &str) -> String {
         Kind::Select(alias) => {
             format!("match &l1.{field} {{ Some(v) => {alias}_emit(v), None => {unset} }}")
         }
-        Kind::Bool | Kind::Logical | Kind::Enum(_) | Kind::Vec(_) => {
+        Kind::Enum(alias) => {
+            format!("match &l1.{field} {{ Some(e) => {alias}_attr(e.clone()), None => {unset} }}")
+        }
+        Kind::Bool | Kind::Logical | Kind::Vec(_) => {
             panic!("gen-early: OPTIONAL {k:?} not yet supported (v4.x)")
         }
     }
@@ -1741,6 +1750,22 @@ mod tests {
         // serialize maps None -> Unset.
         let s = serialize_expr_full(&Kind::Ref, "c", true);
         assert!(s.contains("Some(v) => crate::parser::entity::Attribute::EntityRef(v)"));
+        assert!(s.contains("None => crate::parser::entity::Attribute::Unset"));
+    }
+
+    /// `Option<EarlyEnum>` (v4.10): wraps the standalone `bind_<alias>` /
+    /// `<alias>_attr` with an `$`/`*` -> None check.
+    #[test]
+    fn optional_enum_codegen() {
+        let ctx = empty_ctx();
+        assert!(ctx.emittable(&Kind::Enum("x".into()), true)); // optional enum now ok
+        assert!(!ctx.emittable(&Kind::Bool, true)); // optional bool still deferred
+        let b = bind_expr_full(&Kind::Enum("foo".into()), 1, "x", true);
+        assert!(b.contains("bind_foo(attrs, 1, entity_id"));
+        assert!(b.contains("crate::parser::entity::Attribute::Unset"));
+        assert!(b.contains("=> None,"));
+        let s = serialize_expr_full(&Kind::Enum("foo".into()), "y", true);
+        assert!(s.contains("Some(e) => foo_attr(e.clone())"));
         assert!(s.contains("None => crate::parser::entity::Attribute::Unset"));
     }
 

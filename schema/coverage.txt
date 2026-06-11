@@ -1,10 +1,9 @@
 gen-early coverage (generate_all)
-supported: 2061 / 2195
-skipped:   134
+supported: 2080 / 2195
+skipped:   115
 
 -- skipped by reason --
   nested-agg       7
-  opt-enum         19
   select-edge      77
   unresolved-token 6
   vec-logical      6
@@ -14,7 +13,6 @@ skipped:   134
 
 -- skipped entities --
   a3ma_length_measure_and_context_dependent_measure_pair select-edge
-  actuated_kinematic_pair                          opt-enum
   angle_assembly_constraint_with_dimension         select-edge
   annotation_plane                                 vec-ref
   application_defined_function                     vec-select
@@ -106,24 +104,6 @@ skipped:   134
   shape_data_quality_inspection_criterion_report   select-edge
   shape_data_quality_inspection_instance_report_item select-edge
   shape_data_quality_value_range                   select-edge
-  si_absorbed_dose_unit                            opt-enum
-  si_capacitance_unit                              opt-enum
-  si_conductance_unit                              opt-enum
-  si_dose_equivalent_unit                          opt-enum
-  si_electric_charge_unit                          opt-enum
-  si_electric_potential_unit                       opt-enum
-  si_energy_unit                                   opt-enum
-  si_force_unit                                    opt-enum
-  si_frequency_unit                                opt-enum
-  si_illuminance_unit                              opt-enum
-  si_inductance_unit                               opt-enum
-  si_magnetic_flux_density_unit                    opt-enum
-  si_magnetic_flux_unit                            opt-enum
-  si_power_unit                                    opt-enum
-  si_pressure_unit                                 opt-enum
-  si_radioactivity_unit                            opt-enum
-  si_resistance_unit                               opt-enum
-  si_unit                                          opt-enum
   simple_clause                                    select-edge
   solid_with_curved_slot                           vec-logical
   solid_with_slot                                  vec-logical
