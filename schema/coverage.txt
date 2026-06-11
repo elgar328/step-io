@@ -1,32 +1,19 @@
 gen-early coverage (generate_all)
-supported: 1980 / 2195
-skipped:   215
+supported: 2032 / 2195
+skipped:   163
 
 -- skipped by reason --
   nested-agg       36
   opt-enum         19
   select-edge      77
   unresolved-token 6
-  vec-enum         52
   vec-logical      6
   vec-ref          2
   vec-select       16
   vec-str          1
 
 -- skipped entities --
-  a3m_equivalence_criterion                        vec-enum
-  a3m_equivalence_criterion_for_assembly           vec-enum
-  a3m_equivalence_criterion_for_shape              vec-enum
-  a3m_equivalence_criterion_of_assembly_data_structure vec-enum
-  a3m_equivalence_criterion_of_component_property_difference vec-enum
-  a3m_equivalence_criterion_of_detailed_assembly_data_content vec-enum
-  a3m_equivalence_criterion_of_detailed_shape_data_content vec-enum
-  a3m_equivalence_criterion_of_representative_assembly_property_value vec-enum
-  a3m_equivalence_criterion_of_representative_shape_property_value vec-enum
-  a3m_equivalence_criterion_of_shape_data_structure vec-enum
-  a3m_equivalence_criterion_with_specified_elements vec-enum
   a3ma_length_measure_and_context_dependent_measure_pair select-edge
-  a3ms_equivalence_criterion_with_specified_elements vec-enum
   actuated_kinematic_pair                          opt-enum
   angle_assembly_constraint_with_dimension         select-edge
   annotation_plane                                 vec-ref
@@ -65,28 +52,6 @@ skipped:   215
   datum_reference_compartment                      select-edge
   datum_reference_element                          select-edge
   default_tolerance_table_cell                     select-edge
-  different_angle_of_assembly_constraint           vec-enum
-  different_assembly_centroid                      vec-enum
-  different_assembly_centroid_using_notional_solid vec-enum
-  different_assembly_constraint_type               vec-enum
-  different_assembly_volume                        vec-enum
-  different_bounding_box                           vec-enum
-  different_centroid                               vec-enum
-  different_component_identification_via_multi_level_reference vec-enum
-  different_component_shape                        vec-enum
-  different_component_type                         vec-enum
-  different_curve_length                           vec-enum
-  different_length_of_assembly_constraint          vec-enum
-  different_number_of_closed_shell                 vec-enum
-  different_number_of_components                   vec-enum
-  different_number_of_geometric_elements           vec-enum
-  different_number_of_geometric_elements_wireframe_model vec-enum
-  different_number_of_topological_elements         vec-enum
-  different_number_of_topological_elements_wireframe_model vec-enum
-  different_placement_of_component                 vec-enum
-  different_surface_area                           vec-enum
-  different_surface_normal                         vec-enum
-  different_volume                                 vec-enum
   draughting_model_item_association                select-edge
   draughting_model_item_association_with_placeholder select-edge
   equivalence_notable_instance                     vec-select
@@ -104,8 +69,6 @@ skipped:   215
   general_datum_reference                          select-edge
   generated_finite_numeric_space                   vec-select
   geometric_item_specific_usage                    select-edge
-  geometric_tolerance_with_maximum_tolerance       vec-enum
-  geometric_tolerance_with_modifiers               vec-enum
   geometry_to_topology_model_association           select-edge
   ground_fact                                      select-edge
   incidence_assembly_constraint                    select-edge
@@ -126,20 +89,6 @@ skipped:   215
   maths_value_precision_qualifier                  select-edge
   mechanical_design_requirement_item_association   select-edge
   mechanism_base_placement                         select-edge
-  mismatch_of_arcwise_connected_curves             vec-enum
-  mismatch_of_arcwise_connected_surfaces           vec-enum
-  mismatch_of_arcwise_connected_surfaces_boundary  vec-enum
-  mismatch_of_component                            vec-enum
-  mismatch_of_edges                                vec-enum
-  mismatch_of_faces                                vec-enum
-  mismatch_of_point_cloud_and_related_geometry     vec-enum
-  mismatch_of_points                               vec-enum
-  mismatch_of_underlying_edge_geometry             vec-enum
-  mismatch_of_underlying_face_geometry             vec-enum
-  missing_assembly_constraint                      vec-enum
-  missing_component                                vec-enum
-  missing_edge                                     vec-enum
-  missing_face                                     vec-enum
   pair_representation_relationship                 select-edge
   parallel_assembly_constraint                     select-edge
   parallel_assembly_constraint_with_dimension      select-edge
@@ -202,12 +151,10 @@ skipped:   215
   solid_with_straight_slot                         vec-logical
   solid_with_tee_section_slot                      vec-logical
   solid_with_trapezoidal_section_slot              vec-logical
-  solid_with_variable_radius_edge_blend            vec-enum
   spherical_pair_value                             select-edge
   strict_triangular_matrix                         select-edge
   structured_text_composition                      select-edge
   styled_tessellated_item_with_colours             nested-agg
-  summary_report_request_with_number_of_instances  vec-enum
   surface_distance_assembly_constraint_with_dimension select-edge
   surface_style_parameter_line                     vec-select
   symmetric_banded_matrix                          select-edge

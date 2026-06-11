@@ -316,9 +316,13 @@ impl Ctx {
             Kind::Ref | Kind::Real | Kind::Int | Kind::Str => true,
             // scalar bind exists; optional deferred (no read_optional_*).
             Kind::Bool | Kind::Logical | Kind::Enum(_) => !optional,
-            // scalar/ref element only; optional aggregation deferred.
+            // ref / scalar / enum element; optional aggregation deferred.
             Kind::Vec(inner) => {
-                !optional && matches!(**inner, Kind::Ref | Kind::Real | Kind::Int | Kind::Str)
+                !optional
+                    && matches!(
+                        **inner,
+                        Kind::Ref | Kind::Real | Kind::Int | Kind::Str | Kind::Enum(_)
+                    )
             }
             // optional select is handled by the v4.2 let-form; both need a
             // supported select.
@@ -467,7 +471,7 @@ fn main() {
         // serialize fns don't read `l1`, and big entities trip pedantic style
         // lints. All flip-only — the committed (off) output keeps a bare header.
         format!(
-            "{HEADER}#![allow(dead_code, unused_variables, clippy::too_many_lines, clippy::enum_variant_names, clippy::struct_field_names, clippy::struct_excessive_bools)]\n\n"
+            "{HEADER}#![allow(dead_code, unused_variables, clippy::too_many_lines, clippy::enum_variant_names, clippy::struct_field_names, clippy::struct_excessive_bools, clippy::clone_on_copy)]\n\n"
         )
     } else {
         HEADER.to_string()
@@ -477,6 +481,7 @@ fn main() {
     let mut serialize = head;
     // Helpers to emit once after the loop (dedup across entities).
     let mut used_enums: BTreeSet<String> = BTreeSet::new(); // standalone field ENUMs
+    let mut used_enum_lists: BTreeSet<String> = BTreeSet::new(); // ENUMs in `Vec<…>`
     let mut used_selects: BTreeSet<String> = BTreeSet::new(); // mixed SELECTs
     let mut any_bool = false;
 
@@ -629,6 +634,14 @@ fn main() {
                 Kind::Select(alias) => {
                     used_selects.insert(alias.clone());
                 }
+                // `Vec<EarlyEnum>`: needs the enum model + `<alias>_attr` (via
+                // used_enums) and a `<alias>_list` bind helper.
+                Kind::Vec(inner) => {
+                    if let Kind::Enum(alias) = &**inner {
+                        used_enums.insert(alias.clone());
+                        used_enum_lists.insert(alias.clone());
+                    }
+                }
                 _ => {}
             }
         }
@@ -739,6 +752,11 @@ fn main() {
             .unwrap();
         }
         writeln!(serialize, "    }}.into())\n}}\n").unwrap();
+    }
+
+    // generated `<alias>_list` bind helpers for ENUMs used in `Vec<…>` fields.
+    for alias in &used_enum_lists {
+        emit_enum_list(&ctx, alias, &mut bind);
     }
 
     if any_bool {
@@ -1259,6 +1277,65 @@ fn emit_synth_enum(
     writeln!(serialize, "    }}.into())\n}}\n").unwrap();
 }
 
+/// Emit `<alias>_list(attrs, index, ..) -> Result<Vec<EnumType>>` for an ENUM
+/// used inside a `Vec<…>`: reads the `List`, decoding each `Enum` element to a
+/// variant (mirrors the standalone bind decode, per element). Works for hinted
+/// (L2 reuse, with default) and hint-less (synth `Early*`, strict) enums.
+fn emit_enum_list(ctx: &Ctx, alias: &str, bind: &mut String) {
+    let (et, pairs, default): (String, Vec<(String, String)>, Option<String>) =
+        match ctx.mapping.enums.get(alias) {
+            Some(h) => (
+                h.rust_type.clone(),
+                h.variants
+                    .iter()
+                    .map(|(m, v)| (m.to_uppercase(), v.clone()))
+                    .collect(),
+                h.default.clone(),
+            ),
+            None => (
+                format!("super::model::Early{}", pascal(alias)),
+                synth_enum_members(ctx, alias),
+                None,
+            ),
+        };
+    writeln!(
+        bind,
+        "fn {alias}_list(attrs: &[crate::parser::entity::Attribute], index: usize, entity_id: u64, field: &'static str) -> Result<Vec<{et}>, crate::ir::error::ConvertError> {{"
+    )
+    .unwrap();
+    writeln!(
+        bind,
+        "    let Some(crate::parser::entity::Attribute::List(items)) = attrs.get(index) else {{ return Err(crate::ir::error::ConvertError::UnexpectedEntityForm {{ entity_id, detail: format!(\"{{field}}: expected list\") }}); }};"
+    )
+    .unwrap();
+    writeln!(bind, "    let mut out = Vec::with_capacity(items.len());").unwrap();
+    writeln!(bind, "    for item in items {{").unwrap();
+    writeln!(
+        bind,
+        "        let crate::parser::entity::Attribute::Enum(t) = item else {{ return Err(crate::ir::error::ConvertError::UnexpectedEntityForm {{ entity_id, detail: format!(\"{{field}}: expected enum in list\") }}); }};"
+    )
+    .unwrap();
+    writeln!(bind, "        out.push(match t.as_str() {{").unwrap();
+    for (tok, var) in &pairs {
+        if default.as_ref() == Some(var) {
+            continue; // covered by the catch-all below (avoids match_same_arms)
+        }
+        writeln!(bind, "            \"{tok}\" => {et}::{var},").unwrap();
+    }
+    if let Some(d) = &default {
+        writeln!(bind, "            _ => {et}::{d},").unwrap();
+    } else {
+        writeln!(
+            bind,
+            "            other => return Err(crate::ir::error::ConvertError::UnexpectedEntityForm {{ entity_id, detail: format!(\"{{field}}: unknown {alias} '.{{other}}.'\") }}),"
+        )
+        .unwrap();
+    }
+    writeln!(bind, "        }});").unwrap();
+    writeln!(bind, "    }}").unwrap();
+    writeln!(bind, "    Ok(out)\n}}\n").unwrap();
+}
+
 fn field_ty(ctx: &Ctx, k: &Kind) -> String {
     match k {
         Kind::Ref => "u64".into(),
@@ -1288,16 +1365,21 @@ fn bind_expr(k: &Kind, i: usize, field: &str) -> String {
         Kind::Ref => {
             format!("crate::ir::attr::read_entity_ref(attrs, {i}, entity_id, \"{field}\")?")
         }
-        Kind::Vec(inner) => {
-            let list = match &**inner {
-                Kind::Ref => "read_entity_ref_list",
-                Kind::Real => "read_real_list",
-                Kind::Int => "read_integer_list",
-                Kind::Str => "read_string_list",
-                other => panic!("gen-early: aggregation of {other:?} not yet supported (v4.5)"),
-            };
-            format!("crate::ir::attr::{list}(attrs, {i}, entity_id, \"{field}\")?")
-        }
+        Kind::Vec(inner) => match &**inner {
+            // ENUM list -> generated `<alias>_list` helper (see `emit_enum_list`).
+            Kind::Enum(alias) => format!("{alias}_list(attrs, {i}, entity_id, \"{field}\")?"),
+            Kind::Ref | Kind::Real | Kind::Int | Kind::Str => {
+                let list = match &**inner {
+                    Kind::Ref => "read_entity_ref_list",
+                    Kind::Real => "read_real_list",
+                    Kind::Int => "read_integer_list",
+                    Kind::Str => "read_string_list",
+                    _ => unreachable!(),
+                };
+                format!("crate::ir::attr::{list}(attrs, {i}, entity_id, \"{field}\")?")
+            }
+            other => panic!("gen-early: aggregation of {other:?} not yet supported"),
+        },
         Kind::Real => format!("crate::ir::attr::read_real(attrs, {i}, entity_id, \"{field}\")?"),
         Kind::Int => format!("crate::ir::attr::read_integer(attrs, {i}, entity_id, \"{field}\")?"),
         Kind::Bool => format!("crate::ir::attr::read_bool(attrs, {i}, entity_id, \"{field}\")?"),
@@ -1321,12 +1403,14 @@ fn serialize_expr(k: &Kind, field: &str) -> String {
         Kind::Ref => format!("crate::parser::entity::Attribute::EntityRef(l1.{field})"),
         Kind::Vec(inner) => {
             // Ref arm reproduces the previous `VecRef` output byte-for-byte.
+            // ENUM reuses the standalone `<alias>_attr` helper per element.
             let elem = match &**inner {
                 Kind::Ref => "|&s| crate::parser::entity::Attribute::EntityRef(s)".to_string(),
                 Kind::Real => "|&x| crate::parser::entity::Attribute::Real(x)".to_string(),
                 Kind::Int => "|&x| crate::parser::entity::Attribute::Integer(x)".to_string(),
                 Kind::Str => "|s| crate::parser::entity::Attribute::String(s.clone())".to_string(),
-                other => panic!("gen-early: aggregation of {other:?} not yet supported (v4.5)"),
+                Kind::Enum(alias) => format!("|e| {alias}_attr(e.clone())"),
+                other => panic!("gen-early: aggregation of {other:?} not yet supported"),
             };
             format!(
                 "crate::parser::entity::Attribute::List(l1.{field}.iter().map({elem}).collect())"
@@ -1736,11 +1820,25 @@ mod tests {
         assert!(serialize_expr(&Kind::Vec(Box::new(Kind::Real)), "v").contains("Real(x)"));
     }
 
-    /// Aggregations of enum / nested are deferred to v4.5 (panic).
+    /// `Vec<EarlyEnum>` (aggregation of enum): list-decode helper + per-element
+    /// `<alias>_attr` serialize.
     #[test]
-    #[should_panic(expected = "not yet supported")]
-    fn vec_enum_bind_panics() {
-        bind_expr(&Kind::Vec(Box::new(Kind::Enum("foo".into()))), 1, "x");
+    fn vec_enum_codegen() {
+        let ctx = empty_ctx();
+        let venum = Kind::Vec(Box::new(Kind::Enum("foo".into())));
+        assert!(ctx.emittable(&venum, false));
+        assert!(bind_expr(&venum, 1, "x").contains("foo_list(attrs, 1, entity_id"));
+        assert!(serialize_expr(&venum, "y").contains("|e| foo_attr(e.clone())"));
+        // the generated list helper decodes each Enum element to a variant.
+        let mut b = String::new();
+        emit_enum_list(&ctx_from(schema()), "summary_report_style_type", &mut b);
+        assert!(b.contains(
+            "fn summary_report_style_type_list(attrs: &[crate::parser::entity::Attribute]"
+        ));
+        assert!(b.contains("Vec<super::model::EarlySummaryReportStyleType>"));
+        assert!(
+            b.contains("\"CONCLUSION\" => super::model::EarlySummaryReportStyleType::Conclusion,")
+        );
     }
 
     #[test]
