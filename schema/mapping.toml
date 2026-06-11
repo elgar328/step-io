@@ -12,6 +12,12 @@ generate = [
     "point_style",
 ]
 
+# `generate_all`: diagnostic flip. When true, gen-early generates *every* entity
+# the codegen can handle (filtered by support) + writes schema/coverage.txt,
+# instead of just `generate`. Committed as false (the wired 6); flip on locally
+# to measure coverage / validate that the full union compiles.
+generate_all = false
+
 # `[enum.<alias>]`: reuse an existing L2 enum for a STEP ENUM type-alias instead
 # of synthesizing an `Early*` enum. `variants` maps each early.toml ENUM member
 # to its L2 variant; the STEP Part21 token is the member upper-cased

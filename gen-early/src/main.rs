@@ -94,6 +94,11 @@ struct TypeDef {
 #[derive(Deserialize)]
 struct Mapping {
     generate: Vec<String>,
+    /// Diagnostic flip: when true, generate *every* entity the codegen can
+    /// handle (filtered by [`Ctx::entity_supported`]) + a coverage report,
+    /// instead of just the wired `generate` list. Committed as `false`.
+    #[serde(default)]
+    generate_all: bool,
     #[serde(rename = "enum", default)]
     enums: BTreeMap<String, EnumHint>,
     #[serde(rename = "select", default)]
@@ -260,6 +265,124 @@ impl Ctx {
         panic!("gen-early: cannot resolve ty token `{t}`");
     }
 
+    // ---- support predicate (diagnostic flip; mirrors emit-time panics) ----
+    // Separate fallible classify so the real `classify` (the 6 entities' emit
+    // path) stays untouched. Drift vs the emit path is caught loudly by the
+    // emit-time panic backstop during a local flip run.
+
+    /// Like [`classify`](Self::classify) but `None` (instead of panic) on an
+    /// unresolvable token (e.g. `binary`) or a too-deep / cyclic resolution.
+    fn try_classify(&self, ty: &str, depth: u32) -> Option<Kind> {
+        if depth >= MAX_DEPTH {
+            return None;
+        }
+        let t = ty.trim();
+        if let Some(inner) = t.strip_prefix("OPTIONAL ") {
+            return self.try_classify(inner.trim(), depth + 1);
+        }
+        if let Some(inner) = agg_inner(t) {
+            return Some(Kind::Vec(Box::new(self.try_classify(inner, depth + 1)?)));
+        }
+        match t {
+            "real" | "number" => return Some(Kind::Real),
+            "integer" => return Some(Kind::Int),
+            "boolean" => return Some(Kind::Bool),
+            "logical" => return Some(Kind::Logical),
+            "string" => return Some(Kind::Str),
+            _ => {}
+        }
+        if self.schema.entity.contains_key(t) {
+            return Some(Kind::Ref);
+        }
+        let td = self.schema.types.get(t)?;
+        let a = td.aliased.trim();
+        if a.starts_with("ENUM(") {
+            return Some(Kind::Enum(t.to_string()));
+        }
+        if let Some(members) = select_members(a) {
+            if members.iter().all(|m| self.ref_like(m, 0)) {
+                return Some(Kind::Ref);
+            }
+            return Some(Kind::Select(t.to_string()));
+        }
+        self.try_classify(a, depth + 1)
+    }
+
+    /// Whether a classified attribute kind (with its `OPTIONAL` flag) is emit-
+    /// able by the current codegen — i.e. would not hit an emit-time panic.
+    fn emittable(&self, k: &Kind, optional: bool) -> bool {
+        match k {
+            // read_optional_* exist for these, so optional is fine too.
+            Kind::Ref | Kind::Real | Kind::Int | Kind::Str => true,
+            // scalar bind exists; optional deferred (no read_optional_*).
+            Kind::Bool | Kind::Logical | Kind::Enum(_) => !optional,
+            // scalar/ref element only; optional aggregation deferred.
+            Kind::Vec(inner) => {
+                !optional && matches!(**inner, Kind::Ref | Kind::Real | Kind::Int | Kind::Str)
+            }
+            // optional select is handled by the v4.2 let-form; both need a
+            // supported select.
+            Kind::Select(sel) => self.select_supported(sel),
+        }
+    }
+
+    /// Whether a mixed SELECT is emittable — hinted ones always; hint-less ones
+    /// only in the shape [`emit_select_synth`] accepts.
+    fn select_supported(&self, sel: &str) -> bool {
+        if self.mapping.selects.contains_key(sel) {
+            return true; // hinted -> emit_select
+        }
+        let Some(td) = self.schema.types.get(sel) else {
+            return false;
+        };
+        let Some(members) = select_members(td.aliased.trim()) else {
+            return false;
+        };
+        let mut entity_members = 0;
+        for m in members {
+            let Some(k) = self.try_classify(m, 0) else {
+                return false; // unresolved member
+            };
+            match k {
+                Kind::Ref => entity_members += 1,
+                Kind::Real | Kind::Int | Kind::Str | Kind::Bool => {}
+                // hinted enum member -> dual representation, deferred.
+                Kind::Enum(a) if self.mapping.enums.contains_key(&a) => return false,
+                Kind::Enum(_) => {}
+                // logical / aggregation / nested mixed select members deferred.
+                Kind::Logical | Kind::Vec(_) | Kind::Select(_) => return false,
+            }
+        }
+        entity_members <= 1
+    }
+
+    /// `Ok` if every flattened attribute of `ent` is emittable, else the first
+    /// failure's reason tag (for the coverage report).
+    fn entity_supported(&self, ent: &str) -> Result<(), String> {
+        let attrs = self.schema.flattened_attrs(ent);
+        // Multiple inheritance can yield two attrs sharing a name (e.g. both a
+        // `document` and a `characterized_object` parent declare `name`); a Rust
+        // struct can't have duplicate fields. Deferred (would need qualified
+        // field names).
+        let mut seen = BTreeSet::new();
+        for a in &attrs {
+            if !seen.insert(a.name.as_str()) {
+                return Err("dup-attr".to_string());
+            }
+        }
+        for a in &attrs {
+            let (optional, inner) = strip_optional(&a.ty);
+            match self.try_classify(inner, 0) {
+                None => return Err("unresolved-token".to_string()),
+                Some(k) if !self.emittable(&k, optional) => {
+                    return Err(unsupported_reason(&k, optional));
+                }
+                _ => {}
+            }
+        }
+        Ok(())
+    }
+
     fn enum_hint(&self, alias: &str) -> &EnumHint {
         self.mapping
             .enums
@@ -287,6 +410,32 @@ fn pascal(snake: &str) -> String {
         .collect()
 }
 
+/// Short tag for a [`Kind`] (coverage report).
+fn kind_tag(k: &Kind) -> &'static str {
+    match k {
+        Kind::Ref => "ref",
+        Kind::Real => "real",
+        Kind::Int => "int",
+        Kind::Bool => "bool",
+        Kind::Logical => "logical",
+        Kind::Str => "str",
+        Kind::Enum(_) => "enum",
+        Kind::Select(_) => "select",
+        Kind::Vec(_) => "vec",
+    }
+}
+
+/// Categorize why an unsupported (kind, optional) attribute can't be emitted.
+fn unsupported_reason(k: &Kind, optional: bool) -> String {
+    match k {
+        Kind::Vec(inner) if matches!(**inner, Kind::Vec(_)) => "nested-agg".to_string(),
+        Kind::Vec(inner) => format!("vec-{}", kind_tag(inner)),
+        Kind::Select(_) => "select-edge".to_string(),
+        _ if optional => format!("opt-{}", kind_tag(k)),
+        _ => kind_tag(k).to_string(),
+    }
+}
+
 const HEADER: &str = "// DO NOT EDIT — generated by `cargo run -p gen-early` from schema/early.toml\n// + schema/mapping.toml. Hand-written lower/lift/ids live in the sibling modules.\n\n";
 
 fn main() {
@@ -301,15 +450,45 @@ fn main() {
     .expect("parse mapping.toml");
     let ctx = Ctx { schema, mapping };
 
-    let mut model = String::from(HEADER);
-    let mut bind = String::from(HEADER);
-    let mut serialize = String::from(HEADER);
+    // Targets: normally the wired `generate` list; under the diagnostic flip
+    // (`generate_all`), every entity the codegen can handle (the rest skipped +
+    // recorded for the coverage report).
+    let mut skipped: Vec<(String, String)> = Vec::new();
+    let targets: Vec<String> = if ctx.mapping.generate_all {
+        let mut t = Vec::new();
+        for ent_name in ctx.schema.entity.keys() {
+            match ctx.entity_supported(ent_name) {
+                Ok(()) => t.push(ent_name.clone()),
+                Err(reason) => skipped.push((ent_name.clone(), reason)),
+            }
+        }
+        t
+    } else {
+        ctx.mapping.generate.clone()
+    };
+
+    // Unused generated types/fns (every entity but the wired few have no
+    // lower/lift) are expected under the flip — suppress dead_code there only,
+    // so the committed (`generate_all = false`) output stays byte-identical.
+    let head = if ctx.mapping.generate_all {
+        // Diagnostic mass: most types are unused (no lower/lift), empty entities'
+        // serialize fns don't read `l1`, and big entities trip pedantic style
+        // lints. All flip-only — the committed (off) output keeps a bare header.
+        format!(
+            "{HEADER}#![allow(dead_code, unused_variables, clippy::too_many_lines, clippy::enum_variant_names, clippy::struct_field_names)]\n\n"
+        )
+    } else {
+        HEADER.to_string()
+    };
+    let mut model = head.clone();
+    let mut bind = head.clone();
+    let mut serialize = head;
     // Helpers to emit once after the loop (dedup across entities).
     let mut used_enums: BTreeSet<String> = BTreeSet::new(); // standalone field ENUMs
     let mut used_selects: BTreeSet<String> = BTreeSet::new(); // mixed SELECTs
     let mut any_bool = false;
 
-    for ent_name in &ctx.mapping.generate {
+    for ent_name in &targets {
         assert!(
             ctx.schema.entity.contains_key(ent_name),
             "gen-early: entity `{ent_name}` not in early.toml"
@@ -576,10 +755,38 @@ fn main() {
             "{HEADER}pub(crate) mod bind;\npub(crate) mod model;\npub(crate) mod serialize;\n"
         ),
     );
-    eprintln!(
-        "gen-early: wrote {} entities to {dir}",
-        ctx.mapping.generate.len()
-    );
+    eprintln!("gen-early: wrote {} entities to {dir}", targets.len());
+
+    // Coverage report (diagnostic flip only). Deterministic: `skipped` is built
+    // in sorted entity order; reasons tallied into a BTreeMap.
+    if ctx.mapping.generate_all {
+        let total = ctx.schema.entity.len();
+        let supported = targets.len();
+        let mut by_reason: BTreeMap<&str, usize> = BTreeMap::new();
+        for (_, reason) in &skipped {
+            *by_reason.entry(reason.as_str()).or_default() += 1;
+        }
+        let mut report = String::new();
+        writeln!(
+            report,
+            "gen-early coverage (generate_all)\nsupported: {supported} / {total}\nskipped:   {}\n",
+            skipped.len()
+        )
+        .unwrap();
+        writeln!(report, "-- skipped by reason --").unwrap();
+        for (reason, n) in &by_reason {
+            writeln!(report, "  {reason:<16} {n}").unwrap();
+        }
+        writeln!(report, "\n-- skipped entities --").unwrap();
+        for (ent, reason) in &skipped {
+            writeln!(report, "  {ent:<48} {reason}").unwrap();
+        }
+        std::fs::write(format!("{root}/schema/coverage.txt"), &report).expect("write coverage.txt");
+        eprintln!(
+            "gen-early: coverage {supported}/{total} supported, {} skipped",
+            skipped.len()
+        );
+    }
 }
 
 /// Emit a synthesized `Early*` enum + `bind_<sel>` / `<sel>_emit` for a mixed
@@ -982,8 +1189,10 @@ fn write_synth_enum_model(
         return;
     }
     let rt = format!("Early{}", pascal(alias));
+    // Fieldless (unit variants) -> `Copy`, so the by-value `<alias>_attr`
+    // serialize helper compiles for non-trivial entities too.
     writeln!(model, "/// L1 ENUM `{alias}` (generated).").unwrap();
-    writeln!(model, "#[derive(Debug, Clone, PartialEq)]").unwrap();
+    writeln!(model, "#[derive(Debug, Clone, Copy, PartialEq)]").unwrap();
     writeln!(model, "pub(crate) enum {rt} {{").unwrap();
     for (_, v) in synth_enum_members(ctx, alias) {
         writeln!(model, "    {v},").unwrap();
@@ -1326,6 +1535,7 @@ mod tests {
             schema,
             mapping: Mapping {
                 generate: vec![],
+                generate_all: false,
                 enums: BTreeMap::new(),
                 selects: BTreeMap::new(),
             },
