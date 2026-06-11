@@ -88,9 +88,18 @@ pub(crate) fn serialize_point_style(
         "POINT_STYLE",
         vec![
             crate::parser::entity::Attribute::String(l1.name.clone()),
-            marker_select_emit(&l1.marker),
-            size_select_emit(&l1.marker_size),
-            crate::parser::entity::Attribute::EntityRef(l1.marker_colour),
+            match &l1.marker {
+                Some(v) => marker_select_emit(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            match &l1.marker_size {
+                Some(v) => size_select_emit(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            match l1.marker_colour {
+                Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
         ],
     )
 }

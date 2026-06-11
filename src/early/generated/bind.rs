@@ -103,13 +103,22 @@ pub(crate) fn bind_point_style(
 ) -> Result<Option<super::model::EarlyPointStyle>, crate::ir::error::ConvertError> {
     crate::ir::attr::check_count(attrs, 4, entity_id, "POINT_STYLE")?;
     let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-    let Some(marker) = bind_marker_select(&attrs[1]) else {
-        return Ok(None);
+    let marker = match &attrs[1] {
+        crate::parser::entity::Attribute::Unset | crate::parser::entity::Attribute::Derived => None,
+        _ => match bind_marker_select(&attrs[1]) {
+            Some(v) => Some(v),
+            None => return Ok(None),
+        },
     };
-    let Some(marker_size) = bind_size_select(&attrs[2]) else {
-        return Ok(None);
+    let marker_size = match &attrs[2] {
+        crate::parser::entity::Attribute::Unset | crate::parser::entity::Attribute::Derived => None,
+        _ => match bind_size_select(&attrs[2]) {
+            Some(v) => Some(v),
+            None => return Ok(None),
+        },
     };
-    let marker_colour = crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "marker_colour")?;
+    let marker_colour =
+        crate::ir::attr::read_optional_entity_ref(attrs, 3, entity_id, "marker_colour")?;
     Ok(Some(super::model::EarlyPointStyle {
         name,
         marker,

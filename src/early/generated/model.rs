@@ -46,9 +46,9 @@ pub(crate) struct EarlySurfaceStyleUsage {
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyPointStyle {
     pub(crate) name: String,
-    pub(crate) marker: EarlyMarker,
-    pub(crate) marker_size: EarlyMarkerSize,
-    pub(crate) marker_colour: u64,
+    pub(crate) marker: Option<EarlyMarker>,
+    pub(crate) marker_size: Option<EarlyMarkerSize>,
+    pub(crate) marker_colour: Option<u64>,
 }
 
 /// L1 mixed SELECT `marker_select` (generated).

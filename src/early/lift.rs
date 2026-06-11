@@ -118,10 +118,12 @@ pub(crate) fn lift_point_style(buf: &WriteBuffer, l2: &PointStyle) -> EarlyPoint
         MarkerSize::MeasureWithUnit(id) => EarlyMarkerSize::MeasureWithUnit(buf.step_id(*id)),
         MarkerSize::Descriptive(s) => EarlyMarkerSize::Descriptive(s.clone()),
     };
+    // L2 `PointStyle` is non-optional, so every field is always present `Some`
+    // in the faithfully-optional L1.
     EarlyPointStyle {
         name: l2.name.clone(),
-        marker,
-        marker_size,
-        marker_colour: buf.step_id(l2.marker_colour),
+        marker: Some(marker),
+        marker_size: Some(marker_size),
+        marker_colour: Some(buf.step_id(l2.marker_colour)),
     }
 }

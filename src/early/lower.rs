@@ -149,26 +149,34 @@ pub(crate) fn lower_surface_style_usage(
 /// any unresolved ref drops the entity, matching the previous handler.
 /// Registers the typed [`EarlyPointStyleId`] key for the PSA consumer.
 pub(crate) fn lower_point_style(ctx: &mut ReaderContext, entity_id: u64, early: EarlyPointStyle) {
+    // L1 is faithfully optional; L2 `PointStyle` is non-optional, so an absent
+    // marker / size / colour collapses to dropping the entity (the collapse the
+    // design assigns to `lower`).
     let marker = match early.marker {
-        EarlyMarker::Predefined(n) => {
+        Some(EarlyMarker::Predefined(n)) => {
             let Some(id) = ctx.id_cache.get::<PreDefinedMarkerId>(n) else {
                 return;
             };
             Marker::Predefined(id)
         }
-        EarlyMarker::Type(t) => Marker::Type(t),
+        Some(EarlyMarker::Type(t)) => Marker::Type(t),
+        None => return,
     };
     let marker_size = match early.marker_size {
-        EarlyMarkerSize::PositiveLength(v) => MarkerSize::PositiveLength(v),
-        EarlyMarkerSize::Descriptive(s) => MarkerSize::Descriptive(s),
-        EarlyMarkerSize::MeasureWithUnit(n) => {
+        Some(EarlyMarkerSize::PositiveLength(v)) => MarkerSize::PositiveLength(v),
+        Some(EarlyMarkerSize::Descriptive(s)) => MarkerSize::Descriptive(s),
+        Some(EarlyMarkerSize::MeasureWithUnit(n)) => {
             let Some(id) = ctx.id_cache.get::<MeasureWithUnitId>(n) else {
                 return;
             };
             MarkerSize::MeasureWithUnit(id)
         }
+        None => return,
     };
-    let Some(marker_colour) = ctx.id_cache.get::<ColourId>(early.marker_colour) else {
+    let Some(marker_colour_ref) = early.marker_colour else {
+        return;
+    };
+    let Some(marker_colour) = ctx.id_cache.get::<ColourId>(marker_colour_ref) else {
         return;
     };
     let id = ctx

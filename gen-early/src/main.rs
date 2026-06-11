@@ -7,9 +7,9 @@
 //! dev tool, not a `build.rs`. Generates the entities in the `generate` list
 //! (mapping.toml). Supports entity refs / primitives (real, integer, bool,
 //! string) / ENUMs (hinted L2-reuse or auto-synthesized `Early*` when hint-less)
-//! / all-entity & mixed SELECTs / OPTIONAL (required+drop) and **inheritance
-//! flattening** (supertype attrs prepended in Part21 order, see
-//! [`EarlyToml::flattened_attrs`]).
+//! / all-entity & mixed SELECTs / OPTIONAL (faithful `Option<T>`; `lower` decides
+//! any collapse) and **inheritance flattening** (supertype attrs prepended in
+//! Part21 order, see [`EarlyToml::flattened_attrs`]).
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
@@ -128,6 +128,7 @@ struct SelectHint {
 // ---- classification ----
 
 /// How an attribute's resolved `ty` maps to Rust / bind / serialize.
+#[derive(Debug)]
 enum Kind {
     Ref,            // entity ref (incl. all-entity SELECT) -> u64
     VecRef,         // aggregation of refs -> Vec<u64>
@@ -165,6 +166,15 @@ fn enum_members(aliased: &str) -> Option<Vec<&str>> {
         .map(|inner| inner.split(',').map(str::trim).collect())
 }
 
+/// Split a leading `OPTIONAL ` off a `ty`, returning `(is_optional, inner_ty)`.
+/// EXPRESS does not nest `OPTIONAL`, so a single strip suffices.
+fn strip_optional(ty: &str) -> (bool, &str) {
+    match ty.trim().strip_prefix("OPTIONAL ") {
+        Some(inner) => (true, inner.trim()),
+        None => (false, ty.trim()),
+    }
+}
+
 struct Ctx {
     schema: EarlyToml,
     mapping: Mapping,
@@ -196,19 +206,19 @@ impl Ctx {
     }
 
     /// Resolve a `ty` token to a [`Kind`]. Handles entity refs, primitives
-    /// (after alias resolution), reused ENUMs, all-entity SELECTs (-> ref) and
-    /// aggregations of refs (-> `Vec<u64>`). OPTIONAL and mixed SELECTs are out
-    /// of scope (v2) and panic loudly.
+    /// (after alias resolution), ENUMs (hinted or synthesized), all-entity
+    /// SELECTs (-> ref), mixed SELECTs (-> `Select`) and aggregations of refs
+    /// (-> `Vec<u64>`). `OPTIONAL` is stripped here defensively but is normally
+    /// handled by `main` (tracked as a separate flag for `Option<T>`).
     fn classify(&self, ty: &str, depth: u32) -> Kind {
         assert!(
             depth < MAX_DEPTH,
             "gen-early: ty `{ty}` resolution too deep (cycle?)"
         );
         let t = ty.trim();
-        // OPTIONAL is transparent: the inner type is bound as required; an
-        // absent / unrecognized value drops the whole entity (matching the
-        // hand-written point_style, whose L2 is non-optional). True `Option<T>`
-        // (where L2 is `Option`) is deferred to v4.
+        // `main` strips `OPTIONAL` (via `strip_optional`) and tracks it as a
+        // separate `optional` flag so the field becomes a faithful `Option<T>`;
+        // this defensive strip keeps `classify` correct on any raw-ty path.
         if let Some(inner) = t.strip_prefix("OPTIONAL ") {
             return self.classify(inner.trim(), depth + 1);
         }
@@ -306,21 +316,31 @@ fn main() {
         let type_name = format!("Early{}", pascal(ent_name));
         let step_name = ent_name.to_uppercase();
         // Full Part21 positional attribute list (inherited supertype attrs
-        // prepended, then own); see `EarlyToml::flattened_attrs`.
-        let attrs: Vec<(&Attr, Kind)> = ctx
+        // prepended, then own); see `EarlyToml::flattened_attrs`. Each entry also
+        // carries whether the attr is `OPTIONAL` (-> faithful `Option<T>` in L1).
+        let attrs: Vec<(&Attr, Kind, bool)> = ctx
             .schema
             .flattened_attrs(ent_name)
             .into_iter()
-            .map(|a| (a, ctx.classify(&a.ty, 0)))
+            .map(|a| {
+                let (optional, inner) = strip_optional(&a.ty);
+                (a, ctx.classify(inner, 0), optional)
+            })
             .collect();
-        let has_select = attrs.iter().any(|(_, k)| matches!(k, Kind::Select(_)));
+        let has_select = attrs.iter().any(|(_, k, _)| matches!(k, Kind::Select(_)));
 
         // model struct
         writeln!(model, "/// L1 `{step_name}` (generated).").unwrap();
         writeln!(model, "#[derive(Debug, Clone, PartialEq)]").unwrap();
         writeln!(model, "pub(crate) struct {type_name} {{").unwrap();
-        for (a, k) in &attrs {
-            writeln!(model, "    pub(crate) {}: {},", a.name, field_ty(&ctx, k)).unwrap();
+        for (a, k, opt) in &attrs {
+            writeln!(
+                model,
+                "    pub(crate) {}: {},",
+                a.name,
+                field_ty_full(&ctx, k, *opt)
+            )
+            .unwrap();
         }
         writeln!(model, "}}\n").unwrap();
 
@@ -344,27 +364,60 @@ fn main() {
         )
         .unwrap();
         if has_select {
-            for (i, (a, k)) in attrs.iter().enumerate() {
-                if let Kind::Select(sel) = k {
-                    writeln!(
-                        bind,
-                        "    let Some({}) = bind_{sel}(&attrs[{i}]) else {{ return Ok(None); }};",
-                        a.name
-                    )
-                    .unwrap();
-                } else {
-                    writeln!(bind, "    let {} = {};", a.name, bind_expr(k, i, &a.name)).unwrap();
+            for (i, (a, k, opt)) in attrs.iter().enumerate() {
+                match (k, opt) {
+                    // Optional SELECT: `$`/`*` -> None (entity survives); a present
+                    // but unrecognized form -> drop the whole entity (preserving
+                    // the required-select behavior for malformed input).
+                    (Kind::Select(sel), true) => {
+                        writeln!(bind, "    let {} = match &attrs[{i}] {{", a.name).unwrap();
+                        writeln!(
+                            bind,
+                            "        crate::parser::entity::Attribute::Unset | crate::parser::entity::Attribute::Derived => None,"
+                        )
+                        .unwrap();
+                        writeln!(
+                            bind,
+                            "        _ => match bind_{sel}(&attrs[{i}]) {{ Some(v) => Some(v), None => return Ok(None) }},"
+                        )
+                        .unwrap();
+                        writeln!(bind, "    }};").unwrap();
+                    }
+                    // Required SELECT: drop the whole entity on an unrecognized form.
+                    (Kind::Select(sel), false) => {
+                        writeln!(
+                            bind,
+                            "    let Some({}) = bind_{sel}(&attrs[{i}]) else {{ return Ok(None); }};",
+                            a.name
+                        )
+                        .unwrap();
+                    }
+                    _ => {
+                        writeln!(
+                            bind,
+                            "    let {} = {};",
+                            a.name,
+                            bind_expr_full(k, i, &a.name, *opt)
+                        )
+                        .unwrap();
+                    }
                 }
             }
             writeln!(bind, "    Ok(Some(super::model::{type_name} {{").unwrap();
-            for (a, _) in &attrs {
+            for (a, _, _) in &attrs {
                 writeln!(bind, "        {},", a.name).unwrap();
             }
             writeln!(bind, "    }}))\n}}\n").unwrap();
         } else {
             writeln!(bind, "    Ok(super::model::{type_name} {{").unwrap();
-            for (i, (a, k)) in attrs.iter().enumerate() {
-                writeln!(bind, "        {}: {},", a.name, bind_expr(k, i, &a.name)).unwrap();
+            for (i, (a, k, opt)) in attrs.iter().enumerate() {
+                writeln!(
+                    bind,
+                    "        {}: {},",
+                    a.name,
+                    bind_expr_full(k, i, &a.name, *opt)
+                )
+                .unwrap();
             }
             writeln!(bind, "    }})\n}}\n").unwrap();
         }
@@ -376,8 +429,13 @@ fn main() {
         )
         .unwrap();
         writeln!(serialize, "    buf.push_simple(\"{step_name}\", vec![").unwrap();
-        for (a, k) in &attrs {
-            writeln!(serialize, "        {},", serialize_expr(k, &a.name)).unwrap();
+        for (a, k, opt) in &attrs {
+            writeln!(
+                serialize,
+                "        {},",
+                serialize_expr_full(k, &a.name, *opt)
+            )
+            .unwrap();
             match k {
                 Kind::Bool => any_bool = true,
                 Kind::Enum(alias) => {
@@ -820,6 +878,87 @@ fn serialize_expr(k: &Kind, field: &str) -> String {
     }
 }
 
+/// Field type, wrapping `Option<…>` for an `OPTIONAL` schema attribute (faithful
+/// L1 optionality; `lower` decides any collapse).
+fn field_ty_full(ctx: &Ctx, k: &Kind, optional: bool) -> String {
+    let base = field_ty(ctx, k);
+    if optional {
+        format!("Option<{base}>")
+    } else {
+        base
+    }
+}
+
+/// `bind` expression, optional-aware (non-`Select` kinds; `Select` is emitted
+/// inline in `main`'s let-form path, never here).
+fn bind_expr_full(k: &Kind, i: usize, field: &str, optional: bool) -> String {
+    if optional {
+        bind_expr_opt(k, i, field)
+    } else {
+        bind_expr(k, i, field)
+    }
+}
+
+/// Optional `bind` for kinds with an existing `read_optional_*` helper. Other
+/// kinds (`Bool`/`Enum`/`VecRef`) are deferred — they need new helpers that
+/// would be dead code until an entity uses them (v4.4).
+fn bind_expr_opt(k: &Kind, i: usize, field: &str) -> String {
+    match k {
+        Kind::Ref => {
+            format!(
+                "crate::ir::attr::read_optional_entity_ref(attrs, {i}, entity_id, \"{field}\")?"
+            )
+        }
+        Kind::Real => {
+            format!("crate::ir::attr::read_optional_real(attrs, {i}, entity_id, \"{field}\")?")
+        }
+        Kind::Int => {
+            format!("crate::ir::attr::read_optional_integer(attrs, {i}, entity_id, \"{field}\")?")
+        }
+        Kind::Str => {
+            format!("crate::ir::attr::read_optional_string(attrs, {i}, entity_id, \"{field}\")?")
+        }
+        Kind::Bool | Kind::Enum(_) | Kind::VecRef => {
+            panic!("gen-early: OPTIONAL {k:?} not yet supported (v4.x)")
+        }
+        Kind::Select(_) => unreachable!("optional Select handled in the let-form bind path"),
+    }
+}
+
+/// `serialize` expression, optional-aware: `Some` -> inner attribute, `None` ->
+/// `$` (`Attribute::Unset`).
+fn serialize_expr_full(k: &Kind, field: &str, optional: bool) -> String {
+    if optional {
+        serialize_expr_opt(k, field)
+    } else {
+        serialize_expr(k, field)
+    }
+}
+
+fn serialize_expr_opt(k: &Kind, field: &str) -> String {
+    let unset = "crate::parser::entity::Attribute::Unset";
+    match k {
+        Kind::Ref => format!(
+            "match l1.{field} {{ Some(v) => crate::parser::entity::Attribute::EntityRef(v), None => {unset} }}"
+        ),
+        Kind::Real => format!(
+            "match l1.{field} {{ Some(v) => crate::parser::entity::Attribute::Real(v), None => {unset} }}"
+        ),
+        Kind::Int => format!(
+            "match l1.{field} {{ Some(v) => crate::parser::entity::Attribute::Integer(v), None => {unset} }}"
+        ),
+        Kind::Str => format!(
+            "match &l1.{field} {{ Some(v) => crate::parser::entity::Attribute::String(v.clone()), None => {unset} }}"
+        ),
+        Kind::Select(alias) => {
+            format!("match &l1.{field} {{ Some(v) => {alias}_emit(v), None => {unset} }}")
+        }
+        Kind::Bool | Kind::Enum(_) | Kind::VecRef => {
+            panic!("gen-early: OPTIONAL {k:?} not yet supported (v4.x)")
+        }
+    }
+}
+
 fn write_fmt(path: &str, body: &str) {
     std::fs::write(path, body).expect("write generated file");
     let status = Command::new("rustfmt")
@@ -986,5 +1125,37 @@ mod tests {
         assert!(
             s.contains("super::model::EarlyActuatedDirection::NotActuated => \"NOT_ACTUATED\"")
         );
+    }
+
+    /// `OPTIONAL ` is split off and tracked as a flag; the inner ty stays.
+    #[test]
+    fn strip_optional_splits_prefix() {
+        assert_eq!(strip_optional("OPTIONAL colour"), (true, "colour"));
+        assert_eq!(
+            strip_optional("OPTIONAL SET OF curve"),
+            (true, "SET OF curve")
+        );
+        assert_eq!(strip_optional("label"), (false, "label"));
+    }
+
+    /// Faithful `Option<T>` codegen for the supported kinds.
+    #[test]
+    fn optional_codegen() {
+        let ctx = ctx_from(EarlyToml {
+            entity: BTreeMap::new(),
+            types: BTreeMap::new(),
+        });
+        // field wraps Option only when optional.
+        assert_eq!(field_ty_full(&ctx, &Kind::Real, true), "Option<f64>");
+        assert_eq!(field_ty_full(&ctx, &Kind::Real, false), "f64");
+        // bind uses the read_optional_* helpers.
+        assert!(bind_expr_full(&Kind::Int, 2, "x", true).contains("read_optional_integer"));
+        assert!(bind_expr_full(&Kind::Ref, 3, "c", true).contains("read_optional_entity_ref"));
+        // required path is unchanged.
+        assert!(bind_expr_full(&Kind::Int, 2, "x", false).contains("read_integer(attrs"));
+        // serialize maps None -> Unset.
+        let s = serialize_expr_full(&Kind::Ref, "c", true);
+        assert!(s.contains("Some(v) => crate::parser::entity::Attribute::EntityRef(v)"));
+        assert!(s.contains("None => crate::parser::entity::Attribute::Unset"));
     }
 }
