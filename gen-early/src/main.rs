@@ -6,7 +6,7 @@
 //! Run from anywhere: `cargo run -p gen-early`. Output is committed; this is a
 //! dev tool, not a `build.rs`. Generates the entities in the `generate` list
 //! (mapping.toml). Supports entity refs / primitives (real, integer, bool,
-//! string) / ENUMs (hinted L2-reuse or auto-synthesized `Early*` when hint-less)
+//! logical, string) / ENUMs (hinted L2-reuse or auto-synthesized `Early*` when hint-less)
 //! / SELECTs (all-entity -> ref; mixed -> hinted or auto-synthesized `Early*`
 //! for scalar+ENUM members) / aggregations (`LIST/SET OF` ref or scalar ->
 //! `Vec<u64/f64/i64/String>`) / OPTIONAL (faithful `Option<T>`; `lower` decides
@@ -137,6 +137,7 @@ enum Kind {
     Real,           // -> f64
     Int,            // -> i64
     Bool,           // -> bool
+    Logical,        // -> crate::ir::geometry::Logical (.T./.F./.U.)
     Str,            // -> String
     Enum(String),   // ENUM type-alias name (hinted -> L2 reuse, else synth Early*)
     Select(String), // mixed SELECT type-alias name (looked up in mapping.selects)
@@ -234,6 +235,7 @@ impl Ctx {
             "real" | "number" => return Kind::Real,
             "integer" => return Kind::Int,
             "boolean" => return Kind::Bool,
+            "logical" => return Kind::Logical,
             "string" => return Kind::Str,
             _ => {}
         }
@@ -780,6 +782,9 @@ fn emit_select_synth(
             Kind::Enum(a) if ctx.mapping.enums.contains_key(a) => panic!(
                 "gen-early: select `{sel}` member `{m}` is a hinted enum in a hint-less select (v4.x)"
             ),
+            Kind::Logical => {
+                panic!("gen-early: select `{sel}` member `{m}` is a logical (v4.x)")
+            }
             _ => {}
         }
     }
@@ -1047,6 +1052,7 @@ fn field_ty(ctx: &Ctx, k: &Kind) -> String {
         Kind::Real => "f64".into(),
         Kind::Int => "i64".into(),
         Kind::Bool => "bool".into(),
+        Kind::Logical => "crate::ir::geometry::Logical".into(),
         Kind::Str => "String".into(),
         // Hinted ENUM reuses the L2 type; hint-less ENUM uses the synthesized
         // `Early*` (defined in the same generated/model.rs, so referenced bare).
@@ -1081,6 +1087,9 @@ fn bind_expr(k: &Kind, i: usize, field: &str) -> String {
         Kind::Real => format!("crate::ir::attr::read_real(attrs, {i}, entity_id, \"{field}\")?"),
         Kind::Int => format!("crate::ir::attr::read_integer(attrs, {i}, entity_id, \"{field}\")?"),
         Kind::Bool => format!("crate::ir::attr::read_bool(attrs, {i}, entity_id, \"{field}\")?"),
+        Kind::Logical => {
+            format!("crate::ir::attr::read_logical(attrs, {i}, entity_id, \"{field}\")?")
+        }
         Kind::Str => {
             format!(
                 "crate::ir::attr::read_string_or_unset(attrs, {i}, entity_id, \"{field}\")?.to_owned()"
@@ -1112,6 +1121,9 @@ fn serialize_expr(k: &Kind, field: &str) -> String {
         Kind::Real => format!("crate::parser::entity::Attribute::Real(l1.{field})"),
         Kind::Int => format!("crate::parser::entity::Attribute::Integer(l1.{field})"),
         Kind::Bool => format!("bool_attr(l1.{field})"),
+        Kind::Logical => format!(
+            "crate::parser::entity::Attribute::Enum(crate::ir::attr::logical_to_step(l1.{field}).into())"
+        ),
         Kind::Str => format!("crate::parser::entity::Attribute::String(l1.{field}.clone())"),
         Kind::Enum(alias) => format!("{alias}_attr(l1.{field})"),
         Kind::Select(alias) => format!("{alias}_emit(&l1.{field})"),
@@ -1140,8 +1152,8 @@ fn bind_expr_full(k: &Kind, i: usize, field: &str, optional: bool) -> String {
 }
 
 /// Optional `bind` for kinds with an existing `read_optional_*` helper. Other
-/// kinds (`Bool`/`Enum`/`Vec`) are deferred — they need new helpers that would
-/// be dead code until an entity uses them (v4.5).
+/// kinds (`Bool`/`Logical`/`Enum`/`Vec`) are deferred — they need new helpers
+/// that would be dead code until an entity uses them.
 fn bind_expr_opt(k: &Kind, i: usize, field: &str) -> String {
     match k {
         Kind::Ref => {
@@ -1158,7 +1170,7 @@ fn bind_expr_opt(k: &Kind, i: usize, field: &str) -> String {
         Kind::Str => {
             format!("crate::ir::attr::read_optional_string(attrs, {i}, entity_id, \"{field}\")?")
         }
-        Kind::Bool | Kind::Enum(_) | Kind::Vec(_) => {
+        Kind::Bool | Kind::Logical | Kind::Enum(_) | Kind::Vec(_) => {
             panic!("gen-early: OPTIONAL {k:?} not yet supported (v4.x)")
         }
         Kind::Select(_) => unreachable!("optional Select handled in the let-form bind path"),
@@ -1193,7 +1205,7 @@ fn serialize_expr_opt(k: &Kind, field: &str) -> String {
         Kind::Select(alias) => {
             format!("match &l1.{field} {{ Some(v) => {alias}_emit(v), None => {unset} }}")
         }
-        Kind::Bool | Kind::Enum(_) | Kind::Vec(_) => {
+        Kind::Bool | Kind::Logical | Kind::Enum(_) | Kind::Vec(_) => {
             panic!("gen-early: OPTIONAL {k:?} not yet supported (v4.x)")
         }
     }
@@ -1524,5 +1536,18 @@ mod tests {
             1,
             "x",
         );
+    }
+
+    /// STEP `logical` (.T./.F./.U.) -> `crate::ir::geometry::Logical`.
+    #[test]
+    fn logical_codegen() {
+        let ctx = empty_ctx();
+        assert!(matches!(ctx.classify("logical", 0), Kind::Logical));
+        assert_eq!(
+            field_ty(&ctx, &Kind::Logical),
+            "crate::ir::geometry::Logical"
+        );
+        assert!(bind_expr(&Kind::Logical, 1, "x").contains("read_logical"));
+        assert!(serialize_expr(&Kind::Logical, "x").contains("logical_to_step"));
     }
 }
