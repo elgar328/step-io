@@ -8,7 +8,8 @@
 //! (mapping.toml). Supports entity refs / primitives (real, integer, bool,
 //! string) / ENUMs (hinted L2-reuse or auto-synthesized `Early*` when hint-less)
 //! / SELECTs (all-entity -> ref; mixed -> hinted or auto-synthesized `Early*`
-//! for scalar+ENUM members) / OPTIONAL (faithful `Option<T>`; `lower` decides
+//! for scalar+ENUM members) / aggregations (`LIST/SET OF` ref or scalar ->
+//! `Vec<u64/f64/i64/String>`) / OPTIONAL (faithful `Option<T>`; `lower` decides
 //! any collapse) and **inheritance flattening** (supertype attrs prepended in
 //! Part21 order, see [`EarlyToml::flattened_attrs`]).
 
@@ -132,7 +133,7 @@ struct SelectHint {
 #[derive(Debug)]
 enum Kind {
     Ref,            // entity ref (incl. all-entity SELECT) -> u64
-    VecRef,         // aggregation of refs -> Vec<u64>
+    Vec(Box<Kind>), // aggregation -> Vec<inner> (LIST/SET/BAG/ARRAY OF inner)
     Real,           // -> f64
     Int,            // -> i64
     Bool,           // -> bool
@@ -224,11 +225,10 @@ impl Ctx {
             return self.classify(inner.trim(), depth + 1);
         }
         if let Some(inner) = agg_inner(t) {
-            assert!(
-                self.ref_like(inner, 0),
-                "gen-early: aggregation of non-ref `{inner}` not supported yet"
-            );
-            return Kind::VecRef;
+            // Classify the inner type recursively; which inner kinds are actually
+            // emittable is decided at emit time (v4.4 = ref/scalar; enum/select/
+            // nested deferred to v4.5).
+            return Kind::Vec(Box::new(self.classify(inner, depth + 1)));
         }
         match t {
             "real" | "number" => return Kind::Real,
@@ -771,8 +771,8 @@ fn emit_select_synth(
     );
     for (m, _, k) in &mems {
         match k {
-            Kind::VecRef => {
-                panic!("gen-early: select `{sel}` member `{m}` is an aggregation (v4.4)")
+            Kind::Vec(_) => {
+                panic!("gen-early: select `{sel}` member `{m}` is an aggregation (v4.x)")
             }
             Kind::Select(_) => {
                 panic!("gen-early: select `{sel}` member `{m}` is a nested mixed select (v4.x)")
@@ -1043,7 +1043,7 @@ fn emit_synth_enum(
 fn field_ty(ctx: &Ctx, k: &Kind) -> String {
     match k {
         Kind::Ref => "u64".into(),
-        Kind::VecRef => "Vec<u64>".into(),
+        Kind::Vec(inner) => format!("Vec<{}>", field_ty(ctx, inner)),
         Kind::Real => "f64".into(),
         Kind::Int => "i64".into(),
         Kind::Bool => "bool".into(),
@@ -1068,8 +1068,15 @@ fn bind_expr(k: &Kind, i: usize, field: &str) -> String {
         Kind::Ref => {
             format!("crate::ir::attr::read_entity_ref(attrs, {i}, entity_id, \"{field}\")?")
         }
-        Kind::VecRef => {
-            format!("crate::ir::attr::read_entity_ref_list(attrs, {i}, entity_id, \"{field}\")?")
+        Kind::Vec(inner) => {
+            let list = match &**inner {
+                Kind::Ref => "read_entity_ref_list",
+                Kind::Real => "read_real_list",
+                Kind::Int => "read_integer_list",
+                Kind::Str => "read_string_list",
+                other => panic!("gen-early: aggregation of {other:?} not yet supported (v4.5)"),
+            };
+            format!("crate::ir::attr::{list}(attrs, {i}, entity_id, \"{field}\")?")
         }
         Kind::Real => format!("crate::ir::attr::read_real(attrs, {i}, entity_id, \"{field}\")?"),
         Kind::Int => format!("crate::ir::attr::read_integer(attrs, {i}, entity_id, \"{field}\")?"),
@@ -1089,9 +1096,19 @@ fn bind_expr(k: &Kind, i: usize, field: &str) -> String {
 fn serialize_expr(k: &Kind, field: &str) -> String {
     match k {
         Kind::Ref => format!("crate::parser::entity::Attribute::EntityRef(l1.{field})"),
-        Kind::VecRef => format!(
-            "crate::parser::entity::Attribute::List(l1.{field}.iter().map(|&s| crate::parser::entity::Attribute::EntityRef(s)).collect())"
-        ),
+        Kind::Vec(inner) => {
+            // Ref arm reproduces the previous `VecRef` output byte-for-byte.
+            let elem = match &**inner {
+                Kind::Ref => "|&s| crate::parser::entity::Attribute::EntityRef(s)".to_string(),
+                Kind::Real => "|&x| crate::parser::entity::Attribute::Real(x)".to_string(),
+                Kind::Int => "|&x| crate::parser::entity::Attribute::Integer(x)".to_string(),
+                Kind::Str => "|s| crate::parser::entity::Attribute::String(s.clone())".to_string(),
+                other => panic!("gen-early: aggregation of {other:?} not yet supported (v4.5)"),
+            };
+            format!(
+                "crate::parser::entity::Attribute::List(l1.{field}.iter().map({elem}).collect())"
+            )
+        }
         Kind::Real => format!("crate::parser::entity::Attribute::Real(l1.{field})"),
         Kind::Int => format!("crate::parser::entity::Attribute::Integer(l1.{field})"),
         Kind::Bool => format!("bool_attr(l1.{field})"),
@@ -1123,8 +1140,8 @@ fn bind_expr_full(k: &Kind, i: usize, field: &str, optional: bool) -> String {
 }
 
 /// Optional `bind` for kinds with an existing `read_optional_*` helper. Other
-/// kinds (`Bool`/`Enum`/`VecRef`) are deferred — they need new helpers that
-/// would be dead code until an entity uses them (v4.4).
+/// kinds (`Bool`/`Enum`/`Vec`) are deferred — they need new helpers that would
+/// be dead code until an entity uses them (v4.5).
 fn bind_expr_opt(k: &Kind, i: usize, field: &str) -> String {
     match k {
         Kind::Ref => {
@@ -1141,7 +1158,7 @@ fn bind_expr_opt(k: &Kind, i: usize, field: &str) -> String {
         Kind::Str => {
             format!("crate::ir::attr::read_optional_string(attrs, {i}, entity_id, \"{field}\")?")
         }
-        Kind::Bool | Kind::Enum(_) | Kind::VecRef => {
+        Kind::Bool | Kind::Enum(_) | Kind::Vec(_) => {
             panic!("gen-early: OPTIONAL {k:?} not yet supported (v4.x)")
         }
         Kind::Select(_) => unreachable!("optional Select handled in the let-form bind path"),
@@ -1176,7 +1193,7 @@ fn serialize_expr_opt(k: &Kind, field: &str) -> String {
         Kind::Select(alias) => {
             format!("match &l1.{field} {{ Some(v) => {alias}_emit(v), None => {unset} }}")
         }
-        Kind::Bool | Kind::Enum(_) | Kind::VecRef => {
+        Kind::Bool | Kind::Enum(_) | Kind::Vec(_) => {
             panic!("gen-early: OPTIONAL {k:?} not yet supported (v4.x)")
         }
     }
@@ -1443,5 +1460,69 @@ mod tests {
     #[should_panic(expected = "aggregation")]
     fn synth_select_aggregation_member_panics() {
         synth_select("item_identified_representation_usage_select");
+    }
+
+    fn empty_ctx() -> Ctx {
+        ctx_from(EarlyToml {
+            entity: BTreeMap::new(),
+            types: BTreeMap::new(),
+        })
+    }
+
+    /// Scalar aggregations classify to `Vec(<scalar>)`; nesting recurses.
+    #[test]
+    fn classify_scalar_aggregations() {
+        let ctx = empty_ctx();
+        assert!(
+            matches!(ctx.classify("LIST OF real", 0), Kind::Vec(b) if matches!(*b, Kind::Real))
+        );
+        assert!(
+            matches!(ctx.classify("SET OF integer", 0), Kind::Vec(b) if matches!(*b, Kind::Int))
+        );
+        // nested: Vec(Vec(Real)) — classified, but emit defers (v4.5).
+        assert!(matches!(
+            ctx.classify("LIST OF LIST OF real", 0),
+            Kind::Vec(b) if matches!(*b, Kind::Vec(_))
+        ));
+    }
+
+    /// `Vec<T>` codegen for scalar inner; the ref arm stays byte-identical.
+    #[test]
+    fn vec_scalar_codegen() {
+        let ctx = empty_ctx();
+        assert_eq!(field_ty(&ctx, &Kind::Vec(Box::new(Kind::Real))), "Vec<f64>");
+        assert_eq!(
+            field_ty(&ctx, &Kind::Vec(Box::new(Kind::Str))),
+            "Vec<String>"
+        );
+        assert!(bind_expr(&Kind::Vec(Box::new(Kind::Real)), 1, "x").contains("read_real_list"));
+        assert!(bind_expr(&Kind::Vec(Box::new(Kind::Int)), 1, "x").contains("read_integer_list"));
+        assert!(bind_expr(&Kind::Vec(Box::new(Kind::Str)), 1, "x").contains("read_string_list"));
+        // ref arm unchanged.
+        assert!(
+            bind_expr(&Kind::Vec(Box::new(Kind::Ref)), 1, "x").contains("read_entity_ref_list")
+        );
+        let sr = serialize_expr(&Kind::Vec(Box::new(Kind::Ref)), "items");
+        assert!(sr.contains("|&s| crate::parser::entity::Attribute::EntityRef(s)"));
+        let ss = serialize_expr(&Kind::Vec(Box::new(Kind::Str)), "labels");
+        assert!(ss.contains("|s| crate::parser::entity::Attribute::String(s.clone())"));
+        assert!(serialize_expr(&Kind::Vec(Box::new(Kind::Real)), "v").contains("Real(x)"));
+    }
+
+    /// Aggregations of enum / nested are deferred to v4.5 (panic).
+    #[test]
+    #[should_panic(expected = "not yet supported")]
+    fn vec_enum_bind_panics() {
+        bind_expr(&Kind::Vec(Box::new(Kind::Enum("foo".into()))), 1, "x");
+    }
+
+    #[test]
+    #[should_panic(expected = "not yet supported")]
+    fn vec_nested_bind_panics() {
+        bind_expr(
+            &Kind::Vec(Box::new(Kind::Vec(Box::new(Kind::Real)))),
+            1,
+            "x",
+        );
     }
 }
