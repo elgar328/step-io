@@ -318,12 +318,13 @@ impl Ctx {
             Kind::Enum(_) => true,
             // scalar bind exists; optional deferred (no read_optional_*).
             Kind::Bool | Kind::Logical => !optional,
-            // ref / scalar / enum element (single list), or a `Vec<Vec<ref/real/
-            // int>>` grid; optional aggregation deferred.
+            // ref / scalar / enum / supported-select element (single list), or a
+            // `Vec<Vec<ref/real/int>>` grid; optional aggregation deferred.
             Kind::Vec(inner) => {
                 !optional
                     && match &**inner {
                         Kind::Ref | Kind::Real | Kind::Int | Kind::Str | Kind::Enum(_) => true,
+                        Kind::Select(s) => self.select_supported(s),
                         Kind::Vec(i2) => matches!(**i2, Kind::Ref | Kind::Real | Kind::Int),
                         _ => false,
                     }
@@ -487,6 +488,7 @@ fn main() {
     let mut used_enums: BTreeSet<String> = BTreeSet::new(); // standalone field ENUMs
     let mut used_enum_lists: BTreeSet<String> = BTreeSet::new(); // ENUMs in `Vec<…>`
     let mut used_selects: BTreeSet<String> = BTreeSet::new(); // mixed SELECTs
+    let mut used_select_lists: BTreeSet<String> = BTreeSet::new(); // SELECTs in `Vec<…>`
     let mut any_bool = false;
 
     for ent_name in &targets {
@@ -640,12 +642,19 @@ fn main() {
                 }
                 // `Vec<EarlyEnum>`: needs the enum model + `<alias>_attr` (via
                 // used_enums) and a `<alias>_list` bind helper.
-                Kind::Vec(inner) => {
-                    if let Kind::Enum(alias) = &**inner {
+                Kind::Vec(inner) => match &**inner {
+                    Kind::Enum(alias) => {
                         used_enums.insert(alias.clone());
                         used_enum_lists.insert(alias.clone());
                     }
-                }
+                    // `Vec<EarlySelect>`: needs bind_<select>/<alias>_emit (via
+                    // used_selects) and a `<alias>_list` bind helper.
+                    Kind::Select(alias) => {
+                        used_selects.insert(alias.clone());
+                        used_select_lists.insert(alias.clone());
+                    }
+                    _ => {}
+                },
                 _ => {}
             }
         }
@@ -761,6 +770,10 @@ fn main() {
     // generated `<alias>_list` bind helpers for ENUMs used in `Vec<…>` fields.
     for alias in &used_enum_lists {
         emit_enum_list(&ctx, alias, &mut bind);
+    }
+    // ...and for SELECTs in `Vec<…>` fields (disjoint alias sets, no clash).
+    for alias in &used_select_lists {
+        emit_select_list(&ctx, alias, &mut bind);
     }
 
     if any_bool {
@@ -1340,6 +1353,36 @@ fn emit_enum_list(ctx: &Ctx, alias: &str, bind: &mut String) {
     writeln!(bind, "    Ok(out)\n}}\n").unwrap();
 }
 
+/// Emit `<alias>_list(attrs, index, ..) -> Result<Vec<SelectType>>` for a SELECT
+/// used inside a `Vec<…>`: reads the `List`, decoding each element via the
+/// standalone `bind_<alias>` (which returns `Option`); an unrecognized element
+/// errors. Mirrors [`emit_enum_list`] but for selects.
+fn emit_select_list(ctx: &Ctx, alias: &str, bind: &mut String) {
+    let st = match ctx.mapping.selects.get(alias) {
+        Some(h) => h.rust_type.clone(),
+        None => format!("super::model::Early{}", pascal(alias)),
+    };
+    writeln!(
+        bind,
+        "fn {alias}_list(attrs: &[crate::parser::entity::Attribute], index: usize, entity_id: u64, field: &'static str) -> Result<Vec<{st}>, crate::ir::error::ConvertError> {{"
+    )
+    .unwrap();
+    writeln!(
+        bind,
+        "    let Some(crate::parser::entity::Attribute::List(items)) = attrs.get(index) else {{ return Err(crate::ir::error::ConvertError::UnexpectedEntityForm {{ entity_id, detail: format!(\"{{field}}: expected list\") }}); }};"
+    )
+    .unwrap();
+    writeln!(bind, "    let mut out = Vec::with_capacity(items.len());").unwrap();
+    writeln!(bind, "    for item in items {{").unwrap();
+    writeln!(
+        bind,
+        "        match bind_{alias}(item) {{ Some(v) => out.push(v), None => return Err(crate::ir::error::ConvertError::UnexpectedEntityForm {{ entity_id, detail: format!(\"{{field}}: unrecognized {alias} in list\") }}) }}"
+    )
+    .unwrap();
+    writeln!(bind, "    }}").unwrap();
+    writeln!(bind, "    Ok(out)\n}}\n").unwrap();
+}
+
 fn field_ty(ctx: &Ctx, k: &Kind) -> String {
     match k {
         Kind::Ref => "u64".into(),
@@ -1370,8 +1413,11 @@ fn bind_expr(k: &Kind, i: usize, field: &str) -> String {
             format!("crate::ir::attr::read_entity_ref(attrs, {i}, entity_id, \"{field}\")?")
         }
         Kind::Vec(inner) => match &**inner {
-            // ENUM list -> generated `<alias>_list` helper (see `emit_enum_list`).
-            Kind::Enum(alias) => format!("{alias}_list(attrs, {i}, entity_id, \"{field}\")?"),
+            // ENUM / SELECT list -> generated `<alias>_list` helper (see
+            // `emit_enum_list` / `emit_select_list`).
+            Kind::Enum(alias) | Kind::Select(alias) => {
+                format!("{alias}_list(attrs, {i}, entity_id, \"{field}\")?")
+            }
             Kind::Ref | Kind::Real | Kind::Int | Kind::Str => {
                 let list = match &**inner {
                     Kind::Ref => "read_entity_ref_list",
@@ -1439,6 +1485,8 @@ fn serialize_expr(k: &Kind, field: &str) -> String {
                 Kind::Int => "|&x| crate::parser::entity::Attribute::Integer(x)".to_string(),
                 Kind::Str => "|s| crate::parser::entity::Attribute::String(s.clone())".to_string(),
                 Kind::Enum(alias) => format!("|e| {alias}_attr(e.clone())"),
+                // SELECT reuses the `<alias>_emit` helper directly (takes `&`).
+                Kind::Select(alias) => format!("{alias}_emit"),
                 other => panic!("gen-early: aggregation of {other:?} not yet supported"),
             };
             format!(
@@ -1891,6 +1939,24 @@ mod tests {
         assert!(
             b.contains("\"CONCLUSION\" => super::model::EarlySummaryReportStyleType::Conclusion,")
         );
+    }
+
+    /// `Vec<EarlySelect>` (aggregation of select): list-decode helper reusing
+    /// `bind_<select>` + `<alias>_emit` per element.
+    #[test]
+    fn vec_select_codegen() {
+        let ctx = ctx_from(schema());
+        // a supported (scalar-member) mixed select is emittable inside a Vec.
+        let vsel = Kind::Vec(Box::new(Kind::Select("tolerance_deviation_select".into())));
+        assert!(ctx.emittable(&vsel, false));
+        assert!(bind_expr(&vsel, 2, "x").contains("tolerance_deviation_select_list(attrs, 2"));
+        assert!(serialize_expr(&vsel, "y").contains(".map(tolerance_deviation_select_emit)"));
+        // the generated list helper decodes each element via bind_<select>.
+        let mut b = String::new();
+        emit_select_list(&ctx, "tolerance_deviation_select", &mut b);
+        assert!(b.contains("fn tolerance_deviation_select_list("));
+        assert!(b.contains("Vec<super::model::EarlyToleranceDeviationSelect>"));
+        assert!(b.contains("bind_tolerance_deviation_select(item)"));
     }
 
     /// `Vec<Vec<ref/real/int>>` grid -> `read_*_grid` + nested `List(List(..))`.

@@ -1,6 +1,6 @@
 gen-early coverage (generate_all)
-supported: 2080 / 2195
-skipped:   115
+supported: 2087 / 2195
+skipped:   108
 
 -- skipped by reason --
   nested-agg       7
@@ -8,7 +8,7 @@ skipped:   115
   unresolved-token 6
   vec-logical      6
   vec-ref          2
-  vec-select       16
+  vec-select       9
   vec-str          1
 
 -- skipped entities --
@@ -16,8 +16,6 @@ skipped:   115
   angle_assembly_constraint_with_dimension         select-edge
   annotation_plane                                 vec-ref
   application_defined_function                     vec-select
-  approximation_tolerance_deviation                vec-select
-  approximation_tolerance_parameter                vec-select
   atom_based_literal                               select-edge
   atomic_formula                                   select-edge
   b_spline_volume                                  nested-agg
@@ -45,7 +43,6 @@ skipped:   115
   draughting_model_item_association                select-edge
   draughting_model_item_association_with_placeholder select-edge
   equivalence_notable_instance                     vec-select
-  externally_defined_item_with_multiple_references vec-select
   externally_defined_picture_representation_item   unresolved-token
   extreme_instance                                 select-edge
   extruded_face_solid_with_draft_angle             select-edge
@@ -114,15 +111,11 @@ skipped:   115
   strict_triangular_matrix                         select-edge
   structured_text_composition                      select-edge
   surface_distance_assembly_constraint_with_dimension select-edge
-  surface_style_parameter_line                     vec-select
   symmetric_banded_matrix                          select-edge
   table_representation_item                        select-edge
   tangent_assembly_constraint                      select-edge
-  tessellated_shape_representation_with_accuracy_parameters vec-select
-  text_style_with_box_characteristics              vec-select
   topology_to_geometry_model_association           select-edge
   triangular_matrix                                select-edge
-  trimmed_curve                                    vec-select
   unbound_variational_parameter                    select-edge
   uniform_volume                                   nested-agg
   value_range                                      select-edge
