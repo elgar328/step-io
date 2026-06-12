@@ -5,8 +5,9 @@ use crate::early::model::{
     EarlyColourRgb, EarlyDraughtingPreDefinedColour, EarlyDraughtingPreDefinedCurveFont,
     EarlyFillAreaStyle, EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlyPreDefinedCurveFont,
     EarlyPreDefinedMarker, EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol,
-    EarlyPreDefinedTerminatorSymbol, EarlySurfaceSideStyle, EarlySurfaceStyleFillArea,
-    EarlySurfaceStyleUsage, EarlySymbolColour, EarlyViewVolume,
+    EarlyPreDefinedTerminatorSymbol, EarlySurfaceSideStyle, EarlySurfaceStyleBoundary,
+    EarlySurfaceStyleFillArea, EarlySurfaceStyleUsage, EarlySymbolColour,
+    EarlyTextStyleForDefinedFont, EarlyViewVolume,
 };
 use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::fill_area_style_colour::FillAreaStyleColourHandler;
@@ -175,4 +176,14 @@ pub(crate) fn lift_pre_defined_terminator_symbol(name: String) -> EarlyPreDefine
 /// Lift one `SYMBOL_COLOUR` (colour pre-resolved).
 pub(crate) fn lift_symbol_colour(colour_of_symbol: u64) -> EarlySymbolColour {
     EarlySymbolColour { colour_of_symbol }
+}
+
+/// Lift one `SURFACE_STYLE_BOUNDARY` (style pre-resolved via `emit_select`).
+pub(crate) fn lift_surface_style_boundary(style_of_boundary: u64) -> EarlySurfaceStyleBoundary {
+    EarlySurfaceStyleBoundary { style_of_boundary }
+}
+
+/// Lift one `TEXT_STYLE_FOR_DEFINED_FONT` (colour pre-resolved).
+pub(crate) fn lift_text_style_for_defined_font(text_colour: u64) -> EarlyTextStyleForDefinedFont {
+    EarlyTextStyleForDefinedFont { text_colour }
 }

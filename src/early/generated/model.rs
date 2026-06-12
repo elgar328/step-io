@@ -1750,6 +1750,48 @@ impl crate::ir::arena::ArenaId for EarlyCharacterizedItemWithinRepresentationId 
     }
 }
 
+/// L1 `SURFACE_STYLE_BOUNDARY` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlySurfaceStyleBoundary {
+    pub(crate) style_of_boundary: u64,
+}
+
+/// Typed `id_cache` key for `SURFACE_STYLE_BOUNDARY` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlySurfaceStyleBoundaryId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlySurfaceStyleBoundaryId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `TEXT_STYLE_FOR_DEFINED_FONT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyTextStyleForDefinedFont {
+    pub(crate) text_colour: u64,
+}
+
+/// Typed `id_cache` key for `TEXT_STYLE_FOR_DEFINED_FONT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyTextStyleForDefinedFontId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyTextStyleForDefinedFontId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

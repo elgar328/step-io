@@ -1,18 +1,9 @@
-//! `SURFACE_STYLE_BOUNDARY` handler — phase ssb.
-//!
-//! `founded_item` SUBTYPE with one attribute `style_of_boundary` typed
-//! by the `curve_or_render` SELECT — a `CURVE_STYLE` or a
-//! `curve_style_rendering` (`SurfaceStyleRendering` variant). The SELECT
-//! is narrowed at read time: the source ref is looked up in both id maps
-//! (`viz_curve_style_id_map`, `viz_ssr_id_map`); a double-miss drops the
-//! entity, symmetric on re-read.
+//! `SURFACE_STYLE_BOUNDARY` handler — visualization (2-layer path).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::{
-    CurveOrRender, FoundedItem, SurfaceStyleBoundary, VisualizationPool,
-};
+use crate::ir::visualization::{CurveOrRender, SurfaceStyleBoundary};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -31,40 +22,23 @@ impl SimpleEntityHandler for SurfaceStyleBoundaryHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 1, entity_id, "SURFACE_STYLE_BOUNDARY")?;
-        let ref_id = read_entity_ref(attrs, 0, entity_id, "style_of_boundary")?;
-        let Some(style) = resolve_curve_or_render(ctx, ref_id) else {
-            return Ok(());
-        };
-        // `SurfaceStyleBoundary` is round-tripped via the arena only — nothing
-        // consumes it through a named map, so no id is registered (the former
-        // write-only `viz_ssb_id_map` was removed).
-        ctx.visualization
-            .get_or_insert_with(VisualizationPool::default)
-            .founded_items
-            .push(FoundedItem::SurfaceStyleBoundary(SurfaceStyleBoundary {
-                style_of_boundary: style,
-            }));
+        let early = bind::bind_surface_style_boundary(entity_id, attrs)?;
+        lower::lower_surface_style_boundary(ctx, &early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, ssb: SurfaceStyleBoundary) -> Result<u64, WriteError> {
         let step = emit_curve_or_render(buf, ssb.style_of_boundary);
-        Ok(buf.push_simple("SURFACE_STYLE_BOUNDARY", vec![Attribute::EntityRef(step)]))
+        let early = lift::lift_surface_style_boundary(step);
+        Ok(serialize::serialize_surface_style_boundary(buf, &early))
     }
 }
 
-/// Narrow a raw `#N` ref into a [`CurveOrRender`] by probing the two
-/// id maps that supply the SELECT's members. Returns `None` if neither
-/// map covers the ref — caller drops the carrier entity.
+/// Resolve / emit helpers shared with `SURFACE_STYLE_PARAMETER_LINE` —
+/// members + probe order are generated from the enum by `StepSelect`.
 pub(crate) fn resolve_curve_or_render(ctx: &ReaderContext, ref_id: u64) -> Option<CurveOrRender> {
-    // Members + probe order are generated from the enum by `StepSelect`.
     CurveOrRender::resolve_select(ctx, ref_id)
 }
-
-/// Look up the STEP id of a [`CurveOrRender`] member by dispatching to
-/// the appropriate writer cache. Reused by sibling SELECT consumers
-/// (e.g. `SURFACE_STYLE_PARAMETER_LINE`).
 pub(crate) fn emit_curve_or_render(buf: &WriteBuffer, cor: CurveOrRender) -> u64 {
     cor.emit_select(buf)
 }

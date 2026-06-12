@@ -37,6 +37,7 @@ pub(crate) use super::generated::serialize::{
     serialize_representation_context, serialize_representation_relationship,
     serialize_role_association, serialize_security_classification,
     serialize_security_classification_level, serialize_shape_representation_relationship,
-    serialize_surface_side_style, serialize_surface_style_fill_area, serialize_surface_style_usage,
-    serialize_symbol_colour, serialize_view_volume,
+    serialize_surface_side_style, serialize_surface_style_boundary,
+    serialize_surface_style_fill_area, serialize_surface_style_usage, serialize_symbol_colour,
+    serialize_text_style_for_defined_font, serialize_view_volume,
 };

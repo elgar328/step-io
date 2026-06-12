@@ -1317,6 +1317,31 @@ pub(crate) fn bind_characterized_item_within_representation(
     })
 }
 
+pub(crate) fn bind_surface_style_boundary(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlySurfaceStyleBoundary, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "SURFACE_STYLE_BOUNDARY")?;
+    Ok(super::model::EarlySurfaceStyleBoundary {
+        style_of_boundary: crate::ir::attr::read_entity_ref(
+            attrs,
+            0,
+            entity_id,
+            "style_of_boundary",
+        )?,
+    })
+}
+
+pub(crate) fn bind_text_style_for_defined_font(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyTextStyleForDefinedFont, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "TEXT_STYLE_FOR_DEFINED_FONT")?;
+    Ok(super::model::EarlyTextStyleForDefinedFont {
+        text_colour: crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "text_colour")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

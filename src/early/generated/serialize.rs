@@ -1314,6 +1314,28 @@ pub(crate) fn serialize_characterized_item_within_representation(
     )
 }
 
+pub(crate) fn serialize_surface_style_boundary(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlySurfaceStyleBoundary,
+) -> u64 {
+    buf.push_simple(
+        "SURFACE_STYLE_BOUNDARY",
+        vec![crate::parser::entity::Attribute::EntityRef(
+            l1.style_of_boundary,
+        )],
+    )
+}
+
+pub(crate) fn serialize_text_style_for_defined_font(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyTextStyleForDefinedFont,
+) -> u64 {
+    buf.push_simple(
+        "TEXT_STYLE_FOR_DEFINED_FONT",
+        vec![crate::parser::entity::Attribute::EntityRef(l1.text_colour)],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

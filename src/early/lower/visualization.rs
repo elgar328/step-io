@@ -6,20 +6,22 @@ use crate::early::model::{
     EarlyFillAreaStyle, EarlyFillAreaStyleId, EarlyMarker, EarlyMarkerSize, EarlyPointStyle,
     EarlyPointStyleId, EarlyPreDefinedCurveFont, EarlyPreDefinedMarker,
     EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol,
-    EarlySurfaceSideStyle, EarlySurfaceSideStyleId, EarlySurfaceStyleFillArea,
-    EarlySurfaceStyleFillAreaId, EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId,
-    EarlySymbolColour, EarlyViewVolume, EarlyViewVolumeId,
+    EarlySurfaceSideStyle, EarlySurfaceSideStyleId, EarlySurfaceStyleBoundary,
+    EarlySurfaceStyleFillArea, EarlySurfaceStyleFillAreaId, EarlySurfaceStyleUsage,
+    EarlySurfaceStyleUsageId, EarlySymbolColour, EarlyTextStyleForDefinedFont, EarlyViewVolume,
+    EarlyViewVolumeId,
 };
 use crate::ir::id::{
     ColourId, MeasureWithUnitId, PlanarExtentId, PointId, PreDefinedMarkerId,
     SurfaceStyleRenderingId,
 };
 use crate::ir::visualization::{
-    Colour, ColourRgb, DraughtingPreDefinedColour, DraughtingPreDefinedCurveFont, FillAreaStyle,
-    FoundedItem, Marker, MarkerSize, PointStyle, PreDefinedCurveFont, PreDefinedCurveFontData,
-    PreDefinedMarker, PreDefinedMarkerData, PreDefinedPointMarkerSymbol, PreDefinedSymbol,
-    PreDefinedSymbolData, PreDefinedTerminatorSymbol, SurfaceSideStyle, SurfaceSideStyleEntry,
-    SurfaceStyleFillArea, SurfaceStyleUsage, SymbolColour, ViewVolume, VisualizationPool,
+    Colour, ColourRgb, CurveOrRender, DraughtingPreDefinedColour, DraughtingPreDefinedCurveFont,
+    FillAreaStyle, FoundedItem, Marker, MarkerSize, PointStyle, PreDefinedCurveFont,
+    PreDefinedCurveFontData, PreDefinedMarker, PreDefinedMarkerData, PreDefinedPointMarkerSymbol,
+    PreDefinedSymbol, PreDefinedSymbolData, PreDefinedTerminatorSymbol, SurfaceSideStyle,
+    SurfaceSideStyleEntry, SurfaceStyleBoundary, SurfaceStyleFillArea, SurfaceStyleUsage,
+    SymbolColour, TextStyleForDefinedFont, ViewVolume, VisualizationPool,
 };
 use crate::reader::ReaderContext;
 
@@ -379,5 +381,44 @@ pub(crate) fn lower_symbol_colour(
         .visualization
         .get_or_insert_with(VisualizationPool::default);
     let id = viz.symbol_colours.push(SymbolColour { colour_of_symbol });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `SURFACE_STYLE_BOUNDARY` (unresolved SELECT member = silent
+/// drop, legacy leniency). Round-tripped via the arena only — nothing
+/// consumes it through a map, so no id is registered.
+pub(crate) fn lower_surface_style_boundary(
+    ctx: &mut ReaderContext,
+    early: &EarlySurfaceStyleBoundary,
+) {
+    let Some(style) = CurveOrRender::resolve_select(ctx, early.style_of_boundary) else {
+        return;
+    };
+    ctx.visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .founded_items
+        .push(FoundedItem::SurfaceStyleBoundary(SurfaceStyleBoundary {
+            style_of_boundary: style,
+        }));
+}
+
+/// Lower one `TEXT_STYLE_FOR_DEFINED_FONT` (unresolved colour = silent drop).
+pub(crate) fn lower_text_style_for_defined_font(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyTextStyleForDefinedFont,
+) {
+    let Some(text_colour) = ctx
+        .id_cache
+        .get::<crate::ir::id::ColourId>(early.text_colour)
+    else {
+        return;
+    };
+    let viz = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let id = viz
+        .text_styles_for_defined_font
+        .push(TextStyleForDefinedFont { text_colour });
     ctx.id_cache.insert(entity_id, id);
 }
