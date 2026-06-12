@@ -2,7 +2,8 @@
 //! cluster). See the [module docs](super) for the lifting contract.
 
 use crate::early::model::{
-    EarlyCharacterizedItemWithinRepresentation,
+    EarlyAllAroundShapeAspect, EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
+    EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumTarget,
     EarlyMechanicalDesignAndDraughtingRelationship, EarlyRealRepresentationItem,
     EarlyRepresentationContext, EarlyRepresentationRelationship,
@@ -151,5 +152,65 @@ pub(crate) fn lift_tolerance_zone(
         product_definitional: bool_to_logical(product_definitional),
         defining_tolerance,
         form,
+    }
+}
+
+/// Lift one `COMPOSITE_GROUP_SHAPE_ASPECT` from pre-resolved write fields.
+pub(crate) fn lift_composite_group_shape_aspect(
+    name: String,
+    description: String,
+    of_shape: u64,
+    product_definitional: bool,
+) -> EarlyCompositeGroupShapeAspect {
+    EarlyCompositeGroupShapeAspect {
+        name,
+        description: Some(description),
+        of_shape,
+        product_definitional: bool_to_logical(product_definitional),
+    }
+}
+
+/// Lift one `COMPOSITE_SHAPE_ASPECT`.
+pub(crate) fn lift_composite_shape_aspect(
+    name: String,
+    description: String,
+    of_shape: u64,
+    product_definitional: bool,
+) -> EarlyCompositeShapeAspect {
+    EarlyCompositeShapeAspect {
+        name,
+        description: Some(description),
+        of_shape,
+        product_definitional: bool_to_logical(product_definitional),
+    }
+}
+
+/// Lift one `CENTRE_OF_SYMMETRY`.
+pub(crate) fn lift_centre_of_symmetry(
+    name: String,
+    description: String,
+    of_shape: u64,
+    product_definitional: bool,
+) -> EarlyCentreOfSymmetry {
+    EarlyCentreOfSymmetry {
+        name,
+        description: Some(description),
+        of_shape,
+        product_definitional: bool_to_logical(product_definitional),
+    }
+}
+
+/// Lift one `ALL_AROUND_SHAPE_ASPECT`.
+pub(crate) fn lift_all_around_shape_aspect(
+    name: String,
+    description: String,
+    of_shape: u64,
+    product_definitional: bool,
+) -> EarlyAllAroundShapeAspect {
+    EarlyAllAroundShapeAspect {
+        name,
+        description: Some(description),
+        of_shape,
+        product_definitional: bool_to_logical(product_definitional),
     }
 }

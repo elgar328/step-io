@@ -1397,6 +1397,86 @@ pub(crate) fn serialize_tolerance_zone(
     )
 }
 
+pub(crate) fn serialize_composite_group_shape_aspect(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCompositeGroupShapeAspect,
+) -> u64 {
+    buf.push_simple(
+        "COMPOSITE_GROUP_SHAPE_ASPECT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.of_shape),
+            crate::parser::entity::Attribute::Enum(
+                crate::ir::attr::logical_to_step(l1.product_definitional).into(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_composite_shape_aspect(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCompositeShapeAspect,
+) -> u64 {
+    buf.push_simple(
+        "COMPOSITE_SHAPE_ASPECT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.of_shape),
+            crate::parser::entity::Attribute::Enum(
+                crate::ir::attr::logical_to_step(l1.product_definitional).into(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_centre_of_symmetry(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCentreOfSymmetry,
+) -> u64 {
+    buf.push_simple(
+        "CENTRE_OF_SYMMETRY",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.of_shape),
+            crate::parser::entity::Attribute::Enum(
+                crate::ir::attr::logical_to_step(l1.product_definitional).into(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_all_around_shape_aspect(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAllAroundShapeAspect,
+) -> u64 {
+    buf.push_simple(
+        "ALL_AROUND_SHAPE_ASPECT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.of_shape),
+            crate::parser::entity::Attribute::Enum(
+                crate::ir::attr::logical_to_step(l1.product_definitional).into(),
+            ),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

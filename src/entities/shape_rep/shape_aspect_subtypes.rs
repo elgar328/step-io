@@ -11,9 +11,7 @@ use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::ProductId;
 use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::shape_rep::{
-    AllAroundShapeAspect, CentreOfSymmetry, CompositeGroupShapeAspect, CompositeShapeAspectKind,
-};
+use crate::ir::shape_rep::{CompositeGroupShapeAspect, CompositeShapeAspectKind};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::{ReaderContext, has_all_parts, require_part_attrs};
 use crate::writer::WriteError;
@@ -51,24 +49,6 @@ fn read_shape_aspect_subtype(
     Ok(Some((name, description, product_id, product_definitional)))
 }
 
-/// Emit a `SHAPE_ASPECT`-shaped subtype line under `entity_name`.
-fn write_shape_aspect_subtype(
-    buf: &mut WriteBuffer,
-    entity_name: &str,
-    input: ShapeAspectSubtypeWriteInput,
-) -> u64 {
-    let bool_attr = if input.product_definitional { "T" } else { "F" };
-    buf.push_simple(
-        entity_name,
-        vec![
-            Attribute::String(input.name),
-            Attribute::String(input.description),
-            Attribute::EntityRef(input.pds_step_id),
-            Attribute::Enum(bool_attr.into()),
-        ],
-    )
-}
-
 pub(crate) struct CompositeGroupShapeAspectHandler;
 
 #[step_entity(name = "COMPOSITE_GROUP_SHAPE_ASPECT")]
@@ -81,22 +61,8 @@ impl SimpleEntityHandler for CompositeGroupShapeAspectHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some((name, description, target, product_definitional)) =
-            read_shape_aspect_subtype(ctx, entity_id, attrs, "COMPOSITE_GROUP_SHAPE_ASPECT")?
-        else {
-            return Ok(());
-        };
-        let id = ctx
-            .composite_group_shape_aspects
-            .push(CompositeGroupShapeAspect {
-                name,
-                description,
-                target,
-                product_definitional,
-                kind: CompositeShapeAspectKind::Group,
-                datum_feature: false,
-            });
-        ctx.id_cache.insert(entity_id, id);
+        let early = crate::early::bind::bind_composite_group_shape_aspect(entity_id, attrs)?;
+        crate::early::lower::lower_composite_group_shape_aspect(ctx, entity_id, early);
         Ok(())
     }
 
@@ -104,11 +70,13 @@ impl SimpleEntityHandler for CompositeGroupShapeAspectHandler {
         buf: &mut WriteBuffer,
         input: ShapeAspectSubtypeWriteInput,
     ) -> Result<u64, WriteError> {
-        Ok(write_shape_aspect_subtype(
-            buf,
-            "COMPOSITE_GROUP_SHAPE_ASPECT",
-            input,
-        ))
+        let early = crate::early::lift::lift_composite_group_shape_aspect(
+            input.name,
+            input.description,
+            input.pds_step_id,
+            input.product_definitional,
+        );
+        Ok(crate::early::serialize::serialize_composite_group_shape_aspect(buf, &early))
     }
 }
 
@@ -131,22 +99,8 @@ impl SimpleEntityHandler for CompositeShapeAspectHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some((name, description, target, product_definitional)) =
-            read_shape_aspect_subtype(ctx, entity_id, attrs, "COMPOSITE_SHAPE_ASPECT")?
-        else {
-            return Ok(());
-        };
-        let id = ctx
-            .composite_group_shape_aspects
-            .push(CompositeGroupShapeAspect {
-                name,
-                description,
-                target,
-                product_definitional,
-                kind: CompositeShapeAspectKind::Composite,
-                datum_feature: false,
-            });
-        ctx.id_cache.insert(entity_id, id);
+        let early = crate::early::bind::bind_composite_shape_aspect(entity_id, attrs)?;
+        crate::early::lower::lower_composite_shape_aspect(ctx, entity_id, early);
         Ok(())
     }
 
@@ -154,10 +108,14 @@ impl SimpleEntityHandler for CompositeShapeAspectHandler {
         buf: &mut WriteBuffer,
         input: ShapeAspectSubtypeWriteInput,
     ) -> Result<u64, WriteError> {
-        Ok(write_shape_aspect_subtype(
-            buf,
-            "COMPOSITE_SHAPE_ASPECT",
-            input,
+        let early = crate::early::lift::lift_composite_shape_aspect(
+            input.name,
+            input.description,
+            input.pds_step_id,
+            input.product_definitional,
+        );
+        Ok(crate::early::serialize::serialize_composite_shape_aspect(
+            buf, &early,
         ))
     }
 }
@@ -174,18 +132,8 @@ impl SimpleEntityHandler for CentreOfSymmetryHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some((name, description, target, product_definitional)) =
-            read_shape_aspect_subtype(ctx, entity_id, attrs, "CENTRE_OF_SYMMETRY")?
-        else {
-            return Ok(());
-        };
-        let id = ctx.centre_of_symmetries.push(CentreOfSymmetry {
-            name,
-            description,
-            target,
-            product_definitional,
-        });
-        ctx.id_cache.insert(entity_id, id);
+        let early = crate::early::bind::bind_centre_of_symmetry(entity_id, attrs)?;
+        crate::early::lower::lower_centre_of_symmetry(ctx, entity_id, early);
         Ok(())
     }
 
@@ -193,7 +141,15 @@ impl SimpleEntityHandler for CentreOfSymmetryHandler {
         buf: &mut WriteBuffer,
         input: ShapeAspectSubtypeWriteInput,
     ) -> Result<u64, WriteError> {
-        Ok(write_shape_aspect_subtype(buf, "CENTRE_OF_SYMMETRY", input))
+        let early = crate::early::lift::lift_centre_of_symmetry(
+            input.name,
+            input.description,
+            input.pds_step_id,
+            input.product_definitional,
+        );
+        Ok(crate::early::serialize::serialize_centre_of_symmetry(
+            buf, &early,
+        ))
     }
 }
 
@@ -209,18 +165,8 @@ impl SimpleEntityHandler for AllAroundShapeAspectHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some((name, description, target, product_definitional)) =
-            read_shape_aspect_subtype(ctx, entity_id, attrs, "ALL_AROUND_SHAPE_ASPECT")?
-        else {
-            return Ok(());
-        };
-        let id = ctx.all_around_shape_aspects.push(AllAroundShapeAspect {
-            name,
-            description,
-            target,
-            product_definitional,
-        });
-        ctx.id_cache.insert(entity_id, id);
+        let early = crate::early::bind::bind_all_around_shape_aspect(entity_id, attrs)?;
+        crate::early::lower::lower_all_around_shape_aspect(ctx, entity_id, early);
         Ok(())
     }
 
@@ -228,10 +174,14 @@ impl SimpleEntityHandler for AllAroundShapeAspectHandler {
         buf: &mut WriteBuffer,
         input: ShapeAspectSubtypeWriteInput,
     ) -> Result<u64, WriteError> {
-        Ok(write_shape_aspect_subtype(
-            buf,
-            "ALL_AROUND_SHAPE_ASPECT",
-            input,
+        let early = crate::early::lift::lift_all_around_shape_aspect(
+            input.name,
+            input.description,
+            input.pds_step_id,
+            input.product_definitional,
+        );
+        Ok(crate::early::serialize::serialize_all_around_shape_aspect(
+            buf, &early,
         ))
     }
 }

@@ -1398,6 +1398,78 @@ pub(crate) fn bind_tolerance_zone(
     })
 }
 
+pub(crate) fn bind_composite_group_shape_aspect(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyCompositeGroupShapeAspect, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "COMPOSITE_GROUP_SHAPE_ASPECT")?;
+    Ok(super::model::EarlyCompositeGroupShapeAspect {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        of_shape: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "of_shape")?,
+        product_definitional: crate::ir::attr::read_logical(
+            attrs,
+            3,
+            entity_id,
+            "product_definitional",
+        )?,
+    })
+}
+
+pub(crate) fn bind_composite_shape_aspect(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyCompositeShapeAspect, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "COMPOSITE_SHAPE_ASPECT")?;
+    Ok(super::model::EarlyCompositeShapeAspect {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        of_shape: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "of_shape")?,
+        product_definitional: crate::ir::attr::read_logical(
+            attrs,
+            3,
+            entity_id,
+            "product_definitional",
+        )?,
+    })
+}
+
+pub(crate) fn bind_centre_of_symmetry(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyCentreOfSymmetry, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "CENTRE_OF_SYMMETRY")?;
+    Ok(super::model::EarlyCentreOfSymmetry {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        of_shape: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "of_shape")?,
+        product_definitional: crate::ir::attr::read_logical(
+            attrs,
+            3,
+            entity_id,
+            "product_definitional",
+        )?,
+    })
+}
+
+pub(crate) fn bind_all_around_shape_aspect(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAllAroundShapeAspect, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "ALL_AROUND_SHAPE_ASPECT")?;
+    Ok(super::model::EarlyAllAroundShapeAspect {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        of_shape: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "of_shape")?,
+        product_definitional: crate::ir::attr::read_logical(
+            attrs,
+            3,
+            entity_id,
+            "product_definitional",
+        )?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

@@ -1865,6 +1865,102 @@ impl crate::ir::arena::ArenaId for EarlyToleranceZoneId {
     }
 }
 
+/// L1 `COMPOSITE_GROUP_SHAPE_ASPECT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCompositeGroupShapeAspect {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) of_shape: u64,
+    pub(crate) product_definitional: crate::ir::geometry::Logical,
+}
+
+/// Typed `id_cache` key for `COMPOSITE_GROUP_SHAPE_ASPECT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCompositeGroupShapeAspectId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCompositeGroupShapeAspectId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `COMPOSITE_SHAPE_ASPECT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCompositeShapeAspect {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) of_shape: u64,
+    pub(crate) product_definitional: crate::ir::geometry::Logical,
+}
+
+/// Typed `id_cache` key for `COMPOSITE_SHAPE_ASPECT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCompositeShapeAspectId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCompositeShapeAspectId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `CENTRE_OF_SYMMETRY` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCentreOfSymmetry {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) of_shape: u64,
+    pub(crate) product_definitional: crate::ir::geometry::Logical,
+}
+
+/// Typed `id_cache` key for `CENTRE_OF_SYMMETRY` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCentreOfSymmetryId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCentreOfSymmetryId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `ALL_AROUND_SHAPE_ASPECT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAllAroundShapeAspect {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) of_shape: u64,
+    pub(crate) product_definitional: crate::ir::geometry::Logical,
+}
+
+/// Typed `id_cache` key for `ALL_AROUND_SHAPE_ASPECT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAllAroundShapeAspectId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAllAroundShapeAspectId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

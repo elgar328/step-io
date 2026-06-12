@@ -9,7 +9,8 @@
 //! the equally raw-keyed geometry payload maps.
 
 use crate::early::model::{
-    EarlyCharacterizedItemWithinRepresentation,
+    EarlyAllAroundShapeAspect, EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
+    EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumTarget,
     EarlyMechanicalDesignAndDraughtingRelationship, EarlyRealRepresentationItem,
     EarlyRepresentationContext, EarlyRepresentationRelationship,
@@ -17,8 +18,9 @@ use crate::early::model::{
 };
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::{
-    CharacterizedItemWithinRepresentation, CharacterizedObject, CharacterizedObjectData,
-    ConstructiveGeometryRepresentationRelationship, DatumTarget,
+    AllAroundShapeAspect, CentreOfSymmetry, CharacterizedItemWithinRepresentation,
+    CharacterizedObject, CharacterizedObjectData, CompositeGroupShapeAspect,
+    CompositeShapeAspectKind, ConstructiveGeometryRepresentationRelationship, DatumTarget,
     MechanicalDesignAndDraughtingRelationship, NumericRepresentationItem, RealRepresentationItem,
     RepresentationRelationship, RepresentationRelationshipData, ShapeRepresentationRelationshipIr,
     ToleranceZone, UnitlessContext,
@@ -334,6 +336,119 @@ pub(crate) fn lower_tolerance_zone(
         product_definitional,
         defining_tolerance,
         form,
+    });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Shared `SHAPE_ASPECT`-subtype lowering prelude: bool conversion (`U`
+/// drops) + the typed `of_shape` probe + the `$`→"" description collapse.
+fn lower_sa_subtype_common(
+    ctx: &ReaderContext,
+    of_shape: u64,
+    product_definitional: crate::ir::geometry::Logical,
+    description: Option<String>,
+) -> Option<(crate::ir::ProductId, bool, String)> {
+    let pd = logical_to_bool(product_definitional)?;
+    let target = ctx.product_of_pds(of_shape)?;
+    Some((target, pd, description.unwrap_or_default()))
+}
+
+/// Lower one `COMPOSITE_GROUP_SHAPE_ASPECT` (shared 4-attr subtype shape).
+pub(crate) fn lower_composite_group_shape_aspect(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyCompositeGroupShapeAspect,
+) {
+    let Some((target, product_definitional, description)) = lower_sa_subtype_common(
+        ctx,
+        early.of_shape,
+        early.product_definitional,
+        early.description,
+    ) else {
+        return;
+    };
+    let id = ctx
+        .composite_group_shape_aspects
+        .push(CompositeGroupShapeAspect {
+            name: early.name,
+            description,
+            target,
+            product_definitional,
+            kind: CompositeShapeAspectKind::Group,
+            datum_feature: false,
+        });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `COMPOSITE_SHAPE_ASPECT` (same arena, `Composite` kind).
+pub(crate) fn lower_composite_shape_aspect(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyCompositeShapeAspect,
+) {
+    let Some((target, product_definitional, description)) = lower_sa_subtype_common(
+        ctx,
+        early.of_shape,
+        early.product_definitional,
+        early.description,
+    ) else {
+        return;
+    };
+    let id = ctx
+        .composite_group_shape_aspects
+        .push(CompositeGroupShapeAspect {
+            name: early.name,
+            description,
+            target,
+            product_definitional,
+            kind: CompositeShapeAspectKind::Composite,
+            datum_feature: false,
+        });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `CENTRE_OF_SYMMETRY`.
+pub(crate) fn lower_centre_of_symmetry(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyCentreOfSymmetry,
+) {
+    let Some((target, product_definitional, description)) = lower_sa_subtype_common(
+        ctx,
+        early.of_shape,
+        early.product_definitional,
+        early.description,
+    ) else {
+        return;
+    };
+    let id = ctx.centre_of_symmetries.push(CentreOfSymmetry {
+        name: early.name,
+        description,
+        target,
+        product_definitional,
+    });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `ALL_AROUND_SHAPE_ASPECT`.
+pub(crate) fn lower_all_around_shape_aspect(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyAllAroundShapeAspect,
+) {
+    let Some((target, product_definitional, description)) = lower_sa_subtype_common(
+        ctx,
+        early.of_shape,
+        early.product_definitional,
+        early.description,
+    ) else {
+        return;
+    };
+    let id = ctx.all_around_shape_aspects.push(AllAroundShapeAspect {
+        name: early.name,
+        description,
+        target,
+        product_definitional,
     });
     ctx.id_cache.insert(entity_id, id);
 }
