@@ -605,6 +605,120 @@ pub(crate) fn bind_approval_person_organization(
     })
 }
 
+pub(crate) fn bind_local_time(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyLocalTime, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "LOCAL_TIME")?;
+    Ok(super::model::EarlyLocalTime {
+        hour_component: crate::ir::attr::read_integer(attrs, 0, entity_id, "hour_component")?,
+        minute_component: crate::ir::attr::read_optional_integer(
+            attrs,
+            1,
+            entity_id,
+            "minute_component",
+        )?,
+        second_component: crate::ir::attr::read_optional_real(
+            attrs,
+            2,
+            entity_id,
+            "second_component",
+        )?,
+        zone: crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "zone")?,
+    })
+}
+
+pub(crate) fn bind_coordinated_universal_time_offset(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyCoordinatedUniversalTimeOffset, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "COORDINATED_UNIVERSAL_TIME_OFFSET")?;
+    Ok(super::model::EarlyCoordinatedUniversalTimeOffset {
+        hour_offset: crate::ir::attr::read_integer(attrs, 0, entity_id, "hour_offset")?,
+        minute_offset: crate::ir::attr::read_optional_integer(
+            attrs,
+            1,
+            entity_id,
+            "minute_offset",
+        )?,
+        sense: bind_ahead_or_behind(attrs, 2, entity_id, "sense")?,
+    })
+}
+
+pub(crate) fn bind_person(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPerson, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 6, entity_id, "PERSON")?;
+    Ok(super::model::EarlyPerson {
+        id: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "id")?.to_owned(),
+        last_name: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "last_name")?,
+        first_name: crate::ir::attr::read_optional_string(attrs, 2, entity_id, "first_name")?,
+        middle_names: match attrs.get(3) {
+            Some(
+                crate::parser::entity::Attribute::Unset | crate::parser::entity::Attribute::Derived,
+            ) => None,
+            _ => Some(crate::ir::attr::read_string_list(
+                attrs,
+                3,
+                entity_id,
+                "middle_names",
+            )?),
+        },
+        prefix_titles: match attrs.get(4) {
+            Some(
+                crate::parser::entity::Attribute::Unset | crate::parser::entity::Attribute::Derived,
+            ) => None,
+            _ => Some(crate::ir::attr::read_string_list(
+                attrs,
+                4,
+                entity_id,
+                "prefix_titles",
+            )?),
+        },
+        suffix_titles: match attrs.get(5) {
+            Some(
+                crate::parser::entity::Attribute::Unset | crate::parser::entity::Attribute::Derived,
+            ) => None,
+            _ => Some(crate::ir::attr::read_string_list(
+                attrs,
+                5,
+                entity_id,
+                "suffix_titles",
+            )?),
+        },
+    })
+}
+
+pub(crate) fn bind_role_association(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyRoleAssociation, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "ROLE_ASSOCIATION")?;
+    Ok(super::model::EarlyRoleAssociation {
+        role: crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "role")?,
+        item_with_role: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "item_with_role")?,
+    })
+}
+
+pub(crate) fn bind_document_product_equivalence(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDocumentProductEquivalence, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "DOCUMENT_PRODUCT_EQUIVALENCE")?;
+    Ok(super::model::EarlyDocumentProductEquivalence {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        relating_document: crate::ir::attr::read_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "relating_document",
+        )?,
+        related_product: crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "related_product")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {
@@ -663,6 +777,23 @@ fn marker_type_from_token(t: &str) -> crate::ir::visualization::MarkerType {
         "TRIANGLE" => crate::ir::visualization::MarkerType::Triangle,
         "X" => crate::ir::visualization::MarkerType::X,
         other => crate::ir::visualization::MarkerType::Other(other.to_owned()),
+    }
+}
+
+fn bind_ahead_or_behind(
+    attrs: &[crate::parser::entity::Attribute],
+    index: usize,
+    entity_id: u64,
+    field: &'static str,
+) -> Result<crate::ir::plm::AheadOrBehind, crate::ir::error::ConvertError> {
+    match crate::ir::attr::read_enum(attrs, index, entity_id, field)? {
+        "AHEAD" => Ok(crate::ir::plm::AheadOrBehind::Ahead),
+        "BEHIND" => Ok(crate::ir::plm::AheadOrBehind::Behind),
+        "EXACT" => Ok(crate::ir::plm::AheadOrBehind::Exact),
+        other => Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: format!("{field}: unknown ahead_or_behind '.{other}.'"),
+        }),
     }
 }
 

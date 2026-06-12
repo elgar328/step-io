@@ -45,6 +45,11 @@ generate = [
     "document",
     "approval_date_time",
     "approval_person_organization",
+    "local_time",
+    "coordinated_universal_time_offset",
+    "person",
+    "role_association",
+    "document_product_equivalence",
 ]
 
 # `generate_all`: diagnostic flip. When true, gen-early generates *every* entity
@@ -87,3 +92,7 @@ variants = { marker_type = "Type", pre_defined_marker = "Predefined" }
 [select.size_select]
 rust_type = "EarlyMarkerSize"
 variants = { descriptive_measure = "Descriptive", measure_with_unit = "MeasureWithUnit", positive_length_measure = "PositiveLength" }
+
+[enum.ahead_or_behind]
+rust_type = "crate::ir::plm::AheadOrBehind"
+variants = { ahead = "Ahead", behind = "Behind", exact = "Exact" }

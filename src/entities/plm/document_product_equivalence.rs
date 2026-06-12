@@ -1,17 +1,14 @@
-//! `DOCUMENT_PRODUCT_EQUIVALENCE` handler plm Document
-//! linker. `related_product` SELECT collapses to a `ProductId` via the
-//! shared `resolve_date_time_item` helper.
+//! `DOCUMENT_PRODUCT_EQUIVALENCE` handler — plm (2-layer path: generated bind/serialize +
+//! hand-written lower/lift).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_optional_string, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::plm::{DocumentProductEquivalence, DocumentProductItem, PlmPool};
+use crate::ir::plm::{DocumentProductEquivalence, DocumentProductItem};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
-
-use super::resolve_date_time_item;
 use step_io_macros::step_entity;
 
 pub(crate) struct DocumentProductEquivalenceHandler;
@@ -26,38 +23,8 @@ impl SimpleEntityHandler for DocumentProductEquivalenceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "DOCUMENT_PRODUCT_EQUIVALENCE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let description = read_optional_string(attrs, 1, entity_id, "description")?;
-        let doc_ref = read_entity_ref(attrs, 2, entity_id, "relating_document")?;
-        let product_ref = read_entity_ref(attrs, 3, entity_id, "related_product")?;
-        let Some(relating_document) = ctx.id_cache.get::<crate::ir::DocumentId>(doc_ref) else {
-            return Ok(());
-        };
-        // `related_product` may reference a PRODUCT_DEFINITION_FORMATION
-        // directly (common for document-equivalence links). Preserve that so
-        // the formation ref round-trips; otherwise collapse to the product.
-        let related_product = if let Some(fid) =
-            ctx.id_cache
-                .get::<crate::ir::id::ProductDefinitionFormationId>(product_ref)
-        {
-            DocumentProductItem::Formation(fid)
-        } else {
-            let Some(pid) = resolve_date_time_item(ctx, product_ref) else {
-                return Ok(());
-            };
-            DocumentProductItem::Product(pid)
-        };
-        let pool = ctx.plm.get_or_insert_with(PlmPool::default);
-        let id = pool
-            .document_product_equivalences
-            .push(DocumentProductEquivalence {
-                name,
-                description,
-                relating_document,
-                related_product,
-            });
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_document_product_equivalence(entity_id, attrs)?;
+        lower::lower_document_product_equivalence(ctx, entity_id, early);
         Ok(())
     }
 
@@ -84,18 +51,10 @@ impl SimpleEntityHandler for DocumentProductEquivalenceHandler {
                 }
             }
         };
-        let desc_attr = match d.description {
-            Some(s) => Attribute::String(s),
-            None => Attribute::Unset,
-        };
-        Ok(buf.push_simple(
-            "DOCUMENT_PRODUCT_EQUIVALENCE",
-            vec![
-                Attribute::String(d.name),
-                desc_attr,
-                Attribute::EntityRef(doc_step),
-                Attribute::EntityRef(product_step),
-            ],
+        let early =
+            lift::lift_document_product_equivalence(d.name, d.description, doc_step, product_step);
+        Ok(serialize::serialize_document_product_equivalence(
+            buf, &early,
         ))
     }
 }

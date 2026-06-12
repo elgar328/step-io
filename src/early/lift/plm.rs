@@ -4,15 +4,18 @@
 
 use crate::early::model::{
     EarlyApplicationContext, EarlyApproval, EarlyApprovalDateTime, EarlyApprovalPersonOrganization,
-    EarlyApprovalRole, EarlyApprovalStatus, EarlyCalendarDate, EarlyDateAndTime, EarlyDateTimeRole,
-    EarlyDocument, EarlyDocumentRepresentationType, EarlyDocumentType, EarlyGroup,
-    EarlyIdentificationRole, EarlyObjectRole, EarlyOrganization, EarlyPersonAndOrganizationRole,
-    EarlySecurityClassification, EarlySecurityClassificationLevel,
+    EarlyApprovalRole, EarlyApprovalStatus, EarlyCalendarDate, EarlyCoordinatedUniversalTimeOffset,
+    EarlyDateAndTime, EarlyDateTimeRole, EarlyDocument, EarlyDocumentProductEquivalence,
+    EarlyDocumentRepresentationType, EarlyDocumentType, EarlyGroup, EarlyIdentificationRole,
+    EarlyLocalTime, EarlyObjectRole, EarlyOrganization, EarlyPerson,
+    EarlyPersonAndOrganizationRole, EarlyRoleAssociation, EarlySecurityClassification,
+    EarlySecurityClassificationLevel,
 };
 use crate::ir::plm::{
-    ApplicationContext, ApprovalRole, ApprovalStatus, CalendarDate, DateTimeRole, DocumentData,
-    DocumentType, Group, IdentificationRole, ObjectRole, Organization, PersonAndOrganizationRole,
-    SecurityClassification, SecurityClassificationLevel,
+    ApplicationContext, ApprovalRole, ApprovalStatus, CalendarDate, CoordinatedUniversalTimeOffset,
+    DateTimeRole, DocumentData, DocumentType, Group, IdentificationRole, LocalTime, ObjectRole,
+    Organization, Person, PersonAndOrganizationRole, SecurityClassification,
+    SecurityClassificationLevel,
 };
 
 /// Lift one `APPROVAL_ROLE` from its arena entry.
@@ -172,5 +175,65 @@ pub(crate) fn lift_approval_person_organization(
         person_organization,
         authorized_approval,
         role,
+    }
+}
+
+/// Lift one `LOCAL_TIME` (zone pre-resolved; optional minute/second pass
+/// through faithfully).
+pub(crate) fn lift_local_time(lt: LocalTime, zone: u64) -> EarlyLocalTime {
+    EarlyLocalTime {
+        hour_component: lt.hour_component,
+        minute_component: lt.minute_component,
+        second_component: lt.second_component,
+        zone,
+    }
+}
+
+/// Lift one `COORDINATED_UNIVERSAL_TIME_OFFSET` (pure pass-through; the
+/// L2 already holds the `AheadOrBehind` enum the serialize hint emits).
+pub(crate) fn lift_coordinated_universal_time_offset(
+    utc: CoordinatedUniversalTimeOffset,
+) -> EarlyCoordinatedUniversalTimeOffset {
+    EarlyCoordinatedUniversalTimeOffset {
+        hour_offset: utc.hour_offset,
+        minute_offset: utc.minute_offset,
+        sense: utc.sense,
+    }
+}
+
+/// Lift one `PERSON` (faithful all-optional pass-through).
+pub(crate) fn lift_person(p: Person) -> EarlyPerson {
+    EarlyPerson {
+        id: p.id,
+        last_name: p.last_name,
+        first_name: p.first_name,
+        middle_names: p.middle_names,
+        prefix_titles: p.prefix_titles,
+        suffix_titles: p.suffix_titles,
+    }
+}
+
+/// Lift one `ROLE_ASSOCIATION` (both refs pre-resolved — the SELECT side
+/// via `emit_select`).
+pub(crate) fn lift_role_association(role: u64, item_with_role: u64) -> EarlyRoleAssociation {
+    EarlyRoleAssociation {
+        role,
+        item_with_role,
+    }
+}
+
+/// Lift one `DOCUMENT_PRODUCT_EQUIVALENCE` (refs pre-resolved; the writer's
+/// formation-or-product fallback runs before this).
+pub(crate) fn lift_document_product_equivalence(
+    name: String,
+    description: Option<String>,
+    relating_document: u64,
+    related_product: u64,
+) -> EarlyDocumentProductEquivalence {
+    EarlyDocumentProductEquivalence {
+        name,
+        description,
+        relating_document,
+        related_product,
     }
 }

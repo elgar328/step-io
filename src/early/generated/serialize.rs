@@ -585,6 +585,119 @@ pub(crate) fn serialize_approval_person_organization(
     )
 }
 
+pub(crate) fn serialize_local_time(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyLocalTime,
+) -> u64 {
+    buf.push_simple(
+        "LOCAL_TIME",
+        vec![
+            crate::parser::entity::Attribute::Integer(l1.hour_component),
+            match l1.minute_component {
+                Some(v) => crate::parser::entity::Attribute::Integer(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            match l1.second_component {
+                Some(v) => crate::parser::entity::Attribute::Real(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.zone),
+        ],
+    )
+}
+
+pub(crate) fn serialize_coordinated_universal_time_offset(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCoordinatedUniversalTimeOffset,
+) -> u64 {
+    buf.push_simple(
+        "COORDINATED_UNIVERSAL_TIME_OFFSET",
+        vec![
+            crate::parser::entity::Attribute::Integer(l1.hour_offset),
+            match l1.minute_offset {
+                Some(v) => crate::parser::entity::Attribute::Integer(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            ahead_or_behind_attr(l1.sense),
+        ],
+    )
+}
+
+pub(crate) fn serialize_person(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPerson,
+) -> u64 {
+    buf.push_simple(
+        "PERSON",
+        vec![
+            crate::parser::entity::Attribute::String(l1.id.clone()),
+            match &l1.last_name {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            match &l1.first_name {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            match &l1.middle_names {
+                Some(v) => crate::parser::entity::Attribute::List(
+                    v.iter()
+                        .map(|s| crate::parser::entity::Attribute::String(s.clone()))
+                        .collect(),
+                ),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            match &l1.prefix_titles {
+                Some(v) => crate::parser::entity::Attribute::List(
+                    v.iter()
+                        .map(|s| crate::parser::entity::Attribute::String(s.clone()))
+                        .collect(),
+                ),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            match &l1.suffix_titles {
+                Some(v) => crate::parser::entity::Attribute::List(
+                    v.iter()
+                        .map(|s| crate::parser::entity::Attribute::String(s.clone()))
+                        .collect(),
+                ),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+        ],
+    )
+}
+
+pub(crate) fn serialize_role_association(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyRoleAssociation,
+) -> u64 {
+    buf.push_simple(
+        "ROLE_ASSOCIATION",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.role),
+            crate::parser::entity::Attribute::EntityRef(l1.item_with_role),
+        ],
+    )
+}
+
+pub(crate) fn serialize_document_product_equivalence(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDocumentProductEquivalence,
+) -> u64 {
+    buf.push_simple(
+        "DOCUMENT_PRODUCT_EQUIVALENCE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.relating_document),
+            crate::parser::entity::Attribute::EntityRef(l1.related_product),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {
@@ -628,6 +741,17 @@ fn marker_type_to_token(v: &crate::ir::visualization::MarkerType) -> String {
         crate::ir::visualization::MarkerType::X => "X".into(),
         crate::ir::visualization::MarkerType::Other(s) => s.clone(),
     }
+}
+
+fn ahead_or_behind_attr(v: crate::ir::plm::AheadOrBehind) -> crate::parser::entity::Attribute {
+    crate::parser::entity::Attribute::Enum(
+        match v {
+            crate::ir::plm::AheadOrBehind::Ahead => "AHEAD",
+            crate::ir::plm::AheadOrBehind::Behind => "BEHIND",
+            crate::ir::plm::AheadOrBehind::Exact => "EXACT",
+        }
+        .into(),
+    )
 }
 
 fn central_or_parallel_attr(

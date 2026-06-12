@@ -8,18 +8,22 @@
 
 use crate::early::model::{
     EarlyApplicationContext, EarlyApproval, EarlyApprovalDateTime, EarlyApprovalPersonOrganization,
-    EarlyApprovalRole, EarlyApprovalStatus, EarlyCalendarDate, EarlyDateAndTime, EarlyDateTimeRole,
-    EarlyDocument, EarlyDocumentRepresentationType, EarlyDocumentType, EarlyGroup,
-    EarlyIdentificationRole, EarlyObjectRole, EarlyOrganization, EarlyPersonAndOrganizationRole,
-    EarlySecurityClassification, EarlySecurityClassificationLevel,
+    EarlyApprovalRole, EarlyApprovalStatus, EarlyCalendarDate, EarlyCoordinatedUniversalTimeOffset,
+    EarlyDateAndTime, EarlyDateTimeRole, EarlyDocument, EarlyDocumentProductEquivalence,
+    EarlyDocumentRepresentationType, EarlyDocumentType, EarlyGroup, EarlyIdentificationRole,
+    EarlyLocalTime, EarlyObjectRole, EarlyOrganization, EarlyPerson,
+    EarlyPersonAndOrganizationRole, EarlyRoleAssociation, EarlySecurityClassification,
+    EarlySecurityClassificationLevel,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::plm::{
     ApplicationContext, Approval, ApprovalDateTime, ApprovalDateTimeSelect,
-    ApprovalPersonOrganization, ApprovalRole, ApprovalStatus, CalendarDate, DateAndTime,
-    DateTimeRole, Document, DocumentData, DocumentRepresentationType, DocumentType, Group,
-    IdentificationRole, ObjectRole, Organization, PersonAndOrganizationRole,
-    PersonOrganizationSelect, PlmPool, SecurityClassification, SecurityClassificationLevel,
+    ApprovalPersonOrganization, ApprovalRole, ApprovalStatus, CalendarDate,
+    CoordinatedUniversalTimeOffset, DateAndTime, DateTimeRole, Document, DocumentData,
+    DocumentProductEquivalence, DocumentProductItem, DocumentRepresentationType, DocumentType,
+    Group, IdentificationRole, LocalTime, ObjectRole, Organization, Person,
+    PersonAndOrganizationRole, PersonOrganizationSelect, PlmPool, RoleAssociation, RoleSelect,
+    SecurityClassification, SecurityClassificationLevel,
 };
 use crate::reader::ReaderContext;
 
@@ -346,4 +350,116 @@ pub(crate) fn lower_approval_person_organization(
         });
     ctx.id_cache.insert(entity_id, id);
     Ok(())
+}
+
+/// Lower one `LOCAL_TIME` (faithful optional minute/second; unresolved zone
+/// = silent drop, legacy leniency).
+pub(crate) fn lower_local_time(ctx: &mut ReaderContext, entity_id: u64, early: EarlyLocalTime) {
+    let Some(zone) = ctx
+        .id_cache
+        .get::<crate::ir::CoordinatedUniversalTimeOffsetId>(early.zone)
+    else {
+        return;
+    };
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id = pool.local_times.push(LocalTime {
+        hour_component: early.hour_component,
+        minute_component: early.minute_component,
+        second_component: early.second_component,
+        zone,
+    });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `COORDINATED_UNIVERSAL_TIME_OFFSET`. The `sense` token is
+/// already an [`AheadOrBehind`](crate::ir::plm::AheadOrBehind) — the bind's
+/// enum hint converts it (an unknown token now errors in bind, where the
+/// legacy read silently dropped; no corpus file carries one).
+pub(crate) fn lower_coordinated_universal_time_offset(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyCoordinatedUniversalTimeOffset,
+) {
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id = pool.utc_offsets.push(CoordinatedUniversalTimeOffset {
+        hour_offset: early.hour_offset,
+        minute_offset: early.minute_offset,
+        sense: early.sense,
+    });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `PERSON` (all-optional name parts pass through faithfully).
+pub(crate) fn lower_person(ctx: &mut ReaderContext, entity_id: u64, early: EarlyPerson) {
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let p_id = pool.persons.push(Person {
+        id: early.id,
+        last_name: early.last_name,
+        first_name: early.first_name,
+        middle_names: early.middle_names,
+        prefix_titles: early.prefix_titles,
+        suffix_titles: early.suffix_titles,
+    });
+    ctx.id_cache.insert(entity_id, p_id);
+}
+
+/// Lower one `ROLE_ASSOCIATION`. Members resolved by the `StepSelect`
+/// derive; an unsupported variant (Approval/DTA/etc.) resolves to `None`
+/// and drops the entity (legacy leniency).
+pub(crate) fn lower_role_association(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyRoleAssociation,
+) {
+    let Some(role) = ctx.id_cache.get::<crate::ir::ObjectRoleId>(early.role) else {
+        return;
+    };
+    let Some(item_with_role) = RoleSelect::resolve_select(ctx, early.item_with_role) else {
+        return;
+    };
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id = pool.role_associations.push(RoleAssociation {
+        role,
+        item_with_role,
+    });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `DOCUMENT_PRODUCT_EQUIVALENCE`. `related_product` may reference
+/// a `PRODUCT_DEFINITION_FORMATION` directly (common for document-equivalence
+/// links) — preserved so the formation ref round-trips; otherwise it
+/// collapses to the product (unresolved = silent drop, legacy leniency).
+pub(crate) fn lower_document_product_equivalence(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyDocumentProductEquivalence,
+) {
+    let Some(relating_document) = ctx
+        .id_cache
+        .get::<crate::ir::DocumentId>(early.relating_document)
+    else {
+        return;
+    };
+    let related_product = if let Some(fid) = ctx
+        .id_cache
+        .get::<crate::ir::id::ProductDefinitionFormationId>(early.related_product)
+    {
+        DocumentProductItem::Formation(fid)
+    } else {
+        let Some(pid) = crate::entities::plm::resolve_date_time_item(ctx, early.related_product)
+        else {
+            return;
+        };
+        DocumentProductItem::Product(pid)
+    };
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id = pool
+        .document_product_equivalences
+        .push(DocumentProductEquivalence {
+            name: early.name,
+            description: early.description,
+            relating_document,
+            related_product,
+        });
+    ctx.id_cache.insert(entity_id, id);
 }
