@@ -1,8 +1,5 @@
-//! `lower`: `EarlyModel` (L1) → `StepModel` (L2). The hand-written semantic
-//! glue — SELECT resolution, flatten, normalization live here. For the pilot
-//! cluster, `lower` reproduces exactly what the previous one-shot handlers
-//! produced (same arena, same insertion order), so the writer is untouched and
-//! corpus output stays byte-identical.
+//! Visualization-domain `lower` fns (founded items, view volume, point style —
+//! the pilot cluster). See the [module docs](super) for the lowering contract.
 
 use crate::early::model::{
     EarlyFillAreaStyle, EarlyFillAreaStyleId, EarlyMarker, EarlyMarkerSize, EarlyPointStyle,

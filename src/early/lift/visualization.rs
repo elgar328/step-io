@@ -1,13 +1,5 @@
-//! `lift`: `StepModel` (L2) → `EarlyModel` (L1), the write-side inverse of
-//! [`lower`](super::lower). The kernel only ever produced L2, so `lift`
-//! synthesizes a valid L1 from it (not a "reconstruction" of a parsed L1).
-//!
-//! For the pilot cluster `lift` is mechanical: the L2 already carries
-//! everything the canonical output form needs. Cross-references are resolved
-//! to their **output** step id (`#N`) via the writer's `StepIdCache`, so the
-//! L1 node carries the same `#N`-as-`u64` form its read-side counterpart held
-//! (read = input `#N`, write = output `#N`). [`serialize`](super::serialize)
-//! then emits Part21 text mechanically.
+//! Visualization-domain `lift` fns (founded items, view volume, point style —
+//! the pilot cluster). See the [module docs](super) for the lifting contract.
 
 use crate::early::model::{
     EarlyFillAreaStyle, EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlySurfaceSideStyle,

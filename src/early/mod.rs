@@ -17,14 +17,14 @@
 //! - [`lift`]: L2 → L1 (write-side synthesis, the inverse of `lower`).
 //! - [`serialize`]: L1 → Part21 text (mechanical).
 //!
-//! **Status: first read slice — `{surface_style_fill_area, surface_side_style}`.**
-//! These two entities migrate to the L1 path so that `surface_side_style` can
-//! disambiguate its `FillArea` members by **L1 type** (a distinct
-//! [`model::EarlySurfaceStyleFillAreaId`] bucket in the reader's `id_cache`)
-//! instead of the bespoke `viz_ssfa_id_map` named field — eliminating the
-//! TypeId-value collision that blocked `SurfaceSideStyleEntry` from
-//! `#[derive(StepSelect)]` (the "#2 drift" pain). All other entities keep the
-//! existing direct-`EntityGraph` read and coexist unchanged.
+//! **Status:** the founded-item pilot cluster (6 visualization entities) runs
+//! the full 2-layer path read+write, which eliminated all seven bespoke
+//! `viz_*_id_map` reader fields (typed `Early*Id` `id_cache` keys instead).
+//! `bind`/`serialize`/types/`Early*Id`s are **generated** by `gen-early`
+//! (capable of the whole 2195-entity schema union; see `gen-early`'s docs),
+//! while `lower`/`lift` stay hand-written, one submodule per domain. All other
+//! entities keep the existing direct-`EntityGraph` handlers and coexist
+//! unchanged until their cluster migrates.
 //!
 //! `EarlyModel` is internal and **transient**: it lives on
 //! [`ReaderContext`](crate::reader::ReaderContext) only for the duration of a
