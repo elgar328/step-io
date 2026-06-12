@@ -373,7 +373,9 @@ impl Ctx {
                 // Any number of entity members is fine: they collapse into one
                 // combined `EntityRef(u64)` variant (`lower` resolves the type).
                 Kind::Ref => {}
-                Kind::Real | Kind::Int | Kind::Str | Kind::Bool => {}
+                // scalar members, incl. logical / binary (each is a single
+                // `Typed{tag, ..}` so it's distinguishable by tag).
+                Kind::Real | Kind::Int | Kind::Str | Kind::Bool | Kind::Logical | Kind::Binary => {}
                 // hinted enum member -> dual representation, deferred.
                 Kind::Enum(a) if self.mapping.enums.contains_key(&a) => return false,
                 Kind::Enum(_) => {}
@@ -392,19 +394,20 @@ impl Ctx {
                 // outer bind can delegate to `bind_<nested>`); ref/agg-bearing
                 // nested selects are deferred.
                 Kind::Select(nested) if self.select_typed_only(&nested) => {}
-                // logical / binary / non-scalar aggregation / nested mixed select deferred.
-                Kind::Logical | Kind::Binary | Kind::Vec(_) | Kind::Select(_) => return false,
+                // non-scalar aggregation / non-typed-only nested select deferred.
+                Kind::Vec(_) | Kind::Select(_) => return false,
             }
         }
         true
     }
 
-    /// Whether a mixed SELECT is "Typed-only": every member is a scalar / non-
-    /// hinted enum, so each value is a single `Attribute::Typed{tag, ..}` (no
-    /// bare `EntityRef`, list, nested select, logical, or binary). Such a select
-    /// can be a *nested member* of another synth select, decoded by delegating
-    /// the whole `attr` to its `bind_<sel>` from the outer Typed `_ =>` arm.
-    /// `false` also rules out recursion (a Typed-only select has no select member).
+    /// Whether a mixed SELECT is "Typed-only": every member is a scalar (incl.
+    /// logical / binary) or non-hinted enum, so each value is a single
+    /// `Attribute::Typed{tag, ..}` (no bare `EntityRef`, list, or nested select).
+    /// Such a select can be a *nested member* of another synth select, decoded by
+    /// delegating the whole `attr` to its `bind_<sel>` from the outer Typed `_ =>`
+    /// arm. `false` also rules out recursion (a Typed-only select has no select
+    /// member).
     fn select_typed_only(&self, sel: &str) -> bool {
         let Some(td) = self.schema.types.get(sel) else {
             return false;
@@ -413,7 +416,9 @@ impl Ctx {
             return false;
         };
         members.iter().all(|m| match self.try_classify(m, 0) {
-            Some(Kind::Real | Kind::Int | Kind::Str | Kind::Bool) => true,
+            Some(
+                Kind::Real | Kind::Int | Kind::Str | Kind::Bool | Kind::Logical | Kind::Binary,
+            ) => true,
             // non-hinted enum members serialize as `Typed{tag, Enum}` too.
             Some(Kind::Enum(a)) => !self.mapping.enums.contains_key(&a),
             _ => false,
@@ -532,7 +537,7 @@ fn main() {
         // serialize fns don't read `l1`, and big entities trip pedantic style
         // lints. All flip-only — the committed (off) output keeps a bare header.
         format!(
-            "{HEADER}#![allow(dead_code, unused_variables, clippy::too_many_lines, clippy::enum_variant_names, clippy::struct_field_names, clippy::struct_excessive_bools, clippy::clone_on_copy, clippy::single_match_else)]\n\n"
+            "{HEADER}#![allow(dead_code, unused_variables, clippy::too_many_lines, clippy::enum_variant_names, clippy::struct_field_names, clippy::struct_excessive_bools, clippy::clone_on_copy, clippy::single_match_else, clippy::match_single_binding)]\n\n"
         )
     } else {
         HEADER.to_string()
@@ -1116,9 +1121,6 @@ fn emit_select_synth(
             Kind::Enum(a) if ctx.mapping.enums.contains_key(a) => panic!(
                 "gen-early: select `{sel}` member `{m}` is a hinted enum in a hint-less select (v4.x)"
             ),
-            Kind::Logical => {
-                panic!("gen-early: select `{sel}` member `{m}` is a logical (v4.x)")
-            }
             _ => {}
         }
     }
@@ -1130,6 +1132,8 @@ fn emit_select_synth(
             Kind::Int => "i64".into(),
             Kind::Bool => "bool".into(),
             Kind::Str => "String".into(),
+            Kind::Binary => "String".into(),
+            Kind::Logical => "crate::ir::geometry::Logical".into(),
             Kind::Enum(a) => format!("super::model::Early{}", pascal(a)),
             // Typed-only nested select -> its own synthesized `Early*` type.
             Kind::Select(a) => format!("super::model::Early{}", pascal(a)),
@@ -1243,7 +1247,14 @@ fn emit_select_synth(
     if mems.iter().any(|(_, _, k)| {
         matches!(
             k,
-            Kind::Real | Kind::Int | Kind::Str | Kind::Bool | Kind::Enum(_) | Kind::Select(_)
+            Kind::Real
+                | Kind::Int
+                | Kind::Str
+                | Kind::Bool
+                | Kind::Logical
+                | Kind::Binary
+                | Kind::Enum(_)
+                | Kind::Select(_)
         )
     }) {
         writeln!(
@@ -1266,6 +1277,12 @@ fn emit_select_synth(
                 }
                 Kind::Bool => {
                     writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Enum(t)) => Some({rtq}::{v}(t.as_str() == \"T\")),").unwrap();
+                }
+                Kind::Binary => {
+                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Binary(s)) => Some({rtq}::{v}(s.clone())),").unwrap();
+                }
+                Kind::Logical => {
+                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Enum(t)) => Some({rtq}::{v}(match t.as_str() {{ \"T\" => crate::ir::geometry::Logical::True, \"F\" => crate::ir::geometry::Logical::False, _ => crate::ir::geometry::Logical::Unknown }})),").unwrap();
                 }
                 Kind::Enum(a) => {
                     let etype = format!("super::model::Early{}", pascal(a));
@@ -1346,6 +1363,12 @@ fn emit_select_synth(
             ),
             Kind::Bool => format!(
                 "{rtq}::{v}(b) => crate::parser::entity::Attribute::Typed {{ type_name: \"{tag}\".into(), value: Box::new(crate::parser::entity::Attribute::Enum(if *b {{ \"T\" }} else {{ \"F\" }}.into())) }},"
+            ),
+            Kind::Binary => format!(
+                "{rtq}::{v}(s) => crate::parser::entity::Attribute::Typed {{ type_name: \"{tag}\".into(), value: Box::new(crate::parser::entity::Attribute::Binary(s.clone())) }},"
+            ),
+            Kind::Logical => format!(
+                "{rtq}::{v}(l) => crate::parser::entity::Attribute::Typed {{ type_name: \"{tag}\".into(), value: Box::new(crate::parser::entity::Attribute::Enum(crate::ir::attr::logical_to_step(*l).into())) }},"
             ),
             Kind::Enum(a) => {
                 let etype = format!("super::model::Early{}", pascal(a));
@@ -2253,6 +2276,47 @@ mod tests {
         assert!(ctx.select_typed_only("measure_value")); // 42 scalar measures
         assert!(!ctx.select_typed_only("trim_condition_select")); // has entity refs
         assert!(!ctx.select_typed_only("maths_value")); // has nested / aggregation
+        // logical / binary members are still Typed-only (single `Typed` value).
+        assert!(ctx.select_typed_only("maths_simple_atom"));
+    }
+
+    /// `binary` / `logical` as SELECT members (v4.19): `maths_simple_atom` =
+    /// SELECT(maths_binary, maths_boolean, maths_integer, maths_logical,
+    /// maths_number, maths_real, maths_string). Each is a `Typed{tag, ..}`.
+    #[test]
+    fn synth_select_binary_logical_members() {
+        assert!(ctx_from(schema()).select_supported("maths_simple_atom"));
+        let (m, b, s) = synth_select("maths_simple_atom");
+        // payloads: binary -> String, logical -> the IR Logical type.
+        assert!(m.contains("MathsBinary(String)"));
+        assert!(m.contains("MathsLogical(crate::ir::geometry::Logical)"));
+        assert!(m.contains("MathsReal(f64)"));
+        // bind decodes by tag: Binary attr / logical token.
+        assert!(b.contains(
+            "(\"MATHS_BINARY\", crate::parser::entity::Attribute::Binary(s)) => Some(super::model::EarlyMathsSimpleAtom::MathsBinary(s.clone())),"
+        ));
+        assert!(b.contains("\"T\" => crate::ir::geometry::Logical::True"));
+        // serialize round-trips them.
+        assert!(s.contains(
+            "super::model::EarlyMathsSimpleAtom::MathsBinary(s) => crate::parser::entity::Attribute::Typed"
+        ));
+        assert!(s.contains("crate::parser::entity::Attribute::Binary(s.clone())"));
+        assert!(s.contains("crate::ir::attr::logical_to_step(*l)"));
+    }
+
+    /// `maths_atom` = SELECT(maths_enum_atom, maths_simple_atom) — both Typed-only
+    /// nested selects → outer bind delegates to each `bind_<nested>` (2 nested),
+    /// and both nested selects are emitted recursively.
+    #[test]
+    fn synth_select_maths_atom_two_nested() {
+        assert!(ctx_from(schema()).select_supported("maths_atom"));
+        let (m, b, _) = synth_select("maths_atom");
+        assert!(m.contains("MathsEnumAtom(super::model::EarlyMathsEnumAtom)"));
+        assert!(m.contains("MathsSimpleAtom(super::model::EarlyMathsSimpleAtom)"));
+        // both nested decoders are delegated to and emitted.
+        assert!(b.contains("if let Some(x) = bind_maths_enum_atom(attr)"));
+        assert!(b.contains("if let Some(x) = bind_maths_simple_atom(attr)"));
+        assert!(b.contains("fn bind_maths_simple_atom("));
     }
 
     fn empty_ctx() -> Ctx {
