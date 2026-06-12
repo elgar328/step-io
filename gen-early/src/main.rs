@@ -335,6 +335,8 @@ impl Ctx {
                         && match &**i2 {
                             // 2D grid (v4.9).
                             Kind::Ref | Kind::Real | Kind::Int => true,
+                            // 2D grid of a mixed select (v4.21): `<alias>_grid`.
+                            Kind::Select(s) => self.select_supported(s),
                             // 3D grid (v4.17): ref / real only (no int occurrence).
                             Kind::Vec(i3) => matches!(**i3, Kind::Ref | Kind::Real),
                             _ => false,
@@ -351,8 +353,19 @@ impl Ctx {
     /// Whether a mixed SELECT is emittable — hinted ones always; hint-less ones
     /// only in the shape [`emit_select_synth`] accepts.
     fn select_supported(&self, sel: &str) -> bool {
+        self.select_supported_inner(sel, &mut BTreeSet::new())
+    }
+
+    /// [`select_supported`] with a self-recursion guard: a select reached again
+    /// while already being checked (e.g. `maths_value` → `maths_tuple` = `LIST OF
+    /// maths_value`) is optimistically fine — any genuinely unsupported member
+    /// fails its own check.
+    fn select_supported_inner(&self, sel: &str, seen: &mut BTreeSet<String>) -> bool {
         if self.mapping.selects.contains_key(sel) {
             return true; // hinted -> emit_select
+        }
+        if !seen.insert(sel.to_string()) {
+            return true; // self-recursive reference
         }
         let Some(td) = self.schema.types.get(sel) else {
             return false;
@@ -380,26 +393,46 @@ impl Ctx {
                 // disambiguates it — any number / any mix of inner kinds is fine.
                 Kind::Vec(inner)
                     if matches!(*inner, Kind::Ref | Kind::Real | Kind::Int | Kind::Str) => {}
-                // Nested mixed SELECT member: supported only if it is itself
-                // scalar/enum-only (its value is always a single `Typed`, so the
-                // outer bind can delegate to `bind_<nested>`); ref/agg-bearing
-                // nested selects are deferred.
-                Kind::Select(nested) if self.select_typed_only(&nested) => {}
-                // non-scalar aggregation / non-typed-only nested select deferred.
-                Kind::Vec(_) | Kind::Select(_) => return false,
+                // Aggregation of a mixed select (e.g. `maths_tuple` = `LIST OF
+                // maths_value`): elements decode via `bind_<inner>` if supported.
+                Kind::Vec(inner) => match &*inner {
+                    Kind::Select(s) => {
+                        if !self.select_supported_inner(s, seen) {
+                            return false;
+                        }
+                    }
+                    _ => return false,
+                },
+                // Nested mixed SELECT member: all its values must arrive as
+                // `Typed` (so the outer bind can delegate the whole attr to
+                // `bind_<nested>`) and the nested select itself must be supported.
+                Kind::Select(nested) => {
+                    if !self.select_typed_only(&nested)
+                        || !self.select_supported_inner(&nested, seen)
+                    {
+                        return false;
+                    }
+                }
             }
         }
         true
     }
 
-    /// Whether a mixed SELECT is "Typed-only": every member is a scalar (incl.
-    /// logical / binary) or non-hinted enum, so each value is a single
-    /// `Attribute::Typed{tag, ..}` (no bare `EntityRef`, list, or nested select).
-    /// Such a select can be a *nested member* of another synth select, decoded by
-    /// delegating the whole `attr` to its `bind_<sel>` from the outer Typed `_ =>`
-    /// arm. `false` also rules out recursion (a Typed-only select has no select
-    /// member).
+    /// Whether *every value* of a mixed SELECT arrives as `Attribute::Typed{tag,
+    /// ..}` — scalars (incl. logical / binary), non-hinted enums, aggregations
+    /// (typed parameters per Part21, v4.20), and recursively Typed-only nested
+    /// selects. No bare `EntityRef` member (a `#N` would be ambiguous with the
+    /// outer select's refs). Such a select can be a *nested member* of another
+    /// synth select, decoded by delegating the whole `attr` to its `bind_<sel>`
+    /// from the outer Typed `_ =>` arm.
     fn select_typed_only(&self, sel: &str) -> bool {
+        self.select_typed_only_inner(sel, &mut BTreeSet::new())
+    }
+
+    fn select_typed_only_inner(&self, sel: &str, seen: &mut BTreeSet<String>) -> bool {
+        if !seen.insert(sel.to_string()) {
+            return true; // self-recursive reference
+        }
         let Some(td) = self.schema.types.get(sel) else {
             return false;
         };
@@ -412,6 +445,11 @@ impl Ctx {
             ) => true,
             // non-hinted enum members serialize as `Typed{tag, Enum}` too.
             Some(Kind::Enum(a)) => !self.mapping.enums.contains_key(&a),
+            // aggregation members arrive as typed parameters `TAG((...))`;
+            // decodability is select_supported's concern, not form.
+            Some(Kind::Vec(_)) => true,
+            // a nested select is Typed-form iff it is itself Typed-only.
+            Some(Kind::Select(s)) => self.select_typed_only_inner(&s, seen),
             _ => false,
         })
     }
@@ -541,6 +579,7 @@ fn main() {
     let mut used_enum_lists: BTreeSet<String> = BTreeSet::new(); // ENUMs in `Vec<…>`
     let mut used_selects: BTreeSet<String> = BTreeSet::new(); // mixed SELECTs
     let mut used_select_lists: BTreeSet<String> = BTreeSet::new(); // SELECTs in `Vec<…>`
+    let mut used_select_grids: BTreeSet<String> = BTreeSet::new(); // SELECTs in `Vec<Vec<…>>`
     let mut any_bool = false;
     let mut any_logical_list = false;
 
@@ -708,6 +747,14 @@ fn main() {
                     }
                     // `Vec<Logical>`: the single `logical_list` bind helper.
                     Kind::Logical => any_logical_list = true,
+                    // `Vec<Vec<EarlySelect>>`: needs bind_<select>/<alias>_emit
+                    // (via used_selects) and a `<alias>_grid` bind helper.
+                    Kind::Vec(i2) => {
+                        if let Kind::Select(alias) = &**i2 {
+                            used_selects.insert(alias.clone());
+                            used_select_grids.insert(alias.clone());
+                        }
+                    }
                     _ => {}
                 },
                 _ => {}
@@ -831,6 +878,10 @@ fn main() {
     // ...and for SELECTs in `Vec<…>` fields (disjoint alias sets, no clash).
     for alias in &used_select_lists {
         emit_select_list(&ctx, alias, &mut bind);
+    }
+    // ...and for SELECTs in `Vec<Vec<…>>` fields (`<alias>_grid`).
+    for alias in &used_select_grids {
+        emit_select_grid(&ctx, alias, &mut bind);
     }
     if any_logical_list {
         emit_logical_list(&mut bind);
@@ -1090,6 +1141,9 @@ fn emit_select_synth(
         match k {
             Kind::Vec(inner)
                 if matches!(**inner, Kind::Ref | Kind::Real | Kind::Int | Kind::Str) => {}
+            // Aggregation of a supported mixed select (elements decode via
+            // `bind_<inner>`, e.g. `maths_tuple` = `LIST OF maths_value`).
+            Kind::Vec(inner) if matches!(&**inner, Kind::Select(s) if ctx.select_supported(s)) => {}
             Kind::Vec(_) => {
                 panic!("gen-early: select `{sel}` member `{m}` is a non-scalar aggregation (v4.x)")
             }
@@ -1128,10 +1182,21 @@ fn emit_select_synth(
             write_synth_enum_model(ctx, a, model, emitted_models);
         }
     }
-    // Recursively emit the (typed-only) nested SELECT members' own
-    // model/bind/serialize so `bind_<nested>` / `<nested>_emit` exist.
+    // Recursively emit the nested SELECT members' own model/bind/serialize so
+    // `bind_<nested>` / `<nested>_emit` exist — both direct nested members and
+    // aggregation inners (`Vec<Select>`). Self-references (e.g. `maths_tuple` =
+    // `LIST OF maths_value` inside `maths_value`) are deduped by the
+    // `emitted_selects` entry guard.
     for (_, _, k) in &mems {
-        if let Kind::Select(nested) = k {
+        let nested = match k {
+            Kind::Select(nested) => Some(nested),
+            Kind::Vec(inner) => match &**inner {
+                Kind::Select(nested) => Some(nested),
+                _ => None,
+            },
+            _ => None,
+        };
+        if let Some(nested) = nested {
             emit_select_synth(
                 ctx,
                 nested,
@@ -1246,9 +1311,28 @@ fn emit_select_synth(
                         Kind::Str => {
                             writeln!(bind, "                        crate::parser::entity::Attribute::String(s) => out.push(s.clone()),").unwrap();
                         }
-                        _ => unreachable!("agg inners are restricted to ref/scalar"),
+                        // mixed-select inner: each element is a full select
+                        // value, decoded by its own (possibly self-recursive)
+                        // `bind_<inner>`.
+                        Kind::Select(inner_sel) => {
+                            writeln!(
+                                bind,
+                                "                        it => match bind_{inner_sel}(it) {{"
+                            )
+                            .unwrap();
+                            writeln!(bind, "                            Some(x) => out.push(x),")
+                                .unwrap();
+                            writeln!(bind, "                            None => return None,")
+                                .unwrap();
+                            writeln!(bind, "                        }},").unwrap();
+                        }
+                        _ => unreachable!("agg inners are restricted to ref/scalar/select"),
                     }
-                    writeln!(bind, "                        _ => return None,").unwrap();
+                    // the select-inner arm above is irrefutable; only the
+                    // scalar/ref inners need the explicit mismatch arm.
+                    if !matches!(&**inner, Kind::Select(_)) {
+                        writeln!(bind, "                        _ => return None,").unwrap();
+                    }
                     writeln!(bind, "                    }}").unwrap();
                     writeln!(bind, "                }}").unwrap();
                     writeln!(bind, "                Some({rtq}::{v}(out))").unwrap();
@@ -1572,6 +1656,49 @@ fn emit_select_list(ctx: &Ctx, alias: &str, bind: &mut String) {
     writeln!(bind, "    Ok(out)\n}}\n").unwrap();
 }
 
+/// Emit a `<alias>_grid(attrs, index, ..) -> Result<Vec<Vec<Early..>>>` bind
+/// helper for a standalone 2-level aggregation whose inner is a mixed SELECT
+/// (e.g. `SET OF LIST OF maths_value`): outer `List` of row `List`s, each
+/// element decoded by `bind_<alias>` ([`emit_select_list`]'s grid analogue).
+fn emit_select_grid(ctx: &Ctx, alias: &str, bind: &mut String) {
+    let st = match ctx.mapping.selects.get(alias) {
+        Some(h) => h.rust_type.clone(),
+        None => format!("super::model::Early{}", pascal(alias)),
+    };
+    writeln!(
+        bind,
+        "fn {alias}_grid(attrs: &[crate::parser::entity::Attribute], index: usize, entity_id: u64, field: &'static str) -> Result<Vec<Vec<{st}>>, crate::ir::error::ConvertError> {{"
+    )
+    .unwrap();
+    writeln!(
+        bind,
+        "    let Some(crate::parser::entity::Attribute::List(rows)) = attrs.get(index) else {{ return Err(crate::ir::error::ConvertError::UnexpectedEntityForm {{ entity_id, detail: format!(\"{{field}}: expected list\") }}); }};"
+    )
+    .unwrap();
+    writeln!(bind, "    let mut grid = Vec::with_capacity(rows.len());").unwrap();
+    writeln!(bind, "    for row in rows {{").unwrap();
+    writeln!(
+        bind,
+        "        let crate::parser::entity::Attribute::List(items) = row else {{ return Err(crate::ir::error::ConvertError::UnexpectedEntityForm {{ entity_id, detail: format!(\"{{field}}: expected inner list\") }}); }};"
+    )
+    .unwrap();
+    writeln!(
+        bind,
+        "        let mut out = Vec::with_capacity(items.len());"
+    )
+    .unwrap();
+    writeln!(bind, "        for item in items {{").unwrap();
+    writeln!(
+        bind,
+        "            match bind_{alias}(item) {{ Some(v) => out.push(v), None => return Err(crate::ir::error::ConvertError::UnexpectedEntityForm {{ entity_id, detail: format!(\"{{field}}: unrecognized {alias} in grid\") }}) }}"
+    )
+    .unwrap();
+    writeln!(bind, "        }}").unwrap();
+    writeln!(bind, "        grid.push(out);").unwrap();
+    writeln!(bind, "    }}").unwrap();
+    writeln!(bind, "    Ok(grid)\n}}\n").unwrap();
+}
+
 /// Emit the single `logical_list(attrs, index, ..) -> Result<Vec<Logical>>`
 /// helper: reads the `List`, mapping each `Enum` element via the same lenient
 /// `.T./.F./.U.` decode as `read_logical`.
@@ -1650,9 +1777,13 @@ fn bind_expr(k: &Kind, i: usize, field: &str) -> String {
                 };
                 format!("crate::ir::attr::{list}(attrs, {i}, entity_id, \"{field}\")?")
             }
-            // `Vec<Vec<ref/real/int>>` -> grid helper (List of Lists), or
+            // `Vec<Vec<ref/real/int>>` -> grid helper (List of Lists),
+            // `Vec<Vec<select>>` -> generated `<alias>_grid` helper (v4.21), or
             // `Vec<Vec<Vec<ref/real>>>` -> grid3 helper (v4.17).
             Kind::Vec(i2) => {
+                if let Kind::Select(alias) = &**i2 {
+                    return format!("{alias}_grid(attrs, {i}, entity_id, \"{field}\")?");
+                }
                 let grid = match &**i2 {
                     Kind::Ref => "read_entity_ref_grid",
                     Kind::Real => "read_real_grid",
@@ -1732,9 +1863,11 @@ fn serialize_expr(k: &Kind, field: &str) -> String {
                 )
             } else {
                 let elem2 = match &**i2 {
-                    Kind::Ref => "|&s| crate::parser::entity::Attribute::EntityRef(s)",
-                    Kind::Real => "|&x| crate::parser::entity::Attribute::Real(x)",
-                    Kind::Int => "|&x| crate::parser::entity::Attribute::Integer(x)",
+                    Kind::Ref => "|&s| crate::parser::entity::Attribute::EntityRef(s)".to_string(),
+                    Kind::Real => "|&x| crate::parser::entity::Attribute::Real(x)".to_string(),
+                    Kind::Int => "|&x| crate::parser::entity::Attribute::Integer(x)".to_string(),
+                    // grid of a mixed select: per-element `<alias>_emit` (v4.21).
+                    Kind::Select(alias) => format!("{alias}_emit"),
                     other => panic!("gen-early: grid of {other:?} not yet supported"),
                 };
                 format!(
@@ -2225,8 +2358,8 @@ mod tests {
         assert!(
             b2.contains("crate::parser::entity::Attribute::Integer(x) => out.push(*x as f64),")
         );
-        // maths_value still deferred: its maths_tuple member is a Vec(Select).
-        assert!(!ctx_from(schema()).select_supported("maths_value"));
+        // maths_value is supported as of v4.21 (recursive Vec(Select) member).
+        assert!(ctx_from(schema()).select_supported("maths_value"));
     }
 
     /// A scalar-only nested SELECT member (`measure_value` = 42 scalar measures)
@@ -2256,26 +2389,113 @@ mod tests {
         ));
     }
 
-    /// A nested mixed SELECT member with ref/agg members is still deferred (panics).
-    /// `maths_value` = SELECT(atom_based_value, generic_expression, maths_tuple);
-    /// the first member `atom_based_value` is itself a SELECT with aggregation /
-    /// nested members, so `select_typed_only` is false → the loop panics.
+    /// A nested mixed SELECT member with a *ref* member is still deferred — its
+    /// bare `#N` values would be ambiguous with the outer's. The real schema has
+    /// no such case left (coverage 100%), so this uses a synthetic schema:
+    /// outer = SELECT(real, bad_nested), bad_nested = SELECT(thing [entity], real).
     #[test]
     #[should_panic(expected = "nested mixed select")]
     fn synth_select_nested_mixed_panics() {
-        synth_select("maths_value");
+        let mut entity = BTreeMap::new();
+        entity.insert(
+            "thing".to_string(),
+            Entity {
+                parents: vec![],
+                own_attrs: vec![],
+            },
+        );
+        let mut types = BTreeMap::new();
+        types.insert(
+            "bad_nested".to_string(),
+            TypeDef {
+                aliased: "SELECT(thing, real)".to_string(),
+            },
+        );
+        types.insert(
+            "outer_sel".to_string(),
+            TypeDef {
+                aliased: "SELECT(real, bad_nested)".to_string(),
+            },
+        );
+        let ctx = ctx_from(EarlyToml { entity, types });
+        let (mut m, mut b, mut s) = (String::new(), String::new(), String::new());
+        emit_select_synth(
+            &ctx,
+            "outer_sel",
+            &mut m,
+            &mut b,
+            &mut s,
+            &mut BTreeSet::new(),
+            &mut BTreeSet::new(),
+        );
     }
 
     /// `select_typed_only`: true for an all-scalar select, false once a member is
-    /// an entity ref / aggregation / nested select.
+    /// an entity ref (bare `#N`); aggregations / nested selects are Typed-form.
     #[test]
     fn select_typed_only_classification() {
         let ctx = ctx_from(schema());
         assert!(ctx.select_typed_only("measure_value")); // 42 scalar measures
         assert!(!ctx.select_typed_only("trim_condition_select")); // has entity refs
-        assert!(!ctx.select_typed_only("maths_value")); // has nested / aggregation
+        assert!(!ctx.select_typed_only("maths_value")); // generic_expression = ref
         // logical / binary members are still Typed-only (single `Typed` value).
         assert!(ctx.select_typed_only("maths_simple_atom"));
+        // v4.21: agg members are Typed (`TAG((...))`), nested recursion guarded —
+        // atom_based_value (self-recursive tuple + nested maths_atom) qualifies.
+        assert!(ctx.select_typed_only("atom_based_value"));
+    }
+
+    /// ★maths completion (v4.21): self-recursive `maths_value` via `Vec` (no Box)
+    /// + recursive nested emission + tagged-list element decode.
+    #[test]
+    fn synth_select_maths_value_recursive() {
+        let ctx = ctx_from(schema());
+        assert!(ctx.select_supported("maths_value"));
+        assert!(ctx.select_supported("maths_expression"));
+        assert!(ctx.select_supported("atom_based_value"));
+        let (m, b, s) = synth_select("maths_value");
+        assert!(m.contains("pub(crate) enum EarlyMathsValue"));
+        assert!(m.contains("EntityRef(u64)")); // generic_expression
+        assert!(m.contains("MathsTuple(Vec<EarlyMathsValue>)")); // self-recursive via Vec
+        assert!(m.contains("AtomBasedValue(super::model::EarlyAtomBasedValue)"));
+        // the nested select is emitted recursively, incl. its own self-recursion.
+        assert!(m.contains("pub(crate) enum EarlyAtomBasedValue"));
+        assert!(m.contains("AtomBasedTuple(Vec<EarlyAtomBasedValue>)"));
+        // bind: tagged list arm decodes elements via the (self-recursive) bind.
+        assert!(b.contains("(\"MATHS_TUPLE\", crate::parser::entity::Attribute::List(items)) =>"));
+        assert!(b.contains("it => match bind_maths_value(it) {"));
+        // the Typed `_ =>` arm delegates to the nested decoder.
+        assert!(b.contains("if let Some(x) = bind_atom_based_value(attr)"));
+        // serialize wraps the tag back around the recursive list.
+        assert!(s.contains(
+            "MathsTuple(xs) => crate::parser::entity::Attribute::Typed { type_name: \"MATHS_TUPLE\".into()"
+        ));
+        assert!(s.contains("map(maths_value_emit)"));
+    }
+
+    /// Standalone 2-level aggregation of a mixed select (`finite_function.pairs`
+    /// = `SET OF LIST OF maths_value`): `<alias>_grid` helper + nested `List`.
+    #[test]
+    fn grid_of_select_codegen() {
+        let ctx = ctx_from(schema());
+        let g = Kind::Vec(Box::new(Kind::Vec(Box::new(Kind::Select(
+            "maths_value".into(),
+        )))));
+        assert!(ctx.emittable(&g, false));
+        assert!(!ctx.emittable(&g, true)); // optional grid stays deferred
+        assert!(bind_expr(&g, 1, "x").contains("maths_value_grid(attrs, 1"));
+        let s = serialize_expr(&g, "pairs");
+        assert_eq!(
+            s.matches("crate::parser::entity::Attribute::List(").count(),
+            2
+        );
+        assert!(s.contains("map(maths_value_emit)"));
+        // the generated helper decodes each grid element via bind_<select>.
+        let mut helper = String::new();
+        emit_select_grid(&ctx, "maths_value", &mut helper);
+        assert!(helper.contains("fn maths_value_grid("));
+        assert!(helper.contains("Result<Vec<Vec<super::model::EarlyMathsValue>>"));
+        assert!(helper.contains("bind_maths_value(item)"));
     }
 
     /// `binary` / `logical` as SELECT members (v4.19): `maths_simple_atom` =
