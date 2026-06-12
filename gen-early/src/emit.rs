@@ -83,9 +83,31 @@ pub(crate) fn emit_entity(ctx: &Ctx, ent_name: &str, out: &mut GenOut) {
     }
     let has_select = attrs.iter().any(|(_, k, _)| matches!(k, Kind::Select(_)));
 
-    // model struct
+    // model struct. All-scalar shapes wider than 8 bytes get `Copy` so
+    // by-value `lower`/`lift` adapters compile under clippy's
+    // needless_pass_by_value. At ≤ 8 bytes `Copy` would instead flip the
+    // existing by-reference signatures into trivially_copy_pass_by_ref.
+    let scalar_size = |t: &str| -> Option<usize> {
+        match t {
+            "u64" | "i64" | "f64" => Some(8),
+            "bool" => Some(1),
+            "Option<u64>" | "Option<i64>" | "Option<f64>" => Some(16),
+            "Option<bool>" => Some(2),
+            _ => None,
+        }
+    };
+    let all_copy = attrs
+        .iter()
+        .map(|(_, k, opt)| scalar_size(&field_ty_full(ctx, k, *opt)))
+        .try_fold(0usize, |acc, s| s.map(|s| acc + s))
+        .is_some_and(|total| total > 8);
     writeln!(out.model, "/// L1 `{step_name}` (generated).").unwrap();
-    writeln!(out.model, "#[derive(Debug, Clone, PartialEq)]").unwrap();
+    writeln!(
+        out.model,
+        "#[derive(Debug, Clone{}, PartialEq)]",
+        if all_copy { ", Copy" } else { "" }
+    )
+    .unwrap();
     writeln!(out.model, "pub(crate) struct {type_name} {{").unwrap();
     for (field, k, opt) in &attrs {
         writeln!(

@@ -1,9 +1,10 @@
-//! `ORGANIZATION` handler plm leaf.
+//! `ORGANIZATION` handler — plm (2-layer path: generated bind/serialize +
+//! hand-written lower/lift).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_optional_string, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::plm::{Organization, PlmPool};
+use crate::ir::plm::Organization;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -22,32 +23,13 @@ impl SimpleEntityHandler for OrganizationHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "ORGANIZATION")?;
-        let id = read_optional_string(attrs, 0, entity_id, "id")?;
-        let name = read_string_or_unset(attrs, 1, entity_id, "name")?.to_owned();
-        let description = read_string_or_unset(attrs, 2, entity_id, "description")?.to_owned();
-        let pool = ctx.plm.get_or_insert_with(PlmPool::default);
-        let o_id = pool.organizations.push(Organization {
-            id,
-            name,
-            description,
-        });
-        ctx.id_cache.insert(entity_id, o_id);
+        let early = bind::bind_organization(entity_id, attrs)?;
+        lower::lower_organization(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, o: Organization) -> Result<u64, WriteError> {
-        let id_attr = match o.id {
-            Some(s) => Attribute::String(s),
-            None => Attribute::Unset,
-        };
-        Ok(buf.push_simple(
-            "ORGANIZATION",
-            vec![
-                id_attr,
-                Attribute::String(o.name),
-                Attribute::String(o.description),
-            ],
-        ))
+        let early = lift::lift_organization(o);
+        Ok(serialize::serialize_organization(buf, &early))
     }
 }

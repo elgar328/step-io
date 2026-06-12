@@ -159,12 +159,14 @@ fn file_head(generate_all: bool) -> String {
     if generate_all {
         // Diagnostic mass: most types are unused (no lower/lift), empty entities'
         // serialize fns don't read `l1`, and big entities trip pedantic style
-        // lints. All flip-only — the committed (off) output keeps a bare header.
+        // lints. All flip-only — the committed (off) output keeps a minimal header.
         format!(
             "{HEADER}#![allow(dead_code, unused_variables, clippy::too_many_lines, clippy::enum_variant_names, clippy::struct_field_names, clippy::struct_excessive_bools, clippy::clone_on_copy, clippy::single_match_else, clippy::match_single_binding)]\n\n"
         )
     } else {
-        HEADER.to_string()
+        // Schema-faithful field names legitimately share pre/postfixes
+        // (e.g. CALENDAR_DATE's *_component) — not a naming smell here.
+        format!("{HEADER}#![allow(clippy::struct_field_names)]\n\n")
     }
 }
 

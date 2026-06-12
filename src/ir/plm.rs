@@ -535,7 +535,10 @@ pub enum DateTimeItem {
     Product(ProductId),
 }
 
-/// `CALENDAR_DATE(year_component, month_component, day_component)`.
+/// `CALENDAR_DATE(year_component, day_component, month_component)` —
+/// EXPRESS slot order (year from `date`, then day, then month). The legacy
+/// reader labeled slots 1/2 as month/day (swapped); the 2-layer lower maps
+/// by name, so these fields now carry their true meanings.
 /// All three are STEP `INTEGER`; carried as `i64` to match the parser's
 /// `Attribute::Integer` width.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

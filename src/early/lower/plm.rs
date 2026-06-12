@@ -7,14 +7,19 @@
 //! these through `id_cache` typed arena ids directly.
 
 use crate::early::model::{
-    EarlyApplicationContext, EarlyApprovalRole, EarlyApprovalStatus, EarlyDateTimeRole,
-    EarlyDocumentType, EarlyGroup, EarlyIdentificationRole, EarlyObjectRole,
-    EarlyPersonAndOrganizationRole, EarlySecurityClassificationLevel,
+    EarlyApplicationContext, EarlyApproval, EarlyApprovalDateTime, EarlyApprovalPersonOrganization,
+    EarlyApprovalRole, EarlyApprovalStatus, EarlyCalendarDate, EarlyDateAndTime, EarlyDateTimeRole,
+    EarlyDocument, EarlyDocumentRepresentationType, EarlyDocumentType, EarlyGroup,
+    EarlyIdentificationRole, EarlyObjectRole, EarlyOrganization, EarlyPersonAndOrganizationRole,
+    EarlySecurityClassification, EarlySecurityClassificationLevel,
 };
+use crate::ir::error::ConvertError;
 use crate::ir::plm::{
-    ApplicationContext, ApprovalRole, ApprovalStatus, DateTimeRole, DocumentType, Group,
-    IdentificationRole, ObjectRole, PersonAndOrganizationRole, PlmPool,
-    SecurityClassificationLevel,
+    ApplicationContext, Approval, ApprovalDateTime, ApprovalDateTimeSelect,
+    ApprovalPersonOrganization, ApprovalRole, ApprovalStatus, CalendarDate, DateAndTime,
+    DateTimeRole, Document, DocumentData, DocumentRepresentationType, DocumentType, Group,
+    IdentificationRole, ObjectRole, Organization, PersonAndOrganizationRole,
+    PersonOrganizationSelect, PlmPool, SecurityClassification, SecurityClassificationLevel,
 };
 use crate::reader::ReaderContext;
 
@@ -137,4 +142,208 @@ pub(crate) fn lower_group(ctx: &mut ReaderContext, entity_id: u64, early: EarlyG
         description: early.description,
     });
     ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `APPROVAL` (unresolved status = silent drop, legacy leniency).
+pub(crate) fn lower_approval(ctx: &mut ReaderContext, entity_id: u64, early: EarlyApproval) {
+    let Some(status) = ctx
+        .id_cache
+        .get::<crate::ir::ApprovalStatusId>(early.status)
+    else {
+        return;
+    };
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id = pool.approvals.push(Approval {
+        status,
+        level: early.level,
+    });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `CALENDAR_DATE`. The L1 is schema-ordered (year, day, month);
+/// the legacy handler read attr\[1\] as "month" and attr\[2\] as "day" — a
+/// label swap vs EXPRESS. Mapping by *name* here fixes the L2 labels while
+/// every emitted slot stays put (serialize re-emits in schema order), so the
+/// output is byte-identical.
+pub(crate) fn lower_calendar_date(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyCalendarDate,
+) {
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id = pool.dates.push(CalendarDate {
+        year_component: early.year_component,
+        month_component: early.month_component,
+        day_component: early.day_component,
+    });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `DOCUMENT_REPRESENTATION_TYPE` (unresolved document = silent drop).
+pub(crate) fn lower_document_representation_type(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyDocumentRepresentationType,
+) {
+    let Some(represented_document) = ctx
+        .id_cache
+        .get::<crate::ir::DocumentId>(early.represented_document)
+    else {
+        return;
+    };
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id = pool
+        .document_representation_types
+        .push(DocumentRepresentationType {
+            name: early.name,
+            represented_document,
+        });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `ORGANIZATION` (`id` stays faithfully optional; the legacy
+/// read collapsed a `$` description to "" — L2 keeps a String).
+pub(crate) fn lower_organization(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyOrganization,
+) {
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let o_id = pool.organizations.push(Organization {
+        id: early.id,
+        name: early.name,
+        description: early.description.unwrap_or_default(),
+    });
+    ctx.id_cache.insert(entity_id, o_id);
+}
+
+/// Lower one `DATE_AND_TIME` (either side unresolved = silent drop).
+pub(crate) fn lower_date_and_time(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyDateAndTime,
+) {
+    let Some(date_component) = ctx.id_cache.get::<crate::ir::DateId>(early.date_component) else {
+        return;
+    };
+    let Some(time_component) = ctx
+        .id_cache
+        .get::<crate::ir::LocalTimeId>(early.time_component)
+    else {
+        return;
+    };
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id = pool.date_and_times.push(DateAndTime {
+        date_component,
+        time_component,
+    });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `SECURITY_CLASSIFICATION` (unresolved level = silent drop).
+pub(crate) fn lower_security_classification(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlySecurityClassification,
+) {
+    let Some(security_level) = ctx
+        .id_cache
+        .get::<crate::ir::SecurityClassificationLevelId>(early.security_level)
+    else {
+        return;
+    };
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id = pool.security_classifications.push(SecurityClassification {
+        name: early.name,
+        purpose: early.purpose,
+        security_level,
+    });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one plain `DOCUMENT` (`Itself` carrier; unresolved kind = silent
+/// drop. `DOCUMENT_FILE` keeps its own handler).
+pub(crate) fn lower_document(ctx: &mut ReaderContext, entity_id: u64, early: EarlyDocument) {
+    let Some(kind) = ctx.id_cache.get::<crate::ir::DocumentTypeId>(early.kind) else {
+        return;
+    };
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id = pool.documents.push(Document::Itself(DocumentData {
+        id: early.id,
+        name: early.name,
+        // Legacy read_string_or_unset collapsed `$` to "" (L2 String).
+        description: early.description.unwrap_or_default(),
+        kind,
+    }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `APPROVAL_DATE_TIME`. Members resolved by the `StepSelect`
+/// derive; an unsupported variant (direct `CALENDAR_DATE` / `LOCAL_TIME`)
+/// resolves to `None` and drops the entity (legacy leniency).
+pub(crate) fn lower_approval_date_time(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyApprovalDateTime,
+) {
+    let Some(date_time) = ApprovalDateTimeSelect::resolve_select(ctx, early.date_time) else {
+        return;
+    };
+    let Some(dated_approval) = ctx
+        .id_cache
+        .get::<crate::ir::ApprovalId>(early.dated_approval)
+    else {
+        return;
+    };
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id = pool.approval_date_times.push(ApprovalDateTime {
+        date_time,
+        dated_approval,
+    });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `APPROVAL_PERSON_ORGANIZATION`. A P&O dropped as a
+/// dangling-reference cascade surfaces a `MissingReference` so the
+/// dispatcher reclassifies this approval the same way
+/// (NS-dangling-reference-drop); otherwise an unsupported SELECT variant
+/// (direct PERSON / ORGANIZATION) drops silently.
+pub(crate) fn lower_approval_person_organization(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyApprovalPersonOrganization,
+) -> Result<(), ConvertError> {
+    let po_ref = early.person_organization;
+    let Some(po_id) = ctx
+        .id_cache
+        .get::<crate::ir::PersonAndOrganizationId>(po_ref)
+    else {
+        if ctx.nonstandard_dropped_refs.contains(&po_ref) {
+            return Err(ConvertError::MissingReference {
+                from: entity_id,
+                to: po_ref,
+                field_name: "person_organization",
+            });
+        }
+        return Ok(());
+    };
+    let Some(authorized_approval) = ctx
+        .id_cache
+        .get::<crate::ir::ApprovalId>(early.authorized_approval)
+    else {
+        return Ok(());
+    };
+    let Some(role) = ctx.id_cache.get::<crate::ir::ApprovalRoleId>(early.role) else {
+        return Ok(());
+    };
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id = pool
+        .approval_person_organizations
+        .push(ApprovalPersonOrganization {
+            person_organization: PersonOrganizationSelect::PersonAndOrganization(po_id),
+            authorized_approval,
+            role,
+        });
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
 }

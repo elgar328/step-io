@@ -36,6 +36,15 @@ generate = [
     "object_role",
     "identification_role",
     "group",
+    "approval",
+    "calendar_date",
+    "document_representation_type",
+    "organization",
+    "date_and_time",
+    "security_classification",
+    "document",
+    "approval_date_time",
+    "approval_person_organization",
 ]
 
 # `generate_all`: diagnostic flip. When true, gen-early generates *every* entity

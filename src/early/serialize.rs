@@ -4,17 +4,20 @@
 //! and re-exported here so the handlers keep their `serialize::serialize_*` paths.
 
 pub(crate) use super::generated::serialize::{
-    serialize_application_context, serialize_approval_role, serialize_approval_status,
-    serialize_constructive_geometry_representation_relationship,
-    serialize_context_dependent_shape_representation, serialize_date_time_role,
+    serialize_application_context, serialize_approval, serialize_approval_date_time,
+    serialize_approval_person_organization, serialize_approval_role, serialize_approval_status,
+    serialize_calendar_date, serialize_constructive_geometry_representation_relationship,
+    serialize_context_dependent_shape_representation, serialize_date_and_time,
+    serialize_date_time_role, serialize_document, serialize_document_representation_type,
     serialize_document_type, serialize_fill_area_style, serialize_group,
     serialize_identification_role, serialize_mechanical_design_and_draughting_relationship,
-    serialize_next_assembly_usage_occurrence, serialize_object_role,
+    serialize_next_assembly_usage_occurrence, serialize_object_role, serialize_organization,
     serialize_person_and_organization_role, serialize_point_style, serialize_product,
     serialize_product_definition, serialize_product_definition_formation,
     serialize_product_definition_formation_with_specified_source,
     serialize_product_definition_shape, serialize_product_definition_with_associated_documents,
-    serialize_representation_relationship, serialize_security_classification_level,
-    serialize_shape_representation_relationship, serialize_surface_side_style,
-    serialize_surface_style_fill_area, serialize_surface_style_usage, serialize_view_volume,
+    serialize_representation_relationship, serialize_security_classification,
+    serialize_security_classification_level, serialize_shape_representation_relationship,
+    serialize_surface_side_style, serialize_surface_style_fill_area, serialize_surface_style_usage,
+    serialize_view_volume,
 };
