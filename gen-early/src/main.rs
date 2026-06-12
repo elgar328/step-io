@@ -330,7 +330,16 @@ impl Ctx {
                     true
                 }
                 Kind::Select(s) => self.select_supported(s),
-                Kind::Vec(i2) => !optional && matches!(**i2, Kind::Ref | Kind::Real | Kind::Int),
+                Kind::Vec(i2) => {
+                    !optional
+                        && match &**i2 {
+                            // 2D grid (v4.9).
+                            Kind::Ref | Kind::Real | Kind::Int => true,
+                            // 3D grid (v4.17): ref / real only (no int occurrence).
+                            Kind::Vec(i3) => matches!(**i3, Kind::Ref | Kind::Real),
+                            _ => false,
+                        }
+                }
                 _ => false,
             },
             // optional select is handled by the v4.2 let-form; both need a
@@ -1585,12 +1594,18 @@ fn bind_expr(k: &Kind, i: usize, field: &str) -> String {
                 };
                 format!("crate::ir::attr::{list}(attrs, {i}, entity_id, \"{field}\")?")
             }
-            // `Vec<Vec<ref/real/int>>` -> grid helper (List of Lists).
+            // `Vec<Vec<ref/real/int>>` -> grid helper (List of Lists), or
+            // `Vec<Vec<Vec<ref/real>>>` -> grid3 helper (v4.17).
             Kind::Vec(i2) => {
                 let grid = match &**i2 {
                     Kind::Ref => "read_entity_ref_grid",
                     Kind::Real => "read_real_grid",
                     Kind::Int => "read_integer_grid",
+                    Kind::Vec(i3) => match &**i3 {
+                        Kind::Ref => "read_entity_ref_grid3",
+                        Kind::Real => "read_real_grid3",
+                        other => panic!("gen-early: 3D grid of {other:?} not yet supported"),
+                    },
                     other => panic!("gen-early: grid of {other:?} not yet supported"),
                 };
                 format!("crate::ir::attr::{grid}(attrs, {i}, entity_id, \"{field}\")?")
@@ -1642,20 +1657,34 @@ fn vec_elem_closure(inner: &Kind) -> String {
 fn serialize_expr(k: &Kind, field: &str) -> String {
     match k {
         Kind::Ref => format!("crate::parser::entity::Attribute::EntityRef(l1.{field})"),
-        // `Vec<Vec<ref/real/int>>` grid -> nested `List(List(..))`.
+        // `Vec<Vec<ref/real/int>>` grid -> nested `List(List(..))`, or
+        // `Vec<Vec<Vec<ref/real>>>` 3D grid -> `List(List(List(..)))` (v4.17).
         Kind::Vec(inner) if matches!(&**inner, Kind::Vec(_)) => {
             let Kind::Vec(i2) = &**inner else {
                 unreachable!()
             };
-            let elem2 = match &**i2 {
-                Kind::Ref => "|&s| crate::parser::entity::Attribute::EntityRef(s)",
-                Kind::Real => "|&x| crate::parser::entity::Attribute::Real(x)",
-                Kind::Int => "|&x| crate::parser::entity::Attribute::Integer(x)",
-                other => panic!("gen-early: grid of {other:?} not yet supported"),
-            };
-            format!(
-                "crate::parser::entity::Attribute::List(l1.{field}.iter().map(|row| crate::parser::entity::Attribute::List(row.iter().map({elem2}).collect())).collect())"
-            )
+            if let Kind::Vec(i3) = &**i2 {
+                // 3D grid (v4.17) — separate branch; the 2D path below is kept
+                // byte-for-byte unchanged.
+                let elem3 = match &**i3 {
+                    Kind::Ref => "|&s| crate::parser::entity::Attribute::EntityRef(s)",
+                    Kind::Real => "|&x| crate::parser::entity::Attribute::Real(x)",
+                    other => panic!("gen-early: 3D grid of {other:?} not yet supported"),
+                };
+                format!(
+                    "crate::parser::entity::Attribute::List(l1.{field}.iter().map(|plane| crate::parser::entity::Attribute::List(plane.iter().map(|row| crate::parser::entity::Attribute::List(row.iter().map({elem3}).collect())).collect())).collect())"
+                )
+            } else {
+                let elem2 = match &**i2 {
+                    Kind::Ref => "|&s| crate::parser::entity::Attribute::EntityRef(s)",
+                    Kind::Real => "|&x| crate::parser::entity::Attribute::Real(x)",
+                    Kind::Int => "|&x| crate::parser::entity::Attribute::Integer(x)",
+                    other => panic!("gen-early: grid of {other:?} not yet supported"),
+                };
+                format!(
+                    "crate::parser::entity::Attribute::List(l1.{field}.iter().map(|row| crate::parser::entity::Attribute::List(row.iter().map({elem2}).collect())).collect())"
+                )
+            }
         }
         Kind::Vec(inner) => {
             let elem = vec_elem_closure(inner);
@@ -2270,6 +2299,35 @@ mod tests {
             2
         );
         assert!(s.contains("Integer(x)"));
+    }
+
+    /// `Vec<Vec<Vec<ref/real>>>` 3D grid -> `read_*_grid3` + `List(List(List(..)))`
+    /// (B-spline volume control points / weights). ref/real only; int deferred.
+    #[test]
+    fn vec_grid3_codegen() {
+        let ctx = empty_ctx();
+        let grid3 = |k| Kind::Vec(Box::new(Kind::Vec(Box::new(Kind::Vec(Box::new(k))))));
+        assert!(ctx.emittable(&grid3(Kind::Ref), false));
+        assert!(ctx.emittable(&grid3(Kind::Real), false));
+        // int / str 3D grids have no helper; optional 3D grid deferred.
+        assert!(!ctx.emittable(&grid3(Kind::Int), false));
+        assert!(!ctx.emittable(&grid3(Kind::Str), false));
+        assert!(!ctx.emittable(&grid3(Kind::Ref), true));
+        // bind dispatches to the grid3 helpers.
+        assert!(bind_expr(&grid3(Kind::Ref), 1, "x").contains("read_entity_ref_grid3"));
+        assert!(bind_expr(&grid3(Kind::Real), 1, "x").contains("read_real_grid3"));
+        // serialize nests three `List(` levels.
+        let sr = serialize_expr(&grid3(Kind::Ref), "g");
+        assert_eq!(
+            sr.matches("crate::parser::entity::Attribute::List(")
+                .count(),
+            3
+        );
+        assert!(sr.contains("|&s| crate::parser::entity::Attribute::EntityRef(s)"));
+        assert!(
+            serialize_expr(&grid3(Kind::Real), "g")
+                .contains("|&x| crate::parser::entity::Attribute::Real(x)")
+        );
     }
 
     /// STEP `logical` (.T./.F./.U.) -> `crate::ir::geometry::Logical`.
