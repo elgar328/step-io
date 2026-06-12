@@ -4,9 +4,9 @@
 use crate::early::model::{
     EarlyAllAroundShapeAspect, EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect,
-    EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumTarget,
-    EarlyMechanicalDesignAndDraughtingRelationship, EarlyRealRepresentationItem,
-    EarlyRepresentationContext, EarlyRepresentationRelationship,
+    EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
+    EarlyMechanicalDesignAndDraughtingRelationship, EarlyPlacedDatumTargetFeature,
+    EarlyRealRepresentationItem, EarlyRepresentationContext, EarlyRepresentationRelationship,
     EarlyShapeRepresentationRelationship, EarlyToleranceZone,
 };
 
@@ -212,5 +212,36 @@ pub(crate) fn lift_all_around_shape_aspect(
         description: Some(description),
         of_shape,
         product_definitional: bool_to_logical(product_definitional),
+    }
+}
+
+/// Lift one `PLACED_DATUM_TARGET_FEATURE` (`of_shape` pre-resolved).
+pub(crate) fn lift_placed_datum_target_feature(
+    p: crate::ir::shape_rep::PlacedDatumTargetFeature,
+    of_shape: u64,
+) -> EarlyPlacedDatumTargetFeature {
+    EarlyPlacedDatumTargetFeature {
+        name: p.name,
+        description: Some(p.description),
+        of_shape,
+        product_definitional: bool_to_logical(p.product_definitional),
+        target_id: p.target_id,
+    }
+}
+
+/// Lift one `DATUM_SYSTEM` (refs pre-resolved).
+pub(crate) fn lift_datum_system(
+    name: String,
+    description: String,
+    of_shape: u64,
+    product_definitional: bool,
+    constituents: Vec<u64>,
+) -> EarlyDatumSystem {
+    EarlyDatumSystem {
+        name,
+        description: Some(description),
+        of_shape,
+        product_definitional: bool_to_logical(product_definitional),
+        constituents,
     }
 }

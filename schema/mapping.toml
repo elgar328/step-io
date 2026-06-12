@@ -97,6 +97,8 @@ generate = [
     "composite_shape_aspect",
     "centre_of_symmetry",
     "all_around_shape_aspect",
+    "placed_datum_target_feature",
+    "datum_system",
 ]
 
 # `generate_all`: diagnostic flip. When true, gen-early generates *every* entity

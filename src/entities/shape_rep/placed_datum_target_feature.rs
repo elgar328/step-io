@@ -1,12 +1,7 @@
-//! `PLACED_DATUM_TARGET_FEATURE` handler. Same 5-attr
-//! shape as [`DatumTargetHandler`] (the `target_id` field is inherited
-//! from `datum_target`); the entity is its own ir.toml `shape_aspect`
-//! variant. step-io keeps a dedicated `placed_datum_target_features`
-//! arena and exposes it through the
-//! [`ShapeAspectRef::PlacedDatumTargetFeature`] enum variant.
+//! `PLACED_DATUM_TARGET_FEATURE` handler — shape-rep domain (2-layer path).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::PlacedDatumTargetFeature;
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -27,27 +22,8 @@ impl SimpleEntityHandler for PlacedDatumTargetFeatureHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 5, entity_id, "PLACED_DATUM_TARGET_FEATURE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-        let of_shape_ref = read_entity_ref(attrs, 2, entity_id, "of_shape")?;
-        let product_definitional = read_bool(attrs, 3, entity_id, "product_definitional")?;
-        let target_id = read_string_or_unset(attrs, 4, entity_id, "target_id")?.to_owned();
-
-        let Some(target) = ctx.product_of_pds(of_shape_ref) else {
-            return Ok(());
-        };
-
-        let id = ctx
-            .placed_datum_target_features
-            .push(PlacedDatumTargetFeature {
-                name,
-                description,
-                target,
-                product_definitional,
-                target_id,
-            });
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_placed_datum_target_feature(entity_id, attrs)?;
+        lower::lower_placed_datum_target_feature(ctx, entity_id, early);
         Ok(())
     }
 
@@ -57,16 +33,9 @@ impl SimpleEntityHandler for PlacedDatumTargetFeatureHandler {
             .get(&p.target)
             .copied()
             .unwrap_or(0);
-        let bool_attr = if p.product_definitional { "T" } else { "F" };
-        Ok(buf.push_simple(
-            "PLACED_DATUM_TARGET_FEATURE",
-            vec![
-                Attribute::String(p.name),
-                Attribute::String(p.description),
-                Attribute::EntityRef(pds_step_id),
-                Attribute::Enum(bool_attr.into()),
-                Attribute::String(p.target_id),
-            ],
+        let early = lift::lift_placed_datum_target_feature(p, pds_step_id);
+        Ok(serialize::serialize_placed_datum_target_feature(
+            buf, &early,
         ))
     }
 }

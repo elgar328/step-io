@@ -1477,6 +1477,53 @@ pub(crate) fn serialize_all_around_shape_aspect(
     )
 }
 
+pub(crate) fn serialize_placed_datum_target_feature(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPlacedDatumTargetFeature,
+) -> u64 {
+    buf.push_simple(
+        "PLACED_DATUM_TARGET_FEATURE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.of_shape),
+            crate::parser::entity::Attribute::Enum(
+                crate::ir::attr::logical_to_step(l1.product_definitional).into(),
+            ),
+            crate::parser::entity::Attribute::String(l1.target_id.clone()),
+        ],
+    )
+}
+
+pub(crate) fn serialize_datum_system(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDatumSystem,
+) -> u64 {
+    buf.push_simple(
+        "DATUM_SYSTEM",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.of_shape),
+            crate::parser::entity::Attribute::Enum(
+                crate::ir::attr::logical_to_step(l1.product_definitional).into(),
+            ),
+            crate::parser::entity::Attribute::List(
+                l1.constituents
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

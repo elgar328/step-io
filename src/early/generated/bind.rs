@@ -1470,6 +1470,45 @@ pub(crate) fn bind_all_around_shape_aspect(
     })
 }
 
+pub(crate) fn bind_placed_datum_target_feature(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPlacedDatumTargetFeature, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 5, entity_id, "PLACED_DATUM_TARGET_FEATURE")?;
+    Ok(super::model::EarlyPlacedDatumTargetFeature {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        of_shape: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "of_shape")?,
+        product_definitional: crate::ir::attr::read_logical(
+            attrs,
+            3,
+            entity_id,
+            "product_definitional",
+        )?,
+        target_id: crate::ir::attr::read_string_or_unset(attrs, 4, entity_id, "target_id")?
+            .to_owned(),
+    })
+}
+
+pub(crate) fn bind_datum_system(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDatumSystem, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 5, entity_id, "DATUM_SYSTEM")?;
+    Ok(super::model::EarlyDatumSystem {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        of_shape: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "of_shape")?,
+        product_definitional: crate::ir::attr::read_logical(
+            attrs,
+            3,
+            entity_id,
+            "product_definitional",
+        )?,
+        constituents: crate::ir::attr::read_entity_ref_list(attrs, 4, entity_id, "constituents")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

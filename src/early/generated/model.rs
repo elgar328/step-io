@@ -1961,6 +1961,56 @@ impl crate::ir::arena::ArenaId for EarlyAllAroundShapeAspectId {
     }
 }
 
+/// L1 `PLACED_DATUM_TARGET_FEATURE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPlacedDatumTargetFeature {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) of_shape: u64,
+    pub(crate) product_definitional: crate::ir::geometry::Logical,
+    pub(crate) target_id: String,
+}
+
+/// Typed `id_cache` key for `PLACED_DATUM_TARGET_FEATURE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPlacedDatumTargetFeatureId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPlacedDatumTargetFeatureId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DATUM_SYSTEM` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDatumSystem {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) of_shape: u64,
+    pub(crate) product_definitional: crate::ir::geometry::Logical,
+    pub(crate) constituents: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `DATUM_SYSTEM` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDatumSystemId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDatumSystemId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

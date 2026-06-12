@@ -11,19 +11,20 @@
 use crate::early::model::{
     EarlyAllAroundShapeAspect, EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect,
-    EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumTarget,
-    EarlyMechanicalDesignAndDraughtingRelationship, EarlyRealRepresentationItem,
-    EarlyRepresentationContext, EarlyRepresentationRelationship,
+    EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
+    EarlyMechanicalDesignAndDraughtingRelationship, EarlyPlacedDatumTargetFeature,
+    EarlyRealRepresentationItem, EarlyRepresentationContext, EarlyRepresentationRelationship,
     EarlyShapeRepresentationRelationship, EarlyToleranceZone,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::{
     AllAroundShapeAspect, CentreOfSymmetry, CharacterizedItemWithinRepresentation,
     CharacterizedObject, CharacterizedObjectData, CompositeGroupShapeAspect,
-    CompositeShapeAspectKind, ConstructiveGeometryRepresentationRelationship, DatumTarget,
-    MechanicalDesignAndDraughtingRelationship, NumericRepresentationItem, RealRepresentationItem,
-    RepresentationRelationship, RepresentationRelationshipData, ShapeRepresentationRelationshipIr,
-    ToleranceZone, UnitlessContext,
+    CompositeShapeAspectKind, ConstructiveGeometryRepresentationRelationship, DatumSystem,
+    DatumTarget, MechanicalDesignAndDraughtingRelationship, NumericRepresentationItem,
+    PlacedDatumTargetFeature, RealRepresentationItem, RepresentationRelationship,
+    RepresentationRelationshipData, ShapeRepresentationRelationshipIr, ToleranceZone,
+    UnitlessContext,
 };
 use crate::reader::ReaderContext;
 
@@ -449,6 +450,58 @@ pub(crate) fn lower_all_around_shape_aspect(
         description,
         target,
         product_definitional,
+    });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `PLACED_DATUM_TARGET_FEATURE` (same shared subtype prelude).
+pub(crate) fn lower_placed_datum_target_feature(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyPlacedDatumTargetFeature,
+) {
+    let Some((target, product_definitional, description)) = lower_sa_subtype_common(
+        ctx,
+        early.of_shape,
+        early.product_definitional,
+        early.description,
+    ) else {
+        return;
+    };
+    let id = ctx
+        .placed_datum_target_features
+        .push(PlacedDatumTargetFeature {
+            name: early.name,
+            description,
+            target,
+            product_definitional,
+            target_id: early.target_id,
+        });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `DATUM_SYSTEM` (unresolved constituents skip individually).
+pub(crate) fn lower_datum_system(ctx: &mut ReaderContext, entity_id: u64, early: EarlyDatumSystem) {
+    let Some((target, product_definitional, description)) = lower_sa_subtype_common(
+        ctx,
+        early.of_shape,
+        early.product_definitional,
+        early.description,
+    ) else {
+        return;
+    };
+    let mut constituents = Vec::with_capacity(early.constituents.len());
+    for r in early.constituents {
+        if let Some(id) = ctx.id_cache.get::<crate::ir::GeneralDatumReferenceId>(r) {
+            constituents.push(id);
+        }
+    }
+    let id = ctx.datum_systems.push(DatumSystem {
+        name: early.name,
+        description,
+        target,
+        product_definitional,
+        constituents,
     });
     ctx.id_cache.insert(entity_id, id);
 }
