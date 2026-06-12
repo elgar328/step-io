@@ -1032,6 +1032,56 @@ impl crate::ir::arena::ArenaId for EarlyPersonalAddressId {
     }
 }
 
+/// L1 `APPLICATION_PROTOCOL_DEFINITION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyApplicationProtocolDefinition {
+    pub(crate) status: String,
+    pub(crate) application_interpreted_model_schema_name: String,
+    pub(crate) application_protocol_year: i64,
+    pub(crate) application: u64,
+}
+
+/// Typed `id_cache` key for `APPLICATION_PROTOCOL_DEFINITION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyApplicationProtocolDefinitionId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyApplicationProtocolDefinitionId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DOCUMENT_FILE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDocumentFile {
+    pub(crate) id: String,
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) kind: u64,
+    pub(crate) name_2: String,
+    pub(crate) description_2: Option<String>,
+}
+
+/// Typed `id_cache` key for `DOCUMENT_FILE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDocumentFileId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDocumentFileId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

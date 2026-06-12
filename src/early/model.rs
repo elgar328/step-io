@@ -14,10 +14,11 @@ use crate::ir::arena::ArenaId;
 // unlike `define_id!`): migrated producers register `file id → typed L1 id`,
 // and the `index()` addresses [`EarlyModel`]'s L1→L2 correspondence bucket.
 pub(crate) use super::generated::model::{
-    EarlyAddress, EarlyApplicationContext, EarlyApproval, EarlyApprovalDateTime,
-    EarlyApprovalPersonOrganization, EarlyApprovalRole, EarlyApprovalStatus, EarlyCalendarDate,
-    EarlyConstructiveGeometryRepresentationRelationship, EarlyContextDependentShapeRepresentation,
-    EarlyCoordinatedUniversalTimeOffset, EarlyDateAndTime, EarlyDateTimeRole, EarlyDocument,
+    EarlyAddress, EarlyApplicationContext, EarlyApplicationProtocolDefinition, EarlyApproval,
+    EarlyApprovalDateTime, EarlyApprovalPersonOrganization, EarlyApprovalRole, EarlyApprovalStatus,
+    EarlyCalendarDate, EarlyConstructiveGeometryRepresentationRelationship,
+    EarlyContextDependentShapeRepresentation, EarlyCoordinatedUniversalTimeOffset,
+    EarlyDateAndTime, EarlyDateTimeRole, EarlyDocument, EarlyDocumentFile,
     EarlyDocumentProductEquivalence, EarlyDocumentRepresentationType, EarlyDocumentType,
     EarlyFillAreaStyle, EarlyFillAreaStyleId, EarlyGroup, EarlyIdentificationRole, EarlyLocalTime,
     EarlyMarker, EarlyMarkerSize, EarlyMechanicalDesignAndDraughtingRelationship,

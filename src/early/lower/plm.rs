@@ -7,23 +7,24 @@
 //! these through `id_cache` typed arena ids directly.
 
 use crate::early::model::{
-    EarlyAddress, EarlyApplicationContext, EarlyApproval, EarlyApprovalDateTime,
-    EarlyApprovalPersonOrganization, EarlyApprovalRole, EarlyApprovalStatus, EarlyCalendarDate,
-    EarlyCoordinatedUniversalTimeOffset, EarlyDateAndTime, EarlyDateTimeRole, EarlyDocument,
-    EarlyDocumentProductEquivalence, EarlyDocumentRepresentationType, EarlyDocumentType,
-    EarlyGroup, EarlyIdentificationRole, EarlyLocalTime, EarlyObjectRole, EarlyOrganization,
-    EarlyPerson, EarlyPersonAndOrganizationRole, EarlyPersonalAddress, EarlyRoleAssociation,
+    EarlyAddress, EarlyApplicationContext, EarlyApplicationProtocolDefinition, EarlyApproval,
+    EarlyApprovalDateTime, EarlyApprovalPersonOrganization, EarlyApprovalRole, EarlyApprovalStatus,
+    EarlyCalendarDate, EarlyCoordinatedUniversalTimeOffset, EarlyDateAndTime, EarlyDateTimeRole,
+    EarlyDocument, EarlyDocumentFile, EarlyDocumentProductEquivalence,
+    EarlyDocumentRepresentationType, EarlyDocumentType, EarlyGroup, EarlyIdentificationRole,
+    EarlyLocalTime, EarlyObjectRole, EarlyOrganization, EarlyPerson,
+    EarlyPersonAndOrganizationRole, EarlyPersonalAddress, EarlyRoleAssociation,
     EarlySecurityClassification, EarlySecurityClassificationLevel,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::plm::{
-    Address, AddressData, ApplicationContext, Approval, ApprovalDateTime, ApprovalDateTimeSelect,
-    ApprovalPersonOrganization, ApprovalRole, ApprovalStatus, CalendarDate,
-    CoordinatedUniversalTimeOffset, DateAndTime, DateTimeRole, Document, DocumentData,
-    DocumentProductEquivalence, DocumentProductItem, DocumentRepresentationType, DocumentType,
-    Group, IdentificationRole, LocalTime, ObjectRole, Organization, Person,
-    PersonAndOrganizationRole, PersonOrganizationSelect, PersonalAddress, PlmPool, RoleAssociation,
-    RoleSelect, SecurityClassification, SecurityClassificationLevel,
+    Address, AddressData, ApplicationContext, ApplicationProtocolDefinition, Approval,
+    ApprovalDateTime, ApprovalDateTimeSelect, ApprovalPersonOrganization, ApprovalRole,
+    ApprovalStatus, CalendarDate, CoordinatedUniversalTimeOffset, DateAndTime, DateTimeRole,
+    Document, DocumentData, DocumentFile, DocumentProductEquivalence, DocumentProductItem,
+    DocumentRepresentationType, DocumentType, Group, IdentificationRole, LocalTime, ObjectRole,
+    Organization, Person, PersonAndOrganizationRole, PersonOrganizationSelect, PersonalAddress,
+    PlmPool, RoleAssociation, RoleSelect, SecurityClassification, SecurityClassificationLevel,
 };
 use crate::reader::ReaderContext;
 
@@ -525,5 +526,55 @@ pub(crate) fn lower_personal_address(
     };
     let pool = ctx.plm.get_or_insert_with(PlmPool::default);
     let id = pool.addresses.push(Address::PersonalAddress(pa));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `APPLICATION_PROTOCOL_DEFINITION` (unresolved AC = silent drop,
+/// legacy leniency).
+pub(crate) fn lower_application_protocol_definition(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyApplicationProtocolDefinition,
+) {
+    let Some(application) = ctx
+        .id_cache
+        .get::<crate::ir::ApplicationContextId>(early.application)
+    else {
+        return;
+    };
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id = pool
+        .application_protocol_definitions
+        .push(ApplicationProtocolDefinition {
+            status: early.status,
+            application_interpreted_model_schema_name: early
+                .application_interpreted_model_schema_name,
+            application_protocol_year: early.application_protocol_year,
+            application,
+        });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `DOCUMENT_FILE` (`document` and `characterized_object`
+/// multiple inheritance — the flattened L1 `name_2`/`description_2` are
+/// the `characterized_object` slots; unresolved kind = silent drop).
+pub(crate) fn lower_document_file(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyDocumentFile,
+) {
+    let Some(kind) = ctx.id_cache.get::<crate::ir::DocumentTypeId>(early.kind) else {
+        return;
+    };
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id = pool.documents.push(Document::DocumentFile(DocumentFile {
+        id: early.id,
+        name: early.name,
+        // Legacy read_string_or_unset collapsed `$` to "" (L2 String).
+        description: early.description.unwrap_or_default(),
+        kind,
+        characterized_object_name: early.name_2,
+        characterized_object_description: early.description_2,
+    }));
     ctx.id_cache.insert(entity_id, id);
 }

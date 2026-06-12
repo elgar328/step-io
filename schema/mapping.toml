@@ -52,6 +52,8 @@ generate = [
     "document_product_equivalence",
     "address",
     "personal_address",
+    "application_protocol_definition",
+    "document_file",
 ]
 
 # `generate_all`: diagnostic flip. When true, gen-early generates *every* entity

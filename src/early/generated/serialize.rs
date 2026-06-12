@@ -826,6 +826,46 @@ pub(crate) fn serialize_personal_address(
     )
 }
 
+pub(crate) fn serialize_application_protocol_definition(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyApplicationProtocolDefinition,
+) -> u64 {
+    buf.push_simple(
+        "APPLICATION_PROTOCOL_DEFINITION",
+        vec![
+            crate::parser::entity::Attribute::String(l1.status.clone()),
+            crate::parser::entity::Attribute::String(
+                l1.application_interpreted_model_schema_name.clone(),
+            ),
+            crate::parser::entity::Attribute::Integer(l1.application_protocol_year),
+            crate::parser::entity::Attribute::EntityRef(l1.application),
+        ],
+    )
+}
+
+pub(crate) fn serialize_document_file(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDocumentFile,
+) -> u64 {
+    buf.push_simple(
+        "DOCUMENT_FILE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.id.clone()),
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.kind),
+            crate::parser::entity::Attribute::String(l1.name_2.clone()),
+            match &l1.description_2 {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

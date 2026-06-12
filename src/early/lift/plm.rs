@@ -3,17 +3,18 @@
 //! keep the schema's `Option` descriptions, so no synthesis is needed.
 
 use crate::early::model::{
-    EarlyAddress, EarlyApplicationContext, EarlyApproval, EarlyApprovalDateTime,
-    EarlyApprovalPersonOrganization, EarlyApprovalRole, EarlyApprovalStatus, EarlyCalendarDate,
-    EarlyCoordinatedUniversalTimeOffset, EarlyDateAndTime, EarlyDateTimeRole, EarlyDocument,
-    EarlyDocumentProductEquivalence, EarlyDocumentRepresentationType, EarlyDocumentType,
-    EarlyGroup, EarlyIdentificationRole, EarlyLocalTime, EarlyObjectRole, EarlyOrganization,
-    EarlyPerson, EarlyPersonAndOrganizationRole, EarlyPersonalAddress, EarlyRoleAssociation,
+    EarlyAddress, EarlyApplicationContext, EarlyApplicationProtocolDefinition, EarlyApproval,
+    EarlyApprovalDateTime, EarlyApprovalPersonOrganization, EarlyApprovalRole, EarlyApprovalStatus,
+    EarlyCalendarDate, EarlyCoordinatedUniversalTimeOffset, EarlyDateAndTime, EarlyDateTimeRole,
+    EarlyDocument, EarlyDocumentFile, EarlyDocumentProductEquivalence,
+    EarlyDocumentRepresentationType, EarlyDocumentType, EarlyGroup, EarlyIdentificationRole,
+    EarlyLocalTime, EarlyObjectRole, EarlyOrganization, EarlyPerson,
+    EarlyPersonAndOrganizationRole, EarlyPersonalAddress, EarlyRoleAssociation,
     EarlySecurityClassification, EarlySecurityClassificationLevel,
 };
 use crate::ir::plm::{
     AddressData, ApplicationContext, ApprovalRole, ApprovalStatus, CalendarDate,
-    CoordinatedUniversalTimeOffset, DateTimeRole, DocumentData, DocumentType, Group,
+    CoordinatedUniversalTimeOffset, DateTimeRole, DocumentData, DocumentFile, DocumentType, Group,
     IdentificationRole, LocalTime, ObjectRole, Organization, Person, PersonAndOrganizationRole,
     PersonalAddress, SecurityClassification, SecurityClassificationLevel,
 };
@@ -275,5 +276,35 @@ pub(crate) fn lift_personal_address(pa: PersonalAddress, people: Vec<u64>) -> Ea
         telex_number: d.telex_number,
         people,
         description: Some(pa.description),
+    }
+}
+
+/// Lift one `APPLICATION_PROTOCOL_DEFINITION` from pre-resolved fields (the
+/// writer's context emitter resolves the AC step id; the synthesised
+/// no-IR-context fallbacks construct the same shape).
+pub(crate) fn lift_application_protocol_definition(
+    status: String,
+    application_interpreted_model_schema_name: String,
+    application_protocol_year: i64,
+    application: u64,
+) -> EarlyApplicationProtocolDefinition {
+    EarlyApplicationProtocolDefinition {
+        status,
+        application_interpreted_model_schema_name,
+        application_protocol_year,
+        application,
+    }
+}
+
+/// Lift one `DOCUMENT_FILE` (kind pre-resolved; the `characterized_object`
+/// slots map back to the flattened `name_2`/`description_2`).
+pub(crate) fn lift_document_file(d: DocumentFile, kind: u64) -> EarlyDocumentFile {
+    EarlyDocumentFile {
+        id: d.id,
+        name: d.name,
+        description: Some(d.description),
+        kind,
+        name_2: d.characterized_object_name,
+        description_2: d.characterized_object_description,
     }
 }

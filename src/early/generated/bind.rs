@@ -803,6 +803,45 @@ pub(crate) fn bind_personal_address(
     })
 }
 
+pub(crate) fn bind_application_protocol_definition(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyApplicationProtocolDefinition, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "APPLICATION_PROTOCOL_DEFINITION")?;
+    Ok(super::model::EarlyApplicationProtocolDefinition {
+        status: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "status")?.to_owned(),
+        application_interpreted_model_schema_name: crate::ir::attr::read_string_or_unset(
+            attrs,
+            1,
+            entity_id,
+            "application_interpreted_model_schema_name",
+        )?
+        .to_owned(),
+        application_protocol_year: crate::ir::attr::read_integer(
+            attrs,
+            2,
+            entity_id,
+            "application_protocol_year",
+        )?,
+        application: crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "application")?,
+    })
+}
+
+pub(crate) fn bind_document_file(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDocumentFile, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 6, entity_id, "DOCUMENT_FILE")?;
+    Ok(super::model::EarlyDocumentFile {
+        id: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "id")?.to_owned(),
+        name: crate::ir::attr::read_string_or_unset(attrs, 1, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 2, entity_id, "description")?,
+        kind: crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "kind")?,
+        name_2: crate::ir::attr::read_string_or_unset(attrs, 4, entity_id, "name_2")?.to_owned(),
+        description_2: crate::ir::attr::read_optional_string(attrs, 5, entity_id, "description_2")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {
