@@ -221,6 +221,29 @@ pub(crate) fn serialize_product_definition_shape(
     )
 }
 
+pub(crate) fn serialize_next_assembly_usage_occurrence(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyNextAssemblyUsageOccurrence,
+) -> u64 {
+    buf.push_simple(
+        "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.id.clone()),
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.relating_product_definition),
+            crate::parser::entity::Attribute::EntityRef(l1.related_product_definition),
+            match &l1.reference_designator {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

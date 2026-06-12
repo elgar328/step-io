@@ -8,8 +8,8 @@
 //! chain maps).
 
 use crate::early::model::{
-    EarlyProduct, EarlyProductDefinitionFormationId, EarlyProductDefinitionId,
-    EarlyProductDefinitionShapeId, EarlySource,
+    EarlyNextAssemblyUsageOccurrence, EarlyProduct, EarlyProductDefinitionFormationId,
+    EarlyProductDefinitionId, EarlyProductDefinitionShapeId, EarlySource,
 };
 use crate::ir::assembly::{
     Product, ProductDefinition, ProductDefinitionFormation, ProductDefinitionFormationData,
@@ -183,6 +183,54 @@ pub(crate) fn lower_product_definition(
     // 2-hop `pdef_to_product` chain ultimately resolved to).
     let early_id: EarlyProductDefinitionId = ctx.early.record_lowered(pid);
     ctx.id_cache.insert(entity_id, early_id);
+    Ok(())
+}
+
+/// Lower one `NEXT_ASSEMBLY_USAGE_OCCURRENCE`: resolve the parent / child
+/// PDEF endpoints and defer the instance to the `resolve_nauo_instances`
+/// post-pass (the transform comes from the CDSR handler, which topological
+/// dispatch places *after* the NAUO; a NAUO with no transform leaves neither
+/// an `Instance` nor an arena entry). No `record_lowered`: the canonical
+/// `assembly_component_usage` arena entry only exists after the post-pass.
+pub(crate) fn lower_next_assembly_usage_occurrence(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyNextAssemblyUsageOccurrence,
+) -> Result<(), ConvertError> {
+    let relating_pdef = early.relating_product_definition;
+    let related_pdef = early.related_product_definition;
+    let parent_pid = ctx.resolve_product_by_pdef(entity_id, relating_pdef, "relating_pdef")?;
+    let child_pid = ctx.resolve_product_by_pdef(entity_id, related_pdef, "related_pdef")?;
+    // Canonical NAUO endpoints are PRODUCT_DEFINITION refs — resolve them to
+    // `product_definitions` arena ids (the `Instance` view keeps the
+    // ProductId child above). Missing = drop, mirroring resolve_product_by_pdef.
+    let (Some(relating_pd), Some(related_pd)) = (
+        ctx.id_cache
+            .get::<crate::ir::id::ProductDefinitionId>(relating_pdef),
+        ctx.id_cache
+            .get::<crate::ir::id::ProductDefinitionId>(related_pdef),
+    ) else {
+        return Err(ConvertError::MissingReference {
+            from: entity_id,
+            to: relating_pdef,
+            field_name: "relating/related_product_definition",
+        });
+    };
+
+    ctx.pending_nauo_instances
+        .push(crate::reader::PendingNauoInstance {
+            parent: parent_pid,
+            child: child_pid,
+            relating_pd,
+            related_pd,
+            occurrence_id: early.id,
+            occurrence_name: early.name,
+            // Legacy read_string_or_unset collapsed `$` to "" (the canonical
+            // arena entry keeps a String).
+            description: early.description.unwrap_or_default(),
+            reference_designator: early.reference_designator,
+            nauo_id: entity_id,
+        });
     Ok(())
 }
 

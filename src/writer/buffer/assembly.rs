@@ -1455,46 +1455,33 @@ impl WriteBuffer<'_> {
         use crate::entities::assembly_product::next_assembly_usage_occurrence::{
             NextAssemblyUsageOccurrenceHandler, NextAssemblyUsageOccurrenceWriteInput,
         };
-        if let Some(acuid) = inst.acu {
-            let (id, name, description, reference_designator) = {
-                let acu = &self
-                    .model
-                    .assembly
-                    .as_ref()
-                    .expect("assembly present when Instance.acu is set")
-                    .assembly_component_usages[acuid];
-                (
-                    acu.id.clone(),
-                    acu.name.clone(),
-                    acu.description.clone(),
-                    acu.reference_designator.clone(),
-                )
-            };
-            let ref_designator_attr = match reference_designator {
-                Some(s) => Attribute::String(s),
-                None => Attribute::Unset,
-            };
-            return self.push_simple(
-                "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
-                vec![
-                    Attribute::String(id),
-                    Attribute::String(name),
-                    Attribute::String(description),
-                    Attribute::EntityRef(parent_pdef),
-                    Attribute::EntityRef(child_pdef),
-                    ref_designator_attr,
-                ],
-            );
-        }
-        NextAssemblyUsageOccurrenceHandler::write(
-            self,
+        let input = if let Some(acuid) = inst.acu {
+            let acu = &self
+                .model
+                .assembly
+                .as_ref()
+                .expect("assembly present when Instance.acu is set")
+                .assembly_component_usages[acuid];
             NextAssemblyUsageOccurrenceWriteInput {
-                inst: inst.clone(),
-                parent_pdef,
-                child_pdef,
-            },
-        )
-        .expect("NAUO write only pushes one simple entity")
+                id: acu.id.clone(),
+                name: acu.name.clone(),
+                description: acu.description.clone(),
+                reference_designator: acu.reference_designator.clone(),
+                relating: parent_pdef,
+                related: child_pdef,
+            }
+        } else {
+            NextAssemblyUsageOccurrenceWriteInput {
+                id: inst.occurrence_id.clone(),
+                name: inst.occurrence_name.clone(),
+                description: String::new(),
+                reference_designator: None,
+                relating: parent_pdef,
+                related: child_pdef,
+            }
+        };
+        NextAssemblyUsageOccurrenceHandler::write(self, input)
+            .expect("NAUO write only pushes one simple entity")
     }
 
     /// NAUO-owned `PRODUCT_DEFINITION_SHAPE` — its `definition` points at the

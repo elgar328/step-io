@@ -10,6 +10,7 @@ use crate::early::model::{
     EarlyProductDefinitionFormationWithSpecifiedSource,
     EarlyProductDefinitionWithAssociatedDocuments, EarlySource,
 };
+use crate::entities::assembly_product::next_assembly_usage_occurrence::NextAssemblyUsageOccurrenceWriteInput;
 use crate::entities::assembly_product::product_definition::ProductDefinitionWriteInput;
 use crate::entities::assembly_product::product_definition_formation::ProductDefinitionFormationWriteInput;
 use crate::entities::assembly_product::product_definition_formation_with_source::ProductDefinitionFormationWithSourceWriteInput;
@@ -85,6 +86,23 @@ pub(crate) fn lift_product_definition_with_associated_documents(
         formation: input.formation,
         frame_of_reference: input.pdef_ctx,
         documentation_ids: input.documentation,
+    }
+}
+
+/// Lift one `NEXT_ASSEMBLY_USAGE_OCCURRENCE` write input. Both legacy emit
+/// paths always wrote `description` as a String (`''` for empty, never `$`),
+/// so the faithful-optional L1 field is always `Some`; `reference_designator`
+/// passes through (`None` → `$`, matching the legacy Unset).
+pub(crate) fn lift_next_assembly_usage_occurrence(
+    input: NextAssemblyUsageOccurrenceWriteInput,
+) -> crate::early::model::EarlyNextAssemblyUsageOccurrence {
+    crate::early::model::EarlyNextAssemblyUsageOccurrence {
+        id: input.id,
+        name: input.name,
+        description: Some(input.description),
+        relating_product_definition: input.relating,
+        related_product_definition: input.related,
+        reference_designator: input.reference_designator,
     }
 }
 

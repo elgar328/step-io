@@ -244,6 +244,36 @@ pub(crate) fn bind_product_definition_shape(
     })
 }
 
+pub(crate) fn bind_next_assembly_usage_occurrence(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyNextAssemblyUsageOccurrence, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 6, entity_id, "NEXT_ASSEMBLY_USAGE_OCCURRENCE")?;
+    Ok(super::model::EarlyNextAssemblyUsageOccurrence {
+        id: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "id")?.to_owned(),
+        name: crate::ir::attr::read_string_or_unset(attrs, 1, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 2, entity_id, "description")?,
+        relating_product_definition: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "relating_product_definition",
+        )?,
+        related_product_definition: crate::ir::attr::read_entity_ref(
+            attrs,
+            4,
+            entity_id,
+            "related_product_definition",
+        )?,
+        reference_designator: crate::ir::attr::read_optional_string(
+            attrs,
+            5,
+            entity_id,
+            "reference_designator",
+        )?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

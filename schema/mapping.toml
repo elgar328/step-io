@@ -18,6 +18,7 @@ generate = [
     "product_definition",
     "product_definition_with_associated_documents",
     "product_definition_shape",
+    "next_assembly_usage_occurrence",
 ]
 
 # `generate_all`: diagnostic flip. When true, gen-early generates *every* entity

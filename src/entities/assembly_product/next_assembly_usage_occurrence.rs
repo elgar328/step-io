@@ -1,16 +1,14 @@
 //! `NEXT_ASSEMBLY_USAGE_OCCURRENCE` handler.
 //!
-//! Reader resolves the parent / child PDEFs through `pdef_to_product` and
-//! pushes a fully-formed `Instance` into the parent product's `Group`
-//! content. Transform comes from `nauo_transform_map` populated by the
-//! CDSR + RRWT path; missing transforms surface as warnings (rare in
-//! commercial fixtures). Writer emits the bare NAUO line; the larger
-//! `emit_instance_bundle` orchestrator handles the surrounding
-//! `PRODUCT_DEFINITION_SHAPE` + `RR_complex` + CDSR group.
+//! Reader binds the L1 shape and defers the instance to the
+//! `resolve_nauo_instances` post-pass (see `lower`). Transform comes from
+//! the CDSR + RRWT path; missing transforms surface as warnings (rare in
+//! commercial fixtures). Writer emits the bare NAUO line from pre-resolved
+//! fields; the larger `emit_instance_bundle` orchestrator handles the
+//! surrounding `PRODUCT_DEFINITION_SHAPE` + `RR_complex` + CDSR group.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::assembly::Instance;
-use crate::ir::attr::{check_count, read_entity_ref, read_optional_string, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -18,10 +16,17 @@ use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use step_io_macros::step_entity;
 
+/// Pre-resolved NAUO attrs. `emit_nauo` builds this either from the canonical
+/// `assembly_component_usage` arena entry (reader-built, faithful round-trip)
+/// or from the `Instance` fields (kernel-built: empty description, no
+/// reference designator) — both paths emit through this one handler.
 pub(crate) struct NextAssemblyUsageOccurrenceWriteInput {
-    pub(crate) inst: Instance,
-    pub(crate) parent_pdef: u64,
-    pub(crate) child_pdef: u64,
+    pub(crate) id: String,
+    pub(crate) name: String,
+    pub(crate) description: String,
+    pub(crate) reference_designator: Option<String>,
+    pub(crate) relating: u64,
+    pub(crate) related: u64,
 }
 
 pub(crate) struct NextAssemblyUsageOccurrenceHandler;
@@ -36,75 +41,17 @@ impl SimpleEntityHandler for NextAssemblyUsageOccurrenceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 6, entity_id, "NEXT_ASSEMBLY_USAGE_OCCURRENCE")?;
-        let occurrence_id = read_string_or_unset(attrs, 0, entity_id, "id")?.to_owned();
-        let occurrence_name = read_string_or_unset(attrs, 1, entity_id, "name")?.to_owned();
-        // attr[2] = description (required STRING — `$` normalizes to ""),
-        // attr[5] = reference_designator (OPTIONAL STRING). Both feed the
-        // canonical `assembly_component_usage` arena entry built in the post-pass.
-        let description = read_string_or_unset(attrs, 2, entity_id, "description")?.to_owned();
-        let reference_designator =
-            read_optional_string(attrs, 5, entity_id, "reference_designator")?;
-        let relating_pdef = read_entity_ref(attrs, 3, entity_id, "relating_pdef")?;
-        let related_pdef = read_entity_ref(attrs, 4, entity_id, "related_pdef")?;
-
-        let parent_pid = ctx.resolve_product_by_pdef(entity_id, relating_pdef, "relating_pdef")?;
-        let child_pid = ctx.resolve_product_by_pdef(entity_id, related_pdef, "related_pdef")?;
-        // Canonical NAUO endpoints are PRODUCT_DEFINITION refs — resolve them to
-        // `product_definitions` arena ids (the `Instance` view keeps the
-        // ProductId child above). Missing = drop, mirroring resolve_product_by_pdef.
-        let (Some(relating_pd), Some(related_pd)) = (
-            ctx.id_cache
-                .get::<crate::ir::id::ProductDefinitionId>(relating_pdef),
-            ctx.id_cache
-                .get::<crate::ir::id::ProductDefinitionId>(related_pdef),
-        ) else {
-            return Err(ConvertError::MissingReference {
-                from: entity_id,
-                to: relating_pdef,
-                field_name: "relating/related_product_definition",
-            });
-        };
-
-        // The transform comes from the CDSR handler, which the reference graph
-        // (NAUO <- PDS <- CDSR) places *after* this NAUO under topological
-        // dispatch. Defer the instance: a post-pass attaches the transform AND
-        // pushes the canonical arena entry once every CDSR has run, so a NAUO
-        // with no transform leaves neither an Instance nor an arena entry. See
-        // `ReaderContext::resolve_nauo_instances`.
-        ctx.pending_nauo_instances
-            .push(crate::reader::PendingNauoInstance {
-                parent: parent_pid,
-                child: child_pid,
-                relating_pd,
-                related_pd,
-                occurrence_id,
-                occurrence_name,
-                description,
-                reference_designator,
-                nauo_id: entity_id,
-            });
-        Ok(())
+        let early = bind::bind_next_assembly_usage_occurrence(entity_id, attrs)?;
+        lower::lower_next_assembly_usage_occurrence(ctx, entity_id, early)
     }
 
     fn write(
         buf: &mut WriteBuffer,
-        NextAssemblyUsageOccurrenceWriteInput {
-            inst,
-            parent_pdef,
-            child_pdef,
-        }: NextAssemblyUsageOccurrenceWriteInput,
+        input: NextAssemblyUsageOccurrenceWriteInput,
     ) -> Result<u64, WriteError> {
-        Ok(buf.push_simple(
-            "NEXT_ASSEMBLY_USAGE_OCCURRENCE",
-            vec![
-                Attribute::String(inst.occurrence_id),
-                Attribute::String(inst.occurrence_name),
-                Attribute::String(String::new()),
-                Attribute::EntityRef(parent_pdef),
-                Attribute::EntityRef(child_pdef),
-                Attribute::Unset,
-            ],
+        let early = lift::lift_next_assembly_usage_occurrence(input);
+        Ok(serialize::serialize_next_assembly_usage_occurrence(
+            buf, &early,
         ))
     }
 }
