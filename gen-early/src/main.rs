@@ -1,17 +1,17 @@
-//! `gen-early` — generates the mechanical part of the EarlyModel (L1) layer
-//! (`src/early/generated/{model,bind,serialize}.rs`) from `schema/early.toml`
-//! + `schema/mapping.toml`. The hand-written `lower`/`lift` (semantic mapping)
-//! and the `early_id!` ids stay hand-coded.
+//! `gen-early` — generates the mechanical part of the `EarlyModel` (L1) layer
+//! (`src/early/generated/{model,bind,serialize}.rs`, incl. the `Early*Id`
+//! cache-key types) from `schema/early.toml` + `schema/mapping.toml`. The
+//! hand-written `lower`/`lift` (semantic mapping) stay hand-coded.
 //!
 //! Run from anywhere: `cargo run -p gen-early`. Output is committed; this is a
 //! dev tool, not a `build.rs`. Generates the entities in the `generate` list
-//! (mapping.toml). Supports entity refs / primitives (real, integer, bool,
-//! logical, string) / ENUMs (hinted L2-reuse or auto-synthesized `Early*` when hint-less)
-//! / SELECTs (all-entity -> ref; mixed -> hinted or auto-synthesized `Early*`
-//! for scalar+ENUM members) / aggregations (`LIST/SET OF` ref or scalar ->
-//! `Vec<u64/f64/i64/String>`) / OPTIONAL (faithful `Option<T>`; `lower` decides
-//! any collapse) and **inheritance flattening** (supertype attrs prepended in
-//! Part21 order, see [`EarlyToml::flattened_attrs`]).
+//! (mapping.toml) — or the whole schema under the `generate_all` diagnostic
+//! flip. The full schema union (all 2195 entities) is supported: entity refs,
+//! primitives (incl. logical / binary), ENUMs (hinted L2-reuse or synthesized
+//! `Early*`), mixed SELECTs (incl. recursive / nested / typed aggregation
+//! members), aggregations up to 3 levels, faithful `OPTIONAL` (`Option<T>`;
+//! `lower` decides any collapse), and inheritance flattening (supertype attrs
+//! prepended in Part21 order, see `EarlyToml::flattened_attrs`).
 
 mod classify;
 mod emit;
@@ -45,36 +45,9 @@ fn main() {
     .expect("parse mapping.toml");
     let ctx = Ctx { schema, mapping };
 
-    // Targets: normally the wired `generate` list; under the diagnostic flip
-    // (`generate_all`), every entity the codegen can handle (the rest skipped +
-    // recorded for the coverage report).
-    let mut skipped: Vec<(String, String)> = Vec::new();
-    let targets: Vec<String> = if ctx.mapping.generate_all {
-        let mut t = Vec::new();
-        for ent_name in ctx.schema.entity.keys() {
-            match ctx.entity_supported(ent_name) {
-                Ok(()) => t.push(ent_name.clone()),
-                Err(reason) => skipped.push((ent_name.clone(), reason)),
-            }
-        }
-        t
-    } else {
-        ctx.mapping.generate.clone()
-    };
+    let (targets, skipped) = collect_targets(&ctx);
 
-    // Unused generated types/fns (every entity but the wired few have no
-    // lower/lift) are expected under the flip — suppress dead_code there only,
-    // so the committed (`generate_all = false`) output stays byte-identical.
-    let head = if ctx.mapping.generate_all {
-        // Diagnostic mass: most types are unused (no lower/lift), empty entities'
-        // serialize fns don't read `l1`, and big entities trip pedantic style
-        // lints. All flip-only — the committed (off) output keeps a bare header.
-        format!(
-            "{HEADER}#![allow(dead_code, unused_variables, clippy::too_many_lines, clippy::enum_variant_names, clippy::struct_field_names, clippy::struct_excessive_bools, clippy::clone_on_copy, clippy::single_match_else, clippy::match_single_binding)]\n\n"
-        )
-    } else {
-        HEADER.to_string()
-    };
+    let head = file_head(ctx.mapping.generate_all);
     let mut out = GenOut::new(&head);
 
     for ent_name in &targets {
@@ -127,17 +100,109 @@ fn main() {
     }
 
     // generated standalone-field ENUM helpers
-    for alias in &used_enums {
+    emit_enum_helpers(
+        &ctx,
+        &used_enums,
+        &mut model,
+        &mut bind,
+        &mut serialize,
+        &mut emitted_models,
+    );
+
+    // generated `<alias>_list` bind helpers for ENUMs used in `Vec<…>` fields.
+    for alias in &used_enum_lists {
+        emit_enum_list(&ctx, alias, &mut bind);
+    }
+    // ...and for SELECTs in `Vec<…>` fields (disjoint alias sets, no clash).
+    for alias in &used_select_lists {
+        emit_select_list(&ctx, alias, &mut bind);
+    }
+    // ...and for SELECTs in `Vec<Vec<…>>` fields (`<alias>_grid`).
+    for alias in &used_select_grids {
+        emit_select_grid(&ctx, alias, &mut bind);
+    }
+    if any_logical_list {
+        emit_logical_list(&mut bind);
+    }
+
+    if any_bool {
+        writeln!(
+            serialize,
+            "fn bool_attr(b: bool) -> crate::parser::entity::Attribute {{\n    crate::parser::entity::Attribute::Enum(if b {{ \"T\" }} else {{ \"F\" }}.into())\n}}\n"
+        )
+        .unwrap();
+    }
+
+    let dir = format!("{root}/src/early/generated");
+    std::fs::create_dir_all(&dir).expect("mkdir generated");
+    write_fmt(&format!("{dir}/model.rs"), &model);
+    write_fmt(&format!("{dir}/bind.rs"), &bind);
+    write_fmt(&format!("{dir}/serialize.rs"), &serialize);
+    write_fmt(
+        &format!("{dir}/mod.rs"),
+        &format!(
+            "{HEADER}pub(crate) mod bind;\npub(crate) mod model;\npub(crate) mod serialize;\n"
+        ),
+    );
+    eprintln!("gen-early: wrote {} entities to {dir}", targets.len());
+
+    write_coverage(root, &ctx, &targets, &skipped);
+}
+
+/// The generated-file header: bare for the committed (off) output; under the
+/// `generate_all` flip an `allow` block is added (most generated items are
+/// unused diagnostic mass without lower/lift).
+fn file_head(generate_all: bool) -> String {
+    // Unused generated types/fns (every entity but the wired few have no
+    // lower/lift) are expected under the flip — suppress dead_code there only,
+    // so the committed (`generate_all = false`) output stays byte-identical.
+    if generate_all {
+        // Diagnostic mass: most types are unused (no lower/lift), empty entities'
+        // serialize fns don't read `l1`, and big entities trip pedantic style
+        // lints. All flip-only — the committed (off) output keeps a bare header.
+        format!(
+            "{HEADER}#![allow(dead_code, unused_variables, clippy::too_many_lines, clippy::enum_variant_names, clippy::struct_field_names, clippy::struct_excessive_bools, clippy::clone_on_copy, clippy::single_match_else, clippy::match_single_binding)]\n\n"
+        )
+    } else {
+        HEADER.to_string()
+    }
+}
+
+/// Resolve the generation targets: the wired `generate` list, or (under the
+/// `generate_all` diagnostic flip) every supported entity — the rest recorded
+/// as (entity, reason) for the coverage report.
+fn collect_targets(ctx: &Ctx) -> (Vec<String>, Vec<(String, String)>) {
+    let mut skipped: Vec<(String, String)> = Vec::new();
+    let targets: Vec<String> = if ctx.mapping.generate_all {
+        let mut t = Vec::new();
+        for ent_name in ctx.schema.entity.keys() {
+            match ctx.entity_supported(ent_name) {
+                Ok(()) => t.push(ent_name.clone()),
+                Err(reason) => skipped.push((ent_name.clone(), reason)),
+            }
+        }
+        t
+    } else {
+        ctx.mapping.generate.clone()
+    };
+    (targets, skipped)
+}
+
+/// Emit the standalone-field ENUM helpers: hint-less ones synthesize an
+/// `Early*` enum; hinted ones get `bind_<alias>` / `<alias>_attr` against the
+/// reused L2 type (split from `main`).
+fn emit_enum_helpers(
+    ctx: &Ctx,
+    used_enums: &BTreeSet<String>,
+    model: &mut String,
+    bind: &mut String,
+    serialize: &mut String,
+    emitted_models: &mut BTreeSet<String>,
+) {
+    for alias in used_enums {
         // Hint-less ENUM -> synthesize an `Early*` enum (model def + helpers).
         let Some(h) = ctx.mapping.enums.get(alias) else {
-            emit_synth_enum(
-                &ctx,
-                alias,
-                &mut model,
-                &mut bind,
-                &mut serialize,
-                &mut emitted_models,
-            );
+            emit_synth_enum(ctx, alias, model, bind, serialize, emitted_models);
             continue;
         };
         // bind helper
@@ -200,51 +265,16 @@ fn main() {
         }
         writeln!(serialize, "    }}.into())\n}}\n").unwrap();
     }
+}
 
-    // generated `<alias>_list` bind helpers for ENUMs used in `Vec<…>` fields.
-    for alias in &used_enum_lists {
-        emit_enum_list(&ctx, alias, &mut bind);
-    }
-    // ...and for SELECTs in `Vec<…>` fields (disjoint alias sets, no clash).
-    for alias in &used_select_lists {
-        emit_select_list(&ctx, alias, &mut bind);
-    }
-    // ...and for SELECTs in `Vec<Vec<…>>` fields (`<alias>_grid`).
-    for alias in &used_select_grids {
-        emit_select_grid(&ctx, alias, &mut bind);
-    }
-    if any_logical_list {
-        emit_logical_list(&mut bind);
-    }
-
-    if any_bool {
-        writeln!(
-            serialize,
-            "fn bool_attr(b: bool) -> crate::parser::entity::Attribute {{\n    crate::parser::entity::Attribute::Enum(if b {{ \"T\" }} else {{ \"F\" }}.into())\n}}\n"
-        )
-        .unwrap();
-    }
-
-    let dir = format!("{root}/src/early/generated");
-    std::fs::create_dir_all(&dir).expect("mkdir generated");
-    write_fmt(&format!("{dir}/model.rs"), &model);
-    write_fmt(&format!("{dir}/bind.rs"), &bind);
-    write_fmt(&format!("{dir}/serialize.rs"), &serialize);
-    write_fmt(
-        &format!("{dir}/mod.rs"),
-        &format!(
-            "{HEADER}pub(crate) mod bind;\npub(crate) mod model;\npub(crate) mod serialize;\n"
-        ),
-    );
-    eprintln!("gen-early: wrote {} entities to {dir}", targets.len());
-
-    // Coverage report (diagnostic flip only). Deterministic: `skipped` is built
-    // in sorted entity order; reasons tallied into a BTreeMap.
+/// Write `schema/coverage.txt` (diagnostic flip only). Deterministic:
+/// `skipped` is built in sorted entity order; reasons tallied into a `BTreeMap`.
+fn write_coverage(root: &str, ctx: &Ctx, targets: &[String], skipped: &[(String, String)]) {
     if ctx.mapping.generate_all {
         let total = ctx.schema.entity.len();
         let supported = targets.len();
         let mut by_reason: BTreeMap<&str, usize> = BTreeMap::new();
-        for (_, reason) in &skipped {
+        for (_, reason) in skipped {
             *by_reason.entry(reason.as_str()).or_default() += 1;
         }
         let mut report = String::new();
@@ -259,7 +289,7 @@ fn main() {
             writeln!(report, "  {reason:<16} {n}").unwrap();
         }
         writeln!(report, "\n-- skipped entities --").unwrap();
-        for (ent, reason) in &skipped {
+        for (ent, reason) in skipped {
             writeln!(report, "  {ent:<48} {reason}").unwrap();
         }
         std::fs::write(format!("{root}/schema/coverage.txt"), &report).expect("write coverage.txt");

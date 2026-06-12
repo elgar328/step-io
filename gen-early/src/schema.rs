@@ -124,7 +124,7 @@ mod tests {
         assert_eq!(names(&s, "geometric_representation_item"), ["name"]);
     }
 
-    /// Inherited `name` (from representation_item) precedes the entity's own.
+    /// Inherited `name` (from `representation_item`) precedes the entity's own.
     #[test]
     fn flatten_inherited_before_own() {
         let s = schema();
@@ -137,8 +137,8 @@ mod tests {
         assert_eq!(flat[0].ty, "label");
     }
 
-    /// Three-level chain: representation_item -> geometric_representation_item
-    /// -> text_literal.
+    /// Three-level chain: `representation_item` -> `geometric_representation_item`
+    /// -> `text_literal`.
     #[test]
     fn flatten_deep_chain() {
         let s = schema();
@@ -182,7 +182,10 @@ mod tests {
             ty: "string".to_string(),
         };
         let ent = |parents: &[&str], own: &[&str]| Entity {
-            parents: parents.iter().map(|p| p.to_string()).collect(),
+            parents: parents
+                .iter()
+                .map(std::string::ToString::to_string)
+                .collect(),
             own_attrs: own.iter().map(|n| attr(n)).collect(),
         };
         let mut entity = BTreeMap::new();

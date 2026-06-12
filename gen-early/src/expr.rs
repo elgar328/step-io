@@ -11,8 +11,8 @@ pub(crate) fn field_ty(ctx: &Ctx, k: &Kind) -> String {
         Kind::Int => "i64".into(),
         Kind::Bool => "bool".into(),
         Kind::Logical => "crate::ir::geometry::Logical".into(),
-        Kind::Str => "String".into(),
-        Kind::Binary => "String".into(),
+        // binary carries its hex digits verbatim, as a String.
+        Kind::Str | Kind::Binary => "String".into(),
         // Hinted ENUM reuses the L2 type; hint-less ENUM uses the synthesized
         // `Early*` (defined in the same generated/model.rs, so referenced bare).
         Kind::Enum(alias) => match ctx.mapping.enums.get(alias) {

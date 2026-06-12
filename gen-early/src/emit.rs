@@ -70,7 +70,7 @@ pub(crate) fn emit_entity(ctx: &Ctx, ent_name: &str, out: &mut GenOut) {
     // faithful positional fields, so disambiguate the Rust field identifier
     // (`name`, `name_2`, …) — deterministic, first occurrence keeps the name.
     let mut used: BTreeSet<String> = BTreeSet::new();
-    for (field, _, _) in attrs.iter_mut() {
+    for (field, _, _) in &mut attrs {
         if used.contains(field) {
             let base = field.clone();
             let mut n = 2;
@@ -126,132 +126,9 @@ pub(crate) fn emit_entity(ctx: &Ctx, ent_name: &str, out: &mut GenOut) {
     writeln!(out.model, "    }}").unwrap();
     writeln!(out.model, "}}\n").unwrap();
 
-    // bind fn. A `Select` field drops the whole entity on `None`, so when one
-    // is present the return type is `Result<Option<…>>` and binding uses a
-    // let-form with early `return Ok(None)`; otherwise the simple literal form.
-    let ret = if has_select {
-        format!("Result<Option<super::model::{type_name}>, crate::ir::error::ConvertError>")
-    } else {
-        format!("Result<super::model::{type_name}, crate::ir::error::ConvertError>")
-    };
-    writeln!(
-        out.bind,
-        "pub(crate) fn bind_{ent_name}(entity_id: u64, attrs: &[crate::parser::entity::Attribute]) -> {ret} {{"
-    )
-    .unwrap();
-    writeln!(
-        out.bind,
-        "    crate::ir::attr::check_count(attrs, {}, entity_id, \"{step_name}\")?;",
-        attrs.len()
-    )
-    .unwrap();
-    if has_select {
-        for (i, (field, k, opt)) in attrs.iter().enumerate() {
-            match (k, opt) {
-                // Optional SELECT: `$`/`*` -> None (entity survives); a present
-                // but unrecognized form -> drop the whole entity (preserving
-                // the required-select behavior for malformed input).
-                (Kind::Select(sel), true) => {
-                    writeln!(out.bind, "    let {field} = match &attrs[{i}] {{").unwrap();
-                    writeln!(
-                        out.bind,
-                        "        crate::parser::entity::Attribute::Unset | crate::parser::entity::Attribute::Derived => None,"
-                    )
-                    .unwrap();
-                    writeln!(
-                        out.bind,
-                        "        _ => match bind_{sel}(&attrs[{i}]) {{ Some(v) => Some(v), None => return Ok(None) }},"
-                    )
-                    .unwrap();
-                    writeln!(out.bind, "    }};").unwrap();
-                }
-                // Required SELECT: drop the whole entity on an unrecognized form.
-                (Kind::Select(sel), false) => {
-                    writeln!(
-                        out.bind,
-                        "    let Some({field}) = bind_{sel}(&attrs[{i}]) else {{ return Ok(None); }};"
-                    )
-                    .unwrap();
-                }
-                _ => {
-                    writeln!(
-                        out.bind,
-                        "    let {field} = {};",
-                        bind_expr_full(k, i, field, *opt)
-                    )
-                    .unwrap();
-                }
-            }
-        }
-        writeln!(out.bind, "    Ok(Some(super::model::{type_name} {{").unwrap();
-        for (field, _, _) in &attrs {
-            writeln!(out.bind, "        {field},").unwrap();
-        }
-        writeln!(out.bind, "    }}))\n}}\n").unwrap();
-    } else {
-        writeln!(out.bind, "    Ok(super::model::{type_name} {{").unwrap();
-        for (i, (field, k, opt)) in attrs.iter().enumerate() {
-            writeln!(
-                out.bind,
-                "        {field}: {},",
-                bind_expr_full(k, i, field, *opt)
-            )
-            .unwrap();
-        }
-        writeln!(out.bind, "    }})\n}}\n").unwrap();
-    }
+    entity_bind(ent_name, &type_name, &step_name, &attrs, has_select, out);
 
-    // serialize fn
-    writeln!(
-        out.serialize,
-        "pub(crate) fn serialize_{ent_name}(buf: &mut crate::writer::buffer::WriteBuffer, l1: &super::model::{type_name}) -> u64 {{"
-    )
-    .unwrap();
-    writeln!(out.serialize, "    buf.push_simple(\"{step_name}\", vec![").unwrap();
-    for (field, k, opt) in &attrs {
-        writeln!(
-            out.serialize,
-            "        {},",
-            serialize_expr_full(k, field, *opt)
-        )
-        .unwrap();
-        match k {
-            Kind::Bool => out.any_bool = true,
-            Kind::Enum(alias) => {
-                out.used_enums.insert(alias.clone());
-            }
-            Kind::Select(alias) => {
-                out.used_selects.insert(alias.clone());
-            }
-            // `Vec<EarlyEnum>`: needs the enum model + `<alias>_attr` (via
-            // used_enums) and a `<alias>_list` bind helper.
-            Kind::Vec(inner) => match &**inner {
-                Kind::Enum(alias) => {
-                    out.used_enums.insert(alias.clone());
-                    out.used_enum_lists.insert(alias.clone());
-                }
-                // `Vec<EarlySelect>`: needs bind_<select>/<alias>_emit (via
-                // used_selects) and a `<alias>_list` bind helper.
-                Kind::Select(alias) => {
-                    out.used_selects.insert(alias.clone());
-                    out.used_select_lists.insert(alias.clone());
-                }
-                // `Vec<Logical>`: the single `logical_list` bind helper.
-                Kind::Logical => out.any_logical_list = true,
-                // `Vec<Vec<EarlySelect>>`: needs bind_<select>/<alias>_emit
-                // (via used_selects) and a `<alias>_grid` bind helper.
-                Kind::Vec(i2) => {
-                    if let Kind::Select(alias) = &**i2 {
-                        out.used_selects.insert(alias.clone());
-                        out.used_select_grids.insert(alias.clone());
-                    }
-                }
-                _ => {}
-            },
-            _ => {}
-        }
-    }
-    writeln!(out.serialize, "    ])\n}}\n").unwrap();
+    entity_serialize(ent_name, &type_name, &step_name, &attrs, out);
 }
 
 /// Emit a synthesized `Early*` enum + `bind_<sel>` / `<sel>_emit` for a mixed
@@ -317,93 +194,9 @@ pub(crate) fn emit_select(
     }
     writeln!(model, "}}\n").unwrap();
 
-    // bind_<sel>
-    if mems.iter().any(|(_, _, k)| matches!(k, Kind::Real)) {
-        writeln!(bind, "#[allow(clippy::cast_precision_loss)]").unwrap();
-    }
-    writeln!(
-        bind,
-        "fn bind_{sel}(attr: &crate::parser::entity::Attribute) -> Option<{rtq}> {{"
-    )
-    .unwrap();
-    writeln!(bind, "    match attr {{").unwrap();
-    for (_, v, k) in &mems {
-        if matches!(k, Kind::Ref) {
-            writeln!(
-                bind,
-                "        crate::parser::entity::Attribute::EntityRef(n) => Some({rtq}::{v}(*n)),"
-            )
-            .unwrap();
-        }
-    }
-    if mems
-        .iter()
-        .any(|(_, _, k)| matches!(k, Kind::Enum(_) | Kind::Real | Kind::Str))
-    {
-        writeln!(
-            bind,
-            "        crate::parser::entity::Attribute::Typed {{ type_name, value }} => match (type_name.as_str(), value.as_ref()) {{"
-        )
-        .unwrap();
-        for (m, v, k) in &mems {
-            let tag = m.to_uppercase();
-            match k {
-                Kind::Enum(a) => {
-                    token_enums.insert(a.clone());
-                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Enum(t)) => Some({rtq}::{v}({a}_from_token(t))),").unwrap();
-                }
-                Kind::Real => {
-                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Real(x)) => Some({rtq}::{v}(*x)),").unwrap();
-                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Integer(x)) => Some({rtq}::{v}(*x as f64)),").unwrap();
-                }
-                Kind::Str => {
-                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::String(s)) => Some({rtq}::{v}(s.clone())),").unwrap();
-                }
-                _ => {}
-            }
-        }
-        writeln!(bind, "            _ => None,").unwrap();
-        writeln!(bind, "        }},").unwrap();
-    }
-    for (_, v, k) in &mems {
-        if let Kind::Enum(a) = k {
-            writeln!(
-                bind,
-                "        crate::parser::entity::Attribute::Enum(t) => Some({rtq}::{v}({a}_from_token(t))),"
-            )
-            .unwrap();
-        }
-    }
-    writeln!(bind, "        _ => None,").unwrap();
-    writeln!(bind, "    }}\n}}\n").unwrap();
+    hinted_select_bind(sel, &rtq, &mems, bind, token_enums);
 
-    // <sel>_emit
-    writeln!(
-        serialize,
-        "fn {sel}_emit(v: &{rtq}) -> crate::parser::entity::Attribute {{"
-    )
-    .unwrap();
-    writeln!(serialize, "    match v {{").unwrap();
-    for (m, v, k) in &mems {
-        let tag = m.to_uppercase();
-        let arm = match k {
-            Kind::Ref => {
-                format!("{rtq}::{v}(step) => crate::parser::entity::Attribute::EntityRef(*step),")
-            }
-            Kind::Enum(a) => format!(
-                "{rtq}::{v}(t) => crate::parser::entity::Attribute::Typed {{ type_name: \"{tag}\".into(), value: Box::new(crate::parser::entity::Attribute::Enum({a}_to_token(t))) }},"
-            ),
-            Kind::Real => format!(
-                "{rtq}::{v}(x) => crate::parser::entity::Attribute::Typed {{ type_name: \"{tag}\".into(), value: Box::new(crate::parser::entity::Attribute::Real(*x)) }},"
-            ),
-            Kind::Str => format!(
-                "{rtq}::{v}(s) => crate::parser::entity::Attribute::Typed {{ type_name: \"{tag}\".into(), value: Box::new(crate::parser::entity::Attribute::String(s.clone())) }},"
-            ),
-            _ => panic!("gen-early: select `{sel}` member kind unsupported"),
-        };
-        writeln!(serialize, "        {arm}").unwrap();
-    }
-    writeln!(serialize, "    }}\n}}\n").unwrap();
+    hinted_select_emit(sel, &rtq, &mems, serialize);
 }
 
 /// Emit a synthesized `Early*` enum + `bind_<sel>` / `<sel>_emit` for a
@@ -479,12 +272,11 @@ pub(crate) fn emit_select_synth(
             Kind::Real => "f64".into(),
             Kind::Int => "i64".into(),
             Kind::Bool => "bool".into(),
-            Kind::Str => "String".into(),
-            Kind::Binary => "String".into(),
+            // binary carries its hex digits verbatim, as a String.
+            Kind::Str | Kind::Binary => "String".into(),
             Kind::Logical => "crate::ir::geometry::Logical".into(),
-            Kind::Enum(a) => format!("super::model::Early{}", pascal(a)),
-            // Typed-only nested select -> its own synthesized `Early*` type.
-            Kind::Select(a) => format!("super::model::Early{}", pascal(a)),
+            // Synth ENUM / Typed-only nested select -> its own `Early*` type.
+            Kind::Enum(a) | Kind::Select(a) => format!("super::model::Early{}", pascal(a)),
             // Typed aggregation member -> Vec of its (scalar/ref) inner.
             Kind::Vec(_) => field_ty(ctx, k),
         }
@@ -538,6 +330,266 @@ pub(crate) fn emit_select_synth(
     }
     writeln!(model, "}}\n").unwrap();
 
+    synth_select_bind(ctx, sel, &rtq, &mems, has_ref, bind);
+
+    synth_select_emit(ctx, sel, &rtq, &mems, has_ref, serialize);
+}
+
+/// `bind_<entity>` fn for one entity (split from [`emit_entity`]).
+fn entity_bind(
+    ent_name: &str,
+    type_name: &str,
+    step_name: &str,
+    attrs: &[(String, Kind, bool)],
+    has_select: bool,
+    out: &mut GenOut,
+) {
+    // bind fn. A `Select` field drops the whole entity on `None`, so when one
+    // is present the return type is `Result<Option<…>>` and binding uses a
+    // let-form with early `return Ok(None)`; otherwise the simple literal form.
+    let ret = if has_select {
+        format!("Result<Option<super::model::{type_name}>, crate::ir::error::ConvertError>")
+    } else {
+        format!("Result<super::model::{type_name}, crate::ir::error::ConvertError>")
+    };
+    writeln!(
+        out.bind,
+        "pub(crate) fn bind_{ent_name}(entity_id: u64, attrs: &[crate::parser::entity::Attribute]) -> {ret} {{"
+    )
+    .unwrap();
+    writeln!(
+        out.bind,
+        "    crate::ir::attr::check_count(attrs, {}, entity_id, \"{step_name}\")?;",
+        attrs.len()
+    )
+    .unwrap();
+    if has_select {
+        for (i, (field, k, opt)) in attrs.iter().enumerate() {
+            match (k, opt) {
+                // Optional SELECT: `$`/`*` -> None (entity survives); a present
+                // but unrecognized form -> drop the whole entity (preserving
+                // the required-select behavior for malformed input).
+                (Kind::Select(sel), true) => {
+                    writeln!(out.bind, "    let {field} = match &attrs[{i}] {{").unwrap();
+                    writeln!(
+                        out.bind,
+                        "        crate::parser::entity::Attribute::Unset | crate::parser::entity::Attribute::Derived => None,"
+                    )
+                    .unwrap();
+                    writeln!(
+                        out.bind,
+                        "        _ => match bind_{sel}(&attrs[{i}]) {{ Some(v) => Some(v), None => return Ok(None) }},"
+                    )
+                    .unwrap();
+                    writeln!(out.bind, "    }};").unwrap();
+                }
+                // Required SELECT: drop the whole entity on an unrecognized form.
+                (Kind::Select(sel), false) => {
+                    writeln!(
+                        out.bind,
+                        "    let Some({field}) = bind_{sel}(&attrs[{i}]) else {{ return Ok(None); }};"
+                    )
+                    .unwrap();
+                }
+                _ => {
+                    writeln!(
+                        out.bind,
+                        "    let {field} = {};",
+                        bind_expr_full(k, i, field, *opt)
+                    )
+                    .unwrap();
+                }
+            }
+        }
+        writeln!(out.bind, "    Ok(Some(super::model::{type_name} {{").unwrap();
+        for (field, _, _) in attrs {
+            writeln!(out.bind, "        {field},").unwrap();
+        }
+        writeln!(out.bind, "    }}))\n}}\n").unwrap();
+    } else {
+        writeln!(out.bind, "    Ok(super::model::{type_name} {{").unwrap();
+        for (i, (field, k, opt)) in attrs.iter().enumerate() {
+            writeln!(
+                out.bind,
+                "        {field}: {},",
+                bind_expr_full(k, i, field, *opt)
+            )
+            .unwrap();
+        }
+        writeln!(out.bind, "    }})\n}}\n").unwrap();
+    }
+}
+
+/// `serialize_<entity>` fn + helper-usage tracking (split from [`emit_entity`]).
+fn entity_serialize(
+    ent_name: &str,
+    type_name: &str,
+    step_name: &str,
+    attrs: &[(String, Kind, bool)],
+    out: &mut GenOut,
+) {
+    // serialize fn
+    writeln!(
+        out.serialize,
+        "pub(crate) fn serialize_{ent_name}(buf: &mut crate::writer::buffer::WriteBuffer, l1: &super::model::{type_name}) -> u64 {{"
+    )
+    .unwrap();
+    writeln!(out.serialize, "    buf.push_simple(\"{step_name}\", vec![").unwrap();
+    for (field, k, opt) in attrs {
+        writeln!(
+            out.serialize,
+            "        {},",
+            serialize_expr_full(k, field, *opt)
+        )
+        .unwrap();
+        match k {
+            Kind::Bool => out.any_bool = true,
+            Kind::Enum(alias) => {
+                out.used_enums.insert(alias.clone());
+            }
+            Kind::Select(alias) => {
+                out.used_selects.insert(alias.clone());
+            }
+            // `Vec<EarlyEnum>`: needs the enum model + `<alias>_attr` (via
+            // used_enums) and a `<alias>_list` bind helper.
+            Kind::Vec(inner) => match &**inner {
+                Kind::Enum(alias) => {
+                    out.used_enums.insert(alias.clone());
+                    out.used_enum_lists.insert(alias.clone());
+                }
+                // `Vec<EarlySelect>`: needs bind_<select>/<alias>_emit (via
+                // used_selects) and a `<alias>_list` bind helper.
+                Kind::Select(alias) => {
+                    out.used_selects.insert(alias.clone());
+                    out.used_select_lists.insert(alias.clone());
+                }
+                // `Vec<Logical>`: the single `logical_list` bind helper.
+                Kind::Logical => out.any_logical_list = true,
+                // `Vec<Vec<EarlySelect>>`: needs bind_<select>/<alias>_emit
+                // (via used_selects) and a `<alias>_grid` bind helper.
+                Kind::Vec(i2) => {
+                    if let Kind::Select(alias) = &**i2 {
+                        out.used_selects.insert(alias.clone());
+                        out.used_select_grids.insert(alias.clone());
+                    }
+                }
+                _ => {}
+            },
+            _ => {}
+        }
+    }
+    writeln!(out.serialize, "    ])\n}}\n").unwrap();
+}
+
+/// `bind_<sel>` for a hinted mixed SELECT (split from [`emit_select`]).
+fn hinted_select_bind(
+    sel: &str,
+    rtq: &str,
+    mems: &[(&str, String, Kind)],
+    bind: &mut String,
+    token_enums: &mut BTreeSet<String>,
+) {
+    // bind_<sel>
+    if mems.iter().any(|(_, _, k)| matches!(k, Kind::Real)) {
+        writeln!(bind, "#[allow(clippy::cast_precision_loss)]").unwrap();
+    }
+    writeln!(
+        bind,
+        "fn bind_{sel}(attr: &crate::parser::entity::Attribute) -> Option<{rtq}> {{"
+    )
+    .unwrap();
+    writeln!(bind, "    match attr {{").unwrap();
+    for (_, v, k) in mems {
+        if matches!(k, Kind::Ref) {
+            writeln!(
+                bind,
+                "        crate::parser::entity::Attribute::EntityRef(n) => Some({rtq}::{v}(*n)),"
+            )
+            .unwrap();
+        }
+    }
+    if mems
+        .iter()
+        .any(|(_, _, k)| matches!(k, Kind::Enum(_) | Kind::Real | Kind::Str))
+    {
+        writeln!(
+            bind,
+            "        crate::parser::entity::Attribute::Typed {{ type_name, value }} => match (type_name.as_str(), value.as_ref()) {{"
+        )
+        .unwrap();
+        for (m, v, k) in mems {
+            let tag = m.to_uppercase();
+            match k {
+                Kind::Enum(a) => {
+                    token_enums.insert(a.clone());
+                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Enum(t)) => Some({rtq}::{v}({a}_from_token(t))),").unwrap();
+                }
+                Kind::Real => {
+                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Real(x)) => Some({rtq}::{v}(*x)),").unwrap();
+                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Integer(x)) => Some({rtq}::{v}(*x as f64)),").unwrap();
+                }
+                Kind::Str => {
+                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::String(s)) => Some({rtq}::{v}(s.clone())),").unwrap();
+                }
+                _ => {}
+            }
+        }
+        writeln!(bind, "            _ => None,").unwrap();
+        writeln!(bind, "        }},").unwrap();
+    }
+    for (_, v, k) in mems {
+        if let Kind::Enum(a) = k {
+            writeln!(
+                bind,
+                "        crate::parser::entity::Attribute::Enum(t) => Some({rtq}::{v}({a}_from_token(t))),"
+            )
+            .unwrap();
+        }
+    }
+    writeln!(bind, "        _ => None,").unwrap();
+    writeln!(bind, "    }}\n}}\n").unwrap();
+}
+
+/// `<sel>_emit` for a hinted mixed SELECT (split from [`emit_select`]).
+fn hinted_select_emit(sel: &str, rtq: &str, mems: &[(&str, String, Kind)], serialize: &mut String) {
+    // <sel>_emit
+    writeln!(
+        serialize,
+        "fn {sel}_emit(v: &{rtq}) -> crate::parser::entity::Attribute {{"
+    )
+    .unwrap();
+    writeln!(serialize, "    match v {{").unwrap();
+    for (m, v, k) in mems {
+        let tag = m.to_uppercase();
+        let arm = match k {
+            Kind::Ref => {
+                format!("{rtq}::{v}(step) => crate::parser::entity::Attribute::EntityRef(*step),")
+            }
+            Kind::Enum(a) => format!(
+                "{rtq}::{v}(t) => crate::parser::entity::Attribute::Typed {{ type_name: \"{tag}\".into(), value: Box::new(crate::parser::entity::Attribute::Enum({a}_to_token(t))) }},"
+            ),
+            Kind::Real => format!(
+                "{rtq}::{v}(x) => crate::parser::entity::Attribute::Typed {{ type_name: \"{tag}\".into(), value: Box::new(crate::parser::entity::Attribute::Real(*x)) }},"
+            ),
+            Kind::Str => format!(
+                "{rtq}::{v}(s) => crate::parser::entity::Attribute::Typed {{ type_name: \"{tag}\".into(), value: Box::new(crate::parser::entity::Attribute::String(s.clone())) }},"
+            ),
+            _ => panic!("gen-early: select `{sel}` member kind unsupported"),
+        };
+        writeln!(serialize, "        {arm}").unwrap();
+    }
+    writeln!(serialize, "    }}\n}}\n").unwrap();
+}
+
+/// `bind_<sel>` for a synthesized mixed SELECT (split from [`emit_select_synth`]).
+fn synth_select_bind(
+    ctx: &Ctx,
+    sel: &str,
+    rtq: &str,
+    mems: &[(&str, String, Kind)],
+    has_ref: bool,
+    bind: &mut String,
+) {
     // bind_<sel>
     let needs_cast = mems.iter().any(|(_, _, k)| {
         matches!(k, Kind::Real) || matches!(k, Kind::Vec(i) if matches!(**i, Kind::Real))
@@ -578,98 +630,14 @@ pub(crate) fn emit_select_synth(
             "        crate::parser::entity::Attribute::Typed {{ type_name, value }} => match (type_name.as_str(), value.as_ref()) {{"
         )
         .unwrap();
-        for (m, v, k) in &mems {
-            let tag = m.to_uppercase();
-            match k {
-                Kind::Real => {
-                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Real(x)) => Some({rtq}::{v}(*x)),").unwrap();
-                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Integer(x)) => Some({rtq}::{v}(*x as f64)),").unwrap();
-                }
-                Kind::Int => {
-                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Integer(x)) => Some({rtq}::{v}(*x)),").unwrap();
-                }
-                Kind::Str => {
-                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::String(s)) => Some({rtq}::{v}(s.clone())),").unwrap();
-                }
-                Kind::Bool => {
-                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Enum(t)) => Some({rtq}::{v}(t.as_str() == \"T\")),").unwrap();
-                }
-                Kind::Binary => {
-                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Binary(s)) => Some({rtq}::{v}(s.clone())),").unwrap();
-                }
-                Kind::Logical => {
-                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Enum(t)) => Some({rtq}::{v}(match t.as_str() {{ \"T\" => crate::ir::geometry::Logical::True, \"F\" => crate::ir::geometry::Logical::False, _ => crate::ir::geometry::Logical::Unknown }})),").unwrap();
-                }
-                // Typed aggregation member `TAG((...))`: decode each element by
-                // the (scalar/ref) inner kind; a mismatched element drops the value.
-                Kind::Vec(inner) => {
-                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::List(items)) => {{").unwrap();
-                    writeln!(
-                        bind,
-                        "                let mut out = Vec::with_capacity(items.len());"
-                    )
-                    .unwrap();
-                    writeln!(bind, "                for it in items {{").unwrap();
-                    writeln!(bind, "                    match it {{").unwrap();
-                    match &**inner {
-                        Kind::Ref => {
-                            writeln!(bind, "                        crate::parser::entity::Attribute::EntityRef(n) => out.push(*n),").unwrap();
-                        }
-                        Kind::Real => {
-                            writeln!(bind, "                        crate::parser::entity::Attribute::Real(x) => out.push(*x),").unwrap();
-                            writeln!(bind, "                        crate::parser::entity::Attribute::Integer(x) => out.push(*x as f64),").unwrap();
-                        }
-                        Kind::Int => {
-                            writeln!(bind, "                        crate::parser::entity::Attribute::Integer(x) => out.push(*x),").unwrap();
-                        }
-                        Kind::Str => {
-                            writeln!(bind, "                        crate::parser::entity::Attribute::String(s) => out.push(s.clone()),").unwrap();
-                        }
-                        // mixed-select inner: each element is a full select
-                        // value, decoded by its own (possibly self-recursive)
-                        // `bind_<inner>`.
-                        Kind::Select(inner_sel) => {
-                            writeln!(
-                                bind,
-                                "                        it => match bind_{inner_sel}(it) {{"
-                            )
-                            .unwrap();
-                            writeln!(bind, "                            Some(x) => out.push(x),")
-                                .unwrap();
-                            writeln!(bind, "                            None => return None,")
-                                .unwrap();
-                            writeln!(bind, "                        }},").unwrap();
-                        }
-                        _ => unreachable!("agg inners are restricted to ref/scalar/select"),
-                    }
-                    // the select-inner arm above is irrefutable; only the
-                    // scalar/ref inners need the explicit mismatch arm.
-                    if !matches!(&**inner, Kind::Select(_)) {
-                        writeln!(bind, "                        _ => return None,").unwrap();
-                    }
-                    writeln!(bind, "                    }}").unwrap();
-                    writeln!(bind, "                }}").unwrap();
-                    writeln!(bind, "                Some({rtq}::{v}(out))").unwrap();
-                    writeln!(bind, "            }}").unwrap();
-                }
-                Kind::Enum(a) => {
-                    let etype = format!("super::model::Early{}", pascal(a));
-                    write!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Enum(t)) => match t.as_str() {{").unwrap();
-                    for (etag, evar) in synth_enum_members(ctx, a) {
-                        write!(bind, " \"{etag}\" => Some({rtq}::{v}({etype}::{evar})),").unwrap();
-                    }
-                    writeln!(bind, " _ => None }},").unwrap();
-                }
-                _ => {}
-            }
-        }
+        synth_bind_typed_arms(ctx, rtq, mems, bind);
         // Typed-only nested select members: tags belong to the nested select, so
         // the outer match can't enumerate them — delegate the whole `attr` to
         // `bind_<nested>` (the `_ =>` arm). Selects with no nested member keep the
         // plain `_ => None` (byte-identical to pre-v4.18).
         if mems.iter().any(|(_, _, k)| matches!(k, Kind::Select(_))) {
             writeln!(bind, "            _ => {{").unwrap();
-            for (_, v, k) in &mems {
+            for (_, v, k) in mems {
                 if let Kind::Select(nested) = k {
                     writeln!(bind, "                if let Some(x) = bind_{nested}(attr) {{ return Some({rtq}::{v}(x)); }}").unwrap();
                 }
@@ -683,7 +651,110 @@ pub(crate) fn emit_select_synth(
     }
     writeln!(bind, "        _ => None,").unwrap();
     writeln!(bind, "    }}\n}}\n").unwrap();
+}
 
+/// The per-member `("TAG", ..) => ..` arms of the Typed block (split from
+/// [`synth_select_bind`]).
+fn synth_bind_typed_arms(ctx: &Ctx, rtq: &str, mems: &[(&str, String, Kind)], bind: &mut String) {
+    for (m, v, k) in mems {
+        let tag = m.to_uppercase();
+        match k {
+            Kind::Real => {
+                writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Real(x)) => Some({rtq}::{v}(*x)),").unwrap();
+                writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Integer(x)) => Some({rtq}::{v}(*x as f64)),").unwrap();
+            }
+            Kind::Int => {
+                writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Integer(x)) => Some({rtq}::{v}(*x)),").unwrap();
+            }
+            Kind::Str => {
+                writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::String(s)) => Some({rtq}::{v}(s.clone())),").unwrap();
+            }
+            Kind::Bool => {
+                writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Enum(t)) => Some({rtq}::{v}(t.as_str() == \"T\")),").unwrap();
+            }
+            Kind::Binary => {
+                writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Binary(s)) => Some({rtq}::{v}(s.clone())),").unwrap();
+            }
+            Kind::Logical => {
+                writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Enum(t)) => Some({rtq}::{v}(match t.as_str() {{ \"T\" => crate::ir::geometry::Logical::True, \"F\" => crate::ir::geometry::Logical::False, _ => crate::ir::geometry::Logical::Unknown }})),").unwrap();
+            }
+            // Typed aggregation member `TAG((...))`: decode each element by
+            // the (scalar/ref) inner kind; a mismatched element drops the value.
+            Kind::Vec(inner) => {
+                writeln!(
+                    bind,
+                    "            (\"{tag}\", crate::parser::entity::Attribute::List(items)) => {{"
+                )
+                .unwrap();
+                writeln!(
+                    bind,
+                    "                let mut out = Vec::with_capacity(items.len());"
+                )
+                .unwrap();
+                writeln!(bind, "                for it in items {{").unwrap();
+                writeln!(bind, "                    match it {{").unwrap();
+                match &**inner {
+                    Kind::Ref => {
+                        writeln!(bind, "                        crate::parser::entity::Attribute::EntityRef(n) => out.push(*n),").unwrap();
+                    }
+                    Kind::Real => {
+                        writeln!(bind, "                        crate::parser::entity::Attribute::Real(x) => out.push(*x),").unwrap();
+                        writeln!(bind, "                        crate::parser::entity::Attribute::Integer(x) => out.push(*x as f64),").unwrap();
+                    }
+                    Kind::Int => {
+                        writeln!(bind, "                        crate::parser::entity::Attribute::Integer(x) => out.push(*x),").unwrap();
+                    }
+                    Kind::Str => {
+                        writeln!(bind, "                        crate::parser::entity::Attribute::String(s) => out.push(s.clone()),").unwrap();
+                    }
+                    // mixed-select inner: each element is a full select
+                    // value, decoded by its own (possibly self-recursive)
+                    // `bind_<inner>`.
+                    Kind::Select(inner_sel) => {
+                        writeln!(
+                            bind,
+                            "                        it => match bind_{inner_sel}(it) {{"
+                        )
+                        .unwrap();
+                        writeln!(bind, "                            Some(x) => out.push(x),")
+                            .unwrap();
+                        writeln!(bind, "                            None => return None,").unwrap();
+                        writeln!(bind, "                        }},").unwrap();
+                    }
+                    _ => unreachable!("agg inners are restricted to ref/scalar/select"),
+                }
+                // the select-inner arm above is irrefutable; only the
+                // scalar/ref inners need the explicit mismatch arm.
+                if !matches!(&**inner, Kind::Select(_)) {
+                    writeln!(bind, "                        _ => return None,").unwrap();
+                }
+                writeln!(bind, "                    }}").unwrap();
+                writeln!(bind, "                }}").unwrap();
+                writeln!(bind, "                Some({rtq}::{v}(out))").unwrap();
+                writeln!(bind, "            }}").unwrap();
+            }
+            Kind::Enum(a) => {
+                let etype = format!("super::model::Early{}", pascal(a));
+                write!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Enum(t)) => match t.as_str() {{").unwrap();
+                for (etag, evar) in synth_enum_members(ctx, a) {
+                    write!(bind, " \"{etag}\" => Some({rtq}::{v}({etype}::{evar})),").unwrap();
+                }
+                writeln!(bind, " _ => None }},").unwrap();
+            }
+            _ => {}
+        }
+    }
+}
+
+/// `<sel>_emit` for a synthesized mixed SELECT (split from [`emit_select_synth`]).
+fn synth_select_emit(
+    ctx: &Ctx,
+    sel: &str,
+    rtq: &str,
+    mems: &[(&str, String, Kind)],
+    has_ref: bool,
+    serialize: &mut String,
+) {
     // <sel>_emit
     writeln!(
         serialize,
@@ -699,7 +770,7 @@ pub(crate) fn emit_select_synth(
         )
         .unwrap();
     }
-    for (m, v, k) in &mems {
+    for (m, v, k) in mems {
         if matches!(k, Kind::Ref) {
             continue; // handled by the combined `EntityRef` arm above.
         }
@@ -744,7 +815,7 @@ pub(crate) fn emit_select_synth(
                     "{rtq}::{v}(xs) => crate::parser::entity::Attribute::Typed {{ type_name: \"{tag}\".into(), value: Box::new(crate::parser::entity::Attribute::List(xs.iter().map({elem}).collect())) }},"
                 )
             }
-            _ => unreachable!("filtered by the deferred-shape checks above"),
+            Kind::Ref => unreachable!("ref members are skipped above (combined EntityRef arm)"),
         };
         writeln!(serialize, "        {arm}").unwrap();
     }
@@ -1052,7 +1123,7 @@ mod tests {
     use crate::testutil::*;
 
     /// One entity through [`emit_entity`] (extraction made this testable —
-    /// previously inline in `main`): model struct + `Early*Id` + ArenaId impl
+    /// previously inline in `main`): model struct + `Early*Id` + `ArenaId` impl
     /// + bind/serialize fns land in `GenOut`.
     #[test]
     fn emit_entity_model_id_bind_serialize() {
@@ -1143,8 +1214,8 @@ mod tests {
     /// ≥2 entity members can't be told apart from a bare `#N`, so they collapse
     /// into one combined `EntityRef(u64)` variant (`lower` resolves the type);
     /// scalar members stay per-variant. `trim_condition_select` =
-    /// SELECT(generalized_surface_select [all-entity → ref], length_measure,
-    /// plane_angle_measure, solid_model [ref]) — two entity members.
+    /// `SELECT(generalized_surface_select` [all-entity → ref], `length_measure`,
+    /// `plane_angle_measure`, `solid_model` [ref]) — two entity members.
     #[test]
     fn synth_select_multi_entity_combined() {
         let (m, b, s) = synth_select("trim_condition_select");
@@ -1168,7 +1239,7 @@ mod tests {
     /// Aggregation members arrive as typed parameters `TAG((...))` per Part21,
     /// so each keeps its own variant (no combined `Aggregate`).
     /// `item_identified_representation_usage_select` =
-    /// SELECT(list_representation_item, representation_item, set_representation_item)
+    /// `SELECT(list_representation_item`, `representation_item`, `set_representation_item`)
     /// — one entity ref (collapses to `EntityRef`) + two typed aggregates.
     #[test]
     fn synth_select_typed_aggregate_members() {
@@ -1194,7 +1265,7 @@ mod tests {
     }
 
     /// ★Cross-validation against real-file-proven hand-written code:
-    /// `datum_or_common_datum` = SELECT(common_datum_list [agg], datum [ref]).
+    /// `datum_or_common_datum` = `SELECT(common_datum_list` [agg], datum [ref]).
     /// The generated bind must match `Typed{"COMMON_DATUM_LIST", List}` — the
     /// exact form the hand-written reader for NIST files matches
     /// (src/entities/pmi.rs, `type_name == "COMMON_DATUM_LIST"`).
@@ -1211,7 +1282,7 @@ mod tests {
 
     /// Typed-aggregate edge cases: an agg-only select gets one Typed arm per
     /// member (no empty match); a real-inner agg keeps the integer promotion
-    /// (and its cast allow); maths_value stays deferred (Vec(Select) member).
+    /// (and its cast allow); `maths_value` stays deferred (Vec(Select) member).
     #[test]
     fn synth_select_typed_aggregate_edges() {
         // compound_item_definition = SELECT(list_repr_item, set_repr_item) — agg only.
@@ -1236,8 +1307,8 @@ mod tests {
     /// A scalar-only nested SELECT member (`measure_value` = 42 scalar measures)
     /// is decoded by delegating to its own `bind_measure_value` from the outer
     /// Typed `_ =>` arm; the nested select is emitted recursively.
-    /// `measured_value_select` = SELECT(boolean_value [Bool], measure_value
-    /// [nested SELECT], plane_angle_and_length_pair [ref], plane_angle_and_ratio_pair
+    /// `measured_value_select` = `SELECT(boolean_value` [Bool], `measure_value`
+    /// [nested SELECT], `plane_angle_and_length_pair` [ref], `plane_angle_and_ratio_pair`
     /// [ref]) — two refs collapse to `EntityRef`, the nested becomes `MeasureValue`.
     #[test]
     fn synth_select_nested_typed_only_delegates() {
@@ -1263,7 +1334,7 @@ mod tests {
     /// A nested mixed SELECT member with a *ref* member is still deferred — its
     /// bare `#N` values would be ambiguous with the outer's. The real schema has
     /// no such case left (coverage 100%), so this uses a synthetic schema:
-    /// outer = SELECT(real, bad_nested), bad_nested = SELECT(thing [entity], real).
+    /// outer = SELECT(real, `bad_nested`), `bad_nested` = SELECT(thing [entity], real).
     #[test]
     #[should_panic(expected = "nested mixed select")]
     fn synth_select_nested_mixed_panics() {
@@ -1355,8 +1426,8 @@ mod tests {
     }
 
     /// `binary` / `logical` as SELECT members (v4.19): `maths_simple_atom` =
-    /// SELECT(maths_binary, maths_boolean, maths_integer, maths_logical,
-    /// maths_number, maths_real, maths_string). Each is a `Typed{tag, ..}`.
+    /// `SELECT(maths_binary`, `maths_boolean`, `maths_integer`, `maths_logical`,
+    /// `maths_number`, `maths_real`, `maths_string`). Each is a `Typed{tag, ..}`.
     #[test]
     fn synth_select_binary_logical_members() {
         assert!(ctx_from(schema()).select_supported("maths_simple_atom"));
@@ -1378,7 +1449,7 @@ mod tests {
         assert!(s.contains("crate::ir::attr::logical_to_step(*l)"));
     }
 
-    /// `maths_atom` = SELECT(maths_enum_atom, maths_simple_atom) — both Typed-only
+    /// `maths_atom` = `SELECT(maths_enum_atom`, `maths_simple_atom`) — both Typed-only
     /// nested selects → outer bind delegates to each `bind_<nested>` (2 nested),
     /// and both nested selects are emitted recursively.
     #[test]

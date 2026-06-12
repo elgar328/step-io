@@ -154,10 +154,9 @@ impl Ctx {
     /// able by the current codegen — i.e. would not hit an emit-time panic.
     pub(crate) fn emittable(&self, k: &Kind, optional: bool) -> bool {
         match k {
-            // read_optional_* exist for these, so optional is fine too.
-            Kind::Ref | Kind::Real | Kind::Int | Kind::Str => true,
+            // read_optional_* exist for ref/scalar (optional is fine too); an
             // optional enum wraps the standalone enum decode (v4.10).
-            Kind::Enum(_) => true,
+            Kind::Ref | Kind::Real | Kind::Int | Kind::Str | Kind::Enum(_) => true,
             // scalar bind exists; optional deferred (no read_optional_*).
             Kind::Bool | Kind::Logical | Kind::Binary => !optional,
             // ref / scalar / enum / supported-select element (single list), or a
@@ -217,15 +216,20 @@ impl Ctx {
                 return false; // unresolved member
             };
             match k {
-                // Any number of entity members is fine: they collapse into one
-                // combined `EntityRef(u64)` variant (`lower` resolves the type).
-                Kind::Ref => {}
-                // scalar members, incl. logical / binary (each is a single
-                // `Typed{tag, ..}` so it's distinguishable by tag).
-                Kind::Real | Kind::Int | Kind::Str | Kind::Bool | Kind::Logical | Kind::Binary => {}
                 // hinted enum member -> dual representation, deferred.
                 Kind::Enum(a) if self.mapping.enums.contains_key(&a) => return false,
-                Kind::Enum(_) => {}
+                // Entity members (any number — they collapse into one combined
+                // `EntityRef(u64)` variant, `lower` resolves the type), scalar
+                // members incl. logical / binary, and non-hinted enums (each a
+                // single `Typed{tag, ..}`, distinguishable by tag) are fine.
+                Kind::Ref
+                | Kind::Real
+                | Kind::Int
+                | Kind::Str
+                | Kind::Bool
+                | Kind::Logical
+                | Kind::Binary
+                | Kind::Enum(_) => {}
                 // Aggregation member: per Part21 it arrives as a *typed parameter*
                 // `TAG((...))` (e.g. `COMMON_DATUM_LIST((#1,#2))`, see the
                 // hand-written reader in src/entities/pmi.rs), so the tag
@@ -279,14 +283,20 @@ impl Ctx {
             return false;
         };
         members.iter().all(|m| match self.try_classify(m, 0) {
+            // Scalars (incl. logical / binary) and aggregation members all
+            // arrive as typed parameters `TAG(..)` — for aggregations the
+            // decodability is select_supported's concern, not the form.
             Some(
-                Kind::Real | Kind::Int | Kind::Str | Kind::Bool | Kind::Logical | Kind::Binary,
+                Kind::Real
+                | Kind::Int
+                | Kind::Str
+                | Kind::Bool
+                | Kind::Logical
+                | Kind::Binary
+                | Kind::Vec(_),
             ) => true,
             // non-hinted enum members serialize as `Typed{tag, Enum}` too.
             Some(Kind::Enum(a)) => !self.mapping.enums.contains_key(&a),
-            // aggregation members arrive as typed parameters `TAG((...))`;
-            // decodability is select_supported's concern, not form.
-            Some(Kind::Vec(_)) => true,
             // a nested select is Typed-form iff it is itself Typed-only.
             Some(Kind::Select(s)) => self.select_typed_only_inner(&s, seen),
             _ => false,
