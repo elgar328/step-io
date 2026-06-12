@@ -5,6 +5,8 @@
 //! `bind::bind_*` paths unchanged.
 
 pub(crate) use super::generated::bind::{
-    bind_fill_area_style, bind_point_style, bind_surface_side_style, bind_surface_style_fill_area,
-    bind_surface_style_usage, bind_view_volume,
+    bind_fill_area_style, bind_point_style, bind_product, bind_product_definition,
+    bind_product_definition_formation, bind_product_definition_formation_with_specified_source,
+    bind_product_definition_with_associated_documents, bind_surface_side_style,
+    bind_surface_style_fill_area, bind_surface_style_usage, bind_view_volume,
 };

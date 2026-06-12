@@ -15,7 +15,10 @@ use crate::ir::arena::ArenaId;
 // and the `index()` addresses [`EarlyModel`]'s L1→L2 correspondence bucket.
 pub(crate) use super::generated::model::{
     EarlyFillAreaStyle, EarlyFillAreaStyleId, EarlyMarker, EarlyMarkerSize, EarlyPointStyle,
-    EarlyPointStyleId, EarlySurfaceSideStyle, EarlySurfaceSideStyleId, EarlySurfaceStyleFillArea,
+    EarlyPointStyleId, EarlyProduct, EarlyProductDefinition, EarlyProductDefinitionFormation,
+    EarlyProductDefinitionFormationId, EarlyProductDefinitionFormationWithSpecifiedSource,
+    EarlyProductDefinitionId, EarlyProductDefinitionWithAssociatedDocuments, EarlySource,
+    EarlySurfaceSideStyle, EarlySurfaceSideStyleId, EarlySurfaceStyleFillArea,
     EarlySurfaceStyleFillAreaId, EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId, EarlyViewVolume,
     EarlyViewVolumeId,
 };

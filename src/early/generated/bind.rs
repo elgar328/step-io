@@ -127,6 +127,111 @@ pub(crate) fn bind_point_style(
     }))
 }
 
+pub(crate) fn bind_product(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyProduct, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "PRODUCT")?;
+    Ok(super::model::EarlyProduct {
+        id: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "id")?.to_owned(),
+        name: crate::ir::attr::read_string_or_unset(attrs, 1, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 2, entity_id, "description")?,
+        frame_of_reference: crate::ir::attr::read_entity_ref_list(
+            attrs,
+            3,
+            entity_id,
+            "frame_of_reference",
+        )?,
+    })
+}
+
+pub(crate) fn bind_product_definition_formation(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyProductDefinitionFormation, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "PRODUCT_DEFINITION_FORMATION")?;
+    Ok(super::model::EarlyProductDefinitionFormation {
+        id: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "id")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        of_product: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "of_product")?,
+    })
+}
+
+pub(crate) fn bind_product_definition_formation_with_specified_source(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<
+    super::model::EarlyProductDefinitionFormationWithSpecifiedSource,
+    crate::ir::error::ConvertError,
+> {
+    crate::ir::attr::check_count(
+        attrs,
+        4,
+        entity_id,
+        "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+    )?;
+    Ok(
+        super::model::EarlyProductDefinitionFormationWithSpecifiedSource {
+            id: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "id")?.to_owned(),
+            description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+            of_product: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "of_product")?,
+            make_or_buy: bind_source(attrs, 3, entity_id, "make_or_buy")?,
+        },
+    )
+}
+
+pub(crate) fn bind_product_definition(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyProductDefinition, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "PRODUCT_DEFINITION")?;
+    Ok(super::model::EarlyProductDefinition {
+        id: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "id")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        formation: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "formation")?,
+        frame_of_reference: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "frame_of_reference",
+        )?,
+    })
+}
+
+pub(crate) fn bind_product_definition_with_associated_documents(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<
+    super::model::EarlyProductDefinitionWithAssociatedDocuments,
+    crate::ir::error::ConvertError,
+> {
+    crate::ir::attr::check_count(
+        attrs,
+        5,
+        entity_id,
+        "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
+    )?;
+    Ok(
+        super::model::EarlyProductDefinitionWithAssociatedDocuments {
+            id: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "id")?.to_owned(),
+            description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+            formation: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "formation")?,
+            frame_of_reference: crate::ir::attr::read_entity_ref(
+                attrs,
+                3,
+                entity_id,
+                "frame_of_reference",
+            )?,
+            documentation_ids: crate::ir::attr::read_entity_ref_list(
+                attrs,
+                4,
+                entity_id,
+                "documentation_ids",
+            )?,
+        },
+    )
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {
@@ -200,6 +305,23 @@ fn bind_central_or_parallel(
         other => Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
             entity_id,
             detail: format!("{field}: unknown central_or_parallel '.{other}.'"),
+        }),
+    }
+}
+
+fn bind_source(
+    attrs: &[crate::parser::entity::Attribute],
+    index: usize,
+    entity_id: u64,
+    field: &'static str,
+) -> Result<super::model::EarlySource, crate::ir::error::ConvertError> {
+    match crate::ir::attr::read_enum(attrs, index, entity_id, field)? {
+        "MADE" => Ok(super::model::EarlySource::Made),
+        "BOUGHT" => Ok(super::model::EarlySource::Bought),
+        "NOT_KNOWN" => Ok(super::model::EarlySource::NotKnown),
+        other => Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: format!("{field}: unknown source '.{other}.'"),
         }),
     }
 }

@@ -4,12 +4,19 @@
 # into src/early/generated/. Grows as clusters migrate (lower/lift stay hand-
 # written). v0 = the two simplest founded-item entities (no SELECT/Option/inherit).
 generate = [
+    # visualization (pilot cluster)
     "surface_style_fill_area",
     "view_volume",
     "fill_area_style",
     "surface_side_style",
     "surface_style_usage",
     "point_style",
+    # assembly_product (product 2-hop cluster)
+    "product",
+    "product_definition_formation",
+    "product_definition_formation_with_specified_source",
+    "product_definition",
+    "product_definition_with_associated_documents",
 ]
 
 # `generate_all`: diagnostic flip. When true, gen-early generates *every* entity

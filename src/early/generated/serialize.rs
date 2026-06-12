@@ -104,6 +104,106 @@ pub(crate) fn serialize_point_style(
     )
 }
 
+pub(crate) fn serialize_product(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyProduct,
+) -> u64 {
+    buf.push_simple(
+        "PRODUCT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.id.clone()),
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::List(
+                l1.frame_of_reference
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_product_definition_formation(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyProductDefinitionFormation,
+) -> u64 {
+    buf.push_simple(
+        "PRODUCT_DEFINITION_FORMATION",
+        vec![
+            crate::parser::entity::Attribute::String(l1.id.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.of_product),
+        ],
+    )
+}
+
+pub(crate) fn serialize_product_definition_formation_with_specified_source(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyProductDefinitionFormationWithSpecifiedSource,
+) -> u64 {
+    buf.push_simple(
+        "PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.id.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.of_product),
+            source_attr(l1.make_or_buy),
+        ],
+    )
+}
+
+pub(crate) fn serialize_product_definition(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyProductDefinition,
+) -> u64 {
+    buf.push_simple(
+        "PRODUCT_DEFINITION",
+        vec![
+            crate::parser::entity::Attribute::String(l1.id.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.formation),
+            crate::parser::entity::Attribute::EntityRef(l1.frame_of_reference),
+        ],
+    )
+}
+
+pub(crate) fn serialize_product_definition_with_associated_documents(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyProductDefinitionWithAssociatedDocuments,
+) -> u64 {
+    buf.push_simple(
+        "PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS",
+        vec![
+            crate::parser::entity::Attribute::String(l1.id.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.formation),
+            crate::parser::entity::Attribute::EntityRef(l1.frame_of_reference),
+            crate::parser::entity::Attribute::List(
+                l1.documentation_ids
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {
@@ -156,6 +256,17 @@ fn central_or_parallel_attr(
         match v {
             crate::ir::visualization::Projection::Central => "CENTRAL",
             crate::ir::visualization::Projection::Parallel => "PARALLEL",
+        }
+        .into(),
+    )
+}
+
+fn source_attr(v: super::model::EarlySource) -> crate::parser::entity::Attribute {
+    crate::parser::entity::Attribute::Enum(
+        match v {
+            super::model::EarlySource::Made => "MADE",
+            super::model::EarlySource::Bought => "BOUGHT",
+            super::model::EarlySource::NotKnown => "NOT_KNOWN",
         }
         .into(),
     )

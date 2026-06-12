@@ -8,6 +8,8 @@
 //! re-exported flat so handlers call `lower::lower_<entity>(..)` regardless of
 //! domain.
 
+pub(crate) mod assembly_product;
 pub(crate) mod visualization;
 
+pub(crate) use assembly_product::*;
 pub(crate) use visualization::*;

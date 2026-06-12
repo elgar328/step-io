@@ -9,6 +9,7 @@ pub(crate) struct EarlySurfaceStyleFillArea {
 
 /// Typed `id_cache` key for `SURFACE_STYLE_FILL_AREA` (file id → L1→L2 correspondence;
 /// see `EarlyModel`).
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub(crate) struct EarlySurfaceStyleFillAreaId(pub u32);
 
@@ -37,6 +38,7 @@ pub(crate) struct EarlyViewVolume {
 
 /// Typed `id_cache` key for `VIEW_VOLUME` (file id → L1→L2 correspondence;
 /// see `EarlyModel`).
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub(crate) struct EarlyViewVolumeId(pub u32);
 
@@ -58,6 +60,7 @@ pub(crate) struct EarlyFillAreaStyle {
 
 /// Typed `id_cache` key for `FILL_AREA_STYLE` (file id → L1→L2 correspondence;
 /// see `EarlyModel`).
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub(crate) struct EarlyFillAreaStyleId(pub u32);
 
@@ -79,6 +82,7 @@ pub(crate) struct EarlySurfaceSideStyle {
 
 /// Typed `id_cache` key for `SURFACE_SIDE_STYLE` (file id → L1→L2 correspondence;
 /// see `EarlyModel`).
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub(crate) struct EarlySurfaceSideStyleId(pub u32);
 
@@ -100,6 +104,7 @@ pub(crate) struct EarlySurfaceStyleUsage {
 
 /// Typed `id_cache` key for `SURFACE_STYLE_USAGE` (file id → L1→L2 correspondence;
 /// see `EarlyModel`).
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub(crate) struct EarlySurfaceStyleUsageId(pub u32);
 
@@ -123,10 +128,131 @@ pub(crate) struct EarlyPointStyle {
 
 /// Typed `id_cache` key for `POINT_STYLE` (file id → L1→L2 correspondence;
 /// see `EarlyModel`).
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub(crate) struct EarlyPointStyleId(pub u32);
 
 impl crate::ir::arena::ArenaId for EarlyPointStyleId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PRODUCT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyProduct {
+    pub(crate) id: String,
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) frame_of_reference: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `PRODUCT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyProductId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyProductId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PRODUCT_DEFINITION_FORMATION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyProductDefinitionFormation {
+    pub(crate) id: String,
+    pub(crate) description: Option<String>,
+    pub(crate) of_product: u64,
+}
+
+/// Typed `id_cache` key for `PRODUCT_DEFINITION_FORMATION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyProductDefinitionFormationId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyProductDefinitionFormationId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyProductDefinitionFormationWithSpecifiedSource {
+    pub(crate) id: String,
+    pub(crate) description: Option<String>,
+    pub(crate) of_product: u64,
+    pub(crate) make_or_buy: EarlySource,
+}
+
+/// Typed `id_cache` key for `PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyProductDefinitionFormationWithSpecifiedSourceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyProductDefinitionFormationWithSpecifiedSourceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PRODUCT_DEFINITION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyProductDefinition {
+    pub(crate) id: String,
+    pub(crate) description: Option<String>,
+    pub(crate) formation: u64,
+    pub(crate) frame_of_reference: u64,
+}
+
+/// Typed `id_cache` key for `PRODUCT_DEFINITION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyProductDefinitionId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyProductDefinitionId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyProductDefinitionWithAssociatedDocuments {
+    pub(crate) id: String,
+    pub(crate) description: Option<String>,
+    pub(crate) formation: u64,
+    pub(crate) frame_of_reference: u64,
+    pub(crate) documentation_ids: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyProductDefinitionWithAssociatedDocumentsId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyProductDefinitionWithAssociatedDocumentsId {
     fn index(&self) -> usize {
         self.0 as usize
     }
@@ -148,4 +274,12 @@ pub(crate) enum EarlyMarkerSize {
     Descriptive(String),
     MeasureWithUnit(u64),
     PositiveLength(f64),
+}
+
+/// L1 ENUM `source` (generated).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) enum EarlySource {
+    Made,
+    Bought,
+    NotKnown,
 }

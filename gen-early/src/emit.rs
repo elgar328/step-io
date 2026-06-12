@@ -106,6 +106,9 @@ pub(crate) fn emit_entity(ctx: &Ctx, ent_name: &str, out: &mut GenOut) {
         "/// Typed `id_cache` key for `{step_name}` (file id → L1→L2 correspondence;\n/// see `EarlyModel`)."
     )
     .unwrap();
+    // A key type is legitimately unused until its first consumer migrates, so
+    // the (committed) generated output carries a targeted allow.
+    writeln!(out.model, "#[allow(dead_code)]").unwrap();
     writeln!(
         out.model,
         "#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]"
