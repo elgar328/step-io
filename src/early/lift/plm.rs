@@ -3,19 +3,19 @@
 //! keep the schema's `Option` descriptions, so no synthesis is needed.
 
 use crate::early::model::{
-    EarlyApplicationContext, EarlyApproval, EarlyApprovalDateTime, EarlyApprovalPersonOrganization,
-    EarlyApprovalRole, EarlyApprovalStatus, EarlyCalendarDate, EarlyCoordinatedUniversalTimeOffset,
-    EarlyDateAndTime, EarlyDateTimeRole, EarlyDocument, EarlyDocumentProductEquivalence,
-    EarlyDocumentRepresentationType, EarlyDocumentType, EarlyGroup, EarlyIdentificationRole,
-    EarlyLocalTime, EarlyObjectRole, EarlyOrganization, EarlyPerson,
-    EarlyPersonAndOrganizationRole, EarlyRoleAssociation, EarlySecurityClassification,
-    EarlySecurityClassificationLevel,
+    EarlyAddress, EarlyApplicationContext, EarlyApproval, EarlyApprovalDateTime,
+    EarlyApprovalPersonOrganization, EarlyApprovalRole, EarlyApprovalStatus, EarlyCalendarDate,
+    EarlyCoordinatedUniversalTimeOffset, EarlyDateAndTime, EarlyDateTimeRole, EarlyDocument,
+    EarlyDocumentProductEquivalence, EarlyDocumentRepresentationType, EarlyDocumentType,
+    EarlyGroup, EarlyIdentificationRole, EarlyLocalTime, EarlyObjectRole, EarlyOrganization,
+    EarlyPerson, EarlyPersonAndOrganizationRole, EarlyPersonalAddress, EarlyRoleAssociation,
+    EarlySecurityClassification, EarlySecurityClassificationLevel,
 };
 use crate::ir::plm::{
-    ApplicationContext, ApprovalRole, ApprovalStatus, CalendarDate, CoordinatedUniversalTimeOffset,
-    DateTimeRole, DocumentData, DocumentType, Group, IdentificationRole, LocalTime, ObjectRole,
-    Organization, Person, PersonAndOrganizationRole, SecurityClassification,
-    SecurityClassificationLevel,
+    AddressData, ApplicationContext, ApprovalRole, ApprovalStatus, CalendarDate,
+    CoordinatedUniversalTimeOffset, DateTimeRole, DocumentData, DocumentType, Group,
+    IdentificationRole, LocalTime, ObjectRole, Organization, Person, PersonAndOrganizationRole,
+    PersonalAddress, SecurityClassification, SecurityClassificationLevel,
 };
 
 /// Lift one `APPROVAL_ROLE` from its arena entry.
@@ -235,5 +235,45 @@ pub(crate) fn lift_document_product_equivalence(
         description,
         relating_document,
         related_product,
+    }
+}
+
+/// Lift one plain `ADDRESS` (faithful 12-optional pass-through).
+pub(crate) fn lift_address(d: AddressData) -> EarlyAddress {
+    EarlyAddress {
+        internal_location: d.internal_location,
+        street_number: d.street_number,
+        street: d.street,
+        postal_box: d.postal_box,
+        town: d.town,
+        region: d.region,
+        postal_code: d.postal_code,
+        country: d.country,
+        facsimile_number: d.facsimile_number,
+        telephone_number: d.telephone_number,
+        electronic_mail_address: d.electronic_mail_address,
+        telex_number: d.telex_number,
+    }
+}
+
+/// Lift one `PERSONAL_ADDRESS` (people pre-resolved to output step ids;
+/// legacy always emitted `description` as a String, never `$`).
+pub(crate) fn lift_personal_address(pa: PersonalAddress, people: Vec<u64>) -> EarlyPersonalAddress {
+    let d = pa.inherited;
+    EarlyPersonalAddress {
+        internal_location: d.internal_location,
+        street_number: d.street_number,
+        street: d.street,
+        postal_box: d.postal_box,
+        town: d.town,
+        region: d.region,
+        postal_code: d.postal_code,
+        country: d.country,
+        facsimile_number: d.facsimile_number,
+        telephone_number: d.telephone_number,
+        electronic_mail_address: d.electronic_mail_address,
+        telex_number: d.telex_number,
+        people,
+        description: Some(pa.description),
     }
 }

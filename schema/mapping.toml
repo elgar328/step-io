@@ -50,6 +50,8 @@ generate = [
     "person",
     "role_association",
     "document_product_equivalence",
+    "address",
+    "personal_address",
 ]
 
 # `generate_all`: diagnostic flip. When true, gen-early generates *every* entity

@@ -719,6 +719,90 @@ pub(crate) fn bind_document_product_equivalence(
     })
 }
 
+pub(crate) fn bind_address(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAddress, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 12, entity_id, "ADDRESS")?;
+    Ok(super::model::EarlyAddress {
+        internal_location: crate::ir::attr::read_optional_string(
+            attrs,
+            0,
+            entity_id,
+            "internal_location",
+        )?,
+        street_number: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "street_number")?,
+        street: crate::ir::attr::read_optional_string(attrs, 2, entity_id, "street")?,
+        postal_box: crate::ir::attr::read_optional_string(attrs, 3, entity_id, "postal_box")?,
+        town: crate::ir::attr::read_optional_string(attrs, 4, entity_id, "town")?,
+        region: crate::ir::attr::read_optional_string(attrs, 5, entity_id, "region")?,
+        postal_code: crate::ir::attr::read_optional_string(attrs, 6, entity_id, "postal_code")?,
+        country: crate::ir::attr::read_optional_string(attrs, 7, entity_id, "country")?,
+        facsimile_number: crate::ir::attr::read_optional_string(
+            attrs,
+            8,
+            entity_id,
+            "facsimile_number",
+        )?,
+        telephone_number: crate::ir::attr::read_optional_string(
+            attrs,
+            9,
+            entity_id,
+            "telephone_number",
+        )?,
+        electronic_mail_address: crate::ir::attr::read_optional_string(
+            attrs,
+            10,
+            entity_id,
+            "electronic_mail_address",
+        )?,
+        telex_number: crate::ir::attr::read_optional_string(attrs, 11, entity_id, "telex_number")?,
+    })
+}
+
+pub(crate) fn bind_personal_address(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPersonalAddress, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 14, entity_id, "PERSONAL_ADDRESS")?;
+    Ok(super::model::EarlyPersonalAddress {
+        internal_location: crate::ir::attr::read_optional_string(
+            attrs,
+            0,
+            entity_id,
+            "internal_location",
+        )?,
+        street_number: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "street_number")?,
+        street: crate::ir::attr::read_optional_string(attrs, 2, entity_id, "street")?,
+        postal_box: crate::ir::attr::read_optional_string(attrs, 3, entity_id, "postal_box")?,
+        town: crate::ir::attr::read_optional_string(attrs, 4, entity_id, "town")?,
+        region: crate::ir::attr::read_optional_string(attrs, 5, entity_id, "region")?,
+        postal_code: crate::ir::attr::read_optional_string(attrs, 6, entity_id, "postal_code")?,
+        country: crate::ir::attr::read_optional_string(attrs, 7, entity_id, "country")?,
+        facsimile_number: crate::ir::attr::read_optional_string(
+            attrs,
+            8,
+            entity_id,
+            "facsimile_number",
+        )?,
+        telephone_number: crate::ir::attr::read_optional_string(
+            attrs,
+            9,
+            entity_id,
+            "telephone_number",
+        )?,
+        electronic_mail_address: crate::ir::attr::read_optional_string(
+            attrs,
+            10,
+            entity_id,
+            "electronic_mail_address",
+        )?,
+        telex_number: crate::ir::attr::read_optional_string(attrs, 11, entity_id, "telex_number")?,
+        people: crate::ir::attr::read_entity_ref_list(attrs, 12, entity_id, "people")?,
+        description: crate::ir::attr::read_optional_string(attrs, 13, entity_id, "description")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

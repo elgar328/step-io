@@ -4,9 +4,10 @@
 //! and re-exported here so the handlers keep their `serialize::serialize_*` paths.
 
 pub(crate) use super::generated::serialize::{
-    serialize_application_context, serialize_approval, serialize_approval_date_time,
-    serialize_approval_person_organization, serialize_approval_role, serialize_approval_status,
-    serialize_calendar_date, serialize_constructive_geometry_representation_relationship,
+    serialize_address, serialize_application_context, serialize_approval,
+    serialize_approval_date_time, serialize_approval_person_organization, serialize_approval_role,
+    serialize_approval_status, serialize_calendar_date,
+    serialize_constructive_geometry_representation_relationship,
     serialize_context_dependent_shape_representation, serialize_coordinated_universal_time_offset,
     serialize_date_and_time, serialize_date_time_role, serialize_document,
     serialize_document_product_equivalence, serialize_document_representation_type,
@@ -14,8 +15,9 @@ pub(crate) use super::generated::serialize::{
     serialize_identification_role, serialize_local_time,
     serialize_mechanical_design_and_draughting_relationship,
     serialize_next_assembly_usage_occurrence, serialize_object_role, serialize_organization,
-    serialize_person, serialize_person_and_organization_role, serialize_point_style,
-    serialize_product, serialize_product_definition, serialize_product_definition_formation,
+    serialize_person, serialize_person_and_organization_role, serialize_personal_address,
+    serialize_point_style, serialize_product, serialize_product_definition,
+    serialize_product_definition_formation,
     serialize_product_definition_formation_with_specified_source,
     serialize_product_definition_shape, serialize_product_definition_with_associated_documents,
     serialize_representation_relationship, serialize_role_association,

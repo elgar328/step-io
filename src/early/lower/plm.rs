@@ -7,23 +7,23 @@
 //! these through `id_cache` typed arena ids directly.
 
 use crate::early::model::{
-    EarlyApplicationContext, EarlyApproval, EarlyApprovalDateTime, EarlyApprovalPersonOrganization,
-    EarlyApprovalRole, EarlyApprovalStatus, EarlyCalendarDate, EarlyCoordinatedUniversalTimeOffset,
-    EarlyDateAndTime, EarlyDateTimeRole, EarlyDocument, EarlyDocumentProductEquivalence,
-    EarlyDocumentRepresentationType, EarlyDocumentType, EarlyGroup, EarlyIdentificationRole,
-    EarlyLocalTime, EarlyObjectRole, EarlyOrganization, EarlyPerson,
-    EarlyPersonAndOrganizationRole, EarlyRoleAssociation, EarlySecurityClassification,
-    EarlySecurityClassificationLevel,
+    EarlyAddress, EarlyApplicationContext, EarlyApproval, EarlyApprovalDateTime,
+    EarlyApprovalPersonOrganization, EarlyApprovalRole, EarlyApprovalStatus, EarlyCalendarDate,
+    EarlyCoordinatedUniversalTimeOffset, EarlyDateAndTime, EarlyDateTimeRole, EarlyDocument,
+    EarlyDocumentProductEquivalence, EarlyDocumentRepresentationType, EarlyDocumentType,
+    EarlyGroup, EarlyIdentificationRole, EarlyLocalTime, EarlyObjectRole, EarlyOrganization,
+    EarlyPerson, EarlyPersonAndOrganizationRole, EarlyPersonalAddress, EarlyRoleAssociation,
+    EarlySecurityClassification, EarlySecurityClassificationLevel,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::plm::{
-    ApplicationContext, Approval, ApprovalDateTime, ApprovalDateTimeSelect,
+    Address, AddressData, ApplicationContext, Approval, ApprovalDateTime, ApprovalDateTimeSelect,
     ApprovalPersonOrganization, ApprovalRole, ApprovalStatus, CalendarDate,
     CoordinatedUniversalTimeOffset, DateAndTime, DateTimeRole, Document, DocumentData,
     DocumentProductEquivalence, DocumentProductItem, DocumentRepresentationType, DocumentType,
     Group, IdentificationRole, LocalTime, ObjectRole, Organization, Person,
-    PersonAndOrganizationRole, PersonOrganizationSelect, PlmPool, RoleAssociation, RoleSelect,
-    SecurityClassification, SecurityClassificationLevel,
+    PersonAndOrganizationRole, PersonOrganizationSelect, PersonalAddress, PlmPool, RoleAssociation,
+    RoleSelect, SecurityClassification, SecurityClassificationLevel,
 };
 use crate::reader::ReaderContext;
 
@@ -461,5 +461,69 @@ pub(crate) fn lower_document_product_equivalence(
             relating_document,
             related_product,
         });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one plain `ADDRESS` (`Itself` carrier — 12 faithful optional
+/// fields; `PERSONAL_ADDRESS` keeps its own handler).
+pub(crate) fn lower_address(ctx: &mut ReaderContext, entity_id: u64, early: EarlyAddress) {
+    let data = AddressData {
+        internal_location: early.internal_location,
+        street_number: early.street_number,
+        street: early.street,
+        postal_box: early.postal_box,
+        town: early.town,
+        region: early.region,
+        postal_code: early.postal_code,
+        country: early.country,
+        facsimile_number: early.facsimile_number,
+        telephone_number: early.telephone_number,
+        electronic_mail_address: early.electronic_mail_address,
+        telex_number: early.telex_number,
+    };
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id = pool.addresses.push(Address::Itself(data));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `PERSONAL_ADDRESS`. Schema mandates `people` SET\[1:?\]; an
+/// empty resolved set means no Person ref survived (forward-ref drop or
+/// unsupported variant) — drop the entry rather than emit a violating
+/// empty (legacy leniency).
+pub(crate) fn lower_personal_address(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyPersonalAddress,
+) {
+    let people: Vec<crate::ir::PersonId> = early
+        .people
+        .iter()
+        .filter_map(|r| ctx.id_cache.get::<crate::ir::PersonId>(*r))
+        .collect();
+    if people.is_empty() {
+        return;
+    }
+    let inherited = AddressData {
+        internal_location: early.internal_location,
+        street_number: early.street_number,
+        street: early.street,
+        postal_box: early.postal_box,
+        town: early.town,
+        region: early.region,
+        postal_code: early.postal_code,
+        country: early.country,
+        facsimile_number: early.facsimile_number,
+        telephone_number: early.telephone_number,
+        electronic_mail_address: early.electronic_mail_address,
+        telex_number: early.telex_number,
+    };
+    let pa = PersonalAddress {
+        inherited,
+        people,
+        // Legacy read_string_or_unset collapsed `$` to "" (L2 String).
+        description: early.description.unwrap_or_default(),
+    };
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id = pool.addresses.push(Address::PersonalAddress(pa));
     ctx.id_cache.insert(entity_id, id);
 }

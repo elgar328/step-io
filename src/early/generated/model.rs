@@ -966,6 +966,72 @@ impl crate::ir::arena::ArenaId for EarlyDocumentProductEquivalenceId {
     }
 }
 
+/// L1 `ADDRESS` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAddress {
+    pub(crate) internal_location: Option<String>,
+    pub(crate) street_number: Option<String>,
+    pub(crate) street: Option<String>,
+    pub(crate) postal_box: Option<String>,
+    pub(crate) town: Option<String>,
+    pub(crate) region: Option<String>,
+    pub(crate) postal_code: Option<String>,
+    pub(crate) country: Option<String>,
+    pub(crate) facsimile_number: Option<String>,
+    pub(crate) telephone_number: Option<String>,
+    pub(crate) electronic_mail_address: Option<String>,
+    pub(crate) telex_number: Option<String>,
+}
+
+/// Typed `id_cache` key for `ADDRESS` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAddressId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAddressId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PERSONAL_ADDRESS` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPersonalAddress {
+    pub(crate) internal_location: Option<String>,
+    pub(crate) street_number: Option<String>,
+    pub(crate) street: Option<String>,
+    pub(crate) postal_box: Option<String>,
+    pub(crate) town: Option<String>,
+    pub(crate) region: Option<String>,
+    pub(crate) postal_code: Option<String>,
+    pub(crate) country: Option<String>,
+    pub(crate) facsimile_number: Option<String>,
+    pub(crate) telephone_number: Option<String>,
+    pub(crate) electronic_mail_address: Option<String>,
+    pub(crate) telex_number: Option<String>,
+    pub(crate) people: Vec<u64>,
+    pub(crate) description: Option<String>,
+}
+
+/// Typed `id_cache` key for `PERSONAL_ADDRESS` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPersonalAddressId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPersonalAddressId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {
