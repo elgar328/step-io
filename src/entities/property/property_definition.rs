@@ -197,7 +197,7 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
             CharacterizedDefinition::GeometricTolerance(gt_ref)
         } else if let Some(ds_id) = ctx.id_cache.get::<crate::ir::DimensionalSizeId>(target_ref) {
             CharacterizedDefinition::DimensionalSize(ds_id)
-        } else if ctx.pdef_shape_to_nauo.contains_key(&target_ref) {
+        } else if ctx.nauo_pds_info.contains_key(&target_ref) {
             // Target is a NAUO-owned PRODUCT_DEFINITION_SHAPE (assembly placement
             // shape). It is not in the `property_definitions` arena during
             // dispatch — its ACU id only exists after `resolve_nauo_instances`.

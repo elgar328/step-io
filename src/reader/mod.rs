@@ -106,6 +106,17 @@ pub(crate) struct AssemblyRrData {
     pub(crate) rr_complex_entity: u64,
 }
 
+/// A NAUO-targeted `PRODUCT_DEFINITION_SHAPE`'s payload, recorded by the PDS
+/// handler's NAUO branch: the target NAUO's `#N` plus the source
+/// `name`/`description` (so `materialize_nauo_owned_pds` preserves the
+/// exporter's placement label, e.g. "Placement #462", instead of the assembly
+/// chain's hard-coded "Placement" / "Placement of an item").
+pub(crate) struct NauoPdsInfo {
+    pub(crate) nauo: u64,
+    pub(crate) name: String,
+    pub(crate) description: String,
+}
+
 /// A `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` whose `style_context` SELECT
 /// list is resolved in a post-pass. The targets are overwhelmingly assembly
 /// RR-complexes, which only gain a `RepresentationRelationshipId` after
@@ -390,17 +401,12 @@ pub struct ReaderContext {
     /// wrapper's `items` list may omit an axis (CATIA's GBSSR commonly
     /// does).
     pub(crate) wireframe_ref_frame_map: HashMap<u64, Placement3dId>,
-    /// `PRODUCT_DEFINITION_SHAPE #N → NEXT_ASSEMBLY_USAGE_OCCURRENCE #N` when
-    /// the `pdef_shape` points at a `NAUO` (instance-tagged). Populated by the
+    /// `PRODUCT_DEFINITION_SHAPE #N` → [`NauoPdsInfo`] when the `pdef_shape`
+    /// points at a `NAUO` (instance-tagged). Populated by the
     /// `PRODUCT_DEFINITION_SHAPE` handler's NAUO branch and consumed during
     /// NAUO instance wiring. (The product-targeted counterpart is the typed
     /// [`product_of_pds`](Self::product_of_pds) probe.)
-    pub(crate) pdef_shape_to_nauo: HashMap<u64, u64>,
-    /// Source `(name, description)` of a NAUO-targeted `PRODUCT_DEFINITION_SHAPE`,
-    /// keyed by its `#N`. Captured so `materialize_nauo_owned_pds` preserves the
-    /// exporter's placement label (e.g. "Placement #462") instead of the
-    /// assembly chain's hard-coded "Placement" / "Placement of an item".
-    pub(crate) pdef_shape_nauo_name_desc: HashMap<u64, (String, String)>,
+    pub(crate) nauo_pds_info: HashMap<u64, NauoPdsInfo>,
 
     /// `PROPERTY_DEFINITION`s whose `definition` targets a NAUO-owned PDS,
     /// deferred from the PD handler (the NAUO-PDS is not in the arena during
@@ -1002,24 +1008,19 @@ impl ReaderContext {
         }
 
         // 1. NAUO-targeted PDS → arena entry (source-#N order).
-        let mut nauo_pds: Vec<(u64, u64)> = self
-            .pdef_shape_to_nauo
+        let mut nauo_pds: Vec<(u64, u64, String, String)> = self
+            .nauo_pds_info
             .iter()
-            .map(|(&pds, &nauo)| (pds, nauo))
+            .map(|(&pds, info)| (pds, info.nauo, info.name.clone(), info.description.clone()))
             .collect();
-        nauo_pds.sort_unstable_by_key(|&(pds, _)| pds);
-        for (pds_step, nauo_step) in nauo_pds {
+        nauo_pds.sort_unstable_by_key(|&(pds, ..)| pds);
+        for (pds_step, nauo_step, name, description) in nauo_pds {
             let Some(acu_id) = self
                 .id_cache
                 .get::<crate::ir::id::AssemblyComponentUsageId>(nauo_step)
             else {
                 continue; // NAUO without an instance — no ACU, skip (orphan-safe).
             };
-            let (name, description) = self
-                .pdef_shape_nauo_name_desc
-                .get(&pds_step)
-                .cloned()
-                .unwrap_or_default();
             let pd_id = self
                 .properties
                 .get_or_insert_with(PropertyPool::default)

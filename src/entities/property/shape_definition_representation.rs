@@ -54,7 +54,7 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
             // re-emits one SDR per SR next to the NAUO-owned PDS. (Without this
             // it falls to `sdr_link_refs` and `resolve_sdr_links` drops it, since
             // the NAUO-owned PDS is never a modelled property_definition.)
-            if let Some(&nauo_ref) = ctx.pdef_shape_to_nauo.get(&pdef_shape_ref) {
+            if let Some(nauo_ref) = ctx.nauo_pds_info.get(&pdef_shape_ref).map(|i| i.nauo) {
                 if let Some(sr_id) = ctx
                     .id_cache
                     .get::<crate::ir::id::RepresentationId>(shape_rep_ref)

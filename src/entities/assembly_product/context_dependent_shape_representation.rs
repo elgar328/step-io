@@ -40,7 +40,7 @@ impl SimpleEntityHandler for ContextDependentShapeRepresentationHandler {
         let pdef_shape_ref = early.represented_product_relation;
 
         // Only NAUO-tagged CDSRs — product-level CDSRs skip silently.
-        let Some(&nauo_ref) = ctx.pdef_shape_to_nauo.get(&pdef_shape_ref) else {
+        let Some(nauo_ref) = ctx.nauo_pds_info.get(&pdef_shape_ref).map(|i| i.nauo) else {
             return Ok(());
         };
 

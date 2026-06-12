@@ -4,7 +4,7 @@
 //! whether this `PDEF_SHAPE` describes a product (`PRODUCT_DEFINITION`
 //! target) or an instance (NAUO target). The product branch lowers to the
 //! `property_definitions` arena and records the typed `product_of_pds`
-//! correspondence; the NAUO branch populates `pdef_shape_to_nauo`. These
+//! correspondence; the NAUO branch populates `nauo_pds_info`. These
 //! feed the `SHAPE_DEFINITION_REPRESENTATION` and
 //! `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` handlers downstream.
 //!
@@ -55,16 +55,20 @@ impl SimpleEntityHandler for ProductDefinitionShapeHandler {
         } else if let Some(nauo_ref) =
             pdef_shape_target(graph, entity_id, &["NEXT_ASSEMBLY_USAGE_OCCURRENCE"])
         {
-            ctx.pdef_shape_to_nauo.insert(entity_id, nauo_ref);
-            // Capture the source name/description so `materialize_nauo_owned_pds`
-            // and the assembly-chain emit preserve the exporter's placement
-            // label instead of the hard-coded "Placement" fallback. (Bind is
-            // safe here: the branch guarantees a well-formed entity ref at
-            // attr[2]; `$` descriptions collapse to "" as before.)
+            // Capture the target NAUO plus the source name/description so
+            // `materialize_nauo_owned_pds` and the assembly-chain emit
+            // preserve the exporter's placement label instead of the
+            // hard-coded "Placement" fallback. (Bind is safe here: the branch
+            // guarantees a well-formed entity ref at attr[2]; `$` descriptions
+            // collapse to "" as before.)
             let early = bind::bind_product_definition_shape(entity_id, attrs)?;
-            ctx.pdef_shape_nauo_name_desc.insert(
+            ctx.nauo_pds_info.insert(
                 entity_id,
-                (early.name, early.description.unwrap_or_default()),
+                crate::reader::NauoPdsInfo {
+                    nauo: nauo_ref,
+                    name: early.name,
+                    description: early.description.unwrap_or_default(),
+                },
             );
         }
         Ok(())
