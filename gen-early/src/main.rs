@@ -360,11 +360,6 @@ impl Ctx {
         let Some(members) = select_members(td.aliased.trim()) else {
             return false;
         };
-        // Aggregation members (LIST/SET) all render as `(...)` in Part21, so
-        // they can't be told apart from one another; they collapse into one
-        // combined `Aggregate` variant — but only if they share a single inner
-        // kind (>1 distinct inner can't be disambiguated either).
-        let mut agg_inner: Option<&'static str> = None;
         for m in members {
             let Some(k) = self.try_classify(m, 0) else {
                 return false; // unresolved member
@@ -379,16 +374,12 @@ impl Ctx {
                 // hinted enum member -> dual representation, deferred.
                 Kind::Enum(a) if self.mapping.enums.contains_key(&a) => return false,
                 Kind::Enum(_) => {}
-                // aggregation member: collapsible if its inner is a scalar/ref
-                // (single Attribute element form) and matches any other agg member.
+                // Aggregation member: per Part21 it arrives as a *typed parameter*
+                // `TAG((...))` (e.g. `COMMON_DATUM_LIST((#1,#2))`, see the
+                // hand-written reader in src/entities/pmi.rs), so the tag
+                // disambiguates it — any number / any mix of inner kinds is fine.
                 Kind::Vec(inner)
-                    if matches!(*inner, Kind::Ref | Kind::Real | Kind::Int | Kind::Str) =>
-                {
-                    let tag = kind_tag(&inner);
-                    if agg_inner.get_or_insert(tag) != &tag {
-                        return false; // >1 distinct agg inner kind
-                    }
-                }
+                    if matches!(*inner, Kind::Ref | Kind::Real | Kind::Int | Kind::Str) => {}
                 // Nested mixed SELECT member: supported only if it is itself
                 // scalar/enum-only (its value is always a single `Typed`, so the
                 // outer bind can delegate to `bind_<nested>`); ref/agg-bearing
@@ -1091,25 +1082,14 @@ fn emit_select_synth(
     // of them collapse into one combined `EntityRef(u64)` variant; `lower`
     // resolves the actual entity type. (Scalar / enum members stay per-variant.)
     let has_ref = mems.iter().any(|(_, _, k)| matches!(k, Kind::Ref));
-    // Aggregation members (LIST/SET) all render as `(...)` in Part21, so like
-    // entity refs they're mutually indistinguishable at bind and collapse into
-    // one combined `Aggregate(Vec<inner>)` variant — `lower` recovers them.
-    // They must share a single scalar/ref inner kind (>1 distinct can't be told
-    // apart either, both being `List`).
-    let mut agg_inner: Option<Kind> = None;
+    // Aggregation members arrive as typed parameters `TAG((...))` per Part21
+    // (e.g. `COMMON_DATUM_LIST((#1,#2))`, mirroring the hand-written reader in
+    // src/entities/pmi.rs), so each keeps its own variant — only non-scalar
+    // inners are deferred.
     for (m, _, k) in &mems {
         match k {
             Kind::Vec(inner)
-                if matches!(**inner, Kind::Ref | Kind::Real | Kind::Int | Kind::Str) =>
-            {
-                match &agg_inner {
-                    None => agg_inner = Some((**inner).clone()),
-                    Some(prev) if kind_tag(prev) != kind_tag(inner) => panic!(
-                        "gen-early: select `{sel}` has aggregation members of >1 inner kind (cannot disambiguate)"
-                    ),
-                    _ => {}
-                }
-            }
+                if matches!(**inner, Kind::Ref | Kind::Real | Kind::Int | Kind::Str) => {}
             Kind::Vec(_) => {
                 panic!("gen-early: select `{sel}` member `{m}` is a non-scalar aggregation (v4.x)")
             }
@@ -1137,7 +1117,8 @@ fn emit_select_synth(
             Kind::Enum(a) => format!("super::model::Early{}", pascal(a)),
             // Typed-only nested select -> its own synthesized `Early*` type.
             Kind::Select(a) => format!("super::model::Early{}", pascal(a)),
-            _ => unreachable!("filtered by the deferred-shape checks above"),
+            // Typed aggregation member -> Vec of its (scalar/ref) inner.
+            Kind::Vec(_) => field_ty(ctx, k),
         }
     };
 
@@ -1170,13 +1151,9 @@ fn emit_select_synth(
     if has_ref {
         writeln!(model, "    EntityRef(u64),").unwrap();
     }
-    if let Some(inner) = &agg_inner {
-        let ty = field_ty(ctx, &Kind::Vec(Box::new(inner.clone())));
-        writeln!(model, "    Aggregate({ty}),").unwrap();
-    }
     for (_, v, k) in &mems {
-        if matches!(k, Kind::Ref | Kind::Vec(_)) {
-            continue; // collapsed into the combined EntityRef / Aggregate variant.
+        if matches!(k, Kind::Ref) {
+            continue; // collapsed into the combined `EntityRef` variant above.
         }
         writeln!(model, "    {v}({}),", payload(k)).unwrap();
     }
@@ -1203,47 +1180,6 @@ fn emit_select_synth(
         )
         .unwrap();
     }
-    if let Some(inner) = &agg_inner {
-        // All aggregation members share this one arm (`(...)` is indistinguishable
-        // between LIST/SET); decode each element by the shared inner kind.
-        writeln!(
-            bind,
-            "        crate::parser::entity::Attribute::List(items) => {{"
-        )
-        .unwrap();
-        writeln!(
-            bind,
-            "            let mut out = Vec::with_capacity(items.len());"
-        )
-        .unwrap();
-        writeln!(bind, "            for it in items {{").unwrap();
-        writeln!(bind, "                match it {{").unwrap();
-        match inner {
-            Kind::Ref => {
-                writeln!(bind, "                    crate::parser::entity::Attribute::EntityRef(n) => out.push(*n),").unwrap();
-            }
-            Kind::Real => {
-                writeln!(
-                    bind,
-                    "                    crate::parser::entity::Attribute::Real(x) => out.push(*x),"
-                )
-                .unwrap();
-                writeln!(bind, "                    crate::parser::entity::Attribute::Integer(x) => out.push(*x as f64),").unwrap();
-            }
-            Kind::Int => {
-                writeln!(bind, "                    crate::parser::entity::Attribute::Integer(x) => out.push(*x),").unwrap();
-            }
-            Kind::Str => {
-                writeln!(bind, "                    crate::parser::entity::Attribute::String(s) => out.push(s.clone()),").unwrap();
-            }
-            _ => unreachable!("agg_inner is restricted to ref/scalar"),
-        }
-        writeln!(bind, "                    _ => return None,").unwrap();
-        writeln!(bind, "                }}").unwrap();
-        writeln!(bind, "            }}").unwrap();
-        writeln!(bind, "            Some({rtq}::Aggregate(out))").unwrap();
-        writeln!(bind, "        }}").unwrap();
-    }
     if mems.iter().any(|(_, _, k)| {
         matches!(
             k,
@@ -1255,6 +1191,7 @@ fn emit_select_synth(
                 | Kind::Binary
                 | Kind::Enum(_)
                 | Kind::Select(_)
+                | Kind::Vec(_)
         )
     }) {
         writeln!(
@@ -1283,6 +1220,39 @@ fn emit_select_synth(
                 }
                 Kind::Logical => {
                     writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Enum(t)) => Some({rtq}::{v}(match t.as_str() {{ \"T\" => crate::ir::geometry::Logical::True, \"F\" => crate::ir::geometry::Logical::False, _ => crate::ir::geometry::Logical::Unknown }})),").unwrap();
+                }
+                // Typed aggregation member `TAG((...))`: decode each element by
+                // the (scalar/ref) inner kind; a mismatched element drops the value.
+                Kind::Vec(inner) => {
+                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::List(items)) => {{").unwrap();
+                    writeln!(
+                        bind,
+                        "                let mut out = Vec::with_capacity(items.len());"
+                    )
+                    .unwrap();
+                    writeln!(bind, "                for it in items {{").unwrap();
+                    writeln!(bind, "                    match it {{").unwrap();
+                    match &**inner {
+                        Kind::Ref => {
+                            writeln!(bind, "                        crate::parser::entity::Attribute::EntityRef(n) => out.push(*n),").unwrap();
+                        }
+                        Kind::Real => {
+                            writeln!(bind, "                        crate::parser::entity::Attribute::Real(x) => out.push(*x),").unwrap();
+                            writeln!(bind, "                        crate::parser::entity::Attribute::Integer(x) => out.push(*x as f64),").unwrap();
+                        }
+                        Kind::Int => {
+                            writeln!(bind, "                        crate::parser::entity::Attribute::Integer(x) => out.push(*x),").unwrap();
+                        }
+                        Kind::Str => {
+                            writeln!(bind, "                        crate::parser::entity::Attribute::String(s) => out.push(s.clone()),").unwrap();
+                        }
+                        _ => unreachable!("agg inners are restricted to ref/scalar"),
+                    }
+                    writeln!(bind, "                        _ => return None,").unwrap();
+                    writeln!(bind, "                    }}").unwrap();
+                    writeln!(bind, "                }}").unwrap();
+                    writeln!(bind, "                Some({rtq}::{v}(out))").unwrap();
+                    writeln!(bind, "            }}").unwrap();
                 }
                 Kind::Enum(a) => {
                     let etype = format!("super::model::Early{}", pascal(a));
@@ -1331,24 +1301,9 @@ fn emit_select_synth(
         )
         .unwrap();
     }
-    if let Some(inner) = &agg_inner {
-        // The combined aggregate variant emits a `(...)` list back.
-        let elem = match inner {
-            Kind::Ref => "|n| crate::parser::entity::Attribute::EntityRef(*n)",
-            Kind::Real => "|x| crate::parser::entity::Attribute::Real(*x)",
-            Kind::Int => "|x| crate::parser::entity::Attribute::Integer(*x)",
-            Kind::Str => "|s| crate::parser::entity::Attribute::String(s.clone())",
-            _ => unreachable!("agg_inner is restricted to ref/scalar"),
-        };
-        writeln!(
-            serialize,
-            "        {rtq}::Aggregate(v) => crate::parser::entity::Attribute::List(v.iter().map({elem}).collect()),"
-        )
-        .unwrap();
-    }
     for (m, v, k) in &mems {
-        if matches!(k, Kind::Ref | Kind::Vec(_)) {
-            continue; // handled by the combined EntityRef / Aggregate arm above.
+        if matches!(k, Kind::Ref) {
+            continue; // handled by the combined `EntityRef` arm above.
         }
         let tag = m.to_uppercase();
         let arm = match k {
@@ -1383,6 +1338,13 @@ fn emit_select_synth(
             // Typed-only nested select: delegate to its `<nested>_emit`.
             Kind::Select(nested) => {
                 format!("{rtq}::{v}(x) => {nested}_emit(x),")
+            }
+            // Typed aggregation member: emit `TAG((...))` back.
+            Kind::Vec(inner) => {
+                let elem = vec_elem_closure(inner);
+                format!(
+                    "{rtq}::{v}(xs) => crate::parser::entity::Attribute::Typed {{ type_name: \"{tag}\".into(), value: Box::new(crate::parser::entity::Attribute::List(xs.iter().map({elem}).collect())) }},"
+                )
             }
             _ => unreachable!("filtered by the deferred-shape checks above"),
         };
@@ -2199,36 +2161,72 @@ mod tests {
         ));
     }
 
-    /// Aggregation members (LIST/SET) render as `(...)`, indistinguishable from
-    /// each other at bind, so they collapse into one combined `Aggregate(Vec<_>)`
-    /// variant (scalar/ref inner). `item_identified_representation_usage_select` =
+    /// Aggregation members arrive as typed parameters `TAG((...))` per Part21,
+    /// so each keeps its own variant (no combined `Aggregate`).
+    /// `item_identified_representation_usage_select` =
     /// SELECT(list_representation_item, representation_item, set_representation_item)
-    /// — one entity ref + two `LIST/SET OF representation_item` aggregates.
+    /// — one entity ref (collapses to `EntityRef`) + two typed aggregates.
     #[test]
-    fn synth_select_aggregate_combined() {
+    fn synth_select_typed_aggregate_members() {
         let (m, b, s) = synth_select("item_identified_representation_usage_select");
-        // the ref member and the two aggregates merge into two combined variants...
+        // the ref member still collapses; the aggregates stay per-variant.
         assert!(m.contains("EntityRef(u64)"));
-        assert!(m.contains("Aggregate(Vec<u64>)"));
-        // ...and no per-member variant survives.
-        assert!(!m.contains("ListRepresentationItem("));
-        assert!(!m.contains("SetRepresentationItem("));
-        assert!(!m.contains("RepresentationItem("));
-        // exactly one ref arm and one list arm consume the bare forms.
-        assert_eq!(
-            b.matches("crate::parser::entity::Attribute::EntityRef(n) => Some(")
-                .count(),
-            1
-        );
-        assert_eq!(
-            b.matches("crate::parser::entity::Attribute::List(items) =>")
-                .count(),
-            1
-        );
-        assert!(b.contains("crate::parser::entity::Attribute::EntityRef(n) => out.push(*n),"));
-        assert!(s.contains(
-            "::Aggregate(v) => crate::parser::entity::Attribute::List(v.iter().map(|n| crate::parser::entity::Attribute::EntityRef(*n)).collect())"
+        assert!(m.contains("ListRepresentationItem(Vec<u64>)"));
+        assert!(m.contains("SetRepresentationItem(Vec<u64>)"));
+        assert!(!m.contains("Aggregate("));
+        // bind: one tagged List arm per aggregate member, no bare-List arm.
+        assert!(b.contains(
+            "(\"LIST_REPRESENTATION_ITEM\", crate::parser::entity::Attribute::List(items)) =>"
         ));
+        assert!(b.contains(
+            "(\"SET_REPRESENTATION_ITEM\", crate::parser::entity::Attribute::List(items)) =>"
+        ));
+        assert!(!b.contains("        crate::parser::entity::Attribute::List(items) =>"));
+        assert!(b.contains("crate::parser::entity::Attribute::EntityRef(n) => out.push(*n),"));
+        // serialize: the tag is wrapped back around the list.
+        assert!(s.contains(
+            "ListRepresentationItem(xs) => crate::parser::entity::Attribute::Typed { type_name: \"LIST_REPRESENTATION_ITEM\".into(), value: Box::new(crate::parser::entity::Attribute::List(xs.iter().map(|&s| crate::parser::entity::Attribute::EntityRef(s)).collect())) }"
+        ));
+    }
+
+    /// ★Cross-validation against real-file-proven hand-written code:
+    /// `datum_or_common_datum` = SELECT(common_datum_list [agg], datum [ref]).
+    /// The generated bind must match `Typed{"COMMON_DATUM_LIST", List}` — the
+    /// exact form the hand-written reader for NIST files matches
+    /// (src/entities/pmi.rs, `type_name == "COMMON_DATUM_LIST"`).
+    #[test]
+    fn synth_select_datum_or_common_datum() {
+        let (m, b, s) = synth_select("datum_or_common_datum");
+        assert!(m.contains("EntityRef(u64)"));
+        assert!(m.contains("CommonDatumList(Vec<u64>)"));
+        assert!(
+            b.contains("(\"COMMON_DATUM_LIST\", crate::parser::entity::Attribute::List(items)) =>")
+        );
+        assert!(s.contains("type_name: \"COMMON_DATUM_LIST\".into()"));
+    }
+
+    /// Typed-aggregate edge cases: an agg-only select gets one Typed arm per
+    /// member (no empty match); a real-inner agg keeps the integer promotion
+    /// (and its cast allow); maths_value stays deferred (Vec(Select) member).
+    #[test]
+    fn synth_select_typed_aggregate_edges() {
+        // compound_item_definition = SELECT(list_repr_item, set_repr_item) — agg only.
+        let (_, b, _) = synth_select("compound_item_definition");
+        assert!(b.contains(
+            "(\"LIST_REPRESENTATION_ITEM\", crate::parser::entity::Attribute::List(items)) =>"
+        ));
+        assert!(b.contains(
+            "(\"SET_REPRESENTATION_ITEM\", crate::parser::entity::Attribute::List(items)) =>"
+        ));
+        // spatial_rotation = SELECT(rotation_about_direction [ref], ypr_rotation [LIST OF real]).
+        let (m2, b2, _) = synth_select("spatial_rotation");
+        assert!(m2.contains("YprRotation(Vec<f64>)"));
+        assert!(b2.contains("#[allow(clippy::cast_precision_loss)]"));
+        assert!(
+            b2.contains("crate::parser::entity::Attribute::Integer(x) => out.push(*x as f64),")
+        );
+        // maths_value still deferred: its maths_tuple member is a Vec(Select).
+        assert!(!ctx_from(schema()).select_supported("maths_value"));
     }
 
     /// A scalar-only nested SELECT member (`measure_value` = 42 scalar measures)
