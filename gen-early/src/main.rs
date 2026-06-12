@@ -322,21 +322,17 @@ impl Ctx {
             // scalar bind exists; optional deferred (no read_optional_*).
             Kind::Bool | Kind::Logical | Kind::Binary => !optional,
             // ref / scalar / enum / supported-select element (single list), or a
-            // `Vec<Vec<ref/real/int>>` grid; optional aggregation deferred.
-            Kind::Vec(inner) => {
-                !optional
-                    && match &**inner {
-                        Kind::Ref
-                        | Kind::Real
-                        | Kind::Int
-                        | Kind::Str
-                        | Kind::Enum(_)
-                        | Kind::Logical => true,
-                        Kind::Select(s) => self.select_supported(s),
-                        Kind::Vec(i2) => matches!(**i2, Kind::Ref | Kind::Real | Kind::Int),
-                        _ => false,
-                    }
-            }
+            // `Vec<Vec<ref/real/int>>` grid. Single-level aggregations may be
+            // `OPTIONAL` (`Option<Vec<_>>` via the v4.16 presence-check wrapper);
+            // the grid is still non-optional only (no opt-grid occurrence).
+            Kind::Vec(inner) => match &**inner {
+                Kind::Ref | Kind::Real | Kind::Int | Kind::Str | Kind::Enum(_) | Kind::Logical => {
+                    true
+                }
+                Kind::Select(s) => self.select_supported(s),
+                Kind::Vec(i2) => !optional && matches!(**i2, Kind::Ref | Kind::Real | Kind::Int),
+                _ => false,
+            },
             // optional select is handled by the v4.2 let-form; both need a
             // supported select.
             Kind::Select(sel) => self.select_supported(sel),
@@ -1622,6 +1618,27 @@ fn bind_expr(k: &Kind, i: usize, field: &str) -> String {
     }
 }
 
+/// The per-element closure that maps one `Vec<inner>` element to an
+/// [`Attribute`], shared by `serialize_expr` (non-optional) and
+/// `serialize_expr_opt` (optional). The `Ref` arm reproduces the previous
+/// `VecRef` output byte-for-byte; `ENUM`/`SELECT` reuse the standalone
+/// `<alias>_attr` / `<alias>_emit` helpers per element.
+fn vec_elem_closure(inner: &Kind) -> String {
+    match inner {
+        Kind::Ref => "|&s| crate::parser::entity::Attribute::EntityRef(s)".to_string(),
+        Kind::Real => "|&x| crate::parser::entity::Attribute::Real(x)".to_string(),
+        Kind::Int => "|&x| crate::parser::entity::Attribute::Integer(x)".to_string(),
+        Kind::Str => "|s| crate::parser::entity::Attribute::String(s.clone())".to_string(),
+        Kind::Enum(alias) => format!("|e| {alias}_attr(e.clone())"),
+        Kind::Select(alias) => format!("{alias}_emit"),
+        Kind::Logical => {
+            "|&l| crate::parser::entity::Attribute::Enum(crate::ir::attr::logical_to_step(l).into())"
+                .to_string()
+        }
+        other => panic!("gen-early: aggregation of {other:?} not yet supported"),
+    }
+}
+
 fn serialize_expr(k: &Kind, field: &str) -> String {
     match k {
         Kind::Ref => format!("crate::parser::entity::Attribute::EntityRef(l1.{field})"),
@@ -1641,22 +1658,7 @@ fn serialize_expr(k: &Kind, field: &str) -> String {
             )
         }
         Kind::Vec(inner) => {
-            // Ref arm reproduces the previous `VecRef` output byte-for-byte.
-            // ENUM reuses the standalone `<alias>_attr` helper per element.
-            let elem = match &**inner {
-                Kind::Ref => "|&s| crate::parser::entity::Attribute::EntityRef(s)".to_string(),
-                Kind::Real => "|&x| crate::parser::entity::Attribute::Real(x)".to_string(),
-                Kind::Int => "|&x| crate::parser::entity::Attribute::Integer(x)".to_string(),
-                Kind::Str => "|s| crate::parser::entity::Attribute::String(s.clone())".to_string(),
-                Kind::Enum(alias) => format!("|e| {alias}_attr(e.clone())"),
-                // SELECT reuses the `<alias>_emit` helper directly (takes `&`).
-                Kind::Select(alias) => format!("{alias}_emit"),
-                Kind::Logical => {
-                    "|&l| crate::parser::entity::Attribute::Enum(crate::ir::attr::logical_to_step(l).into())"
-                        .to_string()
-                }
-                other => panic!("gen-early: aggregation of {other:?} not yet supported"),
-            };
+            let elem = vec_elem_closure(inner);
             format!(
                 "crate::parser::entity::Attribute::List(l1.{field}.iter().map({elem}).collect())"
             )
@@ -1718,7 +1720,13 @@ fn bind_expr_opt(k: &Kind, i: usize, field: &str) -> String {
         Kind::Enum(alias) => format!(
             "match attrs.get({i}) {{ Some(crate::parser::entity::Attribute::Unset | crate::parser::entity::Attribute::Derived) => None, _ => Some(bind_{alias}(attrs, {i}, entity_id, \"{field}\")?) }}"
         ),
-        Kind::Bool | Kind::Logical | Kind::Binary | Kind::Vec(_) => {
+        // Optional single-level aggregation: `$`/`*` -> None, else the existing
+        // non-optional list bind (`read_*_list` / `<alias>_list`), unchanged.
+        Kind::Vec(_) => format!(
+            "match attrs.get({i}) {{ Some(crate::parser::entity::Attribute::Unset | crate::parser::entity::Attribute::Derived) => None, _ => Some({}) }}",
+            bind_expr(k, i, field)
+        ),
+        Kind::Bool | Kind::Logical | Kind::Binary => {
             panic!("gen-early: OPTIONAL {k:?} not yet supported (v4.x)")
         }
         Kind::Select(_) => unreachable!("optional Select handled in the let-form bind path"),
@@ -1756,7 +1764,15 @@ fn serialize_expr_opt(k: &Kind, field: &str) -> String {
         Kind::Enum(alias) => {
             format!("match &l1.{field} {{ Some(e) => {alias}_attr(e.clone()), None => {unset} }}")
         }
-        Kind::Bool | Kind::Logical | Kind::Binary | Kind::Vec(_) => {
+        // Optional single-level aggregation: `Some` -> `List`, `None` -> `$`.
+        // (opt-grid is rejected by `emittable`, so `inner` is never `Vec`.)
+        Kind::Vec(inner) => {
+            let elem = vec_elem_closure(inner);
+            format!(
+                "match &l1.{field} {{ Some(v) => crate::parser::entity::Attribute::List(v.iter().map({elem}).collect()), None => {unset} }}"
+            )
+        }
+        Kind::Bool | Kind::Logical | Kind::Binary => {
             panic!("gen-early: OPTIONAL {k:?} not yet supported (v4.x)")
         }
     }
@@ -2138,6 +2154,42 @@ mod tests {
         let ss = serialize_expr(&Kind::Vec(Box::new(Kind::Str)), "labels");
         assert!(ss.contains("|s| crate::parser::entity::Attribute::String(s.clone())"));
         assert!(serialize_expr(&Kind::Vec(Box::new(Kind::Real)), "v").contains("Real(x)"));
+    }
+
+    /// `Option<Vec<inner>>` (optional single-level aggregation): presence-check
+    /// wrapper reuses the non-optional list bind/serialize; the grid stays
+    /// non-optional only.
+    #[test]
+    fn opt_agg_codegen() {
+        let ctx = empty_ctx();
+        // optional single-level aggregations are now emittable...
+        assert!(ctx.emittable(&Kind::Vec(Box::new(Kind::Ref)), true));
+        assert!(ctx.emittable(&Kind::Vec(Box::new(Kind::Str)), true));
+        // ...but an optional grid stays deferred.
+        assert!(!ctx.emittable(&Kind::Vec(Box::new(Kind::Vec(Box::new(Kind::Ref)))), true));
+
+        // opt-vec-ref bind: presence-check around the existing list reader.
+        let b = bind_expr_full(&Kind::Vec(Box::new(Kind::Ref)), 1, "x", true);
+        assert!(b.contains("read_entity_ref_list(attrs, 1"));
+        assert!(b.contains("crate::parser::entity::Attribute::Unset"));
+        assert!(b.contains("=> None"));
+        assert!(b.contains("Some("));
+        // opt-vec-ref serialize: Some -> List, None -> Unset.
+        let s = serialize_expr_full(&Kind::Vec(Box::new(Kind::Ref)), "y", true);
+        assert!(s.contains("Some(v) =>"));
+        assert!(s.contains("v.iter().map(|&s| crate::parser::entity::Attribute::EntityRef(s))"));
+        assert!(s.contains("None => crate::parser::entity::Attribute::Unset"));
+
+        // opt-vec-select reuses the generated `<alias>_list` / `<alias>_emit`.
+        let bs = bind_expr_full(
+            &Kind::Vec(Box::new(Kind::Select("foo".into()))),
+            1,
+            "x",
+            true,
+        );
+        assert!(bs.contains("foo_list(attrs, 1"));
+        let ss = serialize_expr_full(&Kind::Vec(Box::new(Kind::Select("foo".into()))), "y", true);
+        assert!(ss.contains("v.iter().map(foo_emit)"));
     }
 
     /// `binary` primitive: classifies as `Kind::Binary`, maps to `String` (hex),
