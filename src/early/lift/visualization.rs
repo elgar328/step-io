@@ -2,11 +2,12 @@
 //! the pilot cluster). See the [module docs](super) for the lifting contract.
 
 use crate::early::model::{
-    EarlyColourRgb, EarlyDraughtingPreDefinedColour, EarlyDraughtingPreDefinedCurveFont,
-    EarlyFillAreaStyle, EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlyPreDefinedCurveFont,
-    EarlyPreDefinedMarker, EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol,
-    EarlyPreDefinedTerminatorSymbol, EarlySurfaceSideStyle, EarlySurfaceStyleBoundary,
-    EarlySurfaceStyleFillArea, EarlySurfaceStyleUsage, EarlySymbolColour,
+    EarlyCameraUsage, EarlyColourRgb, EarlyCompositeText, EarlyDraughtingPreDefinedColour,
+    EarlyDraughtingPreDefinedCurveFont, EarlyFillAreaStyle, EarlyFillAreaStyleColour, EarlyMarker,
+    EarlyMarkerSize, EarlyPointStyle, EarlyPreDefinedCurveFont, EarlyPreDefinedMarker,
+    EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol,
+    EarlySurfaceSideStyle, EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea,
+    EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage, EarlySymbolColour, EarlySymbolStyle,
     EarlyTextStyleForDefinedFont, EarlyViewVolume,
 };
 use crate::entities::SimpleEntityHandler;
@@ -186,4 +187,44 @@ pub(crate) fn lift_surface_style_boundary(style_of_boundary: u64) -> EarlySurfac
 /// Lift one `TEXT_STYLE_FOR_DEFINED_FONT` (colour pre-resolved).
 pub(crate) fn lift_text_style_for_defined_font(text_colour: u64) -> EarlyTextStyleForDefinedFont {
     EarlyTextStyleForDefinedFont { text_colour }
+}
+
+/// Lift one `FILL_AREA_STYLE_COLOUR` (colour pre-resolved).
+pub(crate) fn lift_fill_area_style_colour(
+    name: String,
+    fill_colour: u64,
+) -> EarlyFillAreaStyleColour {
+    EarlyFillAreaStyleColour { name, fill_colour }
+}
+
+/// Lift one `SURFACE_STYLE_TRANSPARENT`.
+pub(crate) fn lift_surface_style_transparent(transparency: f64) -> EarlySurfaceStyleTransparent {
+    EarlySurfaceStyleTransparent { transparency }
+}
+
+/// Lift one `SYMBOL_STYLE` (colour pre-resolved).
+pub(crate) fn lift_symbol_style(name: String, style_of_symbol: u64) -> EarlySymbolStyle {
+    EarlySymbolStyle {
+        name,
+        style_of_symbol,
+    }
+}
+
+/// Lift one `COMPOSITE_TEXT` (members pre-resolved via `emit_select`).
+pub(crate) fn lift_composite_text(name: String, collected_text: Vec<u64>) -> EarlyCompositeText {
+    EarlyCompositeText {
+        name,
+        collected_text,
+    }
+}
+
+/// Lift one `CAMERA_USAGE` (both refs pre-resolved).
+pub(crate) fn lift_camera_usage(
+    mapping_origin: u64,
+    mapped_representation: u64,
+) -> EarlyCameraUsage {
+    EarlyCameraUsage {
+        mapping_origin,
+        mapped_representation,
+    }
 }

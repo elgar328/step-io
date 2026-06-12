@@ -2,26 +2,29 @@
 //! the pilot cluster). See the [module docs](super) for the lowering contract.
 
 use crate::early::model::{
-    EarlyColourRgb, EarlyDraughtingPreDefinedColour, EarlyDraughtingPreDefinedCurveFont,
-    EarlyFillAreaStyle, EarlyFillAreaStyleId, EarlyMarker, EarlyMarkerSize, EarlyPointStyle,
-    EarlyPointStyleId, EarlyPreDefinedCurveFont, EarlyPreDefinedMarker,
-    EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol,
-    EarlySurfaceSideStyle, EarlySurfaceSideStyleId, EarlySurfaceStyleBoundary,
-    EarlySurfaceStyleFillArea, EarlySurfaceStyleFillAreaId, EarlySurfaceStyleUsage,
-    EarlySurfaceStyleUsageId, EarlySymbolColour, EarlyTextStyleForDefinedFont, EarlyViewVolume,
-    EarlyViewVolumeId,
+    EarlyCameraUsage, EarlyColourRgb, EarlyCompositeText, EarlyDraughtingPreDefinedColour,
+    EarlyDraughtingPreDefinedCurveFont, EarlyFillAreaStyle, EarlyFillAreaStyleColour,
+    EarlyFillAreaStyleId, EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlyPointStyleId,
+    EarlyPreDefinedCurveFont, EarlyPreDefinedMarker, EarlyPreDefinedPointMarkerSymbol,
+    EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol, EarlySurfaceSideStyle,
+    EarlySurfaceSideStyleId, EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea,
+    EarlySurfaceStyleFillAreaId, EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage,
+    EarlySurfaceStyleUsageId, EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont,
+    EarlyViewVolume, EarlyViewVolumeId,
 };
 use crate::ir::id::{
     ColourId, MeasureWithUnitId, PlanarExtentId, PointId, PreDefinedMarkerId,
     SurfaceStyleRenderingId,
 };
+use crate::ir::shape_rep::{CameraUsage, RepresentationMap};
 use crate::ir::visualization::{
-    Colour, ColourRgb, CurveOrRender, DraughtingPreDefinedColour, DraughtingPreDefinedCurveFont,
-    FillAreaStyle, FoundedItem, Marker, MarkerSize, PointStyle, PreDefinedCurveFont,
-    PreDefinedCurveFontData, PreDefinedMarker, PreDefinedMarkerData, PreDefinedPointMarkerSymbol,
-    PreDefinedSymbol, PreDefinedSymbolData, PreDefinedTerminatorSymbol, SurfaceSideStyle,
-    SurfaceSideStyleEntry, SurfaceStyleBoundary, SurfaceStyleFillArea, SurfaceStyleUsage,
-    SymbolColour, TextStyleForDefinedFont, ViewVolume, VisualizationPool,
+    Colour, ColourRgb, CompositeText, CurveOrRender, DraughtingPreDefinedColour,
+    DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour, FoundedItem, Marker,
+    MarkerSize, PointStyle, PreDefinedCurveFont, PreDefinedCurveFontData, PreDefinedMarker,
+    PreDefinedMarkerData, PreDefinedPointMarkerSymbol, PreDefinedSymbol, PreDefinedSymbolData,
+    PreDefinedTerminatorSymbol, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleBoundary,
+    SurfaceStyleFillArea, SurfaceStyleUsage, SymbolColour, SymbolStyle, TextOrCharacter,
+    TextStyleForDefinedFont, ViewVolume, VisualizationPool,
 };
 use crate::reader::ReaderContext;
 
@@ -420,5 +423,110 @@ pub(crate) fn lower_text_style_for_defined_font(
     let id = viz
         .text_styles_for_defined_font
         .push(TextStyleForDefinedFont { text_colour });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `FILL_AREA_STYLE_COLOUR` (unresolved colour = silent skip —
+/// symmetric ignorance; payload stored in the dispatch-side value map).
+pub(crate) fn lower_fill_area_style_colour(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyFillAreaStyleColour,
+) {
+    let Some(colour) = ctx
+        .id_cache
+        .get::<crate::ir::id::ColourId>(early.fill_colour)
+    else {
+        return;
+    };
+    ctx.viz_fasc_map.insert(
+        entity_id,
+        FillAreaStyleColour {
+            name: early.name,
+            colour,
+        },
+    );
+}
+
+/// Lower one `SURFACE_STYLE_TRANSPARENT` (dispatch-side value map).
+pub(crate) fn lower_surface_style_transparent(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlySurfaceStyleTransparent,
+) {
+    ctx.viz_transparent_map
+        .insert(entity_id, early.transparency);
+}
+
+/// Lower one `SYMBOL_STYLE` (unresolved colour = silent drop).
+pub(crate) fn lower_symbol_style(ctx: &mut ReaderContext, early: EarlySymbolStyle) {
+    let Some(style_of_symbol) = ctx
+        .id_cache
+        .get::<crate::ir::id::SymbolColourId>(early.style_of_symbol)
+    else {
+        return;
+    };
+    let viz = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    viz.founded_items
+        .push(FoundedItem::SymbolStyle(SymbolStyle {
+            name: early.name,
+            style_of_symbol,
+        }));
+}
+
+/// Lower one `COMPOSITE_TEXT`. Members resolved by the `StepSelect` derive;
+/// unmodelled members drop silently. EXPRESS SET\[2:?\] cardinality — the
+/// carrier drops if fewer than 2 members survived (emit symmetry).
+pub(crate) fn lower_composite_text(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyCompositeText,
+) {
+    let mut collected_text = Vec::with_capacity(early.collected_text.len());
+    for n in early.collected_text {
+        if let Some(tc) = TextOrCharacter::resolve_select(ctx, n) {
+            collected_text.push(tc);
+        }
+    }
+    if collected_text.len() < 2 {
+        return;
+    }
+    let id = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .composite_texts
+        .push(CompositeText {
+            name: early.name,
+            collected_text,
+        });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `CAMERA_USAGE` (either side unresolved = silent drop).
+pub(crate) fn lower_camera_usage(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyCameraUsage,
+) {
+    let Some(mapping_origin) = ctx
+        .id_cache
+        .get::<crate::ir::id::CameraModelId>(early.mapping_origin)
+    else {
+        return;
+    };
+    let Some(mapped_representation) = ctx
+        .id_cache
+        .get::<crate::ir::id::RepresentationId>(early.mapped_representation)
+    else {
+        return;
+    };
+    let id = ctx
+        .representation_maps
+        .push(RepresentationMap::CameraUsage(CameraUsage {
+            mapping_origin,
+            mapped_representation,
+        }));
     ctx.id_cache.insert(entity_id, id);
 }

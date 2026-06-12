@@ -1,9 +1,8 @@
-//! `SURFACE_STYLE_TRANSPARENT` handler. Leaf entity holding a
-//! single transparency factor; populates `viz_transparent_map` for the
-//! rendering pass to consume.
+//! `SURFACE_STYLE_TRANSPARENT` handler (2-layer path: generated bind/serialize +
+//! hand-written lower/lift).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_real};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -23,16 +22,13 @@ impl SimpleEntityHandler for SurfaceStyleTransparentHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 1, entity_id, "SURFACE_STYLE_TRANSPARENT")?;
-        let transparency = read_real(attrs, 0, entity_id, "transparency")?;
-        ctx.viz_transparent_map.insert(entity_id, transparency);
+        let early = bind::bind_surface_style_transparent(entity_id, attrs)?;
+        lower::lower_surface_style_transparent(ctx, entity_id, &early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, transparency: f64) -> Result<u64, WriteError> {
-        Ok(buf.push_simple(
-            "SURFACE_STYLE_TRANSPARENT",
-            vec![Attribute::Real(transparency)],
-        ))
+        let early = lift::lift_surface_style_transparent(transparency);
+        Ok(serialize::serialize_surface_style_transparent(buf, &early))
     }
 }

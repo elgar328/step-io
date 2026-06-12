@@ -5,8 +5,9 @@ use crate::early::model::{
     EarlyAllAroundShapeAspect, EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
-    EarlyMechanicalDesignAndDraughtingRelationship, EarlyPlacedDatumTargetFeature,
-    EarlyRealRepresentationItem, EarlyRepresentationContext, EarlyRepresentationRelationship,
+    EarlyDescriptiveRepresentationItem, EarlyMechanicalDesignAndDraughtingRelationship,
+    EarlyPlacedDatumTargetFeature, EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem,
+    EarlyRepresentationContext, EarlyRepresentationRelationship,
     EarlyShapeRepresentationRelationship, EarlyToleranceZone,
 };
 
@@ -244,4 +245,21 @@ pub(crate) fn lift_datum_system(
         product_definitional: bool_to_logical(product_definitional),
         constituents,
     }
+}
+
+/// Lift one `DESCRIPTIVE_REPRESENTATION_ITEM`.
+pub(crate) fn lift_descriptive_representation_item(
+    name: String,
+    description: String,
+) -> EarlyDescriptiveRepresentationItem {
+    EarlyDescriptiveRepresentationItem { name, description }
+}
+
+/// Lift one `QUALIFIED_REPRESENTATION_ITEM` (qualifiers pre-resolved via
+/// `emit_select`).
+pub(crate) fn lift_qualified_representation_item(
+    name: String,
+    qualifiers: Vec<u64>,
+) -> EarlyQualifiedRepresentationItem {
+    EarlyQualifiedRepresentationItem { name, qualifiers }
 }

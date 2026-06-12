@@ -1,21 +1,10 @@
-//! `CAMERA_USAGE` handler — phase cm-usage.
-//!
-//! `representation_map` SUBTYPE that narrows `mapping_origin` to a
-//! `camera_model`. The `mapped_representation` may target any
-//! `representation`, including a `DRAUGHTING_MODEL`. Topo order processes
-//! that target first, so the DM slot of `repr_id_map` is populated before
-//! this handler resolves the ref.
-//!
-//!
-//! Writer side, the carrier is emitted by `emit_camera_usage_arena`
-//! (delayed-emit pattern, parallel to `Mdgpr` / `DraughtingModel`) so the
-//! `representation_step_ids` cache is fully populated before the
-//! `mapped_representation` index is looked up.
+//! `CAMERA_USAGE` handler (2-layer path: generated bind/serialize +
+//! hand-written lower/lift).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
-use crate::ir::shape_rep::{CameraUsage, RepresentationMap};
+use crate::ir::shape_rep::CameraUsage;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -34,37 +23,15 @@ impl SimpleEntityHandler for CameraUsageHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "CAMERA_USAGE")?;
-        let origin_ref = read_entity_ref(attrs, 0, entity_id, "mapping_origin")?;
-        let mapped_ref = read_entity_ref(attrs, 1, entity_id, "mapped_representation")?;
-
-        let Some(mapping_origin) = ctx.id_cache.get::<crate::ir::id::CameraModelId>(origin_ref)
-        else {
-            return Ok(());
-        };
-        let Some(mapped_representation) = ctx
-            .id_cache
-            .get::<crate::ir::id::RepresentationId>(mapped_ref)
-        else {
-            return Ok(());
-        };
-
-        let id = ctx
-            .representation_maps
-            .push(RepresentationMap::CameraUsage(CameraUsage {
-                mapping_origin,
-                mapped_representation,
-            }));
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_camera_usage(entity_id, attrs)?;
+        lower::lower_camera_usage(ctx, entity_id, &early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, cu: CameraUsage) -> Result<u64, WriteError> {
         let origin = buf.step_id(cu.mapping_origin);
         let mapped = buf.step_id(cu.mapped_representation);
-        Ok(buf.push_simple(
-            "CAMERA_USAGE",
-            vec![Attribute::EntityRef(origin), Attribute::EntityRef(mapped)],
-        ))
+        let early = lift::lift_camera_usage(origin, mapped);
+        Ok(serialize::serialize_camera_usage(buf, &early))
     }
 }

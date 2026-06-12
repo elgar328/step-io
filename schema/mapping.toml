@@ -99,6 +99,13 @@ generate = [
     "all_around_shape_aspect",
     "placed_datum_target_feature",
     "datum_system",
+    "fill_area_style_colour",
+    "surface_style_transparent",
+    "symbol_style",
+    "composite_text",
+    "camera_usage",
+    "descriptive_representation_item",
+    "qualified_representation_item",
 ]
 
 # `generate_all`: diagnostic flip. When true, gen-early generates *every* entity

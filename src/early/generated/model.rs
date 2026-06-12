@@ -2011,6 +2011,159 @@ impl crate::ir::arena::ArenaId for EarlyDatumSystemId {
     }
 }
 
+/// L1 `FILL_AREA_STYLE_COLOUR` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyFillAreaStyleColour {
+    pub(crate) name: String,
+    pub(crate) fill_colour: u64,
+}
+
+/// Typed `id_cache` key for `FILL_AREA_STYLE_COLOUR` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyFillAreaStyleColourId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyFillAreaStyleColourId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `SURFACE_STYLE_TRANSPARENT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlySurfaceStyleTransparent {
+    pub(crate) transparency: f64,
+}
+
+/// Typed `id_cache` key for `SURFACE_STYLE_TRANSPARENT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlySurfaceStyleTransparentId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlySurfaceStyleTransparentId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `SYMBOL_STYLE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlySymbolStyle {
+    pub(crate) name: String,
+    pub(crate) style_of_symbol: u64,
+}
+
+/// Typed `id_cache` key for `SYMBOL_STYLE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlySymbolStyleId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlySymbolStyleId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `COMPOSITE_TEXT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCompositeText {
+    pub(crate) name: String,
+    pub(crate) collected_text: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `COMPOSITE_TEXT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCompositeTextId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCompositeTextId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `CAMERA_USAGE` (generated).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct EarlyCameraUsage {
+    pub(crate) mapping_origin: u64,
+    pub(crate) mapped_representation: u64,
+}
+
+/// Typed `id_cache` key for `CAMERA_USAGE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCameraUsageId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCameraUsageId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DESCRIPTIVE_REPRESENTATION_ITEM` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDescriptiveRepresentationItem {
+    pub(crate) name: String,
+    pub(crate) description: String,
+}
+
+/// Typed `id_cache` key for `DESCRIPTIVE_REPRESENTATION_ITEM` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDescriptiveRepresentationItemId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDescriptiveRepresentationItemId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `QUALIFIED_REPRESENTATION_ITEM` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyQualifiedRepresentationItem {
+    pub(crate) name: String,
+    pub(crate) qualifiers: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `QUALIFIED_REPRESENTATION_ITEM` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyQualifiedRepresentationItemId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyQualifiedRepresentationItemId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

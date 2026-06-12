@@ -1509,6 +1509,93 @@ pub(crate) fn bind_datum_system(
     })
 }
 
+pub(crate) fn bind_fill_area_style_colour(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyFillAreaStyleColour, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "FILL_AREA_STYLE_COLOUR")?;
+    Ok(super::model::EarlyFillAreaStyleColour {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        fill_colour: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "fill_colour")?,
+    })
+}
+
+pub(crate) fn bind_surface_style_transparent(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlySurfaceStyleTransparent, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "SURFACE_STYLE_TRANSPARENT")?;
+    Ok(super::model::EarlySurfaceStyleTransparent {
+        transparency: crate::ir::attr::read_real(attrs, 0, entity_id, "transparency")?,
+    })
+}
+
+pub(crate) fn bind_symbol_style(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlySymbolStyle, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "SYMBOL_STYLE")?;
+    Ok(super::model::EarlySymbolStyle {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        style_of_symbol: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "style_of_symbol")?,
+    })
+}
+
+pub(crate) fn bind_composite_text(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyCompositeText, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "COMPOSITE_TEXT")?;
+    Ok(super::model::EarlyCompositeText {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        collected_text: crate::ir::attr::read_entity_ref_list(
+            attrs,
+            1,
+            entity_id,
+            "collected_text",
+        )?,
+    })
+}
+
+pub(crate) fn bind_camera_usage(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyCameraUsage, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "CAMERA_USAGE")?;
+    Ok(super::model::EarlyCameraUsage {
+        mapping_origin: crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "mapping_origin")?,
+        mapped_representation: crate::ir::attr::read_entity_ref(
+            attrs,
+            1,
+            entity_id,
+            "mapped_representation",
+        )?,
+    })
+}
+
+pub(crate) fn bind_descriptive_representation_item(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDescriptiveRepresentationItem, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "DESCRIPTIVE_REPRESENTATION_ITEM")?;
+    Ok(super::model::EarlyDescriptiveRepresentationItem {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_string_or_unset(attrs, 1, entity_id, "description")?
+            .to_owned(),
+    })
+}
+
+pub(crate) fn bind_qualified_representation_item(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyQualifiedRepresentationItem, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "QUALIFIED_REPRESENTATION_ITEM")?;
+    Ok(super::model::EarlyQualifiedRepresentationItem {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        qualifiers: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "qualifiers")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

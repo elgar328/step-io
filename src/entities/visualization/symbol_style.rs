@@ -1,9 +1,10 @@
-//! `SYMBOL_STYLE` handler — phase symbol-style.
+//! `SYMBOL_STYLE` handler (2-layer path: generated bind/serialize +
+//! hand-written lower/lift).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::{FoundedItem, SymbolStyle, VisualizationPool};
+use crate::ir::visualization::SymbolStyle;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -22,34 +23,15 @@ impl SimpleEntityHandler for SymbolStyleHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "SYMBOL_STYLE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let colour_ref = read_entity_ref(attrs, 1, entity_id, "style_of_symbol")?;
-        let Some(style_of_symbol) = ctx
-            .id_cache
-            .get::<crate::ir::id::SymbolColourId>(colour_ref)
-        else {
-            return Ok(());
-        };
-        let viz = ctx
-            .visualization
-            .get_or_insert_with(VisualizationPool::default);
-        viz.founded_items
-            .push(FoundedItem::SymbolStyle(SymbolStyle {
-                name,
-                style_of_symbol,
-            }));
+        let early = bind::bind_symbol_style(entity_id, attrs)?;
+        let _ = entity_id;
+        lower::lower_symbol_style(ctx, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, ss: SymbolStyle) -> Result<u64, WriteError> {
         let colour_step = buf.step_id(ss.style_of_symbol);
-        Ok(buf.push_simple(
-            "SYMBOL_STYLE",
-            vec![
-                Attribute::String(ss.name),
-                Attribute::EntityRef(colour_step),
-            ],
-        ))
+        let early = lift::lift_symbol_style(ss.name, colour_step);
+        Ok(serialize::serialize_symbol_style(buf, &early))
     }
 }

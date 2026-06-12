@@ -12,11 +12,15 @@ use crate::early::model::{
     EarlyAllAroundShapeAspect, EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
-    EarlyMechanicalDesignAndDraughtingRelationship, EarlyPlacedDatumTargetFeature,
-    EarlyRealRepresentationItem, EarlyRepresentationContext, EarlyRepresentationRelationship,
+    EarlyDescriptiveRepresentationItem, EarlyMechanicalDesignAndDraughtingRelationship,
+    EarlyPlacedDatumTargetFeature, EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem,
+    EarlyRepresentationContext, EarlyRepresentationRelationship,
     EarlyShapeRepresentationRelationship, EarlyToleranceZone,
 };
 use crate::ir::error::ConvertError;
+use crate::ir::representation_item::{
+    QualifiedRepresentationItem, QualifierRef, RepresentationItem,
+};
 use crate::ir::shape_rep::{
     AllAroundShapeAspect, CentreOfSymmetry, CharacterizedItemWithinRepresentation,
     CharacterizedObject, CharacterizedObjectData, CompositeGroupShapeAspect,
@@ -503,5 +507,45 @@ pub(crate) fn lower_datum_system(ctx: &mut ReaderContext, entity_id: u64, early:
         product_definitional,
         constituents,
     });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `DESCRIPTIVE_REPRESENTATION_ITEM` (dispatch-side value map —
+/// consumed transiently by the property handlers).
+pub(crate) fn lower_descriptive_representation_item(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyDescriptiveRepresentationItem,
+) {
+    ctx.descriptive_item_map.insert(
+        entity_id,
+        crate::ir::shape_rep::DescriptiveItem {
+            name: early.name,
+            description: early.description,
+        },
+    );
+}
+
+/// Lower one `QUALIFIED_REPRESENTATION_ITEM`. Members resolved by the
+/// `StepSelect` derive; unmodelled members drop silently (corpus 0).
+pub(crate) fn lower_qualified_representation_item(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyQualifiedRepresentationItem,
+) {
+    let mut qualifiers = Vec::with_capacity(early.qualifiers.len());
+    for r in early.qualifiers {
+        if let Some(q) = QualifierRef::resolve_select(ctx, r) {
+            qualifiers.push(q);
+        }
+    }
+    let id = ctx
+        .representation_items
+        .push(RepresentationItem::QualifiedRepresentationItem(
+            QualifiedRepresentationItem {
+                name: early.name,
+                qualifiers,
+            },
+        ));
     ctx.id_cache.insert(entity_id, id);
 }

@@ -1524,6 +1524,104 @@ pub(crate) fn serialize_datum_system(
     )
 }
 
+pub(crate) fn serialize_fill_area_style_colour(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyFillAreaStyleColour,
+) -> u64 {
+    buf.push_simple(
+        "FILL_AREA_STYLE_COLOUR",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.fill_colour),
+        ],
+    )
+}
+
+pub(crate) fn serialize_surface_style_transparent(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlySurfaceStyleTransparent,
+) -> u64 {
+    buf.push_simple(
+        "SURFACE_STYLE_TRANSPARENT",
+        vec![crate::parser::entity::Attribute::Real(l1.transparency)],
+    )
+}
+
+pub(crate) fn serialize_symbol_style(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlySymbolStyle,
+) -> u64 {
+    buf.push_simple(
+        "SYMBOL_STYLE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.style_of_symbol),
+        ],
+    )
+}
+
+pub(crate) fn serialize_composite_text(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCompositeText,
+) -> u64 {
+    buf.push_simple(
+        "COMPOSITE_TEXT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.collected_text
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_camera_usage(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCameraUsage,
+) -> u64 {
+    buf.push_simple(
+        "CAMERA_USAGE",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.mapping_origin),
+            crate::parser::entity::Attribute::EntityRef(l1.mapped_representation),
+        ],
+    )
+}
+
+pub(crate) fn serialize_descriptive_representation_item(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDescriptiveRepresentationItem,
+) -> u64 {
+    buf.push_simple(
+        "DESCRIPTIVE_REPRESENTATION_ITEM",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::String(l1.description.clone()),
+        ],
+    )
+}
+
+pub(crate) fn serialize_qualified_representation_item(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyQualifiedRepresentationItem,
+) -> u64 {
+    buf.push_simple(
+        "QUALIFIED_REPRESENTATION_ITEM",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.qualifiers
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {
