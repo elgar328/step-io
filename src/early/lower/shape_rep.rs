@@ -10,16 +10,18 @@
 
 use crate::early::model::{
     EarlyCharacterizedItemWithinRepresentation,
-    EarlyConstructiveGeometryRepresentationRelationship,
-    EarlyMechanicalDesignAndDraughtingRelationship, EarlyRepresentationContext,
-    EarlyRepresentationRelationship, EarlyShapeRepresentationRelationship,
+    EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumTarget,
+    EarlyMechanicalDesignAndDraughtingRelationship, EarlyRealRepresentationItem,
+    EarlyRepresentationContext, EarlyRepresentationRelationship,
+    EarlyShapeRepresentationRelationship, EarlyToleranceZone,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::{
     CharacterizedItemWithinRepresentation, CharacterizedObject, CharacterizedObjectData,
-    ConstructiveGeometryRepresentationRelationship, MechanicalDesignAndDraughtingRelationship,
+    ConstructiveGeometryRepresentationRelationship, DatumTarget,
+    MechanicalDesignAndDraughtingRelationship, NumericRepresentationItem, RealRepresentationItem,
     RepresentationRelationship, RepresentationRelationshipData, ShapeRepresentationRelationshipIr,
-    UnitlessContext,
+    ToleranceZone, UnitlessContext,
 };
 use crate::reader::ReaderContext;
 
@@ -255,4 +257,83 @@ pub(crate) fn lower_characterized_item_within_representation(
                 },
             ));
     ctx.id_cache.insert(entity_id, co_id);
+}
+
+/// L1 LOGICAL → the L2 `bool` the legacy `read_bool` produced. `.U.` drops
+/// the entity (the legacy read errored there; no corpus file carries one).
+fn logical_to_bool(l: crate::ir::geometry::Logical) -> Option<bool> {
+    match l {
+        crate::ir::geometry::Logical::True => Some(true),
+        crate::ir::geometry::Logical::False => Some(false),
+        crate::ir::geometry::Logical::Unknown => None,
+    }
+}
+
+/// Lower one `REAL_REPRESENTATION_ITEM` (no `id_cache` registration — the
+/// arena's only consumer is the writer's emit loop).
+pub(crate) fn lower_real_representation_item(
+    ctx: &mut ReaderContext,
+    early: EarlyRealRepresentationItem,
+) {
+    ctx.numeric_representation_items
+        .push(NumericRepresentationItem::Real(RealRepresentationItem {
+            name: early.name,
+            the_value: early.the_value,
+        }));
+}
+
+/// Lower one `DATUM_TARGET` (unresolved `of_shape` product = silent drop).
+pub(crate) fn lower_datum_target(ctx: &mut ReaderContext, entity_id: u64, early: EarlyDatumTarget) {
+    let Some(product_definitional) = logical_to_bool(early.product_definitional) else {
+        return;
+    };
+    let Some(target) = ctx.product_of_pds(early.of_shape) else {
+        return;
+    };
+    let id = ctx.datum_targets.push(DatumTarget {
+        name: early.name,
+        // Legacy read_string_or_unset collapsed `$` to "" (L2 String).
+        description: early.description.unwrap_or_default(),
+        target,
+        product_definitional,
+        target_id: early.target_id,
+    });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `TOLERANCE_ZONE` (unresolved `of_shape` product / form = silent
+/// drop; unresolved `defining_tolerance` members skip individually).
+pub(crate) fn lower_tolerance_zone(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyToleranceZone,
+) {
+    let Some(product_definitional) = logical_to_bool(early.product_definitional) else {
+        return;
+    };
+    let Some(target) = ctx.product_of_pds(early.of_shape) else {
+        return;
+    };
+    let Some(form) = ctx
+        .id_cache
+        .get::<crate::ir::ToleranceZoneFormId>(early.form)
+    else {
+        return;
+    };
+    let mut defining_tolerance = Vec::with_capacity(early.defining_tolerance.len());
+    for r in early.defining_tolerance {
+        if let Some(gtr) = crate::entities::pmi::resolve_geometric_tolerance_ref(ctx, r) {
+            defining_tolerance.push(gtr);
+        }
+    }
+    let id = ctx.tolerance_zones.push(ToleranceZone {
+        name: early.name,
+        // Legacy read_string_or_unset collapsed `$` to "" (L2 String).
+        description: early.description.unwrap_or_default(),
+        target,
+        product_definitional,
+        defining_tolerance,
+        form,
+    });
+    ctx.id_cache.insert(entity_id, id);
 }

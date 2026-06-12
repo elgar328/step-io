@@ -1,16 +1,7 @@
-//! `TOLERANCE_ZONE` handler.
-//!
-//! `TOLERANCE_ZONE` is a `SHAPE_ASPECT` subtype: the 4-attr shape-aspect body
-//! plus a `defining_tolerance` SET of `geometric_tolerance` references and a
-//! `form` reference to a `TOLERANCE_ZONE_FORM`. The ir.toml blueprint folds it
-//! into the `shape_aspect` arena; step-io keeps a dedicated `tolerance_zones`
-//! arena like every other shape-aspect subtype.
+//! `TOLERANCE_ZONE` handler — shape-rep domain (2-layer path).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::entities::pmi::resolve_geometric_tolerance_ref;
-use crate::ir::attr::{
-    check_count, read_bool, read_entity_ref, read_entity_ref_list, read_string_or_unset,
-};
 use crate::ir::error::ConvertError;
 use crate::ir::pmi::GeometricToleranceRef;
 use crate::ir::shape_rep::ToleranceZone;
@@ -32,72 +23,34 @@ impl SimpleEntityHandler for ToleranceZoneHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 6, entity_id, "TOLERANCE_ZONE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-        let of_shape_ref = read_entity_ref(attrs, 2, entity_id, "of_shape")?;
-        let product_definitional = read_bool(attrs, 3, entity_id, "product_definitional")?;
-        let tolerance_refs = read_entity_ref_list(attrs, 4, entity_id, "defining_tolerance")?;
-        let form_ref = read_entity_ref(attrs, 5, entity_id, "form")?;
-
-        // of_shape → PRODUCT_DEFINITION_SHAPE → ProductId (typed one-probe).
-        let Some(target) = ctx.product_of_pds(of_shape_ref) else {
-            return Ok(());
-        };
-        // form — a TOLERANCE_ZONE_FORM; an unresolved form drops the zone.
-        let Some(form) = ctx.id_cache.get::<crate::ir::ToleranceZoneFormId>(form_ref) else {
-            return Ok(());
-        };
-
-        // defining_tolerance — geometric tolerances. An individual ref that
-        // does not resolve is skipped (symmetric on re-read).
-        let mut defining_tolerance = Vec::with_capacity(tolerance_refs.len());
-        for r in tolerance_refs {
-            if let Some(gtr) = resolve_geometric_tolerance_ref(ctx, r) {
-                defining_tolerance.push(gtr);
-            }
-        }
-
-        let id = ctx.tolerance_zones.push(ToleranceZone {
-            name,
-            description,
-            target,
-            product_definitional,
-            defining_tolerance,
-            form,
-        });
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_tolerance_zone(entity_id, attrs)?;
+        lower::lower_tolerance_zone(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, tz: ToleranceZone) -> Result<u64, WriteError> {
-        // `target` → PRODUCT_DEFINITION_SHAPE step id; a miss is the
-        // kernel-built IR defensive case, in practice unreachable.
         let pds_step_id = buf
             .product_def_shape_ids
             .get(&tz.target)
             .copied()
             .unwrap_or(0);
-        let mut tolerance_refs = Vec::with_capacity(tz.defining_tolerance.len());
-        for gtr in &tz.defining_tolerance {
-            let step_id = match gtr {
+        let defining_tolerance: Vec<u64> = tz
+            .defining_tolerance
+            .iter()
+            .map(|gtr| match gtr {
                 GeometricToleranceRef::Plain(id) => buf.step_id(id),
                 GeometricToleranceRef::WithDatumReference(id) => buf.step_id(id),
-            };
-            tolerance_refs.push(Attribute::EntityRef(step_id));
-        }
+            })
+            .collect();
         let form = buf.step_id(tz.form);
-        let bool_attr = if tz.product_definitional { "T" } else { "F" };
-        Ok(buf.push_simple(
-            "TOLERANCE_ZONE",
-            vec![
-                Attribute::String(tz.name),
-                Attribute::String(tz.description),
-                Attribute::EntityRef(pds_step_id),
-                Attribute::Enum(bool_attr.into()),
-                Attribute::List(tolerance_refs),
-                Attribute::EntityRef(form),
-            ],
-        ))
+        let early = lift::lift_tolerance_zone(
+            tz.name,
+            tz.description,
+            pds_step_id,
+            tz.product_definitional,
+            defining_tolerance,
+            form,
+        );
+        Ok(serialize::serialize_tolerance_zone(buf, &early))
     }
 }

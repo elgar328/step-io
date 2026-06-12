@@ -90,6 +90,9 @@ generate = [
     "characterized_item_within_representation",
     "surface_style_boundary",
     "text_style_for_defined_font",
+    "real_representation_item",
+    "datum_target",
+    "tolerance_zone",
 ]
 
 # `generate_all`: diagnostic flip. When true, gen-early generates *every* entity

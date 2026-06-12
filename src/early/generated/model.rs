@@ -1792,6 +1792,79 @@ impl crate::ir::arena::ArenaId for EarlyTextStyleForDefinedFontId {
     }
 }
 
+/// L1 `REAL_REPRESENTATION_ITEM` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyRealRepresentationItem {
+    pub(crate) name: String,
+    pub(crate) the_value: f64,
+}
+
+/// Typed `id_cache` key for `REAL_REPRESENTATION_ITEM` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyRealRepresentationItemId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyRealRepresentationItemId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DATUM_TARGET` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDatumTarget {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) of_shape: u64,
+    pub(crate) product_definitional: crate::ir::geometry::Logical,
+    pub(crate) target_id: String,
+}
+
+/// Typed `id_cache` key for `DATUM_TARGET` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDatumTargetId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDatumTargetId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `TOLERANCE_ZONE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyToleranceZone {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) of_shape: u64,
+    pub(crate) product_definitional: crate::ir::geometry::Logical,
+    pub(crate) defining_tolerance: Vec<u64>,
+    pub(crate) form: u64,
+}
+
+/// Typed `id_cache` key for `TOLERANCE_ZONE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyToleranceZoneId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyToleranceZoneId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

@@ -1336,6 +1336,67 @@ pub(crate) fn serialize_text_style_for_defined_font(
     )
 }
 
+pub(crate) fn serialize_real_representation_item(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyRealRepresentationItem,
+) -> u64 {
+    buf.push_simple(
+        "REAL_REPRESENTATION_ITEM",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::Real(l1.the_value),
+        ],
+    )
+}
+
+pub(crate) fn serialize_datum_target(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDatumTarget,
+) -> u64 {
+    buf.push_simple(
+        "DATUM_TARGET",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.of_shape),
+            crate::parser::entity::Attribute::Enum(
+                crate::ir::attr::logical_to_step(l1.product_definitional).into(),
+            ),
+            crate::parser::entity::Attribute::String(l1.target_id.clone()),
+        ],
+    )
+}
+
+pub(crate) fn serialize_tolerance_zone(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyToleranceZone,
+) -> u64 {
+    buf.push_simple(
+        "TOLERANCE_ZONE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.of_shape),
+            crate::parser::entity::Attribute::Enum(
+                crate::ir::attr::logical_to_step(l1.product_definitional).into(),
+            ),
+            crate::parser::entity::Attribute::List(
+                l1.defining_tolerance
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::EntityRef(l1.form),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

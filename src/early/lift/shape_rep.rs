@@ -3,9 +3,10 @@
 
 use crate::early::model::{
     EarlyCharacterizedItemWithinRepresentation,
-    EarlyConstructiveGeometryRepresentationRelationship,
-    EarlyMechanicalDesignAndDraughtingRelationship, EarlyRepresentationContext,
-    EarlyRepresentationRelationship, EarlyShapeRepresentationRelationship,
+    EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumTarget,
+    EarlyMechanicalDesignAndDraughtingRelationship, EarlyRealRepresentationItem,
+    EarlyRepresentationContext, EarlyRepresentationRelationship,
+    EarlyShapeRepresentationRelationship, EarlyToleranceZone,
 };
 
 /// Lift one base `REPRESENTATION_RELATIONSHIP` from its (pre-resolved) arena
@@ -99,5 +100,56 @@ pub(crate) fn lift_characterized_item_within_representation(
         description,
         item,
         rep,
+    }
+}
+
+/// `bool` → the L1 LOGICAL slot (the legacy writer emitted `.T.` / `.F.`).
+fn bool_to_logical(b: bool) -> crate::ir::geometry::Logical {
+    if b {
+        crate::ir::geometry::Logical::True
+    } else {
+        crate::ir::geometry::Logical::False
+    }
+}
+
+/// Lift one `REAL_REPRESENTATION_ITEM`.
+pub(crate) fn lift_real_representation_item(
+    name: String,
+    the_value: f64,
+) -> EarlyRealRepresentationItem {
+    EarlyRealRepresentationItem { name, the_value }
+}
+
+/// Lift one `DATUM_TARGET` (`of_shape` pre-resolved to the PDS step id;
+/// legacy always emitted `description` as a String, never `$`).
+pub(crate) fn lift_datum_target(
+    dt: crate::ir::shape_rep::DatumTarget,
+    of_shape: u64,
+) -> EarlyDatumTarget {
+    EarlyDatumTarget {
+        name: dt.name,
+        description: Some(dt.description),
+        of_shape,
+        product_definitional: bool_to_logical(dt.product_definitional),
+        target_id: dt.target_id,
+    }
+}
+
+/// Lift one `TOLERANCE_ZONE` (refs pre-resolved).
+pub(crate) fn lift_tolerance_zone(
+    name: String,
+    description: String,
+    of_shape: u64,
+    product_definitional: bool,
+    defining_tolerance: Vec<u64>,
+    form: u64,
+) -> EarlyToleranceZone {
+    EarlyToleranceZone {
+        name,
+        description: Some(description),
+        of_shape,
+        product_definitional: bool_to_logical(product_definitional),
+        defining_tolerance,
+        form,
     }
 }

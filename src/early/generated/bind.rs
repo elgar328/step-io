@@ -1342,6 +1342,62 @@ pub(crate) fn bind_text_style_for_defined_font(
     })
 }
 
+pub(crate) fn bind_real_representation_item(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyRealRepresentationItem, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "REAL_REPRESENTATION_ITEM")?;
+    Ok(super::model::EarlyRealRepresentationItem {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        the_value: crate::ir::attr::read_real(attrs, 1, entity_id, "the_value")?,
+    })
+}
+
+pub(crate) fn bind_datum_target(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDatumTarget, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 5, entity_id, "DATUM_TARGET")?;
+    Ok(super::model::EarlyDatumTarget {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        of_shape: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "of_shape")?,
+        product_definitional: crate::ir::attr::read_logical(
+            attrs,
+            3,
+            entity_id,
+            "product_definitional",
+        )?,
+        target_id: crate::ir::attr::read_string_or_unset(attrs, 4, entity_id, "target_id")?
+            .to_owned(),
+    })
+}
+
+pub(crate) fn bind_tolerance_zone(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyToleranceZone, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 6, entity_id, "TOLERANCE_ZONE")?;
+    Ok(super::model::EarlyToleranceZone {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        of_shape: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "of_shape")?,
+        product_definitional: crate::ir::attr::read_logical(
+            attrs,
+            3,
+            entity_id,
+            "product_definitional",
+        )?,
+        defining_tolerance: crate::ir::attr::read_entity_ref_list(
+            attrs,
+            4,
+            entity_id,
+            "defining_tolerance",
+        )?,
+        form: crate::ir::attr::read_entity_ref(attrs, 5, entity_id, "form")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

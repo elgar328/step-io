@@ -68,24 +68,15 @@ impl SimpleEntityHandler for RealRepresentationItemHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "REAL_REPRESENTATION_ITEM")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let the_value = read_real(attrs, 1, entity_id, "the_value")?;
-        ctx.numeric_representation_items
-            .push(NumericRepresentationItem::Real(RealRepresentationItem {
-                name,
-                the_value,
-            }));
+        let early = crate::early::bind::bind_real_representation_item(entity_id, attrs)?;
+        crate::early::lower::lower_real_representation_item(ctx, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, item: RealRepresentationItem) -> Result<u64, WriteError> {
-        Ok(buf.push_simple(
-            "REAL_REPRESENTATION_ITEM",
-            vec![
-                Attribute::String(item.name),
-                Attribute::Real(item.the_value),
-            ],
+        let early = crate::early::lift::lift_real_representation_item(item.name, item.the_value);
+        Ok(crate::early::serialize::serialize_real_representation_item(
+            buf, &early,
         ))
     }
 }
