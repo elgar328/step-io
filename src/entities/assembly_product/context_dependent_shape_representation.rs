@@ -7,8 +7,9 @@
 //! `SHAPE_REPRESENTATION_RELATIONSHIP`). Writer emits the two-attr form:
 //! `CDSR(rr_complex_ref, pdef_shape_ref)`.
 
+use crate::early::{bind, lift, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
+use crate::ir::attr::{read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
 use crate::reader::ReaderContext;
@@ -16,6 +17,7 @@ use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use step_io_macros::step_entity;
 
+#[derive(Clone, Copy)]
 pub(crate) struct ContextDependentShapeRepresentationWriteInput {
     pub(crate) rrwt: u64,
     pub(crate) nauo_pds: u64,
@@ -33,14 +35,9 @@ impl SimpleEntityHandler for ContextDependentShapeRepresentationHandler {
         attrs: &[Attribute],
         graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(
-            attrs,
-            2,
-            entity_id,
-            "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
-        )?;
-        let rr_ref = read_entity_ref(attrs, 0, entity_id, "representation_relation")?;
-        let pdef_shape_ref = read_entity_ref(attrs, 1, entity_id, "represented_product_relation")?;
+        let early = bind::bind_context_dependent_shape_representation(entity_id, attrs)?;
+        let rr_ref = early.representation_relation;
+        let pdef_shape_ref = early.represented_product_relation;
 
         // Only NAUO-tagged CDSRs — product-level CDSRs skip silently.
         let Some(&nauo_ref) = ctx.pdef_shape_to_nauo.get(&pdef_shape_ref) else {
@@ -111,11 +108,11 @@ impl SimpleEntityHandler for ContextDependentShapeRepresentationHandler {
 
     fn write(
         buf: &mut WriteBuffer,
-        ContextDependentShapeRepresentationWriteInput { rrwt, nauo_pds }: ContextDependentShapeRepresentationWriteInput,
+        input: ContextDependentShapeRepresentationWriteInput,
     ) -> Result<u64, WriteError> {
-        Ok(buf.push_simple(
-            "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
-            vec![Attribute::EntityRef(rrwt), Attribute::EntityRef(nauo_pds)],
+        let early = lift::lift_context_dependent_shape_representation(input);
+        Ok(serialize::serialize_context_dependent_shape_representation(
+            buf, &early,
         ))
     }
 }

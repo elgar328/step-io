@@ -274,6 +274,33 @@ pub(crate) fn bind_next_assembly_usage_occurrence(
     })
 }
 
+pub(crate) fn bind_context_dependent_shape_representation(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyContextDependentShapeRepresentation, crate::ir::error::ConvertError>
+{
+    crate::ir::attr::check_count(
+        attrs,
+        2,
+        entity_id,
+        "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
+    )?;
+    Ok(super::model::EarlyContextDependentShapeRepresentation {
+        representation_relation: crate::ir::attr::read_entity_ref(
+            attrs,
+            0,
+            entity_id,
+            "representation_relation",
+        )?,
+        represented_product_relation: crate::ir::attr::read_entity_ref(
+            attrs,
+            1,
+            entity_id,
+            "represented_product_relation",
+        )?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

@@ -10,6 +10,7 @@ use crate::early::model::{
     EarlyProductDefinitionFormationWithSpecifiedSource,
     EarlyProductDefinitionWithAssociatedDocuments, EarlySource,
 };
+use crate::entities::assembly_product::context_dependent_shape_representation::ContextDependentShapeRepresentationWriteInput;
 use crate::entities::assembly_product::next_assembly_usage_occurrence::NextAssemblyUsageOccurrenceWriteInput;
 use crate::entities::assembly_product::product_definition::ProductDefinitionWriteInput;
 use crate::entities::assembly_product::product_definition_formation::ProductDefinitionFormationWriteInput;
@@ -86,6 +87,17 @@ pub(crate) fn lift_product_definition_with_associated_documents(
         formation: input.formation,
         frame_of_reference: input.pdef_ctx,
         documentation_ids: input.documentation,
+    }
+}
+
+/// Lift one `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` write input (pure
+/// two-ref shape adapter; `emit_instance_bundle` pre-resolves both step ids).
+pub(crate) fn lift_context_dependent_shape_representation(
+    input: ContextDependentShapeRepresentationWriteInput,
+) -> crate::early::model::EarlyContextDependentShapeRepresentation {
+    crate::early::model::EarlyContextDependentShapeRepresentation {
+        representation_relation: input.rrwt,
+        represented_product_relation: input.nauo_pds,
     }
 }
 

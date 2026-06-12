@@ -14,11 +14,11 @@ use crate::ir::arena::ArenaId;
 // unlike `define_id!`): migrated producers register `file id → typed L1 id`,
 // and the `index()` addresses [`EarlyModel`]'s L1→L2 correspondence bucket.
 pub(crate) use super::generated::model::{
-    EarlyFillAreaStyle, EarlyFillAreaStyleId, EarlyMarker, EarlyMarkerSize,
-    EarlyNextAssemblyUsageOccurrence, EarlyPointStyle, EarlyPointStyleId, EarlyProduct,
-    EarlyProductDefinition, EarlyProductDefinitionFormation, EarlyProductDefinitionFormationId,
-    EarlyProductDefinitionFormationWithSpecifiedSource, EarlyProductDefinitionId,
-    EarlyProductDefinitionShape, EarlyProductDefinitionShapeId,
+    EarlyContextDependentShapeRepresentation, EarlyFillAreaStyle, EarlyFillAreaStyleId,
+    EarlyMarker, EarlyMarkerSize, EarlyNextAssemblyUsageOccurrence, EarlyPointStyle,
+    EarlyPointStyleId, EarlyProduct, EarlyProductDefinition, EarlyProductDefinitionFormation,
+    EarlyProductDefinitionFormationId, EarlyProductDefinitionFormationWithSpecifiedSource,
+    EarlyProductDefinitionId, EarlyProductDefinitionShape, EarlyProductDefinitionShapeId,
     EarlyProductDefinitionWithAssociatedDocuments, EarlySource, EarlySurfaceSideStyle,
     EarlySurfaceSideStyleId, EarlySurfaceStyleFillArea, EarlySurfaceStyleFillAreaId,
     EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId, EarlyViewVolume, EarlyViewVolumeId,

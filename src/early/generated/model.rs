@@ -310,6 +310,28 @@ impl crate::ir::arena::ArenaId for EarlyNextAssemblyUsageOccurrenceId {
     }
 }
 
+/// L1 `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyContextDependentShapeRepresentation {
+    pub(crate) representation_relation: u64,
+    pub(crate) represented_product_relation: u64,
+}
+
+/// Typed `id_cache` key for `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyContextDependentShapeRepresentationId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyContextDependentShapeRepresentationId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

@@ -244,6 +244,19 @@ pub(crate) fn serialize_next_assembly_usage_occurrence(
     )
 }
 
+pub(crate) fn serialize_context_dependent_shape_representation(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyContextDependentShapeRepresentation,
+) -> u64 {
+    buf.push_simple(
+        "CONTEXT_DEPENDENT_SHAPE_REPRESENTATION",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.representation_relation),
+            crate::parser::entity::Attribute::EntityRef(l1.represented_product_relation),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {
