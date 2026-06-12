@@ -70,6 +70,16 @@ generate = [
     "derived_unit_element",
     "derived_unit",
     "dimensional_exponents",
+    # visualization (pre-defined / colour leaf batch)
+    "pre_defined_marker",
+    "pre_defined_point_marker_symbol",
+    "draughting_pre_defined_colour",
+    "colour_rgb",
+    "pre_defined_curve_font",
+    "draughting_pre_defined_curve_font",
+    "pre_defined_symbol",
+    "pre_defined_terminator_symbol",
+    "symbol_colour",
 ]
 
 # `generate_all`: diagnostic flip. When true, gen-early generates *every* entity

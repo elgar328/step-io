@@ -2,8 +2,11 @@
 //! the pilot cluster). See the [module docs](super) for the lifting contract.
 
 use crate::early::model::{
-    EarlyFillAreaStyle, EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlySurfaceSideStyle,
-    EarlySurfaceStyleFillArea, EarlySurfaceStyleUsage, EarlyViewVolume,
+    EarlyColourRgb, EarlyDraughtingPreDefinedColour, EarlyDraughtingPreDefinedCurveFont,
+    EarlyFillAreaStyle, EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlyPreDefinedCurveFont,
+    EarlyPreDefinedMarker, EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol,
+    EarlyPreDefinedTerminatorSymbol, EarlySurfaceSideStyle, EarlySurfaceStyleFillArea,
+    EarlySurfaceStyleUsage, EarlySymbolColour, EarlyViewVolume,
 };
 use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::fill_area_style_colour::FillAreaStyleColourHandler;
@@ -118,4 +121,58 @@ pub(crate) fn lift_point_style(buf: &WriteBuffer, l2: &PointStyle) -> EarlyPoint
         marker_size: Some(marker_size),
         marker_colour: Some(buf.step_id(l2.marker_colour)),
     }
+}
+
+/// Lift one `PRE_DEFINED_MARKER` (name pass-through).
+pub(crate) fn lift_pre_defined_marker(name: String) -> EarlyPreDefinedMarker {
+    EarlyPreDefinedMarker { name }
+}
+
+/// Lift one `PRE_DEFINED_POINT_MARKER_SYMBOL` (name pass-through).
+pub(crate) fn lift_pre_defined_point_marker_symbol(
+    name: String,
+) -> EarlyPreDefinedPointMarkerSymbol {
+    EarlyPreDefinedPointMarkerSymbol { name }
+}
+
+/// Lift one `DRAUGHTING_PRE_DEFINED_COLOUR` (name pass-through).
+pub(crate) fn lift_draughting_pre_defined_colour(name: String) -> EarlyDraughtingPreDefinedColour {
+    EarlyDraughtingPreDefinedColour { name }
+}
+
+/// Lift one `COLOUR_RGB` (pass-through).
+pub(crate) fn lift_colour_rgb(c: crate::ir::visualization::ColourRgb) -> EarlyColourRgb {
+    EarlyColourRgb {
+        name: c.name,
+        red: c.red,
+        green: c.green,
+        blue: c.blue,
+    }
+}
+
+/// Lift one `PRE_DEFINED_CURVE_FONT` (name pass-through).
+pub(crate) fn lift_pre_defined_curve_font(name: String) -> EarlyPreDefinedCurveFont {
+    EarlyPreDefinedCurveFont { name }
+}
+
+/// Lift one `DRAUGHTING_PRE_DEFINED_CURVE_FONT` (name pass-through).
+pub(crate) fn lift_draughting_pre_defined_curve_font(
+    name: String,
+) -> EarlyDraughtingPreDefinedCurveFont {
+    EarlyDraughtingPreDefinedCurveFont { name }
+}
+
+/// Lift one `PRE_DEFINED_SYMBOL` (name pass-through).
+pub(crate) fn lift_pre_defined_symbol(name: String) -> EarlyPreDefinedSymbol {
+    EarlyPreDefinedSymbol { name }
+}
+
+/// Lift one `PRE_DEFINED_TERMINATOR_SYMBOL` (name pass-through).
+pub(crate) fn lift_pre_defined_terminator_symbol(name: String) -> EarlyPreDefinedTerminatorSymbol {
+    EarlyPreDefinedTerminatorSymbol { name }
+}
+
+/// Lift one `SYMBOL_COLOUR` (colour pre-resolved).
+pub(crate) fn lift_symbol_colour(colour_of_symbol: u64) -> EarlySymbolColour {
+    EarlySymbolColour { colour_of_symbol }
 }

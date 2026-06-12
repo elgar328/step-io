@@ -1130,6 +1130,103 @@ pub(crate) fn serialize_dimensional_exponents(
     )
 }
 
+pub(crate) fn serialize_pre_defined_marker(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPreDefinedMarker,
+) -> u64 {
+    buf.push_simple(
+        "PRE_DEFINED_MARKER",
+        vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+    )
+}
+
+pub(crate) fn serialize_pre_defined_point_marker_symbol(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPreDefinedPointMarkerSymbol,
+) -> u64 {
+    buf.push_simple(
+        "PRE_DEFINED_POINT_MARKER_SYMBOL",
+        vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+    )
+}
+
+pub(crate) fn serialize_draughting_pre_defined_colour(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDraughtingPreDefinedColour,
+) -> u64 {
+    buf.push_simple(
+        "DRAUGHTING_PRE_DEFINED_COLOUR",
+        vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+    )
+}
+
+pub(crate) fn serialize_colour_rgb(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyColourRgb,
+) -> u64 {
+    buf.push_simple(
+        "COLOUR_RGB",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::Real(l1.red),
+            crate::parser::entity::Attribute::Real(l1.green),
+            crate::parser::entity::Attribute::Real(l1.blue),
+        ],
+    )
+}
+
+pub(crate) fn serialize_pre_defined_curve_font(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPreDefinedCurveFont,
+) -> u64 {
+    buf.push_simple(
+        "PRE_DEFINED_CURVE_FONT",
+        vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+    )
+}
+
+pub(crate) fn serialize_draughting_pre_defined_curve_font(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDraughtingPreDefinedCurveFont,
+) -> u64 {
+    buf.push_simple(
+        "DRAUGHTING_PRE_DEFINED_CURVE_FONT",
+        vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+    )
+}
+
+pub(crate) fn serialize_pre_defined_symbol(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPreDefinedSymbol,
+) -> u64 {
+    buf.push_simple(
+        "PRE_DEFINED_SYMBOL",
+        vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+    )
+}
+
+pub(crate) fn serialize_pre_defined_terminator_symbol(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPreDefinedTerminatorSymbol,
+) -> u64 {
+    buf.push_simple(
+        "PRE_DEFINED_TERMINATOR_SYMBOL",
+        vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+    )
+}
+
+pub(crate) fn serialize_symbol_colour(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlySymbolColour,
+) -> u64 {
+    buf.push_simple(
+        "SYMBOL_COLOUR",
+        vec![crate::parser::entity::Attribute::EntityRef(
+            l1.colour_of_symbol,
+        )],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

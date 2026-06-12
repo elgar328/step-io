@@ -1423,6 +1423,198 @@ impl crate::ir::arena::ArenaId for EarlyDimensionalExponentsId {
     }
 }
 
+/// L1 `PRE_DEFINED_MARKER` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPreDefinedMarker {
+    pub(crate) name: String,
+}
+
+/// Typed `id_cache` key for `PRE_DEFINED_MARKER` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPreDefinedMarkerId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPreDefinedMarkerId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PRE_DEFINED_POINT_MARKER_SYMBOL` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPreDefinedPointMarkerSymbol {
+    pub(crate) name: String,
+}
+
+/// Typed `id_cache` key for `PRE_DEFINED_POINT_MARKER_SYMBOL` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPreDefinedPointMarkerSymbolId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPreDefinedPointMarkerSymbolId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DRAUGHTING_PRE_DEFINED_COLOUR` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDraughtingPreDefinedColour {
+    pub(crate) name: String,
+}
+
+/// Typed `id_cache` key for `DRAUGHTING_PRE_DEFINED_COLOUR` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDraughtingPreDefinedColourId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDraughtingPreDefinedColourId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `COLOUR_RGB` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyColourRgb {
+    pub(crate) name: String,
+    pub(crate) red: f64,
+    pub(crate) green: f64,
+    pub(crate) blue: f64,
+}
+
+/// Typed `id_cache` key for `COLOUR_RGB` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyColourRgbId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyColourRgbId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PRE_DEFINED_CURVE_FONT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPreDefinedCurveFont {
+    pub(crate) name: String,
+}
+
+/// Typed `id_cache` key for `PRE_DEFINED_CURVE_FONT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPreDefinedCurveFontId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPreDefinedCurveFontId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DRAUGHTING_PRE_DEFINED_CURVE_FONT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDraughtingPreDefinedCurveFont {
+    pub(crate) name: String,
+}
+
+/// Typed `id_cache` key for `DRAUGHTING_PRE_DEFINED_CURVE_FONT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDraughtingPreDefinedCurveFontId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDraughtingPreDefinedCurveFontId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PRE_DEFINED_SYMBOL` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPreDefinedSymbol {
+    pub(crate) name: String,
+}
+
+/// Typed `id_cache` key for `PRE_DEFINED_SYMBOL` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPreDefinedSymbolId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPreDefinedSymbolId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PRE_DEFINED_TERMINATOR_SYMBOL` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPreDefinedTerminatorSymbol {
+    pub(crate) name: String,
+}
+
+/// Typed `id_cache` key for `PRE_DEFINED_TERMINATOR_SYMBOL` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPreDefinedTerminatorSymbolId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPreDefinedTerminatorSymbolId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `SYMBOL_COLOUR` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlySymbolColour {
+    pub(crate) colour_of_symbol: u64,
+}
+
+/// Typed `id_cache` key for `SYMBOL_COLOUR` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlySymbolColourId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlySymbolColourId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

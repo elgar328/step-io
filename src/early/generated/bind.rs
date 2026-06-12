@@ -1119,6 +1119,104 @@ pub(crate) fn bind_dimensional_exponents(
     })
 }
 
+pub(crate) fn bind_pre_defined_marker(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPreDefinedMarker, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "PRE_DEFINED_MARKER")?;
+    Ok(super::model::EarlyPreDefinedMarker {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+    })
+}
+
+pub(crate) fn bind_pre_defined_point_marker_symbol(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPreDefinedPointMarkerSymbol, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "PRE_DEFINED_POINT_MARKER_SYMBOL")?;
+    Ok(super::model::EarlyPreDefinedPointMarkerSymbol {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+    })
+}
+
+pub(crate) fn bind_draughting_pre_defined_colour(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDraughtingPreDefinedColour, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "DRAUGHTING_PRE_DEFINED_COLOUR")?;
+    Ok(super::model::EarlyDraughtingPreDefinedColour {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+    })
+}
+
+pub(crate) fn bind_colour_rgb(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyColourRgb, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "COLOUR_RGB")?;
+    Ok(super::model::EarlyColourRgb {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        red: crate::ir::attr::read_real(attrs, 1, entity_id, "red")?,
+        green: crate::ir::attr::read_real(attrs, 2, entity_id, "green")?,
+        blue: crate::ir::attr::read_real(attrs, 3, entity_id, "blue")?,
+    })
+}
+
+pub(crate) fn bind_pre_defined_curve_font(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPreDefinedCurveFont, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "PRE_DEFINED_CURVE_FONT")?;
+    Ok(super::model::EarlyPreDefinedCurveFont {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+    })
+}
+
+pub(crate) fn bind_draughting_pre_defined_curve_font(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDraughtingPreDefinedCurveFont, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "DRAUGHTING_PRE_DEFINED_CURVE_FONT")?;
+    Ok(super::model::EarlyDraughtingPreDefinedCurveFont {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+    })
+}
+
+pub(crate) fn bind_pre_defined_symbol(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPreDefinedSymbol, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "PRE_DEFINED_SYMBOL")?;
+    Ok(super::model::EarlyPreDefinedSymbol {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+    })
+}
+
+pub(crate) fn bind_pre_defined_terminator_symbol(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPreDefinedTerminatorSymbol, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "PRE_DEFINED_TERMINATOR_SYMBOL")?;
+    Ok(super::model::EarlyPreDefinedTerminatorSymbol {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+    })
+}
+
+pub(crate) fn bind_symbol_colour(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlySymbolColour, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "SYMBOL_COLOUR")?;
+    Ok(super::model::EarlySymbolColour {
+        colour_of_symbol: crate::ir::attr::read_entity_ref(
+            attrs,
+            0,
+            entity_id,
+            "colour_of_symbol",
+        )?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

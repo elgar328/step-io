@@ -1,9 +1,9 @@
-//! `SYMBOL_COLOUR` handler — phase symbol-colour.
+//! `SYMBOL_COLOUR` handler — visualization (2-layer path).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::{SymbolColour, VisualizationPool};
+use crate::ir::visualization::SymbolColour;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -22,21 +22,14 @@ impl SimpleEntityHandler for SymbolColourHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 1, entity_id, "SYMBOL_COLOUR")?;
-        let colour_ref = read_entity_ref(attrs, 0, entity_id, "colour_of_symbol")?;
-        let Some(colour_of_symbol) = ctx.id_cache.get::<crate::ir::id::ColourId>(colour_ref) else {
-            return Ok(());
-        };
-        let viz = ctx
-            .visualization
-            .get_or_insert_with(VisualizationPool::default);
-        let id = viz.symbol_colours.push(SymbolColour { colour_of_symbol });
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_symbol_colour(entity_id, attrs)?;
+        lower::lower_symbol_colour(ctx, entity_id, &early);
         Ok(())
     }
 
-    fn write(buf: &mut WriteBuffer, sc: SymbolColour) -> Result<u64, WriteError> {
-        let colour_step = buf.step_id(sc.colour_of_symbol);
-        Ok(buf.push_simple("SYMBOL_COLOUR", vec![Attribute::EntityRef(colour_step)]))
+    fn write(buf: &mut WriteBuffer, s: SymbolColour) -> Result<u64, WriteError> {
+        let colour_step = buf.step_id(s.colour_of_symbol);
+        let early = lift::lift_symbol_colour(colour_step);
+        Ok(serialize::serialize_symbol_colour(buf, &early))
     }
 }

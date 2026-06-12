@@ -2,18 +2,24 @@
 //! the pilot cluster). See the [module docs](super) for the lowering contract.
 
 use crate::early::model::{
+    EarlyColourRgb, EarlyDraughtingPreDefinedColour, EarlyDraughtingPreDefinedCurveFont,
     EarlyFillAreaStyle, EarlyFillAreaStyleId, EarlyMarker, EarlyMarkerSize, EarlyPointStyle,
-    EarlyPointStyleId, EarlySurfaceSideStyle, EarlySurfaceSideStyleId, EarlySurfaceStyleFillArea,
-    EarlySurfaceStyleFillAreaId, EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId, EarlyViewVolume,
-    EarlyViewVolumeId,
+    EarlyPointStyleId, EarlyPreDefinedCurveFont, EarlyPreDefinedMarker,
+    EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol,
+    EarlySurfaceSideStyle, EarlySurfaceSideStyleId, EarlySurfaceStyleFillArea,
+    EarlySurfaceStyleFillAreaId, EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId,
+    EarlySymbolColour, EarlyViewVolume, EarlyViewVolumeId,
 };
 use crate::ir::id::{
     ColourId, MeasureWithUnitId, PlanarExtentId, PointId, PreDefinedMarkerId,
     SurfaceStyleRenderingId,
 };
 use crate::ir::visualization::{
-    FillAreaStyle, FoundedItem, Marker, MarkerSize, PointStyle, SurfaceSideStyle,
-    SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleUsage, ViewVolume, VisualizationPool,
+    Colour, ColourRgb, DraughtingPreDefinedColour, DraughtingPreDefinedCurveFont, FillAreaStyle,
+    FoundedItem, Marker, MarkerSize, PointStyle, PreDefinedCurveFont, PreDefinedCurveFontData,
+    PreDefinedMarker, PreDefinedMarkerData, PreDefinedPointMarkerSymbol, PreDefinedSymbol,
+    PreDefinedSymbolData, PreDefinedTerminatorSymbol, SurfaceSideStyle, SurfaceSideStyleEntry,
+    SurfaceStyleFillArea, SurfaceStyleUsage, SymbolColour, ViewVolume, VisualizationPool,
 };
 use crate::reader::ReaderContext;
 
@@ -221,4 +227,157 @@ pub(crate) fn lower_view_volume(ctx: &mut ReaderContext, entity_id: u64, early: 
         }));
     let early_id: EarlyViewVolumeId = ctx.early.record_lowered(l2);
     ctx.id_cache.insert(entity_id, early_id);
+}
+
+/// Lower one `PRE_DEFINED_MARKER` (`Plain` variant).
+pub(crate) fn lower_pre_defined_marker(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyPreDefinedMarker,
+) {
+    let viz = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let id = viz
+        .pre_defined_markers
+        .push(PreDefinedMarker::Plain(PreDefinedMarkerData {
+            name: early.name,
+        }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `PRE_DEFINED_POINT_MARKER_SYMBOL` (subtype variant in the
+/// shared `pre_defined_markers` arena).
+pub(crate) fn lower_pre_defined_point_marker_symbol(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyPreDefinedPointMarkerSymbol,
+) {
+    let viz = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let id = viz
+        .pre_defined_markers
+        .push(PreDefinedMarker::PointMarkerSymbol(
+            PreDefinedPointMarkerSymbol { name: early.name },
+        ));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `DRAUGHTING_PRE_DEFINED_COLOUR` (`Colour::PreDefined`).
+pub(crate) fn lower_draughting_pre_defined_colour(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyDraughtingPreDefinedColour,
+) {
+    let pool = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let id = pool
+        .colours
+        .push(Colour::PreDefined(DraughtingPreDefinedColour {
+            name: early.name,
+        }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `COLOUR_RGB` (`Colour::Rgb`).
+pub(crate) fn lower_colour_rgb(ctx: &mut ReaderContext, entity_id: u64, early: EarlyColourRgb) {
+    let pool = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let id = pool.colours.push(Colour::Rgb(ColourRgb {
+        name: early.name,
+        red: early.red,
+        green: early.green,
+        blue: early.blue,
+    }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `PRE_DEFINED_CURVE_FONT` (`Plain` variant).
+pub(crate) fn lower_pre_defined_curve_font(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyPreDefinedCurveFont,
+) {
+    let viz = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let id =
+        viz.pre_defined_curve_fonts
+            .push(PreDefinedCurveFont::Plain(PreDefinedCurveFontData {
+                name: early.name,
+            }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `DRAUGHTING_PRE_DEFINED_CURVE_FONT` (`Draughting` variant).
+pub(crate) fn lower_draughting_pre_defined_curve_font(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyDraughtingPreDefinedCurveFont,
+) {
+    let viz = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let id = viz
+        .pre_defined_curve_fonts
+        .push(PreDefinedCurveFont::Draughting(
+            DraughtingPreDefinedCurveFont { name: early.name },
+        ));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `PRE_DEFINED_SYMBOL` (`Plain` variant).
+pub(crate) fn lower_pre_defined_symbol(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyPreDefinedSymbol,
+) {
+    let pool = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let id = pool
+        .pre_defined_symbols
+        .push(PreDefinedSymbol::Plain(PreDefinedSymbolData {
+            name: early.name,
+        }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `PRE_DEFINED_TERMINATOR_SYMBOL` (`Terminator` variant).
+pub(crate) fn lower_pre_defined_terminator_symbol(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyPreDefinedTerminatorSymbol,
+) {
+    let pool = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let id =
+        pool.pre_defined_symbols
+            .push(PreDefinedSymbol::Terminator(PreDefinedTerminatorSymbol {
+                name: early.name,
+            }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `SYMBOL_COLOUR` (unresolved colour = silent drop).
+pub(crate) fn lower_symbol_colour(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlySymbolColour,
+) {
+    let Some(colour_of_symbol) = ctx
+        .id_cache
+        .get::<crate::ir::id::ColourId>(early.colour_of_symbol)
+    else {
+        return;
+    };
+    let viz = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let id = viz.symbol_colours.push(SymbolColour { colour_of_symbol });
+    ctx.id_cache.insert(entity_id, id);
 }
