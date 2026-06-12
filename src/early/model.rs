@@ -14,17 +14,20 @@ use crate::ir::arena::ArenaId;
 // unlike `define_id!`): migrated producers register `file id → typed L1 id`,
 // and the `index()` addresses [`EarlyModel`]'s L1→L2 correspondence bucket.
 pub(crate) use super::generated::model::{
+    EarlyApplicationContext, EarlyApprovalRole, EarlyApprovalStatus,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyContextDependentShapeRepresentation,
-    EarlyFillAreaStyle, EarlyFillAreaStyleId, EarlyMarker, EarlyMarkerSize,
+    EarlyDateTimeRole, EarlyDocumentType, EarlyFillAreaStyle, EarlyFillAreaStyleId, EarlyGroup,
+    EarlyIdentificationRole, EarlyMarker, EarlyMarkerSize,
     EarlyMechanicalDesignAndDraughtingRelationship, EarlyNextAssemblyUsageOccurrence,
-    EarlyPointStyle, EarlyPointStyleId, EarlyProduct, EarlyProductDefinition,
-    EarlyProductDefinitionFormation, EarlyProductDefinitionFormationId,
-    EarlyProductDefinitionFormationWithSpecifiedSource, EarlyProductDefinitionId,
-    EarlyProductDefinitionShape, EarlyProductDefinitionShapeId,
+    EarlyObjectRole, EarlyPersonAndOrganizationRole, EarlyPointStyle, EarlyPointStyleId,
+    EarlyProduct, EarlyProductDefinition, EarlyProductDefinitionFormation,
+    EarlyProductDefinitionFormationId, EarlyProductDefinitionFormationWithSpecifiedSource,
+    EarlyProductDefinitionId, EarlyProductDefinitionShape, EarlyProductDefinitionShapeId,
     EarlyProductDefinitionWithAssociatedDocuments, EarlyRepresentationRelationship,
-    EarlyShapeRepresentationRelationship, EarlySource, EarlySurfaceSideStyle,
-    EarlySurfaceSideStyleId, EarlySurfaceStyleFillArea, EarlySurfaceStyleFillAreaId,
-    EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId, EarlyViewVolume, EarlyViewVolumeId,
+    EarlySecurityClassificationLevel, EarlyShapeRepresentationRelationship, EarlySource,
+    EarlySurfaceSideStyle, EarlySurfaceSideStyleId, EarlySurfaceStyleFillArea,
+    EarlySurfaceStyleFillAreaId, EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId, EarlyViewVolume,
+    EarlyViewVolumeId,
 };
 
 /// Transient L1 store, held on [`ReaderContext`](crate::reader::ReaderContext)

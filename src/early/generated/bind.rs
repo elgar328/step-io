@@ -373,6 +373,116 @@ pub(crate) fn bind_mechanical_design_and_draughting_relationship(
     )
 }
 
+pub(crate) fn bind_approval_role(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyApprovalRole, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "APPROVAL_ROLE")?;
+    Ok(super::model::EarlyApprovalRole {
+        role: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "role")?.to_owned(),
+    })
+}
+
+pub(crate) fn bind_approval_status(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyApprovalStatus, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "APPROVAL_STATUS")?;
+    Ok(super::model::EarlyApprovalStatus {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+    })
+}
+
+pub(crate) fn bind_date_time_role(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDateTimeRole, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "DATE_TIME_ROLE")?;
+    Ok(super::model::EarlyDateTimeRole {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+    })
+}
+
+pub(crate) fn bind_person_and_organization_role(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPersonAndOrganizationRole, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "PERSON_AND_ORGANIZATION_ROLE")?;
+    Ok(super::model::EarlyPersonAndOrganizationRole {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+    })
+}
+
+pub(crate) fn bind_document_type(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDocumentType, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "DOCUMENT_TYPE")?;
+    Ok(super::model::EarlyDocumentType {
+        product_data_type: crate::ir::attr::read_string_or_unset(
+            attrs,
+            0,
+            entity_id,
+            "product_data_type",
+        )?
+        .to_owned(),
+    })
+}
+
+pub(crate) fn bind_security_classification_level(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlySecurityClassificationLevel, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "SECURITY_CLASSIFICATION_LEVEL")?;
+    Ok(super::model::EarlySecurityClassificationLevel {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+    })
+}
+
+pub(crate) fn bind_application_context(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyApplicationContext, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "APPLICATION_CONTEXT")?;
+    Ok(super::model::EarlyApplicationContext {
+        application: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "application")?
+            .to_owned(),
+    })
+}
+
+pub(crate) fn bind_object_role(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyObjectRole, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "OBJECT_ROLE")?;
+    Ok(super::model::EarlyObjectRole {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+    })
+}
+
+pub(crate) fn bind_identification_role(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyIdentificationRole, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "IDENTIFICATION_ROLE")?;
+    Ok(super::model::EarlyIdentificationRole {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+    })
+}
+
+pub(crate) fn bind_group(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyGroup, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "GROUP")?;
+    Ok(super::model::EarlyGroup {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

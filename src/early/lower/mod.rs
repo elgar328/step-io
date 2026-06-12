@@ -9,9 +9,11 @@
 //! domain.
 
 pub(crate) mod assembly_product;
+pub(crate) mod plm;
 pub(crate) mod shape_rep;
 pub(crate) mod visualization;
 
 pub(crate) use assembly_product::*;
+pub(crate) use plm::*;
 pub(crate) use shape_rep::*;
 pub(crate) use visualization::*;

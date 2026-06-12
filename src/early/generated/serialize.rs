@@ -329,6 +329,128 @@ pub(crate) fn serialize_mechanical_design_and_draughting_relationship(
     )
 }
 
+pub(crate) fn serialize_approval_role(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyApprovalRole,
+) -> u64 {
+    buf.push_simple(
+        "APPROVAL_ROLE",
+        vec![crate::parser::entity::Attribute::String(l1.role.clone())],
+    )
+}
+
+pub(crate) fn serialize_approval_status(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyApprovalStatus,
+) -> u64 {
+    buf.push_simple(
+        "APPROVAL_STATUS",
+        vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+    )
+}
+
+pub(crate) fn serialize_date_time_role(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDateTimeRole,
+) -> u64 {
+    buf.push_simple(
+        "DATE_TIME_ROLE",
+        vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+    )
+}
+
+pub(crate) fn serialize_person_and_organization_role(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPersonAndOrganizationRole,
+) -> u64 {
+    buf.push_simple(
+        "PERSON_AND_ORGANIZATION_ROLE",
+        vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+    )
+}
+
+pub(crate) fn serialize_document_type(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDocumentType,
+) -> u64 {
+    buf.push_simple(
+        "DOCUMENT_TYPE",
+        vec![crate::parser::entity::Attribute::String(
+            l1.product_data_type.clone(),
+        )],
+    )
+}
+
+pub(crate) fn serialize_security_classification_level(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlySecurityClassificationLevel,
+) -> u64 {
+    buf.push_simple(
+        "SECURITY_CLASSIFICATION_LEVEL",
+        vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+    )
+}
+
+pub(crate) fn serialize_application_context(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyApplicationContext,
+) -> u64 {
+    buf.push_simple(
+        "APPLICATION_CONTEXT",
+        vec![crate::parser::entity::Attribute::String(
+            l1.application.clone(),
+        )],
+    )
+}
+
+pub(crate) fn serialize_object_role(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyObjectRole,
+) -> u64 {
+    buf.push_simple(
+        "OBJECT_ROLE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+        ],
+    )
+}
+
+pub(crate) fn serialize_identification_role(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyIdentificationRole,
+) -> u64 {
+    buf.push_simple(
+        "IDENTIFICATION_ROLE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+        ],
+    )
+}
+
+pub(crate) fn serialize_group(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyGroup,
+) -> u64 {
+    buf.push_simple(
+        "GROUP",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

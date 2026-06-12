@@ -1,9 +1,10 @@
-//! `PERSON_AND_ORGANIZATION_ROLE` handler plm leaf.
+//! `PERSON_AND_ORGANIZATION_ROLE` handler — plm metadata leaf (2-layer path: generated
+//! bind/serialize + pass-through lower/lift).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::plm::{PersonAndOrganizationRole, PlmPool};
+use crate::ir::plm::PersonAndOrganizationRole;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -22,18 +23,15 @@ impl SimpleEntityHandler for PersonAndOrganizationRoleHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 1, entity_id, "PERSON_AND_ORGANIZATION_ROLE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let pool = ctx.plm.get_or_insert_with(PlmPool::default);
-        let r_id = pool.p_and_o_roles.push(PersonAndOrganizationRole { name });
-        ctx.id_cache.insert(entity_id, r_id);
+        let early = bind::bind_person_and_organization_role(entity_id, attrs)?;
+        lower::lower_person_and_organization_role(ctx, entity_id, early);
         Ok(())
     }
 
-    fn write(buf: &mut WriteBuffer, r: PersonAndOrganizationRole) -> Result<u64, WriteError> {
-        Ok(buf.push_simple(
-            "PERSON_AND_ORGANIZATION_ROLE",
-            vec![Attribute::String(r.name)],
+    fn write(buf: &mut WriteBuffer, v: PersonAndOrganizationRole) -> Result<u64, WriteError> {
+        let early = lift::lift_person_and_organization_role(v);
+        Ok(serialize::serialize_person_and_organization_role(
+            buf, &early,
         ))
     }
 }

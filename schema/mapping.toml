@@ -25,6 +25,17 @@ generate = [
     "shape_representation_relationship",
     "constructive_geometry_representation_relationship",
     "mechanical_design_and_draughting_relationship",
+    # plm (metadata leaf batch)
+    "approval_role",
+    "approval_status",
+    "date_time_role",
+    "person_and_organization_role",
+    "document_type",
+    "security_classification_level",
+    "application_context",
+    "object_role",
+    "identification_role",
+    "group",
 ]
 
 # `generate_all`: diagnostic flip. When true, gen-early generates *every* entity

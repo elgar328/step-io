@@ -428,6 +428,219 @@ impl crate::ir::arena::ArenaId for EarlyMechanicalDesignAndDraughtingRelationshi
     }
 }
 
+/// L1 `APPROVAL_ROLE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyApprovalRole {
+    pub(crate) role: String,
+}
+
+/// Typed `id_cache` key for `APPROVAL_ROLE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyApprovalRoleId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyApprovalRoleId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `APPROVAL_STATUS` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyApprovalStatus {
+    pub(crate) name: String,
+}
+
+/// Typed `id_cache` key for `APPROVAL_STATUS` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyApprovalStatusId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyApprovalStatusId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DATE_TIME_ROLE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDateTimeRole {
+    pub(crate) name: String,
+}
+
+/// Typed `id_cache` key for `DATE_TIME_ROLE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDateTimeRoleId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDateTimeRoleId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PERSON_AND_ORGANIZATION_ROLE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPersonAndOrganizationRole {
+    pub(crate) name: String,
+}
+
+/// Typed `id_cache` key for `PERSON_AND_ORGANIZATION_ROLE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPersonAndOrganizationRoleId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPersonAndOrganizationRoleId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DOCUMENT_TYPE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDocumentType {
+    pub(crate) product_data_type: String,
+}
+
+/// Typed `id_cache` key for `DOCUMENT_TYPE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDocumentTypeId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDocumentTypeId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `SECURITY_CLASSIFICATION_LEVEL` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlySecurityClassificationLevel {
+    pub(crate) name: String,
+}
+
+/// Typed `id_cache` key for `SECURITY_CLASSIFICATION_LEVEL` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlySecurityClassificationLevelId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlySecurityClassificationLevelId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `APPLICATION_CONTEXT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyApplicationContext {
+    pub(crate) application: String,
+}
+
+/// Typed `id_cache` key for `APPLICATION_CONTEXT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyApplicationContextId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyApplicationContextId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `OBJECT_ROLE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyObjectRole {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+}
+
+/// Typed `id_cache` key for `OBJECT_ROLE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyObjectRoleId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyObjectRoleId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `IDENTIFICATION_ROLE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyIdentificationRole {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+}
+
+/// Typed `id_cache` key for `IDENTIFICATION_ROLE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyIdentificationRoleId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyIdentificationRoleId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `GROUP` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyGroup {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+}
+
+/// Typed `id_cache` key for `GROUP` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyGroupId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyGroupId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {
