@@ -19,7 +19,8 @@ pub(crate) use super::generated::model::{
     EarlyPointStyleId, EarlyProduct, EarlyProductDefinition, EarlyProductDefinitionFormation,
     EarlyProductDefinitionFormationId, EarlyProductDefinitionFormationWithSpecifiedSource,
     EarlyProductDefinitionId, EarlyProductDefinitionShape, EarlyProductDefinitionShapeId,
-    EarlyProductDefinitionWithAssociatedDocuments, EarlySource, EarlySurfaceSideStyle,
+    EarlyProductDefinitionWithAssociatedDocuments, EarlyRepresentationRelationship,
+    EarlyShapeRepresentationRelationship, EarlySource, EarlySurfaceSideStyle,
     EarlySurfaceSideStyleId, EarlySurfaceStyleFillArea, EarlySurfaceStyleFillAreaId,
     EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId, EarlyViewVolume, EarlyViewVolumeId,
 };

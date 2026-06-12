@@ -378,7 +378,9 @@ pub struct ReaderContext {
     /// simple `SHAPE_REPRESENTATION_RELATIONSHIP` entities where exactly one
     /// side resolves to a known ABSR/MSSR. Consumed by SDR conversion to
     /// follow the Fusion 360 / CATIA indirection chain
-    /// `SDR → plain SR → SRR → ABSR/MSSR`.
+    /// `SDR → plain SR → SRR → ABSR/MSSR`. Deliberately NOT a typed L1 probe:
+    /// both key and value are raw step ids the post-passes chain into the
+    /// equally raw-keyed geometry payload maps (no L2 arena id to record).
     pub(crate) srr_equiv_map: HashMap<u64, u64>,
     /// `plain SHAPE_REPRESENTATION #N → items[0] axis Placement3dId`. Captured
     /// by the plain `SHAPE_REPRESENTATION` handler so SDR conversion can attach

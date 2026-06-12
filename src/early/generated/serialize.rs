@@ -257,6 +257,42 @@ pub(crate) fn serialize_context_dependent_shape_representation(
     )
 }
 
+pub(crate) fn serialize_representation_relationship(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyRepresentationRelationship,
+) -> u64 {
+    buf.push_simple(
+        "REPRESENTATION_RELATIONSHIP",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.rep_1),
+            crate::parser::entity::Attribute::EntityRef(l1.rep_2),
+        ],
+    )
+}
+
+pub(crate) fn serialize_shape_representation_relationship(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyShapeRepresentationRelationship,
+) -> u64 {
+    buf.push_simple(
+        "SHAPE_REPRESENTATION_RELATIONSHIP",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.rep_1),
+            crate::parser::entity::Attribute::EntityRef(l1.rep_2),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

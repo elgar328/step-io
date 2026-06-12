@@ -20,6 +20,9 @@ generate = [
     "product_definition_shape",
     "next_assembly_usage_occurrence",
     "context_dependent_shape_representation",
+    # shape_rep (representation relationship cluster)
+    "representation_relationship",
+    "shape_representation_relationship",
 ]
 
 # `generate_all`: diagnostic flip. When true, gen-early generates *every* entity
