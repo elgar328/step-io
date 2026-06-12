@@ -1,16 +1,10 @@
-//! `CHARACTERIZED_ITEM_WITHIN_REPRESENTATION` handler — phase
-//! characterized-object-ciwr.
-//!
-//! Pairs a `representation_item` with the `representation` that contains
-//! it. Either ref unresolved drops the occurrence.
+//! `CHARACTERIZED_ITEM_WITHIN_REPRESENTATION` handler — shape-rep domain
+//! (2-layer path).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::entities::visualization::styled_item::resolve_representation_item_ref;
-use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::shape_rep::{
-    CharacterizedItemWithinRepresentation, CharacterizedObject, CharacterizedObjectData,
-};
+use crate::ir::shape_rep::CharacterizedItemWithinRepresentation;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -29,36 +23,8 @@ impl SimpleEntityHandler for CharacterizedItemWithinRepresentationHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(
-            attrs,
-            4,
-            entity_id,
-            "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
-        )?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let description = match attrs.get(1) {
-            Some(Attribute::String(s)) => Some(s.clone()),
-            _ => None,
-        };
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-        let rep_ref = read_entity_ref(attrs, 3, entity_id, "rep")?;
-        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
-            return Ok(());
-        };
-        let Some(rep) = ctx.id_cache.get::<crate::ir::id::RepresentationId>(rep_ref) else {
-            return Ok(());
-        };
-        let co_id = ctx.characterized_objects.push(
-            CharacterizedObject::CharacterizedItemWithinRepresentation(
-                CharacterizedItemWithinRepresentation {
-                    inherited: CharacterizedObjectData { name, description },
-                    item,
-                    rep,
-                },
-            ),
-        );
-        // Let PROPERTY_DEFINITION.definition resolve a CIWR target.
-        ctx.id_cache.insert(entity_id, co_id);
+        let early = bind::bind_characterized_item_within_representation(entity_id, attrs)?;
+        lower::lower_characterized_item_within_representation(ctx, entity_id, early);
         Ok(())
     }
 
@@ -68,18 +34,12 @@ impl SimpleEntityHandler for CharacterizedItemWithinRepresentationHandler {
     ) -> Result<u64, WriteError> {
         let item_step = buf.emit_representation_item_ref(ciwr.item)?;
         let rep_step = buf.step_id(ciwr.rep);
-        let desc_attr = match ciwr.inherited.description {
-            Some(d) => Attribute::String(d),
-            None => Attribute::Unset,
-        };
-        Ok(buf.push_simple(
-            "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
-            vec![
-                Attribute::String(ciwr.inherited.name),
-                desc_attr,
-                Attribute::EntityRef(item_step),
-                Attribute::EntityRef(rep_step),
-            ],
-        ))
+        let early = lift::lift_characterized_item_within_representation(
+            ciwr.inherited.name,
+            ciwr.inherited.description,
+            item_step,
+            rep_step,
+        );
+        Ok(serialize::serialize_characterized_item_within_representation(buf, &early))
     }
 }

@@ -9,14 +9,17 @@
 //! the equally raw-keyed geometry payload maps.
 
 use crate::early::model::{
+    EarlyCharacterizedItemWithinRepresentation,
     EarlyConstructiveGeometryRepresentationRelationship,
-    EarlyMechanicalDesignAndDraughtingRelationship, EarlyRepresentationRelationship,
-    EarlyShapeRepresentationRelationship,
+    EarlyMechanicalDesignAndDraughtingRelationship, EarlyRepresentationContext,
+    EarlyRepresentationRelationship, EarlyShapeRepresentationRelationship,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::{
+    CharacterizedItemWithinRepresentation, CharacterizedObject, CharacterizedObjectData,
     ConstructiveGeometryRepresentationRelationship, MechanicalDesignAndDraughtingRelationship,
     RepresentationRelationship, RepresentationRelationshipData, ShapeRepresentationRelationshipIr,
+    UnitlessContext,
 };
 use crate::reader::ReaderContext;
 
@@ -204,4 +207,52 @@ pub(crate) fn lower_shape_representation_relationship(
             },
         ),
     );
+}
+
+/// Lower one bare `REPRESENTATION_CONTEXT` (unitless — no dimension count).
+pub(crate) fn lower_representation_context(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyRepresentationContext,
+) {
+    let id = ctx.unitless_contexts.push(UnitlessContext {
+        identifier: early.context_identifier,
+        context_type: early.context_type,
+        coordinate_space_dimension: None,
+    });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `CHARACTERIZED_ITEM_WITHIN_REPRESENTATION` (unresolved item /
+/// rep = silent drop, legacy leniency). Registers in `id_cache` so
+/// `PROPERTY_DEFINITION.definition` can resolve a CIWR target.
+pub(crate) fn lower_characterized_item_within_representation(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyCharacterizedItemWithinRepresentation,
+) {
+    let Some(item) = crate::entities::visualization::styled_item::resolve_representation_item_ref(
+        ctx, early.item,
+    ) else {
+        return;
+    };
+    let Some(rep) = ctx
+        .id_cache
+        .get::<crate::ir::id::RepresentationId>(early.rep)
+    else {
+        return;
+    };
+    let co_id =
+        ctx.characterized_objects
+            .push(CharacterizedObject::CharacterizedItemWithinRepresentation(
+                CharacterizedItemWithinRepresentation {
+                    inherited: CharacterizedObjectData {
+                        name: early.name,
+                        description: early.description,
+                    },
+                    item,
+                    rep,
+                },
+            ));
+    ctx.id_cache.insert(entity_id, co_id);
 }

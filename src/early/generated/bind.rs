@@ -1280,6 +1280,43 @@ pub(crate) fn bind_id_attribute(
     })
 }
 
+pub(crate) fn bind_representation_context(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyRepresentationContext, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "REPRESENTATION_CONTEXT")?;
+    Ok(super::model::EarlyRepresentationContext {
+        context_identifier: crate::ir::attr::read_string_or_unset(
+            attrs,
+            0,
+            entity_id,
+            "context_identifier",
+        )?
+        .to_owned(),
+        context_type: crate::ir::attr::read_string_or_unset(attrs, 1, entity_id, "context_type")?
+            .to_owned(),
+    })
+}
+
+pub(crate) fn bind_characterized_item_within_representation(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyCharacterizedItemWithinRepresentation, crate::ir::error::ConvertError>
+{
+    crate::ir::attr::check_count(
+        attrs,
+        4,
+        entity_id,
+        "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
+    )?;
+    Ok(super::model::EarlyCharacterizedItemWithinRepresentation {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        item: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "item")?,
+        rep: crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "rep")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

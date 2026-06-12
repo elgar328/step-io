@@ -2,9 +2,10 @@
 //! cluster). See the [module docs](super) for the lifting contract.
 
 use crate::early::model::{
+    EarlyCharacterizedItemWithinRepresentation,
     EarlyConstructiveGeometryRepresentationRelationship,
-    EarlyMechanicalDesignAndDraughtingRelationship, EarlyRepresentationRelationship,
-    EarlyShapeRepresentationRelationship,
+    EarlyMechanicalDesignAndDraughtingRelationship, EarlyRepresentationContext,
+    EarlyRepresentationRelationship, EarlyShapeRepresentationRelationship,
 };
 
 /// Lift one base `REPRESENTATION_RELATIONSHIP` from its (pre-resolved) arena
@@ -71,5 +72,32 @@ pub(crate) fn lift_shape_representation_relationship(
         description: Some("None".into()),
         rep_1,
         rep_2,
+    }
+}
+
+/// Lift one bare `REPRESENTATION_CONTEXT` from its arena data.
+pub(crate) fn lift_representation_context(
+    identifier: String,
+    context_type: String,
+) -> EarlyRepresentationContext {
+    EarlyRepresentationContext {
+        context_identifier: identifier,
+        context_type,
+    }
+}
+
+/// Lift one `CHARACTERIZED_ITEM_WITHIN_REPRESENTATION` (refs pre-resolved —
+/// the item via `emit_representation_item_ref`, which may emit it).
+pub(crate) fn lift_characterized_item_within_representation(
+    name: String,
+    description: Option<String>,
+    item: u64,
+    rep: u64,
+) -> EarlyCharacterizedItemWithinRepresentation {
+    EarlyCharacterizedItemWithinRepresentation {
+        name,
+        description,
+        item,
+        rep,
     }
 }

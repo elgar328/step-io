@@ -85,6 +85,9 @@ generate = [
     "name_attribute",
     "description_attribute",
     "id_attribute",
+    # shape_rep (context / characterized leaf batch)
+    "representation_context",
+    "characterized_item_within_representation",
 ]
 
 # `generate_all`: diagnostic flip. When true, gen-early generates *every* entity

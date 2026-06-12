@@ -1704,6 +1704,52 @@ impl crate::ir::arena::ArenaId for EarlyIdAttributeId {
     }
 }
 
+/// L1 `REPRESENTATION_CONTEXT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyRepresentationContext {
+    pub(crate) context_identifier: String,
+    pub(crate) context_type: String,
+}
+
+/// Typed `id_cache` key for `REPRESENTATION_CONTEXT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyRepresentationContextId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyRepresentationContextId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `CHARACTERIZED_ITEM_WITHIN_REPRESENTATION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCharacterizedItemWithinRepresentation {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) item: u64,
+    pub(crate) rep: u64,
+}
+
+/// Typed `id_cache` key for `CHARACTERIZED_ITEM_WITHIN_REPRESENTATION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCharacterizedItemWithinRepresentationId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCharacterizedItemWithinRepresentationId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

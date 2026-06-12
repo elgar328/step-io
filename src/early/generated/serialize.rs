@@ -1283,6 +1283,37 @@ pub(crate) fn serialize_id_attribute(
     )
 }
 
+pub(crate) fn serialize_representation_context(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyRepresentationContext,
+) -> u64 {
+    buf.push_simple(
+        "REPRESENTATION_CONTEXT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.context_identifier.clone()),
+            crate::parser::entity::Attribute::String(l1.context_type.clone()),
+        ],
+    )
+}
+
+pub(crate) fn serialize_characterized_item_within_representation(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCharacterizedItemWithinRepresentation,
+) -> u64 {
+    buf.push_simple(
+        "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.item),
+            crate::parser::entity::Attribute::EntityRef(l1.rep),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {
