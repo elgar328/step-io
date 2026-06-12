@@ -1,108 +1,54 @@
 gen-early coverage (generate_all)
-supported: 2100 / 2195
-skipped:   95
+supported: 2154 / 2195
+skipped:   41
 
 -- skipped by reason --
   nested-agg       7
-  select-edge      73
+  select-edge      16
   unresolved-token 6
   vec-ref          2
-  vec-select       6
+  vec-select       9
   vec-str          1
 
 -- skipped entities --
-  a3ma_length_measure_and_context_dependent_measure_pair select-edge
-  angle_assembly_constraint_with_dimension         select-edge
   annotation_plane                                 vec-ref
   application_defined_function                     vec-select
   atom_based_literal                               select-edge
-  atomic_formula                                   select-edge
   b_spline_volume                                  nested-agg
   b_spline_volume_with_knots                       nested-agg
   banded_matrix                                    select-edge
   basic_sparse_matrix                              select-edge
   bezier_volume                                    nested-agg
-  binary_assembly_constraint                       select-edge
   binary_literal                                   unresolved-token
   binary_representation_item                       unresolved-token
   bound_variational_parameter                      select-edge
   bytes_representation_item                        unresolved-token
-  chain_based_geometric_item_specific_usage        select-edge
-  chain_based_item_identified_representation_usage select-edge
-  coaxial_assembly_constraint                      select-edge
-  complex_clause                                   select-edge
-  complex_conjunctive_clause                       select-edge
-  complex_disjunctive_clause                       select-edge
-  compound_representation_item                     select-edge
   constant_function                                select-edge
-  constrained_kinematic_motion_representation      select-edge
-  datum_reference_compartment                      select-edge
-  datum_reference_element                          select-edge
-  default_tolerance_table_cell                     select-edge
-  draughting_model_item_association                select-edge
-  draughting_model_item_association_with_placeholder select-edge
+  datum_reference_compartment                      vec-select
+  datum_reference_element                          vec-select
   externally_defined_picture_representation_item   unresolved-token
   extreme_instance                                 select-edge
   finite_function                                  nested-agg
   finite_space                                     vec-select
-  free_kinematic_motion_representation             select-edge
-  func                                             select-edge
   function_application                             vec-select
-  general_datum_reference                          select-edge
+  general_datum_reference                          vec-select
   generated_finite_numeric_space                   vec-select
-  geometric_item_specific_usage                    select-edge
-  geometry_to_topology_model_association           select-edge
-  ground_fact                                      select-edge
-  incidence_assembly_constraint                    select-edge
   instance_report_item_with_extreme_instances      select-edge
-  item_identified_representation_usage             select-edge
-  item_link_motion_relationship                    select-edge
-  kinematic_frame_background_representation_association select-edge
-  link_motion_relationship                         select-edge
   listed_data                                      vec-select
-  literal_conjunction                              select-edge
-  literal_disjunction                              select-edge
-  location_in_aggregate_representation_item        select-edge
   mathematical_description                         select-edge
   maths_tuple_literal                              vec-select
   maths_value_precision_qualifier                  select-edge
-  mechanical_design_requirement_item_association   select-edge
-  mechanism_base_placement                         select-edge
-  pair_representation_relationship                 select-edge
-  parallel_assembly_constraint                     select-edge
-  parallel_assembly_constraint_with_dimension      select-edge
-  perpendicular_assembly_constraint                select-edge
   person                                           vec-str
   picture_representation_item                      unresolved-token
-  pmi_requirement_item_association                 select-edge
-  point_and_vector                                 select-edge
-  point_array                                      select-edge
-  point_on_planar_curve_pair_value                 select-edge
-  point_on_surface_pair_value                      select-edge
-  point_path                                       select-edge
   predefined_picture_representation_item           unresolved-token
   prescribed_path                                  vec-ref
-  primitive_2d_with_inner_boundary                 select-edge
   quasi_uniform_volume                             nested-agg
   rational_b_spline_volume                         nested-agg
-  representation_relationship_with_transformation  select-edge
-  row_representation_item                          select-edge
-  row_value                                        select-edge
-  rule_condition                                   select-edge
   shape_data_quality_inspection_criterion_report   select-edge
   shape_data_quality_inspection_instance_report_item select-edge
-  shape_data_quality_value_range                   select-edge
-  simple_clause                                    select-edge
-  spherical_pair_value                             select-edge
   strict_triangular_matrix                         select-edge
-  structured_text_composition                      select-edge
-  surface_distance_assembly_constraint_with_dimension select-edge
   symmetric_banded_matrix                          select-edge
-  table_representation_item                        select-edge
-  tangent_assembly_constraint                      select-edge
-  topology_to_geometry_model_association           select-edge
   triangular_matrix                                select-edge
   unbound_variational_parameter                    select-edge
   uniform_volume                                   nested-agg
-  value_range                                      select-edge
   variational_parameter                            select-edge
