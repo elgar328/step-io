@@ -1,10 +1,10 @@
 gen-early coverage (generate_all)
-supported: 2172 / 2195
-skipped:   23
+supported: 2176 / 2195
+skipped:   19
 
 -- skipped by reason --
   nested-agg       1
-  select-edge      16
+  select-edge      12
   vec-select       6
 
 -- skipped entities --
@@ -14,18 +14,14 @@ skipped:   23
   basic_sparse_matrix                              select-edge
   bound_variational_parameter                      select-edge
   constant_function                                select-edge
-  extreme_instance                                 select-edge
   finite_function                                  nested-agg
   finite_space                                     vec-select
   function_application                             vec-select
   generated_finite_numeric_space                   vec-select
-  instance_report_item_with_extreme_instances      select-edge
   listed_data                                      vec-select
   mathematical_description                         select-edge
   maths_tuple_literal                              vec-select
   maths_value_precision_qualifier                  select-edge
-  shape_data_quality_inspection_criterion_report   select-edge
-  shape_data_quality_inspection_instance_report_item select-edge
   strict_triangular_matrix                         select-edge
   symmetric_banded_matrix                          select-edge
   triangular_matrix                                select-edge

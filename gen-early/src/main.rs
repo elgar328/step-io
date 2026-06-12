@@ -387,11 +387,37 @@ impl Ctx {
                         return false; // >1 distinct agg inner kind
                     }
                 }
+                // Nested mixed SELECT member: supported only if it is itself
+                // scalar/enum-only (its value is always a single `Typed`, so the
+                // outer bind can delegate to `bind_<nested>`); ref/agg-bearing
+                // nested selects are deferred.
+                Kind::Select(nested) if self.select_typed_only(&nested) => {}
                 // logical / binary / non-scalar aggregation / nested mixed select deferred.
                 Kind::Logical | Kind::Binary | Kind::Vec(_) | Kind::Select(_) => return false,
             }
         }
         true
+    }
+
+    /// Whether a mixed SELECT is "Typed-only": every member is a scalar / non-
+    /// hinted enum, so each value is a single `Attribute::Typed{tag, ..}` (no
+    /// bare `EntityRef`, list, nested select, logical, or binary). Such a select
+    /// can be a *nested member* of another synth select, decoded by delegating
+    /// the whole `attr` to its `bind_<sel>` from the outer Typed `_ =>` arm.
+    /// `false` also rules out recursion (a Typed-only select has no select member).
+    fn select_typed_only(&self, sel: &str) -> bool {
+        let Some(td) = self.schema.types.get(sel) else {
+            return false;
+        };
+        let Some(members) = select_members(td.aliased.trim()) else {
+            return false;
+        };
+        members.iter().all(|m| match self.try_classify(m, 0) {
+            Some(Kind::Real | Kind::Int | Kind::Str | Kind::Bool) => true,
+            // non-hinted enum members serialize as `Typed{tag, Enum}` too.
+            Some(Kind::Enum(a)) => !self.mapping.enums.contains_key(&a),
+            _ => false,
+        })
     }
 
     /// `Ok` if every flattened attribute of `ent` is emittable, else the first
@@ -506,7 +532,7 @@ fn main() {
         // serialize fns don't read `l1`, and big entities trip pedantic style
         // lints. All flip-only — the committed (off) output keeps a bare header.
         format!(
-            "{HEADER}#![allow(dead_code, unused_variables, clippy::too_many_lines, clippy::enum_variant_names, clippy::struct_field_names, clippy::struct_excessive_bools, clippy::clone_on_copy)]\n\n"
+            "{HEADER}#![allow(dead_code, unused_variables, clippy::too_many_lines, clippy::enum_variant_names, clippy::struct_field_names, clippy::struct_excessive_bools, clippy::clone_on_copy, clippy::single_match_else)]\n\n"
         )
     } else {
         HEADER.to_string()
@@ -700,6 +726,7 @@ fn main() {
     // across selects and standalone fields via `emitted_models`.
     let mut token_enums: BTreeSet<String> = BTreeSet::new();
     let mut emitted_models: BTreeSet<String> = BTreeSet::new();
+    let mut emitted_selects: BTreeSet<String> = BTreeSet::new();
     for sel in &used_selects {
         if ctx.mapping.selects.contains_key(sel) {
             emit_select(
@@ -718,6 +745,7 @@ fn main() {
                 &mut bind,
                 &mut serialize,
                 &mut emitted_models,
+                &mut emitted_selects,
             );
         }
     }
@@ -1031,7 +1059,12 @@ fn emit_select_synth(
     bind: &mut String,
     serialize: &mut String,
     emitted_models: &mut BTreeSet<String>,
+    emitted_selects: &mut BTreeSet<String>,
 ) {
+    // Dedup across the `used_selects` loop and recursive nested-select emission.
+    if !emitted_selects.insert(sel.to_string()) {
+        return;
+    }
     let rt = format!("Early{}", pascal(sel));
     let rtq = format!("super::model::{rt}");
     let aliased = ctx
@@ -1075,6 +1108,8 @@ fn emit_select_synth(
             Kind::Vec(_) => {
                 panic!("gen-early: select `{sel}` member `{m}` is a non-scalar aggregation (v4.x)")
             }
+            // Typed-only nested select: decoded by delegating to `bind_<nested>`.
+            Kind::Select(nested) if ctx.select_typed_only(nested) => {}
             Kind::Select(_) => {
                 panic!("gen-early: select `{sel}` member `{m}` is a nested mixed select (v4.x)")
             }
@@ -1096,6 +1131,8 @@ fn emit_select_synth(
             Kind::Bool => "bool".into(),
             Kind::Str => "String".into(),
             Kind::Enum(a) => format!("super::model::Early{}", pascal(a)),
+            // Typed-only nested select -> its own synthesized `Early*` type.
+            Kind::Select(a) => format!("super::model::Early{}", pascal(a)),
             _ => unreachable!("filtered by the deferred-shape checks above"),
         }
     };
@@ -1104,6 +1141,21 @@ fn emit_select_synth(
     for (_, _, k) in &mems {
         if let Kind::Enum(a) = k {
             write_synth_enum_model(ctx, a, model, emitted_models);
+        }
+    }
+    // Recursively emit the (typed-only) nested SELECT members' own
+    // model/bind/serialize so `bind_<nested>` / `<nested>_emit` exist.
+    for (_, _, k) in &mems {
+        if let Kind::Select(nested) = k {
+            emit_select_synth(
+                ctx,
+                nested,
+                model,
+                bind,
+                serialize,
+                emitted_models,
+                emitted_selects,
+            );
         }
     }
 
@@ -1191,7 +1243,7 @@ fn emit_select_synth(
     if mems.iter().any(|(_, _, k)| {
         matches!(
             k,
-            Kind::Real | Kind::Int | Kind::Str | Kind::Bool | Kind::Enum(_)
+            Kind::Real | Kind::Int | Kind::Str | Kind::Bool | Kind::Enum(_) | Kind::Select(_)
         )
     }) {
         writeln!(
@@ -1226,7 +1278,22 @@ fn emit_select_synth(
                 _ => {}
             }
         }
-        writeln!(bind, "            _ => None,").unwrap();
+        // Typed-only nested select members: tags belong to the nested select, so
+        // the outer match can't enumerate them — delegate the whole `attr` to
+        // `bind_<nested>` (the `_ =>` arm). Selects with no nested member keep the
+        // plain `_ => None` (byte-identical to pre-v4.18).
+        if mems.iter().any(|(_, _, k)| matches!(k, Kind::Select(_))) {
+            writeln!(bind, "            _ => {{").unwrap();
+            for (_, v, k) in &mems {
+                if let Kind::Select(nested) = k {
+                    writeln!(bind, "                if let Some(x) = bind_{nested}(attr) {{ return Some({rtq}::{v}(x)); }}").unwrap();
+                }
+            }
+            writeln!(bind, "                None").unwrap();
+            writeln!(bind, "            }},").unwrap();
+        } else {
+            writeln!(bind, "            _ => None,").unwrap();
+        }
         writeln!(bind, "        }},").unwrap();
     }
     writeln!(bind, "        _ => None,").unwrap();
@@ -1289,6 +1356,10 @@ fn emit_select_synth(
                 format!(
                     "{rtq}::{v}(e) => crate::parser::entity::Attribute::Typed {{ type_name: \"{tag}\".into(), value: Box::new(crate::parser::entity::Attribute::Enum(match e {{{arms} }}.into())) }},"
                 )
+            }
+            // Typed-only nested select: delegate to its `<nested>_emit`.
+            Kind::Select(nested) => {
+                format!("{rtq}::{v}(x) => {nested}_emit(x),")
             }
             _ => unreachable!("filtered by the deferred-shape checks above"),
         };
@@ -2034,7 +2105,15 @@ mod tests {
     fn synth_select(sel: &str) -> (String, String, String) {
         let ctx = ctx_from(schema());
         let (mut m, mut b, mut s) = (String::new(), String::new(), String::new());
-        emit_select_synth(&ctx, sel, &mut m, &mut b, &mut s, &mut BTreeSet::new());
+        emit_select_synth(
+            &ctx,
+            sel,
+            &mut m,
+            &mut b,
+            &mut s,
+            &mut BTreeSet::new(),
+            &mut BTreeSet::new(),
+        );
         (m, b, s)
     }
 
@@ -2129,13 +2208,51 @@ mod tests {
         ));
     }
 
-    /// A nested mixed SELECT member is still deferred (panics). `measured_value_select`
-    /// = SELECT(boolean_value [Bool], measure_value [mixed SELECT], …) — the loop
-    /// passes boolean_value, then panics on the nested mixed select member.
+    /// A scalar-only nested SELECT member (`measure_value` = 42 scalar measures)
+    /// is decoded by delegating to its own `bind_measure_value` from the outer
+    /// Typed `_ =>` arm; the nested select is emitted recursively.
+    /// `measured_value_select` = SELECT(boolean_value [Bool], measure_value
+    /// [nested SELECT], plane_angle_and_length_pair [ref], plane_angle_and_ratio_pair
+    /// [ref]) — two refs collapse to `EntityRef`, the nested becomes `MeasureValue`.
+    #[test]
+    fn synth_select_nested_typed_only_delegates() {
+        let (m, b, s) = synth_select("measured_value_select");
+        // outer variants: combined ref + bool + nested-select payload.
+        assert!(m.contains("pub(crate) enum EarlyMeasuredValueSelect"));
+        assert!(m.contains("EntityRef(u64)"));
+        assert!(m.contains("BooleanValue(bool)"));
+        assert!(m.contains("MeasureValue(super::model::EarlyMeasureValue)"));
+        // the nested select is emitted recursively (its own model + bind).
+        assert!(m.contains("pub(crate) enum EarlyMeasureValue"));
+        assert!(b.contains("fn bind_measure_value("));
+        // outer bind delegates the whole attr to the nested decoder.
+        assert!(b.contains(
+            "if let Some(x) = bind_measure_value(attr) { return Some(super::model::EarlyMeasuredValueSelect::MeasureValue(x)); }"
+        ));
+        // serialize delegates to the nested emitter.
+        assert!(s.contains(
+            "super::model::EarlyMeasuredValueSelect::MeasureValue(x) => measure_value_emit(x),"
+        ));
+    }
+
+    /// A nested mixed SELECT member with ref/agg members is still deferred (panics).
+    /// `maths_value` = SELECT(atom_based_value, generic_expression, maths_tuple);
+    /// the first member `atom_based_value` is itself a SELECT with aggregation /
+    /// nested members, so `select_typed_only` is false → the loop panics.
     #[test]
     #[should_panic(expected = "nested mixed select")]
     fn synth_select_nested_mixed_panics() {
-        synth_select("measured_value_select");
+        synth_select("maths_value");
+    }
+
+    /// `select_typed_only`: true for an all-scalar select, false once a member is
+    /// an entity ref / aggregation / nested select.
+    #[test]
+    fn select_typed_only_classification() {
+        let ctx = ctx_from(schema());
+        assert!(ctx.select_typed_only("measure_value")); // 42 scalar measures
+        assert!(!ctx.select_typed_only("trim_condition_select")); // has entity refs
+        assert!(!ctx.select_typed_only("maths_value")); // has nested / aggregation
     }
 
     fn empty_ctx() -> Ctx {
