@@ -243,6 +243,33 @@ pub fn read_string<'a>(
     }
 }
 
+/// Extract the hex-encoded `&str` of a `binary` attribute from `attrs[index]`.
+///
+/// The lexer already strips the surrounding quotes and keeps the hex digits
+/// verbatim ([`Attribute::Binary`]); this returns them unchanged for a faithful
+/// round-trip (decoding to bytes is a later, semantic concern).
+///
+/// # Errors
+///
+/// Returns [`ConvertError::AttributeIndex`] or [`ConvertError::AttributeType`].
+pub fn read_binary<'a>(
+    attrs: &'a [Attribute],
+    index: usize,
+    entity_id: u64,
+    field_name: &'static str,
+) -> Result<&'a str, ConvertError> {
+    let attr = get_attr(attrs, index, entity_id, field_name)?;
+    match attr {
+        Attribute::Binary(s) => Ok(s.as_str()),
+        other => Err(ConvertError::AttributeType {
+            entity_id,
+            field_name,
+            expected: "Binary",
+            actual: AttributeKindTag::from_attribute(other),
+        }),
+    }
+}
+
 /// Extract a `&str` from `attrs[index]`, treating `$` (Unset) as `""`.
 ///
 /// STEP spec marks some informal string fields (descriptions, labels,
@@ -880,6 +907,28 @@ mod tests {
             ConvertError::AttributeIndex {
                 index: 0,
                 len: 0,
+                ..
+            }
+        ));
+    }
+
+    // --- read_binary ---
+
+    #[test]
+    fn read_binary_ok() {
+        let attrs = vec![Attribute::Binary("0F3A".into())];
+        assert_eq!(read_binary(&attrs, 0, 1, "lit_value").unwrap(), "0F3A");
+    }
+
+    #[test]
+    fn read_binary_wrong_type() {
+        let attrs = vec![Attribute::String("0F3A".into())];
+        let err = read_binary(&attrs, 0, 1, "lit_value").unwrap_err();
+        assert!(matches!(
+            err,
+            ConvertError::AttributeType {
+                expected: "Binary",
+                actual: AttributeKindTag::String,
                 ..
             }
         ));

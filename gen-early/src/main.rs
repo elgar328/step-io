@@ -144,6 +144,7 @@ enum Kind {
     Bool,           // -> bool
     Logical,        // -> crate::ir::geometry::Logical (.T./.F./.U.)
     Str,            // -> String
+    Binary,         // -> String (hex; Attribute::Binary)
     Enum(String),   // ENUM type-alias name (hinted -> L2 reuse, else synth Early*)
     Select(String), // mixed SELECT type-alias name (looked up in mapping.selects)
 }
@@ -242,6 +243,7 @@ impl Ctx {
             "boolean" => return Kind::Bool,
             "logical" => return Kind::Logical,
             "string" => return Kind::Str,
+            "binary" => return Kind::Binary,
             _ => {}
         }
         if self.schema.entity.contains_key(t) {
@@ -289,6 +291,7 @@ impl Ctx {
             "boolean" => return Some(Kind::Bool),
             "logical" => return Some(Kind::Logical),
             "string" => return Some(Kind::Str),
+            "binary" => return Some(Kind::Binary),
             _ => {}
         }
         if self.schema.entity.contains_key(t) {
@@ -317,7 +320,7 @@ impl Ctx {
             // optional enum wraps the standalone enum decode (v4.10).
             Kind::Enum(_) => true,
             // scalar bind exists; optional deferred (no read_optional_*).
-            Kind::Bool | Kind::Logical => !optional,
+            Kind::Bool | Kind::Logical | Kind::Binary => !optional,
             // ref / scalar / enum / supported-select element (single list), or a
             // `Vec<Vec<ref/real/int>>` grid; optional aggregation deferred.
             Kind::Vec(inner) => {
@@ -379,8 +382,8 @@ impl Ctx {
                         return false; // >1 distinct agg inner kind
                     }
                 }
-                // logical / non-scalar aggregation / nested mixed select deferred.
-                Kind::Logical | Kind::Vec(_) | Kind::Select(_) => return false,
+                // logical / binary / non-scalar aggregation / nested mixed select deferred.
+                Kind::Logical | Kind::Binary | Kind::Vec(_) | Kind::Select(_) => return false,
             }
         }
         true
@@ -441,6 +444,7 @@ fn kind_tag(k: &Kind) -> &'static str {
         Kind::Bool => "bool",
         Kind::Logical => "logical",
         Kind::Str => "str",
+        Kind::Binary => "binary",
         Kind::Enum(_) => "enum",
         Kind::Select(_) => "select",
         Kind::Vec(_) => "vec",
@@ -1546,6 +1550,7 @@ fn field_ty(ctx: &Ctx, k: &Kind) -> String {
         Kind::Bool => "bool".into(),
         Kind::Logical => "crate::ir::geometry::Logical".into(),
         Kind::Str => "String".into(),
+        Kind::Binary => "String".into(),
         // Hinted ENUM reuses the L2 type; hint-less ENUM uses the synthesized
         // `Early*` (defined in the same generated/model.rs, so referenced bare).
         Kind::Enum(alias) => match ctx.mapping.enums.get(alias) {
@@ -1607,6 +1612,9 @@ fn bind_expr(k: &Kind, i: usize, field: &str) -> String {
                 "crate::ir::attr::read_string_or_unset(attrs, {i}, entity_id, \"{field}\")?.to_owned()"
             )
         }
+        Kind::Binary => {
+            format!("crate::ir::attr::read_binary(attrs, {i}, entity_id, \"{field}\")?.to_owned()")
+        }
         Kind::Enum(alias) => format!("bind_{alias}(attrs, {i}, entity_id, \"{field}\")?"),
         // Select fields drop the whole entity on `None`, so they are emitted in
         // the let-form path (see `main`), never via this expression helper.
@@ -1660,6 +1668,7 @@ fn serialize_expr(k: &Kind, field: &str) -> String {
             "crate::parser::entity::Attribute::Enum(crate::ir::attr::logical_to_step(l1.{field}).into())"
         ),
         Kind::Str => format!("crate::parser::entity::Attribute::String(l1.{field}.clone())"),
+        Kind::Binary => format!("crate::parser::entity::Attribute::Binary(l1.{field}.clone())"),
         Kind::Enum(alias) => format!("{alias}_attr(l1.{field})"),
         Kind::Select(alias) => format!("{alias}_emit(&l1.{field})"),
     }
@@ -1709,7 +1718,7 @@ fn bind_expr_opt(k: &Kind, i: usize, field: &str) -> String {
         Kind::Enum(alias) => format!(
             "match attrs.get({i}) {{ Some(crate::parser::entity::Attribute::Unset | crate::parser::entity::Attribute::Derived) => None, _ => Some(bind_{alias}(attrs, {i}, entity_id, \"{field}\")?) }}"
         ),
-        Kind::Bool | Kind::Logical | Kind::Vec(_) => {
+        Kind::Bool | Kind::Logical | Kind::Binary | Kind::Vec(_) => {
             panic!("gen-early: OPTIONAL {k:?} not yet supported (v4.x)")
         }
         Kind::Select(_) => unreachable!("optional Select handled in the let-form bind path"),
@@ -1747,7 +1756,7 @@ fn serialize_expr_opt(k: &Kind, field: &str) -> String {
         Kind::Enum(alias) => {
             format!("match &l1.{field} {{ Some(e) => {alias}_attr(e.clone()), None => {unset} }}")
         }
-        Kind::Bool | Kind::Logical | Kind::Vec(_) => {
+        Kind::Bool | Kind::Logical | Kind::Binary | Kind::Vec(_) => {
             panic!("gen-early: OPTIONAL {k:?} not yet supported (v4.x)")
         }
     }
@@ -2129,6 +2138,26 @@ mod tests {
         let ss = serialize_expr(&Kind::Vec(Box::new(Kind::Str)), "labels");
         assert!(ss.contains("|s| crate::parser::entity::Attribute::String(s.clone())"));
         assert!(serialize_expr(&Kind::Vec(Box::new(Kind::Real)), "v").contains("Real(x)"));
+    }
+
+    /// `binary` primitive: classifies as `Kind::Binary`, maps to `String` (hex),
+    /// binds via `read_binary`, serializes to `Attribute::Binary`. Optional is
+    /// deferred (no `read_optional_binary`).
+    #[test]
+    fn binary_codegen() {
+        let ctx = empty_ctx();
+        assert!(matches!(ctx.classify("binary", 0), Kind::Binary));
+        assert!(matches!(ctx.try_classify("binary", 0), Some(Kind::Binary)));
+        assert!(ctx.emittable(&Kind::Binary, false));
+        assert!(!ctx.emittable(&Kind::Binary, true)); // optional binary deferred
+        assert_eq!(field_ty(&ctx, &Kind::Binary), "String");
+        let b = bind_expr(&Kind::Binary, 1, "x");
+        assert!(b.contains("crate::ir::attr::read_binary(attrs, 1, entity_id, \"x\")?"));
+        assert!(b.contains(".to_owned()"));
+        assert_eq!(
+            serialize_expr(&Kind::Binary, "y"),
+            "crate::parser::entity::Attribute::Binary(l1.y.clone())"
+        );
     }
 
     /// `Vec<EarlyEnum>` (aggregation of enum): list-decode helper + per-element
