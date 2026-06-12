@@ -4,7 +4,9 @@
 //! and re-exported here so the handlers keep their `serialize::serialize_*` paths.
 
 pub(crate) use super::generated::serialize::{
+    serialize_constructive_geometry_representation_relationship,
     serialize_context_dependent_shape_representation, serialize_fill_area_style,
+    serialize_mechanical_design_and_draughting_relationship,
     serialize_next_assembly_usage_occurrence, serialize_point_style, serialize_product,
     serialize_product_definition, serialize_product_definition_formation,
     serialize_product_definition_formation_with_specified_source,

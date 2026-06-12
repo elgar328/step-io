@@ -10,12 +10,10 @@
 //! `emit_representation_relationships` after every Representation slot
 //! of `representation_step_ids` is populated.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::shape_rep::{
-    ConstructiveGeometryRepresentationRelationship, RepresentationRelationship,
-};
+use crate::ir::shape_rep::ConstructiveGeometryRepresentationRelationship;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -34,38 +32,8 @@ impl SimpleEntityHandler for ConstructiveGeometryRepresentationRelationshipHandl
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(
-            attrs,
-            4,
-            entity_id,
-            "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP",
-        )?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-        let rep_1_ref = read_entity_ref(attrs, 2, entity_id, "rep_1")?;
-        let rep_2_ref = read_entity_ref(attrs, 3, entity_id, "rep_2")?;
-        let Some(rep_1) = ctx
-            .id_cache
-            .get::<crate::ir::id::RepresentationId>(rep_1_ref)
-        else {
-            return Ok(());
-        };
-        let Some(rep_2) = ctx
-            .id_cache
-            .get::<crate::ir::id::RepresentationId>(rep_2_ref)
-        else {
-            return Ok(());
-        };
-        ctx.representation_relationships.push(
-            RepresentationRelationship::ConstructiveGeometryRepresentationRelationship(
-                ConstructiveGeometryRepresentationRelationship {
-                    name,
-                    description,
-                    rep_1,
-                    rep_2,
-                },
-            ),
-        );
+        let early = bind::bind_constructive_geometry_representation_relationship(entity_id, attrs)?;
+        lower::lower_constructive_geometry_representation_relationship(ctx, early);
         Ok(())
     }
 
@@ -73,16 +41,16 @@ impl SimpleEntityHandler for ConstructiveGeometryRepresentationRelationshipHandl
         buf: &mut WriteBuffer,
         cgrr: ConstructiveGeometryRepresentationRelationship,
     ) -> Result<u64, WriteError> {
+        // The arena holds L2 ids; resolve to output step ids here (lift is a
+        // pure adapter and never touches the buffer).
         let rep_1_step = buf.step_id(cgrr.rep_1);
         let rep_2_step = buf.step_id(cgrr.rep_2);
-        Ok(buf.push_simple(
-            "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP",
-            vec![
-                Attribute::String(cgrr.name),
-                Attribute::String(cgrr.description),
-                Attribute::EntityRef(rep_1_step),
-                Attribute::EntityRef(rep_2_step),
-            ],
-        ))
+        let early = lift::lift_constructive_geometry_representation_relationship(
+            cgrr.name,
+            cgrr.description,
+            rep_1_step,
+            rep_2_step,
+        );
+        Ok(serialize::serialize_constructive_geometry_representation_relationship(buf, &early))
     }
 }

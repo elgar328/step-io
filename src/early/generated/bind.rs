@@ -327,6 +327,52 @@ pub(crate) fn bind_shape_representation_relationship(
     })
 }
 
+pub(crate) fn bind_constructive_geometry_representation_relationship(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<
+    super::model::EarlyConstructiveGeometryRepresentationRelationship,
+    crate::ir::error::ConvertError,
+> {
+    crate::ir::attr::check_count(
+        attrs,
+        4,
+        entity_id,
+        "CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP",
+    )?;
+    Ok(
+        super::model::EarlyConstructiveGeometryRepresentationRelationship {
+            name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+            description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+            rep_1: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "rep_1")?,
+            rep_2: crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "rep_2")?,
+        },
+    )
+}
+
+pub(crate) fn bind_mechanical_design_and_draughting_relationship(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<
+    super::model::EarlyMechanicalDesignAndDraughtingRelationship,
+    crate::ir::error::ConvertError,
+> {
+    crate::ir::attr::check_count(
+        attrs,
+        4,
+        entity_id,
+        "MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP",
+    )?;
+    Ok(
+        super::model::EarlyMechanicalDesignAndDraughtingRelationship {
+            name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+            description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+            rep_1: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "rep_1")?,
+            rep_2: crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "rep_2")?,
+        },
+    )
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

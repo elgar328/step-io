@@ -1,7 +1,11 @@
 //! Shape-representation-domain `lift` fns (the representation relationship
 //! cluster). See the [module docs](super) for the lifting contract.
 
-use crate::early::model::{EarlyRepresentationRelationship, EarlyShapeRepresentationRelationship};
+use crate::early::model::{
+    EarlyConstructiveGeometryRepresentationRelationship,
+    EarlyMechanicalDesignAndDraughtingRelationship, EarlyRepresentationRelationship,
+    EarlyShapeRepresentationRelationship,
+};
 
 /// Lift one base `REPRESENTATION_RELATIONSHIP` from its (pre-resolved) arena
 /// data. The legacy writer emitted `description` as a String (`''` for empty,
@@ -13,6 +17,39 @@ pub(crate) fn lift_representation_relationship(
     rep_2: u64,
 ) -> EarlyRepresentationRelationship {
     EarlyRepresentationRelationship {
+        name,
+        description: Some(description),
+        rep_1,
+        rep_2,
+    }
+}
+
+/// Lift one `CONSTRUCTIVE_GEOMETRY_REPRESENTATION_RELATIONSHIP` from its
+/// (pre-resolved) arena data — faithful pass-through, `Some` description
+/// (the legacy writer always emitted a String, never `$`).
+pub(crate) fn lift_constructive_geometry_representation_relationship(
+    name: String,
+    description: String,
+    rep_1: u64,
+    rep_2: u64,
+) -> EarlyConstructiveGeometryRepresentationRelationship {
+    EarlyConstructiveGeometryRepresentationRelationship {
+        name,
+        description: Some(description),
+        rep_1,
+        rep_2,
+    }
+}
+
+/// Lift one `MECHANICAL_DESIGN_AND_DRAUGHTING_RELATIONSHIP` from its
+/// (pre-resolved) arena data — faithful pass-through, `Some` description.
+pub(crate) fn lift_mechanical_design_and_draughting_relationship(
+    name: String,
+    description: String,
+    rep_1: u64,
+    rep_2: u64,
+) -> EarlyMechanicalDesignAndDraughtingRelationship {
+    EarlyMechanicalDesignAndDraughtingRelationship {
         name,
         description: Some(description),
         rep_1,
