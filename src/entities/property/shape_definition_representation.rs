@@ -37,13 +37,15 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
         let pdef_shape_ref = read_entity_ref(attrs, 0, entity_id, "definition")?;
         let shape_rep_ref = read_entity_ref(attrs, 1, entity_id, "used_representation")?;
 
-        // Only consider SDRs where `pdef_shape.definition` is a
-        // PRODUCT_DEFINITION. Others (definition = a PROPERTY_DEFINITION, e.g.
-        // geometric-validation / CATIA geometric-set PMI shapes) are stashed
-        // raw and resolved after all entities are read (the PD is read by the
-        // property handler, later than this SDR). NAUO-tagged PDS resolve to neither and
-        // stay dropped (assembly-instance shape — a later phase).
-        let Some(pdef_ref) = ctx.pdef_shape_to_pdef.get(&pdef_shape_ref).copied() else {
+        // Only consider SDRs whose PDS resolved to a product (typed one-probe:
+        // `pdef_shape.definition` = PRODUCT_DEFINITION *and* the product chain
+        // resolved — a PDEF-targeted PDS with an unresolved product falls
+        // through to the stash like any non-product PDS). Others (definition =
+        // a PROPERTY_DEFINITION, e.g. geometric-validation / CATIA
+        // geometric-set PMI shapes) are stashed raw and resolved after all
+        // entities are read (the PD is read by the property handler, later
+        // than this SDR).
+        let Some(pid) = ctx.product_of_pds(pdef_shape_ref) else {
             // NAUO-tagged placement PDS: this SDR links the instance's placement
             // PDS to a standalone placement SHAPE_REPRESENTATION (an extra SDR
             // some exporters emit besides the CDSR; one placement PDS may carry
@@ -66,13 +68,6 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
             }
             ctx.sdr_link_refs.push((pdef_shape_ref, shape_rep_ref));
             return Ok(());
-        };
-        let Some(pid) = ctx.product_of_pdef(pdef_ref) else {
-            return Err(ConvertError::MissingReference {
-                from: entity_id,
-                to: pdef_ref,
-                field_name: "definition.definition",
-            });
         };
 
         // Defer the geometry classification: it follows the indirect chain

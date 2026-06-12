@@ -37,11 +37,8 @@ impl SimpleEntityHandler for DatumSystemHandler {
         let product_definitional = read_bool(attrs, 3, entity_id, "product_definitional")?;
         let constituent_refs = read_entity_ref_list(attrs, 4, entity_id, "constituents")?;
 
-        // of_shape → PRODUCT_DEFINITION_SHAPE → PRODUCT_DEFINITION → ProductId.
-        let Some(&pdef_step_id) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) else {
-            return Ok(());
-        };
-        let Some(target) = ctx.product_of_pdef(pdef_step_id) else {
+        // of_shape → PRODUCT_DEFINITION_SHAPE → ProductId (typed one-probe).
+        let Some(target) = ctx.product_of_pds(of_shape_ref) else {
             return Ok(());
         };
 

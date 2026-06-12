@@ -737,8 +737,8 @@ pub struct RealRepresentationItem {
 /// `SHAPE_ASPECT(name, description, of_shape, product_definitional)`.
 ///
 /// `of_shape` is a `PRODUCT_DEFINITION_SHAPE` reference resolved to a
-/// `ProductId` at read time via the existing `pdef_shape_to_pdef` and
-/// `pdef_to_product` maps. SAs whose `of_shape` does not resolve are
+/// `ProductId` at read time via the typed `product_of_pds` probe. SAs
+/// whose `of_shape` does not resolve are
 /// silently dropped on read (symmetric ignorance preserves round-trip
 /// equality for fixtures with non-standard targets).
 ///

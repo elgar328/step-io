@@ -3,9 +3,9 @@
 //! See the [module docs](super) for the lowering contract.
 //!
 //! Besides the arena work these record the typed `Early*Id` → `ProductId`
-//! correspondence that consumers resolve in one probe (replacing the raw
-//! `formation_to_product` / `pdef_to_product` 2-hop step-id maps — kept
-//! dual-written until every consumer migrates).
+//! correspondence that consumers resolve in one probe (this replaced the raw
+//! `formation_to_product` / `pdef_to_product` / `pdef_shape_to_pdef` step-id
+//! chain maps).
 
 use crate::early::model::{
     EarlyProduct, EarlyProductDefinitionFormationId, EarlyProductDefinitionId,
@@ -196,9 +196,6 @@ pub(crate) fn lower_product_definition_shape(
     entity_id: u64,
     pdef_ref: u64,
 ) {
-    // Raw step-id chain map: dual-written until every consumer migrates to
-    // the typed `EarlyProductDefinitionShapeId` probe.
-    ctx.pdef_shape_to_pdef.insert(entity_id, pdef_ref);
     // Mirror the product-targeted PDS into the schema-faithful
     // `property_definitions` arena so the writer's arena-driven emit sees it.
     // The NAUO-targeted PDS is materialised later, in

@@ -51,12 +51,9 @@ impl SimpleEntityHandler for DefaultModelGeometricViewHandler {
         let Some(rep) = ctx.id_cache.get::<crate::ir::id::RepresentationId>(rep_ref) else {
             return Ok(());
         };
-        // of_shape → PRODUCT_DEFINITION_SHAPE → PRODUCT_DEFINITION → ProductId
-        // (the SHAPE_ASPECT chain).
-        let Some(&pdef_step) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) else {
-            return Ok(());
-        };
-        let Some(target) = ctx.product_of_pdef(pdef_step) else {
+        // of_shape → PRODUCT_DEFINITION_SHAPE → ProductId (typed one-probe;
+        // the SHAPE_ASPECT chain).
+        let Some(target) = ctx.product_of_pds(of_shape_ref) else {
             return Ok(());
         };
 

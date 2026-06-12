@@ -1,7 +1,7 @@
 //! `SHAPE_ASPECT` handler.
 //!
-//! Resolves `SHAPE_ASPECT.of_shape` through the assembly pass's
-//! `pdef_shape_to_pdef` and `pdef_to_product` maps to a `ProductId`.
+//! Resolves `SHAPE_ASPECT.of_shape` to a `ProductId` through the typed
+//! `product_of_pds` probe (recorded by the PDS lower).
 //! Future PMI work (Tolerance / Datum / GD&T per ROADMAP Phase 2) hangs
 //! additional handlers off the same group.
 
@@ -40,14 +40,14 @@ impl SimpleEntityHandler for ShapeAspectHandler {
         let of_shape_ref = read_entity_ref(attrs, 2, entity_id, "of_shape")?;
         let product_definitional = read_bool(attrs, 3, entity_id, "product_definitional")?;
 
-        // Lookup chain: SHAPE_ASPECT.of_shape → PRODUCT_DEFINITION_SHAPE
-        //   → PRODUCT_DEFINITION → ProductId.
+        // Lookup: SHAPE_ASPECT.of_shape → PRODUCT_DEFINITION_SHAPE →
+        // ProductId (typed one-probe).
         // [NS-shape-aspect-of-shape-pd] C3D: of_shape references a
         // PRODUCT_DEFINITION directly (must be a PRODUCT_DEFINITION_SHAPE) →
         // resolve via the product; writer re-emits the standard PDS form.
         // See reader::nonstandard.
-        let pdef_step_id = if let Some(&pd) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) {
-            pd
+        let product_id = if let Some(pid) = ctx.product_of_pds(of_shape_ref) {
+            pid
         } else if ctx
             .id_cache
             .get::<crate::ir::ProductDefinitionId>(of_shape_ref)
@@ -59,12 +59,12 @@ impl SimpleEntityHandler for ShapeAspectHandler {
                 normalized_to: "PRODUCT_DEFINITION_SHAPE (of_shape was a PRODUCT_DEFINITION)"
                     .into(),
             });
-            of_shape_ref
+            let Some(pid) = ctx.product_of_pdef(of_shape_ref) else {
+                return Ok(());
+            };
+            pid
         } else {
             return Ok(()); // unresolved (genuinely non-product target)
-        };
-        let Some(product_id) = ctx.product_of_pdef(pdef_step_id) else {
-            return Ok(());
         };
 
         let id = ctx.shape_aspects.push(ShapeAspect {

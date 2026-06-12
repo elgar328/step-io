@@ -34,10 +34,7 @@ impl SimpleEntityHandler for PlacedDatumTargetFeatureHandler {
         let product_definitional = read_bool(attrs, 3, entity_id, "product_definitional")?;
         let target_id = read_string_or_unset(attrs, 4, entity_id, "target_id")?.to_owned();
 
-        let Some(&pdef_step_id) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) else {
-            return Ok(());
-        };
-        let Some(target) = ctx.product_of_pdef(pdef_step_id) else {
+        let Some(target) = ctx.product_of_pds(of_shape_ref) else {
             return Ok(());
         };
 

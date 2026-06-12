@@ -26,18 +26,21 @@
 //!   per-variant "resolve via this map" escape. Affected:
 //!   `Axis2Placement` / `PlanarBoxPlacement` (`placement_map`),
 //!   `SurfaceSideStyleEntry` (`viz_ssfa_id_map`).
-//! - **2-hop indirection** — a member resolves through an intermediate STEP id
-//!   (`pdef_to_product` / `formation_to_product`: pdef ref → product step id →
-//!   `ProductId`), not a single lookup. Not expressible as a simple probe.
-//!   Affected: `NameAttributeItem` (the `ProductDefinition` member) and the plm
-//!   `Product(ProductId)` SELECTs (`GroupItem`, `ApprovalItem`, `DateTimeItem`,
-//!   `IdentificationItem`, `DocumentReferenceItem`, `PersonOrganizationItem`,
-//!   `SecurityClassificationItem`).
+//! - **Typed-correspondence indirection** — a member resolves to a *different*
+//!   arena type than its probe key: the L1 `product_of_pdef` / `product_of_pds`
+//!   probes are `id_cache.get::<Early*Id>` + `lookup_lowered` → `ProductId`,
+//!   not a plain `id_cache.get::<XId>`. (The former raw 2-hop step-id maps
+//!   `pdef_to_product` / `formation_to_product` / `pdef_shape_to_pdef` are
+//!   gone, but the one-probe form is still not the macro's sequential-probe
+//!   shape.) Affected: `NameAttributeItem` (the `ProductDefinition` member).
 //! - **Resolver-side logic / no benefit** — single-variant SELECTs carry no
 //!   drift risk (nothing to forget), so deriving them is pure churn; some also
 //!   wrap extra logic (`warnings.push`, dangling-ref checks). Affected:
-//!   `PersonOrganizationSelect`, `DerivedDefinitionItem`, and the single-variant
-//!   plm SELECTs above.
+//!   `PersonOrganizationSelect`, `DerivedDefinitionItem`, and the plm
+//!   `Product(ProductId)` SELECTs (`GroupItem`, `ApprovalItem`, `DateTimeItem`,
+//!   `IdentificationItem`, `DocumentReferenceItem`, `PersonOrganizationItem`,
+//!   `SecurityClassificationItem` — these also resolve via the typed
+//!   correspondence above).
 
 use crate::ir::arena::{ArenaId, AsArenaId};
 

@@ -57,8 +57,9 @@
 //! - **Source**: C3D kernel.
 //! - **Schema rule broken**: `SHAPE_ASPECT.of_shape` must reference a
 //!   `PRODUCT_DEFINITION_SHAPE`; C3D references a `PRODUCT_DEFINITION` directly.
-//! - **Acceptance**: lookup chain falls through `pdef_shape_to_pdef` to
-//!   `pdef_to_product`, resolving to the product; the PDS link is reconstructed.
+//! - **Acceptance**: the typed `product_of_pds` probe misses; the fallback
+//!   `product_of_pdef` probe resolves to the product, and the PDS link is
+//!   reconstructed.
 //! - **Writer symmetry**: emits the standard `of_shape = PRODUCT_DEFINITION_SHAPE`
 //!   form (via the product's `product_def_shape_ids`).
 //! - **Code**: `entities/shape_rep/shape_aspect.rs`.

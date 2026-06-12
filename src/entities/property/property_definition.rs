@@ -98,11 +98,11 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
         };
         let target_ref = read_entity_ref(attrs, 2, entity_id, "definition")?;
         // characterized_definition SELECT (subset). Pattern A:
-        // PRODUCT_DEFINITION (pdef_to_product). Pattern B: SHAPE_ASPECT
+        // PRODUCT_DEFINITION (product_of_pdef). Pattern B: SHAPE_ASPECT
         // (shape_aspect_id_map). Pattern C: PRODUCT_DEFINITION_SHAPE — its
-        // arena entry is pushed by the PDS handler with the
-        // ProductDefinitionShape variant; resolved through pdef_shape_to_pdef
-        // → pdef_to_product. Pattern D: GENERAL_PROPERTY — standalone, no
+        // arena entry is pushed by the PDS lower with the
+        // ProductDefinitionShape variant; resolved through the typed
+        // product_of_pds probe. Pattern D: GENERAL_PROPERTY — standalone, no
         // product binding. Product-bound patterns still gate on a resolvable
         // product (drop when unresolved); the resolved id is not stored.
         let definition = if ctx
@@ -145,11 +145,7 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
                 );
                 return Ok(());
             }
-            let resolved = ctx
-                .pdef_shape_to_pdef
-                .get(&target_ref)
-                .and_then(|&pdef_ref| ctx.product_of_pdef(pdef_ref));
-            if resolved.is_none() {
+            if ctx.product_of_pds(target_ref).is_none() {
                 return Ok(());
             }
             CharacterizedDefinition::ProductDefinitionShape(pds_pd_id)

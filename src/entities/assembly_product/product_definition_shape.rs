@@ -2,9 +2,10 @@
 //!
 //! Reader path is a classifier: walks attr[2] (`definition`) to decide
 //! whether this `PDEF_SHAPE` describes a product (`PRODUCT_DEFINITION`
-//! target) or an instance (NAUO target). Populates `pdef_shape_to_pdef` or
-//! `pdef_shape_to_nauo` accordingly. No IR entity is materialised — the
-//! maps feed the `SHAPE_DEFINITION_REPRESENTATION` and
+//! target) or an instance (NAUO target). The product branch lowers to the
+//! `property_definitions` arena and records the typed `product_of_pds`
+//! correspondence; the NAUO branch populates `pdef_shape_to_nauo`. These
+//! feed the `SHAPE_DEFINITION_REPRESENTATION` and
 //! `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` handlers downstream.
 //!
 //! Writer emits the standard three-attr form pointing at the PDEF.

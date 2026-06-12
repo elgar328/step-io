@@ -1881,9 +1881,9 @@ fn pdef_with_associated_documents_is_recognised_as_product_definition() {
     // ashtray (grabcad) and similar AP203 fixtures emit
     //   PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS(id, desc, formation, ctx, documentation_ids)
     // in the PRODUCT chain instead of plain PRODUCT_DEFINITION. The reader
-    // must accept the subtype: the entity dispatch builds pdef_to_product,
-    // and the PDS classification (pdef_shape_to_pdef map) treats the subtype
-    // as a valid PDEF target. Without this, the SDR handler skips silently
+    // must accept the subtype: the pdef lower records the typed product
+    // correspondence, and the PDS classification treats the subtype as a
+    // valid PDEF target. Without this, the SDR handler skips silently
     // and the product ends up with `geometry_context = None` plus empty
     // content - exactly the ashtray failure mode.
     let source = minimal_step(

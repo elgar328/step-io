@@ -390,13 +390,11 @@ pub struct ReaderContext {
     /// wrapper's `items` list may omit an axis (CATIA's GBSSR commonly
     /// does).
     pub(crate) wireframe_ref_frame_map: HashMap<u64, Placement3dId>,
-    /// `PRODUCT_DEFINITION_SHAPE #N → PRODUCT_DEFINITION #N` when the
-    /// `pdef_shape` points at a product definition (not a `NAUO`).
-    /// Populated by the `PRODUCT_DEFINITION_SHAPE` handler.
-    pub(crate) pdef_shape_to_pdef: HashMap<u64, u64>,
     /// `PRODUCT_DEFINITION_SHAPE #N → NEXT_ASSEMBLY_USAGE_OCCURRENCE #N` when
-    /// the `pdef_shape` points at a `NAUO` (instance-tagged). Populated
-    /// alongside `pdef_shape_to_pdef` and consumed during NAUO instance wiring.
+    /// the `pdef_shape` points at a `NAUO` (instance-tagged). Populated by the
+    /// `PRODUCT_DEFINITION_SHAPE` handler's NAUO branch and consumed during
+    /// NAUO instance wiring. (The product-targeted counterpart is the typed
+    /// [`product_of_pds`](Self::product_of_pds) probe.)
     pub(crate) pdef_shape_to_nauo: HashMap<u64, u64>,
     /// Source `(name, description)` of a NAUO-targeted `PRODUCT_DEFINITION_SHAPE`,
     /// keyed by its `#N`. Captured so `materialize_nauo_owned_pds` preserves the
@@ -1504,6 +1502,15 @@ impl ReaderContext {
     pub(crate) fn product_of_formation(&self, formation_ref: u64) -> Option<ProductId> {
         self.id_cache
             .get::<crate::early::model::EarlyProductDefinitionFormationId>(formation_ref)
+            .map(|e| self.early.lookup_lowered(e))
+    }
+
+    /// One typed probe `PRODUCT_DEFINITION_SHAPE #N → ProductId` (PDS
+    /// counterpart of [`product_of_pdef`](Self::product_of_pdef) — what the
+    /// former `pdef_shape_to_pdef` → `product_of_pdef` chain resolved to).
+    pub(crate) fn product_of_pds(&self, pds_ref: u64) -> Option<ProductId> {
+        self.id_cache
+            .get::<crate::early::model::EarlyProductDefinitionShapeId>(pds_ref)
             .map(|e| self.early.lookup_lowered(e))
     }
 

@@ -1912,11 +1912,8 @@ impl SimpleEntityHandler for DatumHandler {
         let identification =
             read_string_or_unset(attrs, 4, entity_id, "identification")?.to_owned();
 
-        // of_shape → PRODUCT_DEFINITION_SHAPE → PRODUCT_DEFINITION → ProductId.
-        let Some(&pdef_step_id) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) else {
-            return Ok(());
-        };
-        let Some(target) = ctx.product_of_pdef(pdef_step_id) else {
+        // of_shape → PRODUCT_DEFINITION_SHAPE → ProductId (typed one-probe).
+        let Some(target) = ctx.product_of_pds(of_shape_ref) else {
             return Ok(());
         };
 
@@ -2024,11 +2021,8 @@ impl SimpleEntityHandler for DimensionalSizeWithDatumFeatureHandler {
         let applies_to_ref = read_entity_ref(attrs, 4, entity_id, "applies_to")?;
         let size_name = read_string_or_unset(attrs, 5, entity_id, "size_name")?.to_owned();
 
-        // of_shape → PRODUCT_DEFINITION_SHAPE → PRODUCT_DEFINITION → ProductId.
-        let Some(&pdef_step_id) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) else {
-            return Ok(());
-        };
-        let Some(target) = ctx.product_of_pdef(pdef_step_id) else {
+        // of_shape → PRODUCT_DEFINITION_SHAPE → ProductId (typed one-probe).
+        let Some(target) = ctx.product_of_pds(of_shape_ref) else {
             return Ok(());
         };
 
@@ -2085,11 +2079,8 @@ fn read_datum_feature_variant(
     let of_shape_ref = read_entity_ref(attrs, 2, entity_id, "of_shape")?;
     let product_definitional = read_bool(attrs, 3, entity_id, "product_definitional")?;
 
-    // of_shape → PRODUCT_DEFINITION_SHAPE → PRODUCT_DEFINITION → ProductId.
-    let Some(&pdef_step_id) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) else {
-        return Ok(());
-    };
-    let Some(target) = ctx.product_of_pdef(pdef_step_id) else {
+    // of_shape → PRODUCT_DEFINITION_SHAPE → ProductId (typed one-probe).
+    let Some(target) = ctx.product_of_pds(of_shape_ref) else {
         return Ok(());
     };
 
@@ -2843,11 +2834,8 @@ fn read_general_datum_reference_data(
     let product_definitional = read_bool(attrs, 3, entity_id, "product_definitional")?;
     // attr 5 (`modifiers`) — datum_reference_modifier set, not modelled.
 
-    // of_shape → PRODUCT_DEFINITION_SHAPE → PRODUCT_DEFINITION → ProductId.
-    let Some(&pdef_step_id) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) else {
-        return Ok(None);
-    };
-    let Some(target) = ctx.product_of_pdef(pdef_step_id) else {
+    // of_shape → PRODUCT_DEFINITION_SHAPE → ProductId (typed one-probe).
+    let Some(target) = ctx.product_of_pds(of_shape_ref) else {
         return Ok(None);
     };
     // base — `datum_or_common_datum` SELECT: a single `DATUM` ref, or a
