@@ -2164,6 +2164,125 @@ impl crate::ir::arena::ArenaId for EarlyQualifiedRepresentationItemId {
     }
 }
 
+/// L1 `PRESENTATION_LAYER_ASSIGNMENT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPresentationLayerAssignment {
+    pub(crate) name: String,
+    pub(crate) description: String,
+    pub(crate) assigned_items: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `PRESENTATION_LAYER_ASSIGNMENT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPresentationLayerAssignmentId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPresentationLayerAssignmentId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PRODUCT_CATEGORY` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyProductCategory {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+}
+
+/// Typed `id_cache` key for `PRODUCT_CATEGORY` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyProductCategoryId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyProductCategoryId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DIMENSIONAL_CHARACTERISTIC_REPRESENTATION` (generated).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct EarlyDimensionalCharacteristicRepresentation {
+    pub(crate) dimension: u64,
+    pub(crate) representation: u64,
+}
+
+/// Typed `id_cache` key for `DIMENSIONAL_CHARACTERISTIC_REPRESENTATION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDimensionalCharacteristicRepresentationId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDimensionalCharacteristicRepresentationId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `GENERAL_PROPERTY_ASSOCIATION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyGeneralPropertyAssociation {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) base_definition: u64,
+    pub(crate) derived_definition: u64,
+}
+
+/// Typed `id_cache` key for `GENERAL_PROPERTY_ASSOCIATION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyGeneralPropertyAssociationId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyGeneralPropertyAssociationId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `MAKE_FROM_USAGE_OPTION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyMakeFromUsageOption {
+    pub(crate) id: String,
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) relating_product_definition: u64,
+    pub(crate) related_product_definition: u64,
+    pub(crate) ranking: i64,
+    pub(crate) ranking_rationale: String,
+    pub(crate) quantity: u64,
+}
+
+/// Typed `id_cache` key for `MAKE_FROM_USAGE_OPTION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyMakeFromUsageOptionId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyMakeFromUsageOptionId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

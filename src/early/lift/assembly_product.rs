@@ -6,8 +6,8 @@
 //! lifts are pure shape adapters onto the generated L1 types.
 
 use crate::early::model::{
-    EarlyProduct, EarlyProductDefinition, EarlyProductDefinitionFormation,
-    EarlyProductDefinitionFormationWithSpecifiedSource,
+    EarlyMakeFromUsageOption, EarlyProduct, EarlyProductCategory, EarlyProductDefinition,
+    EarlyProductDefinitionFormation, EarlyProductDefinitionFormationWithSpecifiedSource,
     EarlyProductDefinitionWithAssociatedDocuments, EarlySource,
 };
 use crate::entities::assembly_product::context_dependent_shape_representation::ContextDependentShapeRepresentationWriteInput;
@@ -128,5 +128,33 @@ pub(crate) fn lift_product_definition_shape(
         name: String::new(),
         description: Some(String::new()),
         definition: pdef,
+    }
+}
+
+/// Lift one `PRODUCT_CATEGORY` (faithful optional description — the legacy
+/// writer emitted `None` as `$`).
+pub(crate) fn lift_product_category(
+    name: String,
+    description: Option<String>,
+) -> EarlyProductCategory {
+    EarlyProductCategory { name, description }
+}
+
+/// Lift one `MAKE_FROM_USAGE_OPTION` (refs pre-resolved).
+pub(crate) fn lift_make_from_usage_option(
+    mfu: crate::ir::assembly::MakeFromUsageOption,
+    relating_product_definition: u64,
+    related_product_definition: u64,
+    quantity: u64,
+) -> EarlyMakeFromUsageOption {
+    EarlyMakeFromUsageOption {
+        id: mfu.id,
+        name: mfu.name,
+        description: mfu.description,
+        relating_product_definition,
+        related_product_definition,
+        ranking: mfu.ranking,
+        ranking_rationale: mfu.ranking_rationale,
+        quantity,
     }
 }

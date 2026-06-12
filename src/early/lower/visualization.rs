@@ -6,11 +6,11 @@ use crate::early::model::{
     EarlyDraughtingPreDefinedCurveFont, EarlyFillAreaStyle, EarlyFillAreaStyleColour,
     EarlyFillAreaStyleId, EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlyPointStyleId,
     EarlyPreDefinedCurveFont, EarlyPreDefinedMarker, EarlyPreDefinedPointMarkerSymbol,
-    EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol, EarlySurfaceSideStyle,
-    EarlySurfaceSideStyleId, EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea,
-    EarlySurfaceStyleFillAreaId, EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage,
-    EarlySurfaceStyleUsageId, EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont,
-    EarlyViewVolume, EarlyViewVolumeId,
+    EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol, EarlyPresentationLayerAssignment,
+    EarlySurfaceSideStyle, EarlySurfaceSideStyleId, EarlySurfaceStyleBoundary,
+    EarlySurfaceStyleFillArea, EarlySurfaceStyleFillAreaId, EarlySurfaceStyleTransparent,
+    EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId, EarlySymbolColour, EarlySymbolStyle,
+    EarlyTextStyleForDefinedFont, EarlyViewVolume, EarlyViewVolumeId,
 };
 use crate::ir::id::{
     ColourId, MeasureWithUnitId, PlanarExtentId, PointId, PreDefinedMarkerId,
@@ -22,9 +22,10 @@ use crate::ir::visualization::{
     DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour, FoundedItem, Marker,
     MarkerSize, PointStyle, PreDefinedCurveFont, PreDefinedCurveFontData, PreDefinedMarker,
     PreDefinedMarkerData, PreDefinedPointMarkerSymbol, PreDefinedSymbol, PreDefinedSymbolData,
-    PreDefinedTerminatorSymbol, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleBoundary,
-    SurfaceStyleFillArea, SurfaceStyleUsage, SymbolColour, SymbolStyle, TextOrCharacter,
-    TextStyleForDefinedFont, ViewVolume, VisualizationPool,
+    PreDefinedTerminatorSymbol, PresentationLayerAssignment, PresentationLayerAssignmentItem,
+    SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleBoundary, SurfaceStyleFillArea,
+    SurfaceStyleUsage, SymbolColour, SymbolStyle, TextOrCharacter, TextStyleForDefinedFont,
+    ViewVolume, VisualizationPool,
 };
 use crate::reader::ReaderContext;
 
@@ -528,5 +529,31 @@ pub(crate) fn lower_camera_usage(
             mapping_origin,
             mapped_representation,
         }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `PRESENTATION_LAYER_ASSIGNMENT` (unresolved SELECT members
+/// drop silently per-item).
+pub(crate) fn lower_presentation_layer_assignment(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyPresentationLayerAssignment,
+) {
+    let mut assigned_items = Vec::with_capacity(early.assigned_items.len());
+    for r in early.assigned_items {
+        if let Some(item) = PresentationLayerAssignmentItem::resolve_select(ctx, r) {
+            assigned_items.push(item);
+        }
+    }
+    let pool = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default);
+    let id = pool
+        .presentation_layer_assignments
+        .push(PresentationLayerAssignment {
+            name: early.name,
+            description: early.description,
+            assigned_items,
+        });
     ctx.id_cache.insert(entity_id, id);
 }

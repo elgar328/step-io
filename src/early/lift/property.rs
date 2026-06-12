@@ -2,7 +2,8 @@
 //! [module docs](super) for the lifting contract.
 
 use crate::early::model::{
-    EarlyDescriptionAttribute, EarlyGeneralProperty, EarlyIdAttribute, EarlyNameAttribute,
+    EarlyDescriptionAttribute, EarlyDimensionalCharacteristicRepresentation, EarlyGeneralProperty,
+    EarlyGeneralPropertyAssociation, EarlyIdAttribute, EarlyNameAttribute,
 };
 use crate::ir::property::GeneralProperty;
 
@@ -40,5 +41,32 @@ pub(crate) fn lift_id_attribute(attribute_value: String, identified_item: u64) -
     EarlyIdAttribute {
         attribute_value,
         identified_item,
+    }
+}
+
+/// Lift one `DIMENSIONAL_CHARACTERISTIC_REPRESENTATION` (refs pre-resolved).
+pub(crate) fn lift_dimensional_characteristic_representation(
+    dimension: u64,
+    representation: u64,
+) -> EarlyDimensionalCharacteristicRepresentation {
+    EarlyDimensionalCharacteristicRepresentation {
+        dimension,
+        representation,
+    }
+}
+
+/// Lift one `GENERAL_PROPERTY_ASSOCIATION` (faithful optional description —
+/// the legacy writer emitted `None` as `$`).
+pub(crate) fn lift_general_property_association(
+    name: String,
+    description: Option<String>,
+    base_definition: u64,
+    derived_definition: u64,
+) -> EarlyGeneralPropertyAssociation {
+    EarlyGeneralPropertyAssociation {
+        name,
+        description,
+        base_definition,
+        derived_definition,
     }
 }

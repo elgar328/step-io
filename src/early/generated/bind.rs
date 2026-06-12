@@ -1596,6 +1596,105 @@ pub(crate) fn bind_qualified_representation_item(
     })
 }
 
+pub(crate) fn bind_presentation_layer_assignment(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPresentationLayerAssignment, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "PRESENTATION_LAYER_ASSIGNMENT")?;
+    Ok(super::model::EarlyPresentationLayerAssignment {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_string_or_unset(attrs, 1, entity_id, "description")?
+            .to_owned(),
+        assigned_items: crate::ir::attr::read_entity_ref_list(
+            attrs,
+            2,
+            entity_id,
+            "assigned_items",
+        )?,
+    })
+}
+
+pub(crate) fn bind_product_category(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyProductCategory, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "PRODUCT_CATEGORY")?;
+    Ok(super::model::EarlyProductCategory {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+    })
+}
+
+pub(crate) fn bind_dimensional_characteristic_representation(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<
+    super::model::EarlyDimensionalCharacteristicRepresentation,
+    crate::ir::error::ConvertError,
+> {
+    crate::ir::attr::check_count(
+        attrs,
+        2,
+        entity_id,
+        "DIMENSIONAL_CHARACTERISTIC_REPRESENTATION",
+    )?;
+    Ok(super::model::EarlyDimensionalCharacteristicRepresentation {
+        dimension: crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "dimension")?,
+        representation: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "representation")?,
+    })
+}
+
+pub(crate) fn bind_general_property_association(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyGeneralPropertyAssociation, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "GENERAL_PROPERTY_ASSOCIATION")?;
+    Ok(super::model::EarlyGeneralPropertyAssociation {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        base_definition: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "base_definition")?,
+        derived_definition: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "derived_definition",
+        )?,
+    })
+}
+
+pub(crate) fn bind_make_from_usage_option(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyMakeFromUsageOption, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 8, entity_id, "MAKE_FROM_USAGE_OPTION")?;
+    Ok(super::model::EarlyMakeFromUsageOption {
+        id: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "id")?.to_owned(),
+        name: crate::ir::attr::read_string_or_unset(attrs, 1, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 2, entity_id, "description")?,
+        relating_product_definition: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "relating_product_definition",
+        )?,
+        related_product_definition: crate::ir::attr::read_entity_ref(
+            attrs,
+            4,
+            entity_id,
+            "related_product_definition",
+        )?,
+        ranking: crate::ir::attr::read_integer(attrs, 5, entity_id, "ranking")?,
+        ranking_rationale: crate::ir::attr::read_string_or_unset(
+            attrs,
+            6,
+            entity_id,
+            "ranking_rationale",
+        )?
+        .to_owned(),
+        quantity: crate::ir::attr::read_entity_ref(attrs, 7, entity_id, "quantity")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

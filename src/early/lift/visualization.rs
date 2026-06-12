@@ -6,9 +6,9 @@ use crate::early::model::{
     EarlyDraughtingPreDefinedCurveFont, EarlyFillAreaStyle, EarlyFillAreaStyleColour, EarlyMarker,
     EarlyMarkerSize, EarlyPointStyle, EarlyPreDefinedCurveFont, EarlyPreDefinedMarker,
     EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol,
-    EarlySurfaceSideStyle, EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea,
-    EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage, EarlySymbolColour, EarlySymbolStyle,
-    EarlyTextStyleForDefinedFont, EarlyViewVolume,
+    EarlyPresentationLayerAssignment, EarlySurfaceSideStyle, EarlySurfaceStyleBoundary,
+    EarlySurfaceStyleFillArea, EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage,
+    EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont, EarlyViewVolume,
 };
 use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::fill_area_style_colour::FillAreaStyleColourHandler;
@@ -226,5 +226,19 @@ pub(crate) fn lift_camera_usage(
     EarlyCameraUsage {
         mapping_origin,
         mapped_representation,
+    }
+}
+
+/// Lift one `PRESENTATION_LAYER_ASSIGNMENT` (items pre-resolved via
+/// `emit_select`; legacy always emitted `description` as a String).
+pub(crate) fn lift_presentation_layer_assignment(
+    name: String,
+    description: String,
+    assigned_items: Vec<u64>,
+) -> EarlyPresentationLayerAssignment {
+    EarlyPresentationLayerAssignment {
+        name,
+        description,
+        assigned_items,
     }
 }

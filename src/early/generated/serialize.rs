@@ -1622,6 +1622,94 @@ pub(crate) fn serialize_qualified_representation_item(
     )
 }
 
+pub(crate) fn serialize_presentation_layer_assignment(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPresentationLayerAssignment,
+) -> u64 {
+    buf.push_simple(
+        "PRESENTATION_LAYER_ASSIGNMENT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::String(l1.description.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.assigned_items
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_product_category(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyProductCategory,
+) -> u64 {
+    buf.push_simple(
+        "PRODUCT_CATEGORY",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+        ],
+    )
+}
+
+pub(crate) fn serialize_dimensional_characteristic_representation(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDimensionalCharacteristicRepresentation,
+) -> u64 {
+    buf.push_simple(
+        "DIMENSIONAL_CHARACTERISTIC_REPRESENTATION",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.dimension),
+            crate::parser::entity::Attribute::EntityRef(l1.representation),
+        ],
+    )
+}
+
+pub(crate) fn serialize_general_property_association(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyGeneralPropertyAssociation,
+) -> u64 {
+    buf.push_simple(
+        "GENERAL_PROPERTY_ASSOCIATION",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.base_definition),
+            crate::parser::entity::Attribute::EntityRef(l1.derived_definition),
+        ],
+    )
+}
+
+pub(crate) fn serialize_make_from_usage_option(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyMakeFromUsageOption,
+) -> u64 {
+    buf.push_simple(
+        "MAKE_FROM_USAGE_OPTION",
+        vec![
+            crate::parser::entity::Attribute::String(l1.id.clone()),
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.relating_product_definition),
+            crate::parser::entity::Attribute::EntityRef(l1.related_product_definition),
+            crate::parser::entity::Attribute::Integer(l1.ranking),
+            crate::parser::entity::Attribute::String(l1.ranking_rationale.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.quantity),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

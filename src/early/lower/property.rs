@@ -2,12 +2,14 @@
 //! [module docs](super) for the lowering contract.
 
 use crate::early::model::{
-    EarlyDescriptionAttribute, EarlyGeneralProperty, EarlyIdAttribute, EarlyNameAttribute,
+    EarlyDescriptionAttribute, EarlyDimensionalCharacteristicRepresentation, EarlyGeneralProperty,
+    EarlyGeneralPropertyAssociation, EarlyIdAttribute, EarlyNameAttribute,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::property::{
-    DescriptionAttribute, DescriptionAttributeItem, GeneralProperty, IdAttribute, IdAttributeItem,
-    NameAttribute, NameAttributeItem, PropertyPool,
+    DerivedDefinitionItem, DescriptionAttribute, DescriptionAttributeItem,
+    DimensionalCharacteristicRepresentation, GeneralProperty, GeneralPropertyAssociation,
+    IdAttribute, IdAttributeItem, NameAttribute, NameAttributeItem, PropertyPool,
 };
 use crate::reader::ReaderContext;
 
@@ -127,4 +129,76 @@ pub(crate) fn lower_id_attribute(ctx: &mut ReaderContext, entity_id: u64, early:
         attribute_value: early.attribute_value,
         identified_item,
     });
+}
+
+/// Lower one `DIMENSIONAL_CHARACTERISTIC_REPRESENTATION` (unresolved
+/// dimension / representation = silent drop).
+pub(crate) fn lower_dimensional_characteristic_representation(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyDimensionalCharacteristicRepresentation,
+) {
+    let Some(dimension) =
+        crate::entities::pmi::resolve_dimensional_characteristic(ctx, early.dimension)
+    else {
+        return;
+    };
+    let Some(representation) = ctx
+        .id_cache
+        .get::<crate::ir::id::RepresentationId>(early.representation)
+    else {
+        return;
+    };
+    let property = ctx.properties.get_or_insert_with(PropertyPool::default);
+    let id = property.dimensional_characteristic_representations.push(
+        DimensionalCharacteristicRepresentation {
+            dimension,
+            representation,
+        },
+    );
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `GENERAL_PROPERTY_ASSOCIATION` (unresolved ends warn and drop;
+/// the legacy read collapsed an empty description to `None`).
+pub(crate) fn lower_general_property_association(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyGeneralPropertyAssociation,
+) {
+    let base_ref = early.base_definition;
+    let Some(base_definition) = ctx
+        .id_cache
+        .get::<crate::ir::id::GeneralPropertyId>(base_ref)
+    else {
+        ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: format!(
+                "GENERAL_PROPERTY_ASSOCIATION.base_definition #{base_ref} is not a GENERAL_PROPERTY"
+            ),
+        });
+        return;
+    };
+    let derived_ref = early.derived_definition;
+    let Some(pd_id) = ctx
+        .id_cache
+        .get::<crate::ir::id::PropertyDefinitionId>(derived_ref)
+    else {
+        ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: format!(
+                "GENERAL_PROPERTY_ASSOCIATION.derived_definition #{derived_ref} did not resolve to a PROPERTY_DEFINITION"
+            ),
+        });
+        return;
+    };
+    ctx.properties
+        .get_or_insert_with(PropertyPool::default)
+        .general_property_associations
+        .push(GeneralPropertyAssociation {
+            name: early.name,
+            description: early.description.filter(|d| !d.is_empty()),
+            base_definition,
+            derived_definition: DerivedDefinitionItem::PropertyDefinition(pd_id),
+        });
 }

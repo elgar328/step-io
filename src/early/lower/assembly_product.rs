@@ -8,8 +8,9 @@
 //! chain maps).
 
 use crate::early::model::{
-    EarlyNextAssemblyUsageOccurrence, EarlyProduct, EarlyProductDefinitionFormationId,
-    EarlyProductDefinitionId, EarlyProductDefinitionShapeId, EarlySource,
+    EarlyMakeFromUsageOption, EarlyNextAssemblyUsageOccurrence, EarlyProduct, EarlyProductCategory,
+    EarlyProductDefinitionFormationId, EarlyProductDefinitionId, EarlyProductDefinitionShapeId,
+    EarlySource,
 };
 use crate::ir::assembly::{
     Product, ProductDefinition, ProductDefinitionFormation, ProductDefinitionFormationData,
@@ -273,4 +274,64 @@ pub(crate) fn lower_product_definition_shape(
         let early_id: EarlyProductDefinitionShapeId = ctx.early.record_lowered(product_id);
         ctx.id_cache.insert(entity_id, early_id);
     }
+}
+
+/// Lower one `PRODUCT_CATEGORY` (`Itself` carrier — the legacy read
+/// collapsed an empty description to `None`, reproduced by the filter).
+pub(crate) fn lower_product_category(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyProductCategory,
+) {
+    let pc_id = ctx
+        .product_categories
+        .push(crate::ir::assembly::ProductCategory::Itself(
+            crate::ir::assembly::ProductCategoryData {
+                name: early.name,
+                description: early.description.filter(|d| !d.is_empty()),
+            },
+        ));
+    ctx.pc_arena_map.insert(entity_id, pc_id);
+}
+
+/// Lower one `MAKE_FROM_USAGE_OPTION` (faithful optional description; an
+/// unsupported MWU subtype quantity drops silently like other MWU
+/// consumers; unresolved pdefs surface `MissingReference`).
+pub(crate) fn lower_make_from_usage_option(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyMakeFromUsageOption,
+) -> Result<(), ConvertError> {
+    let relating = ctx.resolve_product_by_pdef(
+        entity_id,
+        early.relating_product_definition,
+        "relating_product_definition",
+    )?;
+    let related = ctx.resolve_product_by_pdef(
+        entity_id,
+        early.related_product_definition,
+        "related_product_definition",
+    )?;
+    let Some(quantity) = ctx
+        .id_cache
+        .get::<crate::ir::id::MeasureWithUnitId>(early.quantity)
+    else {
+        return Ok(());
+    };
+    let arena_id = ctx.product_definition_relationships.push(
+        crate::ir::assembly::ProductDefinitionRelationship::MakeFrom(
+            crate::ir::assembly::MakeFromUsageOption {
+                id: early.id,
+                name: early.name,
+                description: early.description,
+                relating,
+                related,
+                ranking: early.ranking,
+                ranking_rationale: early.ranking_rationale,
+                quantity,
+            },
+        ),
+    );
+    ctx.id_cache.insert(entity_id, arena_id);
+    Ok(())
 }
