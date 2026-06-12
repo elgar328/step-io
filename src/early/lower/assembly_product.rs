@@ -8,7 +8,8 @@
 //! dual-written until every consumer migrates).
 
 use crate::early::model::{
-    EarlyProduct, EarlyProductDefinitionFormationId, EarlyProductDefinitionId, EarlySource,
+    EarlyProduct, EarlyProductDefinitionFormationId, EarlyProductDefinitionId,
+    EarlyProductDefinitionShapeId, EarlySource,
 };
 use crate::ir::assembly::{
     Product, ProductDefinition, ProductDefinitionFormation, ProductDefinitionFormationData,
@@ -183,4 +184,48 @@ pub(crate) fn lower_product_definition(
     let early_id: EarlyProductDefinitionId = ctx.early.record_lowered(pid);
     ctx.id_cache.insert(entity_id, early_id);
     Ok(())
+}
+
+/// Lower one product-bearing `PRODUCT_DEFINITION_SHAPE` (the handler already
+/// classified the `definition` target as a PDEF; the NAUO-bearing branch stays
+/// in the handler). The L1 `name`/`description` are intentionally dropped —
+/// the writer synthesises empty strings, the legacy behavior (faithful
+/// round-trip of these is a separate, deliberate decision).
+pub(crate) fn lower_product_definition_shape(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    pdef_ref: u64,
+) {
+    // Raw step-id chain map: dual-written until every consumer migrates to
+    // the typed `EarlyProductDefinitionShapeId` probe.
+    ctx.pdef_shape_to_pdef.insert(entity_id, pdef_ref);
+    // Mirror the product-targeted PDS into the schema-faithful
+    // `property_definitions` arena so the writer's arena-driven emit sees it.
+    // The NAUO-targeted PDS is materialised later, in
+    // `materialize_nauo_owned_pds`, once the ACU arena exists.
+    if let Some(product_id) = ctx.product_of_pdef(pdef_ref) {
+        let pd_id = ctx
+            .properties
+            .get_or_insert_with(crate::ir::property::PropertyPool::default)
+            .property_definitions
+            .push(
+                crate::ir::property::PropertyDefinition::ProductDefinitionShape(
+                    crate::ir::property::ProductDefinitionShape {
+                        inherited: crate::ir::property::PropertyDefinitionData {
+                            name: String::new(),
+                            description: String::new(),
+                            definition:
+                                crate::ir::property::CharacterizedDefinition::ProductDefinition(
+                                    product_id,
+                                ),
+                        },
+                    },
+                ),
+            );
+        ctx.id_cache.insert(entity_id, pd_id);
+        // Typed one-probe correspondence: PDS file id → ProductId (what the
+        // former `pdef_shape_to_pdef` → `product_of_pdef` chain resolved to).
+        let early_id: EarlyProductDefinitionShapeId = ctx.early.record_lowered(product_id);
+        ctx.id_cache.insert(entity_id, early_id);
+    }
 }

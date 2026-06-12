@@ -17,10 +17,10 @@ pub(crate) use super::generated::model::{
     EarlyFillAreaStyle, EarlyFillAreaStyleId, EarlyMarker, EarlyMarkerSize, EarlyPointStyle,
     EarlyPointStyleId, EarlyProduct, EarlyProductDefinition, EarlyProductDefinitionFormation,
     EarlyProductDefinitionFormationId, EarlyProductDefinitionFormationWithSpecifiedSource,
-    EarlyProductDefinitionId, EarlyProductDefinitionWithAssociatedDocuments, EarlySource,
-    EarlySurfaceSideStyle, EarlySurfaceSideStyleId, EarlySurfaceStyleFillArea,
-    EarlySurfaceStyleFillAreaId, EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId, EarlyViewVolume,
-    EarlyViewVolumeId,
+    EarlyProductDefinitionId, EarlyProductDefinitionShape, EarlyProductDefinitionShapeId,
+    EarlyProductDefinitionWithAssociatedDocuments, EarlySource, EarlySurfaceSideStyle,
+    EarlySurfaceSideStyleId, EarlySurfaceStyleFillArea, EarlySurfaceStyleFillAreaId,
+    EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId, EarlyViewVolume, EarlyViewVolumeId,
 };
 
 /// Transient L1 store, held on [`ReaderContext`](crate::reader::ReaderContext)

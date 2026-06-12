@@ -9,13 +9,9 @@
 //!
 //! Writer emits the standard three-attr form pointing at the PDEF.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::read_string_or_unset;
 use crate::ir::error::ConvertError;
-use crate::ir::property::{
-    CharacterizedDefinition, ProductDefinitionShape, PropertyDefinition, PropertyDefinitionData,
-    PropertyPool,
-};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -47,43 +43,28 @@ impl SimpleEntityHandler for ProductDefinitionShapeHandler {
         attrs: &[Attribute],
         graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
+        // The classification (PDEF- vs NAUO-bearing) needs the *target's*
+        // entity type, so it stays a lenient graph walk; a malformed PDS
+        // (missing / wrong-typed definition) is a no-op, never an error.
+        // The branches then run the 2-layer path on the well-formed attrs.
         if let Some(pdef_ref) = pdef_shape_target(graph, entity_id, PDEF_TARGET_NAMES) {
-            ctx.pdef_shape_to_pdef.insert(entity_id, pdef_ref);
-            // Mirror the product-targeted PDS into the schema-faithful
-            // `property_definitions` arena so the writer's arena-driven
-            // emit sees it. The NAUO-targeted PDS is materialised later, in
-            // `materialize_nauo_owned_pds`, once the ACU arena exists.
-            {
-                if let Some(product_id) = ctx.product_of_pdef(pdef_ref) {
-                    let pd_id = ctx
-                        .properties
-                        .get_or_insert_with(PropertyPool::default)
-                        .property_definitions
-                        .push(PropertyDefinition::ProductDefinitionShape(
-                            ProductDefinitionShape {
-                                inherited: PropertyDefinitionData {
-                                    name: String::new(),
-                                    description: String::new(),
-                                    definition: CharacterizedDefinition::ProductDefinition(
-                                        product_id,
-                                    ),
-                                },
-                            },
-                        ));
-                    ctx.id_cache.insert(entity_id, pd_id);
-                }
-            }
+            // L1 name/description are deliberately dropped in `lower` (the
+            // writer synthesises empty strings — legacy behavior).
+            lower::lower_product_definition_shape(ctx, entity_id, pdef_ref);
         } else if let Some(nauo_ref) =
             pdef_shape_target(graph, entity_id, &["NEXT_ASSEMBLY_USAGE_OCCURRENCE"])
         {
             ctx.pdef_shape_to_nauo.insert(entity_id, nauo_ref);
             // Capture the source name/description so `materialize_nauo_owned_pds`
             // and the assembly-chain emit preserve the exporter's placement
-            // label instead of the hard-coded "Placement" fallback.
-            let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-            let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-            ctx.pdef_shape_nauo_name_desc
-                .insert(entity_id, (name, description));
+            // label instead of the hard-coded "Placement" fallback. (Bind is
+            // safe here: the branch guarantees a well-formed entity ref at
+            // attr[2]; `$` descriptions collapse to "" as before.)
+            let early = bind::bind_product_definition_shape(entity_id, attrs)?;
+            ctx.pdef_shape_nauo_name_desc.insert(
+                entity_id,
+                (early.name, early.description.unwrap_or_default()),
+            );
         }
         Ok(())
     }
@@ -92,14 +73,8 @@ impl SimpleEntityHandler for ProductDefinitionShapeHandler {
         buf: &mut WriteBuffer,
         ProductDefinitionShapeWriteInput { pdef }: ProductDefinitionShapeWriteInput,
     ) -> Result<u64, WriteError> {
-        Ok(buf.push_simple(
-            "PRODUCT_DEFINITION_SHAPE",
-            vec![
-                Attribute::String(String::new()),
-                Attribute::String(String::new()),
-                Attribute::EntityRef(pdef),
-            ],
-        ))
+        let early = lift::lift_product_definition_shape(pdef);
+        Ok(serialize::serialize_product_definition_shape(buf, &early))
     }
 }
 

@@ -204,6 +204,23 @@ pub(crate) fn serialize_product_definition_with_associated_documents(
     )
 }
 
+pub(crate) fn serialize_product_definition_shape(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyProductDefinitionShape,
+) -> u64 {
+    buf.push_simple(
+        "PRODUCT_DEFINITION_SHAPE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.definition),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

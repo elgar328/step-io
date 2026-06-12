@@ -87,3 +87,16 @@ pub(crate) fn lift_product_definition_with_associated_documents(
         documentation_ids: input.documentation,
     }
 }
+
+/// Lift one `PRODUCT_DEFINITION_SHAPE` write input (just the PDEF step ref —
+/// the legacy writer synthesises empty `name`/`description`, and the
+/// faithful-optional L1 description is therefore always `Some("")`).
+pub(crate) fn lift_product_definition_shape(
+    pdef: u64,
+) -> crate::early::model::EarlyProductDefinitionShape {
+    crate::early::model::EarlyProductDefinitionShape {
+        name: String::new(),
+        description: Some(String::new()),
+        definition: pdef,
+    }
+}

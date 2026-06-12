@@ -7,6 +7,7 @@ pub(crate) use super::generated::serialize::{
     serialize_fill_area_style, serialize_point_style, serialize_product,
     serialize_product_definition, serialize_product_definition_formation,
     serialize_product_definition_formation_with_specified_source,
-    serialize_product_definition_with_associated_documents, serialize_surface_side_style,
-    serialize_surface_style_fill_area, serialize_surface_style_usage, serialize_view_volume,
+    serialize_product_definition_shape, serialize_product_definition_with_associated_documents,
+    serialize_surface_side_style, serialize_surface_style_fill_area, serialize_surface_style_usage,
+    serialize_view_volume,
 };

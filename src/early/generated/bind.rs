@@ -232,6 +232,18 @@ pub(crate) fn bind_product_definition_with_associated_documents(
     )
 }
 
+pub(crate) fn bind_product_definition_shape(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyProductDefinitionShape, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "PRODUCT_DEFINITION_SHAPE")?;
+    Ok(super::model::EarlyProductDefinitionShape {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        definition: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "definition")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {
