@@ -330,13 +330,11 @@ pub struct ReaderContext {
     /// way. See `reader::nonstandard` (`NS-dangling-reference-drop`).
     pub(crate) nonstandard_dropped_refs: HashSet<u64>,
 
-    pub(crate) formation_to_product: HashMap<u64, u64>,
     /// `PRODUCT_DEFINITION_FORMATION` arena (carrier enum), `mem::take`-n into
     /// `AssemblyTree` at finalize. Source of truth for version metadata.
     pub(crate) product_definition_formations:
         crate::ir::Arena<crate::ir::assembly::ProductDefinitionFormation>,
 
-    pub(crate) pdef_to_product: HashMap<u64, u64>,
     pub(crate) absr_solid_map: HashMap<u64, Vec<SolidId>>,
     /// `ADVANCED_BREP_SHAPE_REPRESENTATION #N → Placement3dId` for the first
     /// `AXIS2_PLACEMENT_3D` item in the ABSR's `items` list (its coordinate
@@ -1491,28 +1489,37 @@ impl ReaderContext {
             .resolve::<crate::ir::id::ShellId>(from, to, field_name)
     }
 
-    /// Two-step lookup `PRODUCT_DEFINITION #N → PRODUCT #N → ProductId`
-    /// shared by the NAUO tree-wiring handlers.
+    /// One typed probe `PRODUCT_DEFINITION #N → ProductId`. The migrated
+    /// pdef's `lower` recorded the correspondence (only when the product
+    /// itself resolved — exactly when the former raw 2-hop
+    /// `pdef_to_product` → `id_cache` chain succeeded).
+    pub(crate) fn product_of_pdef(&self, pdef_ref: u64) -> Option<ProductId> {
+        self.id_cache
+            .get::<crate::early::model::EarlyProductDefinitionId>(pdef_ref)
+            .map(|e| self.early.lookup_lowered(e))
+    }
+
+    /// One typed probe `PRODUCT_DEFINITION_FORMATION #N → ProductId`
+    /// (formation counterpart of [`product_of_pdef`](Self::product_of_pdef)).
+    pub(crate) fn product_of_formation(&self, formation_ref: u64) -> Option<ProductId> {
+        self.id_cache
+            .get::<crate::early::model::EarlyProductDefinitionFormationId>(formation_ref)
+            .map(|e| self.early.lookup_lowered(e))
+    }
+
+    /// Lookup `PRODUCT_DEFINITION #N → ProductId` shared by the NAUO
+    /// tree-wiring handlers (error-carrying form of
+    /// [`product_of_pdef`](Self::product_of_pdef)).
     pub(crate) fn resolve_product_by_pdef(
         &self,
         from: u64,
         pdef_ref: u64,
         field_name: &'static str,
     ) -> Result<ProductId, ConvertError> {
-        let product_step_id =
-            self.pdef_to_product
-                .get(&pdef_ref)
-                .copied()
-                .ok_or(ConvertError::MissingReference {
-                    from,
-                    to: pdef_ref,
-                    field_name,
-                })?;
-        self.id_cache
-            .get::<crate::ir::id::ProductId>(product_step_id)
+        self.product_of_pdef(pdef_ref)
             .ok_or(ConvertError::MissingReference {
                 from,
-                to: product_step_id,
+                to: pdef_ref,
                 field_name,
             })
     }

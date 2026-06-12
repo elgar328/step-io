@@ -105,11 +105,12 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
         // → pdef_to_product. Pattern D: GENERAL_PROPERTY — standalone, no
         // product binding. Product-bound patterns still gate on a resolvable
         // product (drop when unresolved); the resolved id is not stored.
-        let definition = if let Some(&product_step_id) = ctx.pdef_to_product.get(&target_ref) {
-            let Some(pid) = ctx
-                .id_cache
-                .get::<crate::ir::id::ProductId>(product_step_id)
-            else {
+        let definition = if ctx
+            .id_cache
+            .get::<crate::ir::ProductDefinitionId>(target_ref)
+            .is_some()
+        {
+            let Some(pid) = ctx.product_of_pdef(target_ref) else {
                 return Ok(());
             };
             CharacterizedDefinition::ProductDefinition(pid)
@@ -147,8 +148,7 @@ impl SimpleEntityHandler for PropertyDefinitionHandler {
             let resolved = ctx
                 .pdef_shape_to_pdef
                 .get(&target_ref)
-                .and_then(|pdef_ref| ctx.pdef_to_product.get(pdef_ref).copied())
-                .and_then(|prod_step| ctx.id_cache.get::<crate::ir::id::ProductId>(prod_step));
+                .and_then(|&pdef_ref| ctx.product_of_pdef(pdef_ref));
             if resolved.is_none() {
                 return Ok(());
             }

@@ -35,13 +35,7 @@ impl SimpleEntityHandler for ProductDefinitionContextAssociationHandler {
         let def_ref = read_entity_ref(attrs, 0, entity_id, "definition")?;
         let frame_ref = read_entity_ref(attrs, 1, entity_id, "frame_of_reference")?;
         let role_ref = read_entity_ref(attrs, 2, entity_id, "role")?;
-        let Some(&pdef_product_eid) = ctx.pdef_to_product.get(&def_ref) else {
-            return Ok(());
-        };
-        let Some(pid) = ctx
-            .id_cache
-            .get::<crate::ir::id::ProductId>(pdef_product_eid)
-        else {
+        let Some(pid) = ctx.product_of_pdef(def_ref) else {
             return Ok(());
         };
         let Some(pdcid) = ctx

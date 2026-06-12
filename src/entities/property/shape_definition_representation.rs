@@ -67,21 +67,11 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
             ctx.sdr_link_refs.push((pdef_shape_ref, shape_rep_ref));
             return Ok(());
         };
-        let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_ref) else {
+        let Some(pid) = ctx.product_of_pdef(pdef_ref) else {
             return Err(ConvertError::MissingReference {
                 from: entity_id,
                 to: pdef_ref,
                 field_name: "definition.definition",
-            });
-        };
-        let Some(pid) = ctx
-            .id_cache
-            .get::<crate::ir::id::ProductId>(product_step_id)
-        else {
-            return Err(ConvertError::MissingReference {
-                from: entity_id,
-                to: product_step_id,
-                field_name: "definition.product",
             });
         };
 

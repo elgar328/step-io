@@ -48,7 +48,11 @@ impl SimpleEntityHandler for ShapeAspectHandler {
         // See reader::nonstandard.
         let pdef_step_id = if let Some(&pd) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) {
             pd
-        } else if ctx.pdef_to_product.contains_key(&of_shape_ref) {
+        } else if ctx
+            .id_cache
+            .get::<crate::ir::ProductDefinitionId>(of_shape_ref)
+            .is_some()
+        {
             ctx.warnings.push(ConvertError::NonStandardInput {
                 field: "SHAPE_ASPECT.of_shape".into(),
                 count: 1,
@@ -59,13 +63,7 @@ impl SimpleEntityHandler for ShapeAspectHandler {
         } else {
             return Ok(()); // unresolved (genuinely non-product target)
         };
-        let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_step_id) else {
-            return Ok(());
-        };
-        let Some(product_id) = ctx
-            .id_cache
-            .get::<crate::ir::id::ProductId>(product_step_id)
-        else {
+        let Some(product_id) = ctx.product_of_pdef(pdef_step_id) else {
             return Ok(());
         };
 

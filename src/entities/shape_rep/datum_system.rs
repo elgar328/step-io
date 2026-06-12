@@ -41,13 +41,7 @@ impl SimpleEntityHandler for DatumSystemHandler {
         let Some(&pdef_step_id) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) else {
             return Ok(());
         };
-        let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_step_id) else {
-            return Ok(());
-        };
-        let Some(target) = ctx
-            .id_cache
-            .get::<crate::ir::id::ProductId>(product_step_id)
-        else {
+        let Some(target) = ctx.product_of_pdef(pdef_step_id) else {
             return Ok(());
         };
 

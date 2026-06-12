@@ -82,10 +82,6 @@ pub(crate) fn lower_product_definition_formation(
     of_product: u64,
     make_or_buy: Option<EarlySource>,
 ) {
-    // Raw step-id chain map: dual-written until every consumer migrates to
-    // the typed `EarlyProductDefinitionFormationId` probe.
-    ctx.formation_to_product.insert(entity_id, of_product);
-
     let Some(pid) = ctx.id_cache.get::<ProductId>(of_product) else {
         return;
     };
@@ -129,16 +125,16 @@ pub(crate) fn lower_product_definition(
     frame_of_reference: u64,
     documentation_ids: Option<Vec<u64>>,
 ) -> Result<(), ConvertError> {
-    let Some(&product_ref) = ctx.formation_to_product.get(&formation_ref) else {
+    // One typed probe replaces the raw formation_to_product hop. `None` covers
+    // both a missing formation and one whose product did not resolve (the
+    // legacy chain then failed at the consumer instead).
+    let Some(pid) = ctx.product_of_formation(formation_ref) else {
         return Err(ConvertError::MissingReference {
             from: entity_id,
             to: formation_ref,
             field_name: "formation",
         });
     };
-    // Raw step-id chain map: dual-written until every consumer migrates to
-    // the typed `EarlyProductDefinitionId` probe.
-    ctx.pdef_to_product.insert(entity_id, product_ref);
 
     // Resolve the WAD document refs up front (the canonical entry carries
     // them; unresolved subtypes are surfaced and skipped).
@@ -174,19 +170,17 @@ pub(crate) fn lower_product_definition(
         documentation_ids: docs.clone(),
     });
     ctx.id_cache.insert(entity_id, pd_id);
-    if let Some(pid) = ctx.id_cache.get::<ProductId>(product_ref) {
-        ctx.assembly_products[pid].pdef = Some(pd_id);
-        ctx.product_pdc_step_refs.insert(pid, frame_of_reference);
-        // Product view keeps `associated_documents` (the writer's plain-vs-WAD
-        // discriminator) only when at least one doc resolved — an empty list
-        // keeps the plain PRODUCT_DEFINITION output, matching the legacy reader.
-        if !docs.is_empty() {
-            ctx.assembly_products[pid].associated_documents = docs;
-        }
-        // Typed one-probe correspondence: pdef file id → ProductId (what the
-        // 2-hop `pdef_to_product` chain ultimately resolved to).
-        let early_id: EarlyProductDefinitionId = ctx.early.record_lowered(pid);
-        ctx.id_cache.insert(entity_id, early_id);
+    ctx.assembly_products[pid].pdef = Some(pd_id);
+    ctx.product_pdc_step_refs.insert(pid, frame_of_reference);
+    // Product view keeps `associated_documents` (the writer's plain-vs-WAD
+    // discriminator) only when at least one doc resolved — an empty list
+    // keeps the plain PRODUCT_DEFINITION output, matching the legacy reader.
+    if !docs.is_empty() {
+        ctx.assembly_products[pid].associated_documents = docs;
     }
+    // Typed one-probe correspondence: pdef file id → ProductId (what the
+    // 2-hop `pdef_to_product` chain ultimately resolved to).
+    let early_id: EarlyProductDefinitionId = ctx.early.record_lowered(pid);
+    ctx.id_cache.insert(entity_id, early_id);
     Ok(())
 }

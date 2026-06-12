@@ -75,6 +75,5 @@ impl SimpleEntityHandler for NameAttributeHandler {
 }
 
 fn resolve_product_definition(ctx: &ReaderContext, item_ref: u64) -> Option<ProductId> {
-    let product_step = ctx.pdef_to_product.get(&item_ref).copied()?;
-    ctx.id_cache.get::<crate::ir::id::ProductId>(product_step)
+    ctx.product_of_pdef(item_ref)
 }

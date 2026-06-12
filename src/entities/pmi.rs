@@ -1916,13 +1916,7 @@ impl SimpleEntityHandler for DatumHandler {
         let Some(&pdef_step_id) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) else {
             return Ok(());
         };
-        let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_step_id) else {
-            return Ok(());
-        };
-        let Some(target) = ctx
-            .id_cache
-            .get::<crate::ir::id::ProductId>(product_step_id)
-        else {
+        let Some(target) = ctx.product_of_pdef(pdef_step_id) else {
             return Ok(());
         };
 
@@ -2034,13 +2028,7 @@ impl SimpleEntityHandler for DimensionalSizeWithDatumFeatureHandler {
         let Some(&pdef_step_id) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) else {
             return Ok(());
         };
-        let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_step_id) else {
-            return Ok(());
-        };
-        let Some(target) = ctx
-            .id_cache
-            .get::<crate::ir::id::ProductId>(product_step_id)
-        else {
+        let Some(target) = ctx.product_of_pdef(pdef_step_id) else {
             return Ok(());
         };
 
@@ -2101,13 +2089,7 @@ fn read_datum_feature_variant(
     let Some(&pdef_step_id) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) else {
         return Ok(());
     };
-    let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_step_id) else {
-        return Ok(());
-    };
-    let Some(target) = ctx
-        .id_cache
-        .get::<crate::ir::id::ProductId>(product_step_id)
-    else {
+    let Some(target) = ctx.product_of_pdef(pdef_step_id) else {
         return Ok(());
     };
 
@@ -2865,13 +2847,7 @@ fn read_general_datum_reference_data(
     let Some(&pdef_step_id) = ctx.pdef_shape_to_pdef.get(&of_shape_ref) else {
         return Ok(None);
     };
-    let Some(&product_step_id) = ctx.pdef_to_product.get(&pdef_step_id) else {
-        return Ok(None);
-    };
-    let Some(target) = ctx
-        .id_cache
-        .get::<crate::ir::id::ProductId>(product_step_id)
-    else {
+    let Some(target) = ctx.product_of_pdef(pdef_step_id) else {
         return Ok(None);
     };
     // base — `datum_or_common_datum` SELECT: a single `DATUM` ref, or a

@@ -62,15 +62,11 @@ use crate::reader::ReaderContext;
 /// silently. The helper name predates Approval / Security / P&O
 /// adoption and is retained pending a rename phase.
 pub(crate) fn resolve_date_time_item(ctx: &ReaderContext, item_ref: u64) -> Option<ProductId> {
-    if let Some(&product_step) = ctx.pdef_to_product.get(&item_ref) {
-        if let Some(pid) = ctx.id_cache.get::<crate::ir::id::ProductId>(product_step) {
-            return Some(pid);
-        }
+    if let Some(pid) = ctx.product_of_pdef(item_ref) {
+        return Some(pid);
     }
-    if let Some(&product_step) = ctx.formation_to_product.get(&item_ref) {
-        if let Some(pid) = ctx.id_cache.get::<crate::ir::id::ProductId>(product_step) {
-            return Some(pid);
-        }
+    if let Some(pid) = ctx.product_of_formation(item_ref) {
+        return Some(pid);
     }
     if let Some(pid) = ctx.id_cache.get::<crate::ir::id::ProductId>(item_ref) {
         return Some(pid);
