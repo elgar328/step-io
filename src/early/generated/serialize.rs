@@ -1227,6 +1227,62 @@ pub(crate) fn serialize_symbol_colour(
     )
 }
 
+pub(crate) fn serialize_general_property(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyGeneralProperty,
+) -> u64 {
+    buf.push_simple(
+        "GENERAL_PROPERTY",
+        vec![
+            crate::parser::entity::Attribute::String(l1.id.clone()),
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+        ],
+    )
+}
+
+pub(crate) fn serialize_name_attribute(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyNameAttribute,
+) -> u64 {
+    buf.push_simple(
+        "NAME_ATTRIBUTE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.attribute_value.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.named_item),
+        ],
+    )
+}
+
+pub(crate) fn serialize_description_attribute(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDescriptionAttribute,
+) -> u64 {
+    buf.push_simple(
+        "DESCRIPTION_ATTRIBUTE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.attribute_value.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.described_item),
+        ],
+    )
+}
+
+pub(crate) fn serialize_id_attribute(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyIdAttribute,
+) -> u64 {
+    buf.push_simple(
+        "ID_ATTRIBUTE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.attribute_value.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.identified_item),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

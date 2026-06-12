@@ -1,17 +1,9 @@
-//! `DESCRIPTION_ATTRIBUTE` handler.
-//!
-//! `(attribute_value, described_item)` — SELECT target. Covers
-//! `person_and_organization` and `representation` (AP242 "supplemental
-//! geometry" notes target a `SHAPE_REPRESENTATION`). Other variants
-//! (`application_context`, `approval_role`, …) are dropped with a warning;
-//! future phases expand
-//! [`DescriptionAttributeItem`](crate::ir::DescriptionAttributeItem).
+//! `DESCRIPTION_ATTRIBUTE` handler — property (2-layer path).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::PropertyPool;
-use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::property::{DescriptionAttribute, DescriptionAttributeItem};
+use crate::ir::property::DescriptionAttribute;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -35,36 +27,8 @@ impl SimpleEntityHandler for DescriptionAttributeHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "DESCRIPTION_ATTRIBUTE")?;
-        let attribute_value =
-            read_string_or_unset(attrs, 0, entity_id, "attribute_value")?.to_owned();
-        let item_ref = read_entity_ref(attrs, 1, entity_id, "described_item")?;
-
-        let described_item = if let Some(pao_id) = ctx
-            .id_cache
-            .get::<crate::ir::PersonAndOrganizationId>(item_ref)
-        {
-            DescriptionAttributeItem::PersonAndOrganization(pao_id)
-        } else if let Some(repr_id) = ctx
-            .id_cache
-            .get::<crate::ir::id::RepresentationId>(item_ref)
-        {
-            DescriptionAttributeItem::Representation(repr_id)
-        } else {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!(
-                    "DESCRIPTION_ATTRIBUTE.described_item #{item_ref} target type unsupported"
-                ),
-            });
-            return Ok(());
-        };
-
-        let pool = ctx.properties.get_or_insert_with(PropertyPool::default);
-        pool.description_attributes.push(DescriptionAttribute {
-            attribute_value,
-            described_item,
-        });
+        let early = bind::bind_description_attribute(entity_id, attrs)?;
+        lower::lower_description_attribute(ctx, entity_id, early);
         Ok(())
     }
 
@@ -72,12 +36,8 @@ impl SimpleEntityHandler for DescriptionAttributeHandler {
         buf: &mut WriteBuffer,
         DescriptionAttributeWriteInput { attr, item_step }: DescriptionAttributeWriteInput,
     ) -> Result<u64, WriteError> {
-        Ok(buf.push_simple(
-            "DESCRIPTION_ATTRIBUTE",
-            vec![
-                Attribute::String(attr.attribute_value),
-                Attribute::EntityRef(item_step),
-            ],
-        ))
+        let _ = buf;
+        let early = lift::lift_description_attribute(attr.attribute_value, item_step);
+        Ok(serialize::serialize_description_attribute(buf, &early))
     }
 }

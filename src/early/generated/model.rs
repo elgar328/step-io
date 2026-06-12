@@ -1615,6 +1615,95 @@ impl crate::ir::arena::ArenaId for EarlySymbolColourId {
     }
 }
 
+/// L1 `GENERAL_PROPERTY` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyGeneralProperty {
+    pub(crate) id: String,
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+}
+
+/// Typed `id_cache` key for `GENERAL_PROPERTY` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyGeneralPropertyId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyGeneralPropertyId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `NAME_ATTRIBUTE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyNameAttribute {
+    pub(crate) attribute_value: String,
+    pub(crate) named_item: u64,
+}
+
+/// Typed `id_cache` key for `NAME_ATTRIBUTE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyNameAttributeId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyNameAttributeId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DESCRIPTION_ATTRIBUTE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDescriptionAttribute {
+    pub(crate) attribute_value: String,
+    pub(crate) described_item: u64,
+}
+
+/// Typed `id_cache` key for `DESCRIPTION_ATTRIBUTE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDescriptionAttributeId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDescriptionAttributeId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `ID_ATTRIBUTE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyIdAttribute {
+    pub(crate) attribute_value: String,
+    pub(crate) identified_item: u64,
+}
+
+/// Typed `id_cache` key for `ID_ATTRIBUTE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyIdAttributeId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyIdAttributeId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

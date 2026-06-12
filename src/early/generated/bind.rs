@@ -1217,6 +1217,69 @@ pub(crate) fn bind_symbol_colour(
     })
 }
 
+pub(crate) fn bind_general_property(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyGeneralProperty, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "GENERAL_PROPERTY")?;
+    Ok(super::model::EarlyGeneralProperty {
+        id: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "id")?.to_owned(),
+        name: crate::ir::attr::read_string_or_unset(attrs, 1, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 2, entity_id, "description")?,
+    })
+}
+
+pub(crate) fn bind_name_attribute(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyNameAttribute, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "NAME_ATTRIBUTE")?;
+    Ok(super::model::EarlyNameAttribute {
+        attribute_value: crate::ir::attr::read_string_or_unset(
+            attrs,
+            0,
+            entity_id,
+            "attribute_value",
+        )?
+        .to_owned(),
+        named_item: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "named_item")?,
+    })
+}
+
+pub(crate) fn bind_description_attribute(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDescriptionAttribute, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "DESCRIPTION_ATTRIBUTE")?;
+    Ok(super::model::EarlyDescriptionAttribute {
+        attribute_value: crate::ir::attr::read_string_or_unset(
+            attrs,
+            0,
+            entity_id,
+            "attribute_value",
+        )?
+        .to_owned(),
+        described_item: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "described_item")?,
+    })
+}
+
+pub(crate) fn bind_id_attribute(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyIdAttribute, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "ID_ATTRIBUTE")?;
+    Ok(super::model::EarlyIdAttribute {
+        attribute_value: crate::ir::attr::read_string_or_unset(
+            attrs,
+            0,
+            entity_id,
+            "attribute_value",
+        )?
+        .to_owned(),
+        identified_item: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "identified_item")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

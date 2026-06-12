@@ -80,6 +80,11 @@ generate = [
     "pre_defined_symbol",
     "pre_defined_terminator_symbol",
     "symbol_colour",
+    # property (attribute leaf batch)
+    "general_property",
+    "name_attribute",
+    "description_attribute",
+    "id_attribute",
 ]
 
 # `generate_all`: diagnostic flip. When true, gen-early generates *every* entity
