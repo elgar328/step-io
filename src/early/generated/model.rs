@@ -1353,6 +1353,76 @@ impl crate::ir::arena::ArenaId for EarlyAppliedExternalIdentificationAssignmentI
     }
 }
 
+/// L1 `DERIVED_UNIT_ELEMENT` (generated).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct EarlyDerivedUnitElement {
+    pub(crate) unit: u64,
+    pub(crate) exponent: f64,
+}
+
+/// Typed `id_cache` key for `DERIVED_UNIT_ELEMENT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDerivedUnitElementId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDerivedUnitElementId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DERIVED_UNIT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDerivedUnit {
+    pub(crate) elements: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `DERIVED_UNIT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDerivedUnitId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDerivedUnitId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DIMENSIONAL_EXPONENTS` (generated).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct EarlyDimensionalExponents {
+    pub(crate) length_exponent: f64,
+    pub(crate) mass_exponent: f64,
+    pub(crate) time_exponent: f64,
+    pub(crate) electric_current_exponent: f64,
+    pub(crate) thermodynamic_temperature_exponent: f64,
+    pub(crate) amount_of_substance_exponent: f64,
+    pub(crate) luminous_intensity_exponent: f64,
+}
+
+/// Typed `id_cache` key for `DIMENSIONAL_EXPONENTS` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDimensionalExponentsId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDimensionalExponentsId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

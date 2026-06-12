@@ -1084,6 +1084,52 @@ pub(crate) fn serialize_applied_external_identification_assignment(
     )
 }
 
+pub(crate) fn serialize_derived_unit_element(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDerivedUnitElement,
+) -> u64 {
+    buf.push_simple(
+        "DERIVED_UNIT_ELEMENT",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.unit),
+            crate::parser::entity::Attribute::Real(l1.exponent),
+        ],
+    )
+}
+
+pub(crate) fn serialize_derived_unit(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDerivedUnit,
+) -> u64 {
+    buf.push_simple(
+        "DERIVED_UNIT",
+        vec![crate::parser::entity::Attribute::List(
+            l1.elements
+                .iter()
+                .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                .collect(),
+        )],
+    )
+}
+
+pub(crate) fn serialize_dimensional_exponents(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDimensionalExponents,
+) -> u64 {
+    buf.push_simple(
+        "DIMENSIONAL_EXPONENTS",
+        vec![
+            crate::parser::entity::Attribute::Real(l1.length_exponent),
+            crate::parser::entity::Attribute::Real(l1.mass_exponent),
+            crate::parser::entity::Attribute::Real(l1.time_exponent),
+            crate::parser::entity::Attribute::Real(l1.electric_current_exponent),
+            crate::parser::entity::Attribute::Real(l1.thermodynamic_temperature_exponent),
+            crate::parser::entity::Attribute::Real(l1.amount_of_substance_exponent),
+            crate::parser::entity::Attribute::Real(l1.luminous_intensity_exponent),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

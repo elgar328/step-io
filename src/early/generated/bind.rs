@@ -1062,6 +1062,63 @@ pub(crate) fn bind_applied_external_identification_assignment(
     })
 }
 
+pub(crate) fn bind_derived_unit_element(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDerivedUnitElement, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "DERIVED_UNIT_ELEMENT")?;
+    Ok(super::model::EarlyDerivedUnitElement {
+        unit: crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "unit")?,
+        exponent: crate::ir::attr::read_real(attrs, 1, entity_id, "exponent")?,
+    })
+}
+
+pub(crate) fn bind_derived_unit(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDerivedUnit, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "DERIVED_UNIT")?;
+    Ok(super::model::EarlyDerivedUnit {
+        elements: crate::ir::attr::read_entity_ref_list(attrs, 0, entity_id, "elements")?,
+    })
+}
+
+pub(crate) fn bind_dimensional_exponents(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDimensionalExponents, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 7, entity_id, "DIMENSIONAL_EXPONENTS")?;
+    Ok(super::model::EarlyDimensionalExponents {
+        length_exponent: crate::ir::attr::read_real(attrs, 0, entity_id, "length_exponent")?,
+        mass_exponent: crate::ir::attr::read_real(attrs, 1, entity_id, "mass_exponent")?,
+        time_exponent: crate::ir::attr::read_real(attrs, 2, entity_id, "time_exponent")?,
+        electric_current_exponent: crate::ir::attr::read_real(
+            attrs,
+            3,
+            entity_id,
+            "electric_current_exponent",
+        )?,
+        thermodynamic_temperature_exponent: crate::ir::attr::read_real(
+            attrs,
+            4,
+            entity_id,
+            "thermodynamic_temperature_exponent",
+        )?,
+        amount_of_substance_exponent: crate::ir::attr::read_real(
+            attrs,
+            5,
+            entity_id,
+            "amount_of_substance_exponent",
+        )?,
+        luminous_intensity_exponent: crate::ir::attr::read_real(
+            attrs,
+            6,
+            entity_id,
+            "luminous_intensity_exponent",
+        )?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

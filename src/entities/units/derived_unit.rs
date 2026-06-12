@@ -1,29 +1,22 @@
-//! `DERIVED_UNIT` handler (units-1b).
-//!
-//! AP214: `DERIVED_UNIT(elements: SET[1:?] OF derived_unit_element)`.
-//! STEP positional: single `(#a,#b,...)` list. The reader resolves each
-//! element ref through [`crate::reader::ReaderContext::due_id_map`]
-//! (populated by the `DERIVED_UNIT_ELEMENT` handler); refs that don't resolve are dropped with
-//! a warning. The schema's `[1:?]` cardinality is enforced post-resolve —
-//! a `DERIVED_UNIT` whose `elements` resolve to an empty `Vec` is
-//! dropped rather than admitted to the arena.
+//! `DERIVED_UNIT` handler — units (2-layer path). The named subtypes
+//! (`AREA_UNIT` / `VOLUME_UNIT`) keep their own handlers (their early.toml
+//! shape is the two-attr multiple-inheritance form, which the corpus's
+//! one-attr files do not match — legacy parse retained there).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref_list};
 use crate::ir::error::ConvertError;
-use crate::ir::units::{DerivedUnit, DerivedUnitKind};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
-use crate::writer::entity::{WriterBody, WriterEntity};
 use step_io_macros::step_entity;
 
 pub(crate) struct DerivedUnitHandler;
 
 #[step_entity(name = "DERIVED_UNIT")]
 impl SimpleEntityHandler for DerivedUnitHandler {
-    /// Element STEP entity ids, in source order. Writer wraps them in a
+    /// Element STEP entity ids, in source order. Serialize wraps them in a
     /// single `Attribute::List(EntityRef…)`.
     type WriteInput = Vec<u64>;
 
@@ -33,50 +26,24 @@ impl SimpleEntityHandler for DerivedUnitHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 1, entity_id, "DERIVED_UNIT")?;
-        let refs = read_entity_ref_list(attrs, 0, entity_id, "elements")?;
-        let mut elements = Vec::with_capacity(refs.len());
-        for r in refs {
-            if let Some(due_id) = ctx.id_cache.get::<crate::ir::id::DerivedUnitElementId>(r) {
-                elements.push(due_id);
-            }
-        }
-        if elements.is_empty() {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: "DERIVED_UNIT has no resolvable elements (schema WHERE: SET[1:?])".into(),
-            });
-            return Ok(());
-        }
-        let id = ctx.derived_unit_arena.push(DerivedUnit {
-            elements,
-            kind: DerivedUnitKind::Plain,
-        });
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_derived_unit(entity_id, attrs)?;
+        lower::lower_derived_unit(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, refs: Vec<u64>) -> Result<u64, WriteError> {
-        Ok(emit_derived_unit_named(buf, "DERIVED_UNIT", refs))
+        let early = lift::lift_derived_unit(refs);
+        Ok(serialize::serialize_derived_unit(buf, &early))
     }
 }
 
-/// Emit a `DERIVED_UNIT` / `AREA_UNIT` / `VOLUME_UNIT` line. The three
-/// share the same `(SET[1:?] OF derived_unit_element)` body and differ
-/// only in entity name.
+/// Emit a named derived-unit line (`AREA_UNIT` / `VOLUME_UNIT`) — the
+/// non-migrated named subtypes share this single-list shape.
 pub(crate) fn emit_derived_unit_named(
     buf: &mut WriteBuffer,
     name: &'static str,
     refs: Vec<u64>,
 ) -> u64 {
     let list = refs.into_iter().map(Attribute::EntityRef).collect();
-    let n = buf.fresh();
-    buf.entities.push(WriterEntity {
-        id: n,
-        body: WriterBody::Simple {
-            name: name.into(),
-            attrs: vec![Attribute::List(list)],
-        },
-    });
-    n
+    buf.push_simple(name, vec![Attribute::List(list)])
 }
