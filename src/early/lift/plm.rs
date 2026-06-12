@@ -5,12 +5,14 @@
 use crate::early::model::{
     EarlyAddress, EarlyApplicationContext, EarlyApplicationProtocolDefinition, EarlyApproval,
     EarlyApprovalDateTime, EarlyApprovalPersonOrganization, EarlyApprovalRole, EarlyApprovalStatus,
-    EarlyCalendarDate, EarlyCoordinatedUniversalTimeOffset, EarlyDateAndTime, EarlyDateTimeRole,
-    EarlyDocument, EarlyDocumentFile, EarlyDocumentProductEquivalence,
-    EarlyDocumentRepresentationType, EarlyDocumentType, EarlyGroup, EarlyIdentificationRole,
-    EarlyLocalTime, EarlyObjectRole, EarlyOrganization, EarlyPerson,
-    EarlyPersonAndOrganizationRole, EarlyPersonalAddress, EarlyRoleAssociation,
-    EarlySecurityClassification, EarlySecurityClassificationLevel,
+    EarlyCalendarDate, EarlyCcDesignApproval, EarlyCcDesignDateAndTimeAssignment,
+    EarlyCcDesignPersonAndOrganizationAssignment, EarlyCcDesignSecurityClassification,
+    EarlyCoordinatedUniversalTimeOffset, EarlyDateAndTime, EarlyDateTimeRole, EarlyDocument,
+    EarlyDocumentFile, EarlyDocumentProductEquivalence, EarlyDocumentRepresentationType,
+    EarlyDocumentType, EarlyGroup, EarlyIdentificationRole, EarlyLocalTime, EarlyObjectRole,
+    EarlyOrganization, EarlyPerson, EarlyPersonAndOrganization, EarlyPersonAndOrganizationRole,
+    EarlyPersonalAddress, EarlyRoleAssociation, EarlySecurityClassification,
+    EarlySecurityClassificationLevel,
 };
 use crate::ir::plm::{
     AddressData, ApplicationContext, ApprovalRole, ApprovalStatus, CalendarDate,
@@ -306,5 +308,64 @@ pub(crate) fn lift_document_file(d: DocumentFile, kind: u64) -> EarlyDocumentFil
         kind,
         name_2: d.characterized_object_name,
         description_2: d.characterized_object_description,
+    }
+}
+
+/// Lift one `PERSON_AND_ORGANIZATION` (both refs pre-resolved).
+pub(crate) fn lift_person_and_organization(
+    the_person: u64,
+    the_organization: u64,
+) -> EarlyPersonAndOrganization {
+    EarlyPersonAndOrganization {
+        the_person,
+        the_organization,
+    }
+}
+
+/// Lift one `CC_DESIGN_APPROVAL` (refs pre-resolved).
+pub(crate) fn lift_cc_design_approval(
+    assigned_approval: u64,
+    items: Vec<u64>,
+) -> EarlyCcDesignApproval {
+    EarlyCcDesignApproval {
+        assigned_approval,
+        items,
+    }
+}
+
+/// Lift one `CC_DESIGN_DATE_AND_TIME_ASSIGNMENT` (refs pre-resolved).
+pub(crate) fn lift_cc_design_date_and_time_assignment(
+    assigned_date_and_time: u64,
+    role: u64,
+    items: Vec<u64>,
+) -> EarlyCcDesignDateAndTimeAssignment {
+    EarlyCcDesignDateAndTimeAssignment {
+        assigned_date_and_time,
+        role,
+        items,
+    }
+}
+
+/// Lift one `CC_DESIGN_SECURITY_CLASSIFICATION` (refs pre-resolved).
+pub(crate) fn lift_cc_design_security_classification(
+    assigned_security_classification: u64,
+    items: Vec<u64>,
+) -> EarlyCcDesignSecurityClassification {
+    EarlyCcDesignSecurityClassification {
+        assigned_security_classification,
+        items,
+    }
+}
+
+/// Lift one `CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT` (refs pre-resolved).
+pub(crate) fn lift_cc_design_person_and_organization_assignment(
+    assigned_person_and_organization: u64,
+    role: u64,
+    items: Vec<u64>,
+) -> EarlyCcDesignPersonAndOrganizationAssignment {
+    EarlyCcDesignPersonAndOrganizationAssignment {
+        assigned_person_and_organization,
+        role,
+        items,
     }
 }

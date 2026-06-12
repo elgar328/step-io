@@ -866,6 +866,93 @@ pub(crate) fn serialize_document_file(
     )
 }
 
+pub(crate) fn serialize_person_and_organization(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPersonAndOrganization,
+) -> u64 {
+    buf.push_simple(
+        "PERSON_AND_ORGANIZATION",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.the_person),
+            crate::parser::entity::Attribute::EntityRef(l1.the_organization),
+        ],
+    )
+}
+
+pub(crate) fn serialize_cc_design_approval(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCcDesignApproval,
+) -> u64 {
+    buf.push_simple(
+        "CC_DESIGN_APPROVAL",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.assigned_approval),
+            crate::parser::entity::Attribute::List(
+                l1.items
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_cc_design_date_and_time_assignment(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCcDesignDateAndTimeAssignment,
+) -> u64 {
+    buf.push_simple(
+        "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.assigned_date_and_time),
+            crate::parser::entity::Attribute::EntityRef(l1.role),
+            crate::parser::entity::Attribute::List(
+                l1.items
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_cc_design_security_classification(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCcDesignSecurityClassification,
+) -> u64 {
+    buf.push_simple(
+        "CC_DESIGN_SECURITY_CLASSIFICATION",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.assigned_security_classification),
+            crate::parser::entity::Attribute::List(
+                l1.items
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_cc_design_person_and_organization_assignment(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCcDesignPersonAndOrganizationAssignment,
+) -> u64 {
+    buf.push_simple(
+        "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.assigned_person_and_organization),
+            crate::parser::entity::Attribute::EntityRef(l1.role),
+            crate::parser::entity::Attribute::List(
+                l1.items
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

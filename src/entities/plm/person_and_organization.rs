@@ -1,10 +1,11 @@
-//! `PERSON_AND_ORGANIZATION` handler plm. Depends on Person +
-//! Organization arenas populated by the Person / Organization handlers.
+//! `PERSON_AND_ORGANIZATION` handler — plm (2-layer path). The dangling
+//! probe (`graph.get(..).is_none()`) stays in the handler; lower receives
+//! the pre-computed flags (lower takes no `&EntityGraph`).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
-use crate::ir::plm::{PersonAndOrganization, PlmPool};
+use crate::ir::plm::PersonAndOrganization;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -23,53 +24,16 @@ impl SimpleEntityHandler for PersonAndOrganizationHandler {
         attrs: &[Attribute],
         graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "PERSON_AND_ORGANIZATION")?;
-        let person_ref = read_entity_ref(attrs, 0, entity_id, "the_person")?;
-        let org_ref = read_entity_ref(attrs, 1, entity_id, "the_organization")?;
-        let person = ctx.id_cache.get::<crate::ir::PersonId>(person_ref);
-        let org = ctx.id_cache.get::<crate::ir::OrganizationId>(org_ref);
-        let (Some(the_person), Some(the_organization)) = (person, org) else {
-            // anonymizers / grabcad: a required person / organization ref
-            // dangles (e.g. the #18446744073709551615 sentinel a scrubbed person
-            // leaves, undefined in the file). Surface it as a MissingReference
-            // so the dispatcher drops this as a dangling-reference normalization
-            // and cascades to dependent approvals / assignments
-            // (NS-dangling-reference-drop). A ref that *is* defined but
-            // unmodelled is a separate gap (silent skip).
-            if graph.get(person_ref).is_none() {
-                return Err(ConvertError::MissingReference {
-                    from: entity_id,
-                    to: person_ref,
-                    field_name: "the_person",
-                });
-            }
-            if graph.get(org_ref).is_none() {
-                return Err(ConvertError::MissingReference {
-                    from: entity_id,
-                    to: org_ref,
-                    field_name: "the_organization",
-                });
-            }
-            return Ok(());
-        };
-        let pool = ctx.plm.get_or_insert_with(PlmPool::default);
-        let id = pool.person_and_organizations.push(PersonAndOrganization {
-            the_person,
-            the_organization,
-        });
-        ctx.id_cache.insert(entity_id, id);
-        Ok(())
+        let early = bind::bind_person_and_organization(entity_id, attrs)?;
+        let person_dangling = graph.get(early.the_person).is_none();
+        let org_dangling = graph.get(early.the_organization).is_none();
+        lower::lower_person_and_organization(ctx, entity_id, &early, person_dangling, org_dangling)
     }
 
     fn write(buf: &mut WriteBuffer, p: PersonAndOrganization) -> Result<u64, WriteError> {
         let person_step = buf.step_id(p.the_person);
         let org_step = buf.step_id(p.the_organization);
-        Ok(buf.push_simple(
-            "PERSON_AND_ORGANIZATION",
-            vec![
-                Attribute::EntityRef(person_step),
-                Attribute::EntityRef(org_step),
-            ],
-        ))
+        let early = lift::lift_person_and_organization(person_step, org_step);
+        Ok(serialize::serialize_person_and_organization(buf, &early))
     }
 }

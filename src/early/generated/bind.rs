@@ -842,6 +842,96 @@ pub(crate) fn bind_document_file(
     })
 }
 
+pub(crate) fn bind_person_and_organization(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPersonAndOrganization, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "PERSON_AND_ORGANIZATION")?;
+    Ok(super::model::EarlyPersonAndOrganization {
+        the_person: crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "the_person")?,
+        the_organization: crate::ir::attr::read_entity_ref(
+            attrs,
+            1,
+            entity_id,
+            "the_organization",
+        )?,
+    })
+}
+
+pub(crate) fn bind_cc_design_approval(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyCcDesignApproval, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "CC_DESIGN_APPROVAL")?;
+    Ok(super::model::EarlyCcDesignApproval {
+        assigned_approval: crate::ir::attr::read_entity_ref(
+            attrs,
+            0,
+            entity_id,
+            "assigned_approval",
+        )?,
+        items: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "items")?,
+    })
+}
+
+pub(crate) fn bind_cc_design_date_and_time_assignment(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyCcDesignDateAndTimeAssignment, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "CC_DESIGN_DATE_AND_TIME_ASSIGNMENT")?;
+    Ok(super::model::EarlyCcDesignDateAndTimeAssignment {
+        assigned_date_and_time: crate::ir::attr::read_entity_ref(
+            attrs,
+            0,
+            entity_id,
+            "assigned_date_and_time",
+        )?,
+        role: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "role")?,
+        items: crate::ir::attr::read_entity_ref_list(attrs, 2, entity_id, "items")?,
+    })
+}
+
+pub(crate) fn bind_cc_design_security_classification(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyCcDesignSecurityClassification, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "CC_DESIGN_SECURITY_CLASSIFICATION")?;
+    Ok(super::model::EarlyCcDesignSecurityClassification {
+        assigned_security_classification: crate::ir::attr::read_entity_ref(
+            attrs,
+            0,
+            entity_id,
+            "assigned_security_classification",
+        )?,
+        items: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "items")?,
+    })
+}
+
+pub(crate) fn bind_cc_design_person_and_organization_assignment(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<
+    super::model::EarlyCcDesignPersonAndOrganizationAssignment,
+    crate::ir::error::ConvertError,
+> {
+    crate::ir::attr::check_count(
+        attrs,
+        3,
+        entity_id,
+        "CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT",
+    )?;
+    Ok(super::model::EarlyCcDesignPersonAndOrganizationAssignment {
+        assigned_person_and_organization: crate::ir::attr::read_entity_ref(
+            attrs,
+            0,
+            entity_id,
+            "assigned_person_and_organization",
+        )?,
+        role: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "role")?,
+        items: crate::ir::attr::read_entity_ref_list(attrs, 2, entity_id, "items")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

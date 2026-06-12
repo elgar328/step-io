@@ -9,22 +9,29 @@
 use crate::early::model::{
     EarlyAddress, EarlyApplicationContext, EarlyApplicationProtocolDefinition, EarlyApproval,
     EarlyApprovalDateTime, EarlyApprovalPersonOrganization, EarlyApprovalRole, EarlyApprovalStatus,
-    EarlyCalendarDate, EarlyCoordinatedUniversalTimeOffset, EarlyDateAndTime, EarlyDateTimeRole,
-    EarlyDocument, EarlyDocumentFile, EarlyDocumentProductEquivalence,
-    EarlyDocumentRepresentationType, EarlyDocumentType, EarlyGroup, EarlyIdentificationRole,
-    EarlyLocalTime, EarlyObjectRole, EarlyOrganization, EarlyPerson,
-    EarlyPersonAndOrganizationRole, EarlyPersonalAddress, EarlyRoleAssociation,
-    EarlySecurityClassification, EarlySecurityClassificationLevel,
+    EarlyCalendarDate, EarlyCcDesignApproval, EarlyCcDesignDateAndTimeAssignment,
+    EarlyCcDesignPersonAndOrganizationAssignment, EarlyCcDesignSecurityClassification,
+    EarlyCoordinatedUniversalTimeOffset, EarlyDateAndTime, EarlyDateTimeRole, EarlyDocument,
+    EarlyDocumentFile, EarlyDocumentProductEquivalence, EarlyDocumentRepresentationType,
+    EarlyDocumentType, EarlyGroup, EarlyIdentificationRole, EarlyLocalTime, EarlyObjectRole,
+    EarlyOrganization, EarlyPerson, EarlyPersonAndOrganization, EarlyPersonAndOrganizationRole,
+    EarlyPersonalAddress, EarlyRoleAssociation, EarlySecurityClassification,
+    EarlySecurityClassificationLevel,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::plm::{
     Address, AddressData, ApplicationContext, ApplicationProtocolDefinition, Approval,
-    ApprovalDateTime, ApprovalDateTimeSelect, ApprovalPersonOrganization, ApprovalRole,
-    ApprovalStatus, CalendarDate, CoordinatedUniversalTimeOffset, DateAndTime, DateTimeRole,
-    Document, DocumentData, DocumentFile, DocumentProductEquivalence, DocumentProductItem,
-    DocumentRepresentationType, DocumentType, Group, IdentificationRole, LocalTime, ObjectRole,
-    Organization, Person, PersonAndOrganizationRole, PersonOrganizationSelect, PersonalAddress,
-    PlmPool, RoleAssociation, RoleSelect, SecurityClassification, SecurityClassificationLevel,
+    ApprovalAssignment, ApprovalDateTime, ApprovalDateTimeSelect, ApprovalItem,
+    ApprovalPersonOrganization, ApprovalRole, ApprovalStatus, CalendarDate, CcDesignApproval,
+    CcDesignDateAndTimeAssignment, CcDesignPersonAndOrganizationAssignment,
+    CcDesignSecurityClassification, CoordinatedUniversalTimeOffset, DateAndTime,
+    DateAndTimeAssignment, DateTimeItem, DateTimeRole, Document, DocumentData, DocumentFile,
+    DocumentProductEquivalence, DocumentProductItem, DocumentRepresentationType, DocumentType,
+    Group, IdentificationRole, LocalTime, ObjectRole, Organization, Person, PersonAndOrganization,
+    PersonAndOrganizationAssignment, PersonAndOrganizationRole, PersonOrganizationItem,
+    PersonOrganizationSelect, PersonalAddress, PlmPool, RoleAssociation, RoleSelect,
+    SecurityClassification, SecurityClassificationAssignment, SecurityClassificationItem,
+    SecurityClassificationLevel,
 };
 use crate::reader::ReaderContext;
 
@@ -577,4 +584,189 @@ pub(crate) fn lower_document_file(
         characterized_object_description: early.description_2,
     }));
     ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `PERSON_AND_ORGANIZATION`. A required person/organization ref
+/// that dangles (anonymizers / grabcad scrub sentinels) surfaces as a
+/// `MissingReference` so the dispatcher drops it as a dangling-reference
+/// normalization and cascades (NS-dangling-reference-drop); a ref that *is*
+/// defined but unmodelled is a separate gap (silent skip). The graph probe
+/// stays in the handler (lower takes no `&EntityGraph`) — this fn receives
+/// the pre-computed danglers.
+pub(crate) fn lower_person_and_organization(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyPersonAndOrganization,
+    person_dangling: bool,
+    org_dangling: bool,
+) -> Result<(), ConvertError> {
+    let person = ctx.id_cache.get::<crate::ir::PersonId>(early.the_person);
+    let org = ctx
+        .id_cache
+        .get::<crate::ir::OrganizationId>(early.the_organization);
+    let (Some(the_person), Some(the_organization)) = (person, org) else {
+        if person_dangling {
+            return Err(ConvertError::MissingReference {
+                from: entity_id,
+                to: early.the_person,
+                field_name: "the_person",
+            });
+        }
+        if org_dangling {
+            return Err(ConvertError::MissingReference {
+                from: entity_id,
+                to: early.the_organization,
+                field_name: "the_organization",
+            });
+        }
+        return Ok(());
+    };
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id = pool.person_and_organizations.push(PersonAndOrganization {
+        the_person,
+        the_organization,
+    });
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
+/// Lower one `CC_DESIGN_APPROVAL` (unresolved approval = silent drop;
+/// unresolved item members skip individually — legacy leniency).
+pub(crate) fn lower_cc_design_approval(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyCcDesignApproval,
+) {
+    let Some(assigned_approval) = ctx
+        .id_cache
+        .get::<crate::ir::ApprovalId>(early.assigned_approval)
+    else {
+        return;
+    };
+    let mut items = Vec::with_capacity(early.items.len());
+    for r in early.items {
+        if let Some(pid) = crate::entities::plm::resolve_date_time_item(ctx, r) {
+            items.push(ApprovalItem::Product(pid));
+        }
+    }
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id = pool
+        .approval_assignments
+        .push(ApprovalAssignment::CcDesign(CcDesignApproval {
+            assigned_approval,
+            items,
+        }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `CC_DESIGN_DATE_AND_TIME_ASSIGNMENT` (same leniencies).
+pub(crate) fn lower_cc_design_date_and_time_assignment(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyCcDesignDateAndTimeAssignment,
+) {
+    let Some(assigned_date_and_time) = ctx
+        .id_cache
+        .get::<crate::ir::DateAndTimeId>(early.assigned_date_and_time)
+    else {
+        return;
+    };
+    let Some(role) = ctx.id_cache.get::<crate::ir::DateTimeRoleId>(early.role) else {
+        return;
+    };
+    let mut items = Vec::with_capacity(early.items.len());
+    for r in early.items {
+        if let Some(pid) = crate::entities::plm::resolve_date_time_item(ctx, r) {
+            items.push(DateTimeItem::Product(pid));
+        }
+    }
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id = pool
+        .date_and_time_assignments
+        .push(DateAndTimeAssignment::CcDesign(
+            CcDesignDateAndTimeAssignment {
+                assigned_date_and_time,
+                role,
+                items,
+            },
+        ));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `CC_DESIGN_SECURITY_CLASSIFICATION` (same leniencies).
+pub(crate) fn lower_cc_design_security_classification(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyCcDesignSecurityClassification,
+) {
+    let Some(assigned_security_classification) = ctx
+        .id_cache
+        .get::<crate::ir::SecurityClassificationId>(early.assigned_security_classification)
+    else {
+        return;
+    };
+    let mut items = Vec::with_capacity(early.items.len());
+    for r in early.items {
+        if let Some(pid) = crate::entities::plm::resolve_date_time_item(ctx, r) {
+            items.push(SecurityClassificationItem::Product(pid));
+        }
+    }
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id =
+        pool.security_classification_assignments
+            .push(SecurityClassificationAssignment::CcDesign(
+                CcDesignSecurityClassification {
+                    assigned_security_classification,
+                    items,
+                },
+            ));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT`. A P&O dropped
+/// as a dangling-reference cascade surfaces a `MissingReference`
+/// (NS-dangling-reference-drop); otherwise unresolved = silent skip.
+pub(crate) fn lower_cc_design_person_and_organization_assignment(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyCcDesignPersonAndOrganizationAssignment,
+) -> Result<(), ConvertError> {
+    let po_ref = early.assigned_person_and_organization;
+    let Some(assigned_person_and_organization) = ctx
+        .id_cache
+        .get::<crate::ir::PersonAndOrganizationId>(po_ref)
+    else {
+        if ctx.nonstandard_dropped_refs.contains(&po_ref) {
+            return Err(ConvertError::MissingReference {
+                from: entity_id,
+                to: po_ref,
+                field_name: "assigned_person_and_organization",
+            });
+        }
+        return Ok(());
+    };
+    let Some(role) = ctx
+        .id_cache
+        .get::<crate::ir::PersonAndOrganizationRoleId>(early.role)
+    else {
+        return Ok(());
+    };
+    let mut items = Vec::with_capacity(early.items.len());
+    for r in early.items {
+        if let Some(pid) = crate::entities::plm::resolve_date_time_item(ctx, r) {
+            items.push(PersonOrganizationItem::Product(pid));
+        }
+    }
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id =
+        pool.person_and_organization_assignments
+            .push(PersonAndOrganizationAssignment::CcDesign(
+                CcDesignPersonAndOrganizationAssignment {
+                    assigned_person_and_organization,
+                    role,
+                    items,
+                },
+            ));
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
 }

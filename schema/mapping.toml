@@ -54,6 +54,11 @@ generate = [
     "personal_address",
     "application_protocol_definition",
     "document_file",
+    "person_and_organization",
+    "cc_design_approval",
+    "cc_design_date_and_time_assignment",
+    "cc_design_security_classification",
+    "cc_design_person_and_organization_assignment",
 ]
 
 # `generate_all`: diagnostic flip. When true, gen-early generates *every* entity

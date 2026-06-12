@@ -1,17 +1,14 @@
-//! `CC_DESIGN_APPROVAL` handler plm. Variant of the
-//! `approval_assignment` arena enum. STEP entity name lacks the
-//! `_ASSIGNMENT` suffix that the Applied sibling carries.
+//! `CC_DESIGN_APPROVAL` handler — plm (2-layer path: generated bind/serialize +
+//! hand-written lower/lift).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list};
 use crate::ir::error::ConvertError;
-use crate::ir::plm::{ApprovalAssignment, ApprovalItem, CcDesignApproval, PlmPool};
+use crate::ir::plm::{ApprovalItem, CcDesignApproval};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
-
-use super::resolve_date_time_item;
 use step_io_macros::step_entity;
 
 pub(crate) struct CcDesignApprovalHandler;
@@ -26,45 +23,21 @@ impl SimpleEntityHandler for CcDesignApprovalHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "CC_DESIGN_APPROVAL")?;
-        let approval_ref = read_entity_ref(attrs, 0, entity_id, "assigned_approval")?;
-        let item_refs = read_entity_ref_list(attrs, 1, entity_id, "items")?;
-        let Some(assigned_approval) = ctx.id_cache.get::<crate::ir::ApprovalId>(approval_ref)
-        else {
-            return Ok(());
-        };
-        let mut items = Vec::with_capacity(item_refs.len());
-        for r in item_refs {
-            if let Some(pid) = resolve_date_time_item(ctx, r) {
-                items.push(ApprovalItem::Product(pid));
-            }
-        }
-        let pool = ctx.plm.get_or_insert_with(PlmPool::default);
-        let id = pool
-            .approval_assignments
-            .push(ApprovalAssignment::CcDesign(CcDesignApproval {
-                assigned_approval,
-                items,
-            }));
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_cc_design_approval(entity_id, attrs)?;
+        lower::lower_cc_design_approval(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, c: CcDesignApproval) -> Result<u64, WriteError> {
         let approval_step = buf.step_id(c.assigned_approval);
-        let mut item_refs = Vec::with_capacity(c.items.len());
-        for item in c.items {
-            let step_id = match item {
+        let items: Vec<u64> = c
+            .items
+            .into_iter()
+            .map(|item| match item {
                 ApprovalItem::Product(pid) => buf.product_def_ids[&pid],
-            };
-            item_refs.push(Attribute::EntityRef(step_id));
-        }
-        Ok(buf.push_simple(
-            "CC_DESIGN_APPROVAL",
-            vec![
-                Attribute::EntityRef(approval_step),
-                Attribute::List(item_refs),
-            ],
-        ))
+            })
+            .collect();
+        let early = lift::lift_cc_design_approval(approval_step, items);
+        Ok(serialize::serialize_cc_design_approval(buf, &early))
     }
 }

@@ -1082,6 +1082,118 @@ impl crate::ir::arena::ArenaId for EarlyDocumentFileId {
     }
 }
 
+/// L1 `PERSON_AND_ORGANIZATION` (generated).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct EarlyPersonAndOrganization {
+    pub(crate) the_person: u64,
+    pub(crate) the_organization: u64,
+}
+
+/// Typed `id_cache` key for `PERSON_AND_ORGANIZATION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPersonAndOrganizationId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPersonAndOrganizationId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `CC_DESIGN_APPROVAL` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCcDesignApproval {
+    pub(crate) assigned_approval: u64,
+    pub(crate) items: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `CC_DESIGN_APPROVAL` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCcDesignApprovalId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCcDesignApprovalId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `CC_DESIGN_DATE_AND_TIME_ASSIGNMENT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCcDesignDateAndTimeAssignment {
+    pub(crate) assigned_date_and_time: u64,
+    pub(crate) role: u64,
+    pub(crate) items: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `CC_DESIGN_DATE_AND_TIME_ASSIGNMENT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCcDesignDateAndTimeAssignmentId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCcDesignDateAndTimeAssignmentId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `CC_DESIGN_SECURITY_CLASSIFICATION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCcDesignSecurityClassification {
+    pub(crate) assigned_security_classification: u64,
+    pub(crate) items: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `CC_DESIGN_SECURITY_CLASSIFICATION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCcDesignSecurityClassificationId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCcDesignSecurityClassificationId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCcDesignPersonAndOrganizationAssignment {
+    pub(crate) assigned_person_and_organization: u64,
+    pub(crate) role: u64,
+    pub(crate) items: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `CC_DESIGN_PERSON_AND_ORGANIZATION_ASSIGNMENT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCcDesignPersonAndOrganizationAssignmentId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCcDesignPersonAndOrganizationAssignmentId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {
