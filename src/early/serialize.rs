@@ -5,9 +5,13 @@
 
 pub(crate) use super::generated::serialize::{
     serialize_address, serialize_application_context, serialize_application_protocol_definition,
-    serialize_approval, serialize_approval_date_time, serialize_approval_person_organization,
-    serialize_approval_role, serialize_approval_status, serialize_calendar_date,
-    serialize_cc_design_approval, serialize_cc_design_date_and_time_assignment,
+    serialize_applied_approval_assignment, serialize_applied_date_and_time_assignment,
+    serialize_applied_document_reference, serialize_applied_external_identification_assignment,
+    serialize_applied_group_assignment, serialize_applied_person_and_organization_assignment,
+    serialize_applied_security_classification_assignment, serialize_approval,
+    serialize_approval_date_time, serialize_approval_person_organization, serialize_approval_role,
+    serialize_approval_status, serialize_calendar_date, serialize_cc_design_approval,
+    serialize_cc_design_date_and_time_assignment,
     serialize_cc_design_person_and_organization_assignment,
     serialize_cc_design_security_classification,
     serialize_constructive_geometry_representation_relationship,

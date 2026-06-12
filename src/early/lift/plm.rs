@@ -3,9 +3,13 @@
 //! keep the schema's `Option` descriptions, so no synthesis is needed.
 
 use crate::early::model::{
-    EarlyAddress, EarlyApplicationContext, EarlyApplicationProtocolDefinition, EarlyApproval,
-    EarlyApprovalDateTime, EarlyApprovalPersonOrganization, EarlyApprovalRole, EarlyApprovalStatus,
-    EarlyCalendarDate, EarlyCcDesignApproval, EarlyCcDesignDateAndTimeAssignment,
+    EarlyAddress, EarlyApplicationContext, EarlyApplicationProtocolDefinition,
+    EarlyAppliedApprovalAssignment, EarlyAppliedDateAndTimeAssignment,
+    EarlyAppliedDocumentReference, EarlyAppliedExternalIdentificationAssignment,
+    EarlyAppliedGroupAssignment, EarlyAppliedPersonAndOrganizationAssignment,
+    EarlyAppliedSecurityClassificationAssignment, EarlyApproval, EarlyApprovalDateTime,
+    EarlyApprovalPersonOrganization, EarlyApprovalRole, EarlyApprovalStatus, EarlyCalendarDate,
+    EarlyCcDesignApproval, EarlyCcDesignDateAndTimeAssignment,
     EarlyCcDesignPersonAndOrganizationAssignment, EarlyCcDesignSecurityClassification,
     EarlyCoordinatedUniversalTimeOffset, EarlyDateAndTime, EarlyDateTimeRole, EarlyDocument,
     EarlyDocumentFile, EarlyDocumentProductEquivalence, EarlyDocumentRepresentationType,
@@ -366,6 +370,93 @@ pub(crate) fn lift_cc_design_person_and_organization_assignment(
     EarlyCcDesignPersonAndOrganizationAssignment {
         assigned_person_and_organization,
         role,
+        items,
+    }
+}
+
+/// Lift one `APPLIED_APPROVAL_ASSIGNMENT` (refs pre-resolved).
+pub(crate) fn lift_applied_approval_assignment(
+    assigned_approval: u64,
+    items: Vec<u64>,
+) -> EarlyAppliedApprovalAssignment {
+    EarlyAppliedApprovalAssignment {
+        assigned_approval,
+        items,
+    }
+}
+
+/// Lift one `APPLIED_GROUP_ASSIGNMENT` (refs pre-resolved).
+pub(crate) fn lift_applied_group_assignment(
+    assigned_group: u64,
+    items: Vec<u64>,
+) -> EarlyAppliedGroupAssignment {
+    EarlyAppliedGroupAssignment {
+        assigned_group,
+        items,
+    }
+}
+
+/// Lift one `APPLIED_DATE_AND_TIME_ASSIGNMENT` (refs pre-resolved).
+pub(crate) fn lift_applied_date_and_time_assignment(
+    assigned_date_and_time: u64,
+    role: u64,
+    items: Vec<u64>,
+) -> EarlyAppliedDateAndTimeAssignment {
+    EarlyAppliedDateAndTimeAssignment {
+        assigned_date_and_time,
+        role,
+        items,
+    }
+}
+
+/// Lift one `APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT` (refs pre-resolved).
+pub(crate) fn lift_applied_security_classification_assignment(
+    assigned_security_classification: u64,
+    items: Vec<u64>,
+) -> EarlyAppliedSecurityClassificationAssignment {
+    EarlyAppliedSecurityClassificationAssignment {
+        assigned_security_classification,
+        items,
+    }
+}
+
+/// Lift one `APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT` (refs pre-resolved).
+pub(crate) fn lift_applied_person_and_organization_assignment(
+    assigned_person_and_organization: u64,
+    role: u64,
+    items: Vec<u64>,
+) -> EarlyAppliedPersonAndOrganizationAssignment {
+    EarlyAppliedPersonAndOrganizationAssignment {
+        assigned_person_and_organization,
+        role,
+        items,
+    }
+}
+
+/// Lift one `APPLIED_DOCUMENT_REFERENCE` (refs pre-resolved).
+pub(crate) fn lift_applied_document_reference(
+    assigned_document: u64,
+    source: String,
+    items: Vec<u64>,
+) -> EarlyAppliedDocumentReference {
+    EarlyAppliedDocumentReference {
+        assigned_document,
+        source,
+        items,
+    }
+}
+
+/// Lift one `APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT` (refs pre-resolved).
+pub(crate) fn lift_applied_external_identification_assignment(
+    role: u64,
+    source: u64,
+    assigned_id: String,
+    items: Vec<u64>,
+) -> EarlyAppliedExternalIdentificationAssignment {
+    EarlyAppliedExternalIdentificationAssignment {
+        assigned_id,
+        role,
+        source,
         items,
     }
 }

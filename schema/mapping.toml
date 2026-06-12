@@ -59,6 +59,13 @@ generate = [
     "cc_design_date_and_time_assignment",
     "cc_design_security_classification",
     "cc_design_person_and_organization_assignment",
+    "applied_approval_assignment",
+    "applied_group_assignment",
+    "applied_date_and_time_assignment",
+    "applied_security_classification_assignment",
+    "applied_person_and_organization_assignment",
+    "applied_document_reference",
+    "applied_external_identification_assignment",
 ]
 
 # `generate_all`: diagnostic flip. When true, gen-early generates *every* entity

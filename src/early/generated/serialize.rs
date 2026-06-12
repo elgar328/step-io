@@ -953,6 +953,137 @@ pub(crate) fn serialize_cc_design_person_and_organization_assignment(
     )
 }
 
+pub(crate) fn serialize_applied_approval_assignment(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAppliedApprovalAssignment,
+) -> u64 {
+    buf.push_simple(
+        "APPLIED_APPROVAL_ASSIGNMENT",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.assigned_approval),
+            crate::parser::entity::Attribute::List(
+                l1.items
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_applied_group_assignment(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAppliedGroupAssignment,
+) -> u64 {
+    buf.push_simple(
+        "APPLIED_GROUP_ASSIGNMENT",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.assigned_group),
+            crate::parser::entity::Attribute::List(
+                l1.items
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_applied_date_and_time_assignment(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAppliedDateAndTimeAssignment,
+) -> u64 {
+    buf.push_simple(
+        "APPLIED_DATE_AND_TIME_ASSIGNMENT",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.assigned_date_and_time),
+            crate::parser::entity::Attribute::EntityRef(l1.role),
+            crate::parser::entity::Attribute::List(
+                l1.items
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_applied_security_classification_assignment(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAppliedSecurityClassificationAssignment,
+) -> u64 {
+    buf.push_simple(
+        "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.assigned_security_classification),
+            crate::parser::entity::Attribute::List(
+                l1.items
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_applied_person_and_organization_assignment(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAppliedPersonAndOrganizationAssignment,
+) -> u64 {
+    buf.push_simple(
+        "APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.assigned_person_and_organization),
+            crate::parser::entity::Attribute::EntityRef(l1.role),
+            crate::parser::entity::Attribute::List(
+                l1.items
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_applied_document_reference(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAppliedDocumentReference,
+) -> u64 {
+    buf.push_simple(
+        "APPLIED_DOCUMENT_REFERENCE",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.assigned_document),
+            crate::parser::entity::Attribute::String(l1.source.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.items
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_applied_external_identification_assignment(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAppliedExternalIdentificationAssignment,
+) -> u64 {
+    buf.push_simple(
+        "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.assigned_id.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.role),
+            crate::parser::entity::Attribute::EntityRef(l1.source),
+            crate::parser::entity::Attribute::List(
+                l1.items
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

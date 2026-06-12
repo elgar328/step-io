@@ -7,9 +7,13 @@
 //! these through `id_cache` typed arena ids directly.
 
 use crate::early::model::{
-    EarlyAddress, EarlyApplicationContext, EarlyApplicationProtocolDefinition, EarlyApproval,
-    EarlyApprovalDateTime, EarlyApprovalPersonOrganization, EarlyApprovalRole, EarlyApprovalStatus,
-    EarlyCalendarDate, EarlyCcDesignApproval, EarlyCcDesignDateAndTimeAssignment,
+    EarlyAddress, EarlyApplicationContext, EarlyApplicationProtocolDefinition,
+    EarlyAppliedApprovalAssignment, EarlyAppliedDateAndTimeAssignment,
+    EarlyAppliedDocumentReference, EarlyAppliedExternalIdentificationAssignment,
+    EarlyAppliedGroupAssignment, EarlyAppliedPersonAndOrganizationAssignment,
+    EarlyAppliedSecurityClassificationAssignment, EarlyApproval, EarlyApprovalDateTime,
+    EarlyApprovalPersonOrganization, EarlyApprovalRole, EarlyApprovalStatus, EarlyCalendarDate,
+    EarlyCcDesignApproval, EarlyCcDesignDateAndTimeAssignment,
     EarlyCcDesignPersonAndOrganizationAssignment, EarlyCcDesignSecurityClassification,
     EarlyCoordinatedUniversalTimeOffset, EarlyDateAndTime, EarlyDateTimeRole, EarlyDocument,
     EarlyDocumentFile, EarlyDocumentProductEquivalence, EarlyDocumentRepresentationType,
@@ -20,14 +24,18 @@ use crate::early::model::{
 };
 use crate::ir::error::ConvertError;
 use crate::ir::plm::{
-    Address, AddressData, ApplicationContext, ApplicationProtocolDefinition, Approval,
+    Address, AddressData, ApplicationContext, ApplicationProtocolDefinition,
+    AppliedApprovalAssignment, AppliedDateAndTimeAssignment, AppliedDocumentReference,
+    AppliedExternalIdentificationAssignment, AppliedGroupAssignment,
+    AppliedPersonAndOrganizationAssignment, AppliedSecurityClassificationAssignment, Approval,
     ApprovalAssignment, ApprovalDateTime, ApprovalDateTimeSelect, ApprovalItem,
     ApprovalPersonOrganization, ApprovalRole, ApprovalStatus, CalendarDate, CcDesignApproval,
     CcDesignDateAndTimeAssignment, CcDesignPersonAndOrganizationAssignment,
     CcDesignSecurityClassification, CoordinatedUniversalTimeOffset, DateAndTime,
     DateAndTimeAssignment, DateTimeItem, DateTimeRole, Document, DocumentData, DocumentFile,
-    DocumentProductEquivalence, DocumentProductItem, DocumentRepresentationType, DocumentType,
-    Group, IdentificationRole, LocalTime, ObjectRole, Organization, Person, PersonAndOrganization,
+    DocumentProductEquivalence, DocumentProductItem, DocumentReferenceItem,
+    DocumentRepresentationType, DocumentType, Group, GroupItem, IdentificationItem,
+    IdentificationRole, LocalTime, ObjectRole, Organization, Person, PersonAndOrganization,
     PersonAndOrganizationAssignment, PersonAndOrganizationRole, PersonOrganizationItem,
     PersonOrganizationSelect, PersonalAddress, PlmPool, RoleAssociation, RoleSelect,
     SecurityClassification, SecurityClassificationAssignment, SecurityClassificationItem,
@@ -769,4 +777,226 @@ pub(crate) fn lower_cc_design_person_and_organization_assignment(
             ));
     ctx.id_cache.insert(entity_id, id);
     Ok(())
+}
+
+/// Lower one `APPLIED_APPROVAL_ASSIGNMENT` (unresolved refs = silent drop; unresolved item
+/// members skip individually — legacy leniency).
+pub(crate) fn lower_applied_approval_assignment(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyAppliedApprovalAssignment,
+) {
+    let Some(assigned_approval) = ctx
+        .id_cache
+        .get::<crate::ir::ApprovalId>(early.assigned_approval)
+    else {
+        return;
+    };
+    let mut items = Vec::with_capacity(early.items.len());
+    for r in early.items {
+        if let Some(pid) = crate::entities::plm::resolve_date_time_item(ctx, r) {
+            items.push(ApprovalItem::Product(pid));
+        }
+    }
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id =
+        pool.approval_assignments
+            .push(ApprovalAssignment::Applied(AppliedApprovalAssignment {
+                assigned_approval,
+                items,
+            }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `APPLIED_GROUP_ASSIGNMENT` (unresolved refs = silent drop; unresolved item
+/// members skip individually — legacy leniency).
+pub(crate) fn lower_applied_group_assignment(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyAppliedGroupAssignment,
+) {
+    let Some(assigned_group) = ctx.id_cache.get::<crate::ir::GroupId>(early.assigned_group) else {
+        return;
+    };
+    let mut items = Vec::with_capacity(early.items.len());
+    for r in early.items {
+        if let Some(pid) = crate::entities::plm::resolve_date_time_item(ctx, r) {
+            items.push(GroupItem::Product(pid));
+        }
+    }
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id = pool.group_assignments.push(AppliedGroupAssignment {
+        assigned_group,
+        items,
+    });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `APPLIED_DATE_AND_TIME_ASSIGNMENT` (unresolved refs = silent drop; unresolved item
+/// members skip individually — legacy leniency).
+pub(crate) fn lower_applied_date_and_time_assignment(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyAppliedDateAndTimeAssignment,
+) {
+    let Some(assigned_date_and_time) = ctx
+        .id_cache
+        .get::<crate::ir::DateAndTimeId>(early.assigned_date_and_time)
+    else {
+        return;
+    };
+    let Some(role) = ctx.id_cache.get::<crate::ir::DateTimeRoleId>(early.role) else {
+        return;
+    };
+    let mut items = Vec::with_capacity(early.items.len());
+    for r in early.items {
+        if let Some(pid) = crate::entities::plm::resolve_date_time_item(ctx, r) {
+            items.push(DateTimeItem::Product(pid));
+        }
+    }
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id = pool
+        .date_and_time_assignments
+        .push(DateAndTimeAssignment::Applied(
+            AppliedDateAndTimeAssignment {
+                assigned_date_and_time,
+                role,
+                items,
+            },
+        ));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT` (unresolved refs = silent drop; unresolved item
+/// members skip individually — legacy leniency).
+pub(crate) fn lower_applied_security_classification_assignment(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyAppliedSecurityClassificationAssignment,
+) {
+    let Some(assigned_security_classification) = ctx
+        .id_cache
+        .get::<crate::ir::SecurityClassificationId>(early.assigned_security_classification)
+    else {
+        return;
+    };
+    let mut items = Vec::with_capacity(early.items.len());
+    for r in early.items {
+        if let Some(pid) = crate::entities::plm::resolve_date_time_item(ctx, r) {
+            items.push(SecurityClassificationItem::Product(pid));
+        }
+    }
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id =
+        pool.security_classification_assignments
+            .push(SecurityClassificationAssignment::Applied(
+                AppliedSecurityClassificationAssignment {
+                    assigned_security_classification,
+                    items,
+                },
+            ));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT` (unresolved refs = silent drop; unresolved item
+/// members skip individually — legacy leniency).
+pub(crate) fn lower_applied_person_and_organization_assignment(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyAppliedPersonAndOrganizationAssignment,
+) {
+    let Some(assigned_person_and_organization) = ctx
+        .id_cache
+        .get::<crate::ir::PersonAndOrganizationId>(early.assigned_person_and_organization)
+    else {
+        return;
+    };
+    let Some(role) = ctx
+        .id_cache
+        .get::<crate::ir::PersonAndOrganizationRoleId>(early.role)
+    else {
+        return;
+    };
+    let mut items = Vec::with_capacity(early.items.len());
+    for r in early.items {
+        if let Some(pid) = crate::entities::plm::resolve_date_time_item(ctx, r) {
+            items.push(PersonOrganizationItem::Product(pid));
+        }
+    }
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id =
+        pool.person_and_organization_assignments
+            .push(PersonAndOrganizationAssignment::Applied(
+                AppliedPersonAndOrganizationAssignment {
+                    assigned_person_and_organization,
+                    role,
+                    items,
+                },
+            ));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `APPLIED_DOCUMENT_REFERENCE` (unresolved refs = silent drop; unresolved item
+/// members skip individually — legacy leniency).
+pub(crate) fn lower_applied_document_reference(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyAppliedDocumentReference,
+) {
+    let Some(assigned_document) = ctx
+        .id_cache
+        .get::<crate::ir::DocumentId>(early.assigned_document)
+    else {
+        return;
+    };
+    let mut items = Vec::with_capacity(early.items.len());
+    for r in early.items {
+        if let Some(pid) = crate::entities::plm::resolve_date_time_item(ctx, r) {
+            items.push(DocumentReferenceItem::Product(pid));
+        }
+    }
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id = pool.document_references.push(AppliedDocumentReference {
+        assigned_document,
+        source: early.source,
+        items,
+    });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT` (unresolved refs = silent drop; unresolved item
+/// members skip individually — legacy leniency).
+pub(crate) fn lower_applied_external_identification_assignment(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyAppliedExternalIdentificationAssignment,
+) {
+    let Some(role) = ctx
+        .id_cache
+        .get::<crate::ir::IdentificationRoleId>(early.role)
+    else {
+        return;
+    };
+    let Some(source) = ctx
+        .id_cache
+        .get::<crate::ir::ExternalSourceId>(early.source)
+    else {
+        return;
+    };
+    let mut items = Vec::with_capacity(early.items.len());
+    for r in early.items {
+        if let Some(pid) = crate::entities::plm::resolve_date_time_item(ctx, r) {
+            items.push(IdentificationItem::Product(pid));
+        }
+    }
+    let pool = ctx.plm.get_or_insert_with(PlmPool::default);
+    let id = pool
+        .identification_assignments
+        .push(AppliedExternalIdentificationAssignment {
+            role,
+            source,
+            assigned_id: early.assigned_id,
+            items,
+        });
+    ctx.id_cache.insert(entity_id, id);
 }

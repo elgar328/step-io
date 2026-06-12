@@ -932,6 +932,136 @@ pub(crate) fn bind_cc_design_person_and_organization_assignment(
     })
 }
 
+pub(crate) fn bind_applied_approval_assignment(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAppliedApprovalAssignment, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "APPLIED_APPROVAL_ASSIGNMENT")?;
+    Ok(super::model::EarlyAppliedApprovalAssignment {
+        assigned_approval: crate::ir::attr::read_entity_ref(
+            attrs,
+            0,
+            entity_id,
+            "assigned_approval",
+        )?,
+        items: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "items")?,
+    })
+}
+
+pub(crate) fn bind_applied_group_assignment(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAppliedGroupAssignment, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "APPLIED_GROUP_ASSIGNMENT")?;
+    Ok(super::model::EarlyAppliedGroupAssignment {
+        assigned_group: crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "assigned_group")?,
+        items: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "items")?,
+    })
+}
+
+pub(crate) fn bind_applied_date_and_time_assignment(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAppliedDateAndTimeAssignment, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "APPLIED_DATE_AND_TIME_ASSIGNMENT")?;
+    Ok(super::model::EarlyAppliedDateAndTimeAssignment {
+        assigned_date_and_time: crate::ir::attr::read_entity_ref(
+            attrs,
+            0,
+            entity_id,
+            "assigned_date_and_time",
+        )?,
+        role: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "role")?,
+        items: crate::ir::attr::read_entity_ref_list(attrs, 2, entity_id, "items")?,
+    })
+}
+
+pub(crate) fn bind_applied_security_classification_assignment(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<
+    super::model::EarlyAppliedSecurityClassificationAssignment,
+    crate::ir::error::ConvertError,
+> {
+    crate::ir::attr::check_count(
+        attrs,
+        2,
+        entity_id,
+        "APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT",
+    )?;
+    Ok(super::model::EarlyAppliedSecurityClassificationAssignment {
+        assigned_security_classification: crate::ir::attr::read_entity_ref(
+            attrs,
+            0,
+            entity_id,
+            "assigned_security_classification",
+        )?,
+        items: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "items")?,
+    })
+}
+
+pub(crate) fn bind_applied_person_and_organization_assignment(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAppliedPersonAndOrganizationAssignment, crate::ir::error::ConvertError>
+{
+    crate::ir::attr::check_count(
+        attrs,
+        3,
+        entity_id,
+        "APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT",
+    )?;
+    Ok(super::model::EarlyAppliedPersonAndOrganizationAssignment {
+        assigned_person_and_organization: crate::ir::attr::read_entity_ref(
+            attrs,
+            0,
+            entity_id,
+            "assigned_person_and_organization",
+        )?,
+        role: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "role")?,
+        items: crate::ir::attr::read_entity_ref_list(attrs, 2, entity_id, "items")?,
+    })
+}
+
+pub(crate) fn bind_applied_document_reference(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAppliedDocumentReference, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "APPLIED_DOCUMENT_REFERENCE")?;
+    Ok(super::model::EarlyAppliedDocumentReference {
+        assigned_document: crate::ir::attr::read_entity_ref(
+            attrs,
+            0,
+            entity_id,
+            "assigned_document",
+        )?,
+        source: crate::ir::attr::read_string_or_unset(attrs, 1, entity_id, "source")?.to_owned(),
+        items: crate::ir::attr::read_entity_ref_list(attrs, 2, entity_id, "items")?,
+    })
+}
+
+pub(crate) fn bind_applied_external_identification_assignment(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<
+    super::model::EarlyAppliedExternalIdentificationAssignment,
+    crate::ir::error::ConvertError,
+> {
+    crate::ir::attr::check_count(
+        attrs,
+        4,
+        entity_id,
+        "APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT",
+    )?;
+    Ok(super::model::EarlyAppliedExternalIdentificationAssignment {
+        assigned_id: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "assigned_id")?
+            .to_owned(),
+        role: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "role")?,
+        source: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "source")?,
+        items: crate::ir::attr::read_entity_ref_list(attrs, 3, entity_id, "items")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

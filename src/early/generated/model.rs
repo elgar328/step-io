@@ -1194,6 +1194,165 @@ impl crate::ir::arena::ArenaId for EarlyCcDesignPersonAndOrganizationAssignmentI
     }
 }
 
+/// L1 `APPLIED_APPROVAL_ASSIGNMENT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAppliedApprovalAssignment {
+    pub(crate) assigned_approval: u64,
+    pub(crate) items: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `APPLIED_APPROVAL_ASSIGNMENT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAppliedApprovalAssignmentId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAppliedApprovalAssignmentId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `APPLIED_GROUP_ASSIGNMENT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAppliedGroupAssignment {
+    pub(crate) assigned_group: u64,
+    pub(crate) items: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `APPLIED_GROUP_ASSIGNMENT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAppliedGroupAssignmentId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAppliedGroupAssignmentId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `APPLIED_DATE_AND_TIME_ASSIGNMENT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAppliedDateAndTimeAssignment {
+    pub(crate) assigned_date_and_time: u64,
+    pub(crate) role: u64,
+    pub(crate) items: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `APPLIED_DATE_AND_TIME_ASSIGNMENT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAppliedDateAndTimeAssignmentId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAppliedDateAndTimeAssignmentId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAppliedSecurityClassificationAssignment {
+    pub(crate) assigned_security_classification: u64,
+    pub(crate) items: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `APPLIED_SECURITY_CLASSIFICATION_ASSIGNMENT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAppliedSecurityClassificationAssignmentId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAppliedSecurityClassificationAssignmentId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAppliedPersonAndOrganizationAssignment {
+    pub(crate) assigned_person_and_organization: u64,
+    pub(crate) role: u64,
+    pub(crate) items: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `APPLIED_PERSON_AND_ORGANIZATION_ASSIGNMENT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAppliedPersonAndOrganizationAssignmentId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAppliedPersonAndOrganizationAssignmentId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `APPLIED_DOCUMENT_REFERENCE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAppliedDocumentReference {
+    pub(crate) assigned_document: u64,
+    pub(crate) source: String,
+    pub(crate) items: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `APPLIED_DOCUMENT_REFERENCE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAppliedDocumentReferenceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAppliedDocumentReferenceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAppliedExternalIdentificationAssignment {
+    pub(crate) assigned_id: String,
+    pub(crate) role: u64,
+    pub(crate) source: u64,
+    pub(crate) items: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `APPLIED_EXTERNAL_IDENTIFICATION_ASSIGNMENT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAppliedExternalIdentificationAssignmentId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAppliedExternalIdentificationAssignmentId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

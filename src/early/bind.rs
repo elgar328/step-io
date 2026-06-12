@@ -5,11 +5,15 @@
 //! `bind::bind_*` paths unchanged.
 
 pub(crate) use super::generated::bind::{
-    bind_address, bind_application_context, bind_application_protocol_definition, bind_approval,
-    bind_approval_date_time, bind_approval_person_organization, bind_approval_role,
-    bind_approval_status, bind_calendar_date, bind_cc_design_approval,
-    bind_cc_design_date_and_time_assignment, bind_cc_design_person_and_organization_assignment,
-    bind_cc_design_security_classification, bind_constructive_geometry_representation_relationship,
+    bind_address, bind_application_context, bind_application_protocol_definition,
+    bind_applied_approval_assignment, bind_applied_date_and_time_assignment,
+    bind_applied_document_reference, bind_applied_external_identification_assignment,
+    bind_applied_group_assignment, bind_applied_person_and_organization_assignment,
+    bind_applied_security_classification_assignment, bind_approval, bind_approval_date_time,
+    bind_approval_person_organization, bind_approval_role, bind_approval_status,
+    bind_calendar_date, bind_cc_design_approval, bind_cc_design_date_and_time_assignment,
+    bind_cc_design_person_and_organization_assignment, bind_cc_design_security_classification,
+    bind_constructive_geometry_representation_relationship,
     bind_context_dependent_shape_representation, bind_coordinated_universal_time_offset,
     bind_date_and_time, bind_date_time_role, bind_document, bind_document_file,
     bind_document_product_equivalence, bind_document_representation_type, bind_document_type,
