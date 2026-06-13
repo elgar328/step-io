@@ -3,10 +3,11 @@
 //! a dangling child surfaces as `MissingReference`.
 
 use crate::early::model::{
-    EarlyClosedShell, EarlyFaceBound, EarlyFaceOuterBound, EarlyOpenShell, EarlyVertexLoop,
+    EarlyAdvancedFace, EarlyClosedShell, EarlyFaceBound, EarlyFaceOuterBound, EarlyFaceSurface,
+    EarlyManifoldSolidBrep, EarlyOpenShell, EarlyVertexLoop,
 };
 use crate::ir::error::ConvertError;
-use crate::ir::topology::{Orientation, Shell, Wire, WireData};
+use crate::ir::topology::{Face, FaceData, Orientation, Shell, Solid, Wire, WireData};
 use crate::reader::{ReaderContext, bool_to_orientation};
 
 /// Shared `FACE_BOUND` / `FACE_OUTER_BOUND` lowering: the `bound` loop is
@@ -110,5 +111,82 @@ pub(crate) fn lower_vertex_loop(
 ) -> Result<(), ConvertError> {
     let vertex = ctx.resolve_vertex(entity_id, early.loop_vertex, "loop_vertex")?;
     ctx.vertex_loop_map.insert(entity_id, vertex);
+    Ok(())
+}
+
+/// Shared `ADVANCED_FACE` / `FACE_SURFACE` lowering: resolve the bound wires
+/// + the surface, build a `FaceData` under the given variant.
+fn lower_face_body(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    bound_refs: &[u64],
+    face_geometry: u64,
+    same_sense: bool,
+    variant: fn(FaceData) -> Face,
+) -> Result<(), ConvertError> {
+    let mut bounds = Vec::with_capacity(bound_refs.len());
+    for &r in bound_refs {
+        bounds.push(ctx.resolve_face_bound(entity_id, r, "bounds")?);
+    }
+    let surface = ctx.resolve_surface(entity_id, face_geometry, "face_geometry")?;
+    let id = ctx.topology.faces.push(variant(FaceData {
+        surface,
+        bounds,
+        orientation: bool_to_orientation(same_sense),
+    }));
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
+/// Lower one `ADVANCED_FACE`.
+pub(crate) fn lower_advanced_face(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyAdvancedFace,
+) -> Result<(), ConvertError> {
+    lower_face_body(
+        ctx,
+        entity_id,
+        &early.bounds,
+        early.face_geometry,
+        early.same_sense,
+        Face::AdvancedFace,
+    )
+}
+
+/// Lower one `FACE_SURFACE`.
+pub(crate) fn lower_face_surface(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyFaceSurface,
+) -> Result<(), ConvertError> {
+    lower_face_body(
+        ctx,
+        entity_id,
+        &early.bounds,
+        early.face_geometry,
+        early.same_sense,
+        Face::FaceSurface,
+    )
+}
+
+/// Lower one `MANIFOLD_SOLID_BREP` (outer shell; empty name collapses to
+/// `None` as the legacy read did).
+pub(crate) fn lower_manifold_solid_brep(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyManifoldSolidBrep,
+) -> Result<(), ConvertError> {
+    let outer = ctx.resolve_shell(entity_id, early.outer, "outer")?;
+    let name = if early.name.is_empty() {
+        None
+    } else {
+        Some(early.name.clone())
+    };
+    let id = ctx
+        .topology
+        .solids
+        .push(Solid::ManifoldSolidBrep { outer, name });
+    ctx.id_cache.insert(entity_id, id);
     Ok(())
 }

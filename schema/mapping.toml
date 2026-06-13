@@ -160,6 +160,9 @@ generate = [
     "open_shell",
     "closed_shell",
     "vertex_loop",
+    "advanced_face",
+    "face_surface",
+    "manifold_solid_brep",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

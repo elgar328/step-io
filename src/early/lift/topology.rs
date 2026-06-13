@@ -3,7 +3,8 @@
 //! the handler's emit recursion; `name` is the legacy empty string.
 
 use crate::early::model::{
-    EarlyClosedShell, EarlyFaceBound, EarlyFaceOuterBound, EarlyOpenShell, EarlyVertexLoop,
+    EarlyAdvancedFace, EarlyClosedShell, EarlyFaceBound, EarlyFaceOuterBound, EarlyFaceSurface,
+    EarlyManifoldSolidBrep, EarlyOpenShell, EarlyVertexLoop,
 };
 use crate::ir::topology::Orientation;
 
@@ -52,4 +53,38 @@ pub(crate) fn lift_vertex_loop(loop_vertex: u64) -> EarlyVertexLoop {
         name: String::new(),
         loop_vertex,
     }
+}
+
+/// Lift one `ADVANCED_FACE` (bounds/surface = child output step ids; legacy
+/// emits empty name).
+pub(crate) fn lift_advanced_face(
+    bounds: Vec<u64>,
+    face_geometry: u64,
+    orientation: Orientation,
+) -> EarlyAdvancedFace {
+    EarlyAdvancedFace {
+        name: String::new(),
+        bounds,
+        face_geometry,
+        same_sense: orientation_to_bool(orientation),
+    }
+}
+
+/// Lift one `FACE_SURFACE`.
+pub(crate) fn lift_face_surface(
+    bounds: Vec<u64>,
+    face_geometry: u64,
+    orientation: Orientation,
+) -> EarlyFaceSurface {
+    EarlyFaceSurface {
+        name: String::new(),
+        bounds,
+        face_geometry,
+        same_sense: orientation_to_bool(orientation),
+    }
+}
+
+/// Lift one `MANIFOLD_SOLID_BREP` (name preserved; outer = child shell step id).
+pub(crate) fn lift_manifold_solid_brep(name: String, outer: u64) -> EarlyManifoldSolidBrep {
+    EarlyManifoldSolidBrep { name, outer }
 }

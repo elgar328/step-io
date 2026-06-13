@@ -2381,6 +2381,43 @@ pub(crate) fn bind_vertex_loop(
     })
 }
 
+pub(crate) fn bind_advanced_face(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAdvancedFace, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "ADVANCED_FACE")?;
+    Ok(super::model::EarlyAdvancedFace {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        bounds: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "bounds")?,
+        face_geometry: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "face_geometry")?,
+        same_sense: crate::ir::attr::read_bool(attrs, 3, entity_id, "same_sense")?,
+    })
+}
+
+pub(crate) fn bind_face_surface(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyFaceSurface, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "FACE_SURFACE")?;
+    Ok(super::model::EarlyFaceSurface {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        bounds: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "bounds")?,
+        face_geometry: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "face_geometry")?,
+        same_sense: crate::ir::attr::read_bool(attrs, 3, entity_id, "same_sense")?,
+    })
+}
+
+pub(crate) fn bind_manifold_solid_brep(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyManifoldSolidBrep, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "MANIFOLD_SOLID_BREP")?;
+    Ok(super::model::EarlyManifoldSolidBrep {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        outer: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "outer")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

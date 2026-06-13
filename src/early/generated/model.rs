@@ -3388,6 +3388,76 @@ impl crate::ir::arena::ArenaId for EarlyVertexLoopId {
     }
 }
 
+/// L1 `ADVANCED_FACE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAdvancedFace {
+    pub(crate) name: String,
+    pub(crate) bounds: Vec<u64>,
+    pub(crate) face_geometry: u64,
+    pub(crate) same_sense: bool,
+}
+
+/// Typed `id_cache` key for `ADVANCED_FACE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAdvancedFaceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAdvancedFaceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `FACE_SURFACE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyFaceSurface {
+    pub(crate) name: String,
+    pub(crate) bounds: Vec<u64>,
+    pub(crate) face_geometry: u64,
+    pub(crate) same_sense: bool,
+}
+
+/// Typed `id_cache` key for `FACE_SURFACE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyFaceSurfaceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyFaceSurfaceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `MANIFOLD_SOLID_BREP` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyManifoldSolidBrep {
+    pub(crate) name: String,
+    pub(crate) outer: u64,
+}
+
+/// Typed `id_cache` key for `MANIFOLD_SOLID_BREP` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyManifoldSolidBrepId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyManifoldSolidBrepId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {
