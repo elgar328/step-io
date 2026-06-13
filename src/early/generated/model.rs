@@ -3322,6 +3322,50 @@ impl crate::ir::arena::ArenaId for EarlyFaceOuterBoundId {
     }
 }
 
+/// L1 `OPEN_SHELL` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyOpenShell {
+    pub(crate) name: String,
+    pub(crate) cfs_faces: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `OPEN_SHELL` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyOpenShellId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyOpenShellId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `CLOSED_SHELL` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyClosedShell {
+    pub(crate) name: String,
+    pub(crate) cfs_faces: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `CLOSED_SHELL` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyClosedShellId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyClosedShellId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

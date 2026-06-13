@@ -2,9 +2,9 @@
 //! for the lowering contract. Refs resolve through the shared reader resolvers;
 //! a dangling child surfaces as `MissingReference`.
 
-use crate::early::model::{EarlyFaceBound, EarlyFaceOuterBound};
+use crate::early::model::{EarlyClosedShell, EarlyFaceBound, EarlyFaceOuterBound, EarlyOpenShell};
 use crate::ir::error::ConvertError;
-use crate::ir::topology::{Wire, WireData};
+use crate::ir::topology::{Orientation, Shell, Wire, WireData};
 use crate::reader::{ReaderContext, bool_to_orientation};
 
 /// Shared `FACE_BOUND` / `FACE_OUTER_BOUND` lowering: the `bound` loop is
@@ -59,4 +59,43 @@ pub(crate) fn lower_face_outer_bound(
     early: &EarlyFaceOuterBound,
 ) -> Result<(), ConvertError> {
     lower_face_bound_common(ctx, entity_id, early.bound, early.orientation, true)
+}
+
+/// Shared `OPEN_SHELL` / `CLOSED_SHELL` lowering: resolve the face list
+/// (a dangling face is a `MissingReference`) and push a `Shell`.
+fn lower_shell_body(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    faces_refs: &[u64],
+    is_open: bool,
+) -> Result<(), ConvertError> {
+    let mut faces = Vec::with_capacity(faces_refs.len());
+    for &r in faces_refs {
+        faces.push(ctx.resolve_face(entity_id, r, "cfs_faces")?);
+    }
+    let id = ctx.topology.shells.push(Shell {
+        faces,
+        orientation: Orientation::Forward,
+        is_open,
+    });
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
+/// Lower one `OPEN_SHELL`.
+pub(crate) fn lower_open_shell(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyOpenShell,
+) -> Result<(), ConvertError> {
+    lower_shell_body(ctx, entity_id, &early.cfs_faces, true)
+}
+
+/// Lower one `CLOSED_SHELL`.
+pub(crate) fn lower_closed_shell(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyClosedShell,
+) -> Result<(), ConvertError> {
+    lower_shell_body(ctx, entity_id, &early.cfs_faces, false)
 }

@@ -2348,6 +2348,28 @@ pub(crate) fn bind_face_outer_bound(
     })
 }
 
+pub(crate) fn bind_open_shell(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyOpenShell, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "OPEN_SHELL")?;
+    Ok(super::model::EarlyOpenShell {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        cfs_faces: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "cfs_faces")?,
+    })
+}
+
+pub(crate) fn bind_closed_shell(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyClosedShell, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "CLOSED_SHELL")?;
+    Ok(super::model::EarlyClosedShell {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        cfs_faces: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "cfs_faces")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

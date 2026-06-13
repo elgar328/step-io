@@ -2,7 +2,7 @@
 //! for the lifting contract. Child refs are pre-resolved to output step ids by
 //! the handler's emit recursion; `name` is the legacy empty string.
 
-use crate::early::model::{EarlyFaceBound, EarlyFaceOuterBound};
+use crate::early::model::{EarlyClosedShell, EarlyFaceBound, EarlyFaceOuterBound, EarlyOpenShell};
 use crate::ir::topology::Orientation;
 
 /// `Orientation` → the BOOLEAN the legacy writer emitted (`Forward` = `T`).
@@ -25,5 +25,21 @@ pub(crate) fn lift_face_outer_bound(bound: u64, orientation: Orientation) -> Ear
         name: String::new(),
         bound,
         orientation: orientation_to_bool(orientation),
+    }
+}
+
+/// Lift one `OPEN_SHELL` (faces = child face output step ids).
+pub(crate) fn lift_open_shell(cfs_faces: Vec<u64>) -> EarlyOpenShell {
+    EarlyOpenShell {
+        name: String::new(),
+        cfs_faces,
+    }
+}
+
+/// Lift one `CLOSED_SHELL`.
+pub(crate) fn lift_closed_shell(cfs_faces: Vec<u64>) -> EarlyClosedShell {
+    EarlyClosedShell {
+        name: String::new(),
+        cfs_faces,
     }
 }

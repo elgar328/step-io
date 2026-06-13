@@ -2477,6 +2477,42 @@ pub(crate) fn serialize_face_outer_bound(
     )
 }
 
+pub(crate) fn serialize_open_shell(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyOpenShell,
+) -> u64 {
+    buf.push_simple(
+        "OPEN_SHELL",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.cfs_faces
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_closed_shell(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyClosedShell,
+) -> u64 {
+    buf.push_simple(
+        "CLOSED_SHELL",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.cfs_faces
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {
