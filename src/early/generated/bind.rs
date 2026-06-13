@@ -2289,6 +2289,41 @@ pub(crate) fn bind_toroidal_surface(
     })
 }
 
+pub(crate) fn bind_surface_of_revolution(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlySurfaceOfRevolution, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "SURFACE_OF_REVOLUTION")?;
+    Ok(super::model::EarlySurfaceOfRevolution {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        swept_curve: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "swept_curve")?,
+        axis_position: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "axis_position")?,
+    })
+}
+
+pub(crate) fn bind_surface_of_linear_extrusion(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlySurfaceOfLinearExtrusion, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "SURFACE_OF_LINEAR_EXTRUSION")?;
+    Ok(super::model::EarlySurfaceOfLinearExtrusion {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        swept_curve: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "swept_curve")?,
+        extrusion_axis: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "extrusion_axis")?,
+    })
+}
+
+pub(crate) fn bind_polyline(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPolyline, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "POLYLINE")?;
+    Ok(super::model::EarlyPolyline {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        points: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "points")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

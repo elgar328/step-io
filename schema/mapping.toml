@@ -152,6 +152,9 @@ generate = [
     "cylindrical_surface",
     "spherical_surface",
     "toroidal_surface",
+    "surface_of_revolution",
+    "surface_of_linear_extrusion",
+    "polyline",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

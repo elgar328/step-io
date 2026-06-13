@@ -8,14 +8,15 @@
 use crate::early::model::{
     EarlyAxis1Placement, EarlyAxis2Placement3d, EarlyCartesianPoint, EarlyCircle,
     EarlyConicalSurface, EarlyCylindricalSurface, EarlyDirection, EarlyEllipse, EarlyHyperbola,
-    EarlyLine, EarlyParabola, EarlyPlane, EarlySphericalSurface, EarlyToroidalSurface, EarlyVector,
+    EarlyLine, EarlyParabola, EarlyPlane, EarlyPolyline, EarlySphericalSurface,
+    EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyVector,
     EarlyVertexPoint,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{
     Axis1Placement, Axis2Placement3d, Circle3, ConicalSurface, Curve, CylindricalSurface,
-    Direction3, Ellipse3, Hyperbola, Line3, Parabola, Plane3, Point3, SphericalSurface, Surface,
-    ToroidalSurface, Vertex,
+    Direction3, Ellipse3, Hyperbola, Line3, Parabola, Plane3, Point3, Polyline, SphericalSurface,
+    Surface, SurfaceOfLinearExtrusion, SurfaceOfRevolution, ToroidalSurface, Vertex,
 };
 use crate::reader::ReaderContext;
 
@@ -348,6 +349,71 @@ pub(crate) fn lower_toroidal_surface(
         major_radius: early.major_radius,
         minor_radius: early.minor_radius,
     }));
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
+/// Lower one `SURFACE_OF_REVOLUTION` (swept curve + axis1 placement).
+pub(crate) fn lower_surface_of_revolution(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlySurfaceOfRevolution,
+) -> Result<(), ConvertError> {
+    let swept_curve = ctx.resolve_curve(entity_id, early.swept_curve, "swept_curve")?;
+    let axis_placement = ctx.resolve_axis1(entity_id, early.axis_position, "axis_position")?;
+    let id = ctx
+        .geometry
+        .surfaces
+        .push(Surface::Revolution(SurfaceOfRevolution {
+            swept_curve,
+            axis_placement,
+        }));
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
+/// Lower one `SURFACE_OF_LINEAR_EXTRUSION` (swept curve + extrusion VECTOR
+/// resolved to direction + depth).
+pub(crate) fn lower_surface_of_linear_extrusion(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlySurfaceOfLinearExtrusion,
+) -> Result<(), ConvertError> {
+    let swept_curve = ctx.resolve_curve(entity_id, early.swept_curve, "swept_curve")?;
+    let (extrusion_direction, depth) =
+        ctx.resolve_vector(entity_id, early.extrusion_axis, "extrusion_axis")?;
+    let id = ctx
+        .geometry
+        .surfaces
+        .push(Surface::Extrusion(SurfaceOfLinearExtrusion {
+            swept_curve,
+            extrusion_direction,
+            depth,
+        }));
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
+/// Lower one `POLYLINE` (point list; 2D sister claims when the first point is
+/// 2D). Each point resolves through the shared point resolver.
+pub(crate) fn lower_polyline(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyPolyline,
+) -> Result<(), ConvertError> {
+    if let Some(first) = early.points.first()
+        && ctx.id_cache.contains::<crate::ir::id::Point2dId>(*first)
+    {
+        return Ok(());
+    }
+    let mut points = Vec::with_capacity(early.points.len());
+    for r in &early.points {
+        points.push(ctx.resolve_point(entity_id, *r, "points")?);
+    }
+    let id = ctx
+        .geometry
+        .curves
+        .push(Curve::Polyline(Polyline { points }));
     ctx.id_cache.insert(entity_id, id);
     Ok(())
 }

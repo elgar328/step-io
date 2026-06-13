@@ -2403,6 +2403,52 @@ pub(crate) fn serialize_toroidal_surface(
     )
 }
 
+pub(crate) fn serialize_surface_of_revolution(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlySurfaceOfRevolution,
+) -> u64 {
+    buf.push_simple(
+        "SURFACE_OF_REVOLUTION",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.swept_curve),
+            crate::parser::entity::Attribute::EntityRef(l1.axis_position),
+        ],
+    )
+}
+
+pub(crate) fn serialize_surface_of_linear_extrusion(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlySurfaceOfLinearExtrusion,
+) -> u64 {
+    buf.push_simple(
+        "SURFACE_OF_LINEAR_EXTRUSION",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.swept_curve),
+            crate::parser::entity::Attribute::EntityRef(l1.extrusion_axis),
+        ],
+    )
+}
+
+pub(crate) fn serialize_polyline(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPolyline,
+) -> u64 {
+    buf.push_simple(
+        "POLYLINE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.points
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

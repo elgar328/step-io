@@ -5,7 +5,8 @@
 use crate::early::model::{
     EarlyAxis1Placement, EarlyAxis2Placement3d, EarlyCartesianPoint, EarlyCircle,
     EarlyConicalSurface, EarlyCylindricalSurface, EarlyDirection, EarlyEllipse, EarlyHyperbola,
-    EarlyLine, EarlyParabola, EarlyPlane, EarlySphericalSurface, EarlyToroidalSurface, EarlyVector,
+    EarlyLine, EarlyParabola, EarlyPlane, EarlyPolyline, EarlySphericalSurface,
+    EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyVector,
     EarlyVertexPoint,
 };
 use crate::ir::geometry::{Direction3, Point3};
@@ -167,5 +168,38 @@ pub(crate) fn lift_toroidal_surface(
         position,
         major_radius,
         minor_radius,
+    }
+}
+
+/// Lift one `SURFACE_OF_REVOLUTION` (swept/axis = child output step ids).
+pub(crate) fn lift_surface_of_revolution(
+    swept_curve: u64,
+    axis_position: u64,
+) -> EarlySurfaceOfRevolution {
+    EarlySurfaceOfRevolution {
+        name: String::new(),
+        swept_curve,
+        axis_position,
+    }
+}
+
+/// Lift one `SURFACE_OF_LINEAR_EXTRUSION` (swept curve + extrusion VECTOR
+/// step ids).
+pub(crate) fn lift_surface_of_linear_extrusion(
+    swept_curve: u64,
+    extrusion_axis: u64,
+) -> EarlySurfaceOfLinearExtrusion {
+    EarlySurfaceOfLinearExtrusion {
+        name: String::new(),
+        swept_curve,
+        extrusion_axis,
+    }
+}
+
+/// Lift one `POLYLINE` (points = child point output step ids).
+pub(crate) fn lift_polyline(points: Vec<u64>) -> EarlyPolyline {
+    EarlyPolyline {
+        name: String::new(),
+        points,
     }
 }
