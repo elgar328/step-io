@@ -2675,6 +2675,102 @@ impl crate::ir::arena::ArenaId for EarlyMeasureQualificationId {
     }
 }
 
+/// L1 `DIMENSIONAL_LOCATION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDimensionalLocation {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) relating_shape_aspect: u64,
+    pub(crate) related_shape_aspect: u64,
+}
+
+/// Typed `id_cache` key for `DIMENSIONAL_LOCATION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDimensionalLocationId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDimensionalLocationId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DIRECTED_DIMENSIONAL_LOCATION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDirectedDimensionalLocation {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) relating_shape_aspect: u64,
+    pub(crate) related_shape_aspect: u64,
+}
+
+/// Typed `id_cache` key for `DIRECTED_DIMENSIONAL_LOCATION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDirectedDimensionalLocationId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDirectedDimensionalLocationId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `ANGULAR_LOCATION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAngularLocation {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) relating_shape_aspect: u64,
+    pub(crate) related_shape_aspect: u64,
+    pub(crate) angle_selection: crate::ir::pmi::AngleSelection,
+}
+
+/// Typed `id_cache` key for `ANGULAR_LOCATION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAngularLocationId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAngularLocationId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `ANGULAR_SIZE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAngularSize {
+    pub(crate) applies_to: u64,
+    pub(crate) name: String,
+    pub(crate) angle_selection: crate::ir::pmi::AngleSelection,
+}
+
+/// Typed `id_cache` key for `ANGULAR_SIZE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAngularSizeId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAngularSizeId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

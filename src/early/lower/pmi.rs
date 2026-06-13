@@ -2,15 +2,16 @@
 //! See the [module docs](super) for the lowering contract.
 
 use crate::early::model::{
-    EarlyCylindricityTolerance, EarlyDatum, EarlyDimensionalSize, EarlyFlatnessTolerance,
-    EarlyGeometricToleranceRelationship, EarlyMeasureQualification, EarlyRoundnessTolerance,
-    EarlyStraightnessTolerance, EarlySurfaceProfileTolerance, EarlyToleranceZoneForm,
-    EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
+    EarlyAngularLocation, EarlyAngularSize, EarlyCylindricityTolerance, EarlyDatum,
+    EarlyDimensionalLocation, EarlyDimensionalSize, EarlyDirectedDimensionalLocation,
+    EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship, EarlyMeasureQualification,
+    EarlyRoundnessTolerance, EarlyStraightnessTolerance, EarlySurfaceProfileTolerance,
+    EarlyToleranceZoneForm, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
 };
 use crate::ir::pmi::{
-    Datum, DimensionalSize, DimensionalSizeKind, GeometricTolerance,
-    GeometricToleranceRelationship, MeasureQualification, PmiPool, ToleranceZoneForm,
-    TypeQualifier, ValueFormatTypeQualifier, ValueQualifier,
+    AngularLocationData, Datum, DimensionalLocation, DimensionalLocationData, DimensionalSize,
+    DimensionalSizeKind, GeometricTolerance, GeometricToleranceRelationship, MeasureQualification,
+    PmiPool, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier, ValueQualifier,
 };
 use crate::reader::ReaderContext;
 
@@ -310,4 +311,128 @@ pub(crate) fn lower_measure_qualification(
             qualified_measure,
             qualifiers,
         });
+}
+
+/// Shared `DIMENSIONAL_LOCATION` endpoint resolve (either unresolved =
+/// silent drop) + the `$`→"" description collapse.
+fn lower_dl_common(
+    ctx: &ReaderContext,
+    name: String,
+    description: Option<String>,
+    relating: u64,
+    related: u64,
+) -> Option<DimensionalLocationData> {
+    let relating_shape_aspect =
+        crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_ref(
+            ctx, relating,
+        )?;
+    let related_shape_aspect =
+        crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_ref(
+            ctx, related,
+        )?;
+    Some(DimensionalLocationData {
+        name,
+        description: description.unwrap_or_default(),
+        relating_shape_aspect,
+        related_shape_aspect,
+    })
+}
+
+/// Lower one plain `DIMENSIONAL_LOCATION`.
+pub(crate) fn lower_dimensional_location(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyDimensionalLocation,
+) {
+    let Some(data) = lower_dl_common(
+        ctx,
+        early.name,
+        early.description,
+        early.relating_shape_aspect,
+        early.related_shape_aspect,
+    ) else {
+        return;
+    };
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .dimensional_locations
+        .push(DimensionalLocation::Plain(data));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `DIRECTED_DIMENSIONAL_LOCATION` (same 4-attr body).
+pub(crate) fn lower_directed_dimensional_location(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyDirectedDimensionalLocation,
+) {
+    let Some(data) = lower_dl_common(
+        ctx,
+        early.name,
+        early.description,
+        early.relating_shape_aspect,
+        early.related_shape_aspect,
+    ) else {
+        return;
+    };
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .dimensional_locations
+        .push(DimensionalLocation::Directed(data));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `ANGULAR_LOCATION` (adds the `angle_relator` enum, converted
+/// by the bind's enum hint — unknown tokens error there, like the legacy
+/// read).
+pub(crate) fn lower_angular_location(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyAngularLocation,
+) {
+    let Some(data) = lower_dl_common(
+        ctx,
+        early.name,
+        early.description,
+        early.relating_shape_aspect,
+        early.related_shape_aspect,
+    ) else {
+        return;
+    };
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .dimensional_locations
+        .push(DimensionalLocation::Angular(AngularLocationData {
+            name: data.name,
+            description: data.description,
+            relating_shape_aspect: data.relating_shape_aspect,
+            related_shape_aspect: data.related_shape_aspect,
+            angle_selection: early.angle_selection,
+        }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `ANGULAR_SIZE` (`DIMENSIONAL_SIZE` plus `angle_relator`).
+pub(crate) fn lower_angular_size(ctx: &mut ReaderContext, entity_id: u64, early: EarlyAngularSize) {
+    let Some(applies_to) =
+        crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_ref(
+            ctx,
+            early.applies_to,
+        )
+    else {
+        return;
+    };
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .dimensional_sizes
+        .push(DimensionalSize {
+            applies_to,
+            name: early.name,
+            kind: DimensionalSizeKind::Angular(early.angle_selection),
+        });
+    ctx.id_cache.insert(entity_id, id);
 }

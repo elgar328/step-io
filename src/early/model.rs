@@ -14,8 +14,8 @@ use crate::ir::arena::ArenaId;
 // unlike `define_id!`): migrated producers register `file id → typed L1 id`,
 // and the `index()` addresses [`EarlyModel`]'s L1→L2 correspondence bucket.
 pub(crate) use super::generated::model::{
-    EarlyAddress, EarlyAllAroundShapeAspect, EarlyApplicationContext,
-    EarlyApplicationProtocolDefinition, EarlyAppliedApprovalAssignment,
+    EarlyAddress, EarlyAllAroundShapeAspect, EarlyAngularLocation, EarlyAngularSize,
+    EarlyApplicationContext, EarlyApplicationProtocolDefinition, EarlyAppliedApprovalAssignment,
     EarlyAppliedDateAndTimeAssignment, EarlyAppliedDocumentReference,
     EarlyAppliedExternalIdentificationAssignment, EarlyAppliedGroupAssignment,
     EarlyAppliedPersonAndOrganizationAssignment, EarlyAppliedPresentedItem,
@@ -29,7 +29,8 @@ pub(crate) use super::generated::model::{
     EarlyCoordinatedUniversalTimeOffset, EarlyCylindricityTolerance, EarlyDateAndTime,
     EarlyDateTimeRole, EarlyDatum, EarlyDatumSystem, EarlyDatumTarget, EarlyDerivedUnit,
     EarlyDerivedUnitElement, EarlyDescriptionAttribute, EarlyDescriptiveRepresentationItem,
-    EarlyDimensionalCharacteristicRepresentation, EarlyDimensionalExponents, EarlyDimensionalSize,
+    EarlyDimensionalCharacteristicRepresentation, EarlyDimensionalExponents,
+    EarlyDimensionalLocation, EarlyDimensionalSize, EarlyDirectedDimensionalLocation,
     EarlyDocument, EarlyDocumentFile, EarlyDocumentProductEquivalence,
     EarlyDocumentRepresentationType, EarlyDocumentType, EarlyDraughtingPreDefinedColour,
     EarlyDraughtingPreDefinedCurveFont, EarlyFillAreaStyle, EarlyFillAreaStyleColour,

@@ -1969,6 +1969,88 @@ pub(crate) fn bind_measure_qualification(
     })
 }
 
+pub(crate) fn bind_dimensional_location(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDimensionalLocation, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "DIMENSIONAL_LOCATION")?;
+    Ok(super::model::EarlyDimensionalLocation {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        relating_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "relating_shape_aspect",
+        )?,
+        related_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "related_shape_aspect",
+        )?,
+    })
+}
+
+pub(crate) fn bind_directed_dimensional_location(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDirectedDimensionalLocation, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "DIRECTED_DIMENSIONAL_LOCATION")?;
+    Ok(super::model::EarlyDirectedDimensionalLocation {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        relating_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "relating_shape_aspect",
+        )?,
+        related_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "related_shape_aspect",
+        )?,
+    })
+}
+
+pub(crate) fn bind_angular_location(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAngularLocation, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 5, entity_id, "ANGULAR_LOCATION")?;
+    Ok(super::model::EarlyAngularLocation {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        relating_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "relating_shape_aspect",
+        )?,
+        related_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "related_shape_aspect",
+        )?,
+        angle_selection: bind_angle_relator(attrs, 4, entity_id, "angle_selection")?,
+    })
+}
+
+pub(crate) fn bind_angular_size(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAngularSize, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "ANGULAR_SIZE")?;
+    Ok(super::model::EarlyAngularSize {
+        applies_to: crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "applies_to")?,
+        name: crate::ir::attr::read_string_or_unset(attrs, 1, entity_id, "name")?.to_owned(),
+        angle_selection: bind_angle_relator(attrs, 2, entity_id, "angle_selection")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {
@@ -2043,6 +2125,23 @@ fn bind_ahead_or_behind(
         other => Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
             entity_id,
             detail: format!("{field}: unknown ahead_or_behind '.{other}.'"),
+        }),
+    }
+}
+
+fn bind_angle_relator(
+    attrs: &[crate::parser::entity::Attribute],
+    index: usize,
+    entity_id: u64,
+    field: &'static str,
+) -> Result<crate::ir::pmi::AngleSelection, crate::ir::error::ConvertError> {
+    match crate::ir::attr::read_enum(attrs, index, entity_id, field)? {
+        "EQUAL" => Ok(crate::ir::pmi::AngleSelection::Equal),
+        "LARGE" => Ok(crate::ir::pmi::AngleSelection::Large),
+        "SMALL" => Ok(crate::ir::pmi::AngleSelection::Small),
+        other => Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: format!("{field}: unknown angle_relator '.{other}.'"),
         }),
     }
 }

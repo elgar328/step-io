@@ -2034,6 +2034,75 @@ pub(crate) fn serialize_measure_qualification(
     )
 }
 
+pub(crate) fn serialize_dimensional_location(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDimensionalLocation,
+) -> u64 {
+    buf.push_simple(
+        "DIMENSIONAL_LOCATION",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.relating_shape_aspect),
+            crate::parser::entity::Attribute::EntityRef(l1.related_shape_aspect),
+        ],
+    )
+}
+
+pub(crate) fn serialize_directed_dimensional_location(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDirectedDimensionalLocation,
+) -> u64 {
+    buf.push_simple(
+        "DIRECTED_DIMENSIONAL_LOCATION",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.relating_shape_aspect),
+            crate::parser::entity::Attribute::EntityRef(l1.related_shape_aspect),
+        ],
+    )
+}
+
+pub(crate) fn serialize_angular_location(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAngularLocation,
+) -> u64 {
+    buf.push_simple(
+        "ANGULAR_LOCATION",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.relating_shape_aspect),
+            crate::parser::entity::Attribute::EntityRef(l1.related_shape_aspect),
+            angle_relator_attr(l1.angle_selection),
+        ],
+    )
+}
+
+pub(crate) fn serialize_angular_size(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAngularSize,
+) -> u64 {
+    buf.push_simple(
+        "ANGULAR_SIZE",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.applies_to),
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            angle_relator_attr(l1.angle_selection),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {
@@ -2085,6 +2154,17 @@ fn ahead_or_behind_attr(v: crate::ir::plm::AheadOrBehind) -> crate::parser::enti
             crate::ir::plm::AheadOrBehind::Ahead => "AHEAD",
             crate::ir::plm::AheadOrBehind::Behind => "BEHIND",
             crate::ir::plm::AheadOrBehind::Exact => "EXACT",
+        }
+        .into(),
+    )
+}
+
+fn angle_relator_attr(v: crate::ir::pmi::AngleSelection) -> crate::parser::entity::Attribute {
+    crate::parser::entity::Attribute::Enum(
+        match v {
+            crate::ir::pmi::AngleSelection::Equal => "EQUAL",
+            crate::ir::pmi::AngleSelection::Large => "LARGE",
+            crate::ir::pmi::AngleSelection::Small => "SMALL",
         }
         .into(),
     )

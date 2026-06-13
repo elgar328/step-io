@@ -129,6 +129,10 @@ generate = [
     "dimensional_size",
     "geometric_tolerance_relationship",
     "measure_qualification",
+    "dimensional_location",
+    "directed_dimensional_location",
+    "angular_location",
+    "angular_size",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
@@ -182,3 +186,7 @@ variants = { descriptive_measure = "Descriptive", measure_with_unit = "MeasureWi
 [enum.ahead_or_behind]
 rust_type = "crate::ir::plm::AheadOrBehind"
 variants = { ahead = "Ahead", behind = "Behind", exact = "Exact" }
+
+[enum.angle_relator]
+rust_type = "crate::ir::pmi::AngleSelection"
+variants = { equal = "Equal", large = "Large", small = "Small" }

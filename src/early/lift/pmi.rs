@@ -2,10 +2,11 @@
 //! See the [module docs](super) for the lifting contract.
 
 use crate::early::model::{
-    EarlyCylindricityTolerance, EarlyDatum, EarlyDimensionalSize, EarlyFlatnessTolerance,
-    EarlyGeometricToleranceRelationship, EarlyMeasureQualification, EarlyRoundnessTolerance,
-    EarlyStraightnessTolerance, EarlySurfaceProfileTolerance, EarlyToleranceZoneForm,
-    EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
+    EarlyAngularLocation, EarlyAngularSize, EarlyCylindricityTolerance, EarlyDatum,
+    EarlyDimensionalLocation, EarlyDimensionalSize, EarlyDirectedDimensionalLocation,
+    EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship, EarlyMeasureQualification,
+    EarlyRoundnessTolerance, EarlyStraightnessTolerance, EarlySurfaceProfileTolerance,
+    EarlyToleranceZoneForm, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
 };
 
 /// Lift one `TOLERANCE_ZONE_FORM`.
@@ -164,5 +165,61 @@ pub(crate) fn lift_measure_qualification(
         description,
         qualified_measure,
         qualifiers,
+    }
+}
+
+/// Lift one plain `DIMENSIONAL_LOCATION` (endpoints pre-resolved).
+pub(crate) fn lift_dimensional_location(
+    d: crate::ir::pmi::DimensionalLocationData,
+    relating_shape_aspect: u64,
+    related_shape_aspect: u64,
+) -> EarlyDimensionalLocation {
+    EarlyDimensionalLocation {
+        name: d.name,
+        description: Some(d.description),
+        relating_shape_aspect,
+        related_shape_aspect,
+    }
+}
+
+/// Lift one `DIRECTED_DIMENSIONAL_LOCATION`.
+pub(crate) fn lift_directed_dimensional_location(
+    d: crate::ir::pmi::DimensionalLocationData,
+    relating_shape_aspect: u64,
+    related_shape_aspect: u64,
+) -> EarlyDirectedDimensionalLocation {
+    EarlyDirectedDimensionalLocation {
+        name: d.name,
+        description: Some(d.description),
+        relating_shape_aspect,
+        related_shape_aspect,
+    }
+}
+
+/// Lift one `ANGULAR_LOCATION`.
+pub(crate) fn lift_angular_location(
+    d: crate::ir::pmi::AngularLocationData,
+    relating_shape_aspect: u64,
+    related_shape_aspect: u64,
+) -> EarlyAngularLocation {
+    EarlyAngularLocation {
+        name: d.name,
+        description: Some(d.description),
+        relating_shape_aspect,
+        related_shape_aspect,
+        angle_selection: d.angle_selection,
+    }
+}
+
+/// Lift one `ANGULAR_SIZE` (`applies_to` pre-resolved).
+pub(crate) fn lift_angular_size(
+    applies_to: u64,
+    name: String,
+    angle_selection: crate::ir::pmi::AngleSelection,
+) -> EarlyAngularSize {
+    EarlyAngularSize {
+        applies_to,
+        name,
+        angle_selection,
     }
 }
