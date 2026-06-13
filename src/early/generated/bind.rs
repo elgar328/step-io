@@ -2051,6 +2051,46 @@ pub(crate) fn bind_angular_size(
     })
 }
 
+pub(crate) fn bind_datum_feature(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDatumFeature, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "DATUM_FEATURE")?;
+    Ok(super::model::EarlyDatumFeature {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        of_shape: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "of_shape")?,
+        product_definitional: crate::ir::attr::read_logical(
+            attrs,
+            3,
+            entity_id,
+            "product_definitional",
+        )?,
+    })
+}
+
+pub(crate) fn bind_draughting_callout(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDraughtingCallout, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "DRAUGHTING_CALLOUT")?;
+    Ok(super::model::EarlyDraughtingCallout {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        contents: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "contents")?,
+    })
+}
+
+pub(crate) fn bind_leader_directed_callout(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyLeaderDirectedCallout, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "LEADER_DIRECTED_CALLOUT")?;
+    Ok(super::model::EarlyLeaderDirectedCallout {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        contents: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "contents")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

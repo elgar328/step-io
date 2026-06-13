@@ -2103,6 +2103,62 @@ pub(crate) fn serialize_angular_size(
     )
 }
 
+pub(crate) fn serialize_datum_feature(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDatumFeature,
+) -> u64 {
+    buf.push_simple(
+        "DATUM_FEATURE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.of_shape),
+            crate::parser::entity::Attribute::Enum(
+                crate::ir::attr::logical_to_step(l1.product_definitional).into(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_draughting_callout(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDraughtingCallout,
+) -> u64 {
+    buf.push_simple(
+        "DRAUGHTING_CALLOUT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.contents
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_leader_directed_callout(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyLeaderDirectedCallout,
+) -> u64 {
+    buf.push_simple(
+        "LEADER_DIRECTED_CALLOUT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.contents
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

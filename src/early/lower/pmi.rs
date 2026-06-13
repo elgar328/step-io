@@ -3,15 +3,17 @@
 
 use crate::early::model::{
     EarlyAngularLocation, EarlyAngularSize, EarlyCylindricityTolerance, EarlyDatum,
-    EarlyDimensionalLocation, EarlyDimensionalSize, EarlyDirectedDimensionalLocation,
-    EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship, EarlyMeasureQualification,
+    EarlyDatumFeature, EarlyDimensionalLocation, EarlyDimensionalSize,
+    EarlyDirectedDimensionalLocation, EarlyDraughtingCallout, EarlyFlatnessTolerance,
+    EarlyGeometricToleranceRelationship, EarlyLeaderDirectedCallout, EarlyMeasureQualification,
     EarlyRoundnessTolerance, EarlyStraightnessTolerance, EarlySurfaceProfileTolerance,
     EarlyToleranceZoneForm, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
 };
 use crate::ir::pmi::{
-    AngularLocationData, Datum, DimensionalLocation, DimensionalLocationData, DimensionalSize,
-    DimensionalSizeKind, GeometricTolerance, GeometricToleranceRelationship, MeasureQualification,
-    PmiPool, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier, ValueQualifier,
+    AngularLocationData, Datum, DatumFeature, DimensionalLocation, DimensionalLocationData,
+    DimensionalSize, DimensionalSizeKind, DraughtingCallout, DraughtingCalloutData,
+    GeometricTolerance, GeometricToleranceRelationship, MeasureQualification, PmiPool,
+    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier, ValueQualifier,
 };
 use crate::reader::ReaderContext;
 
@@ -434,5 +436,69 @@ pub(crate) fn lower_angular_size(ctx: &mut ReaderContext, entity_id: u64, early:
             name: early.name,
             kind: DimensionalSizeKind::Angular(early.angle_selection),
         });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one plain `DATUM_FEATURE` (`Itself` variant of the family; the
+/// complex DSWDF keeps its own handler).
+pub(crate) fn lower_datum_feature(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyDatumFeature,
+) {
+    let Some(product_definitional) = logical_to_bool(early.product_definitional) else {
+        return;
+    };
+    let Some(target) = ctx.product_of_pds(early.of_shape) else {
+        return;
+    };
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .datum_features
+        .push(DatumFeature::Itself(crate::ir::DatumFeatureData {
+            name: early.name,
+            // Legacy read_string_or_unset collapsed `$` to "" (L2 String).
+            description: early.description.unwrap_or_default(),
+            target,
+            product_definitional,
+        }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one plain `DRAUGHTING_CALLOUT` (unresolved content members skip
+/// individually via the shared contents resolver).
+pub(crate) fn lower_draughting_callout(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyDraughtingCallout,
+) {
+    let contents = crate::entities::pmi::read_draughting_callout_contents(ctx, &early.contents);
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .draughting_callouts
+        .push(DraughtingCallout::Plain(DraughtingCalloutData {
+            name: early.name,
+            contents,
+        }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `LEADER_DIRECTED_CALLOUT` (same body, `LeaderDirected` variant).
+pub(crate) fn lower_leader_directed_callout(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyLeaderDirectedCallout,
+) {
+    let contents = crate::entities::pmi::read_draughting_callout_contents(ctx, &early.contents);
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .draughting_callouts
+        .push(DraughtingCallout::LeaderDirected(DraughtingCalloutData {
+            name: early.name,
+            contents,
+        }));
     ctx.id_cache.insert(entity_id, id);
 }

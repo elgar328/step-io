@@ -24,16 +24,16 @@ use crate::ir::pmi::{
     AnnotationTextOccurrence, AnnotationToModelLeaderLine, ApllPointData, ApllPointElement,
     ApllPointWithSurfaceData, AuxiliaryLeaderLineData, DatumFeature, DimensionalCharacteristic,
     DimensionalLocation, DimensionalSize, DimensionalSizeKind, DimensionalSizeWithDatumFeatureData,
-    DraughtingAnnotationOccurrence, DraughtingCallout, DraughtingCalloutData,
-    DraughtingCalloutElement, DraughtingCalloutRelationship, DraughtingModelIdentifiedItem,
-    DraughtingModelItemAssociation, DraughtingModelItemDefinition, DraughtingPreDefinedTextFont,
-    GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance,
-    GeometricToleranceData, GeometricToleranceRef, GeometricToleranceRelationship,
-    GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData, LeaderCurve,
-    LeaderTerminator, LimitsAndFits, MeasureQualification, PlainAnnotationCurveOccurrence,
-    PlainAnnotationOccurrence, PlusMinusTolerance, ProjectedZoneDefinition, TerminatorSymbol,
-    TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue,
-    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
+    DraughtingAnnotationOccurrence, DraughtingCalloutData, DraughtingCalloutElement,
+    DraughtingCalloutRelationship, DraughtingModelIdentifiedItem, DraughtingModelItemAssociation,
+    DraughtingModelItemDefinition, DraughtingPreDefinedTextFont, GeneralDatumBase,
+    GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
+    GeometricToleranceRef, GeometricToleranceRelationship, GeometricToleranceWithDatumReference,
+    GeometricToleranceWithDatumReferenceData, LeaderCurve, LeaderTerminator, LimitsAndFits,
+    MeasureQualification, PlainAnnotationCurveOccurrence, PlainAnnotationOccurrence,
+    PlusMinusTolerance, ProjectedZoneDefinition, TerminatorSymbol, TessellatedAnnotationOccurrence,
+    ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue, ToleranceZoneForm,
+    TypeQualifier, ValueFormatTypeQualifier,
 };
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
 use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
@@ -1399,7 +1399,7 @@ impl ComplexEntityHandler for LeaderTerminatorHandler {
 /// `annotation_curve_occurrence` (`acoc_id_map`) or to an
 /// `annotation_occurrence` enum entry (`ao_id_map`). Unresolved refs are
 /// silently dropped (per-element drop, the occurrence itself is kept).
-fn read_draughting_callout_contents(
+pub(crate) fn read_draughting_callout_contents(
     ctx: &ReaderContext,
     content_refs: &[u64],
 ) -> Vec<DraughtingCalloutElement> {
@@ -1413,19 +1413,6 @@ fn read_draughting_callout_contents(
         }
     }
     contents
-}
-
-/// Emit `contents` SET attribute — each `DraughtingCalloutElement`
-/// becomes an `EntityRef` into the matching step-id cache.
-fn emit_draughting_callout_contents(
-    buf: &WriteBuffer,
-    contents: &[DraughtingCalloutElement],
-) -> Vec<Attribute> {
-    let mut refs = Vec::with_capacity(contents.len());
-    for elem in contents {
-        refs.push(Attribute::EntityRef(elem.emit_select(buf)));
-    }
-    refs
 }
 
 pub(crate) struct DraughtingCalloutHandler;
@@ -1443,27 +1430,20 @@ impl SimpleEntityHandler for DraughtingCalloutHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "DRAUGHTING_CALLOUT")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let content_refs = read_entity_ref_list(attrs, 1, entity_id, "contents")?;
-        let contents = read_draughting_callout_contents(ctx, &content_refs);
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .draughting_callouts
-            .push(DraughtingCallout::Plain(DraughtingCalloutData {
-                name,
-                contents,
-            }));
-        ctx.id_cache.insert(entity_id, id);
+        let early = crate::early::bind::bind_draughting_callout(entity_id, attrs)?;
+        crate::early::lower::lower_draughting_callout(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, data: DraughtingCalloutData) -> Result<u64, WriteError> {
-        let contents = emit_draughting_callout_contents(buf, &data.contents);
-        Ok(buf.push_simple(
-            "DRAUGHTING_CALLOUT",
-            vec![Attribute::String(data.name), Attribute::List(contents)],
+        let contents: Vec<u64> = data
+            .contents
+            .iter()
+            .map(|elem| elem.emit_select(buf))
+            .collect();
+        let early = crate::early::lift::lift_draughting_callout(data.name, contents);
+        Ok(crate::early::serialize::serialize_draughting_callout(
+            buf, &early,
         ))
     }
 }
@@ -1483,27 +1463,20 @@ impl SimpleEntityHandler for LeaderDirectedCalloutHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "LEADER_DIRECTED_CALLOUT")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let content_refs = read_entity_ref_list(attrs, 1, entity_id, "contents")?;
-        let contents = read_draughting_callout_contents(ctx, &content_refs);
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .draughting_callouts
-            .push(DraughtingCallout::LeaderDirected(DraughtingCalloutData {
-                name,
-                contents,
-            }));
-        ctx.id_cache.insert(entity_id, id);
+        let early = crate::early::bind::bind_leader_directed_callout(entity_id, attrs)?;
+        crate::early::lower::lower_leader_directed_callout(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, data: DraughtingCalloutData) -> Result<u64, WriteError> {
-        let contents = emit_draughting_callout_contents(buf, &data.contents);
-        Ok(buf.push_simple(
-            "LEADER_DIRECTED_CALLOUT",
-            vec![Attribute::String(data.name), Attribute::List(contents)],
+        let contents: Vec<u64> = data
+            .contents
+            .iter()
+            .map(|elem| elem.emit_select(buf))
+            .collect();
+        let early = crate::early::lift::lift_leader_directed_callout(data.name, contents);
+        Ok(crate::early::serialize::serialize_leader_directed_callout(
+            buf, &early,
         ))
     }
 }
@@ -1892,13 +1865,9 @@ impl SimpleEntityHandler for DatumFeatureHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        read_datum_feature_variant(
-            ctx,
-            entity_id,
-            attrs,
-            "DATUM_FEATURE",
-            crate::ir::DatumFeature::Itself,
-        )
+        let early = crate::early::bind::bind_datum_feature(entity_id, attrs)?;
+        crate::early::lower::lower_datum_feature(ctx, entity_id, early);
+        Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, input: DatumFeatureWriteInput) -> Result<u64, WriteError> {
@@ -1977,44 +1946,18 @@ impl SimpleEntityHandler for DimensionalSizeWithDatumFeatureHandler {
     }
 }
 
-/// Shared 4-attr `shape_aspect` body read + arena push for the
-/// `datum_feature` family. Drops the entry when the `of_shape` chain
-/// fails to resolve (kernel-built IR / malformed sources).
-fn read_datum_feature_variant(
-    ctx: &mut ReaderContext,
-    entity_id: u64,
-    attrs: &[Attribute],
-    entity_name: &'static str,
-    variant: fn(crate::ir::DatumFeatureData) -> DatumFeature,
-) -> Result<(), ConvertError> {
-    check_count(attrs, 4, entity_id, entity_name)?;
-    let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-    let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-    let of_shape_ref = read_entity_ref(attrs, 2, entity_id, "of_shape")?;
-    let product_definitional = read_bool(attrs, 3, entity_id, "product_definitional")?;
-
-    // of_shape → PRODUCT_DEFINITION_SHAPE → ProductId (typed one-probe).
-    let Some(target) = ctx.product_of_pds(of_shape_ref) else {
-        return Ok(());
-    };
-
-    let id = ctx
-        .pmi
-        .get_or_insert_with(PmiPool::default)
-        .datum_features
-        .push(variant(crate::ir::DatumFeatureData {
-            name,
-            description,
-            target,
-            product_definitional,
-        }));
-    ctx.id_cache.insert(entity_id, id);
-    Ok(())
-}
-
 /// Shared writer for the `datum_feature` family. The STEP entity name is
 /// resolved from the IR variant at the emit site and carried on `input`.
 fn write_datum_feature(buf: &mut WriteBuffer, input: DatumFeatureWriteInput) -> u64 {
+    if input.entity_name == "DATUM_FEATURE" {
+        let early = crate::early::lift::lift_datum_feature(
+            input.name,
+            input.description,
+            input.pds_step_id,
+            input.product_definitional,
+        );
+        return crate::early::serialize::serialize_datum_feature(buf, &early);
+    }
     let bool_attr = if input.product_definitional { "T" } else { "F" };
     buf.push_simple(
         input.entity_name,

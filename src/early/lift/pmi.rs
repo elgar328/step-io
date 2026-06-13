@@ -3,8 +3,9 @@
 
 use crate::early::model::{
     EarlyAngularLocation, EarlyAngularSize, EarlyCylindricityTolerance, EarlyDatum,
-    EarlyDimensionalLocation, EarlyDimensionalSize, EarlyDirectedDimensionalLocation,
-    EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship, EarlyMeasureQualification,
+    EarlyDatumFeature, EarlyDimensionalLocation, EarlyDimensionalSize,
+    EarlyDirectedDimensionalLocation, EarlyDraughtingCallout, EarlyFlatnessTolerance,
+    EarlyGeometricToleranceRelationship, EarlyLeaderDirectedCallout, EarlyMeasureQualification,
     EarlyRoundnessTolerance, EarlyStraightnessTolerance, EarlySurfaceProfileTolerance,
     EarlyToleranceZoneForm, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
 };
@@ -222,4 +223,32 @@ pub(crate) fn lift_angular_size(
         name,
         angle_selection,
     }
+}
+
+/// Lift one plain `DATUM_FEATURE` (`of_shape` pre-resolved).
+pub(crate) fn lift_datum_feature(
+    name: String,
+    description: String,
+    of_shape: u64,
+    product_definitional: bool,
+) -> EarlyDatumFeature {
+    EarlyDatumFeature {
+        name,
+        description: Some(description),
+        of_shape,
+        product_definitional: bool_to_logical(product_definitional),
+    }
+}
+
+/// Lift one plain `DRAUGHTING_CALLOUT` (contents pre-resolved).
+pub(crate) fn lift_draughting_callout(name: String, contents: Vec<u64>) -> EarlyDraughtingCallout {
+    EarlyDraughtingCallout { name, contents }
+}
+
+/// Lift one `LEADER_DIRECTED_CALLOUT` (contents pre-resolved).
+pub(crate) fn lift_leader_directed_callout(
+    name: String,
+    contents: Vec<u64>,
+) -> EarlyLeaderDirectedCallout {
+    EarlyLeaderDirectedCallout { name, contents }
 }

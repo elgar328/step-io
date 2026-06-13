@@ -2771,6 +2771,74 @@ impl crate::ir::arena::ArenaId for EarlyAngularSizeId {
     }
 }
 
+/// L1 `DATUM_FEATURE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDatumFeature {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) of_shape: u64,
+    pub(crate) product_definitional: crate::ir::geometry::Logical,
+}
+
+/// Typed `id_cache` key for `DATUM_FEATURE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDatumFeatureId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDatumFeatureId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DRAUGHTING_CALLOUT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDraughtingCallout {
+    pub(crate) name: String,
+    pub(crate) contents: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `DRAUGHTING_CALLOUT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDraughtingCalloutId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDraughtingCalloutId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `LEADER_DIRECTED_CALLOUT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyLeaderDirectedCallout {
+    pub(crate) name: String,
+    pub(crate) contents: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `LEADER_DIRECTED_CALLOUT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyLeaderDirectedCalloutId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyLeaderDirectedCalloutId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

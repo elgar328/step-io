@@ -133,6 +133,9 @@ generate = [
     "directed_dimensional_location",
     "angular_location",
     "angular_size",
+    "datum_feature",
+    "draughting_callout",
+    "leader_directed_callout",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
