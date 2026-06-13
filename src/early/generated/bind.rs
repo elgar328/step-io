@@ -2537,6 +2537,30 @@ pub(crate) fn bind_shell_based_surface_model(
     })
 }
 
+pub(crate) fn bind_composite_curve_segment(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyCompositeCurveSegment, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "COMPOSITE_CURVE_SEGMENT")?;
+    Ok(super::model::EarlyCompositeCurveSegment {
+        transition: bind_transition_code(attrs, 0, entity_id, "transition")?,
+        same_sense: crate::ir::attr::read_bool(attrs, 1, entity_id, "same_sense")?,
+        parent_curve: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "parent_curve")?,
+    })
+}
+
+pub(crate) fn bind_composite_curve(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyCompositeCurve, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "COMPOSITE_CURVE")?;
+    Ok(super::model::EarlyCompositeCurve {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        segments: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "segments")?,
+        self_intersect: crate::ir::attr::read_logical(attrs, 2, entity_id, "self_intersect")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {
@@ -2675,5 +2699,22 @@ fn bind_surface_side(
         "NEGATIVE" => Ok(crate::ir::visualization::SurfaceSide::Back),
         "POSITIVE" => Ok(crate::ir::visualization::SurfaceSide::Front),
         _ => Ok(crate::ir::visualization::SurfaceSide::Both),
+    }
+}
+
+fn bind_transition_code(
+    attrs: &[crate::parser::entity::Attribute],
+    index: usize,
+    entity_id: u64,
+    field: &'static str,
+) -> Result<crate::ir::geometry::TransitionCode, crate::ir::error::ConvertError> {
+    match crate::ir::attr::read_enum(attrs, index, entity_id, field)? {
+        "CONT_SAME_GRADIENT" => Ok(crate::ir::geometry::TransitionCode::ContSameGradient),
+        "CONT_SAME_GRADIENT_SAME_CURVATURE" => {
+            Ok(crate::ir::geometry::TransitionCode::ContSameGradientSameCurvature)
+        }
+        "CONTINUOUS" => Ok(crate::ir::geometry::TransitionCode::Continuous),
+        "DISCONTINUOUS" => Ok(crate::ir::geometry::TransitionCode::Discontinuous),
+        _ => Ok(crate::ir::geometry::TransitionCode::Unspecified),
     }
 }

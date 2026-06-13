@@ -3676,6 +3676,52 @@ impl crate::ir::arena::ArenaId for EarlyShellBasedSurfaceModelId {
     }
 }
 
+/// L1 `COMPOSITE_CURVE_SEGMENT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCompositeCurveSegment {
+    pub(crate) transition: crate::ir::geometry::TransitionCode,
+    pub(crate) same_sense: bool,
+    pub(crate) parent_curve: u64,
+}
+
+/// Typed `id_cache` key for `COMPOSITE_CURVE_SEGMENT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCompositeCurveSegmentId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCompositeCurveSegmentId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `COMPOSITE_CURVE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCompositeCurve {
+    pub(crate) name: String,
+    pub(crate) segments: Vec<u64>,
+    pub(crate) self_intersect: crate::ir::geometry::Logical,
+}
+
+/// Typed `id_cache` key for `COMPOSITE_CURVE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCompositeCurveId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCompositeCurveId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

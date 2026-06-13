@@ -7,21 +7,22 @@
 
 use crate::early::model::{
     EarlyAxis1Placement, EarlyAxis2Placement3d, EarlyCartesianPoint, EarlyCircle,
-    EarlyCircularArea, EarlyConicalSurface, EarlyCurveBoundedSurface, EarlyCylindricalSurface,
-    EarlyDegenerateToroidalSurface, EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyLine,
-    EarlyOffsetCurve3d, EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent,
-    EarlyPlane, EarlyPolyline, EarlyRectangularTrimmedSurface, EarlySphericalSurface,
+    EarlyCircularArea, EarlyCompositeCurve, EarlyCompositeCurveSegment, EarlyConicalSurface,
+    EarlyCurveBoundedSurface, EarlyCylindricalSurface, EarlyDegenerateToroidalSurface,
+    EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyLine, EarlyOffsetCurve3d,
+    EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent, EarlyPlane,
+    EarlyPolyline, EarlyRectangularTrimmedSurface, EarlySphericalSurface,
     EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyVector,
     EarlyVertexPoint,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{
-    Axis1Placement, Axis2Placement3d, Circle3, CircularArea, CircularAreaCentre, ConicalSurface,
-    Curve, CurveBoundedSurface, CylindricalSurface, DegenerateToroidalSurface, Direction3,
-    Ellipse3, Hyperbola, Line3, OffsetCurve3d, Parabola, PlanarBox, PlanarBoxPlacement,
-    PlanarExtent, PlanarExtentData, Plane3, Point3, Polyline, RectangularTrimmedSurface,
-    SphericalSurface, Surface, SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution,
-    ToroidalSurface, Vertex,
+    Axis1Placement, Axis2Placement3d, Circle3, CircularArea, CircularAreaCentre, CompositeCurve,
+    CompositeSegment, ConicalSurface, Curve, CurveBoundedSurface, CylindricalSurface,
+    DegenerateToroidalSurface, Direction3, Ellipse3, Hyperbola, Line3, OffsetCurve3d, Parabola,
+    PlanarBox, PlanarBoxPlacement, PlanarExtent, PlanarExtentData, Plane3, Point3, Polyline,
+    RectangularTrimmedSurface, SphericalSurface, Surface, SurfaceOfLinearExtrusion,
+    SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, Vertex,
 };
 use crate::reader::ReaderContext;
 
@@ -624,6 +625,54 @@ pub(crate) fn lower_rectangular_trimmed_surface(
             v2: early.v2,
             vsense: early.vsense,
         }));
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
+/// Lower one `COMPOSITE_CURVE_SEGMENT` — map-only (no arena/`id_cache`). Records
+/// the segment metadata (raw `parent_curve` ref) in `composite_segment_map`; the
+/// owning `COMPOSITE_CURVE` assembles `CompositeSegment` values from it.
+pub(crate) fn lower_composite_curve_segment(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyCompositeCurveSegment,
+) {
+    ctx.composite_segment_map.insert(
+        entity_id,
+        (early.transition, early.same_sense, early.parent_curve),
+    );
+}
+
+/// Lower one `COMPOSITE_CURVE`. Each segment ref resolves through
+/// `composite_segment_map` (populated by the segment handler, dispatched first);
+/// a missing entry is `MissingReference` (matching the legacy handler).
+pub(crate) fn lower_composite_curve(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyCompositeCurve,
+) -> Result<(), ConvertError> {
+    let mut segments = Vec::with_capacity(early.segments.len());
+    for seg_ref in &early.segments {
+        let Some(&(transition, same_sense, parent_step_id)) =
+            ctx.composite_segment_map.get(seg_ref)
+        else {
+            return Err(ConvertError::MissingReference {
+                from: entity_id,
+                to: *seg_ref,
+                field_name: "segments",
+            });
+        };
+        let parent_curve = ctx.resolve_curve(entity_id, parent_step_id, "parent_curve")?;
+        segments.push(CompositeSegment {
+            transition,
+            same_sense,
+            parent_curve,
+        });
+    }
+    let id = ctx.geometry.curves.push(Curve::Composite(CompositeCurve {
+        segments,
+        self_intersect: early.self_intersect,
+    }));
     ctx.id_cache.insert(entity_id, id);
     Ok(())
 }

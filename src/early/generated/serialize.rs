@@ -2730,6 +2730,41 @@ pub(crate) fn serialize_shell_based_surface_model(
     )
 }
 
+pub(crate) fn serialize_composite_curve_segment(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCompositeCurveSegment,
+) -> u64 {
+    buf.push_simple(
+        "COMPOSITE_CURVE_SEGMENT",
+        vec![
+            transition_code_attr(l1.transition),
+            bool_attr(l1.same_sense),
+            crate::parser::entity::Attribute::EntityRef(l1.parent_curve),
+        ],
+    )
+}
+
+pub(crate) fn serialize_composite_curve(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCompositeCurve,
+) -> u64 {
+    buf.push_simple(
+        "COMPOSITE_CURVE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.segments
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::Enum(
+                crate::ir::attr::logical_to_step(l1.self_intersect).into(),
+            ),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {
@@ -2826,6 +2861,23 @@ fn surface_side_attr(v: crate::ir::visualization::SurfaceSide) -> crate::parser:
             crate::ir::visualization::SurfaceSide::Both => "BOTH",
             crate::ir::visualization::SurfaceSide::Back => "NEGATIVE",
             crate::ir::visualization::SurfaceSide::Front => "POSITIVE",
+        }
+        .into(),
+    )
+}
+
+fn transition_code_attr(
+    v: crate::ir::geometry::TransitionCode,
+) -> crate::parser::entity::Attribute {
+    crate::parser::entity::Attribute::Enum(
+        match v {
+            crate::ir::geometry::TransitionCode::ContSameGradient => "CONT_SAME_GRADIENT",
+            crate::ir::geometry::TransitionCode::ContSameGradientSameCurvature => {
+                "CONT_SAME_GRADIENT_SAME_CURVATURE"
+            }
+            crate::ir::geometry::TransitionCode::Continuous => "CONTINUOUS",
+            crate::ir::geometry::TransitionCode::Discontinuous => "DISCONTINUOUS",
+            crate::ir::geometry::TransitionCode::Unspecified => "UNSPECIFIED",
         }
         .into(),
     )

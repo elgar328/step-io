@@ -175,6 +175,9 @@ generate = [
     "rectangular_trimmed_surface",
     # visualization (GRI surface model)
     "shell_based_surface_model",
+    # geometry (composite curve cluster)
+    "composite_curve_segment",
+    "composite_curve",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
@@ -228,6 +231,16 @@ variants = { descriptive_measure = "Descriptive", measure_with_unit = "MeasureWi
 [enum.ahead_or_behind]
 rust_type = "crate::ir::plm::AheadOrBehind"
 variants = { ahead = "Ahead", behind = "Behind", exact = "Exact" }
+
+# `transition_code`: EXPRESS has 4 members; L2 `TransitionCode` adds a step-io
+# catch-all `Unspecified` (unknown token -> Unspecified on read, emits the
+# non-standard "UNSPECIFIED" on write). gen-early's serialize matches over the
+# whole `variants` map, so all 5 L2 variants must appear; `default` makes the
+# read `_ => Unspecified` arm (matching the legacy catch-all).
+[enum.transition_code]
+rust_type = "crate::ir::geometry::TransitionCode"
+variants = { continuous = "Continuous", discontinuous = "Discontinuous", cont_same_gradient = "ContSameGradient", cont_same_gradient_same_curvature = "ContSameGradientSameCurvature", unspecified = "Unspecified" }
+default = "Unspecified"
 
 [enum.angle_relator]
 rust_type = "crate::ir::pmi::AngleSelection"

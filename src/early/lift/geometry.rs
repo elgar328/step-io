@@ -4,14 +4,15 @@
 
 use crate::early::model::{
     EarlyAxis1Placement, EarlyAxis2Placement3d, EarlyCartesianPoint, EarlyCircle,
-    EarlyCircularArea, EarlyConicalSurface, EarlyCurveBoundedSurface, EarlyCylindricalSurface,
-    EarlyDegenerateToroidalSurface, EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyLine,
-    EarlyOffsetCurve3d, EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent,
-    EarlyPlane, EarlyPolyline, EarlyRectangularTrimmedSurface, EarlySphericalSurface,
+    EarlyCircularArea, EarlyCompositeCurve, EarlyCompositeCurveSegment, EarlyConicalSurface,
+    EarlyCurveBoundedSurface, EarlyCylindricalSurface, EarlyDegenerateToroidalSurface,
+    EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyLine, EarlyOffsetCurve3d,
+    EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent, EarlyPlane,
+    EarlyPolyline, EarlyRectangularTrimmedSurface, EarlySphericalSurface,
     EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyVector,
     EarlyVertexPoint,
 };
-use crate::ir::geometry::{Direction3, Logical, Point3};
+use crate::ir::geometry::{Direction3, Logical, Point3, TransitionCode};
 
 /// Lift one `CARTESIAN_POINT` from its arena `Point3`.
 pub(crate) fn lift_cartesian_point(p: Point3) -> EarlyCartesianPoint {
@@ -332,5 +333,30 @@ pub(crate) fn lift_rectangular_trimmed_surface(
         v2,
         usense,
         vsense,
+    }
+}
+
+/// Lift one `COMPOSITE_CURVE_SEGMENT` (`parent_curve` = child curve step id).
+pub(crate) fn lift_composite_curve_segment(
+    transition: TransitionCode,
+    same_sense: bool,
+    parent_curve: u64,
+) -> EarlyCompositeCurveSegment {
+    EarlyCompositeCurveSegment {
+        transition,
+        same_sense,
+        parent_curve,
+    }
+}
+
+/// Lift one `COMPOSITE_CURVE` (segments = child segment output step ids).
+pub(crate) fn lift_composite_curve(
+    segments: Vec<u64>,
+    self_intersect: Logical,
+) -> EarlyCompositeCurve {
+    EarlyCompositeCurve {
+        name: String::new(),
+        segments,
+        self_intersect,
     }
 }
