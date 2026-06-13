@@ -2301,6 +2301,108 @@ pub(crate) fn serialize_plane(
     )
 }
 
+pub(crate) fn serialize_ellipse(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyEllipse,
+) -> u64 {
+    buf.push_simple(
+        "ELLIPSE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.position),
+            crate::parser::entity::Attribute::Real(l1.semi_axis_1),
+            crate::parser::entity::Attribute::Real(l1.semi_axis_2),
+        ],
+    )
+}
+
+pub(crate) fn serialize_parabola(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyParabola,
+) -> u64 {
+    buf.push_simple(
+        "PARABOLA",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.position),
+            crate::parser::entity::Attribute::Real(l1.focal_dist),
+        ],
+    )
+}
+
+pub(crate) fn serialize_hyperbola(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyHyperbola,
+) -> u64 {
+    buf.push_simple(
+        "HYPERBOLA",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.position),
+            crate::parser::entity::Attribute::Real(l1.semi_axis),
+            crate::parser::entity::Attribute::Real(l1.semi_imag_axis),
+        ],
+    )
+}
+
+pub(crate) fn serialize_conical_surface(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyConicalSurface,
+) -> u64 {
+    buf.push_simple(
+        "CONICAL_SURFACE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.position),
+            crate::parser::entity::Attribute::Real(l1.radius),
+            crate::parser::entity::Attribute::Real(l1.semi_angle),
+        ],
+    )
+}
+
+pub(crate) fn serialize_cylindrical_surface(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCylindricalSurface,
+) -> u64 {
+    buf.push_simple(
+        "CYLINDRICAL_SURFACE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.position),
+            crate::parser::entity::Attribute::Real(l1.radius),
+        ],
+    )
+}
+
+pub(crate) fn serialize_spherical_surface(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlySphericalSurface,
+) -> u64 {
+    buf.push_simple(
+        "SPHERICAL_SURFACE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.position),
+            crate::parser::entity::Attribute::Real(l1.radius),
+        ],
+    )
+}
+
+pub(crate) fn serialize_toroidal_surface(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyToroidalSurface,
+) -> u64 {
+    buf.push_simple(
+        "TOROIDAL_SURFACE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.position),
+            crate::parser::entity::Attribute::Real(l1.major_radius),
+            crate::parser::entity::Attribute::Real(l1.minor_radius),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

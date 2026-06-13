@@ -3043,6 +3043,171 @@ impl crate::ir::arena::ArenaId for EarlyPlaneId {
     }
 }
 
+/// L1 `ELLIPSE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyEllipse {
+    pub(crate) name: String,
+    pub(crate) position: u64,
+    pub(crate) semi_axis_1: f64,
+    pub(crate) semi_axis_2: f64,
+}
+
+/// Typed `id_cache` key for `ELLIPSE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyEllipseId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyEllipseId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PARABOLA` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyParabola {
+    pub(crate) name: String,
+    pub(crate) position: u64,
+    pub(crate) focal_dist: f64,
+}
+
+/// Typed `id_cache` key for `PARABOLA` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyParabolaId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyParabolaId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `HYPERBOLA` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyHyperbola {
+    pub(crate) name: String,
+    pub(crate) position: u64,
+    pub(crate) semi_axis: f64,
+    pub(crate) semi_imag_axis: f64,
+}
+
+/// Typed `id_cache` key for `HYPERBOLA` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyHyperbolaId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyHyperbolaId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `CONICAL_SURFACE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyConicalSurface {
+    pub(crate) name: String,
+    pub(crate) position: u64,
+    pub(crate) radius: f64,
+    pub(crate) semi_angle: f64,
+}
+
+/// Typed `id_cache` key for `CONICAL_SURFACE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyConicalSurfaceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyConicalSurfaceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `CYLINDRICAL_SURFACE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCylindricalSurface {
+    pub(crate) name: String,
+    pub(crate) position: u64,
+    pub(crate) radius: f64,
+}
+
+/// Typed `id_cache` key for `CYLINDRICAL_SURFACE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCylindricalSurfaceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCylindricalSurfaceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `SPHERICAL_SURFACE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlySphericalSurface {
+    pub(crate) name: String,
+    pub(crate) position: u64,
+    pub(crate) radius: f64,
+}
+
+/// Typed `id_cache` key for `SPHERICAL_SURFACE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlySphericalSurfaceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlySphericalSurfaceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `TOROIDAL_SURFACE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyToroidalSurface {
+    pub(crate) name: String,
+    pub(crate) position: u64,
+    pub(crate) major_radius: f64,
+    pub(crate) minor_radius: f64,
+}
+
+/// Typed `id_cache` key for `TOROIDAL_SURFACE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyToroidalSurfaceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyToroidalSurfaceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

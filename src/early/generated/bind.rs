@@ -2201,6 +2201,94 @@ pub(crate) fn bind_plane(
     })
 }
 
+pub(crate) fn bind_ellipse(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyEllipse, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "ELLIPSE")?;
+    Ok(super::model::EarlyEllipse {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        position: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "position")?,
+        semi_axis_1: crate::ir::attr::read_real(attrs, 2, entity_id, "semi_axis_1")?,
+        semi_axis_2: crate::ir::attr::read_real(attrs, 3, entity_id, "semi_axis_2")?,
+    })
+}
+
+pub(crate) fn bind_parabola(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyParabola, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "PARABOLA")?;
+    Ok(super::model::EarlyParabola {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        position: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "position")?,
+        focal_dist: crate::ir::attr::read_real(attrs, 2, entity_id, "focal_dist")?,
+    })
+}
+
+pub(crate) fn bind_hyperbola(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyHyperbola, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "HYPERBOLA")?;
+    Ok(super::model::EarlyHyperbola {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        position: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "position")?,
+        semi_axis: crate::ir::attr::read_real(attrs, 2, entity_id, "semi_axis")?,
+        semi_imag_axis: crate::ir::attr::read_real(attrs, 3, entity_id, "semi_imag_axis")?,
+    })
+}
+
+pub(crate) fn bind_conical_surface(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyConicalSurface, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "CONICAL_SURFACE")?;
+    Ok(super::model::EarlyConicalSurface {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        position: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "position")?,
+        radius: crate::ir::attr::read_real(attrs, 2, entity_id, "radius")?,
+        semi_angle: crate::ir::attr::read_real(attrs, 3, entity_id, "semi_angle")?,
+    })
+}
+
+pub(crate) fn bind_cylindrical_surface(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyCylindricalSurface, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "CYLINDRICAL_SURFACE")?;
+    Ok(super::model::EarlyCylindricalSurface {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        position: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "position")?,
+        radius: crate::ir::attr::read_real(attrs, 2, entity_id, "radius")?,
+    })
+}
+
+pub(crate) fn bind_spherical_surface(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlySphericalSurface, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "SPHERICAL_SURFACE")?;
+    Ok(super::model::EarlySphericalSurface {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        position: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "position")?,
+        radius: crate::ir::attr::read_real(attrs, 2, entity_id, "radius")?,
+    })
+}
+
+pub(crate) fn bind_toroidal_surface(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyToroidalSurface, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "TOROIDAL_SURFACE")?;
+    Ok(super::model::EarlyToroidalSurface {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        position: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "position")?,
+        major_radius: crate::ir::attr::read_real(attrs, 2, entity_id, "major_radius")?,
+        minor_radius: crate::ir::attr::read_real(attrs, 3, entity_id, "minor_radius")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

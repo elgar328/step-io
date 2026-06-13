@@ -145,6 +145,13 @@ generate = [
     "axis2_placement_3d",
     "circle",
     "plane",
+    "ellipse",
+    "parabola",
+    "hyperbola",
+    "conical_surface",
+    "cylindrical_surface",
+    "spherical_surface",
+    "toroidal_surface",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
