@@ -2526,6 +2526,17 @@ pub(crate) fn bind_rectangular_trimmed_surface(
     })
 }
 
+pub(crate) fn bind_shell_based_surface_model(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyShellBasedSurfaceModel, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "SHELL_BASED_SURFACE_MODEL")?;
+    Ok(super::model::EarlyShellBasedSurfaceModel {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        sbsm_boundary: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "sbsm_boundary")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

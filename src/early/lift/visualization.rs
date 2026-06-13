@@ -7,9 +7,10 @@ use crate::early::model::{
     EarlyFillAreaStyleColour, EarlyMarker, EarlyMarkerSize, EarlyPointStyle,
     EarlyPreDefinedCurveFont, EarlyPreDefinedMarker, EarlyPreDefinedPointMarkerSymbol,
     EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol, EarlyPresentationLayerAssignment,
-    EarlyPresentedItemRepresentation, EarlySurfaceSideStyle, EarlySurfaceStyleBoundary,
-    EarlySurfaceStyleFillArea, EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage,
-    EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont, EarlyViewVolume,
+    EarlyPresentedItemRepresentation, EarlyShellBasedSurfaceModel, EarlySurfaceSideStyle,
+    EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea, EarlySurfaceStyleTransparent,
+    EarlySurfaceStyleUsage, EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont,
+    EarlyViewVolume,
 };
 use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::fill_area_style_colour::FillAreaStyleColourHandler;
@@ -255,4 +256,16 @@ pub(crate) fn lift_presented_item_representation(
 /// Lift one `APPLIED_PRESENTED_ITEM` (items pre-resolved).
 pub(crate) fn lift_applied_presented_item(items: Vec<u64>) -> EarlyAppliedPresentedItem {
     EarlyAppliedPresentedItem { items }
+}
+
+/// Lift one `SHELL_BASED_SURFACE_MODEL` (shells = child shell step ids). The
+/// legacy writer synthesised an empty `name`, so the lift always sets `name:
+/// String::new()`.
+pub(crate) fn lift_shell_based_surface_model(
+    sbsm_boundary: Vec<u64>,
+) -> EarlyShellBasedSurfaceModel {
+    EarlyShellBasedSurfaceModel {
+        name: String::new(),
+        sbsm_boundary,
+    }
 }

@@ -7,27 +7,29 @@ use crate::early::model::{
     EarlyFillAreaStyleColour, EarlyFillAreaStyleId, EarlyMarker, EarlyMarkerSize, EarlyPointStyle,
     EarlyPointStyleId, EarlyPreDefinedCurveFont, EarlyPreDefinedMarker,
     EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol,
-    EarlyPresentationLayerAssignment, EarlyPresentedItemRepresentation, EarlySurfaceSideStyle,
-    EarlySurfaceSideStyleId, EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea,
-    EarlySurfaceStyleFillAreaId, EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage,
-    EarlySurfaceStyleUsageId, EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont,
-    EarlyViewVolume, EarlyViewVolumeId,
+    EarlyPresentationLayerAssignment, EarlyPresentedItemRepresentation,
+    EarlyShellBasedSurfaceModel, EarlySurfaceSideStyle, EarlySurfaceSideStyleId,
+    EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea, EarlySurfaceStyleFillAreaId,
+    EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId,
+    EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont, EarlyViewVolume,
+    EarlyViewVolumeId,
 };
 use crate::ir::id::{
-    ColourId, MeasureWithUnitId, PlanarExtentId, PointId, PreDefinedMarkerId,
+    ColourId, MeasureWithUnitId, PlanarExtentId, PointId, PreDefinedMarkerId, ShellId,
     SurfaceStyleRenderingId,
 };
 use crate::ir::shape_rep::{CameraUsage, RepresentationMap};
 use crate::ir::visualization::{
     AppliedPresentedItem, Colour, ColourRgb, CompositeText, CurveOrRender,
     DraughtingPreDefinedColour, DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour,
-    FoundedItem, Marker, MarkerSize, PointStyle, PreDefinedCurveFont, PreDefinedCurveFontData,
-    PreDefinedMarker, PreDefinedMarkerData, PreDefinedPointMarkerSymbol, PreDefinedSymbol,
-    PreDefinedSymbolData, PreDefinedTerminatorSymbol, PresentationLayerAssignment,
-    PresentationLayerAssignmentItem, PresentationReprSelect, PresentedItem,
-    PresentedItemRepresentation, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleBoundary,
-    SurfaceStyleFillArea, SurfaceStyleUsage, SymbolColour, SymbolStyle, TextOrCharacter,
-    TextStyleForDefinedFont, ViewVolume, VisualizationPool,
+    FoundedItem, GeometricRepresentationItem, Marker, MarkerSize, PointStyle, PreDefinedCurveFont,
+    PreDefinedCurveFontData, PreDefinedMarker, PreDefinedMarkerData, PreDefinedPointMarkerSymbol,
+    PreDefinedSymbol, PreDefinedSymbolData, PreDefinedTerminatorSymbol,
+    PresentationLayerAssignment, PresentationLayerAssignmentItem, PresentationReprSelect,
+    PresentedItem, PresentedItemRepresentation, ShellBasedSurfaceModel, SurfaceSideStyle,
+    SurfaceSideStyleEntry, SurfaceStyleBoundary, SurfaceStyleFillArea, SurfaceStyleUsage,
+    SymbolColour, SymbolStyle, TextOrCharacter, TextStyleForDefinedFont, ViewVolume,
+    VisualizationPool,
 };
 use crate::reader::ReaderContext;
 
@@ -612,4 +614,29 @@ pub(crate) fn lower_applied_presented_item(
         .applied_presented_items
         .push(AppliedPresentedItem { items });
     ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `SHELL_BASED_SURFACE_MODEL`. Resolves the boundary list into
+/// `ShellId`s via `id_cache`, caches the per-SBSM list in `sbsm_shells_map`
+/// (so MSSR can flatten one or more SBSMs into a `SurfaceBody`), and pushes the
+/// item into the unified `geometric_representation_items` arena (indexed by
+/// `sbsm_id_map`) so a `STYLED_ITEM` can resolve it as a single id.
+pub(crate) fn lower_shell_based_surface_model(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyShellBasedSurfaceModel,
+) {
+    let shells: Vec<ShellId> = early
+        .sbsm_boundary
+        .iter()
+        .filter_map(|r| ctx.id_cache.get::<ShellId>(*r))
+        .collect();
+    ctx.sbsm_shells_map.insert(entity_id, shells.clone());
+    let gri_id = ctx.geometry.geometric_representation_items.push(
+        GeometricRepresentationItem::ShellBasedSurfaceModel(ShellBasedSurfaceModel {
+            name: early.name.clone(),
+            shells,
+        }),
+    );
+    ctx.sbsm_id_map.insert(entity_id, gri_id);
 }

@@ -2712,6 +2712,24 @@ pub(crate) fn serialize_rectangular_trimmed_surface(
     )
 }
 
+pub(crate) fn serialize_shell_based_surface_model(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyShellBasedSurfaceModel,
+) -> u64 {
+    buf.push_simple(
+        "SHELL_BASED_SURFACE_MODEL",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.sbsm_boundary
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

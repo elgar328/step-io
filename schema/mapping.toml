@@ -173,6 +173,8 @@ generate = [
     "offset_curve_3d",
     "planar_box",
     "rectangular_trimmed_surface",
+    # visualization (GRI surface model)
+    "shell_based_surface_model",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
