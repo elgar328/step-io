@@ -14,6 +14,7 @@ pub(crate) mod plm;
 pub(crate) mod pmi;
 pub(crate) mod property;
 pub(crate) mod shape_rep;
+pub(crate) mod topology;
 pub(crate) mod units;
 pub(crate) mod visualization;
 
@@ -23,5 +24,6 @@ pub(crate) use plm::*;
 pub(crate) use pmi::*;
 pub(crate) use property::*;
 pub(crate) use shape_rep::*;
+pub(crate) use topology::*;
 pub(crate) use units::*;
 pub(crate) use visualization::*;

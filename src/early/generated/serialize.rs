@@ -2449,6 +2449,34 @@ pub(crate) fn serialize_polyline(
     )
 }
 
+pub(crate) fn serialize_face_bound(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyFaceBound,
+) -> u64 {
+    buf.push_simple(
+        "FACE_BOUND",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.bound),
+            bool_attr(l1.orientation),
+        ],
+    )
+}
+
+pub(crate) fn serialize_face_outer_bound(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyFaceOuterBound,
+) -> u64 {
+    buf.push_simple(
+        "FACE_OUTER_BOUND",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.bound),
+            bool_attr(l1.orientation),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

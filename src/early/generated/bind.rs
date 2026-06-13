@@ -2324,6 +2324,30 @@ pub(crate) fn bind_polyline(
     })
 }
 
+pub(crate) fn bind_face_bound(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyFaceBound, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "FACE_BOUND")?;
+    Ok(super::model::EarlyFaceBound {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        bound: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "bound")?,
+        orientation: crate::ir::attr::read_bool(attrs, 2, entity_id, "orientation")?,
+    })
+}
+
+pub(crate) fn bind_face_outer_bound(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyFaceOuterBound, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "FACE_OUTER_BOUND")?;
+    Ok(super::model::EarlyFaceOuterBound {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        bound: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "bound")?,
+        orientation: crate::ir::attr::read_bool(attrs, 2, entity_id, "orientation")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

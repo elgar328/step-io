@@ -3276,6 +3276,52 @@ impl crate::ir::arena::ArenaId for EarlyPolylineId {
     }
 }
 
+/// L1 `FACE_BOUND` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyFaceBound {
+    pub(crate) name: String,
+    pub(crate) bound: u64,
+    pub(crate) orientation: bool,
+}
+
+/// Typed `id_cache` key for `FACE_BOUND` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyFaceBoundId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyFaceBoundId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `FACE_OUTER_BOUND` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyFaceOuterBound {
+    pub(crate) name: String,
+    pub(crate) bound: u64,
+    pub(crate) orientation: bool,
+}
+
+/// Typed `id_cache` key for `FACE_OUTER_BOUND` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyFaceOuterBoundId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyFaceOuterBoundId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {
