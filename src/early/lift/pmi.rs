@@ -2,7 +2,8 @@
 //! See the [module docs](super) for the lifting contract.
 
 use crate::early::model::{
-    EarlyCylindricityTolerance, EarlyFlatnessTolerance, EarlyRoundnessTolerance,
+    EarlyCylindricityTolerance, EarlyDatum, EarlyDimensionalSize, EarlyFlatnessTolerance,
+    EarlyGeometricToleranceRelationship, EarlyMeasureQualification, EarlyRoundnessTolerance,
     EarlyStraightnessTolerance, EarlySurfaceProfileTolerance, EarlyToleranceZoneForm,
     EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
 };
@@ -101,5 +102,67 @@ pub(crate) fn lift_cylindricity_tolerance(
         description: Some(description),
         magnitude: Some(magnitude),
         toleranced_shape_aspect,
+    }
+}
+
+/// `bool` → the L1 LOGICAL slot (legacy emitted `.T.` / `.F.`).
+fn bool_to_logical(b: bool) -> crate::ir::geometry::Logical {
+    if b {
+        crate::ir::geometry::Logical::True
+    } else {
+        crate::ir::geometry::Logical::False
+    }
+}
+
+/// Lift one `DATUM` (`of_shape` pre-resolved; legacy always emitted
+/// description as a String).
+pub(crate) fn lift_datum(
+    name: String,
+    description: String,
+    of_shape: u64,
+    product_definitional: bool,
+    identification: String,
+) -> EarlyDatum {
+    EarlyDatum {
+        name,
+        description: Some(description),
+        of_shape,
+        product_definitional: bool_to_logical(product_definitional),
+        identification,
+    }
+}
+
+/// Lift one plain `DIMENSIONAL_SIZE` (`applies_to` pre-resolved).
+pub(crate) fn lift_dimensional_size(applies_to: u64, name: String) -> EarlyDimensionalSize {
+    EarlyDimensionalSize { applies_to, name }
+}
+
+/// Lift one `GEOMETRIC_TOLERANCE_RELATIONSHIP` (ends pre-resolved).
+pub(crate) fn lift_geometric_tolerance_relationship(
+    name: String,
+    description: String,
+    relating_geometric_tolerance: u64,
+    related_geometric_tolerance: u64,
+) -> EarlyGeometricToleranceRelationship {
+    EarlyGeometricToleranceRelationship {
+        name,
+        description,
+        relating_geometric_tolerance,
+        related_geometric_tolerance,
+    }
+}
+
+/// Lift one `MEASURE_QUALIFICATION` (refs pre-resolved).
+pub(crate) fn lift_measure_qualification(
+    name: String,
+    description: String,
+    qualified_measure: u64,
+    qualifiers: Vec<u64>,
+) -> EarlyMeasureQualification {
+    EarlyMeasureQualification {
+        name,
+        description,
+        qualified_measure,
+        qualifiers,
     }
 }

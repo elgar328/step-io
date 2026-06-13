@@ -2580,6 +2580,101 @@ impl crate::ir::arena::ArenaId for EarlyCylindricityToleranceId {
     }
 }
 
+/// L1 `DATUM` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDatum {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) of_shape: u64,
+    pub(crate) product_definitional: crate::ir::geometry::Logical,
+    pub(crate) identification: String,
+}
+
+/// Typed `id_cache` key for `DATUM` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDatumId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDatumId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DIMENSIONAL_SIZE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDimensionalSize {
+    pub(crate) applies_to: u64,
+    pub(crate) name: String,
+}
+
+/// Typed `id_cache` key for `DIMENSIONAL_SIZE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDimensionalSizeId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDimensionalSizeId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `GEOMETRIC_TOLERANCE_RELATIONSHIP` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyGeometricToleranceRelationship {
+    pub(crate) name: String,
+    pub(crate) description: String,
+    pub(crate) relating_geometric_tolerance: u64,
+    pub(crate) related_geometric_tolerance: u64,
+}
+
+/// Typed `id_cache` key for `GEOMETRIC_TOLERANCE_RELATIONSHIP` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyGeometricToleranceRelationshipId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyGeometricToleranceRelationshipId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `MEASURE_QUALIFICATION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyMeasureQualification {
+    pub(crate) name: String,
+    pub(crate) description: String,
+    pub(crate) qualified_measure: u64,
+    pub(crate) qualifiers: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `MEASURE_QUALIFICATION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyMeasureQualificationId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyMeasureQualificationId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

@@ -1965,6 +1965,75 @@ pub(crate) fn serialize_cylindricity_tolerance(
     )
 }
 
+pub(crate) fn serialize_datum(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDatum,
+) -> u64 {
+    buf.push_simple(
+        "DATUM",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.of_shape),
+            crate::parser::entity::Attribute::Enum(
+                crate::ir::attr::logical_to_step(l1.product_definitional).into(),
+            ),
+            crate::parser::entity::Attribute::String(l1.identification.clone()),
+        ],
+    )
+}
+
+pub(crate) fn serialize_dimensional_size(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDimensionalSize,
+) -> u64 {
+    buf.push_simple(
+        "DIMENSIONAL_SIZE",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.applies_to),
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+        ],
+    )
+}
+
+pub(crate) fn serialize_geometric_tolerance_relationship(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyGeometricToleranceRelationship,
+) -> u64 {
+    buf.push_simple(
+        "GEOMETRIC_TOLERANCE_RELATIONSHIP",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::String(l1.description.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.relating_geometric_tolerance),
+            crate::parser::entity::Attribute::EntityRef(l1.related_geometric_tolerance),
+        ],
+    )
+}
+
+pub(crate) fn serialize_measure_qualification(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyMeasureQualification,
+) -> u64 {
+    buf.push_simple(
+        "MEASURE_QUALIFICATION",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::String(l1.description.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.qualified_measure),
+            crate::parser::entity::Attribute::List(
+                l1.qualifiers
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

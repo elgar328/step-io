@@ -125,6 +125,10 @@ generate = [
     "straightness_tolerance",
     "roundness_tolerance",
     "cylindricity_tolerance",
+    "datum",
+    "dimensional_size",
+    "geometric_tolerance_relationship",
+    "measure_qualification",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

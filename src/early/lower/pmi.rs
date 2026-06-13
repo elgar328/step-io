@@ -2,12 +2,15 @@
 //! See the [module docs](super) for the lowering contract.
 
 use crate::early::model::{
-    EarlyCylindricityTolerance, EarlyFlatnessTolerance, EarlyRoundnessTolerance,
+    EarlyCylindricityTolerance, EarlyDatum, EarlyDimensionalSize, EarlyFlatnessTolerance,
+    EarlyGeometricToleranceRelationship, EarlyMeasureQualification, EarlyRoundnessTolerance,
     EarlyStraightnessTolerance, EarlySurfaceProfileTolerance, EarlyToleranceZoneForm,
     EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
 };
 use crate::ir::pmi::{
-    GeometricTolerance, PmiPool, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
+    Datum, DimensionalSize, DimensionalSizeKind, GeometricTolerance,
+    GeometricToleranceRelationship, MeasureQualification, PmiPool, ToleranceZoneForm,
+    TypeQualifier, ValueFormatTypeQualifier, ValueQualifier,
 };
 use crate::reader::ReaderContext;
 
@@ -191,4 +194,120 @@ pub(crate) fn lower_cylindricity_tolerance(
         entity_id,
         GeometricTolerance::Cylindricity(data),
     );
+}
+
+/// L1 LOGICAL → the legacy `read_bool`'s `bool` (`.U.` drops).
+fn logical_to_bool(l: crate::ir::geometry::Logical) -> Option<bool> {
+    match l {
+        crate::ir::geometry::Logical::True => Some(true),
+        crate::ir::geometry::Logical::False => Some(false),
+        crate::ir::geometry::Logical::Unknown => None,
+    }
+}
+
+/// Lower one `DATUM` (unresolved `of_shape` product / `.U.` = silent drop).
+pub(crate) fn lower_datum(ctx: &mut ReaderContext, entity_id: u64, early: EarlyDatum) {
+    let Some(product_definitional) = logical_to_bool(early.product_definitional) else {
+        return;
+    };
+    let Some(target) = ctx.product_of_pds(early.of_shape) else {
+        return;
+    };
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .datums
+        .push(Datum {
+            name: early.name,
+            // Legacy read_string_or_unset collapsed `$` to "" (L2 String).
+            description: early.description.unwrap_or_default(),
+            target,
+            product_definitional,
+            identification: early.identification,
+        });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one plain `DIMENSIONAL_SIZE` (unresolved `applies_to` = silent drop).
+pub(crate) fn lower_dimensional_size(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyDimensionalSize,
+) {
+    let Some(applies_to) =
+        crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_ref(
+            ctx,
+            early.applies_to,
+        )
+    else {
+        return;
+    };
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .dimensional_sizes
+        .push(DimensionalSize {
+            applies_to,
+            name: early.name,
+            kind: DimensionalSizeKind::Plain,
+        });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `GEOMETRIC_TOLERANCE_RELATIONSHIP` (either end unresolved =
+/// silent drop).
+pub(crate) fn lower_geometric_tolerance_relationship(
+    ctx: &mut ReaderContext,
+    early: EarlyGeometricToleranceRelationship,
+) {
+    let Some(relating) = crate::entities::pmi::resolve_geometric_tolerance_ref(
+        ctx,
+        early.relating_geometric_tolerance,
+    ) else {
+        return;
+    };
+    let Some(related) = crate::entities::pmi::resolve_geometric_tolerance_ref(
+        ctx,
+        early.related_geometric_tolerance,
+    ) else {
+        return;
+    };
+    ctx.pmi
+        .get_or_insert_with(PmiPool::default)
+        .geometric_tolerance_relationships
+        .push(GeometricToleranceRelationship {
+            name: early.name,
+            description: early.description,
+            relating,
+            related,
+        });
+}
+
+/// Lower one `MEASURE_QUALIFICATION` (unresolved measure = silent drop;
+/// unresolved qualifier members skip individually).
+pub(crate) fn lower_measure_qualification(
+    ctx: &mut ReaderContext,
+    early: EarlyMeasureQualification,
+) {
+    let Some(qualified_measure) = ctx
+        .id_cache
+        .get::<crate::ir::id::MeasureWithUnitId>(early.qualified_measure)
+    else {
+        return;
+    };
+    let mut qualifiers = Vec::with_capacity(early.qualifiers.len());
+    for r in early.qualifiers {
+        if let Some(q) = ValueQualifier::resolve_select(ctx, r) {
+            qualifiers.push(q);
+        }
+    }
+    ctx.pmi
+        .get_or_insert_with(PmiPool::default)
+        .measure_qualifications
+        .push(MeasureQualification {
+            name: early.name,
+            description: early.description,
+            qualified_measure,
+            qualifiers,
+        });
 }

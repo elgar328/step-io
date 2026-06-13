@@ -1890,6 +1890,85 @@ pub(crate) fn bind_cylindricity_tolerance(
     })
 }
 
+pub(crate) fn bind_datum(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDatum, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 5, entity_id, "DATUM")?;
+    Ok(super::model::EarlyDatum {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        of_shape: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "of_shape")?,
+        product_definitional: crate::ir::attr::read_logical(
+            attrs,
+            3,
+            entity_id,
+            "product_definitional",
+        )?,
+        identification: crate::ir::attr::read_string_or_unset(
+            attrs,
+            4,
+            entity_id,
+            "identification",
+        )?
+        .to_owned(),
+    })
+}
+
+pub(crate) fn bind_dimensional_size(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDimensionalSize, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "DIMENSIONAL_SIZE")?;
+    Ok(super::model::EarlyDimensionalSize {
+        applies_to: crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "applies_to")?,
+        name: crate::ir::attr::read_string_or_unset(attrs, 1, entity_id, "name")?.to_owned(),
+    })
+}
+
+pub(crate) fn bind_geometric_tolerance_relationship(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyGeometricToleranceRelationship, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "GEOMETRIC_TOLERANCE_RELATIONSHIP")?;
+    Ok(super::model::EarlyGeometricToleranceRelationship {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_string_or_unset(attrs, 1, entity_id, "description")?
+            .to_owned(),
+        relating_geometric_tolerance: crate::ir::attr::read_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "relating_geometric_tolerance",
+        )?,
+        related_geometric_tolerance: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "related_geometric_tolerance",
+        )?,
+    })
+}
+
+pub(crate) fn bind_measure_qualification(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyMeasureQualification, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "MEASURE_QUALIFICATION")?;
+    Ok(super::model::EarlyMeasureQualification {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_string_or_unset(attrs, 1, entity_id, "description")?
+            .to_owned(),
+        qualified_measure: crate::ir::attr::read_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "qualified_measure",
+        )?,
+        qualifiers: crate::ir::attr::read_entity_ref_list(attrs, 3, entity_id, "qualifiers")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {
