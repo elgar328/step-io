@@ -47,11 +47,11 @@ pub(crate) use super::generated::model::{
     EarlyProductDefinitionWithAssociatedDocuments, EarlyQualifiedRepresentationItem,
     EarlyRealRepresentationItem, EarlyRepresentationContext, EarlyRepresentationRelationship,
     EarlyRoleAssociation, EarlySecurityClassification, EarlySecurityClassificationLevel,
-    EarlyShapeRepresentationRelationship, EarlySource, EarlySurfaceSideStyle,
-    EarlySurfaceSideStyleId, EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea,
-    EarlySurfaceStyleFillAreaId, EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage,
-    EarlySurfaceStyleUsageId, EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont,
-    EarlyToleranceZone, EarlyViewVolume, EarlyViewVolumeId,
+    EarlyShapeDefinitionRepresentation, EarlyShapeRepresentationRelationship, EarlySource,
+    EarlySurfaceSideStyle, EarlySurfaceSideStyleId, EarlySurfaceStyleBoundary,
+    EarlySurfaceStyleFillArea, EarlySurfaceStyleFillAreaId, EarlySurfaceStyleTransparent,
+    EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId, EarlySymbolColour, EarlySymbolStyle,
+    EarlyTextStyleForDefinedFont, EarlyToleranceZone, EarlyViewVolume, EarlyViewVolumeId,
 };
 
 /// Transient L1 store, held on [`ReaderContext`](crate::reader::ReaderContext)

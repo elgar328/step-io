@@ -4,6 +4,7 @@
 use crate::early::model::{
     EarlyDescriptionAttribute, EarlyDimensionalCharacteristicRepresentation, EarlyGeneralProperty,
     EarlyGeneralPropertyAssociation, EarlyIdAttribute, EarlyNameAttribute,
+    EarlyShapeDefinitionRepresentation,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::property::{
@@ -200,5 +201,47 @@ pub(crate) fn lower_general_property_association(
             description: early.description.filter(|d| !d.is_empty()),
             base_definition,
             derived_definition: DerivedDefinitionItem::PropertyDefinition(pd_id),
+        });
+}
+
+/// Lower one `SHAPE_DEFINITION_REPRESENTATION`. Only SDRs whose PDS resolved
+/// to a product (typed one-probe) defer geometry classification to the
+/// `resolve_sdr_product_geometry` post-pass; a NAUO-tagged placement PDS
+/// appends its SR to the NAUO's placement list; everything else is stashed
+/// raw for `resolve_sdr_links` (the PD is read by the property handler,
+/// later than this SDR).
+pub(crate) fn lower_shape_definition_representation(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyShapeDefinitionRepresentation,
+) {
+    let pdef_shape_ref = early.definition;
+    let shape_rep_ref = early.used_representation;
+    let Some(pid) = ctx.product_of_pds(pdef_shape_ref) else {
+        if let Some(nauo_ref) = ctx.nauo_pds_info.get(&pdef_shape_ref).map(|i| i.nauo) {
+            if let Some(sr_id) = ctx
+                .id_cache
+                .get::<crate::ir::id::RepresentationId>(shape_rep_ref)
+            {
+                ctx.nauo_placement_sr
+                    .entry(nauo_ref)
+                    .or_default()
+                    .push(sr_id);
+            }
+            return;
+        }
+        ctx.sdr_link_refs.push((pdef_shape_ref, shape_rep_ref));
+        return;
+    };
+    // Defer the geometry classification: it follows indirection maps this SDR
+    // does not reference, so under topological dispatch they may not be
+    // populated yet. `resolve_sdr_product_geometry` runs once every
+    // relationship and geometry representation has been read.
+    ctx.pending_sdr_geometry
+        .push(crate::reader::PendingSdrGeometry {
+            pid,
+            shape_rep_ref,
+            entity_id,
+            pdef_shape_ref,
         });
 }

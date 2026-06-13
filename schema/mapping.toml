@@ -115,6 +115,7 @@ generate = [
     "presented_item_representation",
     "applied_presented_item",
     "product_definition_relationship",
+    "shape_definition_representation",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

@@ -4,6 +4,7 @@
 use crate::early::model::{
     EarlyDescriptionAttribute, EarlyDimensionalCharacteristicRepresentation, EarlyGeneralProperty,
     EarlyGeneralPropertyAssociation, EarlyIdAttribute, EarlyNameAttribute,
+    EarlyShapeDefinitionRepresentation,
 };
 use crate::ir::property::GeneralProperty;
 
@@ -68,5 +69,16 @@ pub(crate) fn lift_general_property_association(
         description,
         base_definition,
         derived_definition,
+    }
+}
+
+/// Lift one `SHAPE_DEFINITION_REPRESENTATION` (both refs pre-resolved).
+pub(crate) fn lift_shape_definition_representation(
+    definition: u64,
+    used_representation: u64,
+) -> EarlyShapeDefinitionRepresentation {
+    EarlyShapeDefinitionRepresentation {
+        definition,
+        used_representation,
     }
 }

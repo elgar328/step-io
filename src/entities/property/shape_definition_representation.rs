@@ -6,9 +6,9 @@
 //! Writer emits the bare two-attr SDR linking a `PRODUCT_DEFINITION_SHAPE`
 //! and the inner shape representation.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::assembly::{GeometryLeaf, SolidContent, SurfaceBodyContent};
-use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -33,56 +33,8 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "SHAPE_DEFINITION_REPRESENTATION")?;
-        let pdef_shape_ref = read_entity_ref(attrs, 0, entity_id, "definition")?;
-        let shape_rep_ref = read_entity_ref(attrs, 1, entity_id, "used_representation")?;
-
-        // Only consider SDRs whose PDS resolved to a product (typed one-probe:
-        // `pdef_shape.definition` = PRODUCT_DEFINITION *and* the product chain
-        // resolved — a PDEF-targeted PDS with an unresolved product falls
-        // through to the stash like any non-product PDS). Others (definition =
-        // a PROPERTY_DEFINITION, e.g. geometric-validation / CATIA
-        // geometric-set PMI shapes) are stashed raw and resolved after all
-        // entities are read (the PD is read by the property handler, later
-        // than this SDR).
-        let Some(pid) = ctx.product_of_pds(pdef_shape_ref) else {
-            // NAUO-tagged placement PDS: this SDR links the instance's placement
-            // PDS to a standalone placement SHAPE_REPRESENTATION (an extra SDR
-            // some exporters emit besides the CDSR; one placement PDS may carry
-            // several). Append the SR to the NAUO's list so
-            // `resolve_nauo_instances` attaches them to the Instance; the writer
-            // re-emits one SDR per SR next to the NAUO-owned PDS. (Without this
-            // it falls to `sdr_link_refs` and `resolve_sdr_links` drops it, since
-            // the NAUO-owned PDS is never a modelled property_definition.)
-            if let Some(nauo_ref) = ctx.nauo_pds_info.get(&pdef_shape_ref).map(|i| i.nauo) {
-                if let Some(sr_id) = ctx
-                    .id_cache
-                    .get::<crate::ir::id::RepresentationId>(shape_rep_ref)
-                {
-                    ctx.nauo_placement_sr
-                        .entry(nauo_ref)
-                        .or_default()
-                        .push(sr_id);
-                }
-                return Ok(());
-            }
-            ctx.sdr_link_refs.push((pdef_shape_ref, shape_rep_ref));
-            return Ok(());
-        };
-
-        // Defer the geometry classification: it follows the indirect chain
-        // `SDR -> plain SR -> SHAPE_REPRESENTATION_RELATIONSHIP -> geometry rep`
-        // through maps (`srr_equiv_map`, `wireframe_data_map`, ...) that this
-        // SDR does not reference, so under topological dispatch they may not be
-        // populated yet. `resolve_sdr_product_geometry` runs the body below
-        // once every relationship and geometry representation has been read.
-        ctx.pending_sdr_geometry
-            .push(crate::reader::PendingSdrGeometry {
-                pid,
-                shape_rep_ref,
-                entity_id,
-                pdef_shape_ref,
-            });
+        let early = bind::bind_shape_definition_representation(entity_id, attrs)?;
+        lower::lower_shape_definition_representation(ctx, entity_id, &early);
         Ok(())
     }
 
@@ -93,12 +45,9 @@ impl SimpleEntityHandler for ShapeDefinitionRepresentationHandler {
             shape_rep,
         }: ShapeDefinitionRepresentationWriteInput,
     ) -> Result<u64, WriteError> {
-        Ok(buf.push_simple(
-            "SHAPE_DEFINITION_REPRESENTATION",
-            vec![
-                Attribute::EntityRef(pdef_shape),
-                Attribute::EntityRef(shape_rep),
-            ],
+        let early = lift::lift_shape_definition_representation(pdef_shape, shape_rep);
+        Ok(serialize::serialize_shape_definition_representation(
+            buf, &early,
         ))
     }
 }

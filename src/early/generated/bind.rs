@@ -1753,6 +1753,22 @@ pub(crate) fn bind_product_definition_relationship(
     })
 }
 
+pub(crate) fn bind_shape_definition_representation(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyShapeDefinitionRepresentation, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "SHAPE_DEFINITION_REPRESENTATION")?;
+    Ok(super::model::EarlyShapeDefinitionRepresentation {
+        definition: crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "definition")?,
+        used_representation: crate::ir::attr::read_entity_ref(
+            attrs,
+            1,
+            entity_id,
+            "used_representation",
+        )?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

@@ -1815,6 +1815,19 @@ pub(crate) fn serialize_product_definition_relationship(
     )
 }
 
+pub(crate) fn serialize_shape_definition_representation(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyShapeDefinitionRepresentation,
+) -> u64 {
+    buf.push_simple(
+        "SHAPE_DEFINITION_REPRESENTATION",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.definition),
+            crate::parser::entity::Attribute::EntityRef(l1.used_representation),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

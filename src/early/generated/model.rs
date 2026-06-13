@@ -2375,6 +2375,28 @@ impl crate::ir::arena::ArenaId for EarlyProductDefinitionRelationshipId {
     }
 }
 
+/// L1 `SHAPE_DEFINITION_REPRESENTATION` (generated).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct EarlyShapeDefinitionRepresentation {
+    pub(crate) definition: u64,
+    pub(crate) used_representation: u64,
+}
+
+/// Typed `id_cache` key for `SHAPE_DEFINITION_REPRESENTATION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyShapeDefinitionRepresentationId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyShapeDefinitionRepresentationId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

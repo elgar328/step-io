@@ -40,8 +40,9 @@ pub(crate) use super::generated::bind::{
     bind_product_definition_shape, bind_product_definition_with_associated_documents,
     bind_qualified_representation_item, bind_real_representation_item, bind_representation_context,
     bind_representation_relationship, bind_role_association, bind_security_classification,
-    bind_security_classification_level, bind_shape_representation_relationship,
-    bind_surface_side_style, bind_surface_style_boundary, bind_surface_style_fill_area,
-    bind_surface_style_transparent, bind_surface_style_usage, bind_symbol_colour,
-    bind_symbol_style, bind_text_style_for_defined_font, bind_tolerance_zone, bind_view_volume,
+    bind_security_classification_level, bind_shape_definition_representation,
+    bind_shape_representation_relationship, bind_surface_side_style, bind_surface_style_boundary,
+    bind_surface_style_fill_area, bind_surface_style_transparent, bind_surface_style_usage,
+    bind_symbol_colour, bind_symbol_style, bind_text_style_for_defined_font, bind_tolerance_zone,
+    bind_view_volume,
 };
