@@ -9,17 +9,17 @@ use crate::early::model::{
     EarlyAxis1Placement, EarlyAxis2Placement3d, EarlyCartesianPoint, EarlyCircle,
     EarlyCircularArea, EarlyConicalSurface, EarlyCurveBoundedSurface, EarlyCylindricalSurface,
     EarlyDegenerateToroidalSurface, EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyLine,
-    EarlyParabola, EarlyPlanarExtent, EarlyPlane, EarlyPolyline, EarlySphericalSurface,
-    EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyVector,
-    EarlyVertexPoint,
+    EarlyOffsetCurve3d, EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent,
+    EarlyPlane, EarlyPolyline, EarlySphericalSurface, EarlySurfaceOfLinearExtrusion,
+    EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyVector, EarlyVertexPoint,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{
     Axis1Placement, Axis2Placement3d, Circle3, CircularArea, CircularAreaCentre, ConicalSurface,
     Curve, CurveBoundedSurface, CylindricalSurface, DegenerateToroidalSurface, Direction3,
-    Ellipse3, Hyperbola, Line3, Parabola, PlanarExtent, PlanarExtentData, Plane3, Point3, Polyline,
-    SphericalSurface, Surface, SurfaceOfLinearExtrusion, SurfaceOfRevolution, ToroidalSurface,
-    Vertex,
+    Ellipse3, Hyperbola, Line3, OffsetCurve3d, Parabola, PlanarBox, PlanarBoxPlacement,
+    PlanarExtent, PlanarExtentData, Plane3, Point3, Polyline, SphericalSurface, Surface,
+    SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, Vertex,
 };
 use crate::reader::ReaderContext;
 
@@ -515,6 +515,84 @@ pub(crate) fn lower_curve_bounded_surface(
             basis_surface,
             boundaries,
             implicit_outer: early.implicit_outer,
+        }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `OFFSET_SURFACE` (wraps a basis surface; `self_intersect` LOGICAL
+/// passes through unchanged — L2 keeps the full `Logical`). The dup-guard skips
+/// entities already interned through another resolution path.
+pub(crate) fn lower_offset_surface(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyOffsetSurface,
+) -> Result<(), ConvertError> {
+    if ctx.id_cache.contains::<crate::ir::id::SurfaceId>(entity_id) {
+        return Ok(());
+    }
+    let basis = ctx.resolve_surface(entity_id, early.basis_surface, "basis_surface")?;
+    let id = ctx.geometry.surfaces.push(Surface::Offset(SurfaceOfOffset {
+        basis,
+        distance: early.distance,
+        self_intersect: early.self_intersect,
+    }));
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
+/// Lower one `OFFSET_CURVE_3D` (basis curve offset along `ref_direction`).
+pub(crate) fn lower_offset_curve_3d(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyOffsetCurve3d,
+) -> Result<(), ConvertError> {
+    if ctx.id_cache.contains::<crate::ir::id::CurveId>(entity_id) {
+        return Ok(());
+    }
+    let basis = ctx.resolve_curve(entity_id, early.basis_curve, "basis_curve")?;
+    let ref_direction = ctx.resolve_direction(entity_id, early.ref_direction, "ref_direction")?;
+    let id = ctx
+        .geometry
+        .curves
+        .push(Curve::OffsetCurve3d(OffsetCurve3d {
+            basis,
+            distance: early.distance,
+            self_intersect: early.self_intersect,
+            ref_direction,
+        }));
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
+/// Lower one `PLANAR_BOX` (`PlanarExtent::PlanarBox` variant). `placement` is
+/// the `axis2_placement` SELECT — probe the 3D then 2D placement caches; an
+/// unresolved placement warns and drops the carrier (verbatim). `name` preserved.
+pub(crate) fn lower_planar_box(ctx: &mut ReaderContext, entity_id: u64, early: &EarlyPlanarBox) {
+    let placement = if let Some(&id) = ctx.placement_map.get(&early.placement) {
+        PlanarBoxPlacement::Placement3d(id)
+    } else if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::id::Placement2dId>(early.placement)
+    {
+        PlanarBoxPlacement::Placement2d(id)
+    } else {
+        ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: format!(
+                "PLANAR_BOX.placement #{} did not resolve to an AXIS2_PLACEMENT",
+                early.placement
+            ),
+        });
+        return;
+    };
+    let id = ctx
+        .geometry
+        .planar_extents
+        .push(PlanarExtent::PlanarBox(PlanarBox {
+            name: early.name.clone(),
+            size_in_x: early.size_in_x,
+            size_in_y: early.size_in_y,
+            placement,
         }));
     ctx.id_cache.insert(entity_id, id);
 }

@@ -7,9 +7,8 @@
 
 use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_real, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::geometry::{PlanarBox, PlanarBoxPlacement, PlanarExtent, PlanarExtentData};
+use crate::ir::geometry::{PlanarBox, PlanarBoxPlacement, PlanarExtentData};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -51,40 +50,8 @@ impl SimpleEntityHandler for PlanarBoxHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "PLANAR_BOX")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let size_in_x = read_real(attrs, 1, entity_id, "size_in_x")?;
-        let size_in_y = read_real(attrs, 2, entity_id, "size_in_y")?;
-        let placement_ref = read_entity_ref(attrs, 3, entity_id, "placement")?;
-
-        // `placement` is the `axis2_placement` SELECT — resolve against the
-        // 3D then 2D placement maps.
-        let placement = if let Some(&id) = ctx.placement_map.get(&placement_ref) {
-            PlanarBoxPlacement::Placement3d(id)
-        } else if let Some(id) = ctx
-            .id_cache
-            .get::<crate::ir::id::Placement2dId>(placement_ref)
-        {
-            PlanarBoxPlacement::Placement2d(id)
-        } else {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!(
-                    "PLANAR_BOX.placement #{placement_ref} did not resolve to an AXIS2_PLACEMENT"
-                ),
-            });
-            return Ok(());
-        };
-        let id = ctx
-            .geometry
-            .planar_extents
-            .push(PlanarExtent::PlanarBox(PlanarBox {
-                name,
-                size_in_x,
-                size_in_y,
-                placement,
-            }));
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_planar_box(entity_id, attrs)?;
+        lower::lower_planar_box(ctx, entity_id, &early);
         Ok(())
     }
 
@@ -93,14 +60,7 @@ impl SimpleEntityHandler for PlanarBoxHandler {
             PlanarBoxPlacement::Placement3d(id) => buf.emit_axis2_placement_3d(id)?,
             PlanarBoxPlacement::Placement2d(id) => buf.emit_axis2_placement_2d(id)?,
         };
-        Ok(buf.push_simple(
-            "PLANAR_BOX",
-            vec![
-                Attribute::String(pb.name),
-                Attribute::Real(pb.size_in_x),
-                Attribute::Real(pb.size_in_y),
-                Attribute::EntityRef(placement_step),
-            ],
-        ))
+        let early = lift::lift_planar_box(pb.name, pb.size_in_x, pb.size_in_y, placement_step);
+        Ok(serialize::serialize_planar_box(buf, &early))
     }
 }

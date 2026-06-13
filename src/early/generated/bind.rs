@@ -2469,6 +2469,46 @@ pub(crate) fn bind_curve_bounded_surface(
     })
 }
 
+pub(crate) fn bind_offset_surface(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyOffsetSurface, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "OFFSET_SURFACE")?;
+    Ok(super::model::EarlyOffsetSurface {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        basis_surface: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "basis_surface")?,
+        distance: crate::ir::attr::read_real(attrs, 2, entity_id, "distance")?,
+        self_intersect: crate::ir::attr::read_logical(attrs, 3, entity_id, "self_intersect")?,
+    })
+}
+
+pub(crate) fn bind_offset_curve_3d(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyOffsetCurve3d, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 5, entity_id, "OFFSET_CURVE_3D")?;
+    Ok(super::model::EarlyOffsetCurve3d {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        basis_curve: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "basis_curve")?,
+        distance: crate::ir::attr::read_real(attrs, 2, entity_id, "distance")?,
+        self_intersect: crate::ir::attr::read_logical(attrs, 3, entity_id, "self_intersect")?,
+        ref_direction: crate::ir::attr::read_entity_ref(attrs, 4, entity_id, "ref_direction")?,
+    })
+}
+
+pub(crate) fn bind_planar_box(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPlanarBox, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "PLANAR_BOX")?;
+    Ok(super::model::EarlyPlanarBox {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        size_in_x: crate::ir::attr::read_real(attrs, 1, entity_id, "size_in_x")?,
+        size_in_y: crate::ir::attr::read_real(attrs, 2, entity_id, "size_in_y")?,
+        placement: crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "placement")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

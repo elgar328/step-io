@@ -168,6 +168,10 @@ generate = [
     "degenerate_toroidal_surface",
     "circular_area",
     "curve_bounded_surface",
+    # geometry (derived surface/curve leaf batch)
+    "offset_surface",
+    "offset_curve_3d",
+    "planar_box",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

@@ -7,17 +7,14 @@
 
 #![allow(clippy::doc_markdown)]
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{
-    check_count, logical_to_step, read_entity_ref, read_logical, read_real, read_string_or_unset,
-};
 use crate::ir::error::ConvertError;
-use crate::ir::geometry::{Surface, SurfaceOfOffset};
+use crate::ir::geometry::SurfaceOfOffset;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
-use crate::writer::entity::{WriterBody, WriterEntity};
 use step_io_macros::step_entity;
 
 pub(crate) struct OffsetSurfaceHandler;
@@ -32,43 +29,13 @@ impl SimpleEntityHandler for OffsetSurfaceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        // Skip entities already interned through another resolution path
-        // so the arena does not accumulate duplicates.
-        if ctx.id_cache.contains::<crate::ir::id::SurfaceId>(entity_id) {
-            return Ok(());
-        }
-        check_count(attrs, 4, entity_id, "OFFSET_SURFACE")?;
-        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
-        let basis_ref = read_entity_ref(attrs, 1, entity_id, "basis_surface")?;
-        let distance = read_real(attrs, 2, entity_id, "distance")?;
-        let self_intersect = read_logical(attrs, 3, entity_id, "self_intersect")?;
-
-        let basis = ctx.resolve_surface(entity_id, basis_ref, "basis_surface")?;
-
-        let id = ctx.geometry.surfaces.push(Surface::Offset(SurfaceOfOffset {
-            basis,
-            distance,
-            self_intersect,
-        }));
-        ctx.id_cache.insert(entity_id, id);
-        Ok(())
+        let early = bind::bind_offset_surface(entity_id, attrs)?;
+        lower::lower_offset_surface(ctx, entity_id, &early)
     }
 
     fn write(buf: &mut WriteBuffer, o: SurfaceOfOffset) -> Result<u64, WriteError> {
         let basis = buf.emit_surface(o.basis)?;
-        let n = buf.fresh();
-        buf.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "OFFSET_SURFACE".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(basis),
-                    Attribute::Real(o.distance),
-                    Attribute::Enum(logical_to_step(o.self_intersect).into()),
-                ],
-            },
-        });
-        Ok(n)
+        let early = lift::lift_offset_surface(basis, o.distance, o.self_intersect);
+        Ok(serialize::serialize_offset_surface(buf, &early))
     }
 }

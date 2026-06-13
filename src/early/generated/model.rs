@@ -3553,6 +3553,79 @@ impl crate::ir::arena::ArenaId for EarlyCurveBoundedSurfaceId {
     }
 }
 
+/// L1 `OFFSET_SURFACE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyOffsetSurface {
+    pub(crate) name: String,
+    pub(crate) basis_surface: u64,
+    pub(crate) distance: f64,
+    pub(crate) self_intersect: crate::ir::geometry::Logical,
+}
+
+/// Typed `id_cache` key for `OFFSET_SURFACE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyOffsetSurfaceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyOffsetSurfaceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `OFFSET_CURVE_3D` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyOffsetCurve3d {
+    pub(crate) name: String,
+    pub(crate) basis_curve: u64,
+    pub(crate) distance: f64,
+    pub(crate) self_intersect: crate::ir::geometry::Logical,
+    pub(crate) ref_direction: u64,
+}
+
+/// Typed `id_cache` key for `OFFSET_CURVE_3D` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyOffsetCurve3dId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyOffsetCurve3dId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PLANAR_BOX` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPlanarBox {
+    pub(crate) name: String,
+    pub(crate) size_in_x: f64,
+    pub(crate) size_in_y: f64,
+    pub(crate) placement: u64,
+}
+
+/// Typed `id_cache` key for `PLANAR_BOX` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPlanarBoxId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPlanarBoxId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

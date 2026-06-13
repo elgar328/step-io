@@ -2643,6 +2643,56 @@ pub(crate) fn serialize_curve_bounded_surface(
     )
 }
 
+pub(crate) fn serialize_offset_surface(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyOffsetSurface,
+) -> u64 {
+    buf.push_simple(
+        "OFFSET_SURFACE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.basis_surface),
+            crate::parser::entity::Attribute::Real(l1.distance),
+            crate::parser::entity::Attribute::Enum(
+                crate::ir::attr::logical_to_step(l1.self_intersect).into(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_offset_curve_3d(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyOffsetCurve3d,
+) -> u64 {
+    buf.push_simple(
+        "OFFSET_CURVE_3D",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.basis_curve),
+            crate::parser::entity::Attribute::Real(l1.distance),
+            crate::parser::entity::Attribute::Enum(
+                crate::ir::attr::logical_to_step(l1.self_intersect).into(),
+            ),
+            crate::parser::entity::Attribute::EntityRef(l1.ref_direction),
+        ],
+    )
+}
+
+pub(crate) fn serialize_planar_box(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPlanarBox,
+) -> u64 {
+    buf.push_simple(
+        "PLANAR_BOX",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::Real(l1.size_in_x),
+            crate::parser::entity::Attribute::Real(l1.size_in_y),
+            crate::parser::entity::Attribute::EntityRef(l1.placement),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

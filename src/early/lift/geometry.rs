@@ -6,11 +6,11 @@ use crate::early::model::{
     EarlyAxis1Placement, EarlyAxis2Placement3d, EarlyCartesianPoint, EarlyCircle,
     EarlyCircularArea, EarlyConicalSurface, EarlyCurveBoundedSurface, EarlyCylindricalSurface,
     EarlyDegenerateToroidalSurface, EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyLine,
-    EarlyParabola, EarlyPlanarExtent, EarlyPlane, EarlyPolyline, EarlySphericalSurface,
-    EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyVector,
-    EarlyVertexPoint,
+    EarlyOffsetCurve3d, EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent,
+    EarlyPlane, EarlyPolyline, EarlySphericalSurface, EarlySurfaceOfLinearExtrusion,
+    EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyVector, EarlyVertexPoint,
 };
-use crate::ir::geometry::{Direction3, Point3};
+use crate::ir::geometry::{Direction3, Logical, Point3};
 
 /// Lift one `CARTESIAN_POINT` from its arena `Point3`.
 pub(crate) fn lift_cartesian_point(p: Point3) -> EarlyCartesianPoint {
@@ -258,5 +258,53 @@ pub(crate) fn lift_curve_bounded_surface(
         basis_surface,
         boundaries,
         implicit_outer,
+    }
+}
+
+/// Lift one `OFFSET_SURFACE` (basis = child surface step id). `self_intersect`
+/// (`Logical`) passes through unchanged.
+pub(crate) fn lift_offset_surface(
+    basis_surface: u64,
+    distance: f64,
+    self_intersect: Logical,
+) -> EarlyOffsetSurface {
+    EarlyOffsetSurface {
+        name: String::new(),
+        basis_surface,
+        distance,
+        self_intersect,
+    }
+}
+
+/// Lift one `OFFSET_CURVE_3D` (basis = child curve step id, `ref_direction` =
+/// child direction step id).
+pub(crate) fn lift_offset_curve_3d(
+    basis_curve: u64,
+    distance: f64,
+    self_intersect: Logical,
+    ref_direction: u64,
+) -> EarlyOffsetCurve3d {
+    EarlyOffsetCurve3d {
+        name: String::new(),
+        basis_curve,
+        distance,
+        self_intersect,
+        ref_direction,
+    }
+}
+
+/// Lift one `PLANAR_BOX` (placement = child `AXIS2_PLACEMENT` step id). `name`
+/// is preserved.
+pub(crate) fn lift_planar_box(
+    name: String,
+    size_in_x: f64,
+    size_in_y: f64,
+    placement: u64,
+) -> EarlyPlanarBox {
+    EarlyPlanarBox {
+        name,
+        size_in_x,
+        size_in_y,
+        placement,
     }
 }
