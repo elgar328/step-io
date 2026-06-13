@@ -6,8 +6,8 @@ use crate::early::model::{
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
     EarlyDescriptiveRepresentationItem, EarlyMechanicalDesignAndDraughtingRelationship,
-    EarlyPlacedDatumTargetFeature, EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem,
-    EarlyRepresentationContext, EarlyRepresentationRelationship,
+    EarlyModelGeometricView, EarlyPlacedDatumTargetFeature, EarlyQualifiedRepresentationItem,
+    EarlyRealRepresentationItem, EarlyRepresentationContext, EarlyRepresentationRelationship,
     EarlyShapeRepresentationRelationship, EarlyToleranceZone,
 };
 
@@ -262,4 +262,19 @@ pub(crate) fn lift_qualified_representation_item(
     qualifiers: Vec<u64>,
 ) -> EarlyQualifiedRepresentationItem {
     EarlyQualifiedRepresentationItem { name, qualifiers }
+}
+
+/// Lift one `MODEL_GEOMETRIC_VIEW` (refs pre-resolved).
+pub(crate) fn lift_model_geometric_view(
+    name: String,
+    description: Option<String>,
+    item: u64,
+    rep: u64,
+) -> EarlyModelGeometricView {
+    EarlyModelGeometricView {
+        name,
+        description,
+        item,
+        rep,
+    }
 }

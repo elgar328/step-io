@@ -1314,6 +1314,26 @@ pub(crate) fn serialize_characterized_item_within_representation(
     )
 }
 
+pub(crate) fn serialize_characterized_item_within_representation_with_id(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    id: u64,
+    l1: &super::model::EarlyCharacterizedItemWithinRepresentation,
+) {
+    buf.push_simple_with_id(
+        id,
+        "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.item),
+            crate::parser::entity::Attribute::EntityRef(l1.rep),
+        ],
+    );
+}
+
 pub(crate) fn serialize_surface_style_boundary(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlySurfaceStyleBoundary,
@@ -1708,6 +1728,44 @@ pub(crate) fn serialize_make_from_usage_option(
             crate::parser::entity::Attribute::EntityRef(l1.quantity),
         ],
     )
+}
+
+pub(crate) fn serialize_model_geometric_view(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyModelGeometricView,
+) -> u64 {
+    buf.push_simple(
+        "MODEL_GEOMETRIC_VIEW",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.item),
+            crate::parser::entity::Attribute::EntityRef(l1.rep),
+        ],
+    )
+}
+
+pub(crate) fn serialize_model_geometric_view_with_id(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    id: u64,
+    l1: &super::model::EarlyModelGeometricView,
+) {
+    buf.push_simple_with_id(
+        id,
+        "MODEL_GEOMETRIC_VIEW",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.item),
+            crate::parser::entity::Attribute::EntityRef(l1.rep),
+        ],
+    );
 }
 
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {

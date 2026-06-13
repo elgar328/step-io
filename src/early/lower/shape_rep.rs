@@ -13,8 +13,8 @@ use crate::early::model::{
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
     EarlyDescriptiveRepresentationItem, EarlyMechanicalDesignAndDraughtingRelationship,
-    EarlyPlacedDatumTargetFeature, EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem,
-    EarlyRepresentationContext, EarlyRepresentationRelationship,
+    EarlyModelGeometricView, EarlyPlacedDatumTargetFeature, EarlyQualifiedRepresentationItem,
+    EarlyRealRepresentationItem, EarlyRepresentationContext, EarlyRepresentationRelationship,
     EarlyShapeRepresentationRelationship, EarlyToleranceZone,
 };
 use crate::ir::error::ConvertError;
@@ -25,10 +25,10 @@ use crate::ir::shape_rep::{
     AllAroundShapeAspect, CentreOfSymmetry, CharacterizedItemWithinRepresentation,
     CharacterizedObject, CharacterizedObjectData, CompositeGroupShapeAspect,
     CompositeShapeAspectKind, ConstructiveGeometryRepresentationRelationship, DatumSystem,
-    DatumTarget, MechanicalDesignAndDraughtingRelationship, NumericRepresentationItem,
-    PlacedDatumTargetFeature, RealRepresentationItem, RepresentationRelationship,
-    RepresentationRelationshipData, ShapeRepresentationRelationshipIr, ToleranceZone,
-    UnitlessContext,
+    DatumTarget, MechanicalDesignAndDraughtingRelationship, ModelGeometricView,
+    NumericRepresentationItem, PlacedDatumTargetFeature, RealRepresentationItem,
+    RepresentationRelationship, RepresentationRelationshipData, ShapeRepresentationRelationshipIr,
+    ToleranceZone, UnitlessContext,
 };
 use crate::reader::ReaderContext;
 
@@ -548,4 +548,36 @@ pub(crate) fn lower_qualified_representation_item(
             },
         ));
     ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `MODEL_GEOMETRIC_VIEW` (unresolved camera / rep = silent drop).
+/// Registers in `id_cache` so `PROPERTY_DEFINITION.definition` can resolve
+/// an MGV target (mirrors CIWR).
+pub(crate) fn lower_model_geometric_view(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyModelGeometricView,
+) {
+    let Some(item) = ctx.id_cache.get::<crate::ir::id::CameraModelId>(early.item) else {
+        return;
+    };
+    let Some(rep) = ctx
+        .id_cache
+        .get::<crate::ir::id::RepresentationId>(early.rep)
+    else {
+        return;
+    };
+    let co_id = ctx
+        .characterized_objects
+        .push(CharacterizedObject::ModelGeometricView(
+            ModelGeometricView {
+                inherited: CharacterizedObjectData {
+                    name: early.name,
+                    description: early.description,
+                },
+                item,
+                rep,
+            },
+        ));
+    ctx.id_cache.insert(entity_id, co_id);
 }

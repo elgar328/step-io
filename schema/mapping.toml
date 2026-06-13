@@ -111,6 +111,14 @@ generate = [
     "dimensional_characteristic_representation",
     "general_property_association",
     "make_from_usage_option",
+    "model_geometric_view",
+]
+
+# Entities whose writer fills a pre-reserved id (reserve-then-fill): also
+# generate `serialize_<entity>_with_id` for those emit paths.
+serialize_with_id = [
+    "characterized_item_within_representation",
+    "model_geometric_view",
 ]
 
 # `generate_all`: diagnostic flip. When true, gen-early generates *every* entity

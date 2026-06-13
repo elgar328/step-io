@@ -1695,6 +1695,19 @@ pub(crate) fn bind_make_from_usage_option(
     })
 }
 
+pub(crate) fn bind_model_geometric_view(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyModelGeometricView, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "MODEL_GEOMETRIC_VIEW")?;
+    Ok(super::model::EarlyModelGeometricView {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        item: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "item")?,
+        rep: crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "rep")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

@@ -12,6 +12,11 @@ pub(crate) struct Mapping {
     /// instead of just the wired `generate` list. Committed as `false`.
     #[serde(default)]
     pub(crate) generate_all: bool,
+    /// Entities that additionally get a `serialize_<entity>_with_id` variant
+    /// (`push_simple_with_id` under a pre-reserved id) — for writer paths
+    /// using the reserve-then-fill pattern.
+    #[serde(default)]
+    pub(crate) serialize_with_id: Vec<String>,
     #[serde(rename = "enum", default)]
     pub(crate) enums: BTreeMap<String, EnumHint>,
     #[serde(rename = "select", default)]

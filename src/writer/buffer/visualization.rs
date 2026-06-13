@@ -132,7 +132,6 @@ impl WriteBuffer<'_> {
 
     pub(in crate::writer::buffer) fn emit_characterized_objects(&mut self) {
         use crate::ir::shape_rep::CharacterizedObject;
-        use crate::parser::entity::Attribute;
         self.assert_phase(
             super::EmitPhase::DraughtingModels,
             "emit_characterized_objects (indexes draughting_model step ids)",
@@ -158,19 +157,14 @@ impl WriteBuffer<'_> {
                         continue;
                     };
                     let rep_step = self.step_id(ciwr.rep);
-                    let desc_attr = match ciwr.inherited.description {
-                        Some(d) => Attribute::String(d),
-                        None => Attribute::Unset,
-                    };
-                    self.push_simple_with_id(
-                        reserved,
-                        "CHARACTERIZED_ITEM_WITHIN_REPRESENTATION",
-                        vec![
-                            Attribute::String(ciwr.inherited.name),
-                            desc_attr,
-                            Attribute::EntityRef(item_step),
-                            Attribute::EntityRef(rep_step),
-                        ],
+                    let early = crate::early::lift::lift_characterized_item_within_representation(
+                        ciwr.inherited.name,
+                        ciwr.inherited.description,
+                        item_step,
+                        rep_step,
+                    );
+                    crate::early::serialize::serialize_characterized_item_within_representation_with_id(
+                        self, reserved, &early,
                     );
                 }
                 CharacterizedObject::ModelGeometricView(mgv) => {
@@ -179,19 +173,14 @@ impl WriteBuffer<'_> {
                     let reserved = self.step_id(id);
                     let item_step = self.step_id(mgv.item);
                     let rep_step = self.step_id(mgv.rep);
-                    let desc_attr = match mgv.inherited.description {
-                        Some(d) => Attribute::String(d),
-                        None => Attribute::Unset,
-                    };
-                    self.push_simple_with_id(
-                        reserved,
-                        "MODEL_GEOMETRIC_VIEW",
-                        vec![
-                            Attribute::String(mgv.inherited.name),
-                            desc_attr,
-                            Attribute::EntityRef(item_step),
-                            Attribute::EntityRef(rep_step),
-                        ],
+                    let early = crate::early::lift::lift_model_geometric_view(
+                        mgv.inherited.name,
+                        mgv.inherited.description,
+                        item_step,
+                        rep_step,
+                    );
+                    crate::early::serialize::serialize_model_geometric_view_with_id(
+                        self, reserved, &early,
                     );
                 }
                 CharacterizedObject::Itself(data) => {

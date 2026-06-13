@@ -153,7 +153,7 @@ pub(crate) fn emit_entity(ctx: &Ctx, ent_name: &str, out: &mut GenOut) {
 
     entity_bind(ent_name, &type_name, &step_name, &attrs, has_select, out);
 
-    entity_serialize(ent_name, &type_name, &step_name, &attrs, out);
+    entity_serialize(ctx, ent_name, &type_name, &step_name, &attrs, out);
 }
 
 /// Emit a synthesized `Early*` enum + `bind_<sel>` / `<sel>_emit` for a mixed
@@ -446,13 +446,19 @@ fn entity_bind(
 }
 
 /// `serialize_<entity>` fn + helper-usage tracking (split from [`emit_entity`]).
+/// Entities listed in mapping `serialize_with_id` additionally get a
+/// `serialize_<entity>_with_id` variant emitting under a pre-reserved id
+/// (the writer's reserve-then-fill pattern).
 fn entity_serialize(
+    ctx: &Ctx,
     ent_name: &str,
     type_name: &str,
     step_name: &str,
     attrs: &[(String, Kind, bool)],
     out: &mut GenOut,
 ) {
+    // Attr expressions are shared between the plain and with_id variants.
+    let mut attr_lines = String::new();
     // serialize fn
     writeln!(
         out.serialize,
@@ -461,12 +467,10 @@ fn entity_serialize(
     .unwrap();
     writeln!(out.serialize, "    buf.push_simple(\"{step_name}\", vec![").unwrap();
     for (field, k, opt) in attrs {
-        writeln!(
-            out.serialize,
-            "        {},",
-            serialize_expr_full(k, field, *opt)
-        )
-        .unwrap();
+        let line = format!("        {},", serialize_expr_full(k, field, *opt));
+        writeln!(out.serialize, "{line}").unwrap();
+        attr_lines.push_str(&line);
+        attr_lines.push('\n');
         match k {
             Kind::Bool => out.any_bool = true,
             Kind::Enum(alias) => {
@@ -504,6 +508,19 @@ fn entity_serialize(
         }
     }
     writeln!(out.serialize, "    ])\n}}\n").unwrap();
+
+    if ctx.mapping.serialize_with_id.iter().any(|e| e == ent_name) {
+        writeln!(
+            out.serialize,
+            "pub(crate) fn serialize_{ent_name}_with_id(buf: &mut crate::writer::buffer::WriteBuffer, id: u64, l1: &super::model::{type_name}) {{"
+        )
+        .unwrap();
+        writeln!(
+            out.serialize,
+            "    buf.push_simple_with_id(id, \"{step_name}\", vec![\n{attr_lines}    ]);\n}}\n"
+        )
+        .unwrap();
+    }
 }
 
 /// `bind_<sel>` for a hinted mixed SELECT (split from [`emit_select`]).
