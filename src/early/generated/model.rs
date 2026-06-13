@@ -3366,6 +3366,28 @@ impl crate::ir::arena::ArenaId for EarlyClosedShellId {
     }
 }
 
+/// L1 `VERTEX_LOOP` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyVertexLoop {
+    pub(crate) name: String,
+    pub(crate) loop_vertex: u64,
+}
+
+/// Typed `id_cache` key for `VERTEX_LOOP` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyVertexLoopId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyVertexLoopId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

@@ -2,7 +2,9 @@
 //! for the lowering contract. Refs resolve through the shared reader resolvers;
 //! a dangling child surfaces as `MissingReference`.
 
-use crate::early::model::{EarlyClosedShell, EarlyFaceBound, EarlyFaceOuterBound, EarlyOpenShell};
+use crate::early::model::{
+    EarlyClosedShell, EarlyFaceBound, EarlyFaceOuterBound, EarlyOpenShell, EarlyVertexLoop,
+};
 use crate::ir::error::ConvertError;
 use crate::ir::topology::{Orientation, Shell, Wire, WireData};
 use crate::reader::{ReaderContext, bool_to_orientation};
@@ -98,4 +100,15 @@ pub(crate) fn lower_closed_shell(
     early: &EarlyClosedShell,
 ) -> Result<(), ConvertError> {
     lower_shell_body(ctx, entity_id, &early.cfs_faces, false)
+}
+
+/// Lower one `VERTEX_LOOP` (single vertex; registered in `vertex_loop_map`).
+pub(crate) fn lower_vertex_loop(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyVertexLoop,
+) -> Result<(), ConvertError> {
+    let vertex = ctx.resolve_vertex(entity_id, early.loop_vertex, "loop_vertex")?;
+    ctx.vertex_loop_map.insert(entity_id, vertex);
+    Ok(())
 }

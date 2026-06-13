@@ -66,5 +66,5 @@ pub(crate) use super::generated::serialize::{
     serialize_surface_style_usage, serialize_symbol_colour, serialize_symbol_style,
     serialize_text_style_for_defined_font, serialize_tolerance_zone, serialize_tolerance_zone_form,
     serialize_toroidal_surface, serialize_type_qualifier, serialize_value_format_type_qualifier,
-    serialize_vector, serialize_vertex_point, serialize_view_volume,
+    serialize_vector, serialize_vertex_loop, serialize_vertex_point, serialize_view_volume,
 };

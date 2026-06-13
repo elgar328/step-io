@@ -2513,6 +2513,19 @@ pub(crate) fn serialize_closed_shell(
     )
 }
 
+pub(crate) fn serialize_vertex_loop(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyVertexLoop,
+) -> u64 {
+    buf.push_simple(
+        "VERTEX_LOOP",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.loop_vertex),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

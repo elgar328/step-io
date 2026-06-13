@@ -159,6 +159,7 @@ generate = [
     "face_outer_bound",
     "open_shell",
     "closed_shell",
+    "vertex_loop",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

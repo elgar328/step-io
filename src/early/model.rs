@@ -63,7 +63,7 @@ pub(crate) use super::generated::model::{
     EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId,
     EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont, EarlyToleranceZone,
     EarlyToleranceZoneForm, EarlyToroidalSurface, EarlyTypeQualifier,
-    EarlyValueFormatTypeQualifier, EarlyVector, EarlyVertexPoint, EarlyViewVolume,
+    EarlyValueFormatTypeQualifier, EarlyVector, EarlyVertexLoop, EarlyVertexPoint, EarlyViewVolume,
     EarlyViewVolumeId,
 };
 

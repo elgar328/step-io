@@ -2370,6 +2370,17 @@ pub(crate) fn bind_closed_shell(
     })
 }
 
+pub(crate) fn bind_vertex_loop(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyVertexLoop, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "VERTEX_LOOP")?;
+    Ok(super::model::EarlyVertexLoop {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        loop_vertex: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "loop_vertex")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {
