@@ -6,10 +6,14 @@
 //! 3D branch exactly (2-count → the 2D arena claims it, so we no-op).
 
 use crate::early::model::{
-    EarlyCartesianPoint, EarlyDirection, EarlyLine, EarlyVector, EarlyVertexPoint,
+    EarlyAxis1Placement, EarlyAxis2Placement3d, EarlyCartesianPoint, EarlyCircle, EarlyDirection,
+    EarlyLine, EarlyPlane, EarlyVector, EarlyVertexPoint,
 };
 use crate::ir::error::ConvertError;
-use crate::ir::geometry::{Direction3, Line3, Point3, Vertex};
+use crate::ir::geometry::{
+    Axis1Placement, Axis2Placement3d, Circle3, Curve, Direction3, Line3, Plane3, Point3, Surface,
+    Vertex,
+};
 use crate::reader::ReaderContext;
 
 /// Lower one 3D `CARTESIAN_POINT`. A 2-coordinate point belongs to the 2D
@@ -111,14 +115,103 @@ pub(crate) fn lower_line(
     }
     let point = ctx.resolve_point(entity_id, early.pnt, "pnt")?;
     let (direction, magnitude) = ctx.resolve_vector(entity_id, early.dir, "dir")?;
+    let id = ctx.geometry.curves.push(Curve::Line(Line3 {
+        point,
+        direction,
+        magnitude,
+    }));
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
+/// Lower one `AXIS1_PLACEMENT` (location + axis direction). The schema types
+/// `axis` OPTIONAL, but the L2 `Axis1Placement.axis` is required and every
+/// corpus instance carries it; a missing axis is an Err (the legacy required
+/// read errored too — no corpus file triggers it).
+pub(crate) fn lower_axis1_placement(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyAxis1Placement,
+) -> Result<(), ConvertError> {
+    let location = ctx.resolve_point(entity_id, early.location, "location")?;
+    let Some(axis_ref) = early.axis else {
+        return Err(ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: "AXIS1_PLACEMENT.axis is required".into(),
+        });
+    };
+    let axis = ctx.resolve_direction(entity_id, axis_ref, "axis")?;
     let id = ctx
         .geometry
-        .curves
-        .push(crate::ir::geometry::Curve::Line(Line3 {
-            point,
-            direction,
-            magnitude,
-        }));
+        .placements_1d
+        .push(Axis1Placement { location, axis });
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
+/// Lower one `AXIS2_PLACEMENT_3D` (location + optional `axis`/`ref_direction`; 2D
+/// sister claims a 2D location). Stored in the `placement_map` named cache.
+pub(crate) fn lower_axis2_placement_3d(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyAxis2Placement3d,
+) -> Result<(), ConvertError> {
+    if ctx
+        .id_cache
+        .contains::<crate::ir::id::Point2dId>(early.location)
+    {
+        return Ok(());
+    }
+    let location = ctx.resolve_point(entity_id, early.location, "location")?;
+    let axis = early
+        .axis
+        .map(|r| ctx.resolve_direction(entity_id, r, "axis"))
+        .transpose()?;
+    let ref_direction = early
+        .ref_direction
+        .map(|r| ctx.resolve_direction(entity_id, r, "ref_direction"))
+        .transpose()?;
+    let id = ctx.geometry.placements.push(Axis2Placement3d {
+        location,
+        axis,
+        ref_direction,
+    });
+    ctx.placement_map.insert(entity_id, id);
+    Ok(())
+}
+
+/// Lower one `CIRCLE` (placement + radius; 2D sister claims a 2D placement).
+pub(crate) fn lower_circle(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyCircle,
+) -> Result<(), ConvertError> {
+    if ctx
+        .id_cache
+        .contains::<crate::ir::id::Placement2dId>(early.position)
+    {
+        return Ok(());
+    }
+    let position = ctx.resolve_placement(entity_id, early.position, "position")?;
+    let id = ctx.geometry.curves.push(Curve::Circle(Circle3 {
+        position,
+        radius: early.radius,
+    }));
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
+/// Lower one `PLANE` (placement → surface).
+pub(crate) fn lower_plane(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyPlane,
+) -> Result<(), ConvertError> {
+    let position = ctx.resolve_placement(entity_id, early.position, "position")?;
+    let id = ctx
+        .geometry
+        .surfaces
+        .push(Surface::Plane(Plane3 { position }));
     ctx.id_cache.insert(entity_id, id);
     Ok(())
 }

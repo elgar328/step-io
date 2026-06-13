@@ -2236,6 +2236,71 @@ pub(crate) fn serialize_line(
     )
 }
 
+pub(crate) fn serialize_axis1_placement(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAxis1Placement,
+) -> u64 {
+    buf.push_simple(
+        "AXIS1_PLACEMENT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.location),
+            match l1.axis {
+                Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+        ],
+    )
+}
+
+pub(crate) fn serialize_axis2_placement_3d(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAxis2Placement3d,
+) -> u64 {
+    buf.push_simple(
+        "AXIS2_PLACEMENT_3D",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.location),
+            match l1.axis {
+                Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            match l1.ref_direction {
+                Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+        ],
+    )
+}
+
+pub(crate) fn serialize_circle(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCircle,
+) -> u64 {
+    buf.push_simple(
+        "CIRCLE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.position),
+            crate::parser::entity::Attribute::Real(l1.radius),
+        ],
+    )
+}
+
+pub(crate) fn serialize_plane(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPlane,
+) -> u64 {
+    buf.push_simple(
+        "PLANE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.position),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

@@ -141,6 +141,10 @@ generate = [
     "vertex_point",
     "vector",
     "line",
+    "axis1_placement",
+    "axis2_placement_3d",
+    "circle",
+    "plane",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

@@ -2148,6 +2148,59 @@ pub(crate) fn bind_line(
     })
 }
 
+pub(crate) fn bind_axis1_placement(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAxis1Placement, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "AXIS1_PLACEMENT")?;
+    Ok(super::model::EarlyAxis1Placement {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        location: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "location")?,
+        axis: crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "axis")?,
+    })
+}
+
+pub(crate) fn bind_axis2_placement_3d(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAxis2Placement3d, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "AXIS2_PLACEMENT_3D")?;
+    Ok(super::model::EarlyAxis2Placement3d {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        location: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "location")?,
+        axis: crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "axis")?,
+        ref_direction: crate::ir::attr::read_optional_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "ref_direction",
+        )?,
+    })
+}
+
+pub(crate) fn bind_circle(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyCircle, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "CIRCLE")?;
+    Ok(super::model::EarlyCircle {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        position: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "position")?,
+        radius: crate::ir::attr::read_real(attrs, 2, entity_id, "radius")?,
+    })
+}
+
+pub(crate) fn bind_plane(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPlane, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "PLANE")?;
+    Ok(super::model::EarlyPlane {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        position: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "position")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

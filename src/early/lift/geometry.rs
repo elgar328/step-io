@@ -3,7 +3,8 @@
 //! (`String::new()`), so these lifts always set `name: String::new()`.
 
 use crate::early::model::{
-    EarlyCartesianPoint, EarlyDirection, EarlyLine, EarlyVector, EarlyVertexPoint,
+    EarlyAxis1Placement, EarlyAxis2Placement3d, EarlyCartesianPoint, EarlyCircle, EarlyDirection,
+    EarlyLine, EarlyPlane, EarlyVector, EarlyVertexPoint,
 };
 use crate::ir::geometry::{Direction3, Point3};
 
@@ -47,5 +48,47 @@ pub(crate) fn lift_line(pnt: u64, dir: u64) -> EarlyLine {
         name: String::new(),
         pnt,
         dir,
+    }
+}
+
+/// Lift one `AXIS1_PLACEMENT` (location/axis = child output step ids; axis is
+/// always present in practice, so `Some`).
+pub(crate) fn lift_axis1_placement(location: u64, axis: u64) -> EarlyAxis1Placement {
+    EarlyAxis1Placement {
+        name: String::new(),
+        location,
+        axis: Some(axis),
+    }
+}
+
+/// Lift one `AXIS2_PLACEMENT_3D` (optional `axis`/`ref_direction` pass through;
+/// `None` → `$`).
+pub(crate) fn lift_axis2_placement_3d(
+    location: u64,
+    axis: Option<u64>,
+    ref_direction: Option<u64>,
+) -> EarlyAxis2Placement3d {
+    EarlyAxis2Placement3d {
+        name: String::new(),
+        location,
+        axis,
+        ref_direction,
+    }
+}
+
+/// Lift one `CIRCLE` (position = child placement step id).
+pub(crate) fn lift_circle(position: u64, radius: f64) -> EarlyCircle {
+    EarlyCircle {
+        name: String::new(),
+        position,
+        radius,
+    }
+}
+
+/// Lift one `PLANE` (position = child placement step id).
+pub(crate) fn lift_plane(position: u64) -> EarlyPlane {
+    EarlyPlane {
+        name: String::new(),
+        position,
     }
 }

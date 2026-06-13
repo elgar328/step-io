@@ -2951,6 +2951,98 @@ impl crate::ir::arena::ArenaId for EarlyLineId {
     }
 }
 
+/// L1 `AXIS1_PLACEMENT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAxis1Placement {
+    pub(crate) name: String,
+    pub(crate) location: u64,
+    pub(crate) axis: Option<u64>,
+}
+
+/// Typed `id_cache` key for `AXIS1_PLACEMENT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAxis1PlacementId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAxis1PlacementId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `AXIS2_PLACEMENT_3D` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAxis2Placement3d {
+    pub(crate) name: String,
+    pub(crate) location: u64,
+    pub(crate) axis: Option<u64>,
+    pub(crate) ref_direction: Option<u64>,
+}
+
+/// Typed `id_cache` key for `AXIS2_PLACEMENT_3D` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAxis2Placement3dId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAxis2Placement3dId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `CIRCLE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCircle {
+    pub(crate) name: String,
+    pub(crate) position: u64,
+    pub(crate) radius: f64,
+}
+
+/// Typed `id_cache` key for `CIRCLE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCircleId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCircleId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PLANE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPlane {
+    pub(crate) name: String,
+    pub(crate) position: u64,
+}
+
+/// Typed `id_cache` key for `PLANE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPlaneId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPlaneId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {
