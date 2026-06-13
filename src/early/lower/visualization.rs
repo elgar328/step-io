@@ -2,15 +2,16 @@
 //! the pilot cluster). See the [module docs](super) for the lowering contract.
 
 use crate::early::model::{
-    EarlyCameraUsage, EarlyColourRgb, EarlyCompositeText, EarlyDraughtingPreDefinedColour,
-    EarlyDraughtingPreDefinedCurveFont, EarlyFillAreaStyle, EarlyFillAreaStyleColour,
-    EarlyFillAreaStyleId, EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlyPointStyleId,
-    EarlyPreDefinedCurveFont, EarlyPreDefinedMarker, EarlyPreDefinedPointMarkerSymbol,
-    EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol, EarlyPresentationLayerAssignment,
-    EarlySurfaceSideStyle, EarlySurfaceSideStyleId, EarlySurfaceStyleBoundary,
-    EarlySurfaceStyleFillArea, EarlySurfaceStyleFillAreaId, EarlySurfaceStyleTransparent,
-    EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId, EarlySymbolColour, EarlySymbolStyle,
-    EarlyTextStyleForDefinedFont, EarlyViewVolume, EarlyViewVolumeId,
+    EarlyAppliedPresentedItem, EarlyCameraUsage, EarlyColourRgb, EarlyCompositeText,
+    EarlyDraughtingPreDefinedColour, EarlyDraughtingPreDefinedCurveFont, EarlyFillAreaStyle,
+    EarlyFillAreaStyleColour, EarlyFillAreaStyleId, EarlyMarker, EarlyMarkerSize, EarlyPointStyle,
+    EarlyPointStyleId, EarlyPreDefinedCurveFont, EarlyPreDefinedMarker,
+    EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol,
+    EarlyPresentationLayerAssignment, EarlyPresentedItemRepresentation, EarlySurfaceSideStyle,
+    EarlySurfaceSideStyleId, EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea,
+    EarlySurfaceStyleFillAreaId, EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage,
+    EarlySurfaceStyleUsageId, EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont,
+    EarlyViewVolume, EarlyViewVolumeId,
 };
 use crate::ir::id::{
     ColourId, MeasureWithUnitId, PlanarExtentId, PointId, PreDefinedMarkerId,
@@ -18,14 +19,15 @@ use crate::ir::id::{
 };
 use crate::ir::shape_rep::{CameraUsage, RepresentationMap};
 use crate::ir::visualization::{
-    Colour, ColourRgb, CompositeText, CurveOrRender, DraughtingPreDefinedColour,
-    DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour, FoundedItem, Marker,
-    MarkerSize, PointStyle, PreDefinedCurveFont, PreDefinedCurveFontData, PreDefinedMarker,
-    PreDefinedMarkerData, PreDefinedPointMarkerSymbol, PreDefinedSymbol, PreDefinedSymbolData,
-    PreDefinedTerminatorSymbol, PresentationLayerAssignment, PresentationLayerAssignmentItem,
-    SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleBoundary, SurfaceStyleFillArea,
-    SurfaceStyleUsage, SymbolColour, SymbolStyle, TextOrCharacter, TextStyleForDefinedFont,
-    ViewVolume, VisualizationPool,
+    AppliedPresentedItem, Colour, ColourRgb, CompositeText, CurveOrRender,
+    DraughtingPreDefinedColour, DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour,
+    FoundedItem, Marker, MarkerSize, PointStyle, PreDefinedCurveFont, PreDefinedCurveFontData,
+    PreDefinedMarker, PreDefinedMarkerData, PreDefinedPointMarkerSymbol, PreDefinedSymbol,
+    PreDefinedSymbolData, PreDefinedTerminatorSymbol, PresentationLayerAssignment,
+    PresentationLayerAssignmentItem, PresentationReprSelect, PresentedItem,
+    PresentedItemRepresentation, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleBoundary,
+    SurfaceStyleFillArea, SurfaceStyleUsage, SymbolColour, SymbolStyle, TextOrCharacter,
+    TextStyleForDefinedFont, ViewVolume, VisualizationPool,
 };
 use crate::reader::ReaderContext;
 
@@ -555,5 +557,59 @@ pub(crate) fn lower_presentation_layer_assignment(
             description: early.description,
             assigned_items,
         });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `PRESENTED_ITEM_REPRESENTATION` (either side unresolved =
+/// silent drop; `presentation` probes representation-then-set).
+pub(crate) fn lower_presented_item_representation(
+    ctx: &mut ReaderContext,
+    early: &EarlyPresentedItemRepresentation,
+) {
+    let presentation = if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::id::PresentationRepresentationId>(early.presentation)
+    {
+        PresentationReprSelect::Representation(id)
+    } else if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::id::PresentationSetId>(early.presentation)
+    {
+        PresentationReprSelect::Set(id)
+    } else {
+        return;
+    };
+    let Some(item) = ctx
+        .id_cache
+        .get::<crate::ir::id::AppliedPresentedItemId>(early.item)
+    else {
+        return;
+    };
+    let _id = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .presented_item_representations
+        .push(PresentedItemRepresentation { presentation, item });
+}
+
+/// Lower one `APPLIED_PRESENTED_ITEM`. `presented_item` SELECT — only the
+/// `product_definition` member is modelled; the other PLM members skip
+/// per-item (legacy leniency).
+pub(crate) fn lower_applied_presented_item(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyAppliedPresentedItem,
+) {
+    let mut items = Vec::with_capacity(early.items.len());
+    for r in early.items {
+        if let Ok(pid) = ctx.resolve_product_by_pdef(0, r, "presented_item") {
+            items.push(PresentedItem::ProductDefinition(pid));
+        }
+    }
+    let id = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .applied_presented_items
+        .push(AppliedPresentedItem { items });
     ctx.id_cache.insert(entity_id, id);
 }

@@ -1,16 +1,11 @@
-//! `PRESENTED_ITEM_REPRESENTATION` + `APPLIED_PRESENTED_ITEM` handlers
-//! — phase pr-item.
-//!
-//! `presented_item` SELECT has 9 members; step-io models only
-//! `product_definition` (`ProductId` via the product chain). Other 8 PLM
-//! members are silently skipped on read.
+//! `PRESENTED_ITEM_REPRESENTATION` / `APPLIED_PRESENTED_ITEM` handlers —
+//! visualization (2-layer path).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list};
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::{
     AppliedPresentedItem, PresentationReprSelect, PresentedItem, PresentedItemRepresentation,
-    VisualizationPool,
 };
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -30,36 +25,8 @@ impl SimpleEntityHandler for PresentedItemRepresentationHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "PRESENTED_ITEM_REPRESENTATION")?;
-        let pres_ref = read_entity_ref(attrs, 0, entity_id, "presentation")?;
-        let presentation = if let Some(id) = ctx
-            .id_cache
-            .get::<crate::ir::id::PresentationRepresentationId>(pres_ref)
-        {
-            PresentationReprSelect::Representation(id)
-        } else if let Some(id) = ctx
-            .id_cache
-            .get::<crate::ir::id::PresentationSetId>(pres_ref)
-        {
-            PresentationReprSelect::Set(id)
-        } else {
-            return Ok(());
-        };
-        let item_ref = read_entity_ref(attrs, 1, entity_id, "item")?;
-        // `item` is a `presented_item` (abstract; concrete subtype
-        // `applied_presented_item`), so it resolves through the
-        // applied-presented-item arena, not a `presented_item_select` member.
-        let Some(item) = ctx
-            .id_cache
-            .get::<crate::ir::id::AppliedPresentedItemId>(item_ref)
-        else {
-            return Ok(());
-        };
-        let _id = ctx
-            .visualization
-            .get_or_insert_with(VisualizationPool::default)
-            .presented_item_representations
-            .push(PresentedItemRepresentation { presentation, item });
+        let early = bind::bind_presented_item_representation(entity_id, attrs)?;
+        lower::lower_presented_item_representation(ctx, &early);
         Ok(())
     }
 
@@ -69,12 +36,9 @@ impl SimpleEntityHandler for PresentedItemRepresentationHandler {
             PresentationReprSelect::Set(id) => buf.step_id(id),
         };
         let item_step = buf.step_id(pir.item);
-        Ok(buf.push_simple(
-            "PRESENTED_ITEM_REPRESENTATION",
-            vec![
-                Attribute::EntityRef(pres_step),
-                Attribute::EntityRef(item_step),
-            ],
+        let early = lift::lift_presented_item_representation(pres_step, item_step);
+        Ok(serialize::serialize_presented_item_representation(
+            buf, &early,
         ))
     }
 }
@@ -91,42 +55,20 @@ impl SimpleEntityHandler for AppliedPresentedItemHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 1, entity_id, "APPLIED_PRESENTED_ITEM")?;
-        let refs = read_entity_ref_list(attrs, 0, entity_id, "items")?;
-        let mut items = Vec::with_capacity(refs.len());
-        for r in refs {
-            if let Some(item) = resolve_presented_item(ctx, r) {
-                items.push(item);
-            }
-        }
-        if items.is_empty() {
-            return Ok(());
-        }
-        let id = ctx
-            .visualization
-            .get_or_insert_with(VisualizationPool::default)
-            .applied_presented_items
-            .push(AppliedPresentedItem { items });
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_applied_presented_item(entity_id, attrs)?;
+        lower::lower_applied_presented_item(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, api: AppliedPresentedItem) -> Result<u64, WriteError> {
-        let items = api
+        let items: Vec<u64> = api
             .items
             .into_iter()
-            .map(|it| Attribute::EntityRef(emit_presented_item(buf, it)))
+            .map(|it| emit_presented_item(buf, it))
             .collect();
-        Ok(buf.push_simple("APPLIED_PRESENTED_ITEM", vec![Attribute::List(items)]))
+        let early = lift::lift_applied_presented_item(items);
+        Ok(serialize::serialize_applied_presented_item(buf, &early))
     }
-}
-
-fn resolve_presented_item(ctx: &ReaderContext, step_id: u64) -> Option<PresentedItem> {
-    // `presented_item` SELECT — only `product_definition` is modelled.
-    // Other 8 PLM members (action / product_concept / ...) are skipped.
-    ctx.resolve_product_by_pdef(0, step_id, "presented_item")
-        .ok()
-        .map(PresentedItem::ProductDefinition)
 }
 
 fn emit_presented_item(buf: &WriteBuffer, item: PresentedItem) -> u64 {

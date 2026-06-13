@@ -1708,6 +1708,51 @@ pub(crate) fn bind_model_geometric_view(
     })
 }
 
+pub(crate) fn bind_presented_item_representation(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPresentedItemRepresentation, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "PRESENTED_ITEM_REPRESENTATION")?;
+    Ok(super::model::EarlyPresentedItemRepresentation {
+        presentation: crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "presentation")?,
+        item: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "item")?,
+    })
+}
+
+pub(crate) fn bind_applied_presented_item(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAppliedPresentedItem, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "APPLIED_PRESENTED_ITEM")?;
+    Ok(super::model::EarlyAppliedPresentedItem {
+        items: crate::ir::attr::read_entity_ref_list(attrs, 0, entity_id, "items")?,
+    })
+}
+
+pub(crate) fn bind_product_definition_relationship(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyProductDefinitionRelationship, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 5, entity_id, "PRODUCT_DEFINITION_RELATIONSHIP")?;
+    Ok(super::model::EarlyProductDefinitionRelationship {
+        id: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "id")?.to_owned(),
+        name: crate::ir::attr::read_string_or_unset(attrs, 1, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 2, entity_id, "description")?,
+        relating_product_definition: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "relating_product_definition",
+        )?,
+        related_product_definition: crate::ir::attr::read_entity_ref(
+            attrs,
+            4,
+            entity_id,
+            "related_product_definition",
+        )?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

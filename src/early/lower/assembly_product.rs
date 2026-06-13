@@ -9,8 +9,8 @@
 
 use crate::early::model::{
     EarlyMakeFromUsageOption, EarlyNextAssemblyUsageOccurrence, EarlyProduct, EarlyProductCategory,
-    EarlyProductDefinitionFormationId, EarlyProductDefinitionId, EarlyProductDefinitionShapeId,
-    EarlySource,
+    EarlyProductDefinitionFormationId, EarlyProductDefinitionId,
+    EarlyProductDefinitionRelationship, EarlyProductDefinitionShapeId, EarlySource,
 };
 use crate::ir::assembly::{
     Product, ProductDefinition, ProductDefinitionFormation, ProductDefinitionFormationData,
@@ -329,6 +329,38 @@ pub(crate) fn lower_make_from_usage_option(
                 ranking: early.ranking,
                 ranking_rationale: early.ranking_rationale,
                 quantity,
+            },
+        ),
+    );
+    ctx.id_cache.insert(entity_id, arena_id);
+    Ok(())
+}
+
+/// Lower one plain `PRODUCT_DEFINITION_RELATIONSHIP` (faithful optional
+/// description; unresolved pdefs surface `MissingReference`).
+pub(crate) fn lower_product_definition_relationship(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyProductDefinitionRelationship,
+) -> Result<(), ConvertError> {
+    let relating = ctx.resolve_product_by_pdef(
+        entity_id,
+        early.relating_product_definition,
+        "relating_product_definition",
+    )?;
+    let related = ctx.resolve_product_by_pdef(
+        entity_id,
+        early.related_product_definition,
+        "related_product_definition",
+    )?;
+    let arena_id = ctx.product_definition_relationships.push(
+        crate::ir::assembly::ProductDefinitionRelationship::Plain(
+            crate::ir::assembly::PlainProductDefinitionRelationship {
+                id: early.id,
+                name: early.name,
+                description: early.description,
+                relating,
+                related,
             },
         ),
     );

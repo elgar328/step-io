@@ -8,7 +8,7 @@
 use crate::early::model::{
     EarlyMakeFromUsageOption, EarlyProduct, EarlyProductCategory, EarlyProductDefinition,
     EarlyProductDefinitionFormation, EarlyProductDefinitionFormationWithSpecifiedSource,
-    EarlyProductDefinitionWithAssociatedDocuments, EarlySource,
+    EarlyProductDefinitionRelationship, EarlyProductDefinitionWithAssociatedDocuments, EarlySource,
 };
 use crate::entities::assembly_product::context_dependent_shape_representation::ContextDependentShapeRepresentationWriteInput;
 use crate::entities::assembly_product::next_assembly_usage_occurrence::NextAssemblyUsageOccurrenceWriteInput;
@@ -156,5 +156,20 @@ pub(crate) fn lift_make_from_usage_option(
         ranking: mfu.ranking,
         ranking_rationale: mfu.ranking_rationale,
         quantity,
+    }
+}
+
+/// Lift one plain `PRODUCT_DEFINITION_RELATIONSHIP` (refs pre-resolved).
+pub(crate) fn lift_product_definition_relationship(
+    plain: crate::ir::assembly::PlainProductDefinitionRelationship,
+    relating_product_definition: u64,
+    related_product_definition: u64,
+) -> EarlyProductDefinitionRelationship {
+    EarlyProductDefinitionRelationship {
+        id: plain.id,
+        name: plain.name,
+        description: plain.description,
+        relating_product_definition,
+        related_product_definition,
     }
 }

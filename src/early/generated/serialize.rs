@@ -1768,6 +1768,53 @@ pub(crate) fn serialize_model_geometric_view_with_id(
     );
 }
 
+pub(crate) fn serialize_presented_item_representation(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPresentedItemRepresentation,
+) -> u64 {
+    buf.push_simple(
+        "PRESENTED_ITEM_REPRESENTATION",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.presentation),
+            crate::parser::entity::Attribute::EntityRef(l1.item),
+        ],
+    )
+}
+
+pub(crate) fn serialize_applied_presented_item(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAppliedPresentedItem,
+) -> u64 {
+    buf.push_simple(
+        "APPLIED_PRESENTED_ITEM",
+        vec![crate::parser::entity::Attribute::List(
+            l1.items
+                .iter()
+                .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                .collect(),
+        )],
+    )
+}
+
+pub(crate) fn serialize_product_definition_relationship(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyProductDefinitionRelationship,
+) -> u64 {
+    buf.push_simple(
+        "PRODUCT_DEFINITION_RELATIONSHIP",
+        vec![
+            crate::parser::entity::Attribute::String(l1.id.clone()),
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.relating_product_definition),
+            crate::parser::entity::Attribute::EntityRef(l1.related_product_definition),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

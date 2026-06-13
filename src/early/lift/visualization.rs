@@ -2,11 +2,12 @@
 //! the pilot cluster). See the [module docs](super) for the lifting contract.
 
 use crate::early::model::{
-    EarlyCameraUsage, EarlyColourRgb, EarlyCompositeText, EarlyDraughtingPreDefinedColour,
-    EarlyDraughtingPreDefinedCurveFont, EarlyFillAreaStyle, EarlyFillAreaStyleColour, EarlyMarker,
-    EarlyMarkerSize, EarlyPointStyle, EarlyPreDefinedCurveFont, EarlyPreDefinedMarker,
-    EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol,
-    EarlyPresentationLayerAssignment, EarlySurfaceSideStyle, EarlySurfaceStyleBoundary,
+    EarlyAppliedPresentedItem, EarlyCameraUsage, EarlyColourRgb, EarlyCompositeText,
+    EarlyDraughtingPreDefinedColour, EarlyDraughtingPreDefinedCurveFont, EarlyFillAreaStyle,
+    EarlyFillAreaStyleColour, EarlyMarker, EarlyMarkerSize, EarlyPointStyle,
+    EarlyPreDefinedCurveFont, EarlyPreDefinedMarker, EarlyPreDefinedPointMarkerSymbol,
+    EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol, EarlyPresentationLayerAssignment,
+    EarlyPresentedItemRepresentation, EarlySurfaceSideStyle, EarlySurfaceStyleBoundary,
     EarlySurfaceStyleFillArea, EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage,
     EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont, EarlyViewVolume,
 };
@@ -241,4 +242,17 @@ pub(crate) fn lift_presentation_layer_assignment(
         description,
         assigned_items,
     }
+}
+
+/// Lift one `PRESENTED_ITEM_REPRESENTATION` (refs pre-resolved).
+pub(crate) fn lift_presented_item_representation(
+    presentation: u64,
+    item: u64,
+) -> EarlyPresentedItemRepresentation {
+    EarlyPresentedItemRepresentation { presentation, item }
+}
+
+/// Lift one `APPLIED_PRESENTED_ITEM` (items pre-resolved).
+pub(crate) fn lift_applied_presented_item(items: Vec<u64>) -> EarlyAppliedPresentedItem {
+    EarlyAppliedPresentedItem { items }
 }
