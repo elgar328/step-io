@@ -12,8 +12,8 @@ use crate::early::model::{
     EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyLine, EarlyOffsetCurve3d,
     EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent, EarlyPlane,
     EarlyPolyline, EarlyRectangularTrimmedSurface, EarlySphericalSurface,
-    EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyVector,
-    EarlyVertexPoint,
+    EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyTrimSelect,
+    EarlyTrimmedCurve, EarlyVector, EarlyVertexPoint,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{
@@ -22,7 +22,7 @@ use crate::ir::geometry::{
     DegenerateToroidalSurface, Direction3, Ellipse3, Hyperbola, Line3, OffsetCurve3d, Parabola,
     PlanarBox, PlanarBoxPlacement, PlanarExtent, PlanarExtentData, Plane3, Point3, Polyline,
     RectangularTrimmedSurface, SphericalSurface, Surface, SurfaceOfLinearExtrusion,
-    SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, Vertex,
+    SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TrimSelect, TrimmedCurve, Vertex,
 };
 use crate::reader::ReaderContext;
 
@@ -675,4 +675,42 @@ pub(crate) fn lower_composite_curve(
     }));
     ctx.id_cache.insert(entity_id, id);
     Ok(())
+}
+
+/// Lower one `TRIMMED_CURVE`. `trim_1`/`trim_2` map each `EarlyTrimSelect`: a
+/// `Point` ref resolves through `id_cache` (unresolved → silently dropped, as the
+/// legacy handler did); a `Param` real passes through. `master_representation`
+/// (the `trimming_preference` enum) is carried unchanged.
+pub(crate) fn lower_trimmed_curve(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyTrimmedCurve,
+) -> Result<(), ConvertError> {
+    let basis = ctx.resolve_curve(entity_id, early.basis_curve, "basis_curve")?;
+    let trim_1 = lower_trim_select(ctx, &early.trim_1);
+    let trim_2 = lower_trim_select(ctx, &early.trim_2);
+    let id = ctx.geometry.curves.push(Curve::Trimmed(TrimmedCurve {
+        basis,
+        trim_1,
+        trim_2,
+        sense_agreement: early.sense_agreement,
+        master: early.master_representation,
+    }));
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
+/// Resolve a `TRIMMED_CURVE` trim slot's `EarlyTrimSelect` list into `TrimSelect`s
+/// (unresolved point refs dropped).
+fn lower_trim_select(ctx: &ReaderContext, items: &[EarlyTrimSelect]) -> Vec<TrimSelect> {
+    items
+        .iter()
+        .filter_map(|s| match *s {
+            EarlyTrimSelect::Point(r) => ctx
+                .id_cache
+                .get::<crate::ir::id::PointId>(r)
+                .map(TrimSelect::Point),
+            EarlyTrimSelect::Param(v) => Some(TrimSelect::Param(v)),
+        })
+        .collect()
 }

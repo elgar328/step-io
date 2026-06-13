@@ -3722,6 +3722,32 @@ impl crate::ir::arena::ArenaId for EarlyCompositeCurveId {
     }
 }
 
+/// L1 `TRIMMED_CURVE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyTrimmedCurve {
+    pub(crate) name: String,
+    pub(crate) basis_curve: u64,
+    pub(crate) trim_1: Vec<EarlyTrimSelect>,
+    pub(crate) trim_2: Vec<EarlyTrimSelect>,
+    pub(crate) sense_agreement: bool,
+    pub(crate) master_representation: crate::ir::geometry::TrimMaster,
+}
+
+/// Typed `id_cache` key for `TRIMMED_CURVE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyTrimmedCurveId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyTrimmedCurveId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {
@@ -3735,6 +3761,13 @@ pub(crate) enum EarlyMarkerSize {
     Descriptive(String),
     MeasureWithUnit(u64),
     PositiveLength(f64),
+}
+
+/// L1 mixed SELECT `trimming_select` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum EarlyTrimSelect {
+    Point(u64),
+    Param(f64),
 }
 
 /// L1 ENUM `source` (generated).

@@ -178,6 +178,8 @@ generate = [
     # geometry (composite curve cluster)
     "composite_curve_segment",
     "composite_curve",
+    # geometry (trimmed curve)
+    "trimmed_curve",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
@@ -228,6 +230,15 @@ variants = { marker_type = "Type", pre_defined_marker = "Predefined" }
 rust_type = "EarlyMarkerSize"
 variants = { descriptive_measure = "Descriptive", measure_with_unit = "MeasureWithUnit", positive_length_measure = "PositiveLength" }
 
+# `trimming_select` = SELECT(cartesian_point[entity], parameter_value[real]) used
+# in `TRIMMED_CURVE.trim_1/trim_2` (SET OF). Synthesizes `EarlyTrimSelect`;
+# entity member emits a bare `#N`, the real member a `PARAMETER_VALUE(v)` Typed.
+# Non-standard TAG-less bare reals (`( 0.0 )`) are accepted and normalized to
+# `PARAMETER_VALUE(0.0)` on write (gen-early bare-scalar arm).
+[select.trimming_select]
+rust_type = "EarlyTrimSelect"
+variants = { cartesian_point = "Point", parameter_value = "Param" }
+
 [enum.ahead_or_behind]
 rust_type = "crate::ir::plm::AheadOrBehind"
 variants = { ahead = "Ahead", behind = "Behind", exact = "Exact" }
@@ -240,6 +251,13 @@ variants = { ahead = "Ahead", behind = "Behind", exact = "Exact" }
 [enum.transition_code]
 rust_type = "crate::ir::geometry::TransitionCode"
 variants = { continuous = "Continuous", discontinuous = "Discontinuous", cont_same_gradient = "ContSameGradient", cont_same_gradient_same_curvature = "ContSameGradientSameCurvature", unspecified = "Unspecified" }
+default = "Unspecified"
+
+# `trimming_preference`: all 3 EXPRESS members map to L2 `TrimMaster`; `default`
+# reproduces the legacy `_ => Unspecified` catch-all on read.
+[enum.trimming_preference]
+rust_type = "crate::ir::geometry::TrimMaster"
+variants = { cartesian = "Cartesian", parameter = "Parameter", unspecified = "Unspecified" }
 default = "Unspecified"
 
 [enum.angle_relator]

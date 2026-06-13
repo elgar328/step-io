@@ -9,10 +9,10 @@ use crate::early::model::{
     EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyLine, EarlyOffsetCurve3d,
     EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent, EarlyPlane,
     EarlyPolyline, EarlyRectangularTrimmedSurface, EarlySphericalSurface,
-    EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyVector,
-    EarlyVertexPoint,
+    EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyTrimSelect,
+    EarlyTrimmedCurve, EarlyVector, EarlyVertexPoint,
 };
-use crate::ir::geometry::{Direction3, Logical, Point3, TransitionCode};
+use crate::ir::geometry::{Direction3, Logical, Point3, TransitionCode, TrimMaster};
 
 /// Lift one `CARTESIAN_POINT` from its arena `Point3`.
 pub(crate) fn lift_cartesian_point(p: Point3) -> EarlyCartesianPoint {
@@ -358,5 +358,24 @@ pub(crate) fn lift_composite_curve(
         name: String::new(),
         segments,
         self_intersect,
+    }
+}
+
+/// Lift one `TRIMMED_CURVE`. `basis_curve` and each `trim_*` `Point` step id are
+/// pre-resolved by the handler's `emit_*` recursion; `Param` reals pass through.
+pub(crate) fn lift_trimmed_curve(
+    basis_curve: u64,
+    trim_1: Vec<EarlyTrimSelect>,
+    trim_2: Vec<EarlyTrimSelect>,
+    sense_agreement: bool,
+    master_representation: TrimMaster,
+) -> EarlyTrimmedCurve {
+    EarlyTrimmedCurve {
+        name: String::new(),
+        basis_curve,
+        trim_1,
+        trim_2,
+        sense_agreement,
+        master_representation,
     }
 }

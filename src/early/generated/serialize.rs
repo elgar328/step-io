@@ -2765,6 +2765,27 @@ pub(crate) fn serialize_composite_curve(
     )
 }
 
+pub(crate) fn serialize_trimmed_curve(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyTrimmedCurve,
+) -> u64 {
+    buf.push_simple(
+        "TRIMMED_CURVE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.basis_curve),
+            crate::parser::entity::Attribute::List(
+                l1.trim_1.iter().map(trimming_select_emit).collect(),
+            ),
+            crate::parser::entity::Attribute::List(
+                l1.trim_2.iter().map(trimming_select_emit).collect(),
+            ),
+            bool_attr(l1.sense_agreement),
+            trimming_preference_attr(l1.master_representation),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {
@@ -2794,6 +2815,18 @@ fn size_select_emit(v: &super::model::EarlyMarkerSize) -> crate::parser::entity:
                 value: Box::new(crate::parser::entity::Attribute::Real(*x)),
             }
         }
+    }
+}
+
+fn trimming_select_emit(v: &super::model::EarlyTrimSelect) -> crate::parser::entity::Attribute {
+    match v {
+        super::model::EarlyTrimSelect::Point(step) => {
+            crate::parser::entity::Attribute::EntityRef(*step)
+        }
+        super::model::EarlyTrimSelect::Param(x) => crate::parser::entity::Attribute::Typed {
+            type_name: "PARAMETER_VALUE".into(),
+            value: Box::new(crate::parser::entity::Attribute::Real(*x)),
+        },
     }
 }
 
@@ -2878,6 +2911,19 @@ fn transition_code_attr(
             crate::ir::geometry::TransitionCode::Continuous => "CONTINUOUS",
             crate::ir::geometry::TransitionCode::Discontinuous => "DISCONTINUOUS",
             crate::ir::geometry::TransitionCode::Unspecified => "UNSPECIFIED",
+        }
+        .into(),
+    )
+}
+
+fn trimming_preference_attr(
+    v: crate::ir::geometry::TrimMaster,
+) -> crate::parser::entity::Attribute {
+    crate::parser::entity::Attribute::Enum(
+        match v {
+            crate::ir::geometry::TrimMaster::Cartesian => "CARTESIAN",
+            crate::ir::geometry::TrimMaster::Parameter => "PARAMETER",
+            crate::ir::geometry::TrimMaster::Unspecified => "UNSPECIFIED",
         }
         .into(),
     )
