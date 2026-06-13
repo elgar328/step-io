@@ -1040,6 +1040,49 @@ pub fn is_unset_or_derived(attrs: &[Attribute], index: usize) -> bool {
     )
 }
 
+/// Normalize TAG-less bare scalar elements in the given SET/LIST attribute
+/// `slots` to the standard `Typed { type_name: tag, value }` form, returning the
+/// (possibly-rewritten) attrs and the count of rewritten elements.
+///
+/// Some exporters write a select's defined-type member (e.g. `parameter_value`)
+/// as a bare `0.0` instead of `PARAMETER_VALUE(0.0)`. The strict generated
+/// `bind` only accepts the tagged form, so the entity handler normalizes the
+/// input *before* binding (and surfaces a `NonStandardInput`). When no bare
+/// scalar is present the original slice is borrowed (no allocation). See
+/// `reader::nonstandard` `### NS-tagless-parameter-value`.
+pub(crate) fn normalize_tagless_select<'a>(
+    attrs: &'a [Attribute],
+    slots: &[usize],
+    tag: &str,
+) -> (std::borrow::Cow<'a, [Attribute]>, usize) {
+    let is_bare = |a: &Attribute| matches!(a, Attribute::Real(_) | Attribute::Integer(_));
+    let count: usize = slots
+        .iter()
+        .filter_map(|&i| match attrs.get(i) {
+            Some(Attribute::List(elems)) => Some(elems.iter().filter(|e| is_bare(e)).count()),
+            _ => None,
+        })
+        .sum();
+    if count == 0 {
+        return (std::borrow::Cow::Borrowed(attrs), 0);
+    }
+    let mut out = attrs.to_vec();
+    for &i in slots {
+        if let Some(Attribute::List(elems)) = out.get_mut(i) {
+            for e in elems.iter_mut() {
+                if is_bare(e) {
+                    let value = Box::new(std::mem::replace(e, Attribute::Unset));
+                    *e = Attribute::Typed {
+                        type_name: tag.to_string(),
+                        value,
+                    };
+                }
+            }
+        }
+    }
+    (std::borrow::Cow::Owned(out), count)
+}
+
 // ===========================================================================
 // Tests
 // ===========================================================================

@@ -312,3 +312,45 @@
 //!   too (gated on the member's own of_shape=$ so an unrelated drop stays a
 //!   plain drop, not a normalization).
 //! - **Code**: `entities/pmi.rs` (`read_general_datum_reference_data`).
+//!
+//! ### NS-tagless-parameter-value
+//! - **Source**: abc (various exporters).
+//! - **Schema rule broken**: `trimming_select`'s `parameter_value` (a defined
+//!   REAL type) must be tagged `PARAMETER_VALUE(x)` inside the select; emitted as
+//!   a bare real `( 0.0 )`.
+//! - **Acceptance**: the handler normalizes bare `Real`/`Integer` in the trim
+//!   slots to `PARAMETER_VALUE(value)` *before* the strict generated bind
+//!   (`ir::attr::normalize_tagless_select`), so the IR holds the standard form and
+//!   the writer re-emits `PARAMETER_VALUE`. Recorded as `NonStandardInput`.
+//! - **Code**: `entities/geometry/trimmed_curve.rs`.
+//!
+//! ----------------------------------------------------------------------
+//!
+//! # gen-early (2-layer) normalization — principle & residual generated-bind leniencies
+//!
+//! **Principle**: the `bind` layer gen-early generates (L1) is a *strict* parser
+//! matching the EXPRESS schema exactly. Non-standard-input tolerance lives only
+//! in the hand-written layer:
+//!
+//! | case | where | how |
+//! |---|---|---|
+//! | value-form deviation (bare→TAG, typo token, empty→`$`[optional]) | handler (pre-bind) | normalize attrs → strict bind, `NonStandardInput` |
+//! | resolution-dependent / post-parse | `lower` (has ctx) | decide + `NonStandardInput` |
+//! | known unrecoverable | handler / lower / dispatcher | drop + `NonStandardInput("dropped")` → NORM |
+//! | unknown / malformed syntax | strict `bind` `Err` | dispatcher pushes a defect warning + drops → LOSS (automatic) |
+//! | entity not strict-bindable at all | — | hold back (stay hand-written) |
+//!
+//! `NS-tagless-parameter-value` above is the first instance (value-form, handler).
+//!
+//! **Residual uniform leniencies still baked into the generated `bind`** (ideally
+//! the hand-written layer per the principle, but currently in gen-early — honest
+//! inventory; these are NOT `### NS-` slugs, they have no per-instance anchor):
+//! - **enum `default`** (`[enum.*] default=`): unknown token → a default variant.
+//!   `surface_side`=`Both`, `transition_code`/`trimming_preference`=`Unspecified`.
+//!   Moves the legacy `_ =>` catch-all into the generated bind. **Never triggers in
+//!   the corpus (latent).** To revisit: make strict (move the guess to a handler +
+//!   `NonStandardInput`).
+//! - **enum `catch_all`** (`marker_type` → `Other(token)`): unknown token preserved
+//!   losslessly (round-trips). Extensibility — defensible, kept.
+//! - **`Integer`→`Real` coercion**: e.g. `PARAMETER_VALUE(5)` accepted as a real.
+//!   Universal Part21 tolerance, kept.

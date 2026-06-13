@@ -550,9 +550,6 @@ fn hinted_select_bind(
             .unwrap();
         }
     }
-    // Non-standard tolerance: TAG-less bare scalar members (see
-    // [`synth_bind_bare_scalar_arms`]); the writer re-emits the standard TAG.
-    synth_bind_bare_scalar_arms(rtq, mems, bind);
     if mems
         .iter()
         .any(|(_, _, k)| matches!(k, Kind::Enum(_) | Kind::Real | Kind::Str))
@@ -656,12 +653,6 @@ fn synth_select_bind(
         )
         .unwrap();
     }
-    // Non-standard tolerance: a scalar defined-type member (e.g. `parameter_value`)
-    // written WITHOUT its TAG — a bare `#real`/int/string. Map by Rust kind to the
-    // unique scalar member of that kind; the writer re-emits the standard
-    // `TAG(value)` (so the round-trip normalizes the bare form). Each scalar kind
-    // appears at most once in a supported select, so this is unambiguous.
-    synth_bind_bare_scalar_arms(rtq, mems, bind);
     if mems.iter().any(|(_, _, k)| {
         matches!(
             k,
@@ -702,45 +693,6 @@ fn synth_select_bind(
     }
     writeln!(bind, "        _ => None,").unwrap();
     writeln!(bind, "    }}\n}}\n").unwrap();
-}
-
-/// Top-level bare-scalar arms (TAG-less defined-type members) for the mixed-
-/// select bind: a bare `Real`/`Integer`/`String` maps to the unique scalar
-/// member of that kind. A bare `Integer` folds into a `Real` member when there
-/// is no distinct `Int` member (mirroring the Typed arm's `Integer -> f64`).
-fn synth_bind_bare_scalar_arms(rtq: &str, mems: &[(&str, String, Kind)], bind: &mut String) {
-    let find = |want: fn(&Kind) -> bool| mems.iter().find(|(_, _, k)| want(k));
-    let real = find(|k| matches!(k, Kind::Real));
-    let int = find(|k| matches!(k, Kind::Int));
-    let string = find(|k| matches!(k, Kind::Str));
-    if let Some((_, v, _)) = real {
-        writeln!(
-            bind,
-            "        crate::parser::entity::Attribute::Real(x) => Some({rtq}::{v}(*x)),"
-        )
-        .unwrap();
-        if int.is_none() {
-            writeln!(
-                bind,
-                "        crate::parser::entity::Attribute::Integer(x) => Some({rtq}::{v}(*x as f64)),"
-            )
-            .unwrap();
-        }
-    }
-    if let Some((_, v, _)) = int {
-        writeln!(
-            bind,
-            "        crate::parser::entity::Attribute::Integer(x) => Some({rtq}::{v}(*x)),"
-        )
-        .unwrap();
-    }
-    if let Some((_, v, _)) = string {
-        writeln!(
-            bind,
-            "        crate::parser::entity::Attribute::String(s) => Some({rtq}::{v}(s.clone())),"
-        )
-        .unwrap();
-    }
 }
 
 /// The per-member `("TAG", ..) => ..` arms of the Typed block (split from

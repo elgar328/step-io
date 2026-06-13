@@ -2611,15 +2611,6 @@ fn bind_size_select(
         crate::parser::entity::Attribute::EntityRef(n) => {
             Some(super::model::EarlyMarkerSize::MeasureWithUnit(*n))
         }
-        crate::parser::entity::Attribute::Real(x) => {
-            Some(super::model::EarlyMarkerSize::PositiveLength(*x))
-        }
-        crate::parser::entity::Attribute::Integer(x) => {
-            Some(super::model::EarlyMarkerSize::PositiveLength(*x as f64))
-        }
-        crate::parser::entity::Attribute::String(s) => {
-            Some(super::model::EarlyMarkerSize::Descriptive(s.clone()))
-        }
         crate::parser::entity::Attribute::Typed { type_name, value } => {
             match (type_name.as_str(), value.as_ref()) {
                 ("DESCRIPTIVE_MEASURE", crate::parser::entity::Attribute::String(s)) => {
@@ -2645,10 +2636,6 @@ fn bind_trimming_select(
     match attr {
         crate::parser::entity::Attribute::EntityRef(n) => {
             Some(super::model::EarlyTrimSelect::Point(*n))
-        }
-        crate::parser::entity::Attribute::Real(x) => Some(super::model::EarlyTrimSelect::Param(*x)),
-        crate::parser::entity::Attribute::Integer(x) => {
-            Some(super::model::EarlyTrimSelect::Param(*x as f64))
         }
         crate::parser::entity::Attribute::Typed { type_name, value } => {
             match (type_name.as_str(), value.as_ref()) {
