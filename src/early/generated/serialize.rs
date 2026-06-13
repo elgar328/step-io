@@ -2208,6 +2208,34 @@ pub(crate) fn serialize_vertex_point(
     )
 }
 
+pub(crate) fn serialize_vector(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyVector,
+) -> u64 {
+    buf.push_simple(
+        "VECTOR",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.orientation),
+            crate::parser::entity::Attribute::Real(l1.magnitude),
+        ],
+    )
+}
+
+pub(crate) fn serialize_line(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyLine,
+) -> u64 {
+    buf.push_simple(
+        "LINE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.pnt),
+            crate::parser::entity::Attribute::EntityRef(l1.dir),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

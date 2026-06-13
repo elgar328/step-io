@@ -139,6 +139,8 @@ generate = [
     "cartesian_point",
     "direction",
     "vertex_point",
+    "vector",
+    "line",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

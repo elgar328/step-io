@@ -2124,6 +2124,30 @@ pub(crate) fn bind_vertex_point(
     })
 }
 
+pub(crate) fn bind_vector(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyVector, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "VECTOR")?;
+    Ok(super::model::EarlyVector {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        orientation: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "orientation")?,
+        magnitude: crate::ir::attr::read_real(attrs, 2, entity_id, "magnitude")?,
+    })
+}
+
+pub(crate) fn bind_line(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyLine, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "LINE")?;
+    Ok(super::model::EarlyLine {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        pnt: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "pnt")?,
+        dir: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "dir")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

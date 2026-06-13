@@ -2,7 +2,9 @@
 //! for the lifting contract. The legacy writer synthesised an empty `name`
 //! (`String::new()`), so these lifts always set `name: String::new()`.
 
-use crate::early::model::{EarlyCartesianPoint, EarlyDirection, EarlyVertexPoint};
+use crate::early::model::{
+    EarlyCartesianPoint, EarlyDirection, EarlyLine, EarlyVector, EarlyVertexPoint,
+};
 use crate::ir::geometry::{Direction3, Point3};
 
 /// Lift one `CARTESIAN_POINT` from its arena `Point3`.
@@ -27,5 +29,23 @@ pub(crate) fn lift_vertex_point(vertex_geometry: u64) -> EarlyVertexPoint {
     EarlyVertexPoint {
         name: String::new(),
         vertex_geometry,
+    }
+}
+
+/// Lift one `VECTOR` (orientation = child direction's output step id).
+pub(crate) fn lift_vector(orientation: u64, magnitude: f64) -> EarlyVector {
+    EarlyVector {
+        name: String::new(),
+        orientation,
+        magnitude,
+    }
+}
+
+/// Lift one `LINE` (pnt/dir = child point/VECTOR output step ids).
+pub(crate) fn lift_line(pnt: u64, dir: u64) -> EarlyLine {
+    EarlyLine {
+        name: String::new(),
+        pnt,
+        dir,
     }
 }

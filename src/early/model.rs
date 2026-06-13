@@ -37,7 +37,7 @@ pub(crate) use super::generated::model::{
     EarlyDraughtingCallout, EarlyDraughtingPreDefinedColour, EarlyDraughtingPreDefinedCurveFont,
     EarlyFillAreaStyle, EarlyFillAreaStyleColour, EarlyFillAreaStyleId, EarlyFlatnessTolerance,
     EarlyGeneralProperty, EarlyGeneralPropertyAssociation, EarlyGeometricToleranceRelationship,
-    EarlyGroup, EarlyIdAttribute, EarlyIdentificationRole, EarlyLeaderDirectedCallout,
+    EarlyGroup, EarlyIdAttribute, EarlyIdentificationRole, EarlyLeaderDirectedCallout, EarlyLine,
     EarlyLocalTime, EarlyMakeFromUsageOption, EarlyMarker, EarlyMarkerSize,
     EarlyMeasureQualification, EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyModelGeometricView, EarlyNameAttribute, EarlyNextAssemblyUsageOccurrence, EarlyObjectRole,
@@ -58,8 +58,8 @@ pub(crate) use super::generated::model::{
     EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea, EarlySurfaceStyleFillAreaId,
     EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId,
     EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont, EarlyToleranceZone,
-    EarlyToleranceZoneForm, EarlyTypeQualifier, EarlyValueFormatTypeQualifier, EarlyVertexPoint,
-    EarlyViewVolume, EarlyViewVolumeId,
+    EarlyToleranceZoneForm, EarlyTypeQualifier, EarlyValueFormatTypeQualifier, EarlyVector,
+    EarlyVertexPoint, EarlyViewVolume, EarlyViewVolumeId,
 };
 
 /// Transient L1 store, held on [`ReaderContext`](crate::reader::ReaderContext)

@@ -30,7 +30,7 @@ pub(crate) use super::generated::bind::{
     bind_fill_area_style, bind_fill_area_style_colour, bind_flatness_tolerance,
     bind_general_property, bind_general_property_association,
     bind_geometric_tolerance_relationship, bind_group, bind_id_attribute, bind_identification_role,
-    bind_leader_directed_callout, bind_local_time, bind_make_from_usage_option,
+    bind_leader_directed_callout, bind_line, bind_local_time, bind_make_from_usage_option,
     bind_measure_qualification, bind_mechanical_design_and_draughting_relationship,
     bind_model_geometric_view, bind_name_attribute, bind_next_assembly_usage_occurrence,
     bind_object_role, bind_organization, bind_person, bind_person_and_organization,
@@ -50,5 +50,6 @@ pub(crate) use super::generated::bind::{
     bind_surface_style_boundary, bind_surface_style_fill_area, bind_surface_style_transparent,
     bind_surface_style_usage, bind_symbol_colour, bind_symbol_style,
     bind_text_style_for_defined_font, bind_tolerance_zone, bind_tolerance_zone_form,
-    bind_type_qualifier, bind_value_format_type_qualifier, bind_vertex_point, bind_view_volume,
+    bind_type_qualifier, bind_value_format_type_qualifier, bind_vector, bind_vertex_point,
+    bind_view_volume,
 };

@@ -34,8 +34,8 @@ pub(crate) use super::generated::serialize::{
     serialize_fill_area_style, serialize_fill_area_style_colour, serialize_flatness_tolerance,
     serialize_general_property, serialize_general_property_association,
     serialize_geometric_tolerance_relationship, serialize_group, serialize_id_attribute,
-    serialize_identification_role, serialize_leader_directed_callout, serialize_local_time,
-    serialize_make_from_usage_option, serialize_measure_qualification,
+    serialize_identification_role, serialize_leader_directed_callout, serialize_line,
+    serialize_local_time, serialize_make_from_usage_option, serialize_measure_qualification,
     serialize_mechanical_design_and_draughting_relationship, serialize_model_geometric_view,
     serialize_model_geometric_view_with_id, serialize_name_attribute,
     serialize_next_assembly_usage_occurrence, serialize_object_role, serialize_organization,
@@ -59,5 +59,5 @@ pub(crate) use super::generated::serialize::{
     serialize_surface_style_transparent, serialize_surface_style_usage, serialize_symbol_colour,
     serialize_symbol_style, serialize_text_style_for_defined_font, serialize_tolerance_zone,
     serialize_tolerance_zone_form, serialize_type_qualifier, serialize_value_format_type_qualifier,
-    serialize_vertex_point, serialize_view_volume,
+    serialize_vector, serialize_vertex_point, serialize_view_volume,
 };
