@@ -172,6 +172,7 @@ generate = [
     "offset_surface",
     "offset_curve_3d",
     "planar_box",
+    "rectangular_trimmed_surface",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

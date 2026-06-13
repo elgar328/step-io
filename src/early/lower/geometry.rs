@@ -10,16 +10,18 @@ use crate::early::model::{
     EarlyCircularArea, EarlyConicalSurface, EarlyCurveBoundedSurface, EarlyCylindricalSurface,
     EarlyDegenerateToroidalSurface, EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyLine,
     EarlyOffsetCurve3d, EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent,
-    EarlyPlane, EarlyPolyline, EarlySphericalSurface, EarlySurfaceOfLinearExtrusion,
-    EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyVector, EarlyVertexPoint,
+    EarlyPlane, EarlyPolyline, EarlyRectangularTrimmedSurface, EarlySphericalSurface,
+    EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyVector,
+    EarlyVertexPoint,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{
     Axis1Placement, Axis2Placement3d, Circle3, CircularArea, CircularAreaCentre, ConicalSurface,
     Curve, CurveBoundedSurface, CylindricalSurface, DegenerateToroidalSurface, Direction3,
     Ellipse3, Hyperbola, Line3, OffsetCurve3d, Parabola, PlanarBox, PlanarBoxPlacement,
-    PlanarExtent, PlanarExtentData, Plane3, Point3, Polyline, SphericalSurface, Surface,
-    SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, Vertex,
+    PlanarExtent, PlanarExtentData, Plane3, Point3, Polyline, RectangularTrimmedSurface,
+    SphericalSurface, Surface, SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution,
+    ToroidalSurface, Vertex,
 };
 use crate::reader::ReaderContext;
 
@@ -595,4 +597,33 @@ pub(crate) fn lower_planar_box(ctx: &mut ReaderContext, entity_id: u64, early: &
             placement,
         }));
     ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `RECTANGULAR_TRIMMED_SURFACE` (`bounded_surface` subtype:
+/// parameter-space rectangle on a basis surface). Fields map by name from L1;
+/// EXPRESS positional order is `u1,u2,v1,v2,usense,vsense` (the prior hand
+/// handler transposed `usense` to slot 4 — fixed here via the generated bind).
+pub(crate) fn lower_rectangular_trimmed_surface(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyRectangularTrimmedSurface,
+) -> Result<(), ConvertError> {
+    if ctx.id_cache.contains::<crate::ir::id::SurfaceId>(entity_id) {
+        return Ok(());
+    }
+    let basis = ctx.resolve_surface(entity_id, early.basis_surface, "basis_surface")?;
+    let id = ctx
+        .geometry
+        .surfaces
+        .push(Surface::RectangularTrimmed(RectangularTrimmedSurface {
+            basis,
+            u1: early.u1,
+            u2: early.u2,
+            usense: early.usense,
+            v1: early.v1,
+            v2: early.v2,
+            vsense: early.vsense,
+        }));
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
 }

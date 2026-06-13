@@ -7,8 +7,9 @@ use crate::early::model::{
     EarlyCircularArea, EarlyConicalSurface, EarlyCurveBoundedSurface, EarlyCylindricalSurface,
     EarlyDegenerateToroidalSurface, EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyLine,
     EarlyOffsetCurve3d, EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent,
-    EarlyPlane, EarlyPolyline, EarlySphericalSurface, EarlySurfaceOfLinearExtrusion,
-    EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyVector, EarlyVertexPoint,
+    EarlyPlane, EarlyPolyline, EarlyRectangularTrimmedSurface, EarlySphericalSurface,
+    EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyVector,
+    EarlyVertexPoint,
 };
 use crate::ir::geometry::{Direction3, Logical, Point3};
 
@@ -306,5 +307,30 @@ pub(crate) fn lift_planar_box(
         size_in_x,
         size_in_y,
         placement,
+    }
+}
+
+/// Lift one `RECTANGULAR_TRIMMED_SURFACE` (basis = child surface step id).
+/// Emits EXPRESS positional order `u1,u2,v1,v2,usense,vsense`.
+#[allow(clippy::similar_names)] // `usense` / `vsense` mirror the EXPRESS field names.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn lift_rectangular_trimmed_surface(
+    basis_surface: u64,
+    u1: f64,
+    u2: f64,
+    usense: bool,
+    v1: f64,
+    v2: f64,
+    vsense: bool,
+) -> EarlyRectangularTrimmedSurface {
+    EarlyRectangularTrimmedSurface {
+        name: String::new(),
+        basis_surface,
+        u1,
+        u2,
+        v1,
+        v2,
+        usense,
+        vsense,
     }
 }

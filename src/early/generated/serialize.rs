@@ -2693,6 +2693,25 @@ pub(crate) fn serialize_planar_box(
     )
 }
 
+pub(crate) fn serialize_rectangular_trimmed_surface(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyRectangularTrimmedSurface,
+) -> u64 {
+    buf.push_simple(
+        "RECTANGULAR_TRIMMED_SURFACE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.basis_surface),
+            crate::parser::entity::Attribute::Real(l1.u1),
+            crate::parser::entity::Attribute::Real(l1.u2),
+            crate::parser::entity::Attribute::Real(l1.v1),
+            crate::parser::entity::Attribute::Real(l1.v2),
+            bool_attr(l1.usense),
+            bool_attr(l1.vsense),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

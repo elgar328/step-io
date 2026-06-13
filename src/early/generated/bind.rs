@@ -2509,6 +2509,23 @@ pub(crate) fn bind_planar_box(
     })
 }
 
+pub(crate) fn bind_rectangular_trimmed_surface(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyRectangularTrimmedSurface, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 8, entity_id, "RECTANGULAR_TRIMMED_SURFACE")?;
+    Ok(super::model::EarlyRectangularTrimmedSurface {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        basis_surface: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "basis_surface")?,
+        u1: crate::ir::attr::read_real(attrs, 2, entity_id, "u1")?,
+        u2: crate::ir::attr::read_real(attrs, 3, entity_id, "u2")?,
+        v1: crate::ir::attr::read_real(attrs, 4, entity_id, "v1")?,
+        v2: crate::ir::attr::read_real(attrs, 5, entity_id, "v2")?,
+        usense: crate::ir::attr::read_bool(attrs, 6, entity_id, "usense")?,
+        vsense: crate::ir::attr::read_bool(attrs, 7, entity_id, "vsense")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

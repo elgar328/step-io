@@ -3626,6 +3626,34 @@ impl crate::ir::arena::ArenaId for EarlyPlanarBoxId {
     }
 }
 
+/// L1 `RECTANGULAR_TRIMMED_SURFACE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyRectangularTrimmedSurface {
+    pub(crate) name: String,
+    pub(crate) basis_surface: u64,
+    pub(crate) u1: f64,
+    pub(crate) u2: f64,
+    pub(crate) v1: f64,
+    pub(crate) v2: f64,
+    pub(crate) usense: bool,
+    pub(crate) vsense: bool,
+}
+
+/// Typed `id_cache` key for `RECTANGULAR_TRIMMED_SURFACE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyRectangularTrimmedSurfaceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyRectangularTrimmedSurfaceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {
