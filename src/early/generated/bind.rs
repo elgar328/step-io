@@ -1769,6 +1769,127 @@ pub(crate) fn bind_shape_definition_representation(
     })
 }
 
+pub(crate) fn bind_tolerance_zone_form(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyToleranceZoneForm, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "TOLERANCE_ZONE_FORM")?;
+    Ok(super::model::EarlyToleranceZoneForm {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+    })
+}
+
+pub(crate) fn bind_type_qualifier(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyTypeQualifier, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "TYPE_QUALIFIER")?;
+    Ok(super::model::EarlyTypeQualifier {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+    })
+}
+
+pub(crate) fn bind_value_format_type_qualifier(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyValueFormatTypeQualifier, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "VALUE_FORMAT_TYPE_QUALIFIER")?;
+    Ok(super::model::EarlyValueFormatTypeQualifier {
+        format_type: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "format_type")?
+            .to_owned(),
+    })
+}
+
+pub(crate) fn bind_flatness_tolerance(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyFlatnessTolerance, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "FLATNESS_TOLERANCE")?;
+    Ok(super::model::EarlyFlatnessTolerance {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        magnitude: crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?,
+        toleranced_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "toleranced_shape_aspect",
+        )?,
+    })
+}
+
+pub(crate) fn bind_surface_profile_tolerance(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlySurfaceProfileTolerance, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "SURFACE_PROFILE_TOLERANCE")?;
+    Ok(super::model::EarlySurfaceProfileTolerance {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        magnitude: crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?,
+        toleranced_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "toleranced_shape_aspect",
+        )?,
+    })
+}
+
+pub(crate) fn bind_straightness_tolerance(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyStraightnessTolerance, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "STRAIGHTNESS_TOLERANCE")?;
+    Ok(super::model::EarlyStraightnessTolerance {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        magnitude: crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?,
+        toleranced_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "toleranced_shape_aspect",
+        )?,
+    })
+}
+
+pub(crate) fn bind_roundness_tolerance(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyRoundnessTolerance, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "ROUNDNESS_TOLERANCE")?;
+    Ok(super::model::EarlyRoundnessTolerance {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        magnitude: crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?,
+        toleranced_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "toleranced_shape_aspect",
+        )?,
+    })
+}
+
+pub(crate) fn bind_cylindricity_tolerance(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyCylindricityTolerance, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "CYLINDRICITY_TOLERANCE")?;
+    Ok(super::model::EarlyCylindricityTolerance {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        magnitude: crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?,
+        toleranced_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "toleranced_shape_aspect",
+        )?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

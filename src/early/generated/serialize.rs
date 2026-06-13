@@ -1828,6 +1828,143 @@ pub(crate) fn serialize_shape_definition_representation(
     )
 }
 
+pub(crate) fn serialize_tolerance_zone_form(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyToleranceZoneForm,
+) -> u64 {
+    buf.push_simple(
+        "TOLERANCE_ZONE_FORM",
+        vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+    )
+}
+
+pub(crate) fn serialize_type_qualifier(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyTypeQualifier,
+) -> u64 {
+    buf.push_simple(
+        "TYPE_QUALIFIER",
+        vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+    )
+}
+
+pub(crate) fn serialize_value_format_type_qualifier(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyValueFormatTypeQualifier,
+) -> u64 {
+    buf.push_simple(
+        "VALUE_FORMAT_TYPE_QUALIFIER",
+        vec![crate::parser::entity::Attribute::String(
+            l1.format_type.clone(),
+        )],
+    )
+}
+
+pub(crate) fn serialize_flatness_tolerance(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyFlatnessTolerance,
+) -> u64 {
+    buf.push_simple(
+        "FLATNESS_TOLERANCE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            match l1.magnitude {
+                Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+        ],
+    )
+}
+
+pub(crate) fn serialize_surface_profile_tolerance(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlySurfaceProfileTolerance,
+) -> u64 {
+    buf.push_simple(
+        "SURFACE_PROFILE_TOLERANCE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            match l1.magnitude {
+                Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+        ],
+    )
+}
+
+pub(crate) fn serialize_straightness_tolerance(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyStraightnessTolerance,
+) -> u64 {
+    buf.push_simple(
+        "STRAIGHTNESS_TOLERANCE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            match l1.magnitude {
+                Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+        ],
+    )
+}
+
+pub(crate) fn serialize_roundness_tolerance(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyRoundnessTolerance,
+) -> u64 {
+    buf.push_simple(
+        "ROUNDNESS_TOLERANCE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            match l1.magnitude {
+                Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+        ],
+    )
+}
+
+pub(crate) fn serialize_cylindricity_tolerance(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCylindricityTolerance,
+) -> u64 {
+    buf.push_simple(
+        "CYLINDRICITY_TOLERANCE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            match l1.magnitude {
+                Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

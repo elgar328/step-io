@@ -25,6 +25,7 @@ pub(crate) fn ctx_from(schema: EarlyToml) -> Ctx {
         mapping: Mapping {
             generate: vec![],
             generate_all: false,
+            serialize_with_id: Vec::new(),
             enums: BTreeMap::new(),
             selects: BTreeMap::new(),
         },

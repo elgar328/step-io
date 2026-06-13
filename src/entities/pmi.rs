@@ -56,19 +56,16 @@ impl SimpleEntityHandler for ToleranceZoneFormHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 1, entity_id, "TOLERANCE_ZONE_FORM")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .tolerance_zone_forms
-            .push(ToleranceZoneForm { name });
-        ctx.id_cache.insert(entity_id, id);
+        let early = crate::early::bind::bind_tolerance_zone_form(entity_id, attrs)?;
+        crate::early::lower::lower_tolerance_zone_form(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, tzf: ToleranceZoneForm) -> Result<u64, WriteError> {
-        Ok(buf.push_simple("TOLERANCE_ZONE_FORM", vec![Attribute::String(tzf.name)]))
+        let early = crate::early::lift::lift_tolerance_zone_form(tzf.name);
+        Ok(crate::early::serialize::serialize_tolerance_zone_form(
+            buf, &early,
+        ))
     }
 }
 
@@ -84,19 +81,16 @@ impl SimpleEntityHandler for TypeQualifierHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 1, entity_id, "TYPE_QUALIFIER")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .type_qualifiers
-            .push(TypeQualifier { name });
-        ctx.id_cache.insert(entity_id, id);
+        let early = crate::early::bind::bind_type_qualifier(entity_id, attrs)?;
+        crate::early::lower::lower_type_qualifier(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, tq: TypeQualifier) -> Result<u64, WriteError> {
-        Ok(buf.push_simple("TYPE_QUALIFIER", vec![Attribute::String(tq.name)]))
+        let early = crate::early::lift::lift_type_qualifier(tq.name);
+        Ok(crate::early::serialize::serialize_type_qualifier(
+            buf, &early,
+        ))
     }
 }
 
@@ -112,22 +106,14 @@ impl SimpleEntityHandler for ValueFormatTypeQualifierHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 1, entity_id, "VALUE_FORMAT_TYPE_QUALIFIER")?;
-        let format_type = read_string_or_unset(attrs, 0, entity_id, "format_type")?.to_owned();
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .value_format_type_qualifiers
-            .push(ValueFormatTypeQualifier { format_type });
-        ctx.id_cache.insert(entity_id, id);
+        let early = crate::early::bind::bind_value_format_type_qualifier(entity_id, attrs)?;
+        crate::early::lower::lower_value_format_type_qualifier(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, vftq: ValueFormatTypeQualifier) -> Result<u64, WriteError> {
-        Ok(buf.push_simple(
-            "VALUE_FORMAT_TYPE_QUALIFIER",
-            vec![Attribute::String(vftq.format_type)],
-        ))
+        let early = crate::early::lift::lift_value_format_type_qualifier(vftq.format_type);
+        Ok(crate::early::serialize::serialize_value_format_type_qualifier(buf, &early))
     }
 }
 
@@ -2422,7 +2408,10 @@ impl SimpleEntityHandler for AngularLocationHandler {
 /// `MEASURE_REPRESENTATION_ITEM` (simple or complex) through the
 /// `representation_item` arena (`repr_item_id_map`). `None` when the ref
 /// resolves to neither.
-fn resolve_tolerance_magnitude(ctx: &ReaderContext, item_ref: u64) -> Option<ToleranceMagnitude> {
+pub(crate) fn resolve_tolerance_magnitude(
+    ctx: &ReaderContext,
+    item_ref: u64,
+) -> Option<ToleranceMagnitude> {
     if let Some(id) = ctx
         .id_cache
         .get::<crate::ir::id::MeasureWithUnitId>(item_ref)
@@ -2448,7 +2437,11 @@ fn resolve_tolerance_magnitude(ctx: &ReaderContext, item_ref: u64) -> Option<Tol
 /// Push a `GeometricTolerance` into the `pmi` pool and register its
 /// `#N → GeometricToleranceId` so `TOLERANCE_ZONE.defining_tolerance` can
 /// resolve a `ref_geometric_tolerance` onto it.
-fn push_geometric_tolerance(ctx: &mut ReaderContext, entity_id: u64, gt: GeometricTolerance) {
+pub(crate) fn push_geometric_tolerance(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    gt: GeometricTolerance,
+) {
     let id = ctx
         .pmi
         .get_or_insert_with(PmiPool::default)
@@ -2497,7 +2490,7 @@ pub(crate) fn resolve_geometric_tolerance_ref(
 /// PDS branch is gated on the arena variant so a tolerance targeting a non-PDS
 /// `PROPERTY_DEFINITION` (which also lives in `property_def_step_to_id`) does
 /// not mis-resolve. `None` when the ref is neither.
-fn resolve_geometric_tolerance_target(
+pub(crate) fn resolve_geometric_tolerance_target(
     ctx: &ReaderContext,
     item_ref: u64,
 ) -> Option<GeometricToleranceTarget> {
@@ -2515,39 +2508,6 @@ fn resolve_geometric_tolerance_target(
         return Some(GeometricToleranceTarget::ProductDefinitionShape(pd_id));
     }
     None
-}
-
-/// Read the shared `geometric_tolerance` 4-attr form-tolerance body.
-/// `Ok(None)` when `magnitude` or `toleranced_shape_aspect` does not
-/// resolve — the tolerance is dropped, symmetric on re-read.
-fn read_geometric_tolerance_data(
-    ctx: &ReaderContext,
-    entity_id: u64,
-    attrs: &[Attribute],
-    entity_name: &'static str,
-) -> Result<Option<GeometricToleranceData>, ConvertError> {
-    check_count(attrs, 4, entity_id, entity_name)?;
-    let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-    let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-    let magnitude_ref = read_entity_ref(attrs, 2, entity_id, "magnitude")?;
-    let shape_aspect_ref = read_entity_ref(attrs, 3, entity_id, "toleranced_shape_aspect")?;
-
-    let Some(magnitude) = resolve_tolerance_magnitude(ctx, magnitude_ref) else {
-        return Ok(None);
-    };
-    let Some(toleranced_shape_aspect) = resolve_geometric_tolerance_target(ctx, shape_aspect_ref)
-    else {
-        return Ok(None);
-    };
-    Ok(Some(GeometricToleranceData {
-        name,
-        description,
-        magnitude,
-        toleranced_shape_aspect,
-        modifiers: Vec::new(),
-        unit_size: None,
-        defined_area_unit: None,
-    }))
 }
 
 /// Emit a `GeometricTolerance` under the STEP entity name its variant
@@ -2573,15 +2533,55 @@ pub(crate) fn write_geometric_tolerance(buf: &mut WriteBuffer, gt: GeometricTole
     let has_area_unit = data.defined_area_unit.is_some();
     let has_modifiers = !data.modifiers.is_empty();
     if !has_unit_size && !has_area_unit && !has_modifiers {
-        return buf.push_simple(
-            entity_name,
-            vec![
-                Attribute::String(data.name),
-                Attribute::String(data.description),
-                Attribute::EntityRef(magnitude),
-                Attribute::EntityRef(shape_aspect),
-            ],
-        );
+        // Simple 4-attr emit goes through the generated serialize (the
+        // complex-MI branch below stays hand-built).
+        return match entity_name {
+            "FLATNESS_TOLERANCE" => crate::early::serialize::serialize_flatness_tolerance(
+                buf,
+                &crate::early::lift::lift_flatness_tolerance(
+                    data.name,
+                    data.description,
+                    magnitude,
+                    shape_aspect,
+                ),
+            ),
+            "STRAIGHTNESS_TOLERANCE" => crate::early::serialize::serialize_straightness_tolerance(
+                buf,
+                &crate::early::lift::lift_straightness_tolerance(
+                    data.name,
+                    data.description,
+                    magnitude,
+                    shape_aspect,
+                ),
+            ),
+            "ROUNDNESS_TOLERANCE" => crate::early::serialize::serialize_roundness_tolerance(
+                buf,
+                &crate::early::lift::lift_roundness_tolerance(
+                    data.name,
+                    data.description,
+                    magnitude,
+                    shape_aspect,
+                ),
+            ),
+            "CYLINDRICITY_TOLERANCE" => crate::early::serialize::serialize_cylindricity_tolerance(
+                buf,
+                &crate::early::lift::lift_cylindricity_tolerance(
+                    data.name,
+                    data.description,
+                    magnitude,
+                    shape_aspect,
+                ),
+            ),
+            _ => crate::early::serialize::serialize_surface_profile_tolerance(
+                buf,
+                &crate::early::lift::lift_surface_profile_tolerance(
+                    data.name,
+                    data.description,
+                    magnitude,
+                    shape_aspect,
+                ),
+            ),
+        };
     }
     // Complex MI emit. Part order follows EXPRESS supertype order:
     // GT → [WDU] → [WDAU] → [WM] → LEAF.
@@ -2681,12 +2681,8 @@ impl SimpleEntityHandler for FlatnessToleranceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) =
-            read_geometric_tolerance_data(ctx, entity_id, attrs, "FLATNESS_TOLERANCE")?
-        else {
-            return Ok(());
-        };
-        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::Flatness(data));
+        let early = crate::early::bind::bind_flatness_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_flatness_tolerance(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2714,12 +2710,8 @@ impl SimpleEntityHandler for SurfaceProfileToleranceSimpleHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) =
-            read_geometric_tolerance_data(ctx, entity_id, attrs, "SURFACE_PROFILE_TOLERANCE")?
-        else {
-            return Ok(());
-        };
-        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::SurfaceProfile(data));
+        let early = crate::early::bind::bind_surface_profile_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_surface_profile_tolerance(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2740,12 +2732,8 @@ impl SimpleEntityHandler for StraightnessToleranceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) =
-            read_geometric_tolerance_data(ctx, entity_id, attrs, "STRAIGHTNESS_TOLERANCE")?
-        else {
-            return Ok(());
-        };
-        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::Straightness(data));
+        let early = crate::early::bind::bind_straightness_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_straightness_tolerance(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2766,12 +2754,8 @@ impl SimpleEntityHandler for RoundnessToleranceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) =
-            read_geometric_tolerance_data(ctx, entity_id, attrs, "ROUNDNESS_TOLERANCE")?
-        else {
-            return Ok(());
-        };
-        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::Roundness(data));
+        let early = crate::early::bind::bind_roundness_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_roundness_tolerance(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2792,12 +2776,8 @@ impl SimpleEntityHandler for CylindricityToleranceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) =
-            read_geometric_tolerance_data(ctx, entity_id, attrs, "CYLINDRICITY_TOLERANCE")?
-        else {
-            return Ok(());
-        };
-        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::Cylindricity(data));
+        let early = crate::early::bind::bind_cylindricity_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_cylindricity_tolerance(ctx, entity_id, early);
         Ok(())
     }
 

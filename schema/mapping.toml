@@ -116,6 +116,15 @@ generate = [
     "applied_presented_item",
     "product_definition_relationship",
     "shape_definition_representation",
+    # pmi (leaf + datum-free form tolerances)
+    "tolerance_zone_form",
+    "type_qualifier",
+    "value_format_type_qualifier",
+    "flatness_tolerance",
+    "surface_profile_tolerance",
+    "straightness_tolerance",
+    "roundness_tolerance",
+    "cylindricity_tolerance",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

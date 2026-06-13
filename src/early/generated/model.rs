@@ -2397,6 +2397,189 @@ impl crate::ir::arena::ArenaId for EarlyShapeDefinitionRepresentationId {
     }
 }
 
+/// L1 `TOLERANCE_ZONE_FORM` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyToleranceZoneForm {
+    pub(crate) name: String,
+}
+
+/// Typed `id_cache` key for `TOLERANCE_ZONE_FORM` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyToleranceZoneFormId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyToleranceZoneFormId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `TYPE_QUALIFIER` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyTypeQualifier {
+    pub(crate) name: String,
+}
+
+/// Typed `id_cache` key for `TYPE_QUALIFIER` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyTypeQualifierId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyTypeQualifierId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `VALUE_FORMAT_TYPE_QUALIFIER` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyValueFormatTypeQualifier {
+    pub(crate) format_type: String,
+}
+
+/// Typed `id_cache` key for `VALUE_FORMAT_TYPE_QUALIFIER` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyValueFormatTypeQualifierId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyValueFormatTypeQualifierId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `FLATNESS_TOLERANCE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyFlatnessTolerance {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) magnitude: Option<u64>,
+    pub(crate) toleranced_shape_aspect: u64,
+}
+
+/// Typed `id_cache` key for `FLATNESS_TOLERANCE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyFlatnessToleranceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyFlatnessToleranceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `SURFACE_PROFILE_TOLERANCE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlySurfaceProfileTolerance {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) magnitude: Option<u64>,
+    pub(crate) toleranced_shape_aspect: u64,
+}
+
+/// Typed `id_cache` key for `SURFACE_PROFILE_TOLERANCE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlySurfaceProfileToleranceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlySurfaceProfileToleranceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `STRAIGHTNESS_TOLERANCE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyStraightnessTolerance {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) magnitude: Option<u64>,
+    pub(crate) toleranced_shape_aspect: u64,
+}
+
+/// Typed `id_cache` key for `STRAIGHTNESS_TOLERANCE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyStraightnessToleranceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyStraightnessToleranceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `ROUNDNESS_TOLERANCE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyRoundnessTolerance {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) magnitude: Option<u64>,
+    pub(crate) toleranced_shape_aspect: u64,
+}
+
+/// Typed `id_cache` key for `ROUNDNESS_TOLERANCE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyRoundnessToleranceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyRoundnessToleranceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `CYLINDRICITY_TOLERANCE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCylindricityTolerance {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) magnitude: Option<u64>,
+    pub(crate) toleranced_shape_aspect: u64,
+}
+
+/// Typed `id_cache` key for `CYLINDRICITY_TOLERANCE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCylindricityToleranceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCylindricityToleranceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {
