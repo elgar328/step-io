@@ -2159,6 +2159,55 @@ pub(crate) fn serialize_leader_directed_callout(
     )
 }
 
+pub(crate) fn serialize_cartesian_point(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCartesianPoint,
+) -> u64 {
+    buf.push_simple(
+        "CARTESIAN_POINT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.coordinates
+                    .iter()
+                    .map(|&x| crate::parser::entity::Attribute::Real(x))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_direction(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDirection,
+) -> u64 {
+    buf.push_simple(
+        "DIRECTION",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.direction_ratios
+                    .iter()
+                    .map(|&x| crate::parser::entity::Attribute::Real(x))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_vertex_point(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyVertexPoint,
+) -> u64 {
+    buf.push_simple(
+        "VERTEX_POINT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.vertex_geometry),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

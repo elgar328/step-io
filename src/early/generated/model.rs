@@ -2839,6 +2839,72 @@ impl crate::ir::arena::ArenaId for EarlyLeaderDirectedCalloutId {
     }
 }
 
+/// L1 `CARTESIAN_POINT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCartesianPoint {
+    pub(crate) name: String,
+    pub(crate) coordinates: Vec<f64>,
+}
+
+/// Typed `id_cache` key for `CARTESIAN_POINT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCartesianPointId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCartesianPointId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DIRECTION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDirection {
+    pub(crate) name: String,
+    pub(crate) direction_ratios: Vec<f64>,
+}
+
+/// Typed `id_cache` key for `DIRECTION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDirectionId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDirectionId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `VERTEX_POINT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyVertexPoint {
+    pub(crate) name: String,
+    pub(crate) vertex_geometry: u64,
+}
+
+/// Typed `id_cache` key for `VERTEX_POINT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyVertexPointId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyVertexPointId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

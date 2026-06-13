@@ -136,6 +136,9 @@ generate = [
     "datum_feature",
     "draughting_callout",
     "leader_directed_callout",
+    "cartesian_point",
+    "direction",
+    "vertex_point",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

@@ -2091,6 +2091,39 @@ pub(crate) fn bind_leader_directed_callout(
     })
 }
 
+pub(crate) fn bind_cartesian_point(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyCartesianPoint, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "CARTESIAN_POINT")?;
+    Ok(super::model::EarlyCartesianPoint {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        coordinates: crate::ir::attr::read_real_list(attrs, 1, entity_id, "coordinates")?,
+    })
+}
+
+pub(crate) fn bind_direction(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDirection, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "DIRECTION")?;
+    Ok(super::model::EarlyDirection {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        direction_ratios: crate::ir::attr::read_real_list(attrs, 1, entity_id, "direction_ratios")?,
+    })
+}
+
+pub(crate) fn bind_vertex_point(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyVertexPoint, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "VERTEX_POINT")?;
+    Ok(super::model::EarlyVertexPoint {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        vertex_geometry: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "vertex_geometry")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {
