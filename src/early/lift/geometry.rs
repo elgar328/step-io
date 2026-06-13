@@ -4,8 +4,9 @@
 
 use crate::early::model::{
     EarlyAxis1Placement, EarlyAxis2Placement3d, EarlyCartesianPoint, EarlyCircle,
-    EarlyConicalSurface, EarlyCylindricalSurface, EarlyDirection, EarlyEllipse, EarlyHyperbola,
-    EarlyLine, EarlyParabola, EarlyPlane, EarlyPolyline, EarlySphericalSurface,
+    EarlyCircularArea, EarlyConicalSurface, EarlyCurveBoundedSurface, EarlyCylindricalSurface,
+    EarlyDegenerateToroidalSurface, EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyLine,
+    EarlyParabola, EarlyPlanarExtent, EarlyPlane, EarlyPolyline, EarlySphericalSurface,
     EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyVector,
     EarlyVertexPoint,
 };
@@ -201,5 +202,61 @@ pub(crate) fn lift_polyline(points: Vec<u64>) -> EarlyPolyline {
     EarlyPolyline {
         name: String::new(),
         points,
+    }
+}
+
+/// Lift one `PLANAR_EXTENT` (base form). Unlike the synthesised-name leaves
+/// above, `name` is preserved from the L2 `PlanarExtentData`.
+pub(crate) fn lift_planar_extent(
+    name: String,
+    size_in_x: f64,
+    size_in_y: f64,
+) -> EarlyPlanarExtent {
+    EarlyPlanarExtent {
+        name,
+        size_in_x,
+        size_in_y,
+    }
+}
+
+/// Lift one `DEGENERATE_TOROIDAL_SURFACE` (position = child placement step id).
+pub(crate) fn lift_degenerate_toroidal_surface(
+    position: u64,
+    major_radius: f64,
+    minor_radius: f64,
+    select_outer: bool,
+) -> EarlyDegenerateToroidalSurface {
+    EarlyDegenerateToroidalSurface {
+        name: String::new(),
+        position,
+        major_radius,
+        minor_radius,
+        select_outer,
+    }
+}
+
+/// Lift one `CIRCULAR_AREA` (centre = resolved point/external step id). `name`
+/// is preserved.
+pub(crate) fn lift_circular_area(name: String, centre: u64, radius: f64) -> EarlyCircularArea {
+    EarlyCircularArea {
+        name,
+        centre,
+        radius,
+    }
+}
+
+/// Lift one `CURVE_BOUNDED_SURFACE` (basis = child surface step id, boundaries
+/// = child curve output step ids). `name` is preserved.
+pub(crate) fn lift_curve_bounded_surface(
+    name: String,
+    basis_surface: u64,
+    boundaries: Vec<u64>,
+    implicit_outer: bool,
+) -> EarlyCurveBoundedSurface {
+    EarlyCurveBoundedSurface {
+        name,
+        basis_surface,
+        boundaries,
+        implicit_outer,
     }
 }

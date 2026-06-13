@@ -5,6 +5,7 @@
 //! size_in_y)` is the base; `PLANAR_BOX` adds a trailing `placement`
 //! (`axis2_placement` SELECT — 2D or 3D).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_entity_ref, read_real, read_string_or_unset};
 use crate::ir::error::ConvertError;
@@ -27,31 +28,14 @@ impl SimpleEntityHandler for PlanarExtentHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "PLANAR_EXTENT")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let size_in_x = read_real(attrs, 1, entity_id, "size_in_x")?;
-        let size_in_y = read_real(attrs, 2, entity_id, "size_in_y")?;
-        let id = ctx
-            .geometry
-            .planar_extents
-            .push(PlanarExtent::Itself(PlanarExtentData {
-                name,
-                size_in_x,
-                size_in_y,
-            }));
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_planar_extent(entity_id, attrs)?;
+        lower::lower_planar_extent(ctx, entity_id, &early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, data: PlanarExtentData) -> Result<u64, WriteError> {
-        Ok(buf.push_simple(
-            "PLANAR_EXTENT",
-            vec![
-                Attribute::String(data.name),
-                Attribute::Real(data.size_in_x),
-                Attribute::Real(data.size_in_y),
-            ],
-        ))
+        let early = lift::lift_planar_extent(data.name, data.size_in_x, data.size_in_y);
+        Ok(serialize::serialize_planar_extent(buf, &early))
     }
 }
 

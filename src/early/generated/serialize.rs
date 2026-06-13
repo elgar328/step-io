@@ -2579,6 +2579,70 @@ pub(crate) fn serialize_manifold_solid_brep(
     )
 }
 
+pub(crate) fn serialize_planar_extent(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPlanarExtent,
+) -> u64 {
+    buf.push_simple(
+        "PLANAR_EXTENT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::Real(l1.size_in_x),
+            crate::parser::entity::Attribute::Real(l1.size_in_y),
+        ],
+    )
+}
+
+pub(crate) fn serialize_degenerate_toroidal_surface(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDegenerateToroidalSurface,
+) -> u64 {
+    buf.push_simple(
+        "DEGENERATE_TOROIDAL_SURFACE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.position),
+            crate::parser::entity::Attribute::Real(l1.major_radius),
+            crate::parser::entity::Attribute::Real(l1.minor_radius),
+            bool_attr(l1.select_outer),
+        ],
+    )
+}
+
+pub(crate) fn serialize_circular_area(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCircularArea,
+) -> u64 {
+    buf.push_simple(
+        "CIRCULAR_AREA",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.centre),
+            crate::parser::entity::Attribute::Real(l1.radius),
+        ],
+    )
+}
+
+pub(crate) fn serialize_curve_bounded_surface(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCurveBoundedSurface,
+) -> u64 {
+    buf.push_simple(
+        "CURVE_BOUNDED_SURFACE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.basis_surface),
+            crate::parser::entity::Attribute::List(
+                l1.boundaries
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            bool_attr(l1.implicit_outer),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

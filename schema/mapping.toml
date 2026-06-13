@@ -163,6 +163,11 @@ generate = [
     "advanced_face",
     "face_surface",
     "manifold_solid_brep",
+    # geometry (low-frequency leaf batch)
+    "planar_extent",
+    "degenerate_toroidal_surface",
+    "circular_area",
+    "curve_bounded_surface",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

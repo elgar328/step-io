@@ -2418,6 +2418,57 @@ pub(crate) fn bind_manifold_solid_brep(
     })
 }
 
+pub(crate) fn bind_planar_extent(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPlanarExtent, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "PLANAR_EXTENT")?;
+    Ok(super::model::EarlyPlanarExtent {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        size_in_x: crate::ir::attr::read_real(attrs, 1, entity_id, "size_in_x")?,
+        size_in_y: crate::ir::attr::read_real(attrs, 2, entity_id, "size_in_y")?,
+    })
+}
+
+pub(crate) fn bind_degenerate_toroidal_surface(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDegenerateToroidalSurface, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 5, entity_id, "DEGENERATE_TOROIDAL_SURFACE")?;
+    Ok(super::model::EarlyDegenerateToroidalSurface {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        position: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "position")?,
+        major_radius: crate::ir::attr::read_real(attrs, 2, entity_id, "major_radius")?,
+        minor_radius: crate::ir::attr::read_real(attrs, 3, entity_id, "minor_radius")?,
+        select_outer: crate::ir::attr::read_bool(attrs, 4, entity_id, "select_outer")?,
+    })
+}
+
+pub(crate) fn bind_circular_area(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyCircularArea, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "CIRCULAR_AREA")?;
+    Ok(super::model::EarlyCircularArea {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        centre: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "centre")?,
+        radius: crate::ir::attr::read_real(attrs, 2, entity_id, "radius")?,
+    })
+}
+
+pub(crate) fn bind_curve_bounded_surface(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyCurveBoundedSurface, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "CURVE_BOUNDED_SURFACE")?;
+    Ok(super::model::EarlyCurveBoundedSurface {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        basis_surface: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "basis_surface")?,
+        boundaries: crate::ir::attr::read_entity_ref_list(attrs, 2, entity_id, "boundaries")?,
+        implicit_outer: crate::ir::attr::read_bool(attrs, 3, entity_id, "implicit_outer")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

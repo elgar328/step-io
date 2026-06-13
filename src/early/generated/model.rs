@@ -3458,6 +3458,101 @@ impl crate::ir::arena::ArenaId for EarlyManifoldSolidBrepId {
     }
 }
 
+/// L1 `PLANAR_EXTENT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPlanarExtent {
+    pub(crate) name: String,
+    pub(crate) size_in_x: f64,
+    pub(crate) size_in_y: f64,
+}
+
+/// Typed `id_cache` key for `PLANAR_EXTENT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPlanarExtentId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPlanarExtentId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DEGENERATE_TOROIDAL_SURFACE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDegenerateToroidalSurface {
+    pub(crate) name: String,
+    pub(crate) position: u64,
+    pub(crate) major_radius: f64,
+    pub(crate) minor_radius: f64,
+    pub(crate) select_outer: bool,
+}
+
+/// Typed `id_cache` key for `DEGENERATE_TOROIDAL_SURFACE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDegenerateToroidalSurfaceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDegenerateToroidalSurfaceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `CIRCULAR_AREA` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCircularArea {
+    pub(crate) name: String,
+    pub(crate) centre: u64,
+    pub(crate) radius: f64,
+}
+
+/// Typed `id_cache` key for `CIRCULAR_AREA` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCircularAreaId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCircularAreaId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `CURVE_BOUNDED_SURFACE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCurveBoundedSurface {
+    pub(crate) name: String,
+    pub(crate) basis_surface: u64,
+    pub(crate) boundaries: Vec<u64>,
+    pub(crate) implicit_outer: bool,
+}
+
+/// Typed `id_cache` key for `CURVE_BOUNDED_SURFACE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCurveBoundedSurfaceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCurveBoundedSurfaceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

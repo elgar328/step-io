@@ -7,16 +7,19 @@
 
 use crate::early::model::{
     EarlyAxis1Placement, EarlyAxis2Placement3d, EarlyCartesianPoint, EarlyCircle,
-    EarlyConicalSurface, EarlyCylindricalSurface, EarlyDirection, EarlyEllipse, EarlyHyperbola,
-    EarlyLine, EarlyParabola, EarlyPlane, EarlyPolyline, EarlySphericalSurface,
+    EarlyCircularArea, EarlyConicalSurface, EarlyCurveBoundedSurface, EarlyCylindricalSurface,
+    EarlyDegenerateToroidalSurface, EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyLine,
+    EarlyParabola, EarlyPlanarExtent, EarlyPlane, EarlyPolyline, EarlySphericalSurface,
     EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyVector,
     EarlyVertexPoint,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{
-    Axis1Placement, Axis2Placement3d, Circle3, ConicalSurface, Curve, CylindricalSurface,
-    Direction3, Ellipse3, Hyperbola, Line3, Parabola, Plane3, Point3, Polyline, SphericalSurface,
-    Surface, SurfaceOfLinearExtrusion, SurfaceOfRevolution, ToroidalSurface, Vertex,
+    Axis1Placement, Axis2Placement3d, Circle3, CircularArea, CircularAreaCentre, ConicalSurface,
+    Curve, CurveBoundedSurface, CylindricalSurface, DegenerateToroidalSurface, Direction3,
+    Ellipse3, Hyperbola, Line3, Parabola, PlanarExtent, PlanarExtentData, Plane3, Point3, Polyline,
+    SphericalSurface, Surface, SurfaceOfLinearExtrusion, SurfaceOfRevolution, ToroidalSurface,
+    Vertex,
 };
 use crate::reader::ReaderContext;
 
@@ -416,4 +419,102 @@ pub(crate) fn lower_polyline(
         .push(Curve::Polyline(Polyline { points }));
     ctx.id_cache.insert(entity_id, id);
     Ok(())
+}
+
+/// Lower one `PLANAR_EXTENT` (the base form; `PLANAR_BOX` stays on the legacy
+/// path). `name` is preserved — the writer re-emits it.
+pub(crate) fn lower_planar_extent(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyPlanarExtent,
+) {
+    let id = ctx
+        .geometry
+        .planar_extents
+        .push(PlanarExtent::Itself(PlanarExtentData {
+            name: early.name.clone(),
+            size_in_x: early.size_in_x,
+            size_in_y: early.size_in_y,
+        }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `DEGENERATE_TOROIDAL_SURFACE` (`select_outer` BOOLEAN chooses the
+/// outer/inner sheet). `name` is discarded (writer synthesises `''`).
+pub(crate) fn lower_degenerate_toroidal_surface(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyDegenerateToroidalSurface,
+) -> Result<(), ConvertError> {
+    let position = ctx.resolve_placement(entity_id, early.position, "position")?;
+    let id = ctx
+        .geometry
+        .surfaces
+        .push(Surface::DegenerateToroidal(DegenerateToroidalSurface {
+            position,
+            major_radius: early.major_radius,
+            minor_radius: early.minor_radius,
+            select_outer: early.select_outer,
+        }));
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
+/// Lower one `CIRCULAR_AREA` — orphan (no inbound refs, no `id_cache` entry).
+/// `centre` probes the local `cartesian_point` then the external `REFERENCE`;
+/// unresolved drops the carrier.
+pub(crate) fn lower_circular_area(
+    ctx: &mut ReaderContext,
+    _entity_id: u64,
+    early: &EarlyCircularArea,
+) {
+    let centre = if let Some(point) = ctx.id_cache.get::<crate::ir::id::PointId>(early.centre) {
+        CircularAreaCentre::Point(point)
+    } else if let Some(ext) = ctx
+        .id_cache
+        .get::<crate::ir::id::ExternalRefId>(early.centre)
+    {
+        CircularAreaCentre::External(ext)
+    } else {
+        return;
+    };
+    ctx.geometry.circular_areas.push(CircularArea {
+        name: early.name.clone(),
+        centre,
+        radius: early.radius,
+    });
+}
+
+/// Lower one `CURVE_BOUNDED_SURFACE` (`bounded_surface` subtype). `boundaries`
+/// narrows `boundary_curve` to generic `CurveId`; an unresolved basis or empty
+/// boundary set drops the carrier.
+pub(crate) fn lower_curve_bounded_surface(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyCurveBoundedSurface,
+) {
+    let Some(basis_surface) = ctx
+        .id_cache
+        .get::<crate::ir::id::SurfaceId>(early.basis_surface)
+    else {
+        return;
+    };
+    let boundaries: Vec<_> = early
+        .boundaries
+        .iter()
+        .filter_map(|r| ctx.id_cache.get::<crate::ir::id::CurveId>(*r))
+        .collect();
+    if boundaries.is_empty() {
+        return;
+    }
+    let id = ctx
+        .geometry
+        .surfaces
+        .push(Surface::CurveBounded(CurveBoundedSurface {
+            name: early.name.clone(),
+            basis_surface,
+            boundaries,
+            implicit_outer: early.implicit_outer,
+        }));
+    ctx.id_cache.insert(entity_id, id);
 }
