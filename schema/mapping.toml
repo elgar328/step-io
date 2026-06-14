@@ -191,6 +191,8 @@ generate = [
     "oriented_closed_shell",
     # batch 3: W-COMPLEX Phase 1 — non-rational b_spline curve (Simple)
     "b_spline_curve_with_knots",
+    # Phase 1b: W-COMPLEX — non-rational b_spline surface (Simple, 2D cp grid)
+    "b_spline_surface_with_knots",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
@@ -284,3 +286,10 @@ variants = { equal = "Equal", large = "Large", small = "Small" }
 [enum.b_spline_curve_form]
 rust_type = "crate::ir::geometry::CurveForm"
 variants = { polyline_form = "PolylineForm", circular_arc = "CircularArc", elliptic_arc = "EllipticArc", parabolic_arc = "ParabolicArc", hyperbolic_arc = "HyperbolicArc", unspecified = "Unspecified" }
+
+# Lenient (default) to reproduce SurfaceForm::from_step_enum during the structural
+# migration; strict-ification is a separate follow-up (needs a surface-form scan).
+[enum.b_spline_surface_form]
+rust_type = "crate::ir::geometry::SurfaceForm"
+variants = { plane_surf = "PlaneSurf", cylindrical_surf = "CylindricalSurf", conical_surf = "ConicalSurf", spherical_surf = "SphericalSurf", toroidal_surf = "ToroidalSurf", surf_of_revolution = "SurfOfRevolution", ruled_surf = "RuledSurf", generalised_cone = "GeneralisedCone", quadric_surf = "QuadricSurf", surf_of_linear_extrusion = "SurfOfLinearExtrusion", unspecified = "Unspecified" }
+default = "Unspecified"

@@ -6,24 +6,26 @@
 //! 3D branch exactly (2-count → the 2D arena claims it, so we no-op).
 
 use crate::early::model::{
-    EarlyAxis1Placement, EarlyAxis2Placement3d, EarlyBSplineCurveWithKnots, EarlyBoundedPcurve,
-    EarlyCartesianPoint, EarlyCircle, EarlyCircularArea, EarlyCompositeCurve,
-    EarlyCompositeCurveSegment, EarlyConicalSurface, EarlyCurveBoundedSurface,
-    EarlyCylindricalSurface, EarlyDegenerateToroidalSurface, EarlyDirection, EarlyEllipse,
-    EarlyHyperbola, EarlyLine, EarlyOffsetCurve3d, EarlyOffsetSurface, EarlyParabola,
-    EarlyPlanarBox, EarlyPlanarExtent, EarlyPlane, EarlyPolyline, EarlyRectangularTrimmedSurface,
-    EarlySphericalSurface, EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution,
-    EarlyToroidalSurface, EarlyTrimSelect, EarlyTrimmedCurve, EarlyVector, EarlyVertexPoint,
+    EarlyAxis1Placement, EarlyAxis2Placement3d, EarlyBSplineCurveWithKnots,
+    EarlyBSplineSurfaceWithKnots, EarlyBoundedPcurve, EarlyCartesianPoint, EarlyCircle,
+    EarlyCircularArea, EarlyCompositeCurve, EarlyCompositeCurveSegment, EarlyConicalSurface,
+    EarlyCurveBoundedSurface, EarlyCylindricalSurface, EarlyDegenerateToroidalSurface,
+    EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyLine, EarlyOffsetCurve3d,
+    EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent, EarlyPlane,
+    EarlyPolyline, EarlyRectangularTrimmedSurface, EarlySphericalSurface,
+    EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyTrimSelect,
+    EarlyTrimmedCurve, EarlyVector, EarlyVertexPoint,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{
     Axis1Placement, Axis2Placement3d, BoundedPCurve, Circle3, CircularArea, CircularAreaCentre,
     CompositeCurve, CompositeSegment, ConicalSurface, Curve, CurveBoundedSurface,
     CylindricalSurface, DegenerateToroidalSurface, Direction3, Ellipse3, Hyperbola, Line3,
-    NurbsCurve, NurbsKind, OffsetCurve3d, Parabola, ParameterSpaceCurve, PlanarBox,
-    PlanarBoxPlacement, PlanarExtent, PlanarExtentData, Plane3, Point3, Polyline,
-    RectangularTrimmedSurface, SphericalSurface, Surface, SurfaceOfLinearExtrusion,
-    SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TrimSelect, TrimmedCurve, Vertex,
+    NurbsCurve, NurbsKind, NurbsSurface, NurbsSurfaceKind, OffsetCurve3d, Parabola,
+    ParameterSpaceCurve, PlanarBox, PlanarBoxPlacement, PlanarExtent, PlanarExtentData, Plane3,
+    Point3, Polyline, RectangularTrimmedSurface, SphericalSurface, Surface,
+    SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TrimSelect,
+    TrimmedCurve, Vertex,
 };
 use crate::reader::ReaderContext;
 
@@ -92,6 +94,56 @@ pub(crate) fn lower_b_spline_curve_with_knots(
         self_intersect: early.self_intersect,
     };
     let id = ctx.geometry.curves.push(Curve::Nurbs(curve));
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
+/// Lower one `B_SPLINE_SURFACE_WITH_KNOTS` (non-rational). Mirrors the legacy
+/// handler: `u_degree`/`v_degree` narrow to `u32` (error on overflow) first, then
+/// each control point in the u/v grid resolves through the shared point resolver.
+/// There is no 2D sister (surface control points are always 3D), so no self-claim
+/// guard. `knot_spec` is informational and dropped (the writer always re-emits
+/// `UNSPECIFIED`).
+pub(crate) fn lower_b_spline_surface_with_knots(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyBSplineSurfaceWithKnots,
+) -> Result<(), ConvertError> {
+    let u_degree = u32::try_from(early.u_degree).map_err(|_| ConvertError::AttributeType {
+        entity_id,
+        field_name: "u_degree",
+        expected: "non-negative Integer",
+        actual: crate::ir::error::AttributeKindTag::Integer,
+    })?;
+    let v_degree = u32::try_from(early.v_degree).map_err(|_| ConvertError::AttributeType {
+        entity_id,
+        field_name: "v_degree",
+        expected: "non-negative Integer",
+        actual: crate::ir::error::AttributeKindTag::Integer,
+    })?;
+    let mut control_points = Vec::with_capacity(early.control_points_list.len());
+    for row in &early.control_points_list {
+        let mut pt_row = Vec::with_capacity(row.len());
+        for &r in row {
+            pt_row.push(ctx.resolve_point(entity_id, r, "control_points_list")?);
+        }
+        control_points.push(pt_row);
+    }
+    let surface = NurbsSurface {
+        u_degree,
+        v_degree,
+        control_points,
+        kind: NurbsSurfaceKind::NonRational,
+        u_knot_multiplicities: early.u_multiplicities.clone(),
+        v_knot_multiplicities: early.v_multiplicities.clone(),
+        u_knots: early.u_knots.clone(),
+        v_knots: early.v_knots.clone(),
+        u_closed: early.u_closed,
+        v_closed: early.v_closed,
+        form: early.surface_form,
+        self_intersect: early.self_intersect,
+    };
+    let id = ctx.geometry.surfaces.push(Surface::Nurbs(surface));
     ctx.id_cache.insert(entity_id, id);
     Ok(())
 }

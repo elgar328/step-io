@@ -2940,6 +2940,67 @@ pub(crate) fn serialize_b_spline_curve_with_knots(
     )
 }
 
+pub(crate) fn serialize_b_spline_surface_with_knots(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyBSplineSurfaceWithKnots,
+) -> u64 {
+    buf.push_simple(
+        "B_SPLINE_SURFACE_WITH_KNOTS",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::Integer(l1.u_degree),
+            crate::parser::entity::Attribute::Integer(l1.v_degree),
+            crate::parser::entity::Attribute::List(
+                l1.control_points_list
+                    .iter()
+                    .map(|row| {
+                        crate::parser::entity::Attribute::List(
+                            row.iter()
+                                .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                                .collect(),
+                        )
+                    })
+                    .collect(),
+            ),
+            b_spline_surface_form_attr(l1.surface_form),
+            crate::parser::entity::Attribute::Enum(
+                crate::ir::attr::logical_to_step(l1.u_closed).into(),
+            ),
+            crate::parser::entity::Attribute::Enum(
+                crate::ir::attr::logical_to_step(l1.v_closed).into(),
+            ),
+            crate::parser::entity::Attribute::Enum(
+                crate::ir::attr::logical_to_step(l1.self_intersect).into(),
+            ),
+            crate::parser::entity::Attribute::List(
+                l1.u_multiplicities
+                    .iter()
+                    .map(|&x| crate::parser::entity::Attribute::Integer(x))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::List(
+                l1.v_multiplicities
+                    .iter()
+                    .map(|&x| crate::parser::entity::Attribute::Integer(x))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::List(
+                l1.u_knots
+                    .iter()
+                    .map(|&x| crate::parser::entity::Attribute::Real(x))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::List(
+                l1.v_knots
+                    .iter()
+                    .map(|&x| crate::parser::entity::Attribute::Real(x))
+                    .collect(),
+            ),
+            knot_type_attr(l1.knot_spec),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {
@@ -3027,6 +3088,27 @@ fn b_spline_curve_form_attr(v: crate::ir::geometry::CurveForm) -> crate::parser:
             crate::ir::geometry::CurveForm::ParabolicArc => "PARABOLIC_ARC",
             crate::ir::geometry::CurveForm::PolylineForm => "POLYLINE_FORM",
             crate::ir::geometry::CurveForm::Unspecified => "UNSPECIFIED",
+        }
+        .into(),
+    )
+}
+
+fn b_spline_surface_form_attr(
+    v: crate::ir::geometry::SurfaceForm,
+) -> crate::parser::entity::Attribute {
+    crate::parser::entity::Attribute::Enum(
+        match v {
+            crate::ir::geometry::SurfaceForm::ConicalSurf => "CONICAL_SURF",
+            crate::ir::geometry::SurfaceForm::CylindricalSurf => "CYLINDRICAL_SURF",
+            crate::ir::geometry::SurfaceForm::GeneralisedCone => "GENERALISED_CONE",
+            crate::ir::geometry::SurfaceForm::PlaneSurf => "PLANE_SURF",
+            crate::ir::geometry::SurfaceForm::QuadricSurf => "QUADRIC_SURF",
+            crate::ir::geometry::SurfaceForm::RuledSurf => "RULED_SURF",
+            crate::ir::geometry::SurfaceForm::SphericalSurf => "SPHERICAL_SURF",
+            crate::ir::geometry::SurfaceForm::SurfOfLinearExtrusion => "SURF_OF_LINEAR_EXTRUSION",
+            crate::ir::geometry::SurfaceForm::SurfOfRevolution => "SURF_OF_REVOLUTION",
+            crate::ir::geometry::SurfaceForm::ToroidalSurf => "TOROIDAL_SURF",
+            crate::ir::geometry::SurfaceForm::Unspecified => "UNSPECIFIED",
         }
         .into(),
     )

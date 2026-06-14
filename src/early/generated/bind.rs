@@ -2702,6 +2702,43 @@ pub(crate) fn bind_b_spline_curve_with_knots(
     })
 }
 
+pub(crate) fn bind_b_spline_surface_with_knots(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyBSplineSurfaceWithKnots, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 13, entity_id, "B_SPLINE_SURFACE_WITH_KNOTS")?;
+    Ok(super::model::EarlyBSplineSurfaceWithKnots {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        u_degree: crate::ir::attr::read_integer(attrs, 1, entity_id, "u_degree")?,
+        v_degree: crate::ir::attr::read_integer(attrs, 2, entity_id, "v_degree")?,
+        control_points_list: crate::ir::attr::read_entity_ref_grid(
+            attrs,
+            3,
+            entity_id,
+            "control_points_list",
+        )?,
+        surface_form: bind_b_spline_surface_form(attrs, 4, entity_id, "surface_form")?,
+        u_closed: crate::ir::attr::read_logical(attrs, 5, entity_id, "u_closed")?,
+        v_closed: crate::ir::attr::read_logical(attrs, 6, entity_id, "v_closed")?,
+        self_intersect: crate::ir::attr::read_logical(attrs, 7, entity_id, "self_intersect")?,
+        u_multiplicities: crate::ir::attr::read_integer_list(
+            attrs,
+            8,
+            entity_id,
+            "u_multiplicities",
+        )?,
+        v_multiplicities: crate::ir::attr::read_integer_list(
+            attrs,
+            9,
+            entity_id,
+            "v_multiplicities",
+        )?,
+        u_knots: crate::ir::attr::read_real_list(attrs, 10, entity_id, "u_knots")?,
+        v_knots: crate::ir::attr::read_real_list(attrs, 11, entity_id, "v_knots")?,
+        knot_spec: bind_knot_type(attrs, 12, entity_id, "knot_spec")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {
@@ -2840,6 +2877,27 @@ fn bind_b_spline_curve_form(
             field: field.to_string(),
             token: other.to_string(),
         }),
+    }
+}
+
+fn bind_b_spline_surface_form(
+    attrs: &[crate::parser::entity::Attribute],
+    index: usize,
+    entity_id: u64,
+    field: &'static str,
+) -> Result<crate::ir::geometry::SurfaceForm, crate::ir::error::ConvertError> {
+    match crate::ir::attr::read_enum(attrs, index, entity_id, field)? {
+        "CONICAL_SURF" => Ok(crate::ir::geometry::SurfaceForm::ConicalSurf),
+        "CYLINDRICAL_SURF" => Ok(crate::ir::geometry::SurfaceForm::CylindricalSurf),
+        "GENERALISED_CONE" => Ok(crate::ir::geometry::SurfaceForm::GeneralisedCone),
+        "PLANE_SURF" => Ok(crate::ir::geometry::SurfaceForm::PlaneSurf),
+        "QUADRIC_SURF" => Ok(crate::ir::geometry::SurfaceForm::QuadricSurf),
+        "RULED_SURF" => Ok(crate::ir::geometry::SurfaceForm::RuledSurf),
+        "SPHERICAL_SURF" => Ok(crate::ir::geometry::SurfaceForm::SphericalSurf),
+        "SURF_OF_LINEAR_EXTRUSION" => Ok(crate::ir::geometry::SurfaceForm::SurfOfLinearExtrusion),
+        "SURF_OF_REVOLUTION" => Ok(crate::ir::geometry::SurfaceForm::SurfOfRevolution),
+        "TOROIDAL_SURF" => Ok(crate::ir::geometry::SurfaceForm::ToroidalSurf),
+        _ => Ok(crate::ir::geometry::SurfaceForm::Unspecified),
     }
 }
 
