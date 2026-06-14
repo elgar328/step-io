@@ -165,7 +165,11 @@ pub(crate) fn emit_entity(ctx: &Ctx, ent_name: &str, out: &mut GenOut) {
 
     entity_bind(ent_name, &type_name, &step_name, &attrs, has_select, out);
 
-    entity_serialize(ctx, ent_name, &type_name, &step_name, &attrs, out);
+    // `read_only` entities (read-back-only minority forms normalized away on
+    // write) skip serialize: their handler `write` is `unreachable!()`.
+    if !ctx.mapping.read_only.iter().any(|e| e == ent_name) {
+        entity_serialize(ctx, ent_name, &type_name, &step_name, &attrs, out);
+    }
 }
 
 /// Emit a synthesized `Early*` enum + `bind_<sel>` / `<sel>_emit` for a mixed

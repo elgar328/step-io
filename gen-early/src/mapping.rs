@@ -27,6 +27,15 @@ pub(crate) struct Mapping {
     /// later slots read at the right index) and serialized as `*`.
     #[serde(default)]
     pub(crate) derived: BTreeMap<String, Vec<String>>,
+    /// Entities generated as model + bind only (serialize skipped). For
+    /// read-back-only minority forms the writer normalizes away (e.g.
+    /// `QUASI_UNIFORM_CURVE` → `B_SPLINE_CURVE_WITH_KNOTS`): they are read but
+    /// never emitted, so their handler `write` is `unreachable!()`. Precondition:
+    /// any enum/select such an entity binds must also be used by a serialized
+    /// entity (enum/select helper emission keys off serialize usage); otherwise
+    /// the generated bind fails to compile.
+    #[serde(default)]
+    pub(crate) read_only: Vec<String>,
 }
 
 #[derive(Deserialize)]

@@ -29,6 +29,7 @@ pub(crate) fn ctx_from(schema: EarlyToml) -> Ctx {
             enums: BTreeMap::new(),
             selects: BTreeMap::new(),
             derived: BTreeMap::new(),
+            read_only: Vec::new(),
         },
     }
 }
