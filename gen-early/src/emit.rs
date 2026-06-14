@@ -219,7 +219,7 @@ pub(crate) fn emit_select(
     }
     writeln!(model, "}}\n").unwrap();
 
-    hinted_select_bind(sel, &rtq, &mems, bind, token_enums);
+    hinted_select_bind(ctx, sel, &rtq, &mems, bind, token_enums);
 
     hinted_select_emit(sel, &rtq, &mems, serialize);
 }
@@ -525,6 +525,7 @@ fn entity_serialize(
 
 /// `bind_<sel>` for a hinted mixed SELECT (split from [`emit_select`]).
 fn hinted_select_bind(
+    ctx: &Ctx,
     sel: &str,
     rtq: &str,
     mems: &[(&str, String, Kind)],
@@ -564,7 +565,13 @@ fn hinted_select_bind(
             match k {
                 Kind::Enum(a) => {
                     token_enums.insert(a.clone());
-                    writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Enum(t)) => Some({rtq}::{v}({a}_from_token(t))),").unwrap();
+                    // Strict (no catch_all) token-enums return `Option`; a
+                    // non-standard token → `None` → the SELECT drops the member.
+                    if ctx.enum_hint(a).catch_all.is_some() {
+                        writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Enum(t)) => Some({rtq}::{v}({a}_from_token(t))),").unwrap();
+                    } else {
+                        writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Enum(t)) => {a}_from_token(t).map({rtq}::{v}),").unwrap();
+                    }
                 }
                 Kind::Real => {
                     writeln!(bind, "            (\"{tag}\", crate::parser::entity::Attribute::Real(x)) => Some({rtq}::{v}(*x)),").unwrap();
@@ -581,11 +588,19 @@ fn hinted_select_bind(
     }
     for (_, v, k) in mems {
         if let Kind::Enum(a) = k {
-            writeln!(
-                bind,
-                "        crate::parser::entity::Attribute::Enum(t) => Some({rtq}::{v}({a}_from_token(t))),"
-            )
-            .unwrap();
+            if ctx.enum_hint(a).catch_all.is_some() {
+                writeln!(
+                    bind,
+                    "        crate::parser::entity::Attribute::Enum(t) => Some({rtq}::{v}({a}_from_token(t))),"
+                )
+                .unwrap();
+            } else {
+                writeln!(
+                    bind,
+                    "        crate::parser::entity::Attribute::Enum(t) => {a}_from_token(t).map({rtq}::{v}),"
+                )
+                .unwrap();
+            }
         }
     }
     writeln!(bind, "        _ => None,").unwrap();
@@ -869,22 +884,37 @@ fn synth_select_emit(
 pub(crate) fn emit_token_enum(ctx: &Ctx, alias: &str, bind: &mut String, serialize: &mut String) {
     let h = ctx.enum_hint(alias);
     let rt = &h.rust_type;
-    let catch = h
-        .catch_all
-        .as_ref()
-        .unwrap_or_else(|| panic!("gen-early: enum `{alias}` used in a SELECT needs `catch_all`"));
-    writeln!(bind, "fn {alias}_from_token(t: &str) -> {rt} {{").unwrap();
-    writeln!(bind, "    match t {{").unwrap();
-    for (member, variant) in &h.variants {
-        writeln!(
-            bind,
-            "        \"{}\" => {rt}::{variant},",
-            member.to_uppercase()
-        )
-        .unwrap();
+    // With `catch_all`, an unknown token is preserved verbatim (`_from_token`
+    // is infallible). Without it, the enum is strict: `_from_token` returns
+    // `Option` (`None` = non-standard token) and the SELECT bind drops the
+    // member — the owning handler surfaces the drop as NORM.
+    if let Some(catch) = h.catch_all.as_ref() {
+        writeln!(bind, "fn {alias}_from_token(t: &str) -> {rt} {{").unwrap();
+        writeln!(bind, "    match t {{").unwrap();
+        for (member, variant) in &h.variants {
+            writeln!(
+                bind,
+                "        \"{}\" => {rt}::{variant},",
+                member.to_uppercase()
+            )
+            .unwrap();
+        }
+        writeln!(bind, "        other => {rt}::{catch}(other.to_owned()),").unwrap();
+        writeln!(bind, "    }}\n}}\n").unwrap();
+    } else {
+        writeln!(bind, "fn {alias}_from_token(t: &str) -> Option<{rt}> {{").unwrap();
+        writeln!(bind, "    match t {{").unwrap();
+        for (member, variant) in &h.variants {
+            writeln!(
+                bind,
+                "        \"{}\" => Some({rt}::{variant}),",
+                member.to_uppercase()
+            )
+            .unwrap();
+        }
+        writeln!(bind, "        _ => None,").unwrap();
+        writeln!(bind, "    }}\n}}\n").unwrap();
     }
-    writeln!(bind, "        other => {rt}::{catch}(other.to_owned()),").unwrap();
-    writeln!(bind, "    }}\n}}\n").unwrap();
 
     writeln!(serialize, "fn {alias}_to_token(v: &{rt}) -> String {{").unwrap();
     writeln!(serialize, "    match v {{").unwrap();
@@ -896,7 +926,9 @@ pub(crate) fn emit_token_enum(ctx: &Ctx, alias: &str, bind: &mut String, seriali
         )
         .unwrap();
     }
-    writeln!(serialize, "        {rt}::{catch}(s) => s.clone(),").unwrap();
+    if let Some(catch) = h.catch_all.as_ref() {
+        writeln!(serialize, "        {rt}::{catch}(s) => s.clone(),").unwrap();
+    }
     writeln!(serialize, "    }}\n}}\n").unwrap();
 }
 

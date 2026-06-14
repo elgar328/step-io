@@ -325,6 +325,24 @@
 //!   the writer re-emits `PARAMETER_VALUE`. Recorded as `NonStandardInput`.
 //! - **Code**: `entities/geometry/trimmed_curve.rs`.
 //!
+//! ### NS-non-standard-enum-value
+//! - **Source**: any exporter writing an enum token outside the EXPRESS
+//!   enumeration (latent — not seen in the corpus).
+//! - **Schema rule broken**: an ENUM field carries a token that is not one of
+//!   the EXPRESS members (e.g. `surface_side`, `transition_code`,
+//!   `trimming_preference`, `marker_type`).
+//! - **Acceptance**: the generated `bind` is strict (no `default`/`catch_all`) —
+//!   it neither guesses a default nor preserves the raw token. A required-field
+//!   enum returns `ConvertError::NonStandardEnumValue`, which the dispatcher
+//!   (`record_drop_or_warn`) reclassifies as a `NonStandardInput` drop (NORM);
+//!   an OPTIONAL SELECT member (`marker_type`) binds to `None` so the entity's
+//!   `bind` returns `Ok(None)` and the handler records the drop. Rejecting a
+//!   non-standard value is correct behaviour, so it is **NORM, not LOSS**.
+//! - **Writer symmetry**: absent on re-read (the entity was dropped).
+//! - **Code**: `reader/dispatch.rs` (`record_drop_or_warn`) for required-field
+//!   enums; `entities/visualization/point_style.rs` for the `marker_type`
+//!   SELECT member. Strict bind: `early/generated/bind.rs`.
+//!
 //! ----------------------------------------------------------------------
 //!
 //! # gen-early (2-layer) normalization — principle & residual generated-bind leniencies
@@ -338,23 +356,21 @@
 //! | value-form deviation (bare→TAG, typo token, empty→`$`[optional]) | handler (pre-bind) | normalize attrs → strict bind, `NonStandardInput` |
 //! | resolution-dependent / post-parse | `lower` (has ctx) | decide + `NonStandardInput` |
 //! | known unrecoverable | handler / lower / dispatcher | drop + `NonStandardInput("dropped")` → NORM |
-//! | unknown / malformed syntax | strict `bind` `Err` | dispatcher pushes a defect warning + drops → LOSS (automatic) |
+//! | non-standard enum token | strict `bind` `Err`(`NonStandardEnumValue`) / SELECT `None` | dispatcher / handler reclassifies as a `NonStandardInput` drop → NORM (rejecting a non-standard value is correct, not LOSS — see `NS-non-standard-enum-value`) |
+//! | unknown / malformed syntax (step-io gap) | strict `bind` `Err` | dispatcher pushes a defect warning + drops → LOSS (automatic) |
 //! | entity not strict-bindable at all | — | hold back (stay hand-written) |
 //!
 //! `NS-tagless-parameter-value` above is the first instance (value-form, handler).
 //!
-//! **Residual uniform leniencies still baked into the generated `bind`** (ideally
-//! the hand-written layer per the principle, but currently in gen-early — honest
-//! inventory; these are NOT `### NS-` slugs, they have no per-instance anchor):
-//! - **enum `default`** (`[enum.*] default=`): unknown token → a default variant.
-//!   `surface_side`=`Both`, `transition_code`/`trimming_preference`=`Unspecified`.
-//!   Moves the legacy `_ =>` catch-all into the generated bind. **Never triggers in
-//!   the corpus (latent).** To revisit: make strict (move the guess to a handler +
-//!   `NonStandardInput`).
-//! - **enum `catch_all`** (`marker_type` → `Other(token)`): unknown token preserved
-//!   losslessly (round-trips). Extensibility — defensible, kept.
-//! - **`Integer`→`Real` coercion**: e.g. `PARAMETER_VALUE(5)` accepted as a real.
-//!   Universal Part21 tolerance, kept.
+//! **Residual uniform leniency still baked into the generated `bind`** (NOT a
+//! `### NS-` slug, no per-instance anchor):
+//! - **`Integer`→`Real` coercion** (`read_real`): e.g. `PARAMETER_VALUE(5)` accepted
+//!   as a real. A lexical (number-format) tolerance — lossless, no guess — not an
+//!   entity-level non-standard recovery. Universal Part21 practice, kept.
+//!
+//! (The former enum `default` guess and `marker_type` `catch_all` were removed —
+//! both are now strict; a non-standard enum token is dropped as a NORM
+//! normalization. See `NS-non-standard-enum-value`.)
 
 // ---------------------------------------------------------------------------
 // Typed non-standard case marker
@@ -388,6 +404,7 @@ pub(crate) enum NsCase {
     OrsiOverRiddenUnset,
     GeneralDatumReferenceOfShapeUnset,
     TaglessParameterValue,
+    NonStandardEnumValue,
 }
 
 // `ALL` and `slug` exist only to drive the `ns_case_slugs_match_catalogue`
@@ -417,6 +434,7 @@ impl NsCase {
         NsCase::OrsiOverRiddenUnset,
         NsCase::GeneralDatumReferenceOfShapeUnset,
         NsCase::TaglessParameterValue,
+        NsCase::NonStandardEnumValue,
     ];
 
     /// The stable `NS-<slug>` identifying this case's catalogue section.
@@ -444,6 +462,7 @@ impl NsCase {
                 "NS-general-datum-reference-of-shape-unset"
             }
             NsCase::TaglessParameterValue => "NS-tagless-parameter-value",
+            NsCase::NonStandardEnumValue => "NS-non-standard-enum-value",
         }
     }
 }

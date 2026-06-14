@@ -236,9 +236,12 @@ fn emit_enum_helpers(
         if let Some(default) = &h.default {
             writeln!(bind, "        _ => Ok({}::{default}),", h.rust_type).unwrap();
         } else {
+            // Strict: a token outside the EXPRESS enumeration is non-standard
+            // input. Surface it as `NonStandardEnumValue` so the dispatcher
+            // reclassifies the drop as NORM (correct rejection), not a defect.
             writeln!(
                 bind,
-                "        other => Err(crate::ir::error::ConvertError::UnexpectedEntityForm {{ entity_id, detail: format!(\"{{field}}: unknown {alias} '.{{other}}.'\") }}),"
+                "        other => Err(crate::ir::error::ConvertError::NonStandardEnumValue {{ entity_id, field: field.to_string(), token: other.to_string() }}),"
             )
             .unwrap();
         }

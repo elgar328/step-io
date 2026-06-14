@@ -203,20 +203,19 @@ generate_all = false
 rust_type = "crate::ir::visualization::Projection"
 variants = { central = "Central", parallel = "Parallel" }
 
-# `default`: unknown enum token -> this variant (matches a hand-written catch-all
-# `_ => …`); omit to instead error on unknown (like central_or_parallel above).
+# Strict (no `default`): an unknown enum token errors with
+# `NonStandardEnumValue` → the dispatcher drops the entity and reclassifies it
+# as a NORM normalization (rejecting a non-standard value is correct, not a loss).
 [enum.surface_side]
 rust_type = "crate::ir::visualization::SurfaceSide"
 variants = { positive = "Front", negative = "Back", both = "Both" }
-default = "Both"
 
-# `catch_all`: a variant carrying the raw token `String` for unknown values
-# (round-trips them) — e.g. `MarkerType::Other(token)`. Only used token-based,
-# inside a SELECT member.
+# Strict token-enum (SELECT member, no `catch_all`): an unknown token →
+# `None` from `marker_type_from_token`, so the SELECT drops the member; the
+# POINT_STYLE handler surfaces the drop as a NORM normalization.
 [enum.marker_type]
 rust_type = "crate::ir::visualization::MarkerType"
 variants = { dot = "Dot", x = "X", plus = "Plus", asterisk = "Asterisk", ring = "Ring", square = "Square", triangle = "Triangle" }
-catch_all = "Other"
 
 # `[select.<name>]`: synthesize an `Early*` enum for a *mixed* SELECT (members
 # span entity / enum / primitive). `variants` names the L1 variant per member;
@@ -243,22 +242,18 @@ variants = { cartesian_point = "Point", parameter_value = "Param" }
 rust_type = "crate::ir::plm::AheadOrBehind"
 variants = { ahead = "Ahead", behind = "Behind", exact = "Exact" }
 
-# `transition_code`: EXPRESS has 4 members; L2 `TransitionCode` adds a step-io
-# catch-all `Unspecified` (unknown token -> Unspecified on read, emits the
-# non-standard "UNSPECIFIED" on write). gen-early's serialize matches over the
-# whole `variants` map, so all 5 L2 variants must appear; `default` makes the
-# read `_ => Unspecified` arm (matching the legacy catch-all).
+# `transition_code`: 4 EXPRESS members + L2's `Unspecified` (the `.UNSPECIFIED.`
+# token maps to it explicitly). Strict (no `default`): any other token errors
+# (NonStandardEnumValue) → dropped + NORM. serialize matches all 5 L2 variants.
 [enum.transition_code]
 rust_type = "crate::ir::geometry::TransitionCode"
 variants = { continuous = "Continuous", discontinuous = "Discontinuous", cont_same_gradient = "ContSameGradient", cont_same_gradient_same_curvature = "ContSameGradientSameCurvature", unspecified = "Unspecified" }
-default = "Unspecified"
 
-# `trimming_preference`: all 3 EXPRESS members map to L2 `TrimMaster`; `default`
-# reproduces the legacy `_ => Unspecified` catch-all on read.
+# `trimming_preference`: all 3 EXPRESS members map to L2 `TrimMaster`. Strict
+# (no `default`): an unknown token errors (NonStandardEnumValue) → dropped + NORM.
 [enum.trimming_preference]
 rust_type = "crate::ir::geometry::TrimMaster"
 variants = { cartesian = "Cartesian", parameter = "Parameter", unspecified = "Unspecified" }
-default = "Unspecified"
 
 [enum.angle_relator]
 rust_type = "crate::ir::pmi::AngleSelection"

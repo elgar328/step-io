@@ -2591,13 +2591,13 @@ fn bind_marker_select(
         crate::parser::entity::Attribute::Typed { type_name, value } => {
             match (type_name.as_str(), value.as_ref()) {
                 ("MARKER_TYPE", crate::parser::entity::Attribute::Enum(t)) => {
-                    Some(super::model::EarlyMarker::Type(marker_type_from_token(t)))
+                    marker_type_from_token(t).map(super::model::EarlyMarker::Type)
                 }
                 _ => None,
             }
         }
         crate::parser::entity::Attribute::Enum(t) => {
-            Some(super::model::EarlyMarker::Type(marker_type_from_token(t)))
+            marker_type_from_token(t).map(super::model::EarlyMarker::Type)
         }
         _ => None,
     }
@@ -2652,16 +2652,16 @@ fn bind_trimming_select(
     }
 }
 
-fn marker_type_from_token(t: &str) -> crate::ir::visualization::MarkerType {
+fn marker_type_from_token(t: &str) -> Option<crate::ir::visualization::MarkerType> {
     match t {
-        "ASTERISK" => crate::ir::visualization::MarkerType::Asterisk,
-        "DOT" => crate::ir::visualization::MarkerType::Dot,
-        "PLUS" => crate::ir::visualization::MarkerType::Plus,
-        "RING" => crate::ir::visualization::MarkerType::Ring,
-        "SQUARE" => crate::ir::visualization::MarkerType::Square,
-        "TRIANGLE" => crate::ir::visualization::MarkerType::Triangle,
-        "X" => crate::ir::visualization::MarkerType::X,
-        other => crate::ir::visualization::MarkerType::Other(other.to_owned()),
+        "ASTERISK" => Some(crate::ir::visualization::MarkerType::Asterisk),
+        "DOT" => Some(crate::ir::visualization::MarkerType::Dot),
+        "PLUS" => Some(crate::ir::visualization::MarkerType::Plus),
+        "RING" => Some(crate::ir::visualization::MarkerType::Ring),
+        "SQUARE" => Some(crate::ir::visualization::MarkerType::Square),
+        "TRIANGLE" => Some(crate::ir::visualization::MarkerType::Triangle),
+        "X" => Some(crate::ir::visualization::MarkerType::X),
+        _ => None,
     }
 }
 
@@ -2675,9 +2675,10 @@ fn bind_ahead_or_behind(
         "AHEAD" => Ok(crate::ir::plm::AheadOrBehind::Ahead),
         "BEHIND" => Ok(crate::ir::plm::AheadOrBehind::Behind),
         "EXACT" => Ok(crate::ir::plm::AheadOrBehind::Exact),
-        other => Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
+        other => Err(crate::ir::error::ConvertError::NonStandardEnumValue {
             entity_id,
-            detail: format!("{field}: unknown ahead_or_behind '.{other}.'"),
+            field: field.to_string(),
+            token: other.to_string(),
         }),
     }
 }
@@ -2692,9 +2693,10 @@ fn bind_angle_relator(
         "EQUAL" => Ok(crate::ir::pmi::AngleSelection::Equal),
         "LARGE" => Ok(crate::ir::pmi::AngleSelection::Large),
         "SMALL" => Ok(crate::ir::pmi::AngleSelection::Small),
-        other => Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
+        other => Err(crate::ir::error::ConvertError::NonStandardEnumValue {
             entity_id,
-            detail: format!("{field}: unknown angle_relator '.{other}.'"),
+            field: field.to_string(),
+            token: other.to_string(),
         }),
     }
 }
@@ -2708,9 +2710,10 @@ fn bind_central_or_parallel(
     match crate::ir::attr::read_enum(attrs, index, entity_id, field)? {
         "CENTRAL" => Ok(crate::ir::visualization::Projection::Central),
         "PARALLEL" => Ok(crate::ir::visualization::Projection::Parallel),
-        other => Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
+        other => Err(crate::ir::error::ConvertError::NonStandardEnumValue {
             entity_id,
-            detail: format!("{field}: unknown central_or_parallel '.{other}.'"),
+            field: field.to_string(),
+            token: other.to_string(),
         }),
     }
 }
@@ -2739,9 +2742,14 @@ fn bind_surface_side(
     field: &'static str,
 ) -> Result<crate::ir::visualization::SurfaceSide, crate::ir::error::ConvertError> {
     match crate::ir::attr::read_enum(attrs, index, entity_id, field)? {
+        "BOTH" => Ok(crate::ir::visualization::SurfaceSide::Both),
         "NEGATIVE" => Ok(crate::ir::visualization::SurfaceSide::Back),
         "POSITIVE" => Ok(crate::ir::visualization::SurfaceSide::Front),
-        _ => Ok(crate::ir::visualization::SurfaceSide::Both),
+        other => Err(crate::ir::error::ConvertError::NonStandardEnumValue {
+            entity_id,
+            field: field.to_string(),
+            token: other.to_string(),
+        }),
     }
 }
 
@@ -2758,7 +2766,12 @@ fn bind_transition_code(
         }
         "CONTINUOUS" => Ok(crate::ir::geometry::TransitionCode::Continuous),
         "DISCONTINUOUS" => Ok(crate::ir::geometry::TransitionCode::Discontinuous),
-        _ => Ok(crate::ir::geometry::TransitionCode::Unspecified),
+        "UNSPECIFIED" => Ok(crate::ir::geometry::TransitionCode::Unspecified),
+        other => Err(crate::ir::error::ConvertError::NonStandardEnumValue {
+            entity_id,
+            field: field.to_string(),
+            token: other.to_string(),
+        }),
     }
 }
 
@@ -2771,7 +2784,12 @@ fn bind_trimming_preference(
     match crate::ir::attr::read_enum(attrs, index, entity_id, field)? {
         "CARTESIAN" => Ok(crate::ir::geometry::TrimMaster::Cartesian),
         "PARAMETER" => Ok(crate::ir::geometry::TrimMaster::Parameter),
-        _ => Ok(crate::ir::geometry::TrimMaster::Unspecified),
+        "UNSPECIFIED" => Ok(crate::ir::geometry::TrimMaster::Unspecified),
+        other => Err(crate::ir::error::ConvertError::NonStandardEnumValue {
+            entity_id,
+            field: field.to_string(),
+            token: other.to_string(),
+        }),
     }
 }
 

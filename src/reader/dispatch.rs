@@ -369,6 +369,19 @@ impl ReaderContext {
             self.nonstandard_dropped_refs.insert(id);
             return;
         }
+        // A strict ENUM bind rejected a non-standard token. Rejecting a
+        // non-standard value is correct behaviour, so classify the drop as a
+        // NORM normalization (not a defect/LOSS); seed the id so references
+        // cascade the same way.
+        if let crate::ir::error::ConvertError::NonStandardEnumValue { .. } = &e {
+            self.ns_record(
+                super::NsCase::NonStandardEnumValue,
+                entry.name.to_string(),
+                "dropped (non-standard enum value)",
+            );
+            self.nonstandard_dropped_refs.insert(id);
+            return;
+        }
         self.warnings.push(e);
     }
 

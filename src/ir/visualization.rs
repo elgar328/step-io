@@ -242,8 +242,8 @@ pub enum Marker {
 }
 
 /// `marker_type` ENUMERATION OF (dot, x, plus, asterisk, ring, square,
-/// triangle). `Other` preserves any unmodelled token verbatim for
-/// round-trip safety.
+/// triangle) — the exhaustive AP242 set. A non-standard token is rejected by
+/// the strict bind; the `POINT_STYLE` handler drops it as a NORM normalization.
 #[derive(Debug, Clone, PartialEq)]
 pub enum MarkerType {
     Dot,
@@ -253,7 +253,6 @@ pub enum MarkerType {
     Ring,
     Square,
     Triangle,
-    Other(String),
 }
 
 /// `size_select` SELECT — typed primitives or a `MeasureWithUnit`

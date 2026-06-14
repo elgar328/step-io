@@ -2839,7 +2839,6 @@ fn marker_type_to_token(v: &crate::ir::visualization::MarkerType) -> String {
         crate::ir::visualization::MarkerType::Square => "SQUARE".into(),
         crate::ir::visualization::MarkerType::Triangle => "TRIANGLE".into(),
         crate::ir::visualization::MarkerType::X => "X".into(),
-        crate::ir::visualization::MarkerType::Other(s) => s.clone(),
     }
 }
 

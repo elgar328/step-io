@@ -508,6 +508,43 @@ fn orsi_over_ridden_style_unset_dropped_as_normalization() {
 }
 
 #[test]
+fn non_standard_required_enum_dropped_as_normalization() {
+    // NsCase::NonStandardEnumValue (required-field path) — a strict ENUM field
+    // (here `SURFACE_STYLE_USAGE.side`) given a token outside the EXPRESS
+    // enumeration. The strict bind returns `NonStandardEnumValue`; the
+    // dispatcher reclassifies the drop as a `NonStandardInput` normalization
+    // (NORM) — rejecting a non-standard value is correct, not a defect/LOSS.
+    let result = convert_source(&minimal_step("#1 = SURFACE_STYLE_USAGE(.WEIRD.,#1);"));
+    assert!(
+        result.warnings.iter().all(|w| matches!(w,
+            ConvertError::NonStandardInput { field, normalized_to, .. }
+                if field == "SURFACE_STYLE_USAGE"
+                    && normalized_to.starts_with("dropped (non-standard enum"))),
+        "expected a non-standard-enum drop normalization, got {:#?}",
+        result.warnings
+    );
+}
+
+#[test]
+fn non_standard_marker_type_dropped_as_normalization() {
+    // NsCase::NonStandardEnumValue (SELECT path) — a marker token outside the
+    // EXPRESS `marker_type` enumeration. `bind_marker_select` yields `None` so
+    // `bind_point_style` returns `Ok(None)`; the handler records the drop as a
+    // `NonStandardInput` normalization, not a silent loss.
+    let result = convert_source(&minimal_step(
+        "#1 = POINT_STYLE('',MARKER_TYPE(.WEIRD.),$,$);",
+    ));
+    assert!(
+        result.warnings.iter().all(|w| matches!(w,
+            ConvertError::NonStandardInput { field, normalized_to, .. }
+                if field == "POINT_STYLE"
+                    && normalized_to.starts_with("dropped (non-standard marker"))),
+        "expected a non-standard-marker drop normalization, got {:#?}",
+        result.warnings
+    );
+}
+
+#[test]
 fn pcurve_3d_in_parameter_space_dropped_as_normalization() {
     // NsCase::Pcurve3dInPspace A PCURVE whose 2D parameter-space
     // DEFINITIONAL_REPRESENTATION holds a 3D curve (TRIMMED_CURVE on a 3D

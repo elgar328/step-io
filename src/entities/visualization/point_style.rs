@@ -22,12 +22,23 @@ impl SimpleEntityHandler for PointStyleHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        // 2-layer path: bind → L1 (Ok(None) = unrecognized SELECT form → drop),
-        // then lower → L2. `lower` resolves marker/size/colour refs via the
-        // existing id_cache and registers the typed `EarlyPointStyleId` key
-        // (replaces viz_point_style_id_map).
+        // 2-layer path: bind → L1, then lower → L2. `lower` resolves
+        // marker/size/colour refs via the id_cache and registers the typed
+        // `EarlyPointStyleId` key.
         if let Some(early) = bind::bind_point_style(entity_id, attrs)? {
             lower::lower_point_style(ctx, entity_id, early);
+        } else {
+            // NsCase::NonStandardEnumValue — bind returned None because a present
+            // marker/size SELECT member carried a non-standard value (e.g. a
+            // marker token outside the EXPRESS enum). Rejecting it is correct →
+            // drop + NORM, not a silent loss.
+            ctx.ns_push(
+                crate::reader::NsCase::NonStandardEnumValue,
+                "POINT_STYLE".into(),
+                1,
+                "dropped (non-standard marker/size value)".into(),
+            );
+            ctx.nonstandard_dropped_refs.insert(entity_id);
         }
         Ok(())
     }
