@@ -2766,7 +2766,6 @@ fn bind_transition_code(
         }
         "CONTINUOUS" => Ok(crate::ir::geometry::TransitionCode::Continuous),
         "DISCONTINUOUS" => Ok(crate::ir::geometry::TransitionCode::Discontinuous),
-        "UNSPECIFIED" => Ok(crate::ir::geometry::TransitionCode::Unspecified),
         other => Err(crate::ir::error::ConvertError::NonStandardEnumValue {
             entity_id,
             field: field.to_string(),

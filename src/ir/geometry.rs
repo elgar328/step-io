@@ -407,7 +407,8 @@ pub enum Logical {
 }
 
 /// `transition_code` of a `COMPOSITE_CURVE_SEGMENT` — geometric continuity
-/// between consecutive segments.
+/// between consecutive segments. The EXPRESS enumeration is exactly these four
+/// members; a non-standard token is rejected by the strict bind.
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum TransitionCode {
     #[default]
@@ -415,7 +416,6 @@ pub enum TransitionCode {
     Discontinuous,
     ContSameGradient,
     ContSameGradientSameCurvature,
-    Unspecified,
 }
 
 /// Rationality of a [`NurbsCurve`].

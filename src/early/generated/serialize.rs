@@ -2909,7 +2909,6 @@ fn transition_code_attr(
             }
             crate::ir::geometry::TransitionCode::Continuous => "CONTINUOUS",
             crate::ir::geometry::TransitionCode::Discontinuous => "DISCONTINUOUS",
-            crate::ir::geometry::TransitionCode::Unspecified => "UNSPECIFIED",
         }
         .into(),
     )

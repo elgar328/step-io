@@ -242,12 +242,12 @@ variants = { cartesian_point = "Point", parameter_value = "Param" }
 rust_type = "crate::ir::plm::AheadOrBehind"
 variants = { ahead = "Ahead", behind = "Behind", exact = "Exact" }
 
-# `transition_code`: 4 EXPRESS members + L2's `Unspecified` (the `.UNSPECIFIED.`
-# token maps to it explicitly). Strict (no `default`): any other token errors
-# (NonStandardEnumValue) → dropped + NORM. serialize matches all 5 L2 variants.
+# `transition_code`: the 4 EXPRESS members exactly. Strict — any other token
+# (incl. the non-standard `.UNSPECIFIED.`) errors (NonStandardEnumValue) →
+# dropped + NORM.
 [enum.transition_code]
 rust_type = "crate::ir::geometry::TransitionCode"
-variants = { continuous = "Continuous", discontinuous = "Discontinuous", cont_same_gradient = "ContSameGradient", cont_same_gradient_same_curvature = "ContSameGradientSameCurvature", unspecified = "Unspecified" }
+variants = { continuous = "Continuous", discontinuous = "Discontinuous", cont_same_gradient = "ContSameGradient", cont_same_gradient_same_curvature = "ContSameGradientSameCurvature" }
 
 # `trimming_preference`: all 3 EXPRESS members map to L2 `TrimMaster`. Strict
 # (no `default`): an unknown token errors (NonStandardEnumValue) → dropped + NORM.
