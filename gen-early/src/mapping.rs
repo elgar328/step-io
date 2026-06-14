@@ -21,6 +21,12 @@ pub(crate) struct Mapping {
     pub(crate) enums: BTreeMap<String, EnumHint>,
     #[serde(rename = "select", default)]
     pub(crate) selects: BTreeMap<String, SelectHint>,
+    /// Per-entity EXPRESS Derived (`*`) attribute names. early.toml (a generated
+    /// artifact) cannot carry DERIVE info, so it is hand-authored here. A listed
+    /// attr is omitted from the L1 struct + bind (its positional slot is kept so
+    /// later slots read at the right index) and serialized as `*`.
+    #[serde(default)]
+    pub(crate) derived: BTreeMap<String, Vec<String>>,
 }
 
 #[derive(Deserialize)]

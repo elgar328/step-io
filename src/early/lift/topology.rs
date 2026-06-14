@@ -4,13 +4,38 @@
 
 use crate::early::model::{
     EarlyAdvancedFace, EarlyClosedShell, EarlyEdgeCurve, EarlyEdgeLoop, EarlyFaceBound,
-    EarlyFaceOuterBound, EarlyFaceSurface, EarlyManifoldSolidBrep, EarlyOpenShell, EarlyVertexLoop,
+    EarlyFaceOuterBound, EarlyFaceSurface, EarlyManifoldSolidBrep, EarlyOpenShell,
+    EarlyOrientedClosedShell, EarlyOrientedEdge, EarlyVertexLoop,
 };
 use crate::ir::topology::Orientation;
 
 /// `Orientation` → the BOOLEAN the legacy writer emitted (`Forward` = `T`).
 fn orientation_to_bool(o: Orientation) -> bool {
     matches!(o, Orientation::Forward)
+}
+
+/// Lift one `ORIENTED_EDGE`. `edge_element` = emitted `EDGE_CURVE` step id; the
+/// Derived (`*`) `edge_start`/`edge_end` slots are re-emitted by serialize.
+pub(crate) fn lift_oriented_edge(edge_element: u64, orientation: Orientation) -> EarlyOrientedEdge {
+    EarlyOrientedEdge {
+        name: String::new(),
+        edge_element,
+        orientation: orientation_to_bool(orientation),
+    }
+}
+
+/// Lift one `ORIENTED_CLOSED_SHELL`. `closed_shell_element` = the already-emitted
+/// `CLOSED_SHELL` step id; the Derived (`*`) `cfs_faces` slot is re-emitted by
+/// serialize.
+pub(crate) fn lift_oriented_closed_shell(
+    closed_shell_element: u64,
+    orientation: Orientation,
+) -> EarlyOrientedClosedShell {
+    EarlyOrientedClosedShell {
+        name: String::new(),
+        closed_shell_element,
+        orientation: orientation_to_bool(orientation),
+    }
 }
 
 /// Lift one `EDGE_LOOP` — `edge_list` = emitted `ORIENTED_EDGE` refs. Name empty.

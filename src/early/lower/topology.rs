@@ -4,11 +4,53 @@
 
 use crate::early::model::{
     EarlyAdvancedFace, EarlyClosedShell, EarlyEdgeCurve, EarlyEdgeLoop, EarlyFaceBound,
-    EarlyFaceOuterBound, EarlyFaceSurface, EarlyManifoldSolidBrep, EarlyOpenShell, EarlyVertexLoop,
+    EarlyFaceOuterBound, EarlyFaceSurface, EarlyManifoldSolidBrep, EarlyOpenShell,
+    EarlyOrientedClosedShell, EarlyOrientedEdge, EarlyVertexLoop,
 };
+use crate::ir::OrientedEdge;
 use crate::ir::error::ConvertError;
 use crate::ir::topology::{Edge, Face, FaceData, Orientation, Shell, Solid, Wire, WireData};
 use crate::reader::{ReaderContext, bool_to_orientation};
+
+/// Lower one `ORIENTED_EDGE` — resolve `edge_element` to its `Edge` and store
+/// `(edge, orientation)` in `oriented_edge_map` (no IR arena; `EDGE_LOOP` reads
+/// the map). `edge_start`/`edge_end` are EXPRESS Derived (`*`) — not in L1.
+pub(crate) fn lower_oriented_edge(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyOrientedEdge,
+) -> Result<(), ConvertError> {
+    let edge = ctx.resolve_edge(entity_id, early.edge_element, "edge_element")?;
+    ctx.oriented_edge_map.insert(
+        entity_id,
+        OrientedEdge {
+            edge,
+            orientation: bool_to_orientation(early.orientation),
+        },
+    );
+    Ok(())
+}
+
+/// Lower one `ORIENTED_CLOSED_SHELL` — resolve `closed_shell_element` and store
+/// `(ShellId, Orientation)` in `oriented_closed_shell_map`; the shared arena
+/// `CLOSED_SHELL` is reused (orientation applied later by `BREP_WITH_VOIDS`).
+/// `cfs_faces` is EXPRESS Derived (`*`) — not in L1.
+pub(crate) fn lower_oriented_closed_shell(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyOrientedClosedShell,
+) -> Result<(), ConvertError> {
+    let shell_id = ctx.resolve_shell(
+        entity_id,
+        early.closed_shell_element,
+        "closed_shell_element",
+    )?;
+    ctx.oriented_closed_shell_map.insert(
+        entity_id,
+        (shell_id, bool_to_orientation(early.orientation)),
+    );
+    Ok(())
+}
 
 /// Lower one `EDGE_LOOP` — resolve each `ORIENTED_EDGE` member (via the reader's
 /// `edge_loop_map`/`oriented_edge` resolvers). Classify each: resolved, a

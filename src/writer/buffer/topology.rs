@@ -2,7 +2,6 @@
 
 use super::WriteBuffer;
 use crate::ir::{EdgeId, FaceId, Orientation, ShellId, SolidId, VertexId, Wire, WireId};
-use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
 
 impl WriteBuffer<'_> {
@@ -116,12 +115,5 @@ impl WriteBuffer<'_> {
                 crate::entities::topology::brep_with_voids::BrepWithVoidsHandler::write(self, id)
             }
         }
-    }
-}
-
-pub(crate) fn orientation_bool(o: Orientation) -> Attribute {
-    match o {
-        Orientation::Forward => Attribute::Enum("T".into()),
-        Orientation::Reversed => Attribute::Enum("F".into()),
     }
 }

@@ -186,6 +186,9 @@ generate = [
     "geometric_set",
     "edge_loop",
     "edge_curve",
+    # batch 2: oriented topology (EXPRESS Derived `*` slots — see [derived])
+    "oriented_edge",
+    "oriented_closed_shell",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
@@ -200,6 +203,14 @@ serialize_with_id = [
 # instead of just `generate`. Committed as false (the wired 6); flip on locally
 # to measure coverage / validate that the full union compiles.
 generate_all = false
+
+# Per-entity EXPRESS Derived (`*`) attribute names. early.toml (generated) cannot
+# carry DERIVE info, so it is hand-authored here. A listed attr keeps its Part21
+# positional slot (later attrs read at the right index) but is omitted from the
+# L1 struct + bind and serialized as `*`.
+[derived]
+oriented_edge = ["edge_start", "edge_end"]
+oriented_closed_shell = ["cfs_faces"]
 
 # `[enum.<alias>]`: reuse an existing L2 enum for a STEP ENUM type-alias instead
 # of synthesizing an `Early*` enum. `variants` maps each early.toml ENUM member

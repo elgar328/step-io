@@ -3862,6 +3862,52 @@ impl crate::ir::arena::ArenaId for EarlyEdgeCurveId {
     }
 }
 
+/// L1 `ORIENTED_EDGE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyOrientedEdge {
+    pub(crate) name: String,
+    pub(crate) edge_element: u64,
+    pub(crate) orientation: bool,
+}
+
+/// Typed `id_cache` key for `ORIENTED_EDGE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyOrientedEdgeId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyOrientedEdgeId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `ORIENTED_CLOSED_SHELL` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyOrientedClosedShell {
+    pub(crate) name: String,
+    pub(crate) closed_shell_element: u64,
+    pub(crate) orientation: bool,
+}
+
+/// Typed `id_cache` key for `ORIENTED_CLOSED_SHELL` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyOrientedClosedShellId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyOrientedClosedShellId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

@@ -2870,6 +2870,37 @@ pub(crate) fn serialize_edge_curve(
     )
 }
 
+pub(crate) fn serialize_oriented_edge(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyOrientedEdge,
+) -> u64 {
+    buf.push_simple(
+        "ORIENTED_EDGE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::Derived,
+            crate::parser::entity::Attribute::Derived,
+            crate::parser::entity::Attribute::EntityRef(l1.edge_element),
+            bool_attr(l1.orientation),
+        ],
+    )
+}
+
+pub(crate) fn serialize_oriented_closed_shell(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyOrientedClosedShell,
+) -> u64 {
+    buf.push_simple(
+        "ORIENTED_CLOSED_SHELL",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::Derived,
+            crate::parser::entity::Attribute::EntityRef(l1.closed_shell_element),
+            bool_attr(l1.orientation),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

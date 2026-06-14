@@ -2645,6 +2645,35 @@ pub(crate) fn bind_edge_curve(
     })
 }
 
+pub(crate) fn bind_oriented_edge(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyOrientedEdge, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 5, entity_id, "ORIENTED_EDGE")?;
+    Ok(super::model::EarlyOrientedEdge {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        edge_element: crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "edge_element")?,
+        orientation: crate::ir::attr::read_bool(attrs, 4, entity_id, "orientation")?,
+    })
+}
+
+pub(crate) fn bind_oriented_closed_shell(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyOrientedClosedShell, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "ORIENTED_CLOSED_SHELL")?;
+    Ok(super::model::EarlyOrientedClosedShell {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        closed_shell_element: crate::ir::attr::read_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "closed_shell_element",
+        )?,
+        orientation: crate::ir::attr::read_bool(attrs, 3, entity_id, "orientation")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

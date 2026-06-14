@@ -56,13 +56,19 @@ pub(crate) fn emit_entity(ctx: &Ctx, ent_name: &str, out: &mut GenOut) {
     // Full Part21 positional attribute list (inherited supertype attrs
     // prepended, then own); see `EarlyToml::flattened_attrs`. Each entry is
     // (struct field name, kind, is-optional).
-    let mut attrs: Vec<(String, Kind, bool)> = ctx
+    // EXPRESS Derived (`*`) attrs (hand-authored in mapping `[derived]`): matched
+    // by early.toml attr name (before the dedup below). A derived attr keeps its
+    // positional slot (so later attrs read at the right Part21 index) but gets no
+    // struct field / bind read, and serializes as `*`.
+    let derived_set = ctx.mapping.derived.get(ent_name);
+    let mut attrs: Vec<(String, Kind, bool, bool)> = ctx
         .schema
         .flattened_attrs(ent_name)
         .into_iter()
         .map(|a| {
             let (optional, inner) = strip_optional(&a.ty);
-            (a.name.clone(), ctx.classify(inner, 0), optional)
+            let derived = derived_set.is_some_and(|d| d.contains(&a.name));
+            (a.name.clone(), ctx.classify(inner, 0), optional, derived)
         })
         .collect();
     // Multiple inheritance can produce two distinct attrs sharing a name
@@ -70,7 +76,7 @@ pub(crate) fn emit_entity(ctx: &Ctx, ent_name: &str, out: &mut GenOut) {
     // faithful positional fields, so disambiguate the Rust field identifier
     // (`name`, `name_2`, …) — deterministic, first occurrence keeps the name.
     let mut used: BTreeSet<String> = BTreeSet::new();
-    for (field, _, _) in &mut attrs {
+    for (field, _, _, _) in &mut attrs {
         if used.contains(field) {
             let base = field.clone();
             let mut n = 2;
@@ -81,7 +87,9 @@ pub(crate) fn emit_entity(ctx: &Ctx, ent_name: &str, out: &mut GenOut) {
         }
         used.insert(field.clone());
     }
-    let has_select = attrs.iter().any(|(_, k, _)| matches!(k, Kind::Select(_)));
+    let has_select = attrs
+        .iter()
+        .any(|(_, k, _, d)| !d && matches!(k, Kind::Select(_)));
 
     // model struct. All-scalar shapes wider than 8 bytes get `Copy` so
     // by-value `lower`/`lift` adapters compile under clippy's
@@ -98,7 +106,8 @@ pub(crate) fn emit_entity(ctx: &Ctx, ent_name: &str, out: &mut GenOut) {
     };
     let all_copy = attrs
         .iter()
-        .map(|(_, k, opt)| scalar_size(&field_ty_full(ctx, k, *opt)))
+        .filter(|(_, _, _, d)| !d)
+        .map(|(_, k, opt, _)| scalar_size(&field_ty_full(ctx, k, *opt)))
         .try_fold(0usize, |acc, s| s.map(|s| acc + s))
         .is_some_and(|total| total > 8);
     writeln!(out.model, "/// L1 `{step_name}` (generated).").unwrap();
@@ -109,7 +118,10 @@ pub(crate) fn emit_entity(ctx: &Ctx, ent_name: &str, out: &mut GenOut) {
     )
     .unwrap();
     writeln!(out.model, "pub(crate) struct {type_name} {{").unwrap();
-    for (field, k, opt) in &attrs {
+    for (field, k, opt, derived) in &attrs {
+        if *derived {
+            continue; // Derived (`*`) slot: not stored data, no struct field.
+        }
         writeln!(
             out.model,
             "    pub(crate) {}: {},",
@@ -365,7 +377,7 @@ fn entity_bind(
     ent_name: &str,
     type_name: &str,
     step_name: &str,
-    attrs: &[(String, Kind, bool)],
+    attrs: &[(String, Kind, bool, bool)],
     has_select: bool,
     out: &mut GenOut,
 ) {
@@ -389,7 +401,10 @@ fn entity_bind(
     )
     .unwrap();
     if has_select {
-        for (i, (field, k, opt)) in attrs.iter().enumerate() {
+        for (i, (field, k, opt, derived)) in attrs.iter().enumerate() {
+            if *derived {
+                continue; // Derived (`*`) slot: skipped, but `i` keeps the Part21 index.
+            }
             match (k, opt) {
                 // Optional SELECT: `$`/`*` -> None (entity survives); a present
                 // but unrecognized form -> drop the whole entity (preserving
@@ -427,13 +442,19 @@ fn entity_bind(
             }
         }
         writeln!(out.bind, "    Ok(Some(super::model::{type_name} {{").unwrap();
-        for (field, _, _) in attrs {
+        for (field, _, _, derived) in attrs {
+            if *derived {
+                continue;
+            }
             writeln!(out.bind, "        {field},").unwrap();
         }
         writeln!(out.bind, "    }}))\n}}\n").unwrap();
     } else {
         writeln!(out.bind, "    Ok(super::model::{type_name} {{").unwrap();
-        for (i, (field, k, opt)) in attrs.iter().enumerate() {
+        for (i, (field, k, opt, derived)) in attrs.iter().enumerate() {
+            if *derived {
+                continue; // Derived (`*`) slot: no field; `i` keeps the Part21 index.
+            }
             writeln!(
                 out.bind,
                 "        {field}: {},",
@@ -454,7 +475,7 @@ fn entity_serialize(
     ent_name: &str,
     type_name: &str,
     step_name: &str,
-    attrs: &[(String, Kind, bool)],
+    attrs: &[(String, Kind, bool, bool)],
     out: &mut GenOut,
 ) {
     // Attr expressions are shared between the plain and with_id variants.
@@ -466,11 +487,19 @@ fn entity_serialize(
     )
     .unwrap();
     writeln!(out.serialize, "    buf.push_simple(\"{step_name}\", vec![").unwrap();
-    for (field, k, opt) in attrs {
-        let line = format!("        {},", serialize_expr_full(k, field, *opt));
+    for (field, k, opt, derived) in attrs {
+        let line = if *derived {
+            // Derived (`*`) slot: emit the Part21 omitted-attribute marker.
+            "        crate::parser::entity::Attribute::Derived,".to_string()
+        } else {
+            format!("        {},", serialize_expr_full(k, field, *opt))
+        };
         writeln!(out.serialize, "{line}").unwrap();
         attr_lines.push_str(&line);
         attr_lines.push('\n');
+        if *derived {
+            continue; // no helper-usage tracking for a `*` slot.
+        }
         match k {
             Kind::Bool => out.any_bool = true,
             Kind::Enum(alias) => {
