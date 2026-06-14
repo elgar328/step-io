@@ -284,4 +284,3 @@ variants = { equal = "Equal", large = "Large", small = "Small" }
 [enum.b_spline_curve_form]
 rust_type = "crate::ir::geometry::CurveForm"
 variants = { polyline_form = "PolylineForm", circular_arc = "CircularArc", elliptic_arc = "EllipticArc", parabolic_arc = "ParabolicArc", hyperbolic_arc = "HyperbolicArc", unspecified = "Unspecified" }
-default = "Unspecified"

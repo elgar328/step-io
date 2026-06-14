@@ -2834,7 +2834,12 @@ fn bind_b_spline_curve_form(
         "HYPERBOLIC_ARC" => Ok(crate::ir::geometry::CurveForm::HyperbolicArc),
         "PARABOLIC_ARC" => Ok(crate::ir::geometry::CurveForm::ParabolicArc),
         "POLYLINE_FORM" => Ok(crate::ir::geometry::CurveForm::PolylineForm),
-        _ => Ok(crate::ir::geometry::CurveForm::Unspecified),
+        "UNSPECIFIED" => Ok(crate::ir::geometry::CurveForm::Unspecified),
+        other => Err(crate::ir::error::ConvertError::NonStandardEnumValue {
+            entity_id,
+            field: field.to_string(),
+            token: other.to_string(),
+        }),
     }
 }
 
