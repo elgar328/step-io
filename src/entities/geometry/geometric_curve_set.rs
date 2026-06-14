@@ -1,17 +1,16 @@
-//! `GEOMETRIC_CURVE_SET` handler.
+//! `GEOMETRIC_CURVE_SET` handler (2-layer path).
 //!
-//! Hosts the shared reader/writer body that the `GEOMETRIC_SET` sister
-//! imports. Both names share the same EXPRESS shape; `GEOMETRIC_CURVE_SET`
-//! is a subtype restricting `items` to curves, while `GEOMETRIC_SET` allows
-//! points and (rarely) surfaces too. Reader splits the items into `curves`
-//! and `points` buckets; writer emits a single line under the requested
-//! entity name with the IR's curve / point ids inlined as entity refs.
+//! Hosts the shared child-emit helper that the `GEOMETRIC_SET` sister imports.
+//! Both names share the same EXPRESS shape; `GEOMETRIC_CURVE_SET` is a subtype
+//! restricting `items` to curves, while `GEOMETRIC_SET` allows points and
+//! (rarely) surfaces too. `lower` splits the items into `curves` / `points`
+//! buckets; the writer emits curve refs followed by point refs (matching the
+//! IR's `(curves, points)` split) under the requested entity name.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::id::{CurveId, PointId};
-use crate::ir::visualization::{GeometricCurveSet, GeometricRepresentationItem, GeometricSet};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -23,72 +22,21 @@ pub(crate) struct CurveSetWriteInput {
     pub(crate) points: Vec<PointId>,
 }
 
-/// Shared reader body for `GEOMETRIC_CURVE_SET` and `GEOMETRIC_SET`.
-/// `entity_name` is the source entity name used for diagnostics; the
-/// behaviour is identical for both — items resolve through `curve_map` /
-/// `point_map`, anything else is silently skipped (e.g. stray surface refs).
-pub(crate) fn read_geometric_curve_set_body(
-    ctx: &mut ReaderContext,
-    entity_id: u64,
-    attrs: &[Attribute],
-    entity_name: &'static str,
-) -> Result<(), ConvertError> {
-    check_count(attrs, 2, entity_id, entity_name)?;
-    let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-    let item_refs = read_entity_ref_list(attrs, 1, entity_id, "items")?;
-    let mut curves = Vec::new();
-    let mut points = Vec::new();
-    for r in item_refs {
-        if let Some(cid) = ctx.id_cache.get::<crate::ir::id::CurveId>(r) {
-            curves.push(cid);
-        } else if let Some(pid) = ctx.id_cache.get::<crate::ir::id::PointId>(r) {
-            points.push(pid);
-        }
-    }
-    ctx.curve_set_map
-        .insert(entity_id, (curves.clone(), points.clone()));
-    // Also push into the unified `geometric_representation_item` arena so
-    // STYLED_ITEM can resolve a standalone GCS/GS target. The wireframe
-    // flatten path keeps using `curve_set_map`.
-    let variant = if entity_name == "GEOMETRIC_CURVE_SET" {
-        GeometricRepresentationItem::GeometricCurveSet(GeometricCurveSet {
-            name,
-            curves,
-            points,
-        })
-    } else {
-        GeometricRepresentationItem::GeometricSet(GeometricSet {
-            name,
-            curves,
-            points,
-        })
-    };
-    let gri_id = ctx.geometry.geometric_representation_items.push(variant);
-    ctx.curve_set_id_map.insert(entity_id, gri_id);
-    Ok(())
-}
-
-/// Shared writer body. Emits the requested entity name with a list of
-/// curve refs followed by point refs (matching the `(curves, points)`
-/// IR split). Caller picks the entity name based on whether loose points
-/// are present (the writer's existing convention).
-pub(crate) fn write_geometric_curve_set(
+/// Shared child-emit: curve refs followed by point refs (the `(curves, points)`
+/// IR split). Used by both `GEOMETRIC_CURVE_SET` and `GEOMETRIC_SET` writers.
+pub(crate) fn emit_curve_set_elements(
     buf: &mut WriteBuffer,
-    entity_name: &'static str,
     input: CurveSetWriteInput,
-) -> Result<u64, WriteError> {
+) -> Result<Vec<u64>, WriteError> {
     let CurveSetWriteInput { curves, points } = input;
-    let mut item_refs = Vec::with_capacity(curves.len() + points.len());
+    let mut elements = Vec::with_capacity(curves.len() + points.len());
     for cid in curves {
-        item_refs.push(Attribute::EntityRef(buf.emit_curve(cid)?));
+        elements.push(buf.emit_curve(cid)?);
     }
     for pid in points {
-        item_refs.push(Attribute::EntityRef(buf.emit_point(pid)?));
+        elements.push(buf.emit_point(pid)?);
     }
-    Ok(buf.push_simple(
-        entity_name,
-        vec![Attribute::String(String::new()), Attribute::List(item_refs)],
-    ))
+    Ok(elements)
 }
 
 pub(crate) struct GeometricCurveSetHandler;
@@ -103,10 +51,14 @@ impl SimpleEntityHandler for GeometricCurveSetHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        read_geometric_curve_set_body(ctx, entity_id, attrs, "GEOMETRIC_CURVE_SET")
+        let early = bind::bind_geometric_curve_set(entity_id, attrs)?;
+        lower::lower_geometric_curve_set(ctx, entity_id, &early);
+        Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, input: CurveSetWriteInput) -> Result<u64, WriteError> {
-        write_geometric_curve_set(buf, "GEOMETRIC_CURVE_SET", input)
+        let elements = emit_curve_set_elements(buf, input)?;
+        let early = lift::lift_geometric_curve_set(elements);
+        Ok(serialize::serialize_geometric_curve_set(buf, &early))
     }
 }

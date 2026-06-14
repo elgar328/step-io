@@ -3,16 +3,31 @@
 //! (`String::new()`), so these lifts always set `name: String::new()`.
 
 use crate::early::model::{
-    EarlyAxis1Placement, EarlyAxis2Placement3d, EarlyCartesianPoint, EarlyCircle,
-    EarlyCircularArea, EarlyCompositeCurve, EarlyCompositeCurveSegment, EarlyConicalSurface,
-    EarlyCurveBoundedSurface, EarlyCylindricalSurface, EarlyDegenerateToroidalSurface,
-    EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyLine, EarlyOffsetCurve3d,
-    EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent, EarlyPlane,
-    EarlyPolyline, EarlyRectangularTrimmedSurface, EarlySphericalSurface,
+    EarlyAxis1Placement, EarlyAxis2Placement3d, EarlyBoundedPcurve, EarlyCartesianPoint,
+    EarlyCircle, EarlyCircularArea, EarlyCompositeCurve, EarlyCompositeCurveSegment,
+    EarlyConicalSurface, EarlyCurveBoundedSurface, EarlyCylindricalSurface,
+    EarlyDegenerateToroidalSurface, EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyLine,
+    EarlyOffsetCurve3d, EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent,
+    EarlyPlane, EarlyPolyline, EarlyRectangularTrimmedSurface, EarlySphericalSurface,
     EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyTrimSelect,
     EarlyTrimmedCurve, EarlyVector, EarlyVertexPoint,
 };
 use crate::ir::geometry::{Direction3, Logical, Point3, TransitionCode, TrimMaster};
+
+/// Lift one `BOUNDED_PCURVE`. Unlike most geometry, it round-trips its own
+/// `name` (the legacy writer emitted `BoundedPCurve.name`), so it is threaded
+/// through rather than synthesised empty.
+pub(crate) fn lift_bounded_pcurve(
+    name: String,
+    basis_surface: u64,
+    reference_to_curve: u64,
+) -> EarlyBoundedPcurve {
+    EarlyBoundedPcurve {
+        name,
+        basis_surface,
+        reference_to_curve,
+    }
+}
 
 /// Lift one `CARTESIAN_POINT` from its arena `Point3`.
 pub(crate) fn lift_cartesian_point(p: Point3) -> EarlyCartesianPoint {

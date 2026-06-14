@@ -6,25 +6,55 @@
 //! 3D branch exactly (2-count → the 2D arena claims it, so we no-op).
 
 use crate::early::model::{
-    EarlyAxis1Placement, EarlyAxis2Placement3d, EarlyCartesianPoint, EarlyCircle,
-    EarlyCircularArea, EarlyCompositeCurve, EarlyCompositeCurveSegment, EarlyConicalSurface,
-    EarlyCurveBoundedSurface, EarlyCylindricalSurface, EarlyDegenerateToroidalSurface,
-    EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyLine, EarlyOffsetCurve3d,
-    EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent, EarlyPlane,
-    EarlyPolyline, EarlyRectangularTrimmedSurface, EarlySphericalSurface,
+    EarlyAxis1Placement, EarlyAxis2Placement3d, EarlyBoundedPcurve, EarlyCartesianPoint,
+    EarlyCircle, EarlyCircularArea, EarlyCompositeCurve, EarlyCompositeCurveSegment,
+    EarlyConicalSurface, EarlyCurveBoundedSurface, EarlyCylindricalSurface,
+    EarlyDegenerateToroidalSurface, EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyLine,
+    EarlyOffsetCurve3d, EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent,
+    EarlyPlane, EarlyPolyline, EarlyRectangularTrimmedSurface, EarlySphericalSurface,
     EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyTrimSelect,
     EarlyTrimmedCurve, EarlyVector, EarlyVertexPoint,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{
-    Axis1Placement, Axis2Placement3d, Circle3, CircularArea, CircularAreaCentre, CompositeCurve,
-    CompositeSegment, ConicalSurface, Curve, CurveBoundedSurface, CylindricalSurface,
-    DegenerateToroidalSurface, Direction3, Ellipse3, Hyperbola, Line3, OffsetCurve3d, Parabola,
-    PlanarBox, PlanarBoxPlacement, PlanarExtent, PlanarExtentData, Plane3, Point3, Polyline,
-    RectangularTrimmedSurface, SphericalSurface, Surface, SurfaceOfLinearExtrusion,
-    SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TrimSelect, TrimmedCurve, Vertex,
+    Axis1Placement, Axis2Placement3d, BoundedPCurve, Circle3, CircularArea, CircularAreaCentre,
+    CompositeCurve, CompositeSegment, ConicalSurface, Curve, CurveBoundedSurface,
+    CylindricalSurface, DegenerateToroidalSurface, Direction3, Ellipse3, Hyperbola, Line3,
+    OffsetCurve3d, Parabola, ParameterSpaceCurve, PlanarBox, PlanarBoxPlacement, PlanarExtent,
+    PlanarExtentData, Plane3, Point3, Polyline, RectangularTrimmedSurface, SphericalSurface,
+    Surface, SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface,
+    TrimSelect, TrimmedCurve, Vertex,
 };
 use crate::reader::ReaderContext;
+
+/// Lower one `BOUNDED_PCURVE` — resolve `basis_surface` + `reference_to_curve`
+/// and push to the `parameter_space_curves` arena. Orphan (no inbound refs) so
+/// no `id_cache` entry; a missing ref drops it (matching the legacy handler).
+pub(crate) fn lower_bounded_pcurve(
+    ctx: &mut ReaderContext,
+    _entity_id: u64,
+    early: &EarlyBoundedPcurve,
+) {
+    let Some(basis_surface) = ctx
+        .id_cache
+        .get::<crate::ir::id::SurfaceId>(early.basis_surface)
+    else {
+        return;
+    };
+    let Some(reference_to_curve) = ctx
+        .id_cache
+        .get::<crate::ir::id::RepresentationId>(early.reference_to_curve)
+    else {
+        return;
+    };
+    ctx.geometry
+        .parameter_space_curves
+        .push(ParameterSpaceCurve::BoundedPCurve(BoundedPCurve {
+            name: early.name.clone(),
+            basis_surface,
+            reference_to_curve,
+        }));
+}
 
 /// Lower one 3D `CARTESIAN_POINT`. A 2-coordinate point belongs to the 2D
 /// sister arena (no-op here); anything but 2 or 3 is malformed (Err, matching

@@ -180,6 +180,12 @@ generate = [
     "composite_curve",
     # geometry (trimmed curve)
     "trimmed_curve",
+    # batch 1: clean geometry + core topology edge pair
+    "bounded_pcurve",
+    "geometric_curve_set",
+    "geometric_set",
+    "edge_loop",
+    "edge_curve",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

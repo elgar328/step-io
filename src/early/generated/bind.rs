@@ -2581,6 +2581,70 @@ pub(crate) fn bind_trimmed_curve(
     })
 }
 
+pub(crate) fn bind_bounded_pcurve(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyBoundedPcurve, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "BOUNDED_PCURVE")?;
+    Ok(super::model::EarlyBoundedPcurve {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        basis_surface: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "basis_surface")?,
+        reference_to_curve: crate::ir::attr::read_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "reference_to_curve",
+        )?,
+    })
+}
+
+pub(crate) fn bind_geometric_curve_set(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyGeometricCurveSet, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "GEOMETRIC_CURVE_SET")?;
+    Ok(super::model::EarlyGeometricCurveSet {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        elements: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "elements")?,
+    })
+}
+
+pub(crate) fn bind_geometric_set(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyGeometricSet, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "GEOMETRIC_SET")?;
+    Ok(super::model::EarlyGeometricSet {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        elements: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "elements")?,
+    })
+}
+
+pub(crate) fn bind_edge_loop(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyEdgeLoop, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "EDGE_LOOP")?;
+    Ok(super::model::EarlyEdgeLoop {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        edge_list: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "edge_list")?,
+    })
+}
+
+pub(crate) fn bind_edge_curve(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyEdgeCurve, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 5, entity_id, "EDGE_CURVE")?;
+    Ok(super::model::EarlyEdgeCurve {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        edge_start: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "edge_start")?,
+        edge_end: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "edge_end")?,
+        edge_geometry: crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "edge_geometry")?,
+        same_sense: crate::ir::attr::read_bool(attrs, 4, entity_id, "same_sense")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

@@ -3,6 +3,7 @@
 //! surfaces) alongside curves. Imports the shared body from the curve-set
 //! module and registers the alternate entity name.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -11,9 +12,7 @@ use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use step_io_macros::step_entity;
 
-use super::geometric_curve_set::{
-    CurveSetWriteInput, read_geometric_curve_set_body, write_geometric_curve_set,
-};
+use super::geometric_curve_set::{CurveSetWriteInput, emit_curve_set_elements};
 
 pub(crate) struct GeometricSetHandler;
 
@@ -27,10 +26,14 @@ impl SimpleEntityHandler for GeometricSetHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        read_geometric_curve_set_body(ctx, entity_id, attrs, "GEOMETRIC_SET")
+        let early = bind::bind_geometric_set(entity_id, attrs)?;
+        lower::lower_geometric_set(ctx, entity_id, &early);
+        Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, input: CurveSetWriteInput) -> Result<u64, WriteError> {
-        write_geometric_curve_set(buf, "GEOMETRIC_SET", input)
+        let elements = emit_curve_set_elements(buf, input)?;
+        let early = lift::lift_geometric_set(elements);
+        Ok(serialize::serialize_geometric_set(buf, &early))
     }
 }

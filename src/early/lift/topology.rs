@@ -3,14 +3,39 @@
 //! the handler's emit recursion; `name` is the legacy empty string.
 
 use crate::early::model::{
-    EarlyAdvancedFace, EarlyClosedShell, EarlyFaceBound, EarlyFaceOuterBound, EarlyFaceSurface,
-    EarlyManifoldSolidBrep, EarlyOpenShell, EarlyVertexLoop,
+    EarlyAdvancedFace, EarlyClosedShell, EarlyEdgeCurve, EarlyEdgeLoop, EarlyFaceBound,
+    EarlyFaceOuterBound, EarlyFaceSurface, EarlyManifoldSolidBrep, EarlyOpenShell, EarlyVertexLoop,
 };
 use crate::ir::topology::Orientation;
 
 /// `Orientation` → the BOOLEAN the legacy writer emitted (`Forward` = `T`).
 fn orientation_to_bool(o: Orientation) -> bool {
     matches!(o, Orientation::Forward)
+}
+
+/// Lift one `EDGE_LOOP` — `edge_list` = emitted `ORIENTED_EDGE` refs. Name empty.
+pub(crate) fn lift_edge_loop(edge_list: Vec<u64>) -> EarlyEdgeLoop {
+    EarlyEdgeLoop {
+        name: String::new(),
+        edge_list,
+    }
+}
+
+/// Lift one `EDGE_CURVE` — child refs are emitted step ids; `same_sense` is the
+/// orientation's BOOLEAN. Name empty.
+pub(crate) fn lift_edge_curve(
+    edge_start: u64,
+    edge_end: u64,
+    edge_geometry: u64,
+    orientation: Orientation,
+) -> EarlyEdgeCurve {
+    EarlyEdgeCurve {
+        name: String::new(),
+        edge_start,
+        edge_end,
+        edge_geometry,
+        same_sense: orientation_to_bool(orientation),
+    }
 }
 
 /// Lift one `FACE_BOUND` (bound = the loop's output step id).

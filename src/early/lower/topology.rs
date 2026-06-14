@@ -3,12 +3,86 @@
 //! a dangling child surfaces as `MissingReference`.
 
 use crate::early::model::{
-    EarlyAdvancedFace, EarlyClosedShell, EarlyFaceBound, EarlyFaceOuterBound, EarlyFaceSurface,
-    EarlyManifoldSolidBrep, EarlyOpenShell, EarlyVertexLoop,
+    EarlyAdvancedFace, EarlyClosedShell, EarlyEdgeCurve, EarlyEdgeLoop, EarlyFaceBound,
+    EarlyFaceOuterBound, EarlyFaceSurface, EarlyManifoldSolidBrep, EarlyOpenShell, EarlyVertexLoop,
 };
 use crate::ir::error::ConvertError;
-use crate::ir::topology::{Face, FaceData, Orientation, Shell, Solid, Wire, WireData};
+use crate::ir::topology::{Edge, Face, FaceData, Orientation, Shell, Solid, Wire, WireData};
 use crate::reader::{ReaderContext, bool_to_orientation};
+
+/// Lower one `EDGE_LOOP` — resolve each `ORIENTED_EDGE` member (via the reader's
+/// `edge_loop_map`/`oriented_edge` resolvers). Classify each: resolved, a
+/// dangling-reference cascade drop (`nonstandard_dropped_refs`), or a genuine
+/// miss. A genuine miss is a defect. If a member is a cascade drop (and none is
+/// a genuine miss) the whole loop drops; its *resolved* members emit only via
+/// this loop, so they orphan — record those, then return a `MissingReference`
+/// to the cascade member so the dispatcher reclassifies the loop and seeds it.
+pub(crate) fn lower_edge_loop(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyEdgeLoop,
+) -> Result<(), ConvertError> {
+    let mut edges = Vec::with_capacity(early.edge_list.len());
+    let mut resolved_members = 0usize;
+    let mut cascade_member: Option<u64> = None;
+    for &r in &early.edge_list {
+        match ctx.resolve_oriented_edge(entity_id, r, "edge_list") {
+            Ok(oe) => {
+                edges.push(oe);
+                resolved_members += 1;
+            }
+            Err(e) => {
+                if ctx.nonstandard_dropped_refs.contains(&r) {
+                    cascade_member = Some(r);
+                } else {
+                    return Err(e); // genuine missing ref → defect, no orphan record
+                }
+            }
+        }
+    }
+    if let Some(bad) = cascade_member {
+        for _ in 0..resolved_members {
+            ctx.ns_record(
+                crate::reader::NsCase::DanglingReferenceOrphan,
+                "ORIENTED_EDGE".to_string(),
+                "dropped (orphaned by dangling-dropped loop)",
+            );
+        }
+        return Err(ConvertError::MissingReference {
+            from: entity_id,
+            to: bad,
+            field_name: "edge_list",
+        });
+    }
+    ctx.edge_loop_map.insert(entity_id, edges);
+    Ok(())
+}
+
+/// Lower one `EDGE_CURVE`. The handler pre-resolves the refs (so a dangling
+/// `edge_geometry` surfaces as a `MissingReference` before the strict bind reads
+/// `same_sense`); this re-resolves them (side-effect-free id-cache lookups) and
+/// builds the `Edge`. If `edge_geometry` was a `SURFACE_CURVE` / `SEAM_CURVE`,
+/// its wrapper (captured by that handler keyed on the wrapper id) rides along.
+pub(crate) fn lower_edge_curve(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyEdgeCurve,
+) -> Result<(), ConvertError> {
+    let start = ctx.resolve_vertex(entity_id, early.edge_start, "edge_start")?;
+    let end = ctx.resolve_vertex(entity_id, early.edge_end, "edge_end")?;
+    let curve = ctx.resolve_curve(entity_id, early.edge_geometry, "edge_geometry")?;
+    let surface_curve = ctx.surface_curve_map.get(&early.edge_geometry).cloned();
+    let edge = Edge {
+        curve,
+        vertices: (start, end),
+        trim: (0.0, 0.0),
+        orientation: bool_to_orientation(early.same_sense),
+        surface_curve,
+    };
+    let id = ctx.topology.edges.push(edge);
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
 
 /// Shared `FACE_BOUND` / `FACE_OUTER_BOUND` lowering: the `bound` loop is
 /// either an edge loop (resolved to its edges) or a vertex loop; an

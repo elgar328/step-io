@@ -5,10 +5,10 @@
 //! `reference_to_curve` narrows to a `definitional_representation` — step-io
 //! stores it as a plain `RepresentationId`.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::geometry::{BoundedPCurve, ParameterSpaceCurve};
+use crate::ir::geometry::BoundedPCurve;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -27,37 +27,15 @@ impl SimpleEntityHandler for BoundedPCurveHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "BOUNDED_PCURVE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let basis_ref = read_entity_ref(attrs, 1, entity_id, "basis_surface")?;
-        let ref_ref = read_entity_ref(attrs, 2, entity_id, "reference_to_curve")?;
-        let Some(basis_surface) = ctx.id_cache.get::<crate::ir::id::SurfaceId>(basis_ref) else {
-            return Ok(());
-        };
-        let Some(reference_to_curve) = ctx.id_cache.get::<crate::ir::id::RepresentationId>(ref_ref)
-        else {
-            return Ok(());
-        };
-        ctx.geometry
-            .parameter_space_curves
-            .push(ParameterSpaceCurve::BoundedPCurve(BoundedPCurve {
-                name,
-                basis_surface,
-                reference_to_curve,
-            }));
+        let early = bind::bind_bounded_pcurve(entity_id, attrs)?;
+        lower::lower_bounded_pcurve(ctx, entity_id, &early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, b: BoundedPCurve) -> Result<u64, WriteError> {
         let basis_step = buf.emit_surface(b.basis_surface)?;
         let ref_step = buf.step_id(b.reference_to_curve);
-        Ok(buf.push_simple(
-            "BOUNDED_PCURVE",
-            vec![
-                Attribute::String(b.name),
-                Attribute::EntityRef(basis_step),
-                Attribute::EntityRef(ref_step),
-            ],
-        ))
+        let early = lift::lift_bounded_pcurve(b.name, basis_step, ref_step);
+        Ok(serialize::serialize_bounded_pcurve(buf, &early))
     }
 }

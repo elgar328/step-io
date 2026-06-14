@@ -2786,6 +2786,90 @@ pub(crate) fn serialize_trimmed_curve(
     )
 }
 
+pub(crate) fn serialize_bounded_pcurve(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyBoundedPcurve,
+) -> u64 {
+    buf.push_simple(
+        "BOUNDED_PCURVE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.basis_surface),
+            crate::parser::entity::Attribute::EntityRef(l1.reference_to_curve),
+        ],
+    )
+}
+
+pub(crate) fn serialize_geometric_curve_set(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyGeometricCurveSet,
+) -> u64 {
+    buf.push_simple(
+        "GEOMETRIC_CURVE_SET",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.elements
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_geometric_set(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyGeometricSet,
+) -> u64 {
+    buf.push_simple(
+        "GEOMETRIC_SET",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.elements
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_edge_loop(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyEdgeLoop,
+) -> u64 {
+    buf.push_simple(
+        "EDGE_LOOP",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.edge_list
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_edge_curve(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyEdgeCurve,
+) -> u64 {
+    buf.push_simple(
+        "EDGE_CURVE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.edge_start),
+            crate::parser::entity::Attribute::EntityRef(l1.edge_end),
+            crate::parser::entity::Attribute::EntityRef(l1.edge_geometry),
+            bool_attr(l1.same_sense),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

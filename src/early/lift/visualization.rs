@@ -4,13 +4,13 @@
 use crate::early::model::{
     EarlyAppliedPresentedItem, EarlyCameraUsage, EarlyColourRgb, EarlyCompositeText,
     EarlyDraughtingPreDefinedColour, EarlyDraughtingPreDefinedCurveFont, EarlyFillAreaStyle,
-    EarlyFillAreaStyleColour, EarlyMarker, EarlyMarkerSize, EarlyPointStyle,
-    EarlyPreDefinedCurveFont, EarlyPreDefinedMarker, EarlyPreDefinedPointMarkerSymbol,
-    EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol, EarlyPresentationLayerAssignment,
-    EarlyPresentedItemRepresentation, EarlyShellBasedSurfaceModel, EarlySurfaceSideStyle,
-    EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea, EarlySurfaceStyleTransparent,
-    EarlySurfaceStyleUsage, EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont,
-    EarlyViewVolume,
+    EarlyFillAreaStyleColour, EarlyGeometricCurveSet, EarlyGeometricSet, EarlyMarker,
+    EarlyMarkerSize, EarlyPointStyle, EarlyPreDefinedCurveFont, EarlyPreDefinedMarker,
+    EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol,
+    EarlyPresentationLayerAssignment, EarlyPresentedItemRepresentation,
+    EarlyShellBasedSurfaceModel, EarlySurfaceSideStyle, EarlySurfaceStyleBoundary,
+    EarlySurfaceStyleFillArea, EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage,
+    EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont, EarlyViewVolume,
 };
 use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::fill_area_style_colour::FillAreaStyleColourHandler;
@@ -267,5 +267,22 @@ pub(crate) fn lift_shell_based_surface_model(
     EarlyShellBasedSurfaceModel {
         name: String::new(),
         sbsm_boundary,
+    }
+}
+
+/// Lift one `GEOMETRIC_CURVE_SET` — `elements` = emitted curve refs then point
+/// refs (the writer's `(curves, points)` order). Name synthesised empty.
+pub(crate) fn lift_geometric_curve_set(elements: Vec<u64>) -> EarlyGeometricCurveSet {
+    EarlyGeometricCurveSet {
+        name: String::new(),
+        elements,
+    }
+}
+
+/// Lift one `GEOMETRIC_SET` (same shape as `GEOMETRIC_CURVE_SET`).
+pub(crate) fn lift_geometric_set(elements: Vec<u64>) -> EarlyGeometricSet {
+    EarlyGeometricSet {
+        name: String::new(),
+        elements,
     }
 }

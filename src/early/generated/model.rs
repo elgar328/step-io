@@ -3748,6 +3748,120 @@ impl crate::ir::arena::ArenaId for EarlyTrimmedCurveId {
     }
 }
 
+/// L1 `BOUNDED_PCURVE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyBoundedPcurve {
+    pub(crate) name: String,
+    pub(crate) basis_surface: u64,
+    pub(crate) reference_to_curve: u64,
+}
+
+/// Typed `id_cache` key for `BOUNDED_PCURVE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyBoundedPcurveId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyBoundedPcurveId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `GEOMETRIC_CURVE_SET` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyGeometricCurveSet {
+    pub(crate) name: String,
+    pub(crate) elements: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `GEOMETRIC_CURVE_SET` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyGeometricCurveSetId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyGeometricCurveSetId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `GEOMETRIC_SET` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyGeometricSet {
+    pub(crate) name: String,
+    pub(crate) elements: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `GEOMETRIC_SET` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyGeometricSetId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyGeometricSetId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `EDGE_LOOP` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyEdgeLoop {
+    pub(crate) name: String,
+    pub(crate) edge_list: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `EDGE_LOOP` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyEdgeLoopId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyEdgeLoopId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `EDGE_CURVE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyEdgeCurve {
+    pub(crate) name: String,
+    pub(crate) edge_start: u64,
+    pub(crate) edge_end: u64,
+    pub(crate) edge_geometry: u64,
+    pub(crate) same_sense: bool,
+}
+
+/// Typed `id_cache` key for `EDGE_CURVE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyEdgeCurveId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyEdgeCurveId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

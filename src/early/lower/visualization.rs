@@ -4,32 +4,32 @@
 use crate::early::model::{
     EarlyAppliedPresentedItem, EarlyCameraUsage, EarlyColourRgb, EarlyCompositeText,
     EarlyDraughtingPreDefinedColour, EarlyDraughtingPreDefinedCurveFont, EarlyFillAreaStyle,
-    EarlyFillAreaStyleColour, EarlyFillAreaStyleId, EarlyMarker, EarlyMarkerSize, EarlyPointStyle,
-    EarlyPointStyleId, EarlyPreDefinedCurveFont, EarlyPreDefinedMarker,
-    EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol,
-    EarlyPresentationLayerAssignment, EarlyPresentedItemRepresentation,
-    EarlyShellBasedSurfaceModel, EarlySurfaceSideStyle, EarlySurfaceSideStyleId,
-    EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea, EarlySurfaceStyleFillAreaId,
-    EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId,
-    EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont, EarlyViewVolume,
-    EarlyViewVolumeId,
+    EarlyFillAreaStyleColour, EarlyFillAreaStyleId, EarlyGeometricCurveSet, EarlyGeometricSet,
+    EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlyPointStyleId, EarlyPreDefinedCurveFont,
+    EarlyPreDefinedMarker, EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol,
+    EarlyPreDefinedTerminatorSymbol, EarlyPresentationLayerAssignment,
+    EarlyPresentedItemRepresentation, EarlyShellBasedSurfaceModel, EarlySurfaceSideStyle,
+    EarlySurfaceSideStyleId, EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea,
+    EarlySurfaceStyleFillAreaId, EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage,
+    EarlySurfaceStyleUsageId, EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont,
+    EarlyViewVolume, EarlyViewVolumeId,
 };
 use crate::ir::id::{
-    ColourId, MeasureWithUnitId, PlanarExtentId, PointId, PreDefinedMarkerId, ShellId,
+    ColourId, CurveId, MeasureWithUnitId, PlanarExtentId, PointId, PreDefinedMarkerId, ShellId,
     SurfaceStyleRenderingId,
 };
 use crate::ir::shape_rep::{CameraUsage, RepresentationMap};
 use crate::ir::visualization::{
     AppliedPresentedItem, Colour, ColourRgb, CompositeText, CurveOrRender,
     DraughtingPreDefinedColour, DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour,
-    FoundedItem, GeometricRepresentationItem, Marker, MarkerSize, PointStyle, PreDefinedCurveFont,
-    PreDefinedCurveFontData, PreDefinedMarker, PreDefinedMarkerData, PreDefinedPointMarkerSymbol,
-    PreDefinedSymbol, PreDefinedSymbolData, PreDefinedTerminatorSymbol,
-    PresentationLayerAssignment, PresentationLayerAssignmentItem, PresentationReprSelect,
-    PresentedItem, PresentedItemRepresentation, ShellBasedSurfaceModel, SurfaceSideStyle,
-    SurfaceSideStyleEntry, SurfaceStyleBoundary, SurfaceStyleFillArea, SurfaceStyleUsage,
-    SymbolColour, SymbolStyle, TextOrCharacter, TextStyleForDefinedFont, ViewVolume,
-    VisualizationPool,
+    FoundedItem, GeometricCurveSet, GeometricRepresentationItem, GeometricSet, Marker, MarkerSize,
+    PointStyle, PreDefinedCurveFont, PreDefinedCurveFontData, PreDefinedMarker,
+    PreDefinedMarkerData, PreDefinedPointMarkerSymbol, PreDefinedSymbol, PreDefinedSymbolData,
+    PreDefinedTerminatorSymbol, PresentationLayerAssignment, PresentationLayerAssignmentItem,
+    PresentationReprSelect, PresentedItem, PresentedItemRepresentation, ShellBasedSurfaceModel,
+    SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleBoundary, SurfaceStyleFillArea,
+    SurfaceStyleUsage, SymbolColour, SymbolStyle, TextOrCharacter, TextStyleForDefinedFont,
+    ViewVolume, VisualizationPool,
 };
 use crate::reader::ReaderContext;
 
@@ -639,4 +639,61 @@ pub(crate) fn lower_shell_based_surface_model(
         }),
     );
     ctx.sbsm_id_map.insert(entity_id, gri_id);
+}
+
+/// Shared lower for `GEOMETRIC_CURVE_SET` / `GEOMETRIC_SET`: split `elements`
+/// into resolvable curves / points (anything else — e.g. a stray surface — is
+/// skipped), then record in `curve_set_map` (wireframe flatten path) and the
+/// unified `geometric_representation_items` arena (`STYLED_ITEM` target).
+fn lower_geometric_set_body(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    name: &str,
+    elements: &[u64],
+    is_curve_set: bool,
+) {
+    let mut curves = Vec::new();
+    let mut points = Vec::new();
+    for &r in elements {
+        if let Some(cid) = ctx.id_cache.get::<CurveId>(r) {
+            curves.push(cid);
+        } else if let Some(pid) = ctx.id_cache.get::<PointId>(r) {
+            points.push(pid);
+        }
+    }
+    ctx.curve_set_map
+        .insert(entity_id, (curves.clone(), points.clone()));
+    let variant = if is_curve_set {
+        GeometricRepresentationItem::GeometricCurveSet(GeometricCurveSet {
+            name: name.to_owned(),
+            curves,
+            points,
+        })
+    } else {
+        GeometricRepresentationItem::GeometricSet(GeometricSet {
+            name: name.to_owned(),
+            curves,
+            points,
+        })
+    };
+    let gri_id = ctx.geometry.geometric_representation_items.push(variant);
+    ctx.curve_set_id_map.insert(entity_id, gri_id);
+}
+
+/// Lower one `GEOMETRIC_CURVE_SET`.
+pub(crate) fn lower_geometric_curve_set(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyGeometricCurveSet,
+) {
+    lower_geometric_set_body(ctx, entity_id, &early.name, &early.elements, true);
+}
+
+/// Lower one `GEOMETRIC_SET` (allows loose points / surfaces).
+pub(crate) fn lower_geometric_set(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyGeometricSet,
+) {
+    lower_geometric_set_body(ctx, entity_id, &early.name, &early.elements, false);
 }
