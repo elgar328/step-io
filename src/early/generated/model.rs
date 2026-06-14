@@ -3908,6 +3908,35 @@ impl crate::ir::arena::ArenaId for EarlyOrientedClosedShellId {
     }
 }
 
+/// L1 `B_SPLINE_CURVE_WITH_KNOTS` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyBSplineCurveWithKnots {
+    pub(crate) name: String,
+    pub(crate) degree: i64,
+    pub(crate) control_points_list: Vec<u64>,
+    pub(crate) curve_form: crate::ir::geometry::CurveForm,
+    pub(crate) closed_curve: crate::ir::geometry::Logical,
+    pub(crate) self_intersect: crate::ir::geometry::Logical,
+    pub(crate) knot_multiplicities: Vec<i64>,
+    pub(crate) knots: Vec<f64>,
+    pub(crate) knot_spec: EarlyKnotType,
+}
+
+/// Typed `id_cache` key for `B_SPLINE_CURVE_WITH_KNOTS` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyBSplineCurveWithKnotsId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyBSplineCurveWithKnotsId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {
@@ -3928,6 +3957,15 @@ pub(crate) enum EarlyMarkerSize {
 pub(crate) enum EarlyTrimSelect {
     Point(u64),
     Param(f64),
+}
+
+/// L1 ENUM `knot_type` (generated).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) enum EarlyKnotType {
+    UniformKnots,
+    QuasiUniformKnots,
+    PiecewiseBezierKnots,
+    Unspecified,
 }
 
 /// L1 ENUM `source` (generated).

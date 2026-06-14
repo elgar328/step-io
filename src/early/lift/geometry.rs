@@ -3,16 +3,17 @@
 //! (`String::new()`), so these lifts always set `name: String::new()`.
 
 use crate::early::model::{
-    EarlyAxis1Placement, EarlyAxis2Placement3d, EarlyBoundedPcurve, EarlyCartesianPoint,
-    EarlyCircle, EarlyCircularArea, EarlyCompositeCurve, EarlyCompositeCurveSegment,
-    EarlyConicalSurface, EarlyCurveBoundedSurface, EarlyCylindricalSurface,
-    EarlyDegenerateToroidalSurface, EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyLine,
-    EarlyOffsetCurve3d, EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent,
-    EarlyPlane, EarlyPolyline, EarlyRectangularTrimmedSurface, EarlySphericalSurface,
-    EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyTrimSelect,
-    EarlyTrimmedCurve, EarlyVector, EarlyVertexPoint,
+    EarlyAxis1Placement, EarlyAxis2Placement3d, EarlyBSplineCurveWithKnots, EarlyBoundedPcurve,
+    EarlyCartesianPoint, EarlyCircle, EarlyCircularArea, EarlyCompositeCurve,
+    EarlyCompositeCurveSegment, EarlyConicalSurface, EarlyCurveBoundedSurface,
+    EarlyCylindricalSurface, EarlyDegenerateToroidalSurface, EarlyDirection, EarlyEllipse,
+    EarlyHyperbola, EarlyKnotType, EarlyLine, EarlyOffsetCurve3d, EarlyOffsetSurface,
+    EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent, EarlyPlane, EarlyPolyline,
+    EarlyRectangularTrimmedSurface, EarlySphericalSurface, EarlySurfaceOfLinearExtrusion,
+    EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyTrimSelect, EarlyTrimmedCurve,
+    EarlyVector, EarlyVertexPoint,
 };
-use crate::ir::geometry::{Direction3, Logical, Point3, TransitionCode, TrimMaster};
+use crate::ir::geometry::{Direction3, Logical, NurbsCurve, Point3, TransitionCode, TrimMaster};
 
 /// Lift one `BOUNDED_PCURVE`. Unlike most geometry, it round-trips its own
 /// `name` (the legacy writer emitted `BoundedPCurve.name`), so it is threaded
@@ -26,6 +27,26 @@ pub(crate) fn lift_bounded_pcurve(
         name,
         basis_surface,
         reference_to_curve,
+    }
+}
+
+/// Lift one `B_SPLINE_CURVE_WITH_KNOTS` (non-rational). `control_points_list` =
+/// emitted `CARTESIAN_POINT` step ids. `knot_spec` is always re-emitted as
+/// `Unspecified` (the IR does not track the label; see plan).
+pub(crate) fn lift_b_spline_curve_with_knots(
+    nurbs: &NurbsCurve,
+    control_points_list: Vec<u64>,
+) -> EarlyBSplineCurveWithKnots {
+    EarlyBSplineCurveWithKnots {
+        name: String::new(),
+        degree: i64::from(nurbs.degree),
+        control_points_list,
+        curve_form: nurbs.form,
+        closed_curve: nurbs.closed,
+        self_intersect: nurbs.self_intersect,
+        knot_multiplicities: nurbs.knot_multiplicities.clone(),
+        knots: nurbs.knots.clone(),
+        knot_spec: EarlyKnotType::Unspecified,
     }
 }
 

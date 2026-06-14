@@ -2901,6 +2901,45 @@ pub(crate) fn serialize_oriented_closed_shell(
     )
 }
 
+pub(crate) fn serialize_b_spline_curve_with_knots(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyBSplineCurveWithKnots,
+) -> u64 {
+    buf.push_simple(
+        "B_SPLINE_CURVE_WITH_KNOTS",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::Integer(l1.degree),
+            crate::parser::entity::Attribute::List(
+                l1.control_points_list
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            b_spline_curve_form_attr(l1.curve_form),
+            crate::parser::entity::Attribute::Enum(
+                crate::ir::attr::logical_to_step(l1.closed_curve).into(),
+            ),
+            crate::parser::entity::Attribute::Enum(
+                crate::ir::attr::logical_to_step(l1.self_intersect).into(),
+            ),
+            crate::parser::entity::Attribute::List(
+                l1.knot_multiplicities
+                    .iter()
+                    .map(|&x| crate::parser::entity::Attribute::Integer(x))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::List(
+                l1.knots
+                    .iter()
+                    .map(|&x| crate::parser::entity::Attribute::Real(x))
+                    .collect(),
+            ),
+            knot_type_attr(l1.knot_spec),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {
@@ -2979,6 +3018,20 @@ fn angle_relator_attr(v: crate::ir::pmi::AngleSelection) -> crate::parser::entit
     )
 }
 
+fn b_spline_curve_form_attr(v: crate::ir::geometry::CurveForm) -> crate::parser::entity::Attribute {
+    crate::parser::entity::Attribute::Enum(
+        match v {
+            crate::ir::geometry::CurveForm::CircularArc => "CIRCULAR_ARC",
+            crate::ir::geometry::CurveForm::EllipticArc => "ELLIPTIC_ARC",
+            crate::ir::geometry::CurveForm::HyperbolicArc => "HYPERBOLIC_ARC",
+            crate::ir::geometry::CurveForm::ParabolicArc => "PARABOLIC_ARC",
+            crate::ir::geometry::CurveForm::PolylineForm => "POLYLINE_FORM",
+            crate::ir::geometry::CurveForm::Unspecified => "UNSPECIFIED",
+        }
+        .into(),
+    )
+}
+
 fn central_or_parallel_attr(
     v: crate::ir::visualization::Projection,
 ) -> crate::parser::entity::Attribute {
@@ -2986,6 +3039,18 @@ fn central_or_parallel_attr(
         match v {
             crate::ir::visualization::Projection::Central => "CENTRAL",
             crate::ir::visualization::Projection::Parallel => "PARALLEL",
+        }
+        .into(),
+    )
+}
+
+fn knot_type_attr(v: super::model::EarlyKnotType) -> crate::parser::entity::Attribute {
+    crate::parser::entity::Attribute::Enum(
+        match v {
+            super::model::EarlyKnotType::UniformKnots => "UNIFORM_KNOTS",
+            super::model::EarlyKnotType::QuasiUniformKnots => "QUASI_UNIFORM_KNOTS",
+            super::model::EarlyKnotType::PiecewiseBezierKnots => "PIECEWISE_BEZIER_KNOTS",
+            super::model::EarlyKnotType::Unspecified => "UNSPECIFIED",
         }
         .into(),
     )

@@ -6,24 +6,24 @@
 //! 3D branch exactly (2-count → the 2D arena claims it, so we no-op).
 
 use crate::early::model::{
-    EarlyAxis1Placement, EarlyAxis2Placement3d, EarlyBoundedPcurve, EarlyCartesianPoint,
-    EarlyCircle, EarlyCircularArea, EarlyCompositeCurve, EarlyCompositeCurveSegment,
-    EarlyConicalSurface, EarlyCurveBoundedSurface, EarlyCylindricalSurface,
-    EarlyDegenerateToroidalSurface, EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyLine,
-    EarlyOffsetCurve3d, EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent,
-    EarlyPlane, EarlyPolyline, EarlyRectangularTrimmedSurface, EarlySphericalSurface,
-    EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyTrimSelect,
-    EarlyTrimmedCurve, EarlyVector, EarlyVertexPoint,
+    EarlyAxis1Placement, EarlyAxis2Placement3d, EarlyBSplineCurveWithKnots, EarlyBoundedPcurve,
+    EarlyCartesianPoint, EarlyCircle, EarlyCircularArea, EarlyCompositeCurve,
+    EarlyCompositeCurveSegment, EarlyConicalSurface, EarlyCurveBoundedSurface,
+    EarlyCylindricalSurface, EarlyDegenerateToroidalSurface, EarlyDirection, EarlyEllipse,
+    EarlyHyperbola, EarlyLine, EarlyOffsetCurve3d, EarlyOffsetSurface, EarlyParabola,
+    EarlyPlanarBox, EarlyPlanarExtent, EarlyPlane, EarlyPolyline, EarlyRectangularTrimmedSurface,
+    EarlySphericalSurface, EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution,
+    EarlyToroidalSurface, EarlyTrimSelect, EarlyTrimmedCurve, EarlyVector, EarlyVertexPoint,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{
     Axis1Placement, Axis2Placement3d, BoundedPCurve, Circle3, CircularArea, CircularAreaCentre,
     CompositeCurve, CompositeSegment, ConicalSurface, Curve, CurveBoundedSurface,
     CylindricalSurface, DegenerateToroidalSurface, Direction3, Ellipse3, Hyperbola, Line3,
-    OffsetCurve3d, Parabola, ParameterSpaceCurve, PlanarBox, PlanarBoxPlacement, PlanarExtent,
-    PlanarExtentData, Plane3, Point3, Polyline, RectangularTrimmedSurface, SphericalSurface,
-    Surface, SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface,
-    TrimSelect, TrimmedCurve, Vertex,
+    NurbsCurve, NurbsKind, OffsetCurve3d, Parabola, ParameterSpaceCurve, PlanarBox,
+    PlanarBoxPlacement, PlanarExtent, PlanarExtentData, Plane3, Point3, Polyline,
+    RectangularTrimmedSurface, SphericalSurface, Surface, SurfaceOfLinearExtrusion,
+    SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TrimSelect, TrimmedCurve, Vertex,
 };
 use crate::reader::ReaderContext;
 
@@ -54,6 +54,46 @@ pub(crate) fn lower_bounded_pcurve(
             basis_surface,
             reference_to_curve,
         }));
+}
+
+/// Lower one `B_SPLINE_CURVE_WITH_KNOTS` (non-rational). Mirrors the legacy
+/// handler: `degree` narrows to `u32` (error on overflow) first; then if the
+/// first control point is a 2D point this no-ops (the 2D sister
+/// `b_spline_curve_2d_with_knots` claims it). `knot_spec` is informational and
+/// dropped (the writer always re-emits `UNSPECIFIED`).
+pub(crate) fn lower_b_spline_curve_with_knots(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyBSplineCurveWithKnots,
+) -> Result<(), ConvertError> {
+    let degree = u32::try_from(early.degree).map_err(|_| ConvertError::AttributeType {
+        entity_id,
+        field_name: "degree",
+        expected: "non-negative Integer",
+        actual: crate::ir::error::AttributeKindTag::Integer,
+    })?;
+    if let Some(&first) = early.control_points_list.first()
+        && ctx.id_cache.contains::<crate::ir::id::Point2dId>(first)
+    {
+        return Ok(()); // 2D sister handler claims this instance
+    }
+    let mut control_points = Vec::with_capacity(early.control_points_list.len());
+    for &r in &early.control_points_list {
+        control_points.push(ctx.resolve_point(entity_id, r, "control_points_list")?);
+    }
+    let curve = NurbsCurve {
+        degree,
+        control_points,
+        kind: NurbsKind::NonRational,
+        knot_multiplicities: early.knot_multiplicities.clone(),
+        knots: early.knots.clone(),
+        closed: early.closed_curve,
+        form: early.curve_form,
+        self_intersect: early.self_intersect,
+    };
+    let id = ctx.geometry.curves.push(Curve::Nurbs(curve));
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
 }
 
 /// Lower one 3D `CARTESIAN_POINT`. A 2-coordinate point belongs to the 2D

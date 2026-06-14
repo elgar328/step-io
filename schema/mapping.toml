@@ -189,6 +189,8 @@ generate = [
     # batch 2: oriented topology (EXPRESS Derived `*` slots — see [derived])
     "oriented_edge",
     "oriented_closed_shell",
+    # batch 3: W-COMPLEX Phase 1 — non-rational b_spline curve (Simple)
+    "b_spline_curve_with_knots",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
@@ -275,3 +277,11 @@ variants = { cartesian = "Cartesian", parameter = "Parameter", unspecified = "Un
 [enum.angle_relator]
 rust_type = "crate::ir::pmi::AngleSelection"
 variants = { equal = "Equal", large = "Large", small = "Small" }
+
+# `b_spline_curve_form` (b_spline_curve.curve_form). `default` reproduces the
+# legacy `CurveForm::from_step_enum` `_ => Unspecified` catch-all exactly (behavior
+# preserved; a separate plan will strict-ify forms with a corpus token scan first).
+[enum.b_spline_curve_form]
+rust_type = "crate::ir::geometry::CurveForm"
+variants = { polyline_form = "PolylineForm", circular_arc = "CircularArc", elliptic_arc = "EllipticArc", parabolic_arc = "ParabolicArc", hyperbolic_arc = "HyperbolicArc", unspecified = "Unspecified" }
+default = "Unspecified"

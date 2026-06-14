@@ -2674,6 +2674,34 @@ pub(crate) fn bind_oriented_closed_shell(
     })
 }
 
+pub(crate) fn bind_b_spline_curve_with_knots(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyBSplineCurveWithKnots, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 9, entity_id, "B_SPLINE_CURVE_WITH_KNOTS")?;
+    Ok(super::model::EarlyBSplineCurveWithKnots {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        degree: crate::ir::attr::read_integer(attrs, 1, entity_id, "degree")?,
+        control_points_list: crate::ir::attr::read_entity_ref_list(
+            attrs,
+            2,
+            entity_id,
+            "control_points_list",
+        )?,
+        curve_form: bind_b_spline_curve_form(attrs, 3, entity_id, "curve_form")?,
+        closed_curve: crate::ir::attr::read_logical(attrs, 4, entity_id, "closed_curve")?,
+        self_intersect: crate::ir::attr::read_logical(attrs, 5, entity_id, "self_intersect")?,
+        knot_multiplicities: crate::ir::attr::read_integer_list(
+            attrs,
+            6,
+            entity_id,
+            "knot_multiplicities",
+        )?,
+        knots: crate::ir::attr::read_real_list(attrs, 7, entity_id, "knots")?,
+        knot_spec: bind_knot_type(attrs, 8, entity_id, "knot_spec")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {
@@ -2794,6 +2822,22 @@ fn bind_angle_relator(
     }
 }
 
+fn bind_b_spline_curve_form(
+    attrs: &[crate::parser::entity::Attribute],
+    index: usize,
+    entity_id: u64,
+    field: &'static str,
+) -> Result<crate::ir::geometry::CurveForm, crate::ir::error::ConvertError> {
+    match crate::ir::attr::read_enum(attrs, index, entity_id, field)? {
+        "CIRCULAR_ARC" => Ok(crate::ir::geometry::CurveForm::CircularArc),
+        "ELLIPTIC_ARC" => Ok(crate::ir::geometry::CurveForm::EllipticArc),
+        "HYPERBOLIC_ARC" => Ok(crate::ir::geometry::CurveForm::HyperbolicArc),
+        "PARABOLIC_ARC" => Ok(crate::ir::geometry::CurveForm::ParabolicArc),
+        "POLYLINE_FORM" => Ok(crate::ir::geometry::CurveForm::PolylineForm),
+        _ => Ok(crate::ir::geometry::CurveForm::Unspecified),
+    }
+}
+
 fn bind_central_or_parallel(
     attrs: &[crate::parser::entity::Attribute],
     index: usize,
@@ -2807,6 +2851,24 @@ fn bind_central_or_parallel(
             entity_id,
             field: field.to_string(),
             token: other.to_string(),
+        }),
+    }
+}
+
+fn bind_knot_type(
+    attrs: &[crate::parser::entity::Attribute],
+    index: usize,
+    entity_id: u64,
+    field: &'static str,
+) -> Result<super::model::EarlyKnotType, crate::ir::error::ConvertError> {
+    match crate::ir::attr::read_enum(attrs, index, entity_id, field)? {
+        "UNIFORM_KNOTS" => Ok(super::model::EarlyKnotType::UniformKnots),
+        "QUASI_UNIFORM_KNOTS" => Ok(super::model::EarlyKnotType::QuasiUniformKnots),
+        "PIECEWISE_BEZIER_KNOTS" => Ok(super::model::EarlyKnotType::PiecewiseBezierKnots),
+        "UNSPECIFIED" => Ok(super::model::EarlyKnotType::Unspecified),
+        other => Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: format!("{field}: unknown knot_type '.{other}.'"),
         }),
     }
 }
