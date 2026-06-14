@@ -102,11 +102,15 @@ impl SimpleEntityHandler for RatioUnitSimpleHandler {
                 .id_cache
                 .get::<crate::ir::id::DimensionalExponentsId>(*n),
             Some(Attribute::Unset) => {
-                // [NS-ratio-unit-dimensions-unset] c3d: RATIO_UNIT.dimensions is
+                // NsCase::RatioUnitDimensionsUnset c3d: RATIO_UNIT.dimensions is
                 // required by EXPRESS but emitted `$` (Unset). Accept as no
                 // explicit dimensions — the WHERE clause fixes it dimensionless
                 // regardless. See reader::nonstandard.
-                ctx.record_nonstandard("RATIO_UNIT.dimensions (Unset)".into(), "no dimensions");
+                ctx.ns_record(
+                    crate::reader::NsCase::RatioUnitDimensionsUnset,
+                    "RATIO_UNIT.dimensions (Unset)".into(),
+                    "no dimensions",
+                );
                 None
             }
             _ => None, // `*` (Derived) — dimensionless by the WHERE clause

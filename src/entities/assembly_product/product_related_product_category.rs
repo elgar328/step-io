@@ -40,16 +40,17 @@ impl SimpleEntityHandler for ProductRelatedProductCategoryHandler {
         let description = optional_text(attrs, 1, entity_id, "description")?;
         let product_refs = read_entity_ref_list(attrs, 2, entity_id, "products")?;
 
-        // [NS-empty-prrpc] CATIA / Autodesk: products is SET[1:?] but an empty
+        // NsCase::EmptyPrrpc CATIA / Autodesk: products is SET[1:?] but an empty
         // `()` relates no products → drop as a normalization and record the id
         // so the referencing PRODUCT_CATEGORY_RELATIONSHIP cascades
-        // (NS-empty-prrpc-cascade). See reader::nonstandard.
+        // (NsCase::EmptyPrrpcCascade). See reader::nonstandard.
         if product_refs.is_empty() {
-            ctx.warnings.push(ConvertError::NonStandardInput {
-                field: "PRODUCT_RELATED_PRODUCT_CATEGORY".into(),
-                count: 1,
-                normalized_to: "dropped (empty products, non-standard SET[1:?])".into(),
-            });
+            ctx.ns_push(
+                crate::reader::NsCase::EmptyPrrpc,
+                "PRODUCT_RELATED_PRODUCT_CATEGORY".into(),
+                1,
+                "dropped (empty products, non-standard SET[1:?])".into(),
+            );
             ctx.empty_prrpc_refs.insert(entity_id);
             return Ok(());
         }

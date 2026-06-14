@@ -45,7 +45,7 @@ impl SimpleEntityHandler for GeometricItemSpecificUsageHandler {
         let Some(identified_item) = resolve_representation_item_ref(ctx, item_ref) else {
             return Ok(());
         };
-        // [NS-gisu-unset-used-rep] CATIA: used_representation (required) is `$`
+        // NsCase::GisuUnsetUsedRep CATIA: used_representation (required) is `$`
         // for "Solid" GISUs. The standard value (the WHERE-rule container of
         // identified_item) is not referenced here, so dispatch order gives no
         // guarantee the container was read first → defer; the post-pass

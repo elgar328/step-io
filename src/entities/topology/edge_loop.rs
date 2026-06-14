@@ -40,7 +40,7 @@ impl SimpleEntityHandler for EdgeLoopHandler {
         // *resolved* members are good edges that emit only via this loop, so
         // they orphan. Record those orphans, then return a MissingReference to
         // the cascade member so the dispatcher reclassifies the loop and seeds
-        // it. [NS-dangling-reference-orphan]
+        // it. NsCase::DanglingReferenceOrphan
         let mut edges = Vec::with_capacity(edge_refs.len());
         let mut resolved_members = 0usize;
         let mut cascade_member: Option<u64> = None;
@@ -61,7 +61,8 @@ impl SimpleEntityHandler for EdgeLoopHandler {
         }
         if let Some(bad) = cascade_member {
             for _ in 0..resolved_members {
-                ctx.record_nonstandard(
+                ctx.ns_record(
+                    crate::reader::NsCase::DanglingReferenceOrphan,
                     "ORIENTED_EDGE".to_string(),
                     "dropped (orphaned by dangling-dropped loop)",
                 );

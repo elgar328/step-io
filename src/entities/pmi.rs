@@ -2517,12 +2517,13 @@ fn read_general_datum_reference_data(
     check_count(attrs, 6, entity_id, entity_name)?;
     let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
     let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-    // [NS-general-datum-reference-of-shape-unset] of_shape is a mandatory
+    // NsCase::GeneralDatumReferenceOfShapeUnset of_shape is a mandatory
     // shape_aspect attribute (EXPRESS + UNIQUE constraint); some NIST exports
     // (ctc_05) emit `$`. Classify as non-standard input rather than an
     // AttributeType defect; the owning entity carries no resolvable product.
     if matches!(attrs.get(2), Some(Attribute::Unset | Attribute::Derived)) {
-        ctx.record_nonstandard(
+        ctx.ns_record(
+            crate::reader::NsCase::GeneralDatumReferenceOfShapeUnset,
             entity_name.into(),
             "dropped (of_shape Unset — EXPRESS shape_aspect.of_shape required)",
         );
@@ -2558,7 +2559,7 @@ fn read_general_datum_reference_data(
                 let Some(gdr_id) = ctx.id_cache.get::<crate::ir::GeneralDatumReferenceId>(*r)
                 else {
                     // The member dropped. Record the cascade only when it is an
-                    // of_shape=$ sibling (NS-general-datum-reference-of-shape-unset);
+                    // of_shape=$ sibling (NsCase::GeneralDatumReferenceOfShapeUnset);
                     // a member dropped for a different reason (e.g. unmodelled
                     // datum) stays a plain drop, not a normalization.
                     let member_of_shape_unset = matches!(
@@ -2570,7 +2571,8 @@ fn read_general_datum_reference_data(
                             )
                     );
                     if member_of_shape_unset {
-                        ctx.record_nonstandard(
+                        ctx.ns_record(
+                            crate::reader::NsCase::GeneralDatumReferenceOfShapeUnset,
                             entity_name.into(),
                             "dropped (common_datum_list member of_shape Unset — cascade)",
                         );

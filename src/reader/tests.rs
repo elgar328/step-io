@@ -438,7 +438,7 @@ fn inch_cbu_bare_measure_with_unit_factor_round_trips() {
 
 #[test]
 fn datum_reference_element_of_shape_unset_dropped_as_normalization() {
-    // [NS-general-datum-reference-of-shape-unset] shape_aspect.of_shape is
+    // NsCase::GeneralDatumReferenceOfShapeUnset shape_aspect.of_shape is
     // mandatory (EXPRESS + UNIQUE); NIST ctc_05 emits `$`. Classify as a
     // NonStandardInput drop rather than an AttributeType defect. (of_shape=$ is
     // detected before base, so the dangling base ref is never read.)
@@ -464,7 +464,7 @@ fn datum_reference_element_of_shape_unset_dropped_as_normalization() {
 
 #[test]
 fn psa_styles_unset_normalized_as_empty() {
-    // [NS-psa-styles-unset] mandatory `styles` SET[1:?] emitted as `$` → accept
+    // NsCase::PsaStylesUnset mandatory `styles` SET[1:?] emitted as `$` → accept
     // as empty (NonStandardInput, not a defect); the PSA survives.
     let result = convert_source(&minimal_step("#1 = PRESENTATION_STYLE_ASSIGNMENT($);"));
     assert!(
@@ -484,7 +484,7 @@ fn psa_styles_unset_normalized_as_empty() {
 
 #[test]
 fn orsi_over_ridden_style_unset_dropped_as_normalization() {
-    // [NS-orsi-over-ridden-unset] mandatory `over_ridden_style` emitted as `$` →
+    // NsCase::OrsiOverRiddenUnset mandatory `over_ridden_style` emitted as `$` →
     // drop as NonStandardInput (no over-ridden target to model), not a defect.
     let result = convert_source(&minimal_step(
         "#1 = CARTESIAN_POINT('',(0.,0.,0.));\n\
@@ -509,7 +509,7 @@ fn orsi_over_ridden_style_unset_dropped_as_normalization() {
 
 #[test]
 fn pcurve_3d_in_parameter_space_dropped_as_normalization() {
-    // [NS-pcurve-3d-in-pspace] A PCURVE whose 2D parameter-space
+    // NsCase::Pcurve3dInPspace A PCURVE whose 2D parameter-space
     // DEFINITIONAL_REPRESENTATION holds a 3D curve (TRIMMED_CURVE on a 3D
     // CIRCLE / AXIS2_PLACEMENT_3D) violates EXPRESS pcurve.wr3 (dim must be 2).
     // The dropped subtree is classified as NonStandardInput "dropped", not a

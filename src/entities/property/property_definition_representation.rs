@@ -80,7 +80,7 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
         }
         let representation_name = read_string_or_unset(repr_attrs, 0, repr_ref, "name")?.to_owned();
         let item_refs = read_entity_ref_list(repr_attrs, 1, repr_ref, "items")?;
-        // [NS-repr-context-unset] c3d: REPRESENTATION.context_of_items is
+        // NsCase::ReprContextUnset c3d: REPRESENTATION.context_of_items is
         // required by EXPRESS but emitted `$` (Unset) → accept as no context
         // rather than dropping the whole REPRESENTATION. See reader::nonstandard.
         let context = if let Some(ctx_ref) =
@@ -88,7 +88,8 @@ impl SimpleEntityHandler for PropertyDefinitionRepresentationHandler {
         {
             ctx.resolve_repr_context(ctx_ref)
         } else {
-            ctx.record_nonstandard(
+            ctx.ns_record(
+                crate::reader::NsCase::ReprContextUnset,
                 "REPRESENTATION.context_of_items (Unset)".into(),
                 "no context",
             );

@@ -361,8 +361,8 @@ impl ReaderContext {
             && let crate::ir::error::ConvertError::MissingReference { to, .. } = &e
             && (graph.get(*to).is_none() || self.nonstandard_dropped_refs.contains(to))
         {
-            // [NS-dangling-reference-drop]
-            self.record_nonstandard(
+            self.ns_record(
+                super::NsCase::DanglingReferenceDrop,
                 entry.name.to_string(),
                 "dropped (dangling/cascade reference)",
             );

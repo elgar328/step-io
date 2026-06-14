@@ -29,18 +29,19 @@ impl SimpleEntityHandler for TrimmedCurveHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        // [NS-tagless-parameter-value] some exporters write trim parameters as
+        // NsCase::TaglessParameterValue some exporters write trim parameters as
         // bare reals `( 0.0 )` instead of `PARAMETER_VALUE(0.0)`. The strict
         // generated bind only accepts the tagged form, so normalize the input
         // before binding and surface the recovery.
         let (attrs, normalized) =
             crate::ir::attr::normalize_tagless_select(attrs, &[2, 3], "PARAMETER_VALUE");
         if normalized > 0 {
-            ctx.warnings.push(ConvertError::NonStandardInput {
-                field: "TRIMMED_CURVE.trim".into(),
-                count: normalized,
-                normalized_to: "PARAMETER_VALUE(real)".into(),
-            });
+            ctx.ns_push(
+                crate::reader::NsCase::TaglessParameterValue,
+                "TRIMMED_CURVE.trim".into(),
+                normalized,
+                "PARAMETER_VALUE(real)".into(),
+            );
         }
         let early = bind::bind_trimmed_curve(entity_id, &attrs)?;
         lower::lower_trimmed_curve(ctx, entity_id, &early)

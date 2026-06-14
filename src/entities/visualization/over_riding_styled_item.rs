@@ -39,7 +39,7 @@ impl SimpleEntityHandler for OverRidingStyledItemHandler {
         let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
         let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
         let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-        // [NS-orsi-over-ridden-unset] `over_ridden_style` is mandatory
+        // NsCase::OrsiOverRiddenUnset `over_ridden_style` is mandatory
         // (EXPRESS `over_riding_styled_item.over_ridden_style : styled_item`);
         // some exporters emit `$`. Without an over-ridden target the entity
         // carries no information → drop as a normalization, not a defect.
@@ -48,7 +48,8 @@ impl SimpleEntityHandler for OverRidingStyledItemHandler {
         else {
             // field must be the exact type name so reference-check's
             // count-aware effective-missing deduction matches the dropped type.
-            ctx.record_nonstandard(
+            ctx.ns_record(
+                crate::reader::NsCase::OrsiOverRiddenUnset,
                 "OVER_RIDING_STYLED_ITEM".into(),
                 "dropped (over_ridden_style Unset — no over-ridden style)",
             );

@@ -99,7 +99,7 @@ pub(crate) fn collect_surface_curve(
     .unwrap_or(PreferredSurfaceCurveRepresentation::PcurveS1);
 
     let mut members = Vec::with_capacity(member_refs.len());
-    // Count members dropped as the [NS-pcurve-3d-in-pspace] normalization so a
+    // Count members dropped as the NsCase::Pcurve3dInPspace normalization so a
     // wrapper whose every member is a wr3-violating PCURVE can be classified as
     // non-standard input rather than silently skipped.
     let mut wr3_dropped = 0usize;
@@ -114,7 +114,7 @@ pub(crate) fn collect_surface_curve(
         if member_name == "PCURVE" {
             match ctx.resolve_pcurve(member_ref, graph) {
                 Some(pc) => members.push(PCurveOrSurface::Pcurve(pc)),
-                // [NS-pcurve-3d-in-pspace] grabcad/OCCT emit a 3D curve inside a
+                // NsCase::Pcurve3dInPspace grabcad/OCCT emit a 3D curve inside a
                 // PCURVE's 2D parameter-space DEFINITIONAL_REPRESENTATION — an
                 // EXPRESS `pcurve.wr3` violation (`reference_to_curve.items[1].dim
                 // = 2` required). Classify the dropped subtree as non-standard
@@ -156,14 +156,15 @@ pub(crate) fn collect_surface_curve(
             },
         );
     } else if !member_refs.is_empty() && wr3_dropped == member_refs.len() {
-        // [NS-pcurve-3d-in-pspace] every associated_geometry member was a
+        // NsCase::Pcurve3dInPspace every associated_geometry member was a
         // wr3-violating PCURVE (3D curve in a 2D parameter space). With no
         // resolvable geometry the wrapper carries nothing to model — classify
         // the whole SURFACE_CURVE / SEAM_CURVE as the natural cascade of the
         // pcurve normalization instead of silently skipping it. field is the
         // exact type name so reference-check's count-aware effective-missing
         // deduction matches the dropped type.
-        ctx.record_nonstandard(
+        ctx.ns_record(
+            crate::reader::NsCase::Pcurve3dInPspace,
             if is_seam {
                 "SEAM_CURVE"
             } else {

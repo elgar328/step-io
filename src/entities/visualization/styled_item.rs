@@ -59,9 +59,10 @@ impl SimpleEntityHandler for StyledItemHandler {
             // geometry transitively required an undefined entity), drop this
             // STYLED_ITEM as the same normalization rather than a defect — the
             // resolver returns `None` (not a `MissingReference`), so the
-            // dispatcher's general rule cannot see it. [NS-dangling-reference-drop]
+            // dispatcher's general rule cannot see it. NsCase::DanglingReferenceDrop
             if ctx.nonstandard_dropped_refs.contains(&item_ref) {
-                ctx.record_nonstandard(
+                ctx.ns_record(
+                    crate::reader::NsCase::DanglingReferenceDrop,
                     "STYLED_ITEM".to_string(),
                     "dropped (dangling/cascade reference)",
                 );

@@ -25,8 +25,9 @@ use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
 mod dispatch;
 mod header;
 mod id_map_cache;
-/// Catalogue of non-standard input normalizations (documentation only).
+/// Catalogue of non-standard input normalizations + the typed `NsCase` marker.
 mod nonstandard;
+pub(crate) use nonstandard::NsCase;
 
 #[cfg(test)]
 mod tests;
@@ -197,11 +198,11 @@ pub struct ReaderContext {
     /// the 2D arenas (`points_2d`, `directions_2d`, `curves_2d`).
     pub(crate) pcurve_subtree_ids: HashSet<u64>,
 
-    /// Ids already accounted for by the `[NS-pcurve-3d-in-pspace]`
+    /// Ids already accounted for by the `NsCase::Pcurve3dInPspace`
     /// normalization (see `surface_curve.rs`). A 3D curve in a 2D pcurve
     /// parameter-space (EXPRESS `pcurve.wr3` violation) drops the whole
     /// `DEFINITIONAL_REPRESENTATION` subtree; this set dedups the per-type
-    /// `record_nonstandard` accounting when several pcurves share a subtree id.
+    /// `ns_record` accounting when several pcurves share a subtree id.
     pub(crate) dropped_pcurve_recorded: HashSet<u64>,
 
     // Unit entity maps: STEP #N → resolved unit variant.
@@ -624,18 +625,38 @@ impl crate::ir::select::IdResolver for ReaderContext {
 }
 
 impl ReaderContext {
-    /// Record that a required field was non-standard (Unset / unrecognized)
-    /// and the reader normalized it to `normalized_to`. Aggregated per file
-    /// so a 980k-instance defect surfaces as a single summary warning.
-    pub(crate) fn record_nonstandard(&mut self, field: String, normalized_to: &'static str) {
+    /// Record a non-standard input normalization, aggregated per file so a
+    /// 980k-instance defect surfaces as a single summary warning. `case` is the
+    /// typed marker (`rg "NsCase::"` finds every site); it does not affect the
+    /// aggregation key, so output stays byte-identical. The *only* aggregating
+    /// path — see [`NsCase`](crate::reader::NsCase).
+    pub(crate) fn ns_record(&mut self, _case: NsCase, field: String, normalized_to: &'static str) {
         *self
             .nonstandard_normalizations
             .entry((field, normalized_to))
             .or_default() += 1;
     }
 
+    /// Record a non-standard input normalization immediately (one warning with
+    /// the given `count`, not aggregated). `case` is the typed marker. The only
+    /// site (besides this module's per-file flush) that constructs a
+    /// `NonStandardInput` warning — see [`NsCase`](crate::reader::NsCase).
+    pub(crate) fn ns_push(
+        &mut self,
+        _case: NsCase,
+        field: String,
+        count: usize,
+        normalized_to: String,
+    ) {
+        self.warnings.push(ConvertError::NonStandardInput {
+            field,
+            count,
+            normalized_to,
+        });
+    }
+
     /// `true` when `id` was registered into any geometry arena (so it survives
-    /// round-trip). Used by the `[NS-pcurve-3d-in-pspace]` accounting to record
+    /// round-trip). Used by the `NsCase::Pcurve3dInPspace` accounting to record
     /// only the genuinely-dropped subtree members, not survivors like
     /// `CARTESIAN_POINT` / `DIRECTION` / `VECTOR` (which self-discriminate and
     /// land in their 2D/3D arenas even inside a pcurve subtree).
@@ -654,7 +675,7 @@ impl ReaderContext {
     }
 
     /// Classify a dropped `PCURVE` (the `resolve_pcurve` returned `None` path).
-    /// Returns `true` and records `[NS-pcurve-3d-in-pspace]` normalizations for
+    /// Returns `true` and records `NsCase::Pcurve3dInPspace` normalizations for
     /// the dropped `DEFINITIONAL_REPRESENTATION` subtree when the drop is an
     /// EXPRESS `pcurve.wr3` violation (a 3D curve sitting in a 2D parameter
     /// space); returns `false` for any other drop cause (missing
@@ -726,7 +747,8 @@ impl ReaderContext {
                 continue;
             };
             self.dropped_pcurve_recorded.insert(id);
-            self.record_nonstandard(
+            self.ns_record(
+                NsCase::Pcurve3dInPspace,
                 name.clone(),
                 "dropped (3D curve in 2D pcurve parameter-space — EXPRESS pcurve.wr3)",
             );
@@ -773,7 +795,7 @@ impl ReaderContext {
         ctx.finalize_assembly();
         ctx.resolve_sdr_links();
         ctx.resolve_pdr_links();
-        let header = header::extract_file_header(&graph.header, &mut ctx.warnings);
+        let header = header::extract_file_header(&graph.header, &mut ctx);
         for ((field, normalized_to), count) in std::mem::take(&mut ctx.nonstandard_normalizations) {
             ctx.warnings.push(ConvertError::NonStandardInput {
                 field,
@@ -1169,14 +1191,15 @@ impl ReaderContext {
             recovered += 1;
         }
         if recovered > 0 {
-            // [NS-gisu-unset-used-rep] recovery side (detect/defer is in
+            // NsCase::GisuUnsetUsedRep recovery side (detect/defer is in
             // geometric_item_specific_usage.rs). Surfaced as a normalization,
             // not a defect — the GISU is preserved. See reader::nonstandard.
-            self.warnings.push(ConvertError::NonStandardInput {
-                field: "GEOMETRIC_ITEM_SPECIFIC_USAGE.used_representation (Unset)".into(),
-                count: recovered,
-                normalized_to: "containing representation (derived from identified_item)".into(),
-            });
+            self.ns_push(
+                NsCase::GisuUnsetUsedRep,
+                "GEOMETRIC_ITEM_SPECIFIC_USAGE.used_representation (Unset)".into(),
+                recovered,
+                "containing representation (derived from identified_item)".into(),
+            );
         }
     }
 

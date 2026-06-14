@@ -66,9 +66,9 @@ impl SimpleEntityHandler for SurfaceStyleRenderingHandler {
 /// Read the required `rendering_method` field, shared between
 /// `SURFACE_STYLE_RENDERING` and `SURFACE_STYLE_RENDERING_WITH_PROPERTIES`.
 ///
-/// [NS-surface-style-rendering-method] a non-standard `$` (Unset) or
+/// `NsCase::SurfaceStyleRenderingMethod` a non-standard `$` (Unset) or
 /// unrecognized enum value on the required field is normalized to
-/// `NORMAL_SHADING`, aggregated via `record_nonstandard`. See
+/// `NORMAL_SHADING`, aggregated via `ns_record`. See
 /// `reader::nonstandard`.
 pub(crate) fn read_rendering_method(
     ctx: &mut ReaderContext,
@@ -83,7 +83,8 @@ pub(crate) fn read_rendering_method(
             "DOT_SHADING" => ShadingMethod::Dot,
             "NORMAL_SHADING" => ShadingMethod::Normal,
             _ => {
-                ctx.record_nonstandard(
+                ctx.ns_record(
+                    crate::reader::NsCase::SurfaceStyleRenderingMethod,
                     format!("{type_name}.rendering_method (unrecognized value)"),
                     "NORMAL_SHADING",
                 );
@@ -91,7 +92,8 @@ pub(crate) fn read_rendering_method(
             }
         })
     } else {
-        ctx.record_nonstandard(
+        ctx.ns_record(
+            crate::reader::NsCase::SurfaceStyleRenderingMethod,
             format!("{type_name}.rendering_method (Unset)"),
             "NORMAL_SHADING",
         );
@@ -102,10 +104,10 @@ pub(crate) fn read_rendering_method(
 /// Read the required `surface_colour` field, shared between the two
 /// rendering entities.
 ///
-/// [NS-surface-style-surface-colour] a non-standard `$` (Unset) on the
+/// `NsCase::SurfaceStyleSurfaceColour` a non-standard `$` (Unset) on the
 /// EXPRESS-required field is normalized to a bare `COLOUR()`
 /// (`Colour::Itself`, the schema's unspecified-colour placeholder) rather
-/// than fabricating a specific colour, aggregated via `record_nonstandard`.
+/// than fabricating a specific colour, aggregated via `ns_record`.
 /// `Ok(None)` means the ref was present but unresolved — the caller drops the
 /// entity, as before. See `reader::nonstandard`.
 pub(crate) fn read_surface_colour(
@@ -115,7 +117,8 @@ pub(crate) fn read_surface_colour(
     type_name: &'static str,
 ) -> Result<Option<ColourId>, ConvertError> {
     if attrs[1] == Attribute::Unset {
-        ctx.record_nonstandard(
+        ctx.ns_record(
+            crate::reader::NsCase::SurfaceStyleSurfaceColour,
             format!("{type_name}.surface_colour"),
             "COLOUR() (unspecified colour)",
         );

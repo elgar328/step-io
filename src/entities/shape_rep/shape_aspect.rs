@@ -42,7 +42,7 @@ impl SimpleEntityHandler for ShapeAspectHandler {
 
         // Lookup: SHAPE_ASPECT.of_shape → PRODUCT_DEFINITION_SHAPE →
         // ProductId (typed one-probe).
-        // [NS-shape-aspect-of-shape-pd] C3D: of_shape references a
+        // NsCase::ShapeAspectOfShapePd C3D: of_shape references a
         // PRODUCT_DEFINITION directly (must be a PRODUCT_DEFINITION_SHAPE) →
         // resolve via the product; writer re-emits the standard PDS form.
         // See reader::nonstandard.
@@ -53,12 +53,12 @@ impl SimpleEntityHandler for ShapeAspectHandler {
             .get::<crate::ir::ProductDefinitionId>(of_shape_ref)
             .is_some()
         {
-            ctx.warnings.push(ConvertError::NonStandardInput {
-                field: "SHAPE_ASPECT.of_shape".into(),
-                count: 1,
-                normalized_to: "PRODUCT_DEFINITION_SHAPE (of_shape was a PRODUCT_DEFINITION)"
-                    .into(),
-            });
+            ctx.ns_push(
+                crate::reader::NsCase::ShapeAspectOfShapePd,
+                "SHAPE_ASPECT.of_shape".into(),
+                1,
+                "PRODUCT_DEFINITION_SHAPE (of_shape was a PRODUCT_DEFINITION)".into(),
+            );
             let Some(pid) = ctx.product_of_pdef(of_shape_ref) else {
                 return Ok(());
             };

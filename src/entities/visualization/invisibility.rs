@@ -36,15 +36,16 @@ impl SimpleEntityHandler for InvisibilityHandler {
     ) -> Result<(), ConvertError> {
         check_count(attrs, 1, entity_id, "INVISIBILITY")?;
         let refs = read_entity_ref_list(attrs, 0, entity_id, "invisible_items")?;
-        // [NS-empty-invisibility] grabcad: invisible_items is SET[1:?] but an
+        // NsCase::EmptyInvisibility grabcad: invisible_items is SET[1:?] but an
         // empty `()` violates the cardinality (and hides nothing) → drop as a
         // normalization (leaf, no cascade). See reader::nonstandard.
         if refs.is_empty() {
-            ctx.warnings.push(ConvertError::NonStandardInput {
-                field: "INVISIBILITY".into(),
-                count: 1,
-                normalized_to: "dropped (empty invisible_items, non-standard SET[1:?])".into(),
-            });
+            ctx.ns_push(
+                crate::reader::NsCase::EmptyInvisibility,
+                "INVISIBILITY".into(),
+                1,
+                "dropped (empty invisible_items, non-standard SET[1:?])".into(),
+            );
             return Ok(());
         }
         let mut invisible_items = Vec::with_capacity(refs.len());

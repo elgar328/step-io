@@ -218,7 +218,7 @@ pub(super) fn read_conversion_based_unit_body(
             }
         }
         CbuFlavor::PlaneAngle => {
-            // [NS-cbu-angle-factor] anonymizers: a non-standard CBU name no
+            // NsCase::CbuAngleFactor anonymizers: a non-standard CBU name no
             // longer identifies the unit → identify by conversion factor, name
             // fallback; warn on disagreement. See reader::nonstandard.
             let by_name = match_angle_conversion(&upper);
@@ -229,11 +229,12 @@ pub(super) fn read_conversion_based_unit_body(
                         AngleUnit::Degree => "DEGREE",
                         AngleUnit::Radian => "RADIAN",
                     };
-                    ctx.warnings.push(ConvertError::NonStandardInput {
-                        field: format!("CONVERSION_BASED_UNIT.name ({name:?})"),
-                        count: 1,
-                        normalized_to: normalized_to.into(),
-                    });
+                    ctx.ns_push(
+                        crate::reader::NsCase::CbuAngleFactor,
+                        format!("CONVERSION_BASED_UNIT.name ({name:?})"),
+                        1,
+                        normalized_to.into(),
+                    );
                 }
                 true
             } else {
@@ -245,7 +246,7 @@ pub(super) fn read_conversion_based_unit_body(
             }
         }
         CbuFlavor::Mass => {
-            // [NS-cbu-mass-factor] anonymizers: as NS-cbu-angle-factor, for
+            // NsCase::CbuMassFactor anonymizers: as NsCase::CbuAngleFactor, for
             // mass (fixed kg base). See reader::nonstandard.
             let by_name = match_mass_conversion(&upper);
             if let Some(unit) = factor.and_then(match_mass_by_factor).or(by_name) {
@@ -260,11 +261,12 @@ pub(super) fn read_conversion_based_unit_body(
                         // result; unreachable on this path.
                         MassUnit::Megagram => "MEGAGRAM",
                     };
-                    ctx.warnings.push(ConvertError::NonStandardInput {
-                        field: format!("CONVERSION_BASED_UNIT.name ({name:?})"),
-                        count: 1,
-                        normalized_to: normalized_to.into(),
-                    });
+                    ctx.ns_push(
+                        crate::reader::NsCase::CbuMassFactor,
+                        format!("CONVERSION_BASED_UNIT.name ({name:?})"),
+                        1,
+                        normalized_to.into(),
+                    );
                 }
                 true
             } else {

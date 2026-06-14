@@ -68,11 +68,15 @@ pub(crate) fn parse_psa_styles(
     entity_id: u64,
     attr: &Attribute,
 ) -> Vec<PsaStyle> {
-    // [NS-psa-styles-unset] `styles` is a mandatory `SET[1:?]`; some exporters
+    // NsCase::PsaStylesUnset `styles` is a mandatory `SET[1:?]`; some exporters
     // emit it as `$` (Unset). Accept as empty rather than a defect, matching the
-    // sibling NS-psa-bare-null-style policy. See reader::nonstandard.
+    // sibling NsCase::PsaBareNullStyle policy. See reader::nonstandard.
     if matches!(attr, Attribute::Unset | Attribute::Derived) {
-        ctx.record_nonstandard("PRESENTATION_STYLE_ASSIGNMENT.styles (Unset)".into(), "()");
+        ctx.ns_record(
+            crate::reader::NsCase::PsaStylesUnset,
+            "PRESENTATION_STYLE_ASSIGNMENT.styles (Unset)".into(),
+            "()",
+        );
         return Vec::new();
     }
     let Attribute::List(items) = attr else {
@@ -112,11 +116,12 @@ pub(crate) fn parse_psa_styles(
             {
                 styles.push(PsaStyle::Null);
             }
-            // [NS-psa-bare-null-style] some exporters write a bare `.NULL.`
+            // NsCase::PsaBareNullStyle some exporters write a bare `.NULL.`
             // enum instead of the typed NULL_STYLE(.NULL.) placeholder → accept
             // and re-emit the standard typed form. See reader::nonstandard.
             Attribute::Enum(t) if t == "NULL" => {
-                ctx.record_nonstandard(
+                ctx.ns_record(
+                    crate::reader::NsCase::PsaBareNullStyle,
                     "PRESENTATION_STYLE_ASSIGNMENT.styles (bare .NULL.)".into(),
                     "NULL_STYLE(.NULL.)",
                 );
