@@ -12,10 +12,12 @@ use crate::early::model::{
     EarlyCurveBoundedSurface, EarlyCylindricalSurface, EarlyDegenerateToroidalSurface,
     EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyLine, EarlyOffsetCurve3d,
     EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent, EarlyPlane,
-    EarlyPolyline, EarlyRectangularTrimmedSurface, EarlySphericalSurface,
-    EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyTrimSelect,
-    EarlyTrimmedCurve, EarlyVector, EarlyVertexPoint,
+    EarlyPolyline, EarlyQuasiUniformCurve, EarlyQuasiUniformSurface,
+    EarlyRectangularTrimmedSurface, EarlySphericalSurface, EarlySurfaceOfLinearExtrusion,
+    EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyTrimSelect, EarlyTrimmedCurve,
+    EarlyVector, EarlyVertexPoint,
 };
+use crate::entities::geometry::nurbs_shared::quasi_uniform_knots;
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{
     Axis1Placement, Axis2Placement3d, BoundedPCurve, Circle3, CircularArea, CircularAreaCentre,
@@ -138,6 +140,120 @@ pub(crate) fn lower_b_spline_surface_with_knots(
         v_knot_multiplicities: early.v_multiplicities.clone(),
         u_knots: early.u_knots.clone(),
         v_knots: early.v_knots.clone(),
+        u_closed: early.u_closed,
+        v_closed: early.v_closed,
+        form: early.surface_form,
+        self_intersect: early.self_intersect,
+    };
+    let id = ctx.geometry.surfaces.push(Surface::Nurbs(surface));
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
+/// Lower one `QUASI_UNIFORM_CURVE` (non-rational). Like the `b_spline` curve but
+/// knots/multiplicities are absent on the wire and **derived** from
+/// `(degree, cp_count)` via `quasi_uniform_knots` (`None` → `DimensionMismatch`,
+/// matching the legacy handler). The first-2D-cp guard mirrors the curve. This
+/// form is `read_only` (never re-emitted), so there is no `lift`/`serialize`.
+pub(crate) fn lower_quasi_uniform_curve(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyQuasiUniformCurve,
+) -> Result<(), ConvertError> {
+    let degree = u32::try_from(early.degree).map_err(|_| ConvertError::AttributeType {
+        entity_id,
+        field_name: "degree",
+        expected: "non-negative Integer",
+        actual: crate::ir::error::AttributeKindTag::Integer,
+    })?;
+    if let Some(&first) = early.control_points_list.first()
+        && ctx.id_cache.contains::<crate::ir::id::Point2dId>(first)
+    {
+        return Ok(()); // 2D sister instance
+    }
+    let mut control_points = Vec::with_capacity(early.control_points_list.len());
+    for &r in &early.control_points_list {
+        control_points.push(ctx.resolve_point(entity_id, r, "control_points_list")?);
+    }
+    let Some((knot_multiplicities, knots)) = quasi_uniform_knots(degree, control_points.len())
+    else {
+        return Err(ConvertError::DimensionMismatch {
+            entity_id,
+            field_name: "control_points_list",
+            expected: degree as usize + 1,
+            actual: control_points.len(),
+        });
+    };
+    let curve = NurbsCurve {
+        degree,
+        control_points,
+        kind: NurbsKind::NonRational,
+        knot_multiplicities,
+        knots,
+        closed: early.closed_curve,
+        form: early.curve_form,
+        self_intersect: early.self_intersect,
+    };
+    let id = ctx.geometry.curves.push(Curve::Nurbs(curve));
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
+/// Lower one `QUASI_UNIFORM_SURFACE` (non-rational). u/v knots are derived per
+/// direction via `quasi_uniform_knots` (`None` → `DimensionMismatch`). No 2D
+/// sister; `read_only` (no `lift`/`serialize`).
+pub(crate) fn lower_quasi_uniform_surface(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyQuasiUniformSurface,
+) -> Result<(), ConvertError> {
+    let u_degree = u32::try_from(early.u_degree).map_err(|_| ConvertError::AttributeType {
+        entity_id,
+        field_name: "u_degree",
+        expected: "non-negative Integer",
+        actual: crate::ir::error::AttributeKindTag::Integer,
+    })?;
+    let v_degree = u32::try_from(early.v_degree).map_err(|_| ConvertError::AttributeType {
+        entity_id,
+        field_name: "v_degree",
+        expected: "non-negative Integer",
+        actual: crate::ir::error::AttributeKindTag::Integer,
+    })?;
+    let mut control_points = Vec::with_capacity(early.control_points_list.len());
+    for row in &early.control_points_list {
+        let mut pt_row = Vec::with_capacity(row.len());
+        for &r in row {
+            pt_row.push(ctx.resolve_point(entity_id, r, "control_points_list")?);
+        }
+        control_points.push(pt_row);
+    }
+    let u_cp_count = control_points.len();
+    let v_cp_count = control_points.first().map_or(0, Vec::len);
+    let Some((u_knot_multiplicities, u_knots)) = quasi_uniform_knots(u_degree, u_cp_count) else {
+        return Err(ConvertError::DimensionMismatch {
+            entity_id,
+            field_name: "control_points_list",
+            expected: u_degree as usize + 1,
+            actual: u_cp_count,
+        });
+    };
+    let Some((v_knot_multiplicities, v_knots)) = quasi_uniform_knots(v_degree, v_cp_count) else {
+        return Err(ConvertError::DimensionMismatch {
+            entity_id,
+            field_name: "control_points_list",
+            expected: v_degree as usize + 1,
+            actual: v_cp_count,
+        });
+    };
+    let surface = NurbsSurface {
+        u_degree,
+        v_degree,
+        control_points,
+        kind: NurbsSurfaceKind::NonRational,
+        u_knot_multiplicities,
+        v_knot_multiplicities,
+        u_knots,
+        v_knots,
         u_closed: early.u_closed,
         v_closed: early.v_closed,
         form: early.surface_form,

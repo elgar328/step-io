@@ -193,6 +193,9 @@ generate = [
     "b_spline_curve_with_knots",
     # Phase 1b: W-COMPLEX — non-rational b_spline surface (Simple, 2D cp grid)
     "b_spline_surface_with_knots",
+    # Phase 1c: W-COMPLEX — quasi-uniform b_spline (derived knots; read_only)
+    "quasi_uniform_curve",
+    "quasi_uniform_surface",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
@@ -207,6 +210,17 @@ serialize_with_id = [
 # instead of just `generate`. Committed as false (the wired 6); flip on locally
 # to measure coverage / validate that the full union compiles.
 generate_all = false
+
+# `read_only`: entities generated as model + bind only (serialize skipped). For
+# read-back-only minority forms the writer normalizes away (QUASI_UNIFORM_* →
+# B_SPLINE_*_WITH_KNOTS, per emit_nurbs_curve compatibility-first policy): read
+# but never emitted, so their handler `write` is `unreachable!()`. Precondition:
+# any enum each entity binds is also used by a serialized entity (b_spline form
+# helpers are covered by b_spline_*_with_knots).
+read_only = [
+    "quasi_uniform_curve",
+    "quasi_uniform_surface",
+]
 
 # Per-entity EXPRESS Derived (`*`) attribute names. early.toml (generated) cannot
 # carry DERIVE info, so it is hand-authored here. A listed attr keeps its Part21
