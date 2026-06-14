@@ -1568,6 +1568,17 @@ impl WriteBuffer<'_> {
         n
     }
 
+    /// Push a complex (multi-part) entity: `parts` is the ordered
+    /// `(part_name, attrs)` list rendered as `( PART1(..) PART2(..) … )`.
+    pub(crate) fn push_complex(&mut self, parts: Vec<(String, Vec<Attribute>)>) -> u64 {
+        let n = self.fresh();
+        self.entities.push(WriterEntity {
+            id: n,
+            body: WriterBody::Complex { parts },
+        });
+        n
+    }
+
     /// Push a simple entity under a previously-reserved id (from `fresh()`),
     /// rather than minting a new one. Lets a body emit after the referrers
     /// that already used its reserved id (STEP forward references).

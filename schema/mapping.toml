@@ -196,6 +196,8 @@ generate = [
     # Phase 1c: W-COMPLEX — quasi-uniform b_spline (derived knots; read_only)
     "quasi_uniform_curve",
     "quasi_uniform_surface",
+    # Phase 2 pilot: W-COMPLEX — rational b_spline curve (multi-part complex)
+    "rational_b_spline_curve",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
@@ -220,6 +222,22 @@ generate_all = false
 read_only = [
     "quasi_uniform_curve",
     "quasi_uniform_surface",
+]
+
+# `[complex.<entity>]`: multi-part (complex) entity. `parts` = ordered supertype
+# part names (must match the handler's #[step_entity_complex] cases order). Each
+# part contributes its early.toml own_attrs; gen-early emits a part-wise bind
+# (require_part_attrs) + a WriterBody::Complex serialize (push_complex). Single
+# case only.
+[complex.rational_b_spline_curve]
+parts = [
+    "BOUNDED_CURVE",
+    "B_SPLINE_CURVE",
+    "B_SPLINE_CURVE_WITH_KNOTS",
+    "CURVE",
+    "GEOMETRIC_REPRESENTATION_ITEM",
+    "RATIONAL_B_SPLINE_CURVE",
+    "REPRESENTATION_ITEM",
 ]
 
 # Per-entity EXPRESS Derived (`*`) attribute names. early.toml (generated) cannot

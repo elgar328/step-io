@@ -9,9 +9,9 @@ use crate::early::model::{
     EarlyCurveBoundedSurface, EarlyCylindricalSurface, EarlyDegenerateToroidalSurface,
     EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyKnotType, EarlyLine, EarlyOffsetCurve3d,
     EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent, EarlyPlane,
-    EarlyPolyline, EarlyRectangularTrimmedSurface, EarlySphericalSurface,
-    EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyTrimSelect,
-    EarlyTrimmedCurve, EarlyVector, EarlyVertexPoint,
+    EarlyPolyline, EarlyRationalBSplineCurve, EarlyRectangularTrimmedSurface,
+    EarlySphericalSurface, EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution,
+    EarlyToroidalSurface, EarlyTrimSelect, EarlyTrimmedCurve, EarlyVector, EarlyVertexPoint,
 };
 use crate::ir::geometry::{
     Direction3, Logical, NurbsCurve, NurbsSurface, Point3, TransitionCode, TrimMaster,
@@ -73,6 +73,29 @@ pub(crate) fn lift_b_spline_surface_with_knots(
         u_knots: nurbs.u_knots.clone(),
         v_knots: nurbs.v_knots.clone(),
         knot_spec: EarlyKnotType::Unspecified,
+    }
+}
+
+/// Lift one `RATIONAL_B_SPLINE_CURVE` (complex). `control_points` = emitted
+/// `CARTESIAN_POINT` step ids; `weights` = the rational weights (the handler
+/// extracts them from `NurbsKind::Rational`). `knot_spec` is always re-emitted
+/// as `Unspecified` (see plan).
+pub(crate) fn lift_rational_bspline_curve(
+    nurbs: &NurbsCurve,
+    control_points: Vec<u64>,
+    weights: Vec<f64>,
+) -> EarlyRationalBSplineCurve {
+    EarlyRationalBSplineCurve {
+        name: String::new(),
+        degree: i64::from(nurbs.degree),
+        control_points_list: control_points,
+        curve_form: nurbs.form,
+        closed_curve: nurbs.closed,
+        self_intersect: nurbs.self_intersect,
+        knot_multiplicities: nurbs.knot_multiplicities.clone(),
+        knots: nurbs.knots.clone(),
+        knot_spec: EarlyKnotType::Unspecified,
+        weights_data: weights,
     }
 }
 

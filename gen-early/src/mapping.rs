@@ -36,6 +36,20 @@ pub(crate) struct Mapping {
     /// the generated bind fails to compile.
     #[serde(default)]
     pub(crate) read_only: Vec<String>,
+    /// Multi-part (complex) entities: an ordered part-name list per entity. Each
+    /// part contributes its own_attrs (from early.toml) in order; the generated
+    /// bind reads per-part via `require_part_attrs`, and serialize emits a
+    /// `WriterBody::Complex` via `push_complex`. Models a SINGLE case (the part
+    /// order must match the handler's `#[step_entity_complex] cases`). Multi-case
+    /// complex (e.g. measure) is not yet supported.
+    #[serde(rename = "complex", default)]
+    pub(crate) complex: BTreeMap<String, ComplexHint>,
+}
+
+#[derive(Deserialize)]
+pub(crate) struct ComplexHint {
+    /// Ordered part (supertype) names, e.g. `["BOUNDED_CURVE", "B_SPLINE_CURVE", …]`.
+    pub(crate) parts: Vec<String>,
 }
 
 #[derive(Deserialize)]

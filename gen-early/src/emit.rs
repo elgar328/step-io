@@ -53,6 +53,12 @@ pub(crate) fn emit_entity(ctx: &Ctx, ent_name: &str, out: &mut GenOut) {
     );
     let type_name = format!("Early{}", pascal(ent_name));
     let step_name = ent_name.to_uppercase();
+    // Complex (multi-part) entities take a separate path: bind reads per named
+    // part, serialize emits a `WriterBody::Complex`. See `emit_complex_entity`.
+    if let Some(hint) = ctx.mapping.complex.get(ent_name) {
+        emit_complex_entity(ctx, ent_name, &type_name, &step_name, hint, out);
+        return;
+    }
     // Full Part21 positional attribute list (inherited supertype attrs
     // prepended, then own); see `EarlyToml::flattened_attrs`. Each entry is
     // (struct field name, kind, is-optional).
@@ -91,6 +97,27 @@ pub(crate) fn emit_entity(ctx: &Ctx, ent_name: &str, out: &mut GenOut) {
         .iter()
         .any(|(_, k, _, d)| !d && matches!(k, Kind::Select(_)));
 
+    emit_model_and_id(ctx, &type_name, &step_name, &attrs, out);
+
+    entity_bind(ent_name, &type_name, &step_name, &attrs, has_select, out);
+
+    // `read_only` entities (read-back-only minority forms normalized away on
+    // write) skip serialize: their handler `write` is `unreachable!()`.
+    if !ctx.mapping.read_only.iter().any(|e| e == ent_name) {
+        entity_serialize(ctx, ent_name, &type_name, &step_name, &attrs, out);
+    }
+}
+
+/// Emit the `Early*` model struct + its `Early*Id` `id_cache` key (shared by the
+/// simple and complex paths). `attrs` is the flat field list (derived fields
+/// keep no struct field).
+fn emit_model_and_id(
+    ctx: &Ctx,
+    type_name: &str,
+    step_name: &str,
+    attrs: &[(String, Kind, bool, bool)],
+    out: &mut GenOut,
+) {
     // model struct. All-scalar shapes wider than 8 bytes get `Copy` so
     // by-value `lower`/`lift` adapters compile under clippy's
     // needless_pass_by_value. At ≤ 8 bytes `Copy` would instead flip the
@@ -118,7 +145,7 @@ pub(crate) fn emit_entity(ctx: &Ctx, ent_name: &str, out: &mut GenOut) {
     )
     .unwrap();
     writeln!(out.model, "pub(crate) struct {type_name} {{").unwrap();
-    for (field, k, opt, derived) in &attrs {
+    for (field, k, opt, derived) in attrs {
         if *derived {
             continue; // Derived (`*`) slot: not stored data, no struct field.
         }
@@ -162,14 +189,179 @@ pub(crate) fn emit_entity(ctx: &Ctx, ent_name: &str, out: &mut GenOut) {
     writeln!(out.model, "        Self(index)").unwrap();
     writeln!(out.model, "    }}").unwrap();
     writeln!(out.model, "}}\n").unwrap();
+}
 
-    entity_bind(ent_name, &type_name, &step_name, &attrs, has_select, out);
-
-    // `read_only` entities (read-back-only minority forms normalized away on
-    // write) skip serialize: their handler `write` is `unreachable!()`.
-    if !ctx.mapping.read_only.iter().any(|e| e == ent_name) {
-        entity_serialize(ctx, ent_name, &type_name, &step_name, &attrs, out);
+/// Record which shared serialize helpers an attribute Kind needs (enum `_attr`,
+/// `bool_attr`, list/grid helpers). Shared by the simple and complex emitters.
+fn track_serialize_usage(k: &Kind, out: &mut GenOut) {
+    match k {
+        Kind::Bool => out.any_bool = true,
+        Kind::Enum(alias) => {
+            out.used_enums.insert(alias.clone());
+        }
+        Kind::Select(alias) => {
+            out.used_selects.insert(alias.clone());
+        }
+        // `Vec<EarlyEnum>`: needs the enum model + `<alias>_attr` (via
+        // used_enums) and a `<alias>_list` bind helper.
+        Kind::Vec(inner) => match &**inner {
+            Kind::Enum(alias) => {
+                out.used_enums.insert(alias.clone());
+                out.used_enum_lists.insert(alias.clone());
+            }
+            // `Vec<EarlySelect>`: needs bind_<select>/<alias>_emit (via
+            // used_selects) and a `<alias>_list` bind helper.
+            Kind::Select(alias) => {
+                out.used_selects.insert(alias.clone());
+                out.used_select_lists.insert(alias.clone());
+            }
+            // `Vec<Logical>`: the single `logical_list` bind helper.
+            Kind::Logical => out.any_logical_list = true,
+            // `Vec<Vec<EarlySelect>>`: needs bind_<select>/<alias>_emit
+            // (via used_selects) and a `<alias>_grid` bind helper.
+            Kind::Vec(i2) => {
+                if let Kind::Select(alias) = &**i2 {
+                    out.used_selects.insert(alias.clone());
+                    out.used_select_grids.insert(alias.clone());
+                }
+            }
+            _ => {}
+        },
+        _ => {}
     }
+}
+
+/// Emit model + Id + bind + serialize for a multi-part (complex) entity. Each
+/// part of `hint.parts` contributes its `own_attrs` (in order); bind reads each
+/// non-empty part once via `require_part_attrs` (shadowing `attrs`), serialize
+/// emits a `WriterBody::Complex` via `push_complex`. Single-case only; a SELECT
+/// part attr is rejected (not yet supported).
+fn emit_complex_entity(
+    ctx: &Ctx,
+    ent_name: &str,
+    type_name: &str,
+    step_name: &str,
+    hint: &crate::mapping::ComplexHint,
+    out: &mut GenOut,
+) {
+    let derived_set = ctx.mapping.derived.get(ent_name);
+    // (part_name, local_index, field, kind, optional, derived) per attr, in
+    // part order, each part's own_attrs indexed locally from 0.
+    let mut entries: Vec<(String, usize, String, Kind, bool, bool)> = Vec::new();
+    for part in &hint.parts {
+        // Hint part names are the wire (upper-cased) form; early.toml keys are
+        // lower-cased. Look up own_attrs by the lower-cased name; keep the
+        // upper-cased `part` for `require_part_attrs` / the emitted STEP token.
+        for (li, a) in ctx
+            .schema
+            .own_attrs(&part.to_lowercase())
+            .into_iter()
+            .enumerate()
+        {
+            let (optional, inner) = strip_optional(&a.ty);
+            let derived = derived_set.is_some_and(|d| d.contains(&a.name));
+            entries.push((
+                part.clone(),
+                li,
+                a.name.clone(),
+                ctx.classify(inner, 0),
+                optional,
+                derived,
+            ));
+        }
+    }
+    // Disambiguate duplicate field names across parts (same dedup as emit_entity).
+    let mut used: BTreeSet<String> = BTreeSet::new();
+    for e in &mut entries {
+        if used.contains(&e.2) {
+            let base = e.2.clone();
+            let mut n = 2;
+            while used.contains(&format!("{base}_{n}")) {
+                n += 1;
+            }
+            e.2 = format!("{base}_{n}");
+        }
+        used.insert(e.2.clone());
+    }
+    assert!(
+        !entries.iter().any(|e| matches!(e.3, Kind::Select(_))),
+        "gen-early: complex entity `{ent_name}` has a SELECT attr — not yet supported"
+    );
+
+    let model_attrs: Vec<(String, Kind, bool, bool)> = entries
+        .iter()
+        .map(|(_, _, f, k, o, d)| (f.clone(), k.clone(), *o, *d))
+        .collect();
+    emit_model_and_id(ctx, type_name, step_name, &model_attrs, out);
+
+    // bind: per-part `require_part_attrs` (shadow `attrs`) + per-field reads.
+    writeln!(
+        out.bind,
+        "pub(crate) fn bind_{ent_name}(entity_id: u64, parts: &[crate::parser::entity::RawEntityPart]) -> Result<super::model::{type_name}, crate::ir::error::ConvertError> {{"
+    )
+    .unwrap();
+    for part in &hint.parts {
+        let fields: Vec<&(String, usize, String, Kind, bool, bool)> =
+            entries.iter().filter(|e| &e.0 == part && !e.5).collect();
+        if fields.is_empty() {
+            continue; // empty / all-derived part: nothing to read.
+        }
+        writeln!(
+            out.bind,
+            "    let attrs = crate::reader::require_part_attrs(parts, \"{part}\", entity_id)?;"
+        )
+        .unwrap();
+        for (_, li, field, k, opt, _) in fields {
+            writeln!(
+                out.bind,
+                "    let {field} = {};",
+                bind_expr_full(k, *li, field, *opt)
+            )
+            .unwrap();
+        }
+    }
+    writeln!(out.bind, "    Ok(super::model::{type_name} {{").unwrap();
+    for (_, _, field, _, _, derived) in &entries {
+        if *derived {
+            continue;
+        }
+        writeln!(out.bind, "        {field},").unwrap();
+    }
+    writeln!(out.bind, "    }})\n}}\n").unwrap();
+
+    if ctx.mapping.read_only.iter().any(|e| e == ent_name) {
+        return; // read_only: writer normalizes this form away — no serialize.
+    }
+
+    // serialize: `WriterBody::Complex` via push_complex, parts in hint order.
+    writeln!(
+        out.serialize,
+        "pub(crate) fn serialize_{ent_name}(buf: &mut crate::writer::buffer::WriteBuffer, l1: &super::model::{type_name}) -> u64 {{"
+    )
+    .unwrap();
+    writeln!(out.serialize, "    buf.push_complex(vec![").unwrap();
+    for part in &hint.parts {
+        writeln!(out.serialize, "        (\"{part}\".into(), vec![").unwrap();
+        for (_, _, field, k, opt, derived) in entries.iter().filter(|e| &e.0 == part) {
+            if *derived {
+                writeln!(
+                    out.serialize,
+                    "            crate::parser::entity::Attribute::Derived,"
+                )
+                .unwrap();
+                continue;
+            }
+            writeln!(
+                out.serialize,
+                "            {},",
+                serialize_expr_full(k, field, *opt)
+            )
+            .unwrap();
+            track_serialize_usage(k, out);
+        }
+        writeln!(out.serialize, "        ]),").unwrap();
+    }
+    writeln!(out.serialize, "    ])\n}}\n").unwrap();
 }
 
 /// Emit a synthesized `Early*` enum + `bind_<sel>` / `<sel>_emit` for a mixed
@@ -504,41 +696,7 @@ fn entity_serialize(
         if *derived {
             continue; // no helper-usage tracking for a `*` slot.
         }
-        match k {
-            Kind::Bool => out.any_bool = true,
-            Kind::Enum(alias) => {
-                out.used_enums.insert(alias.clone());
-            }
-            Kind::Select(alias) => {
-                out.used_selects.insert(alias.clone());
-            }
-            // `Vec<EarlyEnum>`: needs the enum model + `<alias>_attr` (via
-            // used_enums) and a `<alias>_list` bind helper.
-            Kind::Vec(inner) => match &**inner {
-                Kind::Enum(alias) => {
-                    out.used_enums.insert(alias.clone());
-                    out.used_enum_lists.insert(alias.clone());
-                }
-                // `Vec<EarlySelect>`: needs bind_<select>/<alias>_emit (via
-                // used_selects) and a `<alias>_list` bind helper.
-                Kind::Select(alias) => {
-                    out.used_selects.insert(alias.clone());
-                    out.used_select_lists.insert(alias.clone());
-                }
-                // `Vec<Logical>`: the single `logical_list` bind helper.
-                Kind::Logical => out.any_logical_list = true,
-                // `Vec<Vec<EarlySelect>>`: needs bind_<select>/<alias>_emit
-                // (via used_selects) and a `<alias>_grid` bind helper.
-                Kind::Vec(i2) => {
-                    if let Kind::Select(alias) = &**i2 {
-                        out.used_selects.insert(alias.clone());
-                        out.used_select_grids.insert(alias.clone());
-                    }
-                }
-                _ => {}
-            },
-            _ => {}
-        }
+        track_serialize_usage(k, out);
     }
     writeln!(out.serialize, "    ])\n}}\n").unwrap();
 

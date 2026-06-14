@@ -1,28 +1,19 @@
-//! `RATIONAL_B_SPLINE_CURVE` handler on the `ComplexEntityHandler`
-//! registry path.
+//! `RATIONAL_B_SPLINE_CURVE` handler (`ComplexEntityHandler`, 2-layer path).
 //!
-//! Mirrors the legacy `ReaderContext::convert_rational_bspline_curve`
-//! (`src/reader/geometry.rs`) and the rational branch of
-//! `WriteBuffer::emit_nurbs_curve` (`src/writer/buffer/geometry.rs`).
-//! `emit_nurbs_curve` still emits the non-rational simple
-//! `B_SPLINE_CURVE_WITH_KNOTS` form inline; only the rational complex
-//! emission moves here.
+//! `emit_nurbs_curve` (`src/writer/buffer/geometry.rs`) routes every rational
+//! `Curve::Nurbs` here (non-rational stays the simple `B_SPLINE_CURVE_WITH_KNOTS`
+//! form). The 2D sister `rational_bspline_curve_2d` shares the same `cases`,
+//! disambiguated by the pcurve partition. The generated complex `bind`/`serialize`
+//! (gen-early `[complex.rational_b_spline_curve]`) handle the multi-part wire form.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::ComplexEntityHandler;
-use crate::entities::geometry::nurbs_shared::build_curve_common;
-use crate::ir::attr::{
-    read_entity_ref_list, read_enum, read_integer, read_integer_list, read_logical, read_real_list,
-    read_string_or_unset,
-};
-use crate::ir::error::{AttributeKindTag, ConvertError};
-use crate::ir::geometry::NurbsKind;
-use crate::ir::{Curve, CurveForm, NurbsCurve};
-use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
+use crate::ir::error::ConvertError;
+use crate::ir::geometry::{NurbsCurve, NurbsKind};
+use crate::parser::entity::{EntityGraph, RawEntityPart};
 use crate::reader::ReaderContext;
-use crate::reader::require_part_attrs;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
-use crate::writer::entity::{WriterBody, WriterEntity};
 use step_io_macros::step_entity_complex;
 
 pub(crate) struct RationalBsplineCurveHandler;
@@ -43,100 +34,22 @@ impl ComplexEntityHandler for RationalBsplineCurveHandler {
         parts: &[RawEntityPart],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let repr_attrs = require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
-        let _name = read_string_or_unset(repr_attrs, 0, entity_id, "name")?;
-
-        let bsc_attrs = require_part_attrs(parts, "B_SPLINE_CURVE", entity_id)?;
-        let degree_i = read_integer(bsc_attrs, 0, entity_id, "degree")?;
-        let cp_refs = read_entity_ref_list(bsc_attrs, 1, entity_id, "control_points_list")?;
-        let form = CurveForm::from_step_enum(read_enum(bsc_attrs, 2, entity_id, "curve_form")?);
-        let closed = read_logical(bsc_attrs, 3, entity_id, "closed_curve")?;
-        let self_intersect = read_logical(bsc_attrs, 4, entity_id, "self_intersect")?;
-
-        let bswk_attrs = require_part_attrs(parts, "B_SPLINE_CURVE_WITH_KNOTS", entity_id)?;
-        let knot_multiplicities =
-            read_integer_list(bswk_attrs, 0, entity_id, "knot_multiplicities")?;
-        let knots = read_real_list(bswk_attrs, 1, entity_id, "knots")?;
-
-        let rat_attrs = require_part_attrs(parts, "RATIONAL_B_SPLINE_CURVE", entity_id)?;
-        let weights = read_real_list(rat_attrs, 0, entity_id, "weights_data")?;
-
-        if weights.len() != cp_refs.len() {
-            return Err(ConvertError::DimensionMismatch {
-                entity_id,
-                field_name: "weights_data",
-                expected: cp_refs.len(),
-                actual: weights.len(),
-            });
-        }
-
-        let degree = u32::try_from(degree_i).map_err(|_| ConvertError::AttributeType {
-            entity_id,
-            field_name: "degree",
-            expected: "non-negative Integer",
-            actual: AttributeKindTag::Integer,
-        })?;
-
-        let mut control_points = Vec::with_capacity(cp_refs.len());
-        for &r in &cp_refs {
-            let pt = ctx.resolve_point(entity_id, r, "control_points_list")?;
-            control_points.push(pt);
-        }
-
-        let curve = NurbsCurve {
-            degree,
-            control_points,
-            kind: NurbsKind::Rational { weights },
-            knot_multiplicities,
-            knots,
-            closed,
-            form,
-            self_intersect,
-        };
-        let id = ctx.geometry.curves.push(Curve::Nurbs(curve));
-        ctx.id_cache.insert(entity_id, id);
-        Ok(())
+        let early = bind::bind_rational_b_spline_curve(entity_id, parts)?;
+        lower::lower_rational_bspline_curve(ctx, entity_id, &early)
     }
 
     fn write(buf: &mut WriteBuffer, nurbs: NurbsCurve) -> Result<u64, WriteError> {
-        let common = build_curve_common(buf, &nurbs)?;
-        let NurbsKind::Rational { weights } = nurbs.kind else {
+        let NurbsKind::Rational { weights } = &nurbs.kind else {
             return Err(WriteError::UnsupportedIrVariant {
                 detail: "RationalBsplineCurveHandler::write requires weights".into(),
             });
         };
-        let weights_attr = Attribute::List(weights.into_iter().map(Attribute::Real).collect());
-
-        let n = buf.fresh();
-        buf.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Complex {
-                parts: vec![
-                    ("BOUNDED_CURVE".into(), vec![]),
-                    (
-                        "B_SPLINE_CURVE".into(),
-                        vec![
-                            common.degree,
-                            common.cps,
-                            common.form,
-                            common.closed,
-                            common.self_intersect,
-                        ],
-                    ),
-                    (
-                        "B_SPLINE_CURVE_WITH_KNOTS".into(),
-                        vec![common.mults, common.knots, common.knot_spec],
-                    ),
-                    ("CURVE".into(), vec![]),
-                    ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),
-                    ("RATIONAL_B_SPLINE_CURVE".into(), vec![weights_attr]),
-                    (
-                        "REPRESENTATION_ITEM".into(),
-                        vec![Attribute::String(String::new())],
-                    ),
-                ],
-            },
-        });
-        Ok(n)
+        let weights = weights.clone();
+        let mut control_points = Vec::with_capacity(nurbs.control_points.len());
+        for &pid in &nurbs.control_points {
+            control_points.push(buf.emit_point(pid)?);
+        }
+        let early = lift::lift_rational_bspline_curve(&nurbs, control_points, weights);
+        Ok(serialize::serialize_rational_b_spline_curve(buf, &early))
     }
 }

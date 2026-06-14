@@ -41,6 +41,16 @@ impl EarlyToml {
         out
     }
 
+    /// An entity's OWN attributes only (no inheritance flattening). Used by the
+    /// complex-entity emitter: each part of a complex instance contributes its
+    /// own attrs (the supertype parts carry no inherited attrs on the wire).
+    pub(crate) fn own_attrs(&self, ent_name: &str) -> Vec<&Attr> {
+        self.entity
+            .get(ent_name)
+            .map(|e| e.own_attrs.iter().collect())
+            .unwrap_or_default()
+    }
+
     pub(crate) fn collect_inherited<'a>(
         &'a self,
         ent_name: &str,

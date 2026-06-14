@@ -54,9 +54,6 @@ pub(super) struct CurveCommonAttrs {
     pub form: Attribute,
     pub closed: Attribute,
     pub self_intersect: Attribute,
-    pub mults: Attribute,
-    pub knots: Attribute,
-    pub knot_spec: Attribute,
 }
 
 pub(super) fn build_curve_common(
@@ -74,16 +71,6 @@ pub(super) fn build_curve_common(
         form: Attribute::Enum(nurbs.form.as_step_enum().into()),
         closed: Attribute::Enum(logical_to_step(nurbs.closed).into()),
         self_intersect: Attribute::Enum(logical_to_step(nurbs.self_intersect).into()),
-        mults: Attribute::List(
-            nurbs
-                .knot_multiplicities
-                .iter()
-                .copied()
-                .map(Attribute::Integer)
-                .collect(),
-        ),
-        knots: Attribute::List(nurbs.knots.iter().copied().map(Attribute::Real).collect()),
-        knot_spec: Attribute::Enum("UNSPECIFIED".into()),
     })
 }
 

@@ -3001,6 +3001,67 @@ pub(crate) fn serialize_b_spline_surface_with_knots(
     )
 }
 
+pub(crate) fn serialize_rational_b_spline_curve(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyRationalBSplineCurve,
+) -> u64 {
+    buf.push_complex(vec![
+        ("BOUNDED_CURVE".into(), vec![]),
+        (
+            "B_SPLINE_CURVE".into(),
+            vec![
+                crate::parser::entity::Attribute::Integer(l1.degree),
+                crate::parser::entity::Attribute::List(
+                    l1.control_points_list
+                        .iter()
+                        .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                        .collect(),
+                ),
+                b_spline_curve_form_attr(l1.curve_form),
+                crate::parser::entity::Attribute::Enum(
+                    crate::ir::attr::logical_to_step(l1.closed_curve).into(),
+                ),
+                crate::parser::entity::Attribute::Enum(
+                    crate::ir::attr::logical_to_step(l1.self_intersect).into(),
+                ),
+            ],
+        ),
+        (
+            "B_SPLINE_CURVE_WITH_KNOTS".into(),
+            vec![
+                crate::parser::entity::Attribute::List(
+                    l1.knot_multiplicities
+                        .iter()
+                        .map(|&x| crate::parser::entity::Attribute::Integer(x))
+                        .collect(),
+                ),
+                crate::parser::entity::Attribute::List(
+                    l1.knots
+                        .iter()
+                        .map(|&x| crate::parser::entity::Attribute::Real(x))
+                        .collect(),
+                ),
+                knot_type_attr(l1.knot_spec),
+            ],
+        ),
+        ("CURVE".into(), vec![]),
+        ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),
+        (
+            "RATIONAL_B_SPLINE_CURVE".into(),
+            vec![crate::parser::entity::Attribute::List(
+                l1.weights_data
+                    .iter()
+                    .map(|&x| crate::parser::entity::Attribute::Real(x))
+                    .collect(),
+            )],
+        ),
+        (
+            "REPRESENTATION_ITEM".into(),
+            vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+        ),
+    ])
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

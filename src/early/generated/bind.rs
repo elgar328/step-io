@@ -2781,6 +2781,40 @@ pub(crate) fn bind_quasi_uniform_surface(
     })
 }
 
+pub(crate) fn bind_rational_b_spline_curve(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<super::model::EarlyRationalBSplineCurve, crate::ir::error::ConvertError> {
+    let attrs = crate::reader::require_part_attrs(parts, "B_SPLINE_CURVE", entity_id)?;
+    let degree = crate::ir::attr::read_integer(attrs, 0, entity_id, "degree")?;
+    let control_points_list =
+        crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "control_points_list")?;
+    let curve_form = bind_b_spline_curve_form(attrs, 2, entity_id, "curve_form")?;
+    let closed_curve = crate::ir::attr::read_logical(attrs, 3, entity_id, "closed_curve")?;
+    let self_intersect = crate::ir::attr::read_logical(attrs, 4, entity_id, "self_intersect")?;
+    let attrs = crate::reader::require_part_attrs(parts, "B_SPLINE_CURVE_WITH_KNOTS", entity_id)?;
+    let knot_multiplicities =
+        crate::ir::attr::read_integer_list(attrs, 0, entity_id, "knot_multiplicities")?;
+    let knots = crate::ir::attr::read_real_list(attrs, 1, entity_id, "knots")?;
+    let knot_spec = bind_knot_type(attrs, 2, entity_id, "knot_spec")?;
+    let attrs = crate::reader::require_part_attrs(parts, "RATIONAL_B_SPLINE_CURVE", entity_id)?;
+    let weights_data = crate::ir::attr::read_real_list(attrs, 0, entity_id, "weights_data")?;
+    let attrs = crate::reader::require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    Ok(super::model::EarlyRationalBSplineCurve {
+        degree,
+        control_points_list,
+        curve_form,
+        closed_curve,
+        self_intersect,
+        knot_multiplicities,
+        knots,
+        knot_spec,
+        weights_data,
+        name,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

@@ -12,7 +12,7 @@ use crate::early::model::{
     EarlyCurveBoundedSurface, EarlyCylindricalSurface, EarlyDegenerateToroidalSurface,
     EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyLine, EarlyOffsetCurve3d,
     EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent, EarlyPlane,
-    EarlyPolyline, EarlyQuasiUniformCurve, EarlyQuasiUniformSurface,
+    EarlyPolyline, EarlyQuasiUniformCurve, EarlyQuasiUniformSurface, EarlyRationalBSplineCurve,
     EarlyRectangularTrimmedSurface, EarlySphericalSurface, EarlySurfaceOfLinearExtrusion,
     EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyTrimSelect, EarlyTrimmedCurve,
     EarlyVector, EarlyVertexPoint,
@@ -260,6 +260,51 @@ pub(crate) fn lower_quasi_uniform_surface(
         self_intersect: early.self_intersect,
     };
     let id = ctx.geometry.surfaces.push(Surface::Nurbs(surface));
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
+/// Lower one `RATIONAL_B_SPLINE_CURVE` (complex, rational). Mirrors the legacy
+/// complex handler: degree narrows to `u32`; `weights_data` length must equal the
+/// control-point count (`DimensionMismatch` otherwise). No 2D guard — the 3D and
+/// 2D rational handlers share `cases`, disambiguated by the pcurve partition.
+/// `knot_spec` is informational and dropped.
+pub(crate) fn lower_rational_bspline_curve(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyRationalBSplineCurve,
+) -> Result<(), ConvertError> {
+    let degree = u32::try_from(early.degree).map_err(|_| ConvertError::AttributeType {
+        entity_id,
+        field_name: "degree",
+        expected: "non-negative Integer",
+        actual: crate::ir::error::AttributeKindTag::Integer,
+    })?;
+    if early.weights_data.len() != early.control_points_list.len() {
+        return Err(ConvertError::DimensionMismatch {
+            entity_id,
+            field_name: "weights_data",
+            expected: early.control_points_list.len(),
+            actual: early.weights_data.len(),
+        });
+    }
+    let mut control_points = Vec::with_capacity(early.control_points_list.len());
+    for &r in &early.control_points_list {
+        control_points.push(ctx.resolve_point(entity_id, r, "control_points_list")?);
+    }
+    let curve = NurbsCurve {
+        degree,
+        control_points,
+        kind: NurbsKind::Rational {
+            weights: early.weights_data.clone(),
+        },
+        knot_multiplicities: early.knot_multiplicities.clone(),
+        knots: early.knots.clone(),
+        closed: early.closed_curve,
+        form: early.curve_form,
+        self_intersect: early.self_intersect,
+    };
+    let id = ctx.geometry.curves.push(Curve::Nurbs(curve));
     ctx.id_cache.insert(entity_id, id);
     Ok(())
 }
