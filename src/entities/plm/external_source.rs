@@ -1,11 +1,13 @@
-//! `EXTERNAL_SOURCE` handler plm Identification leaf.
-//! `source_id` is the AP214 `source_item` SELECT — step-io reads the
-//! `IDENTIFIER` variant only; other variants (`MESSAGE`, ...) drop.
+//! `EXTERNAL_SOURCE` handler plm Identification leaf (2-layer path).
+//! `source_id` is the AP214 `source_item` SELECT (`IDENTIFIER`/`MESSAGE`),
+//! codegen via the hinted `[select.source_item]` → `EarlySourceItem`. step-io
+//! models only the `Identifier` member in L2; `lower` drops a `Message`
+//! occurrence (unmodelled), symmetric on re-read.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::check_count;
 use crate::ir::error::ConvertError;
-use crate::ir::plm::{ExternalSource, ExternalSourceItem, PlmPool};
+use crate::ir::plm::ExternalSource;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -24,29 +26,15 @@ impl SimpleEntityHandler for ExternalSourceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 1, entity_id, "EXTERNAL_SOURCE")?;
-        let source_id = match &attrs[0] {
-            Attribute::Typed { type_name, value } if type_name == "IDENTIFIER" => {
-                match value.as_ref() {
-                    Attribute::String(s) => ExternalSourceItem::Identifier(s.clone()),
-                    _ => return Ok(()),
-                }
-            }
-            _ => return Ok(()),
+        let Some(early) = bind::bind_external_source(entity_id, attrs)? else {
+            return Ok(()); // source_item did not bind — drop the entity
         };
-        let pool = ctx.plm.get_or_insert_with(PlmPool::default);
-        let id = pool.external_sources.push(ExternalSource { source_id });
-        ctx.id_cache.insert(entity_id, id);
+        lower::lower_external_source(ctx, entity_id, &early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, e: ExternalSource) -> Result<u64, WriteError> {
-        let item = match e.source_id {
-            ExternalSourceItem::Identifier(s) => Attribute::Typed {
-                type_name: "IDENTIFIER".to_string(),
-                value: Box::new(Attribute::String(s)),
-            },
-        };
-        Ok(buf.push_simple("EXTERNAL_SOURCE", vec![item]))
+        let early = lift::lift_external_source(&e.source_id);
+        Ok(serialize::serialize_external_source(buf, &early))
     }
 }

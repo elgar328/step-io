@@ -13,16 +13,17 @@ use crate::early::model::{
     EarlyCcDesignPersonAndOrganizationAssignment, EarlyCcDesignSecurityClassification,
     EarlyCoordinatedUniversalTimeOffset, EarlyDateAndTime, EarlyDateTimeRole, EarlyDocument,
     EarlyDocumentFile, EarlyDocumentProductEquivalence, EarlyDocumentRepresentationType,
-    EarlyDocumentType, EarlyGroup, EarlyIdentificationRole, EarlyLocalTime, EarlyObjectRole,
-    EarlyOrganization, EarlyPerson, EarlyPersonAndOrganization, EarlyPersonAndOrganizationRole,
-    EarlyPersonalAddress, EarlyRoleAssociation, EarlySecurityClassification,
-    EarlySecurityClassificationLevel,
+    EarlyDocumentType, EarlyExternalSource, EarlyGroup, EarlyIdentificationRole, EarlyLocalTime,
+    EarlyObjectRole, EarlyOrganization, EarlyPerson, EarlyPersonAndOrganization,
+    EarlyPersonAndOrganizationRole, EarlyPersonalAddress, EarlyRoleAssociation,
+    EarlySecurityClassification, EarlySecurityClassificationLevel, EarlySourceItem,
 };
 use crate::ir::plm::{
     AddressData, ApplicationContext, ApprovalRole, ApprovalStatus, CalendarDate,
-    CoordinatedUniversalTimeOffset, DateTimeRole, DocumentData, DocumentFile, DocumentType, Group,
-    IdentificationRole, LocalTime, ObjectRole, Organization, Person, PersonAndOrganizationRole,
-    PersonalAddress, SecurityClassification, SecurityClassificationLevel,
+    CoordinatedUniversalTimeOffset, DateTimeRole, DocumentData, DocumentFile, DocumentType,
+    ExternalSourceItem, Group, IdentificationRole, LocalTime, ObjectRole, Organization, Person,
+    PersonAndOrganizationRole, PersonalAddress, SecurityClassification,
+    SecurityClassificationLevel,
 };
 
 /// Lift one `APPROVAL_ROLE` from its arena entry.
@@ -459,4 +460,12 @@ pub(crate) fn lift_applied_external_identification_assignment(
         source,
         items,
     }
+}
+
+/// Lift one `EXTERNAL_SOURCE` (L2 models only the `Identifier` member).
+pub(crate) fn lift_external_source(item: &ExternalSourceItem) -> EarlyExternalSource {
+    let source_id = match item {
+        ExternalSourceItem::Identifier(s) => EarlySourceItem::Identifier(s.clone()),
+    };
+    EarlyExternalSource { source_id }
 }

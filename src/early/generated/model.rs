@@ -4447,6 +4447,27 @@ impl crate::ir::arena::ArenaId for EarlyCameraModelD3MultiClippingId {
     }
 }
 
+/// L1 `EXTERNAL_SOURCE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyExternalSource {
+    pub(crate) source_id: EarlySourceItem,
+}
+
+/// Typed `id_cache` key for `EXTERNAL_SOURCE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyExternalSourceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyExternalSourceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {
@@ -4460,6 +4481,13 @@ pub(crate) enum EarlyMarkerSize {
     Descriptive(String),
     MeasureWithUnit(u64),
     PositiveLength(f64),
+}
+
+/// L1 mixed SELECT `source_item` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum EarlySourceItem {
+    Identifier(String),
+    Message(String),
 }
 
 /// L1 mixed SELECT `trimming_select` (generated).

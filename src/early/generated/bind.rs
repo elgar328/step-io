@@ -3136,6 +3136,17 @@ pub(crate) fn bind_camera_model_d3_multi_clipping(
     })
 }
 
+pub(crate) fn bind_external_source(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<Option<super::model::EarlyExternalSource>, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "EXTERNAL_SOURCE")?;
+    let Some(source_id) = bind_source_item(&attrs[0]) else {
+        return Ok(None);
+    };
+    Ok(Some(super::model::EarlyExternalSource { source_id }))
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {
@@ -3176,6 +3187,25 @@ fn bind_size_select(
                 }
                 ("POSITIVE_LENGTH_MEASURE", crate::parser::entity::Attribute::Integer(x)) => {
                     Some(super::model::EarlyMarkerSize::PositiveLength(*x as f64))
+                }
+                _ => None,
+            }
+        }
+        _ => None,
+    }
+}
+
+fn bind_source_item(
+    attr: &crate::parser::entity::Attribute,
+) -> Option<super::model::EarlySourceItem> {
+    match attr {
+        crate::parser::entity::Attribute::Typed { type_name, value } => {
+            match (type_name.as_str(), value.as_ref()) {
+                ("IDENTIFIER", crate::parser::entity::Attribute::String(s)) => {
+                    Some(super::model::EarlySourceItem::Identifier(s.clone()))
+                }
+                ("MESSAGE", crate::parser::entity::Attribute::String(s)) => {
+                    Some(super::model::EarlySourceItem::Message(s.clone()))
                 }
                 _ => None,
             }

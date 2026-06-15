@@ -17,10 +17,10 @@ use crate::early::model::{
     EarlyCcDesignPersonAndOrganizationAssignment, EarlyCcDesignSecurityClassification,
     EarlyCoordinatedUniversalTimeOffset, EarlyDateAndTime, EarlyDateTimeRole, EarlyDocument,
     EarlyDocumentFile, EarlyDocumentProductEquivalence, EarlyDocumentRepresentationType,
-    EarlyDocumentType, EarlyGroup, EarlyIdentificationRole, EarlyLocalTime, EarlyObjectRole,
-    EarlyOrganization, EarlyPerson, EarlyPersonAndOrganization, EarlyPersonAndOrganizationRole,
-    EarlyPersonalAddress, EarlyRoleAssociation, EarlySecurityClassification,
-    EarlySecurityClassificationLevel,
+    EarlyDocumentType, EarlyExternalSource, EarlyGroup, EarlyIdentificationRole, EarlyLocalTime,
+    EarlyObjectRole, EarlyOrganization, EarlyPerson, EarlyPersonAndOrganization,
+    EarlyPersonAndOrganizationRole, EarlyPersonalAddress, EarlyRoleAssociation,
+    EarlySecurityClassification, EarlySecurityClassificationLevel, EarlySourceItem,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::plm::{
@@ -34,12 +34,12 @@ use crate::ir::plm::{
     CcDesignSecurityClassification, CoordinatedUniversalTimeOffset, DateAndTime,
     DateAndTimeAssignment, DateTimeItem, DateTimeRole, Document, DocumentData, DocumentFile,
     DocumentProductEquivalence, DocumentProductItem, DocumentReferenceItem,
-    DocumentRepresentationType, DocumentType, Group, GroupItem, IdentificationItem,
-    IdentificationRole, LocalTime, ObjectRole, Organization, Person, PersonAndOrganization,
-    PersonAndOrganizationAssignment, PersonAndOrganizationRole, PersonOrganizationItem,
-    PersonOrganizationSelect, PersonalAddress, PlmPool, RoleAssociation, RoleSelect,
-    SecurityClassification, SecurityClassificationAssignment, SecurityClassificationItem,
-    SecurityClassificationLevel,
+    DocumentRepresentationType, DocumentType, ExternalSource, ExternalSourceItem, Group, GroupItem,
+    IdentificationItem, IdentificationRole, LocalTime, ObjectRole, Organization, Person,
+    PersonAndOrganization, PersonAndOrganizationAssignment, PersonAndOrganizationRole,
+    PersonOrganizationItem, PersonOrganizationSelect, PersonalAddress, PlmPool, RoleAssociation,
+    RoleSelect, SecurityClassification, SecurityClassificationAssignment,
+    SecurityClassificationItem, SecurityClassificationLevel,
 };
 use crate::reader::ReaderContext;
 
@@ -998,5 +998,25 @@ pub(crate) fn lower_applied_external_identification_assignment(
             assigned_id: early.assigned_id,
             items,
         });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `EXTERNAL_SOURCE`. The `source_item` SELECT models only the
+/// `Identifier` member in L2; a `Message` member (unmodelled) drops the entity,
+/// symmetric on re-read. Verbatim port of the legacy read.
+pub(crate) fn lower_external_source(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyExternalSource,
+) {
+    let source_id = match &early.source_id {
+        EarlySourceItem::Identifier(s) => ExternalSourceItem::Identifier(s.clone()),
+        EarlySourceItem::Message(_) => return,
+    };
+    let id = ctx
+        .plm
+        .get_or_insert_with(PlmPool::default)
+        .external_sources
+        .push(ExternalSource { source_id });
     ctx.id_cache.insert(entity_id, id);
 }

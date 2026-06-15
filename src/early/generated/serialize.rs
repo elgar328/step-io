@@ -3436,6 +3436,13 @@ pub(crate) fn serialize_camera_model_d3_multi_clipping(
     )
 }
 
+pub(crate) fn serialize_external_source(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyExternalSource,
+) -> u64 {
+    buf.push_simple("EXTERNAL_SOURCE", vec![source_item_emit(&l1.source_id)])
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {
@@ -3465,6 +3472,19 @@ fn size_select_emit(v: &super::model::EarlyMarkerSize) -> crate::parser::entity:
                 value: Box::new(crate::parser::entity::Attribute::Real(*x)),
             }
         }
+    }
+}
+
+fn source_item_emit(v: &super::model::EarlySourceItem) -> crate::parser::entity::Attribute {
+    match v {
+        super::model::EarlySourceItem::Identifier(s) => crate::parser::entity::Attribute::Typed {
+            type_name: "IDENTIFIER".into(),
+            value: Box::new(crate::parser::entity::Attribute::String(s.clone())),
+        },
+        super::model::EarlySourceItem::Message(s) => crate::parser::entity::Attribute::Typed {
+            type_name: "MESSAGE".into(),
+            value: Box::new(crate::parser::entity::Attribute::String(s.clone())),
+        },
     }
 }
 

@@ -224,6 +224,8 @@ generate = [
     "camera_model_d3_with_hlhsr",
     # Phase 3h: visualization simple — camera model d3 multi clipping (SET shape_clipping)
     "camera_model_d3_multi_clipping",
+    # Phase 3i: plm simple — external source (SELECT codegen pilot, hinted source_item)
+    "external_source",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
@@ -394,6 +396,13 @@ variants = { descriptive_measure = "Descriptive", measure_with_unit = "MeasureWi
 [select.trimming_select]
 rust_type = "EarlyTrimSelect"
 variants = { cartesian_point = "Point", parameter_value = "Param" }
+
+# `source_item` = SELECT(identifier[string], message[string]) used in
+# `EXTERNAL_SOURCE.source_id`. Typed-only mixed select (no entity member):
+# `IDENTIFIER('..')` / `MESSAGE('..')`. step-io models only `Identifier` in L2.
+[select.source_item]
+rust_type = "EarlySourceItem"
+variants = { identifier = "Identifier", message = "Message" }
 
 [enum.ahead_or_behind]
 rust_type = "crate::ir::plm::AheadOrBehind"

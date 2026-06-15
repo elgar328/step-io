@@ -6015,6 +6015,29 @@ fn text_literal_round_trip() {
 }
 
 #[test]
+fn external_source_identifier_round_trips() {
+    // SELECT-codegen pilot: `source_item` (IDENTIFIER/MESSAGE) via the hinted
+    // `EarlySourceItem`. L2 models only `Identifier`; a non-empty payload
+    // round-trips as `IDENTIFIER('..')` (corpus only carries `IDENTIFIER('')`).
+    use step_io::ir::plm::{ExternalSource, ExternalSourceItem, PlmPool};
+    let mut model = empty_model();
+    model
+        .plm
+        .get_or_insert_with(PlmPool::default)
+        .external_sources
+        .push(ExternalSource {
+            source_id: ExternalSourceItem::Identifier("src-42".into()),
+        });
+
+    let text = model.write_to_string().expect("write");
+    let re = reconvert(&text);
+    let re_plm = re.plm.expect("plm pool");
+    assert_eq!(re_plm.external_sources.len(), 1);
+    let es = re_plm.external_sources.iter().next().unwrap();
+    assert!(matches!(&es.source_id, ExternalSourceItem::Identifier(s) if s == "src-42"));
+}
+
+#[test]
 fn composite_text_round_trip() {
     use step_io::ir::pmi::{DraughtingPreDefinedTextFont, PmiPool};
     use step_io::ir::visualization::{
