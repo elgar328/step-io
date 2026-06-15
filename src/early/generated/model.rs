@@ -4808,6 +4808,78 @@ impl crate::ir::arena::ArenaId for EarlyInvisibilityId {
     }
 }
 
+/// L1 `STYLED_ITEM` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyStyledItem {
+    pub(crate) name: String,
+    pub(crate) styles: Vec<u64>,
+    pub(crate) item: u64,
+}
+
+/// Typed `id_cache` key for `STYLED_ITEM` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyStyledItemId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyStyledItemId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `OVER_RIDING_STYLED_ITEM` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyOverRidingStyledItem {
+    pub(crate) name: String,
+    pub(crate) styles: Vec<u64>,
+    pub(crate) item: u64,
+    pub(crate) over_ridden_style: u64,
+}
+
+/// Typed `id_cache` key for `OVER_RIDING_STYLED_ITEM` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyOverRidingStyledItemId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyOverRidingStyledItemId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyContextDependentOverRidingStyledItem {
+    pub(crate) name: String,
+    pub(crate) styles: Vec<u64>,
+    pub(crate) item: u64,
+    pub(crate) over_ridden_style: u64,
+    pub(crate) style_context: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyContextDependentOverRidingStyledItemId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyContextDependentOverRidingStyledItemId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

@@ -250,6 +250,10 @@ generate = [
     "presentation_style_by_context",
     # Phase 3r: visualization — invisibility (all-entity SET, lower multi-probe)
     "invisibility",
+    # Phase 3s: visualization — styled_item family (Plain + OverRiding + CDORSI)
+    "styled_item",
+    "over_riding_styled_item",
+    "context_dependent_over_riding_styled_item",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

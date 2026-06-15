@@ -14,12 +14,12 @@
 //! that resolve to an unmodelled kind are silently dropped to preserve
 //! round-trip equality on the supported subset.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::representation_item::RepresentationItemRef;
 use crate::ir::shape_rep::Representation;
-use crate::ir::visualization::{PlainStyledItem, StyledItem, VisualizationPool};
+use crate::ir::visualization::PlainStyledItem;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -39,70 +39,16 @@ impl SimpleEntityHandler for StyledItemHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "STYLED_ITEM")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(psa_id) = ctx
-                .id_cache
-                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
-            {
-                styles.push(psa_id);
-            }
-        }
-
-        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
-            // If the target was dropped as a dangling-reference cascade (its
-            // geometry transitively required an undefined entity), drop this
-            // STYLED_ITEM as the same normalization rather than a defect — the
-            // resolver returns `None` (not a `MissingReference`), so the
-            // dispatcher's general rule cannot see it. NsCase::DanglingReferenceDrop
-            if ctx.nonstandard_dropped_refs.contains(&item_ref) {
-                ctx.ns_record(
-                    crate::reader::NsCase::DanglingReferenceDrop,
-                    "STYLED_ITEM".to_string(),
-                    "dropped (dangling/cascade reference)",
-                );
-                ctx.nonstandard_dropped_refs.insert(entity_id);
-                return Ok(());
-            }
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!(
-                    "STYLED_ITEM target #{item_ref} did not resolve to a modelled \
-                     representation_item kind (likely cascade from a dropped dependency)"
-                ),
-            });
-            return Ok(());
-        };
-
-        let pool = ctx
-            .visualization
-            .get_or_insert_with(VisualizationPool::default);
-        let id = pool
-            .styled_items
-            .push(StyledItem::Plain(PlainStyledItem { name, styles, item }));
-        ctx.id_cache.insert(entity_id, id);
+        // 2-layer path: bind → L1, then lower → L2. `lower` resolves styles +
+        // `item` (via the shared resolver) and applies the dangling-cascade drop.
+        let early = bind::bind_styled_item(entity_id, attrs)?;
+        lower::lower_styled_item(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, si: PlainStyledItem) -> Result<u64, WriteError> {
-        let item_id = buf.emit_representation_item_ref(si.item)?;
-        let mut style_refs = Vec::with_capacity(si.styles.len());
-        for psa_id in si.styles {
-            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
-        }
-        Ok(buf.push_simple(
-            "STYLED_ITEM",
-            vec![
-                Attribute::String(si.name),
-                Attribute::List(style_refs),
-                Attribute::EntityRef(item_id),
-            ],
-        ))
+        let early = lift::lift_styled_item(buf, &si)?;
+        Ok(serialize::serialize_styled_item(buf, &early))
     }
 }
 

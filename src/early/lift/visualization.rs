@@ -4,24 +4,26 @@
 use crate::early::model::{
     EarlyAppliedPresentedItem, EarlyCameraModelD3, EarlyCameraModelD3MultiClipping,
     EarlyCameraModelD3WithHlhsr, EarlyCameraUsage, EarlyColourRgb, EarlyCompositeText,
-    EarlyCurveStyle, EarlyDraughtingPreDefinedColour, EarlyDraughtingPreDefinedCurveFont,
-    EarlyFillAreaStyle, EarlyFillAreaStyleColour, EarlyGeometricCurveSet, EarlyGeometricSet,
-    EarlyInvisibility, EarlyMarker, EarlyMarkerSize, EarlyNullStyle, EarlyPointStyle,
-    EarlyPreDefinedCurveFont, EarlyPreDefinedMarker, EarlyPreDefinedPointMarkerSymbol,
-    EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol, EarlyPresentationLayerAssignment,
+    EarlyContextDependentOverRidingStyledItem, EarlyCurveStyle, EarlyDraughtingPreDefinedColour,
+    EarlyDraughtingPreDefinedCurveFont, EarlyFillAreaStyle, EarlyFillAreaStyleColour,
+    EarlyGeometricCurveSet, EarlyGeometricSet, EarlyInvisibility, EarlyMarker, EarlyMarkerSize,
+    EarlyNullStyle, EarlyOverRidingStyledItem, EarlyPointStyle, EarlyPreDefinedCurveFont,
+    EarlyPreDefinedMarker, EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol,
+    EarlyPreDefinedTerminatorSymbol, EarlyPresentationLayerAssignment,
     EarlyPresentationStyleAssignment, EarlyPresentationStyleByContext,
     EarlyPresentationStyleSelect, EarlyPresentedItemRepresentation, EarlyShellBasedSurfaceModel,
-    EarlySurfaceSideStyle, EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea,
+    EarlyStyledItem, EarlySurfaceSideStyle, EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea,
     EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage, EarlySymbolColour, EarlySymbolStyle,
     EarlyTextStyleForDefinedFont, EarlyViewVolume,
 };
 use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::fill_area_style_colour::FillAreaStyleColourHandler;
 use crate::ir::visualization::{
-    CurveStyle, CurveWidth, FillAreaStyle, Invisibility, InvisibleItem, Marker, MarkerSize,
-    PointStyle, PresentationStyleAssignmentData, PresentationStyleByContext, PsaStyle,
-    StyleContext, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleUsage,
-    ViewVolume,
+    ContextDependentOverRidingStyledItem, CurveStyle, CurveWidth, FillAreaStyle, Invisibility,
+    InvisibleItem, Marker, MarkerSize, OverRidingStyledItem, PlainStyledItem, PointStyle,
+    PresentationStyleAssignmentData, PresentationStyleByContext, PsaStyle, StyleContext,
+    StyleContextRef, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea,
+    SurfaceStyleUsage, ViewVolume,
 };
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -217,6 +219,87 @@ pub(crate) fn lift_invisibility(buf: &WriteBuffer, inv: &Invisibility) -> EarlyI
         })
         .collect();
     EarlyInvisibility { invisible_items }
+}
+
+/// Shared `styles` SET lifting for the `STYLED_ITEM` family — each PSA id
+/// resolves to its output step id.
+pub(crate) fn lift_styled_item_styles(
+    buf: &WriteBuffer,
+    styles: &[crate::ir::id::PresentationStyleAssignmentId],
+) -> Vec<u64> {
+    styles.iter().map(|psa_id| buf.step_id(*psa_id)).collect()
+}
+
+/// Lift one plain `STYLED_ITEM`. `item` resolves through the (fallible)
+/// `emit_representation_item_ref`, so this lift takes `&mut` and returns `Result`.
+pub(crate) fn lift_styled_item(
+    buf: &mut WriteBuffer,
+    si: &PlainStyledItem,
+) -> Result<EarlyStyledItem, WriteError> {
+    let item = buf.emit_representation_item_ref(si.item)?;
+    Ok(EarlyStyledItem {
+        name: si.name.clone(),
+        styles: lift_styled_item_styles(buf, &si.styles),
+        item,
+    })
+}
+
+/// Lift one `OVER_RIDING_STYLED_ITEM`. `over_ridden_style` resolves to the
+/// (already-emitted) plain styled item's step id.
+pub(crate) fn lift_over_riding_styled_item(
+    buf: &mut WriteBuffer,
+    osi: &OverRidingStyledItem,
+) -> Result<EarlyOverRidingStyledItem, WriteError> {
+    let item = buf.emit_representation_item_ref(osi.item)?;
+    Ok(EarlyOverRidingStyledItem {
+        name: osi.name.clone(),
+        styles: lift_styled_item_styles(buf, &osi.styles),
+        item,
+        over_ridden_style: buf.step_id(osi.over_ridden_style),
+    })
+}
+
+/// Lift one `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM`. `style_context` members
+/// resolve to a representation-item ref emit or a representation-relationship
+/// step id (guarded against a `0` / un-emitted RR complex).
+pub(crate) fn lift_context_dependent_over_riding_styled_item(
+    buf: &mut WriteBuffer,
+    cd: &ContextDependentOverRidingStyledItem,
+) -> Result<EarlyContextDependentOverRidingStyledItem, WriteError> {
+    let item = buf.emit_representation_item_ref(cd.item)?;
+    let styles = lift_styled_item_styles(buf, &cd.styles);
+    let over_ridden_style = buf.step_id(cd.over_ridden_style);
+    let mut style_context = Vec::with_capacity(cd.style_context.len());
+    for ctx_ref in &cd.style_context {
+        match ctx_ref {
+            StyleContextRef::RepresentationItem(target) => {
+                style_context.push(buf.emit_representation_item_ref(*target)?);
+            }
+            StyleContextRef::RepresentationRelationship(rrid) => {
+                let step_id = buf.step_id(*rrid);
+                if step_id == 0 {
+                    // The placement's RR complex was never emitted (its parent
+                    // product chain was skipped). Surface rather than writing a
+                    // dangling `#0` reference.
+                    return Err(WriteError::DanglingId {
+                        detail: format!(
+                            "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM.style_context \
+                             RepresentationRelationshipId({}) has no emitted RR complex",
+                            rrid.0
+                        ),
+                    });
+                }
+                style_context.push(step_id);
+            }
+        }
+    }
+    Ok(EarlyContextDependentOverRidingStyledItem {
+        name: cd.name.clone(),
+        styles,
+        item,
+        over_ridden_style,
+        style_context,
+    })
 }
 
 /// Lift one `PRE_DEFINED_MARKER` (name pass-through).

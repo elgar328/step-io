@@ -4,19 +4,20 @@
 use crate::early::model::{
     EarlyAppliedPresentedItem, EarlyCameraModelD3, EarlyCameraModelD3MultiClipping,
     EarlyCameraModelD3WithHlhsr, EarlyCameraUsage, EarlyColourRgb, EarlyCompositeText,
-    EarlyCurveStyle, EarlyDraughtingPreDefinedColour, EarlyDraughtingPreDefinedCurveFont,
-    EarlyFillAreaStyle, EarlyFillAreaStyleColour, EarlyFillAreaStyleId, EarlyGeometricCurveSet,
-    EarlyGeometricSet, EarlyInvisibility, EarlyMarker, EarlyMarkerSize, EarlyPointStyle,
-    EarlyPointStyleId, EarlyPreDefinedCurveFont, EarlyPreDefinedMarker,
-    EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol,
-    EarlyPresentationLayerAssignment, EarlyPresentationStyleAssignment,
-    EarlyPresentationStyleByContext, EarlyPresentationStyleSelect,
-    EarlyPresentedItemRepresentation, EarlyShellBasedSurfaceModel, EarlySurfaceSideStyle,
-    EarlySurfaceSideStyleId, EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea,
-    EarlySurfaceStyleFillAreaId, EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage,
-    EarlySurfaceStyleUsageId, EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont,
-    EarlyViewVolume, EarlyViewVolumeId,
+    EarlyContextDependentOverRidingStyledItem, EarlyCurveStyle, EarlyDraughtingPreDefinedColour,
+    EarlyDraughtingPreDefinedCurveFont, EarlyFillAreaStyle, EarlyFillAreaStyleColour,
+    EarlyFillAreaStyleId, EarlyGeometricCurveSet, EarlyGeometricSet, EarlyInvisibility,
+    EarlyMarker, EarlyMarkerSize, EarlyOverRidingStyledItem, EarlyPointStyle, EarlyPointStyleId,
+    EarlyPreDefinedCurveFont, EarlyPreDefinedMarker, EarlyPreDefinedPointMarkerSymbol,
+    EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol, EarlyPresentationLayerAssignment,
+    EarlyPresentationStyleAssignment, EarlyPresentationStyleByContext,
+    EarlyPresentationStyleSelect, EarlyPresentedItemRepresentation, EarlyShellBasedSurfaceModel,
+    EarlyStyledItem, EarlySurfaceSideStyle, EarlySurfaceSideStyleId, EarlySurfaceStyleBoundary,
+    EarlySurfaceStyleFillArea, EarlySurfaceStyleFillAreaId, EarlySurfaceStyleTransparent,
+    EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId, EarlySymbolColour, EarlySymbolStyle,
+    EarlyTextStyleForDefinedFont, EarlyViewVolume, EarlyViewVolumeId,
 };
+use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::id::{
     ColourId, CurveId, CurveStyleId, MeasureWithUnitId, PlanarExtentId, PointId,
     PreDefinedCurveFontId, PreDefinedMarkerId, ShellId, SurfaceStyleRenderingId,
@@ -24,16 +25,17 @@ use crate::ir::id::{
 use crate::ir::shape_rep::{CameraUsage, RepresentationMap};
 use crate::ir::visualization::{
     AppliedPresentedItem, CameraModel, CameraModelD3, CameraModelD3MultiClipping,
-    CameraModelD3WithHlhsr, Colour, ColourRgb, CompositeText, CurveOrRender, CurveStyle,
-    CurveWidth, DraughtingPreDefinedColour, DraughtingPreDefinedCurveFont, FillAreaStyle,
-    FillAreaStyleColour, FoundedItem, GeometricCurveSet, GeometricRepresentationItem, GeometricSet,
-    Invisibility, InvisibleItem, Marker, MarkerSize, PointStyle, PreDefinedCurveFont,
+    CameraModelD3WithHlhsr, Colour, ColourRgb, CompositeText, ContextDependentOverRidingStyledItem,
+    CurveOrRender, CurveStyle, CurveWidth, DraughtingPreDefinedColour,
+    DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour, FoundedItem,
+    GeometricCurveSet, GeometricRepresentationItem, GeometricSet, Invisibility, InvisibleItem,
+    Marker, MarkerSize, OverRidingStyledItem, PlainStyledItem, PointStyle, PreDefinedCurveFont,
     PreDefinedCurveFontData, PreDefinedMarker, PreDefinedMarkerData, PreDefinedPointMarkerSymbol,
     PreDefinedSymbol, PreDefinedSymbolData, PreDefinedTerminatorSymbol,
     PresentationLayerAssignment, PresentationLayerAssignmentItem, PresentationReprSelect,
     PresentationStyleAssignment, PresentationStyleAssignmentData, PresentationStyleByContext,
     PresentedItem, PresentedItemRepresentation, PsaStyle, ShapeClipping, ShellBasedSurfaceModel,
-    StyleContext, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleBoundary,
+    StyleContext, StyledItem, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleBoundary,
     SurfaceStyleFillArea, SurfaceStyleUsage, SymbolColour, SymbolStyle, TextOrCharacter,
     TextStyleForDefinedFont, ViewVolume, VisualizationPool,
 };
@@ -413,6 +415,175 @@ pub(crate) fn lower_invisibility(
             presentation_context: None,
         });
     ctx.id_cache.insert(entity_id, id);
+}
+
+/// Shared `styles` SET lowering for the `STYLED_ITEM` family — each ref resolves
+/// to a `PresentationStyleAssignmentId`; unresolved refs are skipped (matching
+/// the previous handlers).
+pub(crate) fn lower_styled_item_styles(
+    ctx: &ReaderContext,
+    style_refs: Vec<u64>,
+) -> Vec<crate::ir::id::PresentationStyleAssignmentId> {
+    let mut styles = Vec::with_capacity(style_refs.len());
+    for r in style_refs {
+        if let Some(psa_id) = ctx
+            .id_cache
+            .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
+        {
+            styles.push(psa_id);
+        }
+    }
+    styles
+}
+
+/// Lower one plain `STYLED_ITEM`. `item` resolves via the shared
+/// `resolve_representation_item_ref`; an unresolved target that was a
+/// dangling-cascade drop normalizes (`NsCase::DanglingReferenceDrop`), else
+/// surfaces a warning — both drop the entity (matching the previous handler).
+pub(crate) fn lower_styled_item(ctx: &mut ReaderContext, entity_id: u64, early: EarlyStyledItem) {
+    let styles = lower_styled_item_styles(ctx, early.styles);
+    let Some(item) = resolve_representation_item_ref(ctx, early.item) else {
+        if ctx.nonstandard_dropped_refs.contains(&early.item) {
+            ctx.ns_record(
+                crate::reader::NsCase::DanglingReferenceDrop,
+                "STYLED_ITEM".to_string(),
+                "dropped (dangling/cascade reference)",
+            );
+            ctx.nonstandard_dropped_refs.insert(entity_id);
+            return;
+        }
+        ctx.warnings
+            .push(crate::ir::error::ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "STYLED_ITEM target #{} did not resolve to a modelled \
+                     representation_item kind (likely cascade from a dropped dependency)",
+                    early.item
+                ),
+            });
+        return;
+    };
+    let id = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .styled_items
+        .push(StyledItem::Plain(PlainStyledItem {
+            name: early.name,
+            styles,
+            item,
+        }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `OVER_RIDING_STYLED_ITEM`. `over_ridden_style` (the `$` form is
+/// pre-bind dropped as `NsCase::OrsiOverRiddenUnset` in the handler) resolves to
+/// a previously-loaded `StyledItemId`; an unresolved `item` / `over_ridden_style`
+/// surfaces a warning and drops (matching the previous handler).
+pub(crate) fn lower_over_riding_styled_item(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyOverRidingStyledItem,
+) {
+    let styles = lower_styled_item_styles(ctx, early.styles);
+    let Some(item) = resolve_representation_item_ref(ctx, early.item) else {
+        ctx.warnings
+            .push(crate::ir::error::ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "OVER_RIDING_STYLED_ITEM target #{} did not resolve to a modelled \
+                     representation_item kind (likely cascade from a dropped dependency)",
+                    early.item
+                ),
+            });
+        return;
+    };
+    let Some(over_ridden_style) = ctx
+        .id_cache
+        .get::<crate::ir::id::StyledItemId>(early.over_ridden_style)
+    else {
+        ctx.warnings
+            .push(crate::ir::error::ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "OVER_RIDING_STYLED_ITEM over_ridden_style #{} did not resolve \
+                     to a previously-loaded STYLED_ITEM",
+                    early.over_ridden_style
+                ),
+            });
+        return;
+    };
+    let id = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .styled_items
+        .push(StyledItem::OverRiding(OverRidingStyledItem {
+            name: early.name,
+            styles,
+            item,
+            over_ridden_style,
+        }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM`. `style_context` targets
+/// are mostly assembly RR-complexes that only gain an id after the placements
+/// materialize, so the styled item is pushed now with an empty `style_context`
+/// and the refs are deferred to the `resolve_cdorsi_style_contexts` post-pass
+/// via `pending_cdorsi` (matching the previous handler).
+pub(crate) fn lower_context_dependent_over_riding_styled_item(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyContextDependentOverRidingStyledItem,
+) {
+    let styles = lower_styled_item_styles(ctx, early.styles);
+    let Some(item) = resolve_representation_item_ref(ctx, early.item) else {
+        ctx.warnings
+            .push(crate::ir::error::ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM target #{} did not resolve \
+                     to a modelled representation_item kind (likely cascade from a dropped \
+                     dependency)",
+                    early.item
+                ),
+            });
+        return;
+    };
+    let Some(over_ridden_style) = ctx
+        .id_cache
+        .get::<crate::ir::id::StyledItemId>(early.over_ridden_style)
+    else {
+        ctx.warnings
+            .push(crate::ir::error::ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM over_ridden_style \
+                     #{} did not resolve to a previously-loaded STYLED_ITEM",
+                    early.over_ridden_style
+                ),
+            });
+        return;
+    };
+    let id = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .styled_items
+        .push(StyledItem::ContextDependent(
+            ContextDependentOverRidingStyledItem {
+                name: early.name,
+                styles,
+                item,
+                over_ridden_style,
+                style_context: Vec::new(),
+            },
+        ));
+    ctx.id_cache.insert(entity_id, id);
+    ctx.pending_cdorsi
+        .push(crate::reader::PendingCdorsiStyleContext {
+            styled_item_id: id,
+            context_refs: early.style_context,
+            entity_id,
+        });
 }
 
 /// Lower one `VIEW_VOLUME` into the `founded_items` arena and record the

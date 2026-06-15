@@ -8,19 +8,16 @@
 //! `representation_item` variants are silently dropped to preserve
 //! round-trip equality on the supported subset.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{
-    check_count, read_entity_ref, read_entity_ref_list, read_optional_entity_ref,
-    read_string_or_unset,
-};
+use crate::ir::attr::check_count;
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::{OverRidingStyledItem, StyledItem, VisualizationPool};
+use crate::ir::visualization::OverRidingStyledItem;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
-use super::styled_item::resolve_representation_item_ref;
 use step_io_macros::step_entity;
 
 pub(crate) struct OverRidingStyledItemHandler;
@@ -36,89 +33,25 @@ impl SimpleEntityHandler for OverRidingStyledItemHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 4, entity_id, "OVER_RIDING_STYLED_ITEM")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-        // NsCase::OrsiOverRiddenUnset `over_ridden_style` is mandatory
-        // (EXPRESS `over_riding_styled_item.over_ridden_style : styled_item`);
-        // some exporters emit `$`. Without an over-ridden target the entity
-        // carries no information → drop as a normalization, not a defect.
-        let Some(over_ridden_ref) =
-            read_optional_entity_ref(attrs, 3, entity_id, "over_ridden_style")?
-        else {
-            // field must be the exact type name so reference-check's
-            // count-aware effective-missing deduction matches the dropped type.
+        // NsCase::OrsiOverRiddenUnset: `over_ridden_style` is mandatory in EXPRESS
+        // but some exporters emit `$`. The generated bind is strict (errors on a
+        // `$` required ref), so normalize that case here (NsCase-recorded for
+        // NORM) by dropping before bind — matches the previous read_optional path.
+        if matches!(attrs.get(3), Some(Attribute::Unset | Attribute::Derived)) {
             ctx.ns_record(
                 crate::reader::NsCase::OrsiOverRiddenUnset,
                 "OVER_RIDING_STYLED_ITEM".into(),
                 "dropped (over_ridden_style Unset — no over-ridden style)",
             );
             return Ok(());
-        };
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(psa_id) = ctx
-                .id_cache
-                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
-            {
-                styles.push(psa_id);
-            }
         }
-        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!(
-                    "OVER_RIDING_STYLED_ITEM target #{item_ref} did not resolve to a modelled \
-                     representation_item kind (likely cascade from a dropped dependency)"
-                ),
-            });
-            return Ok(());
-        };
-        let Some(over_ridden_style) = ctx
-            .id_cache
-            .get::<crate::ir::id::StyledItemId>(over_ridden_ref)
-        else {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!(
-                    "OVER_RIDING_STYLED_ITEM over_ridden_style #{over_ridden_ref} did not resolve \
-                     to a previously-loaded STYLED_ITEM"
-                ),
-            });
-            return Ok(());
-        };
-
-        let pool = ctx
-            .visualization
-            .get_or_insert_with(VisualizationPool::default);
-        let id = pool
-            .styled_items
-            .push(StyledItem::OverRiding(OverRidingStyledItem {
-                name,
-                styles,
-                item,
-                over_ridden_style,
-            }));
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_over_riding_styled_item(entity_id, attrs)?;
+        lower::lower_over_riding_styled_item(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, osi: OverRidingStyledItem) -> Result<u64, WriteError> {
-        let item_id = buf.emit_representation_item_ref(osi.item)?;
-        let mut style_refs = Vec::with_capacity(osi.styles.len());
-        for psa_id in osi.styles {
-            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
-        }
-        let over_ridden_step_id = buf.step_id(osi.over_ridden_style);
-        Ok(buf.push_simple(
-            "OVER_RIDING_STYLED_ITEM",
-            vec![
-                Attribute::String(osi.name),
-                Attribute::List(style_refs),
-                Attribute::EntityRef(item_id),
-                Attribute::EntityRef(over_ridden_step_id),
-            ],
-        ))
+        let early = lift::lift_over_riding_styled_item(buf, &osi)?;
+        Ok(serialize::serialize_over_riding_styled_item(buf, &early))
     }
 }

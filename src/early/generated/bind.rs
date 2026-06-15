@@ -3407,6 +3407,61 @@ pub(crate) fn bind_invisibility(
     })
 }
 
+pub(crate) fn bind_styled_item(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyStyledItem, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "STYLED_ITEM")?;
+    Ok(super::model::EarlyStyledItem {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        styles: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "styles")?,
+        item: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "item")?,
+    })
+}
+
+pub(crate) fn bind_over_riding_styled_item(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyOverRidingStyledItem, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "OVER_RIDING_STYLED_ITEM")?;
+    Ok(super::model::EarlyOverRidingStyledItem {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        styles: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "styles")?,
+        item: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "item")?,
+        over_ridden_style: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "over_ridden_style",
+        )?,
+    })
+}
+
+pub(crate) fn bind_context_dependent_over_riding_styled_item(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyContextDependentOverRidingStyledItem, crate::ir::error::ConvertError>
+{
+    crate::ir::attr::check_count(
+        attrs,
+        5,
+        entity_id,
+        "CONTEXT_DEPENDENT_OVER_RIDING_STYLED_ITEM",
+    )?;
+    Ok(super::model::EarlyContextDependentOverRidingStyledItem {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        styles: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "styles")?,
+        item: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "item")?,
+        over_ridden_style: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "over_ridden_style",
+        )?,
+        style_context: crate::ir::attr::read_entity_ref_list(attrs, 4, entity_id, "style_context")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {
