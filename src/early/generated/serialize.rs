@@ -4280,6 +4280,25 @@ pub(crate) fn serialize_defined_symbol(
     )
 }
 
+pub(crate) fn serialize_constructive_geometry_representation(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyConstructiveGeometryRepresentation,
+) -> u64 {
+    buf.push_simple(
+        "CONSTRUCTIVE_GEOMETRY_REPRESENTATION",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.items
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::EntityRef(l1.context_of_items),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

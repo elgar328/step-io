@@ -11,8 +11,8 @@
 use crate::early::model::{
     EarlyAllAroundShapeAspect, EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect,
-    EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
-    EarlyDescriptiveRepresentationItem, EarlyMeasureValue,
+    EarlyConstructiveGeometryRepresentation, EarlyConstructiveGeometryRepresentationRelationship,
+    EarlyDatumSystem, EarlyDatumTarget, EarlyDescriptiveRepresentationItem, EarlyMeasureValue,
     EarlyMechanicalDesignAndDraughtingRelationship, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
@@ -28,13 +28,13 @@ use crate::ir::representation_item::{
 use crate::ir::shape_rep::{
     AllAroundShapeAspect, CentreOfSymmetry, CharacterizedItemWithinRepresentation,
     CharacterizedObject, CharacterizedObjectData, CompositeGroupShapeAspect,
-    CompositeShapeAspectKind, ConstructiveGeometryRepresentationRelationship, DatumSystem,
-    DatumTarget, MechanicalDesignAndDraughtingRelationship, ModelGeometricView,
-    NumericRepresentationItem, PlacedDatumTargetFeature, RealRepresentationItem, Representation,
-    RepresentationContextRef, RepresentationRelationship, RepresentationRelationshipData,
-    ShapeAspect, ShapeAspectRelationship, ShapeAspectRelationshipKind,
-    ShapeRepresentationRelationshipIr, TessellatedShapeRepresentation, ToleranceZone,
-    UnitlessContext,
+    CompositeShapeAspectKind, ConstructiveGeometryRepr,
+    ConstructiveGeometryRepresentationRelationship, DatumSystem, DatumTarget,
+    MechanicalDesignAndDraughtingRelationship, ModelGeometricView, NumericRepresentationItem,
+    PlacedDatumTargetFeature, RealRepresentationItem, Representation, RepresentationContextRef,
+    RepresentationRelationship, RepresentationRelationshipData, ShapeAspect,
+    ShapeAspectRelationship, ShapeAspectRelationshipKind, ShapeRepresentationRelationshipIr,
+    TessellatedShapeRepresentation, ToleranceZone, UnitlessContext,
 };
 use crate::reader::ReaderContext;
 
@@ -793,6 +793,44 @@ pub(crate) fn lower_tessellated_shape_representation(
                 name: early.name,
                 items,
                 context,
+            },
+        ));
+    ctx.id_cache.insert(entity_id, repr_id);
+}
+
+/// Lower one `CONSTRUCTIVE_GEOMETRY_REPRESENTATION`. Items are narrowed by the
+/// shared representation-item resolver (unresolved skipped; empty set drops the
+/// carrier). `context_of_items` is schema-required; an unresolvable context
+/// (neither Unitful nor Unitless) drops the carrier (schema-strict — no
+/// non-standard `$` round-trip in the corpus, see plan 0-FAIL proof).
+pub(crate) fn lower_constructive_geometry_representation(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyConstructiveGeometryRepresentation,
+) {
+    let Some(context) = ctx.resolve_repr_context(early.context_of_items) else {
+        return;
+    };
+    if let RepresentationContextRef::Unitful(ctx_id) = context {
+        ctx.repr_context_map.insert(entity_id, ctx_id);
+    }
+    let items: Vec<_> = early
+        .items
+        .iter()
+        .filter_map(|&r| {
+            crate::entities::visualization::styled_item::resolve_representation_item_ref(ctx, r)
+        })
+        .collect();
+    if items.is_empty() {
+        return;
+    }
+    let repr_id = ctx
+        .representations
+        .push(Representation::ConstructiveGeometry(
+            ConstructiveGeometryRepr {
+                name: early.name,
+                items,
+                context: Some(context),
             },
         ));
     ctx.id_cache.insert(entity_id, repr_id);

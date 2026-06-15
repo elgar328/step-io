@@ -26,6 +26,7 @@ pub(crate) use super::generated::bind::{
     bind_complex_triangulated_face, bind_complex_triangulated_surface_set, bind_composite_curve,
     bind_composite_curve_segment, bind_composite_group_shape_aspect, bind_composite_shape_aspect,
     bind_composite_text, bind_concentricity_tolerance, bind_conical_surface,
+    bind_constructive_geometry_representation,
     bind_constructive_geometry_representation_relationship,
     bind_context_dependent_over_riding_styled_item, bind_context_dependent_shape_representation,
     bind_coordinated_universal_time_offset, bind_coordinates_list, bind_curve_bounded_surface,

@@ -33,7 +33,7 @@ pub(crate) use super::generated::model::{
     EarlyCircularRunoutTolerance, EarlyClosedShell, EarlyColourRgb, EarlyComplexTriangulatedFace,
     EarlyComplexTriangulatedSurfaceSet, EarlyCompositeCurve, EarlyCompositeCurveSegment,
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect, EarlyCompositeText,
-    EarlyConcentricityTolerance, EarlyConicalSurface,
+    EarlyConcentricityTolerance, EarlyConicalSurface, EarlyConstructiveGeometryRepresentation,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyContextDependentOverRidingStyledItem,
     EarlyContextDependentShapeRepresentation, EarlyCoordinatedUniversalTimeOffset,
     EarlyCoordinatesList, EarlyCurveBoundedSurface, EarlyCurveStyle, EarlyCylindricalSurface,

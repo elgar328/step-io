@@ -4,8 +4,9 @@
 use crate::early::model::{
     EarlyAllAroundShapeAspect, EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect,
-    EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
-    EarlyDescriptiveRepresentationItem, EarlyFeatureForDatumTargetRelationship, EarlyMeasureValue,
+    EarlyConstructiveGeometryRepresentation, EarlyConstructiveGeometryRepresentationRelationship,
+    EarlyDatumSystem, EarlyDatumTarget, EarlyDescriptiveRepresentationItem,
+    EarlyFeatureForDatumTargetRelationship, EarlyMeasureValue,
     EarlyMechanicalDesignAndDraughtingRelationship, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
@@ -15,8 +16,11 @@ use crate::early::model::{
     EarlyValueRepresentationItem,
 };
 use crate::ir::representation_item::{MeasureValue, ValueRepresentationItem};
-use crate::ir::shape_rep::{TessellatedShapeRepresentation, UnitlessContext};
+use crate::ir::shape_rep::{
+    ConstructiveGeometryRepr, TessellatedShapeRepresentation, UnitlessContext,
+};
 use crate::parser::entity::Attribute;
+use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
 /// Lift one base `REPRESENTATION_RELATIONSHIP` from its (pre-resolved) arena
@@ -478,4 +482,26 @@ pub(crate) fn lift_tessellated_shape_representation(
         items,
         context_of_items,
     }
+}
+
+/// Lift one `CONSTRUCTIVE_GEOMETRY_REPRESENTATION`. `items` emit through the
+/// shared (fallible) representation-item emitter; `context_of_items` reuses the
+/// shared `repr_context_attr` mapping, which always yields an `EntityRef` here
+/// because `lower` drops any carrier whose context did not resolve.
+pub(crate) fn lift_constructive_geometry_representation(
+    buf: &mut WriteBuffer,
+    cgr: ConstructiveGeometryRepr,
+) -> Result<EarlyConstructiveGeometryRepresentation, WriteError> {
+    let mut items = Vec::with_capacity(cgr.items.len());
+    for item in cgr.items {
+        items.push(buf.emit_representation_item_ref(item)?);
+    }
+    let Attribute::EntityRef(context_of_items) = buf.repr_context_attr(cgr.context) else {
+        unreachable!("CGR context is guaranteed resolved by lower → EntityRef")
+    };
+    Ok(EarlyConstructiveGeometryRepresentation {
+        name: cgr.name,
+        items,
+        context_of_items,
+    })
 }

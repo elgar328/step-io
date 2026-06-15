@@ -280,6 +280,8 @@ generate = [
     "presentation_size",
     "symbol_target",
     "defined_symbol",
+    # Phase 3x: shape_rep representation — TSR-style, drop-on-unresolvable-context
+    "constructive_geometry_representation",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
