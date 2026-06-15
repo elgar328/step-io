@@ -2,11 +2,10 @@
 //! Top-level visualization wrapper holding a list of
 //! `STYLED_ITEM`s plus an optional unit context.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::Mdgpr;
-use crate::ir::visualization::VisualizationPool;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -26,58 +25,18 @@ impl SimpleEntityHandler for MdgprHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(
-            attrs,
-            3,
-            entity_id,
-            "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
-        )?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let item_refs = read_entity_ref_list(attrs, 1, entity_id, "items")?;
-        let ctx_ref = read_entity_ref(attrs, 2, entity_id, "context_of_items")?;
-        let context = ctx.resolve_repr_context(ctx_ref);
-
-        let mut items = Vec::with_capacity(item_refs.len());
-        for r in item_refs {
-            if let Some(id) = ctx.id_cache.get::<crate::ir::id::StyledItemId>(r) {
-                items.push(id);
-            }
-        }
-
-        let mdgpr = Mdgpr {
-            name,
-            items,
-            context,
-        };
-        ctx.visualization
-            .get_or_insert_with(VisualizationPool::default)
-            .mdgprs
-            .push(mdgpr.clone());
-
-        // representation-refactor A-1: dual-write into the unified arena.
-        let repr_id = ctx
-            .representations
-            .push(crate::ir::shape_rep::Representation::Mdgpr(mdgpr));
-        ctx.id_cache.insert(entity_id, repr_id);
+        let early =
+            bind::bind_mechanical_design_geometric_presentation_representation(entity_id, attrs)?;
+        lower::lower_mechanical_design_geometric_presentation_representation(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, mdgpr: Mdgpr) -> Result<u64, WriteError> {
-        let mut item_refs = Vec::with_capacity(mdgpr.items.len());
-        for id in mdgpr.items {
-            let step_id = buf.step_id(id);
-            item_refs.push(Attribute::EntityRef(step_id));
-        }
-        // MDGPR's `context_of_items` is required by the spec but the IR
-        // accepts `None` for kernel-built fragments.
-        let context = buf.repr_context_attr(mdgpr.context);
-        Ok(buf.push_simple(
-            "MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION",
-            vec![
-                Attribute::String(mdgpr.name),
-                Attribute::List(item_refs),
-                context,
-            ],
-        ))
+        Ok(
+            serialize::serialize_mechanical_design_geometric_presentation_representation(
+                buf,
+                &lift::lift_mechanical_design_geometric_presentation_representation(buf, mdgpr),
+            ),
+        )
     }
 }

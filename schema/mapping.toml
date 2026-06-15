@@ -282,6 +282,8 @@ generate = [
     "defined_symbol",
     # Phase 3x: shape_rep representation — TSR-style, drop-on-unresolvable-context
     "constructive_geometry_representation",
+    # Phase 3y: MDGPR — same drop-on-None pattern, dual-write arena
+    "mechanical_design_geometric_presentation_representation",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

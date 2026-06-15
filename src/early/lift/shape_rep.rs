@@ -7,7 +7,8 @@ use crate::early::model::{
     EarlyConstructiveGeometryRepresentation, EarlyConstructiveGeometryRepresentationRelationship,
     EarlyDatumSystem, EarlyDatumTarget, EarlyDescriptiveRepresentationItem,
     EarlyFeatureForDatumTargetRelationship, EarlyMeasureValue,
-    EarlyMechanicalDesignAndDraughtingRelationship, EarlyModelGeometricView,
+    EarlyMechanicalDesignAndDraughtingRelationship,
+    EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
     EarlyRepresentationRelationship, EarlyShapeAspect, EarlyShapeAspectAssociativity,
@@ -17,7 +18,7 @@ use crate::early::model::{
 };
 use crate::ir::representation_item::{MeasureValue, ValueRepresentationItem};
 use crate::ir::shape_rep::{
-    ConstructiveGeometryRepr, TessellatedShapeRepresentation, UnitlessContext,
+    ConstructiveGeometryRepr, Mdgpr, TessellatedShapeRepresentation, UnitlessContext,
 };
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
@@ -504,4 +505,23 @@ pub(crate) fn lift_constructive_geometry_representation(
         items,
         context_of_items,
     })
+}
+
+/// Lift one `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION`. `items`
+/// are `STYLED_ITEM` arena ids → cached step ids (infallible); `context_of_items`
+/// reuses `repr_context_attr`, always an `EntityRef` here (lower drops any
+/// carrier whose context did not resolve).
+pub(crate) fn lift_mechanical_design_geometric_presentation_representation(
+    buf: &WriteBuffer,
+    mdgpr: Mdgpr,
+) -> EarlyMechanicalDesignGeometricPresentationRepresentation {
+    let items = mdgpr.items.iter().map(|&id| buf.step_id(id)).collect();
+    let Attribute::EntityRef(context_of_items) = buf.repr_context_attr(mdgpr.context) else {
+        unreachable!("MDGPR context is guaranteed resolved by lower → EntityRef")
+    };
+    EarlyMechanicalDesignGeometricPresentationRepresentation {
+        name: mdgpr.name,
+        items,
+        context_of_items,
+    }
 }

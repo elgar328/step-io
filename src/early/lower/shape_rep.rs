@@ -13,7 +13,8 @@ use crate::early::model::{
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect,
     EarlyConstructiveGeometryRepresentation, EarlyConstructiveGeometryRepresentationRelationship,
     EarlyDatumSystem, EarlyDatumTarget, EarlyDescriptiveRepresentationItem, EarlyMeasureValue,
-    EarlyMechanicalDesignAndDraughtingRelationship, EarlyModelGeometricView,
+    EarlyMechanicalDesignAndDraughtingRelationship,
+    EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
     EarlyRepresentationRelationship, EarlyShapeAspect, EarlyShapeRepresentationRelationship,
@@ -29,13 +30,14 @@ use crate::ir::shape_rep::{
     AllAroundShapeAspect, CentreOfSymmetry, CharacterizedItemWithinRepresentation,
     CharacterizedObject, CharacterizedObjectData, CompositeGroupShapeAspect,
     CompositeShapeAspectKind, ConstructiveGeometryRepr,
-    ConstructiveGeometryRepresentationRelationship, DatumSystem, DatumTarget,
+    ConstructiveGeometryRepresentationRelationship, DatumSystem, DatumTarget, Mdgpr,
     MechanicalDesignAndDraughtingRelationship, ModelGeometricView, NumericRepresentationItem,
     PlacedDatumTargetFeature, RealRepresentationItem, Representation, RepresentationContextRef,
     RepresentationRelationship, RepresentationRelationshipData, ShapeAspect,
     ShapeAspectRelationship, ShapeAspectRelationshipKind, ShapeRepresentationRelationshipIr,
     TessellatedShapeRepresentation, ToleranceZone, UnitlessContext,
 };
+use crate::ir::visualization::VisualizationPool;
 use crate::reader::ReaderContext;
 
 /// Lower one base `REPRESENTATION_RELATIONSHIP` (`Itself` carrier): resolve
@@ -833,5 +835,38 @@ pub(crate) fn lower_constructive_geometry_representation(
                 context: Some(context),
             },
         ));
+    ctx.id_cache.insert(entity_id, repr_id);
+}
+
+/// Lower one `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION`. `items`
+/// are narrowed to `STYLED_ITEM` (unresolved skipped; an empty set is kept,
+/// unlike CGR). `context_of_items` is schema-required; an unresolvable context
+/// drops the carrier (schema-strict — None-context is corpus-absent, see plan).
+/// Dual-write: the `visualization.mdgprs` copy + the unified `representations`
+/// arena (the latter drives emit; `id_cache` maps to the `RepresentationId`).
+pub(crate) fn lower_mechanical_design_geometric_presentation_representation(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyMechanicalDesignGeometricPresentationRepresentation,
+) {
+    let Some(context) = ctx.resolve_repr_context(early.context_of_items) else {
+        return;
+    };
+    let mut items = Vec::with_capacity(early.items.len());
+    for r in early.items {
+        if let Some(id) = ctx.id_cache.get::<crate::ir::id::StyledItemId>(r) {
+            items.push(id);
+        }
+    }
+    let mdgpr = Mdgpr {
+        name: early.name,
+        items,
+        context: Some(context),
+    };
+    ctx.visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .mdgprs
+        .push(mdgpr.clone());
+    let repr_id = ctx.representations.push(Representation::Mdgpr(mdgpr));
     ctx.id_cache.insert(entity_id, repr_id);
 }
