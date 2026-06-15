@@ -3752,6 +3752,61 @@ pub(crate) fn bind_tessellated_shape_representation(
     })
 }
 
+pub(crate) fn bind_presentation_set(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPresentationSet, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 0, entity_id, "PRESENTATION_SET")?;
+    Ok(super::model::EarlyPresentationSet {})
+}
+
+pub(crate) fn bind_area_in_set(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAreaInSet, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "AREA_IN_SET")?;
+    Ok(super::model::EarlyAreaInSet {
+        area: crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "area")?,
+        in_set: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "in_set")?,
+    })
+}
+
+pub(crate) fn bind_presentation_size(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPresentationSize, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "PRESENTATION_SIZE")?;
+    Ok(super::model::EarlyPresentationSize {
+        unit: crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "unit")?,
+        size: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "size")?,
+    })
+}
+
+pub(crate) fn bind_symbol_target(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlySymbolTarget, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "SYMBOL_TARGET")?;
+    Ok(super::model::EarlySymbolTarget {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        placement: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "placement")?,
+        x_scale: crate::ir::attr::read_real(attrs, 2, entity_id, "x_scale")?,
+        y_scale: crate::ir::attr::read_real(attrs, 3, entity_id, "y_scale")?,
+    })
+}
+
+pub(crate) fn bind_defined_symbol(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDefinedSymbol, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "DEFINED_SYMBOL")?;
+    Ok(super::model::EarlyDefinedSymbol {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        definition: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "definition")?,
+        target: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "target")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

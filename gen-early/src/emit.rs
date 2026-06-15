@@ -687,10 +687,18 @@ fn entity_serialize(
 ) {
     // Attr expressions are shared between the plain and with_id variants.
     let mut attr_lines = String::new();
+    // `l1` is read only by non-derived attr expressions; a 0-attr (or
+    // all-derived) entity never touches it, so bind the param as `_l1` to
+    // avoid an unused-variable warning.
+    let l1_param = if attrs.iter().any(|(_, _, _, derived)| !derived) {
+        "l1"
+    } else {
+        "_l1"
+    };
     // serialize fn
     writeln!(
         out.serialize,
-        "pub(crate) fn serialize_{ent_name}(buf: &mut crate::writer::buffer::WriteBuffer, l1: &super::model::{type_name}) -> u64 {{"
+        "pub(crate) fn serialize_{ent_name}(buf: &mut crate::writer::buffer::WriteBuffer, {l1_param}: &super::model::{type_name}) -> u64 {{"
     )
     .unwrap();
     writeln!(out.serialize, "    buf.push_simple(\"{step_name}\", vec![").unwrap();
@@ -714,7 +722,7 @@ fn entity_serialize(
     if ctx.mapping.serialize_with_id.iter().any(|e| e == ent_name) {
         writeln!(
             out.serialize,
-            "pub(crate) fn serialize_{ent_name}_with_id(buf: &mut crate::writer::buffer::WriteBuffer, id: u64, l1: &super::model::{type_name}) {{"
+            "pub(crate) fn serialize_{ent_name}_with_id(buf: &mut crate::writer::buffer::WriteBuffer, id: u64, {l1_param}: &super::model::{type_name}) {{"
         )
         .unwrap();
         writeln!(

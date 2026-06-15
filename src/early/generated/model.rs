@@ -5292,6 +5292,116 @@ impl crate::ir::arena::ArenaId for EarlyTessellatedShapeRepresentationId {
     }
 }
 
+/// L1 `PRESENTATION_SET` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPresentationSet {}
+
+/// Typed `id_cache` key for `PRESENTATION_SET` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPresentationSetId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPresentationSetId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `AREA_IN_SET` (generated).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct EarlyAreaInSet {
+    pub(crate) area: u64,
+    pub(crate) in_set: u64,
+}
+
+/// Typed `id_cache` key for `AREA_IN_SET` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAreaInSetId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAreaInSetId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PRESENTATION_SIZE` (generated).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct EarlyPresentationSize {
+    pub(crate) unit: u64,
+    pub(crate) size: u64,
+}
+
+/// Typed `id_cache` key for `PRESENTATION_SIZE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPresentationSizeId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPresentationSizeId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `SYMBOL_TARGET` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlySymbolTarget {
+    pub(crate) name: String,
+    pub(crate) placement: u64,
+    pub(crate) x_scale: f64,
+    pub(crate) y_scale: f64,
+}
+
+/// Typed `id_cache` key for `SYMBOL_TARGET` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlySymbolTargetId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlySymbolTargetId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DEFINED_SYMBOL` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDefinedSymbol {
+    pub(crate) name: String,
+    pub(crate) definition: u64,
+    pub(crate) target: u64,
+}
+
+/// Typed `id_cache` key for `DEFINED_SYMBOL` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDefinedSymbolId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDefinedSymbolId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

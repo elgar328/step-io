@@ -5,12 +5,10 @@
 //! with a `presentation_size_assignment_select` (view / area /
 //! `area_in_set`). Unresolved refs drop the carrier on read.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::{
-    AreaInSet, PresentationSize, PresentationSizeAssignment, VisualizationPool,
-};
+use crate::ir::visualization::{AreaInSet, PresentationSize};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -29,36 +27,15 @@ impl SimpleEntityHandler for AreaInSetHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "AREA_IN_SET")?;
-        let area_ref = read_entity_ref(attrs, 0, entity_id, "area")?;
-        let Some(area) = ctx
-            .id_cache
-            .get::<crate::ir::id::PresentationRepresentationId>(area_ref)
-        else {
-            return Ok(());
-        };
-        let in_ref = read_entity_ref(attrs, 1, entity_id, "in_set")?;
-        let Some(in_set) = ctx.id_cache.get::<crate::ir::id::PresentationSetId>(in_ref) else {
-            return Ok(());
-        };
-        let id = ctx
-            .visualization
-            .get_or_insert_with(VisualizationPool::default)
-            .area_in_sets
-            .push(AreaInSet { area, in_set });
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_area_in_set(entity_id, attrs)?;
+        lower::lower_area_in_set(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, ais: AreaInSet) -> Result<u64, WriteError> {
-        let area_step = buf.step_id(ais.area);
-        let set_step = buf.step_id(ais.in_set);
-        Ok(buf.push_simple(
-            "AREA_IN_SET",
-            vec![
-                Attribute::EntityRef(area_step),
-                Attribute::EntityRef(set_step),
-            ],
+        Ok(serialize::serialize_area_in_set(
+            buf,
+            &lift::lift_area_in_set(buf, ais),
         ))
     }
 }
@@ -75,47 +52,13 @@ impl SimpleEntityHandler for PresentationSizeHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "PRESENTATION_SIZE")?;
-        let unit_ref = read_entity_ref(attrs, 0, entity_id, "unit")?;
-        let unit = if let Some(id) = ctx.id_cache.get::<crate::ir::id::AreaInSetId>(unit_ref) {
-            PresentationSizeAssignment::AreaInSet(id)
-        } else if let Some(id) = ctx
-            .id_cache
-            .get::<crate::ir::id::PresentationRepresentationId>(unit_ref)
-        {
-            // Spec narrows to View / Area variants — read1 cannot tell
-            // which without inspecting the arena entry. Default to View;
-            // emit reconstructs via the cached step id either way.
-            PresentationSizeAssignment::View(id)
-        } else {
-            return Ok(());
-        };
-        let size_ref = read_entity_ref(attrs, 1, entity_id, "size")?;
-        let Some(size) = ctx.id_cache.get::<crate::ir::id::PlanarExtentId>(size_ref) else {
-            return Ok(());
-        };
-        let _id = ctx
-            .visualization
-            .get_or_insert_with(VisualizationPool::default)
-            .presentation_sizes
-            .push(PresentationSize { unit, size });
+        let early = bind::bind_presentation_size(entity_id, attrs)?;
+        lower::lower_presentation_size(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, ps: PresentationSize) -> Result<u64, WriteError> {
-        let unit_step = match ps.unit {
-            PresentationSizeAssignment::View(id) | PresentationSizeAssignment::Area(id) => {
-                buf.step_id(id)
-            }
-            PresentationSizeAssignment::AreaInSet(id) => buf.step_id(id),
-        };
-        let size_step = buf.emit_planar_extent(ps.size)?;
-        Ok(buf.push_simple(
-            "PRESENTATION_SIZE",
-            vec![
-                Attribute::EntityRef(unit_step),
-                Attribute::EntityRef(size_step),
-            ],
-        ))
+        let early = lift::lift_presentation_size(buf, ps)?;
+        Ok(serialize::serialize_presentation_size(buf, &early))
     }
 }

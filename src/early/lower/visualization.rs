@@ -17,6 +17,10 @@ use crate::early::model::{
     EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId, EarlySymbolColour, EarlySymbolStyle,
     EarlyTextStyleForDefinedFont, EarlyViewVolume, EarlyViewVolumeId,
 };
+use crate::early::model::{
+    EarlyAreaInSet, EarlyDefinedSymbol, EarlyPresentationSet, EarlyPresentationSize,
+    EarlySymbolTarget,
+};
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::id::{
     ColourId, CurveId, CurveStyleId, MeasureWithUnitId, PlanarExtentId, PointId,
@@ -38,6 +42,10 @@ use crate::ir::visualization::{
     StyleContext, StyledItem, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleBoundary,
     SurfaceStyleFillArea, SurfaceStyleUsage, SymbolColour, SymbolStyle, TextOrCharacter,
     TextStyleForDefinedFont, ViewVolume, VisualizationPool,
+};
+use crate::ir::visualization::{
+    AreaInSet, DefinedSymbol, DefinedSymbolDefinition, PresentationSet, PresentationSize,
+    PresentationSizeAssignment, SymbolPlacement, SymbolTarget,
 };
 use crate::reader::ReaderContext;
 
@@ -1187,4 +1195,119 @@ pub(crate) fn lower_camera_model_d3_multi_clipping(
             },
         ));
     ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `PRESENTATION_SET` (0-attr carrier) → the `presentation_sets` arena.
+pub(crate) fn lower_presentation_set(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    _early: EarlyPresentationSet,
+) {
+    let id = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .presentation_sets
+        .push(PresentationSet);
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `AREA_IN_SET`. An unresolved `area`/`in_set` drops the carrier.
+pub(crate) fn lower_area_in_set(ctx: &mut ReaderContext, entity_id: u64, early: EarlyAreaInSet) {
+    let Some(area) = ctx
+        .id_cache
+        .get::<crate::ir::id::PresentationRepresentationId>(early.area)
+    else {
+        return;
+    };
+    let Some(in_set) = ctx
+        .id_cache
+        .get::<crate::ir::id::PresentationSetId>(early.in_set)
+    else {
+        return;
+    };
+    let id = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .area_in_sets
+        .push(AreaInSet { area, in_set });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `PRESENTATION_SIZE`. The `unit` SELECT resolves to `AreaInSet` or
+/// (defaulting) a presentation `View`; an unresolved `unit`/`size` drops the
+/// carrier. No `id_cache` entry — nothing references a `PRESENTATION_SIZE`.
+pub(crate) fn lower_presentation_size(
+    ctx: &mut ReaderContext,
+    _entity_id: u64,
+    early: EarlyPresentationSize,
+) {
+    let unit = if let Some(id) = ctx.id_cache.get::<crate::ir::id::AreaInSetId>(early.unit) {
+        PresentationSizeAssignment::AreaInSet(id)
+    } else if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::id::PresentationRepresentationId>(early.unit)
+    {
+        // Spec narrows to View / Area variants — read cannot tell which without
+        // inspecting the arena entry. Default to View; emit reconstructs via
+        // the cached step id either way.
+        PresentationSizeAssignment::View(id)
+    } else {
+        return;
+    };
+    let Some(size) = ctx.id_cache.get::<PlanarExtentId>(early.size) else {
+        return;
+    };
+    ctx.visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .presentation_sizes
+        .push(PresentationSize { unit, size });
+}
+
+/// Lower one `SYMBOL_TARGET` → the geometry `GeometricRepresentationItem` arena.
+/// step-io models only the 3D placement; a 2D `axis2_placement` drops the
+/// carrier. Records into `symbol_target_id_map` for `DEFINED_SYMBOL`.
+pub(crate) fn lower_symbol_target(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlySymbolTarget,
+) {
+    let Some(&placement_id) = ctx.placement_map.get(&early.placement) else {
+        return;
+    };
+    let id = ctx.geometry.geometric_representation_items.push(
+        GeometricRepresentationItem::SymbolTarget(SymbolTarget {
+            name: early.name,
+            placement: SymbolPlacement::Placement3d(placement_id),
+            x_scale: early.x_scale,
+            y_scale: early.y_scale,
+        }),
+    );
+    ctx.symbol_target_id_map.insert(entity_id, id);
+}
+
+/// Lower one `DEFINED_SYMBOL`. `definition` resolves through the
+/// pre-defined-symbol map (other members drop the carrier); `target` resolves
+/// through `symbol_target_id_map`.
+pub(crate) fn lower_defined_symbol(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyDefinedSymbol,
+) {
+    let Some(pds_id) = ctx
+        .id_cache
+        .get::<crate::ir::id::PreDefinedSymbolId>(early.definition)
+    else {
+        return;
+    };
+    let Some(&target) = ctx.symbol_target_id_map.get(&early.target) else {
+        return;
+    };
+    let id = ctx.geometry.geometric_representation_items.push(
+        GeometricRepresentationItem::DefinedSymbol(DefinedSymbol {
+            name: early.name,
+            definition: DefinedSymbolDefinition::PreDefinedSymbol(pds_id),
+            target,
+        }),
+    );
+    ctx.defined_symbol_id_map.insert(entity_id, id);
 }

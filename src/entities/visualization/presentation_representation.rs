@@ -6,6 +6,7 @@
 //! resolve `items` via the generic helper used by SDR / `DraughtingModel`;
 //! Set is a minimal `name`-only carrier required by `AREA_IN_SET.in_set`.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
@@ -91,18 +92,16 @@ impl SimpleEntityHandler for PresentationSetHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 0, entity_id, "PRESENTATION_SET")?;
-        let id = ctx
-            .visualization
-            .get_or_insert_with(VisualizationPool::default)
-            .presentation_sets
-            .push(PresentationSet);
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_presentation_set(entity_id, attrs)?;
+        lower::lower_presentation_set(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, _set: PresentationSet) -> Result<u64, WriteError> {
-        Ok(buf.push_simple("PRESENTATION_SET", vec![]))
+        Ok(serialize::serialize_presentation_set(
+            buf,
+            &lift::lift_presentation_set(),
+        ))
     }
 }
 

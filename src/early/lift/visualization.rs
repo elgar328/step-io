@@ -16,14 +16,19 @@ use crate::early::model::{
     EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage, EarlySymbolColour, EarlySymbolStyle,
     EarlyTextStyleForDefinedFont, EarlyViewVolume,
 };
+use crate::early::model::{
+    EarlyAreaInSet, EarlyDefinedSymbol, EarlyPresentationSet, EarlyPresentationSize,
+    EarlySymbolTarget,
+};
 use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::fill_area_style_colour::FillAreaStyleColourHandler;
 use crate::ir::visualization::{
-    ContextDependentOverRidingStyledItem, CurveStyle, CurveWidth, FillAreaStyle, Invisibility,
-    InvisibleItem, Marker, MarkerSize, OverRidingStyledItem, PlainStyledItem, PointStyle,
-    PresentationStyleAssignmentData, PresentationStyleByContext, PsaStyle, StyleContext,
-    StyleContextRef, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea,
-    SurfaceStyleUsage, ViewVolume,
+    AreaInSet, ContextDependentOverRidingStyledItem, CurveStyle, CurveWidth, DefinedSymbol,
+    DefinedSymbolDefinition, FillAreaStyle, Invisibility, InvisibleItem, Marker, MarkerSize,
+    OverRidingStyledItem, PlainStyledItem, PointStyle, PresentationSize,
+    PresentationSizeAssignment, PresentationStyleAssignmentData, PresentationStyleByContext,
+    PsaStyle, StyleContext, StyleContextRef, SurfaceSideStyle, SurfaceSideStyleEntry,
+    SurfaceStyleFillArea, SurfaceStyleUsage, SymbolPlacement, SymbolTarget, ViewVolume,
 };
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -504,5 +509,62 @@ pub(crate) fn lift_camera_model_d3_multi_clipping(
         view_reference_system,
         perspective_of_volume,
         shape_clipping,
+    }
+}
+
+/// Lift one `PRESENTATION_SET` (0-attr carrier).
+pub(crate) fn lift_presentation_set() -> EarlyPresentationSet {
+    EarlyPresentationSet {}
+}
+
+/// Lift one `AREA_IN_SET` (`area`/`in_set` → cached step ids).
+pub(crate) fn lift_area_in_set(buf: &WriteBuffer, ais: AreaInSet) -> EarlyAreaInSet {
+    EarlyAreaInSet {
+        area: buf.step_id(ais.area),
+        in_set: buf.step_id(ais.in_set),
+    }
+}
+
+/// Lift one `PRESENTATION_SIZE`. `size` emits through the (fallible)
+/// `PLANAR_BOX` emitter; `unit` resolves to the cached step id of whichever
+/// SELECT variant it carries.
+pub(crate) fn lift_presentation_size(
+    buf: &mut WriteBuffer,
+    ps: PresentationSize,
+) -> Result<EarlyPresentationSize, WriteError> {
+    let unit = match ps.unit {
+        PresentationSizeAssignment::View(id) | PresentationSizeAssignment::Area(id) => {
+            buf.step_id(id)
+        }
+        PresentationSizeAssignment::AreaInSet(id) => buf.step_id(id),
+    };
+    let size = buf.emit_planar_extent(ps.size)?;
+    Ok(EarlyPresentationSize { unit, size })
+}
+
+/// Lift one `SYMBOL_TARGET`. `placement` emits through the (fallible)
+/// `AXIS2_PLACEMENT_3D` emitter (step-io models only the 3D variant).
+pub(crate) fn lift_symbol_target(
+    buf: &mut WriteBuffer,
+    t: SymbolTarget,
+) -> Result<EarlySymbolTarget, WriteError> {
+    let SymbolPlacement::Placement3d(placement_id) = t.placement;
+    Ok(EarlySymbolTarget {
+        name: t.name,
+        placement: buf.emit_axis2_placement_3d(placement_id)?,
+        x_scale: t.x_scale,
+        y_scale: t.y_scale,
+    })
+}
+
+/// Lift one `DEFINED_SYMBOL` (`definition`/`target` → cached step ids).
+pub(crate) fn lift_defined_symbol(buf: &WriteBuffer, d: DefinedSymbol) -> EarlyDefinedSymbol {
+    let definition = match d.definition {
+        DefinedSymbolDefinition::PreDefinedSymbol(id) => buf.step_id(id),
+    };
+    EarlyDefinedSymbol {
+        name: d.name,
+        definition,
+        target: buf.step_id(d.target),
     }
 }

@@ -8,13 +8,10 @@
 //! `viz_pre_defined_symbol_id_map`; unresolved members drop the carrier
 //! (symmetric on re-read).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_real, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::{
-    DefinedSymbol, DefinedSymbolDefinition, GeometricRepresentationItem, SymbolPlacement,
-    SymbolTarget,
-};
+use crate::ir::visualization::{DefinedSymbol, SymbolTarget};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -33,40 +30,14 @@ impl SimpleEntityHandler for SymbolTargetHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "SYMBOL_TARGET")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let placement_ref = read_entity_ref(attrs, 1, entity_id, "placement")?;
-        let x_scale = read_real(attrs, 2, entity_id, "x_scale")?;
-        let y_scale = read_real(attrs, 3, entity_id, "y_scale")?;
-        // axis2_placement SELECT — step-io only models the 3D variant
-        // (no 2D placement_map). 2D inputs drop the carrier.
-        let Some(&placement_id) = ctx.placement_map.get(&placement_ref) else {
-            return Ok(());
-        };
-        let id = ctx.geometry.geometric_representation_items.push(
-            GeometricRepresentationItem::SymbolTarget(SymbolTarget {
-                name,
-                placement: SymbolPlacement::Placement3d(placement_id),
-                x_scale,
-                y_scale,
-            }),
-        );
-        ctx.symbol_target_id_map.insert(entity_id, id);
+        let early = bind::bind_symbol_target(entity_id, attrs)?;
+        lower::lower_symbol_target(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, t: SymbolTarget) -> Result<u64, WriteError> {
-        let SymbolPlacement::Placement3d(placement_id) = t.placement;
-        let placement_step = buf.emit_axis2_placement_3d(placement_id)?;
-        Ok(buf.push_simple(
-            "SYMBOL_TARGET",
-            vec![
-                Attribute::String(t.name),
-                Attribute::EntityRef(placement_step),
-                Attribute::Real(t.x_scale),
-                Attribute::Real(t.y_scale),
-            ],
-        ))
+        let early = lift::lift_symbol_target(buf, t)?;
+        Ok(serialize::serialize_symbol_target(buf, &early))
     }
 }
 
@@ -82,42 +53,13 @@ impl SimpleEntityHandler for DefinedSymbolHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "DEFINED_SYMBOL")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let def_ref = read_entity_ref(attrs, 1, entity_id, "definition")?;
-        let target_ref = read_entity_ref(attrs, 2, entity_id, "target")?;
-        let Some(pds_id) = ctx
-            .id_cache
-            .get::<crate::ir::id::PreDefinedSymbolId>(def_ref)
-        else {
-            return Ok(());
-        };
-        let Some(&target) = ctx.symbol_target_id_map.get(&target_ref) else {
-            return Ok(());
-        };
-        let id = ctx.geometry.geometric_representation_items.push(
-            GeometricRepresentationItem::DefinedSymbol(DefinedSymbol {
-                name,
-                definition: DefinedSymbolDefinition::PreDefinedSymbol(pds_id),
-                target,
-            }),
-        );
-        ctx.defined_symbol_id_map.insert(entity_id, id);
+        let early = bind::bind_defined_symbol(entity_id, attrs)?;
+        lower::lower_defined_symbol(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, d: DefinedSymbol) -> Result<u64, WriteError> {
-        let definition_step = match d.definition {
-            DefinedSymbolDefinition::PreDefinedSymbol(id) => buf.step_id(id),
-        };
-        let target_step = buf.step_id(d.target);
-        Ok(buf.push_simple(
-            "DEFINED_SYMBOL",
-            vec![
-                Attribute::String(d.name),
-                Attribute::EntityRef(definition_step),
-                Attribute::EntityRef(target_step),
-            ],
-        ))
+        let early = lift::lift_defined_symbol(buf, d);
+        Ok(serialize::serialize_defined_symbol(buf, &early))
     }
 }

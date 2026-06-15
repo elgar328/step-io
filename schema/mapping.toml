@@ -274,6 +274,12 @@ generate = [
     "complex_triangulated_face",
     "tessellated_annotation_occurrence",
     "tessellated_shape_representation",
+    # Phase 3w: visualization leaf 5 (pure ref/scalar/all-entity-select)
+    "presentation_set",
+    "area_in_set",
+    "presentation_size",
+    "symbol_target",
+    "defined_symbol",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

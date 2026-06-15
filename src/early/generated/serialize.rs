@@ -4218,6 +4218,68 @@ pub(crate) fn serialize_tessellated_shape_representation(
     )
 }
 
+pub(crate) fn serialize_presentation_set(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    _l1: &super::model::EarlyPresentationSet,
+) -> u64 {
+    buf.push_simple("PRESENTATION_SET", vec![])
+}
+
+pub(crate) fn serialize_area_in_set(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAreaInSet,
+) -> u64 {
+    buf.push_simple(
+        "AREA_IN_SET",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.area),
+            crate::parser::entity::Attribute::EntityRef(l1.in_set),
+        ],
+    )
+}
+
+pub(crate) fn serialize_presentation_size(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPresentationSize,
+) -> u64 {
+    buf.push_simple(
+        "PRESENTATION_SIZE",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.unit),
+            crate::parser::entity::Attribute::EntityRef(l1.size),
+        ],
+    )
+}
+
+pub(crate) fn serialize_symbol_target(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlySymbolTarget,
+) -> u64 {
+    buf.push_simple(
+        "SYMBOL_TARGET",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.placement),
+            crate::parser::entity::Attribute::Real(l1.x_scale),
+            crate::parser::entity::Attribute::Real(l1.y_scale),
+        ],
+    )
+}
+
+pub(crate) fn serialize_defined_symbol(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDefinedSymbol,
+) -> u64 {
+    buf.push_simple(
+        "DEFINED_SYMBOL",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.definition),
+            crate::parser::entity::Attribute::EntityRef(l1.target),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {
