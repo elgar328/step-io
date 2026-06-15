@@ -6,10 +6,11 @@ use crate::early::model::{
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
     EarlyDescriptiveRepresentationItem, EarlyMechanicalDesignAndDraughtingRelationship,
-    EarlyModelGeometricView, EarlyPlacedDatumTargetFeature, EarlyQualifiedRepresentationItem,
-    EarlyRealRepresentationItem, EarlyRepresentationContext, EarlyRepresentationRelationship,
-    EarlyShapeRepresentationRelationship, EarlyToleranceZone,
+    EarlyModelGeometricView, EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
+    EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
+    EarlyRepresentationRelationship, EarlyShapeRepresentationRelationship, EarlyToleranceZone,
 };
+use crate::ir::shape_rep::UnitlessContext;
 
 /// Lift one base `REPRESENTATION_RELATIONSHIP` from its (pre-resolved) arena
 /// data. The legacy writer emitted `description` as a String (`''` for empty,
@@ -276,5 +277,20 @@ pub(crate) fn lift_model_geometric_view(
         description,
         item,
         rep,
+    }
+}
+
+/// Lift one parametric `(GRC PRC REP_CONTEXT)` context. `coordinate_space_
+/// dimension` is `Some(..)` by construction here (the writer only routes the
+/// parametric/complex form to this path), so unwrap is total.
+pub(crate) fn lift_parametric_representation_context(
+    uc: UnitlessContext,
+) -> EarlyParametricRepresentationContext {
+    EarlyParametricRepresentationContext {
+        coordinate_space_dimension: uc
+            .coordinate_space_dimension
+            .expect("parametric context carries a coordinate_space_dimension"),
+        context_identifier: uc.identifier,
+        context_type: uc.context_type,
     }
 }

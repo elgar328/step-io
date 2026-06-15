@@ -13,9 +13,9 @@ use crate::early::model::{
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
     EarlyDescriptiveRepresentationItem, EarlyMechanicalDesignAndDraughtingRelationship,
-    EarlyModelGeometricView, EarlyPlacedDatumTargetFeature, EarlyQualifiedRepresentationItem,
-    EarlyRealRepresentationItem, EarlyRepresentationContext, EarlyRepresentationRelationship,
-    EarlyShapeRepresentationRelationship, EarlyToleranceZone,
+    EarlyModelGeometricView, EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
+    EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
+    EarlyRepresentationRelationship, EarlyShapeRepresentationRelationship, EarlyToleranceZone,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::representation_item::{
@@ -580,4 +580,21 @@ pub(crate) fn lower_model_geometric_view(
             },
         ));
     ctx.id_cache.insert(entity_id, co_id);
+}
+
+/// Lower one `(GEOMETRIC_REPRESENTATION_CONTEXT PARAMETRIC_REPRESENTATION_CONTEXT
+/// REPRESENTATION_CONTEXT)` complex into the `unitless_contexts` arena. The GRC
+/// `coordinate_space_dimension` is `Some(..)` here (the writer's
+/// `emit_unitless_contexts` pass keys the parametric-vs-plain form on this).
+pub(crate) fn lower_parametric_representation_context(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyParametricRepresentationContext,
+) {
+    let id = ctx.unitless_contexts.push(UnitlessContext {
+        identifier: early.context_identifier.clone(),
+        context_type: early.context_type.clone(),
+        coordinate_space_dimension: Some(early.coordinate_space_dimension),
+    });
+    ctx.id_cache.insert(entity_id, id);
 }

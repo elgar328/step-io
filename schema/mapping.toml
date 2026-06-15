@@ -203,6 +203,8 @@ generate = [
     # Phase 2c: W-COMPLEX — rational quasi-uniform (synthetic-name complex, read_only)
     "rational_quasi_uniform_curve",
     "rational_quasi_uniform_surface",
+    # Phase 2d: first non-geometry complex — unitless parametric context
+    "parametric_representation_context",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
@@ -281,6 +283,13 @@ parts = [
     "RATIONAL_B_SPLINE_SURFACE",
     "REPRESENTATION_ITEM",
     "SURFACE",
+]
+
+[complex.parametric_representation_context]
+parts = [
+    "GEOMETRIC_REPRESENTATION_CONTEXT",
+    "PARAMETRIC_REPRESENTATION_CONTEXT",
+    "REPRESENTATION_CONTEXT",
 ]
 
 # Per-entity EXPRESS Derived (`*`) attribute names. early.toml (generated) cannot

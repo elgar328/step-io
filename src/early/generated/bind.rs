@@ -2914,6 +2914,27 @@ pub(crate) fn bind_rational_quasi_uniform_surface(
     })
 }
 
+pub(crate) fn bind_parametric_representation_context(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<super::model::EarlyParametricRepresentationContext, crate::ir::error::ConvertError> {
+    let attrs =
+        crate::reader::require_part_attrs(parts, "GEOMETRIC_REPRESENTATION_CONTEXT", entity_id)?;
+    let coordinate_space_dimension =
+        crate::ir::attr::read_integer(attrs, 0, entity_id, "coordinate_space_dimension")?;
+    let attrs = crate::reader::require_part_attrs(parts, "REPRESENTATION_CONTEXT", entity_id)?;
+    let context_identifier =
+        crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "context_identifier")?
+            .to_owned();
+    let context_type =
+        crate::ir::attr::read_string_or_unset(attrs, 1, entity_id, "context_type")?.to_owned();
+    Ok(super::model::EarlyParametricRepresentationContext {
+        coordinate_space_dimension,
+        context_identifier,
+        context_type,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

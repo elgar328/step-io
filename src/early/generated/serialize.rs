@@ -3151,6 +3151,28 @@ pub(crate) fn serialize_rational_b_spline_surface(
     ])
 }
 
+pub(crate) fn serialize_parametric_representation_context(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyParametricRepresentationContext,
+) -> u64 {
+    buf.push_complex(vec![
+        (
+            "GEOMETRIC_REPRESENTATION_CONTEXT".into(),
+            vec![crate::parser::entity::Attribute::Integer(
+                l1.coordinate_space_dimension,
+            )],
+        ),
+        ("PARAMETRIC_REPRESENTATION_CONTEXT".into(), vec![]),
+        (
+            "REPRESENTATION_CONTEXT".into(),
+            vec![
+                crate::parser::entity::Attribute::String(l1.context_identifier.clone()),
+                crate::parser::entity::Attribute::String(l1.context_type.clone()),
+            ],
+        ),
+    ])
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {
