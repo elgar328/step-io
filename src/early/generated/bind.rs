@@ -3381,6 +3381,17 @@ pub(crate) fn bind_presentation_style_assignment(
     })
 }
 
+pub(crate) fn bind_presentation_style_by_context(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPresentationStyleByContext, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "PRESENTATION_STYLE_BY_CONTEXT")?;
+    Ok(super::model::EarlyPresentationStyleByContext {
+        styles: presentation_style_select_list(attrs, 0, entity_id, "styles")?,
+        style_context: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "style_context")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

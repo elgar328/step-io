@@ -224,7 +224,7 @@
 //!   `ns_record`.
 //! - **Writer symmetry**: emits the standard typed `NULL_STYLE(.NULL.)`.
 //! - **Code**: `entities/visualization/presentation_style_assignment.rs`
-//!   (`parse_psa_styles`).
+//!   (`normalize_psa_styles_attr`).
 //!
 //! ### NS-repr-context-unset
 //! - **Source**: C3D kernel (input-shaft / shaft-238).
@@ -291,7 +291,7 @@
 //!   PSA is still built and re-emits `()` (merkle-stable). Same spirit as the
 //!   sibling NS-psa-bare-null-style.
 //! - **Code**: `entities/visualization/presentation_style_assignment.rs`
-//!   (`parse_psa_styles`).
+//!   (`normalize_psa_styles_attr`).
 //!
 //! ### NS-orsi-over-ridden-unset
 //! - **Source**: NIST ctc_05.

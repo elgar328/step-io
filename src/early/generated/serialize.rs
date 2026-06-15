@@ -3652,6 +3652,24 @@ pub(crate) fn serialize_presentation_style_assignment(
     )
 }
 
+pub(crate) fn serialize_presentation_style_by_context(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPresentationStyleByContext,
+) -> u64 {
+    buf.push_simple(
+        "PRESENTATION_STYLE_BY_CONTEXT",
+        vec![
+            crate::parser::entity::Attribute::List(
+                l1.styles
+                    .iter()
+                    .map(presentation_style_select_emit)
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::EntityRef(l1.style_context),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

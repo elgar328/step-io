@@ -4765,6 +4765,28 @@ impl crate::ir::arena::ArenaId for EarlyPresentationStyleAssignmentId {
     }
 }
 
+/// L1 `PRESENTATION_STYLE_BY_CONTEXT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPresentationStyleByContext {
+    pub(crate) styles: Vec<EarlyPresentationStyleSelect>,
+    pub(crate) style_context: u64,
+}
+
+/// Typed `id_cache` key for `PRESENTATION_STYLE_BY_CONTEXT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPresentationStyleByContextId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPresentationStyleByContextId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

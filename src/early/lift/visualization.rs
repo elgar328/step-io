@@ -9,18 +9,18 @@ use crate::early::model::{
     EarlyMarker, EarlyMarkerSize, EarlyNullStyle, EarlyPointStyle, EarlyPreDefinedCurveFont,
     EarlyPreDefinedMarker, EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol,
     EarlyPreDefinedTerminatorSymbol, EarlyPresentationLayerAssignment,
-    EarlyPresentationStyleAssignment, EarlyPresentationStyleSelect,
-    EarlyPresentedItemRepresentation, EarlyShellBasedSurfaceModel, EarlySurfaceSideStyle,
-    EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea, EarlySurfaceStyleTransparent,
-    EarlySurfaceStyleUsage, EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont,
-    EarlyViewVolume,
+    EarlyPresentationStyleAssignment, EarlyPresentationStyleByContext,
+    EarlyPresentationStyleSelect, EarlyPresentedItemRepresentation, EarlyShellBasedSurfaceModel,
+    EarlySurfaceSideStyle, EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea,
+    EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage, EarlySymbolColour, EarlySymbolStyle,
+    EarlyTextStyleForDefinedFont, EarlyViewVolume,
 };
 use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::fill_area_style_colour::FillAreaStyleColourHandler;
 use crate::ir::visualization::{
     CurveStyle, CurveWidth, FillAreaStyle, Marker, MarkerSize, PointStyle,
-    PresentationStyleAssignmentData, PsaStyle, SurfaceSideStyle, SurfaceSideStyleEntry,
-    SurfaceStyleFillArea, SurfaceStyleUsage, ViewVolume,
+    PresentationStyleAssignmentData, PresentationStyleByContext, PsaStyle, StyleContext,
+    SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleUsage, ViewVolume,
 };
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -149,16 +149,15 @@ pub(crate) fn lift_curve_style(buf: &WriteBuffer, l2: &CurveStyle) -> EarlyCurve
     }
 }
 
-/// Lift L2 `PresentationStyleAssignmentData` → L1. Each `PsaStyle` resolves to
-/// its output step id (`Surface`/`Point`/`Curve`) or the `NULL_STYLE`
-/// placeholder; `serialize` wraps the result in the `styles` SET (matching the
+/// Shared `styles` SET lifting for `PRESENTATION_STYLE_ASSIGNMENT` /
+/// `PRESENTATION_STYLE_BY_CONTEXT`. Each `PsaStyle` resolves to its output step
+/// id (`Surface`/`Point`/`Curve`) or the `NULL_STYLE` placeholder (matching the
 /// previous `emit_psa_styles`).
-pub(crate) fn lift_presentation_style_assignment(
+pub(crate) fn lift_psa_styles(
     buf: &WriteBuffer,
-    data: &PresentationStyleAssignmentData,
-) -> EarlyPresentationStyleAssignment {
-    let styles = data
-        .styles
+    styles: &[PsaStyle],
+) -> Vec<EarlyPresentationStyleSelect> {
+    styles
         .iter()
         .map(|style| match style {
             // Surface/Point are both `FoundedItemId`; merged to satisfy
@@ -169,8 +168,36 @@ pub(crate) fn lift_presentation_style_assignment(
             PsaStyle::Curve(id) => EarlyPresentationStyleSelect::EntityRef(buf.step_id(*id)),
             PsaStyle::Null => EarlyPresentationStyleSelect::NullStyle(EarlyNullStyle::Null),
         })
-        .collect();
-    EarlyPresentationStyleAssignment { styles }
+        .collect()
+}
+
+/// Lift L2 `PresentationStyleAssignmentData` → L1 (`Itself` carrier).
+pub(crate) fn lift_presentation_style_assignment(
+    buf: &WriteBuffer,
+    data: &PresentationStyleAssignmentData,
+) -> EarlyPresentationStyleAssignment {
+    EarlyPresentationStyleAssignment {
+        styles: lift_psa_styles(buf, &data.styles),
+    }
+}
+
+/// Lift L2 `PresentationStyleByContext` → L1. `styles` reuses
+/// [`lift_psa_styles`]; `style_context` resolves to the representation step id
+/// or the (fallible) representation-item ref emit, so this lift takes `&mut`
+/// and returns `Result`.
+pub(crate) fn lift_presentation_style_by_context(
+    buf: &mut WriteBuffer,
+    psbc: &PresentationStyleByContext,
+) -> Result<EarlyPresentationStyleByContext, WriteError> {
+    let styles = lift_psa_styles(buf, &psbc.styles);
+    let style_context = match &psbc.style_context {
+        StyleContext::Representation(rid) => buf.step_id(*rid),
+        StyleContext::Item(item) => buf.emit_representation_item_ref(*item)?,
+    };
+    Ok(EarlyPresentationStyleByContext {
+        styles,
+        style_context,
+    })
 }
 
 /// Lift one `PRE_DEFINED_MARKER` (name pass-through).
