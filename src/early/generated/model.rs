@@ -4744,6 +4744,27 @@ impl crate::ir::arena::ArenaId for EarlyFeatureForDatumTargetRelationshipId {
     }
 }
 
+/// L1 `PRESENTATION_STYLE_ASSIGNMENT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPresentationStyleAssignment {
+    pub(crate) styles: Vec<EarlyPresentationStyleSelect>,
+}
+
+/// Typed `id_cache` key for `PRESENTATION_STYLE_ASSIGNMENT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPresentationStyleAssignmentId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPresentationStyleAssignmentId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {
@@ -4796,6 +4817,19 @@ pub(crate) enum EarlyMeasureValue {
     TimeMeasure(f64),
     VelocityMeasure(f64),
     VolumeMeasure(f64),
+}
+
+/// L1 ENUM `null_style` (generated).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) enum EarlyNullStyle {
+    Null,
+}
+
+/// L1 mixed SELECT `presentation_style_select` (generated, hint-less).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum EarlyPresentationStyleSelect {
+    EntityRef(u64),
+    NullStyle(super::model::EarlyNullStyle),
 }
 
 /// L1 mixed SELECT `size_select` (generated).

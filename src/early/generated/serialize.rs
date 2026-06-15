@@ -3637,6 +3637,21 @@ pub(crate) fn serialize_feature_for_datum_target_relationship(
     )
 }
 
+pub(crate) fn serialize_presentation_style_assignment(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPresentationStyleAssignment,
+) -> u64 {
+    buf.push_simple(
+        "PRESENTATION_STYLE_ASSIGNMENT",
+        vec![crate::parser::entity::Attribute::List(
+            l1.styles
+                .iter()
+                .map(presentation_style_select_emit)
+                .collect(),
+        )],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {
@@ -3903,6 +3918,27 @@ fn measure_value_emit(v: &super::model::EarlyMeasureValue) -> crate::parser::ent
             crate::parser::entity::Attribute::Typed {
                 type_name: "VOLUME_MEASURE".into(),
                 value: Box::new(crate::parser::entity::Attribute::Real(*x)),
+            }
+        }
+    }
+}
+
+fn presentation_style_select_emit(
+    v: &super::model::EarlyPresentationStyleSelect,
+) -> crate::parser::entity::Attribute {
+    match v {
+        super::model::EarlyPresentationStyleSelect::EntityRef(step) => {
+            crate::parser::entity::Attribute::EntityRef(*step)
+        }
+        super::model::EarlyPresentationStyleSelect::NullStyle(e) => {
+            crate::parser::entity::Attribute::Typed {
+                type_name: "NULL_STYLE".into(),
+                value: Box::new(crate::parser::entity::Attribute::Enum(
+                    match e {
+                        super::model::EarlyNullStyle::Null => "NULL",
+                    }
+                    .into(),
+                )),
             }
         }
     }

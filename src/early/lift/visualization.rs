@@ -6,18 +6,21 @@ use crate::early::model::{
     EarlyCameraModelD3WithHlhsr, EarlyCameraUsage, EarlyColourRgb, EarlyCompositeText,
     EarlyCurveStyle, EarlyDraughtingPreDefinedColour, EarlyDraughtingPreDefinedCurveFont,
     EarlyFillAreaStyle, EarlyFillAreaStyleColour, EarlyGeometricCurveSet, EarlyGeometricSet,
-    EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlyPreDefinedCurveFont, EarlyPreDefinedMarker,
-    EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol,
-    EarlyPresentationLayerAssignment, EarlyPresentedItemRepresentation,
-    EarlyShellBasedSurfaceModel, EarlySurfaceSideStyle, EarlySurfaceStyleBoundary,
-    EarlySurfaceStyleFillArea, EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage,
-    EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont, EarlyViewVolume,
+    EarlyMarker, EarlyMarkerSize, EarlyNullStyle, EarlyPointStyle, EarlyPreDefinedCurveFont,
+    EarlyPreDefinedMarker, EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol,
+    EarlyPreDefinedTerminatorSymbol, EarlyPresentationLayerAssignment,
+    EarlyPresentationStyleAssignment, EarlyPresentationStyleSelect,
+    EarlyPresentedItemRepresentation, EarlyShellBasedSurfaceModel, EarlySurfaceSideStyle,
+    EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea, EarlySurfaceStyleTransparent,
+    EarlySurfaceStyleUsage, EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont,
+    EarlyViewVolume,
 };
 use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::fill_area_style_colour::FillAreaStyleColourHandler;
 use crate::ir::visualization::{
-    CurveStyle, CurveWidth, FillAreaStyle, Marker, MarkerSize, PointStyle, SurfaceSideStyle,
-    SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleUsage, ViewVolume,
+    CurveStyle, CurveWidth, FillAreaStyle, Marker, MarkerSize, PointStyle,
+    PresentationStyleAssignmentData, PsaStyle, SurfaceSideStyle, SurfaceSideStyleEntry,
+    SurfaceStyleFillArea, SurfaceStyleUsage, ViewVolume,
 };
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -144,6 +147,30 @@ pub(crate) fn lift_curve_style(buf: &WriteBuffer, l2: &CurveStyle) -> EarlyCurve
         curve_width: Some(curve_width),
         curve_colour: Some(buf.step_id(l2.curve_colour)),
     }
+}
+
+/// Lift L2 `PresentationStyleAssignmentData` → L1. Each `PsaStyle` resolves to
+/// its output step id (`Surface`/`Point`/`Curve`) or the `NULL_STYLE`
+/// placeholder; `serialize` wraps the result in the `styles` SET (matching the
+/// previous `emit_psa_styles`).
+pub(crate) fn lift_presentation_style_assignment(
+    buf: &WriteBuffer,
+    data: &PresentationStyleAssignmentData,
+) -> EarlyPresentationStyleAssignment {
+    let styles = data
+        .styles
+        .iter()
+        .map(|style| match style {
+            // Surface/Point are both `FoundedItemId`; merged to satisfy
+            // clippy::match_same_arms (Curve is `CurveStyleId`, distinct type).
+            PsaStyle::Surface(id) | PsaStyle::Point(id) => {
+                EarlyPresentationStyleSelect::EntityRef(buf.step_id(*id))
+            }
+            PsaStyle::Curve(id) => EarlyPresentationStyleSelect::EntityRef(buf.step_id(*id)),
+            PsaStyle::Null => EarlyPresentationStyleSelect::NullStyle(EarlyNullStyle::Null),
+        })
+        .collect();
+    EarlyPresentationStyleAssignment { styles }
 }
 
 /// Lift one `PRE_DEFINED_MARKER` (name pass-through).

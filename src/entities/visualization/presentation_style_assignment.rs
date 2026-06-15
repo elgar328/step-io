@@ -7,14 +7,13 @@
 //! preserves round-trip equality on the supported subset.
 
 use crate::early::model::{EarlyPointStyleId, EarlySurfaceStyleUsageId};
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::check_count;
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::{
-    PresentationStyleAssignment, PresentationStyleAssignmentData, PsaStyle, VisualizationPool,
-};
+use crate::ir::visualization::{PresentationStyleAssignmentData, PsaStyle};
 use crate::parser::entity::{Attribute, EntityGraph};
-use crate::reader::ReaderContext;
+use crate::reader::{NsCase, ReaderContext};
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 
@@ -33,16 +32,48 @@ impl SimpleEntityHandler for PresentationStyleAssignmentHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 1, entity_id, "PRESENTATION_STYLE_ASSIGNMENT")?;
-        let styles = parse_psa_styles(ctx, entity_id, &attrs[0]);
-        let pool = ctx
-            .visualization
-            .get_or_insert_with(VisualizationPool::default);
-        let id = pool
-            .presentation_style_assignments
-            .push(PresentationStyleAssignment::Itself(
-                PresentationStyleAssignmentData { styles },
-            ));
-        ctx.id_cache.insert(entity_id, id);
+        // Pre-bind normalization of the two non-standard `styles` forms, so the
+        // generated bind stays schema-strict. Both are NsCase-recorded here
+        // (bind has no `ctx`), preserving the NORM count:
+        //  - `$`/`*` (mandatory SET emitted unset) → empty SET.
+        //  - bare `.NULL.` member → the typed `NULL_STYLE(.NULL.)` placeholder.
+        let mut norm = attrs.to_vec();
+        let replacement = match &norm[0] {
+            Attribute::Unset | Attribute::Derived => {
+                ctx.ns_record(
+                    NsCase::PsaStylesUnset,
+                    "PRESENTATION_STYLE_ASSIGNMENT.styles (Unset)".into(),
+                    "()",
+                );
+                Some(Attribute::List(Vec::new()))
+            }
+            Attribute::List(items) => {
+                let mut new_items = Vec::with_capacity(items.len());
+                for it in items {
+                    match it {
+                        Attribute::Enum(t) if t == "NULL" => {
+                            ctx.ns_record(
+                                NsCase::PsaBareNullStyle,
+                                "PRESENTATION_STYLE_ASSIGNMENT.styles (bare .NULL.)".into(),
+                                "NULL_STYLE(.NULL.)",
+                            );
+                            new_items.push(Attribute::Typed {
+                                type_name: "NULL_STYLE".into(),
+                                value: Box::new(Attribute::Enum("NULL".into())),
+                            });
+                        }
+                        _ => new_items.push(it.clone()),
+                    }
+                }
+                Some(Attribute::List(new_items))
+            }
+            _ => None,
+        };
+        if let Some(v) = replacement {
+            norm[0] = v;
+        }
+        let early = bind::bind_presentation_style_assignment(entity_id, &norm)?;
+        lower::lower_presentation_style_assignment(ctx, entity_id, early);
         Ok(())
     }
 
@@ -50,10 +81,9 @@ impl SimpleEntityHandler for PresentationStyleAssignmentHandler {
         buf: &mut WriteBuffer,
         data: PresentationStyleAssignmentData,
     ) -> Result<u64, WriteError> {
-        let style_attrs = emit_psa_styles(buf, data.styles);
-        Ok(buf.push_simple(
-            "PRESENTATION_STYLE_ASSIGNMENT",
-            vec![Attribute::List(style_attrs)],
+        let early = lift::lift_presentation_style_assignment(buf, &data);
+        Ok(serialize::serialize_presentation_style_assignment(
+            buf, &early,
         ))
     }
 }

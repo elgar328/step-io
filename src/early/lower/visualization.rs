@@ -9,6 +9,7 @@ use crate::early::model::{
     EarlyGeometricSet, EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlyPointStyleId,
     EarlyPreDefinedCurveFont, EarlyPreDefinedMarker, EarlyPreDefinedPointMarkerSymbol,
     EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol, EarlyPresentationLayerAssignment,
+    EarlyPresentationStyleAssignment, EarlyPresentationStyleSelect,
     EarlyPresentedItemRepresentation, EarlyShellBasedSurfaceModel, EarlySurfaceSideStyle,
     EarlySurfaceSideStyleId, EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea,
     EarlySurfaceStyleFillAreaId, EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage,
@@ -16,8 +17,8 @@ use crate::early::model::{
     EarlyViewVolume, EarlyViewVolumeId,
 };
 use crate::ir::id::{
-    ColourId, CurveId, MeasureWithUnitId, PlanarExtentId, PointId, PreDefinedCurveFontId,
-    PreDefinedMarkerId, ShellId, SurfaceStyleRenderingId,
+    ColourId, CurveId, CurveStyleId, MeasureWithUnitId, PlanarExtentId, PointId,
+    PreDefinedCurveFontId, PreDefinedMarkerId, ShellId, SurfaceStyleRenderingId,
 };
 use crate::ir::shape_rep::{CameraUsage, RepresentationMap};
 use crate::ir::visualization::{
@@ -28,10 +29,11 @@ use crate::ir::visualization::{
     Marker, MarkerSize, PointStyle, PreDefinedCurveFont, PreDefinedCurveFontData, PreDefinedMarker,
     PreDefinedMarkerData, PreDefinedPointMarkerSymbol, PreDefinedSymbol, PreDefinedSymbolData,
     PreDefinedTerminatorSymbol, PresentationLayerAssignment, PresentationLayerAssignmentItem,
-    PresentationReprSelect, PresentedItem, PresentedItemRepresentation, ShapeClipping,
-    ShellBasedSurfaceModel, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleBoundary,
-    SurfaceStyleFillArea, SurfaceStyleUsage, SymbolColour, SymbolStyle, TextOrCharacter,
-    TextStyleForDefinedFont, ViewVolume, VisualizationPool,
+    PresentationReprSelect, PresentationStyleAssignment, PresentationStyleAssignmentData,
+    PresentedItem, PresentedItemRepresentation, PsaStyle, ShapeClipping, ShellBasedSurfaceModel,
+    SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleBoundary, SurfaceStyleFillArea,
+    SurfaceStyleUsage, SymbolColour, SymbolStyle, TextOrCharacter, TextStyleForDefinedFont,
+    ViewVolume, VisualizationPool,
 };
 use crate::reader::ReaderContext;
 
@@ -251,6 +253,53 @@ pub(crate) fn lower_curve_style(ctx: &mut ReaderContext, entity_id: u64, early: 
             curve_width,
             curve_colour,
         });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `PRESENTATION_STYLE_ASSIGNMENT`. Each `styles` member is either an
+/// `EntityRef` resolved by multi-probe (`SURFACE_STYLE_USAGE` / `POINT_STYLE` via
+/// the typed L1 keys, `CURVE_STYLE` via `CurveStyleId`) or the `NULL_STYLE`
+/// placeholder. An entity that matches no modelled style flavour is skipped
+/// (`FILL_AREA_STYLE` direct / `SYMBOL_STYLE` / etc.), matching the previous
+/// `parse_psa_styles`. The non-standard `$`/bare-`.NULL.` forms were normalized
+/// (and `NsCase`-recorded) before bind, so the L1 here is already standard.
+pub(crate) fn lower_presentation_style_assignment(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyPresentationStyleAssignment,
+) {
+    let mut styles = Vec::with_capacity(early.styles.len());
+    for sel in early.styles {
+        match sel {
+            EarlyPresentationStyleSelect::EntityRef(r) => {
+                if let Some(ssu_id) = ctx
+                    .id_cache
+                    .get::<EarlySurfaceStyleUsageId>(r)
+                    .map(|e| ctx.early.lookup_lowered(e))
+                {
+                    styles.push(PsaStyle::Surface(ssu_id));
+                } else if let Some(ps_id) = ctx
+                    .id_cache
+                    .get::<EarlyPointStyleId>(r)
+                    .map(|e| ctx.early.lookup_lowered(e))
+                {
+                    styles.push(PsaStyle::Point(ps_id));
+                } else if let Some(cs_id) = ctx.id_cache.get::<CurveStyleId>(r) {
+                    styles.push(PsaStyle::Curve(cs_id));
+                }
+                // Unmodelled style flavours (FILL_AREA_STYLE direct, SYMBOL_STYLE,
+                // etc.) silently skipped — matches the previous handler.
+            }
+            EarlyPresentationStyleSelect::NullStyle(_) => styles.push(PsaStyle::Null),
+        }
+    }
+    let id = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .presentation_style_assignments
+        .push(PresentationStyleAssignment::Itself(
+            PresentationStyleAssignmentData { styles },
+        ));
     ctx.id_cache.insert(entity_id, id);
 }
 
