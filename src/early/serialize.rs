@@ -30,7 +30,7 @@ pub(crate) use super::generated::serialize::{
     serialize_composite_text, serialize_conical_surface,
     serialize_constructive_geometry_representation_relationship,
     serialize_context_dependent_shape_representation, serialize_coordinated_universal_time_offset,
-    serialize_curve_bounded_surface, serialize_cylindrical_surface,
+    serialize_curve_bounded_surface, serialize_curve_style, serialize_cylindrical_surface,
     serialize_cylindricity_tolerance, serialize_date_and_time, serialize_date_time_role,
     serialize_datum, serialize_datum_feature, serialize_datum_system, serialize_datum_target,
     serialize_degenerate_toroidal_surface, serialize_derived_unit, serialize_derived_unit_element,

@@ -4,9 +4,9 @@
 use crate::early::model::{
     EarlyAppliedPresentedItem, EarlyCameraModelD3, EarlyCameraModelD3MultiClipping,
     EarlyCameraModelD3WithHlhsr, EarlyCameraUsage, EarlyColourRgb, EarlyCompositeText,
-    EarlyDraughtingPreDefinedColour, EarlyDraughtingPreDefinedCurveFont, EarlyFillAreaStyle,
-    EarlyFillAreaStyleColour, EarlyGeometricCurveSet, EarlyGeometricSet, EarlyMarker,
-    EarlyMarkerSize, EarlyPointStyle, EarlyPreDefinedCurveFont, EarlyPreDefinedMarker,
+    EarlyCurveStyle, EarlyDraughtingPreDefinedColour, EarlyDraughtingPreDefinedCurveFont,
+    EarlyFillAreaStyle, EarlyFillAreaStyleColour, EarlyGeometricCurveSet, EarlyGeometricSet,
+    EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlyPreDefinedCurveFont, EarlyPreDefinedMarker,
     EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol,
     EarlyPresentationLayerAssignment, EarlyPresentedItemRepresentation,
     EarlyShellBasedSurfaceModel, EarlySurfaceSideStyle, EarlySurfaceStyleBoundary,
@@ -16,8 +16,8 @@ use crate::early::model::{
 use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::fill_area_style_colour::FillAreaStyleColourHandler;
 use crate::ir::visualization::{
-    FillAreaStyle, Marker, MarkerSize, PointStyle, SurfaceSideStyle, SurfaceSideStyleEntry,
-    SurfaceStyleFillArea, SurfaceStyleUsage, ViewVolume,
+    CurveStyle, CurveWidth, FillAreaStyle, Marker, MarkerSize, PointStyle, SurfaceSideStyle,
+    SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleUsage, ViewVolume,
 };
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -125,6 +125,24 @@ pub(crate) fn lift_point_style(buf: &WriteBuffer, l2: &PointStyle) -> EarlyPoint
         marker: Some(marker),
         marker_size: Some(marker_size),
         marker_colour: Some(buf.step_id(l2.marker_colour)),
+    }
+}
+
+/// Lift L2 `CurveStyle` → L1. `curve_font` (optional) and `curve_colour`
+/// resolve to output step ids; `curve_width` (`size_select`) mirrors the
+/// `MarkerSize` lift. L2-required `curve_width` / `curve_colour` are always
+/// emitted `Some` into the faithfully-optional L1.
+pub(crate) fn lift_curve_style(buf: &WriteBuffer, l2: &CurveStyle) -> EarlyCurveStyle {
+    let curve_width = match &l2.curve_width {
+        CurveWidth::PositiveLengthMeasure(v) => EarlyMarkerSize::PositiveLength(*v),
+        CurveWidth::MeasureWithUnit(id) => EarlyMarkerSize::MeasureWithUnit(buf.step_id(*id)),
+        CurveWidth::Descriptive(s) => EarlyMarkerSize::Descriptive(s.clone()),
+    };
+    EarlyCurveStyle {
+        name: l2.name.clone(),
+        curve_font: l2.curve_font.map(|id| buf.step_id(id)),
+        curve_width: Some(curve_width),
+        curve_colour: Some(buf.step_id(l2.curve_colour)),
     }
 }
 

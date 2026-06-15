@@ -3237,6 +3237,30 @@ pub(crate) fn bind_ratio_measure_with_unit(
     }))
 }
 
+pub(crate) fn bind_curve_style(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<Option<super::model::EarlyCurveStyle>, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "CURVE_STYLE")?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let curve_font = crate::ir::attr::read_optional_entity_ref(attrs, 1, entity_id, "curve_font")?;
+    let curve_width = match &attrs[2] {
+        crate::parser::entity::Attribute::Unset | crate::parser::entity::Attribute::Derived => None,
+        _ => match bind_size_select(&attrs[2]) {
+            Some(v) => Some(v),
+            None => return Ok(None),
+        },
+    };
+    let curve_colour =
+        crate::ir::attr::read_optional_entity_ref(attrs, 3, entity_id, "curve_colour")?;
+    Ok(Some(super::model::EarlyCurveStyle {
+        name,
+        curve_font,
+        curve_width,
+        curve_colour,
+    }))
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

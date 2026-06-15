@@ -4600,6 +4600,30 @@ impl crate::ir::arena::ArenaId for EarlyRatioMeasureWithUnitId {
     }
 }
 
+/// L1 `CURVE_STYLE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCurveStyle {
+    pub(crate) name: String,
+    pub(crate) curve_font: Option<u64>,
+    pub(crate) curve_width: Option<EarlyMarkerSize>,
+    pub(crate) curve_colour: Option<u64>,
+}
+
+/// Typed `id_cache` key for `CURVE_STYLE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCurveStyleId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCurveStyleId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

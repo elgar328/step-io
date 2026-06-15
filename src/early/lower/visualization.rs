@@ -4,11 +4,11 @@
 use crate::early::model::{
     EarlyAppliedPresentedItem, EarlyCameraModelD3, EarlyCameraModelD3MultiClipping,
     EarlyCameraModelD3WithHlhsr, EarlyCameraUsage, EarlyColourRgb, EarlyCompositeText,
-    EarlyDraughtingPreDefinedColour, EarlyDraughtingPreDefinedCurveFont, EarlyFillAreaStyle,
-    EarlyFillAreaStyleColour, EarlyFillAreaStyleId, EarlyGeometricCurveSet, EarlyGeometricSet,
-    EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlyPointStyleId, EarlyPreDefinedCurveFont,
-    EarlyPreDefinedMarker, EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol,
-    EarlyPreDefinedTerminatorSymbol, EarlyPresentationLayerAssignment,
+    EarlyCurveStyle, EarlyDraughtingPreDefinedColour, EarlyDraughtingPreDefinedCurveFont,
+    EarlyFillAreaStyle, EarlyFillAreaStyleColour, EarlyFillAreaStyleId, EarlyGeometricCurveSet,
+    EarlyGeometricSet, EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlyPointStyleId,
+    EarlyPreDefinedCurveFont, EarlyPreDefinedMarker, EarlyPreDefinedPointMarkerSymbol,
+    EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol, EarlyPresentationLayerAssignment,
     EarlyPresentedItemRepresentation, EarlyShellBasedSurfaceModel, EarlySurfaceSideStyle,
     EarlySurfaceSideStyleId, EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea,
     EarlySurfaceStyleFillAreaId, EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage,
@@ -16,16 +16,16 @@ use crate::early::model::{
     EarlyViewVolume, EarlyViewVolumeId,
 };
 use crate::ir::id::{
-    ColourId, CurveId, MeasureWithUnitId, PlanarExtentId, PointId, PreDefinedMarkerId, ShellId,
-    SurfaceStyleRenderingId,
+    ColourId, CurveId, MeasureWithUnitId, PlanarExtentId, PointId, PreDefinedCurveFontId,
+    PreDefinedMarkerId, ShellId, SurfaceStyleRenderingId,
 };
 use crate::ir::shape_rep::{CameraUsage, RepresentationMap};
 use crate::ir::visualization::{
     AppliedPresentedItem, CameraModel, CameraModelD3, CameraModelD3MultiClipping,
-    CameraModelD3WithHlhsr, Colour, ColourRgb, CompositeText, CurveOrRender,
-    DraughtingPreDefinedColour, DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour,
-    FoundedItem, GeometricCurveSet, GeometricRepresentationItem, GeometricSet, Marker, MarkerSize,
-    PointStyle, PreDefinedCurveFont, PreDefinedCurveFontData, PreDefinedMarker,
+    CameraModelD3WithHlhsr, Colour, ColourRgb, CompositeText, CurveOrRender, CurveStyle,
+    CurveWidth, DraughtingPreDefinedColour, DraughtingPreDefinedCurveFont, FillAreaStyle,
+    FillAreaStyleColour, FoundedItem, GeometricCurveSet, GeometricRepresentationItem, GeometricSet,
+    Marker, MarkerSize, PointStyle, PreDefinedCurveFont, PreDefinedCurveFontData, PreDefinedMarker,
     PreDefinedMarkerData, PreDefinedPointMarkerSymbol, PreDefinedSymbol, PreDefinedSymbolData,
     PreDefinedTerminatorSymbol, PresentationLayerAssignment, PresentationLayerAssignmentItem,
     PresentationReprSelect, PresentedItem, PresentedItemRepresentation, ShapeClipping,
@@ -206,6 +206,52 @@ pub(crate) fn lower_point_style(ctx: &mut ReaderContext, entity_id: u64, early: 
         }));
     let early_id: EarlyPointStyleId = ctx.early.record_lowered(id);
     ctx.id_cache.insert(entity_id, early_id);
+}
+
+/// Lower one `CURVE_STYLE` into its own `curve_styles` arena. `curve_font`
+/// (an absent `$` stays `None`), `curve_width` (`size_select`) and `curve_colour`
+/// resolve through the `id_cache`; an unresolved ref — or an absent L2-required
+/// `curve_width` / `curve_colour` — drops the entity (matching the previous
+/// handler). The arena id (`CurveStyleId`) is registered directly, the key the
+/// PSA / styled-item consumers probe.
+pub(crate) fn lower_curve_style(ctx: &mut ReaderContext, entity_id: u64, early: EarlyCurveStyle) {
+    let curve_font = match early.curve_font {
+        None => None,
+        Some(font_ref) => {
+            let Some(id) = ctx.id_cache.get::<PreDefinedCurveFontId>(font_ref) else {
+                return; // unsupported curve_font SELECT variant — drop
+            };
+            Some(id)
+        }
+    };
+    let curve_width = match early.curve_width {
+        Some(EarlyMarkerSize::PositiveLength(v)) => CurveWidth::PositiveLengthMeasure(v),
+        Some(EarlyMarkerSize::Descriptive(s)) => CurveWidth::Descriptive(s),
+        Some(EarlyMarkerSize::MeasureWithUnit(n)) => {
+            let Some(id) = ctx.id_cache.get::<MeasureWithUnitId>(n) else {
+                return;
+            };
+            CurveWidth::MeasureWithUnit(id)
+        }
+        None => return,
+    };
+    let Some(curve_colour_ref) = early.curve_colour else {
+        return;
+    };
+    let Some(curve_colour) = ctx.id_cache.get::<ColourId>(curve_colour_ref) else {
+        return;
+    };
+    let id = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .curve_styles
+        .push(CurveStyle {
+            name: early.name,
+            curve_font,
+            curve_width,
+            curve_colour,
+        });
+    ctx.id_cache.insert(entity_id, id);
 }
 
 /// Lower one `VIEW_VOLUME` into the `founded_items` arena and record the

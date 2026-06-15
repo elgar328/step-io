@@ -3521,6 +3521,30 @@ pub(crate) fn serialize_ratio_measure_with_unit(
     )
 }
 
+pub(crate) fn serialize_curve_style(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCurveStyle,
+) -> u64 {
+    buf.push_simple(
+        "CURVE_STYLE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match l1.curve_font {
+                Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            match &l1.curve_width {
+                Some(v) => size_select_emit(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            match l1.curve_colour {
+                Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {
