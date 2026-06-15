@@ -198,6 +198,8 @@ generate = [
     "quasi_uniform_surface",
     # Phase 2 pilot: W-COMPLEX — rational b_spline curve (multi-part complex)
     "rational_b_spline_curve",
+    # Phase 2b: W-COMPLEX — rational b_spline surface (complex + weights 2D grid)
+    "rational_b_spline_surface",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
@@ -238,6 +240,17 @@ parts = [
     "GEOMETRIC_REPRESENTATION_ITEM",
     "RATIONAL_B_SPLINE_CURVE",
     "REPRESENTATION_ITEM",
+]
+
+[complex.rational_b_spline_surface]
+parts = [
+    "BOUNDED_SURFACE",
+    "B_SPLINE_SURFACE",
+    "B_SPLINE_SURFACE_WITH_KNOTS",
+    "GEOMETRIC_REPRESENTATION_ITEM",
+    "RATIONAL_B_SPLINE_SURFACE",
+    "REPRESENTATION_ITEM",
+    "SURFACE",
 ]
 
 # Per-entity EXPRESS Derived (`*`) attribute names. early.toml (generated) cannot

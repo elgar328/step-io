@@ -3062,6 +3062,95 @@ pub(crate) fn serialize_rational_b_spline_curve(
     ])
 }
 
+pub(crate) fn serialize_rational_b_spline_surface(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyRationalBSplineSurface,
+) -> u64 {
+    buf.push_complex(vec![
+        ("BOUNDED_SURFACE".into(), vec![]),
+        (
+            "B_SPLINE_SURFACE".into(),
+            vec![
+                crate::parser::entity::Attribute::Integer(l1.u_degree),
+                crate::parser::entity::Attribute::Integer(l1.v_degree),
+                crate::parser::entity::Attribute::List(
+                    l1.control_points_list
+                        .iter()
+                        .map(|row| {
+                            crate::parser::entity::Attribute::List(
+                                row.iter()
+                                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                                    .collect(),
+                            )
+                        })
+                        .collect(),
+                ),
+                b_spline_surface_form_attr(l1.surface_form),
+                crate::parser::entity::Attribute::Enum(
+                    crate::ir::attr::logical_to_step(l1.u_closed).into(),
+                ),
+                crate::parser::entity::Attribute::Enum(
+                    crate::ir::attr::logical_to_step(l1.v_closed).into(),
+                ),
+                crate::parser::entity::Attribute::Enum(
+                    crate::ir::attr::logical_to_step(l1.self_intersect).into(),
+                ),
+            ],
+        ),
+        (
+            "B_SPLINE_SURFACE_WITH_KNOTS".into(),
+            vec![
+                crate::parser::entity::Attribute::List(
+                    l1.u_multiplicities
+                        .iter()
+                        .map(|&x| crate::parser::entity::Attribute::Integer(x))
+                        .collect(),
+                ),
+                crate::parser::entity::Attribute::List(
+                    l1.v_multiplicities
+                        .iter()
+                        .map(|&x| crate::parser::entity::Attribute::Integer(x))
+                        .collect(),
+                ),
+                crate::parser::entity::Attribute::List(
+                    l1.u_knots
+                        .iter()
+                        .map(|&x| crate::parser::entity::Attribute::Real(x))
+                        .collect(),
+                ),
+                crate::parser::entity::Attribute::List(
+                    l1.v_knots
+                        .iter()
+                        .map(|&x| crate::parser::entity::Attribute::Real(x))
+                        .collect(),
+                ),
+                knot_type_attr(l1.knot_spec),
+            ],
+        ),
+        ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),
+        (
+            "RATIONAL_B_SPLINE_SURFACE".into(),
+            vec![crate::parser::entity::Attribute::List(
+                l1.weights_data
+                    .iter()
+                    .map(|row| {
+                        crate::parser::entity::Attribute::List(
+                            row.iter()
+                                .map(|&x| crate::parser::entity::Attribute::Real(x))
+                                .collect(),
+                        )
+                    })
+                    .collect(),
+            )],
+        ),
+        (
+            "REPRESENTATION_ITEM".into(),
+            vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+        ),
+        ("SURFACE".into(), vec![]),
+    ])
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

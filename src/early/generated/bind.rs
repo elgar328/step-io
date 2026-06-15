@@ -2815,6 +2815,49 @@ pub(crate) fn bind_rational_b_spline_curve(
     })
 }
 
+pub(crate) fn bind_rational_b_spline_surface(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<super::model::EarlyRationalBSplineSurface, crate::ir::error::ConvertError> {
+    let attrs = crate::reader::require_part_attrs(parts, "B_SPLINE_SURFACE", entity_id)?;
+    let u_degree = crate::ir::attr::read_integer(attrs, 0, entity_id, "u_degree")?;
+    let v_degree = crate::ir::attr::read_integer(attrs, 1, entity_id, "v_degree")?;
+    let control_points_list =
+        crate::ir::attr::read_entity_ref_grid(attrs, 2, entity_id, "control_points_list")?;
+    let surface_form = bind_b_spline_surface_form(attrs, 3, entity_id, "surface_form")?;
+    let u_closed = crate::ir::attr::read_logical(attrs, 4, entity_id, "u_closed")?;
+    let v_closed = crate::ir::attr::read_logical(attrs, 5, entity_id, "v_closed")?;
+    let self_intersect = crate::ir::attr::read_logical(attrs, 6, entity_id, "self_intersect")?;
+    let attrs = crate::reader::require_part_attrs(parts, "B_SPLINE_SURFACE_WITH_KNOTS", entity_id)?;
+    let u_multiplicities =
+        crate::ir::attr::read_integer_list(attrs, 0, entity_id, "u_multiplicities")?;
+    let v_multiplicities =
+        crate::ir::attr::read_integer_list(attrs, 1, entity_id, "v_multiplicities")?;
+    let u_knots = crate::ir::attr::read_real_list(attrs, 2, entity_id, "u_knots")?;
+    let v_knots = crate::ir::attr::read_real_list(attrs, 3, entity_id, "v_knots")?;
+    let knot_spec = bind_knot_type(attrs, 4, entity_id, "knot_spec")?;
+    let attrs = crate::reader::require_part_attrs(parts, "RATIONAL_B_SPLINE_SURFACE", entity_id)?;
+    let weights_data = crate::ir::attr::read_real_grid(attrs, 0, entity_id, "weights_data")?;
+    let attrs = crate::reader::require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    Ok(super::model::EarlyRationalBSplineSurface {
+        u_degree,
+        v_degree,
+        control_points_list,
+        surface_form,
+        u_closed,
+        v_closed,
+        self_intersect,
+        u_multiplicities,
+        v_multiplicities,
+        u_knots,
+        v_knots,
+        knot_spec,
+        weights_data,
+        name,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

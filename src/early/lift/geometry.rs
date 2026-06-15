@@ -9,9 +9,10 @@ use crate::early::model::{
     EarlyCurveBoundedSurface, EarlyCylindricalSurface, EarlyDegenerateToroidalSurface,
     EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyKnotType, EarlyLine, EarlyOffsetCurve3d,
     EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent, EarlyPlane,
-    EarlyPolyline, EarlyRationalBSplineCurve, EarlyRectangularTrimmedSurface,
-    EarlySphericalSurface, EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution,
-    EarlyToroidalSurface, EarlyTrimSelect, EarlyTrimmedCurve, EarlyVector, EarlyVertexPoint,
+    EarlyPolyline, EarlyRationalBSplineCurve, EarlyRationalBSplineSurface,
+    EarlyRectangularTrimmedSurface, EarlySphericalSurface, EarlySurfaceOfLinearExtrusion,
+    EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyTrimSelect, EarlyTrimmedCurve,
+    EarlyVector, EarlyVertexPoint,
 };
 use crate::ir::geometry::{
     Direction3, Logical, NurbsCurve, NurbsSurface, Point3, TransitionCode, TrimMaster,
@@ -94,6 +95,32 @@ pub(crate) fn lift_rational_bspline_curve(
         self_intersect: nurbs.self_intersect,
         knot_multiplicities: nurbs.knot_multiplicities.clone(),
         knots: nurbs.knots.clone(),
+        knot_spec: EarlyKnotType::Unspecified,
+        weights_data: weights,
+    }
+}
+
+/// Lift one `RATIONAL_B_SPLINE_SURFACE` (complex). `control_points`/`weights` are
+/// the u/v grids (the handler extracts weights from `NurbsSurfaceKind::Rational`).
+/// `knot_spec` is always re-emitted as `Unspecified` (see plan).
+pub(crate) fn lift_rational_bspline_surface(
+    nurbs: &NurbsSurface,
+    control_points: Vec<Vec<u64>>,
+    weights: Vec<Vec<f64>>,
+) -> EarlyRationalBSplineSurface {
+    EarlyRationalBSplineSurface {
+        name: String::new(),
+        u_degree: i64::from(nurbs.u_degree),
+        v_degree: i64::from(nurbs.v_degree),
+        control_points_list: control_points,
+        surface_form: nurbs.form,
+        u_closed: nurbs.u_closed,
+        v_closed: nurbs.v_closed,
+        self_intersect: nurbs.self_intersect,
+        u_multiplicities: nurbs.u_knot_multiplicities.clone(),
+        v_multiplicities: nurbs.v_knot_multiplicities.clone(),
+        u_knots: nurbs.u_knots.clone(),
+        v_knots: nurbs.v_knots.clone(),
         knot_spec: EarlyKnotType::Unspecified,
         weights_data: weights,
     }

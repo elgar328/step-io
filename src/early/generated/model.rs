@@ -4054,6 +4054,40 @@ impl crate::ir::arena::ArenaId for EarlyRationalBSplineCurveId {
     }
 }
 
+/// L1 `RATIONAL_B_SPLINE_SURFACE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyRationalBSplineSurface {
+    pub(crate) u_degree: i64,
+    pub(crate) v_degree: i64,
+    pub(crate) control_points_list: Vec<Vec<u64>>,
+    pub(crate) surface_form: crate::ir::geometry::SurfaceForm,
+    pub(crate) u_closed: crate::ir::geometry::Logical,
+    pub(crate) v_closed: crate::ir::geometry::Logical,
+    pub(crate) self_intersect: crate::ir::geometry::Logical,
+    pub(crate) u_multiplicities: Vec<i64>,
+    pub(crate) v_multiplicities: Vec<i64>,
+    pub(crate) u_knots: Vec<f64>,
+    pub(crate) v_knots: Vec<f64>,
+    pub(crate) knot_spec: EarlyKnotType,
+    pub(crate) weights_data: Vec<Vec<f64>>,
+    pub(crate) name: String,
+}
+
+/// Typed `id_cache` key for `RATIONAL_B_SPLINE_SURFACE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyRationalBSplineSurfaceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyRationalBSplineSurfaceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

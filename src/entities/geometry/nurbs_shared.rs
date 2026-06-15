@@ -82,11 +82,6 @@ pub(super) struct SurfaceCommonAttrs {
     pub u_closed: Attribute,
     pub v_closed: Attribute,
     pub self_intersect: Attribute,
-    pub u_mults: Attribute,
-    pub v_mults: Attribute,
-    pub u_knots: Attribute,
-    pub v_knots: Attribute,
-    pub knot_spec: Attribute,
 }
 
 pub(super) fn build_surface_common(
@@ -111,24 +106,5 @@ pub(super) fn build_surface_common(
         u_closed: Attribute::Enum(logical_to_step(nurbs.u_closed).into()),
         v_closed: Attribute::Enum(logical_to_step(nurbs.v_closed).into()),
         self_intersect: Attribute::Enum(logical_to_step(nurbs.self_intersect).into()),
-        u_mults: Attribute::List(
-            nurbs
-                .u_knot_multiplicities
-                .iter()
-                .copied()
-                .map(Attribute::Integer)
-                .collect(),
-        ),
-        v_mults: Attribute::List(
-            nurbs
-                .v_knot_multiplicities
-                .iter()
-                .copied()
-                .map(Attribute::Integer)
-                .collect(),
-        ),
-        u_knots: Attribute::List(nurbs.u_knots.iter().copied().map(Attribute::Real).collect()),
-        v_knots: Attribute::List(nurbs.v_knots.iter().copied().map(Attribute::Real).collect()),
-        knot_spec: Attribute::Enum("UNSPECIFIED".into()),
     })
 }

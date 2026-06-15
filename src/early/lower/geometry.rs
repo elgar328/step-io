@@ -13,9 +13,9 @@ use crate::early::model::{
     EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyLine, EarlyOffsetCurve3d,
     EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent, EarlyPlane,
     EarlyPolyline, EarlyQuasiUniformCurve, EarlyQuasiUniformSurface, EarlyRationalBSplineCurve,
-    EarlyRectangularTrimmedSurface, EarlySphericalSurface, EarlySurfaceOfLinearExtrusion,
-    EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyTrimSelect, EarlyTrimmedCurve,
-    EarlyVector, EarlyVertexPoint,
+    EarlyRationalBSplineSurface, EarlyRectangularTrimmedSurface, EarlySphericalSurface,
+    EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyTrimSelect,
+    EarlyTrimmedCurve, EarlyVector, EarlyVertexPoint,
 };
 use crate::entities::geometry::nurbs_shared::quasi_uniform_knots;
 use crate::ir::error::ConvertError;
@@ -305,6 +305,78 @@ pub(crate) fn lower_rational_bspline_curve(
         self_intersect: early.self_intersect,
     };
     let id = ctx.geometry.curves.push(Curve::Nurbs(curve));
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
+/// Lower one `RATIONAL_B_SPLINE_SURFACE` (complex, rational). u/v degrees narrow
+/// to `u32`; the `weights_data` 2D grid must match the control-point grid shape
+/// (row count and each row's length — `DimensionMismatch` otherwise). No 2D guard.
+/// `knot_spec` is informational and dropped.
+pub(crate) fn lower_rational_bspline_surface(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyRationalBSplineSurface,
+) -> Result<(), ConvertError> {
+    let u_degree = u32::try_from(early.u_degree).map_err(|_| ConvertError::AttributeType {
+        entity_id,
+        field_name: "u_degree",
+        expected: "non-negative Integer",
+        actual: crate::ir::error::AttributeKindTag::Integer,
+    })?;
+    let v_degree = u32::try_from(early.v_degree).map_err(|_| ConvertError::AttributeType {
+        entity_id,
+        field_name: "v_degree",
+        expected: "non-negative Integer",
+        actual: crate::ir::error::AttributeKindTag::Integer,
+    })?;
+    if early.weights_data.len() != early.control_points_list.len() {
+        return Err(ConvertError::DimensionMismatch {
+            entity_id,
+            field_name: "weights_data",
+            expected: early.control_points_list.len(),
+            actual: early.weights_data.len(),
+        });
+    }
+    for (w_row, cp_row) in early
+        .weights_data
+        .iter()
+        .zip(early.control_points_list.iter())
+    {
+        if w_row.len() != cp_row.len() {
+            return Err(ConvertError::DimensionMismatch {
+                entity_id,
+                field_name: "weights_data",
+                expected: cp_row.len(),
+                actual: w_row.len(),
+            });
+        }
+    }
+    let mut control_points = Vec::with_capacity(early.control_points_list.len());
+    for row in &early.control_points_list {
+        let mut pt_row = Vec::with_capacity(row.len());
+        for &r in row {
+            pt_row.push(ctx.resolve_point(entity_id, r, "control_points_list")?);
+        }
+        control_points.push(pt_row);
+    }
+    let surface = NurbsSurface {
+        u_degree,
+        v_degree,
+        control_points,
+        kind: NurbsSurfaceKind::Rational {
+            weights: early.weights_data.clone(),
+        },
+        u_knot_multiplicities: early.u_multiplicities.clone(),
+        v_knot_multiplicities: early.v_multiplicities.clone(),
+        u_knots: early.u_knots.clone(),
+        v_knots: early.v_knots.clone(),
+        u_closed: early.u_closed,
+        v_closed: early.v_closed,
+        form: early.surface_form,
+        self_intersect: early.self_intersect,
+    };
+    let id = ctx.geometry.surfaces.push(Surface::Nurbs(surface));
     ctx.id_cache.insert(entity_id, id);
     Ok(())
 }
