@@ -2935,6 +2935,18 @@ pub(crate) fn bind_parametric_representation_context(
     })
 }
 
+pub(crate) fn bind_brep_with_voids(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyBrepWithVoids, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "BREP_WITH_VOIDS")?;
+    Ok(super::model::EarlyBrepWithVoids {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        outer: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "outer")?,
+        voids: crate::ir::attr::read_entity_ref_list(attrs, 2, entity_id, "voids")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

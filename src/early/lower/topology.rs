@@ -3,8 +3,8 @@
 //! a dangling child surfaces as `MissingReference`.
 
 use crate::early::model::{
-    EarlyAdvancedFace, EarlyClosedShell, EarlyEdgeCurve, EarlyEdgeLoop, EarlyFaceBound,
-    EarlyFaceOuterBound, EarlyFaceSurface, EarlyManifoldSolidBrep, EarlyOpenShell,
+    EarlyAdvancedFace, EarlyBrepWithVoids, EarlyClosedShell, EarlyEdgeCurve, EarlyEdgeLoop,
+    EarlyFaceBound, EarlyFaceOuterBound, EarlyFaceSurface, EarlyManifoldSolidBrep, EarlyOpenShell,
     EarlyOrientedClosedShell, EarlyOrientedEdge, EarlyVertexLoop,
 };
 use crate::ir::OrientedEdge;
@@ -303,6 +303,55 @@ pub(crate) fn lower_manifold_solid_brep(
         .topology
         .solids
         .push(Solid::ManifoldSolidBrep { outer, name });
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
+/// Lower one `BREP_WITH_VOIDS` — like `MANIFOLD_SOLID_BREP` plus inner void
+/// shells. Each void's `ORIENTED_CLOSED_SHELL` resolves through
+/// `oriented_closed_shell_map` (populated by the OCS handler); its orientation
+/// is written back onto the inner shell **in place** (the IR `Solid` stores only
+/// `Vec<ShellId>`). A shell wrapped with conflicting orientations / dual roles
+/// is an IR violation (Err). Verbatim port of the legacy read.
+pub(crate) fn lower_brep_with_voids(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyBrepWithVoids,
+) -> Result<(), ConvertError> {
+    let outer = ctx.resolve_shell(entity_id, early.outer, "outer")?;
+    let mut voids = Vec::with_capacity(early.voids.len());
+    for &ocs_ref in &early.voids {
+        let (inner_id, orientation) =
+            *ctx.oriented_closed_shell_map
+                .get(&ocs_ref)
+                .ok_or(ConvertError::MissingReference {
+                    from: entity_id,
+                    to: ocs_ref,
+                    field_name: "voids",
+                })?;
+        let existing = ctx.topology.shells[inner_id].orientation;
+        if existing != Orientation::Forward && existing != orientation {
+            return Err(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "shared CLOSED_SHELL (ShellId {}) with conflicting \
+                     orientations in multiple roles",
+                    inner_id.0
+                ),
+            });
+        }
+        ctx.topology.shells[inner_id].orientation = orientation;
+        voids.push(inner_id);
+    }
+    let name = if early.name.is_empty() {
+        None
+    } else {
+        Some(early.name.clone())
+    };
+    let id = ctx
+        .topology
+        .solids
+        .push(Solid::BrepWithVoids { outer, voids, name });
     ctx.id_cache.insert(entity_id, id);
     Ok(())
 }

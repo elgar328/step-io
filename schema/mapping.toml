@@ -205,6 +205,8 @@ generate = [
     "rational_quasi_uniform_surface",
     # Phase 2d: first non-geometry complex — unitless parametric context
     "parametric_representation_context",
+    # Phase 3a: simple entity — manifold_solid_brep subtype with voids
+    "brep_with_voids",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

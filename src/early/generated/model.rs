@@ -4167,6 +4167,29 @@ impl crate::ir::arena::ArenaId for EarlyParametricRepresentationContextId {
     }
 }
 
+/// L1 `BREP_WITH_VOIDS` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyBrepWithVoids {
+    pub(crate) name: String,
+    pub(crate) outer: u64,
+    pub(crate) voids: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `BREP_WITH_VOIDS` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyBrepWithVoidsId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyBrepWithVoidsId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

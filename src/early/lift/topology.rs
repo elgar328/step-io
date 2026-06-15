@@ -3,8 +3,8 @@
 //! the handler's emit recursion; `name` is the legacy empty string.
 
 use crate::early::model::{
-    EarlyAdvancedFace, EarlyClosedShell, EarlyEdgeCurve, EarlyEdgeLoop, EarlyFaceBound,
-    EarlyFaceOuterBound, EarlyFaceSurface, EarlyManifoldSolidBrep, EarlyOpenShell,
+    EarlyAdvancedFace, EarlyBrepWithVoids, EarlyClosedShell, EarlyEdgeCurve, EarlyEdgeLoop,
+    EarlyFaceBound, EarlyFaceOuterBound, EarlyFaceSurface, EarlyManifoldSolidBrep, EarlyOpenShell,
     EarlyOrientedClosedShell, EarlyOrientedEdge, EarlyVertexLoop,
 };
 use crate::ir::topology::Orientation;
@@ -137,4 +137,15 @@ pub(crate) fn lift_face_surface(
 /// Lift one `MANIFOLD_SOLID_BREP` (name preserved; outer = child shell step id).
 pub(crate) fn lift_manifold_solid_brep(name: String, outer: u64) -> EarlyManifoldSolidBrep {
     EarlyManifoldSolidBrep { name, outer }
+}
+
+/// Lift one `BREP_WITH_VOIDS` (name preserved; `outer` + each `voids` entry are
+/// child step ids pre-emitted by the handler — the voids as `ORIENTED_CLOSED_SHELL`
+/// wrapper refs).
+pub(crate) fn lift_brep_with_voids(
+    name: String,
+    outer: u64,
+    voids: Vec<u64>,
+) -> EarlyBrepWithVoids {
+    EarlyBrepWithVoids { name, outer, voids }
 }

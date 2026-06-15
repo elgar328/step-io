@@ -3173,6 +3173,25 @@ pub(crate) fn serialize_parametric_representation_context(
     ])
 }
 
+pub(crate) fn serialize_brep_with_voids(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyBrepWithVoids,
+) -> u64 {
+    buf.push_simple(
+        "BREP_WITH_VOIDS",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.outer),
+            crate::parser::entity::Attribute::List(
+                l1.voids
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {
