@@ -209,6 +209,9 @@ generate = [
     "brep_with_voids",
     # Phase 3c: PMI complex — styled annotation text occurrence
     "annotation_text_occurrence",
+    # Phase 3d: PMI complex — styled leader curve + terminator
+    "leader_curve",
+    "leader_terminator",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
@@ -304,6 +307,29 @@ parts = [
     "GEOMETRIC_REPRESENTATION_ITEM",
     "REPRESENTATION_ITEM",
     "STYLED_ITEM",
+]
+
+[complex.leader_curve]
+parts = [
+    "ANNOTATION_CURVE_OCCURRENCE",
+    "ANNOTATION_OCCURRENCE",
+    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+    "GEOMETRIC_REPRESENTATION_ITEM",
+    "LEADER_CURVE",
+    "REPRESENTATION_ITEM",
+    "STYLED_ITEM",
+]
+
+[complex.leader_terminator]
+parts = [
+    "ANNOTATION_OCCURRENCE",
+    "ANNOTATION_SYMBOL_OCCURRENCE",
+    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+    "GEOMETRIC_REPRESENTATION_ITEM",
+    "LEADER_TERMINATOR",
+    "REPRESENTATION_ITEM",
+    "STYLED_ITEM",
+    "TERMINATOR_SYMBOL",
 ]
 
 # Per-entity EXPRESS Derived (`*`) attribute names. early.toml (generated) cannot

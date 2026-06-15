@@ -5,10 +5,10 @@ use crate::early::model::{
     EarlyAngularLocation, EarlyAngularSize, EarlyAnnotationTextOccurrence,
     EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature, EarlyDimensionalLocation,
     EarlyDimensionalSize, EarlyDirectedDimensionalLocation, EarlyDraughtingCallout,
-    EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship, EarlyLeaderDirectedCallout,
-    EarlyMeasureQualification, EarlyRoundnessTolerance, EarlyStraightnessTolerance,
-    EarlySurfaceProfileTolerance, EarlyToleranceZoneForm, EarlyTypeQualifier,
-    EarlyValueFormatTypeQualifier,
+    EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship, EarlyLeaderCurve,
+    EarlyLeaderDirectedCallout, EarlyLeaderTerminator, EarlyMeasureQualification,
+    EarlyRoundnessTolerance, EarlyStraightnessTolerance, EarlySurfaceProfileTolerance,
+    EarlyToleranceZoneForm, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
 };
 
 /// Lift one `TOLERANCE_ZONE_FORM`.
@@ -263,4 +263,26 @@ pub(crate) fn lift_annotation_text_occurrence(
     item: u64,
 ) -> EarlyAnnotationTextOccurrence {
     EarlyAnnotationTextOccurrence { name, styles, item }
+}
+
+/// Lift the styled `LEADER_CURVE` complex. `styles` = emitted PSA step ids;
+/// `item` = emitted curve step id (handler pre-resolves both).
+pub(crate) fn lift_leader_curve(name: String, styles: Vec<u64>, item: u64) -> EarlyLeaderCurve {
+    EarlyLeaderCurve { name, styles, item }
+}
+
+/// Lift the styled `LEADER_TERMINATOR` complex. `item` = emitted item step id,
+/// `annotated_curve` = emitted `LEADER_CURVE` step id (handler pre-resolves all).
+pub(crate) fn lift_leader_terminator(
+    name: String,
+    styles: Vec<u64>,
+    item: u64,
+    annotated_curve: u64,
+) -> EarlyLeaderTerminator {
+    EarlyLeaderTerminator {
+        name,
+        styles,
+        item,
+        annotated_curve,
+    }
 }

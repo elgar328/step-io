@@ -1025,35 +1025,8 @@ impl ComplexEntityHandler for LeaderCurveHandler {
         parts: &[RawEntityPart],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let ri = require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
-        let name = read_string_or_unset(ri, 0, entity_id, "name")?.to_owned();
-        let si = require_part_attrs(parts, "STYLED_ITEM", entity_id)?;
-        let style_refs = read_entity_ref_list(si, 0, entity_id, "styles")?;
-        let item_ref = read_entity_ref(si, 1, entity_id, "item")?;
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(psa_id) = ctx
-                .id_cache
-                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
-            {
-                styles.push(psa_id);
-            }
-        }
-        let Some(item) = ctx.id_cache.get::<crate::ir::id::CurveId>(item_ref) else {
-            return Ok(()); // item unresolved — drop the occurrence
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_curve_occurrences
-            .push(AnnotationCurveOccurrence::LeaderCurve(LeaderCurve {
-                name,
-                styles,
-                item,
-            }));
-        ctx.id_cache.insert(entity_id, id);
+        let early = crate::early::bind::bind_leader_curve(entity_id, parts)?;
+        crate::early::lower::lower_leader_curve(ctx, entity_id, &early);
         Ok(())
     }
 
@@ -1061,36 +1034,10 @@ impl ComplexEntityHandler for LeaderCurveHandler {
         let curve_step = buf.emit_curve(lc.item)?;
         let mut style_refs = Vec::with_capacity(lc.styles.len());
         for psa_id in lc.styles {
-            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
+            style_refs.push(buf.step_id(psa_id));
         }
-        // Re-emit the AND-combined complex form (alphabetical parts, matching the
-        // source); data only on REPRESENTATION_ITEM (name) + STYLED_ITEM
-        // (styles, item).
-        let n = buf.fresh();
-        buf.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Complex {
-                parts: vec![
-                    ("ANNOTATION_CURVE_OCCURRENCE".into(), vec![]),
-                    ("ANNOTATION_OCCURRENCE".into(), vec![]),
-                    ("DRAUGHTING_ANNOTATION_OCCURRENCE".into(), vec![]),
-                    ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),
-                    ("LEADER_CURVE".into(), vec![]),
-                    (
-                        "REPRESENTATION_ITEM".into(),
-                        vec![Attribute::String(lc.name)],
-                    ),
-                    (
-                        "STYLED_ITEM".into(),
-                        vec![
-                            Attribute::List(style_refs),
-                            Attribute::EntityRef(curve_step),
-                        ],
-                    ),
-                ],
-            },
-        });
-        Ok(n)
+        let early = crate::early::lift::lift_leader_curve(lc.name, style_refs, curve_step);
+        Ok(crate::early::serialize::serialize_leader_curve(buf, &early))
     }
 }
 
@@ -1270,44 +1217,8 @@ impl ComplexEntityHandler for LeaderTerminatorHandler {
         parts: &[RawEntityPart],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let ri = require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
-        let name = read_string_or_unset(ri, 0, entity_id, "name")?.to_owned();
-        let si = require_part_attrs(parts, "STYLED_ITEM", entity_id)?;
-        let style_refs = read_entity_ref_list(si, 0, entity_id, "styles")?;
-        let item_ref = read_entity_ref(si, 1, entity_id, "item")?;
-        let ts = require_part_attrs(parts, "TERMINATOR_SYMBOL", entity_id)?;
-        let ac_ref = read_entity_ref(ts, 0, entity_id, "annotated_curve")?;
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(psa_id) = ctx
-                .id_cache
-                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
-            {
-                styles.push(psa_id);
-            }
-        }
-        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
-            return Ok(());
-        };
-        let Some(annotated_curve) = ctx
-            .id_cache
-            .get::<crate::ir::id::AnnotationCurveOccurrenceId>(ac_ref)
-        else {
-            return Ok(());
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_occurrences
-            .push(AnnotationOccurrence::LeaderTerminator(LeaderTerminator {
-                name,
-                styles,
-                item,
-                annotated_curve,
-            }));
-        ctx.id_cache.insert(entity_id, id);
+        let early = crate::early::bind::bind_leader_terminator(entity_id, parts)?;
+        crate::early::lower::lower_leader_terminator(ctx, entity_id, &early);
         Ok(())
     }
 
@@ -1316,37 +1227,13 @@ impl ComplexEntityHandler for LeaderTerminatorHandler {
         let ac_step = buf.step_id(lt.annotated_curve);
         let mut style_refs = Vec::with_capacity(lt.styles.len());
         for psa_id in lt.styles {
-            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
+            style_refs.push(buf.step_id(psa_id));
         }
-        // Re-emit the AND-combined complex form (alphabetical parts); data on
-        // REPRESENTATION_ITEM (name), STYLED_ITEM (styles, item), TERMINATOR_SYMBOL
-        // (annotated_curve).
-        let n = buf.fresh();
-        buf.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Complex {
-                parts: vec![
-                    ("ANNOTATION_OCCURRENCE".into(), vec![]),
-                    ("ANNOTATION_SYMBOL_OCCURRENCE".into(), vec![]),
-                    ("DRAUGHTING_ANNOTATION_OCCURRENCE".into(), vec![]),
-                    ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),
-                    ("LEADER_TERMINATOR".into(), vec![]),
-                    (
-                        "REPRESENTATION_ITEM".into(),
-                        vec![Attribute::String(lt.name)],
-                    ),
-                    (
-                        "STYLED_ITEM".into(),
-                        vec![Attribute::List(style_refs), Attribute::EntityRef(item_id)],
-                    ),
-                    (
-                        "TERMINATOR_SYMBOL".into(),
-                        vec![Attribute::EntityRef(ac_step)],
-                    ),
-                ],
-            },
-        });
-        Ok(n)
+        let early =
+            crate::early::lift::lift_leader_terminator(lt.name, style_refs, item_id, ac_step);
+        Ok(crate::early::serialize::serialize_leader_terminator(
+            buf, &early,
+        ))
     }
 }
 

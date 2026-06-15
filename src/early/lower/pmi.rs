@@ -5,18 +5,18 @@ use crate::early::model::{
     EarlyAngularLocation, EarlyAngularSize, EarlyAnnotationTextOccurrence,
     EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature, EarlyDimensionalLocation,
     EarlyDimensionalSize, EarlyDirectedDimensionalLocation, EarlyDraughtingCallout,
-    EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship, EarlyLeaderDirectedCallout,
-    EarlyMeasureQualification, EarlyRoundnessTolerance, EarlyStraightnessTolerance,
-    EarlySurfaceProfileTolerance, EarlyToleranceZoneForm, EarlyTypeQualifier,
-    EarlyValueFormatTypeQualifier,
+    EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship, EarlyLeaderCurve,
+    EarlyLeaderDirectedCallout, EarlyLeaderTerminator, EarlyMeasureQualification,
+    EarlyRoundnessTolerance, EarlyStraightnessTolerance, EarlySurfaceProfileTolerance,
+    EarlyToleranceZoneForm, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
 };
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::pmi::{
-    AngularLocationData, AnnotationOccurrence, AnnotationTextOccurrence, Datum, DatumFeature,
-    DimensionalLocation, DimensionalLocationData, DimensionalSize, DimensionalSizeKind,
-    DraughtingCallout, DraughtingCalloutData, GeometricTolerance, GeometricToleranceRelationship,
-    MeasureQualification, PmiPool, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
-    ValueQualifier,
+    AngularLocationData, AnnotationCurveOccurrence, AnnotationOccurrence, AnnotationTextOccurrence,
+    Datum, DatumFeature, DimensionalLocation, DimensionalLocationData, DimensionalSize,
+    DimensionalSizeKind, DraughtingCallout, DraughtingCalloutData, GeometricTolerance,
+    GeometricToleranceRelationship, LeaderCurve, LeaderTerminator, MeasureQualification, PmiPool,
+    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier, ValueQualifier,
 };
 use crate::reader::ReaderContext;
 
@@ -538,5 +538,77 @@ pub(crate) fn lower_annotation_text_occurrence(
                 item,
             },
         ));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower the styled `LEADER_CURVE` complex. `styles` keeps only resolved
+/// `PresentationStyleAssignment` refs; `item` must resolve to a `CurveId`
+/// (unresolved drops the occurrence). Verbatim port of the legacy read.
+pub(crate) fn lower_leader_curve(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyLeaderCurve,
+) {
+    let mut styles = Vec::with_capacity(early.styles.len());
+    for &r in &early.styles {
+        if let Some(psa_id) = ctx
+            .id_cache
+            .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
+        {
+            styles.push(psa_id);
+        }
+    }
+    let Some(item) = ctx.id_cache.get::<crate::ir::id::CurveId>(early.item) else {
+        return; // item unresolved — drop the occurrence
+    };
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_curve_occurrences
+        .push(AnnotationCurveOccurrence::LeaderCurve(LeaderCurve {
+            name: early.name.clone(),
+            styles,
+            item,
+        }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower the styled `LEADER_TERMINATOR` complex. Like `LEADER_CURVE` but `item`
+/// resolves through `resolve_representation_item_ref` and `annotated_curve` must
+/// resolve to an `AnnotationCurveOccurrenceId` (a `LEADER_CURVE`); either
+/// unresolved drops the occurrence. Verbatim port of the legacy read.
+pub(crate) fn lower_leader_terminator(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyLeaderTerminator,
+) {
+    let mut styles = Vec::with_capacity(early.styles.len());
+    for &r in &early.styles {
+        if let Some(psa_id) = ctx
+            .id_cache
+            .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
+        {
+            styles.push(psa_id);
+        }
+    }
+    let Some(item) = resolve_representation_item_ref(ctx, early.item) else {
+        return;
+    };
+    let Some(annotated_curve) = ctx
+        .id_cache
+        .get::<crate::ir::id::AnnotationCurveOccurrenceId>(early.annotated_curve)
+    else {
+        return;
+    };
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_occurrences
+        .push(AnnotationOccurrence::LeaderTerminator(LeaderTerminator {
+            name: early.name.clone(),
+            styles,
+            item,
+            annotated_curve,
+        }));
     ctx.id_cache.insert(entity_id, id);
 }

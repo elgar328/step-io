@@ -3220,6 +3220,70 @@ pub(crate) fn serialize_annotation_text_occurrence(
     ])
 }
 
+pub(crate) fn serialize_leader_curve(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyLeaderCurve,
+) -> u64 {
+    buf.push_complex(vec![
+        ("ANNOTATION_CURVE_OCCURRENCE".into(), vec![]),
+        ("ANNOTATION_OCCURRENCE".into(), vec![]),
+        ("DRAUGHTING_ANNOTATION_OCCURRENCE".into(), vec![]),
+        ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),
+        ("LEADER_CURVE".into(), vec![]),
+        (
+            "REPRESENTATION_ITEM".into(),
+            vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+        ),
+        (
+            "STYLED_ITEM".into(),
+            vec![
+                crate::parser::entity::Attribute::List(
+                    l1.styles
+                        .iter()
+                        .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                        .collect(),
+                ),
+                crate::parser::entity::Attribute::EntityRef(l1.item),
+            ],
+        ),
+    ])
+}
+
+pub(crate) fn serialize_leader_terminator(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyLeaderTerminator,
+) -> u64 {
+    buf.push_complex(vec![
+        ("ANNOTATION_OCCURRENCE".into(), vec![]),
+        ("ANNOTATION_SYMBOL_OCCURRENCE".into(), vec![]),
+        ("DRAUGHTING_ANNOTATION_OCCURRENCE".into(), vec![]),
+        ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),
+        ("LEADER_TERMINATOR".into(), vec![]),
+        (
+            "REPRESENTATION_ITEM".into(),
+            vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+        ),
+        (
+            "STYLED_ITEM".into(),
+            vec![
+                crate::parser::entity::Attribute::List(
+                    l1.styles
+                        .iter()
+                        .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                        .collect(),
+                ),
+                crate::parser::entity::Attribute::EntityRef(l1.item),
+            ],
+        ),
+        (
+            "TERMINATOR_SYMBOL".into(),
+            vec![crate::parser::entity::Attribute::EntityRef(
+                l1.annotated_curve,
+            )],
+        ),
+    ])
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

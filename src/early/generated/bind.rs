@@ -2959,6 +2959,37 @@ pub(crate) fn bind_annotation_text_occurrence(
     Ok(super::model::EarlyAnnotationTextOccurrence { name, styles, item })
 }
 
+pub(crate) fn bind_leader_curve(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<super::model::EarlyLeaderCurve, crate::ir::error::ConvertError> {
+    let attrs = crate::reader::require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let attrs = crate::reader::require_part_attrs(parts, "STYLED_ITEM", entity_id)?;
+    let styles = crate::ir::attr::read_entity_ref_list(attrs, 0, entity_id, "styles")?;
+    let item = crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "item")?;
+    Ok(super::model::EarlyLeaderCurve { name, styles, item })
+}
+
+pub(crate) fn bind_leader_terminator(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<super::model::EarlyLeaderTerminator, crate::ir::error::ConvertError> {
+    let attrs = crate::reader::require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let attrs = crate::reader::require_part_attrs(parts, "STYLED_ITEM", entity_id)?;
+    let styles = crate::ir::attr::read_entity_ref_list(attrs, 0, entity_id, "styles")?;
+    let item = crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "item")?;
+    let attrs = crate::reader::require_part_attrs(parts, "TERMINATOR_SYMBOL", entity_id)?;
+    let annotated_curve = crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "annotated_curve")?;
+    Ok(super::model::EarlyLeaderTerminator {
+        name,
+        styles,
+        item,
+        annotated_curve,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {
