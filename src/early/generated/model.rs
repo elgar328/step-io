@@ -4787,6 +4787,27 @@ impl crate::ir::arena::ArenaId for EarlyPresentationStyleByContextId {
     }
 }
 
+/// L1 `INVISIBILITY` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyInvisibility {
+    pub(crate) invisible_items: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `INVISIBILITY` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyInvisibilityId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyInvisibilityId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

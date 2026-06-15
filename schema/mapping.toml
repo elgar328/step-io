@@ -248,6 +248,8 @@ generate = [
     "presentation_style_assignment",
     # Phase 3q: visualization — presentation style by context (PSA subtype + style_context)
     "presentation_style_by_context",
+    # Phase 3r: visualization — invisibility (all-entity SET, lower multi-probe)
+    "invisibility",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

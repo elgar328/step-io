@@ -41,7 +41,7 @@ pub(crate) use super::generated::bind::{
     bind_fill_area_style_colour, bind_flatness_tolerance, bind_general_property,
     bind_general_property_association, bind_geometric_curve_set, bind_geometric_set,
     bind_geometric_tolerance_relationship, bind_group, bind_hyperbola, bind_id_attribute,
-    bind_identification_role, bind_leader_curve, bind_leader_directed_callout,
+    bind_identification_role, bind_invisibility, bind_leader_curve, bind_leader_directed_callout,
     bind_leader_terminator, bind_length_measure_with_unit, bind_line, bind_local_time,
     bind_make_from_usage_option, bind_manifold_solid_brep, bind_mass_measure_with_unit,
     bind_measure_qualification, bind_measure_with_unit,

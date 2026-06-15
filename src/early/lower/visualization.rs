@@ -6,15 +6,16 @@ use crate::early::model::{
     EarlyCameraModelD3WithHlhsr, EarlyCameraUsage, EarlyColourRgb, EarlyCompositeText,
     EarlyCurveStyle, EarlyDraughtingPreDefinedColour, EarlyDraughtingPreDefinedCurveFont,
     EarlyFillAreaStyle, EarlyFillAreaStyleColour, EarlyFillAreaStyleId, EarlyGeometricCurveSet,
-    EarlyGeometricSet, EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlyPointStyleId,
-    EarlyPreDefinedCurveFont, EarlyPreDefinedMarker, EarlyPreDefinedPointMarkerSymbol,
-    EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol, EarlyPresentationLayerAssignment,
-    EarlyPresentationStyleAssignment, EarlyPresentationStyleByContext,
-    EarlyPresentationStyleSelect, EarlyPresentedItemRepresentation, EarlyShellBasedSurfaceModel,
-    EarlySurfaceSideStyle, EarlySurfaceSideStyleId, EarlySurfaceStyleBoundary,
-    EarlySurfaceStyleFillArea, EarlySurfaceStyleFillAreaId, EarlySurfaceStyleTransparent,
-    EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId, EarlySymbolColour, EarlySymbolStyle,
-    EarlyTextStyleForDefinedFont, EarlyViewVolume, EarlyViewVolumeId,
+    EarlyGeometricSet, EarlyInvisibility, EarlyMarker, EarlyMarkerSize, EarlyPointStyle,
+    EarlyPointStyleId, EarlyPreDefinedCurveFont, EarlyPreDefinedMarker,
+    EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol,
+    EarlyPresentationLayerAssignment, EarlyPresentationStyleAssignment,
+    EarlyPresentationStyleByContext, EarlyPresentationStyleSelect,
+    EarlyPresentedItemRepresentation, EarlyShellBasedSurfaceModel, EarlySurfaceSideStyle,
+    EarlySurfaceSideStyleId, EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea,
+    EarlySurfaceStyleFillAreaId, EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage,
+    EarlySurfaceStyleUsageId, EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont,
+    EarlyViewVolume, EarlyViewVolumeId,
 };
 use crate::ir::id::{
     ColourId, CurveId, CurveStyleId, MeasureWithUnitId, PlanarExtentId, PointId,
@@ -26,14 +27,15 @@ use crate::ir::visualization::{
     CameraModelD3WithHlhsr, Colour, ColourRgb, CompositeText, CurveOrRender, CurveStyle,
     CurveWidth, DraughtingPreDefinedColour, DraughtingPreDefinedCurveFont, FillAreaStyle,
     FillAreaStyleColour, FoundedItem, GeometricCurveSet, GeometricRepresentationItem, GeometricSet,
-    Marker, MarkerSize, PointStyle, PreDefinedCurveFont, PreDefinedCurveFontData, PreDefinedMarker,
-    PreDefinedMarkerData, PreDefinedPointMarkerSymbol, PreDefinedSymbol, PreDefinedSymbolData,
-    PreDefinedTerminatorSymbol, PresentationLayerAssignment, PresentationLayerAssignmentItem,
-    PresentationReprSelect, PresentationStyleAssignment, PresentationStyleAssignmentData,
-    PresentationStyleByContext, PresentedItem, PresentedItemRepresentation, PsaStyle,
-    ShapeClipping, ShellBasedSurfaceModel, StyleContext, SurfaceSideStyle, SurfaceSideStyleEntry,
-    SurfaceStyleBoundary, SurfaceStyleFillArea, SurfaceStyleUsage, SymbolColour, SymbolStyle,
-    TextOrCharacter, TextStyleForDefinedFont, ViewVolume, VisualizationPool,
+    Invisibility, InvisibleItem, Marker, MarkerSize, PointStyle, PreDefinedCurveFont,
+    PreDefinedCurveFontData, PreDefinedMarker, PreDefinedMarkerData, PreDefinedPointMarkerSymbol,
+    PreDefinedSymbol, PreDefinedSymbolData, PreDefinedTerminatorSymbol,
+    PresentationLayerAssignment, PresentationLayerAssignmentItem, PresentationReprSelect,
+    PresentationStyleAssignment, PresentationStyleAssignmentData, PresentationStyleByContext,
+    PresentedItem, PresentedItemRepresentation, PsaStyle, ShapeClipping, ShellBasedSurfaceModel,
+    StyleContext, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleBoundary,
+    SurfaceStyleFillArea, SurfaceStyleUsage, SymbolColour, SymbolStyle, TextOrCharacter,
+    TextStyleForDefinedFont, ViewVolume, VisualizationPool,
 };
 use crate::reader::ReaderContext;
 
@@ -349,6 +351,67 @@ pub(crate) fn lower_presentation_style_by_context(
                 style_context,
             },
         ));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `INVISIBILITY`. `invisible_items` (all-entity SET) resolves by
+/// 5-bucket multi-probe; an empty SET (non-standard `SET[1:?]`) drops as
+/// `NsCase::EmptyInvisibility`, and a non-empty-but-all-unresolved set surfaces
+/// a warning and drops — matching the previous handler. Same arena; the emit is
+/// scheduled late (after draughting) in the writer's `emit_pools`.
+pub(crate) fn lower_invisibility(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyInvisibility,
+) {
+    if early.invisible_items.is_empty() {
+        ctx.ns_push(
+            crate::reader::NsCase::EmptyInvisibility,
+            "INVISIBILITY".into(),
+            1,
+            "dropped (empty invisible_items, non-standard SET[1:?])".into(),
+        );
+        return;
+    }
+    let mut invisible_items = Vec::with_capacity(early.invisible_items.len());
+    for r in early.invisible_items {
+        if let Some(id) = ctx.id_cache.get::<crate::ir::id::StyledItemId>(r) {
+            invisible_items.push(InvisibleItem::StyledItem(id));
+        } else if let Some(id) = ctx.id_cache.get::<crate::ir::id::AnnotationOccurrenceId>(r) {
+            invisible_items.push(InvisibleItem::AnnotationOccurrence(id));
+        } else if let Some(id) = ctx.id_cache.get::<crate::ir::id::RepresentationId>(r) {
+            invisible_items.push(InvisibleItem::Representation(id));
+        } else if let Some(id) = ctx.id_cache.get::<crate::ir::id::DraughtingCalloutId>(r) {
+            invisible_items.push(InvisibleItem::DraughtingCallout(id));
+        } else if let Some(id) = ctx
+            .id_cache
+            .get::<crate::ir::id::PresentationLayerAssignmentId>(r)
+        {
+            invisible_items.push(InvisibleItem::PresentationLayerAssignment(id));
+        }
+        // Dropped item instances are skipped per-item — the entity survives on
+        // its resolved items.
+    }
+    if invisible_items.is_empty() {
+        ctx.warnings
+            .push(crate::ir::error::ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: String::from(
+                    "INVISIBILITY invisible_items did not resolve to any modelled \
+                     styled_item / annotation_occurrence / representation / \
+                     draughting_callout / presentation_layer_assignment — dropping",
+                ),
+            });
+        return;
+    }
+    let id = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .invisibilities
+        .push(Invisibility {
+            invisible_items,
+            presentation_context: None,
+        });
     ctx.id_cache.insert(entity_id, id);
 }
 

@@ -3392,6 +3392,21 @@ pub(crate) fn bind_presentation_style_by_context(
     })
 }
 
+pub(crate) fn bind_invisibility(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyInvisibility, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "INVISIBILITY")?;
+    Ok(super::model::EarlyInvisibility {
+        invisible_items: crate::ir::attr::read_entity_ref_list(
+            attrs,
+            0,
+            entity_id,
+            "invisible_items",
+        )?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

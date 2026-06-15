@@ -3670,6 +3670,21 @@ pub(crate) fn serialize_presentation_style_by_context(
     )
 }
 
+pub(crate) fn serialize_invisibility(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyInvisibility,
+) -> u64 {
+    buf.push_simple(
+        "INVISIBILITY",
+        vec![crate::parser::entity::Attribute::List(
+            l1.invisible_items
+                .iter()
+                .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                .collect(),
+        )],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

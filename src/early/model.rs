@@ -47,7 +47,7 @@ pub(crate) use super::generated::model::{
     EarlyFillAreaStyle, EarlyFillAreaStyleColour, EarlyFillAreaStyleId, EarlyFlatnessTolerance,
     EarlyGeneralProperty, EarlyGeneralPropertyAssociation, EarlyGeometricCurveSet,
     EarlyGeometricSet, EarlyGeometricToleranceRelationship, EarlyGroup, EarlyHyperbola,
-    EarlyIdAttribute, EarlyIdentificationRole, EarlyKnotType, EarlyLeaderCurve,
+    EarlyIdAttribute, EarlyIdentificationRole, EarlyInvisibility, EarlyKnotType, EarlyLeaderCurve,
     EarlyLeaderDirectedCallout, EarlyLeaderTerminator, EarlyLengthMeasureWithUnit, EarlyLine,
     EarlyLocalTime, EarlyMakeFromUsageOption, EarlyManifoldSolidBrep, EarlyMarker, EarlyMarkerSize,
     EarlyMassMeasureWithUnit, EarlyMeasureQualification, EarlyMeasureValue, EarlyMeasureWithUnit,

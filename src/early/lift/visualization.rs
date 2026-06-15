@@ -6,9 +6,9 @@ use crate::early::model::{
     EarlyCameraModelD3WithHlhsr, EarlyCameraUsage, EarlyColourRgb, EarlyCompositeText,
     EarlyCurveStyle, EarlyDraughtingPreDefinedColour, EarlyDraughtingPreDefinedCurveFont,
     EarlyFillAreaStyle, EarlyFillAreaStyleColour, EarlyGeometricCurveSet, EarlyGeometricSet,
-    EarlyMarker, EarlyMarkerSize, EarlyNullStyle, EarlyPointStyle, EarlyPreDefinedCurveFont,
-    EarlyPreDefinedMarker, EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol,
-    EarlyPreDefinedTerminatorSymbol, EarlyPresentationLayerAssignment,
+    EarlyInvisibility, EarlyMarker, EarlyMarkerSize, EarlyNullStyle, EarlyPointStyle,
+    EarlyPreDefinedCurveFont, EarlyPreDefinedMarker, EarlyPreDefinedPointMarkerSymbol,
+    EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol, EarlyPresentationLayerAssignment,
     EarlyPresentationStyleAssignment, EarlyPresentationStyleByContext,
     EarlyPresentationStyleSelect, EarlyPresentedItemRepresentation, EarlyShellBasedSurfaceModel,
     EarlySurfaceSideStyle, EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea,
@@ -18,9 +18,10 @@ use crate::early::model::{
 use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::fill_area_style_colour::FillAreaStyleColourHandler;
 use crate::ir::visualization::{
-    CurveStyle, CurveWidth, FillAreaStyle, Marker, MarkerSize, PointStyle,
-    PresentationStyleAssignmentData, PresentationStyleByContext, PsaStyle, StyleContext,
-    SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleUsage, ViewVolume,
+    CurveStyle, CurveWidth, FillAreaStyle, Invisibility, InvisibleItem, Marker, MarkerSize,
+    PointStyle, PresentationStyleAssignmentData, PresentationStyleByContext, PsaStyle,
+    StyleContext, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleUsage,
+    ViewVolume,
 };
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -198,6 +199,24 @@ pub(crate) fn lift_presentation_style_by_context(
         styles,
         style_context,
     })
+}
+
+/// Lift L2 `Invisibility` → L1. Each `InvisibleItem` (5 variants) resolves to
+/// its output step id. `presentation_context` is never emitted (matching the
+/// previous handler), so it is ignored here.
+pub(crate) fn lift_invisibility(buf: &WriteBuffer, inv: &Invisibility) -> EarlyInvisibility {
+    let invisible_items = inv
+        .invisible_items
+        .iter()
+        .map(|item| match item {
+            InvisibleItem::AnnotationOccurrence(id) => buf.step_id(*id),
+            InvisibleItem::StyledItem(id) => buf.step_id(*id),
+            InvisibleItem::Representation(id) => buf.step_id(*id),
+            InvisibleItem::DraughtingCallout(id) => buf.step_id(*id),
+            InvisibleItem::PresentationLayerAssignment(id) => buf.step_id(*id),
+        })
+        .collect();
+    EarlyInvisibility { invisible_items }
 }
 
 /// Lift one `PRE_DEFINED_MARKER` (name pass-through).
