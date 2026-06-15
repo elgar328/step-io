@@ -306,42 +306,6 @@ pub enum SurfaceForm {
     Unspecified,
 }
 
-impl SurfaceForm {
-    #[must_use]
-    pub fn from_step_enum(s: &str) -> Self {
-        match s {
-            "PLANE_SURF" => Self::PlaneSurf,
-            "CYLINDRICAL_SURF" => Self::CylindricalSurf,
-            "CONICAL_SURF" => Self::ConicalSurf,
-            "SPHERICAL_SURF" => Self::SphericalSurf,
-            "TOROIDAL_SURF" => Self::ToroidalSurf,
-            "SURF_OF_REVOLUTION" => Self::SurfOfRevolution,
-            "RULED_SURF" => Self::RuledSurf,
-            "GENERALISED_CONE" => Self::GeneralisedCone,
-            "QUADRIC_SURF" => Self::QuadricSurf,
-            "SURF_OF_LINEAR_EXTRUSION" => Self::SurfOfLinearExtrusion,
-            _ => Self::Unspecified,
-        }
-    }
-
-    #[must_use]
-    pub fn as_step_enum(self) -> &'static str {
-        match self {
-            Self::PlaneSurf => "PLANE_SURF",
-            Self::CylindricalSurf => "CYLINDRICAL_SURF",
-            Self::ConicalSurf => "CONICAL_SURF",
-            Self::SphericalSurf => "SPHERICAL_SURF",
-            Self::ToroidalSurf => "TOROIDAL_SURF",
-            Self::SurfOfRevolution => "SURF_OF_REVOLUTION",
-            Self::RuledSurf => "RULED_SURF",
-            Self::GeneralisedCone => "GENERALISED_CONE",
-            Self::QuadricSurf => "QUADRIC_SURF",
-            Self::SurfOfLinearExtrusion => "SURF_OF_LINEAR_EXTRUSION",
-            Self::Unspecified => "UNSPECIFIED",
-        }
-    }
-}
-
 /// SET element of a `TRIMMED_CURVE` trim slot — STEP SELECT
 /// `(PARAMETER_VALUE | CARTESIAN_POINT)`.
 #[derive(Debug, Clone, Copy, PartialEq)]

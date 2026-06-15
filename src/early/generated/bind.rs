@@ -3105,7 +3105,12 @@ fn bind_b_spline_surface_form(
         "SURF_OF_LINEAR_EXTRUSION" => Ok(crate::ir::geometry::SurfaceForm::SurfOfLinearExtrusion),
         "SURF_OF_REVOLUTION" => Ok(crate::ir::geometry::SurfaceForm::SurfOfRevolution),
         "TOROIDAL_SURF" => Ok(crate::ir::geometry::SurfaceForm::ToroidalSurf),
-        _ => Ok(crate::ir::geometry::SurfaceForm::Unspecified),
+        "UNSPECIFIED" => Ok(crate::ir::geometry::SurfaceForm::Unspecified),
+        other => Err(crate::ir::error::ConvertError::NonStandardEnumValue {
+            entity_id,
+            field: field.to_string(),
+            token: other.to_string(),
+        }),
     }
 }
 

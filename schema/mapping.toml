@@ -378,4 +378,3 @@ variants = { polyline_form = "PolylineForm", circular_arc = "CircularArc", ellip
 [enum.b_spline_surface_form]
 rust_type = "crate::ir::geometry::SurfaceForm"
 variants = { plane_surf = "PlaneSurf", cylindrical_surf = "CylindricalSurf", conical_surf = "ConicalSurf", spherical_surf = "SphericalSurf", toroidal_surf = "ToroidalSurf", surf_of_revolution = "SurfOfRevolution", ruled_surf = "RuledSurf", generalised_cone = "GeneralisedCone", quadric_surf = "QuadricSurf", surf_of_linear_extrusion = "SurfOfLinearExtrusion", unspecified = "Unspecified" }
-default = "Unspecified"
