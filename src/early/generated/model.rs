@@ -5218,6 +5218,80 @@ impl crate::ir::arena::ArenaId for EarlyRepositionedTessellatedItemId {
     }
 }
 
+/// L1 `COMPLEX_TRIANGULATED_FACE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyComplexTriangulatedFace {
+    pub(crate) name: String,
+    pub(crate) coordinates: u64,
+    pub(crate) pnmax: i64,
+    pub(crate) normals: Vec<Vec<f64>>,
+    pub(crate) geometric_link: Option<u64>,
+    pub(crate) pnindex: Vec<i64>,
+    pub(crate) triangle_strips: Vec<Vec<i64>>,
+    pub(crate) triangle_fans: Vec<Vec<i64>>,
+}
+
+/// Typed `id_cache` key for `COMPLEX_TRIANGULATED_FACE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyComplexTriangulatedFaceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyComplexTriangulatedFaceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `TESSELLATED_ANNOTATION_OCCURRENCE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyTessellatedAnnotationOccurrence {
+    pub(crate) name: String,
+    pub(crate) styles: Vec<u64>,
+    pub(crate) item: u64,
+}
+
+/// Typed `id_cache` key for `TESSELLATED_ANNOTATION_OCCURRENCE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyTessellatedAnnotationOccurrenceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyTessellatedAnnotationOccurrenceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `TESSELLATED_SHAPE_REPRESENTATION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyTessellatedShapeRepresentation {
+    pub(crate) name: String,
+    pub(crate) items: Vec<u64>,
+    pub(crate) context_of_items: u64,
+}
+
+/// Typed `id_cache` key for `TESSELLATED_SHAPE_REPRESENTATION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyTessellatedShapeRepresentationId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyTessellatedShapeRepresentationId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

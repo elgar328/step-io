@@ -3696,6 +3696,62 @@ pub(crate) fn bind_repositioned_tessellated_item(
     })
 }
 
+pub(crate) fn bind_complex_triangulated_face(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyComplexTriangulatedFace, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 8, entity_id, "COMPLEX_TRIANGULATED_FACE")?;
+    Ok(super::model::EarlyComplexTriangulatedFace {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        coordinates: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "coordinates")?,
+        pnmax: crate::ir::attr::read_integer(attrs, 2, entity_id, "pnmax")?,
+        normals: crate::ir::attr::read_real_grid(attrs, 3, entity_id, "normals")?,
+        geometric_link: crate::ir::attr::read_optional_entity_ref(
+            attrs,
+            4,
+            entity_id,
+            "geometric_link",
+        )?,
+        pnindex: crate::ir::attr::read_integer_list(attrs, 5, entity_id, "pnindex")?,
+        triangle_strips: crate::ir::attr::read_integer_grid(
+            attrs,
+            6,
+            entity_id,
+            "triangle_strips",
+        )?,
+        triangle_fans: crate::ir::attr::read_integer_grid(attrs, 7, entity_id, "triangle_fans")?,
+    })
+}
+
+pub(crate) fn bind_tessellated_annotation_occurrence(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyTessellatedAnnotationOccurrence, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "TESSELLATED_ANNOTATION_OCCURRENCE")?;
+    Ok(super::model::EarlyTessellatedAnnotationOccurrence {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        styles: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "styles")?,
+        item: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "item")?,
+    })
+}
+
+pub(crate) fn bind_tessellated_shape_representation(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyTessellatedShapeRepresentation, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "TESSELLATED_SHAPE_REPRESENTATION")?;
+    Ok(super::model::EarlyTessellatedShapeRepresentation {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        items: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "items")?,
+        context_of_items: crate::ir::attr::read_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "context_of_items",
+        )?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

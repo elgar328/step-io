@@ -11,9 +11,12 @@ use crate::early::model::{
     EarlyGeometricToleranceRelationship, EarlyLeaderCurve, EarlyLeaderDirectedCallout,
     EarlyLeaderTerminator, EarlyMeasureQualification, EarlyParallelismTolerance,
     EarlyPerpendicularityTolerance, EarlyRoundnessTolerance, EarlyStraightnessTolerance,
-    EarlySurfaceProfileTolerance, EarlySymmetryTolerance, EarlyToleranceZoneForm,
-    EarlyTotalRunoutTolerance, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
+    EarlySurfaceProfileTolerance, EarlySymmetryTolerance, EarlyTessellatedAnnotationOccurrence,
+    EarlyToleranceZoneForm, EarlyTotalRunoutTolerance, EarlyTypeQualifier,
+    EarlyValueFormatTypeQualifier,
 };
+use crate::ir::pmi::TessellatedAnnotationOccurrence;
+use crate::writer::buffer::WriteBuffer;
 
 /// Lift one `TOLERANCE_ZONE_FORM`.
 pub(crate) fn lift_tolerance_zone_form(name: String) -> EarlyToleranceZoneForm {
@@ -461,5 +464,17 @@ pub(crate) fn lift_annotation_plane(
         styles,
         item,
         elements: None,
+    }
+}
+
+/// Lift one `TESSELLATED_ANNOTATION_OCCURRENCE` (`item`/`styles` → cached step ids).
+pub(crate) fn lift_tessellated_annotation_occurrence(
+    buf: &WriteBuffer,
+    tao: TessellatedAnnotationOccurrence,
+) -> EarlyTessellatedAnnotationOccurrence {
+    EarlyTessellatedAnnotationOccurrence {
+        name: tao.name,
+        styles: tao.styles.iter().map(|&psa| buf.step_id(psa)).collect(),
+        item: buf.step_id(tao.item),
     }
 }

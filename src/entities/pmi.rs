@@ -5,6 +5,7 @@
 //! entity pushed into [`PmiPool`]. They have no entity references; the
 //! GD&T entities that consume them arrive in later phases.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_ref;
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
@@ -201,35 +202,8 @@ impl SimpleEntityHandler for TessellatedAnnotationOccurrenceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "TESSELLATED_ANNOTATION_OCCURRENCE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(psa_id) = ctx
-                .id_cache
-                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
-            {
-                styles.push(psa_id);
-            }
-        }
-        let Some(item) = ctx
-            .id_cache
-            .get::<crate::ir::id::TessellatedItemId>(item_ref)
-        else {
-            return Ok(()); // item unresolved — drop the occurrence
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_occurrences
-            .push(AnnotationOccurrence::TessellatedAnnotationOccurrence(
-                TessellatedAnnotationOccurrence { name, styles, item },
-            ));
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_tessellated_annotation_occurrence(entity_id, attrs)?;
+        lower::lower_tessellated_annotation_occurrence(ctx, entity_id, early);
         Ok(())
     }
 
@@ -237,18 +211,9 @@ impl SimpleEntityHandler for TessellatedAnnotationOccurrenceHandler {
         buf: &mut WriteBuffer,
         tao: TessellatedAnnotationOccurrence,
     ) -> Result<u64, WriteError> {
-        let item = buf.step_id(tao.item);
-        let mut style_refs = Vec::with_capacity(tao.styles.len());
-        for psa_id in tao.styles {
-            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
-        }
-        Ok(buf.push_simple(
-            "TESSELLATED_ANNOTATION_OCCURRENCE",
-            vec![
-                Attribute::String(tao.name),
-                Attribute::List(style_refs),
-                Attribute::EntityRef(item),
-            ],
+        Ok(serialize::serialize_tessellated_annotation_occurrence(
+            buf,
+            &lift::lift_tessellated_annotation_occurrence(buf, tao),
         ))
     }
 }

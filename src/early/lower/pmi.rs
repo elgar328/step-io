@@ -11,8 +11,9 @@ use crate::early::model::{
     EarlyGeometricToleranceRelationship, EarlyLeaderCurve, EarlyLeaderDirectedCallout,
     EarlyLeaderTerminator, EarlyMeasureQualification, EarlyParallelismTolerance,
     EarlyPerpendicularityTolerance, EarlyRoundnessTolerance, EarlyStraightnessTolerance,
-    EarlySurfaceProfileTolerance, EarlySymmetryTolerance, EarlyToleranceZoneForm,
-    EarlyTotalRunoutTolerance, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
+    EarlySurfaceProfileTolerance, EarlySymmetryTolerance, EarlyTessellatedAnnotationOccurrence,
+    EarlyToleranceZoneForm, EarlyTotalRunoutTolerance, EarlyTypeQualifier,
+    EarlyValueFormatTypeQualifier,
 };
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::pmi::{
@@ -21,8 +22,9 @@ use crate::ir::pmi::{
     DimensionalLocationData, DimensionalSize, DimensionalSizeKind, DraughtingAnnotationOccurrence,
     DraughtingCallout, DraughtingCalloutData, GeometricTolerance, GeometricToleranceRelationship,
     GeometricToleranceWithDatumReference, LeaderCurve, LeaderTerminator, MeasureQualification,
-    PlainAnnotationCurveOccurrence, PlainAnnotationOccurrence, PmiPool, ToleranceZoneForm,
-    TypeQualifier, ValueFormatTypeQualifier, ValueQualifier,
+    PlainAnnotationCurveOccurrence, PlainAnnotationOccurrence, PmiPool,
+    TessellatedAnnotationOccurrence, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
+    ValueQualifier,
 };
 use crate::reader::ReaderContext;
 
@@ -947,5 +949,41 @@ pub(crate) fn lower_annotation_plane(
             styles,
             item,
         }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `TESSELLATED_ANNOTATION_OCCURRENCE`. `styles` filter through the
+/// PSA id cache; an unresolved `item` (`tessellated_item`) drops the occurrence.
+pub(crate) fn lower_tessellated_annotation_occurrence(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyTessellatedAnnotationOccurrence,
+) {
+    let mut styles = Vec::with_capacity(early.styles.len());
+    for &r in &early.styles {
+        if let Some(psa_id) = ctx
+            .id_cache
+            .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
+        {
+            styles.push(psa_id);
+        }
+    }
+    let Some(item) = ctx
+        .id_cache
+        .get::<crate::ir::id::TessellatedItemId>(early.item)
+    else {
+        return; // item unresolved — drop the occurrence
+    };
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_occurrences
+        .push(AnnotationOccurrence::TessellatedAnnotationOccurrence(
+            TessellatedAnnotationOccurrence {
+                name: early.name,
+                styles,
+                item,
+            },
+        ));
     ctx.id_cache.insert(entity_id, id);
 }

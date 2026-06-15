@@ -17,8 +17,9 @@ use crate::early::model::{
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
     EarlyRepresentationRelationship, EarlyShapeAspect, EarlyShapeRepresentationRelationship,
-    EarlyToleranceZone, EarlyValueRepresentationItem,
+    EarlyTessellatedShapeRepresentation, EarlyToleranceZone, EarlyValueRepresentationItem,
 };
+use crate::entities::tessellation::resolve_tessellated_item_ref;
 use crate::ir::error::ConvertError;
 use crate::ir::representation_item::{
     MeasureValue, QualifiedRepresentationItem, QualifierRef, RepresentationItem,
@@ -29,10 +30,11 @@ use crate::ir::shape_rep::{
     CharacterizedObject, CharacterizedObjectData, CompositeGroupShapeAspect,
     CompositeShapeAspectKind, ConstructiveGeometryRepresentationRelationship, DatumSystem,
     DatumTarget, MechanicalDesignAndDraughtingRelationship, ModelGeometricView,
-    NumericRepresentationItem, PlacedDatumTargetFeature, RealRepresentationItem,
-    RepresentationRelationship, RepresentationRelationshipData, ShapeAspect,
-    ShapeAspectRelationship, ShapeAspectRelationshipKind, ShapeRepresentationRelationshipIr,
-    ToleranceZone, UnitlessContext,
+    NumericRepresentationItem, PlacedDatumTargetFeature, RealRepresentationItem, Representation,
+    RepresentationContextRef, RepresentationRelationship, RepresentationRelationshipData,
+    ShapeAspect, ShapeAspectRelationship, ShapeAspectRelationshipKind,
+    ShapeRepresentationRelationshipIr, TessellatedShapeRepresentation, ToleranceZone,
+    UnitlessContext,
 };
 use crate::reader::ReaderContext;
 
@@ -757,4 +759,41 @@ pub(crate) fn lower_value_representation_item(
             },
         ));
     ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `TESSELLATED_SHAPE_REPRESENTATION`. The EXPRESS WHERE rule requires
+/// `context_of_items` to be a `GLOBAL_UNIT_ASSIGNED_CONTEXT`; only the `Unitful`
+/// variant is accepted (other contexts drop the carrier, symmetric on re-read).
+/// Items unresolved by `resolve_tessellated_item_ref` are filtered; an empty
+/// resolved set drops the carrier.
+pub(crate) fn lower_tessellated_shape_representation(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyTessellatedShapeRepresentation,
+) {
+    let context = ctx.resolve_repr_context(early.context_of_items);
+    let Some(RepresentationContextRef::Unitful(ctx_id)) = context else {
+        return;
+    };
+    ctx.repr_context_map.insert(entity_id, ctx_id);
+
+    let items: Vec<_> = early
+        .items
+        .iter()
+        .filter_map(|&r| resolve_tessellated_item_ref(ctx, r))
+        .collect();
+    if items.is_empty() {
+        return;
+    }
+
+    let repr_id = ctx
+        .representations
+        .push(Representation::TessellatedShapeRepresentation(
+            TessellatedShapeRepresentation {
+                name: early.name,
+                items,
+                context,
+            },
+        ));
+    ctx.id_cache.insert(entity_id, repr_id);
 }

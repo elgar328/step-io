@@ -3,15 +3,16 @@
 //! previous handler's `read` body 1:1 — same arena, same resolution / drop.
 
 use crate::early::model::{
-    EarlyComplexTriangulatedSurfaceSet, EarlyCoordinatesList, EarlyRepositionedTessellatedItem,
-    EarlyTessellatedCurveSet, EarlyTessellatedGeometricSet, EarlyTessellatedShell,
-    EarlyTessellatedSolid,
+    EarlyComplexTriangulatedFace, EarlyComplexTriangulatedSurfaceSet, EarlyCoordinatesList,
+    EarlyRepositionedTessellatedItem, EarlyTessellatedCurveSet, EarlyTessellatedGeometricSet,
+    EarlyTessellatedShell, EarlyTessellatedSolid,
 };
 use crate::entities::tessellation::resolve_tessellated_item_ref;
+use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::tessellation::{
-    ComplexTriangulatedSurfaceSet, CoordinatesList, RepositionedTessellatedItem,
-    TessellatedCurveSet, TessellatedGeometricSet, TessellatedItem, TessellatedItemRef,
-    TessellatedShell, TessellatedSolid,
+    ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, CoordinatesList,
+    RepositionedTessellatedItem, TessellatedCurveSet, TessellatedGeometricSet, TessellatedItem,
+    TessellatedItemRef, TessellatedShell, TessellatedSolid,
 };
 use crate::reader::ReaderContext;
 
@@ -50,6 +51,37 @@ pub(crate) fn lower_tessellated_curve_set(
             coordinates,
             line_strips: early.line_strips,
         }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `COMPLEX_TRIANGULATED_FACE` → the `tessellated_faces` arena.
+/// Unresolved `coordinates` drops the face; the optional `geometric_link`
+/// resolves through the shared representation-item resolver (skipped if
+/// absent/unresolved).
+pub(crate) fn lower_complex_triangulated_face(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyComplexTriangulatedFace,
+) {
+    let Some(coordinates) = ctx
+        .id_cache
+        .get::<crate::ir::id::TessellatedItemId>(early.coordinates)
+    else {
+        return; // coordinates_list dropped — drop the face too
+    };
+    let geometric_link = early
+        .geometric_link
+        .and_then(|r| resolve_representation_item_ref(ctx, r));
+    let id = ctx.tessellated_faces.push(ComplexTriangulatedFace {
+        name: early.name,
+        coordinates,
+        pnmax: early.pnmax,
+        normals: early.normals,
+        geometric_link,
+        pnindex: early.pnindex,
+        triangle_strips: early.triangle_strips,
+        triangle_fans: early.triangle_fans,
+    });
     ctx.id_cache.insert(entity_id, id);
 }
 

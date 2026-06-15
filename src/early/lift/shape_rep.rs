@@ -11,10 +11,13 @@ use crate::early::model::{
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
     EarlyRepresentationRelationship, EarlyShapeAspect, EarlyShapeAspectAssociativity,
     EarlyShapeAspectDerivingRelationship, EarlyShapeAspectRelationship,
-    EarlyShapeRepresentationRelationship, EarlyToleranceZone, EarlyValueRepresentationItem,
+    EarlyShapeRepresentationRelationship, EarlyTessellatedShapeRepresentation, EarlyToleranceZone,
+    EarlyValueRepresentationItem,
 };
 use crate::ir::representation_item::{MeasureValue, ValueRepresentationItem};
-use crate::ir::shape_rep::UnitlessContext;
+use crate::ir::shape_rep::{TessellatedShapeRepresentation, UnitlessContext};
+use crate::parser::entity::Attribute;
+use crate::writer::buffer::WriteBuffer;
 
 /// Lift one base `REPRESENTATION_RELATIONSHIP` from its (pre-resolved) arena
 /// data. The legacy writer emitted `description` as a String (`''` for empty,
@@ -451,5 +454,28 @@ pub(crate) fn lift_value_representation_item(
     EarlyValueRepresentationItem {
         name: vri.name.clone(),
         value_component: measure_value_to_early(&vri.value_component),
+    }
+}
+
+/// Lift one `TESSELLATED_SHAPE_REPRESENTATION`. `items` emit through the shared
+/// (infallible) tessellated-item emitter; `context_of_items` reuses the shared
+/// `repr_context_attr` mapping, which always yields an `EntityRef` here because
+/// `lower` admits only the `Unitful` context.
+pub(crate) fn lift_tessellated_shape_representation(
+    buf: &WriteBuffer,
+    tsr: TessellatedShapeRepresentation,
+) -> EarlyTessellatedShapeRepresentation {
+    let items = tsr
+        .items
+        .iter()
+        .map(|&r| buf.emit_tessellated_item_ref(r))
+        .collect();
+    let Attribute::EntityRef(context_of_items) = buf.repr_context_attr(tsr.context) else {
+        unreachable!("TSR context_of_items is always a Unitful GUAC → EntityRef")
+    };
+    EarlyTessellatedShapeRepresentation {
+        name: tsr.name,
+        items,
+        context_of_items,
     }
 }

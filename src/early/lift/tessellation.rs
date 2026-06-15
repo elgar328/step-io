@@ -4,13 +4,14 @@
 //! emitters, grids/scalars pass through.
 
 use crate::early::model::{
-    EarlyComplexTriangulatedSurfaceSet, EarlyCoordinatesList, EarlyRepositionedTessellatedItem,
-    EarlyTessellatedCurveSet, EarlyTessellatedGeometricSet, EarlyTessellatedShell,
-    EarlyTessellatedSolid,
+    EarlyComplexTriangulatedFace, EarlyComplexTriangulatedSurfaceSet, EarlyCoordinatesList,
+    EarlyRepositionedTessellatedItem, EarlyTessellatedCurveSet, EarlyTessellatedGeometricSet,
+    EarlyTessellatedShell, EarlyTessellatedSolid,
 };
 use crate::ir::tessellation::{
-    ComplexTriangulatedSurfaceSet, CoordinatesList, RepositionedTessellatedItem,
-    TessellatedCurveSet, TessellatedGeometricSet, TessellatedShell, TessellatedSolid,
+    ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, CoordinatesList,
+    RepositionedTessellatedItem, TessellatedCurveSet, TessellatedGeometricSet, TessellatedShell,
+    TessellatedSolid,
 };
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -34,6 +35,30 @@ pub(crate) fn lift_tessellated_curve_set(
         coordinates: buf.step_id(item.coordinates),
         line_strips: item.line_strips,
     }
+}
+
+/// Lift one `COMPLEX_TRIANGULATED_FACE`. `geometric_link` emits through the
+/// (fallible) shared representation-item emitter, so this lift takes `&mut`
+/// and returns `Result`.
+pub(crate) fn lift_complex_triangulated_face(
+    buf: &mut WriteBuffer,
+    face: ComplexTriangulatedFace,
+) -> Result<EarlyComplexTriangulatedFace, WriteError> {
+    let coordinates = buf.step_id(face.coordinates);
+    let geometric_link = match face.geometric_link {
+        Some(link) => Some(buf.emit_representation_item_ref(link)?),
+        None => None,
+    };
+    Ok(EarlyComplexTriangulatedFace {
+        name: face.name,
+        coordinates,
+        pnmax: face.pnmax,
+        normals: face.normals,
+        geometric_link,
+        pnindex: face.pnindex,
+        triangle_strips: face.triangle_strips,
+        triangle_fans: face.triangle_fans,
+    })
 }
 
 /// Lift one `COMPLEX_TRIANGULATED_SURFACE_SET`.

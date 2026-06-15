@@ -270,6 +270,10 @@ generate = [
     "tessellated_solid",
     "tessellated_shell",
     "repositioned_tessellated_item",
+    # Phase 3v: tessellation — moderate 3 (shared resolvers, repr_context, deferred-emit TSR)
+    "complex_triangulated_face",
+    "tessellated_annotation_occurrence",
+    "tessellated_shape_representation",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
