@@ -3456,6 +3456,19 @@ pub(crate) fn serialize_value_representation_item(
     )
 }
 
+pub(crate) fn serialize_measure_with_unit(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyMeasureWithUnit,
+) -> u64 {
+    buf.push_simple(
+        "MEASURE_WITH_UNIT",
+        vec![
+            measure_value_emit(&l1.value_component),
+            crate::parser::entity::Attribute::EntityRef(l1.unit_component),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

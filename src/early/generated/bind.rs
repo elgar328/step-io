@@ -3162,6 +3162,21 @@ pub(crate) fn bind_value_representation_item(
     }))
 }
 
+pub(crate) fn bind_measure_with_unit(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<Option<super::model::EarlyMeasureWithUnit>, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "MEASURE_WITH_UNIT")?;
+    let Some(value_component) = bind_measure_value(&attrs[0]) else {
+        return Ok(None);
+    };
+    let unit_component = crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "unit_component")?;
+    Ok(Some(super::model::EarlyMeasureWithUnit {
+        value_component,
+        unit_component,
+    }))
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

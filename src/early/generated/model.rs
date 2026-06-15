@@ -4490,6 +4490,28 @@ impl crate::ir::arena::ArenaId for EarlyValueRepresentationItemId {
     }
 }
 
+/// L1 `MEASURE_WITH_UNIT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyMeasureWithUnit {
+    pub(crate) value_component: EarlyMeasureValue,
+    pub(crate) unit_component: u64,
+}
+
+/// Typed `id_cache` key for `MEASURE_WITH_UNIT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyMeasureWithUnitId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyMeasureWithUnitId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

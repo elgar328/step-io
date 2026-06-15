@@ -228,6 +228,8 @@ generate = [
     "external_source",
     # Phase 3j: shape_rep simple — value representation item (synth measure_value SELECT, 43-typed)
     "value_representation_item",
+    # Phase 3k: units simple — bare measure with unit (reuse measure_value synth + unit ref)
+    "measure_with_unit",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

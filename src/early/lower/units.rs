@@ -1,9 +1,15 @@
 //! Units-domain `lower` fns (derived-unit cluster). See the
 //! [module docs](super) for the lowering contract.
 
-use crate::early::model::{EarlyDerivedUnit, EarlyDerivedUnitElement, EarlyDimensionalExponents};
+use crate::early::model::{
+    EarlyDerivedUnit, EarlyDerivedUnitElement, EarlyDimensionalExponents, EarlyMeasureWithUnit,
+};
 use crate::ir::error::ConvertError;
-use crate::ir::units::{DerivedUnit, DerivedUnitElement, DerivedUnitKind, DimensionalExponents};
+use crate::ir::representation_item::MeasureValue;
+use crate::ir::units::{
+    DerivedUnit, DerivedUnitElement, DerivedUnitKind, DimensionalExponents, MeasureWithUnit,
+    MeasureWithUnitData,
+};
 use crate::reader::ReaderContext;
 
 /// Lower one `DERIVED_UNIT_ELEMENT` (unresolved unit = silent drop).
@@ -60,5 +66,40 @@ pub(crate) fn lower_dimensional_exponents(
         amount_of_substance_exponent: early.amount_of_substance_exponent,
         luminous_intensity_exponent: early.luminous_intensity_exponent,
     });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower bare `MEASURE_WITH_UNIT` (carrier `Itself`). `value_component` reuses
+/// the synth `measure_value` bridge (real measures only — `EarlyMeasureValue`
+/// has no integer member, so `measure_value_to_l2` yields `Real`/`Text`;
+/// `Text`/descriptive has no `f64` → drop, matching the legacy non-Real drop).
+/// `unit_component` narrows to `NamedUnit` (a `DerivedUnit` ref drops, as before).
+/// The CBU-internal guard is upstream in the handler.
+pub(crate) fn lower_measure_with_unit(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyMeasureWithUnit,
+) {
+    let (measure_type, value) =
+        match super::shape_rep::measure_value_to_l2(early.value_component.clone()) {
+            MeasureValue::Real { type_name, value } => (type_name, value),
+            MeasureValue::Text { .. } => return,
+            MeasureValue::Integer { .. } => {
+                unreachable!("EarlyMeasureValue numeric members are all real")
+            }
+        };
+    let Some(unit) = ctx
+        .id_cache
+        .get::<crate::ir::id::NamedUnitId>(early.unit_component)
+    else {
+        return;
+    };
+    let id = ctx
+        .mwu_arena
+        .push(MeasureWithUnit::Itself(MeasureWithUnitData {
+            measure_type,
+            value,
+            unit,
+        }));
     ctx.id_cache.insert(entity_id, id);
 }

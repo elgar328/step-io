@@ -42,7 +42,7 @@ pub(crate) use super::generated::bind::{
     bind_geometric_set, bind_geometric_tolerance_relationship, bind_group, bind_hyperbola,
     bind_id_attribute, bind_identification_role, bind_leader_curve, bind_leader_directed_callout,
     bind_leader_terminator, bind_line, bind_local_time, bind_make_from_usage_option,
-    bind_manifold_solid_brep, bind_measure_qualification,
+    bind_manifold_solid_brep, bind_measure_qualification, bind_measure_with_unit,
     bind_mechanical_design_and_draughting_relationship, bind_model_geometric_view,
     bind_name_attribute, bind_next_assembly_usage_occurrence, bind_object_role,
     bind_offset_curve_3d, bind_offset_surface, bind_open_shell, bind_organization,
