@@ -3177,6 +3177,66 @@ pub(crate) fn bind_measure_with_unit(
     }))
 }
 
+pub(crate) fn bind_length_measure_with_unit(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<Option<super::model::EarlyLengthMeasureWithUnit>, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "LENGTH_MEASURE_WITH_UNIT")?;
+    let Some(value_component) = bind_measure_value(&attrs[0]) else {
+        return Ok(None);
+    };
+    let unit_component = crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "unit_component")?;
+    Ok(Some(super::model::EarlyLengthMeasureWithUnit {
+        value_component,
+        unit_component,
+    }))
+}
+
+pub(crate) fn bind_mass_measure_with_unit(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<Option<super::model::EarlyMassMeasureWithUnit>, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "MASS_MEASURE_WITH_UNIT")?;
+    let Some(value_component) = bind_measure_value(&attrs[0]) else {
+        return Ok(None);
+    };
+    let unit_component = crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "unit_component")?;
+    Ok(Some(super::model::EarlyMassMeasureWithUnit {
+        value_component,
+        unit_component,
+    }))
+}
+
+pub(crate) fn bind_plane_angle_measure_with_unit(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<Option<super::model::EarlyPlaneAngleMeasureWithUnit>, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "PLANE_ANGLE_MEASURE_WITH_UNIT")?;
+    let Some(value_component) = bind_measure_value(&attrs[0]) else {
+        return Ok(None);
+    };
+    let unit_component = crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "unit_component")?;
+    Ok(Some(super::model::EarlyPlaneAngleMeasureWithUnit {
+        value_component,
+        unit_component,
+    }))
+}
+
+pub(crate) fn bind_ratio_measure_with_unit(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<Option<super::model::EarlyRatioMeasureWithUnit>, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "RATIO_MEASURE_WITH_UNIT")?;
+    let Some(value_component) = bind_measure_value(&attrs[0]) else {
+        return Ok(None);
+    };
+    let unit_component = crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "unit_component")?;
+    Ok(Some(super::model::EarlyRatioMeasureWithUnit {
+        value_component,
+        unit_component,
+    }))
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

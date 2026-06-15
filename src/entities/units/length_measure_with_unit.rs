@@ -10,15 +10,13 @@
 //! inline through the existing CBU emit path, so adding them to
 //! `mwu_arena` would double-emit on round-trip.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::entities::units::shared::read_mwu_attrs;
 use crate::ir::error::ConvertError;
-use crate::ir::units::MeasureWithUnit;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
-use crate::writer::entity::{WriterBody, WriterEntity};
 use step_io_macros::step_entity;
 
 pub(crate) struct LengthMeasureWithUnitHandler;
@@ -38,53 +36,15 @@ impl SimpleEntityHandler for LengthMeasureWithUnitHandler {
         if ctx.cbu_internal_mwu_refs.contains(&entity_id) {
             return Ok(());
         }
-        let Some((value, unit_step)) =
-            read_mwu_attrs(attrs, entity_id, "LENGTH_MEASURE_WITH_UNIT")?
-        else {
+        let Some(early) = bind::bind_length_measure_with_unit(entity_id, attrs)? else {
             return Ok(());
         };
-        let Some(unit_id) = ctx.id_cache.get::<crate::ir::id::NamedUnitId>(unit_step) else {
-            return Ok(());
-        };
-        let id = ctx.mwu_arena.push(MeasureWithUnit::Length {
-            value,
-            unit: unit_id,
-        });
-        ctx.id_cache.insert(entity_id, id);
+        lower::lower_length_measure_with_unit(ctx, entity_id, &early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, (value, unit_step): (f64, u64)) -> Result<u64, WriteError> {
-        Ok(emit_mwu(
-            buf,
-            "LENGTH_MEASURE_WITH_UNIT",
-            "LENGTH_MEASURE",
-            value,
-            unit_step,
-        ))
+        let early = lift::lift_length_measure_with_unit(value, unit_step);
+        Ok(serialize::serialize_length_measure_with_unit(buf, &early))
     }
-}
-
-pub(crate) fn emit_mwu(
-    buf: &mut WriteBuffer,
-    entity_name: &str,
-    measure_type: &str,
-    value: f64,
-    unit_step: u64,
-) -> u64 {
-    let n = buf.fresh();
-    buf.entities.push(WriterEntity {
-        id: n,
-        body: WriterBody::Simple {
-            name: entity_name.into(),
-            attrs: vec![
-                Attribute::Typed {
-                    type_name: measure_type.into(),
-                    value: Box::new(Attribute::Real(value)),
-                },
-                Attribute::EntityRef(unit_step),
-            ],
-        },
-    });
-    n
 }

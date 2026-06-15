@@ -3469,6 +3469,58 @@ pub(crate) fn serialize_measure_with_unit(
     )
 }
 
+pub(crate) fn serialize_length_measure_with_unit(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyLengthMeasureWithUnit,
+) -> u64 {
+    buf.push_simple(
+        "LENGTH_MEASURE_WITH_UNIT",
+        vec![
+            measure_value_emit(&l1.value_component),
+            crate::parser::entity::Attribute::EntityRef(l1.unit_component),
+        ],
+    )
+}
+
+pub(crate) fn serialize_mass_measure_with_unit(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyMassMeasureWithUnit,
+) -> u64 {
+    buf.push_simple(
+        "MASS_MEASURE_WITH_UNIT",
+        vec![
+            measure_value_emit(&l1.value_component),
+            crate::parser::entity::Attribute::EntityRef(l1.unit_component),
+        ],
+    )
+}
+
+pub(crate) fn serialize_plane_angle_measure_with_unit(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPlaneAngleMeasureWithUnit,
+) -> u64 {
+    buf.push_simple(
+        "PLANE_ANGLE_MEASURE_WITH_UNIT",
+        vec![
+            measure_value_emit(&l1.value_component),
+            crate::parser::entity::Attribute::EntityRef(l1.unit_component),
+        ],
+    )
+}
+
+pub(crate) fn serialize_ratio_measure_with_unit(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyRatioMeasureWithUnit,
+) -> u64 {
+    buf.push_simple(
+        "RATIO_MEASURE_WITH_UNIT",
+        vec![
+            measure_value_emit(&l1.value_component),
+            crate::parser::entity::Attribute::EntityRef(l1.unit_component),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

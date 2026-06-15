@@ -2,7 +2,9 @@
 //! [module docs](super) for the lowering contract.
 
 use crate::early::model::{
-    EarlyDerivedUnit, EarlyDerivedUnitElement, EarlyDimensionalExponents, EarlyMeasureWithUnit,
+    EarlyDerivedUnit, EarlyDerivedUnitElement, EarlyDimensionalExponents,
+    EarlyLengthMeasureWithUnit, EarlyMassMeasureWithUnit, EarlyMeasureValue, EarlyMeasureWithUnit,
+    EarlyPlaneAngleMeasureWithUnit, EarlyRatioMeasureWithUnit,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::representation_item::MeasureValue;
@@ -101,5 +103,97 @@ pub(crate) fn lower_measure_with_unit(
             value,
             unit,
         }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Extract the `f64` from a typed-MWU `value_component`. The typed subtypes
+/// carry the measure kind in the entity name, so the inner `measure_value`
+/// member name is irrelevant — only the real value matters (descriptive/text →
+/// `None` drop, matching the legacy `read_mwu_attrs` non-Real drop).
+fn mwu_value(vc: &EarlyMeasureValue) -> Option<f64> {
+    match super::shape_rep::measure_value_to_l2(vc.clone()) {
+        MeasureValue::Real { value, .. } => Some(value),
+        MeasureValue::Text { .. } => None,
+        MeasureValue::Integer { .. } => {
+            unreachable!("EarlyMeasureValue numeric members are all real")
+        }
+    }
+}
+
+/// Lower `LENGTH_MEASURE_WITH_UNIT` (typed subtype → `MeasureWithUnit::Length`).
+pub(crate) fn lower_length_measure_with_unit(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyLengthMeasureWithUnit,
+) {
+    let Some(value) = mwu_value(&early.value_component) else {
+        return;
+    };
+    let Some(unit) = ctx
+        .id_cache
+        .get::<crate::ir::id::NamedUnitId>(early.unit_component)
+    else {
+        return;
+    };
+    let id = ctx.mwu_arena.push(MeasureWithUnit::Length { value, unit });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower `MASS_MEASURE_WITH_UNIT` (typed subtype → `MeasureWithUnit::Mass`).
+pub(crate) fn lower_mass_measure_with_unit(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyMassMeasureWithUnit,
+) {
+    let Some(value) = mwu_value(&early.value_component) else {
+        return;
+    };
+    let Some(unit) = ctx
+        .id_cache
+        .get::<crate::ir::id::NamedUnitId>(early.unit_component)
+    else {
+        return;
+    };
+    let id = ctx.mwu_arena.push(MeasureWithUnit::Mass { value, unit });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower `PLANE_ANGLE_MEASURE_WITH_UNIT` (→ `MeasureWithUnit::PlaneAngle`).
+pub(crate) fn lower_plane_angle_measure_with_unit(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyPlaneAngleMeasureWithUnit,
+) {
+    let Some(value) = mwu_value(&early.value_component) else {
+        return;
+    };
+    let Some(unit) = ctx
+        .id_cache
+        .get::<crate::ir::id::NamedUnitId>(early.unit_component)
+    else {
+        return;
+    };
+    let id = ctx
+        .mwu_arena
+        .push(MeasureWithUnit::PlaneAngle { value, unit });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower `RATIO_MEASURE_WITH_UNIT` (typed subtype → `MeasureWithUnit::Ratio`).
+pub(crate) fn lower_ratio_measure_with_unit(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyRatioMeasureWithUnit,
+) {
+    let Some(value) = mwu_value(&early.value_component) else {
+        return;
+    };
+    let Some(unit) = ctx
+        .id_cache
+        .get::<crate::ir::id::NamedUnitId>(early.unit_component)
+    else {
+        return;
+    };
+    let id = ctx.mwu_arena.push(MeasureWithUnit::Ratio { value, unit });
     ctx.id_cache.insert(entity_id, id);
 }

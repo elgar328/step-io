@@ -230,6 +230,11 @@ generate = [
     "value_representation_item",
     # Phase 3k: units simple — bare measure with unit (reuse measure_value synth + unit ref)
     "measure_with_unit",
+    # Phase 3l: units simple — typed measure_with_unit subtypes (MWU family complete)
+    "length_measure_with_unit",
+    "mass_measure_with_unit",
+    "plane_angle_measure_with_unit",
+    "ratio_measure_with_unit",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

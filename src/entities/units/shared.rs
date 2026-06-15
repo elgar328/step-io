@@ -11,7 +11,7 @@
 //! (ABC-tier loyalty) — the cache fields live on `WriteBuffer`, so the
 //! helpers take `&mut WriteBuffer`.
 
-use crate::ir::attr::{check_count, read_entity_ref, read_enum, read_string_or_unset};
+use crate::ir::attr::{check_count, read_enum, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit};
 use crate::ir::units::MassUnit;
@@ -114,7 +114,7 @@ pub(super) enum CbuFlavor {
 /// Read a `CONVERSION_BASED_UNIT.conversion_factor` MWU's scalar factor from
 /// the graph. The MWU is a `*_MEASURE_WITH_UNIT` whose attr[0] is a typed real
 /// (`PLANE_ANGLE_MEASURE(0.01745)` / `MASS_MEASURE(0.4536)` / …). Mirrors the
-/// typed-real shape used by [`read_mwu_attrs`] / `backfill_cbu_base`.
+/// typed-real shape the typed `*_MEASURE_WITH_UNIT` binds use / `backfill_cbu_base`.
 fn cbu_factor(graph: &EntityGraph, mwu_ref: u64) -> Option<f64> {
     let RawEntity::Simple { attributes, .. } = graph.entities.get(&mwu_ref)? else {
         return None;
@@ -282,33 +282,6 @@ pub(super) fn read_conversion_based_unit_body(
         ctx.cbu_outer_to_mwu.insert(entity_id, r);
     }
     Ok(())
-}
-
-/// Read the shared `(value_component, unit_component)` shape of all four
-/// `MEASURE_WITH_UNIT` subtypes (`LENGTH` / `MASS` / `PLANE_ANGLE` /
-/// `RATIO`).
-///
-/// `value_component` is a typed real (`LENGTH_MEASURE(1.0)` /
-/// `MASS_MEASURE(0.45)` / etc); `unit_component` is an entity ref to a
-/// `NAMED_UNIT` complex. Returns `None` when the attribute shape doesn't
-/// match the expected typed-real form (the unsupported variants — e.g.
-/// `THERMODYNAMIC_TEMPERATURE_MEASURE` — are silently dropped per the
-/// units-1 permanent-loss-boundary note).
-pub(crate) fn read_mwu_attrs(
-    attrs: &[Attribute],
-    entity_id: u64,
-    entity_name: &'static str,
-) -> Result<Option<(f64, u64)>, ConvertError> {
-    check_count(attrs, 2, entity_id, entity_name)?;
-    let value = match attrs.first() {
-        Some(Attribute::Typed { value, .. }) => match value.as_ref() {
-            Attribute::Real(v) => *v,
-            _ => return Ok(None),
-        },
-        _ => return Ok(None),
-    };
-    let unit_step = read_entity_ref(attrs, 1, entity_id, "unit_component")?;
-    Ok(Some((value, unit_step)))
 }
 
 /// Emit the length-flavour `DIMENSIONAL_EXPONENTS` (1, 0, 0, 0, 0, 0, 0)

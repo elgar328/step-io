@@ -1,10 +1,8 @@
 //! `PLANE_ANGLE_MEASURE_WITH_UNIT` handler (units-1).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::entities::units::length_measure_with_unit::emit_mwu;
-use crate::entities::units::shared::read_mwu_attrs;
 use crate::ir::error::ConvertError;
-use crate::ir::units::MeasureWithUnit;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -26,29 +24,17 @@ impl SimpleEntityHandler for PlaneAngleMeasureWithUnitHandler {
         if ctx.cbu_internal_mwu_refs.contains(&entity_id) {
             return Ok(());
         }
-        let Some((value, unit_step)) =
-            read_mwu_attrs(attrs, entity_id, "PLANE_ANGLE_MEASURE_WITH_UNIT")?
-        else {
+        let Some(early) = bind::bind_plane_angle_measure_with_unit(entity_id, attrs)? else {
             return Ok(());
         };
-        let Some(unit_id) = ctx.id_cache.get::<crate::ir::id::NamedUnitId>(unit_step) else {
-            return Ok(());
-        };
-        let id = ctx.mwu_arena.push(MeasureWithUnit::PlaneAngle {
-            value,
-            unit: unit_id,
-        });
-        ctx.id_cache.insert(entity_id, id);
+        lower::lower_plane_angle_measure_with_unit(ctx, entity_id, &early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, (value, unit_step): (f64, u64)) -> Result<u64, WriteError> {
-        Ok(emit_mwu(
-            buf,
-            "PLANE_ANGLE_MEASURE_WITH_UNIT",
-            "PLANE_ANGLE_MEASURE",
-            value,
-            unit_step,
+        let early = lift::lift_plane_angle_measure_with_unit(value, unit_step);
+        Ok(serialize::serialize_plane_angle_measure_with_unit(
+            buf, &early,
         ))
     }
 }

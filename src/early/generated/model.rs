@@ -4512,6 +4512,94 @@ impl crate::ir::arena::ArenaId for EarlyMeasureWithUnitId {
     }
 }
 
+/// L1 `LENGTH_MEASURE_WITH_UNIT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyLengthMeasureWithUnit {
+    pub(crate) value_component: EarlyMeasureValue,
+    pub(crate) unit_component: u64,
+}
+
+/// Typed `id_cache` key for `LENGTH_MEASURE_WITH_UNIT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyLengthMeasureWithUnitId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyLengthMeasureWithUnitId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `MASS_MEASURE_WITH_UNIT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyMassMeasureWithUnit {
+    pub(crate) value_component: EarlyMeasureValue,
+    pub(crate) unit_component: u64,
+}
+
+/// Typed `id_cache` key for `MASS_MEASURE_WITH_UNIT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyMassMeasureWithUnitId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyMassMeasureWithUnitId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PLANE_ANGLE_MEASURE_WITH_UNIT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPlaneAngleMeasureWithUnit {
+    pub(crate) value_component: EarlyMeasureValue,
+    pub(crate) unit_component: u64,
+}
+
+/// Typed `id_cache` key for `PLANE_ANGLE_MEASURE_WITH_UNIT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPlaneAngleMeasureWithUnitId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPlaneAngleMeasureWithUnitId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `RATIO_MEASURE_WITH_UNIT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyRatioMeasureWithUnit {
+    pub(crate) value_component: EarlyMeasureValue,
+    pub(crate) unit_component: u64,
+}
+
+/// Typed `id_cache` key for `RATIO_MEASURE_WITH_UNIT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyRatioMeasureWithUnitId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyRatioMeasureWithUnitId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {
