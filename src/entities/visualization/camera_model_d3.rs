@@ -7,9 +7,8 @@
 //! is silently dropped, symmetric on re-read.
 
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::{CameraModel, CameraModelD3, VisualizationPool};
+use crate::ir::visualization::CameraModelD3;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -28,45 +27,17 @@ impl SimpleEntityHandler for CameraModelD3Handler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "CAMERA_MODEL_D3")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let vrs_ref = read_entity_ref(attrs, 1, entity_id, "view_reference_system")?;
-        let pov_ref = read_entity_ref(attrs, 2, entity_id, "perspective_of_volume")?;
-
-        let Some(&view_reference_system) = ctx.placement_map.get(&vrs_ref) else {
-            return Ok(()); // view_reference_system unresolved — drop the camera
-        };
-        let Some(perspective_of_volume) = ctx
-            .id_cache
-            .get::<crate::early::model::EarlyViewVolumeId>(pov_ref)
-            .map(|v| ctx.early.lookup_lowered(v))
-        else {
-            return Ok(());
-        };
-
-        let id = ctx
-            .visualization
-            .get_or_insert_with(VisualizationPool::default)
-            .camera_models
-            .push(CameraModel::CameraModelD3(CameraModelD3 {
-                name,
-                view_reference_system,
-                perspective_of_volume,
-            }));
-        ctx.id_cache.insert(entity_id, id);
+        let early = crate::early::bind::bind_camera_model_d3(entity_id, attrs)?;
+        crate::early::lower::lower_camera_model_d3(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, cm: CameraModelD3) -> Result<u64, WriteError> {
         let vrs = buf.emit_axis2_placement_3d(cm.view_reference_system)?;
         let pov = buf.step_id(cm.perspective_of_volume);
-        Ok(buf.push_simple(
-            "CAMERA_MODEL_D3",
-            vec![
-                Attribute::String(cm.name),
-                Attribute::EntityRef(vrs),
-                Attribute::EntityRef(pov),
-            ],
+        let early = crate::early::lift::lift_camera_model_d3(cm.name, vrs, pov);
+        Ok(crate::early::serialize::serialize_camera_model_d3(
+            buf, &early,
         ))
     }
 }

@@ -3058,6 +3058,56 @@ pub(crate) fn bind_annotation_plane(
     })
 }
 
+pub(crate) fn bind_camera_model_d3(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyCameraModelD3, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "CAMERA_MODEL_D3")?;
+    Ok(super::model::EarlyCameraModelD3 {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        view_reference_system: crate::ir::attr::read_entity_ref(
+            attrs,
+            1,
+            entity_id,
+            "view_reference_system",
+        )?,
+        perspective_of_volume: crate::ir::attr::read_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "perspective_of_volume",
+        )?,
+    })
+}
+
+pub(crate) fn bind_camera_model_d3_with_hlhsr(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyCameraModelD3WithHlhsr, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "CAMERA_MODEL_D3_WITH_HLHSR")?;
+    Ok(super::model::EarlyCameraModelD3WithHlhsr {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        view_reference_system: crate::ir::attr::read_entity_ref(
+            attrs,
+            1,
+            entity_id,
+            "view_reference_system",
+        )?,
+        perspective_of_volume: crate::ir::attr::read_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "perspective_of_volume",
+        )?,
+        hidden_line_surface_removal: crate::ir::attr::read_bool(
+            attrs,
+            3,
+            entity_id,
+            "hidden_line_surface_removal",
+        )?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

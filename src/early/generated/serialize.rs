@@ -3387,6 +3387,35 @@ pub(crate) fn serialize_annotation_plane(
     )
 }
 
+pub(crate) fn serialize_camera_model_d3(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCameraModelD3,
+) -> u64 {
+    buf.push_simple(
+        "CAMERA_MODEL_D3",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.view_reference_system),
+            crate::parser::entity::Attribute::EntityRef(l1.perspective_of_volume),
+        ],
+    )
+}
+
+pub(crate) fn serialize_camera_model_d3_with_hlhsr(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCameraModelD3WithHlhsr,
+) -> u64 {
+    buf.push_simple(
+        "CAMERA_MODEL_D3_WITH_HLHSR",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.view_reference_system),
+            crate::parser::entity::Attribute::EntityRef(l1.perspective_of_volume),
+            bool_attr(l1.hidden_line_surface_removal),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

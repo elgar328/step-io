@@ -219,6 +219,9 @@ generate = [
     "annotation_curve_occurrence",
     # Phase 3f: PMI simple — annotation plane (+ OPTIONAL SET elements, dropped)
     "annotation_plane",
+    # Phase 3g: visualization simple — camera model d3 (+ hlhsr boolean subtype)
+    "camera_model_d3",
+    "camera_model_d3_with_hlhsr",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
