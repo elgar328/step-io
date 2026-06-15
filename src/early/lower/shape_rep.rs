@@ -16,8 +16,8 @@ use crate::early::model::{
     EarlyMechanicalDesignAndDraughtingRelationship, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
-    EarlyRepresentationRelationship, EarlyShapeRepresentationRelationship, EarlyToleranceZone,
-    EarlyValueRepresentationItem,
+    EarlyRepresentationRelationship, EarlyShapeAspect, EarlyShapeRepresentationRelationship,
+    EarlyToleranceZone, EarlyValueRepresentationItem,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::representation_item::{
@@ -30,8 +30,8 @@ use crate::ir::shape_rep::{
     CompositeShapeAspectKind, ConstructiveGeometryRepresentationRelationship, DatumSystem,
     DatumTarget, MechanicalDesignAndDraughtingRelationship, ModelGeometricView,
     NumericRepresentationItem, PlacedDatumTargetFeature, RealRepresentationItem,
-    RepresentationRelationship, RepresentationRelationshipData, ShapeRepresentationRelationshipIr,
-    ToleranceZone, UnitlessContext,
+    RepresentationRelationship, RepresentationRelationshipData, ShapeAspect,
+    ShapeRepresentationRelationshipIr, ToleranceZone, UnitlessContext,
 };
 use crate::reader::ReaderContext;
 
@@ -359,6 +359,49 @@ fn lower_sa_subtype_common(
     let pd = logical_to_bool(product_definitional)?;
     let target = ctx.product_of_pds(of_shape)?;
     Some((target, pd, description.unwrap_or_default()))
+}
+
+/// Lower one plain `SHAPE_ASPECT`. Same 4-attr shape as the subtypes, but with
+/// the extra non-standard `of_shape = PRODUCT_DEFINITION` fallback (C3D), so the
+/// dual-path resolve is written inline (it needs `&mut` for `ns_push`) rather
+/// than via `lower_sa_subtype_common`. L1 keeps `of_shape` a plain ref; whether
+/// the target is a standard PDS or the non-standard PD is decided here.
+pub(crate) fn lower_shape_aspect(ctx: &mut ReaderContext, entity_id: u64, early: EarlyShapeAspect) {
+    let Some(product_definitional) = logical_to_bool(early.product_definitional) else {
+        return;
+    };
+    // SHAPE_ASPECT.of_shape → PRODUCT_DEFINITION_SHAPE → ProductId (typed
+    // one-probe). NsCase::ShapeAspectOfShapePd (C3D): of_shape references a
+    // PRODUCT_DEFINITION directly → resolve via the product; writer re-emits
+    // the standard PDS form.
+    let target = if let Some(pid) = ctx.product_of_pds(early.of_shape) {
+        pid
+    } else if ctx
+        .id_cache
+        .get::<crate::ir::ProductDefinitionId>(early.of_shape)
+        .is_some()
+    {
+        ctx.ns_push(
+            crate::reader::NsCase::ShapeAspectOfShapePd,
+            "SHAPE_ASPECT.of_shape".into(),
+            1,
+            "PRODUCT_DEFINITION_SHAPE (of_shape was a PRODUCT_DEFINITION)".into(),
+        );
+        let Some(pid) = ctx.product_of_pdef(early.of_shape) else {
+            return;
+        };
+        pid
+    } else {
+        return; // unresolved (genuinely non-product target)
+    };
+    let id = ctx.shape_aspects.push(ShapeAspect {
+        name: early.name,
+        // Legacy read_string_or_unset collapsed `$` to "" (L2 String).
+        description: early.description.unwrap_or_default(),
+        target,
+        product_definitional,
+    });
+    ctx.id_cache.insert(entity_id, id);
 }
 
 /// Lower one `COMPOSITE_GROUP_SHAPE_ASPECT` (shared 4-attr subtype shape).

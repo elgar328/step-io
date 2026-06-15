@@ -69,7 +69,7 @@ pub(crate) use super::generated::model::{
     EarlyRationalQuasiUniformCurve, EarlyRationalQuasiUniformSurface, EarlyRealRepresentationItem,
     EarlyRectangularTrimmedSurface, EarlyRepresentationContext, EarlyRepresentationRelationship,
     EarlyRoleAssociation, EarlyRoundnessTolerance, EarlySecurityClassification,
-    EarlySecurityClassificationLevel, EarlyShapeDefinitionRepresentation,
+    EarlySecurityClassificationLevel, EarlyShapeAspect, EarlyShapeDefinitionRepresentation,
     EarlyShapeRepresentationRelationship, EarlyShellBasedSurfaceModel, EarlySource,
     EarlySourceItem, EarlySphericalSurface, EarlyStraightnessTolerance,
     EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlySurfaceProfileTolerance,

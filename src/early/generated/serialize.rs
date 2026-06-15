@@ -3545,6 +3545,26 @@ pub(crate) fn serialize_curve_style(
     )
 }
 
+pub(crate) fn serialize_shape_aspect(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyShapeAspect,
+) -> u64 {
+    buf.push_simple(
+        "SHAPE_ASPECT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.of_shape),
+            crate::parser::entity::Attribute::Enum(
+                crate::ir::attr::logical_to_step(l1.product_definitional).into(),
+            ),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

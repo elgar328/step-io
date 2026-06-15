@@ -9,8 +9,8 @@ use crate::early::model::{
     EarlyMechanicalDesignAndDraughtingRelationship, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
-    EarlyRepresentationRelationship, EarlyShapeRepresentationRelationship, EarlyToleranceZone,
-    EarlyValueRepresentationItem,
+    EarlyRepresentationRelationship, EarlyShapeAspect, EarlyShapeRepresentationRelationship,
+    EarlyToleranceZone, EarlyValueRepresentationItem,
 };
 use crate::ir::representation_item::{MeasureValue, ValueRepresentationItem};
 use crate::ir::shape_rep::UnitlessContext;
@@ -157,6 +157,23 @@ pub(crate) fn lift_tolerance_zone(
         product_definitional: bool_to_logical(product_definitional),
         defining_tolerance,
         form,
+    }
+}
+
+/// Lift one plain `SHAPE_ASPECT` from pre-resolved write fields (`of_shape` =
+/// the PDS step id the emit loop resolved from `ProductId`). Mirrors the subtype
+/// lifts: `description` always `Some` (legacy never emitted `$`).
+pub(crate) fn lift_shape_aspect(
+    name: String,
+    description: String,
+    of_shape: u64,
+    product_definitional: bool,
+) -> EarlyShapeAspect {
+    EarlyShapeAspect {
+        name,
+        description: Some(description),
+        of_shape,
+        product_definitional: bool_to_logical(product_definitional),
     }
 }
 

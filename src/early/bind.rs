@@ -63,7 +63,7 @@ pub(crate) use super::generated::bind::{
     bind_rational_quasi_uniform_curve, bind_rational_quasi_uniform_surface,
     bind_real_representation_item, bind_rectangular_trimmed_surface, bind_representation_context,
     bind_representation_relationship, bind_role_association, bind_roundness_tolerance,
-    bind_security_classification, bind_security_classification_level,
+    bind_security_classification, bind_security_classification_level, bind_shape_aspect,
     bind_shape_definition_representation, bind_shape_representation_relationship,
     bind_shell_based_surface_model, bind_spherical_surface, bind_straightness_tolerance,
     bind_surface_of_linear_extrusion, bind_surface_of_revolution, bind_surface_profile_tolerance,

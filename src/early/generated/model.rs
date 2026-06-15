@@ -4624,6 +4624,30 @@ impl crate::ir::arena::ArenaId for EarlyCurveStyleId {
     }
 }
 
+/// L1 `SHAPE_ASPECT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyShapeAspect {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) of_shape: u64,
+    pub(crate) product_definitional: crate::ir::geometry::Logical,
+}
+
+/// Typed `id_cache` key for `SHAPE_ASPECT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyShapeAspectId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyShapeAspectId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

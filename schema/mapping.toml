@@ -237,6 +237,8 @@ generate = [
     "ratio_measure_with_unit",
     # Phase 3m: visualization simple — curve style (reuse size_select codegen)
     "curve_style",
+    # Phase 3n: shape_rep simple — shape aspect supertype (subtype precedent)
+    "shape_aspect",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
