@@ -284,6 +284,9 @@ generate = [
     "constructive_geometry_representation",
     # Phase 3y: MDGPR — same drop-on-None pattern, dual-write arena
     "mechanical_design_geometric_presentation_representation",
+    # Phase 3z: SDR + SRWP — drop-on-None, completes push_simple+L2-payload representations
+    "shape_dimension_representation",
+    "shape_representation_with_parameters",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

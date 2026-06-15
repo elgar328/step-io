@@ -17,7 +17,8 @@ use crate::early::model::{
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
-    EarlyRepresentationRelationship, EarlyShapeAspect, EarlyShapeRepresentationRelationship,
+    EarlyRepresentationRelationship, EarlyShapeAspect, EarlyShapeDimensionRepresentation,
+    EarlyShapeRepresentationRelationship, EarlyShapeRepresentationWithParameters,
     EarlyTessellatedShapeRepresentation, EarlyToleranceZone, EarlyValueRepresentationItem,
 };
 use crate::entities::tessellation::resolve_tessellated_item_ref;
@@ -34,7 +35,8 @@ use crate::ir::shape_rep::{
     MechanicalDesignAndDraughtingRelationship, ModelGeometricView, NumericRepresentationItem,
     PlacedDatumTargetFeature, RealRepresentationItem, Representation, RepresentationContextRef,
     RepresentationRelationship, RepresentationRelationshipData, ShapeAspect,
-    ShapeAspectRelationship, ShapeAspectRelationshipKind, ShapeRepresentationRelationshipIr,
+    ShapeAspectRelationship, ShapeAspectRelationshipKind, ShapeDimensionRepresentation,
+    ShapeRepresentationRelationshipIr, ShapeRepresentationWithParameters, SrwpItem,
     TessellatedShapeRepresentation, ToleranceZone, UnitlessContext,
 };
 use crate::ir::visualization::VisualizationPool;
@@ -868,5 +870,83 @@ pub(crate) fn lower_mechanical_design_geometric_presentation_representation(
         .mdgprs
         .push(mdgpr.clone());
     let repr_id = ctx.representations.push(Representation::Mdgpr(mdgpr));
+    ctx.id_cache.insert(entity_id, repr_id);
+}
+
+/// Lower one `SHAPE_DIMENSION_REPRESENTATION`. `context_of_items` is schema-
+/// required; an unresolvable context drops the carrier (schema-strict). Item
+/// resolution is **deferred** (the complex `MEASURE_REPRESENTATION_ITEM` arena is
+/// not yet populated): push empty `items` and stash the raw refs in
+/// `sdr_raw_items`, which `resolve_deferred_sdr_items` rebuilds post-read.
+pub(crate) fn lower_shape_dimension_representation(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyShapeDimensionRepresentation,
+) {
+    let Some(context) = ctx.resolve_repr_context(early.context_of_items) else {
+        return;
+    };
+    if let RepresentationContextRef::Unitful(ctx_id) = context {
+        ctx.repr_context_map.insert(entity_id, ctx_id);
+    }
+    let repr_id = ctx
+        .representations
+        .push(Representation::ShapeDimensionRepresentation(
+            ShapeDimensionRepresentation {
+                name: early.name,
+                context: Some(context),
+                items: Vec::new(),
+            },
+        ));
+    ctx.id_cache.insert(entity_id, repr_id);
+    ctx.sdr_raw_items.insert(repr_id, early.items);
+}
+
+/// Lower one `SHAPE_REPRESENTATION_WITH_PARAMETERS`. `context_of_items` required
+/// → unresolvable drops the carrier. `items` narrow to the 4-way `SrwpItem`
+/// SELECT (direction / placement / descriptive / measure-repr-item); unresolved
+/// members skip, and an empty resolved set drops the carrier.
+pub(crate) fn lower_shape_representation_with_parameters(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyShapeRepresentationWithParameters,
+) {
+    let Some(context) = ctx.resolve_repr_context(early.context_of_items) else {
+        return;
+    };
+    if let RepresentationContextRef::Unitful(ctx_id) = context {
+        ctx.repr_context_map.insert(entity_id, ctx_id);
+    }
+    let mut items = Vec::with_capacity(early.items.len());
+    for r in early.items {
+        if let Some(did) = ctx.id_cache.get::<crate::ir::id::DirectionId>(r) {
+            items.push(SrwpItem::Direction(did));
+        } else if let Some(&pid) = ctx.placement_map.get(&r) {
+            items.push(SrwpItem::Placement(pid));
+        } else if let Some(d) = ctx.descriptive_item_map.get(&r).cloned() {
+            items.push(SrwpItem::Descriptive(d));
+        } else if let Some(id) = ctx.id_cache.get::<crate::ir::id::RepresentationItemId>(r) {
+            // MEASURE_REPRESENTATION_ITEM lives in the representation_item arena.
+            // Guard on the variant: repr_item_id_map also holds QRI / VRI.
+            if matches!(
+                ctx.representation_items[id],
+                RepresentationItem::MeasureRepresentationItem(_)
+            ) {
+                items.push(SrwpItem::MeasureItem(id));
+            }
+        }
+    }
+    if items.is_empty() {
+        return;
+    }
+    let repr_id = ctx
+        .representations
+        .push(Representation::ShapeRepresentationWithParameters(
+            ShapeRepresentationWithParameters {
+                name: early.name,
+                items,
+                context: Some(context),
+            },
+        ));
     ctx.id_cache.insert(entity_id, repr_id);
 }

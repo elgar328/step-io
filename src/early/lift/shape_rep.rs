@@ -13,12 +13,16 @@ use crate::early::model::{
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
     EarlyRepresentationRelationship, EarlyShapeAspect, EarlyShapeAspectAssociativity,
     EarlyShapeAspectDerivingRelationship, EarlyShapeAspectRelationship,
-    EarlyShapeRepresentationRelationship, EarlyTessellatedShapeRepresentation, EarlyToleranceZone,
-    EarlyValueRepresentationItem,
+    EarlyShapeDimensionRepresentation, EarlyShapeRepresentationRelationship,
+    EarlyShapeRepresentationWithParameters, EarlyTessellatedShapeRepresentation,
+    EarlyToleranceZone, EarlyValueRepresentationItem,
 };
+use crate::entities::SimpleEntityHandler;
+use crate::entities::shape_rep::descriptive_representation_item::DescriptiveRepresentationItemHandler;
 use crate::ir::representation_item::{MeasureValue, ValueRepresentationItem};
 use crate::ir::shape_rep::{
-    ConstructiveGeometryRepr, Mdgpr, TessellatedShapeRepresentation, UnitlessContext,
+    ConstructiveGeometryRepr, DimensionItem, Mdgpr, ShapeDimensionRepresentation,
+    ShapeRepresentationWithParameters, SrwpItem, TessellatedShapeRepresentation, UnitlessContext,
 };
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
@@ -524,4 +528,57 @@ pub(crate) fn lift_mechanical_design_geometric_presentation_representation(
         items,
         context_of_items,
     }
+}
+
+/// Lift one `SHAPE_DIMENSION_REPRESENTATION`. `items` are `DimensionItem`
+/// (Item → fallible repr-item emitter / Descriptive → descriptive emitter);
+/// `context_of_items` reuses `repr_context_attr` (always `EntityRef` — lower
+/// drops any carrier whose context did not resolve).
+pub(crate) fn lift_shape_dimension_representation(
+    buf: &mut WriteBuffer,
+    sdr: ShapeDimensionRepresentation,
+) -> Result<EarlyShapeDimensionRepresentation, WriteError> {
+    let mut items = Vec::with_capacity(sdr.items.len());
+    for item in sdr.items {
+        let step = match item {
+            DimensionItem::Item(r) => buf.emit_representation_item_ref(r)?,
+            DimensionItem::Descriptive(d) => buf.emit_descriptive_item(d),
+        };
+        items.push(step);
+    }
+    let Attribute::EntityRef(context_of_items) = buf.repr_context_attr(sdr.context) else {
+        unreachable!("SDR context is guaranteed resolved by lower → EntityRef")
+    };
+    Ok(EarlyShapeDimensionRepresentation {
+        name: sdr.name,
+        items,
+        context_of_items,
+    })
+}
+
+/// Lift one `SHAPE_REPRESENTATION_WITH_PARAMETERS`. `items` are the 4-way
+/// `SrwpItem` SELECT, each emitted to its step id; `context_of_items` reuses
+/// `repr_context_attr` (always `EntityRef` — lower drops unresolved context).
+pub(crate) fn lift_shape_representation_with_parameters(
+    buf: &mut WriteBuffer,
+    srwp: ShapeRepresentationWithParameters,
+) -> Result<EarlyShapeRepresentationWithParameters, WriteError> {
+    let mut items = Vec::with_capacity(srwp.items.len());
+    for item in srwp.items {
+        let step = match item {
+            SrwpItem::Direction(id) => buf.emit_direction(id)?,
+            SrwpItem::Placement(id) => buf.emit_axis2_placement_3d(id)?,
+            SrwpItem::Descriptive(d) => DescriptiveRepresentationItemHandler::write(buf, d)?,
+            SrwpItem::MeasureItem(id) => buf.step_id(id),
+        };
+        items.push(step);
+    }
+    let Attribute::EntityRef(context_of_items) = buf.repr_context_attr(srwp.context) else {
+        unreachable!("SRWP context is guaranteed resolved by lower → EntityRef")
+    };
+    Ok(EarlyShapeRepresentationWithParameters {
+        name: srwp.name,
+        items,
+        context_of_items,
+    })
 }
