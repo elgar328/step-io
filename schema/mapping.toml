@@ -212,6 +212,11 @@ generate = [
     # Phase 3d: PMI complex — styled leader curve + terminator
     "leader_curve",
     "leader_terminator",
+    # Phase 3e: PMI simple — plain styled-annotation occurrences (name/styles/item)
+    "annotation_occurrence",
+    "draughting_annotation_occurrence",
+    "annotation_symbol_occurrence",
+    "annotation_curve_occurrence",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

@@ -2,11 +2,12 @@
 //! See the [module docs](super) for the lifting contract.
 
 use crate::early::model::{
-    EarlyAngularLocation, EarlyAngularSize, EarlyAnnotationTextOccurrence,
+    EarlyAngularLocation, EarlyAngularSize, EarlyAnnotationCurveOccurrence,
+    EarlyAnnotationOccurrence, EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence,
     EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature, EarlyDimensionalLocation,
-    EarlyDimensionalSize, EarlyDirectedDimensionalLocation, EarlyDraughtingCallout,
-    EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship, EarlyLeaderCurve,
-    EarlyLeaderDirectedCallout, EarlyLeaderTerminator, EarlyMeasureQualification,
+    EarlyDimensionalSize, EarlyDirectedDimensionalLocation, EarlyDraughtingAnnotationOccurrence,
+    EarlyDraughtingCallout, EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship,
+    EarlyLeaderCurve, EarlyLeaderDirectedCallout, EarlyLeaderTerminator, EarlyMeasureQualification,
     EarlyRoundnessTolerance, EarlyStraightnessTolerance, EarlySurfaceProfileTolerance,
     EarlyToleranceZoneForm, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
 };
@@ -285,4 +286,41 @@ pub(crate) fn lift_leader_terminator(
         item,
         annotated_curve,
     }
+}
+
+/// Lift the plain `ANNOTATION_OCCURRENCE` (`styles` = emitted PSA step ids,
+/// `item` = emitted item step id; the handler pre-resolves both).
+pub(crate) fn lift_annotation_occurrence(
+    name: String,
+    styles: Vec<u64>,
+    item: u64,
+) -> EarlyAnnotationOccurrence {
+    EarlyAnnotationOccurrence { name, styles, item }
+}
+
+/// Lift one `DRAUGHTING_ANNOTATION_OCCURRENCE` (refs pre-resolved).
+pub(crate) fn lift_draughting_annotation_occurrence(
+    name: String,
+    styles: Vec<u64>,
+    item: u64,
+) -> EarlyDraughtingAnnotationOccurrence {
+    EarlyDraughtingAnnotationOccurrence { name, styles, item }
+}
+
+/// Lift one `ANNOTATION_SYMBOL_OCCURRENCE` (refs pre-resolved).
+pub(crate) fn lift_annotation_symbol_occurrence(
+    name: String,
+    styles: Vec<u64>,
+    item: u64,
+) -> EarlyAnnotationSymbolOccurrence {
+    EarlyAnnotationSymbolOccurrence { name, styles, item }
+}
+
+/// Lift the plain `ANNOTATION_CURVE_OCCURRENCE` (refs pre-resolved).
+pub(crate) fn lift_annotation_curve_occurrence(
+    name: String,
+    styles: Vec<u64>,
+    item: u64,
+) -> EarlyAnnotationCurveOccurrence {
+    EarlyAnnotationCurveOccurrence { name, styles, item }
 }

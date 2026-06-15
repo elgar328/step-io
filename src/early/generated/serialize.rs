@@ -3284,6 +3284,82 @@ pub(crate) fn serialize_leader_terminator(
     ])
 }
 
+pub(crate) fn serialize_annotation_occurrence(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAnnotationOccurrence,
+) -> u64 {
+    buf.push_simple(
+        "ANNOTATION_OCCURRENCE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.styles
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::EntityRef(l1.item),
+        ],
+    )
+}
+
+pub(crate) fn serialize_draughting_annotation_occurrence(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDraughtingAnnotationOccurrence,
+) -> u64 {
+    buf.push_simple(
+        "DRAUGHTING_ANNOTATION_OCCURRENCE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.styles
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::EntityRef(l1.item),
+        ],
+    )
+}
+
+pub(crate) fn serialize_annotation_symbol_occurrence(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAnnotationSymbolOccurrence,
+) -> u64 {
+    buf.push_simple(
+        "ANNOTATION_SYMBOL_OCCURRENCE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.styles
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::EntityRef(l1.item),
+        ],
+    )
+}
+
+pub(crate) fn serialize_annotation_curve_occurrence(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAnnotationCurveOccurrence,
+) -> u64 {
+    buf.push_simple(
+        "ANNOTATION_CURVE_OCCURRENCE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.styles
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::EntityRef(l1.item),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

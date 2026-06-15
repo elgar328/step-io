@@ -18,8 +18,8 @@ use crate::ir::attr::{
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::Point3;
 use crate::ir::pmi::{
-    AnnotationCurveOccurrence, AnnotationOccurrence, AnnotationOccurrenceAssociativity,
-    AnnotationOccurrenceRef, AnnotationPlaceholderLeaderLine, AnnotationPlaceholderOccurrence,
+    AnnotationOccurrence, AnnotationOccurrenceAssociativity, AnnotationOccurrenceRef,
+    AnnotationPlaceholderLeaderLine, AnnotationPlaceholderOccurrence,
     AnnotationPlaceholderOccurrenceWithLeaderLine, AnnotationPlane, AnnotationSymbolOccurrence,
     AnnotationTextOccurrence, AnnotationToModelLeaderLine, ApllPointData, ApllPointElement,
     ApllPointWithSurfaceData, AuxiliaryLeaderLineData, DatumFeature, DimensionalCharacteristic,
@@ -301,32 +301,8 @@ impl SimpleEntityHandler for AnnotationSymbolOccurrenceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "ANNOTATION_SYMBOL_OCCURRENCE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(psa_id) = ctx
-                .id_cache
-                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
-            {
-                styles.push(psa_id);
-            }
-        }
-        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
-            return Ok(());
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_occurrences
-            .push(AnnotationOccurrence::AnnotationSymbolOccurrence(
-                AnnotationSymbolOccurrence { name, styles, item },
-            ));
-        ctx.id_cache.insert(entity_id, id);
+        let early = crate::early::bind::bind_annotation_symbol_occurrence(entity_id, attrs)?;
+        crate::early::lower::lower_annotation_symbol_occurrence(ctx, entity_id, &early);
         Ok(())
     }
 
@@ -334,16 +310,11 @@ impl SimpleEntityHandler for AnnotationSymbolOccurrenceHandler {
         let item_id = buf.emit_representation_item_ref(aso.item)?;
         let mut style_refs = Vec::with_capacity(aso.styles.len());
         for psa_id in aso.styles {
-            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
+            style_refs.push(buf.step_id(psa_id));
         }
-        Ok(buf.push_simple(
-            "ANNOTATION_SYMBOL_OCCURRENCE",
-            vec![
-                Attribute::String(aso.name),
-                Attribute::List(style_refs),
-                Attribute::EntityRef(item_id),
-            ],
-        ))
+        let early =
+            crate::early::lift::lift_annotation_symbol_occurrence(aso.name, style_refs, item_id);
+        Ok(crate::early::serialize::serialize_annotation_symbol_occurrence(buf, &early))
     }
 }
 
@@ -411,32 +382,8 @@ impl SimpleEntityHandler for DraughtingAnnotationOccurrenceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "DRAUGHTING_ANNOTATION_OCCURRENCE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(psa_id) = ctx
-                .id_cache
-                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
-            {
-                styles.push(psa_id);
-            }
-        }
-        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
-            return Ok(());
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_occurrences
-            .push(AnnotationOccurrence::DraughtingAnnotationOccurrence(
-                DraughtingAnnotationOccurrence { name, styles, item },
-            ));
-        ctx.id_cache.insert(entity_id, id);
+        let early = crate::early::bind::bind_draughting_annotation_occurrence(entity_id, attrs)?;
+        crate::early::lower::lower_draughting_annotation_occurrence(ctx, entity_id, &early);
         Ok(())
     }
 
@@ -447,16 +394,12 @@ impl SimpleEntityHandler for DraughtingAnnotationOccurrenceHandler {
         let item_id = buf.emit_representation_item_ref(dao.item)?;
         let mut style_refs = Vec::with_capacity(dao.styles.len());
         for psa_id in dao.styles {
-            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
+            style_refs.push(buf.step_id(psa_id));
         }
-        Ok(buf.push_simple(
-            "DRAUGHTING_ANNOTATION_OCCURRENCE",
-            vec![
-                Attribute::String(dao.name),
-                Attribute::List(style_refs),
-                Attribute::EntityRef(item_id),
-            ],
-        ))
+        let early = crate::early::lift::lift_draughting_annotation_occurrence(
+            dao.name, style_refs, item_id,
+        );
+        Ok(crate::early::serialize::serialize_draughting_annotation_occurrence(buf, &early))
     }
 }
 
@@ -944,34 +887,8 @@ impl SimpleEntityHandler for AnnotationOccurrenceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "ANNOTATION_OCCURRENCE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(psa_id) = ctx
-                .id_cache
-                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
-            {
-                styles.push(psa_id);
-            }
-        }
-        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
-            return Ok(());
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_occurrences
-            .push(AnnotationOccurrence::Plain(PlainAnnotationOccurrence {
-                name,
-                styles,
-                item,
-            }));
-        ctx.id_cache.insert(entity_id, id);
+        let early = crate::early::bind::bind_annotation_occurrence(entity_id, attrs)?;
+        crate::early::lower::lower_annotation_occurrence(ctx, entity_id, &early);
         Ok(())
     }
 
@@ -979,15 +896,11 @@ impl SimpleEntityHandler for AnnotationOccurrenceHandler {
         let item_id = buf.emit_representation_item_ref(ao.item)?;
         let mut style_refs = Vec::with_capacity(ao.styles.len());
         for psa_id in ao.styles {
-            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
+            style_refs.push(buf.step_id(psa_id));
         }
-        Ok(buf.push_simple(
-            "ANNOTATION_OCCURRENCE",
-            vec![
-                Attribute::String(ao.name),
-                Attribute::List(style_refs),
-                Attribute::EntityRef(item_id),
-            ],
+        let early = crate::early::lift::lift_annotation_occurrence(ao.name, style_refs, item_id);
+        Ok(crate::early::serialize::serialize_annotation_occurrence(
+            buf, &early,
         ))
     }
 }
@@ -1060,32 +973,8 @@ impl SimpleEntityHandler for AnnotationCurveOccurrenceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "ANNOTATION_CURVE_OCCURRENCE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(psa_id) = ctx
-                .id_cache
-                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
-            {
-                styles.push(psa_id);
-            }
-        }
-        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
-            return Ok(()); // item unresolved — drop the occurrence
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_curve_occurrences
-            .push(AnnotationCurveOccurrence::Plain(
-                PlainAnnotationCurveOccurrence { name, styles, item },
-            ));
-        ctx.id_cache.insert(entity_id, id);
+        let early = crate::early::bind::bind_annotation_curve_occurrence(entity_id, attrs)?;
+        crate::early::lower::lower_annotation_curve_occurrence(ctx, entity_id, &early);
         Ok(())
     }
 
@@ -1096,16 +985,11 @@ impl SimpleEntityHandler for AnnotationCurveOccurrenceHandler {
         let item_step = buf.emit_representation_item_ref(aco.item)?;
         let mut style_refs = Vec::with_capacity(aco.styles.len());
         for psa_id in aco.styles {
-            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
+            style_refs.push(buf.step_id(psa_id));
         }
-        Ok(buf.push_simple(
-            "ANNOTATION_CURVE_OCCURRENCE",
-            vec![
-                Attribute::String(aco.name),
-                Attribute::List(style_refs),
-                Attribute::EntityRef(item_step),
-            ],
-        ))
+        let early =
+            crate::early::lift::lift_annotation_curve_occurrence(aco.name, style_refs, item_step);
+        Ok(crate::early::serialize::serialize_annotation_curve_occurrence(buf, &early))
     }
 }
 

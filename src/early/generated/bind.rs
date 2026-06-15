@@ -2990,6 +2990,54 @@ pub(crate) fn bind_leader_terminator(
     })
 }
 
+pub(crate) fn bind_annotation_occurrence(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAnnotationOccurrence, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "ANNOTATION_OCCURRENCE")?;
+    Ok(super::model::EarlyAnnotationOccurrence {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        styles: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "styles")?,
+        item: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "item")?,
+    })
+}
+
+pub(crate) fn bind_draughting_annotation_occurrence(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDraughtingAnnotationOccurrence, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "DRAUGHTING_ANNOTATION_OCCURRENCE")?;
+    Ok(super::model::EarlyDraughtingAnnotationOccurrence {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        styles: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "styles")?,
+        item: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "item")?,
+    })
+}
+
+pub(crate) fn bind_annotation_symbol_occurrence(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAnnotationSymbolOccurrence, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "ANNOTATION_SYMBOL_OCCURRENCE")?;
+    Ok(super::model::EarlyAnnotationSymbolOccurrence {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        styles: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "styles")?,
+        item: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "item")?,
+    })
+}
+
+pub(crate) fn bind_annotation_curve_occurrence(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAnnotationCurveOccurrence, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "ANNOTATION_CURVE_OCCURRENCE")?;
+    Ok(super::model::EarlyAnnotationCurveOccurrence {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        styles: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "styles")?,
+        item: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "item")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {
