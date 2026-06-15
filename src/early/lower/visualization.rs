@@ -2,18 +2,18 @@
 //! the pilot cluster). See the [module docs](super) for the lowering contract.
 
 use crate::early::model::{
-    EarlyAppliedPresentedItem, EarlyCameraModelD3, EarlyCameraModelD3WithHlhsr, EarlyCameraUsage,
-    EarlyColourRgb, EarlyCompositeText, EarlyDraughtingPreDefinedColour,
-    EarlyDraughtingPreDefinedCurveFont, EarlyFillAreaStyle, EarlyFillAreaStyleColour,
-    EarlyFillAreaStyleId, EarlyGeometricCurveSet, EarlyGeometricSet, EarlyMarker, EarlyMarkerSize,
-    EarlyPointStyle, EarlyPointStyleId, EarlyPreDefinedCurveFont, EarlyPreDefinedMarker,
-    EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol,
-    EarlyPresentationLayerAssignment, EarlyPresentedItemRepresentation,
-    EarlyShellBasedSurfaceModel, EarlySurfaceSideStyle, EarlySurfaceSideStyleId,
-    EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea, EarlySurfaceStyleFillAreaId,
-    EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId,
-    EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont, EarlyViewVolume,
-    EarlyViewVolumeId,
+    EarlyAppliedPresentedItem, EarlyCameraModelD3, EarlyCameraModelD3MultiClipping,
+    EarlyCameraModelD3WithHlhsr, EarlyCameraUsage, EarlyColourRgb, EarlyCompositeText,
+    EarlyDraughtingPreDefinedColour, EarlyDraughtingPreDefinedCurveFont, EarlyFillAreaStyle,
+    EarlyFillAreaStyleColour, EarlyFillAreaStyleId, EarlyGeometricCurveSet, EarlyGeometricSet,
+    EarlyMarker, EarlyMarkerSize, EarlyPointStyle, EarlyPointStyleId, EarlyPreDefinedCurveFont,
+    EarlyPreDefinedMarker, EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol,
+    EarlyPreDefinedTerminatorSymbol, EarlyPresentationLayerAssignment,
+    EarlyPresentedItemRepresentation, EarlyShellBasedSurfaceModel, EarlySurfaceSideStyle,
+    EarlySurfaceSideStyleId, EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea,
+    EarlySurfaceStyleFillAreaId, EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage,
+    EarlySurfaceStyleUsageId, EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont,
+    EarlyViewVolume, EarlyViewVolumeId,
 };
 use crate::ir::id::{
     ColourId, CurveId, MeasureWithUnitId, PlanarExtentId, PointId, PreDefinedMarkerId, ShellId,
@@ -21,17 +21,17 @@ use crate::ir::id::{
 };
 use crate::ir::shape_rep::{CameraUsage, RepresentationMap};
 use crate::ir::visualization::{
-    AppliedPresentedItem, CameraModel, CameraModelD3, CameraModelD3WithHlhsr, Colour, ColourRgb,
-    CompositeText, CurveOrRender, DraughtingPreDefinedColour, DraughtingPreDefinedCurveFont,
-    FillAreaStyle, FillAreaStyleColour, FoundedItem, GeometricCurveSet,
-    GeometricRepresentationItem, GeometricSet, Marker, MarkerSize, PointStyle, PreDefinedCurveFont,
-    PreDefinedCurveFontData, PreDefinedMarker, PreDefinedMarkerData, PreDefinedPointMarkerSymbol,
-    PreDefinedSymbol, PreDefinedSymbolData, PreDefinedTerminatorSymbol,
-    PresentationLayerAssignment, PresentationLayerAssignmentItem, PresentationReprSelect,
-    PresentedItem, PresentedItemRepresentation, ShellBasedSurfaceModel, SurfaceSideStyle,
-    SurfaceSideStyleEntry, SurfaceStyleBoundary, SurfaceStyleFillArea, SurfaceStyleUsage,
-    SymbolColour, SymbolStyle, TextOrCharacter, TextStyleForDefinedFont, ViewVolume,
-    VisualizationPool,
+    AppliedPresentedItem, CameraModel, CameraModelD3, CameraModelD3MultiClipping,
+    CameraModelD3WithHlhsr, Colour, ColourRgb, CompositeText, CurveOrRender,
+    DraughtingPreDefinedColour, DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour,
+    FoundedItem, GeometricCurveSet, GeometricRepresentationItem, GeometricSet, Marker, MarkerSize,
+    PointStyle, PreDefinedCurveFont, PreDefinedCurveFontData, PreDefinedMarker,
+    PreDefinedMarkerData, PreDefinedPointMarkerSymbol, PreDefinedSymbol, PreDefinedSymbolData,
+    PreDefinedTerminatorSymbol, PresentationLayerAssignment, PresentationLayerAssignmentItem,
+    PresentationReprSelect, PresentedItem, PresentedItemRepresentation, ShapeClipping,
+    ShellBasedSurfaceModel, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleBoundary,
+    SurfaceStyleFillArea, SurfaceStyleUsage, SymbolColour, SymbolStyle, TextOrCharacter,
+    TextStyleForDefinedFont, ViewVolume, VisualizationPool,
 };
 use crate::reader::ReaderContext;
 
@@ -766,6 +766,46 @@ pub(crate) fn lower_camera_model_d3_with_hlhsr(
             CameraModelD3WithHlhsr {
                 inherited,
                 hidden_line_surface_removal: early.hidden_line_surface_removal,
+            },
+        ));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `CAMERA_MODEL_D3_MULTI_CLIPPING` (inherits the D3 body + a
+/// `shape_clipping` SET). Each clipping ref keeps only the `plane` SELECT member
+/// (`SurfaceId` → `ShapeClipping::Plane`); `camera_model_d3_multi_clipping_union`
+/// members are not modelled and skipped. An empty result drops the camera,
+/// symmetric on re-read.
+pub(crate) fn lower_camera_model_d3_multi_clipping(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyCameraModelD3MultiClipping,
+) {
+    let Some(inherited) = lower_cmd3_body(
+        ctx,
+        early.name,
+        early.view_reference_system,
+        early.perspective_of_volume,
+    ) else {
+        return;
+    };
+    let mut shape_clipping = Vec::with_capacity(early.shape_clipping.len());
+    for r in early.shape_clipping {
+        if let Some(sid) = ctx.id_cache.get::<crate::ir::id::SurfaceId>(r) {
+            shape_clipping.push(ShapeClipping::Plane(sid));
+        }
+    }
+    if shape_clipping.is_empty() {
+        return;
+    }
+    let id = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .camera_models
+        .push(CameraModel::CameraModelD3MultiClipping(
+            CameraModelD3MultiClipping {
+                inherited,
+                shape_clipping,
             },
         ));
     ctx.id_cache.insert(entity_id, id);

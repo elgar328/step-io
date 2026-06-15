@@ -3416,6 +3416,26 @@ pub(crate) fn serialize_camera_model_d3_with_hlhsr(
     )
 }
 
+pub(crate) fn serialize_camera_model_d3_multi_clipping(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCameraModelD3MultiClipping,
+) -> u64 {
+    buf.push_simple(
+        "CAMERA_MODEL_D3_MULTI_CLIPPING",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.view_reference_system),
+            crate::parser::entity::Attribute::EntityRef(l1.perspective_of_volume),
+            crate::parser::entity::Attribute::List(
+                l1.shape_clipping
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

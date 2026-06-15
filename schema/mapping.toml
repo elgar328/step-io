@@ -222,6 +222,8 @@ generate = [
     # Phase 3g: visualization simple — camera model d3 (+ hlhsr boolean subtype)
     "camera_model_d3",
     "camera_model_d3_with_hlhsr",
+    # Phase 3h: visualization simple — camera model d3 multi clipping (SET shape_clipping)
+    "camera_model_d3_multi_clipping",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

@@ -2,16 +2,16 @@
 //! the pilot cluster). See the [module docs](super) for the lifting contract.
 
 use crate::early::model::{
-    EarlyAppliedPresentedItem, EarlyCameraModelD3, EarlyCameraModelD3WithHlhsr, EarlyCameraUsage,
-    EarlyColourRgb, EarlyCompositeText, EarlyDraughtingPreDefinedColour,
-    EarlyDraughtingPreDefinedCurveFont, EarlyFillAreaStyle, EarlyFillAreaStyleColour,
-    EarlyGeometricCurveSet, EarlyGeometricSet, EarlyMarker, EarlyMarkerSize, EarlyPointStyle,
-    EarlyPreDefinedCurveFont, EarlyPreDefinedMarker, EarlyPreDefinedPointMarkerSymbol,
-    EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol, EarlyPresentationLayerAssignment,
-    EarlyPresentedItemRepresentation, EarlyShellBasedSurfaceModel, EarlySurfaceSideStyle,
-    EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea, EarlySurfaceStyleTransparent,
-    EarlySurfaceStyleUsage, EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont,
-    EarlyViewVolume,
+    EarlyAppliedPresentedItem, EarlyCameraModelD3, EarlyCameraModelD3MultiClipping,
+    EarlyCameraModelD3WithHlhsr, EarlyCameraUsage, EarlyColourRgb, EarlyCompositeText,
+    EarlyDraughtingPreDefinedColour, EarlyDraughtingPreDefinedCurveFont, EarlyFillAreaStyle,
+    EarlyFillAreaStyleColour, EarlyGeometricCurveSet, EarlyGeometricSet, EarlyMarker,
+    EarlyMarkerSize, EarlyPointStyle, EarlyPreDefinedCurveFont, EarlyPreDefinedMarker,
+    EarlyPreDefinedPointMarkerSymbol, EarlyPreDefinedSymbol, EarlyPreDefinedTerminatorSymbol,
+    EarlyPresentationLayerAssignment, EarlyPresentedItemRepresentation,
+    EarlyShellBasedSurfaceModel, EarlySurfaceSideStyle, EarlySurfaceStyleBoundary,
+    EarlySurfaceStyleFillArea, EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage,
+    EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont, EarlyViewVolume,
 };
 use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::fill_area_style_colour::FillAreaStyleColourHandler;
@@ -314,5 +314,21 @@ pub(crate) fn lift_camera_model_d3_with_hlhsr(
         view_reference_system,
         perspective_of_volume,
         hidden_line_surface_removal,
+    }
+}
+
+/// Lift one `CAMERA_MODEL_D3_MULTI_CLIPPING` (flat L1; `shape_clipping` members
+/// pre-resolved to emitted surface step ids).
+pub(crate) fn lift_camera_model_d3_multi_clipping(
+    name: String,
+    view_reference_system: u64,
+    perspective_of_volume: u64,
+    shape_clipping: Vec<u64>,
+) -> EarlyCameraModelD3MultiClipping {
+    EarlyCameraModelD3MultiClipping {
+        name,
+        view_reference_system,
+        perspective_of_volume,
+        shape_clipping,
     }
 }
