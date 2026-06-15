@@ -2,15 +2,17 @@
 //! See the [module docs](super) for the lifting contract.
 
 use crate::early::model::{
-    EarlyAngularLocation, EarlyAngularSize, EarlyAnnotationCurveOccurrence,
-    EarlyAnnotationOccurrence, EarlyAnnotationPlane, EarlyAnnotationSymbolOccurrence,
-    EarlyAnnotationTextOccurrence, EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature,
+    EarlyAngularLocation, EarlyAngularSize, EarlyAngularityTolerance,
+    EarlyAnnotationCurveOccurrence, EarlyAnnotationOccurrence, EarlyAnnotationPlane,
+    EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence, EarlyCircularRunoutTolerance,
+    EarlyConcentricityTolerance, EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature,
     EarlyDimensionalLocation, EarlyDimensionalSize, EarlyDirectedDimensionalLocation,
     EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout, EarlyFlatnessTolerance,
     EarlyGeometricToleranceRelationship, EarlyLeaderCurve, EarlyLeaderDirectedCallout,
-    EarlyLeaderTerminator, EarlyMeasureQualification, EarlyRoundnessTolerance,
-    EarlyStraightnessTolerance, EarlySurfaceProfileTolerance, EarlyToleranceZoneForm,
-    EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
+    EarlyLeaderTerminator, EarlyMeasureQualification, EarlyParallelismTolerance,
+    EarlyPerpendicularityTolerance, EarlyRoundnessTolerance, EarlyStraightnessTolerance,
+    EarlySurfaceProfileTolerance, EarlySymmetryTolerance, EarlyToleranceZoneForm,
+    EarlyTotalRunoutTolerance, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
 };
 
 /// Lift one `TOLERANCE_ZONE_FORM`.
@@ -43,6 +45,126 @@ pub(crate) fn lift_flatness_tolerance(
         description: Some(description),
         magnitude: Some(magnitude),
         toleranced_shape_aspect,
+    }
+}
+
+/// Lift one simple-form `ANGULARITY_TOLERANCE` (with-datum; refs pre-resolved,
+/// `datum_system` pre-resolved to step ids).
+pub(crate) fn lift_angularity_tolerance(
+    name: String,
+    description: String,
+    magnitude: u64,
+    toleranced_shape_aspect: u64,
+    datum_system: Vec<u64>,
+) -> EarlyAngularityTolerance {
+    EarlyAngularityTolerance {
+        name,
+        description: Some(description),
+        magnitude: Some(magnitude),
+        toleranced_shape_aspect,
+        datum_system,
+    }
+}
+
+/// Lift one simple-form `CIRCULAR_RUNOUT_TOLERANCE`.
+pub(crate) fn lift_circular_runout_tolerance(
+    name: String,
+    description: String,
+    magnitude: u64,
+    toleranced_shape_aspect: u64,
+    datum_system: Vec<u64>,
+) -> EarlyCircularRunoutTolerance {
+    EarlyCircularRunoutTolerance {
+        name,
+        description: Some(description),
+        magnitude: Some(magnitude),
+        toleranced_shape_aspect,
+        datum_system,
+    }
+}
+
+/// Lift one simple-form `CONCENTRICITY_TOLERANCE`.
+pub(crate) fn lift_concentricity_tolerance(
+    name: String,
+    description: String,
+    magnitude: u64,
+    toleranced_shape_aspect: u64,
+    datum_system: Vec<u64>,
+) -> EarlyConcentricityTolerance {
+    EarlyConcentricityTolerance {
+        name,
+        description: Some(description),
+        magnitude: Some(magnitude),
+        toleranced_shape_aspect,
+        datum_system,
+    }
+}
+
+/// Lift one simple-form `PARALLELISM_TOLERANCE`.
+pub(crate) fn lift_parallelism_tolerance(
+    name: String,
+    description: String,
+    magnitude: u64,
+    toleranced_shape_aspect: u64,
+    datum_system: Vec<u64>,
+) -> EarlyParallelismTolerance {
+    EarlyParallelismTolerance {
+        name,
+        description: Some(description),
+        magnitude: Some(magnitude),
+        toleranced_shape_aspect,
+        datum_system,
+    }
+}
+
+/// Lift one simple-form `PERPENDICULARITY_TOLERANCE`.
+pub(crate) fn lift_perpendicularity_tolerance(
+    name: String,
+    description: String,
+    magnitude: u64,
+    toleranced_shape_aspect: u64,
+    datum_system: Vec<u64>,
+) -> EarlyPerpendicularityTolerance {
+    EarlyPerpendicularityTolerance {
+        name,
+        description: Some(description),
+        magnitude: Some(magnitude),
+        toleranced_shape_aspect,
+        datum_system,
+    }
+}
+
+/// Lift one simple-form `SYMMETRY_TOLERANCE`.
+pub(crate) fn lift_symmetry_tolerance(
+    name: String,
+    description: String,
+    magnitude: u64,
+    toleranced_shape_aspect: u64,
+    datum_system: Vec<u64>,
+) -> EarlySymmetryTolerance {
+    EarlySymmetryTolerance {
+        name,
+        description: Some(description),
+        magnitude: Some(magnitude),
+        toleranced_shape_aspect,
+        datum_system,
+    }
+}
+
+/// Lift one simple-form `TOTAL_RUNOUT_TOLERANCE`.
+pub(crate) fn lift_total_runout_tolerance(
+    name: String,
+    description: String,
+    magnitude: u64,
+    toleranced_shape_aspect: u64,
+    datum_system: Vec<u64>,
+) -> EarlyTotalRunoutTolerance {
+    EarlyTotalRunoutTolerance {
+        name,
+        description: Some(description),
+        magnitude: Some(magnitude),
+        toleranced_shape_aspect,
+        datum_system,
     }
 }
 

@@ -254,6 +254,14 @@ generate = [
     "styled_item",
     "over_riding_styled_item",
     "context_dependent_over_riding_styled_item",
+    # Phase 3t: pmi — geometric_tolerance_with_datum_reference simple 7 (GD&T)
+    "angularity_tolerance",
+    "circular_runout_tolerance",
+    "concentricity_tolerance",
+    "parallelism_tolerance",
+    "perpendicularity_tolerance",
+    "symmetry_tolerance",
+    "total_runout_tolerance",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

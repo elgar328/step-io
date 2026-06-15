@@ -3750,6 +3750,195 @@ pub(crate) fn serialize_context_dependent_over_riding_styled_item(
     )
 }
 
+pub(crate) fn serialize_angularity_tolerance(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAngularityTolerance,
+) -> u64 {
+    buf.push_simple(
+        "ANGULARITY_TOLERANCE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            match l1.magnitude {
+                Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+            crate::parser::entity::Attribute::List(
+                l1.datum_system
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_circular_runout_tolerance(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCircularRunoutTolerance,
+) -> u64 {
+    buf.push_simple(
+        "CIRCULAR_RUNOUT_TOLERANCE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            match l1.magnitude {
+                Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+            crate::parser::entity::Attribute::List(
+                l1.datum_system
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_concentricity_tolerance(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyConcentricityTolerance,
+) -> u64 {
+    buf.push_simple(
+        "CONCENTRICITY_TOLERANCE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            match l1.magnitude {
+                Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+            crate::parser::entity::Attribute::List(
+                l1.datum_system
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_parallelism_tolerance(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyParallelismTolerance,
+) -> u64 {
+    buf.push_simple(
+        "PARALLELISM_TOLERANCE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            match l1.magnitude {
+                Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+            crate::parser::entity::Attribute::List(
+                l1.datum_system
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_perpendicularity_tolerance(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPerpendicularityTolerance,
+) -> u64 {
+    buf.push_simple(
+        "PERPENDICULARITY_TOLERANCE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            match l1.magnitude {
+                Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+            crate::parser::entity::Attribute::List(
+                l1.datum_system
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_symmetry_tolerance(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlySymmetryTolerance,
+) -> u64 {
+    buf.push_simple(
+        "SYMMETRY_TOLERANCE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            match l1.magnitude {
+                Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+            crate::parser::entity::Attribute::List(
+                l1.datum_system
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_total_runout_tolerance(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyTotalRunoutTolerance,
+) -> u64 {
+    buf.push_simple(
+        "TOTAL_RUNOUT_TOLERANCE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            match l1.magnitude {
+                Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+            crate::parser::entity::Attribute::List(
+                l1.datum_system
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

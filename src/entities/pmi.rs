@@ -1867,7 +1867,7 @@ pub(crate) fn push_geometric_tolerance(
 /// Push a `GeometricToleranceWithDatumReference` into the `pmi` pool and
 /// register its `#N → GeometricToleranceWithDatumReferenceId` — see
 /// [`push_geometric_tolerance`].
-fn push_gt_with_datum_reference(
+pub(crate) fn push_gt_with_datum_reference(
     ctx: &mut ReaderContext,
     entity_id: u64,
     gt: GeometricToleranceWithDatumReference,
@@ -2424,7 +2424,7 @@ impl SimpleEntityHandler for DatumReferenceElementHandler {
 /// does not resolve; individual `datum_system` refs that do not resolve are
 /// skipped. Shared by the simple-form and complex-form readers.
 #[allow(clippy::too_many_arguments)]
-fn build_gt_with_datum_reference_data(
+pub(crate) fn build_gt_with_datum_reference_data(
     ctx: &ReaderContext,
     name: String,
     description: String,
@@ -2456,30 +2456,6 @@ fn build_gt_with_datum_reference_data(
 /// Read the simple 5-attr `geometric_tolerance_with_datum_reference` body
 /// (the form the seven direct subtypes take). `Ok(None)` when a ref does
 /// not resolve — the tolerance is dropped, symmetric on re-read.
-fn read_geometric_tolerance_with_datum_reference_data(
-    ctx: &ReaderContext,
-    entity_id: u64,
-    attrs: &[Attribute],
-    entity_name: &'static str,
-) -> Result<Option<GeometricToleranceWithDatumReferenceData>, ConvertError> {
-    check_count(attrs, 5, entity_id, entity_name)?;
-    let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-    let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-    let magnitude_ref = read_entity_ref(attrs, 2, entity_id, "magnitude")?;
-    let shape_aspect_ref = read_entity_ref(attrs, 3, entity_id, "toleranced_shape_aspect")?;
-    let datum_system_refs = read_entity_ref_list(attrs, 4, entity_id, "datum_system")?;
-    Ok(build_gt_with_datum_reference_data(
-        ctx,
-        name,
-        description,
-        magnitude_ref,
-        shape_aspect_ref,
-        &datum_system_refs,
-        Vec::new(),
-        None,
-    ))
-}
-
 /// Read the multiple-inheritance complex form `(GEOMETRIC_TOLERANCE
 /// GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE <leaf>)` — the encoding
 /// `POSITION` / `SURFACE_PROFILE` / `LINE_PROFILE` tolerances take. `Ok(None)`
@@ -2676,6 +2652,7 @@ fn read_gt_data_complex(
 /// `SURFACE_PROFILE` / `LINE_PROFILE` emit as the multiple-inheritance
 /// complex `(GEOMETRIC_TOLERANCE GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE
 /// <leaf>)` (parts in ISO 10303-21 alphabetical order).
+#[allow(clippy::too_many_lines)]
 pub(crate) fn write_geometric_tolerance_with_datum_reference(
     buf: &mut WriteBuffer,
     gt: GeometricToleranceWithDatumReference,
@@ -2709,10 +2686,11 @@ pub(crate) fn write_geometric_tolerance_with_datum_reference(
         ToleranceMagnitude::RepresentationItem(id) => buf.step_id(id),
     };
     let shape_aspect = buf.emit_geometric_tolerance_target(data.toleranced_shape_aspect);
-    let mut datum_system_refs = Vec::with_capacity(data.datum_system.len());
-    for ds_id in &data.datum_system {
-        datum_system_refs.push(Attribute::EntityRef(buf.step_id(ds_id)));
-    }
+    let datum_system_ids: Vec<u64> = data
+        .datum_system
+        .iter()
+        .map(|ds_id| buf.step_id(ds_id))
+        .collect();
     let force_complex = is_complex || !data.modifiers.is_empty() || data.displacement.is_some();
     if force_complex {
         let mut parts = Vec::with_capacity(5);
@@ -2727,7 +2705,12 @@ pub(crate) fn write_geometric_tolerance_with_datum_reference(
         ));
         parts.push((
             "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE".into(),
-            vec![Attribute::List(datum_system_refs)],
+            vec![Attribute::List(
+                datum_system_ids
+                    .iter()
+                    .map(|&s| Attribute::EntityRef(s))
+                    .collect(),
+            )],
         ));
         if !data.modifiers.is_empty() {
             parts.push((
@@ -2750,16 +2733,83 @@ pub(crate) fn write_geometric_tolerance_with_datum_reference(
         });
         n
     } else {
-        buf.push_simple(
-            type_name,
-            vec![
-                Attribute::String(data.name),
-                Attribute::String(data.description),
-                Attribute::EntityRef(magnitude),
-                Attribute::EntityRef(shape_aspect),
-                Attribute::List(datum_system_refs),
-            ],
-        )
+        // Simple 5-attr emit goes through the generated serialize (the
+        // complex-MI branch above stays hand-built). `is_complex` is false only
+        // for the 7 simple subtypes, so `type_name` is one of them here.
+        use crate::early::{lift, serialize};
+        match type_name {
+            "ANGULARITY_TOLERANCE" => serialize::serialize_angularity_tolerance(
+                buf,
+                &lift::lift_angularity_tolerance(
+                    data.name,
+                    data.description,
+                    magnitude,
+                    shape_aspect,
+                    datum_system_ids,
+                ),
+            ),
+            "CIRCULAR_RUNOUT_TOLERANCE" => serialize::serialize_circular_runout_tolerance(
+                buf,
+                &lift::lift_circular_runout_tolerance(
+                    data.name,
+                    data.description,
+                    magnitude,
+                    shape_aspect,
+                    datum_system_ids,
+                ),
+            ),
+            "CONCENTRICITY_TOLERANCE" => serialize::serialize_concentricity_tolerance(
+                buf,
+                &lift::lift_concentricity_tolerance(
+                    data.name,
+                    data.description,
+                    magnitude,
+                    shape_aspect,
+                    datum_system_ids,
+                ),
+            ),
+            "PARALLELISM_TOLERANCE" => serialize::serialize_parallelism_tolerance(
+                buf,
+                &lift::lift_parallelism_tolerance(
+                    data.name,
+                    data.description,
+                    magnitude,
+                    shape_aspect,
+                    datum_system_ids,
+                ),
+            ),
+            "PERPENDICULARITY_TOLERANCE" => serialize::serialize_perpendicularity_tolerance(
+                buf,
+                &lift::lift_perpendicularity_tolerance(
+                    data.name,
+                    data.description,
+                    magnitude,
+                    shape_aspect,
+                    datum_system_ids,
+                ),
+            ),
+            "SYMMETRY_TOLERANCE" => serialize::serialize_symmetry_tolerance(
+                buf,
+                &lift::lift_symmetry_tolerance(
+                    data.name,
+                    data.description,
+                    magnitude,
+                    shape_aspect,
+                    datum_system_ids,
+                ),
+            ),
+            "TOTAL_RUNOUT_TOLERANCE" => serialize::serialize_total_runout_tolerance(
+                buf,
+                &lift::lift_total_runout_tolerance(
+                    data.name,
+                    data.description,
+                    magnitude,
+                    shape_aspect,
+                    datum_system_ids,
+                ),
+            ),
+            _ => unreachable!("complex-only with-datum variant reached the simple branch"),
+        }
     }
 }
 
@@ -2775,20 +2825,8 @@ impl SimpleEntityHandler for AngularityToleranceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_geometric_tolerance_with_datum_reference_data(
-            ctx,
-            entity_id,
-            attrs,
-            "ANGULARITY_TOLERANCE",
-        )?
-        else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::Angularity(data),
-        );
+        let early = crate::early::bind::bind_angularity_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_angularity_tolerance(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2812,20 +2850,8 @@ impl SimpleEntityHandler for CircularRunoutToleranceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_geometric_tolerance_with_datum_reference_data(
-            ctx,
-            entity_id,
-            attrs,
-            "CIRCULAR_RUNOUT_TOLERANCE",
-        )?
-        else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::CircularRunout(data),
-        );
+        let early = crate::early::bind::bind_circular_runout_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_circular_runout_tolerance(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2849,20 +2875,8 @@ impl SimpleEntityHandler for ConcentricityToleranceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_geometric_tolerance_with_datum_reference_data(
-            ctx,
-            entity_id,
-            attrs,
-            "CONCENTRICITY_TOLERANCE",
-        )?
-        else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::Concentricity(data),
-        );
+        let early = crate::early::bind::bind_concentricity_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_concentricity_tolerance(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2886,20 +2900,8 @@ impl SimpleEntityHandler for ParallelismToleranceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_geometric_tolerance_with_datum_reference_data(
-            ctx,
-            entity_id,
-            attrs,
-            "PARALLELISM_TOLERANCE",
-        )?
-        else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::Parallelism(data),
-        );
+        let early = crate::early::bind::bind_parallelism_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_parallelism_tolerance(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2923,20 +2925,8 @@ impl SimpleEntityHandler for PerpendicularityToleranceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_geometric_tolerance_with_datum_reference_data(
-            ctx,
-            entity_id,
-            attrs,
-            "PERPENDICULARITY_TOLERANCE",
-        )?
-        else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::Perpendicularity(data),
-        );
+        let early = crate::early::bind::bind_perpendicularity_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_perpendicularity_tolerance(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2960,20 +2950,8 @@ impl SimpleEntityHandler for SymmetryToleranceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_geometric_tolerance_with_datum_reference_data(
-            ctx,
-            entity_id,
-            attrs,
-            "SYMMETRY_TOLERANCE",
-        )?
-        else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::Symmetry(data),
-        );
+        let early = crate::early::bind::bind_symmetry_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_symmetry_tolerance(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2997,20 +2975,8 @@ impl SimpleEntityHandler for TotalRunoutToleranceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_geometric_tolerance_with_datum_reference_data(
-            ctx,
-            entity_id,
-            attrs,
-            "TOTAL_RUNOUT_TOLERANCE",
-        )?
-        else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::TotalRunout(data),
-        );
+        let early = crate::early::bind::bind_total_runout_tolerance(entity_id, attrs)?;
+        crate::early::lower::lower_total_runout_tolerance(ctx, entity_id, early);
         Ok(())
     }
 

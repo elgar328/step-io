@@ -2,15 +2,17 @@
 //! See the [module docs](super) for the lowering contract.
 
 use crate::early::model::{
-    EarlyAngularLocation, EarlyAngularSize, EarlyAnnotationCurveOccurrence,
-    EarlyAnnotationOccurrence, EarlyAnnotationPlane, EarlyAnnotationSymbolOccurrence,
-    EarlyAnnotationTextOccurrence, EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature,
+    EarlyAngularLocation, EarlyAngularSize, EarlyAngularityTolerance,
+    EarlyAnnotationCurveOccurrence, EarlyAnnotationOccurrence, EarlyAnnotationPlane,
+    EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence, EarlyCircularRunoutTolerance,
+    EarlyConcentricityTolerance, EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature,
     EarlyDimensionalLocation, EarlyDimensionalSize, EarlyDirectedDimensionalLocation,
     EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout, EarlyFlatnessTolerance,
     EarlyGeometricToleranceRelationship, EarlyLeaderCurve, EarlyLeaderDirectedCallout,
-    EarlyLeaderTerminator, EarlyMeasureQualification, EarlyRoundnessTolerance,
-    EarlyStraightnessTolerance, EarlySurfaceProfileTolerance, EarlyToleranceZoneForm,
-    EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
+    EarlyLeaderTerminator, EarlyMeasureQualification, EarlyParallelismTolerance,
+    EarlyPerpendicularityTolerance, EarlyRoundnessTolerance, EarlyStraightnessTolerance,
+    EarlySurfaceProfileTolerance, EarlySymmetryTolerance, EarlyToleranceZoneForm,
+    EarlyTotalRunoutTolerance, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
 };
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::pmi::{
@@ -18,9 +20,9 @@ use crate::ir::pmi::{
     AnnotationSymbolOccurrence, AnnotationTextOccurrence, Datum, DatumFeature, DimensionalLocation,
     DimensionalLocationData, DimensionalSize, DimensionalSizeKind, DraughtingAnnotationOccurrence,
     DraughtingCallout, DraughtingCalloutData, GeometricTolerance, GeometricToleranceRelationship,
-    LeaderCurve, LeaderTerminator, MeasureQualification, PlainAnnotationCurveOccurrence,
-    PlainAnnotationOccurrence, PmiPool, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
-    ValueQualifier,
+    GeometricToleranceWithDatumReference, LeaderCurve, LeaderTerminator, MeasureQualification,
+    PlainAnnotationCurveOccurrence, PlainAnnotationOccurrence, PmiPool, ToleranceZoneForm,
+    TypeQualifier, ValueFormatTypeQualifier, ValueQualifier,
 };
 use crate::reader::ReaderContext;
 
@@ -137,6 +139,169 @@ pub(crate) fn lower_surface_profile_tolerance(
         ctx,
         entity_id,
         GeometricTolerance::SurfaceProfile(data),
+    );
+}
+
+/// Shared lowering for the simple `GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE`
+/// subtypes (`angularity` / `circular_runout` / `concentricity` / `parallelism`
+/// / `perpendicularity` / `symmetry` / `total_runout`): resolve `magnitude` /
+/// `shape_aspect` / `datum_system` via the shared builder, then push under
+/// `kind`. A `$` magnitude (corpus-absent — the legacy read required it) drops
+/// the entity.
+#[allow(clippy::too_many_arguments)]
+fn lower_gt_with_datum_reference(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    name: String,
+    description: Option<String>,
+    magnitude: Option<u64>,
+    toleranced_shape_aspect: u64,
+    datum_system: &[u64],
+    kind: fn(
+        crate::ir::pmi::GeometricToleranceWithDatumReferenceData,
+    ) -> GeometricToleranceWithDatumReference,
+) {
+    let Some(mag) = magnitude else {
+        return;
+    };
+    let Some(data) = crate::entities::pmi::build_gt_with_datum_reference_data(
+        ctx,
+        name,
+        description.unwrap_or_default(),
+        mag,
+        toleranced_shape_aspect,
+        datum_system,
+        Vec::new(),
+        None,
+    ) else {
+        return;
+    };
+    crate::entities::pmi::push_gt_with_datum_reference(ctx, entity_id, kind(data));
+}
+
+/// Lower one `ANGULARITY_TOLERANCE`.
+pub(crate) fn lower_angularity_tolerance(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyAngularityTolerance,
+) {
+    lower_gt_with_datum_reference(
+        ctx,
+        entity_id,
+        early.name,
+        early.description,
+        early.magnitude,
+        early.toleranced_shape_aspect,
+        &early.datum_system,
+        GeometricToleranceWithDatumReference::Angularity,
+    );
+}
+
+/// Lower one `CIRCULAR_RUNOUT_TOLERANCE`.
+pub(crate) fn lower_circular_runout_tolerance(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyCircularRunoutTolerance,
+) {
+    lower_gt_with_datum_reference(
+        ctx,
+        entity_id,
+        early.name,
+        early.description,
+        early.magnitude,
+        early.toleranced_shape_aspect,
+        &early.datum_system,
+        GeometricToleranceWithDatumReference::CircularRunout,
+    );
+}
+
+/// Lower one `CONCENTRICITY_TOLERANCE`.
+pub(crate) fn lower_concentricity_tolerance(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyConcentricityTolerance,
+) {
+    lower_gt_with_datum_reference(
+        ctx,
+        entity_id,
+        early.name,
+        early.description,
+        early.magnitude,
+        early.toleranced_shape_aspect,
+        &early.datum_system,
+        GeometricToleranceWithDatumReference::Concentricity,
+    );
+}
+
+/// Lower one `PARALLELISM_TOLERANCE`.
+pub(crate) fn lower_parallelism_tolerance(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyParallelismTolerance,
+) {
+    lower_gt_with_datum_reference(
+        ctx,
+        entity_id,
+        early.name,
+        early.description,
+        early.magnitude,
+        early.toleranced_shape_aspect,
+        &early.datum_system,
+        GeometricToleranceWithDatumReference::Parallelism,
+    );
+}
+
+/// Lower one `PERPENDICULARITY_TOLERANCE`.
+pub(crate) fn lower_perpendicularity_tolerance(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyPerpendicularityTolerance,
+) {
+    lower_gt_with_datum_reference(
+        ctx,
+        entity_id,
+        early.name,
+        early.description,
+        early.magnitude,
+        early.toleranced_shape_aspect,
+        &early.datum_system,
+        GeometricToleranceWithDatumReference::Perpendicularity,
+    );
+}
+
+/// Lower one `SYMMETRY_TOLERANCE`.
+pub(crate) fn lower_symmetry_tolerance(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlySymmetryTolerance,
+) {
+    lower_gt_with_datum_reference(
+        ctx,
+        entity_id,
+        early.name,
+        early.description,
+        early.magnitude,
+        early.toleranced_shape_aspect,
+        &early.datum_system,
+        GeometricToleranceWithDatumReference::Symmetry,
+    );
+}
+
+/// Lower one `TOTAL_RUNOUT_TOLERANCE`.
+pub(crate) fn lower_total_runout_tolerance(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyTotalRunoutTolerance,
+) {
+    lower_gt_with_datum_reference(
+        ctx,
+        entity_id,
+        early.name,
+        early.description,
+        early.magnitude,
+        early.toleranced_shape_aspect,
+        &early.datum_system,
+        GeometricToleranceWithDatumReference::TotalRunout,
     );
 }
 

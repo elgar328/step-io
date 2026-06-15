@@ -3462,6 +3462,139 @@ pub(crate) fn bind_context_dependent_over_riding_styled_item(
     })
 }
 
+pub(crate) fn bind_angularity_tolerance(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAngularityTolerance, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 5, entity_id, "ANGULARITY_TOLERANCE")?;
+    Ok(super::model::EarlyAngularityTolerance {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        magnitude: crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?,
+        toleranced_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "toleranced_shape_aspect",
+        )?,
+        datum_system: crate::ir::attr::read_entity_ref_list(attrs, 4, entity_id, "datum_system")?,
+    })
+}
+
+pub(crate) fn bind_circular_runout_tolerance(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyCircularRunoutTolerance, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 5, entity_id, "CIRCULAR_RUNOUT_TOLERANCE")?;
+    Ok(super::model::EarlyCircularRunoutTolerance {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        magnitude: crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?,
+        toleranced_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "toleranced_shape_aspect",
+        )?,
+        datum_system: crate::ir::attr::read_entity_ref_list(attrs, 4, entity_id, "datum_system")?,
+    })
+}
+
+pub(crate) fn bind_concentricity_tolerance(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyConcentricityTolerance, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 5, entity_id, "CONCENTRICITY_TOLERANCE")?;
+    Ok(super::model::EarlyConcentricityTolerance {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        magnitude: crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?,
+        toleranced_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "toleranced_shape_aspect",
+        )?,
+        datum_system: crate::ir::attr::read_entity_ref_list(attrs, 4, entity_id, "datum_system")?,
+    })
+}
+
+pub(crate) fn bind_parallelism_tolerance(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyParallelismTolerance, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 5, entity_id, "PARALLELISM_TOLERANCE")?;
+    Ok(super::model::EarlyParallelismTolerance {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        magnitude: crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?,
+        toleranced_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "toleranced_shape_aspect",
+        )?,
+        datum_system: crate::ir::attr::read_entity_ref_list(attrs, 4, entity_id, "datum_system")?,
+    })
+}
+
+pub(crate) fn bind_perpendicularity_tolerance(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPerpendicularityTolerance, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 5, entity_id, "PERPENDICULARITY_TOLERANCE")?;
+    Ok(super::model::EarlyPerpendicularityTolerance {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        magnitude: crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?,
+        toleranced_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "toleranced_shape_aspect",
+        )?,
+        datum_system: crate::ir::attr::read_entity_ref_list(attrs, 4, entity_id, "datum_system")?,
+    })
+}
+
+pub(crate) fn bind_symmetry_tolerance(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlySymmetryTolerance, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 5, entity_id, "SYMMETRY_TOLERANCE")?;
+    Ok(super::model::EarlySymmetryTolerance {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        magnitude: crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?,
+        toleranced_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "toleranced_shape_aspect",
+        )?,
+        datum_system: crate::ir::attr::read_entity_ref_list(attrs, 4, entity_id, "datum_system")?,
+    })
+}
+
+pub(crate) fn bind_total_runout_tolerance(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyTotalRunoutTolerance, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 5, entity_id, "TOTAL_RUNOUT_TOLERANCE")?;
+    Ok(super::model::EarlyTotalRunoutTolerance {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        magnitude: crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?,
+        toleranced_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "toleranced_shape_aspect",
+        )?,
+        datum_system: crate::ir::attr::read_entity_ref_list(attrs, 4, entity_id, "datum_system")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {
