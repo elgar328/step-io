@@ -47,18 +47,22 @@ impl GenOut {
 /// `serialize_<entity>` into `out`, recording which shared helpers it needs
 /// (extracted from the former inline loop in `main`).
 pub(crate) fn emit_entity(ctx: &Ctx, ent_name: &str, out: &mut GenOut) {
-    assert!(
-        ctx.schema.entity.contains_key(ent_name),
-        "gen-early: entity `{ent_name}` not in early.toml"
-    );
     let type_name = format!("Early{}", pascal(ent_name));
     let step_name = ent_name.to_uppercase();
     // Complex (multi-part) entities take a separate path: bind reads per named
     // part, serialize emits a `WriterBody::Complex`. See `emit_complex_entity`.
+    // A complex entity may be a synthetic name (a multi-supertype instance with
+    // no single early.toml entity, e.g. `rational_quasi_uniform_curve`), so the
+    // entity-exists assert is for the simple path only; the complex path
+    // validates each part instead.
     if let Some(hint) = ctx.mapping.complex.get(ent_name) {
         emit_complex_entity(ctx, ent_name, &type_name, &step_name, hint, out);
         return;
     }
+    assert!(
+        ctx.schema.entity.contains_key(ent_name),
+        "gen-early: entity `{ent_name}` not in early.toml"
+    );
     // Full Part21 positional attribute list (inherited supertype attrs
     // prepended, then own); see `EarlyToml::flattened_attrs`. Each entry is
     // (struct field name, kind, is-optional).
@@ -252,6 +256,13 @@ fn emit_complex_entity(
         // Hint part names are the wire (upper-cased) form; early.toml keys are
         // lower-cased. Look up own_attrs by the lower-cased name; keep the
         // upper-cased `part` for `require_part_attrs` / the emitted STEP token.
+        // Every part must be a real entity (an empty supertype is fine, but a
+        // typo'd part would silently yield no attrs) — assert existence here
+        // since the complex path skips emit_entity's entity-exists assert.
+        assert!(
+            ctx.schema.entity.contains_key(&part.to_lowercase()),
+            "gen-early: complex `{ent_name}` part `{part}` not in early.toml"
+        );
         for (li, a) in ctx
             .schema
             .own_attrs(&part.to_lowercase())

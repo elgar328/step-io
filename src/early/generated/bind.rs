@@ -2858,6 +2858,62 @@ pub(crate) fn bind_rational_b_spline_surface(
     })
 }
 
+pub(crate) fn bind_rational_quasi_uniform_curve(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<super::model::EarlyRationalQuasiUniformCurve, crate::ir::error::ConvertError> {
+    let attrs = crate::reader::require_part_attrs(parts, "B_SPLINE_CURVE", entity_id)?;
+    let degree = crate::ir::attr::read_integer(attrs, 0, entity_id, "degree")?;
+    let control_points_list =
+        crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "control_points_list")?;
+    let curve_form = bind_b_spline_curve_form(attrs, 2, entity_id, "curve_form")?;
+    let closed_curve = crate::ir::attr::read_logical(attrs, 3, entity_id, "closed_curve")?;
+    let self_intersect = crate::ir::attr::read_logical(attrs, 4, entity_id, "self_intersect")?;
+    let attrs = crate::reader::require_part_attrs(parts, "RATIONAL_B_SPLINE_CURVE", entity_id)?;
+    let weights_data = crate::ir::attr::read_real_list(attrs, 0, entity_id, "weights_data")?;
+    let attrs = crate::reader::require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    Ok(super::model::EarlyRationalQuasiUniformCurve {
+        degree,
+        control_points_list,
+        curve_form,
+        closed_curve,
+        self_intersect,
+        weights_data,
+        name,
+    })
+}
+
+pub(crate) fn bind_rational_quasi_uniform_surface(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<super::model::EarlyRationalQuasiUniformSurface, crate::ir::error::ConvertError> {
+    let attrs = crate::reader::require_part_attrs(parts, "B_SPLINE_SURFACE", entity_id)?;
+    let u_degree = crate::ir::attr::read_integer(attrs, 0, entity_id, "u_degree")?;
+    let v_degree = crate::ir::attr::read_integer(attrs, 1, entity_id, "v_degree")?;
+    let control_points_list =
+        crate::ir::attr::read_entity_ref_grid(attrs, 2, entity_id, "control_points_list")?;
+    let surface_form = bind_b_spline_surface_form(attrs, 3, entity_id, "surface_form")?;
+    let u_closed = crate::ir::attr::read_logical(attrs, 4, entity_id, "u_closed")?;
+    let v_closed = crate::ir::attr::read_logical(attrs, 5, entity_id, "v_closed")?;
+    let self_intersect = crate::ir::attr::read_logical(attrs, 6, entity_id, "self_intersect")?;
+    let attrs = crate::reader::require_part_attrs(parts, "RATIONAL_B_SPLINE_SURFACE", entity_id)?;
+    let weights_data = crate::ir::attr::read_real_grid(attrs, 0, entity_id, "weights_data")?;
+    let attrs = crate::reader::require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    Ok(super::model::EarlyRationalQuasiUniformSurface {
+        u_degree,
+        v_degree,
+        control_points_list,
+        surface_form,
+        u_closed,
+        v_closed,
+        self_intersect,
+        weights_data,
+        name,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

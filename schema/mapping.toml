@@ -200,6 +200,9 @@ generate = [
     "rational_b_spline_curve",
     # Phase 2b: W-COMPLEX — rational b_spline surface (complex + weights 2D grid)
     "rational_b_spline_surface",
+    # Phase 2c: W-COMPLEX — rational quasi-uniform (synthetic-name complex, read_only)
+    "rational_quasi_uniform_curve",
+    "rational_quasi_uniform_surface",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
@@ -224,6 +227,8 @@ generate_all = false
 read_only = [
     "quasi_uniform_curve",
     "quasi_uniform_surface",
+    "rational_quasi_uniform_curve",
+    "rational_quasi_uniform_surface",
 ]
 
 # `[complex.<entity>]`: multi-part (complex) entity. `parts` = ordered supertype
@@ -248,6 +253,31 @@ parts = [
     "B_SPLINE_SURFACE",
     "B_SPLINE_SURFACE_WITH_KNOTS",
     "GEOMETRIC_REPRESENTATION_ITEM",
+    "RATIONAL_B_SPLINE_SURFACE",
+    "REPRESENTATION_ITEM",
+    "SURFACE",
+]
+
+# Synthetic-name complex (no single early.toml entity): rational quasi-uniform.
+# No *_WITH_KNOTS part — knots are derived in lower. read_only (normalized to
+# RATIONAL_B_SPLINE_* on write).
+[complex.rational_quasi_uniform_curve]
+parts = [
+    "BOUNDED_CURVE",
+    "B_SPLINE_CURVE",
+    "CURVE",
+    "GEOMETRIC_REPRESENTATION_ITEM",
+    "QUASI_UNIFORM_CURVE",
+    "RATIONAL_B_SPLINE_CURVE",
+    "REPRESENTATION_ITEM",
+]
+
+[complex.rational_quasi_uniform_surface]
+parts = [
+    "BOUNDED_SURFACE",
+    "B_SPLINE_SURFACE",
+    "GEOMETRIC_REPRESENTATION_ITEM",
+    "QUASI_UNIFORM_SURFACE",
     "RATIONAL_B_SPLINE_SURFACE",
     "REPRESENTATION_ITEM",
     "SURFACE",
