@@ -3038,6 +3038,26 @@ pub(crate) fn bind_annotation_curve_occurrence(
     })
 }
 
+pub(crate) fn bind_annotation_plane(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAnnotationPlane, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "ANNOTATION_PLANE")?;
+    Ok(super::model::EarlyAnnotationPlane {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        styles: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "styles")?,
+        item: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "item")?,
+        elements: match attrs.get(3) {
+            Some(
+                crate::parser::entity::Attribute::Unset | crate::parser::entity::Attribute::Derived,
+            ) => None,
+            _ => Some(crate::ir::attr::read_entity_ref_list(
+                attrs, 3, entity_id, "elements",
+            )?),
+        },
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

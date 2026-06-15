@@ -4352,6 +4352,30 @@ impl crate::ir::arena::ArenaId for EarlyAnnotationCurveOccurrenceId {
     }
 }
 
+/// L1 `ANNOTATION_PLANE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAnnotationPlane {
+    pub(crate) name: String,
+    pub(crate) styles: Vec<u64>,
+    pub(crate) item: u64,
+    pub(crate) elements: Option<Vec<u64>>,
+}
+
+/// Typed `id_cache` key for `ANNOTATION_PLANE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAnnotationPlaneId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAnnotationPlaneId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

@@ -3,17 +3,18 @@
 
 use crate::early::model::{
     EarlyAngularLocation, EarlyAngularSize, EarlyAnnotationCurveOccurrence,
-    EarlyAnnotationOccurrence, EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence,
-    EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature, EarlyDimensionalLocation,
-    EarlyDimensionalSize, EarlyDirectedDimensionalLocation, EarlyDraughtingAnnotationOccurrence,
-    EarlyDraughtingCallout, EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship,
-    EarlyLeaderCurve, EarlyLeaderDirectedCallout, EarlyLeaderTerminator, EarlyMeasureQualification,
-    EarlyRoundnessTolerance, EarlyStraightnessTolerance, EarlySurfaceProfileTolerance,
-    EarlyToleranceZoneForm, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
+    EarlyAnnotationOccurrence, EarlyAnnotationPlane, EarlyAnnotationSymbolOccurrence,
+    EarlyAnnotationTextOccurrence, EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature,
+    EarlyDimensionalLocation, EarlyDimensionalSize, EarlyDirectedDimensionalLocation,
+    EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout, EarlyFlatnessTolerance,
+    EarlyGeometricToleranceRelationship, EarlyLeaderCurve, EarlyLeaderDirectedCallout,
+    EarlyLeaderTerminator, EarlyMeasureQualification, EarlyRoundnessTolerance,
+    EarlyStraightnessTolerance, EarlySurfaceProfileTolerance, EarlyToleranceZoneForm,
+    EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
 };
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::pmi::{
-    AngularLocationData, AnnotationCurveOccurrence, AnnotationOccurrence,
+    AngularLocationData, AnnotationCurveOccurrence, AnnotationOccurrence, AnnotationPlane,
     AnnotationSymbolOccurrence, AnnotationTextOccurrence, Datum, DatumFeature, DimensionalLocation,
     DimensionalLocationData, DimensionalSize, DimensionalSizeKind, DraughtingAnnotationOccurrence,
     DraughtingCallout, DraughtingCalloutData, GeometricTolerance, GeometricToleranceRelationship,
@@ -747,5 +748,39 @@ pub(crate) fn lower_annotation_curve_occurrence(
                 item,
             },
         ));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower `ANNOTATION_PLANE`. Same styled shape as the other occurrences; the
+/// 4th attr `elements` (an `annotation_plane_element` list) is not modelled, so
+/// `early.elements` is ignored here and re-emitted as `$` on write. `item`
+/// resolves through `resolve_representation_item_ref` (unresolved drops the
+/// occurrence, symmetric on re-read). Verbatim port of the legacy read.
+pub(crate) fn lower_annotation_plane(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyAnnotationPlane,
+) {
+    let mut styles = Vec::with_capacity(early.styles.len());
+    for &r in &early.styles {
+        if let Some(psa_id) = ctx
+            .id_cache
+            .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
+        {
+            styles.push(psa_id);
+        }
+    }
+    let Some(item) = resolve_representation_item_ref(ctx, early.item) else {
+        return;
+    };
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_occurrences
+        .push(AnnotationOccurrence::AnnotationPlane(AnnotationPlane {
+            name: early.name.clone(),
+            styles,
+            item,
+        }));
     ctx.id_cache.insert(entity_id, id);
 }

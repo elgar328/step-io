@@ -3,13 +3,14 @@
 
 use crate::early::model::{
     EarlyAngularLocation, EarlyAngularSize, EarlyAnnotationCurveOccurrence,
-    EarlyAnnotationOccurrence, EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence,
-    EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature, EarlyDimensionalLocation,
-    EarlyDimensionalSize, EarlyDirectedDimensionalLocation, EarlyDraughtingAnnotationOccurrence,
-    EarlyDraughtingCallout, EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship,
-    EarlyLeaderCurve, EarlyLeaderDirectedCallout, EarlyLeaderTerminator, EarlyMeasureQualification,
-    EarlyRoundnessTolerance, EarlyStraightnessTolerance, EarlySurfaceProfileTolerance,
-    EarlyToleranceZoneForm, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
+    EarlyAnnotationOccurrence, EarlyAnnotationPlane, EarlyAnnotationSymbolOccurrence,
+    EarlyAnnotationTextOccurrence, EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature,
+    EarlyDimensionalLocation, EarlyDimensionalSize, EarlyDirectedDimensionalLocation,
+    EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout, EarlyFlatnessTolerance,
+    EarlyGeometricToleranceRelationship, EarlyLeaderCurve, EarlyLeaderDirectedCallout,
+    EarlyLeaderTerminator, EarlyMeasureQualification, EarlyRoundnessTolerance,
+    EarlyStraightnessTolerance, EarlySurfaceProfileTolerance, EarlyToleranceZoneForm,
+    EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
 };
 
 /// Lift one `TOLERANCE_ZONE_FORM`.
@@ -323,4 +324,20 @@ pub(crate) fn lift_annotation_curve_occurrence(
     item: u64,
 ) -> EarlyAnnotationCurveOccurrence {
     EarlyAnnotationCurveOccurrence { name, styles, item }
+}
+
+/// Lift one `ANNOTATION_PLANE` (refs pre-resolved). `elements` is not modelled
+/// in L2, so it always lifts to `None` → serialized as `$` (matching the legacy
+/// writer's unconditional unset).
+pub(crate) fn lift_annotation_plane(
+    name: String,
+    styles: Vec<u64>,
+    item: u64,
+) -> EarlyAnnotationPlane {
+    EarlyAnnotationPlane {
+        name,
+        styles,
+        item,
+        elements: None,
+    }
 }

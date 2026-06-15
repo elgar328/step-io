@@ -217,6 +217,8 @@ generate = [
     "draughting_annotation_occurrence",
     "annotation_symbol_occurrence",
     "annotation_curve_occurrence",
+    # Phase 3f: PMI simple — annotation plane (+ OPTIONAL SET elements, dropped)
+    "annotation_plane",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

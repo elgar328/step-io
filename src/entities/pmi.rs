@@ -149,11 +149,13 @@ impl SimpleEntityHandler for DraughtingPreDefinedTextFontHandler {
 pub(crate) struct AnnotationPlaneHandler;
 
 /// `ANNOTATION_PLANE(name, styles, item, elements)` — a `styled_item`
-/// subtype. `styles` resolves through `viz_psa_id_map` (like `STYLED_ITEM`)
-/// and `item` through the shared `representation_item` resolver; the 4th
-/// attribute `elements` (a `DRAUGHTING_CALLOUT` list) is not modelled and
-/// is ignored on read. An `ANNOTATION_PLANE` whose `item` does not resolve
-/// is silently dropped, symmetric on re-read.
+/// subtype, on the 2-layer path (`bind`/`lower` read, `lift`/`serialize`
+/// write). `styles` keeps only resolved `PresentationStyleAssignment` refs and
+/// `item` goes through the shared `representation_item` resolver; the 4th
+/// attribute `elements` (an `annotation_plane_element` list) is not modelled —
+/// `lower` ignores it and `lift` emits `None`, re-serialized as `$` (matching
+/// the legacy writer's unconditional unset). An `ANNOTATION_PLANE` whose `item`
+/// does not resolve is silently dropped, symmetric on re-read.
 #[step_entity(name = "ANNOTATION_PLANE")]
 impl SimpleEntityHandler for AnnotationPlaneHandler {
     type WriteInput = AnnotationPlane;
@@ -164,35 +166,8 @@ impl SimpleEntityHandler for AnnotationPlaneHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "ANNOTATION_PLANE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-        // attr 3 (`elements`) — DRAUGHTING_CALLOUT list, not modelled.
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(psa_id) = ctx
-                .id_cache
-                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
-            {
-                styles.push(psa_id);
-            }
-        }
-        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
-            return Ok(());
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_occurrences
-            .push(AnnotationOccurrence::AnnotationPlane(AnnotationPlane {
-                name,
-                styles,
-                item,
-            }));
-        ctx.id_cache.insert(entity_id, id);
+        let early = crate::early::bind::bind_annotation_plane(entity_id, attrs)?;
+        crate::early::lower::lower_annotation_plane(ctx, entity_id, &early);
         Ok(())
     }
 
@@ -200,16 +175,11 @@ impl SimpleEntityHandler for AnnotationPlaneHandler {
         let item_id = buf.emit_representation_item_ref(ap.item)?;
         let mut style_refs = Vec::with_capacity(ap.styles.len());
         for psa_id in ap.styles {
-            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
+            style_refs.push(buf.step_id(psa_id));
         }
-        Ok(buf.push_simple(
-            "ANNOTATION_PLANE",
-            vec![
-                Attribute::String(ap.name),
-                Attribute::List(style_refs),
-                Attribute::EntityRef(item_id),
-                Attribute::Unset,
-            ],
+        let early = crate::early::lift::lift_annotation_plane(ap.name, style_refs, item_id);
+        Ok(crate::early::serialize::serialize_annotation_plane(
+            buf, &early,
         ))
     }
 }
