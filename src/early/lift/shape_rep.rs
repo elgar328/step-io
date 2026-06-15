@@ -5,11 +5,14 @@ use crate::early::model::{
     EarlyAllAroundShapeAspect, EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
-    EarlyDescriptiveRepresentationItem, EarlyMechanicalDesignAndDraughtingRelationship,
-    EarlyModelGeometricView, EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
+    EarlyDescriptiveRepresentationItem, EarlyMeasureValue,
+    EarlyMechanicalDesignAndDraughtingRelationship, EarlyModelGeometricView,
+    EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
     EarlyRepresentationRelationship, EarlyShapeRepresentationRelationship, EarlyToleranceZone,
+    EarlyValueRepresentationItem,
 };
+use crate::ir::representation_item::{MeasureValue, ValueRepresentationItem};
 use crate::ir::shape_rep::UnitlessContext;
 
 /// Lift one base `REPRESENTATION_RELATIONSHIP` from its (pre-resolved) arena
@@ -292,5 +295,81 @@ pub(crate) fn lift_parametric_representation_context(
             .expect("parametric context carries a coordinate_space_dimension"),
         context_identifier: uc.identifier,
         context_type: uc.context_type,
+    }
+}
+
+/// Bridge L2 generic `MeasureValue` → the synth-generated typed
+/// `EarlyMeasureValue` (inverse of `measure_value_to_l2`). `type_name` selects
+/// the member; numeric members are real (an `Integer` value casts to f64, as
+/// the L1 has no integer member — see Phase 3j). The `unreachable!` only fires
+/// on a non-standard `type_name`, which `lower` never produces.
+#[allow(clippy::cast_precision_loss)]
+pub(crate) fn measure_value_to_early(m: &MeasureValue) -> EarlyMeasureValue {
+    use EarlyMeasureValue as E;
+    let (type_name, value) = match m {
+        MeasureValue::Text { value, .. } => return E::DescriptiveMeasure(value.clone()),
+        MeasureValue::Real { type_name, value } => (type_name.as_str(), *value),
+        MeasureValue::Integer { type_name, value } => (type_name.as_str(), *value as f64),
+    };
+    macro_rules! pick {
+        ($($t:literal => $V:ident),+ $(,)?) => {
+            match type_name {
+                $($t => E::$V(value),)+
+                other => unreachable!("non-standard measure_value type_name: {other}"),
+            }
+        };
+    }
+    pick! {
+        "ABSORBED_DOSE_MEASURE" => AbsorbedDoseMeasure,
+        "ACCELERATION_MEASURE" => AccelerationMeasure,
+        "AMOUNT_OF_SUBSTANCE_MEASURE" => AmountOfSubstanceMeasure,
+        "AREA_MEASURE" => AreaMeasure,
+        "CAPACITANCE_MEASURE" => CapacitanceMeasure,
+        "CELSIUS_TEMPERATURE_MEASURE" => CelsiusTemperatureMeasure,
+        "CONDUCTANCE_MEASURE" => ConductanceMeasure,
+        "CONTEXT_DEPENDENT_MEASURE" => ContextDependentMeasure,
+        "COUNT_MEASURE" => CountMeasure,
+        "DOSE_EQUIVALENT_MEASURE" => DoseEquivalentMeasure,
+        "ELECTRIC_CHARGE_MEASURE" => ElectricChargeMeasure,
+        "ELECTRIC_CURRENT_MEASURE" => ElectricCurrentMeasure,
+        "ELECTRIC_POTENTIAL_MEASURE" => ElectricPotentialMeasure,
+        "ENERGY_MEASURE" => EnergyMeasure,
+        "FORCE_MEASURE" => ForceMeasure,
+        "FREQUENCY_MEASURE" => FrequencyMeasure,
+        "ILLUMINANCE_MEASURE" => IlluminanceMeasure,
+        "INDUCTANCE_MEASURE" => InductanceMeasure,
+        "LENGTH_MEASURE" => LengthMeasure,
+        "LUMINOUS_FLUX_MEASURE" => LuminousFluxMeasure,
+        "LUMINOUS_INTENSITY_MEASURE" => LuminousIntensityMeasure,
+        "MAGNETIC_FLUX_DENSITY_MEASURE" => MagneticFluxDensityMeasure,
+        "MAGNETIC_FLUX_MEASURE" => MagneticFluxMeasure,
+        "MASS_MEASURE" => MassMeasure,
+        "NON_NEGATIVE_LENGTH_MEASURE" => NonNegativeLengthMeasure,
+        "NUMERIC_MEASURE" => NumericMeasure,
+        "PARAMETER_VALUE" => ParameterValue,
+        "PLANE_ANGLE_MEASURE" => PlaneAngleMeasure,
+        "POSITIVE_LENGTH_MEASURE" => PositiveLengthMeasure,
+        "POSITIVE_PLANE_ANGLE_MEASURE" => PositivePlaneAngleMeasure,
+        "POSITIVE_RATIO_MEASURE" => PositiveRatioMeasure,
+        "POWER_MEASURE" => PowerMeasure,
+        "PRESSURE_MEASURE" => PressureMeasure,
+        "RADIOACTIVITY_MEASURE" => RadioactivityMeasure,
+        "RATIO_MEASURE" => RatioMeasure,
+        "RESISTANCE_MEASURE" => ResistanceMeasure,
+        "SOLID_ANGLE_MEASURE" => SolidAngleMeasure,
+        "THERMODYNAMIC_TEMPERATURE_MEASURE" => ThermodynamicTemperatureMeasure,
+        "TIME_MEASURE" => TimeMeasure,
+        "VELOCITY_MEASURE" => VelocityMeasure,
+        "VOLUME_MEASURE" => VolumeMeasure,
+    }
+}
+
+/// Lift one `VALUE_REPRESENTATION_ITEM` → its L1 form.
+pub(crate) fn lift_value_representation_item(
+    vri: &ValueRepresentationItem,
+) -> EarlyValueRepresentationItem {
+    EarlyValueRepresentationItem {
+        name: vri.name.clone(),
+        value_component: measure_value_to_early(&vri.value_component),
     }
 }

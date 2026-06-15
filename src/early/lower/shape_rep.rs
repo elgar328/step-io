@@ -12,14 +12,17 @@ use crate::early::model::{
     EarlyAllAroundShapeAspect, EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
-    EarlyDescriptiveRepresentationItem, EarlyMechanicalDesignAndDraughtingRelationship,
-    EarlyModelGeometricView, EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
+    EarlyDescriptiveRepresentationItem, EarlyMeasureValue,
+    EarlyMechanicalDesignAndDraughtingRelationship, EarlyModelGeometricView,
+    EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
     EarlyRepresentationRelationship, EarlyShapeRepresentationRelationship, EarlyToleranceZone,
+    EarlyValueRepresentationItem,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::representation_item::{
-    QualifiedRepresentationItem, QualifierRef, RepresentationItem,
+    MeasureValue, QualifiedRepresentationItem, QualifierRef, RepresentationItem,
+    ValueRepresentationItem,
 };
 use crate::ir::shape_rep::{
     AllAroundShapeAspect, CentreOfSymmetry, CharacterizedItemWithinRepresentation,
@@ -596,5 +599,87 @@ pub(crate) fn lower_parametric_representation_context(
         context_type: early.context_type.clone(),
         coordinate_space_dimension: Some(early.coordinate_space_dimension),
     });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Bridge the synth-generated 43-typed `EarlyMeasureValue` (L1) → the generic
+/// L2 `MeasureValue` (`type_name` preserved). Every numeric member is real
+/// (NUMBER members are real by type — see Phase 3j); `descriptive_measure` is
+/// text. The `early_measure_value_round_trips` test exercises all 43 arms.
+pub(crate) fn measure_value_to_l2(m: EarlyMeasureValue) -> MeasureValue {
+    use EarlyMeasureValue as E;
+    macro_rules! r {
+        ($v:expr, $t:literal) => {
+            MeasureValue::Real {
+                type_name: $t.into(),
+                value: $v,
+            }
+        };
+    }
+    match m {
+        E::AbsorbedDoseMeasure(v) => r!(v, "ABSORBED_DOSE_MEASURE"),
+        E::AccelerationMeasure(v) => r!(v, "ACCELERATION_MEASURE"),
+        E::AmountOfSubstanceMeasure(v) => r!(v, "AMOUNT_OF_SUBSTANCE_MEASURE"),
+        E::AreaMeasure(v) => r!(v, "AREA_MEASURE"),
+        E::CapacitanceMeasure(v) => r!(v, "CAPACITANCE_MEASURE"),
+        E::CelsiusTemperatureMeasure(v) => r!(v, "CELSIUS_TEMPERATURE_MEASURE"),
+        E::ConductanceMeasure(v) => r!(v, "CONDUCTANCE_MEASURE"),
+        E::ContextDependentMeasure(v) => r!(v, "CONTEXT_DEPENDENT_MEASURE"),
+        E::CountMeasure(v) => r!(v, "COUNT_MEASURE"),
+        E::DescriptiveMeasure(s) => MeasureValue::Text {
+            type_name: "DESCRIPTIVE_MEASURE".into(),
+            value: s,
+        },
+        E::DoseEquivalentMeasure(v) => r!(v, "DOSE_EQUIVALENT_MEASURE"),
+        E::ElectricChargeMeasure(v) => r!(v, "ELECTRIC_CHARGE_MEASURE"),
+        E::ElectricCurrentMeasure(v) => r!(v, "ELECTRIC_CURRENT_MEASURE"),
+        E::ElectricPotentialMeasure(v) => r!(v, "ELECTRIC_POTENTIAL_MEASURE"),
+        E::EnergyMeasure(v) => r!(v, "ENERGY_MEASURE"),
+        E::ForceMeasure(v) => r!(v, "FORCE_MEASURE"),
+        E::FrequencyMeasure(v) => r!(v, "FREQUENCY_MEASURE"),
+        E::IlluminanceMeasure(v) => r!(v, "ILLUMINANCE_MEASURE"),
+        E::InductanceMeasure(v) => r!(v, "INDUCTANCE_MEASURE"),
+        E::LengthMeasure(v) => r!(v, "LENGTH_MEASURE"),
+        E::LuminousFluxMeasure(v) => r!(v, "LUMINOUS_FLUX_MEASURE"),
+        E::LuminousIntensityMeasure(v) => r!(v, "LUMINOUS_INTENSITY_MEASURE"),
+        E::MagneticFluxDensityMeasure(v) => r!(v, "MAGNETIC_FLUX_DENSITY_MEASURE"),
+        E::MagneticFluxMeasure(v) => r!(v, "MAGNETIC_FLUX_MEASURE"),
+        E::MassMeasure(v) => r!(v, "MASS_MEASURE"),
+        E::NonNegativeLengthMeasure(v) => r!(v, "NON_NEGATIVE_LENGTH_MEASURE"),
+        E::NumericMeasure(v) => r!(v, "NUMERIC_MEASURE"),
+        E::ParameterValue(v) => r!(v, "PARAMETER_VALUE"),
+        E::PlaneAngleMeasure(v) => r!(v, "PLANE_ANGLE_MEASURE"),
+        E::PositiveLengthMeasure(v) => r!(v, "POSITIVE_LENGTH_MEASURE"),
+        E::PositivePlaneAngleMeasure(v) => r!(v, "POSITIVE_PLANE_ANGLE_MEASURE"),
+        E::PositiveRatioMeasure(v) => r!(v, "POSITIVE_RATIO_MEASURE"),
+        E::PowerMeasure(v) => r!(v, "POWER_MEASURE"),
+        E::PressureMeasure(v) => r!(v, "PRESSURE_MEASURE"),
+        E::RadioactivityMeasure(v) => r!(v, "RADIOACTIVITY_MEASURE"),
+        E::RatioMeasure(v) => r!(v, "RATIO_MEASURE"),
+        E::ResistanceMeasure(v) => r!(v, "RESISTANCE_MEASURE"),
+        E::SolidAngleMeasure(v) => r!(v, "SOLID_ANGLE_MEASURE"),
+        E::ThermodynamicTemperatureMeasure(v) => r!(v, "THERMODYNAMIC_TEMPERATURE_MEASURE"),
+        E::TimeMeasure(v) => r!(v, "TIME_MEASURE"),
+        E::VelocityMeasure(v) => r!(v, "VELOCITY_MEASURE"),
+        E::VolumeMeasure(v) => r!(v, "VOLUME_MEASURE"),
+    }
+}
+
+/// Lower one `VALUE_REPRESENTATION_ITEM` (synth `measure_value` SELECT). The
+/// generated bind already dropped non-standard measure tags (strict).
+pub(crate) fn lower_value_representation_item(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyValueRepresentationItem,
+) {
+    let value_component = measure_value_to_l2(early.value_component.clone());
+    let id = ctx
+        .representation_items
+        .push(RepresentationItem::ValueRepresentationItem(
+            ValueRepresentationItem {
+                name: early.name.clone(),
+                value_component,
+            },
+        ));
     ctx.id_cache.insert(entity_id, id);
 }

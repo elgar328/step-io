@@ -226,6 +226,8 @@ generate = [
     "camera_model_d3_multi_clipping",
     # Phase 3i: plm simple — external source (SELECT codegen pilot, hinted source_item)
     "external_source",
+    # Phase 3j: shape_rep simple — value representation item (synth measure_value SELECT, 43-typed)
+    "value_representation_item",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

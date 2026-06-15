@@ -7275,6 +7275,95 @@ fn qri_vri_round_trip() {
 }
 
 #[test]
+fn value_representation_item_all_measure_types_round_trip() {
+    // Exercises every arm of the 42-member `measure_value` bridge
+    // (`measure_value_to_l2` / `measure_value_to_early`) so a tag typo in either
+    // direction is caught — the corpus only covers COUNT/NUMERIC_MEASURE.
+    use step_io::ir::representation_item::{
+        MeasureValue, RepresentationItem, ValueRepresentationItem,
+    };
+    const REAL_TAGS: [&str; 41] = [
+        "ABSORBED_DOSE_MEASURE",
+        "ACCELERATION_MEASURE",
+        "AMOUNT_OF_SUBSTANCE_MEASURE",
+        "AREA_MEASURE",
+        "CAPACITANCE_MEASURE",
+        "CELSIUS_TEMPERATURE_MEASURE",
+        "CONDUCTANCE_MEASURE",
+        "CONTEXT_DEPENDENT_MEASURE",
+        "COUNT_MEASURE",
+        "DOSE_EQUIVALENT_MEASURE",
+        "ELECTRIC_CHARGE_MEASURE",
+        "ELECTRIC_CURRENT_MEASURE",
+        "ELECTRIC_POTENTIAL_MEASURE",
+        "ENERGY_MEASURE",
+        "FORCE_MEASURE",
+        "FREQUENCY_MEASURE",
+        "ILLUMINANCE_MEASURE",
+        "INDUCTANCE_MEASURE",
+        "LENGTH_MEASURE",
+        "LUMINOUS_FLUX_MEASURE",
+        "LUMINOUS_INTENSITY_MEASURE",
+        "MAGNETIC_FLUX_DENSITY_MEASURE",
+        "MAGNETIC_FLUX_MEASURE",
+        "MASS_MEASURE",
+        "NON_NEGATIVE_LENGTH_MEASURE",
+        "NUMERIC_MEASURE",
+        "PARAMETER_VALUE",
+        "PLANE_ANGLE_MEASURE",
+        "POSITIVE_LENGTH_MEASURE",
+        "POSITIVE_PLANE_ANGLE_MEASURE",
+        "POSITIVE_RATIO_MEASURE",
+        "POWER_MEASURE",
+        "PRESSURE_MEASURE",
+        "RADIOACTIVITY_MEASURE",
+        "RATIO_MEASURE",
+        "RESISTANCE_MEASURE",
+        "SOLID_ANGLE_MEASURE",
+        "THERMODYNAMIC_TEMPERATURE_MEASURE",
+        "TIME_MEASURE",
+        "VELOCITY_MEASURE",
+        "VOLUME_MEASURE",
+    ];
+    let mut cases: Vec<MeasureValue> = REAL_TAGS
+        .iter()
+        .map(|t| MeasureValue::Real {
+            type_name: (*t).into(),
+            value: 2.5,
+        })
+        .collect();
+    cases.push(MeasureValue::Text {
+        type_name: "DESCRIPTIVE_MEASURE".into(),
+        value: "d".into(),
+    });
+
+    for mv in cases {
+        let mut model = empty_model();
+        model
+            .shape_rep
+            .representation_items
+            .push(RepresentationItem::ValueRepresentationItem(
+                ValueRepresentationItem {
+                    name: "v".into(),
+                    value_component: mv.clone(),
+                },
+            ));
+        let text = model.write_to_string().expect("write");
+        let re = reconvert(&text);
+        let RepresentationItem::ValueRepresentationItem(vri) = re
+            .shape_rep
+            .representation_items
+            .iter()
+            .next()
+            .expect("vri")
+        else {
+            panic!("expected VRI");
+        };
+        assert_eq!(vri.value_component, mv, "round-trip mismatch");
+    }
+}
+
+#[test]
 fn measure_representation_item_round_trip() {
     // Complex-MI MEASURE_REPRESENTATION_ITEM in the representation_item arena
     // (phase measure-arena-1): typed value + unit + value qualifier + the

@@ -166,7 +166,10 @@ fn file_head(generate_all: bool) -> String {
     } else {
         // Schema-faithful field names legitimately share pre/postfixes
         // (e.g. CALENDAR_DATE's *_component) — not a naming smell here.
-        format!("{HEADER}#![allow(clippy::struct_field_names)]\n\n")
+        // `too_many_lines`: a large synth SELECT (e.g. `measure_value`, 42
+        // members) emits a >100-line `bind_*`/`*_emit` — inherent to the
+        // member count, not a complexity smell.
+        format!("{HEADER}#![allow(clippy::struct_field_names, clippy::too_many_lines)]\n\n")
     }
 }
 
