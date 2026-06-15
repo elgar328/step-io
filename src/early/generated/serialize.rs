@@ -3192,6 +3192,34 @@ pub(crate) fn serialize_brep_with_voids(
     )
 }
 
+pub(crate) fn serialize_annotation_text_occurrence(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAnnotationTextOccurrence,
+) -> u64 {
+    buf.push_complex(vec![
+        ("ANNOTATION_OCCURRENCE".into(), vec![]),
+        ("ANNOTATION_TEXT_OCCURRENCE".into(), vec![]),
+        ("DRAUGHTING_ANNOTATION_OCCURRENCE".into(), vec![]),
+        ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),
+        (
+            "REPRESENTATION_ITEM".into(),
+            vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+        ),
+        (
+            "STYLED_ITEM".into(),
+            vec![
+                crate::parser::entity::Attribute::List(
+                    l1.styles
+                        .iter()
+                        .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                        .collect(),
+                ),
+                crate::parser::entity::Attribute::EntityRef(l1.item),
+            ],
+        ),
+    ])
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

@@ -4190,6 +4190,29 @@ impl crate::ir::arena::ArenaId for EarlyBrepWithVoidsId {
     }
 }
 
+/// L1 `ANNOTATION_TEXT_OCCURRENCE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAnnotationTextOccurrence {
+    pub(crate) name: String,
+    pub(crate) styles: Vec<u64>,
+    pub(crate) item: u64,
+}
+
+/// Typed `id_cache` key for `ANNOTATION_TEXT_OCCURRENCE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAnnotationTextOccurrenceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAnnotationTextOccurrenceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

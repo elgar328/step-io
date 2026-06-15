@@ -377,33 +377,8 @@ impl ComplexEntityHandler for AnnotationTextOccurrenceHandler {
         parts: &[RawEntityPart],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let ri = require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
-        let name = read_string_or_unset(ri, 0, entity_id, "name")?.to_owned();
-        let si = require_part_attrs(parts, "STYLED_ITEM", entity_id)?;
-        let style_refs = read_entity_ref_list(si, 0, entity_id, "styles")?;
-        let item_ref = read_entity_ref(si, 1, entity_id, "item")?;
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(psa_id) = ctx
-                .id_cache
-                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
-            {
-                styles.push(psa_id);
-            }
-        }
-        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
-            return Ok(());
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_occurrences
-            .push(AnnotationOccurrence::AnnotationTextOccurrence(
-                AnnotationTextOccurrence { name, styles, item },
-            ));
-        ctx.id_cache.insert(entity_id, id);
+        let early = crate::early::bind::bind_annotation_text_occurrence(entity_id, parts)?;
+        crate::early::lower::lower_annotation_text_occurrence(ctx, entity_id, &early);
         Ok(())
     }
 
@@ -411,31 +386,11 @@ impl ComplexEntityHandler for AnnotationTextOccurrenceHandler {
         let item_id = buf.emit_representation_item_ref(ato.item)?;
         let mut style_refs = Vec::with_capacity(ato.styles.len());
         for psa_id in ato.styles {
-            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
+            style_refs.push(buf.step_id(psa_id));
         }
-        // Re-emit the AND-combined complex form (alphabetical parts); data only
-        // on REPRESENTATION_ITEM (name) + STYLED_ITEM (styles, item).
-        let n = buf.fresh();
-        buf.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Complex {
-                parts: vec![
-                    ("ANNOTATION_OCCURRENCE".into(), vec![]),
-                    ("ANNOTATION_TEXT_OCCURRENCE".into(), vec![]),
-                    ("DRAUGHTING_ANNOTATION_OCCURRENCE".into(), vec![]),
-                    ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),
-                    (
-                        "REPRESENTATION_ITEM".into(),
-                        vec![Attribute::String(ato.name)],
-                    ),
-                    (
-                        "STYLED_ITEM".into(),
-                        vec![Attribute::List(style_refs), Attribute::EntityRef(item_id)],
-                    ),
-                ],
-            },
-        });
-        Ok(n)
+        let early =
+            crate::early::lift::lift_annotation_text_occurrence(ato.name, style_refs, item_id);
+        Ok(crate::early::serialize::serialize_annotation_text_occurrence(buf, &early))
     }
 }
 

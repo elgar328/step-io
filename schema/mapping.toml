@@ -207,6 +207,8 @@ generate = [
     "parametric_representation_context",
     # Phase 3a: simple entity — manifold_solid_brep subtype with voids
     "brep_with_voids",
+    # Phase 3c: PMI complex — styled annotation text occurrence
+    "annotation_text_occurrence",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
@@ -292,6 +294,16 @@ parts = [
     "GEOMETRIC_REPRESENTATION_CONTEXT",
     "PARAMETRIC_REPRESENTATION_CONTEXT",
     "REPRESENTATION_CONTEXT",
+]
+
+[complex.annotation_text_occurrence]
+parts = [
+    "ANNOTATION_OCCURRENCE",
+    "ANNOTATION_TEXT_OCCURRENCE",
+    "DRAUGHTING_ANNOTATION_OCCURRENCE",
+    "GEOMETRIC_REPRESENTATION_ITEM",
+    "REPRESENTATION_ITEM",
+    "STYLED_ITEM",
 ]
 
 # Per-entity EXPRESS Derived (`*`) attribute names. early.toml (generated) cannot

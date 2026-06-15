@@ -2,12 +2,13 @@
 //! See the [module docs](super) for the lifting contract.
 
 use crate::early::model::{
-    EarlyAngularLocation, EarlyAngularSize, EarlyCylindricityTolerance, EarlyDatum,
-    EarlyDatumFeature, EarlyDimensionalLocation, EarlyDimensionalSize,
-    EarlyDirectedDimensionalLocation, EarlyDraughtingCallout, EarlyFlatnessTolerance,
-    EarlyGeometricToleranceRelationship, EarlyLeaderDirectedCallout, EarlyMeasureQualification,
-    EarlyRoundnessTolerance, EarlyStraightnessTolerance, EarlySurfaceProfileTolerance,
-    EarlyToleranceZoneForm, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
+    EarlyAngularLocation, EarlyAngularSize, EarlyAnnotationTextOccurrence,
+    EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature, EarlyDimensionalLocation,
+    EarlyDimensionalSize, EarlyDirectedDimensionalLocation, EarlyDraughtingCallout,
+    EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship, EarlyLeaderDirectedCallout,
+    EarlyMeasureQualification, EarlyRoundnessTolerance, EarlyStraightnessTolerance,
+    EarlySurfaceProfileTolerance, EarlyToleranceZoneForm, EarlyTypeQualifier,
+    EarlyValueFormatTypeQualifier,
 };
 
 /// Lift one `TOLERANCE_ZONE_FORM`.
@@ -251,4 +252,15 @@ pub(crate) fn lift_leader_directed_callout(
     contents: Vec<u64>,
 ) -> EarlyLeaderDirectedCallout {
     EarlyLeaderDirectedCallout { name, contents }
+}
+
+/// Lift the styled `ANNOTATION_TEXT_OCCURRENCE` complex. `styles` = emitted
+/// `PRESENTATION_STYLE_ASSIGNMENT` step ids; `item` = emitted item step id (the
+/// handler pre-resolves both).
+pub(crate) fn lift_annotation_text_occurrence(
+    name: String,
+    styles: Vec<u64>,
+    item: u64,
+) -> EarlyAnnotationTextOccurrence {
+    EarlyAnnotationTextOccurrence { name, styles, item }
 }

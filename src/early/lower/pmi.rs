@@ -2,18 +2,21 @@
 //! See the [module docs](super) for the lowering contract.
 
 use crate::early::model::{
-    EarlyAngularLocation, EarlyAngularSize, EarlyCylindricityTolerance, EarlyDatum,
-    EarlyDatumFeature, EarlyDimensionalLocation, EarlyDimensionalSize,
-    EarlyDirectedDimensionalLocation, EarlyDraughtingCallout, EarlyFlatnessTolerance,
-    EarlyGeometricToleranceRelationship, EarlyLeaderDirectedCallout, EarlyMeasureQualification,
-    EarlyRoundnessTolerance, EarlyStraightnessTolerance, EarlySurfaceProfileTolerance,
-    EarlyToleranceZoneForm, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
+    EarlyAngularLocation, EarlyAngularSize, EarlyAnnotationTextOccurrence,
+    EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature, EarlyDimensionalLocation,
+    EarlyDimensionalSize, EarlyDirectedDimensionalLocation, EarlyDraughtingCallout,
+    EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship, EarlyLeaderDirectedCallout,
+    EarlyMeasureQualification, EarlyRoundnessTolerance, EarlyStraightnessTolerance,
+    EarlySurfaceProfileTolerance, EarlyToleranceZoneForm, EarlyTypeQualifier,
+    EarlyValueFormatTypeQualifier,
 };
+use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::pmi::{
-    AngularLocationData, Datum, DatumFeature, DimensionalLocation, DimensionalLocationData,
-    DimensionalSize, DimensionalSizeKind, DraughtingCallout, DraughtingCalloutData,
-    GeometricTolerance, GeometricToleranceRelationship, MeasureQualification, PmiPool,
-    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier, ValueQualifier,
+    AngularLocationData, AnnotationOccurrence, AnnotationTextOccurrence, Datum, DatumFeature,
+    DimensionalLocation, DimensionalLocationData, DimensionalSize, DimensionalSizeKind,
+    DraughtingCallout, DraughtingCalloutData, GeometricTolerance, GeometricToleranceRelationship,
+    MeasureQualification, PmiPool, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
+    ValueQualifier,
 };
 use crate::reader::ReaderContext;
 
@@ -500,5 +503,40 @@ pub(crate) fn lower_leader_directed_callout(
             name: early.name,
             contents,
         }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower the styled `ANNOTATION_TEXT_OCCURRENCE` complex. `styles` keeps only
+/// refs resolving to a `PresentationStyleAssignment` (others skipped); `item`
+/// resolves through `resolve_representation_item_ref` — an unresolved item drops
+/// the whole occurrence (symmetric on re-read). Verbatim port of the legacy read.
+pub(crate) fn lower_annotation_text_occurrence(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyAnnotationTextOccurrence,
+) {
+    let mut styles = Vec::with_capacity(early.styles.len());
+    for &r in &early.styles {
+        if let Some(psa_id) = ctx
+            .id_cache
+            .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
+        {
+            styles.push(psa_id);
+        }
+    }
+    let Some(item) = resolve_representation_item_ref(ctx, early.item) else {
+        return;
+    };
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_occurrences
+        .push(AnnotationOccurrence::AnnotationTextOccurrence(
+            AnnotationTextOccurrence {
+                name: early.name.clone(),
+                styles,
+                item,
+            },
+        ));
     ctx.id_cache.insert(entity_id, id);
 }

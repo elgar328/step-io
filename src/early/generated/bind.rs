@@ -2947,6 +2947,18 @@ pub(crate) fn bind_brep_with_voids(
     })
 }
 
+pub(crate) fn bind_annotation_text_occurrence(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<super::model::EarlyAnnotationTextOccurrence, crate::ir::error::ConvertError> {
+    let attrs = crate::reader::require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let attrs = crate::reader::require_part_attrs(parts, "STYLED_ITEM", entity_id)?;
+    let styles = crate::ir::attr::read_entity_ref_list(attrs, 0, entity_id, "styles")?;
+    let item = crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "item")?;
+    Ok(super::model::EarlyAnnotationTextOccurrence { name, styles, item })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {
