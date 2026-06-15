@@ -3595,6 +3595,107 @@ pub(crate) fn bind_total_runout_tolerance(
     })
 }
 
+pub(crate) fn bind_coordinates_list(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyCoordinatesList, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "COORDINATES_LIST")?;
+    Ok(super::model::EarlyCoordinatesList {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        npoints: crate::ir::attr::read_integer(attrs, 1, entity_id, "npoints")?,
+        position_coords: crate::ir::attr::read_real_grid(attrs, 2, entity_id, "position_coords")?,
+    })
+}
+
+pub(crate) fn bind_tessellated_curve_set(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyTessellatedCurveSet, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "TESSELLATED_CURVE_SET")?;
+    Ok(super::model::EarlyTessellatedCurveSet {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        coordinates: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "coordinates")?,
+        line_strips: crate::ir::attr::read_integer_grid(attrs, 2, entity_id, "line_strips")?,
+    })
+}
+
+pub(crate) fn bind_complex_triangulated_surface_set(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyComplexTriangulatedSurfaceSet, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 7, entity_id, "COMPLEX_TRIANGULATED_SURFACE_SET")?;
+    Ok(super::model::EarlyComplexTriangulatedSurfaceSet {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        coordinates: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "coordinates")?,
+        pnmax: crate::ir::attr::read_integer(attrs, 2, entity_id, "pnmax")?,
+        normals: crate::ir::attr::read_real_grid(attrs, 3, entity_id, "normals")?,
+        pnindex: crate::ir::attr::read_integer_list(attrs, 4, entity_id, "pnindex")?,
+        triangle_strips: crate::ir::attr::read_integer_grid(
+            attrs,
+            5,
+            entity_id,
+            "triangle_strips",
+        )?,
+        triangle_fans: crate::ir::attr::read_integer_grid(attrs, 6, entity_id, "triangle_fans")?,
+    })
+}
+
+pub(crate) fn bind_tessellated_geometric_set(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyTessellatedGeometricSet, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "TESSELLATED_GEOMETRIC_SET")?;
+    Ok(super::model::EarlyTessellatedGeometricSet {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        children: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "children")?,
+    })
+}
+
+pub(crate) fn bind_tessellated_solid(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyTessellatedSolid, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "TESSELLATED_SOLID")?;
+    Ok(super::model::EarlyTessellatedSolid {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        items: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "items")?,
+        geometric_link: crate::ir::attr::read_optional_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "geometric_link",
+        )?,
+    })
+}
+
+pub(crate) fn bind_tessellated_shell(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyTessellatedShell, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "TESSELLATED_SHELL")?;
+    Ok(super::model::EarlyTessellatedShell {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        items: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "items")?,
+        topological_link: crate::ir::attr::read_optional_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "topological_link",
+        )?,
+    })
+}
+
+pub(crate) fn bind_repositioned_tessellated_item(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyRepositionedTessellatedItem, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "REPOSITIONED_TESSELLATED_ITEM")?;
+    Ok(super::model::EarlyRepositionedTessellatedItem {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        location: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "location")?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

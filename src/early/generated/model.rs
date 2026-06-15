@@ -5055,6 +5055,169 @@ impl crate::ir::arena::ArenaId for EarlyTotalRunoutToleranceId {
     }
 }
 
+/// L1 `COORDINATES_LIST` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCoordinatesList {
+    pub(crate) name: String,
+    pub(crate) npoints: i64,
+    pub(crate) position_coords: Vec<Vec<f64>>,
+}
+
+/// Typed `id_cache` key for `COORDINATES_LIST` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCoordinatesListId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCoordinatesListId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `TESSELLATED_CURVE_SET` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyTessellatedCurveSet {
+    pub(crate) name: String,
+    pub(crate) coordinates: u64,
+    pub(crate) line_strips: Vec<Vec<i64>>,
+}
+
+/// Typed `id_cache` key for `TESSELLATED_CURVE_SET` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyTessellatedCurveSetId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyTessellatedCurveSetId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `COMPLEX_TRIANGULATED_SURFACE_SET` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyComplexTriangulatedSurfaceSet {
+    pub(crate) name: String,
+    pub(crate) coordinates: u64,
+    pub(crate) pnmax: i64,
+    pub(crate) normals: Vec<Vec<f64>>,
+    pub(crate) pnindex: Vec<i64>,
+    pub(crate) triangle_strips: Vec<Vec<i64>>,
+    pub(crate) triangle_fans: Vec<Vec<i64>>,
+}
+
+/// Typed `id_cache` key for `COMPLEX_TRIANGULATED_SURFACE_SET` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyComplexTriangulatedSurfaceSetId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyComplexTriangulatedSurfaceSetId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `TESSELLATED_GEOMETRIC_SET` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyTessellatedGeometricSet {
+    pub(crate) name: String,
+    pub(crate) children: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `TESSELLATED_GEOMETRIC_SET` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyTessellatedGeometricSetId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyTessellatedGeometricSetId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `TESSELLATED_SOLID` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyTessellatedSolid {
+    pub(crate) name: String,
+    pub(crate) items: Vec<u64>,
+    pub(crate) geometric_link: Option<u64>,
+}
+
+/// Typed `id_cache` key for `TESSELLATED_SOLID` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyTessellatedSolidId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyTessellatedSolidId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `TESSELLATED_SHELL` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyTessellatedShell {
+    pub(crate) name: String,
+    pub(crate) items: Vec<u64>,
+    pub(crate) topological_link: Option<u64>,
+}
+
+/// Typed `id_cache` key for `TESSELLATED_SHELL` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyTessellatedShellId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyTessellatedShellId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `REPOSITIONED_TESSELLATED_ITEM` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyRepositionedTessellatedItem {
+    pub(crate) name: String,
+    pub(crate) location: u64,
+}
+
+/// Typed `id_cache` key for `REPOSITIONED_TESSELLATED_ITEM` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyRepositionedTessellatedItemId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyRepositionedTessellatedItemId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

@@ -3939,6 +3939,187 @@ pub(crate) fn serialize_total_runout_tolerance(
     )
 }
 
+pub(crate) fn serialize_coordinates_list(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCoordinatesList,
+) -> u64 {
+    buf.push_simple(
+        "COORDINATES_LIST",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::Integer(l1.npoints),
+            crate::parser::entity::Attribute::List(
+                l1.position_coords
+                    .iter()
+                    .map(|row| {
+                        crate::parser::entity::Attribute::List(
+                            row.iter()
+                                .map(|&x| crate::parser::entity::Attribute::Real(x))
+                                .collect(),
+                        )
+                    })
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_tessellated_curve_set(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyTessellatedCurveSet,
+) -> u64 {
+    buf.push_simple(
+        "TESSELLATED_CURVE_SET",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.coordinates),
+            crate::parser::entity::Attribute::List(
+                l1.line_strips
+                    .iter()
+                    .map(|row| {
+                        crate::parser::entity::Attribute::List(
+                            row.iter()
+                                .map(|&x| crate::parser::entity::Attribute::Integer(x))
+                                .collect(),
+                        )
+                    })
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_complex_triangulated_surface_set(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyComplexTriangulatedSurfaceSet,
+) -> u64 {
+    buf.push_simple(
+        "COMPLEX_TRIANGULATED_SURFACE_SET",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.coordinates),
+            crate::parser::entity::Attribute::Integer(l1.pnmax),
+            crate::parser::entity::Attribute::List(
+                l1.normals
+                    .iter()
+                    .map(|row| {
+                        crate::parser::entity::Attribute::List(
+                            row.iter()
+                                .map(|&x| crate::parser::entity::Attribute::Real(x))
+                                .collect(),
+                        )
+                    })
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::List(
+                l1.pnindex
+                    .iter()
+                    .map(|&x| crate::parser::entity::Attribute::Integer(x))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::List(
+                l1.triangle_strips
+                    .iter()
+                    .map(|row| {
+                        crate::parser::entity::Attribute::List(
+                            row.iter()
+                                .map(|&x| crate::parser::entity::Attribute::Integer(x))
+                                .collect(),
+                        )
+                    })
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::List(
+                l1.triangle_fans
+                    .iter()
+                    .map(|row| {
+                        crate::parser::entity::Attribute::List(
+                            row.iter()
+                                .map(|&x| crate::parser::entity::Attribute::Integer(x))
+                                .collect(),
+                        )
+                    })
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_tessellated_geometric_set(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyTessellatedGeometricSet,
+) -> u64 {
+    buf.push_simple(
+        "TESSELLATED_GEOMETRIC_SET",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.children
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_tessellated_solid(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyTessellatedSolid,
+) -> u64 {
+    buf.push_simple(
+        "TESSELLATED_SOLID",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.items
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            match l1.geometric_link {
+                Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+        ],
+    )
+}
+
+pub(crate) fn serialize_tessellated_shell(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyTessellatedShell,
+) -> u64 {
+    buf.push_simple(
+        "TESSELLATED_SHELL",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.items
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            match l1.topological_link {
+                Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+        ],
+    )
+}
+
+pub(crate) fn serialize_repositioned_tessellated_item(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyRepositionedTessellatedItem,
+) -> u64 {
+    buf.push_simple(
+        "REPOSITIONED_TESSELLATED_ITEM",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.location),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

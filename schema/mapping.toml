@@ -262,6 +262,14 @@ generate = [
     "perpendicularity_tolerance",
     "symmetry_tolerance",
     "total_runout_tolerance",
+    # Phase 3u: tessellation — clean leaf 7 (grids/lists, shared resolvers)
+    "coordinates_list",
+    "tessellated_curve_set",
+    "complex_triangulated_surface_set",
+    "tessellated_geometric_set",
+    "tessellated_solid",
+    "tessellated_shell",
+    "repositioned_tessellated_item",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

@@ -7,6 +7,7 @@
 //! `coordinates` ref does not resolve is silently dropped, symmetric on
 //! re-read.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::attr::{
@@ -38,30 +39,15 @@ impl SimpleEntityHandler for CoordinatesListHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "COORDINATES_LIST")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let npoints = read_integer(attrs, 1, entity_id, "npoints")?;
-        let position_coords = read_real_grid(attrs, 2, entity_id, "position_coords")?;
-
-        let id = ctx
-            .tessellated_items
-            .push(TessellatedItem::CoordinatesList(CoordinatesList {
-                name,
-                npoints,
-                position_coords,
-            }));
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_coordinates_list(entity_id, attrs)?;
+        lower::lower_coordinates_list(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, item: CoordinatesList) -> Result<u64, WriteError> {
-        Ok(buf.push_simple(
-            "COORDINATES_LIST",
-            vec![
-                Attribute::String(item.name),
-                Attribute::Integer(item.npoints),
-                real_grid_attr(&item.position_coords),
-            ],
+        Ok(serialize::serialize_coordinates_list(
+            buf,
+            &lift::lift_coordinates_list(item),
         ))
     }
 }
@@ -145,38 +131,15 @@ impl SimpleEntityHandler for TessellatedCurveSetHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "TESSELLATED_CURVE_SET")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let coordinates_ref = read_entity_ref(attrs, 1, entity_id, "coordinates")?;
-        let line_strips = read_integer_grid(attrs, 2, entity_id, "line_strips")?;
-
-        let Some(coordinates) = ctx
-            .id_cache
-            .get::<crate::ir::id::TessellatedItemId>(coordinates_ref)
-        else {
-            return Ok(()); // coordinates_list dropped — drop the curve set too
-        };
-
-        let id = ctx
-            .tessellated_items
-            .push(TessellatedItem::TessellatedCurveSet(TessellatedCurveSet {
-                name,
-                coordinates,
-                line_strips,
-            }));
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_tessellated_curve_set(entity_id, attrs)?;
+        lower::lower_tessellated_curve_set(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, item: TessellatedCurveSet) -> Result<u64, WriteError> {
-        let coordinates_step = buf.step_id(item.coordinates);
-        Ok(buf.push_simple(
-            "TESSELLATED_CURVE_SET",
-            vec![
-                Attribute::String(item.name),
-                Attribute::EntityRef(coordinates_step),
-                integer_grid_attr(&item.line_strips),
-            ],
+        Ok(serialize::serialize_tessellated_curve_set(
+            buf,
+            &lift::lift_tessellated_curve_set(buf, item),
         ))
     }
 }
@@ -193,50 +156,15 @@ impl SimpleEntityHandler for ComplexTriangulatedSurfaceSetHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 7, entity_id, "COMPLEX_TRIANGULATED_SURFACE_SET")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let coordinates_ref = read_entity_ref(attrs, 1, entity_id, "coordinates")?;
-        let pnmax = read_integer(attrs, 2, entity_id, "pnmax")?;
-        let normals = read_real_grid(attrs, 3, entity_id, "normals")?;
-        let pnindex = read_integer_list(attrs, 4, entity_id, "pnindex")?;
-        let triangle_strips = read_integer_grid(attrs, 5, entity_id, "triangle_strips")?;
-        let triangle_fans = read_integer_grid(attrs, 6, entity_id, "triangle_fans")?;
-
-        let Some(coordinates) = ctx
-            .id_cache
-            .get::<crate::ir::id::TessellatedItemId>(coordinates_ref)
-        else {
-            return Ok(()); // coordinates_list dropped — drop the surface set too
-        };
-
-        let id = ctx
-            .tessellated_surface_sets
-            .push(ComplexTriangulatedSurfaceSet {
-                name,
-                coordinates,
-                pnmax,
-                normals,
-                pnindex,
-                triangle_strips,
-                triangle_fans,
-            });
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_complex_triangulated_surface_set(entity_id, attrs)?;
+        lower::lower_complex_triangulated_surface_set(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, set: ComplexTriangulatedSurfaceSet) -> Result<u64, WriteError> {
-        let coordinates_step = buf.step_id(set.coordinates);
-        Ok(buf.push_simple(
-            "COMPLEX_TRIANGULATED_SURFACE_SET",
-            vec![
-                Attribute::String(set.name),
-                Attribute::EntityRef(coordinates_step),
-                Attribute::Integer(set.pnmax),
-                real_grid_attr(&set.normals),
-                integer_list_attr(&set.pnindex),
-                integer_grid_attr(&set.triangle_strips),
-                integer_grid_attr(&set.triangle_fans),
-            ],
+        Ok(serialize::serialize_complex_triangulated_surface_set(
+            buf,
+            &lift::lift_complex_triangulated_surface_set(buf, set),
         ))
     }
 }
@@ -281,34 +209,15 @@ impl SimpleEntityHandler for TessellatedGeometricSetHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "TESSELLATED_GEOMETRIC_SET")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let child_refs = read_entity_ref_list(attrs, 1, entity_id, "children")?;
-        // Unresolved children (targets step-io does not model) are dropped
-        // from the set — symmetric on re-read.
-        let children: Vec<TessellatedItemRef> = child_refs
-            .iter()
-            .filter_map(|&r| resolve_tessellated_item_ref(ctx, r))
-            .collect();
-
-        let id = ctx
-            .tessellated_items
-            .push(TessellatedItem::TessellatedGeometricSet(
-                TessellatedGeometricSet { name, children },
-            ));
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_tessellated_geometric_set(entity_id, attrs)?;
+        lower::lower_tessellated_geometric_set(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, tgs: TessellatedGeometricSet) -> Result<u64, WriteError> {
-        let children: Vec<Attribute> = tgs
-            .children
-            .iter()
-            .map(|&r| Attribute::EntityRef(buf.emit_tessellated_item_ref(r)))
-            .collect();
-        Ok(buf.push_simple(
-            "TESSELLATED_GEOMETRIC_SET",
-            vec![Attribute::String(tgs.name), Attribute::List(children)],
+        Ok(serialize::serialize_tessellated_geometric_set(
+            buf,
+            &lift::lift_tessellated_geometric_set(buf, tgs),
         ))
     }
 }
@@ -325,47 +234,14 @@ impl SimpleEntityHandler for TessellatedSolidHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "TESSELLATED_SOLID")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let item_refs = read_entity_ref_list(attrs, 1, entity_id, "items")?;
-        let geometric_link_ref = read_optional_entity_ref(attrs, 2, entity_id, "geometric_link")?;
-
-        let items: Vec<TessellatedItemRef> = item_refs
-            .iter()
-            .filter_map(|&r| resolve_tessellated_item_ref(ctx, r))
-            .collect();
-        let geometric_link =
-            geometric_link_ref.and_then(|r| ctx.id_cache.get::<crate::ir::id::SolidId>(r));
-
-        let id = ctx
-            .tessellated_items
-            .push(TessellatedItem::TessellatedSolid(TessellatedSolid {
-                name,
-                items,
-                geometric_link,
-            }));
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_tessellated_solid(entity_id, attrs)?;
+        lower::lower_tessellated_solid(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, ts: TessellatedSolid) -> Result<u64, WriteError> {
-        let items: Vec<Attribute> = ts
-            .items
-            .iter()
-            .map(|&r| Attribute::EntityRef(buf.emit_tessellated_item_ref(r)))
-            .collect();
-        let geometric_link = match ts.geometric_link {
-            Some(id) => Attribute::EntityRef(buf.emit_solid(id)?),
-            None => Attribute::Unset,
-        };
-        Ok(buf.push_simple(
-            "TESSELLATED_SOLID",
-            vec![
-                Attribute::String(ts.name),
-                Attribute::List(items),
-                geometric_link,
-            ],
-        ))
+        let early = lift::lift_tessellated_solid(buf, ts)?;
+        Ok(serialize::serialize_tessellated_solid(buf, &early))
     }
 }
 
@@ -381,48 +257,14 @@ impl SimpleEntityHandler for TessellatedShellHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "TESSELLATED_SHELL")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let item_refs = read_entity_ref_list(attrs, 1, entity_id, "items")?;
-        let topological_link_ref =
-            read_optional_entity_ref(attrs, 2, entity_id, "topological_link")?;
-
-        let items: Vec<TessellatedItemRef> = item_refs
-            .iter()
-            .filter_map(|&r| resolve_tessellated_item_ref(ctx, r))
-            .collect();
-        let topological_link =
-            topological_link_ref.and_then(|r| ctx.id_cache.get::<crate::ir::id::ShellId>(r));
-
-        let id = ctx
-            .tessellated_items
-            .push(TessellatedItem::TessellatedShell(TessellatedShell {
-                name,
-                items,
-                topological_link,
-            }));
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_tessellated_shell(entity_id, attrs)?;
+        lower::lower_tessellated_shell(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, ts: TessellatedShell) -> Result<u64, WriteError> {
-        let items: Vec<Attribute> = ts
-            .items
-            .iter()
-            .map(|&r| Attribute::EntityRef(buf.emit_tessellated_item_ref(r)))
-            .collect();
-        let topological_link = match ts.topological_link {
-            Some(id) => Attribute::EntityRef(buf.emit_shell(id)?),
-            None => Attribute::Unset,
-        };
-        Ok(buf.push_simple(
-            "TESSELLATED_SHELL",
-            vec![
-                Attribute::String(ts.name),
-                Attribute::List(items),
-                topological_link,
-            ],
-        ))
+        let early = lift::lift_tessellated_shell(buf, ts)?;
+        Ok(serialize::serialize_tessellated_shell(buf, &early))
     }
 }
 
@@ -464,29 +306,15 @@ impl SimpleEntityHandler for RepositionedTessellatedItemHandler {
         // 2 attrs: `name` inherited from `representation_item` (flattened
         // into the part), `location` ref to AXIS2_PLACEMENT_3D. Same
         // pattern as TESSELLATED_GEOMETRIC_SET above.
-        check_count(attrs, 2, entity_id, "REPOSITIONED_TESSELLATED_ITEM")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let location_ref = read_entity_ref(attrs, 1, entity_id, "location")?;
-        let Some(&location) = ctx.placement_map.get(&location_ref) else {
-            return Ok(());
-        };
-        let id = ctx
-            .tessellated_items
-            .push(TessellatedItem::RepositionedTessellatedItem(
-                RepositionedTessellatedItem { name, location },
-            ));
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_repositioned_tessellated_item(entity_id, attrs)?;
+        lower::lower_repositioned_tessellated_item(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, r: RepositionedTessellatedItem) -> Result<u64, WriteError> {
-        let placement_ref = buf.emit_axis2_placement_3d(r.location)?;
-        Ok(buf.push_simple(
-            "REPOSITIONED_TESSELLATED_ITEM",
-            vec![
-                Attribute::String(r.name),
-                Attribute::EntityRef(placement_ref),
-            ],
+        let early = lift::lift_repositioned_tessellated_item(buf, r)?;
+        Ok(serialize::serialize_repositioned_tessellated_item(
+            buf, &early,
         ))
     }
 }
