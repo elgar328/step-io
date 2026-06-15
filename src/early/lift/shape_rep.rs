@@ -5,12 +5,13 @@ use crate::early::model::{
     EarlyAllAroundShapeAspect, EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
-    EarlyDescriptiveRepresentationItem, EarlyMeasureValue,
+    EarlyDescriptiveRepresentationItem, EarlyFeatureForDatumTargetRelationship, EarlyMeasureValue,
     EarlyMechanicalDesignAndDraughtingRelationship, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
-    EarlyRepresentationRelationship, EarlyShapeAspect, EarlyShapeRepresentationRelationship,
-    EarlyToleranceZone, EarlyValueRepresentationItem,
+    EarlyRepresentationRelationship, EarlyShapeAspect, EarlyShapeAspectAssociativity,
+    EarlyShapeAspectDerivingRelationship, EarlyShapeAspectRelationship,
+    EarlyShapeRepresentationRelationship, EarlyToleranceZone, EarlyValueRepresentationItem,
 };
 use crate::ir::representation_item::{MeasureValue, ValueRepresentationItem};
 use crate::ir::shape_rep::UnitlessContext;
@@ -174,6 +175,68 @@ pub(crate) fn lift_shape_aspect(
         description: Some(description),
         of_shape,
         product_definitional: bool_to_logical(product_definitional),
+    }
+}
+
+/// Lift the plain `SHAPE_ASPECT_RELATIONSHIP` from pre-resolved write fields
+/// (both endpoints = the step ids `emit_shape_aspect_ref` produced).
+/// `description` always `Some` (legacy never emitted `$`).
+pub(crate) fn lift_shape_aspect_relationship(
+    name: String,
+    description: String,
+    relating_step: u64,
+    related_step: u64,
+) -> EarlyShapeAspectRelationship {
+    EarlyShapeAspectRelationship {
+        name,
+        description: Some(description),
+        relating_shape_aspect: relating_step,
+        related_shape_aspect: related_step,
+    }
+}
+
+/// Lift the `SHAPE_ASPECT_ASSOCIATIVITY` kind.
+pub(crate) fn lift_shape_aspect_associativity(
+    name: String,
+    description: String,
+    relating_step: u64,
+    related_step: u64,
+) -> EarlyShapeAspectAssociativity {
+    EarlyShapeAspectAssociativity {
+        name,
+        description: Some(description),
+        relating_shape_aspect: relating_step,
+        related_shape_aspect: related_step,
+    }
+}
+
+/// Lift the `SHAPE_ASPECT_DERIVING_RELATIONSHIP` kind.
+pub(crate) fn lift_shape_aspect_deriving_relationship(
+    name: String,
+    description: String,
+    relating_step: u64,
+    related_step: u64,
+) -> EarlyShapeAspectDerivingRelationship {
+    EarlyShapeAspectDerivingRelationship {
+        name,
+        description: Some(description),
+        relating_shape_aspect: relating_step,
+        related_shape_aspect: related_step,
+    }
+}
+
+/// Lift the `FEATURE_FOR_DATUM_TARGET_RELATIONSHIP` kind.
+pub(crate) fn lift_feature_for_datum_target_relationship(
+    name: String,
+    description: String,
+    relating_step: u64,
+    related_step: u64,
+) -> EarlyFeatureForDatumTargetRelationship {
+    EarlyFeatureForDatumTargetRelationship {
+        name,
+        description: Some(description),
+        relating_shape_aspect: relating_step,
+        related_shape_aspect: related_step,
     }
 }
 

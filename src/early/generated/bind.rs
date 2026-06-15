@@ -3279,6 +3279,98 @@ pub(crate) fn bind_shape_aspect(
     })
 }
 
+pub(crate) fn bind_shape_aspect_relationship(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyShapeAspectRelationship, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "SHAPE_ASPECT_RELATIONSHIP")?;
+    Ok(super::model::EarlyShapeAspectRelationship {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        relating_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "relating_shape_aspect",
+        )?,
+        related_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "related_shape_aspect",
+        )?,
+    })
+}
+
+pub(crate) fn bind_shape_aspect_associativity(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyShapeAspectAssociativity, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "SHAPE_ASPECT_ASSOCIATIVITY")?;
+    Ok(super::model::EarlyShapeAspectAssociativity {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        relating_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "relating_shape_aspect",
+        )?,
+        related_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "related_shape_aspect",
+        )?,
+    })
+}
+
+pub(crate) fn bind_shape_aspect_deriving_relationship(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyShapeAspectDerivingRelationship, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "SHAPE_ASPECT_DERIVING_RELATIONSHIP")?;
+    Ok(super::model::EarlyShapeAspectDerivingRelationship {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        relating_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "relating_shape_aspect",
+        )?,
+        related_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "related_shape_aspect",
+        )?,
+    })
+}
+
+pub(crate) fn bind_feature_for_datum_target_relationship(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyFeatureForDatumTargetRelationship, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "FEATURE_FOR_DATUM_TARGET_RELATIONSHIP")?;
+    Ok(super::model::EarlyFeatureForDatumTargetRelationship {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        relating_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "relating_shape_aspect",
+        )?,
+        related_shape_aspect: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "related_shape_aspect",
+        )?,
+    })
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

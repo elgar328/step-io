@@ -12,8 +12,8 @@
 //! differ only by STEP entity name. One arena covers the family — the name
 //! is captured in [`ShapeAspectRelationshipKind`].
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_aspect_ref::ShapeAspectRef;
 use crate::ir::shape_rep::{ShapeAspectRelationship, ShapeAspectRelationshipKind};
@@ -34,62 +34,53 @@ pub(crate) fn resolve_shape_aspect_ref(
     ShapeAspectRef::resolve_select(ctx, item_ref)
 }
 
-/// Read the shared `SHAPE_ASPECT_RELATIONSHIP` 4-attr body and push a
-/// [`ShapeAspectRelationship`] tagged with `kind`. Drops silently when
-/// either endpoint does not resolve.
-fn read_shape_aspect_relationship(
-    ctx: &mut ReaderContext,
-    entity_id: u64,
-    attrs: &[Attribute],
-    entity_name: &'static str,
-    kind: ShapeAspectRelationshipKind,
-) -> Result<(), ConvertError> {
-    check_count(attrs, 4, entity_id, entity_name)?;
-    let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-    let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-    let relating_ref = read_entity_ref(attrs, 2, entity_id, "relating_shape_aspect")?;
-    let related_ref = read_entity_ref(attrs, 3, entity_id, "related_shape_aspect")?;
-
-    let Some(relating_shape_aspect) = resolve_shape_aspect_ref(ctx, relating_ref) else {
-        return Ok(()); // endpoint unresolved — drop the relationship
-    };
-    let Some(related_shape_aspect) = resolve_shape_aspect_ref(ctx, related_ref) else {
-        return Ok(());
-    };
-
-    ctx.shape_aspect_relationships
-        .push(ShapeAspectRelationship {
-            name,
-            description,
-            relating_shape_aspect,
-            related_shape_aspect,
-            kind,
-        });
-    Ok(())
-}
-
 /// Emit a `ShapeAspectRelationship` under the STEP entity name its `kind`
-/// selects, returning the STEP id. Shared by all three family handlers.
+/// selects, returning the STEP id. Shared by all four family handlers (the
+/// emit loop calls only this one). 2-layer write: resolve both endpoints, then
+/// dispatch `kind` → the matching `lift_*` + `serialize_*` (each generated
+/// serialize hardcodes its entity name).
 fn write_shape_aspect_relationship(buf: &mut WriteBuffer, rel: ShapeAspectRelationship) -> u64 {
     let relating = buf.emit_shape_aspect_ref(rel.relating_shape_aspect);
     let related = buf.emit_shape_aspect_ref(rel.related_shape_aspect);
-    let name = match rel.kind {
-        ShapeAspectRelationshipKind::Plain => "SHAPE_ASPECT_RELATIONSHIP",
-        ShapeAspectRelationshipKind::Associativity => "SHAPE_ASPECT_ASSOCIATIVITY",
-        ShapeAspectRelationshipKind::DerivingRelationship => "SHAPE_ASPECT_DERIVING_RELATIONSHIP",
-        ShapeAspectRelationshipKind::FeatureForDatumTarget => {
-            "FEATURE_FOR_DATUM_TARGET_RELATIONSHIP"
+    match rel.kind {
+        ShapeAspectRelationshipKind::Plain => serialize::serialize_shape_aspect_relationship(
+            buf,
+            &lift::lift_shape_aspect_relationship(rel.name, rel.description, relating, related),
+        ),
+        ShapeAspectRelationshipKind::Associativity => {
+            serialize::serialize_shape_aspect_associativity(
+                buf,
+                &lift::lift_shape_aspect_associativity(
+                    rel.name,
+                    rel.description,
+                    relating,
+                    related,
+                ),
+            )
         }
-    };
-    buf.push_simple(
-        name,
-        vec![
-            Attribute::String(rel.name),
-            Attribute::String(rel.description),
-            Attribute::EntityRef(relating),
-            Attribute::EntityRef(related),
-        ],
-    )
+        ShapeAspectRelationshipKind::DerivingRelationship => {
+            serialize::serialize_shape_aspect_deriving_relationship(
+                buf,
+                &lift::lift_shape_aspect_deriving_relationship(
+                    rel.name,
+                    rel.description,
+                    relating,
+                    related,
+                ),
+            )
+        }
+        ShapeAspectRelationshipKind::FeatureForDatumTarget => {
+            serialize::serialize_feature_for_datum_target_relationship(
+                buf,
+                &lift::lift_feature_for_datum_target_relationship(
+                    rel.name,
+                    rel.description,
+                    relating,
+                    related,
+                ),
+            )
+        }
+    }
 }
 
 pub(crate) struct ShapeAspectRelationshipHandler;
@@ -104,13 +95,16 @@ impl SimpleEntityHandler for ShapeAspectRelationshipHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        read_shape_aspect_relationship(
+        let early = bind::bind_shape_aspect_relationship(entity_id, attrs)?;
+        lower::lower_shape_aspect_relationship(
             ctx,
-            entity_id,
-            attrs,
-            "SHAPE_ASPECT_RELATIONSHIP",
+            early.name,
+            early.description,
+            early.relating_shape_aspect,
+            early.related_shape_aspect,
             ShapeAspectRelationshipKind::Plain,
-        )
+        );
+        Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, rel: ShapeAspectRelationship) -> Result<u64, WriteError> {
@@ -130,13 +124,16 @@ impl SimpleEntityHandler for ShapeAspectAssociativityHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        read_shape_aspect_relationship(
+        let early = bind::bind_shape_aspect_associativity(entity_id, attrs)?;
+        lower::lower_shape_aspect_relationship(
             ctx,
-            entity_id,
-            attrs,
-            "SHAPE_ASPECT_ASSOCIATIVITY",
+            early.name,
+            early.description,
+            early.relating_shape_aspect,
+            early.related_shape_aspect,
             ShapeAspectRelationshipKind::Associativity,
-        )
+        );
+        Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, rel: ShapeAspectRelationship) -> Result<u64, WriteError> {
@@ -156,13 +153,16 @@ impl SimpleEntityHandler for ShapeAspectDerivingRelationshipHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        read_shape_aspect_relationship(
+        let early = bind::bind_shape_aspect_deriving_relationship(entity_id, attrs)?;
+        lower::lower_shape_aspect_relationship(
             ctx,
-            entity_id,
-            attrs,
-            "SHAPE_ASPECT_DERIVING_RELATIONSHIP",
+            early.name,
+            early.description,
+            early.relating_shape_aspect,
+            early.related_shape_aspect,
             ShapeAspectRelationshipKind::DerivingRelationship,
-        )
+        );
+        Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, rel: ShapeAspectRelationship) -> Result<u64, WriteError> {
@@ -187,13 +187,16 @@ impl SimpleEntityHandler for FeatureForDatumTargetRelationshipHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        read_shape_aspect_relationship(
+        let early = bind::bind_feature_for_datum_target_relationship(entity_id, attrs)?;
+        lower::lower_shape_aspect_relationship(
             ctx,
-            entity_id,
-            attrs,
-            "FEATURE_FOR_DATUM_TARGET_RELATIONSHIP",
+            early.name,
+            early.description,
+            early.relating_shape_aspect,
+            early.related_shape_aspect,
             ShapeAspectRelationshipKind::FeatureForDatumTarget,
-        )
+        );
+        Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, rel: ShapeAspectRelationship) -> Result<u64, WriteError> {

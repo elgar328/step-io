@@ -3565,6 +3565,78 @@ pub(crate) fn serialize_shape_aspect(
     )
 }
 
+pub(crate) fn serialize_shape_aspect_relationship(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyShapeAspectRelationship,
+) -> u64 {
+    buf.push_simple(
+        "SHAPE_ASPECT_RELATIONSHIP",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.relating_shape_aspect),
+            crate::parser::entity::Attribute::EntityRef(l1.related_shape_aspect),
+        ],
+    )
+}
+
+pub(crate) fn serialize_shape_aspect_associativity(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyShapeAspectAssociativity,
+) -> u64 {
+    buf.push_simple(
+        "SHAPE_ASPECT_ASSOCIATIVITY",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.relating_shape_aspect),
+            crate::parser::entity::Attribute::EntityRef(l1.related_shape_aspect),
+        ],
+    )
+}
+
+pub(crate) fn serialize_shape_aspect_deriving_relationship(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyShapeAspectDerivingRelationship,
+) -> u64 {
+    buf.push_simple(
+        "SHAPE_ASPECT_DERIVING_RELATIONSHIP",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.relating_shape_aspect),
+            crate::parser::entity::Attribute::EntityRef(l1.related_shape_aspect),
+        ],
+    )
+}
+
+pub(crate) fn serialize_feature_for_datum_target_relationship(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyFeatureForDatumTargetRelationship,
+) -> u64 {
+    buf.push_simple(
+        "FEATURE_FOR_DATUM_TARGET_RELATIONSHIP",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.relating_shape_aspect),
+            crate::parser::entity::Attribute::EntityRef(l1.related_shape_aspect),
+        ],
+    )
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

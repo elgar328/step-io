@@ -4648,6 +4648,102 @@ impl crate::ir::arena::ArenaId for EarlyShapeAspectId {
     }
 }
 
+/// L1 `SHAPE_ASPECT_RELATIONSHIP` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyShapeAspectRelationship {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) relating_shape_aspect: u64,
+    pub(crate) related_shape_aspect: u64,
+}
+
+/// Typed `id_cache` key for `SHAPE_ASPECT_RELATIONSHIP` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyShapeAspectRelationshipId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyShapeAspectRelationshipId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `SHAPE_ASPECT_ASSOCIATIVITY` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyShapeAspectAssociativity {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) relating_shape_aspect: u64,
+    pub(crate) related_shape_aspect: u64,
+}
+
+/// Typed `id_cache` key for `SHAPE_ASPECT_ASSOCIATIVITY` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyShapeAspectAssociativityId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyShapeAspectAssociativityId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `SHAPE_ASPECT_DERIVING_RELATIONSHIP` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyShapeAspectDerivingRelationship {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) relating_shape_aspect: u64,
+    pub(crate) related_shape_aspect: u64,
+}
+
+/// Typed `id_cache` key for `SHAPE_ASPECT_DERIVING_RELATIONSHIP` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyShapeAspectDerivingRelationshipId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyShapeAspectDerivingRelationshipId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `FEATURE_FOR_DATUM_TARGET_RELATIONSHIP` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyFeatureForDatumTargetRelationship {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) relating_shape_aspect: u64,
+    pub(crate) related_shape_aspect: u64,
+}
+
+/// Typed `id_cache` key for `FEATURE_FOR_DATUM_TARGET_RELATIONSHIP` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyFeatureForDatumTargetRelationshipId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyFeatureForDatumTargetRelationshipId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

@@ -31,7 +31,8 @@ use crate::ir::shape_rep::{
     DatumTarget, MechanicalDesignAndDraughtingRelationship, ModelGeometricView,
     NumericRepresentationItem, PlacedDatumTargetFeature, RealRepresentationItem,
     RepresentationRelationship, RepresentationRelationshipData, ShapeAspect,
-    ShapeRepresentationRelationshipIr, ToleranceZone, UnitlessContext,
+    ShapeAspectRelationship, ShapeAspectRelationshipKind, ShapeRepresentationRelationshipIr,
+    ToleranceZone, UnitlessContext,
 };
 use crate::reader::ReaderContext;
 
@@ -346,6 +347,37 @@ pub(crate) fn lower_tolerance_zone(
         form,
     });
     ctx.id_cache.insert(entity_id, id);
+}
+
+/// Shared lowering for the `SHAPE_ASPECT_RELATIONSHIP` family (base + the
+/// `Associativity` / `DerivingRelationship` / `FeatureForDatumTarget` kinds).
+/// Both endpoints resolve through `resolve_shape_aspect_ref`; either unresolved
+/// drops the relationship (symmetric on re-read). No `id_cache` registration —
+/// the arena's only consumer is the writer emit loop.
+pub(crate) fn lower_shape_aspect_relationship(
+    ctx: &mut ReaderContext,
+    name: String,
+    description: Option<String>,
+    relating_ref: u64,
+    related_ref: u64,
+    kind: ShapeAspectRelationshipKind,
+) {
+    use crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_ref;
+    let Some(relating_shape_aspect) = resolve_shape_aspect_ref(ctx, relating_ref) else {
+        return;
+    };
+    let Some(related_shape_aspect) = resolve_shape_aspect_ref(ctx, related_ref) else {
+        return;
+    };
+    ctx.shape_aspect_relationships
+        .push(ShapeAspectRelationship {
+            name,
+            // Legacy read_string_or_unset collapsed `$` to "" (L2 String).
+            description: description.unwrap_or_default(),
+            relating_shape_aspect,
+            related_shape_aspect,
+            kind,
+        });
 }
 
 /// Shared `SHAPE_ASPECT`-subtype lowering prelude: bool conversion (`U`

@@ -239,6 +239,11 @@ generate = [
     "curve_style",
     # Phase 3n: shape_rep simple — shape aspect supertype (subtype precedent)
     "shape_aspect",
+    # Phase 3o: shape_rep simple — shape aspect relationship family (4, kind tag)
+    "shape_aspect_relationship",
+    "shape_aspect_associativity",
+    "shape_aspect_deriving_relationship",
+    "feature_for_datum_target_relationship",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
