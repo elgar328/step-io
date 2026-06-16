@@ -89,6 +89,7 @@ pub(crate) use super::generated::bind::{
     bind_tessellated_solid, bind_text_literal, bind_text_style_for_defined_font,
     bind_text_style_with_box_characteristics, bind_tolerance_zone, bind_tolerance_zone_form,
     bind_toroidal_surface, bind_total_runout_tolerance, bind_trimmed_curve, bind_type_qualifier,
-    bind_value_format_type_qualifier, bind_value_representation_item, bind_vector,
-    bind_vertex_loop, bind_vertex_point, bind_view_volume,
+    bind_uncertainty_measure_with_unit, bind_value_format_type_qualifier,
+    bind_value_representation_item, bind_vector, bind_vertex_loop, bind_vertex_point,
+    bind_view_volume,
 };

@@ -4094,6 +4094,25 @@ pub(crate) fn bind_default_model_geometric_view(
     })
 }
 
+pub(crate) fn bind_uncertainty_measure_with_unit(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<Option<super::model::EarlyUncertaintyMeasureWithUnit>, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "UNCERTAINTY_MEASURE_WITH_UNIT")?;
+    let Some(value_component) = bind_measure_value(&attrs[0]) else {
+        return Ok(None);
+    };
+    let unit_component = crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "unit_component")?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 2, entity_id, "name")?.to_owned();
+    let description = crate::ir::attr::read_optional_string(attrs, 3, entity_id, "description")?;
+    Ok(Some(super::model::EarlyUncertaintyMeasureWithUnit {
+        value_component,
+        unit_component,
+        name,
+        description,
+    }))
+}
+
 #[allow(clippy::cast_precision_loss)]
 fn bind_box_characteristic_select(
     attr: &crate::parser::entity::Attribute,

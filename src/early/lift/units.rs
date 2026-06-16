@@ -4,9 +4,10 @@
 use crate::early::model::{
     EarlyDerivedUnit, EarlyDerivedUnitElement, EarlyDimensionalExponents,
     EarlyLengthMeasureWithUnit, EarlyMassMeasureWithUnit, EarlyMeasureValue, EarlyMeasureWithUnit,
-    EarlyPlaneAngleMeasureWithUnit, EarlyRatioMeasureWithUnit,
+    EarlyPlaneAngleMeasureWithUnit, EarlyRatioMeasureWithUnit, EarlyUncertaintyMeasureWithUnit,
 };
 use crate::ir::representation_item::MeasureValue;
+use crate::ir::shape_rep::LengthUncertainty;
 use crate::ir::units::DimensionalExponents;
 
 /// Lift one `DERIVED_UNIT_ELEMENT` (unit pre-resolved).
@@ -90,5 +91,26 @@ pub(crate) fn lift_ratio_measure_with_unit(
     EarlyRatioMeasureWithUnit {
         value_component: EarlyMeasureValue::PositiveRatioMeasure(value),
         unit_component: unit_step,
+    }
+}
+
+/// Lift `UNCERTAINTY_MEASURE_WITH_UNIT`. The caller (GUAC emit) supplies the
+/// measure kind name (`LENGTH_MEASURE` / `PLANE_ANGLE_MEASURE` /
+/// `SOLID_ANGLE_MEASURE`) reconstructed from the uncertainty's unit category;
+/// `description` always re-emits (`Some`, possibly empty) — the legacy writer
+/// wrote it unconditionally as a string.
+pub(crate) fn lift_uncertainty_measure_with_unit(
+    unc: LengthUncertainty,
+    unit_step: u64,
+    measure_type: &str,
+) -> EarlyUncertaintyMeasureWithUnit {
+    EarlyUncertaintyMeasureWithUnit {
+        value_component: super::shape_rep::measure_value_to_early(&MeasureValue::Real {
+            type_name: measure_type.to_owned(),
+            value: unc.value,
+        }),
+        unit_component: unit_step,
+        name: unc.name,
+        description: Some(unc.description),
     }
 }

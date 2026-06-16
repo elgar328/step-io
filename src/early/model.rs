@@ -98,9 +98,9 @@ pub(crate) use super::generated::model::{
     EarlyTessellatedShapeRepresentation, EarlyTessellatedShell, EarlyTessellatedSolid,
     EarlyTextLiteral, EarlyTextStyleForDefinedFont, EarlyTextStyleWithBoxCharacteristics,
     EarlyToleranceZone, EarlyToleranceZoneForm, EarlyToroidalSurface, EarlyTotalRunoutTolerance,
-    EarlyTrimSelect, EarlyTrimmedCurve, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
-    EarlyValueRepresentationItem, EarlyVector, EarlyVertexLoop, EarlyVertexPoint, EarlyViewVolume,
-    EarlyViewVolumeId,
+    EarlyTrimSelect, EarlyTrimmedCurve, EarlyTypeQualifier, EarlyUncertaintyMeasureWithUnit,
+    EarlyValueFormatTypeQualifier, EarlyValueRepresentationItem, EarlyVector, EarlyVertexLoop,
+    EarlyVertexPoint, EarlyViewVolume, EarlyViewVolumeId,
 };
 
 /// Transient L1 store, held on [`ReaderContext`](crate::reader::ReaderContext)

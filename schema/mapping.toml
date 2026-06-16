@@ -307,6 +307,8 @@ generate = [
     "item_defined_transformation",
     # Phase 4o: MBD view — DEFAULT_MODEL_GEOMETRIC_VIEW (2-supertype flatten + DERIVE)
     "default_model_geometric_view",
+    # Phase 4p: uncertainty — UNCERTAINTY_MEASURE_WITH_UNIT (measure_with_unit sibling)
+    "uncertainty_measure_with_unit",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

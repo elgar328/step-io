@@ -5796,6 +5796,30 @@ impl crate::ir::arena::ArenaId for EarlyDefaultModelGeometricViewId {
     }
 }
 
+/// L1 `UNCERTAINTY_MEASURE_WITH_UNIT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyUncertaintyMeasureWithUnit {
+    pub(crate) value_component: EarlyMeasureValue,
+    pub(crate) unit_component: u64,
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+}
+
+/// Typed `id_cache` key for `UNCERTAINTY_MEASURE_WITH_UNIT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyUncertaintyMeasureWithUnitId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyUncertaintyMeasureWithUnitId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `box_characteristic_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyBoxCharacteristicSelect {

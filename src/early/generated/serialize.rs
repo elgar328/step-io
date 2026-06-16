@@ -4572,6 +4572,24 @@ pub(crate) fn serialize_default_model_geometric_view(
     )
 }
 
+pub(crate) fn serialize_uncertainty_measure_with_unit(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyUncertaintyMeasureWithUnit,
+) -> u64 {
+    buf.push_simple(
+        "UNCERTAINTY_MEASURE_WITH_UNIT",
+        vec![
+            measure_value_emit(&l1.value_component),
+            crate::parser::entity::Attribute::EntityRef(l1.unit_component),
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+        ],
+    )
+}
+
 fn box_characteristic_select_emit(
     v: &super::model::EarlyBoxCharacteristicSelect,
 ) -> crate::parser::entity::Attribute {

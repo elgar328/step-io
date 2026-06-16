@@ -108,6 +108,7 @@ pub(crate) use super::generated::serialize::{
     serialize_text_style_for_defined_font, serialize_text_style_with_box_characteristics,
     serialize_tolerance_zone, serialize_tolerance_zone_form, serialize_toroidal_surface,
     serialize_total_runout_tolerance, serialize_trimmed_curve, serialize_type_qualifier,
-    serialize_value_format_type_qualifier, serialize_value_representation_item, serialize_vector,
-    serialize_vertex_loop, serialize_vertex_point, serialize_view_volume,
+    serialize_uncertainty_measure_with_unit, serialize_value_format_type_qualifier,
+    serialize_value_representation_item, serialize_vector, serialize_vertex_loop,
+    serialize_vertex_point, serialize_view_volume,
 };

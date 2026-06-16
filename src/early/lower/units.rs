@@ -4,10 +4,11 @@
 use crate::early::model::{
     EarlyDerivedUnit, EarlyDerivedUnitElement, EarlyDimensionalExponents,
     EarlyLengthMeasureWithUnit, EarlyMassMeasureWithUnit, EarlyMeasureValue, EarlyMeasureWithUnit,
-    EarlyPlaneAngleMeasureWithUnit, EarlyRatioMeasureWithUnit,
+    EarlyPlaneAngleMeasureWithUnit, EarlyRatioMeasureWithUnit, EarlyUncertaintyMeasureWithUnit,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::representation_item::MeasureValue;
+use crate::ir::shape_rep::LengthUncertainty;
 use crate::ir::units::{
     DerivedUnit, DerivedUnitElement, DerivedUnitKind, DimensionalExponents, MeasureWithUnit,
     MeasureWithUnitData,
@@ -196,4 +197,32 @@ pub(crate) fn lower_ratio_measure_with_unit(
     };
     let id = ctx.mwu_arena.push(MeasureWithUnit::Ratio { value, unit });
     ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower `UNCERTAINTY_MEASURE_WITH_UNIT` into the context-specific uncertainty
+/// side-map (entity-id keyed, no `id_cache`; GUAC read consumes it). The
+/// `value_component`'s measure kind is irrelevant — the unit ref's category
+/// (length / plane-angle / solid-angle) routes it; an unrecognized unit drops
+/// the value (legacy no-op).
+pub(crate) fn lower_uncertainty_measure_with_unit(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyUncertaintyMeasureWithUnit,
+) {
+    let Some(value) = mwu_value(&early.value_component) else {
+        return;
+    };
+    let unc = LengthUncertainty {
+        value,
+        name: early.name.clone(),
+        // Legacy read_string_or_unset collapsed `$` to "" (L2 String).
+        description: early.description.clone().unwrap_or_default(),
+    };
+    if ctx.length_unit_map.contains_key(&early.unit_component) {
+        ctx.length_uncertainty_map.insert(entity_id, unc);
+    } else if ctx.angle_unit_map.contains_key(&early.unit_component) {
+        ctx.plane_angle_uncertainty_map.insert(entity_id, unc);
+    } else if ctx.solid_angle_unit_map.contains_key(&early.unit_component) {
+        ctx.solid_angle_uncertainty_map.insert(entity_id, unc);
+    }
 }
