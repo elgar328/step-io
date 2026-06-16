@@ -1,13 +1,14 @@
-//! `ITEM_DEFINED_TRANSFORMATION` handler.
+//! `ITEM_DEFINED_TRANSFORMATION` handler (2-layer path).
 //!
-//! Reader resolves source / target placements through
-//! `ReaderContext::resolve_placement` and stores the resulting
-//! `Transform3d` keyed by entity id in `transform_map`. Writer emits an
-//! IDT line with the per-instance source / target axis placements.
+//! Reader resolves source / target placements and stores the resulting
+//! `Transform3d` keyed by entity id in `transform_map`; assembly consumers
+//! (NAUO / CDSR) fetch it there. Writer emits an IDT line with the per-instance
+//! source / target axis placements (`name` / `description` are not modelled by
+//! `Transform3d`, so they re-emit as `''`).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::assembly::Transform3d;
-use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -27,28 +28,16 @@ impl SimpleEntityHandler for ItemDefinedTransformationHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "ITEM_DEFINED_TRANSFORMATION")?;
-        // attrs[0] = name, attrs[1] = description — ignored.
-        let source_ref = read_entity_ref(attrs, 2, entity_id, "transform_item_1")?;
-        let target_ref = read_entity_ref(attrs, 3, entity_id, "transform_item_2")?;
-        let source = ctx.resolve_placement(entity_id, source_ref, "transform_item_1")?;
-        let target = ctx.resolve_placement(entity_id, target_ref, "transform_item_2")?;
-        ctx.transform_map
-            .insert(entity_id, Transform3d { source, target });
-        Ok(())
+        let early = bind::bind_item_defined_transformation(entity_id, attrs)?;
+        lower::lower_item_defined_transformation(ctx, entity_id, &early)
     }
 
     fn write(buf: &mut WriteBuffer, transform: Transform3d) -> Result<u64, WriteError> {
         let source = buf.emit_axis2_placement_3d(transform.source)?;
         let target = buf.emit_axis2_placement_3d(transform.target)?;
-        Ok(buf.push_simple(
-            "ITEM_DEFINED_TRANSFORMATION",
-            vec![
-                Attribute::String(String::new()),
-                Attribute::String(String::new()),
-                Attribute::EntityRef(source),
-                Attribute::EntityRef(target),
-            ],
+        let early = lift::lift_item_defined_transformation(source, target);
+        Ok(serialize::serialize_item_defined_transformation(
+            buf, &early,
         ))
     }
 }

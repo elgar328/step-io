@@ -14,9 +14,9 @@ use crate::early::model::{
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect, EarlyCompoundItemDefinition,
     EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
-    EarlyDescriptiveRepresentationItem, EarlyItemIdentifiedRepresentationUsage,
-    EarlyItemIdentifiedRepresentationUsageSelect, EarlyMappedItem, EarlyMeasureValue,
-    EarlyMechanicalDesignAndDraughtingRelationship,
+    EarlyDescriptiveRepresentationItem, EarlyItemDefinedTransformation,
+    EarlyItemIdentifiedRepresentationUsage, EarlyItemIdentifiedRepresentationUsageSelect,
+    EarlyMappedItem, EarlyMeasureValue, EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
@@ -26,6 +26,7 @@ use crate::early::model::{
     EarlyToleranceZone, EarlyValueRepresentationItem,
 };
 use crate::entities::tessellation::resolve_tessellated_item_ref;
+use crate::ir::assembly::Transform3d;
 use crate::ir::error::ConvertError;
 use crate::ir::representation_item::{
     MeasureValue, QualifiedRepresentationItem, QualifierRef, RepresentationItem,
@@ -1194,4 +1195,21 @@ pub(crate) fn lower_mapped_item(ctx: &mut ReaderContext, entity_id: u64, early: 
         mapping_target,
     }));
     ctx.id_cache.insert(entity_id, mi_id);
+}
+
+/// Lower one `ITEM_DEFINED_TRANSFORMATION`. `transform_item_1` / `transform_item_2`
+/// resolve through `resolve_placement` (an unresolved ref errors → drop + warn).
+/// The `Transform3d` is stored in the `transform_map` side-map keyed by the entity
+/// id; assembly consumers (NAUO / CDSR) fetch it there. `name` / `description` are
+/// not modelled by `Transform3d` (the writer re-emits `''`).
+pub(crate) fn lower_item_defined_transformation(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyItemDefinedTransformation,
+) -> Result<(), ConvertError> {
+    let source = ctx.resolve_placement(entity_id, early.transform_item_1, "transform_item_1")?;
+    let target = ctx.resolve_placement(entity_id, early.transform_item_2, "transform_item_2")?;
+    ctx.transform_map
+        .insert(entity_id, Transform3d { source, target });
+    Ok(())
 }

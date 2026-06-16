@@ -4529,6 +4529,24 @@ pub(crate) fn serialize_mapped_item(
     )
 }
 
+pub(crate) fn serialize_item_defined_transformation(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyItemDefinedTransformation,
+) -> u64 {
+    buf.push_simple(
+        "ITEM_DEFINED_TRANSFORMATION",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.transform_item_1),
+            crate::parser::entity::Attribute::EntityRef(l1.transform_item_2),
+        ],
+    )
+}
+
 fn box_characteristic_select_emit(
     v: &super::model::EarlyBoxCharacteristicSelect,
 ) -> crate::parser::entity::Attribute {

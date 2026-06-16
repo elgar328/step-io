@@ -4055,6 +4055,29 @@ pub(crate) fn bind_mapped_item(
     })
 }
 
+pub(crate) fn bind_item_defined_transformation(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyItemDefinedTransformation, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "ITEM_DEFINED_TRANSFORMATION")?;
+    Ok(super::model::EarlyItemDefinedTransformation {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        transform_item_1: crate::ir::attr::read_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "transform_item_1",
+        )?,
+        transform_item_2: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "transform_item_2",
+        )?,
+    })
+}
+
 #[allow(clippy::cast_precision_loss)]
 fn bind_box_characteristic_select(
     attr: &crate::parser::entity::Attribute,

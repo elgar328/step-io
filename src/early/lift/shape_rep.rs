@@ -8,8 +8,9 @@ use crate::early::model::{
     EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
     EarlyDescriptiveRepresentationItem, EarlyFeatureForDatumTargetRelationship,
-    EarlyItemIdentifiedRepresentationUsage, EarlyItemIdentifiedRepresentationUsageSelect,
-    EarlyMappedItem, EarlyMeasureValue, EarlyMechanicalDesignAndDraughtingRelationship,
+    EarlyItemDefinedTransformation, EarlyItemIdentifiedRepresentationUsage,
+    EarlyItemIdentifiedRepresentationUsageSelect, EarlyMappedItem, EarlyMeasureValue,
+    EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
@@ -708,5 +709,20 @@ pub(crate) fn lift_mapped_item(
         name,
         mapping_source,
         mapping_target,
+    }
+}
+
+/// Lift one `ITEM_DEFINED_TRANSFORMATION`. `transform_item_1` / `transform_item_2`
+/// are the child placement output step ids. `name` / `description` are not modelled
+/// by `Transform3d`, so they are re-emitted as `''` (matching the legacy handler).
+pub(crate) fn lift_item_defined_transformation(
+    transform_item_1: u64,
+    transform_item_2: u64,
+) -> EarlyItemDefinedTransformation {
+    EarlyItemDefinedTransformation {
+        name: String::new(),
+        description: Some(String::new()),
+        transform_item_1,
+        transform_item_2,
     }
 }
