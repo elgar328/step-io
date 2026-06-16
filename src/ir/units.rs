@@ -319,3 +319,61 @@ pub enum DerivedUnitKind {
     AreaUnit,
     VolumeUnit,
 }
+
+/// `SI_UNIT.prefix` — ISO 10303-41 `si_prefix` ENUMERATION (full standard set).
+/// An L1↔`lower` intermediate enum (the typed-unit `lower`s collapse it into the
+/// concrete unit flavour, e.g. `(Milli, Metre)` → `LengthUnit::Millimetre`); it
+/// is not stored in any arena.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum SiPrefix {
+    Exa,
+    Peta,
+    Tera,
+    Giga,
+    Mega,
+    Kilo,
+    Hecto,
+    Deca,
+    Deci,
+    Centi,
+    Milli,
+    Micro,
+    Nano,
+    Pico,
+    Femto,
+    Atto,
+}
+
+/// `SI_UNIT.name` — ISO 10303-41 `si_unit_name` ENUMERATION (full standard set).
+/// L1↔`lower` intermediate enum (see [`SiPrefix`]); not stored in any arena.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum SiUnitName {
+    Metre,
+    Gram,
+    Second,
+    Ampere,
+    Kelvin,
+    Mole,
+    Candela,
+    Radian,
+    Steradian,
+    Hertz,
+    Newton,
+    Pascal,
+    Joule,
+    Watt,
+    Coulomb,
+    Volt,
+    Farad,
+    Ohm,
+    Siemens,
+    Weber,
+    Tesla,
+    Henry,
+    DegreeCelsius,
+    Lumen,
+    Lux,
+    Becquerel,
+    Gray,
+    Sievert,
+}

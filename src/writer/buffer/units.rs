@@ -147,7 +147,6 @@ fn emit_named_unit_plain(
     use crate::entities::units::mass_unit::MassUnitHandler;
     use crate::entities::units::plane_angle_unit::PlaneAngleUnitHandler;
     use crate::entities::units::ratio_unit::{RatioUnitHandler, RatioUnitSimpleHandler};
-    use crate::entities::units::solid_angle_unit::SolidAngleUnitHandler;
     use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
     let dim_exp_step =
         |de: Option<crate::ir::DimensionalExponentsId>| de.map_or(0, |id| buf.step_id(id));
@@ -158,8 +157,13 @@ fn emit_named_unit_plain(
         NamedUnit::PlaneAngle(f) => {
             PlaneAngleUnitHandler::write(buf, (f.unit, target_id, dim_exp_step(f.dim_exp)))
         }
-        NamedUnit::SolidAngle(f) => {
-            SolidAngleUnitHandler::write(buf, (f.unit, target_id, dim_exp_step(f.dim_exp)))
+        NamedUnit::SolidAngle(_f) => {
+            crate::early::serialize::serialize_solid_angle_unit_with_id(
+                buf,
+                target_id,
+                &crate::early::lift::lift_solid_angle_unit(),
+            );
+            Ok(target_id)
         }
         NamedUnit::Mass(f) => {
             MassUnitHandler::write(buf, (f.unit, target_id, dim_exp_step(f.dim_exp)))

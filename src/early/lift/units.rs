@@ -4,12 +4,22 @@
 use crate::early::model::{
     EarlyDerivedUnit, EarlyDerivedUnitElement, EarlyDimensionalExponents,
     EarlyLengthMeasureWithUnit, EarlyMassMeasureWithUnit, EarlyMeasureValue, EarlyMeasureWithUnit,
-    EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit, EarlyRatioMeasureWithUnit,
+    EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit, EarlyRatioMeasureWithUnit, EarlySolidAngleUnit,
     EarlyUncertaintyMeasureWithUnit,
 };
 use crate::ir::representation_item::MeasureValue;
 use crate::ir::shape_rep::LengthUncertainty;
-use crate::ir::units::DimensionalExponents;
+use crate::ir::units::{DimensionalExponents, SiUnitName};
+
+/// Lift `SOLID_ANGLE_UNIT` complex. Only the `STERADIAN` form exists, so the
+/// `SI_UNIT` slot is the fixed `(prefix=$, name=.STERADIAN.)`; `NAMED_UNIT.dimensions`
+/// re-emits as `*` via `[derived]` (handled by the generated serialize).
+pub(crate) fn lift_solid_angle_unit() -> EarlySolidAngleUnit {
+    EarlySolidAngleUnit {
+        prefix: None,
+        name: SiUnitName::Steradian,
+    }
+}
 
 /// Lift one `DERIVED_UNIT_ELEMENT` (unit pre-resolved).
 pub(crate) fn lift_derived_unit_element(unit: u64, exponent: f64) -> EarlyDerivedUnitElement {

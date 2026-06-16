@@ -79,7 +79,7 @@ pub(crate) use super::generated::bind::{
     bind_shape_aspect_relationship, bind_shape_definition_representation,
     bind_shape_dimension_representation, bind_shape_representation_relationship,
     bind_shape_representation_with_parameters, bind_shell_based_surface_model,
-    bind_spherical_surface, bind_straightness_tolerance, bind_styled_item,
+    bind_solid_angle_unit, bind_spherical_surface, bind_straightness_tolerance, bind_styled_item,
     bind_surface_of_linear_extrusion, bind_surface_of_revolution, bind_surface_profile_tolerance,
     bind_surface_side_style, bind_surface_style_boundary, bind_surface_style_fill_area,
     bind_surface_style_parameter_line, bind_surface_style_rendering,

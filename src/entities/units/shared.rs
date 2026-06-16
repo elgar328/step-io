@@ -13,7 +13,7 @@
 
 use crate::ir::attr::{check_count, read_enum, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit};
+use crate::ir::shape_rep::{AngleUnit, LengthUnit};
 use crate::ir::units::MassUnit;
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
 use crate::reader::{ReaderContext, find_part_attrs, has_all_parts, require_part_attrs};
@@ -55,13 +55,6 @@ pub(super) fn match_length_unit(prefix: Option<&str>, name: &str) -> Option<Leng
 pub(super) fn match_angle_unit(prefix: Option<&str>, name: &str) -> Option<AngleUnit> {
     match (prefix, name) {
         (None, "RADIAN") => Some(AngleUnit::Radian),
-        _ => None,
-    }
-}
-
-pub(super) fn match_solid_angle_unit(prefix: Option<&str>, name: &str) -> Option<SolidAngleUnit> {
-    match (prefix, name) {
-        (None, "STERADIAN") => Some(SolidAngleUnit::Steradian),
         _ => None,
     }
 }

@@ -1591,6 +1591,16 @@ impl WriteBuffer<'_> {
             },
         });
     }
+
+    /// Push a complex (multi-part) entity under a previously-reserved id — the
+    /// complex analogue of [`Self::push_simple_with_id`], for reserve-then-fill
+    /// emit paths (e.g. the units pool's pre-reserved `NamedUnit` ids).
+    pub(crate) fn push_complex_with_id(&mut self, id: u64, parts: Vec<(String, Vec<Attribute>)>) {
+        self.entities.push(WriterEntity {
+            id,
+            body: WriterBody::Complex { parts },
+        });
+    }
 }
 
 /// Per-AP `APPLICATION_CONTEXT` description and

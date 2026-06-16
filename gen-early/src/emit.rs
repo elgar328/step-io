@@ -344,35 +344,47 @@ fn emit_complex_entity(
         return; // read_only: writer normalizes this form away — no serialize.
     }
 
-    // serialize: `WriterBody::Complex` via push_complex, parts in hint order.
+    // serialize: `WriterBody::Complex`, parts in hint order. The `vec![..]`
+    // parts literal is built once and reused by both the fresh-id `serialize_<e>`
+    // (push_complex) and, for serialize_with_id entities, the reserved-id
+    // `serialize_<e>_with_id` (push_complex_with_id) — identical bytes, no drift.
+    let mut parts_lit = String::from("vec![\n");
+    for part in &hint.parts {
+        parts_lit.push_str(&format!("        (\"{part}\".into(), vec![\n"));
+        for (_, _, field, k, opt, derived) in entries.iter().filter(|e| &e.0 == part) {
+            if *derived {
+                parts_lit.push_str("            crate::parser::entity::Attribute::Derived,\n");
+                continue;
+            }
+            parts_lit.push_str(&format!(
+                "            {},\n",
+                serialize_expr_full(k, field, *opt)
+            ));
+            track_serialize_usage(k, out);
+        }
+        parts_lit.push_str("        ]),\n");
+    }
+    parts_lit.push_str("    ]");
+
     writeln!(
         out.serialize,
         "pub(crate) fn serialize_{ent_name}(buf: &mut crate::writer::buffer::WriteBuffer, l1: &super::model::{type_name}) -> u64 {{"
     )
     .unwrap();
-    writeln!(out.serialize, "    buf.push_complex(vec![").unwrap();
-    for part in &hint.parts {
-        writeln!(out.serialize, "        (\"{part}\".into(), vec![").unwrap();
-        for (_, _, field, k, opt, derived) in entries.iter().filter(|e| &e.0 == part) {
-            if *derived {
-                writeln!(
-                    out.serialize,
-                    "            crate::parser::entity::Attribute::Derived,"
-                )
-                .unwrap();
-                continue;
-            }
-            writeln!(
-                out.serialize,
-                "            {},",
-                serialize_expr_full(k, field, *opt)
-            )
-            .unwrap();
-            track_serialize_usage(k, out);
-        }
-        writeln!(out.serialize, "        ]),").unwrap();
+    writeln!(out.serialize, "    buf.push_complex({parts_lit})\n}}\n").unwrap();
+
+    if ctx.mapping.serialize_with_id.iter().any(|e| e == ent_name) {
+        writeln!(
+            out.serialize,
+            "pub(crate) fn serialize_{ent_name}_with_id(buf: &mut crate::writer::buffer::WriteBuffer, id: u64, l1: &super::model::{type_name}) {{"
+        )
+        .unwrap();
+        writeln!(
+            out.serialize,
+            "    buf.push_complex_with_id(id, {parts_lit});\n}}\n"
+        )
+        .unwrap();
     }
-    writeln!(out.serialize, "    ])\n}}\n").unwrap();
 }
 
 /// Emit a synthesized `Early*` enum + `bind_<sel>` / `<sel>_emit` for a mixed

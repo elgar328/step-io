@@ -4,15 +4,15 @@
 use crate::early::model::{
     EarlyDerivedUnit, EarlyDerivedUnitElement, EarlyDimensionalExponents,
     EarlyLengthMeasureWithUnit, EarlyMassMeasureWithUnit, EarlyMeasureValue, EarlyMeasureWithUnit,
-    EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit, EarlyRatioMeasureWithUnit,
+    EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit, EarlyRatioMeasureWithUnit, EarlySolidAngleUnit,
     EarlyUncertaintyMeasureWithUnit,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::representation_item::MeasureValue;
-use crate::ir::shape_rep::LengthUncertainty;
+use crate::ir::shape_rep::{LengthUncertainty, SolidAngleUnit};
 use crate::ir::units::{
     DerivedUnit, DerivedUnitElement, DerivedUnitKind, DimensionalExponents, MeasureWithUnit,
-    MeasureWithUnitData, NamedUnit, NamedUnitData,
+    MeasureWithUnitData, NamedUnit, NamedUnitData, SiUnitName, SolidAngleFlavor,
 };
 use crate::reader::ReaderContext;
 
@@ -239,5 +239,38 @@ pub(crate) fn lower_named_unit(ctx: &mut ReaderContext, entity_id: u64, early: &
     let id = ctx
         .named_units_arena
         .push(NamedUnit::Itself(NamedUnitData { dimensions }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower `SOLID_ANGLE_UNIT` complex. Only the SI `STERADIAN` form is modelled
+/// ((None, Steradian) → `SolidAngleUnit::Steradian`); any other SI prefix/name
+/// is unsupported and dropped with a warning (matching the legacy handler).
+/// Dual output: the `solid_angle_unit_map` (consumed by `UNCERTAINTY_MEASURE_
+/// WITH_UNIT` to classify a solid-angle uncertainty) and the `named_units` arena.
+/// `dim_exp` is always `None` — `NAMED_UNIT.dimensions` is the canonical Derived
+/// (`*`) for a typed unit (handled by `[derived]`).
+pub(crate) fn lower_solid_angle_unit(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlySolidAngleUnit,
+) {
+    let (None, SiUnitName::Steradian) = (early.prefix, early.name) else {
+        ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: format!(
+                "unsupported SI solid-angle unit (prefix={:?}, name={:?})",
+                early.prefix, early.name
+            ),
+        });
+        return;
+    };
+    let unit = SolidAngleUnit::Steradian;
+    ctx.solid_angle_unit_map.insert(entity_id, unit);
+    let id = ctx
+        .named_units_arena
+        .push(NamedUnit::SolidAngle(SolidAngleFlavor {
+            unit,
+            dim_exp: None,
+        }));
     ctx.id_cache.insert(entity_id, id);
 }

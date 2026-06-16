@@ -169,7 +169,9 @@ fn file_head(generate_all: bool) -> String {
         // `too_many_lines`: a large synth SELECT (e.g. `measure_value`, 42
         // members) emits a >100-line `bind_*`/`*_emit` — inherent to the
         // member count, not a complexity smell.
-        format!("{HEADER}#![allow(clippy::struct_field_names, clippy::too_many_lines)]\n\n")
+        format!(
+            "{HEADER}#![allow(clippy::struct_field_names, clippy::too_many_lines, clippy::clone_on_copy, clippy::get_first)]\n\n"
+        )
     }
 }
 

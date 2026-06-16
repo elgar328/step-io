@@ -72,6 +72,8 @@ generate = [
     "dimensional_exponents",
     # Phase 4r: units named cluster — NAMED_UNIT bare (reserve-then-fill)
     "named_unit",
+    # Phase 4s: units complex — SOLID_ANGLE_UNIT (SI enum + complex reserve-then-fill)
+    "solid_angle_unit",
     # visualization (pre-defined / colour leaf batch)
     "pre_defined_marker",
     "pre_defined_point_marker_symbol",
@@ -322,6 +324,7 @@ serialize_with_id = [
     "characterized_item_within_representation",
     "model_geometric_view",
     "named_unit",
+    "solid_angle_unit",
 ]
 
 # `generate_all`: diagnostic flip. When true, gen-early generates *every* entity
@@ -447,6 +450,15 @@ parts = [
     "TERMINATOR_SYMBOL",
 ]
 
+# Part order matches the legacy writer emit order (SI_UNIT first), not the
+# alphabetical case order — required for byte-identical output.
+[complex.solid_angle_unit]
+parts = [
+    "SI_UNIT",
+    "NAMED_UNIT",
+    "SOLID_ANGLE_UNIT",
+]
+
 # Per-entity EXPRESS Derived (`*`) attribute names. early.toml (generated) cannot
 # carry DERIVE info, so it is hand-authored here. A listed attr keeps its Part21
 # positional slot (later attrs read at the right index) but is omitted from the
@@ -455,6 +467,7 @@ parts = [
 oriented_edge = ["edge_start", "edge_end"]
 oriented_closed_shell = ["cfs_faces"]
 default_model_geometric_view = ["product_definitional"]
+solid_angle_unit = ["dimensions"]
 
 # `[enum.<alias>]`: reuse an existing L2 enum for a STEP ENUM type-alias instead
 # of synthesizing an `Early*` enum. `variants` maps each early.toml ENUM member
@@ -477,6 +490,18 @@ variants = { positive = "Front", negative = "Back", both = "Both" }
 [enum.shading_surface_method]
 rust_type = "crate::ir::visualization::ShadingMethod"
 variants = { constant_shading = "Constant", colour_shading = "Colour", dot_shading = "Dot", normal_shading = "Normal" }
+
+# SI_UNIT prefix / name — ISO 10303-41 standard ENUMERATION (full member set,
+# strict). L1↔lower intermediate enums; typed-unit lowers collapse them to the
+# concrete unit flavour. units complex (solid_angle / length / mass / plane_angle)
+# share these.
+[enum.si_prefix]
+rust_type = "crate::ir::units::SiPrefix"
+variants = { exa = "Exa", peta = "Peta", tera = "Tera", giga = "Giga", mega = "Mega", kilo = "Kilo", hecto = "Hecto", deca = "Deca", deci = "Deci", centi = "Centi", milli = "Milli", micro = "Micro", nano = "Nano", pico = "Pico", femto = "Femto", atto = "Atto" }
+
+[enum.si_unit_name]
+rust_type = "crate::ir::units::SiUnitName"
+variants = { metre = "Metre", gram = "Gram", second = "Second", ampere = "Ampere", kelvin = "Kelvin", mole = "Mole", candela = "Candela", radian = "Radian", steradian = "Steradian", hertz = "Hertz", newton = "Newton", pascal = "Pascal", joule = "Joule", watt = "Watt", coulomb = "Coulomb", volt = "Volt", farad = "Farad", ohm = "Ohm", siemens = "Siemens", weber = "Weber", tesla = "Tesla", henry = "Henry", degree_celsius = "DegreeCelsius", lumen = "Lumen", lux = "Lux", becquerel = "Becquerel", gray = "Gray", sievert = "Sievert" }
 
 # `text_path` (text_literal.path). Strict (no `default`/`catch_all`): an unknown
 # token errors (NonStandardEnumValue) → dropped + NORM. Corpus scan confirms all
