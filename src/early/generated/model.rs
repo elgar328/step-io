@@ -5541,6 +5541,29 @@ impl crate::ir::arena::ArenaId for EarlyItemIdentifiedRepresentationUsageId {
     }
 }
 
+/// L1 `AXIS2_PLACEMENT_2D` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAxis2Placement2d {
+    pub(crate) name: String,
+    pub(crate) location: u64,
+    pub(crate) ref_direction: Option<u64>,
+}
+
+/// Typed `id_cache` key for `AXIS2_PLACEMENT_2D` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAxis2Placement2dId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAxis2Placement2dId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `compound_item_definition` (generated, hint-less).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyCompoundItemDefinition {

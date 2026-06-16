@@ -3,7 +3,7 @@
 //! (`String::new()`), so these lifts always set `name: String::new()`.
 
 use crate::early::model::{
-    EarlyAxis1Placement, EarlyAxis2Placement3d, EarlyBSplineCurveWithKnots,
+    EarlyAxis1Placement, EarlyAxis2Placement2d, EarlyAxis2Placement3d, EarlyBSplineCurveWithKnots,
     EarlyBSplineSurfaceWithKnots, EarlyBoundedPcurve, EarlyCartesianPoint, EarlyCircle,
     EarlyCircularArea, EarlyCompositeCurve, EarlyCompositeCurveSegment, EarlyConicalSurface,
     EarlyCurveBoundedSurface, EarlyCylindricalSurface, EarlyDegenerateToroidalSurface,
@@ -158,6 +158,19 @@ pub(crate) fn lift_direction_2d(d: Direction2) -> EarlyDirection {
     EarlyDirection {
         name: String::new(),
         direction_ratios: vec![d.x, d.y],
+    }
+}
+
+/// Lift the 2D `AXIS2_PLACEMENT_2D` from pre-emitted child step ids (mirror of
+/// [`lift_axis2_placement_3d`] minus `axis`). `vector_2d` reuses `lift_vector`.
+pub(crate) fn lift_axis2_placement_2d(
+    location: u64,
+    ref_direction: Option<u64>,
+) -> EarlyAxis2Placement2d {
+    EarlyAxis2Placement2d {
+        name: String::new(),
+        location,
+        ref_direction,
     }
 }
 

@@ -291,6 +291,8 @@ generate = [
     "compound_representation_item",
     # Phase 4b: non-repr clean — IIRU (definition all-entity→u64, identified_item mixed synth)
     "item_identified_representation_usage",
+    # Phase 4d: 2D geometry — distinct-name placement (mirrors axis2_placement_3d)
+    "axis2_placement_2d",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

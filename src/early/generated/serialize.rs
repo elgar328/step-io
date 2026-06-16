@@ -4388,6 +4388,23 @@ pub(crate) fn serialize_item_identified_representation_usage(
     )
 }
 
+pub(crate) fn serialize_axis2_placement_2d(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAxis2Placement2d,
+) -> u64 {
+    buf.push_simple(
+        "AXIS2_PLACEMENT_2D",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.location),
+            match l1.ref_direction {
+                Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+        ],
+    )
+}
+
 fn compound_item_definition_emit(
     v: &super::model::EarlyCompoundItemDefinition,
 ) -> crate::parser::entity::Attribute {

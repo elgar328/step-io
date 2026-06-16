@@ -6,7 +6,7 @@
 //! 3D branch exactly (2-count → the 2D arena claims it, so we no-op).
 
 use crate::early::model::{
-    EarlyAxis1Placement, EarlyAxis2Placement3d, EarlyBSplineCurveWithKnots,
+    EarlyAxis1Placement, EarlyAxis2Placement2d, EarlyAxis2Placement3d, EarlyBSplineCurveWithKnots,
     EarlyBSplineSurfaceWithKnots, EarlyBoundedPcurve, EarlyCartesianPoint, EarlyCircle,
     EarlyCircularArea, EarlyCompositeCurve, EarlyCompositeCurveSegment, EarlyConicalSurface,
     EarlyCurveBoundedSurface, EarlyCylindricalSurface, EarlyDegenerateToroidalSurface,
@@ -21,14 +21,14 @@ use crate::early::model::{
 use crate::entities::geometry::nurbs_shared::quasi_uniform_knots;
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{
-    Axis1Placement, Axis2Placement3d, BoundedPCurve, Circle3, CircularArea, CircularAreaCentre,
-    CompositeCurve, CompositeSegment, ConicalSurface, Curve, CurveBoundedSurface,
-    CylindricalSurface, DegenerateToroidalSurface, Direction2, Direction3, Ellipse3, Hyperbola,
-    Line3, NurbsCurve, NurbsKind, NurbsSurface, NurbsSurfaceKind, OffsetCurve3d, Parabola,
-    ParameterSpaceCurve, PlanarBox, PlanarBoxPlacement, PlanarExtent, PlanarExtentData, Plane3,
-    Point2, Point3, Polyline, RectangularTrimmedSurface, SphericalSurface, Surface,
-    SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TrimSelect,
-    TrimmedCurve, Vertex,
+    Axis1Placement, Axis2Placement2d, Axis2Placement3d, BoundedPCurve, Circle3, CircularArea,
+    CircularAreaCentre, CompositeCurve, CompositeSegment, ConicalSurface, Curve,
+    CurveBoundedSurface, CylindricalSurface, DegenerateToroidalSurface, Direction2, Direction3,
+    Ellipse3, Hyperbola, Line3, NurbsCurve, NurbsKind, NurbsSurface, NurbsSurfaceKind,
+    OffsetCurve3d, Parabola, ParameterSpaceCurve, PlanarBox, PlanarBoxPlacement, PlanarExtent,
+    PlanarExtentData, Plane3, Point2, Point3, Polyline, RectangularTrimmedSurface,
+    SphericalSurface, Surface, SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution,
+    ToroidalSurface, TrimSelect, TrimmedCurve, Vertex,
 };
 use crate::reader::ReaderContext;
 
@@ -608,6 +608,48 @@ pub(crate) fn lower_direction_2d(ctx: &mut ReaderContext, entity_id: u64, early:
         y: ratios[1],
     });
     ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower the 2D-arena variant of `VECTOR` (sister of [`lower_vector`]). Claims
+/// vectors whose `orientation` is a 2D direction into the `vector_2d_map`
+/// side-cache; 3D-oriented vectors are left for the 3D sister (no-op).
+pub(crate) fn lower_vector_2d(ctx: &mut ReaderContext, entity_id: u64, early: &EarlyVector) {
+    if let Some(dir) = ctx
+        .id_cache
+        .get::<crate::ir::id::Direction2dId>(early.orientation)
+    {
+        ctx.vector_2d_map.insert(entity_id, (dir, early.magnitude));
+    }
+}
+
+/// Lower one `AXIS2_PLACEMENT_2D` (distinct STEP name). Claims a 2D `location`
+/// into `placements_2d`; a 3D location is left for the 3D placement sister.
+/// `ref_direction` (optional) must resolve to a 2D direction when present
+/// (a dangling ref surfaces as `MissingReference`, matching the legacy handler).
+pub(crate) fn lower_axis2_placement_2d(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyAxis2Placement2d,
+) -> Result<(), ConvertError> {
+    let Some(location) = ctx.id_cache.get::<crate::ir::id::Point2dId>(early.location) else {
+        return Ok(());
+    };
+    let ref_direction = match early.ref_direction {
+        Some(r) => Some(ctx.id_cache.get::<crate::ir::id::Direction2dId>(r).ok_or(
+            ConvertError::MissingReference {
+                from: entity_id,
+                to: r,
+                field_name: "ref_direction",
+            },
+        )?),
+        None => None,
+    };
+    let id = ctx.geometry.placements_2d.push(Axis2Placement2d {
+        location,
+        ref_direction,
+    });
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
 }
 
 /// Lower one `VERTEX_POINT` (resolves `vertex_geometry` through the shared

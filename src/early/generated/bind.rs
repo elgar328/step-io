@@ -3925,6 +3925,23 @@ pub(crate) fn bind_item_identified_representation_usage(
     }))
 }
 
+pub(crate) fn bind_axis2_placement_2d(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAxis2Placement2d, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "AXIS2_PLACEMENT_2D")?;
+    Ok(super::model::EarlyAxis2Placement2d {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        location: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "location")?,
+        ref_direction: crate::ir::attr::read_optional_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "ref_direction",
+        )?,
+    })
+}
+
 fn bind_compound_item_definition(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyCompoundItemDefinition> {
