@@ -17,19 +17,20 @@ use crate::early::model::{
     EarlyTextStyleForDefinedFont, EarlyViewVolume,
 };
 use crate::early::model::{
-    EarlyAreaInSet, EarlyBoxCharacteristicSelect, EarlyDefinedSymbol, EarlyPresentationSet,
-    EarlyPresentationSize, EarlySymbolTarget, EarlyTextLiteral,
-    EarlyTextStyleWithBoxCharacteristics,
+    EarlyAreaInSet, EarlyBoxCharacteristicSelect, EarlyDefinedSymbol, EarlyDirectionCountSelect,
+    EarlyPresentationSet, EarlyPresentationSize, EarlySurfaceStyleParameterLine, EarlySymbolTarget,
+    EarlyTextLiteral, EarlyTextStyleWithBoxCharacteristics,
 };
 use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::fill_area_style_colour::FillAreaStyleColourHandler;
 use crate::ir::visualization::{
     AreaInSet, BoxCharacteristic, ContextDependentOverRidingStyledItem, CurveStyle, CurveWidth,
-    DefinedSymbol, DefinedSymbolDefinition, FillAreaStyle, Invisibility, InvisibleItem, Marker,
-    MarkerSize, OverRidingStyledItem, PlainStyledItem, PointStyle, PresentationSize,
-    PresentationSizeAssignment, PresentationStyleAssignmentData, PresentationStyleByContext,
-    PsaStyle, StyleContext, StyleContextRef, SurfaceSideStyle, SurfaceSideStyleEntry,
-    SurfaceStyleFillArea, SurfaceStyleUsage, SymbolPlacement, SymbolTarget, TextPath, ViewVolume,
+    DefinedSymbol, DefinedSymbolDefinition, DirectionCount, FillAreaStyle, Invisibility,
+    InvisibleItem, Marker, MarkerSize, OverRidingStyledItem, PlainStyledItem, PointStyle,
+    PresentationSize, PresentationSizeAssignment, PresentationStyleAssignmentData,
+    PresentationStyleByContext, PsaStyle, StyleContext, StyleContextRef, SurfaceSideStyle,
+    SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleUsage, SymbolPlacement, SymbolTarget,
+    TextPath, ViewVolume,
 };
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -365,6 +366,25 @@ pub(crate) fn lift_symbol_colour(colour_of_symbol: u64) -> EarlySymbolColour {
 /// Lift one `SURFACE_STYLE_BOUNDARY` (style pre-resolved via `emit_select`).
 pub(crate) fn lift_surface_style_boundary(style_of_boundary: u64) -> EarlySurfaceStyleBoundary {
     EarlySurfaceStyleBoundary { style_of_boundary }
+}
+
+/// Lift one `SURFACE_STYLE_PARAMETER_LINE`. `style` is the child output step id
+/// (the handler emits the `curve_or_render` select first); each L2
+/// `DirectionCount` maps back to its `direction_count_select` variant.
+pub(crate) fn lift_surface_style_parameter_line(
+    style_of_parameter_lines: u64,
+    direction_counts: Vec<DirectionCount>,
+) -> EarlySurfaceStyleParameterLine {
+    EarlySurfaceStyleParameterLine {
+        style_of_parameter_lines,
+        direction_counts: direction_counts
+            .into_iter()
+            .map(|dc| match dc {
+                DirectionCount::U(n) => EarlyDirectionCountSelect::UDirectionCount(n),
+                DirectionCount::V(n) => EarlyDirectionCountSelect::VDirectionCount(n),
+            })
+            .collect(),
+    }
 }
 
 /// Lift one `TEXT_STYLE_FOR_DEFINED_FONT` (colour pre-resolved).

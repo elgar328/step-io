@@ -18,9 +18,9 @@ use crate::early::model::{
     EarlyTextStyleForDefinedFont, EarlyViewVolume, EarlyViewVolumeId,
 };
 use crate::early::model::{
-    EarlyAreaInSet, EarlyBoxCharacteristicSelect, EarlyDefinedSymbol, EarlyPresentationSet,
-    EarlyPresentationSize, EarlySymbolTarget, EarlyTextLiteral,
-    EarlyTextStyleWithBoxCharacteristics,
+    EarlyAreaInSet, EarlyBoxCharacteristicSelect, EarlyDefinedSymbol, EarlyDirectionCountSelect,
+    EarlyPresentationSet, EarlyPresentationSize, EarlySurfaceStyleParameterLine, EarlySymbolTarget,
+    EarlyTextLiteral, EarlyTextStyleWithBoxCharacteristics,
 };
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::id::{
@@ -32,18 +32,19 @@ use crate::ir::visualization::{
     AppliedPresentedItem, Axis2Placement, BoxCharacteristic, CameraModel, CameraModelD3,
     CameraModelD3MultiClipping, CameraModelD3WithHlhsr, CharacterStyle, Colour, ColourRgb,
     CompositeText, ContextDependentOverRidingStyledItem, CurveOrRender, CurveStyle, CurveWidth,
-    DraughtingPreDefinedColour, DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour,
-    FontSelect, FoundedItem, GeometricCurveSet, GeometricRepresentationItem, GeometricSet,
-    Invisibility, InvisibleItem, Marker, MarkerSize, OverRidingStyledItem, PlainStyledItem,
-    PointStyle, PreDefinedCurveFont, PreDefinedCurveFontData, PreDefinedMarker,
+    DirectionCount, DraughtingPreDefinedColour, DraughtingPreDefinedCurveFont, FillAreaStyle,
+    FillAreaStyleColour, FontSelect, FoundedItem, GeometricCurveSet, GeometricRepresentationItem,
+    GeometricSet, Invisibility, InvisibleItem, Marker, MarkerSize, OverRidingStyledItem,
+    PlainStyledItem, PointStyle, PreDefinedCurveFont, PreDefinedCurveFontData, PreDefinedMarker,
     PreDefinedMarkerData, PreDefinedPointMarkerSymbol, PreDefinedSymbol, PreDefinedSymbolData,
     PreDefinedTerminatorSymbol, PresentationLayerAssignment, PresentationLayerAssignmentItem,
     PresentationReprSelect, PresentationStyleAssignment, PresentationStyleAssignmentData,
     PresentationStyleByContext, PresentedItem, PresentedItemRepresentation, PsaStyle,
     ShapeClipping, ShellBasedSurfaceModel, StyleContext, StyledItem, SurfaceSideStyle,
-    SurfaceSideStyleEntry, SurfaceStyleBoundary, SurfaceStyleFillArea, SurfaceStyleUsage,
-    SymbolColour, SymbolStyle, TextLiteral, TextOrCharacter, TextStyle, TextStyleData,
-    TextStyleForDefinedFont, TextStyleWithBoxCharacteristics, ViewVolume, VisualizationPool,
+    SurfaceSideStyleEntry, SurfaceStyleBoundary, SurfaceStyleFillArea, SurfaceStyleParameterLine,
+    SurfaceStyleUsage, SymbolColour, SymbolStyle, TextLiteral, TextOrCharacter, TextStyle,
+    TextStyleData, TextStyleForDefinedFont, TextStyleWithBoxCharacteristics, ViewVolume,
+    VisualizationPool,
 };
 use crate::ir::visualization::{
     AreaInSet, DefinedSymbol, DefinedSymbolDefinition, PresentationSet, PresentationSize,
@@ -798,6 +799,42 @@ pub(crate) fn lower_surface_style_boundary(
         .push(FoundedItem::SurfaceStyleBoundary(SurfaceStyleBoundary {
             style_of_boundary: style,
         }));
+}
+
+/// Lower one `SURFACE_STYLE_PARAMETER_LINE` (`founded_item` subtype). `style`
+/// resolves through `CurveOrRender::resolve_select` (unresolved → drop). The
+/// `direction_count_select` members map to the L2 `DirectionCount` enum; an empty
+/// set drops the carrier. Round-tripped via the arena only — no id registered
+/// (1:1 with the legacy handler).
+pub(crate) fn lower_surface_style_parameter_line(
+    ctx: &mut ReaderContext,
+    early: EarlySurfaceStyleParameterLine,
+) {
+    let Some(style_of_parameter_lines) =
+        CurveOrRender::resolve_select(ctx, early.style_of_parameter_lines)
+    else {
+        return;
+    };
+    let direction_counts: Vec<DirectionCount> = early
+        .direction_counts
+        .into_iter()
+        .map(|dc| match dc {
+            EarlyDirectionCountSelect::UDirectionCount(n) => DirectionCount::U(n),
+            EarlyDirectionCountSelect::VDirectionCount(n) => DirectionCount::V(n),
+        })
+        .collect();
+    if direction_counts.is_empty() {
+        return;
+    }
+    ctx.visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .founded_items
+        .push(FoundedItem::SurfaceStyleParameterLine(
+            SurfaceStyleParameterLine {
+                style_of_parameter_lines,
+                direction_counts,
+            },
+        ));
 }
 
 /// Lower one `TEXT_STYLE_FOR_DEFINED_FONT` (unresolved colour = silent drop).

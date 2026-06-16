@@ -1270,6 +1270,24 @@ pub(crate) fn serialize_text_style_with_box_characteristics(
     )
 }
 
+pub(crate) fn serialize_surface_style_parameter_line(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlySurfaceStyleParameterLine,
+) -> u64 {
+    buf.push_simple(
+        "SURFACE_STYLE_PARAMETER_LINE",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.style_of_parameter_lines),
+            crate::parser::entity::Attribute::List(
+                l1.direction_counts
+                    .iter()
+                    .map(direction_count_select_emit)
+                    .collect(),
+            ),
+        ],
+    )
+}
+
 pub(crate) fn serialize_general_property(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyGeneralProperty,
@@ -4501,6 +4519,25 @@ fn compound_item_definition_emit(
                         .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
                         .collect(),
                 )),
+            }
+        }
+    }
+}
+
+fn direction_count_select_emit(
+    v: &super::model::EarlyDirectionCountSelect,
+) -> crate::parser::entity::Attribute {
+    match v {
+        super::model::EarlyDirectionCountSelect::UDirectionCount(x) => {
+            crate::parser::entity::Attribute::Typed {
+                type_name: "U_DIRECTION_COUNT".into(),
+                value: Box::new(crate::parser::entity::Attribute::Integer(*x)),
+            }
+        }
+        super::model::EarlyDirectionCountSelect::VDirectionCount(x) => {
+            crate::parser::entity::Attribute::Typed {
+                type_name: "V_DIRECTION_COUNT".into(),
+                value: Box::new(crate::parser::entity::Attribute::Integer(*x)),
             }
         }
     }

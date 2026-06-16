@@ -1258,6 +1258,22 @@ pub(crate) fn bind_text_style_with_box_characteristics(
     })
 }
 
+pub(crate) fn bind_surface_style_parameter_line(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlySurfaceStyleParameterLine, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "SURFACE_STYLE_PARAMETER_LINE")?;
+    Ok(super::model::EarlySurfaceStyleParameterLine {
+        style_of_parameter_lines: crate::ir::attr::read_entity_ref(
+            attrs,
+            0,
+            entity_id,
+            "style_of_parameter_lines",
+        )?,
+        direction_counts: direction_count_select_list(attrs, 1, entity_id, "direction_counts")?,
+    })
+}
+
 pub(crate) fn bind_general_property(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],
@@ -4054,6 +4070,25 @@ fn bind_compound_item_definition(
     }
 }
 
+fn bind_direction_count_select(
+    attr: &crate::parser::entity::Attribute,
+) -> Option<super::model::EarlyDirectionCountSelect> {
+    match attr {
+        crate::parser::entity::Attribute::Typed { type_name, value } => {
+            match (type_name.as_str(), value.as_ref()) {
+                ("U_DIRECTION_COUNT", crate::parser::entity::Attribute::Integer(x)) => {
+                    Some(super::model::EarlyDirectionCountSelect::UDirectionCount(*x))
+                }
+                ("V_DIRECTION_COUNT", crate::parser::entity::Attribute::Integer(x)) => {
+                    Some(super::model::EarlyDirectionCountSelect::VDirectionCount(*x))
+                }
+                _ => None,
+            }
+        }
+        _ => None,
+    }
+}
+
 fn bind_item_identified_representation_usage_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyItemIdentifiedRepresentationUsageSelect> {
@@ -4733,6 +4768,33 @@ fn box_characteristic_select_list(
                 return Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
                     entity_id,
                     detail: format!("{field}: unrecognized box_characteristic_select in list"),
+                });
+            }
+        }
+    }
+    Ok(out)
+}
+
+fn direction_count_select_list(
+    attrs: &[crate::parser::entity::Attribute],
+    index: usize,
+    entity_id: u64,
+    field: &'static str,
+) -> Result<Vec<super::model::EarlyDirectionCountSelect>, crate::ir::error::ConvertError> {
+    let Some(crate::parser::entity::Attribute::List(items)) = attrs.get(index) else {
+        return Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: format!("{field}: expected list"),
+        });
+    };
+    let mut out = Vec::with_capacity(items.len());
+    for item in items {
+        match bind_direction_count_select(item) {
+            Some(v) => out.push(v),
+            None => {
+                return Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
+                    entity_id,
+                    detail: format!("{field}: unrecognized direction_count_select in list"),
                 });
             }
         }

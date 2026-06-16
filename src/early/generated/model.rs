@@ -1683,6 +1683,28 @@ impl crate::ir::arena::ArenaId for EarlyTextStyleWithBoxCharacteristicsId {
     }
 }
 
+/// L1 `SURFACE_STYLE_PARAMETER_LINE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlySurfaceStyleParameterLine {
+    pub(crate) style_of_parameter_lines: u64,
+    pub(crate) direction_counts: Vec<EarlyDirectionCountSelect>,
+}
+
+/// Typed `id_cache` key for `SURFACE_STYLE_PARAMETER_LINE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlySurfaceStyleParameterLineId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlySurfaceStyleParameterLineId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `GENERAL_PROPERTY` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyGeneralProperty {
@@ -5646,6 +5668,13 @@ pub(crate) enum EarlyBoxCharacteristicSelect {
 pub(crate) enum EarlyCompoundItemDefinition {
     ListRepresentationItem(Vec<u64>),
     SetRepresentationItem(Vec<u64>),
+}
+
+/// L1 mixed SELECT `direction_count_select` (generated, hint-less).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum EarlyDirectionCountSelect {
+    UDirectionCount(i64),
+    VDirectionCount(i64),
 }
 
 /// L1 mixed SELECT `item_identified_representation_usage_select` (generated, hint-less).

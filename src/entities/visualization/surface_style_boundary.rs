@@ -34,11 +34,8 @@ impl SimpleEntityHandler for SurfaceStyleBoundaryHandler {
     }
 }
 
-/// Resolve / emit helpers shared with `SURFACE_STYLE_PARAMETER_LINE` —
-/// members + probe order are generated from the enum by `StepSelect`.
-pub(crate) fn resolve_curve_or_render(ctx: &ReaderContext, ref_id: u64) -> Option<CurveOrRender> {
-    CurveOrRender::resolve_select(ctx, ref_id)
-}
+/// Emit a `curve_or_render` SELECT to its output step id (members + probe order
+/// generated from the enum by `StepSelect`).
 pub(crate) fn emit_curve_or_render(buf: &WriteBuffer, cor: CurveOrRender) -> u64 {
     cor.emit_select(buf)
 }

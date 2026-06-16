@@ -83,6 +83,7 @@ generate = [
     "symbol_colour",
     "text_literal",
     "text_style_with_box_characteristics",
+    "surface_style_parameter_line",
     # property (attribute leaf batch)
     "general_property",
     "name_attribute",
