@@ -18,7 +18,7 @@ use crate::early::model::{
 };
 use crate::early::model::{
     EarlyAreaInSet, EarlyDefinedSymbol, EarlyPresentationSet, EarlyPresentationSize,
-    EarlySymbolTarget,
+    EarlySymbolTarget, EarlyTextLiteral,
 };
 use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::fill_area_style_colour::FillAreaStyleColourHandler;
@@ -28,7 +28,7 @@ use crate::ir::visualization::{
     OverRidingStyledItem, PlainStyledItem, PointStyle, PresentationSize,
     PresentationSizeAssignment, PresentationStyleAssignmentData, PresentationStyleByContext,
     PsaStyle, StyleContext, StyleContextRef, SurfaceSideStyle, SurfaceSideStyleEntry,
-    SurfaceStyleFillArea, SurfaceStyleUsage, SymbolPlacement, SymbolTarget, ViewVolume,
+    SurfaceStyleFillArea, SurfaceStyleUsage, SymbolPlacement, SymbolTarget, TextPath, ViewVolume,
 };
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -515,6 +515,27 @@ pub(crate) fn lift_camera_model_d3_multi_clipping(
 /// Lift one `PRESENTATION_SET` (0-attr carrier).
 pub(crate) fn lift_colour() -> EarlyColour {
     EarlyColour {}
+}
+
+/// Lift one `TEXT_LITERAL`. `placement`/`font` are the child output step ids
+/// (the handler emits the 2D/3D placement and the `font_select` first); `path`
+/// passes through as the strict `TextPath`.
+pub(crate) fn lift_text_literal(
+    name: String,
+    literal: String,
+    placement: u64,
+    alignment: String,
+    path: TextPath,
+    font: u64,
+) -> EarlyTextLiteral {
+    EarlyTextLiteral {
+        name,
+        literal,
+        placement,
+        alignment,
+        path,
+        font,
+    }
 }
 
 pub(crate) fn lift_presentation_set() -> EarlyPresentationSet {

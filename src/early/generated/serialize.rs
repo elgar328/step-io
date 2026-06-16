@@ -1234,6 +1234,23 @@ pub(crate) fn serialize_symbol_colour(
     )
 }
 
+pub(crate) fn serialize_text_literal(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyTextLiteral,
+) -> u64 {
+    buf.push_simple(
+        "TEXT_LITERAL",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::String(l1.literal.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.placement),
+            crate::parser::entity::Attribute::String(l1.alignment.clone()),
+            text_path_attr(l1.path),
+            crate::parser::entity::Attribute::EntityRef(l1.font),
+        ],
+    )
+}
+
 pub(crate) fn serialize_general_property(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyGeneralProperty,
@@ -4914,6 +4931,18 @@ fn surface_side_attr(v: crate::ir::visualization::SurfaceSide) -> crate::parser:
             crate::ir::visualization::SurfaceSide::Both => "BOTH",
             crate::ir::visualization::SurfaceSide::Back => "NEGATIVE",
             crate::ir::visualization::SurfaceSide::Front => "POSITIVE",
+        }
+        .into(),
+    )
+}
+
+fn text_path_attr(v: crate::ir::visualization::TextPath) -> crate::parser::entity::Attribute {
+    crate::parser::entity::Attribute::Enum(
+        match v {
+            crate::ir::visualization::TextPath::Down => "DOWN",
+            crate::ir::visualization::TextPath::Left => "LEFT",
+            crate::ir::visualization::TextPath::Right => "RIGHT",
+            crate::ir::visualization::TextPath::Up => "UP",
         }
         .into(),
     )

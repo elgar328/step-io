@@ -101,7 +101,7 @@ pub(crate) use super::generated::serialize::{
     serialize_symbol_style, serialize_symbol_target, serialize_symmetry_tolerance,
     serialize_tessellated_annotation_occurrence, serialize_tessellated_curve_set,
     serialize_tessellated_geometric_set, serialize_tessellated_shape_representation,
-    serialize_tessellated_shell, serialize_tessellated_solid,
+    serialize_tessellated_shell, serialize_tessellated_solid, serialize_text_literal,
     serialize_text_style_for_defined_font, serialize_tolerance_zone, serialize_tolerance_zone_form,
     serialize_toroidal_surface, serialize_total_runout_tolerance, serialize_trimmed_curve,
     serialize_type_qualifier, serialize_value_format_type_qualifier,

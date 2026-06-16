@@ -92,9 +92,9 @@ pub(crate) use super::generated::model::{
     EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId, EarlySymbolColour, EarlySymbolStyle,
     EarlySymbolTarget, EarlySymmetryTolerance, EarlyTessellatedAnnotationOccurrence,
     EarlyTessellatedCurveSet, EarlyTessellatedGeometricSet, EarlyTessellatedShapeRepresentation,
-    EarlyTessellatedShell, EarlyTessellatedSolid, EarlyTextStyleForDefinedFont, EarlyToleranceZone,
-    EarlyToleranceZoneForm, EarlyToroidalSurface, EarlyTotalRunoutTolerance, EarlyTrimSelect,
-    EarlyTrimmedCurve, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
+    EarlyTessellatedShell, EarlyTessellatedSolid, EarlyTextLiteral, EarlyTextStyleForDefinedFont,
+    EarlyToleranceZone, EarlyToleranceZoneForm, EarlyToroidalSurface, EarlyTotalRunoutTolerance,
+    EarlyTrimSelect, EarlyTrimmedCurve, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
     EarlyValueRepresentationItem, EarlyVector, EarlyVertexLoop, EarlyVertexPoint, EarlyViewVolume,
     EarlyViewVolumeId,
 };

@@ -1634,6 +1634,32 @@ impl crate::ir::arena::ArenaId for EarlySymbolColourId {
     }
 }
 
+/// L1 `TEXT_LITERAL` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyTextLiteral {
+    pub(crate) name: String,
+    pub(crate) literal: String,
+    pub(crate) placement: u64,
+    pub(crate) alignment: String,
+    pub(crate) path: crate::ir::visualization::TextPath,
+    pub(crate) font: u64,
+}
+
+/// Typed `id_cache` key for `TEXT_LITERAL` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyTextLiteralId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyTextLiteralId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `GENERAL_PROPERTY` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyGeneralProperty {

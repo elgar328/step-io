@@ -1225,6 +1225,22 @@ pub(crate) fn bind_symbol_colour(
     })
 }
 
+pub(crate) fn bind_text_literal(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyTextLiteral, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 6, entity_id, "TEXT_LITERAL")?;
+    Ok(super::model::EarlyTextLiteral {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        literal: crate::ir::attr::read_string_or_unset(attrs, 1, entity_id, "literal")?.to_owned(),
+        placement: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "placement")?,
+        alignment: crate::ir::attr::read_string_or_unset(attrs, 3, entity_id, "alignment")?
+            .to_owned(),
+        path: bind_text_path(attrs, 4, entity_id, "path")?,
+        font: crate::ir::attr::read_entity_ref(attrs, 5, entity_id, "font")?,
+    })
+}
+
 pub(crate) fn bind_general_property(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],
@@ -4576,6 +4592,25 @@ fn bind_surface_side(
         "BOTH" => Ok(crate::ir::visualization::SurfaceSide::Both),
         "NEGATIVE" => Ok(crate::ir::visualization::SurfaceSide::Back),
         "POSITIVE" => Ok(crate::ir::visualization::SurfaceSide::Front),
+        other => Err(crate::ir::error::ConvertError::NonStandardEnumValue {
+            entity_id,
+            field: field.to_string(),
+            token: other.to_string(),
+        }),
+    }
+}
+
+fn bind_text_path(
+    attrs: &[crate::parser::entity::Attribute],
+    index: usize,
+    entity_id: u64,
+    field: &'static str,
+) -> Result<crate::ir::visualization::TextPath, crate::ir::error::ConvertError> {
+    match crate::ir::attr::read_enum(attrs, index, entity_id, field)? {
+        "DOWN" => Ok(crate::ir::visualization::TextPath::Down),
+        "LEFT" => Ok(crate::ir::visualization::TextPath::Left),
+        "RIGHT" => Ok(crate::ir::visualization::TextPath::Right),
+        "UP" => Ok(crate::ir::visualization::TextPath::Up),
         other => Err(crate::ir::error::ConvertError::NonStandardEnumValue {
             entity_id,
             field: field.to_string(),

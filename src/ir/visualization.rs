@@ -1005,15 +1005,15 @@ pub enum FontSelect {
     DraughtingPreDefined(DraughtingPreDefinedTextFontId),
 }
 
-/// `text_path` ENUMERATION OF (left, right, up, down). `Other` preserves
-/// any extension token verbatim for round-trip safety.
-#[derive(Debug, Clone, PartialEq)]
+/// `text_path` ENUMERATION OF (left, right, up, down). Strict — a non-standard
+/// token is rejected on read (`NonStandardEnumValue` → drop + NORM), matching the
+/// other strict enums (`marker_type`, `transition_code`).
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TextPath {
     Left,
     Right,
     Up,
     Down,
-    Other(String),
 }
 
 /// `COMPOSITE_TEXT(name, collected_text)` — phase text-literal. Groups

@@ -81,6 +81,7 @@ generate = [
     "pre_defined_symbol",
     "pre_defined_terminator_symbol",
     "symbol_colour",
+    "text_literal",
     # property (attribute leaf batch)
     "general_property",
     "name_attribute",
@@ -436,6 +437,14 @@ variants = { central = "Central", parallel = "Parallel" }
 [enum.surface_side]
 rust_type = "crate::ir::visualization::SurfaceSide"
 variants = { positive = "Front", negative = "Back", both = "Both" }
+
+# `text_path` (text_literal.path). Strict (no `default`/`catch_all`): an unknown
+# token errors (NonStandardEnumValue) → dropped + NORM. Corpus scan confirms all
+# TEXT_LITERAL use `.RIGHT.` (no non-standard tokens), so this is behaviourally a
+# no-op vs the prior `TextPath::Other` round-trip.
+[enum.text_path]
+rust_type = "crate::ir::visualization::TextPath"
+variants = { left = "Left", right = "Right", up = "Up", down = "Down" }
 
 # Strict token-enum (SELECT member, no `catch_all`): an unknown token →
 # `None` from `marker_type_from_token`, so the SELECT drops the member; the

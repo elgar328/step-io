@@ -19,7 +19,7 @@ use crate::early::model::{
 };
 use crate::early::model::{
     EarlyAreaInSet, EarlyDefinedSymbol, EarlyPresentationSet, EarlyPresentationSize,
-    EarlySymbolTarget,
+    EarlySymbolTarget, EarlyTextLiteral,
 };
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::id::{
@@ -28,10 +28,10 @@ use crate::ir::id::{
 };
 use crate::ir::shape_rep::{CameraUsage, RepresentationMap};
 use crate::ir::visualization::{
-    AppliedPresentedItem, CameraModel, CameraModelD3, CameraModelD3MultiClipping,
+    AppliedPresentedItem, Axis2Placement, CameraModel, CameraModelD3, CameraModelD3MultiClipping,
     CameraModelD3WithHlhsr, Colour, ColourRgb, CompositeText, ContextDependentOverRidingStyledItem,
     CurveOrRender, CurveStyle, CurveWidth, DraughtingPreDefinedColour,
-    DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour, FoundedItem,
+    DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour, FontSelect, FoundedItem,
     GeometricCurveSet, GeometricRepresentationItem, GeometricSet, Invisibility, InvisibleItem,
     Marker, MarkerSize, OverRidingStyledItem, PlainStyledItem, PointStyle, PreDefinedCurveFont,
     PreDefinedCurveFontData, PreDefinedMarker, PreDefinedMarkerData, PreDefinedPointMarkerSymbol,
@@ -40,8 +40,8 @@ use crate::ir::visualization::{
     PresentationStyleAssignment, PresentationStyleAssignmentData, PresentationStyleByContext,
     PresentedItem, PresentedItemRepresentation, PsaStyle, ShapeClipping, ShellBasedSurfaceModel,
     StyleContext, StyledItem, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleBoundary,
-    SurfaceStyleFillArea, SurfaceStyleUsage, SymbolColour, SymbolStyle, TextOrCharacter,
-    TextStyleForDefinedFont, ViewVolume, VisualizationPool,
+    SurfaceStyleFillArea, SurfaceStyleUsage, SymbolColour, SymbolStyle, TextLiteral,
+    TextOrCharacter, TextStyleForDefinedFont, ViewVolume, VisualizationPool,
 };
 use crate::ir::visualization::{
     AreaInSet, DefinedSymbol, DefinedSymbolDefinition, PresentationSet, PresentationSize,
@@ -1220,6 +1220,39 @@ pub(crate) fn lower_colour(ctx: &mut ReaderContext, entity_id: u64, _early: Earl
         .get_or_insert_with(VisualizationPool::default)
         .colours
         .push(Colour::Itself);
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `TEXT_LITERAL`. `placement` discriminates 2D vs 3D (2D arena via
+/// `id_cache`, 3D via `placement_map`); an unresolved placement or an unmodelled
+/// `font_select` member drops the carrier (1:1 with the legacy handler). `path`
+/// is a strict `TextPath` (bound by the generated `bind_text_path`).
+pub(crate) fn lower_text_literal(ctx: &mut ReaderContext, entity_id: u64, early: EarlyTextLiteral) {
+    let placement = if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::id::Placement2dId>(early.placement)
+    {
+        Axis2Placement::D2(id)
+    } else if let Some(&id) = ctx.placement_map.get(&early.placement) {
+        Axis2Placement::D3(id)
+    } else {
+        return;
+    };
+    let Some(font) = FontSelect::resolve_select(ctx, early.font) else {
+        return;
+    };
+    let id = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .text_literals
+        .push(TextLiteral {
+            name: early.name,
+            literal: early.literal,
+            placement,
+            alignment: early.alignment,
+            path: early.path,
+            font,
+        });
     ctx.id_cache.insert(entity_id, id);
 }
 
