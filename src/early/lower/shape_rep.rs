@@ -14,9 +14,10 @@ use crate::early::model::{
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect, EarlyCompoundItemDefinition,
     EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
-    EarlyDescriptiveRepresentationItem, EarlyItemDefinedTransformation,
-    EarlyItemIdentifiedRepresentationUsage, EarlyItemIdentifiedRepresentationUsageSelect,
-    EarlyMappedItem, EarlyMeasureValue, EarlyMechanicalDesignAndDraughtingRelationship,
+    EarlyDefaultModelGeometricView, EarlyDescriptiveRepresentationItem,
+    EarlyItemDefinedTransformation, EarlyItemIdentifiedRepresentationUsage,
+    EarlyItemIdentifiedRepresentationUsageSelect, EarlyMappedItem, EarlyMeasureValue,
+    EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
@@ -37,11 +38,12 @@ use crate::ir::shape_rep::{
     CharacterizedObject, CharacterizedObjectData, CompositeGroupShapeAspect,
     CompositeShapeAspectKind, CompoundItem, CompoundItemElement, CompoundItemKind,
     CompoundRepresentationItem, ConstructiveGeometryRepr,
-    ConstructiveGeometryRepresentationRelationship, DatumSystem, DatumTarget, IiruDefinition,
-    IiruIdentifiedItem, ItemIdentifiedRepresentationUsage, MappedItem, MappedItemData,
-    MappedRepresentationRef, Mdgpr, MechanicalDesignAndDraughtingRelationship, ModelGeometricView,
-    NumericRepresentationItem, PlacedDatumTargetFeature, RealRepresentationItem, Representation,
-    RepresentationContextRef, RepresentationMap, RepresentationMapData, RepresentationRelationship,
+    ConstructiveGeometryRepresentationRelationship, DatumSystem, DatumTarget,
+    DefaultModelGeometricView, IiruDefinition, IiruIdentifiedItem,
+    ItemIdentifiedRepresentationUsage, MappedItem, MappedItemData, MappedRepresentationRef, Mdgpr,
+    MechanicalDesignAndDraughtingRelationship, ModelGeometricView, NumericRepresentationItem,
+    PlacedDatumTargetFeature, RealRepresentationItem, Representation, RepresentationContextRef,
+    RepresentationMap, RepresentationMapData, RepresentationRelationship,
     RepresentationRelationshipData, ShapeAspect, ShapeAspectRelationship,
     ShapeAspectRelationshipKind, ShapeDimensionRepresentation, ShapeRepresentationRelationshipIr,
     ShapeRepresentationWithParameters, SrwpItem, TessellatedShapeRepresentation, ToleranceZone,
@@ -1212,4 +1214,36 @@ pub(crate) fn lower_item_defined_transformation(
     ctx.transform_map
         .insert(entity_id, Transform3d { source, target });
     Ok(())
+}
+
+/// Lower one `DEFAULT_MODEL_GEOMETRIC_VIEW` (2-supertype flatten; leaf, no
+/// `id_cache`). `item` is a `CAMERA_MODEL`, `rep` a `DRAUGHTING_MODEL`, `of_shape`
+/// a `PRODUCT_DEFINITION_SHAPE` resolved to its product. Any unresolved member
+/// drops the view. `description` defaults to `""` (re-emitted as `''`).
+pub(crate) fn lower_default_model_geometric_view(
+    ctx: &mut ReaderContext,
+    early: &EarlyDefaultModelGeometricView,
+) {
+    let Some(item) = ctx.id_cache.get::<crate::ir::id::CameraModelId>(early.item) else {
+        return;
+    };
+    let Some(rep) = ctx
+        .id_cache
+        .get::<crate::ir::id::RepresentationId>(early.rep)
+    else {
+        return;
+    };
+    let Some(target) = ctx.product_of_pds(early.of_shape) else {
+        return;
+    };
+    ctx.default_model_geometric_views
+        .push(DefaultModelGeometricView {
+            co_name: early.name.clone(),
+            co_description: early.description.clone().unwrap_or_default(),
+            sa_name: early.name_2.clone(),
+            sa_description: early.description_2.clone().unwrap_or_default(),
+            item,
+            rep,
+            target,
+        });
 }

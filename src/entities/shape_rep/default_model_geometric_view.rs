@@ -8,8 +8,8 @@
 //! product like `SHAPE_ASPECT`). `product_definitional` is DERIVE `false` (`*`).
 //! A leaf (nothing references it), so it just round-trips through its own arena.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::DefaultModelGeometricView;
 use crate::parser::entity::{Attribute, EntityGraph};
@@ -35,38 +35,8 @@ impl SimpleEntityHandler for DefaultModelGeometricViewHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 8, entity_id, "DEFAULT_MODEL_GEOMETRIC_VIEW")?;
-        let co_name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let co_description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-        let rep_ref = read_entity_ref(attrs, 3, entity_id, "rep")?;
-        let sa_name = read_string_or_unset(attrs, 4, entity_id, "name")?.to_owned();
-        let sa_description = read_string_or_unset(attrs, 5, entity_id, "description")?.to_owned();
-        let of_shape_ref = read_entity_ref(attrs, 6, entity_id, "of_shape")?;
-        // attr[7] product_definitional is DERIVE `*` — not read.
-
-        let Some(item) = ctx.id_cache.get::<crate::ir::id::CameraModelId>(item_ref) else {
-            return Ok(());
-        };
-        let Some(rep) = ctx.id_cache.get::<crate::ir::id::RepresentationId>(rep_ref) else {
-            return Ok(());
-        };
-        // of_shape → PRODUCT_DEFINITION_SHAPE → ProductId (typed one-probe;
-        // the SHAPE_ASPECT chain).
-        let Some(target) = ctx.product_of_pds(of_shape_ref) else {
-            return Ok(());
-        };
-
-        ctx.default_model_geometric_views
-            .push(DefaultModelGeometricView {
-                co_name,
-                co_description,
-                sa_name,
-                sa_description,
-                item,
-                rep,
-                target,
-            });
+        let early = bind::bind_default_model_geometric_view(entity_id, attrs)?;
+        lower::lower_default_model_geometric_view(ctx, &early);
         Ok(())
     }
 
@@ -79,18 +49,17 @@ impl SimpleEntityHandler for DefaultModelGeometricViewHandler {
     ) -> Result<u64, WriteError> {
         let item_step = buf.step_id(view.item);
         let rep_step = buf.step_id(view.rep);
-        Ok(buf.push_simple(
-            "DEFAULT_MODEL_GEOMETRIC_VIEW",
-            vec![
-                Attribute::String(view.co_name),
-                Attribute::String(view.co_description),
-                Attribute::EntityRef(item_step),
-                Attribute::EntityRef(rep_step),
-                Attribute::String(view.sa_name),
-                Attribute::String(view.sa_description),
-                Attribute::EntityRef(of_shape_step),
-                Attribute::Derived,
-            ],
+        Ok(serialize::serialize_default_model_geometric_view(
+            buf,
+            &lift::lift_default_model_geometric_view(
+                view.co_name,
+                view.co_description,
+                item_step,
+                rep_step,
+                view.sa_name,
+                view.sa_description,
+                of_shape_step,
+            ),
         ))
     }
 }

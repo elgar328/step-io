@@ -7,10 +7,10 @@ use crate::early::model::{
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect, EarlyCompoundItemDefinition,
     EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
-    EarlyDescriptiveRepresentationItem, EarlyFeatureForDatumTargetRelationship,
-    EarlyItemDefinedTransformation, EarlyItemIdentifiedRepresentationUsage,
-    EarlyItemIdentifiedRepresentationUsageSelect, EarlyMappedItem, EarlyMeasureValue,
-    EarlyMechanicalDesignAndDraughtingRelationship,
+    EarlyDefaultModelGeometricView, EarlyDescriptiveRepresentationItem,
+    EarlyFeatureForDatumTargetRelationship, EarlyItemDefinedTransformation,
+    EarlyItemIdentifiedRepresentationUsage, EarlyItemIdentifiedRepresentationUsageSelect,
+    EarlyMappedItem, EarlyMeasureValue, EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
@@ -724,5 +724,29 @@ pub(crate) fn lift_item_defined_transformation(
         description: Some(String::new()),
         transform_item_1,
         transform_item_2,
+    }
+}
+
+/// Lift one `DEFAULT_MODEL_GEOMETRIC_VIEW`. `item` / `rep` / `of_shape` are child
+/// output step ids. Descriptions are always re-emitted (`Some`, possibly empty),
+/// matching the legacy handler which wrote them unconditionally as strings.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn lift_default_model_geometric_view(
+    co_name: String,
+    co_description: String,
+    item: u64,
+    rep: u64,
+    sa_name: String,
+    sa_description: String,
+    of_shape: u64,
+) -> EarlyDefaultModelGeometricView {
+    EarlyDefaultModelGeometricView {
+        name: co_name,
+        description: Some(co_description),
+        item,
+        rep,
+        name_2: sa_name,
+        description_2: Some(sa_description),
+        of_shape,
     }
 }

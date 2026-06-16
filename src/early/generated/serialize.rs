@@ -4547,6 +4547,31 @@ pub(crate) fn serialize_item_defined_transformation(
     )
 }
 
+pub(crate) fn serialize_default_model_geometric_view(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDefaultModelGeometricView,
+) -> u64 {
+    buf.push_simple(
+        "DEFAULT_MODEL_GEOMETRIC_VIEW",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.item),
+            crate::parser::entity::Attribute::EntityRef(l1.rep),
+            crate::parser::entity::Attribute::String(l1.name_2.clone()),
+            match &l1.description_2 {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.of_shape),
+            crate::parser::entity::Attribute::Derived,
+        ],
+    )
+}
+
 fn box_characteristic_select_emit(
     v: &super::model::EarlyBoxCharacteristicSelect,
 ) -> crate::parser::entity::Attribute {

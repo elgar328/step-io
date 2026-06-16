@@ -4078,6 +4078,22 @@ pub(crate) fn bind_item_defined_transformation(
     })
 }
 
+pub(crate) fn bind_default_model_geometric_view(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDefaultModelGeometricView, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 8, entity_id, "DEFAULT_MODEL_GEOMETRIC_VIEW")?;
+    Ok(super::model::EarlyDefaultModelGeometricView {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        item: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "item")?,
+        rep: crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "rep")?,
+        name_2: crate::ir::attr::read_string_or_unset(attrs, 4, entity_id, "name_2")?.to_owned(),
+        description_2: crate::ir::attr::read_optional_string(attrs, 5, entity_id, "description_2")?,
+        of_shape: crate::ir::attr::read_entity_ref(attrs, 6, entity_id, "of_shape")?,
+    })
+}
+
 #[allow(clippy::cast_precision_loss)]
 fn bind_box_characteristic_select(
     attr: &crate::parser::entity::Attribute,

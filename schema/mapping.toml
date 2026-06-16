@@ -305,6 +305,8 @@ generate = [
     "mapped_item",
     # Phase 4n: assembly transform — ITEM_DEFINED_TRANSFORMATION (push_simple, transform_map)
     "item_defined_transformation",
+    # Phase 4o: MBD view — DEFAULT_MODEL_GEOMETRIC_VIEW (2-supertype flatten + DERIVE)
+    "default_model_geometric_view",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
@@ -444,6 +446,7 @@ parts = [
 [derived]
 oriented_edge = ["edge_start", "edge_end"]
 oriented_closed_shell = ["cfs_faces"]
+default_model_geometric_view = ["product_definitional"]
 
 # `[enum.<alias>]`: reuse an existing L2 enum for a STEP ENUM type-alias instead
 # of synthesizing an `Early*` enum. `variants` maps each early.toml ENUM member
