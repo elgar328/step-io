@@ -74,6 +74,7 @@ generate = [
     "pre_defined_marker",
     "pre_defined_point_marker_symbol",
     "draughting_pre_defined_colour",
+    "colour",
     "colour_rgb",
     "pre_defined_curve_font",
     "draughting_pre_defined_curve_font",

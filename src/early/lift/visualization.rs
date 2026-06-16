@@ -3,7 +3,7 @@
 
 use crate::early::model::{
     EarlyAppliedPresentedItem, EarlyCameraModelD3, EarlyCameraModelD3MultiClipping,
-    EarlyCameraModelD3WithHlhsr, EarlyCameraUsage, EarlyColourRgb, EarlyCompositeText,
+    EarlyCameraModelD3WithHlhsr, EarlyCameraUsage, EarlyColour, EarlyColourRgb, EarlyCompositeText,
     EarlyContextDependentOverRidingStyledItem, EarlyCurveStyle, EarlyDraughtingPreDefinedColour,
     EarlyDraughtingPreDefinedCurveFont, EarlyFillAreaStyle, EarlyFillAreaStyleColour,
     EarlyGeometricCurveSet, EarlyGeometricSet, EarlyInvisibility, EarlyMarker, EarlyMarkerSize,
@@ -513,6 +513,10 @@ pub(crate) fn lift_camera_model_d3_multi_clipping(
 }
 
 /// Lift one `PRESENTATION_SET` (0-attr carrier).
+pub(crate) fn lift_colour() -> EarlyColour {
+    EarlyColour {}
+}
+
 pub(crate) fn lift_presentation_set() -> EarlyPresentationSet {
     EarlyPresentationSet {}
 }

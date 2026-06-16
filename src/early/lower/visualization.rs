@@ -3,7 +3,7 @@
 
 use crate::early::model::{
     EarlyAppliedPresentedItem, EarlyCameraModelD3, EarlyCameraModelD3MultiClipping,
-    EarlyCameraModelD3WithHlhsr, EarlyCameraUsage, EarlyColourRgb, EarlyCompositeText,
+    EarlyCameraModelD3WithHlhsr, EarlyCameraUsage, EarlyColour, EarlyColourRgb, EarlyCompositeText,
     EarlyContextDependentOverRidingStyledItem, EarlyCurveStyle, EarlyDraughtingPreDefinedColour,
     EarlyDraughtingPreDefinedCurveFont, EarlyFillAreaStyle, EarlyFillAreaStyleColour,
     EarlyFillAreaStyleId, EarlyGeometricCurveSet, EarlyGeometricSet, EarlyInvisibility,
@@ -1208,6 +1208,18 @@ pub(crate) fn lower_presentation_set(
         .get_or_insert_with(VisualizationPool::default)
         .presentation_sets
         .push(PresentationSet);
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `COLOUR` — the attributeless bare-colour placeholder. Pushes a
+/// `Colour::Itself` into the `colours` pool (consumers resolve the `ColourId`
+/// through the shared map, as the RGB / pre-defined flavours do).
+pub(crate) fn lower_colour(ctx: &mut ReaderContext, entity_id: u64, _early: EarlyColour) {
+    let id = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .colours
+        .push(Colour::Itself);
     ctx.id_cache.insert(entity_id, id);
 }
 

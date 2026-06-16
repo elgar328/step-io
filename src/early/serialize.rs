@@ -27,7 +27,7 @@ pub(crate) use super::generated::serialize::{
     serialize_characterized_item_within_representation,
     serialize_characterized_item_within_representation_with_id, serialize_circle,
     serialize_circular_area, serialize_circular_runout_tolerance, serialize_closed_shell,
-    serialize_colour_rgb, serialize_complex_triangulated_face,
+    serialize_colour, serialize_colour_rgb, serialize_complex_triangulated_face,
     serialize_complex_triangulated_surface_set, serialize_composite_curve,
     serialize_composite_curve_segment, serialize_composite_group_shape_aspect,
     serialize_composite_shape_aspect, serialize_composite_text,

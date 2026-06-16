@@ -1486,6 +1486,25 @@ impl crate::ir::arena::ArenaId for EarlyDraughtingPreDefinedColourId {
     }
 }
 
+/// L1 `COLOUR` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyColour {}
+
+/// Typed `id_cache` key for `COLOUR` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyColourId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyColourId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `COLOUR_RGB` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyColourRgb {

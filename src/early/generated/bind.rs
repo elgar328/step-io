@@ -1149,6 +1149,14 @@ pub(crate) fn bind_draughting_pre_defined_colour(
     })
 }
 
+pub(crate) fn bind_colour(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyColour, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 0, entity_id, "COLOUR")?;
+    Ok(super::model::EarlyColour {})
+}
+
 pub(crate) fn bind_colour_rgb(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],

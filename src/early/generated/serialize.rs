@@ -1160,6 +1160,13 @@ pub(crate) fn serialize_draughting_pre_defined_colour(
     )
 }
 
+pub(crate) fn serialize_colour(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    _l1: &super::model::EarlyColour,
+) -> u64 {
+    buf.push_simple("COLOUR", vec![])
+}
+
 pub(crate) fn serialize_colour_rgb(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyColourRgb,
