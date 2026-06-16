@@ -9,15 +9,15 @@ use crate::early::model::{
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
     EarlyDescriptiveRepresentationItem, EarlyFeatureForDatumTargetRelationship,
     EarlyItemIdentifiedRepresentationUsage, EarlyItemIdentifiedRepresentationUsageSelect,
-    EarlyMeasureValue, EarlyMechanicalDesignAndDraughtingRelationship,
+    EarlyMappedItem, EarlyMeasureValue, EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
-    EarlyRepresentationRelationship, EarlyShapeAspect, EarlyShapeAspectAssociativity,
-    EarlyShapeAspectDerivingRelationship, EarlyShapeAspectRelationship,
-    EarlyShapeDimensionRepresentation, EarlyShapeRepresentationRelationship,
-    EarlyShapeRepresentationWithParameters, EarlyTessellatedShapeRepresentation,
-    EarlyToleranceZone, EarlyValueRepresentationItem,
+    EarlyRepresentationMap, EarlyRepresentationRelationship, EarlyShapeAspect,
+    EarlyShapeAspectAssociativity, EarlyShapeAspectDerivingRelationship,
+    EarlyShapeAspectRelationship, EarlyShapeDimensionRepresentation,
+    EarlyShapeRepresentationRelationship, EarlyShapeRepresentationWithParameters,
+    EarlyTessellatedShapeRepresentation, EarlyToleranceZone, EarlyValueRepresentationItem,
 };
 use crate::entities::SimpleEntityHandler;
 use crate::entities::shape_rep::descriptive_representation_item::DescriptiveRepresentationItemHandler;
@@ -681,5 +681,32 @@ pub(crate) fn lift_camera_image_3d_with_scale(
         mapping_source,
         mapping_target,
         name,
+    }
+}
+
+/// Lift one `REPRESENTATION_MAP` (`Itself`). `mapping_origin` / `mapped_representation`
+/// are the child output step ids (the handler emits the origin item and resolves
+/// the mapped representation step id first).
+pub(crate) fn lift_representation_map(
+    mapping_origin: u64,
+    mapped_representation: u64,
+) -> EarlyRepresentationMap {
+    EarlyRepresentationMap {
+        mapping_origin,
+        mapped_representation,
+    }
+}
+
+/// Lift one `MAPPED_ITEM` (`Itself`). `mapping_source` / `mapping_target` are the
+/// child output step ids.
+pub(crate) fn lift_mapped_item(
+    name: String,
+    mapping_source: u64,
+    mapping_target: u64,
+) -> EarlyMappedItem {
+    EarlyMappedItem {
+        name,
+        mapping_source,
+        mapping_target,
     }
 }

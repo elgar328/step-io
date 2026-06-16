@@ -5700,6 +5700,51 @@ impl crate::ir::arena::ArenaId for EarlyCameraImage3dWithScaleId {
     }
 }
 
+/// L1 `REPRESENTATION_MAP` (generated).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct EarlyRepresentationMap {
+    pub(crate) mapping_origin: u64,
+    pub(crate) mapped_representation: u64,
+}
+
+/// Typed `id_cache` key for `REPRESENTATION_MAP` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyRepresentationMapId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyRepresentationMapId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `MAPPED_ITEM` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyMappedItem {
+    pub(crate) name: String,
+    pub(crate) mapping_source: u64,
+    pub(crate) mapping_target: u64,
+}
+
+/// Typed `id_cache` key for `MAPPED_ITEM` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyMappedItemId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyMappedItemId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `box_characteristic_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyBoxCharacteristicSelect {

@@ -15,14 +15,15 @@ use crate::early::model::{
     EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
     EarlyDescriptiveRepresentationItem, EarlyItemIdentifiedRepresentationUsage,
-    EarlyItemIdentifiedRepresentationUsageSelect, EarlyMeasureValue,
+    EarlyItemIdentifiedRepresentationUsageSelect, EarlyMappedItem, EarlyMeasureValue,
     EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
-    EarlyRepresentationRelationship, EarlyShapeAspect, EarlyShapeDimensionRepresentation,
-    EarlyShapeRepresentationRelationship, EarlyShapeRepresentationWithParameters,
-    EarlyTessellatedShapeRepresentation, EarlyToleranceZone, EarlyValueRepresentationItem,
+    EarlyRepresentationMap, EarlyRepresentationRelationship, EarlyShapeAspect,
+    EarlyShapeDimensionRepresentation, EarlyShapeRepresentationRelationship,
+    EarlyShapeRepresentationWithParameters, EarlyTessellatedShapeRepresentation,
+    EarlyToleranceZone, EarlyValueRepresentationItem,
 };
 use crate::entities::tessellation::resolve_tessellated_item_ref;
 use crate::ir::error::ConvertError;
@@ -36,13 +37,14 @@ use crate::ir::shape_rep::{
     CompositeShapeAspectKind, CompoundItem, CompoundItemElement, CompoundItemKind,
     CompoundRepresentationItem, ConstructiveGeometryRepr,
     ConstructiveGeometryRepresentationRelationship, DatumSystem, DatumTarget, IiruDefinition,
-    IiruIdentifiedItem, ItemIdentifiedRepresentationUsage, MappedItem, Mdgpr,
-    MechanicalDesignAndDraughtingRelationship, ModelGeometricView, NumericRepresentationItem,
-    PlacedDatumTargetFeature, RealRepresentationItem, Representation, RepresentationContextRef,
-    RepresentationRelationship, RepresentationRelationshipData, ShapeAspect,
-    ShapeAspectRelationship, ShapeAspectRelationshipKind, ShapeDimensionRepresentation,
-    ShapeRepresentationRelationshipIr, ShapeRepresentationWithParameters, SrwpItem,
-    TessellatedShapeRepresentation, ToleranceZone, UnitlessContext,
+    IiruIdentifiedItem, ItemIdentifiedRepresentationUsage, MappedItem, MappedItemData,
+    MappedRepresentationRef, Mdgpr, MechanicalDesignAndDraughtingRelationship, ModelGeometricView,
+    NumericRepresentationItem, PlacedDatumTargetFeature, RealRepresentationItem, Representation,
+    RepresentationContextRef, RepresentationMap, RepresentationMapData, RepresentationRelationship,
+    RepresentationRelationshipData, ShapeAspect, ShapeAspectRelationship,
+    ShapeAspectRelationshipKind, ShapeDimensionRepresentation, ShapeRepresentationRelationshipIr,
+    ShapeRepresentationWithParameters, SrwpItem, TessellatedShapeRepresentation, ToleranceZone,
+    UnitlessContext,
 };
 use crate::ir::visualization::VisualizationPool;
 use crate::reader::ReaderContext;
@@ -1127,5 +1129,69 @@ pub(crate) fn lower_camera_image_3d_with_scale(
     let mi_id = ctx
         .mapped_items
         .push(MappedItem::CameraImage3dWithScale(body));
+    ctx.id_cache.insert(entity_id, mi_id);
+}
+
+/// Lower one `REPRESENTATION_MAP` (`Itself`). `mapping_origin` resolves through
+/// the shared representation-item resolver (unmodelled → drop); `mapped_representation`
+/// probes the plain-representation arena then the presentation arena (else drop).
+pub(crate) fn lower_representation_map(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyRepresentationMap,
+) {
+    let Some(mapping_origin) =
+        crate::entities::visualization::styled_item::resolve_representation_item_ref(
+            ctx,
+            early.mapping_origin,
+        )
+    else {
+        return;
+    };
+    let mapped_representation = if let Some(rid) = ctx
+        .id_cache
+        .get::<crate::ir::id::RepresentationId>(early.mapped_representation)
+    {
+        MappedRepresentationRef::Representation(rid)
+    } else if let Some(pid) = ctx
+        .id_cache
+        .get::<crate::ir::id::PresentationRepresentationId>(early.mapped_representation)
+    {
+        MappedRepresentationRef::Presentation(pid)
+    } else {
+        return;
+    };
+    let id = ctx
+        .representation_maps
+        .push(RepresentationMap::Itself(RepresentationMapData {
+            mapping_origin,
+            mapped_representation,
+        }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `MAPPED_ITEM` (`Itself`). `mapping_source` narrows to a
+/// `RepresentationMapId`; `mapping_target` resolves through the shared
+/// representation-item resolver. An unresolved ref drops the carrier.
+pub(crate) fn lower_mapped_item(ctx: &mut ReaderContext, entity_id: u64, early: EarlyMappedItem) {
+    let Some(mapping_source) = ctx
+        .id_cache
+        .get::<crate::ir::id::RepresentationMapId>(early.mapping_source)
+    else {
+        return;
+    };
+    let Some(mapping_target) =
+        crate::entities::visualization::styled_item::resolve_representation_item_ref(
+            ctx,
+            early.mapping_target,
+        )
+    else {
+        return;
+    };
+    let mi_id = ctx.mapped_items.push(MappedItem::Itself(MappedItemData {
+        name: early.name,
+        mapping_source,
+        mapping_target,
+    }));
     ctx.id_cache.insert(entity_id, mi_id);
 }

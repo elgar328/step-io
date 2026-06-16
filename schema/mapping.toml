@@ -300,6 +300,9 @@ generate = [
     # Phase 4l: camera_image family — simple (flatten from mapped_item) + complex 3d_with_scale
     "camera_image",
     "camera_image_3d_with_scale",
+    # Phase 4m: mapped-item base — REPRESENTATION_MAP + MAPPED_ITEM (Itself)
+    "representation_map",
+    "mapped_item",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

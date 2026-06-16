@@ -4502,6 +4502,33 @@ pub(crate) fn serialize_camera_image_3d_with_scale(
     ])
 }
 
+pub(crate) fn serialize_representation_map(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyRepresentationMap,
+) -> u64 {
+    buf.push_simple(
+        "REPRESENTATION_MAP",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.mapping_origin),
+            crate::parser::entity::Attribute::EntityRef(l1.mapped_representation),
+        ],
+    )
+}
+
+pub(crate) fn serialize_mapped_item(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyMappedItem,
+) -> u64 {
+    buf.push_simple(
+        "MAPPED_ITEM",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.mapping_source),
+            crate::parser::entity::Attribute::EntityRef(l1.mapping_target),
+        ],
+    )
+}
+
 fn box_characteristic_select_emit(
     v: &super::model::EarlyBoxCharacteristicSelect,
 ) -> crate::parser::entity::Attribute {

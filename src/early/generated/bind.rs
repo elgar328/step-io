@@ -4027,6 +4027,34 @@ pub(crate) fn bind_camera_image_3d_with_scale(
     })
 }
 
+pub(crate) fn bind_representation_map(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyRepresentationMap, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "REPRESENTATION_MAP")?;
+    Ok(super::model::EarlyRepresentationMap {
+        mapping_origin: crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "mapping_origin")?,
+        mapped_representation: crate::ir::attr::read_entity_ref(
+            attrs,
+            1,
+            entity_id,
+            "mapped_representation",
+        )?,
+    })
+}
+
+pub(crate) fn bind_mapped_item(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyMappedItem, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "MAPPED_ITEM")?;
+    Ok(super::model::EarlyMappedItem {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        mapping_source: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "mapping_source")?,
+        mapping_target: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "mapping_target")?,
+    })
+}
+
 #[allow(clippy::cast_precision_loss)]
 fn bind_box_characteristic_select(
     attr: &crate::parser::entity::Attribute,
