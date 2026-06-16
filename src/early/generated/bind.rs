@@ -3885,6 +3885,54 @@ pub(crate) fn bind_shape_representation_with_parameters(
     })
 }
 
+pub(crate) fn bind_compound_representation_item(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<Option<super::model::EarlyCompoundRepresentationItem>, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "COMPOUND_REPRESENTATION_ITEM")?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let Some(item_element) = bind_compound_item_definition(&attrs[1]) else {
+        return Ok(None);
+    };
+    Ok(Some(super::model::EarlyCompoundRepresentationItem {
+        name,
+        item_element,
+    }))
+}
+
+fn bind_compound_item_definition(
+    attr: &crate::parser::entity::Attribute,
+) -> Option<super::model::EarlyCompoundItemDefinition> {
+    match attr {
+        crate::parser::entity::Attribute::Typed { type_name, value } => {
+            match (type_name.as_str(), value.as_ref()) {
+                ("LIST_REPRESENTATION_ITEM", crate::parser::entity::Attribute::List(items)) => {
+                    let mut out = Vec::with_capacity(items.len());
+                    for it in items {
+                        match it {
+                            crate::parser::entity::Attribute::EntityRef(n) => out.push(*n),
+                            _ => return None,
+                        }
+                    }
+                    Some(super::model::EarlyCompoundItemDefinition::ListRepresentationItem(out))
+                }
+                ("SET_REPRESENTATION_ITEM", crate::parser::entity::Attribute::List(items)) => {
+                    let mut out = Vec::with_capacity(items.len());
+                    for it in items {
+                        match it {
+                            crate::parser::entity::Attribute::EntityRef(n) => out.push(*n),
+                            _ => return None,
+                        }
+                    }
+                    Some(super::model::EarlyCompoundItemDefinition::SetRepresentationItem(out))
+                }
+                _ => None,
+            }
+        }
+        _ => None,
+    }
+}
+
 fn bind_marker_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyMarker> {

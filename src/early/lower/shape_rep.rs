@@ -10,9 +10,10 @@
 
 use crate::early::model::{
     EarlyAllAroundShapeAspect, EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
-    EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect,
-    EarlyConstructiveGeometryRepresentation, EarlyConstructiveGeometryRepresentationRelationship,
-    EarlyDatumSystem, EarlyDatumTarget, EarlyDescriptiveRepresentationItem, EarlyMeasureValue,
+    EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect, EarlyCompoundItemDefinition,
+    EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
+    EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
+    EarlyDescriptiveRepresentationItem, EarlyMeasureValue,
     EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
@@ -30,7 +31,8 @@ use crate::ir::representation_item::{
 use crate::ir::shape_rep::{
     AllAroundShapeAspect, CentreOfSymmetry, CharacterizedItemWithinRepresentation,
     CharacterizedObject, CharacterizedObjectData, CompositeGroupShapeAspect,
-    CompositeShapeAspectKind, ConstructiveGeometryRepr,
+    CompositeShapeAspectKind, CompoundItem, CompoundItemElement, CompoundItemKind,
+    CompoundRepresentationItem, ConstructiveGeometryRepr,
     ConstructiveGeometryRepresentationRelationship, DatumSystem, DatumTarget, Mdgpr,
     MechanicalDesignAndDraughtingRelationship, ModelGeometricView, NumericRepresentationItem,
     PlacedDatumTargetFeature, RealRepresentationItem, Representation, RepresentationContextRef,
@@ -949,4 +951,38 @@ pub(crate) fn lower_shape_representation_with_parameters(
             },
         ));
     ctx.id_cache.insert(entity_id, repr_id);
+}
+
+/// Lower one `COMPOUND_REPRESENTATION_ITEM`. The synth `item_element` SELECT
+/// carries the Set/List kind + raw child refs; each child resolves to a
+/// `Descriptive` (via `descriptive_item_map`) or a generic representation
+/// `Item` (unresolved skipped). An empty resolved set drops the carrier.
+/// Orphan round-trip — no `id_cache` entry.
+pub(crate) fn lower_compound_representation_item(
+    ctx: &mut ReaderContext,
+    _entity_id: u64,
+    early: EarlyCompoundRepresentationItem,
+) {
+    let (kind, raw) = match early.item_element {
+        EarlyCompoundItemDefinition::SetRepresentationItem(refs) => (CompoundItemKind::Set, refs),
+        EarlyCompoundItemDefinition::ListRepresentationItem(refs) => (CompoundItemKind::List, refs),
+    };
+    let mut items = Vec::with_capacity(raw.len());
+    for r in raw {
+        if let Some(d) = ctx.descriptive_item_map.get(&r).cloned() {
+            items.push(CompoundItem::Descriptive(d));
+        } else if let Some(item_ref) =
+            crate::entities::visualization::styled_item::resolve_representation_item_ref(ctx, r)
+        {
+            items.push(CompoundItem::Item(item_ref));
+        }
+    }
+    if items.is_empty() {
+        return;
+    }
+    ctx.compound_representation_items
+        .push(CompoundRepresentationItem {
+            name: early.name,
+            item_element: CompoundItemElement { kind, items },
+        });
 }

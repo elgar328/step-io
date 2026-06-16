@@ -8,14 +8,10 @@
 //! resolvable via `resolve_representation_item_ref`. Carrier drops when
 //! every child ref is unresolved (symmetric on re-read).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::entities::shape_rep::descriptive_representation_item::DescriptiveRepresentationItemHandler;
-use crate::entities::visualization::styled_item::resolve_representation_item_ref;
-use crate::ir::attr::{check_count, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::shape_rep::{
-    CompoundItem, CompoundItemElement, CompoundItemKind, CompoundRepresentationItem,
-};
+use crate::ir::shape_rep::CompoundRepresentationItem;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -34,67 +30,17 @@ impl SimpleEntityHandler for CompoundRepresentationItemHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "COMPOUND_REPRESENTATION_ITEM")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let Attribute::Typed { type_name, value } = &attrs[1] else {
-            return Ok(());
-        };
-        let kind = match type_name.as_str() {
-            "SET_REPRESENTATION_ITEM" => CompoundItemKind::Set,
-            "LIST_REPRESENTATION_ITEM" => CompoundItemKind::List,
-            _ => return Ok(()),
-        };
-        let Attribute::List(child_attrs) = value.as_ref() else {
-            return Ok(());
-        };
-        let mut items = Vec::with_capacity(child_attrs.len());
-        for child in child_attrs {
-            let Attribute::EntityRef(r) = child else {
-                continue;
-            };
-            if let Some(d) = ctx.descriptive_item_map.get(r).cloned() {
-                items.push(CompoundItem::Descriptive(d));
-                continue;
-            }
-            if let Some(item_ref) = resolve_representation_item_ref(ctx, *r) {
-                items.push(CompoundItem::Item(item_ref));
-            }
+        if let Some(early) = bind::bind_compound_representation_item(entity_id, attrs)? {
+            lower::lower_compound_representation_item(ctx, entity_id, early);
         }
-        if items.is_empty() {
-            return Ok(());
-        }
-        ctx.compound_representation_items
-            .push(CompoundRepresentationItem {
-                name,
-                item_element: CompoundItemElement { kind, items },
-            });
+        // else: unrecognized `item_element` wrapper — silent drop (legacy behavior).
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, cri: CompoundRepresentationItem) -> Result<u64, WriteError> {
-        let mut refs = Vec::with_capacity(cri.item_element.items.len());
-        for item in cri.item_element.items {
-            let step = match item {
-                CompoundItem::Descriptive(d) => {
-                    DescriptiveRepresentationItemHandler::write(buf, d)?
-                }
-                CompoundItem::Item(r) => buf.emit_representation_item_ref(r)?,
-            };
-            refs.push(Attribute::EntityRef(step));
-        }
-        let type_name = match cri.item_element.kind {
-            CompoundItemKind::Set => "SET_REPRESENTATION_ITEM",
-            CompoundItemKind::List => "LIST_REPRESENTATION_ITEM",
-        };
-        Ok(buf.push_simple(
-            "COMPOUND_REPRESENTATION_ITEM",
-            vec![
-                Attribute::String(cri.name),
-                Attribute::Typed {
-                    type_name: type_name.into(),
-                    value: Box::new(Attribute::List(refs)),
-                },
-            ],
+        let early = lift::lift_compound_representation_item(buf, cri)?;
+        Ok(serialize::serialize_compound_representation_item(
+            buf, &early,
         ))
     }
 }

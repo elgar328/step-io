@@ -5494,6 +5494,35 @@ impl crate::ir::arena::ArenaId for EarlyShapeRepresentationWithParametersId {
     }
 }
 
+/// L1 `COMPOUND_REPRESENTATION_ITEM` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCompoundRepresentationItem {
+    pub(crate) name: String,
+    pub(crate) item_element: EarlyCompoundItemDefinition,
+}
+
+/// Typed `id_cache` key for `COMPOUND_REPRESENTATION_ITEM` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCompoundRepresentationItemId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCompoundRepresentationItemId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 mixed SELECT `compound_item_definition` (generated, hint-less).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum EarlyCompoundItemDefinition {
+    ListRepresentationItem(Vec<u64>),
+    SetRepresentationItem(Vec<u64>),
+}
+
 /// L1 mixed SELECT `marker_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyMarker {

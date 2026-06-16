@@ -287,6 +287,8 @@ generate = [
     # Phase 3z: SDR + SRWP — drop-on-None, completes push_simple+L2-payload representations
     "shape_dimension_representation",
     "shape_representation_with_parameters",
+    # Phase 4a: non-repr clean — first synth typed-aggregate select (compound_item_definition)
+    "compound_representation_item",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

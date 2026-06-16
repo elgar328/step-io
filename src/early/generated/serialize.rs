@@ -4356,6 +4356,46 @@ pub(crate) fn serialize_shape_representation_with_parameters(
     )
 }
 
+pub(crate) fn serialize_compound_representation_item(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCompoundRepresentationItem,
+) -> u64 {
+    buf.push_simple(
+        "COMPOUND_REPRESENTATION_ITEM",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            compound_item_definition_emit(&l1.item_element),
+        ],
+    )
+}
+
+fn compound_item_definition_emit(
+    v: &super::model::EarlyCompoundItemDefinition,
+) -> crate::parser::entity::Attribute {
+    match v {
+        super::model::EarlyCompoundItemDefinition::ListRepresentationItem(xs) => {
+            crate::parser::entity::Attribute::Typed {
+                type_name: "LIST_REPRESENTATION_ITEM".into(),
+                value: Box::new(crate::parser::entity::Attribute::List(
+                    xs.iter()
+                        .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                        .collect(),
+                )),
+            }
+        }
+        super::model::EarlyCompoundItemDefinition::SetRepresentationItem(xs) => {
+            crate::parser::entity::Attribute::Typed {
+                type_name: "SET_REPRESENTATION_ITEM".into(),
+                value: Box::new(crate::parser::entity::Attribute::List(
+                    xs.iter()
+                        .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                        .collect(),
+                )),
+            }
+        }
+    }
+}
+
 fn marker_select_emit(v: &super::model::EarlyMarker) -> crate::parser::entity::Attribute {
     match v {
         super::model::EarlyMarker::Type(t) => crate::parser::entity::Attribute::Typed {

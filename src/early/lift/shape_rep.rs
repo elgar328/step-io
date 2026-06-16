@@ -3,10 +3,10 @@
 
 use crate::early::model::{
     EarlyAllAroundShapeAspect, EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
-    EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect,
-    EarlyConstructiveGeometryRepresentation, EarlyConstructiveGeometryRepresentationRelationship,
-    EarlyDatumSystem, EarlyDatumTarget, EarlyDescriptiveRepresentationItem,
-    EarlyFeatureForDatumTargetRelationship, EarlyMeasureValue,
+    EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect, EarlyCompoundItemDefinition,
+    EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
+    EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
+    EarlyDescriptiveRepresentationItem, EarlyFeatureForDatumTargetRelationship, EarlyMeasureValue,
     EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
@@ -21,8 +21,9 @@ use crate::entities::SimpleEntityHandler;
 use crate::entities::shape_rep::descriptive_representation_item::DescriptiveRepresentationItemHandler;
 use crate::ir::representation_item::{MeasureValue, ValueRepresentationItem};
 use crate::ir::shape_rep::{
-    ConstructiveGeometryRepr, DimensionItem, Mdgpr, ShapeDimensionRepresentation,
-    ShapeRepresentationWithParameters, SrwpItem, TessellatedShapeRepresentation, UnitlessContext,
+    CompoundItem, CompoundItemKind, CompoundRepresentationItem, ConstructiveGeometryRepr,
+    DimensionItem, Mdgpr, ShapeDimensionRepresentation, ShapeRepresentationWithParameters,
+    SrwpItem, TessellatedShapeRepresentation, UnitlessContext,
 };
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
@@ -580,5 +581,30 @@ pub(crate) fn lift_shape_representation_with_parameters(
         name: srwp.name,
         items,
         context_of_items,
+    })
+}
+
+/// Lift one `COMPOUND_REPRESENTATION_ITEM`. Each child emits to its step id
+/// (Descriptive → handler write / Item → repr-item emitter); the Set/List kind
+/// selects the synth SELECT variant.
+pub(crate) fn lift_compound_representation_item(
+    buf: &mut WriteBuffer,
+    cri: CompoundRepresentationItem,
+) -> Result<EarlyCompoundRepresentationItem, WriteError> {
+    let mut steps = Vec::with_capacity(cri.item_element.items.len());
+    for item in cri.item_element.items {
+        let step = match item {
+            CompoundItem::Descriptive(d) => DescriptiveRepresentationItemHandler::write(buf, d)?,
+            CompoundItem::Item(r) => buf.emit_representation_item_ref(r)?,
+        };
+        steps.push(step);
+    }
+    let item_element = match cri.item_element.kind {
+        CompoundItemKind::Set => EarlyCompoundItemDefinition::SetRepresentationItem(steps),
+        CompoundItemKind::List => EarlyCompoundItemDefinition::ListRepresentationItem(steps),
+    };
+    Ok(EarlyCompoundRepresentationItem {
+        name: cri.name,
+        item_element,
     })
 }
