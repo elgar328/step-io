@@ -5516,9 +5516,42 @@ impl crate::ir::arena::ArenaId for EarlyCompoundRepresentationItemId {
     }
 }
 
+/// L1 `ITEM_IDENTIFIED_REPRESENTATION_USAGE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyItemIdentifiedRepresentationUsage {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) definition: u64,
+    pub(crate) used_representation: u64,
+    pub(crate) identified_item: EarlyItemIdentifiedRepresentationUsageSelect,
+}
+
+/// Typed `id_cache` key for `ITEM_IDENTIFIED_REPRESENTATION_USAGE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyItemIdentifiedRepresentationUsageId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyItemIdentifiedRepresentationUsageId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `compound_item_definition` (generated, hint-less).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyCompoundItemDefinition {
+    ListRepresentationItem(Vec<u64>),
+    SetRepresentationItem(Vec<u64>),
+}
+
+/// L1 mixed SELECT `item_identified_representation_usage_select` (generated, hint-less).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum EarlyItemIdentifiedRepresentationUsageSelect {
+    EntityRef(u64),
     ListRepresentationItem(Vec<u64>),
     SetRepresentationItem(Vec<u64>),
 }

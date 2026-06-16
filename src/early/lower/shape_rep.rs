@@ -13,7 +13,8 @@ use crate::early::model::{
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect, EarlyCompoundItemDefinition,
     EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
-    EarlyDescriptiveRepresentationItem, EarlyMeasureValue,
+    EarlyDescriptiveRepresentationItem, EarlyItemIdentifiedRepresentationUsage,
+    EarlyItemIdentifiedRepresentationUsageSelect, EarlyMeasureValue,
     EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
@@ -33,7 +34,8 @@ use crate::ir::shape_rep::{
     CharacterizedObject, CharacterizedObjectData, CompositeGroupShapeAspect,
     CompositeShapeAspectKind, CompoundItem, CompoundItemElement, CompoundItemKind,
     CompoundRepresentationItem, ConstructiveGeometryRepr,
-    ConstructiveGeometryRepresentationRelationship, DatumSystem, DatumTarget, Mdgpr,
+    ConstructiveGeometryRepresentationRelationship, DatumSystem, DatumTarget, IiruDefinition,
+    IiruIdentifiedItem, ItemIdentifiedRepresentationUsage, Mdgpr,
     MechanicalDesignAndDraughtingRelationship, ModelGeometricView, NumericRepresentationItem,
     PlacedDatumTargetFeature, RealRepresentationItem, Representation, RepresentationContextRef,
     RepresentationRelationship, RepresentationRelationshipData, ShapeAspect,
@@ -984,5 +986,91 @@ pub(crate) fn lower_compound_representation_item(
         .push(CompoundRepresentationItem {
             name: early.name,
             item_element: CompoundItemElement { kind, items },
+        });
+}
+
+/// Resolve the IIRU `definition` SELECT (all-entity → bare ref) to the typed
+/// [`IiruDefinition`] via the 5 modelled members; unmodelled members → `None`.
+fn resolve_iiru_definition(ctx: &ReaderContext, ref_id: u64) -> Option<IiruDefinition> {
+    if let Some(id) = ctx.id_cache.get::<crate::ir::ShapeAspectId>(ref_id) {
+        return Some(IiruDefinition::ShapeAspect(id));
+    }
+    if let Some(id) = ctx.id_cache.get::<crate::ir::DatumFeatureId>(ref_id) {
+        return Some(IiruDefinition::DatumFeature(id));
+    }
+    if let Some(id) = ctx.id_cache.get::<crate::ir::DatumId>(ref_id) {
+        return Some(IiruDefinition::Datum(id));
+    }
+    if let Some(id) = ctx.id_cache.get::<crate::ir::DimensionalSizeId>(ref_id) {
+        return Some(IiruDefinition::DimensionalSize(id));
+    }
+    if let Some(id) = ctx.id_cache.get::<crate::ir::GeometricToleranceId>(ref_id) {
+        return Some(IiruDefinition::GeometricTolerance(id));
+    }
+    None
+}
+
+/// Map the synth `identified_item` SELECT to [`IiruIdentifiedItem`]: a single
+/// ref → `Item`; a `SET`/`LIST_REPRESENTATION_ITEM` → `Compound` (per-child
+/// resolved, unresolved skipped). An entirely-unresolved member → `None`.
+fn lower_iiru_identified_item(
+    ctx: &ReaderContext,
+    sel: EarlyItemIdentifiedRepresentationUsageSelect,
+) -> Option<IiruIdentifiedItem> {
+    let (kind, refs) = match sel {
+        EarlyItemIdentifiedRepresentationUsageSelect::EntityRef(r) => {
+            return crate::entities::visualization::styled_item::resolve_representation_item_ref(
+                ctx, r,
+            )
+            .map(IiruIdentifiedItem::Item);
+        }
+        EarlyItemIdentifiedRepresentationUsageSelect::SetRepresentationItem(refs) => {
+            (CompoundItemKind::Set, refs)
+        }
+        EarlyItemIdentifiedRepresentationUsageSelect::ListRepresentationItem(refs) => {
+            (CompoundItemKind::List, refs)
+        }
+    };
+    let mut items = Vec::with_capacity(refs.len());
+    for r in refs {
+        if let Some(item) =
+            crate::entities::visualization::styled_item::resolve_representation_item_ref(ctx, r)
+        {
+            items.push(item);
+        }
+    }
+    if items.is_empty() {
+        return None;
+    }
+    Some(IiruIdentifiedItem::Compound { kind, items })
+}
+
+/// Lower one `ITEM_IDENTIFIED_REPRESENTATION_USAGE`. `definition` (5-way) /
+/// `used_representation` / `identified_item` each drop the carrier when
+/// unresolved. Orphan round-trip — no `id_cache` entry.
+pub(crate) fn lower_item_identified_representation_usage(
+    ctx: &mut ReaderContext,
+    _entity_id: u64,
+    early: EarlyItemIdentifiedRepresentationUsage,
+) {
+    let Some(definition) = resolve_iiru_definition(ctx, early.definition) else {
+        return;
+    };
+    let Some(used_representation) = ctx
+        .id_cache
+        .get::<crate::ir::id::RepresentationId>(early.used_representation)
+    else {
+        return;
+    };
+    let Some(identified_item) = lower_iiru_identified_item(ctx, early.identified_item) else {
+        return;
+    };
+    ctx.item_identified_representation_usages
+        .push(ItemIdentifiedRepresentationUsage {
+            name: early.name,
+            description: early.description,
+            definition,
+            used_representation,
+            identified_item,
         });
 }

@@ -6,8 +6,9 @@ use crate::early::model::{
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect, EarlyCompoundItemDefinition,
     EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
-    EarlyDescriptiveRepresentationItem, EarlyFeatureForDatumTargetRelationship, EarlyMeasureValue,
-    EarlyMechanicalDesignAndDraughtingRelationship,
+    EarlyDescriptiveRepresentationItem, EarlyFeatureForDatumTargetRelationship,
+    EarlyItemIdentifiedRepresentationUsage, EarlyItemIdentifiedRepresentationUsageSelect,
+    EarlyMeasureValue, EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
@@ -22,8 +23,9 @@ use crate::entities::shape_rep::descriptive_representation_item::DescriptiveRepr
 use crate::ir::representation_item::{MeasureValue, ValueRepresentationItem};
 use crate::ir::shape_rep::{
     CompoundItem, CompoundItemKind, CompoundRepresentationItem, ConstructiveGeometryRepr,
-    DimensionItem, Mdgpr, ShapeDimensionRepresentation, ShapeRepresentationWithParameters,
-    SrwpItem, TessellatedShapeRepresentation, UnitlessContext,
+    DimensionItem, IiruDefinition, IiruIdentifiedItem, ItemIdentifiedRepresentationUsage, Mdgpr,
+    ShapeDimensionRepresentation, ShapeRepresentationWithParameters, SrwpItem,
+    TessellatedShapeRepresentation, UnitlessContext,
 };
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
@@ -606,5 +608,48 @@ pub(crate) fn lift_compound_representation_item(
     Ok(EarlyCompoundRepresentationItem {
         name: cri.name,
         item_element,
+    })
+}
+
+/// Lift one `ITEM_IDENTIFIED_REPRESENTATION_USAGE`. `definition` (5-way) /
+/// `used_representation` resolve to cached step ids; `identified_item` emits to
+/// the synth SELECT (single ref → `EntityRef`, Set/List → typed aggregate).
+pub(crate) fn lift_item_identified_representation_usage(
+    buf: &mut WriteBuffer,
+    iiru: ItemIdentifiedRepresentationUsage,
+) -> Result<EarlyItemIdentifiedRepresentationUsage, WriteError> {
+    let definition = match iiru.definition {
+        IiruDefinition::ShapeAspect(id) => buf.step_id(id),
+        IiruDefinition::Datum(id) => buf.step_id(id),
+        IiruDefinition::DatumFeature(id) => buf.step_id(id),
+        IiruDefinition::DimensionalSize(id) => buf.step_id(id),
+        IiruDefinition::GeometricTolerance(id) => buf.step_id(id),
+    };
+    let used_representation = buf.step_id(iiru.used_representation);
+    let identified_item = match iiru.identified_item {
+        IiruIdentifiedItem::Item(r) => EarlyItemIdentifiedRepresentationUsageSelect::EntityRef(
+            buf.emit_representation_item_ref(r)?,
+        ),
+        IiruIdentifiedItem::Compound { kind, items } => {
+            let mut steps = Vec::with_capacity(items.len());
+            for r in items {
+                steps.push(buf.emit_representation_item_ref(r)?);
+            }
+            match kind {
+                CompoundItemKind::Set => {
+                    EarlyItemIdentifiedRepresentationUsageSelect::SetRepresentationItem(steps)
+                }
+                CompoundItemKind::List => {
+                    EarlyItemIdentifiedRepresentationUsageSelect::ListRepresentationItem(steps)
+                }
+            }
+        }
+    };
+    Ok(EarlyItemIdentifiedRepresentationUsage {
+        name: iiru.name,
+        description: iiru.description,
+        definition,
+        used_representation,
+        identified_item,
     })
 }

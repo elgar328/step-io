@@ -3900,6 +3900,31 @@ pub(crate) fn bind_compound_representation_item(
     }))
 }
 
+pub(crate) fn bind_item_identified_representation_usage(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<
+    Option<super::model::EarlyItemIdentifiedRepresentationUsage>,
+    crate::ir::error::ConvertError,
+> {
+    crate::ir::attr::check_count(attrs, 5, entity_id, "ITEM_IDENTIFIED_REPRESENTATION_USAGE")?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let description = crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?;
+    let definition = crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "definition")?;
+    let used_representation =
+        crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "used_representation")?;
+    let Some(identified_item) = bind_item_identified_representation_usage_select(&attrs[4]) else {
+        return Ok(None);
+    };
+    Ok(Some(super::model::EarlyItemIdentifiedRepresentationUsage {
+        name,
+        description,
+        definition,
+        used_representation,
+        identified_item,
+    }))
+}
+
 fn bind_compound_item_definition(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyCompoundItemDefinition> {
@@ -3925,6 +3950,42 @@ fn bind_compound_item_definition(
                         }
                     }
                     Some(super::model::EarlyCompoundItemDefinition::SetRepresentationItem(out))
+                }
+                _ => None,
+            }
+        }
+        _ => None,
+    }
+}
+
+fn bind_item_identified_representation_usage_select(
+    attr: &crate::parser::entity::Attribute,
+) -> Option<super::model::EarlyItemIdentifiedRepresentationUsageSelect> {
+    match attr {
+        crate::parser::entity::Attribute::EntityRef(n) => {
+            Some(super::model::EarlyItemIdentifiedRepresentationUsageSelect::EntityRef(*n))
+        }
+        crate::parser::entity::Attribute::Typed { type_name, value } => {
+            match (type_name.as_str(), value.as_ref()) {
+                ("LIST_REPRESENTATION_ITEM", crate::parser::entity::Attribute::List(items)) => {
+                    let mut out = Vec::with_capacity(items.len());
+                    for it in items {
+                        match it {
+                            crate::parser::entity::Attribute::EntityRef(n) => out.push(*n),
+                            _ => return None,
+                        }
+                    }
+                    Some(super::model::EarlyItemIdentifiedRepresentationUsageSelect::ListRepresentationItem(out))
+                }
+                ("SET_REPRESENTATION_ITEM", crate::parser::entity::Attribute::List(items)) => {
+                    let mut out = Vec::with_capacity(items.len());
+                    for it in items {
+                        match it {
+                            crate::parser::entity::Attribute::EntityRef(n) => out.push(*n),
+                            _ => return None,
+                        }
+                    }
+                    Some(super::model::EarlyItemIdentifiedRepresentationUsageSelect::SetRepresentationItem(out))
                 }
                 _ => None,
             }

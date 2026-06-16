@@ -289,6 +289,8 @@ generate = [
     "shape_representation_with_parameters",
     # Phase 4a: non-repr clean — first synth typed-aggregate select (compound_item_definition)
     "compound_representation_item",
+    # Phase 4b: non-repr clean — IIRU (definition all-entity→u64, identified_item mixed synth)
+    "item_identified_representation_usage",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also

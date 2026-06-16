@@ -4369,6 +4369,25 @@ pub(crate) fn serialize_compound_representation_item(
     )
 }
 
+pub(crate) fn serialize_item_identified_representation_usage(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyItemIdentifiedRepresentationUsage,
+) -> u64 {
+    buf.push_simple(
+        "ITEM_IDENTIFIED_REPRESENTATION_USAGE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.definition),
+            crate::parser::entity::Attribute::EntityRef(l1.used_representation),
+            item_identified_representation_usage_select_emit(&l1.identified_item),
+        ],
+    )
+}
+
 fn compound_item_definition_emit(
     v: &super::model::EarlyCompoundItemDefinition,
 ) -> crate::parser::entity::Attribute {
@@ -4384,6 +4403,36 @@ fn compound_item_definition_emit(
             }
         }
         super::model::EarlyCompoundItemDefinition::SetRepresentationItem(xs) => {
+            crate::parser::entity::Attribute::Typed {
+                type_name: "SET_REPRESENTATION_ITEM".into(),
+                value: Box::new(crate::parser::entity::Attribute::List(
+                    xs.iter()
+                        .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                        .collect(),
+                )),
+            }
+        }
+    }
+}
+
+fn item_identified_representation_usage_select_emit(
+    v: &super::model::EarlyItemIdentifiedRepresentationUsageSelect,
+) -> crate::parser::entity::Attribute {
+    match v {
+        super::model::EarlyItemIdentifiedRepresentationUsageSelect::EntityRef(step) => {
+            crate::parser::entity::Attribute::EntityRef(*step)
+        }
+        super::model::EarlyItemIdentifiedRepresentationUsageSelect::ListRepresentationItem(xs) => {
+            crate::parser::entity::Attribute::Typed {
+                type_name: "LIST_REPRESENTATION_ITEM".into(),
+                value: Box::new(crate::parser::entity::Attribute::List(
+                    xs.iter()
+                        .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                        .collect(),
+                )),
+            }
+        }
+        super::model::EarlyItemIdentifiedRepresentationUsageSelect::SetRepresentationItem(xs) => {
             crate::parser::entity::Attribute::Typed {
                 type_name: "SET_REPRESENTATION_ITEM".into(),
                 value: Box::new(crate::parser::entity::Attribute::List(
