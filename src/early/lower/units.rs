@@ -4,14 +4,15 @@
 use crate::early::model::{
     EarlyDerivedUnit, EarlyDerivedUnitElement, EarlyDimensionalExponents,
     EarlyLengthMeasureWithUnit, EarlyMassMeasureWithUnit, EarlyMeasureValue, EarlyMeasureWithUnit,
-    EarlyPlaneAngleMeasureWithUnit, EarlyRatioMeasureWithUnit, EarlyUncertaintyMeasureWithUnit,
+    EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit, EarlyRatioMeasureWithUnit,
+    EarlyUncertaintyMeasureWithUnit,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::representation_item::MeasureValue;
 use crate::ir::shape_rep::LengthUncertainty;
 use crate::ir::units::{
     DerivedUnit, DerivedUnitElement, DerivedUnitKind, DimensionalExponents, MeasureWithUnit,
-    MeasureWithUnitData,
+    MeasureWithUnitData, NamedUnit, NamedUnitData,
 };
 use crate::reader::ReaderContext;
 
@@ -225,4 +226,18 @@ pub(crate) fn lower_uncertainty_measure_with_unit(
     } else if ctx.solid_angle_unit_map.contains_key(&early.unit_component) {
         ctx.solid_angle_uncertainty_map.insert(entity_id, unc);
     }
+}
+
+/// Lower bare `NAMED_UNIT(#dimensions)` (`NamedUnit::Itself` — a
+/// dimensionless/count unit). `dimensions` resolves through the typed
+/// `DimensionalExponentsId` cache (unresolved → `None`, matching the legacy
+/// handler); registers the `NamedUnitId` key.
+pub(crate) fn lower_named_unit(ctx: &mut ReaderContext, entity_id: u64, early: &EarlyNamedUnit) {
+    let dimensions = ctx
+        .id_cache
+        .get::<crate::ir::id::DimensionalExponentsId>(early.dimensions);
+    let id = ctx
+        .named_units_arena
+        .push(NamedUnit::Itself(NamedUnitData { dimensions }));
+    ctx.id_cache.insert(entity_id, id);
 }

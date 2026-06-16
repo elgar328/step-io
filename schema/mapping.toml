@@ -70,6 +70,8 @@ generate = [
     "derived_unit_element",
     "derived_unit",
     "dimensional_exponents",
+    # Phase 4r: units named cluster — NAMED_UNIT bare (reserve-then-fill)
+    "named_unit",
     # visualization (pre-defined / colour leaf batch)
     "pre_defined_marker",
     "pre_defined_point_marker_symbol",
@@ -319,6 +321,7 @@ generate = [
 serialize_with_id = [
     "characterized_item_within_representation",
     "model_geometric_view",
+    "named_unit",
 ]
 
 # `generate_all`: diagnostic flip. When true, gen-early generates *every* entity

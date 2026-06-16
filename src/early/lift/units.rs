@@ -4,7 +4,8 @@
 use crate::early::model::{
     EarlyDerivedUnit, EarlyDerivedUnitElement, EarlyDimensionalExponents,
     EarlyLengthMeasureWithUnit, EarlyMassMeasureWithUnit, EarlyMeasureValue, EarlyMeasureWithUnit,
-    EarlyPlaneAngleMeasureWithUnit, EarlyRatioMeasureWithUnit, EarlyUncertaintyMeasureWithUnit,
+    EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit, EarlyRatioMeasureWithUnit,
+    EarlyUncertaintyMeasureWithUnit,
 };
 use crate::ir::representation_item::MeasureValue;
 use crate::ir::shape_rep::LengthUncertainty;
@@ -112,5 +113,13 @@ pub(crate) fn lift_uncertainty_measure_with_unit(
         unit_component: unit_step,
         name: unc.name,
         description: Some(unc.description),
+    }
+}
+
+/// Lift bare `NAMED_UNIT` (`NamedUnit::Itself`). `dim_step` is the child
+/// `DIMENSIONAL_EXPONENTS` step id (the emit loop resolves it).
+pub(crate) fn lift_named_unit(dim_step: u64) -> EarlyNamedUnit {
+    EarlyNamedUnit {
+        dimensions: dim_step,
     }
 }

@@ -53,7 +53,7 @@ pub(crate) use super::generated::bind::{
     bind_mass_measure_with_unit, bind_measure_qualification, bind_measure_with_unit,
     bind_mechanical_design_and_draughting_relationship,
     bind_mechanical_design_geometric_presentation_representation, bind_model_geometric_view,
-    bind_name_attribute, bind_next_assembly_usage_occurrence, bind_object_role,
+    bind_name_attribute, bind_named_unit, bind_next_assembly_usage_occurrence, bind_object_role,
     bind_offset_curve_3d, bind_offset_surface, bind_open_shell, bind_organization,
     bind_oriented_closed_shell, bind_oriented_edge, bind_over_riding_styled_item, bind_parabola,
     bind_parallelism_tolerance, bind_parametric_representation_context,

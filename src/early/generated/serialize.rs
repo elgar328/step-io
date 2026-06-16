@@ -1130,6 +1130,28 @@ pub(crate) fn serialize_dimensional_exponents(
     )
 }
 
+pub(crate) fn serialize_named_unit(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyNamedUnit,
+) -> u64 {
+    buf.push_simple(
+        "NAMED_UNIT",
+        vec![crate::parser::entity::Attribute::EntityRef(l1.dimensions)],
+    )
+}
+
+pub(crate) fn serialize_named_unit_with_id(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    id: u64,
+    l1: &super::model::EarlyNamedUnit,
+) {
+    buf.push_simple_with_id(
+        id,
+        "NAMED_UNIT",
+        vec![crate::parser::entity::Attribute::EntityRef(l1.dimensions)],
+    );
+}
+
 pub(crate) fn serialize_pre_defined_marker(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyPreDefinedMarker,

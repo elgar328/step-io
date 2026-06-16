@@ -8,10 +8,10 @@
 //! complex `(MASS_UNIT()NAMED_UNIT()SI_UNIT())` handlers (simple vs complex
 //! dispatch, mirroring `RATIO_UNIT`).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::check_count;
 use crate::ir::error::ConvertError;
-use crate::ir::units::{NamedUnit, NamedUnitData};
+use crate::ir::units::NamedUnitData;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -22,9 +22,11 @@ pub(crate) struct NamedUnitSimpleHandler;
 
 #[step_entity(name = "NAMED_UNIT")]
 impl SimpleEntityHandler for NamedUnitSimpleHandler {
-    /// `(target_id, dim_exp_step)` — reserved step id + resolved
-    /// `DIMENSIONAL_EXPONENTS` ref (`0` → emit `$`).
-    type WriteInput = (u64, u64);
+    /// The bare named-unit arena data. The units pool emitter pre-reserves each
+    /// `NamedUnit` step id and calls `serialize_named_unit_with_id` directly
+    /// (see `emit_named_unit_plain`); this fresh-id `write` exists for the
+    /// generic handler contract.
+    type WriteInput = NamedUnitData;
 
     fn read(
         ctx: &mut ReaderContext,
@@ -32,30 +34,16 @@ impl SimpleEntityHandler for NamedUnitSimpleHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 1, entity_id, "NAMED_UNIT")?;
-        let dimensions = match attrs.first() {
-            Some(Attribute::EntityRef(n)) => ctx
-                .id_cache
-                .get::<crate::ir::id::DimensionalExponentsId>(*n),
-            _ => None, // `$` (Unset) / `*` (Derived) — no explicit dimensions
-        };
-        let id = ctx
-            .named_units_arena
-            .push(NamedUnit::Itself(NamedUnitData { dimensions }));
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_named_unit(entity_id, attrs)?;
+        lower::lower_named_unit(ctx, entity_id, &early);
         Ok(())
     }
 
-    fn write(
-        buf: &mut WriteBuffer,
-        (target_id, dim_exp_step): (u64, u64),
-    ) -> Result<u64, WriteError> {
-        let dim_attr = if dim_exp_step == 0 {
-            Attribute::Unset
-        } else {
-            Attribute::EntityRef(dim_exp_step)
-        };
-        buf.push_simple_with_id(target_id, "NAMED_UNIT", vec![dim_attr]);
-        Ok(target_id)
+    fn write(buf: &mut WriteBuffer, data: NamedUnitData) -> Result<u64, WriteError> {
+        let dim_step = data.dimensions.map_or(0, |id| buf.step_id(id));
+        Ok(serialize::serialize_named_unit(
+            buf,
+            &lift::lift_named_unit(dim_step),
+        ))
     }
 }

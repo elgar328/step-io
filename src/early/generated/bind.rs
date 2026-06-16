@@ -1119,6 +1119,16 @@ pub(crate) fn bind_dimensional_exponents(
     })
 }
 
+pub(crate) fn bind_named_unit(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyNamedUnit, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "NAMED_UNIT")?;
+    Ok(super::model::EarlyNamedUnit {
+        dimensions: crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "dimensions")?,
+    })
+}
+
 pub(crate) fn bind_pre_defined_marker(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],
