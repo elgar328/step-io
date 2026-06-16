@@ -21,14 +21,14 @@ use crate::early::model::{
 use crate::entities::geometry::nurbs_shared::quasi_uniform_knots;
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{
-    Axis1Placement, Axis2Placement2d, Axis2Placement3d, BoundedPCurve, Circle3, CircularArea,
-    CircularAreaCentre, CompositeCurve, CompositeSegment, ConicalSurface, Curve,
-    CurveBoundedSurface, CylindricalSurface, DegenerateToroidalSurface, Direction2, Direction3,
-    Ellipse3, Hyperbola, Line3, NurbsCurve, NurbsKind, NurbsSurface, NurbsSurfaceKind,
-    OffsetCurve3d, Parabola, ParameterSpaceCurve, PlanarBox, PlanarBoxPlacement, PlanarExtent,
-    PlanarExtentData, Plane3, Point2, Point3, Polyline, RectangularTrimmedSurface,
-    SphericalSurface, Surface, SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution,
-    ToroidalSurface, TrimSelect, TrimmedCurve, Vertex,
+    Axis1Placement, Axis2Placement2d, Axis2Placement3d, BoundedPCurve, Circle2, Circle3,
+    CircularArea, CircularAreaCentre, CompositeCurve, CompositeSegment, ConicalSurface, Curve,
+    Curve2d, CurveBoundedSurface, CylindricalSurface, DegenerateToroidalSurface, Direction2,
+    Direction3, Ellipse2, Ellipse3, Hyperbola, Line2, Line3, NurbsCurve, NurbsKind, NurbsSurface,
+    NurbsSurfaceKind, OffsetCurve3d, Parabola, ParameterSpaceCurve, PlanarBox, PlanarBoxPlacement,
+    PlanarExtent, PlanarExtentData, Plane3, Point2, Point3, Polyline, Polyline2d,
+    RectangularTrimmedSurface, SphericalSurface, Surface, SurfaceOfLinearExtrusion,
+    SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TrimSelect, TrimmedCurve, Vertex,
 };
 use crate::reader::ReaderContext;
 
@@ -648,6 +648,103 @@ pub(crate) fn lower_axis2_placement_2d(
         location,
         ref_direction,
     });
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
+/// Lower the 2D-arena variant of `CIRCLE` (sister of [`lower_circle`]). Claims
+/// circles whose `position` resolved into `placements_2d`; a 3D placement is
+/// left for the 3D sister (no-op).
+pub(crate) fn lower_circle_2d(ctx: &mut ReaderContext, entity_id: u64, early: &EarlyCircle) {
+    let Some(position) = ctx
+        .id_cache
+        .get::<crate::ir::id::Placement2dId>(early.position)
+    else {
+        return;
+    };
+    let id = ctx.geometry.curves_2d.push(Curve2d::Circle(Circle2 {
+        position,
+        radius: early.radius,
+    }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower the 2D-arena variant of `ELLIPSE` (sister of [`lower_ellipse`]). Claims
+/// ellipses whose `position` resolved into `placements_2d`; a 3D placement is
+/// left for the 3D sister (no-op).
+pub(crate) fn lower_ellipse_2d(ctx: &mut ReaderContext, entity_id: u64, early: &EarlyEllipse) {
+    let Some(position) = ctx
+        .id_cache
+        .get::<crate::ir::id::Placement2dId>(early.position)
+    else {
+        return;
+    };
+    let id = ctx.geometry.curves_2d.push(Curve2d::Ellipse(Ellipse2 {
+        position,
+        semi_axis_1: early.semi_axis_1,
+        semi_axis_2: early.semi_axis_2,
+    }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower the 2D-arena variant of `LINE` (sister of [`lower_line`]). Claims lines
+/// whose `pnt` resolved into `points_2d`; a 3D point is left for the 3D sister
+/// (no-op). The `dir` VECTOR must be in `vector_2d_map` (a dangling ref surfaces
+/// as `MissingReference`, matching the legacy handler).
+pub(crate) fn lower_line_2d(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyLine,
+) -> Result<(), ConvertError> {
+    let Some(point) = ctx.id_cache.get::<crate::ir::id::Point2dId>(early.pnt) else {
+        return Ok(());
+    };
+    let (direction, magnitude) =
+        *ctx.vector_2d_map
+            .get(&early.dir)
+            .ok_or(ConvertError::MissingReference {
+                from: entity_id,
+                to: early.dir,
+                field_name: "dir",
+            })?;
+    let id = ctx.geometry.curves_2d.push(Curve2d::Line(Line2 {
+        point,
+        direction,
+        magnitude,
+    }));
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
+/// Lower the 2D-arena variant of `POLYLINE` (sister of [`lower_polyline`]). The
+/// first point's arena discriminates: 2D points claim here, 3D fall through to
+/// the 3D sister. A dangling point ref surfaces as `MissingReference`.
+pub(crate) fn lower_polyline_2d(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyPolyline,
+) -> Result<(), ConvertError> {
+    let Some(first) = early.points.first() else {
+        return Ok(());
+    };
+    if !ctx.id_cache.contains::<crate::ir::id::Point2dId>(*first) {
+        return Ok(());
+    }
+    let mut points = Vec::with_capacity(early.points.len());
+    for r in &early.points {
+        let Some(pid) = ctx.id_cache.get::<crate::ir::id::Point2dId>(*r) else {
+            return Err(ConvertError::MissingReference {
+                from: entity_id,
+                to: *r,
+                field_name: "points",
+            });
+        };
+        points.push(pid);
+    }
+    let id = ctx
+        .geometry
+        .curves_2d
+        .push(Curve2d::Polyline(Polyline2d { points }));
     ctx.id_cache.insert(entity_id, id);
     Ok(())
 }
