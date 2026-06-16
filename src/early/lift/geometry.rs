@@ -15,8 +15,8 @@ use crate::early::model::{
     EarlyVector, EarlyVertexPoint,
 };
 use crate::ir::geometry::{
-    Direction2, Direction3, Logical, NurbsCurve, NurbsSurface, Point2, Point3, TransitionCode,
-    TrimMaster,
+    Direction2, Direction3, Logical, NurbsCurve, NurbsCurve2d, NurbsSurface, Point2, Point3,
+    TransitionCode, TrimMaster,
 };
 
 /// Lift one `BOUNDED_PCURVE`. Unlike most geometry, it round-trips its own
@@ -48,6 +48,27 @@ pub(crate) fn lift_b_spline_curve_with_knots(
         curve_form: nurbs.form,
         closed_curve: nurbs.closed,
         self_intersect: nurbs.self_intersect,
+        knot_multiplicities: nurbs.knot_multiplicities.clone(),
+        knots: nurbs.knots.clone(),
+        knot_spec: EarlyKnotType::Unspecified,
+    }
+}
+
+/// Lift the 2D-arena variant of `B_SPLINE_CURVE_WITH_KNOTS` (non-rational;
+/// sister of [`lift_b_spline_curve_with_knots`]). `NurbsCurve2d` does not model
+/// `self_intersect`, so it is re-emitted as `.F.` (`Logical::False`), matching
+/// the legacy handler; `knot_spec` is always `Unspecified`.
+pub(crate) fn lift_b_spline_curve_2d_with_knots(
+    nurbs: &NurbsCurve2d,
+    control_points_list: Vec<u64>,
+) -> EarlyBSplineCurveWithKnots {
+    EarlyBSplineCurveWithKnots {
+        name: String::new(),
+        degree: i64::from(nurbs.degree),
+        control_points_list,
+        curve_form: nurbs.form,
+        closed_curve: nurbs.closed,
+        self_intersect: Logical::False,
         knot_multiplicities: nurbs.knot_multiplicities.clone(),
         knots: nurbs.knots.clone(),
         knot_spec: EarlyKnotType::Unspecified,

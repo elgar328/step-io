@@ -24,11 +24,12 @@ use crate::ir::geometry::{
     Axis1Placement, Axis2Placement2d, Axis2Placement3d, BoundedPCurve, Circle2, Circle3,
     CircularArea, CircularAreaCentre, CompositeCurve, CompositeSegment, ConicalSurface, Curve,
     Curve2d, CurveBoundedSurface, CylindricalSurface, DegenerateToroidalSurface, Direction2,
-    Direction3, Ellipse2, Ellipse3, Hyperbola, Line2, Line3, NurbsCurve, NurbsKind, NurbsSurface,
-    NurbsSurfaceKind, OffsetCurve3d, Parabola, ParameterSpaceCurve, PlanarBox, PlanarBoxPlacement,
-    PlanarExtent, PlanarExtentData, Plane3, Point2, Point3, Polyline, Polyline2d,
-    RectangularTrimmedSurface, SphericalSurface, Surface, SurfaceOfLinearExtrusion,
-    SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TrimSelect, TrimmedCurve, Vertex,
+    Direction3, Ellipse2, Ellipse3, Hyperbola, Line2, Line3, NurbsCurve, NurbsCurve2d, NurbsKind,
+    NurbsKind2d, NurbsSurface, NurbsSurfaceKind, OffsetCurve3d, Parabola, ParameterSpaceCurve,
+    PlanarBox, PlanarBoxPlacement, PlanarExtent, PlanarExtentData, Plane3, Point2, Point3,
+    Polyline, Polyline2d, RectangularTrimmedSurface, SphericalSurface, Surface,
+    SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TrimSelect,
+    TrimmedCurve, Vertex,
 };
 use crate::reader::ReaderContext;
 
@@ -745,6 +746,52 @@ pub(crate) fn lower_polyline_2d(
         .geometry
         .curves_2d
         .push(Curve2d::Polyline(Polyline2d { points }));
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
+/// Lower the 2D-arena variant of `B_SPLINE_CURVE_WITH_KNOTS` (non-rational;
+/// sister of [`lower_b_spline_curve_with_knots`]). `degree` narrows to `u32`
+/// first; then the first control point's arena discriminates (a 3D point falls
+/// through to the 3D sister). Once 2D is confirmed, a missing successor is an
+/// error. `self_intersect`/`knot_spec` are not modelled by `NurbsCurve2d` (the
+/// writer re-emits `.F.` / `UNSPECIFIED`).
+pub(crate) fn lower_b_spline_curve_2d_with_knots(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyBSplineCurveWithKnots,
+) -> Result<(), ConvertError> {
+    let degree = u32::try_from(early.degree).map_err(|_| ConvertError::AttributeType {
+        entity_id,
+        field_name: "degree",
+        expected: "non-negative Integer",
+        actual: crate::ir::error::AttributeKindTag::Integer,
+    })?;
+    if let Some(&first) = early.control_points_list.first()
+        && !ctx.id_cache.contains::<crate::ir::id::Point2dId>(first)
+    {
+        return Ok(()); // 3D sister handler claims this instance
+    }
+    let mut control_points = Vec::with_capacity(early.control_points_list.len());
+    for &r in &early.control_points_list {
+        let pt = ctx.id_cache.get::<crate::ir::id::Point2dId>(r).ok_or(
+            ConvertError::MissingReference {
+                from: entity_id,
+                to: r,
+                field_name: "control_points_list",
+            },
+        )?;
+        control_points.push(pt);
+    }
+    let id = ctx.geometry.curves_2d.push(Curve2d::Nurbs(NurbsCurve2d {
+        degree,
+        control_points,
+        kind: NurbsKind2d::NonRational,
+        knot_multiplicities: early.knot_multiplicities.clone(),
+        knots: early.knots.clone(),
+        closed: early.closed_curve,
+        form: early.curve_form,
+    }));
     ctx.id_cache.insert(entity_id, id);
     Ok(())
 }

@@ -1,23 +1,19 @@
-//! `B_SPLINE_CURVE_WITH_KNOTS` handler (2D, pcurve subtree).
+//! `B_SPLINE_CURVE_WITH_KNOTS` handler — 2D sister (pcurve subtree), non-rational
+//! → `Curve2d::Nurbs` (2-layer path; reuses the 3D generated bind/serialize).
 //!
-//! Sister of [`crate::entities::geometry::b_spline_curve_with_knots`].
-//! Read accepts the non-rational form only; write returns
-//! `UnsupportedIrVariant` if `weights` is set since 2D rational NURBS
-//! has no fixture coverage yet.
+//! The rational form lives in `rational_bspline_curve_2d.rs`; `write` asserts
+//! the non-rational invariant since `emit_nurbs_curve_2d` routes rational forms
+//! to the 2D rational handler.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::cartesian_point_2d::CartesianPoint2dHandler;
-use crate::ir::attr::{
-    check_count, logical_to_step, read_entity_ref_list, read_enum, read_integer, read_integer_list,
-    read_logical, read_real_list, read_string_or_unset,
-};
-use crate::ir::error::{AttributeKindTag, ConvertError};
-use crate::ir::geometry::{Curve2d, CurveForm, NurbsCurve2d, NurbsKind2d};
+use crate::ir::error::ConvertError;
+use crate::ir::geometry::NurbsCurve2d;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
-use crate::writer::entity::{WriterBody, WriterEntity};
 use step_io_macros::step_entity;
 
 pub(crate) struct BSplineCurve2dWithKnotsHandler;
@@ -32,54 +28,8 @@ impl SimpleEntityHandler for BSplineCurve2dWithKnotsHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 9, entity_id, "B_SPLINE_CURVE_WITH_KNOTS")?;
-        let _name = read_string_or_unset(attrs, 0, entity_id, "name")?;
-        let degree_i = read_integer(attrs, 1, entity_id, "degree")?;
-        let cp_refs = read_entity_ref_list(attrs, 2, entity_id, "control_points_list")?;
-        let form = CurveForm::from_step_enum(read_enum(attrs, 3, entity_id, "curve_form")?);
-        let closed = read_logical(attrs, 4, entity_id, "closed_curve")?;
-        let knot_multiplicities = read_integer_list(attrs, 6, entity_id, "knot_multiplicities")?;
-        let knots = read_real_list(attrs, 7, entity_id, "knots")?;
-
-        let degree = u32::try_from(degree_i).map_err(|_| ConvertError::AttributeType {
-            entity_id,
-            field_name: "degree",
-            expected: "non-negative Integer",
-            actual: AttributeKindTag::Integer,
-        })?;
-
-        let mut control_points = Vec::with_capacity(cp_refs.len());
-        // First control point discriminates 2D vs 3D: if it's absent
-        // from the 2D arena, this is the 3D B_SPLINE_CURVE_WITH_KNOTS.
-        // Once the first point is confirmed 2D, missing successors are
-        // legitimate errors.
-        if let Some(&first_ref) = cp_refs.first() {
-            if !ctx.id_cache.contains::<crate::ir::id::Point2dId>(first_ref) {
-                return Ok(());
-            }
-        }
-        for &r in &cp_refs {
-            let pt = ctx.id_cache.get::<crate::ir::id::Point2dId>(r).ok_or(
-                ConvertError::MissingReference {
-                    from: entity_id,
-                    to: r,
-                    field_name: "control_points_list",
-                },
-            )?;
-            control_points.push(pt);
-        }
-
-        let id = ctx.geometry.curves_2d.push(Curve2d::Nurbs(NurbsCurve2d {
-            degree,
-            control_points,
-            kind: NurbsKind2d::NonRational,
-            knot_multiplicities,
-            knots,
-            closed,
-            form,
-        }));
-        ctx.id_cache.insert(entity_id, id);
-        Ok(())
+        let early = bind::bind_b_spline_curve_with_knots(entity_id, attrs)?;
+        lower::lower_b_spline_curve_2d_with_knots(ctx, entity_id, &early)
     }
 
     fn write(buf: &mut WriteBuffer, nurbs: NurbsCurve2d) -> Result<u64, WriteError> {
@@ -88,42 +38,11 @@ impl SimpleEntityHandler for BSplineCurve2dWithKnotsHandler {
             "BSplineCurve2dWithKnotsHandler::write expects a non-rational curve; \
              dispatch in emit_nurbs_curve_2d routes rational forms to the 2D rational handler",
         );
-        let mut cp_refs = Vec::with_capacity(nurbs.control_points.len());
+        let mut control_points = Vec::with_capacity(nurbs.control_points.len());
         for &pid in &nurbs.control_points {
-            cp_refs.push(CartesianPoint2dHandler::write(buf, pid)?);
+            control_points.push(CartesianPoint2dHandler::write(buf, pid)?);
         }
-        let degree_attr = Attribute::Integer(i64::from(nurbs.degree));
-        let cps_attr = Attribute::List(cp_refs.into_iter().map(Attribute::EntityRef).collect());
-        let mults_attr = Attribute::List(
-            nurbs
-                .knot_multiplicities
-                .iter()
-                .copied()
-                .map(Attribute::Integer)
-                .collect(),
-        );
-        let knots_attr =
-            Attribute::List(nurbs.knots.iter().copied().map(Attribute::Real).collect());
-        let closed_attr = Attribute::Enum(logical_to_step(nurbs.closed).into());
-        let form = nurbs.form;
-        let n = buf.fresh();
-        buf.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "B_SPLINE_CURVE_WITH_KNOTS".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    degree_attr,
-                    cps_attr,
-                    Attribute::Enum(form.as_step_enum().into()),
-                    closed_attr,
-                    Attribute::Enum("F".into()),
-                    mults_attr,
-                    knots_attr,
-                    Attribute::Enum("UNSPECIFIED".into()),
-                ],
-            },
-        });
-        Ok(n)
+        let early = lift::lift_b_spline_curve_2d_with_knots(&nurbs, control_points);
+        Ok(serialize::serialize_b_spline_curve_with_knots(buf, &early))
     }
 }
