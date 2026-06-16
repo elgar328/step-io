@@ -122,6 +122,29 @@ pub(crate) fn lift_rational_bspline_curve(
     }
 }
 
+/// Lift the 2D-arena variant of `RATIONAL_B_SPLINE_CURVE` (complex; sister of
+/// [`lift_rational_bspline_curve`]). `NurbsCurve2d` does not model
+/// `self_intersect`, so it is re-emitted as `.F.` (`Logical::False`), matching the
+/// legacy handler; `knot_spec` is always `Unspecified`.
+pub(crate) fn lift_rational_bspline_curve_2d(
+    nurbs: &NurbsCurve2d,
+    control_points: Vec<u64>,
+    weights: Vec<f64>,
+) -> EarlyRationalBSplineCurve {
+    EarlyRationalBSplineCurve {
+        name: String::new(),
+        degree: i64::from(nurbs.degree),
+        control_points_list: control_points,
+        curve_form: nurbs.form,
+        closed_curve: nurbs.closed,
+        self_intersect: Logical::False,
+        knot_multiplicities: nurbs.knot_multiplicities.clone(),
+        knots: nurbs.knots.clone(),
+        knot_spec: EarlyKnotType::Unspecified,
+        weights_data: weights,
+    }
+}
+
 /// Lift one `RATIONAL_B_SPLINE_SURFACE` (complex). `control_points`/`weights` are
 /// the u/v grids (the handler extracts weights from `NurbsSurfaceKind::Rational`).
 /// `knot_spec` is always re-emitted as `Unspecified` (see plan).

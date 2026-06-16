@@ -311,6 +311,62 @@ pub(crate) fn lower_rational_bspline_curve(
     Ok(())
 }
 
+/// Lower the 2D-arena variant of `RATIONAL_B_SPLINE_CURVE` (complex, rational;
+/// sister of [`lower_rational_bspline_curve`]). The first control point's arena
+/// discriminates **first** (a 3D point falls through to the 3D sister), then the
+/// `weights`/control-point count is checked and `degree` narrows to `u32` — the
+/// legacy handler's check order. `self_intersect`/`knot_spec` are not modelled by
+/// `NurbsCurve2d` (the writer re-emits `.F.` / `UNSPECIFIED`).
+pub(crate) fn lower_rational_bspline_curve_2d(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyRationalBSplineCurve,
+) -> Result<(), ConvertError> {
+    if let Some(&first) = early.control_points_list.first()
+        && !ctx.id_cache.contains::<crate::ir::id::Point2dId>(first)
+    {
+        return Ok(()); // 3D sister handler claims this instance
+    }
+    if early.weights_data.len() != early.control_points_list.len() {
+        return Err(ConvertError::DimensionMismatch {
+            entity_id,
+            field_name: "weights_data",
+            expected: early.control_points_list.len(),
+            actual: early.weights_data.len(),
+        });
+    }
+    let degree = u32::try_from(early.degree).map_err(|_| ConvertError::AttributeType {
+        entity_id,
+        field_name: "degree",
+        expected: "non-negative Integer",
+        actual: crate::ir::error::AttributeKindTag::Integer,
+    })?;
+    let mut control_points = Vec::with_capacity(early.control_points_list.len());
+    for &r in &early.control_points_list {
+        let pt = ctx.id_cache.get::<crate::ir::id::Point2dId>(r).ok_or(
+            ConvertError::MissingReference {
+                from: entity_id,
+                to: r,
+                field_name: "control_points_list",
+            },
+        )?;
+        control_points.push(pt);
+    }
+    let id = ctx.geometry.curves_2d.push(Curve2d::Nurbs(NurbsCurve2d {
+        degree,
+        control_points,
+        kind: NurbsKind2d::Rational {
+            weights: early.weights_data.clone(),
+        },
+        knot_multiplicities: early.knot_multiplicities.clone(),
+        knots: early.knots.clone(),
+        closed: early.closed_curve,
+        form: early.curve_form,
+    }));
+    ctx.id_cache.insert(entity_id, id);
+    Ok(())
+}
+
 /// Lower one `RATIONAL_B_SPLINE_SURFACE` (complex, rational). u/v degrees narrow
 /// to `u32`; the `weights_data` 2D grid must match the control-point grid shape
 /// (row count and each row's length — `DimensionMismatch` otherwise). No 2D guard.
