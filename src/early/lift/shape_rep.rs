@@ -2,7 +2,8 @@
 //! cluster). See the [module docs](super) for the lifting contract.
 
 use crate::early::model::{
-    EarlyAllAroundShapeAspect, EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
+    EarlyAllAroundShapeAspect, EarlyCameraImage, EarlyCameraImage3dWithScale,
+    EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect, EarlyCompoundItemDefinition,
     EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
@@ -652,4 +653,33 @@ pub(crate) fn lift_item_identified_representation_usage(
         used_representation,
         identified_item,
     })
+}
+
+/// Lift one `CAMERA_IMAGE`. `mapping_source` / `mapping_target` are the child
+/// output step ids (the handler resolves the camera-usage step id and emits the
+/// planar extent first).
+pub(crate) fn lift_camera_image(
+    name: String,
+    mapping_source: u64,
+    mapping_target: u64,
+) -> EarlyCameraImage {
+    EarlyCameraImage {
+        name,
+        mapping_source,
+        mapping_target,
+    }
+}
+
+/// Lift one `CAMERA_IMAGE_3D_WITH_SCALE` (AND-combined complex). Same child step
+/// ids as the plain `CAMERA_IMAGE`.
+pub(crate) fn lift_camera_image_3d_with_scale(
+    name: String,
+    mapping_source: u64,
+    mapping_target: u64,
+) -> EarlyCameraImage3dWithScale {
+    EarlyCameraImage3dWithScale {
+        mapping_source,
+        mapping_target,
+        name,
+    }
 }

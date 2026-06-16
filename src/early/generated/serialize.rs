@@ -4466,6 +4466,42 @@ pub(crate) fn serialize_axis2_placement_2d(
     )
 }
 
+pub(crate) fn serialize_camera_image(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCameraImage,
+) -> u64 {
+    buf.push_simple(
+        "CAMERA_IMAGE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.mapping_source),
+            crate::parser::entity::Attribute::EntityRef(l1.mapping_target),
+        ],
+    )
+}
+
+pub(crate) fn serialize_camera_image_3d_with_scale(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCameraImage3dWithScale,
+) -> u64 {
+    buf.push_complex(vec![
+        ("CAMERA_IMAGE".into(), vec![]),
+        ("CAMERA_IMAGE_3D_WITH_SCALE".into(), vec![]),
+        ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),
+        (
+            "MAPPED_ITEM".into(),
+            vec![
+                crate::parser::entity::Attribute::EntityRef(l1.mapping_source),
+                crate::parser::entity::Attribute::EntityRef(l1.mapping_target),
+            ],
+        ),
+        (
+            "REPRESENTATION_ITEM".into(),
+            vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+        ),
+    ])
+}
+
 fn box_characteristic_select_emit(
     v: &super::model::EarlyBoxCharacteristicSelect,
 ) -> crate::parser::entity::Attribute {

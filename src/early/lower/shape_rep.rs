@@ -9,7 +9,8 @@
 //! the equally raw-keyed geometry payload maps.
 
 use crate::early::model::{
-    EarlyAllAroundShapeAspect, EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
+    EarlyAllAroundShapeAspect, EarlyCameraImage, EarlyCameraImage3dWithScale,
+    EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect, EarlyCompoundItemDefinition,
     EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
@@ -30,12 +31,12 @@ use crate::ir::representation_item::{
     ValueRepresentationItem,
 };
 use crate::ir::shape_rep::{
-    AllAroundShapeAspect, CentreOfSymmetry, CharacterizedItemWithinRepresentation,
+    AllAroundShapeAspect, CameraImage, CentreOfSymmetry, CharacterizedItemWithinRepresentation,
     CharacterizedObject, CharacterizedObjectData, CompositeGroupShapeAspect,
     CompositeShapeAspectKind, CompoundItem, CompoundItemElement, CompoundItemKind,
     CompoundRepresentationItem, ConstructiveGeometryRepr,
     ConstructiveGeometryRepresentationRelationship, DatumSystem, DatumTarget, IiruDefinition,
-    IiruIdentifiedItem, ItemIdentifiedRepresentationUsage, Mdgpr,
+    IiruIdentifiedItem, ItemIdentifiedRepresentationUsage, MappedItem, Mdgpr,
     MechanicalDesignAndDraughtingRelationship, ModelGeometricView, NumericRepresentationItem,
     PlacedDatumTargetFeature, RealRepresentationItem, Representation, RepresentationContextRef,
     RepresentationRelationship, RepresentationRelationshipData, ShapeAspect,
@@ -1073,4 +1074,58 @@ pub(crate) fn lower_item_identified_representation_usage(
             used_representation,
             identified_item,
         });
+}
+
+/// Resolve a `camera_image` body from `name` + `mapping_source` / `mapping_target`
+/// step refs. `None` when either ref does not resolve (the carrier is dropped,
+/// symmetric on re-read). Shared by the plain and `_3d_with_scale` lowers.
+fn resolve_camera_image_body(
+    ctx: &ReaderContext,
+    name: String,
+    source_ref: u64,
+    target_ref: u64,
+) -> Option<CameraImage> {
+    let mapping_source = ctx
+        .id_cache
+        .get::<crate::ir::id::RepresentationMapId>(source_ref)?;
+    let mapping_target = ctx
+        .id_cache
+        .get::<crate::ir::id::PlanarExtentId>(target_ref)?;
+    Some(CameraImage {
+        name,
+        mapping_source,
+        mapping_target,
+    })
+}
+
+/// Lower one `CAMERA_IMAGE` (`mapped_item` subtype). `mapping_source` narrows to
+/// a `RepresentationMapId`, `mapping_target` to a `PlanarExtentId`; an unresolved
+/// ref drops the carrier. Pushed to the `mapped_items` arena.
+pub(crate) fn lower_camera_image(ctx: &mut ReaderContext, entity_id: u64, early: EarlyCameraImage) {
+    let Some(body) =
+        resolve_camera_image_body(ctx, early.name, early.mapping_source, early.mapping_target)
+    else {
+        return;
+    };
+    let mi_id = ctx.mapped_items.push(MappedItem::CameraImage(body));
+    ctx.id_cache.insert(entity_id, mi_id);
+}
+
+/// Lower one `CAMERA_IMAGE_3D_WITH_SCALE` (AND-combined complex). Same body
+/// resolution as the plain `CAMERA_IMAGE`; stored as the `CameraImage3dWithScale`
+/// variant.
+pub(crate) fn lower_camera_image_3d_with_scale(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyCameraImage3dWithScale,
+) {
+    let Some(body) =
+        resolve_camera_image_body(ctx, early.name, early.mapping_source, early.mapping_target)
+    else {
+        return;
+    };
+    let mi_id = ctx
+        .mapped_items
+        .push(MappedItem::CameraImage3dWithScale(body));
+    ctx.id_cache.insert(entity_id, mi_id);
 }

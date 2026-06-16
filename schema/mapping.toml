@@ -297,6 +297,9 @@ generate = [
     "item_identified_representation_usage",
     # Phase 4d: 2D geometry — distinct-name placement (mirrors axis2_placement_3d)
     "axis2_placement_2d",
+    # Phase 4l: camera_image family — simple (flatten from mapped_item) + complex 3d_with_scale
+    "camera_image",
+    "camera_image_3d_with_scale",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
@@ -338,6 +341,18 @@ parts = [
     "CURVE",
     "GEOMETRIC_REPRESENTATION_ITEM",
     "RATIONAL_B_SPLINE_CURVE",
+    "REPRESENTATION_ITEM",
+]
+
+# `camera_image_3d_with_scale` — AND-combined; data on MAPPED_ITEM
+# (mapping_source, mapping_target) + REPRESENTATION_ITEM (name). The empty parts
+# (CAMERA_IMAGE / CAMERA_IMAGE_3D_WITH_SCALE / GRI) contribute no attrs.
+[complex.camera_image_3d_with_scale]
+parts = [
+    "CAMERA_IMAGE",
+    "CAMERA_IMAGE_3D_WITH_SCALE",
+    "GEOMETRIC_REPRESENTATION_ITEM",
+    "MAPPED_ITEM",
     "REPRESENTATION_ITEM",
 ]
 

@@ -3999,6 +3999,34 @@ pub(crate) fn bind_axis2_placement_2d(
     })
 }
 
+pub(crate) fn bind_camera_image(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyCameraImage, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "CAMERA_IMAGE")?;
+    Ok(super::model::EarlyCameraImage {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        mapping_source: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "mapping_source")?,
+        mapping_target: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "mapping_target")?,
+    })
+}
+
+pub(crate) fn bind_camera_image_3d_with_scale(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<super::model::EarlyCameraImage3dWithScale, crate::ir::error::ConvertError> {
+    let attrs = crate::reader::require_part_attrs(parts, "MAPPED_ITEM", entity_id)?;
+    let mapping_source = crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "mapping_source")?;
+    let mapping_target = crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "mapping_target")?;
+    let attrs = crate::reader::require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    Ok(super::model::EarlyCameraImage3dWithScale {
+        mapping_source,
+        mapping_target,
+        name,
+    })
+}
+
 #[allow(clippy::cast_precision_loss)]
 fn bind_box_characteristic_select(
     attr: &crate::parser::entity::Attribute,

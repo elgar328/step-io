@@ -1,24 +1,20 @@
-//! `CAMERA_IMAGE` + `CAMERA_IMAGE_3D_WITH_SCALE` handlers — phase cm-image.
+//! `CAMERA_IMAGE` + `CAMERA_IMAGE_3D_WITH_SCALE` handlers (2-layer path).
 //!
-//! `CAMERA_IMAGE` is `SUBTYPE OF (mapped_item)` with `mapping_source`
-//! narrowed to a `camera_usage` and `mapping_target` narrowed to a
-//! `planar_box`. `CAMERA_IMAGE_3D_WITH_SCALE` extends `camera_image` with
-//! a DERIVE `scale` attribute (encoded as `*` in P21), so its instance
-//! carries 4 attrs in the source file but no extra IR fields.
-//!
-//! Both variants share the [`CameraImage`] payload and live in the
-//! `mapped_items` arena alongside the `Itself` carrier; dispatch on the
-//! `MappedItem` enum picks the correct STEP type at write time.
+//! `CAMERA_IMAGE` is `SUBTYPE OF (mapped_item)` with `mapping_source` narrowed
+//! to a `camera_usage` and `mapping_target` to a `planar_box`.
+//! `CAMERA_IMAGE_3D_WITH_SCALE` is the AND-combined complex form (the only form
+//! in the corpus; the `scale` DERIVE attr is not stored or emitted). Both share
+//! the [`CameraImage`] payload in the `mapped_items` arena; the `MappedItem`
+//! enum picks the STEP type at write time.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
-use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::shape_rep::{CameraImage, MappedItem};
+use crate::ir::shape_rep::CameraImage;
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
-use crate::reader::{ReaderContext, require_part_attrs};
+use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
-use crate::writer::entity::{WriterBody, WriterEntity};
 use step_io_macros::{step_entity, step_entity_complex};
 
 pub(crate) struct CameraImageHandler;
@@ -33,33 +29,25 @@ impl SimpleEntityHandler for CameraImageHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "CAMERA_IMAGE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let source_ref = read_entity_ref(attrs, 1, entity_id, "mapping_source")?;
-        let target_ref = read_entity_ref(attrs, 2, entity_id, "mapping_target")?;
-        let Some(body) = resolve_camera_image_body(ctx, name, source_ref, target_ref) else {
-            return Ok(());
-        };
-        let mi_id = ctx.mapped_items.push(MappedItem::CameraImage(body));
-        ctx.id_cache.insert(entity_id, mi_id);
+        let early = bind::bind_camera_image(entity_id, attrs)?;
+        lower::lower_camera_image(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, ci: CameraImage) -> Result<u64, WriteError> {
-        emit_camera_image(buf, "CAMERA_IMAGE", ci, false)
+        let source = buf.step_id(ci.mapping_source);
+        let target = buf.emit_planar_extent(ci.mapping_target)?;
+        let early = lift::lift_camera_image(ci.name, source, target);
+        Ok(serialize::serialize_camera_image(buf, &early))
     }
 }
 
 pub(crate) struct CameraImage3dWithScaleHandler;
 
-/// Styled `CAMERA_IMAGE_3D_WITH_SCALE` — read only as the AND-combined complex
-/// `(CAMERA_IMAGE CAMERA_IMAGE_3D_WITH_SCALE GEOMETRIC_REPRESENTATION_ITEM
-/// MAPPED_ITEM REPRESENTATION_ITEM)`, the only form in the corpus (the simple
-/// single-name entity has count 0). `name` is on the `REPRESENTATION_ITEM` part,
-/// `mapping_source` (a `camera_usage`) + `mapping_target` (a `planar_box`) on the
-/// `MAPPED_ITEM` part; unresolved members drop the carrier, symmetric on re-read.
-/// Stored in the `mapped_items` arena + `mapped_item_id_map` so a `PRESENTATION_VIEW`
-/// / `STYLED_ITEM` consumer resolves it through `RepresentationItemRef::MappedItem`.
+/// `CAMERA_IMAGE_3D_WITH_SCALE` — read only as the AND-combined complex (the only
+/// corpus form; the single-name entity has count 0). Stored in `mapped_items` so
+/// a `PRESENTATION_VIEW` / `STYLED_ITEM` consumer resolves it through
+/// `RepresentationItemRef::MappedItem`.
 #[step_entity_complex(
     name = "CAMERA_IMAGE_3D_WITH_SCALE",
     cases = [[
@@ -79,88 +67,15 @@ impl ComplexEntityHandler for CameraImage3dWithScaleHandler {
         parts: &[RawEntityPart],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let ri = require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
-        let name = read_string_or_unset(ri, 0, entity_id, "name")?.to_owned();
-        let mi = require_part_attrs(parts, "MAPPED_ITEM", entity_id)?;
-        let source_ref = read_entity_ref(mi, 0, entity_id, "mapping_source")?;
-        let target_ref = read_entity_ref(mi, 1, entity_id, "mapping_target")?;
-        let Some(body) = resolve_camera_image_body(ctx, name, source_ref, target_ref) else {
-            return Ok(());
-        };
-        let mi_id = ctx
-            .mapped_items
-            .push(MappedItem::CameraImage3dWithScale(body));
-        ctx.id_cache.insert(entity_id, mi_id);
+        let early = bind::bind_camera_image_3d_with_scale(entity_id, parts)?;
+        lower::lower_camera_image_3d_with_scale(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, ci: CameraImage) -> Result<u64, WriteError> {
-        // Re-emit the AND-combined complex form (alphabetical parts); data only on
-        // MAPPED_ITEM (mapping_source, mapping_target) + REPRESENTATION_ITEM (name).
         let source = buf.step_id(ci.mapping_source);
         let target = buf.emit_planar_extent(ci.mapping_target)?;
-        let n = buf.fresh();
-        buf.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Complex {
-                parts: vec![
-                    ("CAMERA_IMAGE".into(), vec![]),
-                    ("CAMERA_IMAGE_3D_WITH_SCALE".into(), vec![]),
-                    ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),
-                    (
-                        "MAPPED_ITEM".into(),
-                        vec![Attribute::EntityRef(source), Attribute::EntityRef(target)],
-                    ),
-                    (
-                        "REPRESENTATION_ITEM".into(),
-                        vec![Attribute::String(ci.name)],
-                    ),
-                ],
-            },
-        });
-        Ok(n)
+        let early = lift::lift_camera_image_3d_with_scale(ci.name, source, target);
+        Ok(serialize::serialize_camera_image_3d_with_scale(buf, &early))
     }
-}
-
-/// Resolve a `camera_image` body from an already-read `name` + `mapping_source`
-/// / `mapping_target` step refs. `None` when either ref does not resolve (the
-/// carrier is dropped, symmetric on re-read). Shared by the plain `CAMERA_IMAGE`
-/// reader and the `CAMERA_IMAGE_3D_WITH_SCALE` complex reader.
-fn resolve_camera_image_body(
-    ctx: &ReaderContext,
-    name: String,
-    source_ref: u64,
-    target_ref: u64,
-) -> Option<CameraImage> {
-    let mapping_source = ctx
-        .id_cache
-        .get::<crate::ir::id::RepresentationMapId>(source_ref)?;
-    let mapping_target = ctx
-        .id_cache
-        .get::<crate::ir::id::PlanarExtentId>(target_ref)?;
-    Some(CameraImage {
-        name,
-        mapping_source,
-        mapping_target,
-    })
-}
-
-fn emit_camera_image(
-    buf: &mut WriteBuffer,
-    type_name: &'static str,
-    ci: CameraImage,
-    derive_scale: bool,
-) -> Result<u64, WriteError> {
-    let source = buf.step_id(ci.mapping_source);
-    let target = buf.emit_planar_extent(ci.mapping_target)?;
-    let mut attrs = vec![
-        Attribute::String(ci.name),
-        Attribute::EntityRef(source),
-        Attribute::EntityRef(target),
-    ];
-    if derive_scale {
-        // `scale` is DERIVE in EXPRESS — encoded as `*` in P21.
-        attrs.push(Attribute::Derived);
-    }
-    Ok(buf.push_simple(type_name, attrs))
 }

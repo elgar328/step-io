@@ -5654,6 +5654,52 @@ impl crate::ir::arena::ArenaId for EarlyAxis2Placement2dId {
     }
 }
 
+/// L1 `CAMERA_IMAGE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCameraImage {
+    pub(crate) name: String,
+    pub(crate) mapping_source: u64,
+    pub(crate) mapping_target: u64,
+}
+
+/// Typed `id_cache` key for `CAMERA_IMAGE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCameraImageId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCameraImageId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `CAMERA_IMAGE_3D_WITH_SCALE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCameraImage3dWithScale {
+    pub(crate) mapping_source: u64,
+    pub(crate) mapping_target: u64,
+    pub(crate) name: String,
+}
+
+/// Typed `id_cache` key for `CAMERA_IMAGE_3D_WITH_SCALE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCameraImage3dWithScaleId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCameraImage3dWithScaleId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `box_characteristic_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyBoxCharacteristicSelect {
