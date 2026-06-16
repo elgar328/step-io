@@ -17,15 +17,16 @@ use crate::early::model::{
     EarlyTextStyleForDefinedFont, EarlyViewVolume,
 };
 use crate::early::model::{
-    EarlyAreaInSet, EarlyDefinedSymbol, EarlyPresentationSet, EarlyPresentationSize,
-    EarlySymbolTarget, EarlyTextLiteral,
+    EarlyAreaInSet, EarlyBoxCharacteristicSelect, EarlyDefinedSymbol, EarlyPresentationSet,
+    EarlyPresentationSize, EarlySymbolTarget, EarlyTextLiteral,
+    EarlyTextStyleWithBoxCharacteristics,
 };
 use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::fill_area_style_colour::FillAreaStyleColourHandler;
 use crate::ir::visualization::{
-    AreaInSet, ContextDependentOverRidingStyledItem, CurveStyle, CurveWidth, DefinedSymbol,
-    DefinedSymbolDefinition, FillAreaStyle, Invisibility, InvisibleItem, Marker, MarkerSize,
-    OverRidingStyledItem, PlainStyledItem, PointStyle, PresentationSize,
+    AreaInSet, BoxCharacteristic, ContextDependentOverRidingStyledItem, CurveStyle, CurveWidth,
+    DefinedSymbol, DefinedSymbolDefinition, FillAreaStyle, Invisibility, InvisibleItem, Marker,
+    MarkerSize, OverRidingStyledItem, PlainStyledItem, PointStyle, PresentationSize,
     PresentationSizeAssignment, PresentationStyleAssignmentData, PresentationStyleByContext,
     PsaStyle, StyleContext, StyleContextRef, SurfaceSideStyle, SurfaceSideStyleEntry,
     SurfaceStyleFillArea, SurfaceStyleUsage, SymbolPlacement, SymbolTarget, TextPath, ViewVolume,
@@ -535,6 +536,30 @@ pub(crate) fn lift_text_literal(
         alignment,
         path,
         font,
+    }
+}
+
+/// Lift one `TEXT_STYLE_WITH_BOX_CHARACTERISTICS`. `character_appearance` is the
+/// child output step id (the handler emits the `character_style` select first);
+/// each L2 `BoxCharacteristic` maps back to its `box_characteristic_select`
+/// variant.
+pub(crate) fn lift_text_style_with_box_characteristics(
+    name: String,
+    character_appearance: u64,
+    characteristics: Vec<BoxCharacteristic>,
+) -> EarlyTextStyleWithBoxCharacteristics {
+    EarlyTextStyleWithBoxCharacteristics {
+        name,
+        character_appearance,
+        characteristics: characteristics
+            .into_iter()
+            .map(|bc| match bc {
+                BoxCharacteristic::Height(v) => EarlyBoxCharacteristicSelect::Height(v),
+                BoxCharacteristic::Width(v) => EarlyBoxCharacteristicSelect::Width(v),
+                BoxCharacteristic::SlantAngle(v) => EarlyBoxCharacteristicSelect::SlantAngle(v),
+                BoxCharacteristic::RotateAngle(v) => EarlyBoxCharacteristicSelect::RotateAngle(v),
+            })
+            .collect(),
     }
 }
 

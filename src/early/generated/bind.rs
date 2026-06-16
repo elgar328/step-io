@@ -1241,6 +1241,23 @@ pub(crate) fn bind_text_literal(
     })
 }
 
+pub(crate) fn bind_text_style_with_box_characteristics(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyTextStyleWithBoxCharacteristics, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "TEXT_STYLE_WITH_BOX_CHARACTERISTICS")?;
+    Ok(super::model::EarlyTextStyleWithBoxCharacteristics {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        character_appearance: crate::ir::attr::read_entity_ref(
+            attrs,
+            1,
+            entity_id,
+            "character_appearance",
+        )?,
+        characteristics: box_characteristic_select_list(attrs, 2, entity_id, "characteristics")?,
+    })
+}
+
 pub(crate) fn bind_general_property(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],
@@ -3966,6 +3983,44 @@ pub(crate) fn bind_axis2_placement_2d(
     })
 }
 
+#[allow(clippy::cast_precision_loss)]
+fn bind_box_characteristic_select(
+    attr: &crate::parser::entity::Attribute,
+) -> Option<super::model::EarlyBoxCharacteristicSelect> {
+    match attr {
+        crate::parser::entity::Attribute::Typed { type_name, value } => {
+            match (type_name.as_str(), value.as_ref()) {
+                ("BOX_HEIGHT", crate::parser::entity::Attribute::Real(x)) => {
+                    Some(super::model::EarlyBoxCharacteristicSelect::Height(*x))
+                }
+                ("BOX_HEIGHT", crate::parser::entity::Attribute::Integer(x)) => Some(
+                    super::model::EarlyBoxCharacteristicSelect::Height(*x as f64),
+                ),
+                ("BOX_ROTATE_ANGLE", crate::parser::entity::Attribute::Real(x)) => {
+                    Some(super::model::EarlyBoxCharacteristicSelect::RotateAngle(*x))
+                }
+                ("BOX_ROTATE_ANGLE", crate::parser::entity::Attribute::Integer(x)) => Some(
+                    super::model::EarlyBoxCharacteristicSelect::RotateAngle(*x as f64),
+                ),
+                ("BOX_SLANT_ANGLE", crate::parser::entity::Attribute::Real(x)) => {
+                    Some(super::model::EarlyBoxCharacteristicSelect::SlantAngle(*x))
+                }
+                ("BOX_SLANT_ANGLE", crate::parser::entity::Attribute::Integer(x)) => Some(
+                    super::model::EarlyBoxCharacteristicSelect::SlantAngle(*x as f64),
+                ),
+                ("BOX_WIDTH", crate::parser::entity::Attribute::Real(x)) => {
+                    Some(super::model::EarlyBoxCharacteristicSelect::Width(*x))
+                }
+                ("BOX_WIDTH", crate::parser::entity::Attribute::Integer(x)) => {
+                    Some(super::model::EarlyBoxCharacteristicSelect::Width(*x as f64))
+                }
+                _ => None,
+            }
+        }
+        _ => None,
+    }
+}
+
 fn bind_compound_item_definition(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyCompoundItemDefinition> {
@@ -4656,6 +4711,33 @@ fn bind_trimming_preference(
             token: other.to_string(),
         }),
     }
+}
+
+fn box_characteristic_select_list(
+    attrs: &[crate::parser::entity::Attribute],
+    index: usize,
+    entity_id: u64,
+    field: &'static str,
+) -> Result<Vec<super::model::EarlyBoxCharacteristicSelect>, crate::ir::error::ConvertError> {
+    let Some(crate::parser::entity::Attribute::List(items)) = attrs.get(index) else {
+        return Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: format!("{field}: expected list"),
+        });
+    };
+    let mut out = Vec::with_capacity(items.len());
+    for item in items {
+        match bind_box_characteristic_select(item) {
+            Some(v) => out.push(v),
+            None => {
+                return Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
+                    entity_id,
+                    detail: format!("{field}: unrecognized box_characteristic_select in list"),
+                });
+            }
+        }
+    }
+    Ok(out)
 }
 
 fn presentation_style_select_list(

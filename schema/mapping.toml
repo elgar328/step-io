@@ -82,6 +82,7 @@ generate = [
     "pre_defined_terminator_symbol",
     "symbol_colour",
     "text_literal",
+    "text_style_with_box_characteristics",
     # property (attribute leaf batch)
     "general_property",
     "name_attribute",
@@ -480,6 +481,15 @@ variants = { cartesian_point = "Point", parameter_value = "Param" }
 [select.source_item]
 rust_type = "EarlySourceItem"
 variants = { identifier = "Identifier", message = "Message" }
+
+# `box_characteristic_select` = SELECT of 4 typed reals (box_height / box_width /
+# box_slant_angle / box_rotate_angle) in `TEXT_STYLE_WITH_BOX_CHARACTERISTICS`.
+# Hinted (not auto-synth) only to drop the shared `Box` variant prefix — the
+# auto-synth pascal names (BoxHeight, ...) trip clippy::enum_variant_names. The
+# L2 `BoxCharacteristic` mapping still lives in lower/lift.
+[select.box_characteristic_select]
+rust_type = "EarlyBoxCharacteristicSelect"
+variants = { box_height = "Height", box_width = "Width", box_slant_angle = "SlantAngle", box_rotate_angle = "RotateAngle" }
 
 [enum.ahead_or_behind]
 rust_type = "crate::ir::plm::AheadOrBehind"

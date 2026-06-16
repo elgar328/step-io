@@ -18,8 +18,9 @@ use crate::early::model::{
     EarlyTextStyleForDefinedFont, EarlyViewVolume, EarlyViewVolumeId,
 };
 use crate::early::model::{
-    EarlyAreaInSet, EarlyDefinedSymbol, EarlyPresentationSet, EarlyPresentationSize,
-    EarlySymbolTarget, EarlyTextLiteral,
+    EarlyAreaInSet, EarlyBoxCharacteristicSelect, EarlyDefinedSymbol, EarlyPresentationSet,
+    EarlyPresentationSize, EarlySymbolTarget, EarlyTextLiteral,
+    EarlyTextStyleWithBoxCharacteristics,
 };
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::id::{
@@ -28,20 +29,21 @@ use crate::ir::id::{
 };
 use crate::ir::shape_rep::{CameraUsage, RepresentationMap};
 use crate::ir::visualization::{
-    AppliedPresentedItem, Axis2Placement, CameraModel, CameraModelD3, CameraModelD3MultiClipping,
-    CameraModelD3WithHlhsr, Colour, ColourRgb, CompositeText, ContextDependentOverRidingStyledItem,
-    CurveOrRender, CurveStyle, CurveWidth, DraughtingPreDefinedColour,
-    DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour, FontSelect, FoundedItem,
-    GeometricCurveSet, GeometricRepresentationItem, GeometricSet, Invisibility, InvisibleItem,
-    Marker, MarkerSize, OverRidingStyledItem, PlainStyledItem, PointStyle, PreDefinedCurveFont,
-    PreDefinedCurveFontData, PreDefinedMarker, PreDefinedMarkerData, PreDefinedPointMarkerSymbol,
-    PreDefinedSymbol, PreDefinedSymbolData, PreDefinedTerminatorSymbol,
-    PresentationLayerAssignment, PresentationLayerAssignmentItem, PresentationReprSelect,
-    PresentationStyleAssignment, PresentationStyleAssignmentData, PresentationStyleByContext,
-    PresentedItem, PresentedItemRepresentation, PsaStyle, ShapeClipping, ShellBasedSurfaceModel,
-    StyleContext, StyledItem, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleBoundary,
-    SurfaceStyleFillArea, SurfaceStyleUsage, SymbolColour, SymbolStyle, TextLiteral,
-    TextOrCharacter, TextStyleForDefinedFont, ViewVolume, VisualizationPool,
+    AppliedPresentedItem, Axis2Placement, BoxCharacteristic, CameraModel, CameraModelD3,
+    CameraModelD3MultiClipping, CameraModelD3WithHlhsr, CharacterStyle, Colour, ColourRgb,
+    CompositeText, ContextDependentOverRidingStyledItem, CurveOrRender, CurveStyle, CurveWidth,
+    DraughtingPreDefinedColour, DraughtingPreDefinedCurveFont, FillAreaStyle, FillAreaStyleColour,
+    FontSelect, FoundedItem, GeometricCurveSet, GeometricRepresentationItem, GeometricSet,
+    Invisibility, InvisibleItem, Marker, MarkerSize, OverRidingStyledItem, PlainStyledItem,
+    PointStyle, PreDefinedCurveFont, PreDefinedCurveFontData, PreDefinedMarker,
+    PreDefinedMarkerData, PreDefinedPointMarkerSymbol, PreDefinedSymbol, PreDefinedSymbolData,
+    PreDefinedTerminatorSymbol, PresentationLayerAssignment, PresentationLayerAssignmentItem,
+    PresentationReprSelect, PresentationStyleAssignment, PresentationStyleAssignmentData,
+    PresentationStyleByContext, PresentedItem, PresentedItemRepresentation, PsaStyle,
+    ShapeClipping, ShellBasedSurfaceModel, StyleContext, StyledItem, SurfaceSideStyle,
+    SurfaceSideStyleEntry, SurfaceStyleBoundary, SurfaceStyleFillArea, SurfaceStyleUsage,
+    SymbolColour, SymbolStyle, TextLiteral, TextOrCharacter, TextStyle, TextStyleData,
+    TextStyleForDefinedFont, TextStyleWithBoxCharacteristics, ViewVolume, VisualizationPool,
 };
 use crate::ir::visualization::{
     AreaInSet, DefinedSymbol, DefinedSymbolDefinition, PresentationSet, PresentationSize,
@@ -1253,6 +1255,50 @@ pub(crate) fn lower_text_literal(ctx: &mut ReaderContext, entity_id: u64, early:
             path: early.path,
             font,
         });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `TEXT_STYLE_WITH_BOX_CHARACTERISTICS`. `character_appearance`
+/// resolves through `CharacterStyle::resolve_select` (an unmodelled glyph-style
+/// member drops the carrier). The `box_characteristic_select` members map to the
+/// L2 `BoxCharacteristic` enum; an empty set drops the carrier (1:1 with the
+/// legacy handler).
+pub(crate) fn lower_text_style_with_box_characteristics(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyTextStyleWithBoxCharacteristics,
+) {
+    let Some(character_appearance) =
+        CharacterStyle::resolve_select(ctx, early.character_appearance)
+    else {
+        return;
+    };
+    let characteristics: Vec<BoxCharacteristic> = early
+        .characteristics
+        .into_iter()
+        .map(|bc| match bc {
+            EarlyBoxCharacteristicSelect::Height(v) => BoxCharacteristic::Height(v),
+            EarlyBoxCharacteristicSelect::Width(v) => BoxCharacteristic::Width(v),
+            EarlyBoxCharacteristicSelect::SlantAngle(v) => BoxCharacteristic::SlantAngle(v),
+            EarlyBoxCharacteristicSelect::RotateAngle(v) => BoxCharacteristic::RotateAngle(v),
+        })
+        .collect();
+    if characteristics.is_empty() {
+        return;
+    }
+    let id = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .text_styles
+        .push(TextStyle::WithBoxCharacteristics(
+            TextStyleWithBoxCharacteristics {
+                inherited: TextStyleData {
+                    name: early.name,
+                    character_appearance,
+                },
+                characteristics,
+            },
+        ));
     ctx.id_cache.insert(entity_id, id);
 }
 

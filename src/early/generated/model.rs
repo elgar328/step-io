@@ -1660,6 +1660,29 @@ impl crate::ir::arena::ArenaId for EarlyTextLiteralId {
     }
 }
 
+/// L1 `TEXT_STYLE_WITH_BOX_CHARACTERISTICS` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyTextStyleWithBoxCharacteristics {
+    pub(crate) name: String,
+    pub(crate) character_appearance: u64,
+    pub(crate) characteristics: Vec<EarlyBoxCharacteristicSelect>,
+}
+
+/// Typed `id_cache` key for `TEXT_STYLE_WITH_BOX_CHARACTERISTICS` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyTextStyleWithBoxCharacteristicsId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyTextStyleWithBoxCharacteristicsId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `GENERAL_PROPERTY` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyGeneralProperty {
@@ -5607,6 +5630,15 @@ impl crate::ir::arena::ArenaId for EarlyAxis2Placement2dId {
     fn from_index(index: u32) -> Self {
         Self(index)
     }
+}
+
+/// L1 mixed SELECT `box_characteristic_select` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum EarlyBoxCharacteristicSelect {
+    Height(f64),
+    RotateAngle(f64),
+    SlantAngle(f64),
+    Width(f64),
 }
 
 /// L1 mixed SELECT `compound_item_definition` (generated, hint-less).

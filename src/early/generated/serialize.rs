@@ -1251,6 +1251,25 @@ pub(crate) fn serialize_text_literal(
     )
 }
 
+pub(crate) fn serialize_text_style_with_box_characteristics(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyTextStyleWithBoxCharacteristics,
+) -> u64 {
+    buf.push_simple(
+        "TEXT_STYLE_WITH_BOX_CHARACTERISTICS",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.character_appearance),
+            crate::parser::entity::Attribute::List(
+                l1.characteristics
+                    .iter()
+                    .map(box_characteristic_select_emit)
+                    .collect(),
+            ),
+        ],
+    )
+}
+
 pub(crate) fn serialize_general_property(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyGeneralProperty,
@@ -4427,6 +4446,37 @@ pub(crate) fn serialize_axis2_placement_2d(
             },
         ],
     )
+}
+
+fn box_characteristic_select_emit(
+    v: &super::model::EarlyBoxCharacteristicSelect,
+) -> crate::parser::entity::Attribute {
+    match v {
+        super::model::EarlyBoxCharacteristicSelect::Height(x) => {
+            crate::parser::entity::Attribute::Typed {
+                type_name: "BOX_HEIGHT".into(),
+                value: Box::new(crate::parser::entity::Attribute::Real(*x)),
+            }
+        }
+        super::model::EarlyBoxCharacteristicSelect::RotateAngle(x) => {
+            crate::parser::entity::Attribute::Typed {
+                type_name: "BOX_ROTATE_ANGLE".into(),
+                value: Box::new(crate::parser::entity::Attribute::Real(*x)),
+            }
+        }
+        super::model::EarlyBoxCharacteristicSelect::SlantAngle(x) => {
+            crate::parser::entity::Attribute::Typed {
+                type_name: "BOX_SLANT_ANGLE".into(),
+                value: Box::new(crate::parser::entity::Attribute::Real(*x)),
+            }
+        }
+        super::model::EarlyBoxCharacteristicSelect::Width(x) => {
+            crate::parser::entity::Attribute::Typed {
+                type_name: "BOX_WIDTH".into(),
+                value: Box::new(crate::parser::entity::Attribute::Real(*x)),
+            }
+        }
+    }
 }
 
 fn compound_item_definition_emit(
