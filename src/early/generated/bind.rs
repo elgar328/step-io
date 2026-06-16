@@ -4113,6 +4113,35 @@ pub(crate) fn bind_uncertainty_measure_with_unit(
     }))
 }
 
+pub(crate) fn bind_surface_style_rendering(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlySurfaceStyleRendering, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "SURFACE_STYLE_RENDERING")?;
+    Ok(super::model::EarlySurfaceStyleRendering {
+        rendering_method: bind_shading_surface_method(attrs, 0, entity_id, "rendering_method")?,
+        surface_colour: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "surface_colour")?,
+    })
+}
+
+pub(crate) fn bind_surface_style_rendering_with_properties(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlySurfaceStyleRenderingWithProperties, crate::ir::error::ConvertError>
+{
+    crate::ir::attr::check_count(
+        attrs,
+        3,
+        entity_id,
+        "SURFACE_STYLE_RENDERING_WITH_PROPERTIES",
+    )?;
+    Ok(super::model::EarlySurfaceStyleRenderingWithProperties {
+        rendering_method: bind_shading_surface_method(attrs, 0, entity_id, "rendering_method")?,
+        surface_colour: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "surface_colour")?,
+        properties: crate::ir::attr::read_entity_ref_list(attrs, 2, entity_id, "properties")?,
+    })
+}
+
 #[allow(clippy::cast_precision_loss)]
 fn bind_box_characteristic_select(
     attr: &crate::parser::entity::Attribute,
@@ -4765,6 +4794,25 @@ fn bind_knot_type(
         other => Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
             entity_id,
             detail: format!("{field}: unknown knot_type '.{other}.'"),
+        }),
+    }
+}
+
+fn bind_shading_surface_method(
+    attrs: &[crate::parser::entity::Attribute],
+    index: usize,
+    entity_id: u64,
+    field: &'static str,
+) -> Result<crate::ir::visualization::ShadingMethod, crate::ir::error::ConvertError> {
+    match crate::ir::attr::read_enum(attrs, index, entity_id, field)? {
+        "COLOUR_SHADING" => Ok(crate::ir::visualization::ShadingMethod::Colour),
+        "CONSTANT_SHADING" => Ok(crate::ir::visualization::ShadingMethod::Constant),
+        "DOT_SHADING" => Ok(crate::ir::visualization::ShadingMethod::Dot),
+        "NORMAL_SHADING" => Ok(crate::ir::visualization::ShadingMethod::Normal),
+        other => Err(crate::ir::error::ConvertError::NonStandardEnumValue {
+            entity_id,
+            field: field.to_string(),
+            token: other.to_string(),
         }),
     }
 }

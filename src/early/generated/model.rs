@@ -5820,6 +5820,51 @@ impl crate::ir::arena::ArenaId for EarlyUncertaintyMeasureWithUnitId {
     }
 }
 
+/// L1 `SURFACE_STYLE_RENDERING` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlySurfaceStyleRendering {
+    pub(crate) rendering_method: crate::ir::visualization::ShadingMethod,
+    pub(crate) surface_colour: u64,
+}
+
+/// Typed `id_cache` key for `SURFACE_STYLE_RENDERING` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlySurfaceStyleRenderingId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlySurfaceStyleRenderingId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `SURFACE_STYLE_RENDERING_WITH_PROPERTIES` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlySurfaceStyleRenderingWithProperties {
+    pub(crate) rendering_method: crate::ir::visualization::ShadingMethod,
+    pub(crate) surface_colour: u64,
+    pub(crate) properties: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `SURFACE_STYLE_RENDERING_WITH_PROPERTIES` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlySurfaceStyleRenderingWithPropertiesId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlySurfaceStyleRenderingWithPropertiesId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 mixed SELECT `box_characteristic_select` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum EarlyBoxCharacteristicSelect {

@@ -13,9 +13,10 @@ use crate::early::model::{
     EarlyPresentationStyleAssignment, EarlyPresentationStyleByContext,
     EarlyPresentationStyleSelect, EarlyPresentedItemRepresentation, EarlyShellBasedSurfaceModel,
     EarlyStyledItem, EarlySurfaceSideStyle, EarlySurfaceSideStyleId, EarlySurfaceStyleBoundary,
-    EarlySurfaceStyleFillArea, EarlySurfaceStyleFillAreaId, EarlySurfaceStyleTransparent,
-    EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId, EarlySymbolColour, EarlySymbolStyle,
-    EarlyTextStyleForDefinedFont, EarlyViewVolume, EarlyViewVolumeId,
+    EarlySurfaceStyleFillArea, EarlySurfaceStyleFillAreaId, EarlySurfaceStyleRendering,
+    EarlySurfaceStyleRenderingWithProperties, EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage,
+    EarlySurfaceStyleUsageId, EarlySymbolColour, EarlySymbolStyle, EarlyTextStyleForDefinedFont,
+    EarlyViewVolume, EarlyViewVolumeId,
 };
 use crate::early::model::{
     EarlyAreaInSet, EarlyBoxCharacteristicSelect, EarlyDefinedSymbol, EarlyDirectionCountSelect,
@@ -40,11 +41,12 @@ use crate::ir::visualization::{
     PreDefinedTerminatorSymbol, PresentationLayerAssignment, PresentationLayerAssignmentItem,
     PresentationReprSelect, PresentationStyleAssignment, PresentationStyleAssignmentData,
     PresentationStyleByContext, PresentedItem, PresentedItemRepresentation, PsaStyle,
-    ShapeClipping, ShellBasedSurfaceModel, StyleContext, StyledItem, SurfaceSideStyle,
-    SurfaceSideStyleEntry, SurfaceStyleBoundary, SurfaceStyleFillArea, SurfaceStyleParameterLine,
-    SurfaceStyleUsage, SymbolColour, SymbolStyle, TextLiteral, TextOrCharacter, TextStyle,
-    TextStyleData, TextStyleForDefinedFont, TextStyleWithBoxCharacteristics, ViewVolume,
-    VisualizationPool,
+    RenderingProperty, ShapeClipping, ShellBasedSurfaceModel, StyleContext, StyledItem,
+    SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleBoundary, SurfaceStyleFillArea,
+    SurfaceStyleParameterLine, SurfaceStyleRendering, SurfaceStyleRenderingData,
+    SurfaceStyleRenderingWithProperties, SurfaceStyleUsage, SymbolColour, SymbolStyle, TextLiteral,
+    TextOrCharacter, TextStyle, TextStyleData, TextStyleForDefinedFont,
+    TextStyleWithBoxCharacteristics, ViewVolume, VisualizationPool,
 };
 use crate::ir::visualization::{
     AreaInSet, DefinedSymbol, DefinedSymbolDefinition, PresentationSet, PresentationSize,
@@ -1438,4 +1440,58 @@ pub(crate) fn lower_defined_symbol(
         }),
     );
     ctx.defined_symbol_id_map.insert(entity_id, id);
+}
+
+/// Lower one `SURFACE_STYLE_RENDERING` (`Itself`). `surface_colour` resolves
+/// through the shared colour cache (the handler pre-bind injected a placeholder
+/// `COLOUR()` for a non-standard Unset, so the ref always resolves); an
+/// unresolved ref drops the entity (legacy leniency).
+pub(crate) fn lower_surface_style_rendering(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlySurfaceStyleRendering,
+) {
+    let Some(surface_colour) = ctx.id_cache.get::<ColourId>(early.surface_colour) else {
+        return;
+    };
+    let id = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .surface_style_renderings
+        .push(SurfaceStyleRendering::Itself(SurfaceStyleRenderingData {
+            rendering_method: early.rendering_method,
+            surface_colour,
+        }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `SURFACE_STYLE_RENDERING_WITH_PROPERTIES`. Same colour resolution;
+/// `properties` keeps only the modelled `SURFACE_STYLE_TRANSPARENT` members
+/// (others silently dropped, preserving round-trip on the supported subset).
+pub(crate) fn lower_surface_style_rendering_with_properties(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlySurfaceStyleRenderingWithProperties,
+) {
+    let Some(surface_colour) = ctx.id_cache.get::<ColourId>(early.surface_colour) else {
+        return;
+    };
+    let mut properties = Vec::with_capacity(early.properties.len());
+    for r in early.properties {
+        if let Some(&t) = ctx.viz_transparent_map.get(&r) {
+            properties.push(RenderingProperty::Transparent(t));
+        }
+    }
+    let id = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .surface_style_renderings
+        .push(SurfaceStyleRendering::SurfaceStyleRenderingWithProperties(
+            SurfaceStyleRenderingWithProperties {
+                rendering_method: early.rendering_method,
+                surface_colour,
+                properties,
+            },
+        ));
+    ctx.id_cache.insert(entity_id, id);
 }

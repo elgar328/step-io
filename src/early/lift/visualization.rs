@@ -13,6 +13,7 @@ use crate::early::model::{
     EarlyPresentationStyleAssignment, EarlyPresentationStyleByContext,
     EarlyPresentationStyleSelect, EarlyPresentedItemRepresentation, EarlyShellBasedSurfaceModel,
     EarlyStyledItem, EarlySurfaceSideStyle, EarlySurfaceStyleBoundary, EarlySurfaceStyleFillArea,
+    EarlySurfaceStyleRendering, EarlySurfaceStyleRenderingWithProperties,
     EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage, EarlySymbolColour, EarlySymbolStyle,
     EarlyTextStyleForDefinedFont, EarlyViewVolume,
 };
@@ -28,9 +29,9 @@ use crate::ir::visualization::{
     DefinedSymbol, DefinedSymbolDefinition, DirectionCount, FillAreaStyle, Invisibility,
     InvisibleItem, Marker, MarkerSize, OverRidingStyledItem, PlainStyledItem, PointStyle,
     PresentationSize, PresentationSizeAssignment, PresentationStyleAssignmentData,
-    PresentationStyleByContext, PsaStyle, StyleContext, StyleContextRef, SurfaceSideStyle,
-    SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleUsage, SymbolPlacement, SymbolTarget,
-    TextPath, ViewVolume,
+    PresentationStyleByContext, PsaStyle, ShadingMethod, StyleContext, StyleContextRef,
+    SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleUsage,
+    SymbolPlacement, SymbolTarget, TextPath, ViewVolume,
 };
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -636,5 +637,32 @@ pub(crate) fn lift_defined_symbol(buf: &WriteBuffer, d: DefinedSymbol) -> EarlyD
         name: d.name,
         definition,
         target: buf.step_id(d.target),
+    }
+}
+
+/// Lift one `SURFACE_STYLE_RENDERING` (`Itself`). `surface_colour` is the
+/// child colour's (already-emitted) step id.
+pub(crate) fn lift_surface_style_rendering(
+    rendering_method: ShadingMethod,
+    surface_colour: u64,
+) -> EarlySurfaceStyleRendering {
+    EarlySurfaceStyleRendering {
+        rendering_method,
+        surface_colour,
+    }
+}
+
+/// Lift one `SURFACE_STYLE_RENDERING_WITH_PROPERTIES`. `surface_colour` and
+/// each `properties` ref are child step ids the handler emitted (the
+/// `SURFACE_STYLE_TRANSPARENT` lines are inline-emitted before lifting).
+pub(crate) fn lift_surface_style_rendering_with_properties(
+    rendering_method: ShadingMethod,
+    surface_colour: u64,
+    properties: Vec<u64>,
+) -> EarlySurfaceStyleRenderingWithProperties {
+    EarlySurfaceStyleRenderingWithProperties {
+        rendering_method,
+        surface_colour,
+        properties,
     }
 }

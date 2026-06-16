@@ -309,6 +309,9 @@ generate = [
     "default_model_geometric_view",
     # Phase 4p: uncertainty — UNCERTAINTY_MEASURE_WITH_UNIT (measure_with_unit sibling)
     "uncertainty_measure_with_unit",
+    # Phase 4q: ns-normalization framework — SURFACE_STYLE_RENDERING cluster
+    "surface_style_rendering",
+    "surface_style_rendering_with_properties",
 ]
 
 # Entities whose writer fills a pre-reserved id (reserve-then-fill): also
@@ -464,6 +467,13 @@ variants = { central = "Central", parallel = "Parallel" }
 [enum.surface_side]
 rust_type = "crate::ir::visualization::SurfaceSide"
 variants = { positive = "Front", negative = "Back", both = "Both" }
+
+# Strict (no `default`): the handler normalizes Unset / unrecognized
+# `rendering_method` to NORMAL_SHADING *before* the strict bind (pre-bind attrs
+# rewrite, NORM-recorded), so the generated bind only ever sees a valid token.
+[enum.shading_surface_method]
+rust_type = "crate::ir::visualization::ShadingMethod"
+variants = { constant_shading = "Constant", colour_shading = "Colour", dot_shading = "Dot", normal_shading = "Normal" }
 
 # `text_path` (text_literal.path). Strict (no `default`/`catch_all`): an unknown
 # token errors (NonStandardEnumValue) → dropped + NORM. Corpus scan confirms all

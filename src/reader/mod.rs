@@ -613,6 +613,12 @@ pub struct ReaderContext {
     /// file, so a shape recurring across many instances warns once.
     pub(crate) unhandled_complex_seen: std::collections::BTreeSet<String>,
 
+    /// Largest real file-id in the DATA section (computed once at `convert`
+    /// entry). Base for [`Self::alloc_synthetic_entity_id`].
+    pub(crate) max_file_id: u64,
+    /// Monotonic counter for reader-injected placeholder entity ids.
+    pub(crate) synthetic_id_counter: u64,
+
     pub(crate) warnings: Vec<ConvertError>,
 }
 
@@ -635,6 +641,16 @@ impl ReaderContext {
             .nonstandard_normalizations
             .entry((field, normalized_to))
             .or_default() += 1;
+    }
+
+    /// Allocate a collision-free synthetic file-id for a reader-injected
+    /// placeholder entity (non-standard normalization). The result exceeds every
+    /// real file-id (`max_file_id` base) and stays well below the dangling
+    /// sentinel (`u64::MAX`), so it never aliases a real, dangling, or other
+    /// synthetic id.
+    pub(crate) fn alloc_synthetic_entity_id(&mut self) -> u64 {
+        self.synthetic_id_counter += 1;
+        self.max_file_id + self.synthetic_id_counter
     }
 
     /// Record a non-standard input normalization immediately (one warning with
@@ -766,6 +782,7 @@ impl ReaderContext {
     pub fn convert(graph: &EntityGraph) -> ConvertResult {
         let mut ctx = Self {
             pcurve_subtree_ids: collect_pcurve_subtree_ids(graph),
+            max_file_id: graph.entities.last_key_value().map_or(0, |(&k, _)| k),
             ..Self::default()
         };
         // Materialize P21 edition 3 external references before dispatch so

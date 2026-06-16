@@ -92,6 +92,7 @@ pub(crate) use super::generated::model::{
     EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlySurfaceProfileTolerance,
     EarlySurfaceSideStyle, EarlySurfaceSideStyleId, EarlySurfaceStyleBoundary,
     EarlySurfaceStyleFillArea, EarlySurfaceStyleFillAreaId, EarlySurfaceStyleParameterLine,
+    EarlySurfaceStyleRendering, EarlySurfaceStyleRenderingWithProperties,
     EarlySurfaceStyleTransparent, EarlySurfaceStyleUsage, EarlySurfaceStyleUsageId,
     EarlySymbolColour, EarlySymbolStyle, EarlySymbolTarget, EarlySymmetryTolerance,
     EarlyTessellatedAnnotationOccurrence, EarlyTessellatedCurveSet, EarlyTessellatedGeometricSet,

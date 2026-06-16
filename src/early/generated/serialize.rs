@@ -4590,6 +4590,38 @@ pub(crate) fn serialize_uncertainty_measure_with_unit(
     )
 }
 
+pub(crate) fn serialize_surface_style_rendering(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlySurfaceStyleRendering,
+) -> u64 {
+    buf.push_simple(
+        "SURFACE_STYLE_RENDERING",
+        vec![
+            shading_surface_method_attr(l1.rendering_method),
+            crate::parser::entity::Attribute::EntityRef(l1.surface_colour),
+        ],
+    )
+}
+
+pub(crate) fn serialize_surface_style_rendering_with_properties(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlySurfaceStyleRenderingWithProperties,
+) -> u64 {
+    buf.push_simple(
+        "SURFACE_STYLE_RENDERING_WITH_PROPERTIES",
+        vec![
+            shading_surface_method_attr(l1.rendering_method),
+            crate::parser::entity::Attribute::EntityRef(l1.surface_colour),
+            crate::parser::entity::Attribute::List(
+                l1.properties
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
 fn box_characteristic_select_emit(
     v: &super::model::EarlyBoxCharacteristicSelect,
 ) -> crate::parser::entity::Attribute {
@@ -5120,6 +5152,20 @@ fn knot_type_attr(v: super::model::EarlyKnotType) -> crate::parser::entity::Attr
             super::model::EarlyKnotType::QuasiUniformKnots => "QUASI_UNIFORM_KNOTS",
             super::model::EarlyKnotType::PiecewiseBezierKnots => "PIECEWISE_BEZIER_KNOTS",
             super::model::EarlyKnotType::Unspecified => "UNSPECIFIED",
+        }
+        .into(),
+    )
+}
+
+fn shading_surface_method_attr(
+    v: crate::ir::visualization::ShadingMethod,
+) -> crate::parser::entity::Attribute {
+    crate::parser::entity::Attribute::Enum(
+        match v {
+            crate::ir::visualization::ShadingMethod::Colour => "COLOUR_SHADING",
+            crate::ir::visualization::ShadingMethod::Constant => "CONSTANT_SHADING",
+            crate::ir::visualization::ShadingMethod::Dot => "DOT_SHADING",
+            crate::ir::visualization::ShadingMethod::Normal => "NORMAL_SHADING",
         }
         .into(),
     )
