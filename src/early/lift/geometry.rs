@@ -15,7 +15,8 @@ use crate::early::model::{
     EarlyVector, EarlyVertexPoint,
 };
 use crate::ir::geometry::{
-    Direction3, Logical, NurbsCurve, NurbsSurface, Point3, TransitionCode, TrimMaster,
+    Direction2, Direction3, Logical, NurbsCurve, NurbsSurface, Point2, Point3, TransitionCode,
+    TrimMaster,
 };
 
 /// Lift one `BOUNDED_PCURVE`. Unlike most geometry, it round-trips its own
@@ -139,6 +140,24 @@ pub(crate) fn lift_direction(d: Direction3) -> EarlyDirection {
     EarlyDirection {
         name: String::new(),
         direction_ratios: vec![d.x, d.y, d.z],
+    }
+}
+
+/// Lift the 2D-arena `CARTESIAN_POINT` from its `Point2` (sister of
+/// [`lift_cartesian_point`]); reuses the shared `serialize_cartesian_point`.
+pub(crate) fn lift_cartesian_point_2d(p: Point2) -> EarlyCartesianPoint {
+    EarlyCartesianPoint {
+        name: String::new(),
+        coordinates: vec![p.x, p.y],
+    }
+}
+
+/// Lift the 2D-arena `DIRECTION` from its `Direction2` (sister of
+/// [`lift_direction`]); reuses the shared `serialize_direction`.
+pub(crate) fn lift_direction_2d(d: Direction2) -> EarlyDirection {
+    EarlyDirection {
+        name: String::new(),
+        direction_ratios: vec![d.x, d.y],
     }
 }
 

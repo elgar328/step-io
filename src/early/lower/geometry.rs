@@ -23,10 +23,10 @@ use crate::ir::error::ConvertError;
 use crate::ir::geometry::{
     Axis1Placement, Axis2Placement3d, BoundedPCurve, Circle3, CircularArea, CircularAreaCentre,
     CompositeCurve, CompositeSegment, ConicalSurface, Curve, CurveBoundedSurface,
-    CylindricalSurface, DegenerateToroidalSurface, Direction3, Ellipse3, Hyperbola, Line3,
-    NurbsCurve, NurbsKind, NurbsSurface, NurbsSurfaceKind, OffsetCurve3d, Parabola,
+    CylindricalSurface, DegenerateToroidalSurface, Direction2, Direction3, Ellipse3, Hyperbola,
+    Line3, NurbsCurve, NurbsKind, NurbsSurface, NurbsSurfaceKind, OffsetCurve3d, Parabola,
     ParameterSpaceCurve, PlanarBox, PlanarBoxPlacement, PlanarExtent, PlanarExtentData, Plane3,
-    Point3, Polyline, RectangularTrimmedSurface, SphericalSurface, Surface,
+    Point2, Point3, Polyline, RectangularTrimmedSurface, SphericalSurface, Surface,
     SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TrimSelect,
     TrimmedCurve, Vertex,
 };
@@ -575,6 +575,39 @@ pub(crate) fn lower_direction(
     });
     ctx.id_cache.insert(entity_id, id);
     Ok(())
+}
+
+/// Lower the 2D-arena variant of `CARTESIAN_POINT` (sister of
+/// [`lower_cartesian_point`]). Claims exactly 2-coordinate points into
+/// `points_2d`; other dimensions are left for the 3D sister (silent skip).
+pub(crate) fn lower_cartesian_point_2d(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyCartesianPoint,
+) {
+    let coords = early.coordinates;
+    if coords.len() != 2 {
+        return;
+    }
+    let id = ctx.geometry.points_2d.push(Point2 {
+        x: coords[0],
+        y: coords[1],
+    });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower the 2D-arena variant of `DIRECTION` (sister of [`lower_direction`]).
+/// Claims exactly 2-component directions into `directions_2d`.
+pub(crate) fn lower_direction_2d(ctx: &mut ReaderContext, entity_id: u64, early: EarlyDirection) {
+    let ratios = early.direction_ratios;
+    if ratios.len() != 2 {
+        return;
+    }
+    let id = ctx.geometry.directions_2d.push(Direction2 {
+        x: ratios[0],
+        y: ratios[1],
+    });
+    ctx.id_cache.insert(entity_id, id);
 }
 
 /// Lower one `VERTEX_POINT` (resolves `vertex_geometry` through the shared
