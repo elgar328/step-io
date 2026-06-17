@@ -2134,6 +2134,70 @@ pub(crate) fn bind_geometric_tolerance_relationship(
     })
 }
 
+pub(crate) fn bind_global_unit_assigned_context(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<super::model::EarlyGlobalUnitAssignedContext, crate::ir::error::ConvertError> {
+    if parts
+        .iter()
+        .any(|p| p.name == "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT")
+    {
+        let attrs = crate::reader::require_part_attrs(
+            parts,
+            "GEOMETRIC_REPRESENTATION_CONTEXT",
+            entity_id,
+        )?;
+        let coordinate_space_dimension =
+            crate::ir::attr::read_integer(attrs, 0, entity_id, "coordinate_space_dimension")?;
+        let attrs = crate::reader::require_part_attrs(
+            parts,
+            "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT",
+            entity_id,
+        )?;
+        let uncertainty =
+            crate::ir::attr::read_entity_ref_list(attrs, 0, entity_id, "uncertainty")?;
+        let attrs =
+            crate::reader::require_part_attrs(parts, "GLOBAL_UNIT_ASSIGNED_CONTEXT", entity_id)?;
+        let units = crate::ir::attr::read_entity_ref_list(attrs, 0, entity_id, "units")?;
+        let attrs = crate::reader::require_part_attrs(parts, "REPRESENTATION_CONTEXT", entity_id)?;
+        let context_identifier =
+            crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "context_identifier")?
+                .to_owned();
+        let context_type =
+            crate::ir::attr::read_string_or_unset(attrs, 1, entity_id, "context_type")?.to_owned();
+        return Ok(super::model::EarlyGlobalUnitAssignedContext::Full(
+            super::model::EarlyGlobalUnitAssignedContextFull {
+                coordinate_space_dimension,
+                uncertainty,
+                units,
+                context_identifier,
+                context_type,
+            },
+        ));
+    }
+    let attrs =
+        crate::reader::require_part_attrs(parts, "GEOMETRIC_REPRESENTATION_CONTEXT", entity_id)?;
+    let coordinate_space_dimension =
+        crate::ir::attr::read_integer(attrs, 0, entity_id, "coordinate_space_dimension")?;
+    let attrs =
+        crate::reader::require_part_attrs(parts, "GLOBAL_UNIT_ASSIGNED_CONTEXT", entity_id)?;
+    let units = crate::ir::attr::read_entity_ref_list(attrs, 0, entity_id, "units")?;
+    let attrs = crate::reader::require_part_attrs(parts, "REPRESENTATION_CONTEXT", entity_id)?;
+    let context_identifier =
+        crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "context_identifier")?
+            .to_owned();
+    let context_type =
+        crate::ir::attr::read_string_or_unset(attrs, 1, entity_id, "context_type")?.to_owned();
+    Ok(super::model::EarlyGlobalUnitAssignedContext::NoUncertainty(
+        super::model::EarlyGlobalUnitAssignedContextNoUncertainty {
+            coordinate_space_dimension,
+            units,
+            context_identifier,
+            context_type,
+        },
+    ))
+}
+
 pub(crate) fn bind_measure_qualification(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],

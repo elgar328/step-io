@@ -388,7 +388,11 @@ mod tests {
             let ctx = UnitContext {
                 units: vec![length_id, plane_id, solid_id],
                 uncertainty,
-                form: crate::ir::shape_rep::UnitContextForm::Complex,
+                form: crate::ir::shape_rep::UnitContextForm::Complex {
+                    coordinate_space_dimension: 3,
+                    repr_identifier: String::new(),
+                    repr_type: String::new(),
+                },
             };
 
             let mut arena: Arena<UnitContext> = Arena::default();

@@ -1,15 +1,14 @@
 //! `GLOBAL_UNIT_ASSIGNED_CONTEXT` handler orchestrator.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::id::{MeasureWithUnitId, NamedUnitId};
 use crate::ir::shape_rep::{UnitContext, UnitContextForm};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
-use crate::reader::{ReaderContext, require_part_attrs};
+use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
-use crate::writer::entity::{WriterBody, WriterEntity};
 use step_io_macros::{step_entity, step_entity_complex};
 
 pub(crate) struct GlobalUnitAssignedContextHandler;
@@ -29,40 +28,23 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
         parts: &[RawEntityPart],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let guac_attrs = require_part_attrs(parts, "GLOBAL_UNIT_ASSIGNED_CONTEXT", entity_id)?;
-        check_count(guac_attrs, 1, entity_id, "GLOBAL_UNIT_ASSIGNED_CONTEXT")?;
-        let unit_refs = read_entity_ref_list(guac_attrs, 0, entity_id, "units")?;
-
-        // `units` is `SET[1:?] OF unit` — collect each ref (any kind: length /
-        // plane_angle / solid_angle / mass / ratio, in source order) into the
-        // set. A source may legitimately omit a kind (e.g. solid_angle); no
-        // synthesis, no "incomplete" warning. An unresolved ref (unit step-io
-        // did not model) is surfaced and skipped.
-        let units = resolve_unit_refs(ctx, entity_id, &unit_refs);
-        let uncertainty = read_uncertainty_refs(ctx, entity_id, parts);
-        let ctx_id = ctx.units.push(UnitContext {
-            units,
-            uncertainty,
-            form: UnitContextForm::Complex,
-        });
-        ctx.context_id_map.insert(entity_id, ctx_id);
+        let early = bind::bind_global_unit_assigned_context(entity_id, parts)?;
+        lower::lower_global_unit_assigned_context(ctx, entity_id, &early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, units: UnitContext) -> Result<u64, WriteError> {
-        // units-2: leaf entities are emitted once by `emit_units_pool_if_set`
-        // before `emit_all` reaches the GUAC loop. Resolve each `NamedUnitId`
-        // to the emitted step id, preserving the source `units` set order.
-        let unit_steps: Vec<u64> = units.units.iter().map(|id| buf.step_id(id)).collect();
-
         // A simple GUAC carries no geometric / uncertainty parts — emit the
         // standalone `GLOBAL_UNIT_ASSIGNED_CONTEXT(identifier, type, units)`
-        // entity, reproducing its `representation_context` strings.
+        // entity by hand, reproducing its `representation_context` strings.
+        // (The simple form is a non-complex instance; only the complex MI is
+        // codegen'd.) Leaf units are emitted by `emit_units_pool_if_set`.
         if let UnitContextForm::Simple {
             identifier,
             context_type,
         } = &units.form
         {
+            let unit_steps: Vec<u64> = units.units.iter().map(|id| buf.step_id(id)).collect();
             return Ok(buf.push_simple(
                 "GLOBAL_UNIT_ASSIGNED_CONTEXT",
                 vec![
@@ -78,58 +60,12 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
             ));
         }
 
-        // ISO 10303-21:2016 §11.2.5.1 — complex entity parts serialize in
-        // alphabetical order. Final order with uncertainty present:
-        //   GEOMETRIC_REPRESENTATION_CONTEXT
-        //   GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT   (UNCERTAINTY < UNIT)
-        //   GLOBAL_UNIT_ASSIGNED_CONTEXT
-        //   REPRESENTATION_CONTEXT
-        let mut parts = vec![
-            (
-                "GEOMETRIC_REPRESENTATION_CONTEXT".into(),
-                vec![Attribute::Integer(3)],
-            ),
-            (
-                "GLOBAL_UNIT_ASSIGNED_CONTEXT".into(),
-                vec![Attribute::List(
-                    unit_steps
-                        .iter()
-                        .map(|&s| Attribute::EntityRef(s))
-                        .collect(),
-                )],
-            ),
-            (
-                "REPRESENTATION_CONTEXT".into(),
-                vec![
-                    Attribute::String(String::new()),
-                    Attribute::String(String::new()),
-                ],
-            ),
-        ];
-        // Each `UNCERTAINTY_MEASURE_WITH_UNIT` is a `measure_with_units` arena
-        // entry emitted by `emit_units_pool_if_set` before the GUAC loop —
-        // reference its already-emitted step id, in source order.
-        if !units.uncertainty.is_empty() {
-            let unc_refs: Vec<Attribute> = units
-                .uncertainty
-                .iter()
-                .map(|id| Attribute::EntityRef(buf.step_id(id)))
-                .collect();
-            parts.insert(
-                1,
-                (
-                    "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT".into(),
-                    vec![Attribute::List(unc_refs)],
-                ),
-            );
-        }
-
-        let n = buf.fresh();
-        buf.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Complex { parts },
-        });
-        Ok(n)
+        // Complex form: lift to the generated L1 (case selection + step-id
+        // resolution) and emit via the generated multi-case serialize.
+        let early = lift::lift_global_unit_assigned_context(buf, &units);
+        Ok(serialize::serialize_global_unit_assigned_context(
+            buf, &early,
+        ))
     }
 }
 
@@ -158,7 +94,7 @@ impl SimpleEntityHandler for GlobalUnitAssignedContextSimpleHandler {
             read_string_or_unset(attrs, 0, entity_id, "context_identifier")?.to_owned();
         let context_type = read_string_or_unset(attrs, 1, entity_id, "context_type")?.to_owned();
         let unit_refs = read_entity_ref_list(attrs, 2, entity_id, "units")?;
-        let units = resolve_unit_refs(ctx, entity_id, &unit_refs);
+        let units = lower::resolve_unit_refs(ctx, entity_id, &unit_refs);
         // The simple form has no GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT part.
         let ctx_id = ctx.units.push(UnitContext {
             units,
@@ -178,64 +114,4 @@ impl SimpleEntityHandler for GlobalUnitAssignedContextSimpleHandler {
         // `write`. This dispatch handler's `write` is never invoked.
         unreachable!("simple GUAC is emitted via emit_unit_context form branch")
     }
-}
-
-/// Resolve a `GLOBAL_UNIT_ASSIGNED_CONTEXT.units` ref list into `NamedUnitId`s
-/// in source order. `units` is `SET[1:?] OF unit` — any kind (`length` /
-/// `plane_angle` / `solid_angle` / `mass` / `ratio`); a source may legitimately
-/// omit a kind (no synthesis). An unresolved ref (a unit step-io did not model)
-/// is surfaced and skipped.
-fn resolve_unit_refs(
-    ctx: &mut ReaderContext,
-    entity_id: u64,
-    unit_refs: &[u64],
-) -> Vec<NamedUnitId> {
-    let mut units = Vec::with_capacity(unit_refs.len());
-    for r in unit_refs {
-        if let Some(nu_id) = ctx.id_cache.get::<crate::ir::id::NamedUnitId>(*r) {
-            units.push(nu_id);
-        } else {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!("GLOBAL_UNIT_ASSIGNED_CONTEXT.units ref #{r} unresolved"),
-            });
-        }
-    }
-    units
-}
-
-/// Resolve the `GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.uncertainty` ref list (each
-/// a `UNCERTAINTY_MEASURE_WITH_UNIT`) into `MeasureWithUnitId`s, in source order.
-/// Each entity was lowered into the shared `measure_with_units` arena on read,
-/// so it resolves through `id_cache`. An unresolved ref (value dropped on bind,
-/// or dangling) is surfaced and skipped — consistent with the dangling-reference
-/// dispatch rule.
-fn read_uncertainty_refs(
-    ctx: &mut ReaderContext,
-    entity_id: u64,
-    parts: &[RawEntityPart],
-) -> Vec<MeasureWithUnitId> {
-    let Some(guac) = parts
-        .iter()
-        .find(|p| p.name == "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT")
-    else {
-        return Vec::new();
-    };
-    let Ok(refs) = read_entity_ref_list(&guac.attributes, 0, entity_id, "uncertainty") else {
-        return Vec::new();
-    };
-    let mut out = Vec::with_capacity(refs.len());
-    for r in &refs {
-        if let Some(id) = ctx.id_cache.get::<MeasureWithUnitId>(*r) {
-            out.push(id);
-        } else {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!(
-                    "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.uncertainty ref #{r} unresolved"
-                ),
-            });
-        }
-    }
-    out
 }

@@ -62,8 +62,15 @@ pub struct UnitContext {
 /// IR-faithful (a complex GRC would distort a non-geometric ratio context).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum UnitContextForm {
-    /// Complex `(GEOMETRIC_REPRESENTATION_CONTEXT … REPRESENTATION_CONTEXT)`.
-    Complex,
+    /// Complex `(GEOMETRIC_REPRESENTATION_CONTEXT(coordinate_space_dimension) …
+    /// REPRESENTATION_CONTEXT(repr_identifier, repr_type))`. The dimension and
+    /// the two `representation_context` strings are preserved verbatim (the
+    /// writer no longer hardcodes `3` / `''`).
+    Complex {
+        coordinate_space_dimension: i64,
+        repr_identifier: String,
+        repr_type: String,
+    },
     /// Standalone simple `GLOBAL_UNIT_ASSIGNED_CONTEXT` with its inherited
     /// `representation_context` strings.
     Simple {

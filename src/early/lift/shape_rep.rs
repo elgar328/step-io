@@ -8,9 +8,11 @@ use crate::early::model::{
     EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
     EarlyDefaultModelGeometricView, EarlyDescriptiveRepresentationItem,
-    EarlyFeatureForDatumTargetRelationship, EarlyItemDefinedTransformation,
-    EarlyItemIdentifiedRepresentationUsage, EarlyItemIdentifiedRepresentationUsageSelect,
-    EarlyMappedItem, EarlyMeasureValue, EarlyMechanicalDesignAndDraughtingRelationship,
+    EarlyFeatureForDatumTargetRelationship, EarlyGlobalUnitAssignedContext,
+    EarlyGlobalUnitAssignedContextFull, EarlyGlobalUnitAssignedContextNoUncertainty,
+    EarlyItemDefinedTransformation, EarlyItemIdentifiedRepresentationUsage,
+    EarlyItemIdentifiedRepresentationUsageSelect, EarlyMappedItem, EarlyMeasureValue,
+    EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
@@ -27,7 +29,7 @@ use crate::ir::shape_rep::{
     CompoundItem, CompoundItemKind, CompoundRepresentationItem, ConstructiveGeometryRepr,
     DimensionItem, IiruDefinition, IiruIdentifiedItem, ItemIdentifiedRepresentationUsage, Mdgpr,
     ShapeDimensionRepresentation, ShapeRepresentationWithParameters, SrwpItem,
-    TessellatedShapeRepresentation, UnitlessContext,
+    TessellatedShapeRepresentation, UnitContext, UnitContextForm, UnitlessContext,
 };
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
@@ -748,5 +750,42 @@ pub(crate) fn lift_default_model_geometric_view(
         name_2: sa_name,
         description_2: Some(sa_description),
         of_shape,
+    }
+}
+
+/// Lift the complex `GLOBAL_UNIT_ASSIGNED_CONTEXT`. The unit / uncertainty arena
+/// entries were already emitted by `emit_units_pool_if_set`, so each ref
+/// resolves to its step id. A non-empty `uncertainty` selects the `Full` case
+/// (adds the `GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT` part). Only called for
+/// [`UnitContextForm::Complex`]; the simple form emits via its own hand path.
+pub(crate) fn lift_global_unit_assigned_context(
+    buf: &WriteBuffer,
+    units: &UnitContext,
+) -> EarlyGlobalUnitAssignedContext {
+    let UnitContextForm::Complex {
+        coordinate_space_dimension,
+        repr_identifier,
+        repr_type,
+    } = &units.form
+    else {
+        unreachable!("lift_global_unit_assigned_context called on a non-Complex form")
+    };
+    let unit_steps: Vec<u64> = units.units.iter().map(|id| buf.step_id(id)).collect();
+    if units.uncertainty.is_empty() {
+        EarlyGlobalUnitAssignedContext::NoUncertainty(EarlyGlobalUnitAssignedContextNoUncertainty {
+            coordinate_space_dimension: *coordinate_space_dimension,
+            units: unit_steps,
+            context_identifier: repr_identifier.clone(),
+            context_type: repr_type.clone(),
+        })
+    } else {
+        let uncertainty: Vec<u64> = units.uncertainty.iter().map(|id| buf.step_id(id)).collect();
+        EarlyGlobalUnitAssignedContext::Full(EarlyGlobalUnitAssignedContextFull {
+            coordinate_space_dimension: *coordinate_space_dimension,
+            uncertainty,
+            units: unit_steps,
+            context_identifier: repr_identifier.clone(),
+            context_type: repr_type.clone(),
+        })
     }
 }

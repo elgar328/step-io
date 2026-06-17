@@ -60,7 +60,11 @@ fn mm_radian_steradian(model: &mut StepModel) -> UnitContext {
             pool.push_plain_solid_angle(SolidAngleUnit::Steradian),
         ],
         uncertainty: Vec::new(),
-        form: step_io::ir::shape_rep::UnitContextForm::Complex,
+        form: step_io::ir::shape_rep::UnitContextForm::Complex {
+            coordinate_space_dimension: 3,
+            repr_identifier: String::new(),
+            repr_type: String::new(),
+        },
     }
 }
 

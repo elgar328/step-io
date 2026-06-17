@@ -15,9 +15,9 @@ use crate::early::model::{
     EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
     EarlyDefaultModelGeometricView, EarlyDescriptiveRepresentationItem,
-    EarlyItemDefinedTransformation, EarlyItemIdentifiedRepresentationUsage,
-    EarlyItemIdentifiedRepresentationUsageSelect, EarlyMappedItem, EarlyMeasureValue,
-    EarlyMechanicalDesignAndDraughtingRelationship,
+    EarlyGlobalUnitAssignedContext, EarlyItemDefinedTransformation,
+    EarlyItemIdentifiedRepresentationUsage, EarlyItemIdentifiedRepresentationUsageSelect,
+    EarlyMappedItem, EarlyMeasureValue, EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
@@ -47,7 +47,7 @@ use crate::ir::shape_rep::{
     RepresentationRelationshipData, ShapeAspect, ShapeAspectRelationship,
     ShapeAspectRelationshipKind, ShapeDimensionRepresentation, ShapeRepresentationRelationshipIr,
     ShapeRepresentationWithParameters, SrwpItem, TessellatedShapeRepresentation, ToleranceZone,
-    UnitlessContext,
+    UnitContext, UnitContextForm, UnitlessContext,
 };
 use crate::ir::visualization::VisualizationPool;
 use crate::reader::ReaderContext;
@@ -1246,4 +1246,91 @@ pub(crate) fn lower_default_model_geometric_view(
             rep,
             target,
         });
+}
+
+/// Lower the complex `GLOBAL_UNIT_ASSIGNED_CONTEXT` (the
+/// `(GEOMETRIC_REPRESENTATION_CONTEXT … REPRESENTATION_CONTEXT)` MI). Resolves
+/// `units` / `uncertainty` refs to arena ids, preserves the GEO dimension and
+/// the two `representation_context` strings in [`UnitContextForm::Complex`], and
+/// registers the `context_id_map` entry consumed by representation converters.
+pub(crate) fn lower_global_unit_assigned_context(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyGlobalUnitAssignedContext,
+) {
+    let (dimension, unit_refs, uncertainty_refs, repr_identifier, repr_type) = match early {
+        EarlyGlobalUnitAssignedContext::Full(f) => (
+            f.coordinate_space_dimension,
+            f.units.as_slice(),
+            f.uncertainty.as_slice(),
+            f.context_identifier.clone(),
+            f.context_type.clone(),
+        ),
+        EarlyGlobalUnitAssignedContext::NoUncertainty(n) => (
+            n.coordinate_space_dimension,
+            n.units.as_slice(),
+            &[][..],
+            n.context_identifier.clone(),
+            n.context_type.clone(),
+        ),
+    };
+    let units = resolve_unit_refs(ctx, entity_id, unit_refs);
+    let uncertainty = resolve_uncertainty_refs(ctx, entity_id, uncertainty_refs);
+    let ctx_id = ctx.units.push(UnitContext {
+        units,
+        uncertainty,
+        form: UnitContextForm::Complex {
+            coordinate_space_dimension: dimension,
+            repr_identifier,
+            repr_type,
+        },
+    });
+    ctx.context_id_map.insert(entity_id, ctx_id);
+}
+
+/// Resolve a `GLOBAL_UNIT_ASSIGNED_CONTEXT.units` ref list (`SET OF unit`, any
+/// kind) into `NamedUnitId`s in source order. An unresolved ref (a unit step-io
+/// did not model) is surfaced and skipped (no synthesis).
+pub(crate) fn resolve_unit_refs(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    unit_refs: &[u64],
+) -> Vec<crate::ir::id::NamedUnitId> {
+    let mut units = Vec::with_capacity(unit_refs.len());
+    for r in unit_refs {
+        if let Some(nu_id) = ctx.id_cache.get::<crate::ir::id::NamedUnitId>(*r) {
+            units.push(nu_id);
+        } else {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!("GLOBAL_UNIT_ASSIGNED_CONTEXT.units ref #{r} unresolved"),
+            });
+        }
+    }
+    units
+}
+
+/// Resolve a `GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.uncertainty` ref list (each a
+/// `UNCERTAINTY_MEASURE_WITH_UNIT`, lowered into the shared `measure_with_units`
+/// arena) into `MeasureWithUnitId`s in source order. An unresolved ref (value
+/// dropped on bind, or dangling) is surfaced and skipped.
+fn resolve_uncertainty_refs(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    uncertainty_refs: &[u64],
+) -> Vec<crate::ir::id::MeasureWithUnitId> {
+    let mut out = Vec::with_capacity(uncertainty_refs.len());
+    for r in uncertainty_refs {
+        if let Some(id) = ctx.id_cache.get::<crate::ir::id::MeasureWithUnitId>(*r) {
+            out.push(id);
+        } else {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.uncertainty ref #{r} unresolved"
+                ),
+            });
+        }
+    }
+    out
 }

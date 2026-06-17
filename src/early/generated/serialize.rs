@@ -2429,6 +2429,71 @@ pub(crate) fn serialize_geometric_tolerance_relationship(
     )
 }
 
+pub(crate) fn serialize_global_unit_assigned_context(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyGlobalUnitAssignedContext,
+) -> u64 {
+    match l1 {
+        super::model::EarlyGlobalUnitAssignedContext::Full(l1) => buf.push_complex(vec![
+            (
+                "GEOMETRIC_REPRESENTATION_CONTEXT".into(),
+                vec![crate::parser::entity::Attribute::Integer(
+                    l1.coordinate_space_dimension,
+                )],
+            ),
+            (
+                "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT".into(),
+                vec![crate::parser::entity::Attribute::List(
+                    l1.uncertainty
+                        .iter()
+                        .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                        .collect(),
+                )],
+            ),
+            (
+                "GLOBAL_UNIT_ASSIGNED_CONTEXT".into(),
+                vec![crate::parser::entity::Attribute::List(
+                    l1.units
+                        .iter()
+                        .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                        .collect(),
+                )],
+            ),
+            (
+                "REPRESENTATION_CONTEXT".into(),
+                vec![
+                    crate::parser::entity::Attribute::String(l1.context_identifier.clone()),
+                    crate::parser::entity::Attribute::String(l1.context_type.clone()),
+                ],
+            ),
+        ]),
+        super::model::EarlyGlobalUnitAssignedContext::NoUncertainty(l1) => buf.push_complex(vec![
+            (
+                "GEOMETRIC_REPRESENTATION_CONTEXT".into(),
+                vec![crate::parser::entity::Attribute::Integer(
+                    l1.coordinate_space_dimension,
+                )],
+            ),
+            (
+                "GLOBAL_UNIT_ASSIGNED_CONTEXT".into(),
+                vec![crate::parser::entity::Attribute::List(
+                    l1.units
+                        .iter()
+                        .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                        .collect(),
+                )],
+            ),
+            (
+                "REPRESENTATION_CONTEXT".into(),
+                vec![
+                    crate::parser::entity::Attribute::String(l1.context_identifier.clone()),
+                    crate::parser::entity::Attribute::String(l1.context_type.clone()),
+                ],
+            ),
+        ]),
+    }
+}
+
 pub(crate) fn serialize_measure_qualification(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyMeasureQualification,

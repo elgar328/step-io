@@ -1138,6 +1138,48 @@ fn unit_data(length_prefix: &str) -> String {
     )
 }
 
+/// The complex GUAC now preserves the `GEOMETRIC_REPRESENTATION_CONTEXT`
+/// dimension and the two `REPRESENTATION_CONTEXT` strings (previously dropped /
+/// hardcoded to 3 / ''), round-tripping through the generated multi-case
+/// bind / serialize.
+#[test]
+fn complex_guac_preserves_dimension_and_repr_strings() {
+    let src = minimal_step(
+        "#1 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n\
+         #2 = ( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n\
+         #3 = ( NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT() );\n\
+         #4 = ( GEOMETRIC_REPRESENTATION_CONTEXT(3)\n\
+         \t\tGLOBAL_UNIT_ASSIGNED_CONTEXT((#1,#2,#3))\n\
+         \t\tREPRESENTATION_CONTEXT('Context #1','3D Context with UNIT') );",
+    );
+    let result = convert_source(&src);
+    assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
+    let ctx = result
+        .model
+        .shape_rep
+        .unit_contexts
+        .iter()
+        .next()
+        .expect("ctx");
+    match &ctx.form {
+        crate::ir::shape_rep::UnitContextForm::Complex {
+            coordinate_space_dimension,
+            repr_identifier,
+            repr_type,
+        } => {
+            assert_eq!(*coordinate_space_dimension, 3);
+            assert_eq!(repr_identifier, "Context #1");
+            assert_eq!(repr_type, "3D Context with UNIT");
+        }
+        crate::ir::shape_rep::UnitContextForm::Simple { .. } => {
+            panic!("expected Complex form, got Simple")
+        }
+    }
+    let text = result.model.write_to_string().expect("write");
+    assert!(text.contains("'Context #1'"), "{text}");
+    assert!(text.contains("'3D Context with UNIT'"), "{text}");
+}
+
 #[test]
 fn unit_millimetre_radian_steradian() {
     let result = convert_source(&minimal_step(&unit_data(".MILLI.")));
