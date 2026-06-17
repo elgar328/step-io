@@ -4347,6 +4347,28 @@ pub(crate) fn bind_item_identified_representation_usage(
     }))
 }
 
+pub(crate) fn bind_geometric_item_specific_usage(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<Option<super::model::EarlyGeometricItemSpecificUsage>, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 5, entity_id, "GEOMETRIC_ITEM_SPECIFIC_USAGE")?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let description = crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?;
+    let definition = crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "definition")?;
+    let used_representation =
+        crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "used_representation")?;
+    let Some(identified_item) = bind_item_identified_representation_usage_select(&attrs[4]) else {
+        return Ok(None);
+    };
+    Ok(Some(super::model::EarlyGeometricItemSpecificUsage {
+        name,
+        description,
+        definition,
+        used_representation,
+        identified_item,
+    }))
+}
+
 pub(crate) fn bind_axis2_placement_2d(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],

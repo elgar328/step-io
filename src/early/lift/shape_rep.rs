@@ -8,11 +8,11 @@ use crate::early::model::{
     EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
     EarlyDefaultModelGeometricView, EarlyDescriptiveRepresentationItem,
-    EarlyFeatureForDatumTargetRelationship, EarlyGlobalUnitAssignedContext,
-    EarlyGlobalUnitAssignedContextFull, EarlyGlobalUnitAssignedContextNoUncertainty,
-    EarlyItemDefinedTransformation, EarlyItemIdentifiedRepresentationUsage,
-    EarlyItemIdentifiedRepresentationUsageSelect, EarlyMappedItem, EarlyMeasureValue,
-    EarlyMechanicalDesignAndDraughtingRelationship,
+    EarlyFeatureForDatumTargetRelationship, EarlyGeometricItemSpecificUsage,
+    EarlyGlobalUnitAssignedContext, EarlyGlobalUnitAssignedContextFull,
+    EarlyGlobalUnitAssignedContextNoUncertainty, EarlyItemDefinedTransformation,
+    EarlyItemIdentifiedRepresentationUsage, EarlyItemIdentifiedRepresentationUsageSelect,
+    EarlyMappedItem, EarlyMeasureValue, EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
@@ -787,5 +787,25 @@ pub(crate) fn lift_global_unit_assigned_context(
             context_identifier: repr_identifier.clone(),
             context_type: repr_type.clone(),
         })
+    }
+}
+
+/// Lift `GEOMETRIC_ITEM_SPECIFIC_USAGE`. The handler write pre-resolves the
+/// three refs to emitted step ids (`emit_shape_aspect_ref` / `step_id` /
+/// `emit_representation_item_ref`); `identified_item` re-wraps as the single
+/// `EntityRef` member (GISU never carries the SET/LIST forms).
+pub(crate) fn lift_geometric_item_specific_usage(
+    name: String,
+    description: Option<String>,
+    def_step: u64,
+    used_step: u64,
+    item_step: u64,
+) -> EarlyGeometricItemSpecificUsage {
+    EarlyGeometricItemSpecificUsage {
+        name,
+        description,
+        definition: def_step,
+        used_representation: used_step,
+        identified_item: EarlyItemIdentifiedRepresentationUsageSelect::EntityRef(item_step),
     }
 }

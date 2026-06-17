@@ -5014,6 +5014,25 @@ pub(crate) fn serialize_item_identified_representation_usage(
     )
 }
 
+pub(crate) fn serialize_geometric_item_specific_usage(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyGeometricItemSpecificUsage,
+) -> u64 {
+    buf.push_simple(
+        "GEOMETRIC_ITEM_SPECIFIC_USAGE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.definition),
+            crate::parser::entity::Attribute::EntityRef(l1.used_representation),
+            item_identified_representation_usage_select_emit(&l1.identified_item),
+        ],
+    )
+}
+
 pub(crate) fn serialize_axis2_placement_2d(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyAxis2Placement2d,

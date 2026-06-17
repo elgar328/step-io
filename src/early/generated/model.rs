@@ -6073,6 +6073,31 @@ impl crate::ir::arena::ArenaId for EarlyItemIdentifiedRepresentationUsageId {
     }
 }
 
+/// L1 `GEOMETRIC_ITEM_SPECIFIC_USAGE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyGeometricItemSpecificUsage {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) definition: u64,
+    pub(crate) used_representation: u64,
+    pub(crate) identified_item: EarlyItemIdentifiedRepresentationUsageSelect,
+}
+
+/// Typed `id_cache` key for `GEOMETRIC_ITEM_SPECIFIC_USAGE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyGeometricItemSpecificUsageId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyGeometricItemSpecificUsageId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `AXIS2_PLACEMENT_2D` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyAxis2Placement2d {

@@ -15,9 +15,10 @@ use crate::early::model::{
     EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
     EarlyDefaultModelGeometricView, EarlyDescriptiveRepresentationItem,
-    EarlyGlobalUnitAssignedContext, EarlyItemDefinedTransformation,
-    EarlyItemIdentifiedRepresentationUsage, EarlyItemIdentifiedRepresentationUsageSelect,
-    EarlyMappedItem, EarlyMeasureValue, EarlyMechanicalDesignAndDraughtingRelationship,
+    EarlyGeometricItemSpecificUsage, EarlyGlobalUnitAssignedContext,
+    EarlyItemDefinedTransformation, EarlyItemIdentifiedRepresentationUsage,
+    EarlyItemIdentifiedRepresentationUsageSelect, EarlyMappedItem, EarlyMeasureValue,
+    EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
@@ -39,7 +40,7 @@ use crate::ir::shape_rep::{
     CompositeShapeAspectKind, CompoundItem, CompoundItemElement, CompoundItemKind,
     CompoundRepresentationItem, ConstructiveGeometryRepr,
     ConstructiveGeometryRepresentationRelationship, DatumSystem, DatumTarget,
-    DefaultModelGeometricView, IiruDefinition, IiruIdentifiedItem,
+    DefaultModelGeometricView, GeometricItemSpecificUsage, IiruDefinition, IiruIdentifiedItem,
     ItemIdentifiedRepresentationUsage, MappedItem, MappedItemData, MappedRepresentationRef, Mdgpr,
     MechanicalDesignAndDraughtingRelationship, ModelGeometricView, NumericRepresentationItem,
     PlacedDatumTargetFeature, RealRepresentationItem, Representation, RepresentationContextRef,
@@ -1333,4 +1334,51 @@ fn resolve_uncertainty_refs(
         }
     }
     out
+}
+
+/// Lower the standard (non-`$`) `GEOMETRIC_ITEM_SPECIFIC_USAGE`: `definition`
+/// → `ShapeAspectRef`, `identified_item` SELECT → a single `RepresentationItemRef`
+/// (GISU only ever carries the `EntityRef` member; SET/LIST drop, matching the
+/// hand read's single-ref `read_entity_ref`), `used_representation` → arena id.
+/// Any unresolved member drops the carrier. The non-standard `used_representation=$`
+/// (`GisuUnsetUsedRep`) is intercepted + deferred in the handler before bind.
+pub(crate) fn lower_geometric_item_specific_usage(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyGeometricItemSpecificUsage,
+) {
+    use crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_ref;
+    use crate::entities::visualization::styled_item::resolve_representation_item_ref;
+
+    let Some(definition) = resolve_shape_aspect_ref(ctx, early.definition) else {
+        return;
+    };
+    let identified_item = match early.identified_item {
+        EarlyItemIdentifiedRepresentationUsageSelect::EntityRef(r) => {
+            let Some(item) = resolve_representation_item_ref(ctx, r) else {
+                return;
+            };
+            item
+        }
+        // GISU narrows identified_item to a single representation_item; the
+        // SET/LIST members never occur (and the hand read errored on them).
+        EarlyItemIdentifiedRepresentationUsageSelect::SetRepresentationItem(_)
+        | EarlyItemIdentifiedRepresentationUsageSelect::ListRepresentationItem(_) => return,
+    };
+    let Some(used_representation) = ctx
+        .id_cache
+        .get::<crate::ir::id::RepresentationId>(early.used_representation)
+    else {
+        return;
+    };
+    let id = ctx
+        .geometric_item_specific_usages
+        .push(GeometricItemSpecificUsage {
+            name: early.name,
+            description: early.description,
+            definition,
+            used_representation,
+            identified_item,
+        });
+    ctx.id_cache.insert(entity_id, id);
 }
