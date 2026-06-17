@@ -133,29 +133,25 @@ impl WriteBuffer<'_> {
         let mut pdcr_step_ids: Vec<u64> =
             Vec::with_capacity(assembly.product_definition_context_roles.len());
         for r in assembly.product_definition_context_roles.iter() {
-            let desc_attr = match &r.description {
-                Some(d) => Attribute::String(d.clone()),
-                None => Attribute::Unset,
-            };
-            let id = self.push_simple(
-                "PRODUCT_DEFINITION_CONTEXT_ROLE",
-                vec![Attribute::String(r.name.clone()), desc_attr],
+            let id = crate::early::serialize::serialize_product_definition_context_role(
+                self,
+                &crate::early::lift::lift_product_definition_context_role(r),
             );
             pdcr_step_ids.push(id);
         }
         for a in assembly.product_definition_context_associations.iter() {
+            // refs resolved here (orchestrator owns these caches); lift +
+            // generated serialize handle the L1 shape / emit.
             let Some(&pdef_step) = self.product_def_ids.get(&a.definition) else {
                 continue;
             };
             let pdc_step = self.pdc_step_ids[a.frame_of_reference.0 as usize];
             let role_step = pdcr_step_ids[a.role.0 as usize];
-            let _ = self.push_simple(
-                "PRODUCT_DEFINITION_CONTEXT_ASSOCIATION",
-                vec![
-                    Attribute::EntityRef(pdef_step),
-                    Attribute::EntityRef(pdc_step),
-                    Attribute::EntityRef(role_step),
-                ],
+            let _ = crate::early::serialize::serialize_product_definition_context_association(
+                self,
+                &crate::early::lift::lift_product_definition_context_association(
+                    pdef_step, pdc_step, role_step,
+                ),
             );
         }
     }

@@ -466,6 +466,36 @@ pub(crate) fn serialize_design_context(
     )
 }
 
+pub(crate) fn serialize_product_definition_context_role(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyProductDefinitionContextRole,
+) -> u64 {
+    buf.push_simple(
+        "PRODUCT_DEFINITION_CONTEXT_ROLE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+        ],
+    )
+}
+
+pub(crate) fn serialize_product_definition_context_association(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyProductDefinitionContextAssociation,
+) -> u64 {
+    buf.push_simple(
+        "PRODUCT_DEFINITION_CONTEXT_ASSOCIATION",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.definition),
+            crate::parser::entity::Attribute::EntityRef(l1.frame_of_reference),
+            crate::parser::entity::Attribute::EntityRef(l1.role),
+        ],
+    )
+}
+
 pub(crate) fn serialize_object_role(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyObjectRole,

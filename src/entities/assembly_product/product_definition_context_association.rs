@@ -1,12 +1,12 @@
-//! `PRODUCT_DEFINITION_CONTEXT_ASSOCIATION` handler
-//! `assembly_product`. STEP positional
-//! `(definition, frame_of_reference, role)` per `AP214e3`.
-//! `definition` refs `PRODUCT_DEFINITION` → resolved via
-//! `pdef_to_product` to a `ProductId` (PDEF data lives on Product).
+//! `PRODUCT_DEFINITION_CONTEXT_ASSOCIATION` handler `assembly_product` —
+//! 2-layer path. STEP positional `(definition, frame_of_reference, role)` per
+//! `AP214e3`. `definition` refs `PRODUCT_DEFINITION` → resolved via
+//! `product_of_pdef` to a `ProductId` (PDEF data lives on Product). Emitted by
+//! `emit_pdca_cluster` (lift + generated serialize), so `write` is unreachable.
 
+use crate::early::{bind, lower};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::assembly::ProductDefinitionContextAssociation;
-use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -26,38 +26,8 @@ impl SimpleEntityHandler for ProductDefinitionContextAssociationHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(
-            attrs,
-            3,
-            entity_id,
-            "PRODUCT_DEFINITION_CONTEXT_ASSOCIATION",
-        )?;
-        let def_ref = read_entity_ref(attrs, 0, entity_id, "definition")?;
-        let frame_ref = read_entity_ref(attrs, 1, entity_id, "frame_of_reference")?;
-        let role_ref = read_entity_ref(attrs, 2, entity_id, "role")?;
-        let Some(pid) = ctx.product_of_pdef(def_ref) else {
-            return Ok(());
-        };
-        let Some(pdcid) = ctx
-            .id_cache
-            .get::<crate::ir::id::ProductDefinitionContextId>(frame_ref)
-        else {
-            return Ok(());
-        };
-        let Some(roleid) = ctx
-            .id_cache
-            .get::<crate::ir::id::ProductDefinitionContextRoleId>(role_ref)
-        else {
-            return Ok(());
-        };
-        let id =
-            ctx.product_definition_context_associations
-                .push(ProductDefinitionContextAssociation {
-                    definition: pid,
-                    frame_of_reference: pdcid,
-                    role: roleid,
-                });
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_product_definition_context_association(entity_id, attrs)?;
+        lower::lower_product_definition_context_association(ctx, entity_id, early);
         Ok(())
     }
 

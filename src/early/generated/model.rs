@@ -674,6 +674,51 @@ impl crate::ir::arena::ArenaId for EarlyDesignContextId {
     }
 }
 
+/// L1 `PRODUCT_DEFINITION_CONTEXT_ROLE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyProductDefinitionContextRole {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+}
+
+/// Typed `id_cache` key for `PRODUCT_DEFINITION_CONTEXT_ROLE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyProductDefinitionContextRoleId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyProductDefinitionContextRoleId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PRODUCT_DEFINITION_CONTEXT_ASSOCIATION` (generated).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct EarlyProductDefinitionContextAssociation {
+    pub(crate) definition: u64,
+    pub(crate) frame_of_reference: u64,
+    pub(crate) role: u64,
+}
+
+/// Typed `id_cache` key for `PRODUCT_DEFINITION_CONTEXT_ASSOCIATION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyProductDefinitionContextAssociationId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyProductDefinitionContextAssociationId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `OBJECT_ROLE` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyObjectRole {

@@ -10,13 +10,15 @@
 use crate::early::model::{
     EarlyDesignContext, EarlyMakeFromUsageOption, EarlyMechanicalContext,
     EarlyNextAssemblyUsageOccurrence, EarlyProduct, EarlyProductCategory, EarlyProductContext,
-    EarlyProductDefinitionContext, EarlyProductDefinitionFormationId, EarlyProductDefinitionId,
+    EarlyProductDefinitionContext, EarlyProductDefinitionContextAssociation,
+    EarlyProductDefinitionContextRole, EarlyProductDefinitionFormationId, EarlyProductDefinitionId,
     EarlyProductDefinitionRelationship, EarlyProductDefinitionShapeId, EarlySource,
 };
 use crate::ir::ApplicationContextId;
 use crate::ir::assembly::{
     Product, ProductContext, ProductContextData, ProductDefinition, ProductDefinitionContext,
-    ProductDefinitionContextData, ProductDefinitionFormation, ProductDefinitionFormationData,
+    ProductDefinitionContextAssociation, ProductDefinitionContextData,
+    ProductDefinitionContextRole, ProductDefinitionFormation, ProductDefinitionFormationData,
     ProductDefinitionFormationWithSpecifiedSource,
 };
 use crate::ir::error::ConvertError;
@@ -482,4 +484,54 @@ pub(crate) fn lower_design_context(
         early.life_cycle_stage,
         ProductDefinitionContext::Design,
     );
+}
+
+/// Lower `PRODUCT_DEFINITION_CONTEXT_ROLE` (leaf). Registers the `id_cache` key
+/// so a `PRODUCT_DEFINITION_CONTEXT_ASSOCIATION` can resolve its `role` ref.
+pub(crate) fn lower_product_definition_context_role(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyProductDefinitionContextRole,
+) {
+    let id = ctx
+        .product_definition_context_roles
+        .push(ProductDefinitionContextRole {
+            name: early.name,
+            description: early.description,
+        });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower `PRODUCT_DEFINITION_CONTEXT_ASSOCIATION`. `definition` refs a
+/// `PRODUCT_DEFINITION` → resolved to its `ProductId` (PDEF data lives on
+/// Product); `frame_of_reference`/`role` resolve through `id_cache`. Any
+/// unresolved member drops the entry (matching the legacy read).
+pub(crate) fn lower_product_definition_context_association(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyProductDefinitionContextAssociation,
+) {
+    let Some(definition) = ctx.product_of_pdef(early.definition) else {
+        return;
+    };
+    let Some(frame_of_reference) = ctx
+        .id_cache
+        .get::<crate::ir::id::ProductDefinitionContextId>(early.frame_of_reference)
+    else {
+        return;
+    };
+    let Some(role) = ctx
+        .id_cache
+        .get::<crate::ir::id::ProductDefinitionContextRoleId>(early.role)
+    else {
+        return;
+    };
+    let id =
+        ctx.product_definition_context_associations
+            .push(ProductDefinitionContextAssociation {
+                definition,
+                frame_of_reference,
+                role,
+            });
+    ctx.id_cache.insert(entity_id, id);
 }

@@ -1,9 +1,10 @@
-//! `PRODUCT_DEFINITION_CONTEXT_ROLE` handler `assembly_product`.
-//! STEP positional `(name, description)` per `AP214e3`. Leaf entity.
+//! `PRODUCT_DEFINITION_CONTEXT_ROLE` handler `assembly_product` — 2-layer path.
+//! STEP positional `(name, description)` per `AP214e3`. Leaf entity; emitted by
+//! `emit_pdca_cluster` (lift + generated serialize), so `write` is unreachable.
 
+use crate::early::{bind, lower};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::assembly::ProductDefinitionContextRole;
-use crate::ir::attr::{check_count, read_optional_string, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -23,13 +24,8 @@ impl SimpleEntityHandler for ProductDefinitionContextRoleHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "PRODUCT_DEFINITION_CONTEXT_ROLE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let description = read_optional_string(attrs, 1, entity_id, "description")?;
-        let id = ctx
-            .product_definition_context_roles
-            .push(ProductDefinitionContextRole { name, description });
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_product_definition_context_role(entity_id, attrs)?;
+        lower::lower_product_definition_context_role(ctx, entity_id, early);
         Ok(())
     }
 

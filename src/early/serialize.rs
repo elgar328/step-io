@@ -85,6 +85,7 @@ pub(crate) use super::generated::serialize::{
     serialize_presentation_style_assignment, serialize_presentation_style_by_context,
     serialize_presented_item_representation, serialize_product, serialize_product_category,
     serialize_product_context, serialize_product_definition, serialize_product_definition_context,
+    serialize_product_definition_context_association, serialize_product_definition_context_role,
     serialize_product_definition_formation,
     serialize_product_definition_formation_with_specified_source,
     serialize_product_definition_relationship, serialize_product_definition_shape,

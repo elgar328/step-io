@@ -8,7 +8,8 @@
 use crate::early::model::{
     EarlyDesignContext, EarlyMakeFromUsageOption, EarlyMechanicalContext, EarlyProduct,
     EarlyProductCategory, EarlyProductContext, EarlyProductDefinition,
-    EarlyProductDefinitionContext, EarlyProductDefinitionFormation,
+    EarlyProductDefinitionContext, EarlyProductDefinitionContextAssociation,
+    EarlyProductDefinitionContextRole, EarlyProductDefinitionFormation,
     EarlyProductDefinitionFormationWithSpecifiedSource, EarlyProductDefinitionRelationship,
     EarlyProductDefinitionWithAssociatedDocuments, EarlySource,
 };
@@ -18,7 +19,9 @@ use crate::entities::assembly_product::product_definition::ProductDefinitionWrit
 use crate::entities::assembly_product::product_definition_formation::ProductDefinitionFormationWriteInput;
 use crate::entities::assembly_product::product_definition_formation_with_source::ProductDefinitionFormationWithSourceWriteInput;
 use crate::entities::assembly_product::product_definition_with_associated_documents::ProductDefinitionWithAssociatedDocumentsWriteInput;
-use crate::ir::assembly::{Product, ProductContextData, ProductDefinitionContextData};
+use crate::ir::assembly::{
+    Product, ProductContextData, ProductDefinitionContextData, ProductDefinitionContextRole,
+};
 use crate::writer::buffer::assembly::AssemblyContextIds;
 
 /// Parse the L2 `make_or_buy` token back into the L1 enum. The reader only
@@ -220,5 +223,30 @@ pub(crate) fn lift_design_context(
         name: data.name.clone(),
         frame_of_reference: ac_step,
         life_cycle_stage: data.life_cycle_stage.clone(),
+    }
+}
+
+/// Lift `PRODUCT_DEFINITION_CONTEXT_ROLE` (leaf; `description` faithful-optional).
+pub(crate) fn lift_product_definition_context_role(
+    role: &ProductDefinitionContextRole,
+) -> EarlyProductDefinitionContextRole {
+    EarlyProductDefinitionContextRole {
+        name: role.name.clone(),
+        description: role.description.clone(),
+    }
+}
+
+/// Lift `PRODUCT_DEFINITION_CONTEXT_ASSOCIATION`. The orchestrator pre-resolves
+/// the three refs to emitted step ids (PDEF via `product_def_ids`, PDC/role via
+/// the pdc/pdcr step-id caches).
+pub(crate) fn lift_product_definition_context_association(
+    pdef_step: u64,
+    pdc_step: u64,
+    role_step: u64,
+) -> EarlyProductDefinitionContextAssociation {
+    EarlyProductDefinitionContextAssociation {
+        definition: pdef_step,
+        frame_of_reference: pdc_step,
+        role: role_step,
     }
 }

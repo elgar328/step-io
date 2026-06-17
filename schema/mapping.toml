@@ -37,6 +37,8 @@ generate = [
     "mechanical_context",
     "product_definition_context",
     "design_context",
+    "product_definition_context_role",
+    "product_definition_context_association",
     "object_role",
     "identification_role",
     "group",

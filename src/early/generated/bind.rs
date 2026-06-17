@@ -549,6 +549,40 @@ pub(crate) fn bind_design_context(
     })
 }
 
+pub(crate) fn bind_product_definition_context_role(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyProductDefinitionContextRole, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "PRODUCT_DEFINITION_CONTEXT_ROLE")?;
+    Ok(super::model::EarlyProductDefinitionContextRole {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+    })
+}
+
+pub(crate) fn bind_product_definition_context_association(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyProductDefinitionContextAssociation, crate::ir::error::ConvertError>
+{
+    crate::ir::attr::check_count(
+        attrs,
+        3,
+        entity_id,
+        "PRODUCT_DEFINITION_CONTEXT_ASSOCIATION",
+    )?;
+    Ok(super::model::EarlyProductDefinitionContextAssociation {
+        definition: crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "definition")?,
+        frame_of_reference: crate::ir::attr::read_entity_ref(
+            attrs,
+            1,
+            entity_id,
+            "frame_of_reference",
+        )?,
+        role: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "role")?,
+    })
+}
+
 pub(crate) fn bind_object_role(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],
