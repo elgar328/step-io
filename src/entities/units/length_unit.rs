@@ -5,18 +5,17 @@
 //! calls). Catalog group: `units` (O, part-only — `REQUIRED_PARTS`
 //! dispatch keys on the `LENGTH_UNIT` part).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::ComplexEntityHandler;
 use crate::entities::units::shared::{
-    CbuFlavor, emit_length_dim_exponents, has_part, match_length_unit,
-    read_conversion_based_unit_body, read_optional_enum,
+    CbuFlavor, emit_length_dim_exponents, has_part, read_conversion_based_unit_body,
 };
-use crate::ir::attr::{check_count, read_enum};
 use crate::ir::error::ConvertError;
 use crate::ir::id::NamedUnitId;
 use crate::ir::shape_rep::LengthUnit;
 use crate::ir::units::{LengthFlavor, NamedUnit};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
-use crate::reader::{ReaderContext, require_part_attrs};
+use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
@@ -29,9 +28,10 @@ pub(crate) struct LengthUnitHandler;
     ["LENGTH_UNIT", "NAMED_UNIT", "SI_UNIT"],
 ])]
 impl ComplexEntityHandler for LengthUnitHandler {
-    /// `(unit, target_id)` — caller pre-reserves the `LENGTH_UNIT` complex's
-    /// step id so arena order is preserved on round-trip.
-    type WriteInput = (LengthUnit, u64, u64);
+    /// Arena flavour. The units pool emitter dispatches the actual emit
+    /// (SI plain via `serialize_length_unit_with_id`, CBU via
+    /// `emit_length_cbu_outer`); this fresh-id `write` is the trait contract.
+    type WriteInput = LengthFlavor;
 
     fn read_complex(
         ctx: &mut ReaderContext,
@@ -42,37 +42,15 @@ impl ComplexEntityHandler for LengthUnitHandler {
         // CONVERSION_BASED_UNIT (inch, foot, degree, or CBU-wrapped metric)
         // takes precedence over SI_UNIT: some AP242 files wrap SI units in a
         // CONVERSION_BASED_UNIT, and the CBU name is the authoritative identity.
+        // CBU path stays hand-written (graph-walk + backfill); SI path is 2-layer.
         if has_part(parts, "CONVERSION_BASED_UNIT") {
             read_conversion_based_unit_body(ctx, entity_id, parts, CbuFlavor::Length, graph)?;
             let dim_exp = super::shared::read_named_unit_dim_exp(ctx, parts);
             register_named_length(ctx, entity_id, None, dim_exp);
             return Ok(());
         }
-
-        if !has_part(parts, "SI_UNIT") {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: "LENGTH_UNIT complex carries neither SI_UNIT nor CONVERSION_BASED_UNIT"
-                    .into(),
-            });
-            return Ok(());
-        }
-
-        let si_attrs = require_part_attrs(parts, "SI_UNIT", entity_id)?;
-        check_count(si_attrs, 2, entity_id, "SI_UNIT")?;
-        let prefix = read_optional_enum(si_attrs, 0, entity_id, "prefix")?;
-        let name = read_enum(si_attrs, 1, entity_id, "name")?;
-
-        if let Some(unit) = match_length_unit(prefix, name) {
-            ctx.length_unit_map.insert(entity_id, unit);
-            let dim_exp = super::shared::read_named_unit_dim_exp(ctx, parts);
-            register_named_length(ctx, entity_id, None, dim_exp);
-        } else {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!("unsupported SI length unit (prefix={prefix:?}, name={name:?})"),
-            });
-        }
+        let early = bind::bind_length_unit(entity_id, parts)?;
+        lower::lower_length_si(ctx, entity_id, &early);
         Ok(())
     }
 
@@ -82,19 +60,14 @@ impl ComplexEntityHandler for LengthUnitHandler {
     /// the writer preserve the input file's `NAMED_UNIT` entity-id ordering
     /// across round-trip. `dim_exp_step` carries the explicit
     /// `DIMENSIONAL_EXPONENTS` ref step id (0 = Derived / `*`).
-    fn write(
-        buf: &mut WriteBuffer,
-        (unit, target_id, dim_exp_step): (LengthUnit, u64, u64),
-    ) -> Result<u64, WriteError> {
-        // Non-SI (Inch / Foot) reaching the plain path is a kernel-built
-        // IR misuse — fall back to MILLI METRE so the writer stays total.
-        let prefix = match unit {
-            LengthUnit::Centimetre => Some("CENTI"),
-            LengthUnit::Metre => None,
-            LengthUnit::Millimetre | LengthUnit::Inch | LengthUnit::Foot => Some("MILLI"),
-        };
-        emit_plain_si_length(buf, prefix, target_id, dim_exp_step);
-        Ok(target_id)
+    /// Fresh-id SI serialize (trait contract). The units pool emitter calls
+    /// `serialize_length_unit_with_id` directly for the plain SI path and
+    /// `emit_length_cbu_outer` for the CBU path, so this is not on the hot path.
+    fn write(buf: &mut WriteBuffer, flavor: LengthFlavor) -> Result<u64, WriteError> {
+        Ok(serialize::serialize_length_unit(
+            buf,
+            &lift::lift_length_si(flavor.unit),
+        ))
     }
 }
 
@@ -148,37 +121,6 @@ fn register_named_length(
         let id = ctx.named_units_arena.push(NamedUnit::Length(flavor));
         ctx.id_cache.insert(entity_id, id);
     }
-}
-
-/// Emit a plain SI-based length unit. `NAMED_UNIT.dimensions` is canonical
-/// `*` Derived — units-3b dropped the input-preserving `dim_exp_explicit`
-/// flag, so plain SI never emits a `DIMENSIONAL_EXPONENTS` ref. CBU outers
-/// still carry the explicit DE per spec via [`emit_conversion_based_length`].
-fn emit_plain_si_length(
-    buf: &mut WriteBuffer,
-    prefix: Option<&'static str>,
-    target_id: u64,
-    dim_exp_step: u64,
-) {
-    let si_attrs = match prefix {
-        Some(p) => vec![Attribute::Enum(p.into()), Attribute::Enum("METRE".into())],
-        None => vec![Attribute::Unset, Attribute::Enum("METRE".into())],
-    };
-    let named_unit_attr = if dim_exp_step == 0 {
-        Attribute::Derived
-    } else {
-        Attribute::EntityRef(dim_exp_step)
-    };
-    buf.entities.push(WriterEntity {
-        id: target_id,
-        body: WriterBody::Complex {
-            parts: vec![
-                ("LENGTH_UNIT".into(), vec![]),
-                ("NAMED_UNIT".into(), vec![named_unit_attr]),
-                ("SI_UNIT".into(), si_attrs),
-            ],
-        },
-    });
 }
 
 /// Emit a `CONVERSION_BASED_UNIT` length chain wrapping the **already-emitted**

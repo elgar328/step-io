@@ -43,15 +43,6 @@ pub(super) fn read_optional_enum<'a>(
     }
 }
 
-pub(super) fn match_length_unit(prefix: Option<&str>, name: &str) -> Option<LengthUnit> {
-    match (prefix, name) {
-        (None, "METRE") => Some(LengthUnit::Metre),
-        (Some("MILLI"), "METRE") => Some(LengthUnit::Millimetre),
-        (Some("CENTI"), "METRE") => Some(LengthUnit::Centimetre),
-        _ => None,
-    }
-}
-
 pub(super) fn match_angle_unit(prefix: Option<&str>, name: &str) -> Option<AngleUnit> {
     match (prefix, name) {
         (None, "RADIAN") => Some(AngleUnit::Radian),

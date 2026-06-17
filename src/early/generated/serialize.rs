@@ -1207,6 +1207,56 @@ pub(crate) fn serialize_solid_angle_unit_with_id(
     );
 }
 
+pub(crate) fn serialize_length_unit(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyLengthUnit,
+) -> u64 {
+    buf.push_complex(vec![
+        ("LENGTH_UNIT".into(), vec![]),
+        (
+            "NAMED_UNIT".into(),
+            vec![crate::parser::entity::Attribute::Derived],
+        ),
+        (
+            "SI_UNIT".into(),
+            vec![
+                match &l1.prefix {
+                    Some(e) => si_prefix_attr(e.clone()),
+                    None => crate::parser::entity::Attribute::Unset,
+                },
+                si_unit_name_attr(l1.name),
+            ],
+        ),
+    ])
+}
+
+pub(crate) fn serialize_length_unit_with_id(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    id: u64,
+    l1: &super::model::EarlyLengthUnit,
+) {
+    buf.push_complex_with_id(
+        id,
+        vec![
+            ("LENGTH_UNIT".into(), vec![]),
+            (
+                "NAMED_UNIT".into(),
+                vec![crate::parser::entity::Attribute::Derived],
+            ),
+            (
+                "SI_UNIT".into(),
+                vec![
+                    match &l1.prefix {
+                        Some(e) => si_prefix_attr(e.clone()),
+                        None => crate::parser::entity::Attribute::Unset,
+                    },
+                    si_unit_name_attr(l1.name),
+                ],
+            ),
+        ],
+    );
+}
+
 pub(crate) fn serialize_pre_defined_marker(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyPreDefinedMarker,

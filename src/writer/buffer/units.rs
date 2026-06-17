@@ -143,7 +143,6 @@ fn emit_named_unit_plain(
     named: NamedUnit,
     target_id: u64,
 ) -> Result<u64, WriteError> {
-    use crate::entities::units::length_unit::LengthUnitHandler;
     use crate::entities::units::mass_unit::MassUnitHandler;
     use crate::entities::units::plane_angle_unit::PlaneAngleUnitHandler;
     use crate::entities::units::ratio_unit::{RatioUnitHandler, RatioUnitSimpleHandler};
@@ -152,7 +151,12 @@ fn emit_named_unit_plain(
         |de: Option<crate::ir::DimensionalExponentsId>| de.map_or(0, |id| buf.step_id(id));
     match named {
         NamedUnit::Length(f) => {
-            LengthUnitHandler::write(buf, (f.unit, target_id, dim_exp_step(f.dim_exp)))
+            crate::early::serialize::serialize_length_unit_with_id(
+                buf,
+                target_id,
+                &crate::early::lift::lift_length_si(f.unit),
+            );
+            Ok(target_id)
         }
         NamedUnit::PlaneAngle(f) => {
             PlaneAngleUnitHandler::write(buf, (f.unit, target_id, dim_exp_step(f.dim_exp)))

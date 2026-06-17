@@ -3,16 +3,17 @@
 
 use crate::early::model::{
     EarlyDerivedUnit, EarlyDerivedUnitElement, EarlyDimensionalExponents,
-    EarlyLengthMeasureWithUnit, EarlyMassMeasureWithUnit, EarlyMeasureValue, EarlyMeasureWithUnit,
-    EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit, EarlyRatioMeasureWithUnit, EarlySolidAngleUnit,
-    EarlyUncertaintyMeasureWithUnit,
+    EarlyLengthMeasureWithUnit, EarlyLengthUnit, EarlyMassMeasureWithUnit, EarlyMeasureValue,
+    EarlyMeasureWithUnit, EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit,
+    EarlyRatioMeasureWithUnit, EarlySolidAngleUnit, EarlyUncertaintyMeasureWithUnit,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::representation_item::MeasureValue;
-use crate::ir::shape_rep::{LengthUncertainty, SolidAngleUnit};
+use crate::ir::shape_rep::{LengthUncertainty, LengthUnit, SolidAngleUnit};
 use crate::ir::units::{
-    DerivedUnit, DerivedUnitElement, DerivedUnitKind, DimensionalExponents, MeasureWithUnit,
-    MeasureWithUnitData, NamedUnit, NamedUnitData, SiUnitName, SolidAngleFlavor,
+    DerivedUnit, DerivedUnitElement, DerivedUnitKind, DimensionalExponents, LengthFlavor,
+    MeasureWithUnit, MeasureWithUnitData, NamedUnit, NamedUnitData, SiPrefix, SiUnitName,
+    SolidAngleFlavor,
 };
 use crate::reader::ReaderContext;
 
@@ -272,5 +273,35 @@ pub(crate) fn lower_solid_angle_unit(
             unit,
             dim_exp: None,
         }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower the **SI case** of `LENGTH_UNIT` (CBU stays hand-written in the
+/// handler). `(prefix, name)` → `LengthUnit` (Metre/Millimetre/Centimetre);
+/// an unsupported SI length is dropped with a warning. `dim_exp` is always
+/// `None` — `NAMED_UNIT.dimensions` is canonical Derived (`*`) via `[derived]`.
+pub(crate) fn lower_length_si(ctx: &mut ReaderContext, entity_id: u64, early: &EarlyLengthUnit) {
+    let unit = match (early.prefix, early.name) {
+        (None, SiUnitName::Metre) => LengthUnit::Metre,
+        (Some(SiPrefix::Milli), SiUnitName::Metre) => LengthUnit::Millimetre,
+        (Some(SiPrefix::Centi), SiUnitName::Metre) => LengthUnit::Centimetre,
+        _ => {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "unsupported SI length unit (prefix={:?}, name={:?})",
+                    early.prefix, early.name
+                ),
+            });
+            return;
+        }
+    };
+    ctx.length_unit_map.insert(entity_id, unit);
+    let id = ctx.named_units_arena.push(NamedUnit::Length(LengthFlavor {
+        unit,
+        cbu_base: None,
+        dim_exp: None,
+        cbu_factor_bare: false,
+    }));
     ctx.id_cache.insert(entity_id, id);
 }

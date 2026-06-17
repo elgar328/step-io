@@ -1471,6 +1471,28 @@ impl crate::ir::arena::ArenaId for EarlySolidAngleUnitId {
     }
 }
 
+/// L1 `LENGTH_UNIT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyLengthUnit {
+    pub(crate) prefix: Option<crate::ir::units::SiPrefix>,
+    pub(crate) name: crate::ir::units::SiUnitName,
+}
+
+/// Typed `id_cache` key for `LENGTH_UNIT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyLengthUnitId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyLengthUnitId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `PRE_DEFINED_MARKER` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyPreDefinedMarker {

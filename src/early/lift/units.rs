@@ -3,13 +3,13 @@
 
 use crate::early::model::{
     EarlyDerivedUnit, EarlyDerivedUnitElement, EarlyDimensionalExponents,
-    EarlyLengthMeasureWithUnit, EarlyMassMeasureWithUnit, EarlyMeasureValue, EarlyMeasureWithUnit,
-    EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit, EarlyRatioMeasureWithUnit, EarlySolidAngleUnit,
-    EarlyUncertaintyMeasureWithUnit,
+    EarlyLengthMeasureWithUnit, EarlyLengthUnit, EarlyMassMeasureWithUnit, EarlyMeasureValue,
+    EarlyMeasureWithUnit, EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit,
+    EarlyRatioMeasureWithUnit, EarlySolidAngleUnit, EarlyUncertaintyMeasureWithUnit,
 };
 use crate::ir::representation_item::MeasureValue;
-use crate::ir::shape_rep::LengthUncertainty;
-use crate::ir::units::{DimensionalExponents, SiUnitName};
+use crate::ir::shape_rep::{LengthUncertainty, LengthUnit};
+use crate::ir::units::{DimensionalExponents, SiPrefix, SiUnitName};
 
 /// Lift `SOLID_ANGLE_UNIT` complex. Only the `STERADIAN` form exists, so the
 /// `SI_UNIT` slot is the fixed `(prefix=$, name=.STERADIAN.)`; `NAMED_UNIT.dimensions`
@@ -19,6 +19,21 @@ pub(crate) fn lift_solid_angle_unit() -> EarlySolidAngleUnit {
         prefix: None,
         name: SiUnitName::Steradian,
     }
+}
+
+/// Lift the **SI case** of `LENGTH_UNIT` (CBU is emitted by the hand-written
+/// `emit_length_cbu_outer`). `LengthUnit` → `(prefix, .METRE.)`; `NAMED_UNIT.
+/// dimensions` re-emits as `*` via `[derived]`. Non-SI units (Inch/Foot) only
+/// reach here as a kernel-built-IR fallback (→ MILLI METRE, matching legacy).
+pub(crate) fn lift_length_si(unit: LengthUnit) -> EarlyLengthUnit {
+    let (prefix, name) = match unit {
+        LengthUnit::Centimetre => (Some(SiPrefix::Centi), SiUnitName::Metre),
+        LengthUnit::Metre => (None, SiUnitName::Metre),
+        LengthUnit::Millimetre | LengthUnit::Inch | LengthUnit::Foot => {
+            (Some(SiPrefix::Milli), SiUnitName::Metre)
+        }
+    };
+    EarlyLengthUnit { prefix, name }
 }
 
 /// Lift one `DERIVED_UNIT_ELEMENT` (unit pre-resolved).

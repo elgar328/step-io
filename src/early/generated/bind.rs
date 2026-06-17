@@ -1149,6 +1149,21 @@ pub(crate) fn bind_solid_angle_unit(
     Ok(super::model::EarlySolidAngleUnit { prefix, name })
 }
 
+pub(crate) fn bind_length_unit(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<super::model::EarlyLengthUnit, crate::ir::error::ConvertError> {
+    let attrs = crate::reader::require_part_attrs(parts, "SI_UNIT", entity_id)?;
+    let prefix = match attrs.get(0) {
+        Some(
+            crate::parser::entity::Attribute::Unset | crate::parser::entity::Attribute::Derived,
+        ) => None,
+        _ => Some(bind_si_prefix(attrs, 0, entity_id, "prefix")?),
+    };
+    let name = bind_si_unit_name(attrs, 1, entity_id, "name")?;
+    Ok(super::model::EarlyLengthUnit { prefix, name })
+}
+
 pub(crate) fn bind_pre_defined_marker(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],
