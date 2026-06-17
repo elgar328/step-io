@@ -76,6 +76,9 @@ generate = [
     "solid_angle_unit",
     # Phase 4t: units complex — LENGTH_UNIT SI case (CBU stays hand-written)
     "length_unit",
+    # Phase 4u: units complex — MASS_UNIT + PLANE_ANGLE_UNIT SI case (CBU stays hand-written)
+    "mass_unit",
+    "plane_angle_unit",
     # visualization (pre-defined / colour leaf batch)
     "pre_defined_marker",
     "pre_defined_point_marker_symbol",
@@ -328,6 +331,8 @@ serialize_with_id = [
     "named_unit",
     "solid_angle_unit",
     "length_unit",
+    "mass_unit",
+    "plane_angle_unit",
 ]
 
 # `generate_all`: diagnostic flip. When true, gen-early generates *every* entity
@@ -471,6 +476,24 @@ parts = [
     "SI_UNIT",
 ]
 
+# SI case only (CBU stays hand-written). Part order matches emit_plain_si_mass
+# (MASS_UNIT, NAMED_UNIT, SI_UNIT).
+[complex.mass_unit]
+parts = [
+    "MASS_UNIT",
+    "NAMED_UNIT",
+    "SI_UNIT",
+]
+
+# SI case only (CBU stays hand-written). Part order matches emit_plain_si_radian
+# (SI_UNIT, NAMED_UNIT, PLANE_ANGLE_UNIT).
+[complex.plane_angle_unit]
+parts = [
+    "SI_UNIT",
+    "NAMED_UNIT",
+    "PLANE_ANGLE_UNIT",
+]
+
 # Per-entity EXPRESS Derived (`*`) attribute names. early.toml (generated) cannot
 # carry DERIVE info, so it is hand-authored here. A listed attr keeps its Part21
 # positional slot (later attrs read at the right index) but is omitted from the
@@ -481,6 +504,8 @@ oriented_closed_shell = ["cfs_faces"]
 default_model_geometric_view = ["product_definitional"]
 solid_angle_unit = ["dimensions"]
 length_unit = ["dimensions"]
+mass_unit = ["dimensions"]
+plane_angle_unit = ["dimensions"]
 
 # `[enum.<alias>]`: reuse an existing L2 enum for a STEP ENUM type-alias instead
 # of synthesizing an `Early*` enum. `variants` maps each early.toml ENUM member

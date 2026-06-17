@@ -1493,6 +1493,50 @@ impl crate::ir::arena::ArenaId for EarlyLengthUnitId {
     }
 }
 
+/// L1 `MASS_UNIT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyMassUnit {
+    pub(crate) prefix: Option<crate::ir::units::SiPrefix>,
+    pub(crate) name: crate::ir::units::SiUnitName,
+}
+
+/// Typed `id_cache` key for `MASS_UNIT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyMassUnitId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyMassUnitId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PLANE_ANGLE_UNIT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPlaneAngleUnit {
+    pub(crate) prefix: Option<crate::ir::units::SiPrefix>,
+    pub(crate) name: crate::ir::units::SiUnitName,
+}
+
+/// Typed `id_cache` key for `PLANE_ANGLE_UNIT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPlaneAngleUnitId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPlaneAngleUnitId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `PRE_DEFINED_MARKER` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyPreDefinedMarker {

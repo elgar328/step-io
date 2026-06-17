@@ -143,8 +143,6 @@ fn emit_named_unit_plain(
     named: NamedUnit,
     target_id: u64,
 ) -> Result<u64, WriteError> {
-    use crate::entities::units::mass_unit::MassUnitHandler;
-    use crate::entities::units::plane_angle_unit::PlaneAngleUnitHandler;
     use crate::entities::units::ratio_unit::{RatioUnitHandler, RatioUnitSimpleHandler};
     use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
     let dim_exp_step =
@@ -158,8 +156,13 @@ fn emit_named_unit_plain(
             );
             Ok(target_id)
         }
-        NamedUnit::PlaneAngle(f) => {
-            PlaneAngleUnitHandler::write(buf, (f.unit, target_id, dim_exp_step(f.dim_exp)))
+        NamedUnit::PlaneAngle(_f) => {
+            crate::early::serialize::serialize_plane_angle_unit_with_id(
+                buf,
+                target_id,
+                &crate::early::lift::lift_plane_angle_si(),
+            );
+            Ok(target_id)
         }
         NamedUnit::SolidAngle(_f) => {
             crate::early::serialize::serialize_solid_angle_unit_with_id(
@@ -170,7 +173,12 @@ fn emit_named_unit_plain(
             Ok(target_id)
         }
         NamedUnit::Mass(f) => {
-            MassUnitHandler::write(buf, (f.unit, target_id, dim_exp_step(f.dim_exp)))
+            crate::early::serialize::serialize_mass_unit_with_id(
+                buf,
+                target_id,
+                &crate::early::lift::lift_mass_si(f.unit),
+            );
+            Ok(target_id)
         }
         // Reproduce the source form: complex `(NAMED_UNIT()RATIO_UNIT())` vs
         // the standalone simple `RATIO_UNIT(dimensions)` entity.

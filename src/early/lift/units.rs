@@ -3,13 +3,14 @@
 
 use crate::early::model::{
     EarlyDerivedUnit, EarlyDerivedUnitElement, EarlyDimensionalExponents,
-    EarlyLengthMeasureWithUnit, EarlyLengthUnit, EarlyMassMeasureWithUnit, EarlyMeasureValue,
-    EarlyMeasureWithUnit, EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit,
-    EarlyRatioMeasureWithUnit, EarlySolidAngleUnit, EarlyUncertaintyMeasureWithUnit,
+    EarlyLengthMeasureWithUnit, EarlyLengthUnit, EarlyMassMeasureWithUnit, EarlyMassUnit,
+    EarlyMeasureValue, EarlyMeasureWithUnit, EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit,
+    EarlyPlaneAngleUnit, EarlyRatioMeasureWithUnit, EarlySolidAngleUnit,
+    EarlyUncertaintyMeasureWithUnit,
 };
 use crate::ir::representation_item::MeasureValue;
 use crate::ir::shape_rep::{LengthUncertainty, LengthUnit};
-use crate::ir::units::{DimensionalExponents, SiPrefix, SiUnitName};
+use crate::ir::units::{DimensionalExponents, MassUnit, SiPrefix, SiUnitName};
 
 /// Lift `SOLID_ANGLE_UNIT` complex. Only the `STERADIAN` form exists, so the
 /// `SI_UNIT` slot is the fixed `(prefix=$, name=.STERADIAN.)`; `NAMED_UNIT.dimensions`
@@ -34,6 +35,34 @@ pub(crate) fn lift_length_si(unit: LengthUnit) -> EarlyLengthUnit {
         }
     };
     EarlyLengthUnit { prefix, name }
+}
+
+/// Lift the **SI case** of `MASS_UNIT` (CBU is emitted by the hand-written
+/// `emit_mass_cbu_outer`). `MassUnit` → `(prefix, .GRAM.)`; `NAMED_UNIT.
+/// dimensions` re-emits as `*` via `[derived]`. CBU units (Pound/Ton) only reach
+/// here as a kernel-built-IR fallback (→ KILO GRAM, matching legacy).
+pub(crate) fn lift_mass_si(unit: MassUnit) -> EarlyMassUnit {
+    let prefix = match unit {
+        MassUnit::Gram => None,
+        MassUnit::Megagram => Some(SiPrefix::Mega),
+        MassUnit::Kilogram | MassUnit::Pound | MassUnit::Ton => Some(SiPrefix::Kilo),
+    };
+    EarlyMassUnit {
+        prefix,
+        name: SiUnitName::Gram,
+    }
+}
+
+/// Lift the **SI case** of `PLANE_ANGLE_UNIT` (CBU is emitted by the hand-written
+/// `emit_plane_angle_cbu_outer`). Only the `RADIAN` form exists, so the `SI_UNIT`
+/// slot is the fixed `(prefix=$, name=.RADIAN.)`; `NAMED_UNIT.dimensions`
+/// re-emits as `*` via `[derived]`. Degree only reaches here as a kernel-built-IR
+/// fallback (→ plain RADIAN, matching legacy).
+pub(crate) fn lift_plane_angle_si() -> EarlyPlaneAngleUnit {
+    EarlyPlaneAngleUnit {
+        prefix: None,
+        name: SiUnitName::Radian,
+    }
 }
 
 /// Lift one `DERIVED_UNIT_ELEMENT` (unit pre-resolved).

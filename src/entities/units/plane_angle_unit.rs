@@ -4,18 +4,17 @@
 //! Catalog group: `units` (O, part-only — `REQUIRED_PARTS` dispatch keys
 //! on `PLANE_ANGLE_UNIT`).
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::ComplexEntityHandler;
 use crate::entities::units::shared::{
-    CbuFlavor, emit_dimensionless_exponents, has_part, match_angle_unit,
-    read_conversion_based_unit_body, read_optional_enum,
+    CbuFlavor, emit_dimensionless_exponents, has_part, read_conversion_based_unit_body,
 };
-use crate::ir::attr::{check_count, read_enum};
 use crate::ir::error::ConvertError;
 use crate::ir::id::NamedUnitId;
 use crate::ir::shape_rep::AngleUnit;
 use crate::ir::units::{NamedUnit, PlaneAngleFlavor};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
-use crate::reader::{ReaderContext, require_part_attrs};
+use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
@@ -28,8 +27,10 @@ pub(crate) struct PlaneAngleUnitHandler;
     ["NAMED_UNIT", "PLANE_ANGLE_UNIT", "SI_UNIT"],
 ])]
 impl ComplexEntityHandler for PlaneAngleUnitHandler {
-    /// `(unit, target_id)`.
-    type WriteInput = (AngleUnit, u64, u64);
+    /// Arena flavour. The units pool emitter dispatches the actual emit
+    /// (SI plain via `serialize_plane_angle_unit_with_id`, CBU via
+    /// `emit_plane_angle_cbu_outer`); this fresh-id `write` is the trait contract.
+    type WriteInput = PlaneAngleFlavor;
 
     fn read_complex(
         ctx: &mut ReaderContext,
@@ -37,53 +38,29 @@ impl ComplexEntityHandler for PlaneAngleUnitHandler {
         parts: &[RawEntityPart],
         graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
+        // CONVERSION_BASED_UNIT (Degree, or CBU-wrapped radian) takes precedence:
+        // the CBU name is the authoritative identity. CBU path stays hand-written
+        // (graph-walk + backfill); SI path is 2-layer.
         if has_part(parts, "CONVERSION_BASED_UNIT") {
             read_conversion_based_unit_body(ctx, entity_id, parts, CbuFlavor::PlaneAngle, graph)?;
             let dim_exp = super::shared::read_named_unit_dim_exp(ctx, parts);
             register_named_plane_angle(ctx, entity_id, None, dim_exp);
             return Ok(());
         }
-
-        if !has_part(parts, "SI_UNIT") {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail:
-                    "PLANE_ANGLE_UNIT complex carries neither SI_UNIT nor CONVERSION_BASED_UNIT"
-                        .into(),
-            });
-            return Ok(());
-        }
-
-        let si_attrs = require_part_attrs(parts, "SI_UNIT", entity_id)?;
-        check_count(si_attrs, 2, entity_id, "SI_UNIT")?;
-        let prefix = read_optional_enum(si_attrs, 0, entity_id, "prefix")?;
-        let name = read_enum(si_attrs, 1, entity_id, "name")?;
-
-        if let Some(unit) = match_angle_unit(prefix, name) {
-            ctx.angle_unit_map.insert(entity_id, unit);
-            let dim_exp = super::shared::read_named_unit_dim_exp(ctx, parts);
-            register_named_plane_angle(ctx, entity_id, None, dim_exp);
-        } else {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!("unsupported SI angle unit (prefix={prefix:?}, name={name:?})"),
-            });
-        }
+        let early = bind::bind_plane_angle_unit(entity_id, parts)?;
+        lower::lower_plane_angle_si(ctx, entity_id, &early);
         Ok(())
     }
 
-    /// Emit plain SI radian only — CBU outers (Degree, CBU(RADIAN)) go
-    /// through [`emit_plane_angle_cbu_outer`] (units-2 2-pass writer).
-    /// Plain SI emission only. Degree (non-SI) and CBU(RADIAN) self-wrap
-    /// go through [`emit_plane_angle_cbu_outer`]; if Degree ever reaches
-    /// this path (kernel-built IR misuse) we emit plain RADIAN as a
-    /// fallback rather than panic.
-    fn write(
-        buf: &mut WriteBuffer,
-        (_unit, target_id, dim_exp_step): (AngleUnit, u64, u64),
-    ) -> Result<u64, WriteError> {
-        emit_plain_si_radian(buf, target_id, dim_exp_step);
-        Ok(target_id)
+    /// Fresh-id SI serialize (trait contract). The units pool emitter calls
+    /// `serialize_plane_angle_unit_with_id` directly for the plain SI path and
+    /// `emit_plane_angle_cbu_outer` for the CBU path, so this is not on the hot
+    /// path.
+    fn write(buf: &mut WriteBuffer, _flavor: PlaneAngleFlavor) -> Result<u64, WriteError> {
+        Ok(serialize::serialize_plane_angle_unit(
+            buf,
+            &lift::lift_plane_angle_si(),
+        ))
     }
 }
 
@@ -119,29 +96,6 @@ fn register_named_plane_angle(
         let id = ctx.named_units_arena.push(NamedUnit::PlaneAngle(flavor));
         ctx.id_cache.insert(entity_id, id);
     }
-}
-
-/// Canonical plain SI radian — `NAMED_UNIT.dimensions` is `*` Derived
-/// (units-3b dropped the input-preserving explicit-DE flag).
-fn emit_plain_si_radian(buf: &mut WriteBuffer, target_id: u64, dim_exp_step: u64) {
-    let named_unit_attr = if dim_exp_step == 0 {
-        Attribute::Derived
-    } else {
-        Attribute::EntityRef(dim_exp_step)
-    };
-    buf.entities.push(WriterEntity {
-        id: target_id,
-        body: WriterBody::Complex {
-            parts: vec![
-                (
-                    "SI_UNIT".into(),
-                    vec![Attribute::Unset, Attribute::Enum("RADIAN".into())],
-                ),
-                ("NAMED_UNIT".into(), vec![named_unit_attr]),
-                ("PLANE_ANGLE_UNIT".into(), vec![]),
-            ],
-        },
-    });
 }
 
 /// Emit a `CONVERSION_BASED_UNIT` plane-angle outer at `target_id` wrapping

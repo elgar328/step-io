@@ -11,7 +11,7 @@
 //! (ABC-tier loyalty) — the cache fields live on `WriteBuffer`, so the
 //! helpers take `&mut WriteBuffer`.
 
-use crate::ir::attr::{check_count, read_enum, read_string_or_unset};
+use crate::ir::attr::{check_count, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::{AngleUnit, LengthUnit};
 use crate::ir::units::MassUnit;
@@ -22,32 +22,6 @@ use crate::writer::entity::{WriterBody, WriterEntity};
 
 pub(super) fn has_part(parts: &[RawEntityPart], name: &str) -> bool {
     has_all_parts(parts, &[name])
-}
-
-/// Read an enum attribute, treating `$` (Unset) as `None`.
-pub(super) fn read_optional_enum<'a>(
-    attrs: &'a [Attribute],
-    index: usize,
-    entity_id: u64,
-    field_name: &'static str,
-) -> Result<Option<&'a str>, ConvertError> {
-    match attrs.get(index) {
-        Some(Attribute::Unset) => Ok(None),
-        Some(_) => read_enum(attrs, index, entity_id, field_name).map(Some),
-        None => Err(ConvertError::AttributeIndex {
-            entity_id,
-            field_name,
-            index,
-            len: attrs.len(),
-        }),
-    }
-}
-
-pub(super) fn match_angle_unit(prefix: Option<&str>, name: &str) -> Option<AngleUnit> {
-    match (prefix, name) {
-        (None, "RADIAN") => Some(AngleUnit::Radian),
-        _ => None,
-    }
 }
 
 pub(super) fn match_length_conversion(upper_name: &str) -> Option<LengthUnit> {
