@@ -14,7 +14,7 @@
 use crate::ir::attr::{check_count, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::id::{MeasureWithUnitId, NamedUnitId};
-use crate::ir::shape_rep::{AngleUnit, LengthUnit};
+use crate::ir::shape_rep::AngleUnit;
 use crate::ir::units::MassUnit;
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
 use crate::reader::{ReaderContext, find_part_attrs, has_all_parts, require_part_attrs};
@@ -59,21 +59,6 @@ pub(super) fn normalize_bare_measure_attrs(
     out
 }
 
-pub(super) fn match_length_conversion(upper_name: &str) -> Option<LengthUnit> {
-    match upper_name {
-        "INCH" => Some(LengthUnit::Inch),
-        "FOOT" => Some(LengthUnit::Foot),
-        // Some AP242 / ABC exports wrap SI units in a CONVERSION_BASED_UNIT.
-        // Self-wrap is represented structurally via `cbu_base = Some(<base_id>)`
-        // with `outer.unit == base.unit`; the writer reproduces the wrapper
-        // by virtue of `cbu_base` being `Some`.
-        "MILLIMETRE" => Some(LengthUnit::Millimetre),
-        "CENTIMETRE" => Some(LengthUnit::Centimetre),
-        "METRE" => Some(LengthUnit::Metre),
-        _ => None,
-    }
-}
-
 pub(super) fn match_angle_conversion(upper_name: &str) -> Option<AngleUnit> {
     match upper_name {
         "DEGREE" | "DEGREES" => Some(AngleUnit::Degree),
@@ -99,7 +84,8 @@ pub(super) fn match_mass_conversion(upper_name: &str) -> Option<MassUnit> {
 /// [`read_conversion_based_unit_body`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum CbuFlavor {
-    Length,
+    // LENGTH is now generated 2-layer (units-CBU-②); identification moved to
+    // `lower_length_cbu`. mass / plane-angle remain hand-written here (Plan 2).
     PlaneAngle,
     Mass,
 }
@@ -185,18 +171,6 @@ pub(super) fn read_conversion_based_unit_body(
     let factor = mwu_ref.and_then(|r| cbu_factor(graph, r));
 
     let recognised = match flavor {
-        CbuFlavor::Length => {
-            if let Some(unit) = match_length_conversion(&upper) {
-                ctx.length_unit_map.insert(entity_id, unit);
-                true
-            } else {
-                ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                    entity_id,
-                    detail: format!("unsupported CONVERSION_BASED_UNIT length name: {name:?}"),
-                });
-                false
-            }
-        }
         CbuFlavor::PlaneAngle => {
             // NsCase::CbuAngleFactor anonymizers: a non-standard CBU name no
             // longer identifies the unit → identify by conversion factor, name
@@ -290,33 +264,6 @@ fn resolve_cbu_factor_refs(
         cbu_base,
         cbu_factor_mwu_id,
     }
-}
-
-/// Emit the length-flavour `DIMENSIONAL_EXPONENTS` (1, 0, 0, 0, 0, 0, 0)
-/// once per `WriteBuffer` and cache the step id (units-3c dedup); later
-/// callers receive the cached id.
-pub(super) fn emit_length_dim_exponents(buf: &mut WriteBuffer) -> u64 {
-    if let Some(id) = buf.length_dim_exp_step {
-        return id;
-    }
-    let n = buf.fresh();
-    buf.entities.push(WriterEntity {
-        id: n,
-        body: WriterBody::Simple {
-            name: "DIMENSIONAL_EXPONENTS".into(),
-            attrs: vec![
-                Attribute::Real(1.0),
-                Attribute::Real(0.0),
-                Attribute::Real(0.0),
-                Attribute::Real(0.0),
-                Attribute::Real(0.0),
-                Attribute::Real(0.0),
-                Attribute::Real(0.0),
-            ],
-        },
-    });
-    buf.length_dim_exp_step = Some(n);
-    n
 }
 
 /// Emit the dimensionless `DIMENSIONAL_EXPONENTS` (0, 0, 0, 0, 0, 0, 0)

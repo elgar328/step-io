@@ -74,7 +74,12 @@ impl WriteBuffer<'_> {
             .collect();
         for (id, named) in entries {
             let target = self.step_id(id);
-            if cbu_base_of(&named).is_some() {
+            // units-CBU-②: LENGTH_UNIT (SI + CBU) is fully 2-layer → always the
+            // plain (serialize_with_id) path, which picks SI/CBU by the flavor.
+            // MASS / PLANE_ANGLE CBU still go through the hand `emit_named_unit_cbu`
+            // (Plan 2).
+            let go_cbu = cbu_base_of(&named).is_some() && !matches!(named, NamedUnit::Length(_));
+            if go_cbu {
                 let measure_step = cbu_factor_mwu_id_of(&named)
                     .map(|m| self.step_id(m))
                     .ok_or_else(|| WriteError::UnsupportedIrVariant {
@@ -166,15 +171,17 @@ fn emit_named_unit_plain(
 ) -> Result<u64, WriteError> {
     use crate::entities::ComplexEntityHandler;
     use crate::entities::units::ratio_unit::RatioUnitHandler;
-    let dim_exp_step =
-        |de: Option<crate::ir::DimensionalExponentsId>| de.map_or(0, |id| buf.step_id(id));
     match named {
         NamedUnit::Length(f) => {
-            crate::early::serialize::serialize_length_unit_with_id(
-                buf,
-                target_id,
-                &crate::early::lift::lift_length_si(f.unit),
-            );
+            // units-CBU-②: SI vs CBU chosen by the preserved factor MWU. CBU
+            // references that MWU (emitted earlier); NAMED_UNIT.dimensions is `*`
+            // (Derived) for both cases.
+            let l1 = if let Some(mwu_id) = f.cbu_factor_mwu_id {
+                crate::early::lift::lift_length_cbu(f.unit, buf.step_id(mwu_id))
+            } else {
+                crate::early::lift::lift_length_si(f.unit)
+            };
+            crate::early::serialize::serialize_length_unit_with_id(buf, target_id, &l1);
             Ok(target_id)
         }
         NamedUnit::PlaneAngle(_f) => {
@@ -205,20 +212,21 @@ fn emit_named_unit_plain(
         // (hand-written, corpus-absent) vs the standalone simple
         // `RATIO_UNIT(dimensions)` entity (2-layer serialize_with_id).
         NamedUnit::Ratio(f) if f.complex => {
-            RatioUnitHandler::write(buf, (target_id, dim_exp_step(f.dim_exp)))
+            RatioUnitHandler::write(buf, (target_id, f.dim_exp.map_or(0, |id| buf.step_id(id))))
         }
         NamedUnit::Ratio(f) => {
+            let dim_step = f.dim_exp.map_or(0, |id| buf.step_id(id));
             crate::early::serialize::serialize_ratio_unit_with_id(
                 buf,
                 target_id,
-                &crate::early::lift::lift_ratio_unit(dim_exp_step(f.dim_exp)),
+                &crate::early::lift::lift_ratio_unit(dim_step),
             );
             Ok(target_id)
         }
         // Bare NAMED_UNIT(#dimensions) — a dimensionless/count unit. Emitted at
         // the pre-reserved id via the 2-layer serialize_with_id path.
         NamedUnit::Itself(d) => {
-            let dim_step = dim_exp_step(d.dimensions);
+            let dim_step = d.dimensions.map_or(0, |id| buf.step_id(id));
             crate::early::serialize::serialize_named_unit_with_id(
                 buf,
                 target_id,
@@ -235,19 +243,11 @@ fn emit_named_unit_cbu(
     measure_step: u64,
     target_id: u64,
 ) -> Result<u64, WriteError> {
-    use crate::entities::units::length_unit::emit_length_cbu_outer;
     use crate::entities::units::mass_unit::emit_mass_cbu_outer;
     use crate::entities::units::plane_angle_unit::emit_plane_angle_cbu_outer;
     let dim_exp_step =
         |de: Option<crate::ir::DimensionalExponentsId>| de.map_or(0, |id| buf.step_id(id));
     match named {
-        NamedUnit::Length(f) => Ok(emit_length_cbu_outer(
-            buf,
-            f.unit,
-            measure_step,
-            target_id,
-            dim_exp_step(f.dim_exp),
-        )),
         NamedUnit::PlaneAngle(f) => Ok(emit_plane_angle_cbu_outer(
             buf,
             f.unit,
@@ -262,10 +262,12 @@ fn emit_named_unit_cbu(
             target_id,
             dim_exp_step(f.dim_exp),
         ),
-        // SolidAngle / Ratio / bare Itself have no CBU variant; fall through.
-        NamedUnit::SolidAngle(_) | NamedUnit::Ratio(_) | NamedUnit::Itself(_) => {
-            emit_named_unit_plain(buf, named, target_id)
-        }
+        // LENGTH_UNIT (units-CBU-②) goes through the 2-layer plain path; SolidAngle
+        // / Ratio / bare Itself have no CBU variant.
+        NamedUnit::Length(_)
+        | NamedUnit::SolidAngle(_)
+        | NamedUnit::Ratio(_)
+        | NamedUnit::Itself(_) => emit_named_unit_plain(buf, named, target_id),
     }
 }
 
@@ -458,7 +460,12 @@ mod tests {
             out.contains("LENGTH_MEASURE_WITH_UNIT(LENGTH_MEASURE(25.4)"),
             "{out}"
         );
-        assert!(out.contains("DIMENSIONAL_EXPONENTS(1."), "{out}");
+        // units-CBU-②: the CBU outer's NAMED_UNIT.dimensions is `*` (Derived),
+        // matching the corpus complex-supertype form (NIST ctc_05) — no synth DE.
+        assert!(
+            out.contains("CONVERSION_BASED_UNIT('INCH',#") && out.contains("NAMED_UNIT(*))"),
+            "{out}"
+        );
         assert!(out.contains("(.MILLI.,.METRE.)"), "{out}");
     }
 
@@ -589,7 +596,8 @@ mod tests {
             "writer must emit CBU('METRE') for self-wrap length: {text}"
         );
         assert!(text.contains("LENGTH_MEASURE_WITH_UNIT(LENGTH_MEASURE(1."));
-        assert!(text.contains("DIMENSIONAL_EXPONENTS(1."));
+        // units-CBU-②: CBU outer's NAMED_UNIT.dimensions is `*` (Derived).
+        assert!(text.contains("NAMED_UNIT(*))"), "{text}");
 
         let graph = parse(&text).expect("re-parse");
         let back = ReaderContext::convert(&graph);

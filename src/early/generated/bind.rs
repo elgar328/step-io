@@ -1153,6 +1153,18 @@ pub(crate) fn bind_length_unit(
     entity_id: u64,
     parts: &[crate::parser::entity::RawEntityPart],
 ) -> Result<super::model::EarlyLengthUnit, crate::ir::error::ConvertError> {
+    if parts.iter().any(|p| p.name == "CONVERSION_BASED_UNIT") {
+        let attrs = crate::reader::require_part_attrs(parts, "CONVERSION_BASED_UNIT", entity_id)?;
+        let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let conversion_factor =
+            crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "conversion_factor")?;
+        return Ok(super::model::EarlyLengthUnit::Cbu(
+            super::model::EarlyLengthUnitCbu {
+                name,
+                conversion_factor,
+            },
+        ));
+    }
     let attrs = crate::reader::require_part_attrs(parts, "SI_UNIT", entity_id)?;
     let prefix = match attrs.get(0) {
         Some(
@@ -1161,7 +1173,9 @@ pub(crate) fn bind_length_unit(
         _ => Some(bind_si_prefix(attrs, 0, entity_id, "prefix")?),
     };
     let name = bind_si_unit_name(attrs, 1, entity_id, "name")?;
-    Ok(super::model::EarlyLengthUnit { prefix, name })
+    Ok(super::model::EarlyLengthUnit::Si(
+        super::model::EarlyLengthUnitSi { prefix, name },
+    ))
 }
 
 pub(crate) fn bind_mass_unit(

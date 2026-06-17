@@ -1473,9 +1473,23 @@ impl crate::ir::arena::ArenaId for EarlySolidAngleUnitId {
 
 /// L1 `LENGTH_UNIT` (generated).
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct EarlyLengthUnit {
+pub(crate) struct EarlyLengthUnitCbu {
+    pub(crate) name: String,
+    pub(crate) conversion_factor: u64,
+}
+
+/// L1 `LENGTH_UNIT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyLengthUnitSi {
     pub(crate) prefix: Option<crate::ir::units::SiPrefix>,
     pub(crate) name: crate::ir::units::SiUnitName,
+}
+
+/// L1 `LENGTH_UNIT` (generated, multi-case).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum EarlyLengthUnit {
+    Cbu(EarlyLengthUnitCbu),
+    Si(EarlyLengthUnitSi),
 }
 
 /// Typed `id_cache` key for `LENGTH_UNIT` (file id → L1→L2 correspondence;

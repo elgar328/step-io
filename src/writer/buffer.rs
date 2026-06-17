@@ -68,10 +68,6 @@ pub(crate) struct WriteBuffer<'m> {
     // now live in `step_ids` keyed by their arena-id type.
     // units-pool step ids (NAMED_UNIT / MEASURE_WITH_UNIT / DERIVED_UNIT_ELEMENT
     // / DERIVED_UNIT) now live in `step_ids` keyed by their arena-id type.
-    /// Lazily emitted `DIMENSIONAL_EXPONENTS(1, 0, ...)` step id, shared by
-    /// every length-flavour CBU outer in this file. `None` until the first
-    /// length CBU is emitted (units-3c dedup).
-    pub(crate) length_dim_exp_step: Option<u64>,
     /// Lazily emitted `DIMENSIONAL_EXPONENTS(0, 0, ...)` step id, shared by
     /// every dimensionless emitter (plane-angle / solid-angle CBU outers,
     /// area / volume DUE consumers).
@@ -142,7 +138,6 @@ impl<'m> WriteBuffer<'m> {
             entities: Vec::new(),
             step_ids: step_id_cache::StepIdCache::default(),
             unit_context_ids: Vec::new(),
-            length_dim_exp_step: None,
             dimensionless_dim_exp_step: None,
             mass_dim_exp_step: None,
             deferred_assembly_absr_ids: Vec::new(),

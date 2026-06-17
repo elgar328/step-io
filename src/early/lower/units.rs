@@ -3,10 +3,10 @@
 
 use crate::early::model::{
     EarlyDerivedUnit, EarlyDerivedUnitElement, EarlyDimensionalExponents,
-    EarlyLengthMeasureWithUnit, EarlyLengthUnit, EarlyMassMeasureWithUnit, EarlyMassUnit,
-    EarlyMeasureValue, EarlyMeasureWithUnit, EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit,
-    EarlyPlaneAngleUnit, EarlyRatioMeasureWithUnit, EarlyRatioUnit, EarlySolidAngleUnit,
-    EarlyUncertaintyMeasureWithUnit,
+    EarlyLengthMeasureWithUnit, EarlyLengthUnit, EarlyLengthUnitCbu, EarlyLengthUnitSi,
+    EarlyMassMeasureWithUnit, EarlyMassUnit, EarlyMeasureValue, EarlyMeasureWithUnit,
+    EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit, EarlyPlaneAngleUnit, EarlyRatioMeasureWithUnit,
+    EarlyRatioUnit, EarlySolidAngleUnit, EarlyUncertaintyMeasureWithUnit,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::representation_item::MeasureValue;
@@ -292,11 +292,32 @@ pub(crate) fn lower_solid_angle_unit(
     ctx.id_cache.insert(entity_id, id);
 }
 
-/// Lower the **SI case** of `LENGTH_UNIT` (CBU stays hand-written in the
-/// handler). `(prefix, name)` → `LengthUnit` (Metre/Millimetre/Centimetre);
-/// an unsupported SI length is dropped with a warning. `dim_exp` is always
-/// `None` — `NAMED_UNIT.dimensions` is canonical Derived (`*`) via `[derived]`.
-pub(crate) fn lower_length_si(ctx: &mut ReaderContext, entity_id: u64, early: &EarlyLengthUnit) {
+/// The base SI `NamedUnitId` a `MEASURE_WITH_UNIT` references (its
+/// `unit_component`). Used by CBU lower to recover `cbu_base` from the preserved
+/// conversion-factor MWU (units-CBU-②) — no graph-walk.
+pub(crate) fn mwu_unit_of(mwu: &MeasureWithUnit) -> crate::ir::id::NamedUnitId {
+    match mwu {
+        MeasureWithUnit::Itself(d) => d.unit,
+        MeasureWithUnit::Length { unit, .. }
+        | MeasureWithUnit::Mass { unit, .. }
+        | MeasureWithUnit::PlaneAngle { unit, .. }
+        | MeasureWithUnit::Ratio { unit, .. } => *unit,
+    }
+}
+
+/// Lower `LENGTH_UNIT` (generated L1 enum). SI vs `CONVERSION_BASED_UNIT`.
+pub(crate) fn lower_length(ctx: &mut ReaderContext, entity_id: u64, early: &EarlyLengthUnit) {
+    match early {
+        EarlyLengthUnit::Si(si) => lower_length_si(ctx, entity_id, si),
+        EarlyLengthUnit::Cbu(cbu) => lower_length_cbu(ctx, entity_id, cbu),
+    }
+}
+
+/// Lower the **SI case** of `LENGTH_UNIT`. `(prefix, name)` → `LengthUnit`
+/// (Metre/Millimetre/Centimetre); an unsupported SI length is dropped with a
+/// warning. `dim_exp` is `None` — `NAMED_UNIT.dimensions` is canonical Derived
+/// (`*`) via the case's `derived` hint.
+fn lower_length_si(ctx: &mut ReaderContext, entity_id: u64, early: &EarlyLengthUnitSi) {
     let unit = match (early.prefix, early.name) {
         (None, SiUnitName::Metre) => LengthUnit::Metre,
         (Some(SiPrefix::Milli), SiUnitName::Metre) => LengthUnit::Millimetre,
@@ -318,6 +339,52 @@ pub(crate) fn lower_length_si(ctx: &mut ReaderContext, entity_id: u64, early: &E
         cbu_base: None,
         dim_exp: None,
         cbu_factor_mwu_id: None,
+    }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower the **`CONVERSION_BASED_UNIT` case** of `LENGTH_UNIT`. Identifies the
+/// unit by the CBU `name` (length's SI base varies — millimetre vs metre — so
+/// the factor is not a base-free identity, unlike mass/plane-angle). The
+/// preserved conversion-factor MWU (`conversion_factor` ref) supplies `cbu_base`
+/// (its `unit_component`) and is referenced via `cbu_factor_mwu_id` — no
+/// graph-walk. `NAMED_UNIT.dimensions` is `*` (Derived) → `dim_exp = None`.
+fn lower_length_cbu(ctx: &mut ReaderContext, entity_id: u64, early: &EarlyLengthUnitCbu) {
+    let unit = match early.name.to_uppercase().as_str() {
+        "INCH" => LengthUnit::Inch,
+        "FOOT" => LengthUnit::Foot,
+        // Some AP242 / ABC exports wrap an SI unit in a CONVERSION_BASED_UNIT
+        // (self-wrap); the name is still authoritative.
+        "MILLIMETRE" => LengthUnit::Millimetre,
+        "CENTIMETRE" => LengthUnit::Centimetre,
+        "METRE" => LengthUnit::Metre,
+        other => {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!("unsupported CONVERSION_BASED_UNIT length name: {other:?}"),
+            });
+            return;
+        }
+    };
+    let Some(mwu_id) = ctx
+        .id_cache
+        .get::<crate::ir::id::MeasureWithUnitId>(early.conversion_factor)
+    else {
+        // Conversion-factor MWU unresolved (non-Real value etc.) — drop, matching
+        // the prior read-side None behaviour.
+        ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: "CONVERSION_BASED_UNIT length conversion_factor MWU unresolved".into(),
+        });
+        return;
+    };
+    let cbu_base = Some(mwu_unit_of(&ctx.mwu_arena[mwu_id]));
+    ctx.length_unit_map.insert(entity_id, unit);
+    let id = ctx.named_units_arena.push(NamedUnit::Length(LengthFlavor {
+        unit,
+        cbu_base,
+        dim_exp: None,
+        cbu_factor_mwu_id: Some(mwu_id),
     }));
     ctx.id_cache.insert(entity_id, id);
 }

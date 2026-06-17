@@ -470,14 +470,19 @@ parts = [
     "SOLID_ANGLE_UNIT",
 ]
 
-# SI case only (CBU stays hand-written). Part order matches emit_plain_si_length
-# (LENGTH_UNIT, NAMED_UNIT, SI_UNIT).
-[complex.length_unit]
-parts = [
-    "LENGTH_UNIT",
-    "NAMED_UNIT",
-    "SI_UNIT",
-]
+# Multi-case (units-CBU-② Plan 1): SI vs CONVERSION_BASED_UNIT. L1 enum
+# EarlyLengthUnit{Si, Cbu}. Both cases: NAMED_UNIT.dimensions = `*` (derived) —
+# the complex supertype attr is conventionally Derived (corpus, e.g. NIST
+# ctc_05 `NAMED_UNIT(*)`). CBU adds CONVERSION_BASED_UNIT(name, conversion_factor
+# MWU). Part order = each case's emit order (must match the hand emit it replaces).
+[complex.length_unit.cases.si]
+parts = ["LENGTH_UNIT", "NAMED_UNIT", "SI_UNIT"]
+derived = ["dimensions"]
+
+[complex.length_unit.cases.cbu]
+parts = ["CONVERSION_BASED_UNIT", "LENGTH_UNIT", "NAMED_UNIT"]
+derived = ["dimensions"]
+discriminant = "CONVERSION_BASED_UNIT"
 
 # SI case only (CBU stays hand-written). Part order matches emit_plain_si_mass
 # (MASS_UNIT, NAMED_UNIT, SI_UNIT).
@@ -506,9 +511,9 @@ oriented_edge = ["edge_start", "edge_end"]
 oriented_closed_shell = ["cfs_faces"]
 default_model_geometric_view = ["product_definitional"]
 solid_angle_unit = ["dimensions"]
-length_unit = ["dimensions"]
 mass_unit = ["dimensions"]
 plane_angle_unit = ["dimensions"]
+# length_unit: per-case derived now lives in [complex.length_unit.cases.*]
 
 # `[enum.<alias>]`: reuse an existing L2 enum for a STEP ENUM type-alias instead
 # of synthesizing an `Early*` enum. `variants` maps each early.toml ENUM member

@@ -1211,33 +1211,22 @@ pub(crate) fn serialize_length_unit(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyLengthUnit,
 ) -> u64 {
-    buf.push_complex(vec![
-        ("LENGTH_UNIT".into(), vec![]),
-        (
-            "NAMED_UNIT".into(),
-            vec![crate::parser::entity::Attribute::Derived],
-        ),
-        (
-            "SI_UNIT".into(),
-            vec![
-                match &l1.prefix {
-                    Some(e) => si_prefix_attr(e.clone()),
-                    None => crate::parser::entity::Attribute::Unset,
-                },
-                si_unit_name_attr(l1.name),
-            ],
-        ),
-    ])
-}
-
-pub(crate) fn serialize_length_unit_with_id(
-    buf: &mut crate::writer::buffer::WriteBuffer,
-    id: u64,
-    l1: &super::model::EarlyLengthUnit,
-) {
-    buf.push_complex_with_id(
-        id,
-        vec![
+    match l1 {
+        super::model::EarlyLengthUnit::Cbu(l1) => buf.push_complex(vec![
+            (
+                "CONVERSION_BASED_UNIT".into(),
+                vec![
+                    crate::parser::entity::Attribute::String(l1.name.clone()),
+                    crate::parser::entity::Attribute::EntityRef(l1.conversion_factor),
+                ],
+            ),
+            ("LENGTH_UNIT".into(), vec![]),
+            (
+                "NAMED_UNIT".into(),
+                vec![crate::parser::entity::Attribute::Derived],
+            ),
+        ]),
+        super::model::EarlyLengthUnit::Si(l1) => buf.push_complex(vec![
             ("LENGTH_UNIT".into(), vec![]),
             (
                 "NAMED_UNIT".into(),
@@ -1253,8 +1242,54 @@ pub(crate) fn serialize_length_unit_with_id(
                     si_unit_name_attr(l1.name),
                 ],
             ),
-        ],
-    );
+        ]),
+    }
+}
+
+pub(crate) fn serialize_length_unit_with_id(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    id: u64,
+    l1: &super::model::EarlyLengthUnit,
+) {
+    match l1 {
+        super::model::EarlyLengthUnit::Cbu(l1) => buf.push_complex_with_id(
+            id,
+            vec![
+                (
+                    "CONVERSION_BASED_UNIT".into(),
+                    vec![
+                        crate::parser::entity::Attribute::String(l1.name.clone()),
+                        crate::parser::entity::Attribute::EntityRef(l1.conversion_factor),
+                    ],
+                ),
+                ("LENGTH_UNIT".into(), vec![]),
+                (
+                    "NAMED_UNIT".into(),
+                    vec![crate::parser::entity::Attribute::Derived],
+                ),
+            ],
+        ),
+        super::model::EarlyLengthUnit::Si(l1) => buf.push_complex_with_id(
+            id,
+            vec![
+                ("LENGTH_UNIT".into(), vec![]),
+                (
+                    "NAMED_UNIT".into(),
+                    vec![crate::parser::entity::Attribute::Derived],
+                ),
+                (
+                    "SI_UNIT".into(),
+                    vec![
+                        match &l1.prefix {
+                            Some(e) => si_prefix_attr(e.clone()),
+                            None => crate::parser::entity::Attribute::Unset,
+                        },
+                        si_unit_name_attr(l1.name),
+                    ],
+                ),
+            ],
+        ),
+    }
 }
 
 pub(crate) fn serialize_mass_unit(

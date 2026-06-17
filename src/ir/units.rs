@@ -220,8 +220,8 @@ pub struct LengthFlavor {
     pub cbu_base: Option<NamedUnitId>,
     /// `NAMED_UNIT.dimensions` explicit ref (phase dim-exp-arena-b).
     /// `Some(id)` reproduces the source's `(#N)` reference; `None` emits
-    /// the `*` (Derived) form. The CBU outer path still uses its dedicated
-    /// `length_dim_exp_step` cache and ignores this field.
+    /// the `*` (Derived) form. CBU outers always carry `*` (`None`) — the
+    /// complex supertype attr is conventionally Derived (units-CBU-②).
     pub dim_exp: Option<super::id::DimensionalExponentsId>,
     /// `Some(id)` → this CBU outer's preserved `conversion_factor`
     /// `MEASURE_WITH_UNIT` arena entry (units-CBU-① preservation). The writer

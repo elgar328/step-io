@@ -36,20 +36,47 @@ pub(crate) struct Mapping {
     /// the generated bind fails to compile.
     #[serde(default)]
     pub(crate) read_only: Vec<String>,
-    /// Multi-part (complex) entities: an ordered part-name list per entity. Each
-    /// part contributes its own_attrs (from early.toml) in order; the generated
-    /// bind reads per-part via `require_part_attrs`, and serialize emits a
-    /// `WriterBody::Complex` via `push_complex`. Models a SINGLE case (the part
-    /// order must match the handler's `#[step_entity_complex] cases`). Multi-case
-    /// complex (e.g. measure) is not yet supported.
+    /// Multi-part (complex) entities. Each part contributes its `own_attrs` (from
+    /// early.toml) in order; the generated bind reads per-part via
+    /// `require_part_attrs`, serialize emits a `WriterBody::Complex` via
+    /// `push_complex`. Two shapes (exactly one set per entity):
+    /// - `parts`: a SINGLE case (the part order must match the handler's
+    ///   `#[step_entity_complex] cases`). The common case.
+    /// - `cases`: MULTI-case (e.g. units SI vs `CONVERSION_BASED_UNIT`) — the L1
+    ///   becomes an enum (one variant per case), bind discriminates by part
+    ///   presence, serialize matches the variant.
     #[serde(rename = "complex", default)]
     pub(crate) complex: BTreeMap<String, ComplexHint>,
 }
 
 #[derive(Deserialize)]
 pub(crate) struct ComplexHint {
-    /// Ordered part (supertype) names, e.g. `["BOUNDED_CURVE", "B_SPLINE_CURVE", …]`.
+    /// Single-case: ordered part (supertype) names,
+    /// e.g. `["BOUNDED_CURVE", "B_SPLINE_CURVE", …]`. Mutually exclusive with
+    /// `cases`.
+    #[serde(default)]
+    pub(crate) parts: Option<Vec<String>>,
+    /// Multi-case: `case-name -> CaseHint`. The L1 is an enum whose variants are
+    /// the (pascal-cased) case names. Mutually exclusive with `parts`.
+    #[serde(default)]
+    pub(crate) cases: Option<BTreeMap<String, CaseHint>>,
+}
+
+/// One case of a multi-case complex entity ([`ComplexHint::cases`]).
+#[derive(Deserialize)]
+pub(crate) struct CaseHint {
+    /// Ordered part names for this case (= serialize emit order).
     pub(crate) parts: Vec<String>,
+    /// EXPRESS Derived (`*`) attr names *for this case* (e.g. `NAMED_UNIT.
+    /// dimensions` is `*` in the SI case but an explicit ref in the CBU case).
+    /// Per-case because the same part's attr differs across cases.
+    #[serde(default)]
+    pub(crate) derived: Vec<String>,
+    /// Part whose presence selects this case in the generated bind (e.g.
+    /// `CONVERSION_BASED_UNIT`). `None` => the fallback case when no other
+    /// case's discriminant matches.
+    #[serde(default)]
+    pub(crate) discriminant: Option<String>,
 }
 
 #[derive(Deserialize)]

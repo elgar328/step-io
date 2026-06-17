@@ -3,10 +3,10 @@
 
 use crate::early::model::{
     EarlyDerivedUnit, EarlyDerivedUnitElement, EarlyDimensionalExponents,
-    EarlyLengthMeasureWithUnit, EarlyLengthUnit, EarlyMassMeasureWithUnit, EarlyMassUnit,
-    EarlyMeasureValue, EarlyMeasureWithUnit, EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit,
-    EarlyPlaneAngleUnit, EarlyRatioMeasureWithUnit, EarlyRatioUnit, EarlySolidAngleUnit,
-    EarlyUncertaintyMeasureWithUnit,
+    EarlyLengthMeasureWithUnit, EarlyLengthUnit, EarlyLengthUnitCbu, EarlyLengthUnitSi,
+    EarlyMassMeasureWithUnit, EarlyMassUnit, EarlyMeasureValue, EarlyMeasureWithUnit,
+    EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit, EarlyPlaneAngleUnit, EarlyRatioMeasureWithUnit,
+    EarlyRatioUnit, EarlySolidAngleUnit, EarlyUncertaintyMeasureWithUnit,
 };
 use crate::ir::representation_item::MeasureValue;
 use crate::ir::shape_rep::{LengthUncertainty, LengthUnit};
@@ -22,10 +22,10 @@ pub(crate) fn lift_solid_angle_unit() -> EarlySolidAngleUnit {
     }
 }
 
-/// Lift the **SI case** of `LENGTH_UNIT` (CBU is emitted by the hand-written
-/// `emit_length_cbu_outer`). `LengthUnit` → `(prefix, .METRE.)`; `NAMED_UNIT.
-/// dimensions` re-emits as `*` via `[derived]`. Non-SI units (Inch/Foot) only
-/// reach here as a kernel-built-IR fallback (→ MILLI METRE, matching legacy).
+/// Lift the **SI case** of `LENGTH_UNIT`. `LengthUnit` → `(prefix, .METRE.)`;
+/// `NAMED_UNIT.dimensions` re-emits as `*` via the case's `derived` hint. Non-SI
+/// units (Inch/Foot) only reach here as a kernel-built-IR fallback (→ MILLI
+/// METRE, matching legacy).
 pub(crate) fn lift_length_si(unit: LengthUnit) -> EarlyLengthUnit {
     let (prefix, name) = match unit {
         LengthUnit::Centimetre => (Some(SiPrefix::Centi), SiUnitName::Metre),
@@ -34,7 +34,25 @@ pub(crate) fn lift_length_si(unit: LengthUnit) -> EarlyLengthUnit {
             (Some(SiPrefix::Milli), SiUnitName::Metre)
         }
     };
-    EarlyLengthUnit { prefix, name }
+    EarlyLengthUnit::Si(EarlyLengthUnitSi { prefix, name })
+}
+
+/// Lift the **`CONVERSION_BASED_UNIT` case** of `LENGTH_UNIT`. `unit` → the CBU
+/// `name` token; `measure_step` is the pre-emitted conversion-factor MWU step id
+/// (the units pool emitter emits it before the `NamedUnit` block).
+/// `NAMED_UNIT.dimensions` re-emits as `*` via the case's `derived` hint.
+pub(crate) fn lift_length_cbu(unit: LengthUnit, measure_step: u64) -> EarlyLengthUnit {
+    let name = match unit {
+        LengthUnit::Millimetre => "MILLIMETRE",
+        LengthUnit::Centimetre => "CENTIMETRE",
+        LengthUnit::Metre => "METRE",
+        LengthUnit::Inch => "INCH",
+        LengthUnit::Foot => "FOOT",
+    };
+    EarlyLengthUnit::Cbu(EarlyLengthUnitCbu {
+        name: name.to_owned(),
+        conversion_factor: measure_step,
+    })
 }
 
 /// Lift the **SI case** of `MASS_UNIT` (CBU is emitted by the hand-written

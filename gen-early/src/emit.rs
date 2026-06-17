@@ -56,7 +56,11 @@ pub(crate) fn emit_entity(ctx: &Ctx, ent_name: &str, out: &mut GenOut) {
     // entity-exists assert is for the simple path only; the complex path
     // validates each part instead.
     if let Some(hint) = ctx.mapping.complex.get(ent_name) {
-        emit_complex_entity(ctx, ent_name, &type_name, &step_name, hint, out);
+        if let Some(cases) = &hint.cases {
+            emit_multi_case_complex(ctx, ent_name, &type_name, &step_name, cases, out);
+        } else {
+            emit_complex_entity(ctx, ent_name, &type_name, &step_name, hint, out);
+        }
         return;
     }
     assert!(
@@ -122,6 +126,20 @@ fn emit_model_and_id(
     attrs: &[(String, Kind, bool, bool)],
     out: &mut GenOut,
 ) {
+    emit_struct_model(ctx, type_name, step_name, attrs, out);
+    emit_id_only(type_name, step_name, out);
+}
+
+/// Emit just the `Early*` model struct (no Id). `attrs` is the flat field list
+/// (derived fields keep no struct field). Shared by [`emit_model_and_id`] and
+/// the multi-case enum path (inner per-case structs).
+fn emit_struct_model(
+    ctx: &Ctx,
+    type_name: &str,
+    step_name: &str,
+    attrs: &[(String, Kind, bool, bool)],
+    out: &mut GenOut,
+) {
     // model struct. All-scalar shapes wider than 8 bytes get `Copy` so
     // by-value `lower`/`lift` adapters compile under clippy's
     // needless_pass_by_value. At ≤ 8 bytes `Copy` would instead flip the
@@ -162,10 +180,14 @@ fn emit_model_and_id(
         .unwrap();
     }
     writeln!(out.model, "}}\n").unwrap();
+}
 
-    // typed `id_cache` key (the expanded form of the former hand-written
-    // `early_id!` macro): a pure cache-key newtype whose index addresses
-    // `EarlyModel`'s L1→L2 correspondence bucket.
+/// Emit just the typed `id_cache` key newtype + its `ArenaId` impl (the expanded
+/// form of the former hand-written `early_id!` macro): a pure cache-key newtype
+/// whose index addresses `EarlyModel`'s L1→L2 correspondence bucket. Shared by
+/// the struct model path ([`emit_model_and_id`]) and the multi-case enum model
+/// path ([`emit_multi_case_complex`]).
+fn emit_id_only(type_name: &str, step_name: &str, out: &mut GenOut) {
     writeln!(
         out.model,
         "/// Typed `id_cache` key for `{step_name}` (file id → L1→L2 correspondence;\n/// see `EarlyModel`)."
@@ -240,6 +262,7 @@ fn track_serialize_usage(k: &Kind, out: &mut GenOut) {
 /// non-empty part once via `require_part_attrs` (shadowing `attrs`), serialize
 /// emits a `WriterBody::Complex` via `push_complex`. Single-case only; a SELECT
 /// part attr is rejected (not yet supported).
+#[allow(clippy::too_many_lines)] // one cohesive codegen routine (model+bind+serialize)
 fn emit_complex_entity(
     ctx: &Ctx,
     ent_name: &str,
@@ -249,10 +272,14 @@ fn emit_complex_entity(
     out: &mut GenOut,
 ) {
     let derived_set = ctx.mapping.derived.get(ent_name);
+    let parts = hint
+        .parts
+        .as_ref()
+        .expect("single-case complex must have `parts` (use `cases` for multi-case)");
     // (part_name, local_index, field, kind, optional, derived) per attr, in
     // part order, each part's own_attrs indexed locally from 0.
     let mut entries: Vec<(String, usize, String, Kind, bool, bool)> = Vec::new();
-    for part in &hint.parts {
+    for part in parts {
         // Hint part names are the wire (upper-cased) form; early.toml keys are
         // lower-cased. Look up own_attrs by the lower-cased name; keep the
         // upper-cased `part` for `require_part_attrs` / the emitted STEP token.
@@ -311,7 +338,7 @@ fn emit_complex_entity(
         "pub(crate) fn bind_{ent_name}(entity_id: u64, parts: &[crate::parser::entity::RawEntityPart]) -> Result<super::model::{type_name}, crate::ir::error::ConvertError> {{"
     )
     .unwrap();
-    for part in &hint.parts {
+    for part in parts {
         let fields: Vec<&(String, usize, String, Kind, bool, bool)> =
             entries.iter().filter(|e| &e.0 == part && !e.5).collect();
         if fields.is_empty() {
@@ -349,17 +376,19 @@ fn emit_complex_entity(
     // (push_complex) and, for serialize_with_id entities, the reserved-id
     // `serialize_<e>_with_id` (push_complex_with_id) — identical bytes, no drift.
     let mut parts_lit = String::from("vec![\n");
-    for part in &hint.parts {
-        parts_lit.push_str(&format!("        (\"{part}\".into(), vec![\n"));
+    for part in parts {
+        writeln!(parts_lit, "        (\"{part}\".into(), vec![").unwrap();
         for (_, _, field, k, opt, derived) in entries.iter().filter(|e| &e.0 == part) {
             if *derived {
                 parts_lit.push_str("            crate::parser::entity::Attribute::Derived,\n");
                 continue;
             }
-            parts_lit.push_str(&format!(
-                "            {},\n",
+            writeln!(
+                parts_lit,
+                "            {},",
                 serialize_expr_full(k, field, *opt)
-            ));
+            )
+            .unwrap();
             track_serialize_usage(k, out);
         }
         parts_lit.push_str("        ]),\n");
@@ -384,6 +413,261 @@ fn emit_complex_entity(
             "    buf.push_complex_with_id(id, {parts_lit});\n}}\n"
         )
         .unwrap();
+    }
+}
+
+/// Collect one case's flat `(part, local_index, field, kind, optional, derived)`
+/// entries (part order; each part's `own_attrs` indexed locally). `derived_attrs`
+/// is the case-specific Derived (`*`) attr-name list. Field names are
+/// disambiguated across parts (`name`, `name_2`, …). Mirrors the single-case
+/// `emit_complex_entity` collection.
+fn collect_case_entries(
+    ctx: &Ctx,
+    ent_name: &str,
+    parts: &[String],
+    derived_attrs: &[String],
+) -> Vec<(String, usize, String, Kind, bool, bool)> {
+    let mut entries: Vec<(String, usize, String, Kind, bool, bool)> = Vec::new();
+    for part in parts {
+        assert!(
+            ctx.schema.entity.contains_key(&part.to_lowercase()),
+            "gen-early: multi-case `{ent_name}` part `{part}` not in early.toml"
+        );
+        for (li, a) in ctx
+            .schema
+            .own_attrs(&part.to_lowercase())
+            .into_iter()
+            .enumerate()
+        {
+            let (optional, inner) = strip_optional(&a.ty);
+            let derived = derived_attrs.contains(&a.name);
+            entries.push((
+                part.clone(),
+                li,
+                a.name.clone(),
+                ctx.classify(inner, 0),
+                optional,
+                derived,
+            ));
+        }
+    }
+    let mut used: BTreeSet<String> = BTreeSet::new();
+    for e in &mut entries {
+        if used.contains(&e.2) {
+            let base = e.2.clone();
+            let mut n = 2;
+            while used.contains(&format!("{base}_{n}")) {
+                n += 1;
+            }
+            e.2 = format!("{base}_{n}");
+        }
+        used.insert(e.2.clone());
+    }
+    assert!(
+        !entries.iter().any(|e| matches!(e.3, Kind::Select(_))),
+        "gen-early: multi-case entity `{ent_name}` has a SELECT attr — not yet supported"
+    );
+    entries
+}
+
+/// Emit a **multi-case** complex entity ([`crate::mapping::ComplexHint::cases`]):
+/// an L1 **enum** with one variant per case, each wrapping a per-case inner
+/// struct (so the existing `serialize_expr_full` `l1.field` form is reused
+/// verbatim — the match arm rebinds the inner struct as `l1`). bind selects the
+/// case by part presence (`CaseHint::discriminant`; the no-discriminant case is
+/// the fallback). serialize matches the variant.
+#[allow(clippy::too_many_lines)] // one cohesive codegen routine (model+bind+serialize)
+fn emit_multi_case_complex(
+    ctx: &Ctx,
+    ent_name: &str,
+    type_name: &str,
+    step_name: &str,
+    cases: &std::collections::BTreeMap<String, crate::mapping::CaseHint>,
+    out: &mut GenOut,
+) {
+    // Per case: (case key, variant pascal, inner struct type, hint, entries).
+    let cases_data: Vec<(&String, String, String, &crate::mapping::CaseHint, _)> = cases
+        .iter()
+        .map(|(cn, ch)| {
+            let variant = pascal(cn);
+            let inner_type = format!("{type_name}{variant}");
+            let entries = collect_case_entries(ctx, ent_name, &ch.parts, &ch.derived);
+            (cn, variant, inner_type, ch, entries)
+        })
+        .collect();
+    assert!(
+        cases_data
+            .iter()
+            .filter(|(_, _, _, ch, _)| ch.discriminant.is_none())
+            .count()
+            <= 1,
+        "gen-early: multi-case `{ent_name}` must have at most one fallback (no-discriminant) case"
+    );
+
+    // 1. Inner per-case structs (reuse the struct-model emitter).
+    for (_, _, inner_type, _, entries) in &cases_data {
+        let model_attrs: Vec<(String, Kind, bool, bool)> = entries
+            .iter()
+            .map(|(_, _, f, k, o, d)| (f.clone(), k.clone(), *o, *d))
+            .collect();
+        emit_struct_model(ctx, inner_type, step_name, &model_attrs, out);
+    }
+
+    // 2. Outer enum (no Copy — an inner struct may hold a String).
+    writeln!(out.model, "/// L1 `{step_name}` (generated, multi-case).").unwrap();
+    writeln!(out.model, "#[derive(Debug, Clone, PartialEq)]").unwrap();
+    writeln!(out.model, "pub(crate) enum {type_name} {{").unwrap();
+    for (_, variant, inner_type, _, _) in &cases_data {
+        writeln!(out.model, "    {variant}({inner_type}),").unwrap();
+    }
+    writeln!(out.model, "}}\n").unwrap();
+
+    // 3. Id key.
+    emit_id_only(type_name, step_name, out);
+
+    // 4. bind: discriminant dispatch.
+    writeln!(
+        out.bind,
+        "pub(crate) fn bind_{ent_name}(entity_id: u64, parts: &[crate::parser::entity::RawEntityPart]) -> Result<super::model::{type_name}, crate::ir::error::ConvertError> {{"
+    )
+    .unwrap();
+    // Writes the per-part `let attrs`/`let field` reads for one case.
+    let emit_case_reads =
+        |bind: &mut String,
+         ch: &crate::mapping::CaseHint,
+         entries: &[(String, usize, String, Kind, bool, bool)]| {
+            for part in &ch.parts {
+                let fields: Vec<_> = entries.iter().filter(|e| &e.0 == part && !e.5).collect();
+                if fields.is_empty() {
+                    continue;
+                }
+                writeln!(
+                bind,
+                "    let attrs = crate::reader::require_part_attrs(parts, \"{part}\", entity_id)?;"
+            )
+            .unwrap();
+                for (_, li, field, k, opt, _) in fields {
+                    writeln!(
+                        bind,
+                        "    let {field} = {};",
+                        bind_expr_full(k, *li, field, *opt)
+                    )
+                    .unwrap();
+                }
+            }
+        };
+    // The `Type::Variant(Inner { fields.. })` constructor expression.
+    let case_ctor =
+        |variant: &str, inner_type: &str, entries: &[(String, usize, String, Kind, bool, bool)]| {
+            let fields: Vec<&str> = entries
+                .iter()
+                .filter(|e| !e.5)
+                .map(|e| e.2.as_str())
+                .collect();
+            format!(
+                "super::model::{type_name}::{variant}(super::model::{inner_type} {{ {} }})",
+                fields.join(", ")
+            )
+        };
+    for (_, variant, inner_type, ch, entries) in &cases_data {
+        let Some(disc) = &ch.discriminant else {
+            continue;
+        };
+        writeln!(
+            out.bind,
+            "    if parts.iter().any(|p| p.name == \"{disc}\") {{"
+        )
+        .unwrap();
+        emit_case_reads(&mut out.bind, ch, entries);
+        writeln!(
+            out.bind,
+            "    return Ok({});",
+            case_ctor(variant, inner_type, entries)
+        )
+        .unwrap();
+        writeln!(out.bind, "    }}").unwrap();
+    }
+    if let Some((_, variant, inner_type, ch, entries)) = cases_data
+        .iter()
+        .find(|(_, _, _, ch, _)| ch.discriminant.is_none())
+    {
+        emit_case_reads(&mut out.bind, ch, entries);
+        writeln!(
+            out.bind,
+            "    Ok({})",
+            case_ctor(variant, inner_type, entries)
+        )
+        .unwrap();
+    } else {
+        writeln!(
+            out.bind,
+            "    Err(crate::ir::error::ConvertError::UnexpectedEntityForm {{ entity_id, detail: \"unsupported {step_name} complex case\".into() }})"
+        )
+        .unwrap();
+    }
+    writeln!(out.bind, "}}\n").unwrap();
+
+    // 5. serialize: build each variant's parts literal, match on variant.
+    if ctx.mapping.read_only.iter().any(|e| e == ent_name) {
+        return;
+    }
+    let variant_lits: Vec<(String, String)> = cases_data
+        .iter()
+        .map(|(_, variant, _, ch, entries)| {
+            let mut parts_lit = String::from("vec![\n");
+            for part in &ch.parts {
+                writeln!(parts_lit, "        (\"{part}\".into(), vec![").unwrap();
+                for (_, _, field, k, opt, derived) in entries.iter().filter(|e| &e.0 == part) {
+                    if *derived {
+                        parts_lit
+                            .push_str("            crate::parser::entity::Attribute::Derived,\n");
+                        continue;
+                    }
+                    writeln!(
+                        parts_lit,
+                        "            {},",
+                        serialize_expr_full(k, field, *opt)
+                    )
+                    .unwrap();
+                    track_serialize_usage(k, out);
+                }
+                parts_lit.push_str("        ]),\n");
+            }
+            parts_lit.push_str("    ]");
+            (variant.clone(), parts_lit)
+        })
+        .collect();
+
+    writeln!(
+        out.serialize,
+        "pub(crate) fn serialize_{ent_name}(buf: &mut crate::writer::buffer::WriteBuffer, l1: &super::model::{type_name}) -> u64 {{"
+    )
+    .unwrap();
+    writeln!(out.serialize, "    match l1 {{").unwrap();
+    for (variant, parts_lit) in &variant_lits {
+        writeln!(
+            out.serialize,
+            "        super::model::{type_name}::{variant}(l1) => buf.push_complex({parts_lit}),"
+        )
+        .unwrap();
+    }
+    writeln!(out.serialize, "    }}\n}}\n").unwrap();
+
+    if ctx.mapping.serialize_with_id.iter().any(|e| e == ent_name) {
+        writeln!(
+            out.serialize,
+            "pub(crate) fn serialize_{ent_name}_with_id(buf: &mut crate::writer::buffer::WriteBuffer, id: u64, l1: &super::model::{type_name}) {{"
+        )
+        .unwrap();
+        writeln!(out.serialize, "    match l1 {{").unwrap();
+        for (variant, parts_lit) in &variant_lits {
+            writeln!(
+                out.serialize,
+                "        super::model::{type_name}::{variant}(l1) => buf.push_complex_with_id(id, {parts_lit}),"
+            )
+            .unwrap();
+        }
+        writeln!(out.serialize, "    }}\n}}\n").unwrap();
     }
 }
 
@@ -1449,6 +1733,71 @@ mod tests {
         // tracking: point_style uses the two hinted mixed selects.
         assert!(out.used_selects.contains("marker_select"));
         assert!(out.used_selects.contains("size_select"));
+    }
+
+    /// Multi-case complex (`cases`): enum L1 with per-case inner structs,
+    /// part-presence-discriminated bind, per-variant serialize with case-specific
+    /// derived. Exercises `emit_multi_case_complex` via `LENGTH_UNIT` (SI vs CBU).
+    #[test]
+    fn multi_case_complex_length_unit() {
+        use crate::mapping::{CaseHint, ComplexHint};
+        let mut ctx = ctx_from(schema());
+        let mut cases = BTreeMap::new();
+        cases.insert(
+            "si".to_string(),
+            CaseHint {
+                parts: vec!["LENGTH_UNIT".into(), "NAMED_UNIT".into(), "SI_UNIT".into()],
+                derived: vec!["dimensions".into()],
+                discriminant: None,
+            },
+        );
+        cases.insert(
+            "cbu".to_string(),
+            CaseHint {
+                parts: vec![
+                    "CONVERSION_BASED_UNIT".into(),
+                    "LENGTH_UNIT".into(),
+                    "NAMED_UNIT".into(),
+                ],
+                derived: vec![],
+                discriminant: Some("CONVERSION_BASED_UNIT".into()),
+            },
+        );
+        ctx.mapping.complex.insert(
+            "length_unit".to_string(),
+            ComplexHint {
+                parts: None,
+                cases: Some(cases),
+            },
+        );
+        let mut out = GenOut::new("");
+        emit_entity(&ctx, "length_unit", &mut out);
+        // enum + per-case inner structs.
+        assert!(out.model.contains("pub(crate) enum EarlyLengthUnit {"));
+        assert!(out.model.contains("Si(EarlyLengthUnitSi)"));
+        assert!(out.model.contains("Cbu(EarlyLengthUnitCbu)"));
+        assert!(out.model.contains("pub(crate) struct EarlyLengthUnitCbu {"));
+        assert!(out.model.contains("conversion_factor: u64"));
+        // bind: part-presence discriminant.
+        assert!(
+            out.bind
+                .contains("parts.iter().any(|p| p.name == \"CONVERSION_BASED_UNIT\")")
+        );
+        assert!(out.bind.contains("EarlyLengthUnit::Cbu"));
+        assert!(out.bind.contains("EarlyLengthUnit::Si"));
+        // serialize: per-variant match; SI dimensions = Derived, CBU = explicit ref.
+        assert!(
+            out.serialize
+                .contains("super::model::EarlyLengthUnit::Si(l1) => buf.push_complex")
+        );
+        assert!(
+            out.serialize
+                .contains("crate::parser::entity::Attribute::Derived")
+        );
+        assert!(
+            out.serialize
+                .contains("super::model::EarlyLengthUnit::Cbu(l1) => buf.push_complex")
+        );
     }
 
     /// Hint-less ENUM auto-synthesis: model enum + strict bind/serialize helpers.
