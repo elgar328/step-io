@@ -2,8 +2,8 @@
 //! cluster). See the [module docs](super) for the lifting contract.
 
 use crate::early::model::{
-    EarlyAllAroundShapeAspect, EarlyCameraImage, EarlyCameraImage3dWithScale,
-    EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
+    EarlyAdvancedBrepShapeRepresentation, EarlyAllAroundShapeAspect, EarlyCameraImage,
+    EarlyCameraImage3dWithScale, EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect, EarlyCompoundItemDefinition,
     EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
@@ -18,7 +18,7 @@ use crate::early::model::{
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
     EarlyRepresentationMap, EarlyRepresentationRelationship, EarlyShapeAspect,
     EarlyShapeAspectAssociativity, EarlyShapeAspectDerivingRelationship,
-    EarlyShapeAspectRelationship, EarlyShapeDimensionRepresentation,
+    EarlyShapeAspectRelationship, EarlyShapeDimensionRepresentation, EarlyShapeRepresentation,
     EarlyShapeRepresentationRelationship, EarlyShapeRepresentationWithParameters,
     EarlyTessellatedShapeRepresentation, EarlyToleranceZone, EarlyValueRepresentationItem,
 };
@@ -516,6 +516,37 @@ pub(crate) fn lift_constructive_geometry_representation(
         items,
         context_of_items,
     })
+}
+
+/// Lift one plain `SHAPE_REPRESENTATION` from pre-resolved step ids. Shared by
+/// the arena write path (Plain arm) and the product-driven paths (Group SR /
+/// Fusion-CATIA indirect outer SR), which differ in input shape — hence the
+/// raw-pieces signature.
+pub(crate) fn lift_shape_representation(
+    name: String,
+    items: Vec<u64>,
+    context_of_items: u64,
+) -> EarlyShapeRepresentation {
+    EarlyShapeRepresentation {
+        name,
+        items,
+        context_of_items,
+    }
+}
+
+/// Lift one `ADVANCED_BREP_SHAPE_REPRESENTATION` from pre-resolved step ids.
+/// Shared by the arena write path (`advanced_brep_early`) and the product-driven
+/// path; raw-pieces signature for the same reason as `lift_shape_representation`.
+pub(crate) fn lift_advanced_brep_shape_representation(
+    name: String,
+    items: Vec<u64>,
+    context_of_items: u64,
+) -> EarlyAdvancedBrepShapeRepresentation {
+    EarlyAdvancedBrepShapeRepresentation {
+        name,
+        items,
+        context_of_items,
+    }
 }
 
 /// Lift one `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION`. `items`

@@ -9,8 +9,8 @@
 //! the equally raw-keyed geometry payload maps.
 
 use crate::early::model::{
-    EarlyAllAroundShapeAspect, EarlyCameraImage, EarlyCameraImage3dWithScale,
-    EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
+    EarlyAdvancedBrepShapeRepresentation, EarlyAllAroundShapeAspect, EarlyCameraImage,
+    EarlyCameraImage3dWithScale, EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect, EarlyCompoundItemDefinition,
     EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
@@ -23,28 +23,28 @@ use crate::early::model::{
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
     EarlyRepresentationMap, EarlyRepresentationRelationship, EarlyShapeAspect,
-    EarlyShapeDimensionRepresentation, EarlyShapeRepresentationRelationship,
-    EarlyShapeRepresentationWithParameters, EarlyTessellatedShapeRepresentation,
-    EarlyToleranceZone, EarlyValueRepresentationItem,
+    EarlyShapeDimensionRepresentation, EarlyShapeRepresentation,
+    EarlyShapeRepresentationRelationship, EarlyShapeRepresentationWithParameters,
+    EarlyTessellatedShapeRepresentation, EarlyToleranceZone, EarlyValueRepresentationItem,
 };
 use crate::entities::tessellation::resolve_tessellated_item_ref;
 use crate::ir::assembly::Transform3d;
 use crate::ir::error::ConvertError;
 use crate::ir::representation_item::{
     MeasureValue, QualifiedRepresentationItem, QualifierRef, RepresentationItem,
-    ValueRepresentationItem,
+    RepresentationItemRef, ValueRepresentationItem,
 };
 use crate::ir::shape_rep::{
-    AllAroundShapeAspect, CameraImage, CentreOfSymmetry, CharacterizedItemWithinRepresentation,
-    CharacterizedObject, CharacterizedObjectData, CompositeGroupShapeAspect,
-    CompositeShapeAspectKind, CompoundItem, CompoundItemElement, CompoundItemKind,
-    CompoundRepresentationItem, ConstructiveGeometryRepr,
+    AdvancedBrepRepr, AllAroundShapeAspect, CameraImage, CentreOfSymmetry,
+    CharacterizedItemWithinRepresentation, CharacterizedObject, CharacterizedObjectData,
+    CompositeGroupShapeAspect, CompositeShapeAspectKind, CompoundItem, CompoundItemElement,
+    CompoundItemKind, CompoundRepresentationItem, ConstructiveGeometryRepr,
     ConstructiveGeometryRepresentationRelationship, DatumSystem, DatumTarget,
     DefaultModelGeometricView, GeometricItemSpecificUsage, IiruDefinition, IiruIdentifiedItem,
     ItemIdentifiedRepresentationUsage, MappedItem, MappedItemData, MappedRepresentationRef, Mdgpr,
     MechanicalDesignAndDraughtingRelationship, ModelGeometricView, NumericRepresentationItem,
-    PlacedDatumTargetFeature, RealRepresentationItem, Representation, RepresentationContextRef,
-    RepresentationMap, RepresentationMapData, RepresentationRelationship,
+    PlacedDatumTargetFeature, PlainRepr, RealRepresentationItem, Representation,
+    RepresentationContextRef, RepresentationMap, RepresentationMapData, RepresentationRelationship,
     RepresentationRelationshipData, ShapeAspect, ShapeAspectRelationship,
     ShapeAspectRelationshipKind, ShapeDimensionRepresentation, ShapeRepresentationRelationshipIr,
     ShapeRepresentationWithParameters, SrwpItem, TessellatedShapeRepresentation, ToleranceZone,
@@ -848,6 +848,97 @@ pub(crate) fn lower_constructive_geometry_representation(
                 context: Some(context),
             },
         ));
+    ctx.id_cache.insert(entity_id, repr_id);
+}
+
+/// Lower one plain `SHAPE_REPRESENTATION`. Captures the first
+/// `AXIS2_PLACEMENT_3D` from `items` as the coordinate frame (for the SDR
+/// indirection pass) and dual-writes into the unified `representations` arena.
+/// `context_of_items` is schema-required; an unresolvable context drops the
+/// carrier (schema-strict — None-context is corpus-absent, see plan 0-FAIL
+/// proof).
+pub(crate) fn lower_shape_representation(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyShapeRepresentation,
+) {
+    let Some(context) = ctx.resolve_repr_context(early.context_of_items) else {
+        return;
+    };
+    if let RepresentationContextRef::Unitful(ctx_id) = context {
+        ctx.repr_context_map.insert(entity_id, ctx_id);
+    }
+    let frame = early
+        .items
+        .iter()
+        .find_map(|r| ctx.placement_map.get(r).copied());
+    if let Some(placement_id) = frame {
+        ctx.plain_sr_frame_map.insert(entity_id, placement_id);
+    }
+    let repr_id = ctx.representations.push(Representation::Plain(PlainRepr {
+        name: early.name,
+        context: Some(context),
+        frame,
+    }));
+    ctx.id_cache.insert(entity_id, repr_id);
+}
+
+/// Lower one `ADVANCED_BREP_SHAPE_REPRESENTATION`. Resolves every `items` ref
+/// into a typed `RepresentationItemRef` (solids + an axis frame, or `MAPPED_ITEM`s
+/// for an assembly ABSR), preserving source order, and derives the legacy
+/// `absr_solid_map` / `absr_ref_frame_map` side maps. An empty resolved set is
+/// kept (with a warning) — unlike CGR, which drops. `context_of_items` is
+/// schema-required; an unresolvable context drops the carrier (schema-strict —
+/// None-context is corpus-absent, see plan 0-FAIL proof).
+pub(crate) fn lower_advanced_brep_shape_representation(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyAdvancedBrepShapeRepresentation,
+) {
+    let Some(context) = ctx.resolve_repr_context(early.context_of_items) else {
+        return;
+    };
+    if let RepresentationContextRef::Unitful(ctx_id) = context {
+        ctx.repr_context_map.insert(entity_id, ctx_id);
+    }
+    let resolved: Vec<RepresentationItemRef> = early
+        .items
+        .iter()
+        .filter_map(|&r| {
+            crate::entities::visualization::styled_item::resolve_representation_item_ref(ctx, r)
+        })
+        .collect();
+
+    let solid_ids: Vec<_> = resolved
+        .iter()
+        .filter_map(|it| match it {
+            RepresentationItemRef::Solid(id) => Some(*id),
+            _ => None,
+        })
+        .collect();
+    if let Some(placement_id) = resolved.iter().find_map(|it| match it {
+        RepresentationItemRef::Placement3d(id) => Some(*id),
+        _ => None,
+    }) {
+        ctx.absr_ref_frame_map.insert(entity_id, placement_id);
+    }
+    if !solid_ids.is_empty() {
+        ctx.absr_solid_map.insert(entity_id, solid_ids);
+    }
+    if resolved.is_empty() {
+        ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: String::from("ADVANCED_BREP_SHAPE_REPRESENTATION with no resolvable items"),
+        });
+    }
+
+    let repr_id = ctx
+        .representations
+        .push(Representation::AdvancedBrep(AdvancedBrepRepr {
+            name: early.name,
+            context: Some(context),
+            items: resolved,
+        }));
     ctx.id_cache.insert(entity_id, repr_id);
 }
 

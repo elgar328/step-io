@@ -336,6 +336,65 @@ pub(crate) fn serialize_mechanical_design_and_draughting_relationship(
     )
 }
 
+pub(crate) fn serialize_shape_representation(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyShapeRepresentation,
+) -> u64 {
+    buf.push_simple(
+        "SHAPE_REPRESENTATION",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.items
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::EntityRef(l1.context_of_items),
+        ],
+    )
+}
+
+pub(crate) fn serialize_advanced_brep_shape_representation(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAdvancedBrepShapeRepresentation,
+) -> u64 {
+    buf.push_simple(
+        "ADVANCED_BREP_SHAPE_REPRESENTATION",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.items
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::EntityRef(l1.context_of_items),
+        ],
+    )
+}
+
+pub(crate) fn serialize_advanced_brep_shape_representation_with_id(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    id: u64,
+    l1: &super::model::EarlyAdvancedBrepShapeRepresentation,
+) {
+    buf.push_simple_with_id(
+        id,
+        "ADVANCED_BREP_SHAPE_REPRESENTATION",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.items
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::EntityRef(l1.context_of_items),
+        ],
+    );
+}
+
 pub(crate) fn serialize_approval_role(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyApprovalRole,

@@ -435,6 +435,52 @@ impl crate::ir::arena::ArenaId for EarlyMechanicalDesignAndDraughtingRelationshi
     }
 }
 
+/// L1 `SHAPE_REPRESENTATION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyShapeRepresentation {
+    pub(crate) name: String,
+    pub(crate) items: Vec<u64>,
+    pub(crate) context_of_items: u64,
+}
+
+/// Typed `id_cache` key for `SHAPE_REPRESENTATION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyShapeRepresentationId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyShapeRepresentationId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `ADVANCED_BREP_SHAPE_REPRESENTATION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAdvancedBrepShapeRepresentation {
+    pub(crate) name: String,
+    pub(crate) items: Vec<u64>,
+    pub(crate) context_of_items: u64,
+}
+
+/// Typed `id_cache` key for `ADVANCED_BREP_SHAPE_REPRESENTATION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAdvancedBrepShapeRepresentationId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAdvancedBrepShapeRepresentationId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `APPROVAL_ROLE` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyApprovalRole {

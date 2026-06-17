@@ -607,25 +607,27 @@ impl WriteBuffer<'_> {
         Ok(())
     }
 
-    /// Build the `[name, items, context]` attrs of an
-    /// `ADVANCED_BREP_SHAPE_REPRESENTATION` from its arena items, preserving
-    /// source order. Shared by the pre-pass (solid ABSR) and the deferred pass
-    /// (assembly ABSR whose MAPPED_ITEM items emit later).
-    fn advanced_brep_attrs(
+    /// Build the L1 `EarlyAdvancedBrepShapeRepresentation` from an arena ABSR,
+    /// resolving items in source order. Shared by the pre-pass (solid ABSR) and
+    /// the deferred pass (assembly ABSR whose MAPPED_ITEM items emit later).
+    /// `context` is always an `EntityRef` here — `lower` drops any carrier whose
+    /// context did not resolve.
+    fn advanced_brep_early(
         &mut self,
         r: &crate::ir::shape_rep::AdvancedBrepRepr,
-    ) -> Result<Vec<Attribute>, WriteError> {
+    ) -> Result<crate::early::model::EarlyAdvancedBrepShapeRepresentation, WriteError> {
         let mut items = Vec::with_capacity(r.items.len());
         for it in &r.items {
-            items.push(Attribute::EntityRef(
-                self.emit_representation_item_ref(*it)?,
-            ));
+            items.push(self.emit_representation_item_ref(*it)?);
         }
-        Ok(vec![
-            Attribute::String(r.name.clone()),
-            Attribute::List(items),
-            self.repr_context_attr(r.context),
-        ])
+        let Attribute::EntityRef(context) = self.repr_context_attr(r.context) else {
+            unreachable!("ABSR context is guaranteed resolved by lower → EntityRef")
+        };
+        Ok(crate::early::lift::lift_advanced_brep_shape_representation(
+            r.name.clone(),
+            items,
+            context,
+        ))
     }
 
     /// Emit the bodies of assembly ABSRs whose step ids were reserved in
@@ -638,8 +640,10 @@ impl WriteBuffer<'_> {
         let reprs = self.model.shape_rep.representations.clone();
         for (rid, reserved) in deferred {
             if let Representation::AdvancedBrep(r) = &reprs[rid] {
-                let attrs = self.advanced_brep_attrs(r)?;
-                self.push_simple_with_id(reserved, "ADVANCED_BREP_SHAPE_REPRESENTATION", attrs);
+                let early = self.advanced_brep_early(r)?;
+                crate::early::serialize::serialize_advanced_brep_shape_representation_with_id(
+                    self, reserved, &early,
+                );
             }
         }
         Ok(())
@@ -661,8 +665,12 @@ impl WriteBuffer<'_> {
 
         match repr {
             Representation::AdvancedBrep(r) => {
-                let attrs = self.advanced_brep_attrs(r)?;
-                Ok(self.push_simple("ADVANCED_BREP_SHAPE_REPRESENTATION", attrs))
+                let early = self.advanced_brep_early(r)?;
+                Ok(
+                    crate::early::serialize::serialize_advanced_brep_shape_representation(
+                        self, &early,
+                    ),
+                )
             }
             Representation::ManifoldSurface(r) => {
                 let mut items = Vec::with_capacity(2);
@@ -700,15 +708,15 @@ impl WriteBuffer<'_> {
             Representation::Plain(r) => {
                 let mut items = Vec::with_capacity(1);
                 if let Some(frame) = r.frame {
-                    items.push(Attribute::EntityRef(self.emit_axis2_placement_3d(frame)?));
+                    items.push(self.emit_axis2_placement_3d(frame)?);
                 }
-                Ok(self.push_simple(
-                    "SHAPE_REPRESENTATION",
-                    vec![
-                        Attribute::String(r.name.clone()),
-                        Attribute::List(items),
-                        self.repr_context_attr(r.context),
-                    ],
+                let Attribute::EntityRef(context) = self.repr_context_attr(r.context) else {
+                    unreachable!("SR context is guaranteed resolved by lower → EntityRef")
+                };
+                let early =
+                    crate::early::lift::lift_shape_representation(r.name.clone(), items, context);
+                Ok(crate::early::serialize::serialize_shape_representation(
+                    self, &early,
                 ))
             }
             Representation::Wireframe(r) => {
@@ -1331,14 +1339,12 @@ impl WriteBuffer<'_> {
             return Ok(geo_sr);
         };
         let outer_axis = self.emit_axis2_placement_3d(outer_frame)?;
-        let plain_sr = self.push_simple(
-            "SHAPE_REPRESENTATION",
-            vec![
-                Attribute::String(String::new()),
-                Attribute::List(vec![Attribute::EntityRef(outer_axis)]),
-                Attribute::EntityRef(unit_ctx),
-            ],
+        let early = crate::early::lift::lift_shape_representation(
+            String::new(),
+            vec![outer_axis],
+            unit_ctx,
         );
+        let plain_sr = crate::early::serialize::serialize_shape_representation(self, &early);
         let _ = self.emit_simple_srr(plain_sr, geo_sr);
         Ok(plain_sr)
     }
