@@ -21,10 +21,8 @@ impl SimpleEntityHandler for PlaneAngleMeasureWithUnitHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        if ctx.cbu_internal_mwu_refs.contains(&entity_id) {
-            return Ok(());
-        }
-        let Some(early) = bind::bind_plane_angle_measure_with_unit(entity_id, attrs)? else {
+        let attrs = super::shared::normalize_bare_measure_attrs(attrs, "PLANE_ANGLE_MEASURE");
+        let Some(early) = bind::bind_plane_angle_measure_with_unit(entity_id, &attrs)? else {
             return Ok(());
         };
         lower::lower_plane_angle_measure_with_unit(ctx, entity_id, &early);

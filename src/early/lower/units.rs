@@ -302,7 +302,7 @@ pub(crate) fn lower_length_si(ctx: &mut ReaderContext, entity_id: u64, early: &E
         unit,
         cbu_base: None,
         dim_exp: None,
-        cbu_factor_bare: false,
+        cbu_factor_mwu_id: None,
     }));
     ctx.id_cache.insert(entity_id, id);
 }
@@ -333,6 +333,7 @@ pub(crate) fn lower_mass_si(ctx: &mut ReaderContext, entity_id: u64, early: &Ear
         unit,
         cbu_base: None,
         dim_exp: None,
+        cbu_factor_mwu_id: None,
     }));
     ctx.id_cache.insert(entity_id, id);
 }
@@ -365,6 +366,7 @@ pub(crate) fn lower_plane_angle_si(
             unit,
             cbu_base: None,
             dim_exp: None,
+            cbu_factor_mwu_id: None,
         }));
     ctx.id_cache.insert(entity_id, id);
 }

@@ -122,50 +122,6 @@ fn topo_order(graph: &EntityGraph) -> Vec<u64> {
 }
 
 impl ReaderContext {
-    /// For each CBU outer recorded in `cbu_outer_to_mwu`, look up its
-    /// conversion-factor MWU in `graph`, extract `unit_component` to get
-    /// the base SI's `entity_id`, then mutate the outer's flavor entry in
-    /// `named_units_arena` to set `cbu_base = Some(base_NamedUnitId)`.
-    fn backfill_cbu_base(&mut self, graph: &EntityGraph) {
-        use crate::ir::units::NamedUnit;
-        let pairs: Vec<(u64, u64)> = self
-            .cbu_outer_to_mwu
-            .iter()
-            .map(|(&o, &m)| (o, m))
-            .collect();
-        for (outer_id, mwu_id) in pairs {
-            let base_entity = match graph.entities.get(&mwu_id) {
-                Some(RawEntity::Simple { attributes, .. }) => {
-                    attributes.iter().find_map(|a| match a {
-                        // Typed wrapper: MEASURE_TYPE(real). Skip — that's the value.
-                        crate::parser::entity::Attribute::EntityRef(e) => Some(*e),
-                        _ => None,
-                    })
-                }
-                _ => None,
-            };
-            let Some(base_entity_id) = base_entity else {
-                continue;
-            };
-            let Some(base_nuid) = self
-                .id_cache
-                .get::<crate::ir::id::NamedUnitId>(base_entity_id)
-            else {
-                continue;
-            };
-            let Some(outer_nuid) = self.id_cache.get::<crate::ir::id::NamedUnitId>(outer_id) else {
-                continue;
-            };
-            match &mut self.named_units_arena.items[outer_nuid.0 as usize] {
-                NamedUnit::Length(f) => f.cbu_base = Some(base_nuid),
-                NamedUnit::PlaneAngle(f) => f.cbu_base = Some(base_nuid),
-                NamedUnit::Mass(f) => f.cbu_base = Some(base_nuid),
-                // SolidAngle / Ratio / bare Itself have no CBU variant.
-                NamedUnit::SolidAngle(_) | NamedUnit::Ratio(_) | NamedUnit::Itself(_) => {}
-            }
-        }
-    }
-
     /// Re-resolve `SHAPE_DIMENSION_REPRESENTATION` items deferred from the
     /// SDR handler (phase measure-arena-1). Runs once the complex
     /// `MEASURE_REPRESENTATION_ITEM` arena entries (and their
@@ -220,11 +176,12 @@ impl ReaderContext {
                     ),
                 });
         }
-        // Order-independent seeding of the CBU `conversion_factor` suppression
-        // set. Under topo the embedded MWU (a dependency) is processed before
-        // its CONVERSION_BASED_UNIT, so the set must be seeded up front or the
-        // MWU duplicates the inline conversion factor the writer re-emits.
-        self.prescan_cbu_internal_mwu_refs(graph);
+        // Order-independent seeding of the RATIO_UNIT CBU `conversion_factor`
+        // suppression set. RATIO_UNIT CBU forms aren't modelled yet (the handler
+        // drops them), so their factor MWU must be suppressed to avoid an orphan
+        // arena entry. Length / mass / plane-angle CBU factor MWUs are now
+        // *preserved* (units-CBU-①), so only ratio is seeded here.
+        self.prescan_ratio_cbu_mwu_refs(graph);
         let index = build_topo_index();
         for id in order {
             let Some(ent) = graph.get(id) else { continue };
@@ -246,26 +203,31 @@ impl ReaderContext {
             }
         }
         // Inline post-passes that `run_*_passes` ran mid-sequence — now after
-        // the single loop (all producers done; equivalent timing).
-        self.backfill_cbu_base(graph);
+        // the single loop (all producers done; equivalent timing). CBU base
+        // linkage is set inline at read time (units-CBU-①), so no backfill pass.
         self.resolve_deferred_sdr_items();
     }
 
-    /// Seed `cbu_internal_mwu_refs` from every `CONVERSION_BASED_UNIT`'s
-    /// `conversion_factor` ref (attr index 1) so the MWU handlers suppress the
-    /// embedded duplicate regardless of dispatch order. Mirrors the insert in
-    /// `read_conversion_based_unit_body` (which fires for any CBU name,
-    /// recognised or not), just hoisted ahead of the topo loop.
-    fn prescan_cbu_internal_mwu_refs(&mut self, graph: &EntityGraph) {
+    /// Seed `ratio_cbu_mwu_refs` from every `RATIO_UNIT` `CONVERSION_BASED_UNIT`'s
+    /// `conversion_factor` ref (attr index 1) so `RatioMeasureWithUnitHandler`
+    /// suppresses the embedded duplicate regardless of dispatch order. Only
+    /// `RATIO_UNIT` CBUs are seeded — length / mass / plane-angle factor MWUs are
+    /// preserved (units-CBU-①). A `CONVERSION_BASED_UNIT` part co-occurs with the
+    /// `RATIO_UNIT` part in the same complex entity.
+    fn prescan_ratio_cbu_mwu_refs(&mut self, graph: &EntityGraph) {
         for ent in graph.entities.values() {
             let RawEntity::Complex { parts, .. } = ent else {
                 continue;
             };
+            let is_ratio = parts.iter().any(|p| p.name == "RATIO_UNIT");
+            if !is_ratio {
+                continue;
+            }
             for part in parts {
                 if part.name == "CONVERSION_BASED_UNIT"
                     && let Some(Attribute::EntityRef(r)) = part.attributes.get(1)
                 {
-                    self.cbu_internal_mwu_refs.insert(*r);
+                    self.ratio_cbu_mwu_refs.insert(*r);
                 }
             }
         }

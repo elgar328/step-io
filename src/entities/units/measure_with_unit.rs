@@ -31,12 +31,6 @@ impl SimpleEntityHandler for MeasureWithUnitHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        // A bare MWU used as a CONVERSION_BASED_UNIT conversion factor is
-        // re-emitted inline by the CBU path — keep it out of the arena to avoid
-        // double-emit (mirrors the typed MWU handlers).
-        if ctx.cbu_internal_mwu_refs.contains(&entity_id) {
-            return Ok(());
-        }
         let Some(early) = bind::bind_measure_with_unit(entity_id, attrs)? else {
             return Ok(()); // value_component (measure_value) did not bind — drop
         };

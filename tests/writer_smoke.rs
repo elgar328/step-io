@@ -36,7 +36,7 @@ use step_io::ir::shape_rep::{
     ShapeAspectRelationshipKind, SolidAngleUnit, UnitContext,
 };
 use step_io::ir::topology::{Face, FaceData, Orientation, Shell, Solid, Wire, WireData};
-use step_io::ir::units::{MassFlavor, MassUnit, NamedUnit, UnitsPool};
+use step_io::ir::units::{MassUnit, NamedUnit, UnitsPool};
 use step_io::ir::visualization::{
     CameraModel, CameraModelD3, FoundedItem, Projection, ViewVolume, VisualizationPool,
 };
@@ -2550,16 +2550,9 @@ fn gram_conversion_based_unit_round_trips() {
     // `reconvert` asserts the reader produced no warnings.
     let mut model = empty_model();
     let mut pool = UnitsPool::default();
-    let kg = pool.named_units.push(NamedUnit::Mass(MassFlavor {
-        unit: MassUnit::Kilogram,
-        cbu_base: None,
-        dim_exp: None,
-    }));
-    pool.named_units.push(NamedUnit::Mass(MassFlavor {
-        unit: MassUnit::Gram,
-        cbu_base: Some(kg),
-        dim_exp: None,
-    }));
+    // push_cbu_mass pushes the base SI kilogram, the preserved conversion-factor
+    // MASS_MEASURE_WITH_UNIT, and the gram CBU outer (cbu_factor_mwu_id set).
+    pool.push_cbu_mass(MassUnit::Gram, MassUnit::Kilogram);
     model.units_pool = Some(pool);
 
     let text = model.write_to_string().expect("write");
@@ -2588,11 +2581,7 @@ fn megagram_si_unit_round_trips() {
     // reader warnings.
     let mut model = empty_model();
     let mut pool = UnitsPool::default();
-    pool.named_units.push(NamedUnit::Mass(MassFlavor {
-        unit: MassUnit::Megagram,
-        cbu_base: None,
-        dim_exp: None,
-    }));
+    pool.push_plain_mass(MassUnit::Megagram);
     model.units_pool = Some(pool);
 
     let text = model.write_to_string().expect("write");
@@ -2621,22 +2610,9 @@ fn ton_conversion_based_unit_round_trips() {
     // wrapper, not `(MEGA, GRAM)`. Ton and Megagram coexist.
     let mut model = empty_model();
     let mut pool = UnitsPool::default();
-    let kg = pool.named_units.push(NamedUnit::Mass(MassFlavor {
-        unit: MassUnit::Kilogram,
-        cbu_base: None,
-        dim_exp: None,
-    }));
-    pool.named_units.push(NamedUnit::Mass(MassFlavor {
-        unit: MassUnit::Ton,
-        cbu_base: Some(kg),
-        dim_exp: None,
-    }));
+    pool.push_cbu_mass(MassUnit::Ton, MassUnit::Kilogram);
     // A coexisting plain-SI megagram (also 1000 kg, different form).
-    pool.named_units.push(NamedUnit::Mass(MassFlavor {
-        unit: MassUnit::Megagram,
-        cbu_base: None,
-        dim_exp: None,
-    }));
+    pool.push_plain_mass(MassUnit::Megagram);
     model.units_pool = Some(pool);
 
     let text = model.write_to_string().expect("write");

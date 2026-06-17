@@ -55,8 +55,18 @@ impl WriteBuffer<'_> {
             let reserved = self.fresh();
             self.set_step_id(id, reserved);
         }
-        // Now emit each entry at its reserved id. Sub-entities (DE, MWU)
-        // use `fresh()` and get ids after the reservation block.
+        // Emit the MEASURE_WITH_UNIT arena BEFORE the NamedUnit entries:
+        // a CBU outer references its preserved conversion-factor MWU
+        // (`cbu_factor_mwu_id`), so the MWU's step id must exist first. The
+        // MWU's own `unit` (base SI) resolves through the pre-reserved NamedUnit
+        // block above. (units-CBU-① preservation: the factor MWU is no longer
+        // regenerated inline by the CBU emit path.)
+        for (id, mwu) in pool.measure_with_units.iter_with_ids() {
+            let step = emit_measure_with_unit(self, mwu)?;
+            self.set_step_id(id, step);
+        }
+        // Now emit each NamedUnit at its reserved id. Sub-entities (DE) use
+        // `fresh()` and get ids after the reservation block.
         let entries: Vec<(crate::ir::id::NamedUnitId, NamedUnit)> = pool
             .named_units
             .iter_with_ids()
@@ -64,16 +74,16 @@ impl WriteBuffer<'_> {
             .collect();
         for (id, named) in entries {
             let target = self.step_id(id);
-            if let Some(base_id) = cbu_base_of(&named) {
-                let base_step = self.step_id(base_id);
-                emit_named_unit_cbu(self, named, base_step, target)?;
+            if cbu_base_of(&named).is_some() {
+                let measure_step = cbu_factor_mwu_id_of(&named)
+                    .map(|m| self.step_id(m))
+                    .ok_or_else(|| WriteError::UnsupportedIrVariant {
+                        detail: "CBU NamedUnit is missing its cbu_factor_mwu_id".into(),
+                    })?;
+                emit_named_unit_cbu(self, named, measure_step, target)?;
             } else {
                 emit_named_unit_plain(self, named, target)?;
             }
-        }
-        for (id, mwu) in pool.measure_with_units.iter_with_ids() {
-            let step = emit_measure_with_unit(self, mwu)?;
-            self.set_step_id(id, step);
         }
         for (id, due) in pool.derived_unit_elements.iter_with_ids() {
             let unit_step = self.step_id(due.unit);
@@ -135,6 +145,17 @@ fn cbu_base_of(named: &NamedUnit) -> Option<crate::ir::id::NamedUnitId> {
         NamedUnit::PlaneAngle(f) => f.cbu_base,
         NamedUnit::SolidAngle(_) | NamedUnit::Ratio(_) | NamedUnit::Itself(_) => None,
         NamedUnit::Mass(f) => f.cbu_base,
+    }
+}
+
+/// The preserved conversion-factor `MEASURE_WITH_UNIT` of a CBU outer
+/// (units-CBU-① preservation). `None` for plain SI / non-CBU flavours.
+fn cbu_factor_mwu_id_of(named: &NamedUnit) -> Option<crate::ir::id::MeasureWithUnitId> {
+    match named {
+        NamedUnit::Length(f) => f.cbu_factor_mwu_id,
+        NamedUnit::PlaneAngle(f) => f.cbu_factor_mwu_id,
+        NamedUnit::Mass(f) => f.cbu_factor_mwu_id,
+        NamedUnit::SolidAngle(_) | NamedUnit::Ratio(_) | NamedUnit::Itself(_) => None,
     }
 }
 
@@ -205,7 +226,7 @@ fn emit_named_unit_plain(
 fn emit_named_unit_cbu(
     buf: &mut WriteBuffer<'_>,
     named: NamedUnit,
-    base_step: u64,
+    measure_step: u64,
     target_id: u64,
 ) -> Result<u64, WriteError> {
     use crate::entities::units::length_unit::emit_length_cbu_outer;
@@ -217,21 +238,24 @@ fn emit_named_unit_cbu(
         NamedUnit::Length(f) => Ok(emit_length_cbu_outer(
             buf,
             f.unit,
-            base_step,
+            measure_step,
             target_id,
             dim_exp_step(f.dim_exp),
-            f.cbu_factor_bare,
         )),
         NamedUnit::PlaneAngle(f) => Ok(emit_plane_angle_cbu_outer(
             buf,
             f.unit,
-            base_step,
+            measure_step,
             target_id,
             dim_exp_step(f.dim_exp),
         )),
-        NamedUnit::Mass(f) => {
-            emit_mass_cbu_outer(buf, f.unit, base_step, target_id, dim_exp_step(f.dim_exp))
-        }
+        NamedUnit::Mass(f) => emit_mass_cbu_outer(
+            buf,
+            f.unit,
+            measure_step,
+            target_id,
+            dim_exp_step(f.dim_exp),
+        ),
         // SolidAngle / Ratio / bare Itself have no CBU variant; fall through.
         NamedUnit::SolidAngle(_) | NamedUnit::Ratio(_) | NamedUnit::Itself(_) => {
             emit_named_unit_plain(buf, named, target_id)
@@ -422,7 +446,12 @@ mod tests {
         ));
         let out = model.write_to_string().expect("write");
         assert!(out.contains("CONVERSION_BASED_UNIT('INCH'"), "{out}");
-        assert!(out.contains("LENGTH_MEASURE_WITH_UNIT(25.4"), "{out}");
+        // units-CBU-①: the preserved factor MWU re-emits in the canonical typed
+        // form `LENGTH_MEASURE(25.4)` (corpus form), not a bare real.
+        assert!(
+            out.contains("LENGTH_MEASURE_WITH_UNIT(LENGTH_MEASURE(25.4)"),
+            "{out}"
+        );
         assert!(out.contains("DIMENSIONAL_EXPONENTS(1."), "{out}");
         assert!(out.contains("(.MILLI.,.METRE.)"), "{out}");
     }
@@ -436,7 +465,10 @@ mod tests {
         ));
         let out = model.write_to_string().expect("write");
         assert!(out.contains("CONVERSION_BASED_UNIT('FOOT'"), "{out}");
-        assert!(out.contains("LENGTH_MEASURE_WITH_UNIT(304.8"), "{out}");
+        assert!(
+            out.contains("LENGTH_MEASURE_WITH_UNIT(LENGTH_MEASURE(304.8)"),
+            "{out}"
+        );
         assert!(out.contains("(.MILLI.,.METRE.)"), "{out}");
     }
 
@@ -450,7 +482,7 @@ mod tests {
         let out = model.write_to_string().expect("write");
         assert!(out.contains("CONVERSION_BASED_UNIT('DEGREE'"), "{out}");
         assert!(
-            out.contains("PLANE_ANGLE_MEASURE_WITH_UNIT(0.017453"),
+            out.contains("PLANE_ANGLE_MEASURE_WITH_UNIT(PLANE_ANGLE_MEASURE(0.017453"),
             "{out}"
         );
         assert!(out.contains("DIMENSIONAL_EXPONENTS(0."), "{out}");
@@ -550,7 +582,7 @@ mod tests {
             text.contains("CONVERSION_BASED_UNIT('METRE'"),
             "writer must emit CBU('METRE') for self-wrap length: {text}"
         );
-        assert!(text.contains("LENGTH_MEASURE_WITH_UNIT(1."));
+        assert!(text.contains("LENGTH_MEASURE_WITH_UNIT(LENGTH_MEASURE(1."));
         assert!(text.contains("DIMENSIONAL_EXPONENTS(1."));
 
         let graph = parse(&text).expect("re-parse");

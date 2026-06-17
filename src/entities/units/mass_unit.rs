@@ -17,7 +17,9 @@
 
 use crate::early::{bind, lift, lower, serialize};
 use crate::entities::ComplexEntityHandler;
-use crate::entities::units::shared::{CbuFlavor, has_part, read_conversion_based_unit_body};
+use crate::entities::units::shared::{
+    CbuFactorRefs, CbuFlavor, has_part, read_conversion_based_unit_body,
+};
 use crate::ir::error::ConvertError;
 use crate::ir::units::{MassFlavor, MassUnit, NamedUnit};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
@@ -47,11 +49,13 @@ impl ComplexEntityHandler for MassUnitHandler {
     ) -> Result<(), ConvertError> {
         // CONVERSION_BASED_UNIT (Pound / gram / ton) takes precedence: the CBU
         // name is the authoritative identity. CBU path stays hand-written
-        // (graph-walk + backfill); SI path is 2-layer.
+        // (graph-walk identification); the preserved conversion-factor MWU is
+        // referenced via `cbu_factor_mwu_id`. SI path is 2-layer.
         if has_part(parts, "CONVERSION_BASED_UNIT") {
-            read_conversion_based_unit_body(ctx, entity_id, parts, CbuFlavor::Mass, graph)?;
+            let refs =
+                read_conversion_based_unit_body(ctx, entity_id, parts, CbuFlavor::Mass, graph)?;
             let dim_exp = super::shared::read_named_unit_dim_exp(ctx, parts);
-            register_named_mass(ctx, entity_id, None, dim_exp);
+            register_named_mass(ctx, entity_id, refs, dim_exp);
             return Ok(());
         }
         let early = bind::bind_mass_unit(entity_id, parts)?;
@@ -71,71 +75,61 @@ impl ComplexEntityHandler for MassUnitHandler {
 }
 
 /// Push a `NamedUnit::Mass` entry once the SI / CBU branch has resolved
-/// the unit into `mass_unit_map`. Mirrors `register_named_length` —
-/// `cbu_base` is set to `None` here and patched by the
-/// `backfill_cbu_base` post-pass once the outer↔base SI link is known.
+/// the unit into `mass_unit_map`. Mirrors `register_named_length` — CBU outers
+/// receive their resolved [`CbuFactorRefs`] (base SI + preserved factor MWU)
+/// inline; plain SI never reaches this path (it lowers via `lower_mass_si`).
 fn register_named_mass(
     ctx: &mut ReaderContext,
     entity_id: u64,
-    cbu_base: Option<crate::ir::id::NamedUnitId>,
+    refs: Option<CbuFactorRefs>,
     dim_exp: Option<crate::ir::DimensionalExponentsId>,
 ) {
     if let Some(&unit) = ctx.mass_unit_map.get(&entity_id) {
+        let (cbu_base, cbu_factor_mwu_id) =
+            refs.map_or((None, None), |r| (r.cbu_base, r.cbu_factor_mwu_id));
         let flavor = MassFlavor {
             unit,
             cbu_base,
             dim_exp,
+            cbu_factor_mwu_id,
         };
         let id = ctx.named_units_arena.push(NamedUnit::Mass(flavor));
         ctx.id_cache.insert(entity_id, id);
     }
 }
 
-/// Emit a `CONVERSION_BASED_UNIT` mass outer at `target_id` wrapping the
-/// already-emitted base SI kilogram at `base_step` — Pound (0.45359237) or
-/// gram (0.001). Returns `Result` to mirror the dispatcher signature.
-#[allow(clippy::unnecessary_wraps)]
+/// Emit a `CONVERSION_BASED_UNIT` mass outer at `target_id` referencing the
+/// **preserved** conversion-factor `MASS_MEASURE_WITH_UNIT` at `measure_step`
+/// (emitted earlier in the units pool). The base SI kilogram is reached through
+/// that MWU. Pound / gram / ton only. Kilogram / Megagram are plain SI and must
+/// not reach the CBU path (`cbu_base` is `None` → plain dispatch).
 pub(crate) fn emit_mass_cbu_outer(
     buf: &mut WriteBuffer,
     unit: MassUnit,
-    base_step: u64,
+    measure_step: u64,
     target_id: u64,
     dim_exp_step: u64,
 ) -> Result<u64, WriteError> {
-    let (name, factor) = match unit {
-        MassUnit::Pound => ("POUND", 0.453_592_37),
-        MassUnit::Gram => ("GRAM", 0.001),
+    let name = match unit {
+        MassUnit::Pound => "POUND",
+        MassUnit::Gram => "GRAM",
         // Lowercase 'ton' matches the corpus spelling; the reader discards the
         // CBU name string, so the writer must reproduce the source casing to
         // keep the round-trip multiset stable (uppercase "TON" would differ).
-        MassUnit::Ton => ("ton", 1000.0),
-        // Kilogram / Megagram reaching the CBU path is unexpected (both are
-        // plain SI; kernel-built IR) — fall back to the already-emitted base
-        // step id (no extra entity).
-        MassUnit::Kilogram | MassUnit::Megagram => return Ok(base_step),
+        MassUnit::Ton => "ton",
+        MassUnit::Kilogram | MassUnit::Megagram => {
+            return Err(WriteError::UnsupportedIrVariant {
+                detail: format!(
+                    "plain-SI mass unit {unit:?} reached the CONVERSION_BASED_UNIT emit path"
+                ),
+            });
+        }
     };
-    // Reference the flavour's own DE (IR arena) when present so the round-trip
-    // is idempotent; only synthesize for kernel-built IR. See
-    // `length_unit::emit_conversion_based_length`.
     let dim_exp = if dim_exp_step != 0 {
         dim_exp_step
     } else {
         emit_mass_dim_exponents(buf)
     };
-    let measure = buf.fresh();
-    buf.entities.push(WriterEntity {
-        id: measure,
-        body: WriterBody::Simple {
-            name: "MASS_MEASURE_WITH_UNIT".into(),
-            attrs: vec![
-                Attribute::Typed {
-                    type_name: "MASS_MEASURE".into(),
-                    value: Box::new(Attribute::Real(factor)),
-                },
-                Attribute::EntityRef(base_step),
-            ],
-        },
-    });
     buf.entities.push(WriterEntity {
         id: target_id,
         body: WriterBody::Complex {
@@ -144,7 +138,7 @@ pub(crate) fn emit_mass_cbu_outer(
                     "CONVERSION_BASED_UNIT".into(),
                     vec![
                         Attribute::String(name.into()),
-                        Attribute::EntityRef(measure),
+                        Attribute::EntityRef(measure_step),
                     ],
                 ),
                 ("MASS_UNIT".into(), vec![]),

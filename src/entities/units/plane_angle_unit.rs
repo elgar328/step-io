@@ -7,10 +7,10 @@
 use crate::early::{bind, lift, lower, serialize};
 use crate::entities::ComplexEntityHandler;
 use crate::entities::units::shared::{
-    CbuFlavor, emit_dimensionless_exponents, has_part, read_conversion_based_unit_body,
+    CbuFactorRefs, CbuFlavor, emit_dimensionless_exponents, has_part,
+    read_conversion_based_unit_body,
 };
 use crate::ir::error::ConvertError;
-use crate::ir::id::NamedUnitId;
 use crate::ir::shape_rep::AngleUnit;
 use crate::ir::units::{NamedUnit, PlaneAngleFlavor};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
@@ -40,11 +40,18 @@ impl ComplexEntityHandler for PlaneAngleUnitHandler {
     ) -> Result<(), ConvertError> {
         // CONVERSION_BASED_UNIT (Degree, or CBU-wrapped radian) takes precedence:
         // the CBU name is the authoritative identity. CBU path stays hand-written
-        // (graph-walk + backfill); SI path is 2-layer.
+        // (graph-walk identification); the preserved conversion-factor MWU is
+        // referenced via `cbu_factor_mwu_id`. SI path is 2-layer.
         if has_part(parts, "CONVERSION_BASED_UNIT") {
-            read_conversion_based_unit_body(ctx, entity_id, parts, CbuFlavor::PlaneAngle, graph)?;
+            let refs = read_conversion_based_unit_body(
+                ctx,
+                entity_id,
+                parts,
+                CbuFlavor::PlaneAngle,
+                graph,
+            )?;
             let dim_exp = super::shared::read_named_unit_dim_exp(ctx, parts);
-            register_named_plane_angle(ctx, entity_id, None, dim_exp);
+            register_named_plane_angle(ctx, entity_id, refs, dim_exp);
             return Ok(());
         }
         let early = bind::bind_plane_angle_unit(entity_id, parts)?;
@@ -64,67 +71,26 @@ impl ComplexEntityHandler for PlaneAngleUnitHandler {
     }
 }
 
-/// Emit a `CONVERSION_BASED_UNIT` plane-angle outer at `target_id` wrapping
-/// the already-emitted base SI radian at `base_step`.
+/// Emit a `CONVERSION_BASED_UNIT` plane-angle outer at `target_id` referencing
+/// the **preserved** conversion-factor `PLANE_ANGLE_MEASURE_WITH_UNIT` at
+/// `measure_step` (emitted earlier in the units pool). Used for Degree and the
+/// RADIAN self-wrap. The base SI radian is reached through that MWU.
 pub(crate) fn emit_plane_angle_cbu_outer(
     buf: &mut WriteBuffer,
     unit: AngleUnit,
-    base_step: u64,
+    measure_step: u64,
     target_id: u64,
     dim_exp_step: u64,
 ) -> u64 {
-    let (name, factor) = match unit {
-        AngleUnit::Radian => ("RADIAN", 1.0),
-        AngleUnit::Degree => ("DEGREE", std::f64::consts::PI / 180.0),
+    let name = match unit {
+        AngleUnit::Radian => "RADIAN",
+        AngleUnit::Degree => "DEGREE",
     };
-    emit_conversion_based_angle(buf, name, factor, base_step, target_id, dim_exp_step)
-}
-
-/// See `length_unit::register_named_length` for the rationale.
-fn register_named_plane_angle(
-    ctx: &mut ReaderContext,
-    entity_id: u64,
-    cbu_base: Option<NamedUnitId>,
-    dim_exp: Option<crate::ir::DimensionalExponentsId>,
-) {
-    if let Some(&unit) = ctx.angle_unit_map.get(&entity_id) {
-        let flavor = PlaneAngleFlavor {
-            unit,
-            cbu_base,
-            dim_exp,
-        };
-        let id = ctx.named_units_arena.push(NamedUnit::PlaneAngle(flavor));
-        ctx.id_cache.insert(entity_id, id);
-    }
-}
-
-/// Emit a `CONVERSION_BASED_UNIT` plane-angle outer at `target_id` wrapping
-/// the already-emitted base SI at `base_step`. Used for Degree (factor π/180)
-/// and CBU(RADIAN) self-wrap (factor 1.0).
-fn emit_conversion_based_angle(
-    buf: &mut WriteBuffer,
-    name: &str,
-    factor: f64,
-    base_step: u64,
-    target_id: u64,
-    dim_exp_step: u64,
-) -> u64 {
-    // Reference the flavour's own DE (IR arena) when present so the round-trip
-    // is idempotent; only synthesize for kernel-built IR. See
-    // `length_unit::emit_conversion_based_length`.
     let dim_exp = if dim_exp_step != 0 {
         dim_exp_step
     } else {
         emit_dimensionless_exponents(buf)
     };
-    let measure = buf.fresh();
-    buf.entities.push(WriterEntity {
-        id: measure,
-        body: WriterBody::Simple {
-            name: "PLANE_ANGLE_MEASURE_WITH_UNIT".into(),
-            attrs: vec![Attribute::Real(factor), Attribute::EntityRef(base_step)],
-        },
-    });
     buf.entities.push(WriterEntity {
         id: target_id,
         body: WriterBody::Complex {
@@ -133,7 +99,7 @@ fn emit_conversion_based_angle(
                     "CONVERSION_BASED_UNIT".into(),
                     vec![
                         Attribute::String(name.into()),
-                        Attribute::EntityRef(measure),
+                        Attribute::EntityRef(measure_step),
                     ],
                 ),
                 ("NAMED_UNIT".into(), vec![Attribute::EntityRef(dim_exp)]),
@@ -142,4 +108,25 @@ fn emit_conversion_based_angle(
         },
     });
     target_id
+}
+
+/// See `length_unit::register_named_length` for the rationale.
+fn register_named_plane_angle(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    refs: Option<CbuFactorRefs>,
+    dim_exp: Option<crate::ir::DimensionalExponentsId>,
+) {
+    if let Some(&unit) = ctx.angle_unit_map.get(&entity_id) {
+        let (cbu_base, cbu_factor_mwu_id) =
+            refs.map_or((None, None), |r| (r.cbu_base, r.cbu_factor_mwu_id));
+        let flavor = PlaneAngleFlavor {
+            unit,
+            cbu_base,
+            dim_exp,
+            cbu_factor_mwu_id,
+        };
+        let id = ctx.named_units_arena.push(NamedUnit::PlaneAngle(flavor));
+        ctx.id_cache.insert(entity_id, id);
+    }
 }

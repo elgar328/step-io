@@ -13,6 +13,7 @@
 
 use crate::ir::attr::{check_count, read_string_or_unset};
 use crate::ir::error::ConvertError;
+use crate::ir::id::{MeasureWithUnitId, NamedUnitId};
 use crate::ir::shape_rep::{AngleUnit, LengthUnit};
 use crate::ir::units::MassUnit;
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
@@ -20,8 +21,42 @@ use crate::reader::{ReaderContext, find_part_attrs, has_all_parts, require_part_
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
 
+/// Resolved CBU outer back-references (units-CBU-① preservation): the base SI
+/// `NamedUnit` and the preserved `conversion_factor` `MEASURE_WITH_UNIT`. Both
+/// are already lowered when `read_conversion_based_unit_body` runs (topo: the
+/// embedded MWU and its base SI are dependencies of the CBU outer), so they
+/// resolve through `id_cache` inline — no `backfill_cbu_base` post-pass.
+pub(super) struct CbuFactorRefs {
+    pub(super) cbu_base: Option<NamedUnitId>,
+    pub(super) cbu_factor_mwu_id: Option<MeasureWithUnitId>,
+}
+
 pub(super) fn has_part(parts: &[RawEntityPart], name: &str) -> bool {
     has_all_parts(parts, &[name])
+}
+
+/// Normalize a bare (untyped) numeric `value_component` to the typed measure
+/// form the generated `bind_measure_value` (a `measure_value` SELECT bind)
+/// expects. The typed `*_MEASURE_WITH_UNIT` subtypes redeclare `value_component`
+/// to a concrete measure REAL, so some exporters write the standard plain
+/// `25.4` rather than the supertype-style `LENGTH_MEASURE(25.4)` (e.g. a
+/// `CONVERSION_BASED_UNIT` conversion factor, NIST `fillet_box`). The SELECT
+/// bind only matches the typed form, so the handler rewrites the plain
+/// real/integer to the subtype's measure type before binding (reader-side
+/// leniency; the generated bind stays strict). Typed inputs pass through
+/// unchanged.
+pub(super) fn normalize_bare_measure_attrs(
+    attrs: &[Attribute],
+    measure_type: &str,
+) -> Vec<Attribute> {
+    let mut out = attrs.to_vec();
+    if let Some(first @ (Attribute::Real(_) | Attribute::Integer(_))) = out.first().cloned() {
+        out[0] = Attribute::Typed {
+            type_name: measure_type.into(),
+            value: Box::new(first),
+        };
+    }
+    out
 }
 
 pub(super) fn match_length_conversion(upper_name: &str) -> Option<LengthUnit> {
@@ -128,16 +163,17 @@ fn match_mass_by_factor(factor: f64) -> Option<MassUnit> {
 /// identified **by conversion factor first, name second** — a non-standard
 /// name (e.g. a degree unit named `'MIAU'`) is normalized to the standard
 /// unit when its factor matches. Length keeps name-matching (its base varies).
-/// Unrecognised CBUs are dropped with a warning and **not** recorded in
-/// `cbu_outer_to_mwu` — the outer never reaches `NamedUnit` registration so
-/// the backfill lookup would be a dead entry.
+/// Unrecognised CBUs are dropped with a warning and return `None` (the outer
+/// never reaches `NamedUnit` registration). A recognised CBU returns the
+/// resolved [`CbuFactorRefs`] (base SI + preserved factor MWU), which the
+/// caller threads into `register_named_*`.
 pub(super) fn read_conversion_based_unit_body(
     ctx: &mut ReaderContext,
     entity_id: u64,
     parts: &[RawEntityPart],
     flavor: CbuFlavor,
     graph: &EntityGraph,
-) -> Result<(), ConvertError> {
+) -> Result<Option<CbuFactorRefs>, ConvertError> {
     let cbu_attrs = require_part_attrs(parts, "CONVERSION_BASED_UNIT", entity_id)?;
     check_count(cbu_attrs, 2, entity_id, "CONVERSION_BASED_UNIT")?;
     let name = read_string_or_unset(cbu_attrs, 0, entity_id, "name")?;
@@ -146,20 +182,6 @@ pub(super) fn read_conversion_based_unit_body(
         Some(Attribute::EntityRef(r)) => Some(*r),
         _ => None,
     };
-    // units-1: always suppress the embedded `conversion_factor` MWU duplicate;
-    // `cbu_outer_to_mwu` is populated only on recognised names so the
-    // `backfill_cbu_base` post-pass never chases a dead outer.
-    if let Some(r) = mwu_ref {
-        ctx.cbu_internal_mwu_refs.insert(r);
-        // For LENGTH CBUs, remember whether the conversion_factor used the bare
-        // MEASURE_WITH_UNIT supertype (vs the LENGTH_MEASURE_WITH_UNIT subtype)
-        // so the writer reproduces the input entity form (NIST ctc_05 inch).
-        if matches!(flavor, CbuFlavor::Length)
-            && matches!(graph.get(r), Some(RawEntity::Simple { name, .. }) if name == "MEASURE_WITH_UNIT")
-        {
-            ctx.length_cbu_factor_bare.insert(entity_id);
-        }
-    }
     let factor = mwu_ref.and_then(|r| cbu_factor(graph, r));
 
     let recognised = match flavor {
@@ -237,9 +259,37 @@ pub(super) fn read_conversion_based_unit_body(
         }
     };
     if recognised && let Some(r) = mwu_ref {
-        ctx.cbu_outer_to_mwu.insert(entity_id, r);
+        Ok(Some(resolve_cbu_factor_refs(ctx, r, graph)))
+    } else {
+        Ok(None)
     }
-    Ok(())
+}
+
+/// Resolve a recognised CBU outer's [`CbuFactorRefs`] from its
+/// `conversion_factor` MWU ref. The MWU is preserved in `mwu_arena` (its
+/// `MeasureWithUnitId`) and its `unit_component` is the base SI's
+/// `NamedUnitId` — both already in `id_cache` (topo dependencies).
+fn resolve_cbu_factor_refs(
+    ctx: &ReaderContext,
+    mwu_ref: u64,
+    graph: &EntityGraph,
+) -> CbuFactorRefs {
+    let cbu_factor_mwu_id = ctx.id_cache.get::<MeasureWithUnitId>(mwu_ref);
+    let cbu_base = graph
+        .entities
+        .get(&mwu_ref)
+        .and_then(|e| match e {
+            RawEntity::Simple { attributes, .. } => attributes.iter().find_map(|a| match a {
+                Attribute::EntityRef(b) => Some(*b),
+                _ => None,
+            }),
+            RawEntity::Complex { .. } => None,
+        })
+        .and_then(|base_eid| ctx.id_cache.get::<NamedUnitId>(base_eid));
+    CbuFactorRefs {
+        cbu_base,
+        cbu_factor_mwu_id,
+    }
 }
 
 /// Emit the length-flavour `DIMENSIONAL_EXPONENTS` (1, 0, 0, 0, 0, 0, 0)

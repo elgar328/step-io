@@ -226,25 +226,12 @@ pub struct ReaderContext {
     /// look up the ref in [`Self::dim_exp_id_map`].
     pub(crate) dimensional_exponents: Arena<crate::ir::units::DimensionalExponents>,
 
-    /// MWU step ids that appear as the `conversion_factor` of a
-    /// `CONVERSION_BASED_UNIT` complex (units-1). Populated by the unit
-    /// complex handlers and consulted by the `MEASURE_WITH_UNIT` readers —
-    /// those MWUs are re-emitted inline by the CBU writer
-    /// chain, so adding them to `mwu_arena` would cause double-emit on
-    /// round-trip.
-    pub(crate) cbu_internal_mwu_refs: HashSet<u64>,
-    /// LENGTH `CONVERSION_BASED_UNIT` outer `entity_id`s whose
-    /// `conversion_factor` was a **bare** `MEASURE_WITH_UNIT` (supertype) rather
-    /// than the `LENGTH_MEASURE_WITH_UNIT` subtype (NIST `ctc_05` inch). Consumed
-    /// by `register_named_length` to set `LengthFlavor.cbu_factor_bare` so the
-    /// writer reproduces the input entity form (multiset-stable).
-    pub(crate) length_cbu_factor_bare: HashSet<u64>,
-    /// units-2: `CBU outer entity_id → conversion_factor MWU entity_id`.
-    /// Populated by `read_conversion_based_unit_body` (`LENGTH` / `PLANE_ANGLE`
-    /// / `MASS` branches) and consumed by the `backfill_cbu_base` post-pass
-    /// to set each outer's `LengthFlavor.cbu_base` (etc.) to the
-    /// `NamedUnitId` of its base SI entry.
-    pub(crate) cbu_outer_to_mwu: HashMap<u64, u64>,
+    /// MWU step ids that appear as the `conversion_factor` of a `RATIO_UNIT`
+    /// `CONVERSION_BASED_UNIT` complex. `RATIO_UNIT` CBU forms aren't modelled
+    /// yet (the handler drops them), so `RatioMeasureWithUnitHandler` suppresses
+    /// their factor MWU to avoid an orphan `mwu_arena` entry. Length / mass /
+    /// plane-angle factor MWUs are *preserved* (units-CBU-①) and not seeded here.
+    pub(crate) ratio_cbu_mwu_refs: HashSet<u64>,
     /// `UNCERTAINTY_MEASURE_WITH_UNIT #N → value+metadata` for uncertainty
     /// entities whose `unit_component` resolved to a length unit. Populated
     /// when `UNCERTAINTY_MEASURE_WITH_UNIT` entities are read.

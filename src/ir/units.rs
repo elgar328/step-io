@@ -12,7 +12,7 @@
 //! (no inline base-SI generation that would shift arena indices).
 
 use super::arena::Arena;
-use super::id::NamedUnitId;
+use super::id::{MeasureWithUnitId, NamedUnitId};
 use super::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit};
 
 /// Container for the `units` pool entities.
@@ -50,21 +50,26 @@ impl UnitsPool {
             unit,
             cbu_base: None,
             dim_exp: None,
-            cbu_factor_bare: false,
+            cbu_factor_mwu_id: None,
         }))
     }
 
     /// Push a `CONVERSION_BASED_UNIT` length outer that wraps `base`.
     /// `base` should be an SI length (Millimetre / Metre / Centimetre);
-    /// it is pushed first as a plain SI entry and the outer references it.
-    /// Self-wrap (outer == base) is preserved structurally via `cbu_base`.
+    /// it is pushed first as a plain SI entry, then the preserved
+    /// conversion-factor `MEASURE_WITH_UNIT` (referencing `base`), and the
+    /// outer references both via `cbu_base` + `cbu_factor_mwu_id`.
     pub fn push_cbu_length(&mut self, outer: LengthUnit, base: LengthUnit) -> NamedUnitId {
         let base_id = self.push_plain_length(base);
+        let mwu_id = self.measure_with_units.push(MeasureWithUnit::Length {
+            value: length_cbu_factor(outer),
+            unit: base_id,
+        });
         self.named_units.push(NamedUnit::Length(LengthFlavor {
             unit: outer,
             cbu_base: Some(base_id),
             dim_exp: None,
-            cbu_factor_bare: false,
+            cbu_factor_mwu_id: Some(mwu_id),
         }))
     }
 
@@ -74,16 +79,22 @@ impl UnitsPool {
                 unit,
                 cbu_base: None,
                 dim_exp: None,
+                cbu_factor_mwu_id: None,
             }))
     }
 
     pub fn push_cbu_plane_angle(&mut self, outer: AngleUnit, base: AngleUnit) -> NamedUnitId {
         let base_id = self.push_plain_plane_angle(base);
+        let mwu_id = self.measure_with_units.push(MeasureWithUnit::PlaneAngle {
+            value: plane_angle_cbu_factor(outer),
+            unit: base_id,
+        });
         self.named_units
             .push(NamedUnit::PlaneAngle(PlaneAngleFlavor {
                 unit: outer,
                 cbu_base: Some(base_id),
                 dim_exp: None,
+                cbu_factor_mwu_id: Some(mwu_id),
             }))
     }
 
@@ -100,16 +111,52 @@ impl UnitsPool {
             unit,
             cbu_base: None,
             dim_exp: None,
+            cbu_factor_mwu_id: None,
         }))
     }
 
     pub fn push_cbu_mass(&mut self, outer: MassUnit, base: MassUnit) -> NamedUnitId {
         let base_id = self.push_plain_mass(base);
+        let mwu_id = self.measure_with_units.push(MeasureWithUnit::Mass {
+            value: mass_cbu_factor(outer),
+            unit: base_id,
+        });
         self.named_units.push(NamedUnit::Mass(MassFlavor {
             unit: outer,
             cbu_base: Some(base_id),
             dim_exp: None,
+            cbu_factor_mwu_id: Some(mwu_id),
         }))
+    }
+}
+
+/// CBU conversion factor (relative to the SI base) for a length unit, used by
+/// the [`UnitsPool::push_cbu_length`] kernel/test helper to populate the
+/// preserved factor `MEASURE_WITH_UNIT`. Mirrors the writer's former inline
+/// constants; SI self-wraps are factor `1.0`.
+fn length_cbu_factor(unit: LengthUnit) -> f64 {
+    match unit {
+        LengthUnit::Inch => 25.4,
+        LengthUnit::Foot => 304.8,
+        LengthUnit::Millimetre | LengthUnit::Centimetre | LengthUnit::Metre => 1.0,
+    }
+}
+
+/// CBU conversion factor (relative to SI kilogram) for a mass unit.
+fn mass_cbu_factor(unit: MassUnit) -> f64 {
+    match unit {
+        MassUnit::Pound => 0.453_592_37,
+        MassUnit::Gram => 0.001,
+        MassUnit::Ton => 1000.0,
+        MassUnit::Kilogram | MassUnit::Megagram => 1.0,
+    }
+}
+
+/// CBU conversion factor (relative to SI radian) for a plane-angle unit.
+fn plane_angle_cbu_factor(unit: AngleUnit) -> f64 {
+    match unit {
+        AngleUnit::Degree => std::f64::consts::PI / 180.0,
+        AngleUnit::Radian => 1.0,
     }
 }
 
@@ -176,13 +223,12 @@ pub struct LengthFlavor {
     /// the `*` (Derived) form. The CBU outer path still uses its dedicated
     /// `length_dim_exp_step` cache and ignores this field.
     pub dim_exp: Option<super::id::DimensionalExponentsId>,
-    /// `true` when this CBU outer's `conversion_factor` was a **bare**
-    /// `MEASURE_WITH_UNIT` (supertype) carrying a typed `LENGTH_MEASURE`, rather
-    /// than the `LENGTH_MEASURE_WITH_UNIT` subtype (NIST `ctc_05` inch). The
-    /// writer reproduces the input entity form so the round-trip multiset is
-    /// stable. `false` for plain SI and kernel-built IR (writer emits the
-    /// canonical `LENGTH_MEASURE_WITH_UNIT`).
-    pub cbu_factor_bare: bool,
+    /// `Some(id)` → this CBU outer's preserved `conversion_factor`
+    /// `MEASURE_WITH_UNIT` arena entry (units-CBU-① preservation). The writer
+    /// references this entry instead of regenerating the factor entity; its
+    /// form (bare `MEASURE_WITH_UNIT` carrier vs typed `LENGTH_MEASURE_WITH_UNIT`)
+    /// and exact value round-trip verbatim. `None` for plain SI.
+    pub cbu_factor_mwu_id: Option<MeasureWithUnitId>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -190,6 +236,8 @@ pub struct PlaneAngleFlavor {
     pub unit: AngleUnit,
     pub cbu_base: Option<NamedUnitId>,
     pub dim_exp: Option<super::id::DimensionalExponentsId>,
+    /// See [`LengthFlavor::cbu_factor_mwu_id`].
+    pub cbu_factor_mwu_id: Option<MeasureWithUnitId>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -211,6 +259,8 @@ pub struct MassFlavor {
     pub unit: MassUnit,
     pub cbu_base: Option<NamedUnitId>,
     pub dim_exp: Option<super::id::DimensionalExponentsId>,
+    /// See [`LengthFlavor::cbu_factor_mwu_id`].
+    pub cbu_factor_mwu_id: Option<MeasureWithUnitId>,
 }
 
 /// `MASS_UNIT` value variant. Corpus: kilogram (plain SI), gram (plain SI),

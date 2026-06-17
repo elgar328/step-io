@@ -5,10 +5,9 @@
 //! `value_component` is a typed `LENGTH_MEASURE(real)`. Subtype of
 //! `MEASURE_WITH_UNIT` with the same positional layout.
 //!
-//! MWUs referenced as the `conversion_factor` of a
-//! `CONVERSION_BASED_UNIT` complex are skipped — the writer re-emits them
-//! inline through the existing CBU emit path, so adding them to
-//! `mwu_arena` would double-emit on round-trip.
+//! A LENGTH MWU used as the `conversion_factor` of a `CONVERSION_BASED_UNIT`
+//! is preserved in `mwu_arena` (units-CBU-①) and referenced by the CBU outer
+//! via `LengthFlavor.cbu_factor_mwu_id` — no longer suppressed/regenerated.
 
 use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
@@ -33,10 +32,8 @@ impl SimpleEntityHandler for LengthMeasureWithUnitHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        if ctx.cbu_internal_mwu_refs.contains(&entity_id) {
-            return Ok(());
-        }
-        let Some(early) = bind::bind_length_measure_with_unit(entity_id, attrs)? else {
+        let attrs = super::shared::normalize_bare_measure_attrs(attrs, "LENGTH_MEASURE");
+        let Some(early) = bind::bind_length_measure_with_unit(entity_id, &attrs)? else {
             return Ok(());
         };
         lower::lower_length_measure_with_unit(ctx, entity_id, &early);
