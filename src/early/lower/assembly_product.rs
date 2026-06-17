@@ -8,12 +8,15 @@
 //! chain maps).
 
 use crate::early::model::{
-    EarlyMakeFromUsageOption, EarlyNextAssemblyUsageOccurrence, EarlyProduct, EarlyProductCategory,
-    EarlyProductDefinitionFormationId, EarlyProductDefinitionId,
+    EarlyDesignContext, EarlyMakeFromUsageOption, EarlyMechanicalContext,
+    EarlyNextAssemblyUsageOccurrence, EarlyProduct, EarlyProductCategory, EarlyProductContext,
+    EarlyProductDefinitionContext, EarlyProductDefinitionFormationId, EarlyProductDefinitionId,
     EarlyProductDefinitionRelationship, EarlyProductDefinitionShapeId, EarlySource,
 };
+use crate::ir::ApplicationContextId;
 use crate::ir::assembly::{
-    Product, ProductDefinition, ProductDefinitionFormation, ProductDefinitionFormationData,
+    Product, ProductContext, ProductContextData, ProductDefinition, ProductDefinitionContext,
+    ProductDefinitionContextData, ProductDefinitionFormation, ProductDefinitionFormationData,
     ProductDefinitionFormationWithSpecifiedSource,
 };
 use crate::ir::error::ConvertError;
@@ -366,4 +369,117 @@ pub(crate) fn lower_product_definition_relationship(
     );
     ctx.id_cache.insert(entity_id, arena_id);
     Ok(())
+}
+
+/// Shared lowering for `PRODUCT_CONTEXT` / `MECHANICAL_CONTEXT` (same
+/// `(name, frame_of_reference, discipline_type)` body, distinguished by the
+/// L2 enum variant). `frame_of_reference` resolves to an `ApplicationContextId`
+/// (an unmapped `APPLICATION_CONTEXT` drops the entity, matching the legacy
+/// read); registers the `id_cache` key so a `PRODUCT_DEFINITION_CONTEXT_
+/// ASSOCIATION` etc. can resolve it.
+fn lower_product_context_kind(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    name: String,
+    frame_ref: u64,
+    discipline_type: String,
+    variant: fn(ProductContextData) -> ProductContext,
+) {
+    let Some(frame_of_reference) = ctx.id_cache.get::<ApplicationContextId>(frame_ref) else {
+        return;
+    };
+    let id = ctx.product_contexts.push(variant(ProductContextData {
+        name,
+        frame_of_reference,
+        discipline_type,
+    }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower `PRODUCT_CONTEXT` (`ProductContext::Itself`).
+pub(crate) fn lower_product_context(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyProductContext,
+) {
+    lower_product_context_kind(
+        ctx,
+        entity_id,
+        early.name,
+        early.frame_of_reference,
+        early.discipline_type,
+        ProductContext::Itself,
+    );
+}
+
+/// Lower `MECHANICAL_CONTEXT` (`ProductContext::Mechanical`).
+pub(crate) fn lower_mechanical_context(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyMechanicalContext,
+) {
+    lower_product_context_kind(
+        ctx,
+        entity_id,
+        early.name,
+        early.frame_of_reference,
+        early.discipline_type,
+        ProductContext::Mechanical,
+    );
+}
+
+/// Shared lowering for `PRODUCT_DEFINITION_CONTEXT` / `DESIGN_CONTEXT` (same
+/// `(name, frame_of_reference, life_cycle_stage)` body, distinguished by the
+/// L2 enum variant).
+fn lower_product_definition_context_kind(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    name: String,
+    frame_ref: u64,
+    life_cycle_stage: String,
+    variant: fn(ProductDefinitionContextData) -> ProductDefinitionContext,
+) {
+    let Some(frame_of_reference) = ctx.id_cache.get::<ApplicationContextId>(frame_ref) else {
+        return;
+    };
+    let id = ctx
+        .product_definition_contexts
+        .push(variant(ProductDefinitionContextData {
+            name,
+            frame_of_reference,
+            life_cycle_stage,
+        }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower `PRODUCT_DEFINITION_CONTEXT` (`ProductDefinitionContext::Itself`).
+pub(crate) fn lower_product_definition_context(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyProductDefinitionContext,
+) {
+    lower_product_definition_context_kind(
+        ctx,
+        entity_id,
+        early.name,
+        early.frame_of_reference,
+        early.life_cycle_stage,
+        ProductDefinitionContext::Itself,
+    );
+}
+
+/// Lower `DESIGN_CONTEXT` (`ProductDefinitionContext::Design`).
+pub(crate) fn lower_design_context(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyDesignContext,
+) {
+    lower_product_definition_context_kind(
+        ctx,
+        entity_id,
+        early.name,
+        early.frame_of_reference,
+        early.life_cycle_stage,
+        ProductDefinitionContext::Design,
+    );
 }

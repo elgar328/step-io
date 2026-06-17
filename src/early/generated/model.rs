@@ -582,6 +582,98 @@ impl crate::ir::arena::ArenaId for EarlyApplicationContextId {
     }
 }
 
+/// L1 `PRODUCT_CONTEXT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyProductContext {
+    pub(crate) name: String,
+    pub(crate) frame_of_reference: u64,
+    pub(crate) discipline_type: String,
+}
+
+/// Typed `id_cache` key for `PRODUCT_CONTEXT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyProductContextId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyProductContextId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `MECHANICAL_CONTEXT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyMechanicalContext {
+    pub(crate) name: String,
+    pub(crate) frame_of_reference: u64,
+    pub(crate) discipline_type: String,
+}
+
+/// Typed `id_cache` key for `MECHANICAL_CONTEXT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyMechanicalContextId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyMechanicalContextId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PRODUCT_DEFINITION_CONTEXT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyProductDefinitionContext {
+    pub(crate) name: String,
+    pub(crate) frame_of_reference: u64,
+    pub(crate) life_cycle_stage: String,
+}
+
+/// Typed `id_cache` key for `PRODUCT_DEFINITION_CONTEXT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyProductDefinitionContextId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyProductDefinitionContextId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DESIGN_CONTEXT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDesignContext {
+    pub(crate) name: String,
+    pub(crate) frame_of_reference: u64,
+    pub(crate) life_cycle_stage: String,
+}
+
+/// Typed `id_cache` key for `DESIGN_CONTEXT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDesignContextId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDesignContextId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `OBJECT_ROLE` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyObjectRole {

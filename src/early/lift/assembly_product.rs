@@ -6,9 +6,11 @@
 //! lifts are pure shape adapters onto the generated L1 types.
 
 use crate::early::model::{
-    EarlyMakeFromUsageOption, EarlyProduct, EarlyProductCategory, EarlyProductDefinition,
-    EarlyProductDefinitionFormation, EarlyProductDefinitionFormationWithSpecifiedSource,
-    EarlyProductDefinitionRelationship, EarlyProductDefinitionWithAssociatedDocuments, EarlySource,
+    EarlyDesignContext, EarlyMakeFromUsageOption, EarlyMechanicalContext, EarlyProduct,
+    EarlyProductCategory, EarlyProductContext, EarlyProductDefinition,
+    EarlyProductDefinitionContext, EarlyProductDefinitionFormation,
+    EarlyProductDefinitionFormationWithSpecifiedSource, EarlyProductDefinitionRelationship,
+    EarlyProductDefinitionWithAssociatedDocuments, EarlySource,
 };
 use crate::entities::assembly_product::context_dependent_shape_representation::ContextDependentShapeRepresentationWriteInput;
 use crate::entities::assembly_product::next_assembly_usage_occurrence::NextAssemblyUsageOccurrenceWriteInput;
@@ -16,7 +18,7 @@ use crate::entities::assembly_product::product_definition::ProductDefinitionWrit
 use crate::entities::assembly_product::product_definition_formation::ProductDefinitionFormationWriteInput;
 use crate::entities::assembly_product::product_definition_formation_with_source::ProductDefinitionFormationWithSourceWriteInput;
 use crate::entities::assembly_product::product_definition_with_associated_documents::ProductDefinitionWithAssociatedDocumentsWriteInput;
-use crate::ir::assembly::Product;
+use crate::ir::assembly::{Product, ProductContextData, ProductDefinitionContextData};
 use crate::writer::buffer::assembly::AssemblyContextIds;
 
 /// Parse the L2 `make_or_buy` token back into the L1 enum. The reader only
@@ -171,5 +173,52 @@ pub(crate) fn lift_product_definition_relationship(
         description: plain.description,
         relating_product_definition,
         related_product_definition,
+    }
+}
+
+/// Lift `PRODUCT_CONTEXT` (`ProductContext::Itself`). `ac_step` is the
+/// already-emitted `APPLICATION_CONTEXT` step id (the orchestrator resolves it
+/// from the `ac_step_ids` cache before calling).
+pub(crate) fn lift_product_context(data: &ProductContextData, ac_step: u64) -> EarlyProductContext {
+    EarlyProductContext {
+        name: data.name.clone(),
+        frame_of_reference: ac_step,
+        discipline_type: data.discipline_type.clone(),
+    }
+}
+
+/// Lift `MECHANICAL_CONTEXT` (`ProductContext::Mechanical`).
+pub(crate) fn lift_mechanical_context(
+    data: &ProductContextData,
+    ac_step: u64,
+) -> EarlyMechanicalContext {
+    EarlyMechanicalContext {
+        name: data.name.clone(),
+        frame_of_reference: ac_step,
+        discipline_type: data.discipline_type.clone(),
+    }
+}
+
+/// Lift `PRODUCT_DEFINITION_CONTEXT` (`ProductDefinitionContext::Itself`).
+pub(crate) fn lift_product_definition_context(
+    data: &ProductDefinitionContextData,
+    ac_step: u64,
+) -> EarlyProductDefinitionContext {
+    EarlyProductDefinitionContext {
+        name: data.name.clone(),
+        frame_of_reference: ac_step,
+        life_cycle_stage: data.life_cycle_stage.clone(),
+    }
+}
+
+/// Lift `DESIGN_CONTEXT` (`ProductDefinitionContext::Design`).
+pub(crate) fn lift_design_context(
+    data: &ProductDefinitionContextData,
+    ac_step: u64,
+) -> EarlyDesignContext {
+    EarlyDesignContext {
+        name: data.name.clone(),
+        frame_of_reference: ac_step,
+        life_cycle_stage: data.life_cycle_stage.clone(),
     }
 }

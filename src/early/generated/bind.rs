@@ -457,6 +457,98 @@ pub(crate) fn bind_application_context(
     })
 }
 
+pub(crate) fn bind_product_context(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyProductContext, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "PRODUCT_CONTEXT")?;
+    Ok(super::model::EarlyProductContext {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        frame_of_reference: crate::ir::attr::read_entity_ref(
+            attrs,
+            1,
+            entity_id,
+            "frame_of_reference",
+        )?,
+        discipline_type: crate::ir::attr::read_string_or_unset(
+            attrs,
+            2,
+            entity_id,
+            "discipline_type",
+        )?
+        .to_owned(),
+    })
+}
+
+pub(crate) fn bind_mechanical_context(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyMechanicalContext, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "MECHANICAL_CONTEXT")?;
+    Ok(super::model::EarlyMechanicalContext {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        frame_of_reference: crate::ir::attr::read_entity_ref(
+            attrs,
+            1,
+            entity_id,
+            "frame_of_reference",
+        )?,
+        discipline_type: crate::ir::attr::read_string_or_unset(
+            attrs,
+            2,
+            entity_id,
+            "discipline_type",
+        )?
+        .to_owned(),
+    })
+}
+
+pub(crate) fn bind_product_definition_context(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyProductDefinitionContext, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "PRODUCT_DEFINITION_CONTEXT")?;
+    Ok(super::model::EarlyProductDefinitionContext {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        frame_of_reference: crate::ir::attr::read_entity_ref(
+            attrs,
+            1,
+            entity_id,
+            "frame_of_reference",
+        )?,
+        life_cycle_stage: crate::ir::attr::read_string_or_unset(
+            attrs,
+            2,
+            entity_id,
+            "life_cycle_stage",
+        )?
+        .to_owned(),
+    })
+}
+
+pub(crate) fn bind_design_context(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDesignContext, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "DESIGN_CONTEXT")?;
+    Ok(super::model::EarlyDesignContext {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        frame_of_reference: crate::ir::attr::read_entity_ref(
+            attrs,
+            1,
+            entity_id,
+            "frame_of_reference",
+        )?,
+        life_cycle_stage: crate::ir::attr::read_string_or_unset(
+            attrs,
+            2,
+            entity_id,
+            "life_cycle_stage",
+        )?
+        .to_owned(),
+    })
+}
+
 pub(crate) fn bind_object_role(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],

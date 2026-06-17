@@ -410,6 +410,62 @@ pub(crate) fn serialize_application_context(
     )
 }
 
+pub(crate) fn serialize_product_context(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyProductContext,
+) -> u64 {
+    buf.push_simple(
+        "PRODUCT_CONTEXT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.frame_of_reference),
+            crate::parser::entity::Attribute::String(l1.discipline_type.clone()),
+        ],
+    )
+}
+
+pub(crate) fn serialize_mechanical_context(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyMechanicalContext,
+) -> u64 {
+    buf.push_simple(
+        "MECHANICAL_CONTEXT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.frame_of_reference),
+            crate::parser::entity::Attribute::String(l1.discipline_type.clone()),
+        ],
+    )
+}
+
+pub(crate) fn serialize_product_definition_context(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyProductDefinitionContext,
+) -> u64 {
+    buf.push_simple(
+        "PRODUCT_DEFINITION_CONTEXT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.frame_of_reference),
+            crate::parser::entity::Attribute::String(l1.life_cycle_stage.clone()),
+        ],
+    )
+}
+
+pub(crate) fn serialize_design_context(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDesignContext,
+) -> u64 {
+    buf.push_simple(
+        "DESIGN_CONTEXT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.frame_of_reference),
+            crate::parser::entity::Attribute::String(l1.life_cycle_stage.clone()),
+        ],
+    )
+}
+
 pub(crate) fn serialize_object_role(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyObjectRole,
