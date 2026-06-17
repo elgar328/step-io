@@ -11,7 +11,7 @@ use crate::early::model::{
 };
 use crate::ir::error::ConvertError;
 use crate::ir::representation_item::MeasureValue;
-use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit, SolidAngleUnit};
+use crate::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit};
 use crate::ir::units::{
     DerivedUnit, DerivedUnitElement, DerivedUnitKind, DimensionalExponents, LengthFlavor,
     MassFlavor, MassUnit, MeasureWithUnit, MeasureWithUnitData, NamedUnit, NamedUnitData,
@@ -218,11 +218,13 @@ pub(crate) fn lower_ratio_unit(ctx: &mut ReaderContext, entity_id: u64, early: &
     ctx.id_cache.insert(entity_id, id);
 }
 
-/// Lower `UNCERTAINTY_MEASURE_WITH_UNIT` into the context-specific uncertainty
-/// side-map (entity-id keyed, no `id_cache`; GUAC read consumes it). The
-/// `value_component`'s measure kind is irrelevant — the unit ref's category
-/// (length / plane-angle / solid-angle) routes it; an unrecognized unit drops
-/// the value (legacy no-op).
+/// Lower `UNCERTAINTY_MEASURE_WITH_UNIT` (a `measure_with_unit` subtype) into the
+/// shared `measure_with_units` arena as [`MeasureWithUnit::UncertaintyMeasureWithUnit`]
+/// (ir.toml: `arena = "measure_with_unit"`, `id = "MeasureWithUnitId"`). Registers
+/// the `id_cache` key so `GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.uncertainty` refs
+/// resolve to `MeasureWithUnitId`. The `value_component` measure kind is not
+/// stored — it is derived from `unit`'s `NamedUnit` category on emit. An
+/// unresolved `unit_component` drops the entry (matching the legacy no-op).
 pub(crate) fn lower_uncertainty_measure_with_unit(
     ctx: &mut ReaderContext,
     entity_id: u64,
@@ -231,19 +233,22 @@ pub(crate) fn lower_uncertainty_measure_with_unit(
     let Some(value) = mwu_value(&early.value_component) else {
         return;
     };
-    let unc = LengthUncertainty {
-        value,
-        name: early.name.clone(),
-        // Legacy read_string_or_unset collapsed `$` to "" (L2 String).
-        description: early.description.clone().unwrap_or_default(),
+    let Some(unit) = ctx
+        .id_cache
+        .get::<crate::ir::id::NamedUnitId>(early.unit_component)
+    else {
+        return;
     };
-    if ctx.length_unit_map.contains_key(&early.unit_component) {
-        ctx.length_uncertainty_map.insert(entity_id, unc);
-    } else if ctx.angle_unit_map.contains_key(&early.unit_component) {
-        ctx.plane_angle_uncertainty_map.insert(entity_id, unc);
-    } else if ctx.solid_angle_unit_map.contains_key(&early.unit_component) {
-        ctx.solid_angle_uncertainty_map.insert(entity_id, unc);
-    }
+    let id = ctx
+        .mwu_arena
+        .push(MeasureWithUnit::UncertaintyMeasureWithUnit {
+            value,
+            unit,
+            name: early.name.clone(),
+            // Legacy read_string_or_unset collapsed `$` to "" (L2 String).
+            description: early.description.clone().unwrap_or_default(),
+        });
+    ctx.id_cache.insert(entity_id, id);
 }
 
 /// Lower bare `NAMED_UNIT(#dimensions)` (`NamedUnit::Itself` — a
@@ -302,7 +307,8 @@ pub(crate) fn mwu_unit_of(mwu: &MeasureWithUnit) -> crate::ir::id::NamedUnitId {
         MeasureWithUnit::Length { unit, .. }
         | MeasureWithUnit::Mass { unit, .. }
         | MeasureWithUnit::PlaneAngle { unit, .. }
-        | MeasureWithUnit::Ratio { unit, .. } => *unit,
+        | MeasureWithUnit::Ratio { unit, .. }
+        | MeasureWithUnit::UncertaintyMeasureWithUnit { unit, .. } => *unit,
     }
 }
 
@@ -315,7 +321,8 @@ fn mwu_value_of(mwu: &MeasureWithUnit) -> f64 {
         MeasureWithUnit::Length { value, .. }
         | MeasureWithUnit::Mass { value, .. }
         | MeasureWithUnit::PlaneAngle { value, .. }
-        | MeasureWithUnit::Ratio { value, .. } => *value,
+        | MeasureWithUnit::Ratio { value, .. }
+        | MeasureWithUnit::UncertaintyMeasureWithUnit { value, .. } => *value,
     }
 }
 

@@ -245,6 +245,40 @@ fn emit_measure_with_unit(
             let unit_step = buf.step_id(unit);
             RatioMeasureWithUnitHandler::write(buf, (*value, unit_step))
         }
+        MeasureWithUnit::UncertaintyMeasureWithUnit {
+            value,
+            unit,
+            name,
+            description,
+        } => {
+            use crate::entities::units::uncertainty_measure_with_unit::UncertaintyMeasureWithUnitHandler;
+            let unit_step = buf.step_id(unit);
+            // The `value_component` measure kind is derived from the unit's
+            // category (matching the legacy unit-routed write).
+            let measure_type = uncertainty_measure_type(buf, *unit);
+            let unc = crate::ir::shape_rep::LengthUncertainty {
+                value: *value,
+                name: name.clone(),
+                description: description.clone(),
+            };
+            UncertaintyMeasureWithUnitHandler::write(buf, (unc, unit_step, measure_type))
+        }
+    }
+}
+
+/// Measure-kind token for an `UNCERTAINTY_MEASURE_WITH_UNIT`'s `value_component`,
+/// derived from its unit's `NamedUnit` category. `Length` / `Itself` (and the
+/// `None` pool fallback) map to `LENGTH_MEASURE`.
+fn uncertainty_measure_type(buf: &WriteBuffer, unit: crate::ir::id::NamedUnitId) -> &'static str {
+    let Some(pool) = buf.model.units_pool.as_ref() else {
+        return "LENGTH_MEASURE";
+    };
+    match &pool.named_units[unit] {
+        NamedUnit::PlaneAngle(_) => "PLANE_ANGLE_MEASURE",
+        NamedUnit::SolidAngle(_) => "SOLID_ANGLE_MEASURE",
+        NamedUnit::Mass(_) => "MASS_MEASURE",
+        NamedUnit::Ratio(_) => "RATIO_MEASURE",
+        _ => "LENGTH_MEASURE",
     }
 }
 
@@ -252,7 +286,7 @@ fn emit_measure_with_unit(
 mod tests {
     use crate::ir::arena::Arena;
     use crate::ir::shape_rep::LengthUncertainty;
-    use crate::ir::units::{NamedUnit, UnitsPool};
+    use crate::ir::units::{MeasureWithUnit, NamedUnit, UnitsPool};
     use crate::ir::{AngleUnit, LengthUnit, SolidAngleUnit, StepModel, UnitContext};
     use crate::parse;
     use crate::reader::ReaderContext;
@@ -330,11 +364,30 @@ mod tests {
             };
             let solid_id = pool.push_plain_solid_angle(self.solid_angle);
 
+            // Uncertainties become `UncertaintyMeasureWithUnit` entries in the
+            // shared MWU arena, referenced by id (source order: length, angle,
+            // solid), each bound to its kind's unit.
+            let mut uncertainty = Vec::new();
+            for (unc, unit) in [
+                (self.length_uncertainty, length_id),
+                (self.plane_angle_uncertainty, plane_id),
+                (self.solid_angle_uncertainty, solid_id),
+            ] {
+                if let Some(u) = unc {
+                    uncertainty.push(pool.measure_with_units.push(
+                        MeasureWithUnit::UncertaintyMeasureWithUnit {
+                            value: u.value,
+                            unit,
+                            name: u.name,
+                            description: u.description,
+                        },
+                    ));
+                }
+            }
+
             let ctx = UnitContext {
                 units: vec![length_id, plane_id, solid_id],
-                length_uncertainty: self.length_uncertainty,
-                plane_angle_uncertainty: self.plane_angle_uncertainty,
-                solid_angle_uncertainty: self.solid_angle_uncertainty,
+                uncertainty,
                 form: crate::ir::shape_rep::UnitContextForm::Complex,
             };
 
@@ -608,8 +661,9 @@ mod tests {
         let back = ReaderContext::convert(&graph);
         assert!(back.warnings.is_empty(), "{:#?}", back.warnings);
         let ctx = first_ctx(&back.model).expect("ctx");
-        assert_eq!(ctx.length_uncertainty.as_ref(), Some(&length_unc));
-        assert_eq!(ctx.plane_angle_uncertainty.as_ref(), Some(&plane_unc));
-        assert_eq!(ctx.solid_angle_uncertainty.as_ref(), Some(&solid_unc));
+        let pool = back.model.units_pool.as_ref().expect("pool");
+        assert_eq!(ctx.length_uncertainty(pool), Some(length_unc));
+        assert_eq!(ctx.plane_angle_uncertainty(pool), Some(plane_unc));
+        assert_eq!(ctx.solid_angle_uncertainty(pool), Some(solid_unc));
     }
 }

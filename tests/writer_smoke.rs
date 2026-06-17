@@ -59,9 +59,7 @@ fn mm_radian_steradian(model: &mut StepModel) -> UnitContext {
             pool.push_plain_plane_angle(AngleUnit::Radian),
             pool.push_plain_solid_angle(SolidAngleUnit::Steradian),
         ],
-        length_uncertainty: None,
-        plane_angle_uncertainty: None,
-        solid_angle_uncertainty: None,
+        uncertainty: Vec::new(),
         form: step_io::ir::shape_rep::UnitContextForm::Complex,
     }
 }
@@ -10297,9 +10295,7 @@ fn simple_global_unit_assigned_context_and_ratio_unit_round_trip() {
     };
     model.shape_rep.unit_contexts.push(UnitContext {
         units: vec![ratio_id],
-        length_uncertainty: None,
-        plane_angle_uncertainty: None,
-        solid_angle_uncertainty: None,
+        uncertainty: Vec::new(),
         form: simple_form.clone(),
     });
 

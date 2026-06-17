@@ -1379,7 +1379,7 @@ fn every_fixture_has_expected_units() {
             // Every FreeCAD fixture carries a length uncertainty. Values
             // vary per-fixture (1e-7 vs 2e-7), so just assert presence.
             assert!(
-                units.length_uncertainty.is_some(),
+                units.length_uncertainty(pool).is_some(),
                 "fixture {name}: length_uncertainty missing",
             );
         }

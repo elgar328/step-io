@@ -17,11 +17,11 @@ pub(crate) struct UncertaintyMeasureWithUnitHandler;
 #[step_entity(name = "UNCERTAINTY_MEASURE_WITH_UNIT")]
 impl SimpleEntityHandler for UncertaintyMeasureWithUnitHandler {
     /// `(LengthUncertainty, unit_step_id, measure_type_name)` — caller
-    /// (`emit_unit_context`) already emitted the relevant unit (length,
-    /// plane-angle, or solid-angle) and supplies its STEP id; the
-    /// `LengthUncertainty` carries the numeric value plus original
-    /// `name` / `description` strings; the measure type name is one of
-    /// `"LENGTH_MEASURE"`, `"PLANE_ANGLE_MEASURE"`, `"SOLID_ANGLE_MEASURE"`.
+    /// (`emit_measure_with_unit`, the `measure_with_units` arena loop) resolves
+    /// the unit's already-emitted STEP id and derives the measure type from the
+    /// unit's `NamedUnit` category; the `LengthUncertainty` carries the numeric
+    /// value plus original `name` / `description` strings; the measure type name
+    /// is one of `"LENGTH_MEASURE"`, `"PLANE_ANGLE_MEASURE"`, `"SOLID_ANGLE_MEASURE"`.
     type WriteInput = (LengthUncertainty, u64, &'static str);
 
     fn read(

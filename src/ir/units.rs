@@ -322,6 +322,18 @@ pub enum MeasureWithUnit {
         value: f64,
         unit: super::id::NamedUnitId,
     },
+    /// `UNCERTAINTY_MEASURE_WITH_UNIT` subtype. Per the ir.toml blueprint
+    /// (`arena = "measure_with_unit"`, `enum_of = "measure_with_unit"`,
+    /// `id = "MeasureWithUnitId"`) it lives in this same arena. Unlike the
+    /// other typed subtypes it carries `name` / `description` metadata; its
+    /// `value_component` measure kind is derived from `unit`'s `NamedUnit`
+    /// category on emit (matching the legacy unit-routed write).
+    UncertaintyMeasureWithUnit {
+        value: f64,
+        unit: super::id::NamedUnitId,
+        name: String,
+        description: String,
+    },
 }
 
 /// Carrier body for the bare `MEASURE_WITH_UNIT` supertype instance.

@@ -15,7 +15,7 @@ use crate::ir::id::{
     ProductId, ShellId, SolidId, SurfaceId, UnitContextId, VertexId, WireId,
 };
 use crate::ir::model::{GeometryPool, StepModel, TopologyPool};
-use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit, SolidAngleUnit, UnitContext};
+use crate::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit, UnitContext};
 use crate::ir::topology::{Orientation, OrientedEdge};
 use crate::ir::units::{DerivedUnit, DerivedUnitElement, MeasureWithUnit, NamedUnit, UnitsPool};
 use crate::ir::visualization::{FillAreaStyleColour, VisualizationPool};
@@ -232,15 +232,6 @@ pub struct ReaderContext {
     /// their factor MWU to avoid an orphan `mwu_arena` entry. Length / mass /
     /// plane-angle factor MWUs are *preserved* (units-CBU-①) and not seeded here.
     pub(crate) ratio_cbu_mwu_refs: HashSet<u64>,
-    /// `UNCERTAINTY_MEASURE_WITH_UNIT #N → value+metadata` for uncertainty
-    /// entities whose `unit_component` resolved to a length unit. Populated
-    /// when `UNCERTAINTY_MEASURE_WITH_UNIT` entities are read.
-    pub(crate) length_uncertainty_map: HashMap<u64, LengthUncertainty>,
-    /// Same shape as `length_uncertainty_map` but keyed on UMUs whose
-    /// `unit_component` is a plane-angle unit.
-    pub(crate) plane_angle_uncertainty_map: HashMap<u64, LengthUncertainty>,
-    /// Same shape but for solid-angle uncertainty UMUs.
-    pub(crate) solid_angle_uncertainty_map: HashMap<u64, LengthUncertainty>,
 
     // Geometry maps: STEP #N → typed Id.
 

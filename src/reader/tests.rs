@@ -1155,9 +1155,7 @@ fn unit_millimetre_radian_steradian() {
         .iter()
         .next()
         .expect("ctx");
-    assert!(ctx.length_uncertainty.is_none());
-    assert!(ctx.plane_angle_uncertainty.is_none());
-    assert!(ctx.solid_angle_uncertainty.is_none());
+    assert!(ctx.uncertainty.is_empty());
 }
 
 #[test]

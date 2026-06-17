@@ -9,8 +9,8 @@
 use super::assembly::WireframeContent;
 use super::id::StyledItemId;
 use super::id::{
-    GeneralDatumReferenceId, NamedUnitId, Placement3dId, ProductId, RepresentationId,
-    RepresentationMapId, ShellId, SolidId, ToleranceZoneFormId, UnitContextId,
+    GeneralDatumReferenceId, MeasureWithUnitId, NamedUnitId, Placement3dId, ProductId,
+    RepresentationId, RepresentationMapId, ShellId, SolidId, ToleranceZoneFormId, UnitContextId,
 };
 use super::pmi::GeometricToleranceRef;
 use super::representation_item::RepresentationItemRef;
@@ -21,13 +21,14 @@ use super::shape_aspect_ref::ShapeAspectRef;
 /// The IR preserves original units — numeric values are **not** normalized.
 /// Kernel adapters inspect `UnitContext` and convert if needed.
 ///
-/// `length_uncertainty` is `Some` when the source file carried a
-/// `UNCERTAINTY_MEASURE_WITH_UNIT` referenced through
-/// `GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT`. The numeric value is in the
-/// source's length unit (mm / inch / ...) — no normalization. The
-/// `name` / `description` strings are preserved verbatim so round-trip
-/// reproduces the original metadata (writers no longer hardcode
-/// `'distance_accuracy_value'` / `'confusion accuracy'`).
+/// `uncertainty` holds the `GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.uncertainty :
+/// SET OF uncertainty_measure_with_unit` refs (source order) into
+/// `StepModel.units_pool.measure_with_units` (each a
+/// [`crate::ir::units::MeasureWithUnit::UncertaintyMeasureWithUnit`]). Empty when
+/// the source carried no uncertainty part. Per-kind views (length / plane-angle /
+/// solid-angle) are derived on demand via [`UnitContext::length_uncertainty`] etc.
+/// — the numeric value is in the source unit (mm / radian / ...), unnormalized,
+/// and the `name` / `description` strings are preserved verbatim.
 /// `units` is the schema's `GLOBAL_UNIT_ASSIGNED_CONTEXT.units : SET[1:?] OF
 /// unit` — an ordered set of `NamedUnitId` refs into
 /// `StepModel.units_pool.named_units`. Any unit kind (`length` / `plane_angle`
@@ -41,14 +42,10 @@ use super::shape_aspect_ref::ShapeAspectRef;
 #[derive(Debug, Clone, PartialEq)]
 pub struct UnitContext {
     pub units: Vec<NamedUnitId>,
-    pub length_uncertainty: Option<LengthUncertainty>,
-    /// Optional plane-angle uncertainty (e.g. `'angle_accuracy'` in some
-    /// CAD exports). `None` when the source carried no angle-typed
-    /// `UNCERTAINTY_MEASURE_WITH_UNIT`. Value is in the source's plane
-    /// angle unit (radian / degree).
-    pub plane_angle_uncertainty: Option<LengthUncertainty>,
-    /// Optional solid-angle uncertainty. `None` for the typical case.
-    pub solid_angle_uncertainty: Option<LengthUncertainty>,
+    /// `GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT.uncertainty` refs (source order).
+    /// Each points at a `MeasureWithUnit::UncertaintyMeasureWithUnit` in the
+    /// shared `measure_with_units` arena. Empty for the no-uncertainty form.
+    pub uncertainty: Vec<MeasureWithUnitId>,
     /// Which source form this context was read from, so the writer
     /// reproduces it. See [`UnitContextForm`].
     pub form: UnitContextForm,
@@ -106,6 +103,62 @@ impl UnitContext {
             .iter()
             .copied()
             .find(|&id| want(&pool.named_units[id]))
+    }
+
+    /// Length-kind uncertainty view: the first `uncertainty` ref whose
+    /// `UncertaintyMeasureWithUnit.unit` is a `Length` unit, projected to the
+    /// [`LengthUncertainty`] carrier (value + metadata).
+    #[must_use]
+    pub fn length_uncertainty(
+        &self,
+        pool: &crate::ir::units::UnitsPool,
+    ) -> Option<LengthUncertainty> {
+        self.uncertainty_of_kind(pool, |u| {
+            matches!(u, crate::ir::units::NamedUnit::Length(_))
+        })
+    }
+    /// Plane-angle-kind uncertainty view (radian / degree unit).
+    #[must_use]
+    pub fn plane_angle_uncertainty(
+        &self,
+        pool: &crate::ir::units::UnitsPool,
+    ) -> Option<LengthUncertainty> {
+        self.uncertainty_of_kind(pool, |u| {
+            matches!(u, crate::ir::units::NamedUnit::PlaneAngle(_))
+        })
+    }
+    /// Solid-angle-kind uncertainty view (steradian unit).
+    #[must_use]
+    pub fn solid_angle_uncertainty(
+        &self,
+        pool: &crate::ir::units::UnitsPool,
+    ) -> Option<LengthUncertainty> {
+        self.uncertainty_of_kind(pool, |u| {
+            matches!(u, crate::ir::units::NamedUnit::SolidAngle(_))
+        })
+    }
+    fn uncertainty_of_kind(
+        &self,
+        pool: &crate::ir::units::UnitsPool,
+        want: impl Fn(&crate::ir::units::NamedUnit) -> bool,
+    ) -> Option<LengthUncertainty> {
+        self.uncertainty.iter().copied().find_map(|id| {
+            if let crate::ir::units::MeasureWithUnit::UncertaintyMeasureWithUnit {
+                value,
+                unit,
+                name,
+                description,
+            } = &pool.measure_with_units[id]
+            {
+                want(&pool.named_units[*unit]).then(|| LengthUncertainty {
+                    value: *value,
+                    name: name.clone(),
+                    description: description.clone(),
+                })
+            } else {
+                None
+            }
+        })
     }
 }
 

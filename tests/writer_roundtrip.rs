@@ -66,15 +66,18 @@ fn assert_unit_contexts_equivalent(
         };
         assert_eq!(l_solid, r_solid, "{name}: solid_angle");
         assert_eq!(
-            lc.length_uncertainty, rc.length_uncertainty,
+            lc.length_uncertainty(lpool),
+            rc.length_uncertainty(rpool),
             "{name}: length_uncertainty"
         );
         assert_eq!(
-            lc.plane_angle_uncertainty, rc.plane_angle_uncertainty,
+            lc.plane_angle_uncertainty(lpool),
+            rc.plane_angle_uncertainty(rpool),
             "{name}: plane_angle_uncertainty"
         );
         assert_eq!(
-            lc.solid_angle_uncertainty, rc.solid_angle_uncertainty,
+            lc.solid_angle_uncertainty(lpool),
+            rc.solid_angle_uncertainty(rpool),
             "{name}: solid_angle_uncertainty"
         );
     }
