@@ -4,9 +4,21 @@
 use crate::early::model::{
     EarlyDescriptionAttribute, EarlyDimensionalCharacteristicRepresentation, EarlyGeneralProperty,
     EarlyGeneralPropertyAssociation, EarlyIdAttribute, EarlyNameAttribute, EarlyPropertyDefinition,
-    EarlyShapeDefinitionRepresentation,
+    EarlyPropertyDefinitionRepresentation, EarlyShapeDefinitionRepresentation,
 };
 use crate::ir::property::GeneralProperty;
+
+/// Lift one `PROPERTY_DEFINITION_REPRESENTATION` (both refs pre-resolved to
+/// emitted step ids by `emit_property` / `emit_pdr_links`).
+pub(crate) fn lift_property_definition_representation(
+    pd: u64,
+    repr: u64,
+) -> EarlyPropertyDefinitionRepresentation {
+    EarlyPropertyDefinitionRepresentation {
+        definition: pd,
+        used_representation: repr,
+    }
+}
 
 /// Lift one `PROPERTY_DEFINITION`. The orchestrator
 /// (`emit_property_definitions_*`) resolves the `characterized_definition`

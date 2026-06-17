@@ -4,10 +4,11 @@
 use crate::early::model::{
     EarlyDescriptionAttribute, EarlyDimensionalCharacteristicRepresentation, EarlyGeneralProperty,
     EarlyGeneralPropertyAssociation, EarlyIdAttribute, EarlyNameAttribute, EarlyPropertyDefinition,
-    EarlyShapeDefinitionRepresentation,
+    EarlyPropertyDefinitionRepresentation, EarlyShapeDefinitionRepresentation,
 };
 use crate::entities::pmi::resolve_geometric_tolerance_ref;
 use crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_ref;
+use crate::ir::attr::{read_entity_ref_list, read_optional_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::id::DimensionalLocationId;
 use crate::ir::plm::Document;
@@ -15,11 +16,12 @@ use crate::ir::pmi::{DimensionalLocation, GeneralDatumReference};
 use crate::ir::property::{
     CharacterizedDefinition, DerivedDefinitionItem, DescriptionAttribute, DescriptionAttributeItem,
     DimensionalCharacteristicRepresentation, GeneralProperty, GeneralPropertyAssociation,
-    IdAttribute, IdAttributeItem, NameAttribute, NameAttributeItem, PropertyDefinition,
-    PropertyDefinitionData, PropertyPool,
+    IdAttribute, IdAttributeItem, NameAttribute, NameAttributeItem, Property, PropertyDefinition,
+    PropertyDefinitionData, PropertyDefinitionRef, PropertyItem, PropertyPool,
 };
 use crate::ir::shape_rep::CharacterizedObject;
 use crate::ir::{ProductId, ShapeAspectRef};
+use crate::parser::entity::RawEntity;
 use crate::reader::ReaderContext;
 
 /// Lower one `GENERAL_PROPERTY`. The legacy read collapsed an empty
@@ -422,4 +424,132 @@ pub(crate) fn lower_property_definition(
             definition,
         }));
     ctx.id_cache.insert(entity_id, pd_id);
+}
+
+/// Lower one `PROPERTY_DEFINITION_REPRESENTATION`. Unlike most lowers this
+/// takes the `graph`: the bound `REPRESENTATION` is walked directly (a generic
+/// entity name shared with MDGPR / SR, so a per-pass map would conflate them).
+/// `bind` extracts the two raw refs; everything else (2-way PD/GP dispatch,
+/// `REPRESENTATION` subtype check, `ReprContextUnset`, item filter, `Property`
+/// push) relocates verbatim from the handler `read`.
+pub(crate) fn lower_property_definition_representation(
+    ctx: &mut ReaderContext,
+    _entity_id: u64,
+    early: EarlyPropertyDefinitionRepresentation,
+    graph: &crate::parser::entity::EntityGraph,
+) -> Result<(), ConvertError> {
+    let pd_ref = early.definition;
+    let repr_ref = early.used_representation;
+
+    let pd_entry = ctx.property_def_map.get(&pd_ref).cloned();
+    let is_deferred_nauo = ctx.nauo_pds_pd_refs.contains(&pd_ref);
+    let gp_id = ctx.id_cache.get::<crate::ir::id::GeneralPropertyId>(pd_ref);
+    if pd_entry.is_none() && !is_deferred_nauo && gp_id.is_none() {
+        return Ok(()); // silently skipped (unresolved / unsupported target)
+    }
+
+    // Walk the graph for the bound REPRESENTATION (shared name; direct read).
+    let Some(RawEntity::Simple {
+        name: repr_name_step,
+        attributes: repr_attrs,
+        ..
+    }) = graph.get(repr_ref)
+    else {
+        return Ok(());
+    };
+    if repr_name_step != "REPRESENTATION" {
+        // A modelled representation subtype (e.g. SHAPE_REPRESENTATION) — record
+        // a PD↔representation link for the writer to reference the existing
+        // representation rather than a descriptive REPRESENTATION.
+        if ctx
+            .id_cache
+            .contains::<crate::ir::id::RepresentationId>(repr_ref)
+        {
+            ctx.pdr_link_refs.push((pd_ref, repr_ref));
+        }
+        return Ok(());
+    }
+    let representation_name = read_string_or_unset(repr_attrs, 0, repr_ref, "name")?.to_owned();
+    let item_refs = read_entity_ref_list(repr_attrs, 1, repr_ref, "items")?;
+    // NsCase::ReprContextUnset: REPRESENTATION.context_of_items is required by
+    // EXPRESS but the c3d kernel emits `$` — accept as no context.
+    let context = if let Some(ctx_ref) =
+        read_optional_entity_ref(repr_attrs, 2, repr_ref, "context_of_items")?
+    {
+        ctx.resolve_repr_context(ctx_ref)
+    } else {
+        ctx.ns_record(
+            crate::reader::NsCase::ReprContextUnset,
+            "REPRESENTATION.context_of_items (Unset)".into(),
+            "no context",
+        );
+        None
+    };
+
+    let items: Vec<PropertyItem> =
+        item_refs
+            .into_iter()
+            .filter_map(|r| {
+                if let Some(id) = ctx.id_cache.get::<crate::ir::id::RepresentationItemId>(r) {
+                    if matches!(
+                    ctx.representation_items[id],
+                    crate::ir::representation_item::RepresentationItem::MeasureRepresentationItem(_)
+                ) {
+                        return Some(PropertyItem::MeasureItem(id));
+                    }
+                }
+                ctx.descriptive_item_map
+                    .get(&r)
+                    .cloned()
+                    .map(PropertyItem::Descriptive)
+            })
+            .collect();
+
+    if let Some(gp_id) = gp_id {
+        // GENERAL_PROPERTY-bound: definition is the GP itself; name/description
+        // unused (emit_property only reads definition/items/context/repr name).
+        ctx.properties
+            .get_or_insert_with(PropertyPool::default)
+            .properties
+            .push(Property {
+                name: String::new(),
+                description: None,
+                definition: PropertyDefinitionRef::GeneralProperty(gp_id),
+                representation_name,
+                context,
+                items,
+            });
+        return Ok(());
+    }
+
+    if is_deferred_nauo {
+        // PD arena entry doesn't exist yet — stash for materialize_nauo_owned_pds.
+        ctx.deferred_nauo_property
+            .push((pd_ref, representation_name, items, context));
+        return Ok(());
+    }
+    let (pd_name, pd_desc) = pd_entry.expect("non-deferred PD resolved in property_def_map");
+
+    let Some(definition) = ctx
+        .id_cache
+        .get::<crate::ir::id::PropertyDefinitionId>(pd_ref)
+    else {
+        return Ok(());
+    };
+    let prop_id = ctx
+        .properties
+        .get_or_insert_with(PropertyPool::default)
+        .properties
+        .push(Property {
+            name: pd_name,
+            description: pd_desc,
+            definition: PropertyDefinitionRef::PropertyDefinition(definition),
+            representation_name,
+            context,
+            items,
+        });
+    // Record PD `#N → PropertyId` so the GPA reader can resolve a
+    // `derived_definition` pointing at this PROPERTY_DEFINITION.
+    ctx.id_cache.insert(pd_ref, prop_id);
+    Ok(())
 }

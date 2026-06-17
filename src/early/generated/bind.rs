@@ -1571,6 +1571,22 @@ pub(crate) fn bind_property_definition(
     })
 }
 
+pub(crate) fn bind_property_definition_representation(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPropertyDefinitionRepresentation, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "PROPERTY_DEFINITION_REPRESENTATION")?;
+    Ok(super::model::EarlyPropertyDefinitionRepresentation {
+        definition: crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "definition")?,
+        used_representation: crate::ir::attr::read_entity_ref(
+            attrs,
+            1,
+            entity_id,
+            "used_representation",
+        )?,
+    })
+}
+
 pub(crate) fn bind_name_attribute(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],

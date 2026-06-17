@@ -106,6 +106,7 @@ generate = [
     # property (attribute leaf batch)
     "general_property",
     "property_definition",
+    "property_definition_representation",
     "name_attribute",
     "description_attribute",
     "id_attribute",

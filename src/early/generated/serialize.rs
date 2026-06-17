@@ -1792,6 +1792,19 @@ pub(crate) fn serialize_property_definition(
     )
 }
 
+pub(crate) fn serialize_property_definition_representation(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPropertyDefinitionRepresentation,
+) -> u64 {
+    buf.push_simple(
+        "PROPERTY_DEFINITION_REPRESENTATION",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.definition),
+            crate::parser::entity::Attribute::EntityRef(l1.used_representation),
+        ],
+    )
+}
+
 pub(crate) fn serialize_name_attribute(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyNameAttribute,
