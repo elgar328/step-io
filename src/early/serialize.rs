@@ -15,8 +15,8 @@ pub(crate) use super::generated::serialize::{
     serialize_applied_person_and_organization_assignment, serialize_applied_presented_item,
     serialize_applied_security_classification_assignment, serialize_approval,
     serialize_approval_date_time, serialize_approval_person_organization, serialize_approval_role,
-    serialize_approval_status, serialize_area_in_set, serialize_axis1_placement,
-    serialize_axis2_placement_2d, serialize_axis2_placement_3d,
+    serialize_approval_status, serialize_area_in_set, serialize_area_unit,
+    serialize_axis1_placement, serialize_axis2_placement_2d, serialize_axis2_placement_3d,
     serialize_b_spline_curve_with_knots, serialize_b_spline_surface_with_knots,
     serialize_bounded_pcurve, serialize_brep_with_voids, serialize_calendar_date,
     serialize_camera_image, serialize_camera_image_3d_with_scale, serialize_camera_model_d3,
@@ -115,5 +115,5 @@ pub(crate) use super::generated::serialize::{
     serialize_total_runout_tolerance, serialize_trimmed_curve, serialize_type_qualifier,
     serialize_uncertainty_measure_with_unit, serialize_value_format_type_qualifier,
     serialize_value_representation_item, serialize_vector, serialize_vertex_loop,
-    serialize_vertex_point, serialize_view_volume,
+    serialize_vertex_point, serialize_view_volume, serialize_volume_unit,
 };

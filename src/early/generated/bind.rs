@@ -1088,6 +1088,26 @@ pub(crate) fn bind_derived_unit(
     })
 }
 
+pub(crate) fn bind_area_unit(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAreaUnit, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "AREA_UNIT")?;
+    Ok(super::model::EarlyAreaUnit {
+        elements: crate::ir::attr::read_entity_ref_list(attrs, 0, entity_id, "elements")?,
+    })
+}
+
+pub(crate) fn bind_volume_unit(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyVolumeUnit, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "VOLUME_UNIT")?;
+    Ok(super::model::EarlyVolumeUnit {
+        elements: crate::ir::attr::read_entity_ref_list(attrs, 0, entity_id, "elements")?,
+    })
+}
+
 pub(crate) fn bind_dimensional_exponents(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],

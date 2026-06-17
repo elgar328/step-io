@@ -2,12 +2,12 @@
 //! [module docs](super) for the lowering contract.
 
 use crate::early::model::{
-    EarlyDerivedUnit, EarlyDerivedUnitElement, EarlyDimensionalExponents,
+    EarlyAreaUnit, EarlyDerivedUnit, EarlyDerivedUnitElement, EarlyDimensionalExponents,
     EarlyLengthMeasureWithUnit, EarlyLengthUnit, EarlyLengthUnitCbu, EarlyLengthUnitSi,
     EarlyMassMeasureWithUnit, EarlyMassUnit, EarlyMassUnitCbu, EarlyMassUnitSi, EarlyMeasureValue,
     EarlyMeasureWithUnit, EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit, EarlyPlaneAngleUnit,
     EarlyPlaneAngleUnitCbu, EarlyPlaneAngleUnitSi, EarlyRatioMeasureWithUnit, EarlyRatioUnit,
-    EarlySolidAngleUnit, EarlyUncertaintyMeasureWithUnit,
+    EarlySolidAngleUnit, EarlyUncertaintyMeasureWithUnit, EarlyVolumeUnit,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::representation_item::MeasureValue;
@@ -35,11 +35,19 @@ pub(crate) fn lower_derived_unit_element(
     ctx.id_cache.insert(entity_id, id);
 }
 
-/// Lower one plain `DERIVED_UNIT`: resolve the element refs (unresolved
-/// members skip; an all-empty result warns and drops — schema WHERE SET[1:?]).
-pub(crate) fn lower_derived_unit(ctx: &mut ReaderContext, entity_id: u64, early: EarlyDerivedUnit) {
-    let mut elements = Vec::with_capacity(early.elements.len());
-    for r in early.elements {
+/// Shared lowering for `DERIVED_UNIT` and its named subtypes (`AREA_UNIT` /
+/// `VOLUME_UNIT` — same one-attr `elements` body, distinguished by `kind`):
+/// resolve the element refs (unresolved members skip; an all-empty result warns
+/// and drops — schema WHERE SET[1:?]) and push one arena entry.
+fn lower_derived_unit_kind(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    element_refs: Vec<u64>,
+    kind: DerivedUnitKind,
+    tag: &str,
+) {
+    let mut elements = Vec::with_capacity(element_refs.len());
+    for r in element_refs {
         if let Some(due_id) = ctx.id_cache.get::<crate::ir::id::DerivedUnitElementId>(r) {
             elements.push(due_id);
         }
@@ -47,15 +55,45 @@ pub(crate) fn lower_derived_unit(ctx: &mut ReaderContext, entity_id: u64, early:
     if elements.is_empty() {
         ctx.warnings.push(ConvertError::UnexpectedEntityForm {
             entity_id,
-            detail: "DERIVED_UNIT has no resolvable elements (schema WHERE: SET[1:?])".into(),
+            detail: format!("{tag} has no resolvable elements (schema WHERE: SET[1:?])"),
         });
         return;
     }
-    let id = ctx.derived_unit_arena.push(DerivedUnit {
-        elements,
-        kind: DerivedUnitKind::Plain,
-    });
+    let id = ctx.derived_unit_arena.push(DerivedUnit { elements, kind });
     ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one plain `DERIVED_UNIT`.
+pub(crate) fn lower_derived_unit(ctx: &mut ReaderContext, entity_id: u64, early: EarlyDerivedUnit) {
+    lower_derived_unit_kind(
+        ctx,
+        entity_id,
+        early.elements,
+        DerivedUnitKind::Plain,
+        "DERIVED_UNIT",
+    );
+}
+
+/// Lower `AREA_UNIT` (`derived_unit` subtype, `dimensions` is DERIVE/WHERE-fixed).
+pub(crate) fn lower_area_unit(ctx: &mut ReaderContext, entity_id: u64, early: EarlyAreaUnit) {
+    lower_derived_unit_kind(
+        ctx,
+        entity_id,
+        early.elements,
+        DerivedUnitKind::AreaUnit,
+        "AREA_UNIT",
+    );
+}
+
+/// Lower `VOLUME_UNIT` (`derived_unit` subtype, `dimensions` is DERIVE/WHERE-fixed).
+pub(crate) fn lower_volume_unit(ctx: &mut ReaderContext, entity_id: u64, early: EarlyVolumeUnit) {
+    lower_derived_unit_kind(
+        ctx,
+        entity_id,
+        early.elements,
+        DerivedUnitKind::VolumeUnit,
+        "VOLUME_UNIT",
+    );
 }
 
 /// Lower one `DIMENSIONAL_EXPONENTS` (pure pass-through).

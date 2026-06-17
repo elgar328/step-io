@@ -15,7 +15,7 @@ pub(crate) use super::generated::bind::{
     bind_applied_person_and_organization_assignment, bind_applied_presented_item,
     bind_applied_security_classification_assignment, bind_approval, bind_approval_date_time,
     bind_approval_person_organization, bind_approval_role, bind_approval_status, bind_area_in_set,
-    bind_axis1_placement, bind_axis2_placement_2d, bind_axis2_placement_3d,
+    bind_area_unit, bind_axis1_placement, bind_axis2_placement_2d, bind_axis2_placement_3d,
     bind_b_spline_curve_with_knots, bind_b_spline_surface_with_knots, bind_bounded_pcurve,
     bind_brep_with_voids, bind_calendar_date, bind_camera_image, bind_camera_image_3d_with_scale,
     bind_camera_model_d3, bind_camera_model_d3_multi_clipping, bind_camera_model_d3_with_hlhsr,
@@ -94,5 +94,5 @@ pub(crate) use super::generated::bind::{
     bind_toroidal_surface, bind_total_runout_tolerance, bind_trimmed_curve, bind_type_qualifier,
     bind_uncertainty_measure_with_unit, bind_value_format_type_qualifier,
     bind_value_representation_item, bind_vector, bind_vertex_loop, bind_vertex_point,
-    bind_view_volume,
+    bind_view_volume, bind_volume_unit,
 };

@@ -69,6 +69,8 @@ generate = [
     # units (derived cluster)
     "derived_unit_element",
     "derived_unit",
+    "area_unit",
+    "volume_unit",
     "dimensional_exponents",
     # Phase 4r: units named cluster — NAMED_UNIT bare (reserve-then-fill)
     "named_unit",

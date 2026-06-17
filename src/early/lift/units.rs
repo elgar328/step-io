@@ -2,12 +2,12 @@
 //! [module docs](super) for the lifting contract.
 
 use crate::early::model::{
-    EarlyDerivedUnit, EarlyDerivedUnitElement, EarlyDimensionalExponents,
+    EarlyAreaUnit, EarlyDerivedUnit, EarlyDerivedUnitElement, EarlyDimensionalExponents,
     EarlyLengthMeasureWithUnit, EarlyLengthUnit, EarlyLengthUnitCbu, EarlyLengthUnitSi,
     EarlyMassMeasureWithUnit, EarlyMassUnit, EarlyMassUnitCbu, EarlyMassUnitSi, EarlyMeasureValue,
     EarlyMeasureWithUnit, EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit, EarlyPlaneAngleUnit,
     EarlyPlaneAngleUnitCbu, EarlyPlaneAngleUnitSi, EarlyRatioMeasureWithUnit, EarlyRatioUnit,
-    EarlySolidAngleUnit, EarlyUncertaintyMeasureWithUnit,
+    EarlySolidAngleUnit, EarlyUncertaintyMeasureWithUnit, EarlyVolumeUnit,
 };
 use crate::ir::representation_item::MeasureValue;
 use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit};
@@ -122,6 +122,16 @@ pub(crate) fn lift_derived_unit_element(unit: u64, exponent: f64) -> EarlyDerive
 /// Lift one plain `DERIVED_UNIT` (elements pre-resolved).
 pub(crate) fn lift_derived_unit(elements: Vec<u64>) -> EarlyDerivedUnit {
     EarlyDerivedUnit { elements }
+}
+
+/// Lift `AREA_UNIT` (one-attr `elements`, like `DERIVED_UNIT`).
+pub(crate) fn lift_area_unit(elements: Vec<u64>) -> EarlyAreaUnit {
+    EarlyAreaUnit { elements }
+}
+
+/// Lift `VOLUME_UNIT` (one-attr `elements`, like `DERIVED_UNIT`).
+pub(crate) fn lift_volume_unit(elements: Vec<u64>) -> EarlyVolumeUnit {
+    EarlyVolumeUnit { elements }
 }
 
 /// Lift one `DIMENSIONAL_EXPONENTS` (pure pass-through).

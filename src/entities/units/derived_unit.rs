@@ -1,7 +1,7 @@
 //! `DERIVED_UNIT` handler — units (2-layer path). The named subtypes
-//! (`AREA_UNIT` / `VOLUME_UNIT`) keep their own handlers (their early.toml
-//! shape is the two-attr multiple-inheritance form, which the corpus's
-//! one-attr files do not match — legacy parse retained there).
+//! (`AREA_UNIT` / `VOLUME_UNIT`) are also 2-layer (single `derived_unit`
+//! inheritance, one-attr `elements` body) in their own handlers, sharing the
+//! `derived_unit_arena` via [`crate::ir::units::DerivedUnitKind`].
 
 use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
@@ -35,15 +35,4 @@ impl SimpleEntityHandler for DerivedUnitHandler {
         let early = lift::lift_derived_unit(refs);
         Ok(serialize::serialize_derived_unit(buf, &early))
     }
-}
-
-/// Emit a named derived-unit line (`AREA_UNIT` / `VOLUME_UNIT`) — the
-/// non-migrated named subtypes share this single-list shape.
-pub(crate) fn emit_derived_unit_named(
-    buf: &mut WriteBuffer,
-    name: &'static str,
-    refs: Vec<u64>,
-) -> u64 {
-    let list = refs.into_iter().map(Attribute::EntityRef).collect();
-    buf.push_simple(name, vec![Attribute::List(list)])
 }

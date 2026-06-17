@@ -1117,6 +1117,36 @@ pub(crate) fn serialize_derived_unit(
     )
 }
 
+pub(crate) fn serialize_area_unit(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAreaUnit,
+) -> u64 {
+    buf.push_simple(
+        "AREA_UNIT",
+        vec![crate::parser::entity::Attribute::List(
+            l1.elements
+                .iter()
+                .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                .collect(),
+        )],
+    )
+}
+
+pub(crate) fn serialize_volume_unit(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyVolumeUnit,
+) -> u64 {
+    buf.push_simple(
+        "VOLUME_UNIT",
+        vec![crate::parser::entity::Attribute::List(
+            l1.elements
+                .iter()
+                .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                .collect(),
+        )],
+    )
+}
+
 pub(crate) fn serialize_dimensional_exponents(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyDimensionalExponents,

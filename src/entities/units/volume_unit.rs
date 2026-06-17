@@ -1,14 +1,13 @@
-//! `VOLUME_UNIT` handler (units-3a).
+//! `VOLUME_UNIT` handler — units (2-layer path).
 //!
 //! Sister of [`crate::entities::units::area_unit::AreaUnitHandler`].
-//! EXPRESS: `VOLUME_UNIT SUBTYPE OF (derived_unit)` with `WHERE`
-//! clause fixing `dimensional_exponents` to `(3.0, 0, ...)`.
+//! EXPRESS: `VOLUME_UNIT SUBTYPE OF (derived_unit)` — single inheritance, with
+//! a `WHERE` clause fixing the derived `dimensional_exponents` to `(3.0, 0, …)`.
+//! Standard encoding: `VOLUME_UNIT((#e1, #e2))` — one `elements` attribute.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::entities::units::derived_unit::emit_derived_unit_named;
-use crate::ir::attr::{check_count, read_entity_ref_list};
 use crate::ir::error::ConvertError;
-use crate::ir::units::{DerivedUnit, DerivedUnitKind};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -19,6 +18,8 @@ pub(crate) struct VolumeUnitHandler;
 
 #[step_entity(name = "VOLUME_UNIT")]
 impl SimpleEntityHandler for VolumeUnitHandler {
+    /// Element STEP entity ids, in source order (the writer's
+    /// `emit_derived_unit_by_kind` supplies them for the `VolumeUnit` kind).
     type WriteInput = Vec<u64>;
 
     fn read(
@@ -27,30 +28,13 @@ impl SimpleEntityHandler for VolumeUnitHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 1, entity_id, "VOLUME_UNIT")?;
-        let refs = read_entity_ref_list(attrs, 0, entity_id, "elements")?;
-        let mut elements = Vec::with_capacity(refs.len());
-        for r in refs {
-            if let Some(due_id) = ctx.id_cache.get::<crate::ir::id::DerivedUnitElementId>(r) {
-                elements.push(due_id);
-            }
-        }
-        if elements.is_empty() {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: "VOLUME_UNIT has no resolvable elements (schema WHERE: SET[1:?])".into(),
-            });
-            return Ok(());
-        }
-        let id = ctx.derived_unit_arena.push(DerivedUnit {
-            elements,
-            kind: DerivedUnitKind::VolumeUnit,
-        });
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_volume_unit(entity_id, attrs)?;
+        lower::lower_volume_unit(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, refs: Vec<u64>) -> Result<u64, WriteError> {
-        Ok(emit_derived_unit_named(buf, "VOLUME_UNIT", refs))
+        let early = lift::lift_volume_unit(refs);
+        Ok(serialize::serialize_volume_unit(buf, &early))
     }
 }

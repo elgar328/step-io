@@ -1401,6 +1401,48 @@ impl crate::ir::arena::ArenaId for EarlyDerivedUnitId {
     }
 }
 
+/// L1 `AREA_UNIT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAreaUnit {
+    pub(crate) elements: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `AREA_UNIT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAreaUnitId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAreaUnitId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `VOLUME_UNIT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyVolumeUnit {
+    pub(crate) elements: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `VOLUME_UNIT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyVolumeUnitId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyVolumeUnitId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `DIMENSIONAL_EXPONENTS` (generated).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct EarlyDimensionalExponents {
