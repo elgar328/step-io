@@ -4,12 +4,13 @@
 use crate::early::model::{
     EarlyDerivedUnit, EarlyDerivedUnitElement, EarlyDimensionalExponents,
     EarlyLengthMeasureWithUnit, EarlyLengthUnit, EarlyLengthUnitCbu, EarlyLengthUnitSi,
-    EarlyMassMeasureWithUnit, EarlyMassUnit, EarlyMeasureValue, EarlyMeasureWithUnit,
-    EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit, EarlyPlaneAngleUnit, EarlyRatioMeasureWithUnit,
-    EarlyRatioUnit, EarlySolidAngleUnit, EarlyUncertaintyMeasureWithUnit,
+    EarlyMassMeasureWithUnit, EarlyMassUnit, EarlyMassUnitCbu, EarlyMassUnitSi, EarlyMeasureValue,
+    EarlyMeasureWithUnit, EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit, EarlyPlaneAngleUnit,
+    EarlyPlaneAngleUnitCbu, EarlyPlaneAngleUnitSi, EarlyRatioMeasureWithUnit, EarlyRatioUnit,
+    EarlySolidAngleUnit, EarlyUncertaintyMeasureWithUnit,
 };
 use crate::ir::representation_item::MeasureValue;
-use crate::ir::shape_rep::{LengthUncertainty, LengthUnit};
+use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit};
 use crate::ir::units::{DimensionalExponents, MassUnit, SiPrefix, SiUnitName};
 
 /// Lift `SOLID_ANGLE_UNIT` complex. Only the `STERADIAN` form exists, so the
@@ -55,32 +56,62 @@ pub(crate) fn lift_length_cbu(unit: LengthUnit, measure_step: u64) -> EarlyLengt
     })
 }
 
-/// Lift the **SI case** of `MASS_UNIT` (CBU is emitted by the hand-written
-/// `emit_mass_cbu_outer`). `MassUnit` → `(prefix, .GRAM.)`; `NAMED_UNIT.
-/// dimensions` re-emits as `*` via `[derived]`. CBU units (Pound/Ton) only reach
-/// here as a kernel-built-IR fallback (→ KILO GRAM, matching legacy).
+/// Lift the **SI case** of `MASS_UNIT`. `MassUnit` → `(prefix, .GRAM.)`;
+/// `NAMED_UNIT.dimensions` re-emits as `*` via the case's `derived` hint. CBU
+/// units (Pound/Ton) only reach here as a kernel-built-IR fallback (→ KILO GRAM).
 pub(crate) fn lift_mass_si(unit: MassUnit) -> EarlyMassUnit {
     let prefix = match unit {
         MassUnit::Gram => None,
         MassUnit::Megagram => Some(SiPrefix::Mega),
         MassUnit::Kilogram | MassUnit::Pound | MassUnit::Ton => Some(SiPrefix::Kilo),
     };
-    EarlyMassUnit {
+    EarlyMassUnit::Si(EarlyMassUnitSi {
         prefix,
         name: SiUnitName::Gram,
-    }
+    })
 }
 
-/// Lift the **SI case** of `PLANE_ANGLE_UNIT` (CBU is emitted by the hand-written
-/// `emit_plane_angle_cbu_outer`). Only the `RADIAN` form exists, so the `SI_UNIT`
-/// slot is the fixed `(prefix=$, name=.RADIAN.)`; `NAMED_UNIT.dimensions`
-/// re-emits as `*` via `[derived]`. Degree only reaches here as a kernel-built-IR
-/// fallback (→ plain RADIAN, matching legacy).
+/// Lift the **`CONVERSION_BASED_UNIT` case** of `MASS_UNIT`. `unit` → the CBU
+/// `name` token (`'ton'` is lowercase per corpus casing); `measure_step` is the
+/// pre-emitted conversion-factor MWU step id. `NAMED_UNIT.dimensions` re-emits
+/// as `*`. Kilogram/Megagram are plain SI (never a CBU) — benign fallback.
+pub(crate) fn lift_mass_cbu(unit: MassUnit, measure_step: u64) -> EarlyMassUnit {
+    let name = match unit {
+        MassUnit::Pound => "POUND",
+        MassUnit::Gram => "GRAM",
+        MassUnit::Ton => "ton",
+        MassUnit::Kilogram => "KILOGRAM",
+        MassUnit::Megagram => "MEGAGRAM",
+    };
+    EarlyMassUnit::Cbu(EarlyMassUnitCbu {
+        name: name.to_owned(),
+        conversion_factor: measure_step,
+    })
+}
+
+/// Lift the **SI case** of `PLANE_ANGLE_UNIT`. Only the `RADIAN` form exists, so
+/// the `SI_UNIT` slot is the fixed `(prefix=$, name=.RADIAN.)`; `NAMED_UNIT.
+/// dimensions` re-emits as `*`. Degree only reaches here as a kernel-built-IR
+/// fallback (→ plain RADIAN).
 pub(crate) fn lift_plane_angle_si() -> EarlyPlaneAngleUnit {
-    EarlyPlaneAngleUnit {
+    EarlyPlaneAngleUnit::Si(EarlyPlaneAngleUnitSi {
         prefix: None,
         name: SiUnitName::Radian,
-    }
+    })
+}
+
+/// Lift the **`CONVERSION_BASED_UNIT` case** of `PLANE_ANGLE_UNIT`. `unit` → the
+/// CBU `name` token; `measure_step` is the pre-emitted conversion-factor MWU
+/// step id. `NAMED_UNIT.dimensions` re-emits as `*`.
+pub(crate) fn lift_plane_angle_cbu(unit: AngleUnit, measure_step: u64) -> EarlyPlaneAngleUnit {
+    let name = match unit {
+        AngleUnit::Radian => "RADIAN",
+        AngleUnit::Degree => "DEGREE",
+    };
+    EarlyPlaneAngleUnit::Cbu(EarlyPlaneAngleUnitCbu {
+        name: name.to_owned(),
+        conversion_factor: measure_step,
+    })
 }
 
 /// Lift one `DERIVED_UNIT_ELEMENT` (unit pre-resolved).

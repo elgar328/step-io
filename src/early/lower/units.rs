@@ -4,9 +4,10 @@
 use crate::early::model::{
     EarlyDerivedUnit, EarlyDerivedUnitElement, EarlyDimensionalExponents,
     EarlyLengthMeasureWithUnit, EarlyLengthUnit, EarlyLengthUnitCbu, EarlyLengthUnitSi,
-    EarlyMassMeasureWithUnit, EarlyMassUnit, EarlyMeasureValue, EarlyMeasureWithUnit,
-    EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit, EarlyPlaneAngleUnit, EarlyRatioMeasureWithUnit,
-    EarlyRatioUnit, EarlySolidAngleUnit, EarlyUncertaintyMeasureWithUnit,
+    EarlyMassMeasureWithUnit, EarlyMassUnit, EarlyMassUnitCbu, EarlyMassUnitSi, EarlyMeasureValue,
+    EarlyMeasureWithUnit, EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit, EarlyPlaneAngleUnit,
+    EarlyPlaneAngleUnitCbu, EarlyPlaneAngleUnitSi, EarlyRatioMeasureWithUnit, EarlyRatioUnit,
+    EarlySolidAngleUnit, EarlyUncertaintyMeasureWithUnit,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::representation_item::MeasureValue;
@@ -305,6 +306,71 @@ pub(crate) fn mwu_unit_of(mwu: &MeasureWithUnit) -> crate::ir::id::NamedUnitId {
     }
 }
 
+/// The scalar `value` of a `MEASURE_WITH_UNIT`. Used by mass/plane-angle CBU
+/// lower to identify the unit by conversion factor (units-CBU-②) — read from the
+/// preserved factor MWU arena entry, replacing the prior graph-walk.
+fn mwu_value_of(mwu: &MeasureWithUnit) -> f64 {
+    match mwu {
+        MeasureWithUnit::Itself(d) => d.value,
+        MeasureWithUnit::Length { value, .. }
+        | MeasureWithUnit::Mass { value, .. }
+        | MeasureWithUnit::PlaneAngle { value, .. }
+        | MeasureWithUnit::Ratio { value, .. } => *value,
+    }
+}
+
+/// Relative-tolerance compare for CBU conversion factors (source files vary in
+/// printed precision; the canonical constants are exact).
+fn factor_eq(a: f64, b: f64) -> bool {
+    (a - b).abs() <= 1e-6 * b.abs()
+}
+
+/// Identify a mass unit by its conversion factor to the SI base (kilogram):
+/// `0.453_592_37` → Pound, `0.001` → Gram, `1000.0` → Ton. (kg is the fixed SI
+/// base, so the factor is a base-free identity — unlike length.)
+fn match_mass_by_factor(factor: f64) -> Option<MassUnit> {
+    if factor_eq(factor, 0.453_592_37) {
+        Some(MassUnit::Pound)
+    } else if factor_eq(factor, 0.001) {
+        Some(MassUnit::Gram)
+    } else if factor_eq(factor, 1000.0) {
+        Some(MassUnit::Ton)
+    } else {
+        None
+    }
+}
+
+/// Identify a plane-angle unit by conversion factor to SI radian: π/180 →
+/// Degree, 1.0 → Radian.
+fn match_angle_by_factor(factor: f64) -> Option<AngleUnit> {
+    if factor_eq(factor, std::f64::consts::PI / 180.0) {
+        Some(AngleUnit::Degree)
+    } else if factor_eq(factor, 1.0) {
+        Some(AngleUnit::Radian)
+    } else {
+        None
+    }
+}
+
+/// CBU mass name → unit (fallback when the factor is unrecognized).
+fn match_mass_conversion(upper: &str) -> Option<MassUnit> {
+    match upper {
+        "POUND" => Some(MassUnit::Pound),
+        "GRAM" => Some(MassUnit::Gram),
+        "TON" => Some(MassUnit::Ton),
+        _ => None,
+    }
+}
+
+/// CBU plane-angle name → unit (fallback).
+fn match_angle_conversion(upper: &str) -> Option<AngleUnit> {
+    match upper {
+        "DEGREE" | "DEGREES" => Some(AngleUnit::Degree),
+        "RADIAN" | "RADIANS" => Some(AngleUnit::Radian),
+        _ => None,
+    }
+}
+
 /// Lower `LENGTH_UNIT` (generated L1 enum). SI vs `CONVERSION_BASED_UNIT`.
 pub(crate) fn lower_length(ctx: &mut ReaderContext, entity_id: u64, early: &EarlyLengthUnit) {
     match early {
@@ -389,12 +455,20 @@ fn lower_length_cbu(ctx: &mut ReaderContext, entity_id: u64, early: &EarlyLength
     ctx.id_cache.insert(entity_id, id);
 }
 
-/// Lower the **SI case** of `MASS_UNIT` (CBU stays hand-written in the handler).
-/// `(prefix, name)` → `MassUnit` (Gram/Kilogram/Megagram); an unsupported SI
-/// mass spelling is dropped with a warning rather than faked as Kilogram (a fake
-/// match misrepresents the magnitude, e.g. 1 Mg ≠ 1 kg). `dim_exp` is always
-/// `None` — `NAMED_UNIT.dimensions` is canonical Derived (`*`) via `[derived]`.
-pub(crate) fn lower_mass_si(ctx: &mut ReaderContext, entity_id: u64, early: &EarlyMassUnit) {
+/// Lower `MASS_UNIT` (generated L1 enum). SI vs `CONVERSION_BASED_UNIT`.
+pub(crate) fn lower_mass(ctx: &mut ReaderContext, entity_id: u64, early: &EarlyMassUnit) {
+    match early {
+        EarlyMassUnit::Si(si) => lower_mass_si(ctx, entity_id, si),
+        EarlyMassUnit::Cbu(cbu) => lower_mass_cbu(ctx, entity_id, cbu),
+    }
+}
+
+/// Lower the **SI case** of `MASS_UNIT`. `(prefix, name)` → `MassUnit`
+/// (Gram/Kilogram/Megagram); an unsupported SI mass spelling is dropped with a
+/// warning rather than faked as Kilogram (a fake match misrepresents the
+/// magnitude, e.g. 1 Mg ≠ 1 kg). `dim_exp` is `None` — `NAMED_UNIT.dimensions`
+/// is canonical Derived (`*`) via the case's `derived` hint.
+fn lower_mass_si(ctx: &mut ReaderContext, entity_id: u64, early: &EarlyMassUnitSi) {
     let unit = match (early.prefix, early.name) {
         (None, SiUnitName::Gram) => MassUnit::Gram,
         (Some(SiPrefix::Kilo), SiUnitName::Gram) => MassUnit::Kilogram,
@@ -420,16 +494,79 @@ pub(crate) fn lower_mass_si(ctx: &mut ReaderContext, entity_id: u64, early: &Ear
     ctx.id_cache.insert(entity_id, id);
 }
 
-/// Lower the **SI case** of `PLANE_ANGLE_UNIT` (CBU stays hand-written in the
-/// handler). Only the SI `RADIAN` form is modelled ((None, Radian) →
-/// `AngleUnit::Radian`); any other SI prefix/name is unsupported and dropped
-/// with a warning. `dim_exp` is always `None` — `NAMED_UNIT.dimensions` is
-/// canonical Derived (`*`) via `[derived]`.
-pub(crate) fn lower_plane_angle_si(
+/// Lower the **`CONVERSION_BASED_UNIT` case** of `MASS_UNIT`. The SI base is the
+/// fixed kilogram, so the unit is identified **by the preserved factor MWU's
+/// value first, name second**; a non-standard name whose factor matches is
+/// normalized (`NsCase::CbuMassFactor`). `cbu_base` is the MWU's `unit_component`;
+/// `dim_exp = None` (`NAMED_UNIT.dimensions` is `*`).
+fn lower_mass_cbu(ctx: &mut ReaderContext, entity_id: u64, early: &EarlyMassUnitCbu) {
+    let by_name = match_mass_conversion(&early.name.to_uppercase());
+    let Some(mwu_id) = ctx
+        .id_cache
+        .get::<crate::ir::id::MeasureWithUnitId>(early.conversion_factor)
+    else {
+        ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: "CONVERSION_BASED_UNIT mass conversion_factor MWU unresolved".into(),
+        });
+        return;
+    };
+    let (factor, cbu_base) = {
+        let mwu = &ctx.mwu_arena[mwu_id];
+        (mwu_value_of(mwu), mwu_unit_of(mwu))
+    };
+    let Some(unit) = match_mass_by_factor(factor).or(by_name) else {
+        ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: format!(
+                "unsupported CONVERSION_BASED_UNIT mass (name={:?}, factor={factor})",
+                early.name
+            ),
+        });
+        return;
+    };
+    if by_name != Some(unit) {
+        let normalized_to = match unit {
+            MassUnit::Pound => "POUND",
+            MassUnit::Gram => "GRAM",
+            MassUnit::Ton => "TON",
+            MassUnit::Kilogram => "KILOGRAM",
+            MassUnit::Megagram => "MEGAGRAM",
+        };
+        ctx.ns_push(
+            crate::reader::NsCase::CbuMassFactor,
+            format!("CONVERSION_BASED_UNIT.name ({:?})", early.name),
+            1,
+            normalized_to.into(),
+        );
+    }
+    ctx.mass_unit_map.insert(entity_id, unit);
+    let id = ctx.named_units_arena.push(NamedUnit::Mass(MassFlavor {
+        unit,
+        cbu_base: Some(cbu_base),
+        dim_exp: None,
+        cbu_factor_mwu_id: Some(mwu_id),
+    }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower `PLANE_ANGLE_UNIT` (generated L1 enum). SI vs `CONVERSION_BASED_UNIT`.
+pub(crate) fn lower_plane_angle(
     ctx: &mut ReaderContext,
     entity_id: u64,
     early: &EarlyPlaneAngleUnit,
 ) {
+    match early {
+        EarlyPlaneAngleUnit::Si(si) => lower_plane_angle_si(ctx, entity_id, si),
+        EarlyPlaneAngleUnit::Cbu(cbu) => lower_plane_angle_cbu(ctx, entity_id, cbu),
+    }
+}
+
+/// Lower the **SI case** of `PLANE_ANGLE_UNIT`. Only the SI `RADIAN` form is
+/// modelled ((None, Radian) → `AngleUnit::Radian`); any other SI prefix/name is
+/// unsupported and dropped with a warning. `dim_exp = None` — `NAMED_UNIT.
+/// dimensions` is canonical Derived (`*`) via the case's `derived` hint.
+fn lower_plane_angle_si(ctx: &mut ReaderContext, entity_id: u64, early: &EarlyPlaneAngleUnitSi) {
     let (None, SiUnitName::Radian) = (early.prefix, early.name) else {
         ctx.warnings.push(ConvertError::UnexpectedEntityForm {
             entity_id,
@@ -449,6 +586,59 @@ pub(crate) fn lower_plane_angle_si(
             cbu_base: None,
             dim_exp: None,
             cbu_factor_mwu_id: None,
+        }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower the **`CONVERSION_BASED_UNIT` case** of `PLANE_ANGLE_UNIT`. SI base is
+/// the fixed radian → identify by factor first, name second; non-standard name
+/// matching a known factor is normalized (`NsCase::CbuAngleFactor`).
+fn lower_plane_angle_cbu(ctx: &mut ReaderContext, entity_id: u64, early: &EarlyPlaneAngleUnitCbu) {
+    let by_name = match_angle_conversion(&early.name.to_uppercase());
+    let Some(mwu_id) = ctx
+        .id_cache
+        .get::<crate::ir::id::MeasureWithUnitId>(early.conversion_factor)
+    else {
+        ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: "CONVERSION_BASED_UNIT angle conversion_factor MWU unresolved".into(),
+        });
+        return;
+    };
+    let (factor, cbu_base) = {
+        let mwu = &ctx.mwu_arena[mwu_id];
+        (mwu_value_of(mwu), mwu_unit_of(mwu))
+    };
+    let Some(unit) = match_angle_by_factor(factor).or(by_name) else {
+        ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: format!(
+                "unsupported CONVERSION_BASED_UNIT angle (name={:?}, factor={factor})",
+                early.name
+            ),
+        });
+        return;
+    };
+    if by_name != Some(unit) {
+        let normalized_to = match unit {
+            AngleUnit::Degree => "DEGREE",
+            AngleUnit::Radian => "RADIAN",
+        };
+        ctx.ns_push(
+            crate::reader::NsCase::CbuAngleFactor,
+            format!("CONVERSION_BASED_UNIT.name ({:?})", early.name),
+            1,
+            normalized_to.into(),
+        );
+    }
+    ctx.angle_unit_map.insert(entity_id, unit);
+    let id = ctx
+        .named_units_arena
+        .push(NamedUnit::PlaneAngle(PlaneAngleFlavor {
+            unit,
+            cbu_base: Some(cbu_base),
+            dim_exp: None,
+            cbu_factor_mwu_id: Some(mwu_id),
         }));
     ctx.id_cache.insert(entity_id, id);
 }

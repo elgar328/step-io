@@ -1182,6 +1182,18 @@ pub(crate) fn bind_mass_unit(
     entity_id: u64,
     parts: &[crate::parser::entity::RawEntityPart],
 ) -> Result<super::model::EarlyMassUnit, crate::ir::error::ConvertError> {
+    if parts.iter().any(|p| p.name == "CONVERSION_BASED_UNIT") {
+        let attrs = crate::reader::require_part_attrs(parts, "CONVERSION_BASED_UNIT", entity_id)?;
+        let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let conversion_factor =
+            crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "conversion_factor")?;
+        return Ok(super::model::EarlyMassUnit::Cbu(
+            super::model::EarlyMassUnitCbu {
+                name,
+                conversion_factor,
+            },
+        ));
+    }
     let attrs = crate::reader::require_part_attrs(parts, "SI_UNIT", entity_id)?;
     let prefix = match attrs.get(0) {
         Some(
@@ -1190,13 +1202,27 @@ pub(crate) fn bind_mass_unit(
         _ => Some(bind_si_prefix(attrs, 0, entity_id, "prefix")?),
     };
     let name = bind_si_unit_name(attrs, 1, entity_id, "name")?;
-    Ok(super::model::EarlyMassUnit { prefix, name })
+    Ok(super::model::EarlyMassUnit::Si(
+        super::model::EarlyMassUnitSi { prefix, name },
+    ))
 }
 
 pub(crate) fn bind_plane_angle_unit(
     entity_id: u64,
     parts: &[crate::parser::entity::RawEntityPart],
 ) -> Result<super::model::EarlyPlaneAngleUnit, crate::ir::error::ConvertError> {
+    if parts.iter().any(|p| p.name == "CONVERSION_BASED_UNIT") {
+        let attrs = crate::reader::require_part_attrs(parts, "CONVERSION_BASED_UNIT", entity_id)?;
+        let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let conversion_factor =
+            crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "conversion_factor")?;
+        return Ok(super::model::EarlyPlaneAngleUnit::Cbu(
+            super::model::EarlyPlaneAngleUnitCbu {
+                name,
+                conversion_factor,
+            },
+        ));
+    }
     let attrs = crate::reader::require_part_attrs(parts, "SI_UNIT", entity_id)?;
     let prefix = match attrs.get(0) {
         Some(
@@ -1205,7 +1231,9 @@ pub(crate) fn bind_plane_angle_unit(
         _ => Some(bind_si_prefix(attrs, 0, entity_id, "prefix")?),
     };
     let name = bind_si_unit_name(attrs, 1, entity_id, "name")?;
-    Ok(super::model::EarlyPlaneAngleUnit { prefix, name })
+    Ok(super::model::EarlyPlaneAngleUnit::Si(
+        super::model::EarlyPlaneAngleUnitSi { prefix, name },
+    ))
 }
 
 pub(crate) fn bind_ratio_unit(

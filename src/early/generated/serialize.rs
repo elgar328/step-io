@@ -1296,33 +1296,22 @@ pub(crate) fn serialize_mass_unit(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyMassUnit,
 ) -> u64 {
-    buf.push_complex(vec![
-        ("MASS_UNIT".into(), vec![]),
-        (
-            "NAMED_UNIT".into(),
-            vec![crate::parser::entity::Attribute::Derived],
-        ),
-        (
-            "SI_UNIT".into(),
-            vec![
-                match &l1.prefix {
-                    Some(e) => si_prefix_attr(e.clone()),
-                    None => crate::parser::entity::Attribute::Unset,
-                },
-                si_unit_name_attr(l1.name),
-            ],
-        ),
-    ])
-}
-
-pub(crate) fn serialize_mass_unit_with_id(
-    buf: &mut crate::writer::buffer::WriteBuffer,
-    id: u64,
-    l1: &super::model::EarlyMassUnit,
-) {
-    buf.push_complex_with_id(
-        id,
-        vec![
+    match l1 {
+        super::model::EarlyMassUnit::Cbu(l1) => buf.push_complex(vec![
+            (
+                "CONVERSION_BASED_UNIT".into(),
+                vec![
+                    crate::parser::entity::Attribute::String(l1.name.clone()),
+                    crate::parser::entity::Attribute::EntityRef(l1.conversion_factor),
+                ],
+            ),
+            ("MASS_UNIT".into(), vec![]),
+            (
+                "NAMED_UNIT".into(),
+                vec![crate::parser::entity::Attribute::Derived],
+            ),
+        ]),
+        super::model::EarlyMassUnit::Si(l1) => buf.push_complex(vec![
             ("MASS_UNIT".into(), vec![]),
             (
                 "NAMED_UNIT".into(),
@@ -1338,41 +1327,76 @@ pub(crate) fn serialize_mass_unit_with_id(
                     si_unit_name_attr(l1.name),
                 ],
             ),
-        ],
-    );
+        ]),
+    }
+}
+
+pub(crate) fn serialize_mass_unit_with_id(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    id: u64,
+    l1: &super::model::EarlyMassUnit,
+) {
+    match l1 {
+        super::model::EarlyMassUnit::Cbu(l1) => buf.push_complex_with_id(
+            id,
+            vec![
+                (
+                    "CONVERSION_BASED_UNIT".into(),
+                    vec![
+                        crate::parser::entity::Attribute::String(l1.name.clone()),
+                        crate::parser::entity::Attribute::EntityRef(l1.conversion_factor),
+                    ],
+                ),
+                ("MASS_UNIT".into(), vec![]),
+                (
+                    "NAMED_UNIT".into(),
+                    vec![crate::parser::entity::Attribute::Derived],
+                ),
+            ],
+        ),
+        super::model::EarlyMassUnit::Si(l1) => buf.push_complex_with_id(
+            id,
+            vec![
+                ("MASS_UNIT".into(), vec![]),
+                (
+                    "NAMED_UNIT".into(),
+                    vec![crate::parser::entity::Attribute::Derived],
+                ),
+                (
+                    "SI_UNIT".into(),
+                    vec![
+                        match &l1.prefix {
+                            Some(e) => si_prefix_attr(e.clone()),
+                            None => crate::parser::entity::Attribute::Unset,
+                        },
+                        si_unit_name_attr(l1.name),
+                    ],
+                ),
+            ],
+        ),
+    }
 }
 
 pub(crate) fn serialize_plane_angle_unit(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyPlaneAngleUnit,
 ) -> u64 {
-    buf.push_complex(vec![
-        (
-            "SI_UNIT".into(),
-            vec![
-                match &l1.prefix {
-                    Some(e) => si_prefix_attr(e.clone()),
-                    None => crate::parser::entity::Attribute::Unset,
-                },
-                si_unit_name_attr(l1.name),
-            ],
-        ),
-        (
-            "NAMED_UNIT".into(),
-            vec![crate::parser::entity::Attribute::Derived],
-        ),
-        ("PLANE_ANGLE_UNIT".into(), vec![]),
-    ])
-}
-
-pub(crate) fn serialize_plane_angle_unit_with_id(
-    buf: &mut crate::writer::buffer::WriteBuffer,
-    id: u64,
-    l1: &super::model::EarlyPlaneAngleUnit,
-) {
-    buf.push_complex_with_id(
-        id,
-        vec![
+    match l1 {
+        super::model::EarlyPlaneAngleUnit::Cbu(l1) => buf.push_complex(vec![
+            (
+                "CONVERSION_BASED_UNIT".into(),
+                vec![
+                    crate::parser::entity::Attribute::String(l1.name.clone()),
+                    crate::parser::entity::Attribute::EntityRef(l1.conversion_factor),
+                ],
+            ),
+            (
+                "NAMED_UNIT".into(),
+                vec![crate::parser::entity::Attribute::Derived],
+            ),
+            ("PLANE_ANGLE_UNIT".into(), vec![]),
+        ]),
+        super::model::EarlyPlaneAngleUnit::Si(l1) => buf.push_complex(vec![
             (
                 "SI_UNIT".into(),
                 vec![
@@ -1388,8 +1412,54 @@ pub(crate) fn serialize_plane_angle_unit_with_id(
                 vec![crate::parser::entity::Attribute::Derived],
             ),
             ("PLANE_ANGLE_UNIT".into(), vec![]),
-        ],
-    );
+        ]),
+    }
+}
+
+pub(crate) fn serialize_plane_angle_unit_with_id(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    id: u64,
+    l1: &super::model::EarlyPlaneAngleUnit,
+) {
+    match l1 {
+        super::model::EarlyPlaneAngleUnit::Cbu(l1) => buf.push_complex_with_id(
+            id,
+            vec![
+                (
+                    "CONVERSION_BASED_UNIT".into(),
+                    vec![
+                        crate::parser::entity::Attribute::String(l1.name.clone()),
+                        crate::parser::entity::Attribute::EntityRef(l1.conversion_factor),
+                    ],
+                ),
+                (
+                    "NAMED_UNIT".into(),
+                    vec![crate::parser::entity::Attribute::Derived],
+                ),
+                ("PLANE_ANGLE_UNIT".into(), vec![]),
+            ],
+        ),
+        super::model::EarlyPlaneAngleUnit::Si(l1) => buf.push_complex_with_id(
+            id,
+            vec![
+                (
+                    "SI_UNIT".into(),
+                    vec![
+                        match &l1.prefix {
+                            Some(e) => si_prefix_attr(e.clone()),
+                            None => crate::parser::entity::Attribute::Unset,
+                        },
+                        si_unit_name_attr(l1.name),
+                    ],
+                ),
+                (
+                    "NAMED_UNIT".into(),
+                    vec![crate::parser::entity::Attribute::Derived],
+                ),
+                ("PLANE_ANGLE_UNIT".into(), vec![]),
+            ],
+        ),
+    }
 }
 
 pub(crate) fn serialize_ratio_unit(

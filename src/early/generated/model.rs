@@ -1509,9 +1509,23 @@ impl crate::ir::arena::ArenaId for EarlyLengthUnitId {
 
 /// L1 `MASS_UNIT` (generated).
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct EarlyMassUnit {
+pub(crate) struct EarlyMassUnitCbu {
+    pub(crate) name: String,
+    pub(crate) conversion_factor: u64,
+}
+
+/// L1 `MASS_UNIT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyMassUnitSi {
     pub(crate) prefix: Option<crate::ir::units::SiPrefix>,
     pub(crate) name: crate::ir::units::SiUnitName,
+}
+
+/// L1 `MASS_UNIT` (generated, multi-case).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum EarlyMassUnit {
+    Cbu(EarlyMassUnitCbu),
+    Si(EarlyMassUnitSi),
 }
 
 /// Typed `id_cache` key for `MASS_UNIT` (file id → L1→L2 correspondence;
@@ -1531,9 +1545,23 @@ impl crate::ir::arena::ArenaId for EarlyMassUnitId {
 
 /// L1 `PLANE_ANGLE_UNIT` (generated).
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct EarlyPlaneAngleUnit {
+pub(crate) struct EarlyPlaneAngleUnitCbu {
+    pub(crate) name: String,
+    pub(crate) conversion_factor: u64,
+}
+
+/// L1 `PLANE_ANGLE_UNIT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPlaneAngleUnitSi {
     pub(crate) prefix: Option<crate::ir::units::SiPrefix>,
     pub(crate) name: crate::ir::units::SiUnitName,
+}
+
+/// L1 `PLANE_ANGLE_UNIT` (generated, multi-case).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum EarlyPlaneAngleUnit {
+    Cbu(EarlyPlaneAngleUnitCbu),
+    Si(EarlyPlaneAngleUnitSi),
 }
 
 /// Typed `id_cache` key for `PLANE_ANGLE_UNIT` (file id → L1→L2 correspondence;

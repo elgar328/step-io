@@ -74,21 +74,10 @@ impl WriteBuffer<'_> {
             .collect();
         for (id, named) in entries {
             let target = self.step_id(id);
-            // units-CBU-②: LENGTH_UNIT (SI + CBU) is fully 2-layer → always the
-            // plain (serialize_with_id) path, which picks SI/CBU by the flavor.
-            // MASS / PLANE_ANGLE CBU still go through the hand `emit_named_unit_cbu`
-            // (Plan 2).
-            let go_cbu = cbu_base_of(&named).is_some() && !matches!(named, NamedUnit::Length(_));
-            if go_cbu {
-                let measure_step = cbu_factor_mwu_id_of(&named)
-                    .map(|m| self.step_id(m))
-                    .ok_or_else(|| WriteError::UnsupportedIrVariant {
-                        detail: "CBU NamedUnit is missing its cbu_factor_mwu_id".into(),
-                    })?;
-                emit_named_unit_cbu(self, named, measure_step, target)?;
-            } else {
-                emit_named_unit_plain(self, named, target)?;
-            }
+            // units-CBU-②: every NAMED_UNIT (SI + CBU, all flavours) is fully
+            // 2-layer → the plain (serialize_with_id) path picks SI/CBU by the
+            // flavor's `cbu_factor_mwu_id`. No hand CBU emit path remains.
+            emit_named_unit_plain(self, named, target)?;
         }
         for (id, due) in pool.derived_unit_elements.iter_with_ids() {
             let unit_step = self.step_id(due.unit);
@@ -144,26 +133,6 @@ fn emit_derived_unit_element(
     )
 }
 
-fn cbu_base_of(named: &NamedUnit) -> Option<crate::ir::id::NamedUnitId> {
-    match named {
-        NamedUnit::Length(f) => f.cbu_base,
-        NamedUnit::PlaneAngle(f) => f.cbu_base,
-        NamedUnit::SolidAngle(_) | NamedUnit::Ratio(_) | NamedUnit::Itself(_) => None,
-        NamedUnit::Mass(f) => f.cbu_base,
-    }
-}
-
-/// The preserved conversion-factor `MEASURE_WITH_UNIT` of a CBU outer
-/// (units-CBU-① preservation). `None` for plain SI / non-CBU flavours.
-fn cbu_factor_mwu_id_of(named: &NamedUnit) -> Option<crate::ir::id::MeasureWithUnitId> {
-    match named {
-        NamedUnit::Length(f) => f.cbu_factor_mwu_id,
-        NamedUnit::PlaneAngle(f) => f.cbu_factor_mwu_id,
-        NamedUnit::Mass(f) => f.cbu_factor_mwu_id,
-        NamedUnit::SolidAngle(_) | NamedUnit::Ratio(_) | NamedUnit::Itself(_) => None,
-    }
-}
-
 fn emit_named_unit_plain(
     buf: &mut WriteBuffer<'_>,
     named: NamedUnit,
@@ -184,12 +153,14 @@ fn emit_named_unit_plain(
             crate::early::serialize::serialize_length_unit_with_id(buf, target_id, &l1);
             Ok(target_id)
         }
-        NamedUnit::PlaneAngle(_f) => {
-            crate::early::serialize::serialize_plane_angle_unit_with_id(
-                buf,
-                target_id,
-                &crate::early::lift::lift_plane_angle_si(),
-            );
+        NamedUnit::PlaneAngle(f) => {
+            // units-CBU-②: SI vs CBU by the preserved factor MWU; dimensions `*`.
+            let l1 = if let Some(mwu_id) = f.cbu_factor_mwu_id {
+                crate::early::lift::lift_plane_angle_cbu(f.unit, buf.step_id(mwu_id))
+            } else {
+                crate::early::lift::lift_plane_angle_si()
+            };
+            crate::early::serialize::serialize_plane_angle_unit_with_id(buf, target_id, &l1);
             Ok(target_id)
         }
         NamedUnit::SolidAngle(_f) => {
@@ -201,11 +172,13 @@ fn emit_named_unit_plain(
             Ok(target_id)
         }
         NamedUnit::Mass(f) => {
-            crate::early::serialize::serialize_mass_unit_with_id(
-                buf,
-                target_id,
-                &crate::early::lift::lift_mass_si(f.unit),
-            );
+            // units-CBU-②: SI vs CBU by the preserved factor MWU; dimensions `*`.
+            let l1 = if let Some(mwu_id) = f.cbu_factor_mwu_id {
+                crate::early::lift::lift_mass_cbu(f.unit, buf.step_id(mwu_id))
+            } else {
+                crate::early::lift::lift_mass_si(f.unit)
+            };
+            crate::early::serialize::serialize_mass_unit_with_id(buf, target_id, &l1);
             Ok(target_id)
         }
         // Reproduce the source form: complex `(NAMED_UNIT()RATIO_UNIT())`
@@ -234,40 +207,6 @@ fn emit_named_unit_plain(
             );
             Ok(target_id)
         }
-    }
-}
-
-fn emit_named_unit_cbu(
-    buf: &mut WriteBuffer<'_>,
-    named: NamedUnit,
-    measure_step: u64,
-    target_id: u64,
-) -> Result<u64, WriteError> {
-    use crate::entities::units::mass_unit::emit_mass_cbu_outer;
-    use crate::entities::units::plane_angle_unit::emit_plane_angle_cbu_outer;
-    let dim_exp_step =
-        |de: Option<crate::ir::DimensionalExponentsId>| de.map_or(0, |id| buf.step_id(id));
-    match named {
-        NamedUnit::PlaneAngle(f) => Ok(emit_plane_angle_cbu_outer(
-            buf,
-            f.unit,
-            measure_step,
-            target_id,
-            dim_exp_step(f.dim_exp),
-        )),
-        NamedUnit::Mass(f) => emit_mass_cbu_outer(
-            buf,
-            f.unit,
-            measure_step,
-            target_id,
-            dim_exp_step(f.dim_exp),
-        ),
-        // LENGTH_UNIT (units-CBU-②) goes through the 2-layer plain path; SolidAngle
-        // / Ratio / bare Itself have no CBU variant.
-        NamedUnit::Length(_)
-        | NamedUnit::SolidAngle(_)
-        | NamedUnit::Ratio(_)
-        | NamedUnit::Itself(_) => emit_named_unit_plain(buf, named, target_id),
     }
 }
 
@@ -498,7 +437,8 @@ mod tests {
             out.contains("PLANE_ANGLE_MEASURE_WITH_UNIT(PLANE_ANGLE_MEASURE(0.017453"),
             "{out}"
         );
-        assert!(out.contains("DIMENSIONAL_EXPONENTS(0."), "{out}");
+        // units-CBU-②: the CBU outer's NAMED_UNIT.dimensions is `*` (Derived).
+        assert!(out.contains("NAMED_UNIT(*) PLANE_ANGLE_UNIT())"), "{out}");
     }
 
     #[test]

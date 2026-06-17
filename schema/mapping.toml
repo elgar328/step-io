@@ -484,23 +484,29 @@ parts = ["CONVERSION_BASED_UNIT", "LENGTH_UNIT", "NAMED_UNIT"]
 derived = ["dimensions"]
 discriminant = "CONVERSION_BASED_UNIT"
 
-# SI case only (CBU stays hand-written). Part order matches emit_plain_si_mass
-# (MASS_UNIT, NAMED_UNIT, SI_UNIT).
-[complex.mass_unit]
-parts = [
-    "MASS_UNIT",
-    "NAMED_UNIT",
-    "SI_UNIT",
-]
+# Multi-case (units-CBU-② Plan 2): SI vs CONVERSION_BASED_UNIT. Both cases'
+# NAMED_UNIT.dimensions = `*` (Derived). CBU adds CONVERSION_BASED_UNIT(name,
+# conversion_factor MWU); unit identified by factor in lower (fixed kg base).
+[complex.mass_unit.cases.si]
+parts = ["MASS_UNIT", "NAMED_UNIT", "SI_UNIT"]
+derived = ["dimensions"]
 
-# SI case only (CBU stays hand-written). Part order matches emit_plain_si_radian
-# (SI_UNIT, NAMED_UNIT, PLANE_ANGLE_UNIT).
-[complex.plane_angle_unit]
-parts = [
-    "SI_UNIT",
-    "NAMED_UNIT",
-    "PLANE_ANGLE_UNIT",
-]
+[complex.mass_unit.cases.cbu]
+parts = ["CONVERSION_BASED_UNIT", "MASS_UNIT", "NAMED_UNIT"]
+derived = ["dimensions"]
+discriminant = "CONVERSION_BASED_UNIT"
+
+# Multi-case (units-CBU-② Plan 2): SI vs CONVERSION_BASED_UNIT. Both cases'
+# NAMED_UNIT.dimensions = `*` (Derived). CBU unit identified by factor in lower
+# (fixed radian base).
+[complex.plane_angle_unit.cases.si]
+parts = ["SI_UNIT", "NAMED_UNIT", "PLANE_ANGLE_UNIT"]
+derived = ["dimensions"]
+
+[complex.plane_angle_unit.cases.cbu]
+parts = ["CONVERSION_BASED_UNIT", "NAMED_UNIT", "PLANE_ANGLE_UNIT"]
+derived = ["dimensions"]
+discriminant = "CONVERSION_BASED_UNIT"
 
 # Per-entity EXPRESS Derived (`*`) attribute names. early.toml (generated) cannot
 # carry DERIVE info, so it is hand-authored here. A listed attr keeps its Part21
@@ -511,9 +517,8 @@ oriented_edge = ["edge_start", "edge_end"]
 oriented_closed_shell = ["cfs_faces"]
 default_model_geometric_view = ["product_definitional"]
 solid_angle_unit = ["dimensions"]
-mass_unit = ["dimensions"]
-plane_angle_unit = ["dimensions"]
-# length_unit: per-case derived now lives in [complex.length_unit.cases.*]
+# length_unit / mass_unit / plane_angle_unit: per-case derived now lives in
+# [complex.<entity>.cases.*] (multi-case, units-CBU-②).
 
 # `[enum.<alias>]`: reuse an existing L2 enum for a STEP ENUM type-alias instead
 # of synthesizing an `Early*` enum. `variants` maps each early.toml ENUM member
