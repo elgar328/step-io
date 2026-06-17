@@ -1194,6 +1194,16 @@ pub(crate) fn bind_plane_angle_unit(
     Ok(super::model::EarlyPlaneAngleUnit { prefix, name })
 }
 
+pub(crate) fn bind_ratio_unit(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyRatioUnit, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "RATIO_UNIT")?;
+    Ok(super::model::EarlyRatioUnit {
+        dimensions: crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "dimensions")?,
+    })
+}
+
 pub(crate) fn bind_pre_defined_marker(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],

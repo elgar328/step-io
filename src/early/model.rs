@@ -79,7 +79,7 @@ pub(crate) use super::generated::model::{
     EarlyProductDefinitionFormationWithSpecifiedSource, EarlyProductDefinitionId,
     EarlyProductDefinitionRelationship, EarlyProductDefinitionShape, EarlyProductDefinitionShapeId,
     EarlyProductDefinitionWithAssociatedDocuments, EarlyQualifiedRepresentationItem,
-    EarlyQuasiUniformCurve, EarlyQuasiUniformSurface, EarlyRatioMeasureWithUnit,
+    EarlyQuasiUniformCurve, EarlyQuasiUniformSurface, EarlyRatioMeasureWithUnit, EarlyRatioUnit,
     EarlyRationalBSplineCurve, EarlyRationalBSplineSurface, EarlyRationalQuasiUniformCurve,
     EarlyRationalQuasiUniformSurface, EarlyRealRepresentationItem, EarlyRectangularTrimmedSurface,
     EarlyRepositionedTessellatedItem, EarlyRepresentationContext, EarlyRepresentationMap,

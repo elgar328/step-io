@@ -5,7 +5,7 @@ use crate::early::model::{
     EarlyDerivedUnit, EarlyDerivedUnitElement, EarlyDimensionalExponents,
     EarlyLengthMeasureWithUnit, EarlyLengthUnit, EarlyMassMeasureWithUnit, EarlyMassUnit,
     EarlyMeasureValue, EarlyMeasureWithUnit, EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit,
-    EarlyPlaneAngleUnit, EarlyRatioMeasureWithUnit, EarlySolidAngleUnit,
+    EarlyPlaneAngleUnit, EarlyRatioMeasureWithUnit, EarlyRatioUnit, EarlySolidAngleUnit,
     EarlyUncertaintyMeasureWithUnit,
 };
 use crate::ir::error::ConvertError;
@@ -14,7 +14,7 @@ use crate::ir::shape_rep::{AngleUnit, LengthUncertainty, LengthUnit, SolidAngleU
 use crate::ir::units::{
     DerivedUnit, DerivedUnitElement, DerivedUnitKind, DimensionalExponents, LengthFlavor,
     MassFlavor, MassUnit, MeasureWithUnit, MeasureWithUnitData, NamedUnit, NamedUnitData,
-    PlaneAngleFlavor, SiPrefix, SiUnitName, SolidAngleFlavor,
+    PlaneAngleFlavor, RatioFlavor, SiPrefix, SiUnitName, SolidAngleFlavor,
 };
 use crate::reader::ReaderContext;
 
@@ -199,6 +199,21 @@ pub(crate) fn lower_ratio_measure_with_unit(
         return;
     };
     let id = ctx.mwu_arena.push(MeasureWithUnit::Ratio { value, unit });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower the simple `RATIO_UNIT(dimensions)` (c3d) → `NamedUnit::Ratio`.
+/// `dimensions` resolves through the `DimensionalExponentsId` cache (the
+/// handler normalizes a `$`/`*` to a synthetic dimensionless DE before bind, so
+/// the ref always resolves here). `complex = false` (the standalone form).
+pub(crate) fn lower_ratio_unit(ctx: &mut ReaderContext, entity_id: u64, early: &EarlyRatioUnit) {
+    let dim_exp = ctx
+        .id_cache
+        .get::<crate::ir::id::DimensionalExponentsId>(early.dimensions);
+    let id = ctx.named_units_arena.push(NamedUnit::Ratio(RatioFlavor {
+        dim_exp,
+        complex: false,
+    }));
     ctx.id_cache.insert(entity_id, id);
 }
 

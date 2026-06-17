@@ -1537,6 +1537,27 @@ impl crate::ir::arena::ArenaId for EarlyPlaneAngleUnitId {
     }
 }
 
+/// L1 `RATIO_UNIT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyRatioUnit {
+    pub(crate) dimensions: u64,
+}
+
+/// Typed `id_cache` key for `RATIO_UNIT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyRatioUnitId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyRatioUnitId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `PRE_DEFINED_MARKER` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyPreDefinedMarker {

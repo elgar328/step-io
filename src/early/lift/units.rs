@@ -5,7 +5,7 @@ use crate::early::model::{
     EarlyDerivedUnit, EarlyDerivedUnitElement, EarlyDimensionalExponents,
     EarlyLengthMeasureWithUnit, EarlyLengthUnit, EarlyMassMeasureWithUnit, EarlyMassUnit,
     EarlyMeasureValue, EarlyMeasureWithUnit, EarlyNamedUnit, EarlyPlaneAngleMeasureWithUnit,
-    EarlyPlaneAngleUnit, EarlyRatioMeasureWithUnit, EarlySolidAngleUnit,
+    EarlyPlaneAngleUnit, EarlyRatioMeasureWithUnit, EarlyRatioUnit, EarlySolidAngleUnit,
     EarlyUncertaintyMeasureWithUnit,
 };
 use crate::ir::representation_item::MeasureValue;
@@ -146,6 +146,15 @@ pub(crate) fn lift_ratio_measure_with_unit(
     EarlyRatioMeasureWithUnit {
         value_component: EarlyMeasureValue::PositiveRatioMeasure(value),
         unit_component: unit_step,
+    }
+}
+
+/// Lift the simple `RATIO_UNIT(dimensions)`. `dim_step` is the child
+/// `DIMENSIONAL_EXPONENTS` step id (the emit loop resolves it from the
+/// flavor's `dim_exp`, always `Some` post-synthetic-normalization).
+pub(crate) fn lift_ratio_unit(dim_step: u64) -> EarlyRatioUnit {
+    EarlyRatioUnit {
+        dimensions: dim_step,
     }
 }
 

@@ -1357,6 +1357,28 @@ pub(crate) fn serialize_plane_angle_unit_with_id(
     );
 }
 
+pub(crate) fn serialize_ratio_unit(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyRatioUnit,
+) -> u64 {
+    buf.push_simple(
+        "RATIO_UNIT",
+        vec![crate::parser::entity::Attribute::EntityRef(l1.dimensions)],
+    )
+}
+
+pub(crate) fn serialize_ratio_unit_with_id(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    id: u64,
+    l1: &super::model::EarlyRatioUnit,
+) {
+    buf.push_simple_with_id(
+        id,
+        "RATIO_UNIT",
+        vec![crate::parser::entity::Attribute::EntityRef(l1.dimensions)],
+    );
+}
+
 pub(crate) fn serialize_pre_defined_marker(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyPreDefinedMarker,

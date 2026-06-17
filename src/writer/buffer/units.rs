@@ -164,8 +164,8 @@ fn emit_named_unit_plain(
     named: NamedUnit,
     target_id: u64,
 ) -> Result<u64, WriteError> {
-    use crate::entities::units::ratio_unit::{RatioUnitHandler, RatioUnitSimpleHandler};
-    use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
+    use crate::entities::ComplexEntityHandler;
+    use crate::entities::units::ratio_unit::RatioUnitHandler;
     let dim_exp_step =
         |de: Option<crate::ir::DimensionalExponentsId>| de.map_or(0, |id| buf.step_id(id));
     match named {
@@ -201,13 +201,19 @@ fn emit_named_unit_plain(
             );
             Ok(target_id)
         }
-        // Reproduce the source form: complex `(NAMED_UNIT()RATIO_UNIT())` vs
-        // the standalone simple `RATIO_UNIT(dimensions)` entity.
+        // Reproduce the source form: complex `(NAMED_UNIT()RATIO_UNIT())`
+        // (hand-written, corpus-absent) vs the standalone simple
+        // `RATIO_UNIT(dimensions)` entity (2-layer serialize_with_id).
         NamedUnit::Ratio(f) if f.complex => {
             RatioUnitHandler::write(buf, (target_id, dim_exp_step(f.dim_exp)))
         }
         NamedUnit::Ratio(f) => {
-            RatioUnitSimpleHandler::write(buf, (target_id, dim_exp_step(f.dim_exp)))
+            crate::early::serialize::serialize_ratio_unit_with_id(
+                buf,
+                target_id,
+                &crate::early::lift::lift_ratio_unit(dim_exp_step(f.dim_exp)),
+            );
+            Ok(target_id)
         }
         // Bare NAMED_UNIT(#dimensions) — a dimensionless/count unit. Emitted at
         // the pre-reserved id via the 2-layer serialize_with_id path.

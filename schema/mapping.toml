@@ -79,6 +79,8 @@ generate = [
     # Phase 4u: units complex — MASS_UNIT + PLANE_ANGLE_UNIT SI case (CBU stays hand-written)
     "mass_unit",
     "plane_angle_unit",
+    # Phase 5b: units simple — RATIO_UNIT (NAMED_UNIT subtype; dimensions $ → synthetic DE)
+    "ratio_unit",
     # visualization (pre-defined / colour leaf batch)
     "pre_defined_marker",
     "pre_defined_point_marker_symbol",
@@ -333,6 +335,7 @@ serialize_with_id = [
     "length_unit",
     "mass_unit",
     "plane_angle_unit",
+    "ratio_unit",
 ]
 
 # `generate_all`: diagnostic flip. When true, gen-early generates *every* entity
