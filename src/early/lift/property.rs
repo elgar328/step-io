@@ -3,10 +3,25 @@
 
 use crate::early::model::{
     EarlyDescriptionAttribute, EarlyDimensionalCharacteristicRepresentation, EarlyGeneralProperty,
-    EarlyGeneralPropertyAssociation, EarlyIdAttribute, EarlyNameAttribute,
+    EarlyGeneralPropertyAssociation, EarlyIdAttribute, EarlyNameAttribute, EarlyPropertyDefinition,
     EarlyShapeDefinitionRepresentation,
 };
 use crate::ir::property::GeneralProperty;
+
+/// Lift one `PROPERTY_DEFINITION`. The orchestrator
+/// (`emit_property_definitions_*`) resolves the `characterized_definition`
+/// target to its emitted step id (`definition_step`) before calling write.
+pub(crate) fn lift_property_definition(
+    name: String,
+    description: Option<String>,
+    definition_step: u64,
+) -> EarlyPropertyDefinition {
+    EarlyPropertyDefinition {
+        name,
+        description,
+        definition: definition_step,
+    }
+}
 
 /// Lift one `GENERAL_PROPERTY` (faithful optional description — the legacy
 /// writer emitted `None` as `$`).

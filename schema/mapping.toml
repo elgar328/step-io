@@ -105,6 +105,7 @@ generate = [
     "surface_style_parameter_line",
     # property (attribute leaf batch)
     "general_property",
+    "property_definition",
     "name_attribute",
     "description_attribute",
     "id_attribute",

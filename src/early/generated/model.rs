@@ -2084,6 +2084,29 @@ impl crate::ir::arena::ArenaId for EarlyGeneralPropertyId {
     }
 }
 
+/// L1 `PROPERTY_DEFINITION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPropertyDefinition {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) definition: u64,
+}
+
+/// Typed `id_cache` key for `PROPERTY_DEFINITION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPropertyDefinitionId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPropertyDefinitionId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `NAME_ATTRIBUTE` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyNameAttribute {

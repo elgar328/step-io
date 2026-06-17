@@ -89,7 +89,7 @@ pub(crate) use super::generated::serialize::{
     serialize_product_definition_formation,
     serialize_product_definition_formation_with_specified_source,
     serialize_product_definition_relationship, serialize_product_definition_shape,
-    serialize_product_definition_with_associated_documents,
+    serialize_product_definition_with_associated_documents, serialize_property_definition,
     serialize_qualified_representation_item, serialize_ratio_measure_with_unit,
     serialize_ratio_unit, serialize_ratio_unit_with_id, serialize_rational_b_spline_curve,
     serialize_rational_b_spline_surface, serialize_real_representation_item,

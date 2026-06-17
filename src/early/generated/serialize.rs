@@ -1775,6 +1775,23 @@ pub(crate) fn serialize_general_property(
     )
 }
 
+pub(crate) fn serialize_property_definition(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPropertyDefinition,
+) -> u64 {
+    buf.push_simple(
+        "PROPERTY_DEFINITION",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.definition),
+        ],
+    )
+}
+
 pub(crate) fn serialize_name_attribute(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyNameAttribute,

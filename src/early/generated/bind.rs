@@ -1559,6 +1559,18 @@ pub(crate) fn bind_general_property(
     })
 }
 
+pub(crate) fn bind_property_definition(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPropertyDefinition, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "PROPERTY_DEFINITION")?;
+    Ok(super::model::EarlyPropertyDefinition {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        definition: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "definition")?,
+    })
+}
+
 pub(crate) fn bind_name_attribute(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],
