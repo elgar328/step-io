@@ -9,9 +9,11 @@ use crate::early::model::{
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
     EarlyDefaultModelGeometricView, EarlyDescriptiveRepresentationItem,
     EarlyFeatureForDatumTargetRelationship, EarlyGeometricItemSpecificUsage,
-    EarlyGlobalUnitAssignedContext, EarlyGlobalUnitAssignedContextFull,
-    EarlyGlobalUnitAssignedContextNoUncertainty, EarlyItemDefinedTransformation,
-    EarlyItemIdentifiedRepresentationUsage, EarlyItemIdentifiedRepresentationUsageSelect,
+    EarlyGeometricallyBoundedSurfaceShapeRepresentation,
+    EarlyGeometricallyBoundedWireframeShapeRepresentation, EarlyGlobalUnitAssignedContext,
+    EarlyGlobalUnitAssignedContextFull, EarlyGlobalUnitAssignedContextNoUncertainty,
+    EarlyItemDefinedTransformation, EarlyItemIdentifiedRepresentationUsage,
+    EarlyItemIdentifiedRepresentationUsageSelect, EarlyManifoldSurfaceShapeRepresentation,
     EarlyMappedItem, EarlyMeasureValue, EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
@@ -543,6 +545,49 @@ pub(crate) fn lift_advanced_brep_shape_representation(
     context_of_items: u64,
 ) -> EarlyAdvancedBrepShapeRepresentation {
     EarlyAdvancedBrepShapeRepresentation {
+        name,
+        items,
+        context_of_items,
+    }
+}
+
+/// Lift one `MANIFOLD_SURFACE_SHAPE_REPRESENTATION` from pre-resolved step ids
+/// (frame axis + SBSM refs). Raw-pieces signature — shared by the arena arm and
+/// the product-driven handler, which differ in input shape.
+pub(crate) fn lift_manifold_surface_shape_representation(
+    name: String,
+    items: Vec<u64>,
+    context_of_items: u64,
+) -> EarlyManifoldSurfaceShapeRepresentation {
+    EarlyManifoldSurfaceShapeRepresentation {
+        name,
+        items,
+        context_of_items,
+    }
+}
+
+/// Lift one `GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION` from
+/// pre-resolved step ids (frame axis + GCS/GS ref).
+pub(crate) fn lift_geometrically_bounded_surface_shape_representation(
+    name: String,
+    items: Vec<u64>,
+    context_of_items: u64,
+) -> EarlyGeometricallyBoundedSurfaceShapeRepresentation {
+    EarlyGeometricallyBoundedSurfaceShapeRepresentation {
+        name,
+        items,
+        context_of_items,
+    }
+}
+
+/// Lift one `GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION` from
+/// pre-resolved step ids (frame axis + GCS/GS ref).
+pub(crate) fn lift_geometrically_bounded_wireframe_shape_representation(
+    name: String,
+    items: Vec<u64>,
+    context_of_items: u64,
+) -> EarlyGeometricallyBoundedWireframeShapeRepresentation {
+    EarlyGeometricallyBoundedWireframeShapeRepresentation {
         name,
         items,
         context_of_items,

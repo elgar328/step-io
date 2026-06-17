@@ -481,6 +481,75 @@ impl crate::ir::arena::ArenaId for EarlyAdvancedBrepShapeRepresentationId {
     }
 }
 
+/// L1 `MANIFOLD_SURFACE_SHAPE_REPRESENTATION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyManifoldSurfaceShapeRepresentation {
+    pub(crate) name: String,
+    pub(crate) items: Vec<u64>,
+    pub(crate) context_of_items: u64,
+}
+
+/// Typed `id_cache` key for `MANIFOLD_SURFACE_SHAPE_REPRESENTATION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyManifoldSurfaceShapeRepresentationId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyManifoldSurfaceShapeRepresentationId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyGeometricallyBoundedSurfaceShapeRepresentation {
+    pub(crate) name: String,
+    pub(crate) items: Vec<u64>,
+    pub(crate) context_of_items: u64,
+}
+
+/// Typed `id_cache` key for `GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyGeometricallyBoundedSurfaceShapeRepresentationId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyGeometricallyBoundedSurfaceShapeRepresentationId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyGeometricallyBoundedWireframeShapeRepresentation {
+    pub(crate) name: String,
+    pub(crate) items: Vec<u64>,
+    pub(crate) context_of_items: u64,
+}
+
+/// Typed `id_cache` key for `GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyGeometricallyBoundedWireframeShapeRepresentationId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyGeometricallyBoundedWireframeShapeRepresentationId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `APPROVAL_ROLE` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyApprovalRole {

@@ -675,7 +675,7 @@ impl WriteBuffer<'_> {
             Representation::ManifoldSurface(r) => {
                 let mut items = Vec::with_capacity(2);
                 if let Some(frame) = r.ref_frame {
-                    items.push(Attribute::EntityRef(self.emit_axis2_placement_3d(frame)?));
+                    items.push(self.emit_axis2_placement_3d(frame)?);
                 }
                 // Route SBSM emit through the unified GRI arena cache so
                 // an SBSM also referenced from a STYLED_ITEM doesn't
@@ -685,7 +685,7 @@ impl WriteBuffer<'_> {
                 // emit from the flattened `shells`.
                 if r.sbsm_ids.is_empty() {
                     let sbsm = ShellBasedSurfaceModelHandler::write(self, r.shells.clone())?;
-                    items.push(Attribute::EntityRef(sbsm));
+                    items.push(sbsm);
                 } else {
                     for sbsm_id in &r.sbsm_ids {
                         let step_id = self.emit_representation_item_ref(
@@ -693,17 +693,22 @@ impl WriteBuffer<'_> {
                                 *sbsm_id,
                             ),
                         )?;
-                        items.push(Attribute::EntityRef(step_id));
+                        items.push(step_id);
                     }
                 }
-                Ok(self.push_simple(
-                    "MANIFOLD_SURFACE_SHAPE_REPRESENTATION",
-                    vec![
-                        Attribute::String(r.name.clone()),
-                        Attribute::List(items),
-                        self.repr_context_attr(r.context),
-                    ],
-                ))
+                let Attribute::EntityRef(context) = self.repr_context_attr(r.context) else {
+                    unreachable!("MSSR context is guaranteed resolved by lower → EntityRef")
+                };
+                let early = crate::early::lift::lift_manifold_surface_shape_representation(
+                    r.name.clone(),
+                    items,
+                    context,
+                );
+                Ok(
+                    crate::early::serialize::serialize_manifold_surface_shape_representation(
+                        self, &early,
+                    ),
+                )
             }
             Representation::Plain(r) => {
                 let mut items = Vec::with_capacity(1);
@@ -722,7 +727,7 @@ impl WriteBuffer<'_> {
             Representation::Wireframe(r) => {
                 let mut items = Vec::with_capacity(2);
                 if let Some(frame) = r.ref_frame {
-                    items.push(Attribute::EntityRef(self.emit_axis2_placement_3d(frame)?));
+                    items.push(self.emit_axis2_placement_3d(frame)?);
                 }
                 // Route GCS/GS emits through the unified GRI arena cache
                 // so a curve set also referenced from a STYLED_ITEM
@@ -740,7 +745,7 @@ impl WriteBuffer<'_> {
                     } else {
                         GeometricSetHandler::write(self, set_input)?
                     };
-                    items.push(Attribute::EntityRef(set_ref));
+                    items.push(set_ref);
                 } else {
                     for gcs_id in &r.gcs_ids {
                         let set_ref = self.emit_representation_item_ref(
@@ -748,25 +753,32 @@ impl WriteBuffer<'_> {
                                 *gcs_id,
                             ),
                         )?;
-                        items.push(Attribute::EntityRef(set_ref));
+                        items.push(set_ref);
                     }
                 }
-                let name = match r.content.repr_kind {
+                let Attribute::EntityRef(context) = self.repr_context_attr(r.context) else {
+                    unreachable!("wireframe SR context is guaranteed resolved by lower → EntityRef")
+                };
+                // `repr_kind` selects which wrapper entity the source used so
+                // the original spelling round-trips.
+                Ok(match r.content.repr_kind {
                     WireframeReprKind::Surface => {
-                        "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION"
+                        let early = crate::early::lift::lift_geometrically_bounded_surface_shape_representation(
+                            r.name.clone(),
+                            items,
+                            context,
+                        );
+                        crate::early::serialize::serialize_geometrically_bounded_surface_shape_representation(self, &early)
                     }
                     WireframeReprKind::Wireframe => {
-                        "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION"
+                        let early = crate::early::lift::lift_geometrically_bounded_wireframe_shape_representation(
+                            r.name.clone(),
+                            items,
+                            context,
+                        );
+                        crate::early::serialize::serialize_geometrically_bounded_wireframe_shape_representation(self, &early)
                     }
-                };
-                Ok(self.push_simple(
-                    name,
-                    vec![
-                        Attribute::String(r.name.clone()),
-                        Attribute::List(items),
-                        self.repr_context_attr(r.context),
-                    ],
-                ))
+                })
             }
             Representation::Mdgpr(_) => {
                 unreachable!("MDGPR is emitted by the visualization pass, not the pre-emit pass")

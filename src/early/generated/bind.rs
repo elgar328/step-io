@@ -414,6 +414,77 @@ pub(crate) fn bind_advanced_brep_shape_representation(
     })
 }
 
+pub(crate) fn bind_manifold_surface_shape_representation(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyManifoldSurfaceShapeRepresentation, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "MANIFOLD_SURFACE_SHAPE_REPRESENTATION")?;
+    Ok(super::model::EarlyManifoldSurfaceShapeRepresentation {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        items: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "items")?,
+        context_of_items: crate::ir::attr::read_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "context_of_items",
+        )?,
+    })
+}
+
+pub(crate) fn bind_geometrically_bounded_surface_shape_representation(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<
+    super::model::EarlyGeometricallyBoundedSurfaceShapeRepresentation,
+    crate::ir::error::ConvertError,
+> {
+    crate::ir::attr::check_count(
+        attrs,
+        3,
+        entity_id,
+        "GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION",
+    )?;
+    Ok(
+        super::model::EarlyGeometricallyBoundedSurfaceShapeRepresentation {
+            name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+            items: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "items")?,
+            context_of_items: crate::ir::attr::read_entity_ref(
+                attrs,
+                2,
+                entity_id,
+                "context_of_items",
+            )?,
+        },
+    )
+}
+
+pub(crate) fn bind_geometrically_bounded_wireframe_shape_representation(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<
+    super::model::EarlyGeometricallyBoundedWireframeShapeRepresentation,
+    crate::ir::error::ConvertError,
+> {
+    crate::ir::attr::check_count(
+        attrs,
+        3,
+        entity_id,
+        "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION",
+    )?;
+    Ok(
+        super::model::EarlyGeometricallyBoundedWireframeShapeRepresentation {
+            name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+            items: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "items")?,
+            context_of_items: crate::ir::attr::read_entity_ref(
+                attrs,
+                2,
+                entity_id,
+                "context_of_items",
+            )?,
+        },
+    )
+}
+
 pub(crate) fn bind_approval_role(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],

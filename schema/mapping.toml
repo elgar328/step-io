@@ -28,6 +28,9 @@ generate = [
     # shape_rep (representation cluster)
     "shape_representation",
     "advanced_brep_shape_representation",
+    "manifold_surface_shape_representation",
+    "geometrically_bounded_surface_shape_representation",
+    "geometrically_bounded_wireframe_shape_representation",
     # plm (metadata leaf batch)
     "approval_role",
     "approval_status",

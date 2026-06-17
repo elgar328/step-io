@@ -15,10 +15,11 @@ use crate::early::model::{
     EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
     EarlyDefaultModelGeometricView, EarlyDescriptiveRepresentationItem,
-    EarlyGeometricItemSpecificUsage, EarlyGlobalUnitAssignedContext,
+    EarlyGeometricItemSpecificUsage, EarlyGeometricallyBoundedSurfaceShapeRepresentation,
+    EarlyGeometricallyBoundedWireframeShapeRepresentation, EarlyGlobalUnitAssignedContext,
     EarlyItemDefinedTransformation, EarlyItemIdentifiedRepresentationUsage,
-    EarlyItemIdentifiedRepresentationUsageSelect, EarlyMappedItem, EarlyMeasureValue,
-    EarlyMechanicalDesignAndDraughtingRelationship,
+    EarlyItemIdentifiedRepresentationUsageSelect, EarlyManifoldSurfaceShapeRepresentation,
+    EarlyMappedItem, EarlyMeasureValue, EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
@@ -41,16 +42,18 @@ use crate::ir::shape_rep::{
     CompoundItemKind, CompoundRepresentationItem, ConstructiveGeometryRepr,
     ConstructiveGeometryRepresentationRelationship, DatumSystem, DatumTarget,
     DefaultModelGeometricView, GeometricItemSpecificUsage, IiruDefinition, IiruIdentifiedItem,
-    ItemIdentifiedRepresentationUsage, MappedItem, MappedItemData, MappedRepresentationRef, Mdgpr,
-    MechanicalDesignAndDraughtingRelationship, ModelGeometricView, NumericRepresentationItem,
-    PlacedDatumTargetFeature, PlainRepr, RealRepresentationItem, Representation,
-    RepresentationContextRef, RepresentationMap, RepresentationMapData, RepresentationRelationship,
-    RepresentationRelationshipData, ShapeAspect, ShapeAspectRelationship,
-    ShapeAspectRelationshipKind, ShapeDimensionRepresentation, ShapeRepresentationRelationshipIr,
-    ShapeRepresentationWithParameters, SrwpItem, TessellatedShapeRepresentation, ToleranceZone,
-    UnitContext, UnitContextForm, UnitlessContext,
+    ItemIdentifiedRepresentationUsage, ManifoldSurfaceRepr, MappedItem, MappedItemData,
+    MappedRepresentationRef, Mdgpr, MechanicalDesignAndDraughtingRelationship, ModelGeometricView,
+    NumericRepresentationItem, PlacedDatumTargetFeature, PlainRepr, RealRepresentationItem,
+    Representation, RepresentationContextRef, RepresentationMap, RepresentationMapData,
+    RepresentationRelationship, RepresentationRelationshipData, ShapeAspect,
+    ShapeAspectRelationship, ShapeAspectRelationshipKind, ShapeDimensionRepresentation,
+    ShapeRepresentationRelationshipIr, ShapeRepresentationWithParameters, SrwpItem,
+    TessellatedShapeRepresentation, ToleranceZone, UnitContext, UnitContextForm, UnitlessContext,
+    WireframeRepr,
 };
 use crate::ir::visualization::VisualizationPool;
+use crate::ir::{WireframeContent, WireframeReprKind};
 use crate::reader::ReaderContext;
 
 /// Lower one base `REPRESENTATION_RELATIONSHIP` (`Itself` carrier): resolve
@@ -940,6 +943,146 @@ pub(crate) fn lower_advanced_brep_shape_representation(
             items: resolved,
         }));
     ctx.id_cache.insert(entity_id, repr_id);
+}
+
+/// Lower one `MANIFOLD_SURFACE_SHAPE_REPRESENTATION`. `items` carry one or more
+/// `SHELL_BASED_SURFACE_MODEL`s (shells flattened via `sbsm_shells_map`, GRI ids
+/// kept in `sbsm_id_map` for the writer's arena routing) plus an optional
+/// `AXIS2_PLACEMENT_3D` frame. Derives the legacy `mssr_ref_frame_map` /
+/// `mssr_shells_map` side maps and dual-writes the unified arena. An empty
+/// resolved set is kept (no warning, mirroring the legacy reader).
+/// `context_of_items` is schema-required; an unresolvable context drops the
+/// carrier (schema-strict — None-context is corpus-absent, see plan 0-FAIL).
+pub(crate) fn lower_manifold_surface_shape_representation(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyManifoldSurfaceShapeRepresentation,
+) {
+    let Some(context) = ctx.resolve_repr_context(early.context_of_items) else {
+        return;
+    };
+    if let RepresentationContextRef::Unitful(ctx_id) = context {
+        ctx.repr_context_map.insert(entity_id, ctx_id);
+    }
+    let ref_frame = early
+        .items
+        .iter()
+        .find_map(|r| ctx.placement_map.get(r).copied());
+    if let Some(placement_id) = ref_frame {
+        ctx.mssr_ref_frame_map.insert(entity_id, placement_id);
+    }
+    let shells: Vec<crate::ir::ShellId> = early
+        .items
+        .iter()
+        .filter_map(|r| ctx.sbsm_shells_map.get(r))
+        .flat_map(|shells| shells.iter().copied())
+        .collect();
+    ctx.mssr_shells_map.insert(entity_id, shells.clone());
+    let sbsm_ids: Vec<crate::ir::id::GeometricRepresentationItemId> = early
+        .items
+        .iter()
+        .filter_map(|r| ctx.sbsm_id_map.get(r).copied())
+        .collect();
+    let repr_id = ctx
+        .representations
+        .push(Representation::ManifoldSurface(ManifoldSurfaceRepr {
+            name: early.name,
+            context: Some(context),
+            ref_frame,
+            shells,
+            sbsm_ids,
+        }));
+    ctx.id_cache.insert(entity_id, repr_id);
+}
+
+/// Shared body for `GEOMETRICALLY_BOUNDED_{WIREFRAME,SURFACE}_SHAPE_
+/// REPRESENTATION` (differ only by `repr_kind`). `items` carry a
+/// `GEOMETRIC_(CURVE_)SET` (curves + points flattened via `curve_set_map`, with
+/// a bare `CURVE` ref also accepted) plus an optional `AXIS2_PLACEMENT_3D`
+/// frame; GRI ids are kept in `curve_set_id_map` for the writer's arena routing.
+/// Derives the legacy `wireframe_ref_frame_map` / `wireframe_data_map` side maps
+/// and dual-writes the unified arena. Empty set kept (no warning).
+/// `context_of_items` schema-required; unresolvable context drops the carrier.
+fn lower_wireframe_representation_body(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    name: String,
+    items: &[u64],
+    context_of_items: u64,
+    repr_kind: WireframeReprKind,
+) {
+    let Some(context) = ctx.resolve_repr_context(context_of_items) else {
+        return;
+    };
+    if let RepresentationContextRef::Unitful(ctx_id) = context {
+        ctx.repr_context_map.insert(entity_id, ctx_id);
+    }
+    let ref_frame = items.iter().find_map(|r| ctx.placement_map.get(r).copied());
+    if let Some(placement_id) = ref_frame {
+        ctx.wireframe_ref_frame_map.insert(entity_id, placement_id);
+    }
+    let mut curves = Vec::new();
+    let mut points = Vec::new();
+    for r in items {
+        if let Some((c, p)) = ctx.curve_set_map.get(r) {
+            curves.extend_from_slice(c);
+            points.extend_from_slice(p);
+        } else if let Some(cid) = ctx.id_cache.get::<crate::ir::id::CurveId>(*r) {
+            curves.push(cid);
+        }
+    }
+    let wireframe = WireframeContent {
+        curves,
+        points,
+        repr_kind,
+    };
+    ctx.wireframe_data_map.insert(entity_id, wireframe.clone());
+    let gcs_ids: Vec<crate::ir::id::GeometricRepresentationItemId> = items
+        .iter()
+        .filter_map(|r| ctx.curve_set_id_map.get(r).copied())
+        .collect();
+    let repr_id = ctx
+        .representations
+        .push(Representation::Wireframe(WireframeRepr {
+            name,
+            context: Some(context),
+            ref_frame,
+            content: wireframe,
+            gcs_ids,
+        }));
+    ctx.id_cache.insert(entity_id, repr_id);
+}
+
+/// Lower one `GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION`.
+pub(crate) fn lower_geometrically_bounded_surface_shape_representation(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyGeometricallyBoundedSurfaceShapeRepresentation,
+) {
+    lower_wireframe_representation_body(
+        ctx,
+        entity_id,
+        early.name,
+        &early.items,
+        early.context_of_items,
+        WireframeReprKind::Surface,
+    );
+}
+
+/// Lower one `GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION`.
+pub(crate) fn lower_geometrically_bounded_wireframe_shape_representation(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyGeometricallyBoundedWireframeShapeRepresentation,
+) {
+    lower_wireframe_representation_body(
+        ctx,
+        entity_id,
+        early.name,
+        &early.items,
+        early.context_of_items,
+        WireframeReprKind::Wireframe,
+    );
 }
 
 /// Lower one `MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION`. `items`
