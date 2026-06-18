@@ -274,6 +274,9 @@ generate = [
     # PMI simple — APLL points (cartesian_point subtype; symbol enum + 1:N writer)
     "apll_point",
     "apll_point_with_surface",
+    # PMI simple — DMIA (definition 6-way + identified_item select; 1:N placeholder writer)
+    "draughting_model_item_association",
+    "draughting_model_item_association_with_placeholder",
     # Phase 3f: PMI simple — annotation plane (+ OPTIONAL SET elements, dropped)
     "annotation_plane",
     # Phase 3g: visualization simple — camera model d3 (+ hlhsr boolean subtype)

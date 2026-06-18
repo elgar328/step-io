@@ -10,9 +10,10 @@ use crate::early::model::{
     EarlyAuxiliaryLeaderLine, EarlyCircularRunoutTolerance, EarlyConcentricityTolerance,
     EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature, EarlyDimensionalLocation,
     EarlyDimensionalSize, EarlyDirectedDimensionalLocation, EarlyDraughtingAnnotationOccurrence,
-    EarlyDraughtingCallout, EarlyDraughtingCalloutRelationship, EarlyDraughtingPreDefinedTextFont,
-    EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship, EarlyLeaderCurve,
-    EarlyLeaderDirectedCallout, EarlyLeaderTerminator, EarlyLimitsAndFits,
+    EarlyDraughtingCallout, EarlyDraughtingCalloutRelationship,
+    EarlyDraughtingModelItemAssociation, EarlyDraughtingModelItemAssociationWithPlaceholder,
+    EarlyDraughtingPreDefinedTextFont, EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship,
+    EarlyLeaderCurve, EarlyLeaderDirectedCallout, EarlyLeaderTerminator, EarlyLimitsAndFits,
     EarlyMeasureQualification, EarlyParallelismTolerance, EarlyPerpendicularityTolerance,
     EarlyPlusMinusTolerance, EarlyProjectedZoneDefinition, EarlyRoundnessTolerance,
     EarlyStraightnessTolerance, EarlySurfaceProfileTolerance, EarlySymmetryTolerance,
@@ -30,6 +31,7 @@ use crate::ir::pmi::{
     ApllPointWithSurfaceData, AuxiliaryLeaderLineData, Datum, DatumFeature, DimensionalLocation,
     DimensionalLocationData, DimensionalSize, DimensionalSizeKind, DraughtingAnnotationOccurrence,
     DraughtingCallout, DraughtingCalloutData, DraughtingCalloutRelationship,
+    DraughtingModelIdentifiedItem, DraughtingModelItemAssociation, DraughtingModelItemDefinition,
     DraughtingPreDefinedTextFont, GeometricTolerance, GeometricToleranceRelationship,
     GeometricToleranceWithDatumReference, LeaderCurve, LeaderTerminator, LimitsAndFits,
     MeasureQualification, PlainAnnotationCurveOccurrence, PlainAnnotationOccurrence,
@@ -1446,5 +1448,133 @@ pub(crate) fn lower_auxiliary_leader_line(
                 controlling_leader_line,
             },
         ));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Shared DMIA base lowering: resolve `definition`(6-way SELECT probe),
+/// `used_representation`(`RepresentationId`), `identified_item`(SELECT). Verbatim
+/// port of `read_dmia_base`. `annotation_placeholder` defaults `None` (the
+/// `_WITH_PLACEHOLDER` lower sets it). A 6-member-miss `definition` warns +
+/// drops; an unresolved `used_representation`/`identified_item` silently drops.
+fn lower_dmia_common(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    name: String,
+    description: Option<String>,
+    definition_ref: u64,
+    used_ref: u64,
+    identified_ref: u64,
+) -> Option<DraughtingModelItemAssociation> {
+    let definition = if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::id::RepresentationId>(definition_ref)
+    {
+        DraughtingModelItemDefinition::Representation(id)
+    } else if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::DimensionalSizeId>(definition_ref)
+    {
+        DraughtingModelItemDefinition::DimensionalSize(id)
+    } else if let Some(sa_ref) =
+        crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_ref(
+            ctx,
+            definition_ref,
+        )
+    {
+        DraughtingModelItemDefinition::ShapeAspect(sa_ref)
+    } else if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::id::PropertyDefinitionId>(definition_ref)
+    {
+        DraughtingModelItemDefinition::PropertyDefinition(id)
+    } else if let Some(id) = ctx
+        .id_cache
+        .get::<crate::ir::DimensionalLocationId>(definition_ref)
+    {
+        DraughtingModelItemDefinition::DimensionalLocation(id)
+    } else if let Some(gt_ref) =
+        crate::entities::pmi::resolve_geometric_tolerance_ref(ctx, definition_ref)
+    {
+        DraughtingModelItemDefinition::GeometricTolerance(gt_ref)
+    } else {
+        ctx.warnings
+            .push(crate::ir::error::ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "DRAUGHTING_MODEL_ITEM_ASSOCIATION definition #{definition_ref} resolves to \
+                     none of the 6 modelled SELECT members — skipping"
+                ),
+            });
+        return None;
+    };
+    let used_representation = ctx
+        .id_cache
+        .get::<crate::ir::id::RepresentationId>(used_ref)?;
+    let identified_item = DraughtingModelIdentifiedItem::resolve_select(ctx, identified_ref)?;
+    Some(DraughtingModelItemAssociation {
+        name,
+        description,
+        definition,
+        used_representation,
+        identified_item,
+        annotation_placeholder: None,
+    })
+}
+
+/// Lower one `DRAUGHTING_MODEL_ITEM_ASSOCIATION`.
+pub(crate) fn lower_draughting_model_item_association(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyDraughtingModelItemAssociation,
+) {
+    let Some(dmia) = lower_dmia_common(
+        ctx,
+        entity_id,
+        early.name,
+        early.description,
+        early.definition,
+        early.used_representation,
+        early.identified_item,
+    ) else {
+        return;
+    };
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .draughting_model_item_associations
+        .push(dmia);
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER` (base +
+/// `annotation_placeholder`; unresolved placeholder drops the entity).
+pub(crate) fn lower_draughting_model_item_association_with_placeholder(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyDraughtingModelItemAssociationWithPlaceholder,
+) {
+    let Some(mut dmia) = lower_dmia_common(
+        ctx,
+        entity_id,
+        early.name,
+        early.description,
+        early.definition,
+        early.used_representation,
+        early.identified_item,
+    ) else {
+        return;
+    };
+    let Some(ph_id) = ctx
+        .id_cache
+        .get::<crate::ir::id::AnnotationOccurrenceId>(early.annotation_placeholder)
+    else {
+        return;
+    };
+    dmia.annotation_placeholder = Some(ph_id);
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .draughting_model_item_associations
+        .push(dmia);
     ctx.id_cache.insert(entity_id, id);
 }

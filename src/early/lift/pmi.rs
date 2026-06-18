@@ -10,9 +10,10 @@ use crate::early::model::{
     EarlyAuxiliaryLeaderLine, EarlyCircularRunoutTolerance, EarlyConcentricityTolerance,
     EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature, EarlyDimensionalLocation,
     EarlyDimensionalSize, EarlyDirectedDimensionalLocation, EarlyDraughtingAnnotationOccurrence,
-    EarlyDraughtingCallout, EarlyDraughtingCalloutRelationship, EarlyDraughtingPreDefinedTextFont,
-    EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship, EarlyLeaderCurve,
-    EarlyLeaderDirectedCallout, EarlyLeaderTerminator, EarlyLimitsAndFits,
+    EarlyDraughtingCallout, EarlyDraughtingCalloutRelationship,
+    EarlyDraughtingModelItemAssociation, EarlyDraughtingModelItemAssociationWithPlaceholder,
+    EarlyDraughtingPreDefinedTextFont, EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship,
+    EarlyLeaderCurve, EarlyLeaderDirectedCallout, EarlyLeaderTerminator, EarlyLimitsAndFits,
     EarlyMeasureQualification, EarlyParallelismTolerance, EarlyPerpendicularityTolerance,
     EarlyPlusMinusTolerance, EarlyProjectedZoneDefinition, EarlyRoundnessTolerance,
     EarlyStraightnessTolerance, EarlySurfaceProfileTolerance, EarlySymmetryTolerance,
@@ -660,5 +661,43 @@ pub(crate) fn lift_apll_point_with_surface(
         coordinates: vec![coordinates.x, coordinates.y, coordinates.z],
         symbol_applied,
         associated_surface,
+    }
+}
+
+/// Lift one `DRAUGHTING_MODEL_ITEM_ASSOCIATION` (all refs pre-resolved to step
+/// ids by the handler: definition 6-way, used `step_id`, identified `emit_select`).
+pub(crate) fn lift_dmia(
+    name: String,
+    description: Option<String>,
+    definition: u64,
+    used_representation: u64,
+    identified_item: u64,
+) -> EarlyDraughtingModelItemAssociation {
+    EarlyDraughtingModelItemAssociation {
+        name,
+        description,
+        definition,
+        used_representation,
+        identified_item,
+    }
+}
+
+/// Lift one `DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER` (base +
+/// `annotation_placeholder` step id).
+pub(crate) fn lift_dmia_with_placeholder(
+    name: String,
+    description: Option<String>,
+    definition: u64,
+    used_representation: u64,
+    identified_item: u64,
+    annotation_placeholder: u64,
+) -> EarlyDraughtingModelItemAssociationWithPlaceholder {
+    EarlyDraughtingModelItemAssociationWithPlaceholder {
+        name,
+        description,
+        definition,
+        used_representation,
+        identified_item,
+        annotation_placeholder,
     }
 }

@@ -5523,6 +5523,57 @@ impl crate::ir::arena::ArenaId for EarlyApllPointWithSurfaceId {
     }
 }
 
+/// L1 `DRAUGHTING_MODEL_ITEM_ASSOCIATION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDraughtingModelItemAssociation {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) definition: u64,
+    pub(crate) used_representation: u64,
+    pub(crate) identified_item: u64,
+}
+
+/// Typed `id_cache` key for `DRAUGHTING_MODEL_ITEM_ASSOCIATION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDraughtingModelItemAssociationId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDraughtingModelItemAssociationId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDraughtingModelItemAssociationWithPlaceholder {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) definition: u64,
+    pub(crate) used_representation: u64,
+    pub(crate) identified_item: u64,
+    pub(crate) annotation_placeholder: u64,
+}
+
+/// Typed `id_cache` key for `DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDraughtingModelItemAssociationWithPlaceholderId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDraughtingModelItemAssociationWithPlaceholderId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `ANNOTATION_PLANE` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyAnnotationPlane {

@@ -4666,6 +4666,45 @@ pub(crate) fn serialize_apll_point_with_surface(
     )
 }
 
+pub(crate) fn serialize_draughting_model_item_association(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDraughtingModelItemAssociation,
+) -> u64 {
+    buf.push_simple(
+        "DRAUGHTING_MODEL_ITEM_ASSOCIATION",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.definition),
+            crate::parser::entity::Attribute::EntityRef(l1.used_representation),
+            crate::parser::entity::Attribute::EntityRef(l1.identified_item),
+        ],
+    )
+}
+
+pub(crate) fn serialize_draughting_model_item_association_with_placeholder(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDraughtingModelItemAssociationWithPlaceholder,
+) -> u64 {
+    buf.push_simple(
+        "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.definition),
+            crate::parser::entity::Attribute::EntityRef(l1.used_representation),
+            crate::parser::entity::Attribute::EntityRef(l1.identified_item),
+            crate::parser::entity::Attribute::EntityRef(l1.annotation_placeholder),
+        ],
+    )
+}
+
 pub(crate) fn serialize_annotation_plane(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyAnnotationPlane,

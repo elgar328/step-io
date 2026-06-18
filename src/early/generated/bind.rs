@@ -4063,6 +4063,65 @@ pub(crate) fn bind_apll_point_with_surface(
     })
 }
 
+pub(crate) fn bind_draughting_model_item_association(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDraughtingModelItemAssociation, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 5, entity_id, "DRAUGHTING_MODEL_ITEM_ASSOCIATION")?;
+    Ok(super::model::EarlyDraughtingModelItemAssociation {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        definition: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "definition")?,
+        used_representation: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "used_representation",
+        )?,
+        identified_item: crate::ir::attr::read_entity_ref(attrs, 4, entity_id, "identified_item")?,
+    })
+}
+
+pub(crate) fn bind_draughting_model_item_association_with_placeholder(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<
+    super::model::EarlyDraughtingModelItemAssociationWithPlaceholder,
+    crate::ir::error::ConvertError,
+> {
+    crate::ir::attr::check_count(
+        attrs,
+        6,
+        entity_id,
+        "DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER",
+    )?;
+    Ok(
+        super::model::EarlyDraughtingModelItemAssociationWithPlaceholder {
+            name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+            description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+            definition: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "definition")?,
+            used_representation: crate::ir::attr::read_entity_ref(
+                attrs,
+                3,
+                entity_id,
+                "used_representation",
+            )?,
+            identified_item: crate::ir::attr::read_entity_ref(
+                attrs,
+                4,
+                entity_id,
+                "identified_item",
+            )?,
+            annotation_placeholder: crate::ir::attr::read_entity_ref(
+                attrs,
+                5,
+                entity_id,
+                "annotation_placeholder",
+            )?,
+        },
+    )
+}
+
 pub(crate) fn bind_annotation_plane(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],

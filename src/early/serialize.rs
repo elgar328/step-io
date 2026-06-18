@@ -57,6 +57,8 @@ pub(crate) use super::generated::serialize::{
     serialize_document_representation_type, serialize_document_type,
     serialize_draughting_annotation_occurrence, serialize_draughting_callout,
     serialize_draughting_callout_relationship, serialize_draughting_model,
+    serialize_draughting_model_item_association,
+    serialize_draughting_model_item_association_with_placeholder,
     serialize_draughting_pre_defined_colour, serialize_draughting_pre_defined_curve_font,
     serialize_draughting_pre_defined_text_font, serialize_edge_curve, serialize_edge_loop,
     serialize_ellipse, serialize_external_source, serialize_face_bound, serialize_face_outer_bound,
