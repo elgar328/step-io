@@ -5468,6 +5468,44 @@ pub(crate) fn serialize_area_in_set(
     )
 }
 
+pub(crate) fn serialize_presentation_view(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPresentationView,
+) -> u64 {
+    buf.push_simple(
+        "PRESENTATION_VIEW",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.items
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::EntityRef(l1.context_of_items),
+        ],
+    )
+}
+
+pub(crate) fn serialize_presentation_area(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPresentationArea,
+) -> u64 {
+    buf.push_simple(
+        "PRESENTATION_AREA",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.items
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::EntityRef(l1.context_of_items),
+        ],
+    )
+}
+
 pub(crate) fn serialize_presentation_size(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyPresentationSize,

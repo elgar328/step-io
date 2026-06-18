@@ -8,12 +8,8 @@
 
 use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::entities::visualization::styled_item::resolve_representation_item_ref;
-use crate::ir::attr::{check_count, read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::visualization::{
-    PresentationReprData, PresentationRepresentation, PresentationSet, VisualizationPool,
-};
+use crate::ir::visualization::{PresentationReprData, PresentationSet};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -32,21 +28,14 @@ impl SimpleEntityHandler for PresentationViewHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let data = read_presentation_repr(ctx, entity_id, attrs, "PRESENTATION_VIEW")?;
-        if data.items.is_empty() {
-            return Ok(());
-        }
-        let id = ctx
-            .visualization
-            .get_or_insert_with(VisualizationPool::default)
-            .presentation_representations
-            .push(PresentationRepresentation::View(data));
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_presentation_view(entity_id, attrs)?;
+        lower::lower_presentation_view(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, data: PresentationReprData) -> Result<u64, WriteError> {
-        emit_presentation_repr(buf, "PRESENTATION_VIEW", data)
+        let early = lift::lift_presentation_view(buf, data)?;
+        Ok(serialize::serialize_presentation_view(buf, &early))
     }
 }
 
@@ -62,21 +51,14 @@ impl SimpleEntityHandler for PresentationAreaHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let data = read_presentation_repr(ctx, entity_id, attrs, "PRESENTATION_AREA")?;
-        if data.items.is_empty() {
-            return Ok(());
-        }
-        let id = ctx
-            .visualization
-            .get_or_insert_with(VisualizationPool::default)
-            .presentation_representations
-            .push(PresentationRepresentation::Area(data));
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_presentation_area(entity_id, attrs)?;
+        lower::lower_presentation_area(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, data: PresentationReprData) -> Result<u64, WriteError> {
-        emit_presentation_repr(buf, "PRESENTATION_AREA", data)
+        let early = lift::lift_presentation_area(buf, data)?;
+        Ok(serialize::serialize_presentation_area(buf, &early))
     }
 }
 
@@ -103,49 +85,4 @@ impl SimpleEntityHandler for PresentationSetHandler {
             &lift::lift_presentation_set(),
         ))
     }
-}
-
-fn read_presentation_repr(
-    ctx: &mut ReaderContext,
-    entity_id: u64,
-    attrs: &[Attribute],
-    name: &'static str,
-) -> Result<PresentationReprData, ConvertError> {
-    check_count(attrs, 3, entity_id, name)?;
-    let item_name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-    let item_refs = read_entity_ref_list(attrs, 1, entity_id, "items")?;
-    let ctx_ref = read_entity_ref(attrs, 2, entity_id, "context_of_items")?;
-    let context = ctx.resolve_repr_context(ctx_ref);
-    let mut items = Vec::with_capacity(item_refs.len());
-    for r in item_refs {
-        if let Some(item) = resolve_representation_item_ref(ctx, r) {
-            items.push(item);
-        }
-    }
-    Ok(PresentationReprData {
-        name: item_name,
-        items,
-        context,
-    })
-}
-
-fn emit_presentation_repr(
-    buf: &mut WriteBuffer,
-    name: &'static str,
-    data: PresentationReprData,
-) -> Result<u64, WriteError> {
-    let mut item_refs = Vec::with_capacity(data.items.len());
-    for item in data.items {
-        let step = buf.emit_representation_item_ref(item)?;
-        item_refs.push(Attribute::EntityRef(step));
-    }
-    let ctx_attr = buf.repr_context_attr(data.context);
-    Ok(buf.push_simple(
-        name,
-        vec![
-            Attribute::String(data.name),
-            Attribute::List(item_refs),
-            ctx_attr,
-        ],
-    ))
 }

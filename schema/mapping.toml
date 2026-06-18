@@ -328,6 +328,9 @@ generate = [
     # Phase 3w: visualization leaf 5 (pure ref/scalar/all-entity-select)
     "presentation_set",
     "area_in_set",
+    # visualization — presentation_representation subtypes (shared arena, pattern-a)
+    "presentation_view",
+    "presentation_area",
     "presentation_size",
     "symbol_target",
     "defined_symbol",

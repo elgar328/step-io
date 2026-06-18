@@ -20,8 +20,9 @@ use crate::early::model::{
 };
 use crate::early::model::{
     EarlyAreaInSet, EarlyBoxCharacteristicSelect, EarlyDefinedSymbol, EarlyDirectionCountSelect,
-    EarlyPresentationSet, EarlyPresentationSize, EarlySurfaceStyleParameterLine, EarlySymbolTarget,
-    EarlyTextLiteral, EarlyTextStyleWithBoxCharacteristics,
+    EarlyPresentationArea, EarlyPresentationSet, EarlyPresentationSize, EarlyPresentationView,
+    EarlySurfaceStyleParameterLine, EarlySymbolTarget, EarlyTextLiteral,
+    EarlyTextStyleWithBoxCharacteristics,
 };
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::id::{
@@ -39,14 +40,14 @@ use crate::ir::visualization::{
     PlainStyledItem, PointStyle, PreDefinedCurveFont, PreDefinedCurveFontData, PreDefinedMarker,
     PreDefinedMarkerData, PreDefinedPointMarkerSymbol, PreDefinedSymbol, PreDefinedSymbolData,
     PreDefinedTerminatorSymbol, PresentationLayerAssignment, PresentationLayerAssignmentItem,
-    PresentationReprSelect, PresentationStyleAssignment, PresentationStyleAssignmentData,
-    PresentationStyleByContext, PresentedItem, PresentedItemRepresentation, PsaStyle,
-    RenderingProperty, ShapeClipping, ShellBasedSurfaceModel, StyleContext, StyledItem,
-    SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleBoundary, SurfaceStyleFillArea,
-    SurfaceStyleParameterLine, SurfaceStyleRendering, SurfaceStyleRenderingData,
-    SurfaceStyleRenderingWithProperties, SurfaceStyleUsage, SymbolColour, SymbolStyle, TextLiteral,
-    TextOrCharacter, TextStyle, TextStyleData, TextStyleForDefinedFont,
-    TextStyleWithBoxCharacteristics, ViewVolume, VisualizationPool,
+    PresentationReprData, PresentationReprSelect, PresentationRepresentation,
+    PresentationStyleAssignment, PresentationStyleAssignmentData, PresentationStyleByContext,
+    PresentedItem, PresentedItemRepresentation, PsaStyle, RenderingProperty, ShapeClipping,
+    ShellBasedSurfaceModel, StyleContext, StyledItem, SurfaceSideStyle, SurfaceSideStyleEntry,
+    SurfaceStyleBoundary, SurfaceStyleFillArea, SurfaceStyleParameterLine, SurfaceStyleRendering,
+    SurfaceStyleRenderingData, SurfaceStyleRenderingWithProperties, SurfaceStyleUsage,
+    SymbolColour, SymbolStyle, TextLiteral, TextOrCharacter, TextStyle, TextStyleData,
+    TextStyleForDefinedFont, TextStyleWithBoxCharacteristics, ViewVolume, VisualizationPool,
 };
 use crate::ir::visualization::{
     AreaInSet, DefinedSymbol, DefinedSymbolDefinition, PresentationSet, PresentationSize,
@@ -1493,5 +1494,74 @@ pub(crate) fn lower_surface_style_rendering_with_properties(
                 properties,
             },
         ));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Shared `presentation_representation` subtype lowering: resolve `items`
+/// (filter through `resolve_representation_item_ref`) + `context_of_items`
+/// (`resolve_repr_context`). An empty item list OR an unresolved context drops
+/// the representation (symmetric on re-read; the legacy read dropped on empty
+/// items, and a `None` context cannot round-trip through the strict required
+/// `context_of_items` ref so it normalizes to a drop). Verbatim resolve of the
+/// legacy `read_presentation_repr`.
+fn lower_presentation_repr_data(
+    ctx: &ReaderContext,
+    name: String,
+    item_refs: &[u64],
+    context_ref: u64,
+) -> Option<PresentationReprData> {
+    let mut items = Vec::with_capacity(item_refs.len());
+    for &r in item_refs {
+        if let Some(item) = resolve_representation_item_ref(ctx, r) {
+            items.push(item);
+        }
+    }
+    if items.is_empty() {
+        return None;
+    }
+    let context = ctx.resolve_repr_context(context_ref);
+    context.as_ref()?;
+    Some(PresentationReprData {
+        name,
+        items,
+        context,
+    })
+}
+
+/// Lower one `PRESENTATION_VIEW` into the shared `presentation_representations` arena.
+pub(crate) fn lower_presentation_view(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyPresentationView,
+) {
+    let Some(data) =
+        lower_presentation_repr_data(ctx, early.name, &early.items, early.context_of_items)
+    else {
+        return;
+    };
+    let id = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .presentation_representations
+        .push(PresentationRepresentation::View(data));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `PRESENTATION_AREA` into the shared `presentation_representations` arena.
+pub(crate) fn lower_presentation_area(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyPresentationArea,
+) {
+    let Some(data) =
+        lower_presentation_repr_data(ctx, early.name, &early.items, early.context_of_items)
+    else {
+        return;
+    };
+    let id = ctx
+        .visualization
+        .get_or_insert_with(VisualizationPool::default)
+        .presentation_representations
+        .push(PresentationRepresentation::Area(data));
     ctx.id_cache.insert(entity_id, id);
 }

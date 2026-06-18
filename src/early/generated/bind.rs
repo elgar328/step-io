@@ -4728,6 +4728,40 @@ pub(crate) fn bind_area_in_set(
     })
 }
 
+pub(crate) fn bind_presentation_view(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPresentationView, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "PRESENTATION_VIEW")?;
+    Ok(super::model::EarlyPresentationView {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        items: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "items")?,
+        context_of_items: crate::ir::attr::read_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "context_of_items",
+        )?,
+    })
+}
+
+pub(crate) fn bind_presentation_area(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPresentationArea, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "PRESENTATION_AREA")?;
+    Ok(super::model::EarlyPresentationArea {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        items: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "items")?,
+        context_of_items: crate::ir::attr::read_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "context_of_items",
+        )?,
+    })
+}
+
 pub(crate) fn bind_presentation_size(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],

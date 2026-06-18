@@ -19,8 +19,9 @@ use crate::early::model::{
 };
 use crate::early::model::{
     EarlyAreaInSet, EarlyBoxCharacteristicSelect, EarlyDefinedSymbol, EarlyDirectionCountSelect,
-    EarlyPresentationSet, EarlyPresentationSize, EarlySurfaceStyleParameterLine, EarlySymbolTarget,
-    EarlyTextLiteral, EarlyTextStyleWithBoxCharacteristics,
+    EarlyPresentationArea, EarlyPresentationSet, EarlyPresentationSize, EarlyPresentationView,
+    EarlySurfaceStyleParameterLine, EarlySymbolTarget, EarlyTextLiteral,
+    EarlyTextStyleWithBoxCharacteristics,
 };
 use crate::entities::SimpleEntityHandler;
 use crate::entities::visualization::fill_area_style_colour::FillAreaStyleColourHandler;
@@ -28,10 +29,10 @@ use crate::ir::visualization::{
     AreaInSet, BoxCharacteristic, ContextDependentOverRidingStyledItem, CurveStyle, CurveWidth,
     DefinedSymbol, DefinedSymbolDefinition, DirectionCount, FillAreaStyle, Invisibility,
     InvisibleItem, Marker, MarkerSize, OverRidingStyledItem, PlainStyledItem, PointStyle,
-    PresentationSize, PresentationSizeAssignment, PresentationStyleAssignmentData,
-    PresentationStyleByContext, PsaStyle, ShadingMethod, StyleContext, StyleContextRef,
-    SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea, SurfaceStyleUsage,
-    SymbolPlacement, SymbolTarget, TextPath, ViewVolume,
+    PresentationReprData, PresentationSize, PresentationSizeAssignment,
+    PresentationStyleAssignmentData, PresentationStyleByContext, PsaStyle, ShadingMethod,
+    StyleContext, StyleContextRef, SurfaceSideStyle, SurfaceSideStyleEntry, SurfaceStyleFillArea,
+    SurfaceStyleUsage, SymbolPlacement, SymbolTarget, TextPath, ViewVolume,
 };
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -665,4 +666,51 @@ pub(crate) fn lift_surface_style_rendering_with_properties(
         surface_colour,
         properties,
     }
+}
+
+/// Shared `presentation_representation` subtype lifting: emit `items` to step
+/// ids and extract `context_of_items` from `repr_context_attr`. `lower` drops
+/// any representation with a `None` context, so the context is always present
+/// here → always an `EntityRef` (mirrors the TSR lift). Verbatim port of the
+/// legacy `emit_presentation_repr`.
+fn lift_presentation_repr_data(
+    buf: &mut WriteBuffer,
+    data: PresentationReprData,
+) -> Result<(String, Vec<u64>, u64), WriteError> {
+    let mut items = Vec::with_capacity(data.items.len());
+    for item in data.items {
+        items.push(buf.emit_representation_item_ref(item)?);
+    }
+    let crate::parser::entity::Attribute::EntityRef(context_of_items) =
+        buf.repr_context_attr(data.context)
+    else {
+        unreachable!("presentation context is always present (lower drops None) → EntityRef")
+    };
+    Ok((data.name, items, context_of_items))
+}
+
+/// Lift one `PRESENTATION_VIEW` (items emitted to step ids; context extracted).
+pub(crate) fn lift_presentation_view(
+    buf: &mut WriteBuffer,
+    data: PresentationReprData,
+) -> Result<EarlyPresentationView, WriteError> {
+    let (name, items, context_of_items) = lift_presentation_repr_data(buf, data)?;
+    Ok(EarlyPresentationView {
+        name,
+        items,
+        context_of_items,
+    })
+}
+
+/// Lift one `PRESENTATION_AREA`.
+pub(crate) fn lift_presentation_area(
+    buf: &mut WriteBuffer,
+    data: PresentationReprData,
+) -> Result<EarlyPresentationArea, WriteError> {
+    let (name, items, context_of_items) = lift_presentation_repr_data(buf, data)?;
+    Ok(EarlyPresentationArea {
+        name,
+        items,
+        context_of_items,
+    })
 }

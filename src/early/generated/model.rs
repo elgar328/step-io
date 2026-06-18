@@ -6412,6 +6412,52 @@ impl crate::ir::arena::ArenaId for EarlyAreaInSetId {
     }
 }
 
+/// L1 `PRESENTATION_VIEW` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPresentationView {
+    pub(crate) name: String,
+    pub(crate) items: Vec<u64>,
+    pub(crate) context_of_items: u64,
+}
+
+/// Typed `id_cache` key for `PRESENTATION_VIEW` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPresentationViewId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPresentationViewId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PRESENTATION_AREA` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPresentationArea {
+    pub(crate) name: String,
+    pub(crate) items: Vec<u64>,
+    pub(crate) context_of_items: u64,
+}
+
+/// Typed `id_cache` key for `PRESENTATION_AREA` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPresentationAreaId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPresentationAreaId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `PRESENTATION_SIZE` (generated).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct EarlyPresentationSize {
