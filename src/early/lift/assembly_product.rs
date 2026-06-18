@@ -7,11 +7,12 @@
 
 use crate::early::model::{
     EarlyDesignContext, EarlyMakeFromUsageOption, EarlyMechanicalContext, EarlyProduct,
-    EarlyProductCategory, EarlyProductContext, EarlyProductDefinition,
-    EarlyProductDefinitionContext, EarlyProductDefinitionContextAssociation,
-    EarlyProductDefinitionContextRole, EarlyProductDefinitionFormation,
-    EarlyProductDefinitionFormationWithSpecifiedSource, EarlyProductDefinitionRelationship,
-    EarlyProductDefinitionWithAssociatedDocuments, EarlySource,
+    EarlyProductCategory, EarlyProductCategoryRelationship, EarlyProductContext,
+    EarlyProductDefinition, EarlyProductDefinitionContext,
+    EarlyProductDefinitionContextAssociation, EarlyProductDefinitionContextRole,
+    EarlyProductDefinitionFormation, EarlyProductDefinitionFormationWithSpecifiedSource,
+    EarlyProductDefinitionRelationship, EarlyProductDefinitionWithAssociatedDocuments,
+    EarlyProductRelatedProductCategory, EarlySource,
 };
 use crate::entities::assembly_product::context_dependent_shape_representation::ContextDependentShapeRepresentationWriteInput;
 use crate::entities::assembly_product::next_assembly_usage_occurrence::NextAssemblyUsageOccurrenceWriteInput;
@@ -138,6 +139,35 @@ pub(crate) fn lift_product_definition_shape(
 
 /// Lift one `PRODUCT_CATEGORY` (faithful optional description — the legacy
 /// writer emitted `None` as `$`).
+pub(crate) fn lift_product_related_product_category(
+    kind: String,
+    kind_description: Option<String>,
+    product_refs: Vec<u64>,
+) -> EarlyProductRelatedProductCategory {
+    EarlyProductRelatedProductCategory {
+        name: kind,
+        description: kind_description,
+        products: product_refs,
+    }
+}
+
+/// Lift one `PRODUCT_CATEGORY_RELATIONSHIP` (L1-strict: emit the real
+/// `name`/`description`, not the legacy `" "` placeholder). `category`/
+/// `sub_category` are the pre-emitted PC/PRPC step ids.
+pub(crate) fn lift_product_category_relationship(
+    name: String,
+    description: Option<String>,
+    pc_ref: u64,
+    prpc_ref: u64,
+) -> EarlyProductCategoryRelationship {
+    EarlyProductCategoryRelationship {
+        name,
+        description,
+        category: pc_ref,
+        sub_category: prpc_ref,
+    }
+}
+
 pub(crate) fn lift_product_category(
     name: String,
     description: Option<String>,

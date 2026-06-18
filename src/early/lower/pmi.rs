@@ -4,8 +4,9 @@
 use crate::early::model::{
     EarlyAngularLocation, EarlyAngularSize, EarlyAngularityTolerance,
     EarlyAnnotationCurveOccurrence, EarlyAnnotationOccurrence,
-    EarlyAnnotationPlaceholderOccurrence, EarlyAnnotationPlaceholderOccurrenceWithLeaderLine,
-    EarlyAnnotationPlane, EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence,
+    EarlyAnnotationOccurrenceAssociativity, EarlyAnnotationPlaceholderOccurrence,
+    EarlyAnnotationPlaceholderOccurrenceWithLeaderLine, EarlyAnnotationPlane,
+    EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence,
     EarlyAnnotationToModelLeaderLine, EarlyApllPoint, EarlyApllPointWithSurface,
     EarlyAuxiliaryLeaderLine, EarlyCircularRunoutTolerance, EarlyConcentricityTolerance,
     EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature, EarlyDimensionalLocation,
@@ -25,19 +26,19 @@ use crate::entities::visualization::styled_item::resolve_representation_item_ref
 use crate::ir::geometry::Point3;
 use crate::ir::pmi::{
     AngularLocationData, AnnotationCurveOccurrence, AnnotationOccurrence,
-    AnnotationPlaceholderLeaderLine, AnnotationPlaceholderOccurrence,
-    AnnotationPlaceholderOccurrenceWithLeaderLine, AnnotationPlane, AnnotationSymbolOccurrence,
-    AnnotationTextOccurrence, AnnotationToModelLeaderLine, ApllPointData, ApllPointElement,
-    ApllPointWithSurfaceData, AuxiliaryLeaderLineData, Datum, DatumFeature, DimensionalLocation,
-    DimensionalLocationData, DimensionalSize, DimensionalSizeKind, DraughtingAnnotationOccurrence,
-    DraughtingCallout, DraughtingCalloutData, DraughtingCalloutRelationship,
-    DraughtingModelIdentifiedItem, DraughtingModelItemAssociation, DraughtingModelItemDefinition,
-    DraughtingPreDefinedTextFont, GeometricTolerance, GeometricToleranceRelationship,
-    GeometricToleranceWithDatumReference, LeaderCurve, LeaderTerminator, LimitsAndFits,
-    MeasureQualification, PlainAnnotationCurveOccurrence, PlainAnnotationOccurrence,
-    PlusMinusTolerance, PmiPool, ProjectedZoneDefinition, TerminatorSymbol,
-    TessellatedAnnotationOccurrence, ToleranceValue, ToleranceZoneForm, TypeQualifier,
-    ValueFormatTypeQualifier, ValueQualifier,
+    AnnotationOccurrenceAssociativity, AnnotationOccurrenceRef, AnnotationPlaceholderLeaderLine,
+    AnnotationPlaceholderOccurrence, AnnotationPlaceholderOccurrenceWithLeaderLine,
+    AnnotationPlane, AnnotationSymbolOccurrence, AnnotationTextOccurrence,
+    AnnotationToModelLeaderLine, ApllPointData, ApllPointElement, ApllPointWithSurfaceData,
+    AuxiliaryLeaderLineData, Datum, DatumFeature, DimensionalLocation, DimensionalLocationData,
+    DimensionalSize, DimensionalSizeKind, DraughtingAnnotationOccurrence, DraughtingCallout,
+    DraughtingCalloutData, DraughtingCalloutRelationship, DraughtingModelIdentifiedItem,
+    DraughtingModelItemAssociation, DraughtingModelItemDefinition, DraughtingPreDefinedTextFont,
+    GeometricTolerance, GeometricToleranceRelationship, GeometricToleranceWithDatumReference,
+    LeaderCurve, LeaderTerminator, LimitsAndFits, MeasureQualification,
+    PlainAnnotationCurveOccurrence, PlainAnnotationOccurrence, PlusMinusTolerance, PmiPool,
+    ProjectedZoneDefinition, TerminatorSymbol, TessellatedAnnotationOccurrence, ToleranceValue,
+    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier, ValueQualifier,
 };
 use crate::reader::ReaderContext;
 
@@ -1577,4 +1578,51 @@ pub(crate) fn lower_draughting_model_item_association_with_placeholder(
         .draughting_model_item_associations
         .push(dmia);
     ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `ANNOTATION_OCCURRENCE_ASSOCIATIVITY` (pairs two
+/// `annotation_occurrence` SELECT members). Either end resolving to no modelled
+/// annotation-occurrence arena warns + drops (symmetric on re-read).
+pub(crate) fn lower_annotation_occurrence_associativity(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyAnnotationOccurrenceAssociativity,
+) {
+    let Some(relating) =
+        AnnotationOccurrenceRef::resolve_select(ctx, early.relating_annotation_occurrence)
+    else {
+        ctx.warnings
+            .push(crate::ir::error::ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "ANNOTATION_OCCURRENCE_ASSOCIATIVITY relating #{} resolves to no modelled \
+                     annotation occurrence — skipping",
+                    early.relating_annotation_occurrence
+                ),
+            });
+        return;
+    };
+    let Some(related) =
+        AnnotationOccurrenceRef::resolve_select(ctx, early.related_annotation_occurrence)
+    else {
+        ctx.warnings
+            .push(crate::ir::error::ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "ANNOTATION_OCCURRENCE_ASSOCIATIVITY related #{} resolves to no modelled \
+                     annotation occurrence — skipping",
+                    early.related_annotation_occurrence
+                ),
+            });
+        return;
+    };
+    ctx.pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_occurrence_associativities
+        .push(AnnotationOccurrenceAssociativity {
+            name: early.name,
+            description: early.description,
+            relating,
+            related,
+        });
 }

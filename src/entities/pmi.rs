@@ -901,20 +901,6 @@ impl SimpleEntityHandler for DraughtingCalloutRelationshipHandler {
     }
 }
 
-/// Resolve an `annotation_occurrence` reference to step-io's two annotation
-/// occurrence arenas: the [`AnnotationOccurrence`] enum
-/// (`annotation_occurrence_id_map`) or the separate
-/// `annotation_curve_occurrence` arena (`annotation_curve_occurrence_id_map`).
-/// Returns `None` for an unmodelled member (e.g.
-/// `annotation_fill_area_occurrence`).
-fn resolve_annotation_occurrence_ref(
-    ctx: &ReaderContext,
-    entity_ref: u64,
-) -> Option<AnnotationOccurrenceRef> {
-    // Members + probe order are generated from the enum by `StepSelect`.
-    AnnotationOccurrenceRef::resolve_select(ctx, entity_ref)
-}
-
 pub(crate) struct AnnotationOccurrenceAssociativityHandler;
 
 /// `ANNOTATION_OCCURRENCE_ASSOCIATIVITY(name, description, relating, related)`
@@ -930,40 +916,8 @@ impl SimpleEntityHandler for AnnotationOccurrenceAssociativityHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "ANNOTATION_OCCURRENCE_ASSOCIATIVITY")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-        let relating_ref = read_entity_ref(attrs, 2, entity_id, "relating_annotation_occurrence")?;
-        let related_ref = read_entity_ref(attrs, 3, entity_id, "related_annotation_occurrence")?;
-        let Some(relating) = resolve_annotation_occurrence_ref(ctx, relating_ref) else {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!(
-                    "ANNOTATION_OCCURRENCE_ASSOCIATIVITY relating #{relating_ref} \
-                     resolves to no modelled annotation occurrence — skipping"
-                ),
-            });
-            return Ok(());
-        };
-        let Some(related) = resolve_annotation_occurrence_ref(ctx, related_ref) else {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!(
-                    "ANNOTATION_OCCURRENCE_ASSOCIATIVITY related #{related_ref} \
-                     resolves to no modelled annotation occurrence — skipping"
-                ),
-            });
-            return Ok(());
-        };
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_occurrence_associativities
-            .push(AnnotationOccurrenceAssociativity {
-                name,
-                description,
-                relating,
-                related,
-            });
+        let early = bind::bind_annotation_occurrence_associativity(entity_id, attrs)?;
+        lower::lower_annotation_occurrence_associativity(ctx, entity_id, early);
         Ok(())
     }
 
@@ -973,14 +927,14 @@ impl SimpleEntityHandler for AnnotationOccurrenceAssociativityHandler {
     ) -> Result<u64, WriteError> {
         let relating = emit_annotation_occurrence_ref(buf, aoa.relating);
         let related = emit_annotation_occurrence_ref(buf, aoa.related);
-        Ok(buf.push_simple(
-            "ANNOTATION_OCCURRENCE_ASSOCIATIVITY",
-            vec![
-                Attribute::String(aoa.name),
-                Attribute::String(aoa.description),
-                Attribute::EntityRef(relating),
-                Attribute::EntityRef(related),
-            ],
+        let early = lift::lift_annotation_occurrence_associativity(
+            aoa.name,
+            aoa.description,
+            relating,
+            related,
+        );
+        Ok(serialize::serialize_annotation_occurrence_associativity(
+            buf, &early,
         ))
     }
 }

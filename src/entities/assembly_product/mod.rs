@@ -23,4 +23,3 @@ pub mod product_definition_relationship;
 pub mod product_definition_shape;
 pub mod product_definition_with_associated_documents;
 pub mod product_related_product_category;
-pub(crate) mod shared;

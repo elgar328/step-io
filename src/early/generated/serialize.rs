@@ -2754,6 +2754,46 @@ pub(crate) fn serialize_product_category(
     )
 }
 
+pub(crate) fn serialize_product_related_product_category(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyProductRelatedProductCategory,
+) -> u64 {
+    buf.push_simple(
+        "PRODUCT_RELATED_PRODUCT_CATEGORY",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::List(
+                l1.products
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_product_category_relationship(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyProductCategoryRelationship,
+) -> u64 {
+    buf.push_simple(
+        "PRODUCT_CATEGORY_RELATIONSHIP",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.category),
+            crate::parser::entity::Attribute::EntityRef(l1.sub_category),
+        ],
+    )
+}
+
 pub(crate) fn serialize_dimensional_characteristic_representation(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyDimensionalCharacteristicRepresentation,
@@ -4701,6 +4741,21 @@ pub(crate) fn serialize_draughting_model_item_association_with_placeholder(
             crate::parser::entity::Attribute::EntityRef(l1.used_representation),
             crate::parser::entity::Attribute::EntityRef(l1.identified_item),
             crate::parser::entity::Attribute::EntityRef(l1.annotation_placeholder),
+        ],
+    )
+}
+
+pub(crate) fn serialize_annotation_occurrence_associativity(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAnnotationOccurrenceAssociativity,
+) -> u64 {
+    buf.push_simple(
+        "ANNOTATION_OCCURRENCE_ASSOCIATIVITY",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::String(l1.description.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.relating_annotation_occurrence),
+            crate::parser::entity::Attribute::EntityRef(l1.related_annotation_occurrence),
         ],
     )
 }

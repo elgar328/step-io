@@ -4,8 +4,9 @@
 use crate::early::model::{
     EarlyAngularLocation, EarlyAngularSize, EarlyAngularityTolerance,
     EarlyAnnotationCurveOccurrence, EarlyAnnotationOccurrence,
-    EarlyAnnotationPlaceholderOccurrence, EarlyAnnotationPlaceholderOccurrenceWithLeaderLine,
-    EarlyAnnotationPlane, EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence,
+    EarlyAnnotationOccurrenceAssociativity, EarlyAnnotationPlaceholderOccurrence,
+    EarlyAnnotationPlaceholderOccurrenceWithLeaderLine, EarlyAnnotationPlane,
+    EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence,
     EarlyAnnotationToModelLeaderLine, EarlyApllPoint, EarlyApllPointWithSurface,
     EarlyAuxiliaryLeaderLine, EarlyCircularRunoutTolerance, EarlyConcentricityTolerance,
     EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature, EarlyDimensionalLocation,
@@ -699,5 +700,21 @@ pub(crate) fn lift_dmia_with_placeholder(
         used_representation,
         identified_item,
         annotation_placeholder,
+    }
+}
+
+/// Lift one `ANNOTATION_OCCURRENCE_ASSOCIATIVITY` (`relating`/`related`
+/// pre-emitted to step ids via `emit_select` by the handler).
+pub(crate) fn lift_annotation_occurrence_associativity(
+    name: String,
+    description: String,
+    relating_annotation_occurrence: u64,
+    related_annotation_occurrence: u64,
+) -> EarlyAnnotationOccurrenceAssociativity {
+    EarlyAnnotationOccurrenceAssociativity {
+        name,
+        description,
+        relating_annotation_occurrence,
+        related_annotation_occurrence,
     }
 }

@@ -2433,6 +2433,31 @@ pub(crate) fn bind_product_category(
     })
 }
 
+pub(crate) fn bind_product_related_product_category(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyProductRelatedProductCategory, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "PRODUCT_RELATED_PRODUCT_CATEGORY")?;
+    Ok(super::model::EarlyProductRelatedProductCategory {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        products: crate::ir::attr::read_entity_ref_list(attrs, 2, entity_id, "products")?,
+    })
+}
+
+pub(crate) fn bind_product_category_relationship(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyProductCategoryRelationship, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "PRODUCT_CATEGORY_RELATIONSHIP")?;
+    Ok(super::model::EarlyProductCategoryRelationship {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        category: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "category")?,
+        sub_category: crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "sub_category")?,
+    })
+}
+
 pub(crate) fn bind_dimensional_characteristic_representation(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],
@@ -4120,6 +4145,30 @@ pub(crate) fn bind_draughting_model_item_association_with_placeholder(
             )?,
         },
     )
+}
+
+pub(crate) fn bind_annotation_occurrence_associativity(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAnnotationOccurrenceAssociativity, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "ANNOTATION_OCCURRENCE_ASSOCIATIVITY")?;
+    Ok(super::model::EarlyAnnotationOccurrenceAssociativity {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_string_or_unset(attrs, 1, entity_id, "description")?
+            .to_owned(),
+        relating_annotation_occurrence: crate::ir::attr::read_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "relating_annotation_occurrence",
+        )?,
+        related_annotation_occurrence: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "related_annotation_occurrence",
+        )?,
+    })
 }
 
 pub(crate) fn bind_annotation_plane(

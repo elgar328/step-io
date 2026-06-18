@@ -344,13 +344,13 @@ pub struct ProductRelatedProductCategoryData {
 }
 
 /// `PRODUCT_CATEGORY_RELATIONSHIP(name, description, category, sub_category)`
-/// — blueprint `single_struct`. Both `name` / `description` are `string`
-/// (NOT `opt_string` — different from the `PC` / `PRPC` description);
-/// empty strings normalise the source's `$` form.
+/// — blueprint `single_struct`. `name` is `label` (required → `String`);
+/// `description` is `OPTIONAL text` → `Option<String>` (faithful `$` round-trip,
+/// consistent with the `PC` / `PRPC` description).
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProductCategoryRelationship {
     pub name: String,
-    pub description: String,
+    pub description: Option<String>,
     pub category: ProductCategoryId,
     pub sub_category: ProductCategoryId,
 }

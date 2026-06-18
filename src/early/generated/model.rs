@@ -3148,6 +3148,53 @@ impl crate::ir::arena::ArenaId for EarlyProductCategoryId {
     }
 }
 
+/// L1 `PRODUCT_RELATED_PRODUCT_CATEGORY` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyProductRelatedProductCategory {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) products: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `PRODUCT_RELATED_PRODUCT_CATEGORY` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyProductRelatedProductCategoryId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyProductRelatedProductCategoryId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PRODUCT_CATEGORY_RELATIONSHIP` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyProductCategoryRelationship {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) category: u64,
+    pub(crate) sub_category: u64,
+}
+
+/// Typed `id_cache` key for `PRODUCT_CATEGORY_RELATIONSHIP` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyProductCategoryRelationshipId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyProductCategoryRelationshipId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `DIMENSIONAL_CHARACTERISTIC_REPRESENTATION` (generated).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct EarlyDimensionalCharacteristicRepresentation {
@@ -5566,6 +5613,30 @@ pub(crate) struct EarlyDraughtingModelItemAssociationWithPlaceholder {
 pub(crate) struct EarlyDraughtingModelItemAssociationWithPlaceholderId(pub u32);
 
 impl crate::ir::arena::ArenaId for EarlyDraughtingModelItemAssociationWithPlaceholderId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `ANNOTATION_OCCURRENCE_ASSOCIATIVITY` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAnnotationOccurrenceAssociativity {
+    pub(crate) name: String,
+    pub(crate) description: String,
+    pub(crate) relating_annotation_occurrence: u64,
+    pub(crate) related_annotation_occurrence: u64,
+}
+
+/// Typed `id_cache` key for `ANNOTATION_OCCURRENCE_ASSOCIATIVITY` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAnnotationOccurrenceAssociativityId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAnnotationOccurrenceAssociativityId {
     fn index(&self) -> usize {
         self.0 as usize
     }

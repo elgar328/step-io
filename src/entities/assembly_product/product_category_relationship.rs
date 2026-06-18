@@ -5,9 +5,8 @@
 //! refs through arena maps the `PRODUCT_CATEGORY` and
 //! `PRODUCT_RELATED_PRODUCT_CATEGORY` handlers fill upstream.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::assembly::ProductCategoryRelationship;
-use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
@@ -16,6 +15,8 @@ use crate::writer::buffer::WriteBuffer;
 use step_io_macros::step_entity;
 
 pub(crate) struct ProductCategoryRelationshipWriteInput {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
     pub(crate) pc_ref: u64,
     pub(crate) prpc_ref: u64,
 }
@@ -32,69 +33,23 @@ impl SimpleEntityHandler for ProductCategoryRelationshipHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "PRODUCT_CATEGORY_RELATIONSHIP")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-        let pc_ref = read_entity_ref(attrs, 2, entity_id, "category")?;
-        let prpc_ref = read_entity_ref(attrs, 3, entity_id, "sub_category")?;
-
-        // NsCase::EmptyPrrpcCascade sub_category is an empty PRRPC dropped as a
-        // normalization (NsCase::EmptyPrrpc); this relationship carries no info →
-        // drop as a normalization, not a MissingReference defect. See
-        // reader::nonstandard.
-        if ctx.empty_prrpc_refs.contains(&prpc_ref) {
-            ctx.ns_push(
-                crate::reader::NsCase::EmptyPrrpcCascade,
-                "PRODUCT_CATEGORY_RELATIONSHIP".into(),
-                1,
-                "dropped (relates empty PRRPC)".into(),
-            );
-            return Ok(());
-        }
-
-        // `category` is typed `product_category`; PRODUCT_RELATED_PRODUCT_CATEGORY
-        // is a product_category subtype, so a PRPC is a valid `category` (NIST
-        // ctc_05). Both arenas yield ProductCategoryId into the unified
-        // product_categories arena, so probe pc_arena_map then prpc_arena_map.
-        let (Some(&category_id), Some(&sub_category_id)) = (
-            ctx.pc_arena_map
-                .get(&pc_ref)
-                .or_else(|| ctx.prpc_arena_map.get(&pc_ref)),
-            ctx.prpc_arena_map.get(&prpc_ref),
-        ) else {
-            ctx.warnings.push(ConvertError::MissingReference {
-                from: entity_id,
-                to: if ctx.prpc_arena_map.contains_key(&prpc_ref) {
-                    pc_ref
-                } else {
-                    prpc_ref
-                },
-                field_name: "category",
-            });
-            return Ok(());
-        };
-        ctx.product_category_relationships
-            .push(ProductCategoryRelationship {
-                name,
-                description,
-                category: category_id,
-                sub_category: sub_category_id,
-            });
+        let early = bind::bind_product_category_relationship(entity_id, attrs)?;
+        lower::lower_product_category_relationship(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(
         buf: &mut WriteBuffer,
-        ProductCategoryRelationshipWriteInput { pc_ref, prpc_ref }: ProductCategoryRelationshipWriteInput,
+        ProductCategoryRelationshipWriteInput {
+            name,
+            description,
+            pc_ref,
+            prpc_ref,
+        }: ProductCategoryRelationshipWriteInput,
     ) -> Result<u64, WriteError> {
-        Ok(buf.push_simple(
-            "PRODUCT_CATEGORY_RELATIONSHIP",
-            vec![
-                Attribute::String(" ".into()),
-                Attribute::String(" ".into()),
-                Attribute::EntityRef(pc_ref),
-                Attribute::EntityRef(prpc_ref),
-            ],
+        let early = lift::lift_product_category_relationship(name, description, pc_ref, prpc_ref);
+        Ok(serialize::serialize_product_category_relationship(
+            buf, &early,
         ))
     }
 }

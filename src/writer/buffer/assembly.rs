@@ -1180,6 +1180,8 @@ impl WriteBuffer<'_> {
             let _ = ProductCategoryRelationshipHandler::write(
                 self,
                 ProductCategoryRelationshipWriteInput {
+                    name: pcr.name.clone(),
+                    description: pcr.description.clone(),
                     pc_ref: pc,
                     prpc_ref: prpc,
                 },

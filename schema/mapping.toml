@@ -152,6 +152,9 @@ generate = [
     "qualified_representation_item",
     "presentation_layer_assignment",
     "product_category",
+    # product_categories arena completion (cascade chain)
+    "product_related_product_category",
+    "product_category_relationship",
     "dimensional_characteristic_representation",
     "general_property_association",
     "make_from_usage_option",
@@ -277,6 +280,8 @@ generate = [
     # PMI simple — DMIA (definition 6-way + identified_item select; 1:N placeholder writer)
     "draughting_model_item_association",
     "draughting_model_item_association_with_placeholder",
+    # PMI simple relationship — annotation occurrence associativity
+    "annotation_occurrence_associativity",
     # Phase 3f: PMI simple — annotation plane (+ OPTIONAL SET elements, dropped)
     "annotation_plane",
     # Phase 3g: visualization simple — camera model d3 (+ hlhsr boolean subtype)

@@ -837,6 +837,26 @@ fn wire1_preserves_pc_chain_with_specification() {
     );
 }
 
+/// L1-strict: `PRODUCT_CATEGORY_RELATIONSHIP` must round-trip its real
+/// `name`/`description` (`box_ap203` carries empty `''` strings), not the legacy
+/// hardcoded `' '` placeholder the writer used to emit. (The
+/// `product_category_relationships` arena is not deep-diffed by the corpus
+/// reference-check, so this guards the fidelity directly.)
+#[test]
+fn product_category_relationship_preserves_name_description() {
+    let src = include_str!("fixtures/box_ap203.step");
+    let model = ReaderContext::convert(&parse(src).expect("parse")).model;
+    let out = model.write_to_string().expect("write");
+    let pcr_line = out
+        .lines()
+        .find(|l| l.contains("PRODUCT_CATEGORY_RELATIONSHIP"))
+        .expect("PCR round-trips (sub_category is a non-empty PRPC)");
+    assert!(
+        pcr_line.contains("PRODUCT_CATEGORY_RELATIONSHIP('','',"),
+        "PCR name/description must emit the faithful empty strings, not ' ': {pcr_line}"
+    );
+}
+
 /// PMI scaffolding reader check — same NIST fixture as the property test
 /// reader-only check below. Verifies the reader populates
 /// `model.shape_rep.shape_aspects` with at least one entry. Round-trip is not

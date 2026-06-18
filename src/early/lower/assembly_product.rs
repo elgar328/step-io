@@ -9,17 +9,20 @@
 
 use crate::early::model::{
     EarlyDesignContext, EarlyMakeFromUsageOption, EarlyMechanicalContext,
-    EarlyNextAssemblyUsageOccurrence, EarlyProduct, EarlyProductCategory, EarlyProductContext,
-    EarlyProductDefinitionContext, EarlyProductDefinitionContextAssociation,
-    EarlyProductDefinitionContextRole, EarlyProductDefinitionFormationId, EarlyProductDefinitionId,
-    EarlyProductDefinitionRelationship, EarlyProductDefinitionShapeId, EarlySource,
+    EarlyNextAssemblyUsageOccurrence, EarlyProduct, EarlyProductCategory,
+    EarlyProductCategoryRelationship, EarlyProductContext, EarlyProductDefinitionContext,
+    EarlyProductDefinitionContextAssociation, EarlyProductDefinitionContextRole,
+    EarlyProductDefinitionFormationId, EarlyProductDefinitionId,
+    EarlyProductDefinitionRelationship, EarlyProductDefinitionShapeId,
+    EarlyProductRelatedProductCategory, EarlySource,
 };
 use crate::ir::ApplicationContextId;
 use crate::ir::assembly::{
-    Product, ProductContext, ProductContextData, ProductDefinition, ProductDefinitionContext,
-    ProductDefinitionContextAssociation, ProductDefinitionContextData,
-    ProductDefinitionContextRole, ProductDefinitionFormation, ProductDefinitionFormationData,
-    ProductDefinitionFormationWithSpecifiedSource,
+    Product, ProductCategory, ProductCategoryRelationship, ProductContext, ProductContextData,
+    ProductDefinition, ProductDefinitionContext, ProductDefinitionContextAssociation,
+    ProductDefinitionContextData, ProductDefinitionContextRole, ProductDefinitionFormation,
+    ProductDefinitionFormationData, ProductDefinitionFormationWithSpecifiedSource,
+    ProductRelatedProductCategoryData,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::id::{Placement3dId, ProductId};
@@ -297,6 +300,91 @@ pub(crate) fn lower_product_category(
             },
         ));
     ctx.pc_arena_map.insert(entity_id, pc_id);
+}
+
+/// Lower one `PRODUCT_RELATED_PRODUCT_CATEGORY` into the shared
+/// `product_categories` arena. Empty `products` (non-standard SET[1:?]) is a
+/// `NsCase::EmptyPrrpc` drop that records `empty_prrpc_refs` so a referencing
+/// `PRODUCT_CATEGORY_RELATIONSHIP` cascades. Unknown product refs are filtered
+/// (verbatim port of the legacy read). `description` empty→None mirrors the
+/// `optional_text` reader / the `Itself` sibling.
+pub(crate) fn lower_product_related_product_category(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyProductRelatedProductCategory,
+) {
+    if early.products.is_empty() {
+        ctx.ns_push(
+            crate::reader::NsCase::EmptyPrrpc,
+            "PRODUCT_RELATED_PRODUCT_CATEGORY".into(),
+            1,
+            "dropped (empty products, non-standard SET[1:?])".into(),
+        );
+        ctx.empty_prrpc_refs.insert(entity_id);
+        return;
+    }
+    let mut products = Vec::with_capacity(early.products.len());
+    for prod_ref in &early.products {
+        if let Some(pid) = ctx.id_cache.get::<ProductId>(*prod_ref) {
+            products.push(pid);
+        }
+    }
+    let pc_id = ctx
+        .product_categories
+        .push(ProductCategory::ProductRelatedProductCategory(
+            ProductRelatedProductCategoryData {
+                name: early.name,
+                description: early.description.filter(|d| !d.is_empty()),
+                products,
+            },
+        ));
+    ctx.prpc_arena_map.insert(entity_id, pc_id);
+}
+
+/// Lower one `PRODUCT_CATEGORY_RELATIONSHIP`. A `sub_category` that is a
+/// dropped empty PRRPC cascades (`NsCase::EmptyPrrpcCascade` drop). `category`
+/// resolves through `pc_arena_map` then `prpc_arena_map` (a PRPC is a valid
+/// `product_category`); `sub_category` through `prpc_arena_map`. Either
+/// unresolved → `MissingReference` drop. `name`/`description` are kept faithful
+/// (L1-strict — the legacy writer discarded them to `" "`).
+pub(crate) fn lower_product_category_relationship(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyProductCategoryRelationship,
+) {
+    if ctx.empty_prrpc_refs.contains(&early.sub_category) {
+        ctx.ns_push(
+            crate::reader::NsCase::EmptyPrrpcCascade,
+            "PRODUCT_CATEGORY_RELATIONSHIP".into(),
+            1,
+            "dropped (relates empty PRRPC)".into(),
+        );
+        return;
+    }
+    let (Some(&category), Some(&sub_category)) = (
+        ctx.pc_arena_map
+            .get(&early.category)
+            .or_else(|| ctx.prpc_arena_map.get(&early.category)),
+        ctx.prpc_arena_map.get(&early.sub_category),
+    ) else {
+        ctx.warnings.push(ConvertError::MissingReference {
+            from: entity_id,
+            to: if ctx.prpc_arena_map.contains_key(&early.sub_category) {
+                early.category
+            } else {
+                early.sub_category
+            },
+            field_name: "category",
+        });
+        return;
+    };
+    ctx.product_category_relationships
+        .push(ProductCategoryRelationship {
+            name: early.name,
+            description: early.description,
+            category,
+            sub_category,
+        });
 }
 
 /// Lower one `MAKE_FROM_USAGE_OPTION` (faithful optional description; an
