@@ -5349,6 +5349,25 @@ pub(crate) fn bind_tessellated_geometric_set(
     })
 }
 
+pub(crate) fn bind_repositioned_tessellated_geometric_set(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<super::model::EarlyRepositionedTessellatedGeometricSet, crate::ir::error::ConvertError>
+{
+    let attrs =
+        crate::reader::require_part_attrs(parts, "REPOSITIONED_TESSELLATED_ITEM", entity_id)?;
+    let location = crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "location")?;
+    let attrs = crate::reader::require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let attrs = crate::reader::require_part_attrs(parts, "TESSELLATED_GEOMETRIC_SET", entity_id)?;
+    let children = crate::ir::attr::read_entity_ref_list(attrs, 0, entity_id, "children")?;
+    Ok(super::model::EarlyRepositionedTessellatedGeometricSet {
+        location,
+        name,
+        children,
+    })
+}
+
 pub(crate) fn bind_tessellated_solid(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],

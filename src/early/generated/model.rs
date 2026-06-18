@@ -6838,6 +6838,29 @@ impl crate::ir::arena::ArenaId for EarlyTessellatedGeometricSetId {
     }
 }
 
+/// L1 `REPOSITIONED_TESSELLATED_GEOMETRIC_SET` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyRepositionedTessellatedGeometricSet {
+    pub(crate) location: u64,
+    pub(crate) name: String,
+    pub(crate) children: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `REPOSITIONED_TESSELLATED_GEOMETRIC_SET` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyRepositionedTessellatedGeometricSetId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyRepositionedTessellatedGeometricSetId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `TESSELLATED_SOLID` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyTessellatedSolid {

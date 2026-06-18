@@ -5,8 +5,9 @@
 
 use crate::early::model::{
     EarlyComplexTriangulatedFace, EarlyComplexTriangulatedSurfaceSet, EarlyCoordinatesList,
-    EarlyRepositionedTessellatedItem, EarlyTessellatedCurveSet, EarlyTessellatedGeometricSet,
-    EarlyTessellatedShell, EarlyTessellatedSolid,
+    EarlyRepositionedTessellatedGeometricSet, EarlyRepositionedTessellatedItem,
+    EarlyTessellatedCurveSet, EarlyTessellatedGeometricSet, EarlyTessellatedShell,
+    EarlyTessellatedSolid,
 };
 use crate::ir::tessellation::{
     ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, CoordinatesList,
@@ -89,6 +90,21 @@ pub(crate) fn lift_tessellated_geometric_set(
         .collect();
     EarlyTessellatedGeometricSet {
         name: tgs.name,
+        children,
+    }
+}
+
+/// Lift one `REPOSITIONED_TESSELLATED_GEOMETRIC_SET` from pre-resolved step ids
+/// (`location` / `children` resolved by `emit_tessellation`'s phase-3 pass, which
+/// holds `&mut buf` for the fallible placement emit).
+pub(crate) fn lift_repositioned_tessellated_geometric_set(
+    name: String,
+    location: u64,
+    children: Vec<u64>,
+) -> EarlyRepositionedTessellatedGeometricSet {
+    EarlyRepositionedTessellatedGeometricSet {
+        location,
+        name,
         children,
     }
 }

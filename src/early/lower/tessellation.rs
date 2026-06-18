@@ -4,15 +4,17 @@
 
 use crate::early::model::{
     EarlyComplexTriangulatedFace, EarlyComplexTriangulatedSurfaceSet, EarlyCoordinatesList,
-    EarlyRepositionedTessellatedItem, EarlyTessellatedCurveSet, EarlyTessellatedGeometricSet,
-    EarlyTessellatedShell, EarlyTessellatedSolid,
+    EarlyRepositionedTessellatedGeometricSet, EarlyRepositionedTessellatedItem,
+    EarlyTessellatedCurveSet, EarlyTessellatedGeometricSet, EarlyTessellatedShell,
+    EarlyTessellatedSolid,
 };
 use crate::entities::tessellation::resolve_tessellated_item_ref;
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::tessellation::{
     ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, CoordinatesList,
-    RepositionedTessellatedItem, TessellatedCurveSet, TessellatedGeometricSet, TessellatedItem,
-    TessellatedItemRef, TessellatedShell, TessellatedSolid,
+    RepositionedTessellatedGeometricSet, RepositionedTessellatedItem, TessellatedCurveSet,
+    TessellatedGeometricSet, TessellatedItem, TessellatedItemRef, TessellatedShell,
+    TessellatedSolid,
 };
 use crate::reader::ReaderContext;
 
@@ -128,6 +130,34 @@ pub(crate) fn lower_tessellated_geometric_set(
         .push(TessellatedItem::TessellatedGeometricSet(
             TessellatedGeometricSet {
                 name: early.name,
+                children,
+            },
+        ));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `REPOSITIONED_TESSELLATED_GEOMETRIC_SET` (5-part complex MI). Mirrors
+/// the plain TGS lower plus a `location` resolved through `placement_map`
+/// (drop-if-unresolved, as the legacy hand reader did).
+pub(crate) fn lower_repositioned_tessellated_geometric_set(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyRepositionedTessellatedGeometricSet,
+) {
+    let Some(&location) = ctx.placement_map.get(&early.location) else {
+        return;
+    };
+    let children: Vec<TessellatedItemRef> = early
+        .children
+        .iter()
+        .filter_map(|&r| resolve_tessellated_item_ref(ctx, r))
+        .collect();
+    let id = ctx
+        .tessellated_items
+        .push(TessellatedItem::RepositionedTessellatedGeometricSet(
+            RepositionedTessellatedGeometricSet {
+                name: early.name,
+                location,
                 children,
             },
         ));

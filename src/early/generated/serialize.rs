@@ -6063,6 +6063,33 @@ pub(crate) fn serialize_tessellated_geometric_set(
     )
 }
 
+pub(crate) fn serialize_repositioned_tessellated_geometric_set(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyRepositionedTessellatedGeometricSet,
+) -> u64 {
+    buf.push_complex(vec![
+        ("GEOMETRIC_REPRESENTATION_ITEM".into(), vec![]),
+        (
+            "REPOSITIONED_TESSELLATED_ITEM".into(),
+            vec![crate::parser::entity::Attribute::EntityRef(l1.location)],
+        ),
+        (
+            "REPRESENTATION_ITEM".into(),
+            vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+        ),
+        (
+            "TESSELLATED_GEOMETRIC_SET".into(),
+            vec![crate::parser::entity::Attribute::List(
+                l1.children
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            )],
+        ),
+        ("TESSELLATED_ITEM".into(), vec![]),
+    ])
+}
+
 pub(crate) fn serialize_tessellated_solid(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyTessellatedSolid,

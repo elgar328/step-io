@@ -9,16 +9,14 @@
 
 use crate::early::{bind, lift, lower, serialize};
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
-use crate::ir::attr::{read_entity_ref, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::tessellation::{
     ComplexTriangulatedFace, ComplexTriangulatedSurfaceSet, CoordinatesList,
-    RepositionedTessellatedGeometricSet, RepositionedTessellatedItem, TessellatedCurveSet,
-    TessellatedGeometricSet, TessellatedItem, TessellatedItemRef, TessellatedShell,
-    TessellatedSolid,
+    RepositionedTessellatedItem, TessellatedCurveSet, TessellatedGeometricSet, TessellatedItemRef,
+    TessellatedShell, TessellatedSolid,
 };
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
-use crate::reader::{ReaderContext, require_part_attrs};
+use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use step_io_macros::{step_entity, step_entity_complex};
@@ -276,30 +274,8 @@ impl ComplexEntityHandler for RepositionedTessellatedGeometricSetHandler {
         parts: &[RawEntityPart],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let name_attrs = require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
-        let name = read_string_or_unset(name_attrs, 0, entity_id, "name")?.to_owned();
-        let rti_attrs = require_part_attrs(parts, "REPOSITIONED_TESSELLATED_ITEM", entity_id)?;
-        let location_ref = read_entity_ref(rti_attrs, 0, entity_id, "location")?;
-        let Some(&location) = ctx.placement_map.get(&location_ref) else {
-            return Ok(());
-        };
-        let tgs_attrs = require_part_attrs(parts, "TESSELLATED_GEOMETRIC_SET", entity_id)?;
-        let child_refs = read_entity_ref_list(tgs_attrs, 0, entity_id, "children")?;
-        let children: Vec<TessellatedItemRef> = child_refs
-            .iter()
-            .filter_map(|&r| resolve_tessellated_item_ref(ctx, r))
-            .collect();
-
-        let id = ctx
-            .tessellated_items
-            .push(TessellatedItem::RepositionedTessellatedGeometricSet(
-                RepositionedTessellatedGeometricSet {
-                    name,
-                    location,
-                    children,
-                },
-            ));
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_repositioned_tessellated_geometric_set(entity_id, parts)?;
+        lower::lower_repositioned_tessellated_geometric_set(ctx, entity_id, early);
         Ok(())
     }
 

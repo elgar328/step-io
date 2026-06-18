@@ -343,6 +343,7 @@ generate = [
     "tessellated_curve_set",
     "complex_triangulated_surface_set",
     "tessellated_geometric_set",
+    "repositioned_tessellated_geometric_set",
     "tessellated_solid",
     "tessellated_shell",
     "repositioned_tessellated_item",
@@ -659,6 +660,14 @@ match_parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE"
 
 [complex.line_profile_tolerance_complex]
 parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "LINE_PROFILE_TOLERANCE"]
+
+# Repositioned tessellated geometric set — 5-part complex MI (synthetic name; the
+# plain TESSELLATED_GEOMETRIC_SET is a separate simple handler). Data: name on
+# REPRESENTATION_ITEM, location on REPOSITIONED_TESSELLATED_ITEM, children on
+# TESSELLATED_GEOMETRIC_SET; GEOMETRIC_REPRESENTATION_ITEM / TESSELLATED_ITEM empty.
+# part order = the hand WriterBody::Complex order. No self-ref → plain serialize.
+[complex.repositioned_tessellated_geometric_set]
+parts = ["GEOMETRIC_REPRESENTATION_ITEM", "REPOSITIONED_TESSELLATED_ITEM", "REPRESENTATION_ITEM", "TESSELLATED_GEOMETRIC_SET", "TESSELLATED_ITEM"]
 
 # Complex MI DRAUGHTING_MODEL family (synthetic name — no single early.toml
 # entity). 3 exact part-sets (A ⊂ B share CHARACTERIZED_OBJECT, so single-part
