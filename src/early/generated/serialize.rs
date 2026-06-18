@@ -355,6 +355,7 @@ pub(crate) fn serialize_shape_representation(
     )
 }
 
+#[allow(dead_code)]
 pub(crate) fn serialize_advanced_brep_shape_representation(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyAdvancedBrepShapeRepresentation,
@@ -1767,6 +1768,7 @@ pub(crate) fn serialize_dimensional_exponents(
     )
 }
 
+#[allow(dead_code)]
 pub(crate) fn serialize_named_unit(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyNamedUnit,
@@ -2094,6 +2096,7 @@ pub(crate) fn serialize_plane_angle_unit_with_id(
     }
 }
 
+#[allow(dead_code)]
 pub(crate) fn serialize_ratio_unit(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyRatioUnit,
@@ -2373,6 +2376,7 @@ pub(crate) fn serialize_representation_context(
     )
 }
 
+#[allow(dead_code)]
 pub(crate) fn serialize_characterized_item_within_representation(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyCharacterizedItemWithinRepresentation,
@@ -2847,6 +2851,7 @@ pub(crate) fn serialize_make_from_usage_option(
     )
 }
 
+#[allow(dead_code)]
 pub(crate) fn serialize_model_geometric_view(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyModelGeometricView,
@@ -3303,6 +3308,53 @@ pub(crate) fn serialize_datum_feature(
             ),
         ],
     )
+}
+
+#[allow(dead_code)]
+pub(crate) fn serialize_dimensional_size_with_datum_feature(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDimensionalSizeWithDatumFeature,
+) -> u64 {
+    buf.push_simple(
+        "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.of_shape),
+            crate::parser::entity::Attribute::Enum(
+                crate::ir::attr::logical_to_step(l1.product_definitional).into(),
+            ),
+            crate::parser::entity::Attribute::EntityRef(l1.applies_to),
+            crate::parser::entity::Attribute::String(l1.name_2.clone()),
+        ],
+    )
+}
+
+pub(crate) fn serialize_dimensional_size_with_datum_feature_with_id(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    id: u64,
+    l1: &super::model::EarlyDimensionalSizeWithDatumFeature,
+) {
+    buf.push_simple_with_id(
+        id,
+        "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.of_shape),
+            crate::parser::entity::Attribute::Enum(
+                crate::ir::attr::logical_to_step(l1.product_definitional).into(),
+            ),
+            crate::parser::entity::Attribute::EntityRef(l1.applies_to),
+            crate::parser::entity::Attribute::String(l1.name_2.clone()),
+        ],
+    );
 }
 
 pub(crate) fn serialize_draughting_callout(

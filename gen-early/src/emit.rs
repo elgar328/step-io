@@ -1088,6 +1088,13 @@ fn entity_serialize(
         "_l1"
     };
     // serialize fn
+    // `serialize_with_id` entities emitted exclusively via a reserve-then-fill
+    // pool path (e.g. DSWDF's WR1 self-reference in `emit_datum_features`) never
+    // call the plain variant; allow it to be unused. Harmless when the plain
+    // form is also used (the allow only suppresses, never forces, a warning).
+    if ctx.mapping.serialize_with_id.iter().any(|e| e == ent_name) {
+        writeln!(out.serialize, "#[allow(dead_code)]").unwrap();
+    }
     writeln!(
         out.serialize,
         "pub(crate) fn serialize_{ent_name}(buf: &mut crate::writer::buffer::WriteBuffer, {l1_param}: &super::model::{type_name}) -> u64 {{"

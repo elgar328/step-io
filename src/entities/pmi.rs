@@ -10,7 +10,6 @@ use crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::GeometricToleranceTarget;
 use crate::ir::PmiPool;
-use crate::ir::ShapeAspectRef;
 use crate::ir::attr::{
     check_count, read_bool, read_entity_ref, read_entity_ref_list, read_string_or_unset,
 };
@@ -20,16 +19,16 @@ use crate::ir::pmi::{
     AnnotationPlaceholderOccurrence, AnnotationPlaceholderOccurrenceWithLeaderLine,
     AnnotationPlane, AnnotationSymbolOccurrence, AnnotationTextOccurrence, ApllPointElement,
     DatumFeature, DimensionalCharacteristic, DimensionalLocation, DimensionalSize,
-    DimensionalSizeKind, DimensionalSizeWithDatumFeatureData, DraughtingAnnotationOccurrence,
-    DraughtingCalloutData, DraughtingCalloutElement, DraughtingCalloutRelationship,
-    DraughtingModelItemAssociation, DraughtingModelItemDefinition, DraughtingPreDefinedTextFont,
-    GeneralDatumBase, GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance,
-    GeometricToleranceData, GeometricToleranceRef, GeometricToleranceRelationship,
-    GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData, LeaderCurve,
-    LeaderTerminator, LimitsAndFits, MeasureQualification, PlainAnnotationCurveOccurrence,
-    PlainAnnotationOccurrence, PlusMinusTolerance, ProjectedZoneDefinition, TerminatorSymbol,
-    TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue,
-    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
+    DimensionalSizeKind, DraughtingAnnotationOccurrence, DraughtingCalloutData,
+    DraughtingCalloutElement, DraughtingCalloutRelationship, DraughtingModelItemAssociation,
+    DraughtingModelItemDefinition, DraughtingPreDefinedTextFont, GeneralDatumBase,
+    GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
+    GeometricToleranceRef, GeometricToleranceRelationship, GeometricToleranceWithDatumReference,
+    GeometricToleranceWithDatumReferenceData, LeaderCurve, LeaderTerminator, LimitsAndFits,
+    MeasureQualification, PlainAnnotationCurveOccurrence, PlainAnnotationOccurrence,
+    PlusMinusTolerance, ProjectedZoneDefinition, TerminatorSymbol, TessellatedAnnotationOccurrence,
+    ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue, ToleranceZoneForm,
+    TypeQualifier, ValueFormatTypeQualifier,
 };
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
 use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
@@ -1179,49 +1178,8 @@ impl SimpleEntityHandler for DimensionalSizeWithDatumFeatureHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 6, entity_id, "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-        let of_shape_ref = read_entity_ref(attrs, 2, entity_id, "of_shape")?;
-        let product_definitional = read_bool(attrs, 3, entity_id, "product_definitional")?;
-        // attrs[4] = applies_to (WR1: SELF), resolved after self-registration.
-        let applies_to_ref = read_entity_ref(attrs, 4, entity_id, "applies_to")?;
-        let size_name = read_string_or_unset(attrs, 5, entity_id, "size_name")?.to_owned();
-
-        // of_shape → PRODUCT_DEFINITION_SHAPE → ProductId (typed one-probe).
-        let Some(target) = ctx.product_of_pds(of_shape_ref) else {
-            return Ok(());
-        };
-
-        // Push and register first so the WR1 self-reference resolves, then fill
-        // applies_to (chicken-and-egg: the id only exists after the push).
-        let df_id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .datum_features
-            .push(DatumFeature::DimensionalSizeWithDatumFeature(
-                DimensionalSizeWithDatumFeatureData {
-                    base: crate::ir::DatumFeatureData {
-                        name,
-                        description,
-                        target,
-                        product_definitional,
-                    },
-                    applies_to: ShapeAspectRef::DatumFeature(
-                        // placeholder, overwritten below once the id is known
-                        crate::ir::DatumFeatureId(0),
-                    ),
-                    size_name,
-                },
-            ));
-        ctx.id_cache.insert(entity_id, df_id);
-        let applies_to = resolve_shape_aspect_ref(ctx, applies_to_ref)
-            .unwrap_or(ShapeAspectRef::DatumFeature(df_id));
-        if let DatumFeature::DimensionalSizeWithDatumFeature(d) =
-            &mut ctx.pmi.get_or_insert_with(PmiPool::default).datum_features[df_id]
-        {
-            d.applies_to = applies_to;
-        }
+        let early = bind::bind_dimensional_size_with_datum_feature(entity_id, attrs)?;
+        lower::lower_dimensional_size_with_datum_feature(ctx, entity_id, early);
         Ok(())
     }
 

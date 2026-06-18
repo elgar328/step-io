@@ -10,11 +10,12 @@ use crate::early::model::{
     EarlyAnnotationToModelLeaderLine, EarlyApllPoint, EarlyApllPointWithSurface,
     EarlyAuxiliaryLeaderLine, EarlyCircularRunoutTolerance, EarlyConcentricityTolerance,
     EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature, EarlyDimensionalLocation,
-    EarlyDimensionalSize, EarlyDirectedDimensionalLocation, EarlyDraughtingAnnotationOccurrence,
-    EarlyDraughtingCallout, EarlyDraughtingCalloutRelationship,
-    EarlyDraughtingModelItemAssociation, EarlyDraughtingModelItemAssociationWithPlaceholder,
-    EarlyDraughtingPreDefinedTextFont, EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship,
-    EarlyLeaderCurve, EarlyLeaderDirectedCallout, EarlyLeaderTerminator, EarlyLimitsAndFits,
+    EarlyDimensionalSize, EarlyDimensionalSizeWithDatumFeature, EarlyDirectedDimensionalLocation,
+    EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout,
+    EarlyDraughtingCalloutRelationship, EarlyDraughtingModelItemAssociation,
+    EarlyDraughtingModelItemAssociationWithPlaceholder, EarlyDraughtingPreDefinedTextFont,
+    EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship, EarlyLeaderCurve,
+    EarlyLeaderDirectedCallout, EarlyLeaderTerminator, EarlyLimitsAndFits,
     EarlyMeasureQualification, EarlyParallelismTolerance, EarlyPerpendicularityTolerance,
     EarlyPlusMinusTolerance, EarlyProjectedZoneDefinition, EarlyRoundnessTolerance,
     EarlyStraightnessTolerance, EarlySurfaceProfileTolerance, EarlySymmetryTolerance,
@@ -31,14 +32,15 @@ use crate::ir::pmi::{
     AnnotationPlane, AnnotationSymbolOccurrence, AnnotationTextOccurrence,
     AnnotationToModelLeaderLine, ApllPointData, ApllPointElement, ApllPointWithSurfaceData,
     AuxiliaryLeaderLineData, Datum, DatumFeature, DimensionalLocation, DimensionalLocationData,
-    DimensionalSize, DimensionalSizeKind, DraughtingAnnotationOccurrence, DraughtingCallout,
-    DraughtingCalloutData, DraughtingCalloutRelationship, DraughtingModelIdentifiedItem,
-    DraughtingModelItemAssociation, DraughtingModelItemDefinition, DraughtingPreDefinedTextFont,
-    GeometricTolerance, GeometricToleranceRelationship, GeometricToleranceWithDatumReference,
-    LeaderCurve, LeaderTerminator, LimitsAndFits, MeasureQualification,
-    PlainAnnotationCurveOccurrence, PlainAnnotationOccurrence, PlusMinusTolerance, PmiPool,
-    ProjectedZoneDefinition, TerminatorSymbol, TessellatedAnnotationOccurrence, ToleranceValue,
-    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier, ValueQualifier,
+    DimensionalSize, DimensionalSizeKind, DimensionalSizeWithDatumFeatureData,
+    DraughtingAnnotationOccurrence, DraughtingCallout, DraughtingCalloutData,
+    DraughtingCalloutRelationship, DraughtingModelIdentifiedItem, DraughtingModelItemAssociation,
+    DraughtingModelItemDefinition, DraughtingPreDefinedTextFont, GeometricTolerance,
+    GeometricToleranceRelationship, GeometricToleranceWithDatumReference, LeaderCurve,
+    LeaderTerminator, LimitsAndFits, MeasureQualification, PlainAnnotationCurveOccurrence,
+    PlainAnnotationOccurrence, PlusMinusTolerance, PmiPool, ProjectedZoneDefinition,
+    TerminatorSymbol, TessellatedAnnotationOccurrence, ToleranceValue, ToleranceZoneForm,
+    TypeQualifier, ValueFormatTypeQualifier, ValueQualifier,
 };
 use crate::reader::ReaderContext;
 
@@ -652,6 +654,53 @@ pub(crate) fn lower_datum_feature(
             product_definitional,
         }));
     ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`. Multiple-inheritance
+/// (`datum_feature` + `dimensional_size`): `applies_to` is the EXPRESS WR1
+/// self-reference, so push a placeholder, register the id, then resolve and
+/// backpatch (the id only exists after the push).
+pub(crate) fn lower_dimensional_size_with_datum_feature(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyDimensionalSizeWithDatumFeature,
+) {
+    let Some(product_definitional) = logical_to_bool(early.product_definitional) else {
+        return;
+    };
+    let Some(target) = ctx.product_of_pds(early.of_shape) else {
+        return;
+    };
+    let df_id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .datum_features
+        .push(DatumFeature::DimensionalSizeWithDatumFeature(
+            DimensionalSizeWithDatumFeatureData {
+                base: crate::ir::DatumFeatureData {
+                    name: early.name,
+                    // Legacy read_string_or_unset collapsed `$` to "" (L2 String).
+                    description: early.description.unwrap_or_default(),
+                    target,
+                    product_definitional,
+                },
+                // placeholder, overwritten below once the id is known
+                applies_to: crate::ir::ShapeAspectRef::DatumFeature(crate::ir::DatumFeatureId(0)),
+                size_name: early.name_2,
+            },
+        ));
+    ctx.id_cache.insert(entity_id, df_id);
+    let applies_to =
+        crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_ref(
+            ctx,
+            early.applies_to,
+        )
+        .unwrap_or(crate::ir::ShapeAspectRef::DatumFeature(df_id));
+    if let DatumFeature::DimensionalSizeWithDatumFeature(d) =
+        &mut ctx.pmi.get_or_insert_with(PmiPool::default).datum_features[df_id]
+    {
+        d.applies_to = applies_to;
+    }
 }
 
 /// Lower one plain `DRAUGHTING_CALLOUT` (unresolved content members skip

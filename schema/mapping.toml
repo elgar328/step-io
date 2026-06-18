@@ -182,6 +182,7 @@ generate = [
     "angular_location",
     "angular_size",
     "datum_feature",
+    "dimensional_size_with_datum_feature",
     "draughting_callout",
     "leader_directed_callout",
     "cartesian_point",
@@ -392,6 +393,7 @@ serialize_with_id = [
     "mass_unit",
     "plane_angle_unit",
     "ratio_unit",
+    "dimensional_size_with_datum_feature",
 ]
 
 # `generate_all`: diagnostic flip. When true, gen-early generates *every* entity

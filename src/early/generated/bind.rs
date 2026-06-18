@@ -2966,6 +2966,26 @@ pub(crate) fn bind_datum_feature(
     })
 }
 
+pub(crate) fn bind_dimensional_size_with_datum_feature(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDimensionalSizeWithDatumFeature, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 6, entity_id, "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE")?;
+    Ok(super::model::EarlyDimensionalSizeWithDatumFeature {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?,
+        of_shape: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "of_shape")?,
+        product_definitional: crate::ir::attr::read_logical(
+            attrs,
+            3,
+            entity_id,
+            "product_definitional",
+        )?,
+        applies_to: crate::ir::attr::read_entity_ref(attrs, 4, entity_id, "applies_to")?,
+        name_2: crate::ir::attr::read_string_or_unset(attrs, 5, entity_id, "name_2")?.to_owned(),
+    })
+}
+
 pub(crate) fn bind_draughting_callout(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],

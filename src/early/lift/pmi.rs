@@ -10,11 +10,12 @@ use crate::early::model::{
     EarlyAnnotationToModelLeaderLine, EarlyApllPoint, EarlyApllPointWithSurface,
     EarlyAuxiliaryLeaderLine, EarlyCircularRunoutTolerance, EarlyConcentricityTolerance,
     EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature, EarlyDimensionalLocation,
-    EarlyDimensionalSize, EarlyDirectedDimensionalLocation, EarlyDraughtingAnnotationOccurrence,
-    EarlyDraughtingCallout, EarlyDraughtingCalloutRelationship,
-    EarlyDraughtingModelItemAssociation, EarlyDraughtingModelItemAssociationWithPlaceholder,
-    EarlyDraughtingPreDefinedTextFont, EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship,
-    EarlyLeaderCurve, EarlyLeaderDirectedCallout, EarlyLeaderTerminator, EarlyLimitsAndFits,
+    EarlyDimensionalSize, EarlyDimensionalSizeWithDatumFeature, EarlyDirectedDimensionalLocation,
+    EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout,
+    EarlyDraughtingCalloutRelationship, EarlyDraughtingModelItemAssociation,
+    EarlyDraughtingModelItemAssociationWithPlaceholder, EarlyDraughtingPreDefinedTextFont,
+    EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship, EarlyLeaderCurve,
+    EarlyLeaderDirectedCallout, EarlyLeaderTerminator, EarlyLimitsAndFits,
     EarlyMeasureQualification, EarlyParallelismTolerance, EarlyPerpendicularityTolerance,
     EarlyPlusMinusTolerance, EarlyProjectedZoneDefinition, EarlyRoundnessTolerance,
     EarlyStraightnessTolerance, EarlySurfaceProfileTolerance, EarlySymmetryTolerance,
@@ -376,6 +377,26 @@ pub(crate) fn lift_datum_feature(
         description: Some(description),
         of_shape,
         product_definitional: bool_to_logical(product_definitional),
+    }
+}
+
+/// Lift one `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` (`of_shape`/`applies_to`
+/// pre-resolved by the emit site; `applies_to` is the WR1 self-reference).
+pub(crate) fn lift_dimensional_size_with_datum_feature(
+    name: String,
+    description: String,
+    of_shape: u64,
+    product_definitional: bool,
+    applies_to: u64,
+    size_name: String,
+) -> EarlyDimensionalSizeWithDatumFeature {
+    EarlyDimensionalSizeWithDatumFeature {
+        name,
+        description: Some(description),
+        of_shape,
+        product_definitional: bool_to_logical(product_definitional),
+        applies_to,
+        name_2: size_name,
     }
 }
 

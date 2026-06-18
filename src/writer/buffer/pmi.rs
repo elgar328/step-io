@@ -149,26 +149,23 @@ impl WriteBuffer<'_> {
                     }
                 }
                 crate::ir::DatumFeature::DimensionalSizeWithDatumFeature(dswdf) => {
-                    use crate::parser::entity::Attribute;
                     // Dual-faceted: 6 attrs (4-attr shape_aspect body +
                     // dimensional_size.applies_to + dimensional_size.name).
                     // applies_to is the WR1 self-reference, so reserve the id
                     // first and emit it back through emit_shape_aspect_ref.
-                    let bool_attr = if d.product_definitional { "T" } else { "F" };
                     let id = self.fresh();
                     self.set_step_id(DatumFeatureId(index as u32), id);
                     let applies_to_step = self.emit_shape_aspect_ref(dswdf.applies_to);
-                    self.push_simple_with_id(
-                        id,
-                        "DIMENSIONAL_SIZE_WITH_DATUM_FEATURE",
-                        vec![
-                            Attribute::String(d.name.clone()),
-                            Attribute::String(d.description.clone()),
-                            Attribute::EntityRef(pds_step_id),
-                            Attribute::Enum(bool_attr.into()),
-                            Attribute::EntityRef(applies_to_step),
-                            Attribute::String(dswdf.size_name.clone()),
-                        ],
+                    let early = crate::early::lift::lift_dimensional_size_with_datum_feature(
+                        d.name.clone(),
+                        d.description.clone(),
+                        pds_step_id,
+                        d.product_definitional,
+                        applies_to_step,
+                        dswdf.size_name.clone(),
+                    );
+                    crate::early::serialize::serialize_dimensional_size_with_datum_feature_with_id(
+                        self, id, &early,
                     );
                 }
             }

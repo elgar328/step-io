@@ -3822,6 +3822,32 @@ impl crate::ir::arena::ArenaId for EarlyDatumFeatureId {
     }
 }
 
+/// L1 `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDimensionalSizeWithDatumFeature {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) of_shape: u64,
+    pub(crate) product_definitional: crate::ir::geometry::Logical,
+    pub(crate) applies_to: u64,
+    pub(crate) name_2: String,
+}
+
+/// Typed `id_cache` key for `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDimensionalSizeWithDatumFeatureId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDimensionalSizeWithDatumFeatureId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `DRAUGHTING_CALLOUT` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyDraughtingCallout {
