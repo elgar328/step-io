@@ -1020,6 +1020,6 @@ pub(crate) fn lift_geometric_item_specific_usage(
         description,
         definition: def_step,
         used_representation: used_step,
-        identified_item: EarlyItemIdentifiedRepresentationUsageSelect::EntityRef(item_step),
+        identified_item: item_step,
     }
 }

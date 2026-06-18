@@ -4,8 +4,9 @@
 //! reused as the bind/lower/lift template), narrowing `definition` to a
 //! shape-aspect-family ref and `identified_item` to a single `representation_item`.
 //!
-//! `read` = generated `bind` (`Result<Option<…>>`; the `identified_item` SELECT
-//! drops on an unrecognized member) + hand `lower_geometric_item_specific_usage`.
+//! `read` = generated `bind` + hand `lower_geometric_item_specific_usage`.
+//! (`identified_item` is the schema-narrowed all-entity `geometric_model_item`
+//! → single ref `u64` in L1; `lower` resolves it via `resolve_representation_item_ref`.)
 //! `write` resolves the three refs (`emit_shape_aspect_ref` / `step_id` /
 //! `emit_representation_item_ref`) then lift + generated serialize.
 //!
@@ -67,9 +68,8 @@ impl SimpleEntityHandler for GeometricItemSpecificUsageHandler {
             });
             return Ok(());
         }
-        if let Some(early) = bind::bind_geometric_item_specific_usage(entity_id, attrs)? {
-            lower::lower_geometric_item_specific_usage(ctx, entity_id, early);
-        }
+        let early = bind::bind_geometric_item_specific_usage(entity_id, attrs)?;
+        lower::lower_geometric_item_specific_usage(ctx, entity_id, early);
         Ok(())
     }
 

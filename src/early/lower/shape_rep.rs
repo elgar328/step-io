@@ -1816,17 +1816,10 @@ pub(crate) fn lower_geometric_item_specific_usage(
     let Some(definition) = resolve_shape_aspect_ref(ctx, early.definition) else {
         return;
     };
-    let identified_item = match early.identified_item {
-        EarlyItemIdentifiedRepresentationUsageSelect::EntityRef(r) => {
-            let Some(item) = resolve_representation_item_ref(ctx, r) else {
-                return;
-            };
-            item
-        }
-        // GISU narrows identified_item to a single representation_item; the
-        // SET/LIST members never occur (and the hand read errored on them).
-        EarlyItemIdentifiedRepresentationUsageSelect::SetRepresentationItem(_)
-        | EarlyItemIdentifiedRepresentationUsageSelect::ListRepresentationItem(_) => return,
+    // GISU narrows `identified_item` to `geometric_model_item` (all-entity →
+    // single ref `u64` in L1, per the schema redeclaration); resolve it directly.
+    let Some(identified_item) = resolve_representation_item_ref(ctx, early.identified_item) else {
+        return;
     };
     let Some(used_representation) = ctx
         .id_cache

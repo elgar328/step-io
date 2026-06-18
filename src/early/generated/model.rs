@@ -6765,7 +6765,7 @@ pub(crate) struct EarlyGeometricItemSpecificUsage {
     pub(crate) description: Option<String>,
     pub(crate) definition: u64,
     pub(crate) used_representation: u64,
-    pub(crate) identified_item: EarlyItemIdentifiedRepresentationUsageSelect,
+    pub(crate) identified_item: u64,
 }
 
 /// Typed `id_cache` key for `GEOMETRIC_ITEM_SPECIFIC_USAGE` (file id → L1→L2 correspondence;

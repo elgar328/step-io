@@ -5746,7 +5746,7 @@ pub(crate) fn serialize_geometric_item_specific_usage(
             },
             crate::parser::entity::Attribute::EntityRef(l1.definition),
             crate::parser::entity::Attribute::EntityRef(l1.used_representation),
-            item_identified_representation_usage_select_emit(&l1.identified_item),
+            crate::parser::entity::Attribute::EntityRef(l1.identified_item),
         ],
     )
 }
