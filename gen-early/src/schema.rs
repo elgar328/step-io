@@ -51,7 +51,7 @@ impl EarlyToml {
         }
         for r in redeclared {
             if let Some(a) = out.iter_mut().find(|a| a.name == r.name) {
-                a.ty = r.ty.clone();
+                a.ty.clone_from(&r.ty);
             }
         }
         out

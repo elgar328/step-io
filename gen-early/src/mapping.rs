@@ -77,6 +77,13 @@ pub(crate) struct CaseHint {
     /// case's discriminant matches.
     #[serde(default)]
     pub(crate) discriminant: Option<String>,
+    /// Exact part-set that selects this case (e.g. the A/B/C `DRAUGHTING_MODEL`
+    /// forms where a single discriminant part can't distinguish A from B). When
+    /// *any* case of an entity sets `match_parts`, the generated bind switches to
+    /// exact-set dispatch (length + membership equality) instead of single-part
+    /// `discriminant`. Mutually exclusive with `discriminant` per entity.
+    #[serde(default)]
+    pub(crate) match_parts: Option<Vec<String>>,
 }
 
 #[derive(Deserialize)]

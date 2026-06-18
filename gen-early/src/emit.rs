@@ -495,12 +495,19 @@ fn emit_multi_case_complex(
             (cn, variant, inner_type, ch, entries)
         })
         .collect();
+    // Exact-set mode (any case has `match_parts`) dispatches by full part-set,
+    // so every case is no-discriminant by design — the ≤1-fallback rule only
+    // applies to single-part discriminant mode.
+    let exact_mode = cases_data
+        .iter()
+        .any(|(_, _, _, ch, _)| ch.match_parts.is_some());
     assert!(
-        cases_data
-            .iter()
-            .filter(|(_, _, _, ch, _)| ch.discriminant.is_none())
-            .count()
-            <= 1,
+        exact_mode
+            || cases_data
+                .iter()
+                .filter(|(_, _, _, ch, _)| ch.discriminant.is_none())
+                .count()
+                <= 1,
         "gen-early: multi-case `{ent_name}` must have at most one fallback (no-discriminant) case"
     );
 
@@ -569,43 +576,84 @@ fn emit_multi_case_complex(
                 fields.join(", ")
             )
         };
-    for (_, variant, inner_type, ch, entries) in &cases_data {
-        let Some(disc) = &ch.discriminant else {
-            continue;
-        };
+    // Exact-set mode (opt-in via any case's `match_parts`): dispatch by the
+    // instance's distinct part-set == the case's set. Needed when a single
+    // discriminant part can't separate cases (e.g. DRAUGHTING_MODEL A ⊂ B).
+    // Dispatch already guarantees a distinct part-set, so `len + all-contained`
+    // = set equality. (`exact_mode` computed above.)
+    if exact_mode {
         writeln!(
             out.bind,
-            "    if parts.iter().any(|p| p.name == \"{disc}\") {{"
+            "    let part_set: std::collections::BTreeSet<&str> = parts.iter().map(|p| p.name.as_str()).collect();"
         )
         .unwrap();
-        emit_case_reads(&mut out.bind, ch, entries);
-        writeln!(
-            out.bind,
-            "    return Ok({});",
-            case_ctor(variant, inner_type, entries)
-        )
-        .unwrap();
-        writeln!(out.bind, "    }}").unwrap();
-    }
-    if let Some((_, variant, inner_type, ch, entries)) = cases_data
-        .iter()
-        .find(|(_, _, _, ch, _)| ch.discriminant.is_none())
-    {
-        emit_case_reads(&mut out.bind, ch, entries);
-        writeln!(
-            out.bind,
-            "    Ok({})",
-            case_ctor(variant, inner_type, entries)
-        )
-        .unwrap();
-    } else {
+        for (_, variant, inner_type, ch, entries) in &cases_data {
+            let set = ch.match_parts.as_ref().unwrap_or(&ch.parts);
+            let n = set.len();
+            let conds: Vec<String> = set
+                .iter()
+                .map(|p| format!("part_set.contains(\"{p}\")"))
+                .collect();
+            writeln!(
+                out.bind,
+                "    if part_set.len() == {n} && {} {{",
+                conds.join(" && ")
+            )
+            .unwrap();
+            emit_case_reads(&mut out.bind, ch, entries);
+            writeln!(
+                out.bind,
+                "    return Ok({});",
+                case_ctor(variant, inner_type, entries)
+            )
+            .unwrap();
+            writeln!(out.bind, "    }}").unwrap();
+        }
         writeln!(
             out.bind,
             "    Err(crate::ir::error::ConvertError::UnexpectedEntityForm {{ entity_id, detail: \"unsupported {step_name} complex case\".into() }})"
         )
         .unwrap();
+        writeln!(out.bind, "}}\n").unwrap();
+    } else {
+        for (_, variant, inner_type, ch, entries) in &cases_data {
+            let Some(disc) = &ch.discriminant else {
+                continue;
+            };
+            writeln!(
+                out.bind,
+                "    if parts.iter().any(|p| p.name == \"{disc}\") {{"
+            )
+            .unwrap();
+            emit_case_reads(&mut out.bind, ch, entries);
+            writeln!(
+                out.bind,
+                "    return Ok({});",
+                case_ctor(variant, inner_type, entries)
+            )
+            .unwrap();
+            writeln!(out.bind, "    }}").unwrap();
+        }
+        if let Some((_, variant, inner_type, ch, entries)) = cases_data
+            .iter()
+            .find(|(_, _, _, ch, _)| ch.discriminant.is_none())
+        {
+            emit_case_reads(&mut out.bind, ch, entries);
+            writeln!(
+                out.bind,
+                "    Ok({})",
+                case_ctor(variant, inner_type, entries)
+            )
+            .unwrap();
+        } else {
+            writeln!(
+                out.bind,
+                "    Err(crate::ir::error::ConvertError::UnexpectedEntityForm {{ entity_id, detail: \"unsupported {step_name} complex case\".into() }})"
+            )
+            .unwrap();
+        }
+        writeln!(out.bind, "}}\n").unwrap();
     }
-    writeln!(out.bind, "}}\n").unwrap();
 
     // 5. serialize: build each variant's parts literal, match on variant.
     if ctx.mapping.read_only.iter().any(|e| e == ent_name) {
@@ -1749,6 +1797,7 @@ mod tests {
                 parts: vec!["LENGTH_UNIT".into(), "NAMED_UNIT".into(), "SI_UNIT".into()],
                 derived: vec!["dimensions".into()],
                 discriminant: None,
+                match_parts: None,
             },
         );
         cases.insert(
@@ -1761,6 +1810,7 @@ mod tests {
                 ],
                 derived: vec![],
                 discriminant: Some("CONVERSION_BASED_UNIT".into()),
+                match_parts: None,
             },
         );
         ctx.mapping.complex.insert(
@@ -1797,6 +1847,78 @@ mod tests {
         assert!(
             out.serialize
                 .contains("super::model::EarlyLengthUnit::Cbu(l1) => buf.push_complex")
+        );
+    }
+
+    /// Exact part-set dispatch (`match_parts`): the `DRAUGHTING_MODEL` A/B/C forms
+    /// where A ⊂ B share a leading part so single-part discriminant can't
+    /// separate them. Bind must use `part_set` length+membership equality, with
+    /// distinct length guards (4 vs 6) so A and B never collide.
+    #[test]
+    fn multi_case_complex_exact_match() {
+        use crate::mapping::{CaseHint, ComplexHint};
+        let mut ctx = ctx_from(schema());
+        let mk = |parts: Vec<&str>| CaseHint {
+            parts: parts.iter().map(|s| (*s).to_string()).collect(),
+            derived: vec![],
+            discriminant: None,
+            match_parts: Some(parts.iter().map(|s| (*s).to_string()).collect()),
+        };
+        let mut cases = BTreeMap::new();
+        cases.insert(
+            "characterized".to_string(),
+            mk(vec![
+                "CHARACTERIZED_OBJECT",
+                "CHARACTERIZED_REPRESENTATION",
+                "DRAUGHTING_MODEL",
+                "REPRESENTATION",
+            ]),
+        );
+        cases.insert(
+            "characterized_shape_tessellated".to_string(),
+            mk(vec![
+                "CHARACTERIZED_OBJECT",
+                "CHARACTERIZED_REPRESENTATION",
+                "DRAUGHTING_MODEL",
+                "REPRESENTATION",
+                "SHAPE_REPRESENTATION",
+                "TESSELLATED_SHAPE_REPRESENTATION",
+            ]),
+        );
+        cases.insert(
+            "shape_tessellated".to_string(),
+            mk(vec![
+                "DRAUGHTING_MODEL",
+                "REPRESENTATION",
+                "SHAPE_REPRESENTATION",
+                "TESSELLATED_SHAPE_REPRESENTATION",
+            ]),
+        );
+        ctx.mapping.complex.insert(
+            "characterized_object_complex".to_string(),
+            ComplexHint {
+                parts: None,
+                cases: Some(cases),
+            },
+        );
+        let mut out = GenOut::new("");
+        emit_entity(&ctx, "characterized_object_complex", &mut out);
+        // exact-set dispatch with distinct length guards (A=4 vs B=6).
+        assert!(
+            out.bind
+                .contains("let part_set: std::collections::BTreeSet")
+        );
+        assert!(out.bind.contains("part_set.len() == 4 &&"));
+        assert!(out.bind.contains("part_set.len() == 6 &&"));
+        assert!(
+            out.bind
+                .contains("part_set.contains(\"TESSELLATED_SHAPE_REPRESENTATION\")")
+        );
+        // no single-part discriminant form leaked.
+        assert!(!out.bind.contains("parts.iter().any(|p| p.name =="));
+        assert!(
+            out.model
+                .contains("pub(crate) enum EarlyCharacterizedObjectComplex {")
         );
     }
 
