@@ -8315,6 +8315,45 @@ fn geometric_tolerance_with_modifiers_round_trip() {
             displacement: None,
         }),
     );
+    // WDR simple-leaf COMPLEX forms (PARALLELISM/PERPENDICULARITY/CIRCULAR_RUNOUT)
+    // with a modifier — exercises the generated complex bind/serialize.
+    for leaf in [
+        GeometricToleranceWithDatumReference::Parallelism(
+            GeometricToleranceWithDatumReferenceData {
+                name: "PA".into(),
+                description: String::new(),
+                magnitude: magnitude(),
+                toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+                datum_system: vec![ds],
+                modifiers: vec![GeometricToleranceModifier::MaximumMaterialRequirement],
+                displacement: None,
+            },
+        ),
+        GeometricToleranceWithDatumReference::Perpendicularity(
+            GeometricToleranceWithDatumReferenceData {
+                name: "PE".into(),
+                description: String::new(),
+                magnitude: magnitude(),
+                toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+                datum_system: vec![ds],
+                modifiers: vec![GeometricToleranceModifier::Other("PITCH_DIAMETER".into())],
+                displacement: None,
+            },
+        ),
+        GeometricToleranceWithDatumReference::CircularRunout(
+            GeometricToleranceWithDatumReferenceData {
+                name: "CR".into(),
+                description: String::new(),
+                magnitude: magnitude(),
+                toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+                datum_system: vec![ds],
+                modifiers: vec![GeometricToleranceModifier::LeastMaterialRequirement],
+                displacement: None,
+            },
+        ),
+    ] {
+        pmi.geometric_tolerance_with_datum_references.push(leaf);
+    }
     pmi.geometric_tolerances
         .push(GeometricTolerance::Roundness(GeometricToleranceData {
             name: "R".into(),
@@ -8369,6 +8408,38 @@ fn geometric_tolerance_with_modifiers_round_trip() {
             GeometricToleranceModifier::Other("PITCH_DIAMETER".into()),
         ],
         "Roundness named + Other modifier preserved"
+    );
+    // WDR simple-leaf COMPLEX forms with modifiers survive the round-trip.
+    let wdr_mods = |name: &str| {
+        re_pmi
+            .geometric_tolerance_with_datum_references
+            .iter()
+            .find_map(|gt| match gt {
+                GeometricToleranceWithDatumReference::Parallelism(d)
+                | GeometricToleranceWithDatumReference::Perpendicularity(d)
+                | GeometricToleranceWithDatumReference::CircularRunout(d)
+                    if d.name == name =>
+                {
+                    Some(d.modifiers.clone())
+                }
+                _ => None,
+            })
+            .unwrap_or_else(|| panic!("{name} variant present after round-trip"))
+    };
+    assert_eq!(
+        wdr_mods("PA"),
+        vec![GeometricToleranceModifier::MaximumMaterialRequirement],
+        "Parallelism modifier preserved"
+    );
+    assert_eq!(
+        wdr_mods("PE"),
+        vec![GeometricToleranceModifier::Other("PITCH_DIAMETER".into())],
+        "Perpendicularity Other modifier preserved"
+    );
+    assert_eq!(
+        wdr_mods("CR"),
+        vec![GeometricToleranceModifier::LeastMaterialRequirement],
+        "CircularRunout modifier preserved"
     );
 }
 

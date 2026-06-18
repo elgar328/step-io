@@ -8,22 +8,23 @@ use crate::early::model::{
     EarlyAnnotationPlaceholderOccurrenceWithLeaderLine, EarlyAnnotationPlane,
     EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence,
     EarlyAnnotationToModelLeaderLine, EarlyApllPoint, EarlyApllPointWithSurface, EarlyAreaUnitType,
-    EarlyAuxiliaryLeaderLine, EarlyCircularRunoutTolerance, EarlyConcentricityTolerance,
-    EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature, EarlyDimensionalLocation,
-    EarlyDimensionalSize, EarlyDimensionalSizeWithDatumFeature, EarlyDirectedDimensionalLocation,
-    EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout,
+    EarlyAuxiliaryLeaderLine, EarlyCircularRunoutTolerance, EarlyCircularRunoutToleranceComplex,
+    EarlyConcentricityTolerance, EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature,
+    EarlyDimensionalLocation, EarlyDimensionalSize, EarlyDimensionalSizeWithDatumFeature,
+    EarlyDirectedDimensionalLocation, EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout,
     EarlyDraughtingCalloutRelationship, EarlyDraughtingModelItemAssociation,
     EarlyDraughtingModelItemAssociationWithPlaceholder, EarlyDraughtingPreDefinedTextFont,
     EarlyFlatnessTolerance, EarlyFlatnessToleranceComplex, EarlyFlatnessToleranceComplexModifiers,
     EarlyFlatnessToleranceComplexUnit, EarlyFlatnessToleranceComplexUnitArea,
     EarlyGeometricToleranceModifier, EarlyGeometricToleranceRelationship, EarlyLeaderCurve,
     EarlyLeaderDirectedCallout, EarlyLeaderTerminator, EarlyLimitsAndFits,
-    EarlyMeasureQualification, EarlyParallelismTolerance, EarlyPerpendicularityTolerance,
-    EarlyPlusMinusTolerance, EarlyProjectedZoneDefinition, EarlyRoundnessTolerance,
-    EarlyRoundnessToleranceComplex, EarlyStraightnessTolerance, EarlyStraightnessToleranceComplex,
-    EarlySurfaceProfileTolerance, EarlySymmetryTolerance, EarlyTerminatorSymbol,
-    EarlyTessellatedAnnotationOccurrence, EarlyToleranceValue, EarlyToleranceZoneForm,
-    EarlyTotalRunoutTolerance, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
+    EarlyMeasureQualification, EarlyParallelismTolerance, EarlyParallelismToleranceComplex,
+    EarlyPerpendicularityTolerance, EarlyPerpendicularityToleranceComplex, EarlyPlusMinusTolerance,
+    EarlyProjectedZoneDefinition, EarlyRoundnessTolerance, EarlyRoundnessToleranceComplex,
+    EarlyStraightnessTolerance, EarlyStraightnessToleranceComplex, EarlySurfaceProfileTolerance,
+    EarlySymmetryTolerance, EarlyTerminatorSymbol, EarlyTessellatedAnnotationOccurrence,
+    EarlyToleranceValue, EarlyToleranceZoneForm, EarlyTotalRunoutTolerance, EarlyTypeQualifier,
+    EarlyValueFormatTypeQualifier,
 };
 use crate::ir::geometry::Point3;
 use crate::ir::pmi::{
@@ -220,6 +221,65 @@ pub(crate) fn lift_straightness_tolerance_complex(
         magnitude: Some(magnitude),
         toleranced_shape_aspect,
         unit_size,
+    }
+}
+
+/// Lift a `PARALLELISM_TOLERANCE` COMPLEX form (WDR + modifiers). Refs
+/// (`magnitude` / `tsa` / `datum_system`) pre-resolved to step ids by the writer;
+/// modifiers expanded from L2 via the strict bridge.
+pub(crate) fn lift_parallelism_tolerance_complex(
+    name: String,
+    description: String,
+    magnitude: u64,
+    toleranced_shape_aspect: u64,
+    datum_system: Vec<u64>,
+    modifiers: &[crate::ir::GeometricToleranceModifier],
+) -> EarlyParallelismToleranceComplex {
+    EarlyParallelismToleranceComplex {
+        name,
+        description: Some(description),
+        magnitude: Some(magnitude),
+        toleranced_shape_aspect,
+        datum_system,
+        modifiers: modifiers.iter().filter_map(l2_modifier_to_early).collect(),
+    }
+}
+
+/// Lift a `PERPENDICULARITY_TOLERANCE` COMPLEX form (WDR + modifiers).
+pub(crate) fn lift_perpendicularity_tolerance_complex(
+    name: String,
+    description: String,
+    magnitude: u64,
+    toleranced_shape_aspect: u64,
+    datum_system: Vec<u64>,
+    modifiers: &[crate::ir::GeometricToleranceModifier],
+) -> EarlyPerpendicularityToleranceComplex {
+    EarlyPerpendicularityToleranceComplex {
+        name,
+        description: Some(description),
+        magnitude: Some(magnitude),
+        toleranced_shape_aspect,
+        datum_system,
+        modifiers: modifiers.iter().filter_map(l2_modifier_to_early).collect(),
+    }
+}
+
+/// Lift a `CIRCULAR_RUNOUT_TOLERANCE` COMPLEX form (WDR + modifiers).
+pub(crate) fn lift_circular_runout_tolerance_complex(
+    name: String,
+    description: String,
+    magnitude: u64,
+    toleranced_shape_aspect: u64,
+    datum_system: Vec<u64>,
+    modifiers: &[crate::ir::GeometricToleranceModifier],
+) -> EarlyCircularRunoutToleranceComplex {
+    EarlyCircularRunoutToleranceComplex {
+        name,
+        description: Some(description),
+        magnitude: Some(magnitude),
+        toleranced_shape_aspect,
+        datum_system,
+        modifiers: modifiers.iter().filter_map(l2_modifier_to_early).collect(),
     }
 }
 

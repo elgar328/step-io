@@ -8,20 +8,21 @@ use crate::early::model::{
     EarlyAnnotationPlaceholderOccurrenceWithLeaderLine, EarlyAnnotationPlane,
     EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence,
     EarlyAnnotationToModelLeaderLine, EarlyApllPoint, EarlyApllPointWithSurface, EarlyAreaUnitType,
-    EarlyAuxiliaryLeaderLine, EarlyCircularRunoutTolerance, EarlyConcentricityTolerance,
-    EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature, EarlyDimensionalLocation,
-    EarlyDimensionalSize, EarlyDimensionalSizeWithDatumFeature, EarlyDirectedDimensionalLocation,
-    EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout,
+    EarlyAuxiliaryLeaderLine, EarlyCircularRunoutTolerance, EarlyCircularRunoutToleranceComplex,
+    EarlyConcentricityTolerance, EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature,
+    EarlyDimensionalLocation, EarlyDimensionalSize, EarlyDimensionalSizeWithDatumFeature,
+    EarlyDirectedDimensionalLocation, EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout,
     EarlyDraughtingCalloutRelationship, EarlyDraughtingModelItemAssociation,
     EarlyDraughtingModelItemAssociationWithPlaceholder, EarlyDraughtingPreDefinedTextFont,
     EarlyFlatnessTolerance, EarlyFlatnessToleranceComplex, EarlyGeometricToleranceModifier,
     EarlyGeometricToleranceRelationship, EarlyLeaderCurve, EarlyLeaderDirectedCallout,
     EarlyLeaderTerminator, EarlyLimitsAndFits, EarlyMeasureQualification,
-    EarlyParallelismTolerance, EarlyPerpendicularityTolerance, EarlyPlusMinusTolerance,
-    EarlyProjectedZoneDefinition, EarlyRoundnessTolerance, EarlyRoundnessToleranceComplex,
-    EarlyStraightnessTolerance, EarlyStraightnessToleranceComplex, EarlySurfaceProfileTolerance,
-    EarlySymmetryTolerance, EarlyTerminatorSymbol, EarlyTessellatedAnnotationOccurrence,
-    EarlyToleranceValue, EarlyToleranceZoneForm, EarlyTotalRunoutTolerance, EarlyTypeQualifier,
+    EarlyParallelismTolerance, EarlyParallelismToleranceComplex, EarlyPerpendicularityTolerance,
+    EarlyPerpendicularityToleranceComplex, EarlyPlusMinusTolerance, EarlyProjectedZoneDefinition,
+    EarlyRoundnessTolerance, EarlyRoundnessToleranceComplex, EarlyStraightnessTolerance,
+    EarlyStraightnessToleranceComplex, EarlySurfaceProfileTolerance, EarlySymmetryTolerance,
+    EarlyTerminatorSymbol, EarlyTessellatedAnnotationOccurrence, EarlyToleranceValue,
+    EarlyToleranceZoneForm, EarlyTotalRunoutTolerance, EarlyTypeQualifier,
     EarlyValueFormatTypeQualifier,
 };
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
@@ -375,6 +376,104 @@ pub(crate) fn lower_straightness_tolerance_complex(
         ctx,
         entity_id,
         GeometricTolerance::Straightness(data),
+    );
+}
+
+/// Shared builder for the WDR simple-leaf COMPLEX forms (`PARALLELISM` /
+/// `PERPENDICULARITY` / `CIRCULAR_RUNOUT`): collapse the strict L1 modifier enum
+/// to L2, then resolve via the shared with-datum builder (no displacement — these
+/// cases carry only `GEOMETRIC_TOLERANCE_WITH_MODIFIERS`).
+fn lower_gtwdr_simple_leaf_complex_common(
+    ctx: &ReaderContext,
+    name: String,
+    description: Option<String>,
+    magnitude: Option<u64>,
+    toleranced_shape_aspect: u64,
+    datum_system: &[u64],
+    modifiers: Vec<EarlyGeometricToleranceModifier>,
+) -> Option<crate::ir::pmi::GeometricToleranceWithDatumReferenceData> {
+    let magnitude = magnitude?;
+    crate::entities::pmi::build_gt_with_datum_reference_data(
+        ctx,
+        name,
+        description.unwrap_or_default(),
+        magnitude,
+        toleranced_shape_aspect,
+        datum_system,
+        modifiers.into_iter().map(early_modifier_to_l2).collect(),
+        None,
+    )
+}
+
+/// Lower one `PARALLELISM_TOLERANCE` COMPLEX form (WDR + modifiers).
+pub(crate) fn lower_parallelism_tolerance_complex(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyParallelismToleranceComplex,
+) {
+    let Some(data) = lower_gtwdr_simple_leaf_complex_common(
+        ctx,
+        early.name,
+        early.description,
+        early.magnitude,
+        early.toleranced_shape_aspect,
+        &early.datum_system,
+        early.modifiers,
+    ) else {
+        return;
+    };
+    crate::entities::pmi::push_gt_with_datum_reference(
+        ctx,
+        entity_id,
+        GeometricToleranceWithDatumReference::Parallelism(data),
+    );
+}
+
+/// Lower one `PERPENDICULARITY_TOLERANCE` COMPLEX form (WDR + modifiers).
+pub(crate) fn lower_perpendicularity_tolerance_complex(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyPerpendicularityToleranceComplex,
+) {
+    let Some(data) = lower_gtwdr_simple_leaf_complex_common(
+        ctx,
+        early.name,
+        early.description,
+        early.magnitude,
+        early.toleranced_shape_aspect,
+        &early.datum_system,
+        early.modifiers,
+    ) else {
+        return;
+    };
+    crate::entities::pmi::push_gt_with_datum_reference(
+        ctx,
+        entity_id,
+        GeometricToleranceWithDatumReference::Perpendicularity(data),
+    );
+}
+
+/// Lower one `CIRCULAR_RUNOUT_TOLERANCE` COMPLEX form (WDR + modifiers).
+pub(crate) fn lower_circular_runout_tolerance_complex(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyCircularRunoutToleranceComplex,
+) {
+    let Some(data) = lower_gtwdr_simple_leaf_complex_common(
+        ctx,
+        early.name,
+        early.description,
+        early.magnitude,
+        early.toleranced_shape_aspect,
+        &early.datum_system,
+        early.modifiers,
+    ) else {
+        return;
+    };
+    crate::entities::pmi::push_gt_with_datum_reference(
+        ctx,
+        entity_id,
+        GeometricToleranceWithDatumReference::CircularRunout(data),
     );
 }
 

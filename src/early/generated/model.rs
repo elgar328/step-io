@@ -6417,6 +6417,32 @@ impl crate::ir::arena::ArenaId for EarlyCircularRunoutToleranceId {
     }
 }
 
+/// L1 `CIRCULAR_RUNOUT_TOLERANCE_COMPLEX` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCircularRunoutToleranceComplex {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) magnitude: Option<u64>,
+    pub(crate) toleranced_shape_aspect: u64,
+    pub(crate) datum_system: Vec<u64>,
+    pub(crate) modifiers: Vec<EarlyGeometricToleranceModifier>,
+}
+
+/// Typed `id_cache` key for `CIRCULAR_RUNOUT_TOLERANCE_COMPLEX` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCircularRunoutToleranceComplexId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCircularRunoutToleranceComplexId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `CONCENTRICITY_TOLERANCE` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyConcentricityTolerance {
@@ -6467,6 +6493,32 @@ impl crate::ir::arena::ArenaId for EarlyParallelismToleranceId {
     }
 }
 
+/// L1 `PARALLELISM_TOLERANCE_COMPLEX` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyParallelismToleranceComplex {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) magnitude: Option<u64>,
+    pub(crate) toleranced_shape_aspect: u64,
+    pub(crate) datum_system: Vec<u64>,
+    pub(crate) modifiers: Vec<EarlyGeometricToleranceModifier>,
+}
+
+/// Typed `id_cache` key for `PARALLELISM_TOLERANCE_COMPLEX` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyParallelismToleranceComplexId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyParallelismToleranceComplexId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `PERPENDICULARITY_TOLERANCE` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyPerpendicularityTolerance {
@@ -6484,6 +6536,32 @@ pub(crate) struct EarlyPerpendicularityTolerance {
 pub(crate) struct EarlyPerpendicularityToleranceId(pub u32);
 
 impl crate::ir::arena::ArenaId for EarlyPerpendicularityToleranceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PERPENDICULARITY_TOLERANCE_COMPLEX` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPerpendicularityToleranceComplex {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) magnitude: Option<u64>,
+    pub(crate) toleranced_shape_aspect: u64,
+    pub(crate) datum_system: Vec<u64>,
+    pub(crate) modifiers: Vec<EarlyGeometricToleranceModifier>,
+}
+
+/// Typed `id_cache` key for `PERPENDICULARITY_TOLERANCE_COMPLEX` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPerpendicularityToleranceComplexId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPerpendicularityToleranceComplexId {
     fn index(&self) -> usize {
         self.0 as usize
     }

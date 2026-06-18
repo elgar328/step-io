@@ -2215,6 +2215,50 @@ pub(crate) fn write_geometric_tolerance_with_datum_reference(
         .collect();
     let force_complex = is_complex || !data.modifiers.is_empty() || data.displacement.is_some();
     if force_complex {
+        // Migrated WDR simple-leaf COMPLEX forms emit via the generated serialize.
+        // The rest (POSITION / SURFACE_PROFILE / LINE_PROFILE) stay hand-built below.
+        match type_name {
+            "PARALLELISM_TOLERANCE" => {
+                return crate::early::serialize::serialize_parallelism_tolerance_complex(
+                    buf,
+                    &crate::early::lift::lift_parallelism_tolerance_complex(
+                        data.name,
+                        data.description,
+                        magnitude,
+                        shape_aspect,
+                        datum_system_ids,
+                        &data.modifiers,
+                    ),
+                );
+            }
+            "PERPENDICULARITY_TOLERANCE" => {
+                return crate::early::serialize::serialize_perpendicularity_tolerance_complex(
+                    buf,
+                    &crate::early::lift::lift_perpendicularity_tolerance_complex(
+                        data.name,
+                        data.description,
+                        magnitude,
+                        shape_aspect,
+                        datum_system_ids,
+                        &data.modifiers,
+                    ),
+                );
+            }
+            "CIRCULAR_RUNOUT_TOLERANCE" => {
+                return crate::early::serialize::serialize_circular_runout_tolerance_complex(
+                    buf,
+                    &crate::early::lift::lift_circular_runout_tolerance_complex(
+                        data.name,
+                        data.description,
+                        magnitude,
+                        shape_aspect,
+                        datum_system_ids,
+                        &data.modifiers,
+                    ),
+                );
+            }
+            _ => {}
+        }
         let mut parts = Vec::with_capacity(5);
         parts.push((
             "GEOMETRIC_TOLERANCE".into(),
@@ -2859,48 +2903,6 @@ impl ComplexEntityHandler for StraightnessToleranceComplexHandler {
     }
 }
 
-/// Read a `geometric_tolerance_with_datum_reference` simple-leaf in
-/// complex form: GT (required) + WDR (required) + optional WM. Used by
-/// `PARALLELISM` / `PERPENDICULARITY` / `CIRCULAR_RUNOUT` complex handlers.
-/// WDR absence drops the entry with a warning — `datum_ref` simple leaves
-/// have no meaningful datum-less complex form.
-fn read_gtwdr_simple_leaf_complex(
-    ctx: &mut ReaderContext,
-    entity_id: u64,
-    parts: &[RawEntityPart],
-    entity_name: &'static str,
-) -> Result<Option<GeometricToleranceWithDatumReferenceData>, ConvertError> {
-    let gt_attrs = require_part_attrs(parts, "GEOMETRIC_TOLERANCE", entity_id)?;
-    check_count(gt_attrs, 4, entity_id, "GEOMETRIC_TOLERANCE")?;
-    let name = read_string_or_unset(gt_attrs, 0, entity_id, "name")?.to_owned();
-    let description = read_string_or_unset(gt_attrs, 1, entity_id, "description")?.to_owned();
-    let magnitude_ref = read_entity_ref(gt_attrs, 2, entity_id, "magnitude")?;
-    let shape_aspect_ref = read_entity_ref(gt_attrs, 3, entity_id, "toleranced_shape_aspect")?;
-    let Some(gtwdr_attrs) = find_part_attrs(parts, "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE")
-    else {
-        ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-            entity_id,
-            detail: format!(
-                "complex {entity_name} missing GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE part"
-            ),
-        });
-        return Ok(None);
-    };
-    let datum_system_refs = read_entity_ref_list(gtwdr_attrs, 0, entity_id, "datum_system")?;
-    let modifiers = read_optional_modifiers(parts, entity_id)?;
-    let displacement = read_optional_displacement(ctx, parts, entity_id)?;
-    Ok(build_gt_with_datum_reference_data(
-        ctx,
-        name,
-        description,
-        magnitude_ref,
-        shape_aspect_ref,
-        &datum_system_refs,
-        modifiers,
-        displacement,
-    ))
-}
-
 pub(crate) struct ParallelismToleranceComplexHandler;
 
 #[step_entity_complex(
@@ -2916,16 +2918,8 @@ impl ComplexEntityHandler for ParallelismToleranceComplexHandler {
         parts: &[RawEntityPart],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) =
-            read_gtwdr_simple_leaf_complex(ctx, entity_id, parts, "PARALLELISM_TOLERANCE")?
-        else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::Parallelism(data),
-        );
+        let early = crate::early::bind::bind_parallelism_tolerance_complex(entity_id, parts)?;
+        crate::early::lower::lower_parallelism_tolerance_complex(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2952,16 +2946,8 @@ impl ComplexEntityHandler for PerpendicularityToleranceComplexHandler {
         parts: &[RawEntityPart],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) =
-            read_gtwdr_simple_leaf_complex(ctx, entity_id, parts, "PERPENDICULARITY_TOLERANCE")?
-        else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::Perpendicularity(data),
-        );
+        let early = crate::early::bind::bind_perpendicularity_tolerance_complex(entity_id, parts)?;
+        crate::early::lower::lower_perpendicularity_tolerance_complex(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2988,16 +2974,8 @@ impl ComplexEntityHandler for CircularRunoutToleranceComplexHandler {
         parts: &[RawEntityPart],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) =
-            read_gtwdr_simple_leaf_complex(ctx, entity_id, parts, "CIRCULAR_RUNOUT_TOLERANCE")?
-        else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::CircularRunout(data),
-        );
+        let early = crate::early::bind::bind_circular_runout_tolerance_complex(entity_id, parts)?;
+        crate::early::lower::lower_circular_runout_tolerance_complex(ctx, entity_id, early);
         Ok(())
     }
 

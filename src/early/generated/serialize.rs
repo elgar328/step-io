@@ -5470,6 +5470,48 @@ pub(crate) fn serialize_circular_runout_tolerance(
     )
 }
 
+pub(crate) fn serialize_circular_runout_tolerance_complex(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCircularRunoutToleranceComplex,
+) -> u64 {
+    buf.push_complex(vec![
+        (
+            "GEOMETRIC_TOLERANCE".into(),
+            vec![
+                crate::parser::entity::Attribute::String(l1.name.clone()),
+                match &l1.description {
+                    Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                    None => crate::parser::entity::Attribute::Unset,
+                },
+                match l1.magnitude {
+                    Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                    None => crate::parser::entity::Attribute::Unset,
+                },
+                crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+            ],
+        ),
+        (
+            "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE".into(),
+            vec![crate::parser::entity::Attribute::List(
+                l1.datum_system
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            )],
+        ),
+        (
+            "GEOMETRIC_TOLERANCE_WITH_MODIFIERS".into(),
+            vec![crate::parser::entity::Attribute::List(
+                l1.modifiers
+                    .iter()
+                    .map(|e| geometric_tolerance_modifier_attr(e.clone()))
+                    .collect(),
+            )],
+        ),
+        ("CIRCULAR_RUNOUT_TOLERANCE".into(), vec![]),
+    ])
+}
+
 pub(crate) fn serialize_concentricity_tolerance(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyConcentricityTolerance,
@@ -5524,6 +5566,48 @@ pub(crate) fn serialize_parallelism_tolerance(
     )
 }
 
+pub(crate) fn serialize_parallelism_tolerance_complex(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyParallelismToleranceComplex,
+) -> u64 {
+    buf.push_complex(vec![
+        (
+            "GEOMETRIC_TOLERANCE".into(),
+            vec![
+                crate::parser::entity::Attribute::String(l1.name.clone()),
+                match &l1.description {
+                    Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                    None => crate::parser::entity::Attribute::Unset,
+                },
+                match l1.magnitude {
+                    Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                    None => crate::parser::entity::Attribute::Unset,
+                },
+                crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+            ],
+        ),
+        (
+            "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE".into(),
+            vec![crate::parser::entity::Attribute::List(
+                l1.datum_system
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            )],
+        ),
+        (
+            "GEOMETRIC_TOLERANCE_WITH_MODIFIERS".into(),
+            vec![crate::parser::entity::Attribute::List(
+                l1.modifiers
+                    .iter()
+                    .map(|e| geometric_tolerance_modifier_attr(e.clone()))
+                    .collect(),
+            )],
+        ),
+        ("PARALLELISM_TOLERANCE".into(), vec![]),
+    ])
+}
+
 pub(crate) fn serialize_perpendicularity_tolerance(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyPerpendicularityTolerance,
@@ -5549,6 +5633,48 @@ pub(crate) fn serialize_perpendicularity_tolerance(
             ),
         ],
     )
+}
+
+pub(crate) fn serialize_perpendicularity_tolerance_complex(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPerpendicularityToleranceComplex,
+) -> u64 {
+    buf.push_complex(vec![
+        (
+            "GEOMETRIC_TOLERANCE".into(),
+            vec![
+                crate::parser::entity::Attribute::String(l1.name.clone()),
+                match &l1.description {
+                    Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                    None => crate::parser::entity::Attribute::Unset,
+                },
+                match l1.magnitude {
+                    Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                    None => crate::parser::entity::Attribute::Unset,
+                },
+                crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+            ],
+        ),
+        (
+            "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE".into(),
+            vec![crate::parser::entity::Attribute::List(
+                l1.datum_system
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            )],
+        ),
+        (
+            "GEOMETRIC_TOLERANCE_WITH_MODIFIERS".into(),
+            vec![crate::parser::entity::Attribute::List(
+                l1.modifiers
+                    .iter()
+                    .map(|e| geometric_tolerance_modifier_attr(e.clone()))
+                    .collect(),
+            )],
+        ),
+        ("PERPENDICULARITY_TOLERANCE".into(), vec![]),
+    ])
 }
 
 pub(crate) fn serialize_symmetry_tolerance(

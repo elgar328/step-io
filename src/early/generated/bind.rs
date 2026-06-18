@@ -4884,6 +4884,35 @@ pub(crate) fn bind_circular_runout_tolerance(
     })
 }
 
+pub(crate) fn bind_circular_runout_tolerance_complex(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<super::model::EarlyCircularRunoutToleranceComplex, crate::ir::error::ConvertError> {
+    let attrs = crate::reader::require_part_attrs(parts, "GEOMETRIC_TOLERANCE", entity_id)?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let description = crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?;
+    let magnitude = crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?;
+    let toleranced_shape_aspect =
+        crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "toleranced_shape_aspect")?;
+    let attrs = crate::reader::require_part_attrs(
+        parts,
+        "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
+        entity_id,
+    )?;
+    let datum_system = crate::ir::attr::read_entity_ref_list(attrs, 0, entity_id, "datum_system")?;
+    let attrs =
+        crate::reader::require_part_attrs(parts, "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", entity_id)?;
+    let modifiers = geometric_tolerance_modifier_list(attrs, 0, entity_id, "modifiers")?;
+    Ok(super::model::EarlyCircularRunoutToleranceComplex {
+        name,
+        description,
+        magnitude,
+        toleranced_shape_aspect,
+        datum_system,
+        modifiers,
+    })
+}
+
 pub(crate) fn bind_concentricity_tolerance(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],
@@ -4922,6 +4951,35 @@ pub(crate) fn bind_parallelism_tolerance(
     })
 }
 
+pub(crate) fn bind_parallelism_tolerance_complex(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<super::model::EarlyParallelismToleranceComplex, crate::ir::error::ConvertError> {
+    let attrs = crate::reader::require_part_attrs(parts, "GEOMETRIC_TOLERANCE", entity_id)?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let description = crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?;
+    let magnitude = crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?;
+    let toleranced_shape_aspect =
+        crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "toleranced_shape_aspect")?;
+    let attrs = crate::reader::require_part_attrs(
+        parts,
+        "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
+        entity_id,
+    )?;
+    let datum_system = crate::ir::attr::read_entity_ref_list(attrs, 0, entity_id, "datum_system")?;
+    let attrs =
+        crate::reader::require_part_attrs(parts, "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", entity_id)?;
+    let modifiers = geometric_tolerance_modifier_list(attrs, 0, entity_id, "modifiers")?;
+    Ok(super::model::EarlyParallelismToleranceComplex {
+        name,
+        description,
+        magnitude,
+        toleranced_shape_aspect,
+        datum_system,
+        modifiers,
+    })
+}
+
 pub(crate) fn bind_perpendicularity_tolerance(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],
@@ -4938,6 +4996,35 @@ pub(crate) fn bind_perpendicularity_tolerance(
             "toleranced_shape_aspect",
         )?,
         datum_system: crate::ir::attr::read_entity_ref_list(attrs, 4, entity_id, "datum_system")?,
+    })
+}
+
+pub(crate) fn bind_perpendicularity_tolerance_complex(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<super::model::EarlyPerpendicularityToleranceComplex, crate::ir::error::ConvertError> {
+    let attrs = crate::reader::require_part_attrs(parts, "GEOMETRIC_TOLERANCE", entity_id)?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let description = crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?;
+    let magnitude = crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?;
+    let toleranced_shape_aspect =
+        crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "toleranced_shape_aspect")?;
+    let attrs = crate::reader::require_part_attrs(
+        parts,
+        "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
+        entity_id,
+    )?;
+    let datum_system = crate::ir::attr::read_entity_ref_list(attrs, 0, entity_id, "datum_system")?;
+    let attrs =
+        crate::reader::require_part_attrs(parts, "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", entity_id)?;
+    let modifiers = geometric_tolerance_modifier_list(attrs, 0, entity_id, "modifiers")?;
+    Ok(super::model::EarlyPerpendicularityToleranceComplex {
+        name,
+        description,
+        magnitude,
+        toleranced_shape_aspect,
+        datum_system,
+        modifiers,
     })
 }
 

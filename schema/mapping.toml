@@ -327,9 +327,12 @@ generate = [
     # Phase 3t: pmi — geometric_tolerance_with_datum_reference simple 7 (GD&T)
     "angularity_tolerance",
     "circular_runout_tolerance",
+    "circular_runout_tolerance_complex",
     "concentricity_tolerance",
     "parallelism_tolerance",
+    "parallelism_tolerance_complex",
     "perpendicularity_tolerance",
+    "perpendicularity_tolerance_complex",
     "symmetry_tolerance",
     "total_runout_tolerance",
     # Phase 3u: tessellation — clean leaf 7 (grids/lists, shared resolvers)
@@ -614,6 +617,18 @@ parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "ROUNDNESS
 
 [complex.straightness_tolerance_complex]
 parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT", "STRAIGHTNESS_TOLERANCE"]
+
+# GD&T datum-reference (WDR) COMPLEX forms — simple-leaf single case (GT + WDR +
+# WITH_MODIFIERS + leaf). datum_system on WDR; modifiers on WITH_MODIFIERS; leaf
+# empty. part order = hand writer (GT, WDR, WM, leaf).
+[complex.parallelism_tolerance_complex]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "PARALLELISM_TOLERANCE"]
+
+[complex.perpendicularity_tolerance_complex]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "PERPENDICULARITY_TOLERANCE"]
+
+[complex.circular_runout_tolerance_complex]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "CIRCULAR_RUNOUT_TOLERANCE"]
 
 # Complex MI DRAUGHTING_MODEL family (synthetic name — no single early.toml
 # entity). 3 exact part-sets (A ⊂ B share CHARACTERIZED_OBJECT, so single-part
