@@ -33,6 +33,7 @@ generate = [
     "geometrically_bounded_wireframe_shape_representation",
     "integer_representation_item",
     "draughting_model",
+    "characterized_object_complex",
     # plm (metadata leaf batch)
     "approval_role",
     "approval_status",
@@ -349,6 +350,7 @@ generate = [
 # generate `serialize_<entity>_with_id` for those emit paths.
 serialize_with_id = [
     "characterized_item_within_representation",
+    "characterized_object_complex",
     "advanced_brep_shape_representation",
     "model_geometric_view",
     "named_unit",
@@ -543,6 +545,26 @@ discriminant = "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT"
 
 [complex.global_unit_assigned_context.cases.no_uncertainty]
 parts = ["GEOMETRIC_REPRESENTATION_CONTEXT", "GLOBAL_UNIT_ASSIGNED_CONTEXT", "REPRESENTATION_CONTEXT"]
+
+# Complex MI DRAUGHTING_MODEL family (synthetic name — no single early.toml
+# entity). 3 exact part-sets (A ⊂ B share CHARACTERIZED_OBJECT, so single-part
+# discriminant can't separate them → `match_parts` exact-set dispatch). All data
+# lives on the REPRESENTATION part; CHARACTERIZED_OBJECT's name/description are
+# `(*,*)` (part-qualified derived). part order = alphabetical = the hand
+# WriterBody::Complex order so re-read re-dispatches to the same case.
+[complex.characterized_object_complex.cases.characterized]
+parts = ["CHARACTERIZED_OBJECT", "CHARACTERIZED_REPRESENTATION", "DRAUGHTING_MODEL", "REPRESENTATION"]
+match_parts = ["CHARACTERIZED_OBJECT", "CHARACTERIZED_REPRESENTATION", "DRAUGHTING_MODEL", "REPRESENTATION"]
+derived = ["CHARACTERIZED_OBJECT.name", "CHARACTERIZED_OBJECT.description"]
+
+[complex.characterized_object_complex.cases.characterized_shape_tessellated]
+parts = ["CHARACTERIZED_OBJECT", "CHARACTERIZED_REPRESENTATION", "DRAUGHTING_MODEL", "REPRESENTATION", "SHAPE_REPRESENTATION", "TESSELLATED_SHAPE_REPRESENTATION"]
+match_parts = ["CHARACTERIZED_OBJECT", "CHARACTERIZED_REPRESENTATION", "DRAUGHTING_MODEL", "REPRESENTATION", "SHAPE_REPRESENTATION", "TESSELLATED_SHAPE_REPRESENTATION"]
+derived = ["CHARACTERIZED_OBJECT.name", "CHARACTERIZED_OBJECT.description"]
+
+[complex.characterized_object_complex.cases.shape_tessellated]
+parts = ["DRAUGHTING_MODEL", "REPRESENTATION", "SHAPE_REPRESENTATION", "TESSELLATED_SHAPE_REPRESENTATION"]
+match_parts = ["DRAUGHTING_MODEL", "REPRESENTATION", "SHAPE_REPRESENTATION", "TESSELLATED_SHAPE_REPRESENTATION"]
 
 # Per-entity EXPRESS Derived (`*`) attribute names. early.toml (generated) cannot
 # carry DERIVE info, so it is hand-authored here. A listed attr keeps its Part21

@@ -440,7 +440,13 @@ fn collect_case_entries(
             .enumerate()
         {
             let (optional, inner) = strip_optional(&a.ty);
-            let derived = derived_attrs.contains(&a.name);
+            // Derived match is by bare attr name or part-qualified `PART.attr`.
+            // The qualified form is required when the same attr name appears on
+            // multiple parts but is `*` on only one (e.g. CHARACTERIZED_OBJECT.
+            // name is derived but REPRESENTATION.name is real data).
+            let qualified = format!("{part}.{}", a.name);
+            let derived =
+                derived_attrs.contains(&a.name) || derived_attrs.iter().any(|d| d == &qualified);
             entries.push((
                 part.clone(),
                 li,
@@ -451,8 +457,14 @@ fn collect_case_entries(
             ));
         }
     }
+    // Disambiguate duplicate field names (`name`, `name_2`, …). Derived attrs
+    // get no struct field / bind read, so they claim no name slot — this lets a
+    // real attr keep the bare name when a same-named attr on another part is `*`.
     let mut used: BTreeSet<String> = BTreeSet::new();
     for e in &mut entries {
+        if e.5 {
+            continue;
+        }
         if used.contains(&e.2) {
             let base = e.2.clone();
             let mut n = 2;

@@ -484,6 +484,174 @@ pub(crate) fn serialize_draughting_model(
     )
 }
 
+pub(crate) fn serialize_characterized_object_complex(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCharacterizedObjectComplex,
+) -> u64 {
+    match l1 {
+        super::model::EarlyCharacterizedObjectComplex::Characterized(l1) => buf.push_complex(vec![
+            (
+                "CHARACTERIZED_OBJECT".into(),
+                vec![
+                    crate::parser::entity::Attribute::Derived,
+                    crate::parser::entity::Attribute::Derived,
+                ],
+            ),
+            ("CHARACTERIZED_REPRESENTATION".into(), vec![]),
+            ("DRAUGHTING_MODEL".into(), vec![]),
+            (
+                "REPRESENTATION".into(),
+                vec![
+                    crate::parser::entity::Attribute::String(l1.name.clone()),
+                    crate::parser::entity::Attribute::List(
+                        l1.items
+                            .iter()
+                            .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                            .collect(),
+                    ),
+                    crate::parser::entity::Attribute::EntityRef(l1.context_of_items),
+                ],
+            ),
+        ]),
+        super::model::EarlyCharacterizedObjectComplex::CharacterizedShapeTessellated(l1) => buf
+            .push_complex(vec![
+                (
+                    "CHARACTERIZED_OBJECT".into(),
+                    vec![
+                        crate::parser::entity::Attribute::Derived,
+                        crate::parser::entity::Attribute::Derived,
+                    ],
+                ),
+                ("CHARACTERIZED_REPRESENTATION".into(), vec![]),
+                ("DRAUGHTING_MODEL".into(), vec![]),
+                (
+                    "REPRESENTATION".into(),
+                    vec![
+                        crate::parser::entity::Attribute::String(l1.name.clone()),
+                        crate::parser::entity::Attribute::List(
+                            l1.items
+                                .iter()
+                                .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                                .collect(),
+                        ),
+                        crate::parser::entity::Attribute::EntityRef(l1.context_of_items),
+                    ],
+                ),
+                ("SHAPE_REPRESENTATION".into(), vec![]),
+                ("TESSELLATED_SHAPE_REPRESENTATION".into(), vec![]),
+            ]),
+        super::model::EarlyCharacterizedObjectComplex::ShapeTessellated(l1) => {
+            buf.push_complex(vec![
+                ("DRAUGHTING_MODEL".into(), vec![]),
+                (
+                    "REPRESENTATION".into(),
+                    vec![
+                        crate::parser::entity::Attribute::String(l1.name.clone()),
+                        crate::parser::entity::Attribute::List(
+                            l1.items
+                                .iter()
+                                .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                                .collect(),
+                        ),
+                        crate::parser::entity::Attribute::EntityRef(l1.context_of_items),
+                    ],
+                ),
+                ("SHAPE_REPRESENTATION".into(), vec![]),
+                ("TESSELLATED_SHAPE_REPRESENTATION".into(), vec![]),
+            ])
+        }
+    }
+}
+
+pub(crate) fn serialize_characterized_object_complex_with_id(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    id: u64,
+    l1: &super::model::EarlyCharacterizedObjectComplex,
+) {
+    match l1 {
+        super::model::EarlyCharacterizedObjectComplex::Characterized(l1) => buf
+            .push_complex_with_id(
+                id,
+                vec![
+                    (
+                        "CHARACTERIZED_OBJECT".into(),
+                        vec![
+                            crate::parser::entity::Attribute::Derived,
+                            crate::parser::entity::Attribute::Derived,
+                        ],
+                    ),
+                    ("CHARACTERIZED_REPRESENTATION".into(), vec![]),
+                    ("DRAUGHTING_MODEL".into(), vec![]),
+                    (
+                        "REPRESENTATION".into(),
+                        vec![
+                            crate::parser::entity::Attribute::String(l1.name.clone()),
+                            crate::parser::entity::Attribute::List(
+                                l1.items
+                                    .iter()
+                                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                                    .collect(),
+                            ),
+                            crate::parser::entity::Attribute::EntityRef(l1.context_of_items),
+                        ],
+                    ),
+                ],
+            ),
+        super::model::EarlyCharacterizedObjectComplex::CharacterizedShapeTessellated(l1) => buf
+            .push_complex_with_id(
+                id,
+                vec![
+                    (
+                        "CHARACTERIZED_OBJECT".into(),
+                        vec![
+                            crate::parser::entity::Attribute::Derived,
+                            crate::parser::entity::Attribute::Derived,
+                        ],
+                    ),
+                    ("CHARACTERIZED_REPRESENTATION".into(), vec![]),
+                    ("DRAUGHTING_MODEL".into(), vec![]),
+                    (
+                        "REPRESENTATION".into(),
+                        vec![
+                            crate::parser::entity::Attribute::String(l1.name.clone()),
+                            crate::parser::entity::Attribute::List(
+                                l1.items
+                                    .iter()
+                                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                                    .collect(),
+                            ),
+                            crate::parser::entity::Attribute::EntityRef(l1.context_of_items),
+                        ],
+                    ),
+                    ("SHAPE_REPRESENTATION".into(), vec![]),
+                    ("TESSELLATED_SHAPE_REPRESENTATION".into(), vec![]),
+                ],
+            ),
+        super::model::EarlyCharacterizedObjectComplex::ShapeTessellated(l1) => buf
+            .push_complex_with_id(
+                id,
+                vec![
+                    ("DRAUGHTING_MODEL".into(), vec![]),
+                    (
+                        "REPRESENTATION".into(),
+                        vec![
+                            crate::parser::entity::Attribute::String(l1.name.clone()),
+                            crate::parser::entity::Attribute::List(
+                                l1.items
+                                    .iter()
+                                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                                    .collect(),
+                            ),
+                            crate::parser::entity::Attribute::EntityRef(l1.context_of_items),
+                        ],
+                    ),
+                    ("SHAPE_REPRESENTATION".into(), vec![]),
+                    ("TESSELLATED_SHAPE_REPRESENTATION".into(), vec![]),
+                ],
+            ),
+    }
+}
+
 pub(crate) fn serialize_approval_role(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyApprovalRole,

@@ -513,6 +513,83 @@ pub(crate) fn bind_draughting_model(
     })
 }
 
+pub(crate) fn bind_characterized_object_complex(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<super::model::EarlyCharacterizedObjectComplex, crate::ir::error::ConvertError> {
+    let part_set: std::collections::BTreeSet<&str> =
+        parts.iter().map(|p| p.name.as_str()).collect();
+    if part_set.len() == 4
+        && part_set.contains("CHARACTERIZED_OBJECT")
+        && part_set.contains("CHARACTERIZED_REPRESENTATION")
+        && part_set.contains("DRAUGHTING_MODEL")
+        && part_set.contains("REPRESENTATION")
+    {
+        let attrs = crate::reader::require_part_attrs(parts, "REPRESENTATION", entity_id)?;
+        let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let items = crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "items")?;
+        let context_of_items =
+            crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "context_of_items")?;
+        return Ok(
+            super::model::EarlyCharacterizedObjectComplex::Characterized(
+                super::model::EarlyCharacterizedObjectComplexCharacterized {
+                    name,
+                    items,
+                    context_of_items,
+                },
+            ),
+        );
+    }
+    if part_set.len() == 6
+        && part_set.contains("CHARACTERIZED_OBJECT")
+        && part_set.contains("CHARACTERIZED_REPRESENTATION")
+        && part_set.contains("DRAUGHTING_MODEL")
+        && part_set.contains("REPRESENTATION")
+        && part_set.contains("SHAPE_REPRESENTATION")
+        && part_set.contains("TESSELLATED_SHAPE_REPRESENTATION")
+    {
+        let attrs = crate::reader::require_part_attrs(parts, "REPRESENTATION", entity_id)?;
+        let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let items = crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "items")?;
+        let context_of_items =
+            crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "context_of_items")?;
+        return Ok(
+            super::model::EarlyCharacterizedObjectComplex::CharacterizedShapeTessellated(
+                super::model::EarlyCharacterizedObjectComplexCharacterizedShapeTessellated {
+                    name,
+                    items,
+                    context_of_items,
+                },
+            ),
+        );
+    }
+    if part_set.len() == 4
+        && part_set.contains("DRAUGHTING_MODEL")
+        && part_set.contains("REPRESENTATION")
+        && part_set.contains("SHAPE_REPRESENTATION")
+        && part_set.contains("TESSELLATED_SHAPE_REPRESENTATION")
+    {
+        let attrs = crate::reader::require_part_attrs(parts, "REPRESENTATION", entity_id)?;
+        let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let items = crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "items")?;
+        let context_of_items =
+            crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "context_of_items")?;
+        return Ok(
+            super::model::EarlyCharacterizedObjectComplex::ShapeTessellated(
+                super::model::EarlyCharacterizedObjectComplexShapeTessellated {
+                    name,
+                    items,
+                    context_of_items,
+                },
+            ),
+        );
+    }
+    Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
+        entity_id,
+        detail: "unsupported CHARACTERIZED_OBJECT_COMPLEX complex case".into(),
+    })
+}
+
 pub(crate) fn bind_approval_role(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],

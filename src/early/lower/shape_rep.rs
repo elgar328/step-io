@@ -11,11 +11,12 @@
 use crate::early::model::{
     EarlyAdvancedBrepShapeRepresentation, EarlyAllAroundShapeAspect, EarlyCameraImage,
     EarlyCameraImage3dWithScale, EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
-    EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect, EarlyCompoundItemDefinition,
-    EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
-    EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
-    EarlyDefaultModelGeometricView, EarlyDescriptiveRepresentationItem, EarlyDraughtingModel,
-    EarlyGeometricItemSpecificUsage, EarlyGeometricallyBoundedSurfaceShapeRepresentation,
+    EarlyCharacterizedObjectComplex, EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect,
+    EarlyCompoundItemDefinition, EarlyCompoundRepresentationItem,
+    EarlyConstructiveGeometryRepresentation, EarlyConstructiveGeometryRepresentationRelationship,
+    EarlyDatumSystem, EarlyDatumTarget, EarlyDefaultModelGeometricView,
+    EarlyDescriptiveRepresentationItem, EarlyDraughtingModel, EarlyGeometricItemSpecificUsage,
+    EarlyGeometricallyBoundedSurfaceShapeRepresentation,
     EarlyGeometricallyBoundedWireframeShapeRepresentation, EarlyGlobalUnitAssignedContext,
     EarlyIntegerRepresentationItem, EarlyItemDefinedTransformation,
     EarlyItemIdentifiedRepresentationUsage, EarlyItemIdentifiedRepresentationUsageSelect,
@@ -913,6 +914,74 @@ pub(crate) fn lower_draughting_model(
             form: DraughtingModelForm::Simple,
         }));
     ctx.id_cache.insert(entity_id, repr_id);
+}
+
+/// Lower one complex-MI `DRAUGHTING_MODEL` form (cases A/B/C). bind already
+/// exact-matched the part-set into the variant, so the form follows directly.
+/// A/B carry a `CHARACTERIZED_OBJECT` facet → a `CharacterizedObject::Itself`
+/// carrier arena entry (name reused from the REPRESENTATION part; `(*,*)` so no
+/// CO-local data) + a dual `id_cache` insert so a `PROPERTY_DEFINITION` targeting
+/// the CO facet resolves. Items resolve via the generic ref helper; an empty
+/// resolved set drops the DM (the CO carrier, already pushed, remains).
+/// `context_of_items` schema-strict (drop-on-None).
+pub(crate) fn lower_characterized_object_complex(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyCharacterizedObjectComplex,
+) {
+    let (name, item_refs, ctx_raw, has_co, has_st) = match early {
+        EarlyCharacterizedObjectComplex::Characterized(c) => {
+            (c.name, c.items, c.context_of_items, true, false)
+        }
+        EarlyCharacterizedObjectComplex::CharacterizedShapeTessellated(c) => {
+            (c.name, c.items, c.context_of_items, true, true)
+        }
+        EarlyCharacterizedObjectComplex::ShapeTessellated(c) => {
+            (c.name, c.items, c.context_of_items, false, true)
+        }
+    };
+    // The CHARACTERIZED_OBJECT facet (cases A/B) gets a carrier arena entry so a
+    // PROPERTY_DEFINITION / CIWR targeting it resolves; case C has none.
+    let co_id = has_co.then(|| {
+        ctx.characterized_objects
+            .push(CharacterizedObject::Itself(CharacterizedObjectData {
+                name: name.clone(),
+                description: None,
+            }))
+    });
+    let Some(context) = ctx.resolve_repr_context(ctx_raw) else {
+        return;
+    };
+    if let RepresentationContextRef::Unitful(ctx_id) = context {
+        ctx.repr_context_map.insert(entity_id, ctx_id);
+    }
+    let items: Vec<_> = item_refs
+        .iter()
+        .filter_map(|&r| {
+            crate::entities::visualization::styled_item::resolve_representation_item_ref(ctx, r)
+        })
+        .collect();
+    if items.is_empty() {
+        return;
+    }
+    let form = match (co_id, has_st) {
+        (Some(id), true) => DraughtingModelForm::CharacterizedShapeTessellated(id),
+        (Some(id), false) => DraughtingModelForm::Characterized(id),
+        (None, true) => DraughtingModelForm::ShapeTessellated,
+        (None, false) => DraughtingModelForm::Simple,
+    };
+    let repr_id = ctx
+        .representations
+        .push(Representation::DraughtingModel(DraughtingModel {
+            name,
+            items,
+            context: Some(context),
+            form,
+        }));
+    ctx.id_cache.insert(entity_id, repr_id);
+    if let Some(cid) = co_id {
+        ctx.id_cache.insert(entity_id, cid);
+    }
 }
 
 /// Lower one plain `SHAPE_REPRESENTATION`. Captures the first

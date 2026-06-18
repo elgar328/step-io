@@ -595,6 +595,53 @@ impl crate::ir::arena::ArenaId for EarlyDraughtingModelId {
     }
 }
 
+/// L1 `CHARACTERIZED_OBJECT_COMPLEX` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCharacterizedObjectComplexCharacterized {
+    pub(crate) name: String,
+    pub(crate) items: Vec<u64>,
+    pub(crate) context_of_items: u64,
+}
+
+/// L1 `CHARACTERIZED_OBJECT_COMPLEX` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCharacterizedObjectComplexCharacterizedShapeTessellated {
+    pub(crate) name: String,
+    pub(crate) items: Vec<u64>,
+    pub(crate) context_of_items: u64,
+}
+
+/// L1 `CHARACTERIZED_OBJECT_COMPLEX` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCharacterizedObjectComplexShapeTessellated {
+    pub(crate) name: String,
+    pub(crate) items: Vec<u64>,
+    pub(crate) context_of_items: u64,
+}
+
+/// L1 `CHARACTERIZED_OBJECT_COMPLEX` (generated, multi-case).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum EarlyCharacterizedObjectComplex {
+    Characterized(EarlyCharacterizedObjectComplexCharacterized),
+    CharacterizedShapeTessellated(EarlyCharacterizedObjectComplexCharacterizedShapeTessellated),
+    ShapeTessellated(EarlyCharacterizedObjectComplexShapeTessellated),
+}
+
+/// Typed `id_cache` key for `CHARACTERIZED_OBJECT_COMPLEX` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCharacterizedObjectComplexId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCharacterizedObjectComplexId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `APPROVAL_ROLE` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyApprovalRole {

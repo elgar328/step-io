@@ -1,16 +1,18 @@
-//! `DRAUGHTING_MODEL` handler — phase draughting-model.
+//! `DRAUGHTING_MODEL` handler — 2-layer.
 //!
 //! `representation` subtype carrying a `set_select` of
-//! `draughting_model_item_select` members. Resolved through the generic
-//! [`RepresentationItemRef`] helper; unresolved items are skipped on read
-//! (symmetric on re-read). Complex-MI multi-inheritance forms
-//! (`(CHARACTERIZED_OBJECT ... DRAUGHTING_MODEL ...)`) are not modelled
-//! in this phase and silently dropped.
+//! `draughting_model_item_select` members. The plain `DRAUGHTING_MODEL(name,
+//! items, context)` form is read here (`bind` + `lower_draughting_model`,
+//! always `Form::Simple`); the complex-MI forms `(CHARACTERIZED_OBJECT ...
+//! DRAUGHTING_MODEL ...)` are read by `characterized_object_complex`.
 //!
-//! Emit is delayed (Mdgpr pattern) — `emit_representations_pre_pass`
-//! skips `DraughtingModel`; the actual write happens in
-//! `emit_draughting_models` after every item-ref cache has been
-//! populated.
+//! `write` (driven by `emit_draughting_models` after the item-ref caches are
+//! populated) dispatches `dm.form` 4-way through lift + generated serialize:
+//! `Simple` → `serialize_draughting_model`; the three complex forms →
+//! `serialize_characterized_object_complex(_with_id)`. The complex forms emit
+//! the `CHARACTERIZED_OBJECT` part as `(*, *)` and reuse the step id reserved
+//! for the CO facet (so a PD forward-ref resolves) — the standalone CO pass
+//! dedups it.
 
 use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
@@ -41,126 +43,41 @@ impl SimpleEntityHandler for DraughtingModelHandler {
         Ok(())
     }
 
-    #[allow(clippy::too_many_lines)]
     fn write(buf: &mut WriteBuffer, dm: DraughtingModel) -> Result<u64, WriteError> {
-        let mut item_refs = Vec::with_capacity(dm.items.len());
+        let mut items = Vec::with_capacity(dm.items.len());
         for item in dm.items {
-            let step = buf.emit_representation_item_ref(item)?;
-            item_refs.push(Attribute::EntityRef(step));
+            items.push(buf.emit_representation_item_ref(item)?);
         }
-        let ctx_attr = buf.repr_context_attr(dm.context);
+        let Attribute::EntityRef(ctx_step) = buf.repr_context_attr(dm.context) else {
+            unreachable!("DRAUGHTING_MODEL context guaranteed resolved by lower → EntityRef")
+        };
         match dm.form {
-            DraughtingModelForm::Characterized(co_id) => {
-                // Complex MI form (phase dm-complex-mi): four-part entity
-                // wrapping CHARACTERIZED_OBJECT(*,*) + CHARACTERIZED_REPRESENTATION
-                // + DRAUGHTING_MODEL + REPRESENTATION. The CO part is emitted
-                // here inline; emit_characterized_objects skips the linked
-                // arena entry via dedup so it doesn't surface twice.
-                use crate::writer::entity::{WriterBody, WriterEntity};
-                // Emit under the id reserved for the CO facet (so a PD targeting
-                // the CHARACTERIZED_OBJECT forward-refs this one shared id);
-                // fall back to a fresh id when nothing reserved it.
-                let reserved = buf.step_id(co_id);
-                let n = if reserved != 0 { reserved } else { buf.fresh() };
-                buf.entities.push(WriterEntity {
-                    id: n,
-                    body: WriterBody::Complex {
-                        parts: vec![
-                            (
-                                "CHARACTERIZED_OBJECT".into(),
-                                vec![Attribute::Derived, Attribute::Derived],
-                            ),
-                            ("CHARACTERIZED_REPRESENTATION".into(), vec![]),
-                            ("DRAUGHTING_MODEL".into(), vec![]),
-                            (
-                                "REPRESENTATION".into(),
-                                vec![
-                                    Attribute::String(dm.name),
-                                    Attribute::List(item_refs),
-                                    ctx_attr,
-                                ],
-                            ),
-                        ],
-                    },
-                });
-                Ok(n)
+            DraughtingModelForm::Simple => {
+                let early = lift::lift_draughting_model(dm.name, items, ctx_step);
+                Ok(serialize::serialize_draughting_model(buf, &early))
             }
-            DraughtingModelForm::CharacterizedShapeTessellated(co_id) => {
-                // 6-part MI form: the union of the Characterized and
-                // ShapeTessellated facets, parts in alphabetical order so
-                // re-read re-dispatches to the same case. CO emitted inline
-                // (DERIVE); the standalone CO pass dedups it.
-                use crate::writer::entity::{WriterBody, WriterEntity};
+            // Complex MI: emit under the id reserved for the CO facet (so a PD
+            // targeting the CHARACTERIZED_OBJECT forward-refs this shared id);
+            // fall back to a fresh id when nothing reserved it. The standalone
+            // CO pass dedups the inline CO.
+            form @ (DraughtingModelForm::Characterized(co_id)
+            | DraughtingModelForm::CharacterizedShapeTessellated(co_id)) => {
                 let reserved = buf.step_id(co_id);
                 let n = if reserved != 0 { reserved } else { buf.fresh() };
-                buf.entities.push(WriterEntity {
-                    id: n,
-                    body: WriterBody::Complex {
-                        parts: vec![
-                            (
-                                "CHARACTERIZED_OBJECT".into(),
-                                vec![Attribute::Derived, Attribute::Derived],
-                            ),
-                            ("CHARACTERIZED_REPRESENTATION".into(), vec![]),
-                            ("DRAUGHTING_MODEL".into(), vec![]),
-                            (
-                                "REPRESENTATION".into(),
-                                vec![
-                                    Attribute::String(dm.name),
-                                    Attribute::List(item_refs),
-                                    ctx_attr,
-                                ],
-                            ),
-                            ("SHAPE_REPRESENTATION".into(), vec![]),
-                            ("TESSELLATED_SHAPE_REPRESENTATION".into(), vec![]),
-                        ],
-                    },
-                });
+                let early = lift::lift_characterized_object_complex(form, dm.name, items, ctx_step);
+                serialize::serialize_characterized_object_complex_with_id(buf, n, &early);
                 Ok(n)
             }
             DraughtingModelForm::ShapeTessellated => {
-                // Complex MI form (phase dm-rep-tsr-complex): four-part entity
-                // `(DRAUGHTING_MODEL() REPRESENTATION(...) SHAPE_REPRESENTATION()
-                // TESSELLATED_SHAPE_REPRESENTATION())`. Parts in alphabetical
-                // order, matching the reader's `required` set so re-read
-                // re-dispatches to the same handler.
-                use crate::writer::entity::{WriterBody, WriterEntity};
-                let n = buf.fresh();
-                buf.entities.push(WriterEntity {
-                    id: n,
-                    body: WriterBody::Complex {
-                        parts: vec![
-                            ("DRAUGHTING_MODEL".into(), vec![]),
-                            (
-                                "REPRESENTATION".into(),
-                                vec![
-                                    Attribute::String(dm.name),
-                                    Attribute::List(item_refs),
-                                    ctx_attr,
-                                ],
-                            ),
-                            ("SHAPE_REPRESENTATION".into(), vec![]),
-                            ("TESSELLATED_SHAPE_REPRESENTATION".into(), vec![]),
-                        ],
-                    },
-                });
-                Ok(n)
-            }
-            DraughtingModelForm::Simple => {
-                let Attribute::EntityRef(ctx_step) = ctx_attr else {
-                    unreachable!(
-                        "DRAUGHTING_MODEL context guaranteed resolved by lower → EntityRef"
-                    )
-                };
-                let items: Vec<u64> = item_refs
-                    .into_iter()
-                    .map(|a| match a {
-                        Attribute::EntityRef(s) => s,
-                        _ => unreachable!("item refs are EntityRef"),
-                    })
-                    .collect();
-                let early = lift::lift_draughting_model(dm.name, items, ctx_step);
-                Ok(serialize::serialize_draughting_model(buf, &early))
+                let early = lift::lift_characterized_object_complex(
+                    DraughtingModelForm::ShapeTessellated,
+                    dm.name,
+                    items,
+                    ctx_step,
+                );
+                Ok(serialize::serialize_characterized_object_complex(
+                    buf, &early,
+                ))
             }
         }
     }

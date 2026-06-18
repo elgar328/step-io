@@ -4,10 +4,13 @@
 use crate::early::model::{
     EarlyAdvancedBrepShapeRepresentation, EarlyAllAroundShapeAspect, EarlyCameraImage,
     EarlyCameraImage3dWithScale, EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
-    EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect, EarlyCompoundItemDefinition,
-    EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
-    EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
-    EarlyDefaultModelGeometricView, EarlyDescriptiveRepresentationItem, EarlyDraughtingModel,
+    EarlyCharacterizedObjectComplex, EarlyCharacterizedObjectComplexCharacterized,
+    EarlyCharacterizedObjectComplexCharacterizedShapeTessellated,
+    EarlyCharacterizedObjectComplexShapeTessellated, EarlyCompositeGroupShapeAspect,
+    EarlyCompositeShapeAspect, EarlyCompoundItemDefinition, EarlyCompoundRepresentationItem,
+    EarlyConstructiveGeometryRepresentation, EarlyConstructiveGeometryRepresentationRelationship,
+    EarlyDatumSystem, EarlyDatumTarget, EarlyDefaultModelGeometricView,
+    EarlyDescriptiveRepresentationItem, EarlyDraughtingModel,
     EarlyFeatureForDatumTargetRelationship, EarlyGeometricItemSpecificUsage,
     EarlyGeometricallyBoundedSurfaceShapeRepresentation,
     EarlyGeometricallyBoundedWireframeShapeRepresentation, EarlyGlobalUnitAssignedContext,
@@ -30,9 +33,10 @@ use crate::entities::shape_rep::descriptive_representation_item::DescriptiveRepr
 use crate::ir::representation_item::{MeasureValue, ValueRepresentationItem};
 use crate::ir::shape_rep::{
     CompoundItem, CompoundItemKind, CompoundRepresentationItem, ConstructiveGeometryRepr,
-    DimensionItem, IiruDefinition, IiruIdentifiedItem, ItemIdentifiedRepresentationUsage, Mdgpr,
-    ShapeDimensionRepresentation, ShapeRepresentationWithParameters, SrwpItem,
-    TessellatedShapeRepresentation, UnitContext, UnitContextForm, UnitlessContext,
+    DimensionItem, DraughtingModelForm, IiruDefinition, IiruIdentifiedItem,
+    ItemIdentifiedRepresentationUsage, Mdgpr, ShapeDimensionRepresentation,
+    ShapeRepresentationWithParameters, SrwpItem, TessellatedShapeRepresentation, UnitContext,
+    UnitContextForm, UnitlessContext,
 };
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
@@ -167,6 +171,46 @@ pub(crate) fn lift_draughting_model(
         name,
         items,
         context_of_items,
+    }
+}
+
+/// Lift a complex-MI `DRAUGHTING_MODEL` form (A/B/C) from pre-resolved step ids.
+/// The `form` selects the variant; the carried `CharacterizedObjectId` is not
+/// emitted here (the `CHARACTERIZED_OBJECT` part is `(*,*)` and the writer reuses
+/// the reserved step id separately). `Form::Simple` is plain-DM only → unreachable.
+pub(crate) fn lift_characterized_object_complex(
+    form: DraughtingModelForm,
+    name: String,
+    items: Vec<u64>,
+    context_of_items: u64,
+) -> EarlyCharacterizedObjectComplex {
+    match form {
+        DraughtingModelForm::Characterized(_) => EarlyCharacterizedObjectComplex::Characterized(
+            EarlyCharacterizedObjectComplexCharacterized {
+                name,
+                items,
+                context_of_items,
+            },
+        ),
+        DraughtingModelForm::CharacterizedShapeTessellated(_) => {
+            EarlyCharacterizedObjectComplex::CharacterizedShapeTessellated(
+                EarlyCharacterizedObjectComplexCharacterizedShapeTessellated {
+                    name,
+                    items,
+                    context_of_items,
+                },
+            )
+        }
+        DraughtingModelForm::ShapeTessellated => EarlyCharacterizedObjectComplex::ShapeTessellated(
+            EarlyCharacterizedObjectComplexShapeTessellated {
+                name,
+                items,
+                context_of_items,
+            },
+        ),
+        DraughtingModelForm::Simple => {
+            unreachable!("Form::Simple is the plain DRAUGHTING_MODEL path, not complex MI")
+        }
     }
 }
 
