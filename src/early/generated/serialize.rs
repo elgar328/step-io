@@ -452,6 +452,19 @@ pub(crate) fn serialize_geometrically_bounded_wireframe_shape_representation(
     )
 }
 
+pub(crate) fn serialize_integer_representation_item(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyIntegerRepresentationItem,
+) -> u64 {
+    buf.push_simple(
+        "INTEGER_REPRESENTATION_ITEM",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::Integer(l1.the_value),
+        ],
+    )
+}
+
 pub(crate) fn serialize_approval_role(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyApprovalRole,

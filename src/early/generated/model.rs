@@ -550,6 +550,28 @@ impl crate::ir::arena::ArenaId for EarlyGeometricallyBoundedWireframeShapeRepres
     }
 }
 
+/// L1 `INTEGER_REPRESENTATION_ITEM` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyIntegerRepresentationItem {
+    pub(crate) name: String,
+    pub(crate) the_value: i64,
+}
+
+/// Typed `id_cache` key for `INTEGER_REPRESENTATION_ITEM` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyIntegerRepresentationItemId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyIntegerRepresentationItemId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `APPROVAL_ROLE` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyApprovalRole {

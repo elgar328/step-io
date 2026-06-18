@@ -12,9 +12,10 @@ use crate::early::model::{
     EarlyGeometricallyBoundedSurfaceShapeRepresentation,
     EarlyGeometricallyBoundedWireframeShapeRepresentation, EarlyGlobalUnitAssignedContext,
     EarlyGlobalUnitAssignedContextFull, EarlyGlobalUnitAssignedContextNoUncertainty,
-    EarlyItemDefinedTransformation, EarlyItemIdentifiedRepresentationUsage,
-    EarlyItemIdentifiedRepresentationUsageSelect, EarlyManifoldSurfaceShapeRepresentation,
-    EarlyMappedItem, EarlyMeasureValue, EarlyMechanicalDesignAndDraughtingRelationship,
+    EarlyIntegerRepresentationItem, EarlyItemDefinedTransformation,
+    EarlyItemIdentifiedRepresentationUsage, EarlyItemIdentifiedRepresentationUsageSelect,
+    EarlyManifoldSurfaceShapeRepresentation, EarlyMappedItem, EarlyMeasureValue,
+    EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
@@ -146,6 +147,14 @@ pub(crate) fn lift_real_representation_item(
     the_value: f64,
 ) -> EarlyRealRepresentationItem {
     EarlyRealRepresentationItem { name, the_value }
+}
+
+/// Lift one `INTEGER_REPRESENTATION_ITEM`.
+pub(crate) fn lift_integer_representation_item(
+    name: String,
+    the_value: i64,
+) -> EarlyIntegerRepresentationItem {
+    EarlyIntegerRepresentationItem { name, the_value }
 }
 
 /// Lift one `DATUM_TARGET` (`of_shape` pre-resolved to the PDS step id;

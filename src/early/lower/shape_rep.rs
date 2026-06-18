@@ -17,9 +17,10 @@ use crate::early::model::{
     EarlyDefaultModelGeometricView, EarlyDescriptiveRepresentationItem,
     EarlyGeometricItemSpecificUsage, EarlyGeometricallyBoundedSurfaceShapeRepresentation,
     EarlyGeometricallyBoundedWireframeShapeRepresentation, EarlyGlobalUnitAssignedContext,
-    EarlyItemDefinedTransformation, EarlyItemIdentifiedRepresentationUsage,
-    EarlyItemIdentifiedRepresentationUsageSelect, EarlyManifoldSurfaceShapeRepresentation,
-    EarlyMappedItem, EarlyMeasureValue, EarlyMechanicalDesignAndDraughtingRelationship,
+    EarlyIntegerRepresentationItem, EarlyItemDefinedTransformation,
+    EarlyItemIdentifiedRepresentationUsage, EarlyItemIdentifiedRepresentationUsageSelect,
+    EarlyManifoldSurfaceShapeRepresentation, EarlyMappedItem, EarlyMeasureValue,
+    EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
@@ -42,11 +43,11 @@ use crate::ir::shape_rep::{
     CompoundItemKind, CompoundRepresentationItem, ConstructiveGeometryRepr,
     ConstructiveGeometryRepresentationRelationship, DatumSystem, DatumTarget,
     DefaultModelGeometricView, GeometricItemSpecificUsage, IiruDefinition, IiruIdentifiedItem,
-    ItemIdentifiedRepresentationUsage, ManifoldSurfaceRepr, MappedItem, MappedItemData,
-    MappedRepresentationRef, Mdgpr, MechanicalDesignAndDraughtingRelationship, ModelGeometricView,
-    NumericRepresentationItem, PlacedDatumTargetFeature, PlainRepr, RealRepresentationItem,
-    Representation, RepresentationContextRef, RepresentationMap, RepresentationMapData,
-    RepresentationRelationship, RepresentationRelationshipData, ShapeAspect,
+    IntegerRepresentationItem, ItemIdentifiedRepresentationUsage, ManifoldSurfaceRepr, MappedItem,
+    MappedItemData, MappedRepresentationRef, Mdgpr, MechanicalDesignAndDraughtingRelationship,
+    ModelGeometricView, NumericRepresentationItem, PlacedDatumTargetFeature, PlainRepr,
+    RealRepresentationItem, Representation, RepresentationContextRef, RepresentationMap,
+    RepresentationMapData, RepresentationRelationship, RepresentationRelationshipData, ShapeAspect,
     ShapeAspectRelationship, ShapeAspectRelationshipKind, ShapeDimensionRepresentation,
     ShapeRepresentationRelationshipIr, ShapeRepresentationWithParameters, SrwpItem,
     TessellatedShapeRepresentation, ToleranceZone, UnitContext, UnitContextForm, UnitlessContext,
@@ -311,6 +312,20 @@ pub(crate) fn lower_real_representation_item(
             name: early.name,
             the_value: early.the_value,
         }));
+}
+
+/// Lower one `INTEGER_REPRESENTATION_ITEM` into the shared numeric arena.
+pub(crate) fn lower_integer_representation_item(
+    ctx: &mut ReaderContext,
+    early: EarlyIntegerRepresentationItem,
+) {
+    ctx.numeric_representation_items
+        .push(NumericRepresentationItem::Integer(
+            IntegerRepresentationItem {
+                name: early.name,
+                the_value: early.the_value,
+            },
+        ));
 }
 
 /// Lower one `DATUM_TARGET` (unresolved `of_shape` product = silent drop).

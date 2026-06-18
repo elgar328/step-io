@@ -31,6 +31,7 @@ generate = [
     "manifold_surface_shape_representation",
     "geometrically_bounded_surface_shape_representation",
     "geometrically_bounded_wireframe_shape_representation",
+    "integer_representation_item",
     # plm (metadata leaf batch)
     "approval_role",
     "approval_status",

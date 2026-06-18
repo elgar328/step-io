@@ -9194,6 +9194,10 @@ parents = ["literal_number"]
 is_abstract = false
 own_attrs = []
 
+[[entity.int_literal.redeclared_attrs]]
+name = "the_value"
+ty = "integer"
+
 [entity.int_numeric_variable]
 parents = ["numeric_variable"]
 is_abstract = false
@@ -14377,6 +14381,10 @@ ty = "open_closed"
 parents = ["literal_number"]
 is_abstract = false
 own_attrs = []
+
+[[entity.real_literal.redeclared_attrs]]
+name = "the_value"
+ty = "real"
 
 [entity.real_numeric_variable]
 parents = ["numeric_variable"]

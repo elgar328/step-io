@@ -485,6 +485,17 @@ pub(crate) fn bind_geometrically_bounded_wireframe_shape_representation(
     )
 }
 
+pub(crate) fn bind_integer_representation_item(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyIntegerRepresentationItem, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "INTEGER_REPRESENTATION_ITEM")?;
+    Ok(super::model::EarlyIntegerRepresentationItem {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        the_value: crate::ir::attr::read_integer(attrs, 1, entity_id, "the_value")?,
+    })
+}
+
 pub(crate) fn bind_approval_role(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],

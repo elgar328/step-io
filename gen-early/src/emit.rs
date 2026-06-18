@@ -1992,6 +1992,7 @@ mod tests {
             Entity {
                 parents: vec![],
                 own_attrs: vec![],
+                redeclared_attrs: vec![],
             },
         );
         let mut types = BTreeMap::new();

@@ -20,6 +20,11 @@ pub(crate) struct Entity {
     pub(crate) parents: Vec<String>,
     #[serde(default)]
     pub(crate) own_attrs: Vec<Attr>,
+    /// `SELF\super.attr : type` scalar-primitive narrowings (blueprint emits
+    /// only these). Applied as in-place type overrides on the flattened attr
+    /// list — they retype an inherited attr, never add a new positional slot.
+    #[serde(default)]
+    pub(crate) redeclared_attrs: Vec<Attr>,
 }
 
 impl EarlyToml {
@@ -30,13 +35,24 @@ impl EarlyToml {
     /// A shared ancestor reached via multiple parent paths (diamond) is included
     /// once — deduped by entity name via `visited`. Same-named attrs declared by
     /// *different* parents both survive (dedup is per-entity, not per-attr).
-    /// L1 carries no redeclared attrs, so no type narrowing is applied here.
-    pub(crate) fn flattened_attrs(&self, ent_name: &str) -> Vec<&Attr> {
-        let mut out = Vec::new();
+    ///
+    /// Scalar `redeclared_attrs` (SELF\super.attr narrowings) from the entity and
+    /// its ancestors are applied last as in-place type overrides on the matching
+    /// inherited attr — positional order is preserved (a redeclare retypes, never
+    /// appends). Returns owned `Attr`s so the override can mutate `ty`.
+    pub(crate) fn flattened_attrs(&self, ent_name: &str) -> Vec<Attr> {
+        let mut out: Vec<Attr> = Vec::new();
+        let mut redeclared: Vec<&Attr> = Vec::new();
         let mut visited = BTreeSet::new();
-        self.collect_inherited(ent_name, &mut visited, &mut out);
+        self.collect_inherited(ent_name, &mut visited, &mut out, &mut redeclared);
         if let Some(ent) = self.entity.get(ent_name) {
-            out.extend(ent.own_attrs.iter());
+            out.extend(ent.own_attrs.iter().cloned());
+            redeclared.extend(ent.redeclared_attrs.iter());
+        }
+        for r in redeclared {
+            if let Some(a) = out.iter_mut().find(|a| a.name == r.name) {
+                a.ty = r.ty.clone();
+            }
         }
         out
     }
@@ -55,7 +71,8 @@ impl EarlyToml {
         &'a self,
         ent_name: &str,
         visited: &mut BTreeSet<String>,
-        out: &mut Vec<&'a Attr>,
+        out: &mut Vec<Attr>,
+        redeclared: &mut Vec<&'a Attr>,
     ) {
         let Some(ent) = self.entity.get(ent_name) else {
             return; // dangling parent reference — skip (matches blueprint)
@@ -64,15 +81,16 @@ impl EarlyToml {
             if !visited.insert(parent.clone()) {
                 continue; // diamond: shared ancestor already collected
             }
-            self.collect_inherited(parent, visited, out);
+            self.collect_inherited(parent, visited, out, redeclared);
             if let Some(p) = self.entity.get(parent) {
-                out.extend(p.own_attrs.iter());
+                out.extend(p.own_attrs.iter().cloned());
+                redeclared.extend(p.redeclared_attrs.iter());
             }
         }
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub(crate) struct Attr {
     pub(crate) name: String,
     pub(crate) ty: String,
@@ -197,6 +215,7 @@ mod tests {
                 .map(std::string::ToString::to_string)
                 .collect(),
             own_attrs: own.iter().map(|n| attr(n)).collect(),
+            redeclared_attrs: Vec::new(),
         };
         let mut entity = BTreeMap::new();
         entity.insert("gp".to_string(), ent(&[], &["g"]));
@@ -209,6 +228,44 @@ mod tests {
         };
         // gp's `g` appears once (via a's chain), not twice.
         assert_eq!(names(&s, "leaf"), ["g", "x", "y", "z"]);
+    }
+
+    /// A child's scalar `redeclared_attrs` retypes the inherited attr in place
+    /// (the `int_literal`-narrows-`the_value`-to-INTEGER case) — same name, same
+    /// position, narrowed type.
+    #[test]
+    fn flatten_applies_scalar_redeclare() {
+        let mut entity = BTreeMap::new();
+        entity.insert(
+            "lit".to_string(),
+            Entity {
+                parents: vec![],
+                own_attrs: vec![Attr {
+                    name: "the_value".to_string(),
+                    ty: "number".to_string(),
+                }],
+                redeclared_attrs: vec![],
+            },
+        );
+        entity.insert(
+            "int_lit".to_string(),
+            Entity {
+                parents: vec!["lit".to_string()],
+                own_attrs: vec![],
+                redeclared_attrs: vec![Attr {
+                    name: "the_value".to_string(),
+                    ty: "integer".to_string(),
+                }],
+            },
+        );
+        let s = EarlyToml {
+            entity,
+            types: BTreeMap::new(),
+        };
+        let flat = s.flattened_attrs("int_lit");
+        assert_eq!(flat.len(), 1);
+        assert_eq!(flat[0].name, "the_value");
+        assert_eq!(flat[0].ty, "integer");
     }
 
     /// `OPTIONAL ` is split off and tracked as a flag; the inner ty stays.
