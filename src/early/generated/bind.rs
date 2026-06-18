@@ -2242,6 +2242,61 @@ pub(crate) fn bind_composite_shape_aspect(
     })
 }
 
+pub(crate) fn bind_composite_datum_shape_aspect(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<super::model::EarlyCompositeDatumShapeAspect, crate::ir::error::ConvertError> {
+    let part_set: std::collections::BTreeSet<&str> =
+        parts.iter().map(|p| p.name.as_str()).collect();
+    if part_set.len() == 3
+        && part_set.contains("COMPOSITE_SHAPE_ASPECT")
+        && part_set.contains("DATUM_FEATURE")
+        && part_set.contains("SHAPE_ASPECT")
+    {
+        let attrs = crate::reader::require_part_attrs(parts, "SHAPE_ASPECT", entity_id)?;
+        let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let description =
+            crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?;
+        let of_shape = crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "of_shape")?;
+        let product_definitional =
+            crate::ir::attr::read_logical(attrs, 3, entity_id, "product_definitional")?;
+        return Ok(super::model::EarlyCompositeDatumShapeAspect::Composite(
+            super::model::EarlyCompositeDatumShapeAspectComposite {
+                name,
+                description,
+                of_shape,
+                product_definitional,
+            },
+        ));
+    }
+    if part_set.len() == 4
+        && part_set.contains("COMPOSITE_GROUP_SHAPE_ASPECT")
+        && part_set.contains("COMPOSITE_SHAPE_ASPECT")
+        && part_set.contains("DATUM_FEATURE")
+        && part_set.contains("SHAPE_ASPECT")
+    {
+        let attrs = crate::reader::require_part_attrs(parts, "SHAPE_ASPECT", entity_id)?;
+        let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let description =
+            crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?;
+        let of_shape = crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "of_shape")?;
+        let product_definitional =
+            crate::ir::attr::read_logical(attrs, 3, entity_id, "product_definitional")?;
+        return Ok(super::model::EarlyCompositeDatumShapeAspect::Group(
+            super::model::EarlyCompositeDatumShapeAspectGroup {
+                name,
+                description,
+                of_shape,
+                product_definitional,
+            },
+        ));
+    }
+    Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
+        entity_id,
+        detail: "unsupported COMPOSITE_DATUM_SHAPE_ASPECT complex case".into(),
+    })
+}
+
 pub(crate) fn bind_centre_of_symmetry(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],

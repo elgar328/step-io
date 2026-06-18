@@ -2852,6 +2852,46 @@ impl crate::ir::arena::ArenaId for EarlyCompositeShapeAspectId {
     }
 }
 
+/// L1 `COMPOSITE_DATUM_SHAPE_ASPECT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCompositeDatumShapeAspectComposite {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) of_shape: u64,
+    pub(crate) product_definitional: crate::ir::geometry::Logical,
+}
+
+/// L1 `COMPOSITE_DATUM_SHAPE_ASPECT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyCompositeDatumShapeAspectGroup {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) of_shape: u64,
+    pub(crate) product_definitional: crate::ir::geometry::Logical,
+}
+
+/// L1 `COMPOSITE_DATUM_SHAPE_ASPECT` (generated, multi-case).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum EarlyCompositeDatumShapeAspect {
+    Composite(EarlyCompositeDatumShapeAspectComposite),
+    Group(EarlyCompositeDatumShapeAspectGroup),
+}
+
+/// Typed `id_cache` key for `COMPOSITE_DATUM_SHAPE_ASPECT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyCompositeDatumShapeAspectId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyCompositeDatumShapeAspectId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `CENTRE_OF_SYMMETRY` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyCentreOfSymmetry {

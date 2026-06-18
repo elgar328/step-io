@@ -7,16 +7,14 @@
 //! STEP entity name. The reader/writer bodies are shared here — only the
 //! entity name and target arena differ per handler.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
-use crate::ir::ProductId;
-use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
-use crate::ir::shape_rep::{CompositeGroupShapeAspect, CompositeShapeAspectKind};
+use crate::ir::shape_rep::CompositeShapeAspectKind;
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
-use crate::reader::{ReaderContext, has_all_parts, require_part_attrs};
+use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
-use crate::writer::entity::{WriterBody, WriterEntity};
 use step_io_macros::{step_entity, step_entity_complex};
 
 /// Resolved write input shared by all three subtype handlers.
@@ -25,28 +23,6 @@ pub(crate) struct ShapeAspectSubtypeWriteInput {
     pub(crate) description: String,
     pub(crate) pds_step_id: u64,
     pub(crate) product_definitional: bool,
-}
-
-/// Read the shared `SHAPE_ASPECT` 4-attr body and resolve `of_shape` to a
-/// `ProductId`. `Ok(None)` when the target ref does not resolve — the
-/// subtype is dropped, mirroring `ShapeAspectHandler`'s policy.
-fn read_shape_aspect_subtype(
-    ctx: &ReaderContext,
-    entity_id: u64,
-    attrs: &[Attribute],
-    entity_name: &'static str,
-) -> Result<Option<(String, String, ProductId, bool)>, ConvertError> {
-    check_count(attrs, 4, entity_id, entity_name)?;
-    let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-    let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-    let of_shape_ref = read_entity_ref(attrs, 2, entity_id, "of_shape")?;
-    let product_definitional = read_bool(attrs, 3, entity_id, "product_definitional")?;
-
-    // of_shape → PRODUCT_DEFINITION_SHAPE → ProductId (typed one-probe).
-    let Some(product_id) = ctx.product_of_pds(of_shape_ref) else {
-        return Ok(None);
-    };
-    Ok(Some((name, description, product_id, product_definitional)))
 }
 
 pub(crate) struct CompositeGroupShapeAspectHandler;
@@ -221,30 +197,8 @@ impl ComplexEntityHandler for CompositeDatumShapeAspectHandler {
         parts: &[RawEntityPart],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        // All four attributes live on the SHAPE_ASPECT part; the other leaves
-        // are `()`. Reuse the shared subtype body reader.
-        let attrs = require_part_attrs(parts, "SHAPE_ASPECT", entity_id)?;
-        let Some((name, description, target, product_definitional)) =
-            read_shape_aspect_subtype(ctx, entity_id, attrs, "SHAPE_ASPECT")?
-        else {
-            return Ok(());
-        };
-        let kind = if has_all_parts(parts, &["COMPOSITE_GROUP_SHAPE_ASPECT"]) {
-            CompositeShapeAspectKind::Group
-        } else {
-            CompositeShapeAspectKind::Composite
-        };
-        let id = ctx
-            .composite_group_shape_aspects
-            .push(CompositeGroupShapeAspect {
-                name,
-                description,
-                target,
-                product_definitional,
-                kind,
-                datum_feature: true,
-            });
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_composite_datum_shape_aspect(entity_id, parts)?;
+        lower::lower_composite_datum_shape_aspect(ctx, entity_id, early);
         Ok(())
     }
 
@@ -252,34 +206,15 @@ impl ComplexEntityHandler for CompositeDatumShapeAspectHandler {
         buf: &mut WriteBuffer,
         input: CompositeDatumShapeAspectWriteInput,
     ) -> Result<u64, WriteError> {
-        let bool_attr = if input.product_definitional { "T" } else { "F" };
-        // Composite leaf tags first (alphabetical, matching the source), then
-        // the data-bearing SHAPE_ASPECT part last.
-        let mut parts: Vec<(String, Vec<Attribute>)> = match input.kind {
-            CompositeShapeAspectKind::Composite => vec![
-                ("COMPOSITE_SHAPE_ASPECT".into(), vec![]),
-                ("DATUM_FEATURE".into(), vec![]),
-            ],
-            CompositeShapeAspectKind::Group => vec![
-                ("COMPOSITE_GROUP_SHAPE_ASPECT".into(), vec![]),
-                ("COMPOSITE_SHAPE_ASPECT".into(), vec![]),
-                ("DATUM_FEATURE".into(), vec![]),
-            ],
-        };
-        parts.push((
-            "SHAPE_ASPECT".into(),
-            vec![
-                Attribute::String(input.name),
-                Attribute::String(input.description),
-                Attribute::EntityRef(input.pds_step_id),
-                Attribute::Enum(bool_attr.into()),
-            ],
-        ));
-        let n = buf.fresh();
-        buf.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Complex { parts },
-        });
-        Ok(n)
+        let early = lift::lift_composite_datum_shape_aspect(
+            input.kind,
+            input.name,
+            input.description,
+            input.pds_step_id,
+            input.product_definitional,
+        );
+        Ok(serialize::serialize_composite_datum_shape_aspect(
+            buf, &early,
+        ))
     }
 }

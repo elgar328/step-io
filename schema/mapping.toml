@@ -139,6 +139,7 @@ generate = [
     "tolerance_zone",
     "composite_group_shape_aspect",
     "composite_shape_aspect",
+    "composite_datum_shape_aspect",
     "centre_of_symmetry",
     "all_around_shape_aspect",
     "placed_datum_target_feature",
@@ -587,6 +588,19 @@ parts = ["GEOMETRIC_REPRESENTATION_CONTEXT", "GLOBAL_UNIT_ASSIGNED_CONTEXT", "RE
 # lives on the REPRESENTATION part; CHARACTERIZED_OBJECT's name/description are
 # `(*,*)` (part-qualified derived). part order = alphabetical = the hand
 # WriterBody::Complex order so re-read re-dispatches to the same case.
+# AND-combined SHAPE_ASPECT subtype that is simultaneously a COMPOSITE_(GROUP_)
+# SHAPE_ASPECT and a DATUM_FEATURE. All data lives on the SHAPE_ASPECT part; the
+# other leaves are empty `()`. composite ⊂ group (group adds COMPOSITE_GROUP_
+# SHAPE_ASPECT) → `match_parts` exact-set dispatch. part order = alphabetical =
+# the hand WriterBody::Complex order so re-read re-dispatches to the same case.
+[complex.composite_datum_shape_aspect.cases.composite]
+parts = ["COMPOSITE_SHAPE_ASPECT", "DATUM_FEATURE", "SHAPE_ASPECT"]
+match_parts = ["COMPOSITE_SHAPE_ASPECT", "DATUM_FEATURE", "SHAPE_ASPECT"]
+
+[complex.composite_datum_shape_aspect.cases.group]
+parts = ["COMPOSITE_GROUP_SHAPE_ASPECT", "COMPOSITE_SHAPE_ASPECT", "DATUM_FEATURE", "SHAPE_ASPECT"]
+match_parts = ["COMPOSITE_GROUP_SHAPE_ASPECT", "COMPOSITE_SHAPE_ASPECT", "DATUM_FEATURE", "SHAPE_ASPECT"]
+
 [complex.characterized_object_complex.cases.characterized]
 parts = ["CHARACTERIZED_OBJECT", "CHARACTERIZED_REPRESENTATION", "DRAUGHTING_MODEL", "REPRESENTATION"]
 match_parts = ["CHARACTERIZED_OBJECT", "CHARACTERIZED_REPRESENTATION", "DRAUGHTING_MODEL", "REPRESENTATION"]

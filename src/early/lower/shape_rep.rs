@@ -11,12 +11,12 @@
 use crate::early::model::{
     EarlyAdvancedBrepShapeRepresentation, EarlyAllAroundShapeAspect, EarlyCameraImage,
     EarlyCameraImage3dWithScale, EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
-    EarlyCharacterizedObjectComplex, EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect,
-    EarlyCompoundItemDefinition, EarlyCompoundRepresentationItem,
-    EarlyConstructiveGeometryRepresentation, EarlyConstructiveGeometryRepresentationRelationship,
-    EarlyDatumSystem, EarlyDatumTarget, EarlyDefaultModelGeometricView,
-    EarlyDescriptiveRepresentationItem, EarlyDraughtingModel, EarlyGeometricItemSpecificUsage,
-    EarlyGeometricallyBoundedSurfaceShapeRepresentation,
+    EarlyCharacterizedObjectComplex, EarlyCompositeDatumShapeAspect,
+    EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect, EarlyCompoundItemDefinition,
+    EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
+    EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
+    EarlyDefaultModelGeometricView, EarlyDescriptiveRepresentationItem, EarlyDraughtingModel,
+    EarlyGeometricItemSpecificUsage, EarlyGeometricallyBoundedSurfaceShapeRepresentation,
     EarlyGeometricallyBoundedWireframeShapeRepresentation, EarlyGlobalUnitAssignedContext,
     EarlyIntegerRepresentationItem, EarlyItemDefinedTransformation,
     EarlyItemIdentifiedRepresentationUsage, EarlyItemIdentifiedRepresentationUsageSelect,
@@ -525,6 +525,50 @@ pub(crate) fn lower_composite_shape_aspect(
             product_definitional,
             kind: CompositeShapeAspectKind::Composite,
             datum_feature: false,
+        });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `COMPOSITE_DATUM_SHAPE_ASPECT` — AND-combined `SHAPE_ASPECT` subtype
+/// that is simultaneously a `DATUM_FEATURE`; data lives on the `SHAPE_ASPECT` leaf.
+/// Shares the `composite_group_shape_aspects` arena with the plain composite
+/// subtypes, tagged `datum_feature = true` so the writer re-emits the multi-leaf
+/// `(COMPOSITE_(GROUP_)SHAPE_ASPECT DATUM_FEATURE SHAPE_ASPECT)` form.
+pub(crate) fn lower_composite_datum_shape_aspect(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyCompositeDatumShapeAspect,
+) {
+    let (kind, name, of_shape, product_definitional, description) = match early {
+        EarlyCompositeDatumShapeAspect::Composite(c) => (
+            CompositeShapeAspectKind::Composite,
+            c.name,
+            c.of_shape,
+            c.product_definitional,
+            c.description,
+        ),
+        EarlyCompositeDatumShapeAspect::Group(g) => (
+            CompositeShapeAspectKind::Group,
+            g.name,
+            g.of_shape,
+            g.product_definitional,
+            g.description,
+        ),
+    };
+    let Some((target, product_definitional, description)) =
+        lower_sa_subtype_common(ctx, of_shape, product_definitional, description)
+    else {
+        return;
+    };
+    let id = ctx
+        .composite_group_shape_aspects
+        .push(CompositeGroupShapeAspect {
+            name,
+            description,
+            target,
+            product_definitional,
+            kind,
+            datum_feature: true,
         });
     ctx.id_cache.insert(entity_id, id);
 }

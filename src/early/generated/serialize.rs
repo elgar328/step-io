@@ -2538,6 +2538,51 @@ pub(crate) fn serialize_composite_shape_aspect(
     )
 }
 
+pub(crate) fn serialize_composite_datum_shape_aspect(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCompositeDatumShapeAspect,
+) -> u64 {
+    match l1 {
+        super::model::EarlyCompositeDatumShapeAspect::Composite(l1) => buf.push_complex(vec![
+            ("COMPOSITE_SHAPE_ASPECT".into(), vec![]),
+            ("DATUM_FEATURE".into(), vec![]),
+            (
+                "SHAPE_ASPECT".into(),
+                vec![
+                    crate::parser::entity::Attribute::String(l1.name.clone()),
+                    match &l1.description {
+                        Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                        None => crate::parser::entity::Attribute::Unset,
+                    },
+                    crate::parser::entity::Attribute::EntityRef(l1.of_shape),
+                    crate::parser::entity::Attribute::Enum(
+                        crate::ir::attr::logical_to_step(l1.product_definitional).into(),
+                    ),
+                ],
+            ),
+        ]),
+        super::model::EarlyCompositeDatumShapeAspect::Group(l1) => buf.push_complex(vec![
+            ("COMPOSITE_GROUP_SHAPE_ASPECT".into(), vec![]),
+            ("COMPOSITE_SHAPE_ASPECT".into(), vec![]),
+            ("DATUM_FEATURE".into(), vec![]),
+            (
+                "SHAPE_ASPECT".into(),
+                vec![
+                    crate::parser::entity::Attribute::String(l1.name.clone()),
+                    match &l1.description {
+                        Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                        None => crate::parser::entity::Attribute::Unset,
+                    },
+                    crate::parser::entity::Attribute::EntityRef(l1.of_shape),
+                    crate::parser::entity::Attribute::Enum(
+                        crate::ir::attr::logical_to_step(l1.product_definitional).into(),
+                    ),
+                ],
+            ),
+        ]),
+    }
+}
+
 pub(crate) fn serialize_centre_of_symmetry(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyCentreOfSymmetry,

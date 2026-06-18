@@ -6,11 +6,12 @@ use crate::early::model::{
     EarlyCameraImage3dWithScale, EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
     EarlyCharacterizedObjectComplex, EarlyCharacterizedObjectComplexCharacterized,
     EarlyCharacterizedObjectComplexCharacterizedShapeTessellated,
-    EarlyCharacterizedObjectComplexShapeTessellated, EarlyCompositeGroupShapeAspect,
-    EarlyCompositeShapeAspect, EarlyCompoundItemDefinition, EarlyCompoundRepresentationItem,
-    EarlyConstructiveGeometryRepresentation, EarlyConstructiveGeometryRepresentationRelationship,
-    EarlyDatumSystem, EarlyDatumTarget, EarlyDefaultModelGeometricView,
-    EarlyDescriptiveRepresentationItem, EarlyDraughtingModel,
+    EarlyCharacterizedObjectComplexShapeTessellated, EarlyCompositeDatumShapeAspect,
+    EarlyCompositeDatumShapeAspectComposite, EarlyCompositeDatumShapeAspectGroup,
+    EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect, EarlyCompoundItemDefinition,
+    EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
+    EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
+    EarlyDefaultModelGeometricView, EarlyDescriptiveRepresentationItem, EarlyDraughtingModel,
     EarlyFeatureForDatumTargetRelationship, EarlyGeometricItemSpecificUsage,
     EarlyGeometricallyBoundedSurfaceShapeRepresentation,
     EarlyGeometricallyBoundedWireframeShapeRepresentation, EarlyGlobalUnitAssignedContext,
@@ -35,9 +36,9 @@ use crate::entities::SimpleEntityHandler;
 use crate::entities::shape_rep::descriptive_representation_item::DescriptiveRepresentationItemHandler;
 use crate::ir::representation_item::{MeasureValue, ValueRepresentationItem};
 use crate::ir::shape_rep::{
-    CompoundItem, CompoundItemKind, CompoundRepresentationItem, ConstructiveGeometryRepr,
-    DimensionItem, DraughtingModelForm, IiruDefinition, IiruIdentifiedItem,
-    ItemIdentifiedRepresentationUsage, Mdgpr, ShapeDimensionRepresentation,
+    CompositeShapeAspectKind, CompoundItem, CompoundItemKind, CompoundRepresentationItem,
+    ConstructiveGeometryRepr, DimensionItem, DraughtingModelForm, IiruDefinition,
+    IiruIdentifiedItem, ItemIdentifiedRepresentationUsage, Mdgpr, ShapeDimensionRepresentation,
     ShapeRepresentationWithParameters, SrwpItem, TessellatedShapeRepresentation, UnitContext,
     UnitContextForm, UnitlessContext,
 };
@@ -357,6 +358,36 @@ pub(crate) fn lift_composite_shape_aspect(
         description: Some(description),
         of_shape,
         product_definitional: bool_to_logical(product_definitional),
+    }
+}
+
+/// Lift one `COMPOSITE_DATUM_SHAPE_ASPECT` — pick the case variant from `kind`;
+/// the empty leaf parts are emitted by the generated serialize.
+pub(crate) fn lift_composite_datum_shape_aspect(
+    kind: CompositeShapeAspectKind,
+    name: String,
+    description: String,
+    of_shape: u64,
+    product_definitional: bool,
+) -> EarlyCompositeDatumShapeAspect {
+    let product_definitional = bool_to_logical(product_definitional);
+    match kind {
+        CompositeShapeAspectKind::Composite => {
+            EarlyCompositeDatumShapeAspect::Composite(EarlyCompositeDatumShapeAspectComposite {
+                name,
+                description: Some(description),
+                of_shape,
+                product_definitional,
+            })
+        }
+        CompositeShapeAspectKind::Group => {
+            EarlyCompositeDatumShapeAspect::Group(EarlyCompositeDatumShapeAspectGroup {
+                name,
+                description: Some(description),
+                of_shape,
+                product_definitional,
+            })
+        }
     }
 }
 
