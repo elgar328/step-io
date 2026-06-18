@@ -7,7 +7,7 @@ use crate::early::model::{
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect, EarlyCompoundItemDefinition,
     EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
-    EarlyDefaultModelGeometricView, EarlyDescriptiveRepresentationItem,
+    EarlyDefaultModelGeometricView, EarlyDescriptiveRepresentationItem, EarlyDraughtingModel,
     EarlyFeatureForDatumTargetRelationship, EarlyGeometricItemSpecificUsage,
     EarlyGeometricallyBoundedSurfaceShapeRepresentation,
     EarlyGeometricallyBoundedWireframeShapeRepresentation, EarlyGlobalUnitAssignedContext,
@@ -155,6 +155,19 @@ pub(crate) fn lift_integer_representation_item(
     the_value: i64,
 ) -> EarlyIntegerRepresentationItem {
     EarlyIntegerRepresentationItem { name, the_value }
+}
+
+/// Lift one plain `DRAUGHTING_MODEL` (`Form::Simple`) from pre-resolved step ids.
+pub(crate) fn lift_draughting_model(
+    name: String,
+    items: Vec<u64>,
+    context_of_items: u64,
+) -> EarlyDraughtingModel {
+    EarlyDraughtingModel {
+        name,
+        items,
+        context_of_items,
+    }
 }
 
 /// Lift one `DATUM_TARGET` (`of_shape` pre-resolved to the PDS step id;

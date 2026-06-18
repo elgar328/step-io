@@ -572,6 +572,29 @@ impl crate::ir::arena::ArenaId for EarlyIntegerRepresentationItemId {
     }
 }
 
+/// L1 `DRAUGHTING_MODEL` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDraughtingModel {
+    pub(crate) name: String,
+    pub(crate) items: Vec<u64>,
+    pub(crate) context_of_items: u64,
+}
+
+/// Typed `id_cache` key for `DRAUGHTING_MODEL` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDraughtingModelId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDraughtingModelId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `APPROVAL_ROLE` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyApprovalRole {

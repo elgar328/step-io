@@ -14,7 +14,7 @@ use crate::early::model::{
     EarlyCompositeGroupShapeAspect, EarlyCompositeShapeAspect, EarlyCompoundItemDefinition,
     EarlyCompoundRepresentationItem, EarlyConstructiveGeometryRepresentation,
     EarlyConstructiveGeometryRepresentationRelationship, EarlyDatumSystem, EarlyDatumTarget,
-    EarlyDefaultModelGeometricView, EarlyDescriptiveRepresentationItem,
+    EarlyDefaultModelGeometricView, EarlyDescriptiveRepresentationItem, EarlyDraughtingModel,
     EarlyGeometricItemSpecificUsage, EarlyGeometricallyBoundedSurfaceShapeRepresentation,
     EarlyGeometricallyBoundedWireframeShapeRepresentation, EarlyGlobalUnitAssignedContext,
     EarlyIntegerRepresentationItem, EarlyItemDefinedTransformation,
@@ -42,12 +42,13 @@ use crate::ir::shape_rep::{
     CompositeGroupShapeAspect, CompositeShapeAspectKind, CompoundItem, CompoundItemElement,
     CompoundItemKind, CompoundRepresentationItem, ConstructiveGeometryRepr,
     ConstructiveGeometryRepresentationRelationship, DatumSystem, DatumTarget,
-    DefaultModelGeometricView, GeometricItemSpecificUsage, IiruDefinition, IiruIdentifiedItem,
-    IntegerRepresentationItem, ItemIdentifiedRepresentationUsage, ManifoldSurfaceRepr, MappedItem,
-    MappedItemData, MappedRepresentationRef, Mdgpr, MechanicalDesignAndDraughtingRelationship,
-    ModelGeometricView, NumericRepresentationItem, PlacedDatumTargetFeature, PlainRepr,
-    RealRepresentationItem, Representation, RepresentationContextRef, RepresentationMap,
-    RepresentationMapData, RepresentationRelationship, RepresentationRelationshipData, ShapeAspect,
+    DefaultModelGeometricView, DraughtingModel, DraughtingModelForm, GeometricItemSpecificUsage,
+    IiruDefinition, IiruIdentifiedItem, IntegerRepresentationItem,
+    ItemIdentifiedRepresentationUsage, ManifoldSurfaceRepr, MappedItem, MappedItemData,
+    MappedRepresentationRef, Mdgpr, MechanicalDesignAndDraughtingRelationship, ModelGeometricView,
+    NumericRepresentationItem, PlacedDatumTargetFeature, PlainRepr, RealRepresentationItem,
+    Representation, RepresentationContextRef, RepresentationMap, RepresentationMapData,
+    RepresentationRelationship, RepresentationRelationshipData, ShapeAspect,
     ShapeAspectRelationship, ShapeAspectRelationshipKind, ShapeDimensionRepresentation,
     ShapeRepresentationRelationshipIr, ShapeRepresentationWithParameters, SrwpItem,
     TessellatedShapeRepresentation, ToleranceZone, UnitContext, UnitContextForm, UnitlessContext,
@@ -866,6 +867,51 @@ pub(crate) fn lower_constructive_geometry_representation(
                 context: Some(context),
             },
         ));
+    ctx.id_cache.insert(entity_id, repr_id);
+}
+
+/// Lower one plain `DRAUGHTING_MODEL` (`Form::Simple`). `representation` subtype
+/// — resolves items via the generic ref helper (unresolved skipped); a model
+/// that listed items but resolved none is dropped with a warning, an empty `()`
+/// SET is kept. `context_of_items` is schema-required; an unresolvable context
+/// drops the carrier (schema-strict drop-on-None; the complex-MI forms are
+/// lowered by `lower_characterized_object_complex`).
+pub(crate) fn lower_draughting_model(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyDraughtingModel,
+) {
+    let Some(context) = ctx.resolve_repr_context(early.context_of_items) else {
+        return;
+    };
+    if let RepresentationContextRef::Unitful(ctx_id) = context {
+        ctx.repr_context_map.insert(entity_id, ctx_id);
+    }
+    let had_item_refs = !early.items.is_empty();
+    let items: Vec<_> = early
+        .items
+        .iter()
+        .filter_map(|&r| {
+            crate::entities::visualization::styled_item::resolve_representation_item_ref(ctx, r)
+        })
+        .collect();
+    if items.is_empty() && had_item_refs {
+        ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: String::from(
+                "DRAUGHTING_MODEL dropped: no items resolved to a modelled representation_item",
+            ),
+        });
+        return;
+    }
+    let repr_id = ctx
+        .representations
+        .push(Representation::DraughtingModel(DraughtingModel {
+            name: early.name,
+            items,
+            context: Some(context),
+            form: DraughtingModelForm::Simple,
+        }));
     ctx.id_cache.insert(entity_id, repr_id);
 }
 

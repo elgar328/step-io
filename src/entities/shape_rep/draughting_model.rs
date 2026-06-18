@@ -12,13 +12,11 @@
 //! `emit_draughting_models` after every item-ref cache has been
 //! populated.
 
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::entities::visualization::styled_item::resolve_representation_item_ref;
-use crate::ir::attr::{
-    check_count, read_entity_ref_list, read_optional_entity_ref, read_string_or_unset,
-};
+use crate::ir::attr::check_count;
 use crate::ir::error::ConvertError;
-use crate::ir::shape_rep::{DraughtingModel, DraughtingModelForm, Representation};
+use crate::ir::shape_rep::{DraughtingModel, DraughtingModelForm};
 use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
@@ -38,48 +36,8 @@ impl SimpleEntityHandler for DraughtingModelHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 3, entity_id, "DRAUGHTING_MODEL")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let item_refs = read_entity_ref_list(attrs, 1, entity_id, "items")?;
-        // `context_of_items` is optional on re-read: the writer emits `$`
-        // when the source context was a non-modelled complex (e.g. a 2D
-        // `GEOMETRIC_REPRESENTATION_CONTEXT` + `PARAMETRIC_REPRESENTATION_CONTEXT`
-        // wrapper without `global_unit_assigned_context`). Accept both
-        // forms so round-trip is symmetric.
-        let ctx_ref_opt = read_optional_entity_ref(attrs, 2, entity_id, "context_of_items")?;
-        let context = ctx_ref_opt.and_then(|r| ctx.resolve_repr_context(r));
-        if let Some(crate::ir::shape_rep::RepresentationContextRef::Unitful(ctx_id)) = context {
-            ctx.repr_context_map.insert(entity_id, ctx_id);
-        }
-        let had_item_refs = !item_refs.is_empty();
-        let mut items = Vec::with_capacity(item_refs.len());
-        for r in item_refs {
-            if let Some(item) = resolve_representation_item_ref(ctx, r) {
-                items.push(item);
-            }
-        }
-        if items.is_empty() && had_item_refs {
-            // The model listed items but none resolved to a modelled
-            // representation_item — the whole DRAUGHTING_MODEL is dropped.
-            // Surface it rather than dropping silently.
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: String::from(
-                    "DRAUGHTING_MODEL dropped: no items resolved to a modelled representation_item",
-                ),
-            });
-            return Ok(());
-        }
-        // A genuinely empty `items` SET (source had `()`) is schema-legal and
-        // preserved as an empty draughting model.
-        let repr_id = ctx
-            .representations
-            .push(Representation::DraughtingModel(DraughtingModel {
-                name,
-                items,
-                context,
-                form: DraughtingModelForm::Simple,
-            }));
-        ctx.id_cache.insert(entity_id, repr_id);
+        let early = bind::bind_draughting_model(entity_id, attrs)?;
+        lower::lower_draughting_model(ctx, entity_id, early);
         Ok(())
     }
 
@@ -188,14 +146,22 @@ impl SimpleEntityHandler for DraughtingModelHandler {
                 });
                 Ok(n)
             }
-            DraughtingModelForm::Simple => Ok(buf.push_simple(
-                "DRAUGHTING_MODEL",
-                vec![
-                    Attribute::String(dm.name),
-                    Attribute::List(item_refs),
-                    ctx_attr,
-                ],
-            )),
+            DraughtingModelForm::Simple => {
+                let Attribute::EntityRef(ctx_step) = ctx_attr else {
+                    unreachable!(
+                        "DRAUGHTING_MODEL context guaranteed resolved by lower → EntityRef"
+                    )
+                };
+                let items: Vec<u64> = item_refs
+                    .into_iter()
+                    .map(|a| match a {
+                        Attribute::EntityRef(s) => s,
+                        _ => unreachable!("item refs are EntityRef"),
+                    })
+                    .collect();
+                let early = lift::lift_draughting_model(dm.name, items, ctx_step);
+                Ok(serialize::serialize_draughting_model(buf, &early))
+            }
         }
     }
 }

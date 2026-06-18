@@ -465,6 +465,25 @@ pub(crate) fn serialize_integer_representation_item(
     )
 }
 
+pub(crate) fn serialize_draughting_model(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDraughtingModel,
+) -> u64 {
+    buf.push_simple(
+        "DRAUGHTING_MODEL",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.items
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::EntityRef(l1.context_of_items),
+        ],
+    )
+}
+
 pub(crate) fn serialize_approval_role(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyApprovalRole,

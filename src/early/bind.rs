@@ -40,7 +40,7 @@ pub(crate) use super::generated::bind::{
     bind_dimensional_location, bind_dimensional_size, bind_directed_dimensional_location,
     bind_direction, bind_document, bind_document_file, bind_document_product_equivalence,
     bind_document_representation_type, bind_document_type, bind_draughting_annotation_occurrence,
-    bind_draughting_callout, bind_draughting_pre_defined_colour,
+    bind_draughting_callout, bind_draughting_model, bind_draughting_pre_defined_colour,
     bind_draughting_pre_defined_curve_font, bind_edge_curve, bind_edge_loop, bind_ellipse,
     bind_external_source, bind_face_bound, bind_face_outer_bound, bind_face_surface,
     bind_feature_for_datum_target_relationship, bind_fill_area_style, bind_fill_area_style_colour,
