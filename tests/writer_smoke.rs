@@ -6675,7 +6675,9 @@ fn annotation_placeholder_occurrence_round_trip() {
     // role enum token + line_spacing measure preserved.
     use step_io::ir::PmiPool;
     use step_io::ir::geometry::{Plane3, Surface};
-    use step_io::ir::pmi::{AnnotationOccurrence, AnnotationPlaceholderOccurrence};
+    use step_io::ir::pmi::{
+        AnnotationOccurrence, AnnotationPlaceholderOccurrence, AnnotationPlaceholderOccurrenceRole,
+    };
     use step_io::ir::representation_item::RepresentationItemRef;
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
@@ -6693,7 +6695,7 @@ fn annotation_placeholder_occurrence_round_trip() {
                 name: "Note (195)".into(),
                 styles: vec![],
                 item: RepresentationItemRef::Surface(surf),
-                role: "GPS_DATA".into(),
+                role: AnnotationPlaceholderOccurrenceRole::GpsData,
                 line_spacing: 4.889_495_205_134_15,
             },
         ));
@@ -6709,7 +6711,7 @@ fn annotation_placeholder_occurrence_round_trip() {
         panic!("expected AnnotationPlaceholderOccurrence");
     };
     assert_eq!(apo.name, "Note (195)");
-    assert_eq!(apo.role, "GPS_DATA");
+    assert_eq!(apo.role, AnnotationPlaceholderOccurrenceRole::GpsData);
     assert!((apo.line_spacing - 4.889_495_205_134_15).abs() < 1e-12);
 }
 
@@ -6720,7 +6722,7 @@ fn leader_line_cluster_round_trip() {
     use step_io::ir::PmiPool;
     use step_io::ir::geometry::{Plane3, Point3, Surface};
     use step_io::ir::pmi::{
-        AnnotationOccurrence, AnnotationPlaceholderLeaderLine,
+        AnnotationOccurrence, AnnotationPlaceholderLeaderLine, AnnotationPlaceholderOccurrenceRole,
         AnnotationPlaceholderOccurrenceWithLeaderLine, AnnotationToModelLeaderLine, ApllPointData,
         ApllPointElement,
     };
@@ -6768,7 +6770,7 @@ fn leader_line_cluster_round_trip() {
                 name: "Flatness.1".into(),
                 styles: vec![],
                 item: RepresentationItemRef::Surface(surf),
-                role: "GPS_DATA".into(),
+                role: AnnotationPlaceholderOccurrenceRole::GpsData,
                 line_spacing: 7.0,
                 leader_line: vec![leader],
             },
@@ -6917,8 +6919,9 @@ fn dmia_with_placeholder_round_trip() {
     use step_io::ir::PmiPool;
     use step_io::ir::geometry::{Plane3, Surface};
     use step_io::ir::pmi::{
-        AnnotationOccurrence, AnnotationPlaceholderOccurrence, DraughtingModelIdentifiedItem,
-        DraughtingModelItemAssociation, DraughtingModelItemDefinition,
+        AnnotationOccurrence, AnnotationPlaceholderOccurrence, AnnotationPlaceholderOccurrenceRole,
+        DraughtingModelIdentifiedItem, DraughtingModelItemAssociation,
+        DraughtingModelItemDefinition,
     };
     use step_io::ir::representation_item::RepresentationItemRef;
     use step_io::ir::shape_rep::{PlainRepr, Representation};
@@ -6937,7 +6940,7 @@ fn dmia_with_placeholder_round_trip() {
                     name: "Note (195)".into(),
                     styles: vec![],
                     item: RepresentationItemRef::Surface(surf),
-                    role: "GPS_DATA".into(),
+                    role: AnnotationPlaceholderOccurrenceRole::GpsData,
                     line_spacing: 1.5,
                 },
             ));

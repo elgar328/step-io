@@ -265,6 +265,9 @@ generate = [
     "draughting_annotation_occurrence",
     "annotation_symbol_occurrence",
     "annotation_curve_occurrence",
+    # PMI simple — annotation placeholder occurrences (role enum)
+    "annotation_placeholder_occurrence",
+    "annotation_placeholder_occurrence_with_leader_line",
     # Phase 3f: PMI simple — annotation plane (+ OPTIONAL SET elements, dropped)
     "annotation_plane",
     # Phase 3g: visualization simple — camera model d3 (+ hlhsr boolean subtype)
@@ -742,3 +745,11 @@ variants = { plane_surf = "PlaneSurf", cylindrical_surf = "CylindricalSurf", con
 [enum.preferred_surface_curve_representation]
 rust_type = "crate::ir::geometry::PreferredSurfaceCurveRepresentation"
 variants = { curve_3d = "Curve3d", pcurve_s1 = "PcurveS1", pcurve_s2 = "PcurveS2" }
+
+# `annotation_placeholder_occurrence_role` (ANNOTATION_PLACEHOLDER_OCCURRENCE
+# [_WITH_LEADER_LINE].role). Strict: off-schema token is non-standard input,
+# dropped (NonStandardEnumValue → NORM). The L2 String was promoted to this
+# closed 2-member enum.
+[enum.annotation_placeholder_occurrence_role]
+rust_type = "crate::ir::pmi::AnnotationPlaceholderOccurrenceRole"
+variants = { annotation_text = "AnnotationText", gps_data = "GpsData" }

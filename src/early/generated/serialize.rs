@@ -4542,6 +4542,54 @@ pub(crate) fn serialize_annotation_curve_occurrence(
     )
 }
 
+pub(crate) fn serialize_annotation_placeholder_occurrence(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAnnotationPlaceholderOccurrence,
+) -> u64 {
+    buf.push_simple(
+        "ANNOTATION_PLACEHOLDER_OCCURRENCE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.styles
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::EntityRef(l1.item),
+            annotation_placeholder_occurrence_role_attr(l1.role),
+            crate::parser::entity::Attribute::Real(l1.line_spacing),
+        ],
+    )
+}
+
+pub(crate) fn serialize_annotation_placeholder_occurrence_with_leader_line(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAnnotationPlaceholderOccurrenceWithLeaderLine,
+) -> u64 {
+    buf.push_simple(
+        "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.styles
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::EntityRef(l1.item),
+            annotation_placeholder_occurrence_role_attr(l1.role),
+            crate::parser::entity::Attribute::Real(l1.line_spacing),
+            crate::parser::entity::Attribute::List(
+                l1.leader_line
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
 pub(crate) fn serialize_annotation_plane(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyAnnotationPlane,
@@ -6233,6 +6281,20 @@ fn angle_relator_attr(v: crate::ir::pmi::AngleSelection) -> crate::parser::entit
             crate::ir::pmi::AngleSelection::Equal => "EQUAL",
             crate::ir::pmi::AngleSelection::Large => "LARGE",
             crate::ir::pmi::AngleSelection::Small => "SMALL",
+        }
+        .into(),
+    )
+}
+
+fn annotation_placeholder_occurrence_role_attr(
+    v: crate::ir::pmi::AnnotationPlaceholderOccurrenceRole,
+) -> crate::parser::entity::Attribute {
+    crate::parser::entity::Attribute::Enum(
+        match v {
+            crate::ir::pmi::AnnotationPlaceholderOccurrenceRole::AnnotationText => {
+                "ANNOTATION_TEXT"
+            }
+            crate::ir::pmi::AnnotationPlaceholderOccurrenceRole::GpsData => "GPS_DATA",
         }
         .into(),
     )

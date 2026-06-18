@@ -7,24 +7,23 @@
 
 use crate::early::{bind, lift, lower, serialize};
 use crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_ref;
-use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::GeometricToleranceTarget;
 use crate::ir::PmiPool;
 use crate::ir::ShapeAspectRef;
 use crate::ir::attr::{
-    check_count, read_bool, read_entity_ref, read_entity_ref_list, read_enum, read_real,
-    read_real_list, read_string_or_unset,
+    check_count, read_bool, read_entity_ref, read_entity_ref_list, read_enum, read_real_list,
+    read_string_or_unset,
 };
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::Point3;
 use crate::ir::pmi::{
-    AnnotationOccurrence, AnnotationOccurrenceAssociativity, AnnotationOccurrenceRef,
-    AnnotationPlaceholderLeaderLine, AnnotationPlaceholderOccurrence,
-    AnnotationPlaceholderOccurrenceWithLeaderLine, AnnotationPlane, AnnotationSymbolOccurrence,
-    AnnotationTextOccurrence, AnnotationToModelLeaderLine, ApllPointData, ApllPointElement,
-    ApllPointWithSurfaceData, AuxiliaryLeaderLineData, DatumFeature, DimensionalCharacteristic,
-    DimensionalLocation, DimensionalSize, DimensionalSizeKind, DimensionalSizeWithDatumFeatureData,
+    AnnotationOccurrenceAssociativity, AnnotationOccurrenceRef, AnnotationPlaceholderLeaderLine,
+    AnnotationPlaceholderOccurrence, AnnotationPlaceholderOccurrenceWithLeaderLine,
+    AnnotationPlane, AnnotationSymbolOccurrence, AnnotationTextOccurrence,
+    AnnotationToModelLeaderLine, ApllPointData, ApllPointElement, ApllPointWithSurfaceData,
+    AuxiliaryLeaderLineData, DatumFeature, DimensionalCharacteristic, DimensionalLocation,
+    DimensionalSize, DimensionalSizeKind, DimensionalSizeWithDatumFeatureData,
     DraughtingAnnotationOccurrence, DraughtingCalloutData, DraughtingCalloutElement,
     DraughtingCalloutRelationship, DraughtingModelIdentifiedItem, DraughtingModelItemAssociation,
     DraughtingModelItemDefinition, DraughtingPreDefinedTextFont, GeneralDatumBase,
@@ -641,40 +640,8 @@ impl SimpleEntityHandler for AnnotationPlaceholderOccurrenceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 5, entity_id, "ANNOTATION_PLACEHOLDER_OCCURRENCE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-        let role = read_enum(attrs, 3, entity_id, "role")?.to_owned();
-        let line_spacing = read_real(attrs, 4, entity_id, "line_spacing")?;
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(psa_id) = ctx
-                .id_cache
-                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
-            {
-                styles.push(psa_id);
-            }
-        }
-        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
-            return Ok(());
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_occurrences
-            .push(AnnotationOccurrence::AnnotationPlaceholderOccurrence(
-                AnnotationPlaceholderOccurrence {
-                    name,
-                    styles,
-                    item,
-                    role,
-                    line_spacing,
-                },
-            ));
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_annotation_placeholder_occurrence(entity_id, attrs)?;
+        lower::lower_annotation_placeholder_occurrence(ctx, entity_id, early);
         Ok(())
     }
 
@@ -683,19 +650,16 @@ impl SimpleEntityHandler for AnnotationPlaceholderOccurrenceHandler {
         apo: AnnotationPlaceholderOccurrence,
     ) -> Result<u64, WriteError> {
         let item_id = buf.emit_representation_item_ref(apo.item)?;
-        let mut style_refs = Vec::with_capacity(apo.styles.len());
-        for psa_id in apo.styles {
-            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
-        }
-        Ok(buf.push_simple(
-            "ANNOTATION_PLACEHOLDER_OCCURRENCE",
-            vec![
-                Attribute::String(apo.name),
-                Attribute::List(style_refs),
-                Attribute::EntityRef(item_id),
-                Attribute::Enum(apo.role),
-                Attribute::Real(apo.line_spacing),
-            ],
+        let style_refs = apo.styles.iter().map(|&psa| buf.step_id(psa)).collect();
+        let early = lift::lift_annotation_placeholder_occurrence(
+            apo.name,
+            style_refs,
+            item_id,
+            apo.role,
+            apo.line_spacing,
+        );
+        Ok(serialize::serialize_annotation_placeholder_occurrence(
+            buf, &early,
         ))
     }
 }
@@ -717,58 +681,9 @@ impl SimpleEntityHandler for AnnotationPlaceholderOccurrenceWithLeaderLineHandle
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(
-            attrs,
-            6,
-            entity_id,
-            "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
-        )?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-        let role = read_enum(attrs, 3, entity_id, "role")?.to_owned();
-        let line_spacing = read_real(attrs, 4, entity_id, "line_spacing")?;
-        let leader_refs = read_entity_ref_list(attrs, 5, entity_id, "leader_line")?;
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(psa_id) = ctx
-                .id_cache
-                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
-            {
-                styles.push(psa_id);
-            }
-        }
-        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
-            return Ok(());
-        };
-        let mut leader_line = Vec::with_capacity(leader_refs.len());
-        for r in leader_refs {
-            if let Some(id) = ctx
-                .id_cache
-                .get::<crate::ir::id::AnnotationPlaceholderLeaderLineId>(r)
-            {
-                leader_line.push(id);
-            }
-        }
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_occurrences
-            .push(
-                AnnotationOccurrence::AnnotationPlaceholderOccurrenceWithLeaderLine(
-                    AnnotationPlaceholderOccurrenceWithLeaderLine {
-                        name,
-                        styles,
-                        item,
-                        role,
-                        line_spacing,
-                        leader_line,
-                    },
-                ),
-            );
-        ctx.id_cache.insert(entity_id, id);
+        let early =
+            bind::bind_annotation_placeholder_occurrence_with_leader_line(entity_id, attrs)?;
+        lower::lower_annotation_placeholder_occurrence_with_leader_line(ctx, entity_id, early);
         Ok(())
     }
 
@@ -777,26 +692,17 @@ impl SimpleEntityHandler for AnnotationPlaceholderOccurrenceWithLeaderLineHandle
         apo: AnnotationPlaceholderOccurrenceWithLeaderLine,
     ) -> Result<u64, WriteError> {
         let item_id = buf.emit_representation_item_ref(apo.item)?;
-        let mut style_refs = Vec::with_capacity(apo.styles.len());
-        for psa_id in apo.styles {
-            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
-        }
-        let leader_refs = apo
-            .leader_line
-            .iter()
-            .map(|id| Attribute::EntityRef(buf.step_id(id)))
-            .collect();
-        Ok(buf.push_simple(
-            "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
-            vec![
-                Attribute::String(apo.name),
-                Attribute::List(style_refs),
-                Attribute::EntityRef(item_id),
-                Attribute::Enum(apo.role),
-                Attribute::Real(apo.line_spacing),
-                Attribute::List(leader_refs),
-            ],
-        ))
+        let style_refs = apo.styles.iter().map(|&psa| buf.step_id(psa)).collect();
+        let leader_line = apo.leader_line.iter().map(|id| buf.step_id(id)).collect();
+        let early = lift::lift_annotation_placeholder_occurrence_with_leader_line(
+            apo.name,
+            style_refs,
+            item_id,
+            apo.role,
+            apo.line_spacing,
+            leader_line,
+        );
+        Ok(serialize::serialize_annotation_placeholder_occurrence_with_leader_line(buf, &early))
     }
 }
 

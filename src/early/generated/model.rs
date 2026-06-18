@@ -5380,6 +5380,57 @@ impl crate::ir::arena::ArenaId for EarlyAnnotationCurveOccurrenceId {
     }
 }
 
+/// L1 `ANNOTATION_PLACEHOLDER_OCCURRENCE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAnnotationPlaceholderOccurrence {
+    pub(crate) name: String,
+    pub(crate) styles: Vec<u64>,
+    pub(crate) item: u64,
+    pub(crate) role: crate::ir::pmi::AnnotationPlaceholderOccurrenceRole,
+    pub(crate) line_spacing: f64,
+}
+
+/// Typed `id_cache` key for `ANNOTATION_PLACEHOLDER_OCCURRENCE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAnnotationPlaceholderOccurrenceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAnnotationPlaceholderOccurrenceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAnnotationPlaceholderOccurrenceWithLeaderLine {
+    pub(crate) name: String,
+    pub(crate) styles: Vec<u64>,
+    pub(crate) item: u64,
+    pub(crate) role: crate::ir::pmi::AnnotationPlaceholderOccurrenceRole,
+    pub(crate) line_spacing: f64,
+    pub(crate) leader_line: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAnnotationPlaceholderOccurrenceWithLeaderLineId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAnnotationPlaceholderOccurrenceWithLeaderLineId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `ANNOTATION_PLANE` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyAnnotationPlane {

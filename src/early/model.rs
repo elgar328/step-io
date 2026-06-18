@@ -16,9 +16,10 @@ use crate::ir::arena::ArenaId;
 pub(crate) use super::generated::model::{
     EarlyAddress, EarlyAdvancedBrepShapeRepresentation, EarlyAdvancedFace,
     EarlyAllAroundShapeAspect, EarlyAngularLocation, EarlyAngularSize, EarlyAngularityTolerance,
-    EarlyAnnotationCurveOccurrence, EarlyAnnotationOccurrence, EarlyAnnotationPlane,
-    EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence, EarlyApplicationContext,
-    EarlyApplicationProtocolDefinition, EarlyAppliedApprovalAssignment,
+    EarlyAnnotationCurveOccurrence, EarlyAnnotationOccurrence,
+    EarlyAnnotationPlaceholderOccurrence, EarlyAnnotationPlaceholderOccurrenceWithLeaderLine,
+    EarlyAnnotationPlane, EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence,
+    EarlyApplicationContext, EarlyApplicationProtocolDefinition, EarlyAppliedApprovalAssignment,
     EarlyAppliedDateAndTimeAssignment, EarlyAppliedDocumentReference,
     EarlyAppliedExternalIdentificationAssignment, EarlyAppliedGroupAssignment,
     EarlyAppliedPersonAndOrganizationAssignment, EarlyAppliedPresentedItem,

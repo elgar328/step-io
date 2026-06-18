@@ -3,11 +3,12 @@
 
 use crate::early::model::{
     EarlyAngularLocation, EarlyAngularSize, EarlyAngularityTolerance,
-    EarlyAnnotationCurveOccurrence, EarlyAnnotationOccurrence, EarlyAnnotationPlane,
-    EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence, EarlyCircularRunoutTolerance,
-    EarlyConcentricityTolerance, EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature,
-    EarlyDimensionalLocation, EarlyDimensionalSize, EarlyDirectedDimensionalLocation,
-    EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout,
+    EarlyAnnotationCurveOccurrence, EarlyAnnotationOccurrence,
+    EarlyAnnotationPlaceholderOccurrence, EarlyAnnotationPlaceholderOccurrenceWithLeaderLine,
+    EarlyAnnotationPlane, EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence,
+    EarlyCircularRunoutTolerance, EarlyConcentricityTolerance, EarlyCylindricityTolerance,
+    EarlyDatum, EarlyDatumFeature, EarlyDimensionalLocation, EarlyDimensionalSize,
+    EarlyDirectedDimensionalLocation, EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout,
     EarlyDraughtingCalloutRelationship, EarlyDraughtingPreDefinedTextFont, EarlyFlatnessTolerance,
     EarlyGeometricToleranceRelationship, EarlyLeaderCurve, EarlyLeaderDirectedCallout,
     EarlyLeaderTerminator, EarlyLimitsAndFits, EarlyMeasureQualification,
@@ -17,7 +18,9 @@ use crate::early::model::{
     EarlyTessellatedAnnotationOccurrence, EarlyToleranceValue, EarlyToleranceZoneForm,
     EarlyTotalRunoutTolerance, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
 };
-use crate::ir::pmi::{LimitsAndFits, TessellatedAnnotationOccurrence};
+use crate::ir::pmi::{
+    AnnotationPlaceholderOccurrenceRole, LimitsAndFits, TessellatedAnnotationOccurrence,
+};
 use crate::writer::buffer::WriteBuffer;
 
 /// Lift one `TOLERANCE_ZONE_FORM`.
@@ -560,5 +563,43 @@ pub(crate) fn lift_terminator_symbol(
         styles,
         item,
         annotated_curve,
+    }
+}
+
+/// Lift one `ANNOTATION_PLACEHOLDER_OCCURRENCE` (`styles`/`item` pre-emitted to
+/// step ids; `role`/`line_spacing` pass through).
+pub(crate) fn lift_annotation_placeholder_occurrence(
+    name: String,
+    styles: Vec<u64>,
+    item: u64,
+    role: AnnotationPlaceholderOccurrenceRole,
+    line_spacing: f64,
+) -> EarlyAnnotationPlaceholderOccurrence {
+    EarlyAnnotationPlaceholderOccurrence {
+        name,
+        styles,
+        item,
+        role,
+        line_spacing,
+    }
+}
+
+/// Lift one `ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE` (base APO +
+/// `leader_line` step ids).
+pub(crate) fn lift_annotation_placeholder_occurrence_with_leader_line(
+    name: String,
+    styles: Vec<u64>,
+    item: u64,
+    role: AnnotationPlaceholderOccurrenceRole,
+    line_spacing: f64,
+    leader_line: Vec<u64>,
+) -> EarlyAnnotationPlaceholderOccurrenceWithLeaderLine {
+    EarlyAnnotationPlaceholderOccurrenceWithLeaderLine {
+        name,
+        styles,
+        item,
+        role,
+        line_spacing,
+        leader_line,
     }
 }

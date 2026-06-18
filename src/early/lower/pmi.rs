@@ -3,11 +3,12 @@
 
 use crate::early::model::{
     EarlyAngularLocation, EarlyAngularSize, EarlyAngularityTolerance,
-    EarlyAnnotationCurveOccurrence, EarlyAnnotationOccurrence, EarlyAnnotationPlane,
-    EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence, EarlyCircularRunoutTolerance,
-    EarlyConcentricityTolerance, EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature,
-    EarlyDimensionalLocation, EarlyDimensionalSize, EarlyDirectedDimensionalLocation,
-    EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout,
+    EarlyAnnotationCurveOccurrence, EarlyAnnotationOccurrence,
+    EarlyAnnotationPlaceholderOccurrence, EarlyAnnotationPlaceholderOccurrenceWithLeaderLine,
+    EarlyAnnotationPlane, EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence,
+    EarlyCircularRunoutTolerance, EarlyConcentricityTolerance, EarlyCylindricityTolerance,
+    EarlyDatum, EarlyDatumFeature, EarlyDimensionalLocation, EarlyDimensionalSize,
+    EarlyDirectedDimensionalLocation, EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout,
     EarlyDraughtingCalloutRelationship, EarlyDraughtingPreDefinedTextFont, EarlyFlatnessTolerance,
     EarlyGeometricToleranceRelationship, EarlyLeaderCurve, EarlyLeaderDirectedCallout,
     EarlyLeaderTerminator, EarlyLimitsAndFits, EarlyMeasureQualification,
@@ -19,16 +20,17 @@ use crate::early::model::{
 };
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::pmi::{
-    AngularLocationData, AnnotationCurveOccurrence, AnnotationOccurrence, AnnotationPlane,
-    AnnotationSymbolOccurrence, AnnotationTextOccurrence, Datum, DatumFeature, DimensionalLocation,
-    DimensionalLocationData, DimensionalSize, DimensionalSizeKind, DraughtingAnnotationOccurrence,
-    DraughtingCallout, DraughtingCalloutData, DraughtingCalloutRelationship,
-    DraughtingPreDefinedTextFont, GeometricTolerance, GeometricToleranceRelationship,
-    GeometricToleranceWithDatumReference, LeaderCurve, LeaderTerminator, LimitsAndFits,
-    MeasureQualification, PlainAnnotationCurveOccurrence, PlainAnnotationOccurrence,
-    PlusMinusTolerance, PmiPool, ProjectedZoneDefinition, TerminatorSymbol,
-    TessellatedAnnotationOccurrence, ToleranceValue, ToleranceZoneForm, TypeQualifier,
-    ValueFormatTypeQualifier, ValueQualifier,
+    AngularLocationData, AnnotationCurveOccurrence, AnnotationOccurrence,
+    AnnotationPlaceholderOccurrence, AnnotationPlaceholderOccurrenceWithLeaderLine,
+    AnnotationPlane, AnnotationSymbolOccurrence, AnnotationTextOccurrence, Datum, DatumFeature,
+    DimensionalLocation, DimensionalLocationData, DimensionalSize, DimensionalSizeKind,
+    DraughtingAnnotationOccurrence, DraughtingCallout, DraughtingCalloutData,
+    DraughtingCalloutRelationship, DraughtingPreDefinedTextFont, GeometricTolerance,
+    GeometricToleranceRelationship, GeometricToleranceWithDatumReference, LeaderCurve,
+    LeaderTerminator, LimitsAndFits, MeasureQualification, PlainAnnotationCurveOccurrence,
+    PlainAnnotationOccurrence, PlusMinusTolerance, PmiPool, ProjectedZoneDefinition,
+    TerminatorSymbol, TessellatedAnnotationOccurrence, ToleranceValue, ToleranceZoneForm,
+    TypeQualifier, ValueFormatTypeQualifier, ValueQualifier,
 };
 use crate::reader::ReaderContext;
 
@@ -1189,5 +1191,91 @@ pub(crate) fn lower_terminator_symbol(
             item,
             annotated_curve,
         }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Resolve a styled occurrence's `styles` list, keeping only refs resolving to a
+/// `PresentationStyleAssignment` (others skipped) — shared by the placeholder
+/// occurrences.
+fn resolve_psa_styles(
+    ctx: &ReaderContext,
+    refs: &[u64],
+) -> Vec<crate::ir::id::PresentationStyleAssignmentId> {
+    let mut styles = Vec::with_capacity(refs.len());
+    for &r in refs {
+        if let Some(psa_id) = ctx
+            .id_cache
+            .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
+        {
+            styles.push(psa_id);
+        }
+    }
+    styles
+}
+
+/// Lower one `ANNOTATION_PLACEHOLDER_OCCURRENCE`. `styles` filter through the
+/// PSA cache; an unresolved `item` (`resolve_representation_item_ref`) drops the
+/// occurrence (symmetric on re-read). `role` is the bind-decoded enum.
+pub(crate) fn lower_annotation_placeholder_occurrence(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyAnnotationPlaceholderOccurrence,
+) {
+    let styles = resolve_psa_styles(ctx, &early.styles);
+    let Some(item) = resolve_representation_item_ref(ctx, early.item) else {
+        return;
+    };
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_occurrences
+        .push(AnnotationOccurrence::AnnotationPlaceholderOccurrence(
+            AnnotationPlaceholderOccurrence {
+                name: early.name,
+                styles,
+                item,
+                role: early.role,
+                line_spacing: early.line_spacing,
+            },
+        ));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE` (base APO +
+/// `leader_line` SET; individual unresolved leader refs skip).
+pub(crate) fn lower_annotation_placeholder_occurrence_with_leader_line(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyAnnotationPlaceholderOccurrenceWithLeaderLine,
+) {
+    let styles = resolve_psa_styles(ctx, &early.styles);
+    let Some(item) = resolve_representation_item_ref(ctx, early.item) else {
+        return;
+    };
+    let mut leader_line = Vec::with_capacity(early.leader_line.len());
+    for &r in &early.leader_line {
+        if let Some(id) = ctx
+            .id_cache
+            .get::<crate::ir::id::AnnotationPlaceholderLeaderLineId>(r)
+        {
+            leader_line.push(id);
+        }
+    }
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_occurrences
+        .push(
+            AnnotationOccurrence::AnnotationPlaceholderOccurrenceWithLeaderLine(
+                AnnotationPlaceholderOccurrenceWithLeaderLine {
+                    name: early.name,
+                    styles,
+                    item,
+                    role: early.role,
+                    line_spacing: early.line_spacing,
+                    leader_line,
+                },
+            ),
+        );
     ctx.id_cache.insert(entity_id, id);
 }

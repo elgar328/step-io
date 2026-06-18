@@ -727,22 +727,29 @@ pub struct DraughtingAnnotationOccurrence {
     pub item: RepresentationItemRef,
 }
 
+/// EXPRESS `annotation_placeholder_occurrence_role` ENUMERATION — the role a
+/// placeholder occurrence plays. Closed 2-member enum; an off-schema token is
+/// non-standard input and dropped (`NonStandardEnumValue` → NORM).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum AnnotationPlaceholderOccurrenceRole {
+    AnnotationText,
+    GpsData,
+}
+
 /// `ANNOTATION_PLACEHOLDER_OCCURRENCE(name, styles, item, role, line_spacing)`
 /// — an `annotation_occurrence` / `geometric_representation_item` subtype that
 /// reserves a placeholder for a PMI annotation. `item` is narrowed (EXPRESS) to
 /// a `geometric_set`, carried here as the family-uniform [`RepresentationItemRef`]
 /// (resolved through `resolve_representation_item_ref`'s `GEOMETRIC_SET` path).
-/// `role` is the `annotation_placeholder_occurrence_role` enum, kept as its raw
-/// token string for lossless round-trip; `line_spacing` is a
-/// `positive_length_measure`. Unresolved `item` drops the occurrence, symmetric
-/// on re-read.
+/// `role` is the `annotation_placeholder_occurrence_role` enum; `line_spacing`
+/// is a `positive_length_measure`. Unresolved `item` drops the occurrence,
+/// symmetric on re-read.
 #[derive(Debug, Clone, PartialEq)]
 pub struct AnnotationPlaceholderOccurrence {
     pub name: String,
     pub styles: Vec<PresentationStyleAssignmentId>,
     pub item: RepresentationItemRef,
-    /// `annotation_placeholder_occurrence_role` enum token (e.g. `GPS_DATA`).
-    pub role: String,
+    pub role: AnnotationPlaceholderOccurrenceRole,
     /// `positive_length_measure`.
     pub line_spacing: f64,
 }
@@ -758,7 +765,7 @@ pub struct AnnotationPlaceholderOccurrenceWithLeaderLine {
     pub name: String,
     pub styles: Vec<PresentationStyleAssignmentId>,
     pub item: RepresentationItemRef,
-    pub role: String,
+    pub role: AnnotationPlaceholderOccurrenceRole,
     pub line_spacing: f64,
     /// `leader_line` SET [1:?] OF `annotation_placeholder_leader_line`.
     pub leader_line: Vec<AnnotationPlaceholderLeaderLineId>,

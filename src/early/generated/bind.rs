@@ -3956,6 +3956,45 @@ pub(crate) fn bind_annotation_curve_occurrence(
     })
 }
 
+pub(crate) fn bind_annotation_placeholder_occurrence(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAnnotationPlaceholderOccurrence, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 5, entity_id, "ANNOTATION_PLACEHOLDER_OCCURRENCE")?;
+    Ok(super::model::EarlyAnnotationPlaceholderOccurrence {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        styles: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "styles")?,
+        item: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "item")?,
+        role: bind_annotation_placeholder_occurrence_role(attrs, 3, entity_id, "role")?,
+        line_spacing: crate::ir::attr::read_real(attrs, 4, entity_id, "line_spacing")?,
+    })
+}
+
+pub(crate) fn bind_annotation_placeholder_occurrence_with_leader_line(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<
+    super::model::EarlyAnnotationPlaceholderOccurrenceWithLeaderLine,
+    crate::ir::error::ConvertError,
+> {
+    crate::ir::attr::check_count(
+        attrs,
+        6,
+        entity_id,
+        "ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE",
+    )?;
+    Ok(
+        super::model::EarlyAnnotationPlaceholderOccurrenceWithLeaderLine {
+            name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+            styles: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "styles")?,
+            item: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "item")?,
+            role: bind_annotation_placeholder_occurrence_role(attrs, 3, entity_id, "role")?,
+            line_spacing: crate::ir::attr::read_real(attrs, 4, entity_id, "line_spacing")?,
+            leader_line: crate::ir::attr::read_entity_ref_list(attrs, 5, entity_id, "leader_line")?,
+        },
+    )
+}
+
 pub(crate) fn bind_annotation_plane(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],
@@ -5591,6 +5630,25 @@ fn bind_angle_relator(
         "EQUAL" => Ok(crate::ir::pmi::AngleSelection::Equal),
         "LARGE" => Ok(crate::ir::pmi::AngleSelection::Large),
         "SMALL" => Ok(crate::ir::pmi::AngleSelection::Small),
+        other => Err(crate::ir::error::ConvertError::NonStandardEnumValue {
+            entity_id,
+            field: field.to_string(),
+            token: other.to_string(),
+        }),
+    }
+}
+
+fn bind_annotation_placeholder_occurrence_role(
+    attrs: &[crate::parser::entity::Attribute],
+    index: usize,
+    entity_id: u64,
+    field: &'static str,
+) -> Result<crate::ir::pmi::AnnotationPlaceholderOccurrenceRole, crate::ir::error::ConvertError> {
+    match crate::ir::attr::read_enum(attrs, index, entity_id, field)? {
+        "ANNOTATION_TEXT" => {
+            Ok(crate::ir::pmi::AnnotationPlaceholderOccurrenceRole::AnnotationText)
+        }
+        "GPS_DATA" => Ok(crate::ir::pmi::AnnotationPlaceholderOccurrenceRole::GpsData),
         other => Err(crate::ir::error::ConvertError::NonStandardEnumValue {
             entity_id,
             field: field.to_string(),
