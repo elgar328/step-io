@@ -665,6 +665,63 @@ impl crate::ir::arena::ArenaId for EarlyMeasureRepresentationItemId {
     }
 }
 
+/// L1 `MEASURE_REPRESENTATION_ITEM_COMPLEX` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyMeasureRepresentationItemComplexLength {
+    pub(crate) value_component: EarlyMeasureValue,
+    pub(crate) unit_component: u64,
+    pub(crate) name: String,
+}
+
+/// L1 `MEASURE_REPRESENTATION_ITEM_COMPLEX` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyMeasureRepresentationItemComplexLengthQualified {
+    pub(crate) value_component: EarlyMeasureValue,
+    pub(crate) unit_component: u64,
+    pub(crate) qualifiers: Vec<u64>,
+    pub(crate) name: String,
+}
+
+/// L1 `MEASURE_REPRESENTATION_ITEM_COMPLEX` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyMeasureRepresentationItemComplexPlaneAngle {
+    pub(crate) value_component: EarlyMeasureValue,
+    pub(crate) unit_component: u64,
+    pub(crate) name: String,
+}
+
+/// L1 `MEASURE_REPRESENTATION_ITEM_COMPLEX` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyMeasureRepresentationItemComplexRatio {
+    pub(crate) value_component: EarlyMeasureValue,
+    pub(crate) unit_component: u64,
+    pub(crate) name: String,
+}
+
+/// L1 `MEASURE_REPRESENTATION_ITEM_COMPLEX` (generated, multi-case).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum EarlyMeasureRepresentationItemComplex {
+    Length(EarlyMeasureRepresentationItemComplexLength),
+    LengthQualified(EarlyMeasureRepresentationItemComplexLengthQualified),
+    PlaneAngle(EarlyMeasureRepresentationItemComplexPlaneAngle),
+    Ratio(EarlyMeasureRepresentationItemComplexRatio),
+}
+
+/// Typed `id_cache` key for `MEASURE_REPRESENTATION_ITEM_COMPLEX` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyMeasureRepresentationItemComplexId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyMeasureRepresentationItemComplexId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `APPROVAL_ROLE` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyApprovalRole {

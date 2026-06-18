@@ -220,7 +220,7 @@ impl WriteBuffer<'_> {
                     ValueRepresentationItemHandler::write(self, vri)
                 }
                 RepresentationItem::MeasureRepresentationItem(mri) => {
-                    Ok(self.emit_measure_repr_item(mri))
+                    Ok(self.emit_measure_repr_item(&mri))
                 }
             };
             self.set_step_id(__id, step.unwrap_or(0));
@@ -236,70 +236,19 @@ impl WriteBuffer<'_> {
     /// emit, both of which run before `emit_representation_items`.
     fn emit_measure_repr_item(
         &mut self,
-        mri: crate::ir::representation_item::MeasureRepresentationItem,
+        mri: &crate::ir::representation_item::MeasureRepresentationItem,
     ) -> u64 {
-        use crate::ir::representation_item::{MeasureValue, QualifierRef};
-        use crate::parser::entity::Attribute;
-        use crate::writer::entity::{WriterBody, WriterEntity};
-        // Simple form: 2-layer lift + generated serialize.
-        if matches!(
-            mri.form,
-            crate::ir::representation_item::MeasureForm::Simple
-        ) {
-            let early = crate::early::lift::lift_measure_representation_item(self, &mri);
-            return crate::early::serialize::serialize_measure_representation_item(self, &early);
+        // 2-layer lift + generated serialize, split on the form.
+        match mri.form {
+            crate::ir::representation_item::MeasureForm::Simple => {
+                let early = crate::early::lift::lift_measure_representation_item(self, mri);
+                crate::early::serialize::serialize_measure_representation_item(self, &early)
+            }
+            crate::ir::representation_item::MeasureForm::Complex => {
+                let early = crate::early::lift::lift_measure_representation_item_complex(self, mri);
+                crate::early::serialize::serialize_measure_representation_item_complex(self, &early)
+            }
         }
-        let typed = match mri.value {
-            MeasureValue::Real { type_name, value } => Attribute::Typed {
-                type_name,
-                value: Box::new(Attribute::Real(value)),
-            },
-            MeasureValue::Integer { type_name, value } => Attribute::Typed {
-                type_name,
-                value: Box::new(Attribute::Integer(value)),
-            },
-            MeasureValue::Text { type_name, value } => Attribute::Typed {
-                type_name,
-                value: Box::new(Attribute::String(value)),
-            },
-        };
-        let unit_step = self.resolve_explicit_unit_ref(mri.unit_ref).unwrap_or(0);
-        let mut parts: Vec<(String, Vec<Attribute>)> = Vec::with_capacity(5);
-        if let Some(supertype) = mri.measure_supertype {
-            parts.push((supertype, vec![]));
-        }
-        parts.push(("MEASURE_REPRESENTATION_ITEM".into(), vec![]));
-        parts.push((
-            "MEASURE_WITH_UNIT".into(),
-            vec![typed, Attribute::EntityRef(unit_step)],
-        ));
-        if !mri.qualifiers.is_empty() {
-            let q_refs: Vec<Attribute> = mri
-                .qualifiers
-                .iter()
-                .map(|q| {
-                    let step = match q {
-                        QualifierRef::TypeQualifier(id) => self.step_id(id),
-                        QualifierRef::ValueFormatTypeQualifier(id) => self.step_id(id),
-                    };
-                    Attribute::EntityRef(step)
-                })
-                .collect();
-            parts.push((
-                "QUALIFIED_REPRESENTATION_ITEM".into(),
-                vec![Attribute::List(q_refs)],
-            ));
-        }
-        parts.push((
-            "REPRESENTATION_ITEM".into(),
-            vec![Attribute::String(mri.name)],
-        ));
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Complex { parts },
-        });
-        n
     }
 
     fn emit_pre_defined_curve_fonts(

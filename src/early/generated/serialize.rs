@@ -666,6 +666,86 @@ pub(crate) fn serialize_measure_representation_item(
     )
 }
 
+pub(crate) fn serialize_measure_representation_item_complex(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyMeasureRepresentationItemComplex,
+) -> u64 {
+    match l1 {
+        super::model::EarlyMeasureRepresentationItemComplex::Length(l1) => buf.push_complex(vec![
+            ("LENGTH_MEASURE_WITH_UNIT".into(), vec![]),
+            ("MEASURE_REPRESENTATION_ITEM".into(), vec![]),
+            (
+                "MEASURE_WITH_UNIT".into(),
+                vec![
+                    measure_value_emit(&l1.value_component),
+                    crate::parser::entity::Attribute::EntityRef(l1.unit_component),
+                ],
+            ),
+            (
+                "REPRESENTATION_ITEM".into(),
+                vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+            ),
+        ]),
+        super::model::EarlyMeasureRepresentationItemComplex::LengthQualified(l1) => buf
+            .push_complex(vec![
+                ("LENGTH_MEASURE_WITH_UNIT".into(), vec![]),
+                ("MEASURE_REPRESENTATION_ITEM".into(), vec![]),
+                (
+                    "MEASURE_WITH_UNIT".into(),
+                    vec![
+                        measure_value_emit(&l1.value_component),
+                        crate::parser::entity::Attribute::EntityRef(l1.unit_component),
+                    ],
+                ),
+                (
+                    "QUALIFIED_REPRESENTATION_ITEM".into(),
+                    vec![crate::parser::entity::Attribute::List(
+                        l1.qualifiers
+                            .iter()
+                            .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                            .collect(),
+                    )],
+                ),
+                (
+                    "REPRESENTATION_ITEM".into(),
+                    vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+                ),
+            ]),
+        super::model::EarlyMeasureRepresentationItemComplex::PlaneAngle(l1) => {
+            buf.push_complex(vec![
+                ("MEASURE_REPRESENTATION_ITEM".into(), vec![]),
+                (
+                    "MEASURE_WITH_UNIT".into(),
+                    vec![
+                        measure_value_emit(&l1.value_component),
+                        crate::parser::entity::Attribute::EntityRef(l1.unit_component),
+                    ],
+                ),
+                ("PLANE_ANGLE_MEASURE_WITH_UNIT".into(), vec![]),
+                (
+                    "REPRESENTATION_ITEM".into(),
+                    vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+                ),
+            ])
+        }
+        super::model::EarlyMeasureRepresentationItemComplex::Ratio(l1) => buf.push_complex(vec![
+            ("MEASURE_REPRESENTATION_ITEM".into(), vec![]),
+            (
+                "MEASURE_WITH_UNIT".into(),
+                vec![
+                    measure_value_emit(&l1.value_component),
+                    crate::parser::entity::Attribute::EntityRef(l1.unit_component),
+                ],
+            ),
+            ("RATIO_MEASURE_WITH_UNIT".into(), vec![]),
+            (
+                "REPRESENTATION_ITEM".into(),
+                vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+            ),
+        ]),
+    }
+}
+
 pub(crate) fn serialize_approval_role(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyApprovalRole,

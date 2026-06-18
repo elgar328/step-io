@@ -35,6 +35,7 @@ generate = [
     "draughting_model",
     "characterized_object_complex",
     "measure_representation_item",
+    "measure_representation_item_complex",
     # plm (metadata leaf batch)
     "approval_role",
     "approval_status",
@@ -566,6 +567,29 @@ derived = ["CHARACTERIZED_OBJECT.name", "CHARACTERIZED_OBJECT.description"]
 [complex.characterized_object_complex.cases.shape_tessellated]
 parts = ["DRAUGHTING_MODEL", "REPRESENTATION", "SHAPE_REPRESENTATION", "TESSELLATED_SHAPE_REPRESENTATION"]
 match_parts = ["DRAUGHTING_MODEL", "REPRESENTATION", "SHAPE_REPRESENTATION", "TESSELLATED_SHAPE_REPRESENTATION"]
+
+# Complex MI MEASURE_REPRESENTATION_ITEM (synthetic name). Data on REPRESENTATION_
+# ITEM (name) + MEASURE_WITH_UNIT (value_component=measure_value SELECT,
+# unit_component=unit ref); the <X>_MEASURE_WITH_UNIT supertype-marker part and
+# MEASURE_REPRESENTATION_ITEM carry no own attrs — supertype identity = case
+# variant. case length_qualified adds QUALIFIED_REPRESENTATION_ITEM (qualifiers
+# SET). length ⊂ length_qualified → match_parts exact-set dispatch. part order =
+# alphabetical = hand WriterBody order.
+[complex.measure_representation_item_complex.cases.length_qualified]
+parts = ["LENGTH_MEASURE_WITH_UNIT", "MEASURE_REPRESENTATION_ITEM", "MEASURE_WITH_UNIT", "QUALIFIED_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"]
+match_parts = ["LENGTH_MEASURE_WITH_UNIT", "MEASURE_REPRESENTATION_ITEM", "MEASURE_WITH_UNIT", "QUALIFIED_REPRESENTATION_ITEM", "REPRESENTATION_ITEM"]
+
+[complex.measure_representation_item_complex.cases.length]
+parts = ["LENGTH_MEASURE_WITH_UNIT", "MEASURE_REPRESENTATION_ITEM", "MEASURE_WITH_UNIT", "REPRESENTATION_ITEM"]
+match_parts = ["LENGTH_MEASURE_WITH_UNIT", "MEASURE_REPRESENTATION_ITEM", "MEASURE_WITH_UNIT", "REPRESENTATION_ITEM"]
+
+[complex.measure_representation_item_complex.cases.plane_angle]
+parts = ["MEASURE_REPRESENTATION_ITEM", "MEASURE_WITH_UNIT", "PLANE_ANGLE_MEASURE_WITH_UNIT", "REPRESENTATION_ITEM"]
+match_parts = ["MEASURE_REPRESENTATION_ITEM", "MEASURE_WITH_UNIT", "PLANE_ANGLE_MEASURE_WITH_UNIT", "REPRESENTATION_ITEM"]
+
+[complex.measure_representation_item_complex.cases.ratio]
+parts = ["MEASURE_REPRESENTATION_ITEM", "MEASURE_WITH_UNIT", "RATIO_MEASURE_WITH_UNIT", "REPRESENTATION_ITEM"]
+match_parts = ["MEASURE_REPRESENTATION_ITEM", "MEASURE_WITH_UNIT", "RATIO_MEASURE_WITH_UNIT", "REPRESENTATION_ITEM"]
 
 # Per-entity EXPRESS Derived (`*`) attribute names. early.toml (generated) cannot
 # carry DERIVE info, so it is hand-authored here. A listed attr keeps its Part21

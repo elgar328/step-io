@@ -18,6 +18,9 @@ use crate::early::model::{
     EarlyIntegerRepresentationItem, EarlyItemDefinedTransformation,
     EarlyItemIdentifiedRepresentationUsage, EarlyItemIdentifiedRepresentationUsageSelect,
     EarlyManifoldSurfaceShapeRepresentation, EarlyMappedItem, EarlyMeasureRepresentationItem,
+    EarlyMeasureRepresentationItemComplex, EarlyMeasureRepresentationItemComplexLength,
+    EarlyMeasureRepresentationItemComplexLengthQualified,
+    EarlyMeasureRepresentationItemComplexPlaneAngle, EarlyMeasureRepresentationItemComplexRatio,
     EarlyMeasureValue, EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
@@ -552,6 +555,61 @@ pub(crate) fn lift_measure_representation_item(
         name: mri.name.clone(),
         value_component: measure_value_to_early(&mri.value),
         unit_component: buf.resolve_explicit_unit_ref(mri.unit_ref).unwrap_or(0),
+    }
+}
+
+/// Lift one complex-MI `MEASURE_REPRESENTATION_ITEM`. The case variant is chosen
+/// from `measure_supertype` + qualifier presence (length-qualified vs length) —
+/// mirroring the legacy writer's QUALIFIED-part decision. `qualifiers` lift to
+/// step ids. An unknown supertype is defensively treated as plain `Length`.
+pub(crate) fn lift_measure_representation_item_complex(
+    buf: &WriteBuffer,
+    mri: &crate::ir::representation_item::MeasureRepresentationItem,
+) -> EarlyMeasureRepresentationItemComplex {
+    use crate::ir::representation_item::QualifierRef;
+    let value_component = measure_value_to_early(&mri.value);
+    let unit_component = buf.resolve_explicit_unit_ref(mri.unit_ref).unwrap_or(0);
+    let name = mri.name.clone();
+    let qualifiers: Vec<u64> = mri
+        .qualifiers
+        .iter()
+        .map(|q| match q {
+            QualifierRef::TypeQualifier(id) => buf.step_id(id),
+            QualifierRef::ValueFormatTypeQualifier(id) => buf.step_id(id),
+        })
+        .collect();
+    match (mri.measure_supertype.as_deref(), qualifiers.is_empty()) {
+        (Some("PLANE_ANGLE_MEASURE_WITH_UNIT"), _) => {
+            EarlyMeasureRepresentationItemComplex::PlaneAngle(
+                EarlyMeasureRepresentationItemComplexPlaneAngle {
+                    value_component,
+                    unit_component,
+                    name,
+                },
+            )
+        }
+        (Some("RATIO_MEASURE_WITH_UNIT"), _) => EarlyMeasureRepresentationItemComplex::Ratio(
+            EarlyMeasureRepresentationItemComplexRatio {
+                value_component,
+                unit_component,
+                name,
+            },
+        ),
+        (_, false) => EarlyMeasureRepresentationItemComplex::LengthQualified(
+            EarlyMeasureRepresentationItemComplexLengthQualified {
+                value_component,
+                unit_component,
+                qualifiers,
+                name,
+            },
+        ),
+        (_, true) => EarlyMeasureRepresentationItemComplex::Length(
+            EarlyMeasureRepresentationItemComplexLength {
+                value_component,
+                unit_component,
+                name,
+            },
+        ),
     }
 }
 

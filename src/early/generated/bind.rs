@@ -607,6 +607,122 @@ pub(crate) fn bind_measure_representation_item(
     }))
 }
 
+pub(crate) fn bind_measure_representation_item_complex(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<
+    Option<super::model::EarlyMeasureRepresentationItemComplex>,
+    crate::ir::error::ConvertError,
+> {
+    let part_set: std::collections::BTreeSet<&str> =
+        parts.iter().map(|p| p.name.as_str()).collect();
+    if part_set.len() == 4
+        && part_set.contains("LENGTH_MEASURE_WITH_UNIT")
+        && part_set.contains("MEASURE_REPRESENTATION_ITEM")
+        && part_set.contains("MEASURE_WITH_UNIT")
+        && part_set.contains("REPRESENTATION_ITEM")
+    {
+        let attrs = crate::reader::require_part_attrs(parts, "MEASURE_WITH_UNIT", entity_id)?;
+        let Some(value_component) = bind_measure_value(&attrs[0]) else {
+            return Ok(None);
+        };
+        let unit_component =
+            crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "unit_component")?;
+        let attrs = crate::reader::require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
+        let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        return Ok(Some(
+            super::model::EarlyMeasureRepresentationItemComplex::Length(
+                super::model::EarlyMeasureRepresentationItemComplexLength {
+                    value_component,
+                    unit_component,
+                    name,
+                },
+            ),
+        ));
+    }
+    if part_set.len() == 5
+        && part_set.contains("LENGTH_MEASURE_WITH_UNIT")
+        && part_set.contains("MEASURE_REPRESENTATION_ITEM")
+        && part_set.contains("MEASURE_WITH_UNIT")
+        && part_set.contains("QUALIFIED_REPRESENTATION_ITEM")
+        && part_set.contains("REPRESENTATION_ITEM")
+    {
+        let attrs = crate::reader::require_part_attrs(parts, "MEASURE_WITH_UNIT", entity_id)?;
+        let Some(value_component) = bind_measure_value(&attrs[0]) else {
+            return Ok(None);
+        };
+        let unit_component =
+            crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "unit_component")?;
+        let attrs =
+            crate::reader::require_part_attrs(parts, "QUALIFIED_REPRESENTATION_ITEM", entity_id)?;
+        let qualifiers = crate::ir::attr::read_entity_ref_list(attrs, 0, entity_id, "qualifiers")?;
+        let attrs = crate::reader::require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
+        let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        return Ok(Some(
+            super::model::EarlyMeasureRepresentationItemComplex::LengthQualified(
+                super::model::EarlyMeasureRepresentationItemComplexLengthQualified {
+                    value_component,
+                    unit_component,
+                    qualifiers,
+                    name,
+                },
+            ),
+        ));
+    }
+    if part_set.len() == 4
+        && part_set.contains("MEASURE_REPRESENTATION_ITEM")
+        && part_set.contains("MEASURE_WITH_UNIT")
+        && part_set.contains("PLANE_ANGLE_MEASURE_WITH_UNIT")
+        && part_set.contains("REPRESENTATION_ITEM")
+    {
+        let attrs = crate::reader::require_part_attrs(parts, "MEASURE_WITH_UNIT", entity_id)?;
+        let Some(value_component) = bind_measure_value(&attrs[0]) else {
+            return Ok(None);
+        };
+        let unit_component =
+            crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "unit_component")?;
+        let attrs = crate::reader::require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
+        let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        return Ok(Some(
+            super::model::EarlyMeasureRepresentationItemComplex::PlaneAngle(
+                super::model::EarlyMeasureRepresentationItemComplexPlaneAngle {
+                    value_component,
+                    unit_component,
+                    name,
+                },
+            ),
+        ));
+    }
+    if part_set.len() == 4
+        && part_set.contains("MEASURE_REPRESENTATION_ITEM")
+        && part_set.contains("MEASURE_WITH_UNIT")
+        && part_set.contains("RATIO_MEASURE_WITH_UNIT")
+        && part_set.contains("REPRESENTATION_ITEM")
+    {
+        let attrs = crate::reader::require_part_attrs(parts, "MEASURE_WITH_UNIT", entity_id)?;
+        let Some(value_component) = bind_measure_value(&attrs[0]) else {
+            return Ok(None);
+        };
+        let unit_component =
+            crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "unit_component")?;
+        let attrs = crate::reader::require_part_attrs(parts, "REPRESENTATION_ITEM", entity_id)?;
+        let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        return Ok(Some(
+            super::model::EarlyMeasureRepresentationItemComplex::Ratio(
+                super::model::EarlyMeasureRepresentationItemComplexRatio {
+                    value_component,
+                    unit_component,
+                    name,
+                },
+            ),
+        ));
+    }
+    Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
+        entity_id,
+        detail: "unsupported MEASURE_REPRESENTATION_ITEM_COMPLEX complex case".into(),
+    })
+}
+
 pub(crate) fn bind_approval_role(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],

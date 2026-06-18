@@ -56,7 +56,7 @@ pub(crate) use super::generated::bind::{
     bind_local_time, bind_make_from_usage_option, bind_manifold_solid_brep,
     bind_manifold_surface_shape_representation, bind_mapped_item, bind_mass_measure_with_unit,
     bind_mass_unit, bind_measure_qualification, bind_measure_representation_item,
-    bind_measure_with_unit, bind_mechanical_context,
+    bind_measure_representation_item_complex, bind_measure_with_unit, bind_mechanical_context,
     bind_mechanical_design_and_draughting_relationship,
     bind_mechanical_design_geometric_presentation_representation, bind_model_geometric_view,
     bind_name_attribute, bind_named_unit, bind_next_assembly_usage_occurrence, bind_object_role,

@@ -21,7 +21,8 @@ use crate::early::model::{
     EarlyIntegerRepresentationItem, EarlyItemDefinedTransformation,
     EarlyItemIdentifiedRepresentationUsage, EarlyItemIdentifiedRepresentationUsageSelect,
     EarlyManifoldSurfaceShapeRepresentation, EarlyMappedItem, EarlyMeasureRepresentationItem,
-    EarlyMeasureValue, EarlyMechanicalDesignAndDraughtingRelationship,
+    EarlyMeasureRepresentationItemComplex, EarlyMeasureValue,
+    EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
@@ -819,6 +820,76 @@ pub(crate) fn lower_measure_representation_item(
                 unit_ref,
                 qualifiers: Vec::new(),
                 measure_supertype: None,
+            },
+        ));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one complex-MI `MEASURE_REPRESENTATION_ITEM` (cases A/B/C/D). The case
+/// variant fixes the `measure_supertype` (`<X>_MEASURE_WITH_UNIT`); the
+/// length-qualified case also carries `qualifiers` (`value_qualifier` SELECT SET,
+/// only `TypeQualifier`/`ValueFormatTypeQualifier` modelled, others dropped —
+/// matching the legacy reader).
+pub(crate) fn lower_measure_representation_item_complex(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyMeasureRepresentationItemComplex,
+) {
+    use EarlyMeasureRepresentationItemComplex as E;
+    let (value_component, unit_component, name, supertype, qualifier_refs) = match early {
+        E::Length(c) => (
+            c.value_component,
+            c.unit_component,
+            c.name,
+            "LENGTH_MEASURE_WITH_UNIT",
+            Vec::new(),
+        ),
+        E::LengthQualified(c) => (
+            c.value_component,
+            c.unit_component,
+            c.name,
+            "LENGTH_MEASURE_WITH_UNIT",
+            c.qualifiers,
+        ),
+        E::PlaneAngle(c) => (
+            c.value_component,
+            c.unit_component,
+            c.name,
+            "PLANE_ANGLE_MEASURE_WITH_UNIT",
+            Vec::new(),
+        ),
+        E::Ratio(c) => (
+            c.value_component,
+            c.unit_component,
+            c.name,
+            "RATIO_MEASURE_WITH_UNIT",
+            Vec::new(),
+        ),
+    };
+    let value = measure_value_to_l2(value_component);
+    let unit_ref = PropertyMeasureUnit::resolve_select(ctx, unit_component);
+    let qualifiers = qualifier_refs
+        .into_iter()
+        .filter_map(|r| {
+            if let Some(id) = ctx.id_cache.get::<crate::ir::id::TypeQualifierId>(r) {
+                Some(QualifierRef::TypeQualifier(id))
+            } else {
+                ctx.id_cache
+                    .get::<crate::ir::id::ValueFormatTypeQualifierId>(r)
+                    .map(QualifierRef::ValueFormatTypeQualifier)
+            }
+        })
+        .collect();
+    let id = ctx
+        .representation_items
+        .push(RepresentationItem::MeasureRepresentationItem(
+            MeasureRepresentationItem {
+                form: MeasureForm::Complex,
+                name,
+                value,
+                unit_ref,
+                qualifiers,
+                measure_supertype: Some(supertype.to_owned()),
             },
         ));
     ctx.id_cache.insert(entity_id, id);
