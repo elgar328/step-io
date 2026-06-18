@@ -590,6 +590,23 @@ pub(crate) fn bind_characterized_object_complex(
     })
 }
 
+pub(crate) fn bind_measure_representation_item(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<Option<super::model::EarlyMeasureRepresentationItem>, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "MEASURE_REPRESENTATION_ITEM")?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let Some(value_component) = bind_measure_value(&attrs[1]) else {
+        return Ok(None);
+    };
+    let unit_component = crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "unit_component")?;
+    Ok(Some(super::model::EarlyMeasureRepresentationItem {
+        name,
+        value_component,
+        unit_component,
+    }))
+}
+
 pub(crate) fn bind_approval_role(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],

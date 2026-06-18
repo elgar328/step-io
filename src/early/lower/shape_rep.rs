@@ -20,8 +20,8 @@ use crate::early::model::{
     EarlyGeometricallyBoundedWireframeShapeRepresentation, EarlyGlobalUnitAssignedContext,
     EarlyIntegerRepresentationItem, EarlyItemDefinedTransformation,
     EarlyItemIdentifiedRepresentationUsage, EarlyItemIdentifiedRepresentationUsageSelect,
-    EarlyManifoldSurfaceShapeRepresentation, EarlyMappedItem, EarlyMeasureValue,
-    EarlyMechanicalDesignAndDraughtingRelationship,
+    EarlyManifoldSurfaceShapeRepresentation, EarlyMappedItem, EarlyMeasureRepresentationItem,
+    EarlyMeasureValue, EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
@@ -33,9 +33,10 @@ use crate::early::model::{
 use crate::entities::tessellation::resolve_tessellated_item_ref;
 use crate::ir::assembly::Transform3d;
 use crate::ir::error::ConvertError;
+use crate::ir::property::PropertyMeasureUnit;
 use crate::ir::representation_item::{
-    MeasureValue, QualifiedRepresentationItem, QualifierRef, RepresentationItem,
-    RepresentationItemRef, ValueRepresentationItem,
+    MeasureForm, MeasureRepresentationItem, MeasureValue, QualifiedRepresentationItem,
+    QualifierRef, RepresentationItem, RepresentationItemRef, ValueRepresentationItem,
 };
 use crate::ir::shape_rep::{
     AdvancedBrepRepr, AllAroundShapeAspect, CameraImage, CentreOfSymmetry,
@@ -791,6 +792,33 @@ pub(crate) fn lower_value_representation_item(
             ValueRepresentationItem {
                 name: early.name.clone(),
                 value_component,
+            },
+        ));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one simple `MEASURE_REPRESENTATION_ITEM` into the `representation_item`
+/// arena. `value_component` (typed-only `measure_value` SELECT) bridges to the L2
+/// `MeasureValue` (type-name verbatim; the schema member type — all real/text,
+/// no integer — decides real-vs-text, never the input token); `unit_component`
+/// resolves via the `PropertyMeasureUnit` SELECT.
+pub(crate) fn lower_measure_representation_item(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: &EarlyMeasureRepresentationItem,
+) {
+    let value = measure_value_to_l2(early.value_component.clone());
+    let unit_ref = PropertyMeasureUnit::resolve_select(ctx, early.unit_component);
+    let id = ctx
+        .representation_items
+        .push(RepresentationItem::MeasureRepresentationItem(
+            MeasureRepresentationItem {
+                form: MeasureForm::Simple,
+                name: early.name.clone(),
+                value,
+                unit_ref,
+                qualifiers: Vec::new(),
+                measure_supertype: None,
             },
         ));
     ctx.id_cache.insert(entity_id, id);

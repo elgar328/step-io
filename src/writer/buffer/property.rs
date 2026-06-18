@@ -519,7 +519,7 @@ impl WriteBuffer<'_> {
     }
 
     /// Resolve an explicit [`PropertyMeasureUnit`] to its emitted STEP id.
-    pub(in crate::writer::buffer) fn resolve_explicit_unit_ref(
+    pub(crate) fn resolve_explicit_unit_ref(
         &self,
         unit_ref: Option<PropertyMeasureUnit>,
     ) -> Option<u64> {

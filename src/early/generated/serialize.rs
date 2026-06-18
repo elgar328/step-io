@@ -652,6 +652,20 @@ pub(crate) fn serialize_characterized_object_complex_with_id(
     }
 }
 
+pub(crate) fn serialize_measure_representation_item(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyMeasureRepresentationItem,
+) -> u64 {
+    buf.push_simple(
+        "MEASURE_REPRESENTATION_ITEM",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            measure_value_emit(&l1.value_component),
+            crate::parser::entity::Attribute::EntityRef(l1.unit_component),
+        ],
+    )
+}
+
 pub(crate) fn serialize_approval_role(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyApprovalRole,

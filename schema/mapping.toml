@@ -34,6 +34,7 @@ generate = [
     "integer_representation_item",
     "draughting_model",
     "characterized_object_complex",
+    "measure_representation_item",
     # plm (metadata leaf batch)
     "approval_role",
     "approval_status",

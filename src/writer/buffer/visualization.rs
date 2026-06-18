@@ -241,6 +241,14 @@ impl WriteBuffer<'_> {
         use crate::ir::representation_item::{MeasureValue, QualifierRef};
         use crate::parser::entity::Attribute;
         use crate::writer::entity::{WriterBody, WriterEntity};
+        // Simple form: 2-layer lift + generated serialize.
+        if matches!(
+            mri.form,
+            crate::ir::representation_item::MeasureForm::Simple
+        ) {
+            let early = crate::early::lift::lift_measure_representation_item(self, &mri);
+            return crate::early::serialize::serialize_measure_representation_item(self, &early);
+        }
         let typed = match mri.value {
             MeasureValue::Real { type_name, value } => Attribute::Typed {
                 type_name,
@@ -256,21 +264,6 @@ impl WriteBuffer<'_> {
             },
         };
         let unit_step = self.resolve_explicit_unit_ref(mri.unit_ref).unwrap_or(0);
-        // Simple form: the bare 3-attr MEASURE_REPRESENTATION_ITEM line
-        // (phase measure-arena-4).
-        if matches!(
-            mri.form,
-            crate::ir::representation_item::MeasureForm::Simple
-        ) {
-            return self.push_simple(
-                "MEASURE_REPRESENTATION_ITEM",
-                vec![
-                    Attribute::String(mri.name),
-                    typed,
-                    Attribute::EntityRef(unit_step),
-                ],
-            );
-        }
         let mut parts: Vec<(String, Vec<Attribute>)> = Vec::with_capacity(5);
         if let Some(supertype) = mri.measure_supertype {
             parts.push((supertype, vec![]));

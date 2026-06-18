@@ -10,6 +10,7 @@
 //! and register it in `repr_item_id_map`; the property / GD&T consumers
 //! resolve it there, and the writer emits it via `emit_representation_items`.
 
+use crate::early::{bind, lower};
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
@@ -38,29 +39,9 @@ impl SimpleEntityHandler for MeasureRepresentationItemHandler {
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 3, entity_id, "MEASURE_REPRESENTATION_ITEM")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        // attrs[1] = typed value, attrs[2] = unit_component. Capture into the
-        // representation_item arena (phase measure-arena-4) with the verbatim
-        // measure_value (NUMERIC_MEASURE / RATIO_MEASURE / POSITIVE_LENGTH_MEASURE
-        // are preserved, not dropped / downgraded). Consumers resolve it
-        // through repr_item_id_map.
-        let Some(value) = read_measure_value(attrs.get(1)) else {
-            return Ok(());
-        };
-        let unit_ref = resolve_unit_ref(ctx, attrs.get(2));
-        let id = ctx
-            .representation_items
-            .push(RepresentationItem::MeasureRepresentationItem(
-                MeasureRepresentationItem {
-                    form: MeasureForm::Simple,
-                    name,
-                    value,
-                    unit_ref,
-                    qualifiers: Vec::new(),
-                    measure_supertype: None,
-                },
-            ));
-        ctx.id_cache.insert(entity_id, id);
+        if let Some(early) = bind::bind_measure_representation_item(entity_id, attrs)? {
+            lower::lower_measure_representation_item(ctx, entity_id, &early);
+        }
         Ok(())
     }
 

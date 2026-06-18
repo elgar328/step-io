@@ -17,8 +17,8 @@ use crate::early::model::{
     EarlyGlobalUnitAssignedContextFull, EarlyGlobalUnitAssignedContextNoUncertainty,
     EarlyIntegerRepresentationItem, EarlyItemDefinedTransformation,
     EarlyItemIdentifiedRepresentationUsage, EarlyItemIdentifiedRepresentationUsageSelect,
-    EarlyManifoldSurfaceShapeRepresentation, EarlyMappedItem, EarlyMeasureValue,
-    EarlyMechanicalDesignAndDraughtingRelationship,
+    EarlyManifoldSurfaceShapeRepresentation, EarlyMappedItem, EarlyMeasureRepresentationItem,
+    EarlyMeasureValue, EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
@@ -538,6 +538,20 @@ pub(crate) fn lift_value_representation_item(
     EarlyValueRepresentationItem {
         name: vri.name.clone(),
         value_component: measure_value_to_early(&vri.value_component),
+    }
+}
+
+/// Lift one simple `MEASURE_REPRESENTATION_ITEM`. `unit_component` = the resolved
+/// unit step id (`resolve_explicit_unit_ref`, `unwrap_or(0)` mirrors the legacy
+/// writer); `value_component` bridges back to the synth `measure_value`.
+pub(crate) fn lift_measure_representation_item(
+    buf: &WriteBuffer,
+    mri: &crate::ir::representation_item::MeasureRepresentationItem,
+) -> EarlyMeasureRepresentationItem {
+    EarlyMeasureRepresentationItem {
+        name: mri.name.clone(),
+        value_component: measure_value_to_early(&mri.value),
+        unit_component: buf.resolve_explicit_unit_ref(mri.unit_ref).unwrap_or(0),
     }
 }
 
