@@ -784,6 +784,20 @@ pub enum ApllPointElement {
     ApllPointWithSurface(ApllPointWithSurfaceData),
 }
 
+/// EXPRESS `des_apll_point_symbol` ENUMERATION — the symbol drawn at an
+/// `apll_point`. Closed 7-member enum; an off-schema token is non-standard
+/// input and dropped (`NonStandardEnumValue` → NORM).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum DesApllPointSymbol {
+    Circle,
+    Dot,
+    InternalPairForwardArrowhead,
+    InternalPairReverseArrowhead,
+    None,
+    PositiveArrowhead,
+    Triangle,
+}
+
 /// `APLL_POINT` body — a `cartesian_point` subtype. `coordinates` reuse the 3D
 /// [`Point3`]; `symbol_applied` keeps the `des_apll_point_symbol` enum token raw
 /// for lossless round-trip.
@@ -791,7 +805,7 @@ pub enum ApllPointElement {
 pub struct ApllPointData {
     pub name: String,
     pub coordinates: crate::ir::geometry::Point3,
-    pub symbol_applied: String,
+    pub symbol_applied: DesApllPointSymbol,
 }
 
 /// `APLL_POINT_WITH_SURFACE` body — an `apll_point` carrying the `face_surface`
@@ -801,7 +815,7 @@ pub struct ApllPointData {
 pub struct ApllPointWithSurfaceData {
     pub name: String,
     pub coordinates: crate::ir::geometry::Point3,
-    pub symbol_applied: String,
+    pub symbol_applied: DesApllPointSymbol,
     pub associated_surface: FaceId,
 }
 

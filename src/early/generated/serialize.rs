@@ -4627,6 +4627,45 @@ pub(crate) fn serialize_auxiliary_leader_line(
     )
 }
 
+pub(crate) fn serialize_apll_point(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyApllPoint,
+) -> u64 {
+    buf.push_simple(
+        "APLL_POINT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.coordinates
+                    .iter()
+                    .map(|&x| crate::parser::entity::Attribute::Real(x))
+                    .collect(),
+            ),
+            des_apll_point_symbol_attr(l1.symbol_applied),
+        ],
+    )
+}
+
+pub(crate) fn serialize_apll_point_with_surface(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyApllPointWithSurface,
+) -> u64 {
+    buf.push_simple(
+        "APLL_POINT_WITH_SURFACE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.coordinates
+                    .iter()
+                    .map(|&x| crate::parser::entity::Attribute::Real(x))
+                    .collect(),
+            ),
+            des_apll_point_symbol_attr(l1.symbol_applied),
+            crate::parser::entity::Attribute::EntityRef(l1.associated_surface),
+        ],
+    )
+}
+
 pub(crate) fn serialize_annotation_plane(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyAnnotationPlane,
@@ -6417,6 +6456,27 @@ fn central_or_parallel_attr(
         match v {
             crate::ir::visualization::Projection::Central => "CENTRAL",
             crate::ir::visualization::Projection::Parallel => "PARALLEL",
+        }
+        .into(),
+    )
+}
+
+fn des_apll_point_symbol_attr(
+    v: crate::ir::pmi::DesApllPointSymbol,
+) -> crate::parser::entity::Attribute {
+    crate::parser::entity::Attribute::Enum(
+        match v {
+            crate::ir::pmi::DesApllPointSymbol::Circle => "CIRCLE",
+            crate::ir::pmi::DesApllPointSymbol::Dot => "DOT",
+            crate::ir::pmi::DesApllPointSymbol::InternalPairForwardArrowhead => {
+                "INTERNAL_PAIR_FORWARD_ARROWHEAD"
+            }
+            crate::ir::pmi::DesApllPointSymbol::InternalPairReverseArrowhead => {
+                "INTERNAL_PAIR_REVERSE_ARROWHEAD"
+            }
+            crate::ir::pmi::DesApllPointSymbol::None => "NONE",
+            crate::ir::pmi::DesApllPointSymbol::PositiveArrowhead => "POSITIVE_ARROWHEAD",
+            crate::ir::pmi::DesApllPointSymbol::Triangle => "TRIANGLE",
         }
         .into(),
     )

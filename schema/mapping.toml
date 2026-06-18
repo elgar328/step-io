@@ -271,6 +271,9 @@ generate = [
     # PMI simple — annotation placeholder leader lines (pattern-b 1:N writer split)
     "annotation_to_model_leader_line",
     "auxiliary_leader_line",
+    # PMI simple — APLL points (cartesian_point subtype; symbol enum + 1:N writer)
+    "apll_point",
+    "apll_point_with_surface",
     # Phase 3f: PMI simple — annotation plane (+ OPTIONAL SET elements, dropped)
     "annotation_plane",
     # Phase 3g: visualization simple — camera model d3 (+ hlhsr boolean subtype)
@@ -759,3 +762,10 @@ variants = { curve_3d = "Curve3d", pcurve_s1 = "PcurveS1", pcurve_s2 = "PcurveS2
 [enum.annotation_placeholder_occurrence_role]
 rust_type = "crate::ir::pmi::AnnotationPlaceholderOccurrenceRole"
 variants = { annotation_text = "AnnotationText", gps_data = "GpsData" }
+
+# `des_apll_point_symbol` (apll_point[_with_surface].symbol_applied). Strict:
+# off-schema token is non-standard input, dropped (NonStandardEnumValue → NORM).
+# The L2 String was promoted to this closed 7-member enum.
+[enum.des_apll_point_symbol]
+rust_type = "crate::ir::pmi::DesApllPointSymbol"
+variants = { circle = "Circle", dot = "Dot", internal_pair_forward_arrowhead = "InternalPairForwardArrowhead", internal_pair_reverse_arrowhead = "InternalPairReverseArrowhead", none = "None", positive_arrowhead = "PositiveArrowhead", triangle = "Triangle" }

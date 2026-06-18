@@ -4033,6 +4033,36 @@ pub(crate) fn bind_auxiliary_leader_line(
     })
 }
 
+pub(crate) fn bind_apll_point(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyApllPoint, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "APLL_POINT")?;
+    Ok(super::model::EarlyApllPoint {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        coordinates: crate::ir::attr::read_real_list(attrs, 1, entity_id, "coordinates")?,
+        symbol_applied: bind_des_apll_point_symbol(attrs, 2, entity_id, "symbol_applied")?,
+    })
+}
+
+pub(crate) fn bind_apll_point_with_surface(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyApllPointWithSurface, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "APLL_POINT_WITH_SURFACE")?;
+    Ok(super::model::EarlyApllPointWithSurface {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        coordinates: crate::ir::attr::read_real_list(attrs, 1, entity_id, "coordinates")?,
+        symbol_applied: bind_des_apll_point_symbol(attrs, 2, entity_id, "symbol_applied")?,
+        associated_surface: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "associated_surface",
+        )?,
+    })
+}
+
 pub(crate) fn bind_annotation_plane(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],
@@ -5785,6 +5815,32 @@ fn bind_central_or_parallel(
     match crate::ir::attr::read_enum(attrs, index, entity_id, field)? {
         "CENTRAL" => Ok(crate::ir::visualization::Projection::Central),
         "PARALLEL" => Ok(crate::ir::visualization::Projection::Parallel),
+        other => Err(crate::ir::error::ConvertError::NonStandardEnumValue {
+            entity_id,
+            field: field.to_string(),
+            token: other.to_string(),
+        }),
+    }
+}
+
+fn bind_des_apll_point_symbol(
+    attrs: &[crate::parser::entity::Attribute],
+    index: usize,
+    entity_id: u64,
+    field: &'static str,
+) -> Result<crate::ir::pmi::DesApllPointSymbol, crate::ir::error::ConvertError> {
+    match crate::ir::attr::read_enum(attrs, index, entity_id, field)? {
+        "CIRCLE" => Ok(crate::ir::pmi::DesApllPointSymbol::Circle),
+        "DOT" => Ok(crate::ir::pmi::DesApllPointSymbol::Dot),
+        "INTERNAL_PAIR_FORWARD_ARROWHEAD" => {
+            Ok(crate::ir::pmi::DesApllPointSymbol::InternalPairForwardArrowhead)
+        }
+        "INTERNAL_PAIR_REVERSE_ARROWHEAD" => {
+            Ok(crate::ir::pmi::DesApllPointSymbol::InternalPairReverseArrowhead)
+        }
+        "NONE" => Ok(crate::ir::pmi::DesApllPointSymbol::None),
+        "POSITIVE_ARROWHEAD" => Ok(crate::ir::pmi::DesApllPointSymbol::PositiveArrowhead),
+        "TRIANGLE" => Ok(crate::ir::pmi::DesApllPointSymbol::Triangle),
         other => Err(crate::ir::error::ConvertError::NonStandardEnumValue {
             entity_id,
             field: field.to_string(),

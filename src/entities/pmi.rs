@@ -12,22 +12,20 @@ use crate::ir::GeometricToleranceTarget;
 use crate::ir::PmiPool;
 use crate::ir::ShapeAspectRef;
 use crate::ir::attr::{
-    check_count, read_bool, read_entity_ref, read_entity_ref_list, read_enum, read_real_list,
-    read_string_or_unset,
+    check_count, read_bool, read_entity_ref, read_entity_ref_list, read_string_or_unset,
 };
 use crate::ir::error::ConvertError;
-use crate::ir::geometry::Point3;
 use crate::ir::pmi::{
     AnnotationOccurrenceAssociativity, AnnotationOccurrenceRef, AnnotationPlaceholderLeaderLine,
     AnnotationPlaceholderOccurrence, AnnotationPlaceholderOccurrenceWithLeaderLine,
-    AnnotationPlane, AnnotationSymbolOccurrence, AnnotationTextOccurrence, ApllPointData,
-    ApllPointElement, ApllPointWithSurfaceData, DatumFeature, DimensionalCharacteristic,
-    DimensionalLocation, DimensionalSize, DimensionalSizeKind, DimensionalSizeWithDatumFeatureData,
-    DraughtingAnnotationOccurrence, DraughtingCalloutData, DraughtingCalloutElement,
-    DraughtingCalloutRelationship, DraughtingModelIdentifiedItem, DraughtingModelItemAssociation,
-    DraughtingModelItemDefinition, DraughtingPreDefinedTextFont, GeneralDatumBase,
-    GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
-    GeometricToleranceRef, GeometricToleranceRelationship, GeometricToleranceWithDatumReference,
+    AnnotationPlane, AnnotationSymbolOccurrence, AnnotationTextOccurrence, ApllPointElement,
+    DatumFeature, DimensionalCharacteristic, DimensionalLocation, DimensionalSize,
+    DimensionalSizeKind, DimensionalSizeWithDatumFeatureData, DraughtingAnnotationOccurrence,
+    DraughtingCalloutData, DraughtingCalloutElement, DraughtingCalloutRelationship,
+    DraughtingModelIdentifiedItem, DraughtingModelItemAssociation, DraughtingModelItemDefinition,
+    DraughtingPreDefinedTextFont, GeneralDatumBase, GeneralDatumReference,
+    GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData, GeometricToleranceRef,
+    GeometricToleranceRelationship, GeometricToleranceWithDatumReference,
     GeometricToleranceWithDatumReferenceData, LeaderCurve, LeaderTerminator, LimitsAndFits,
     MeasureQualification, PlainAnnotationCurveOccurrence, PlainAnnotationOccurrence,
     PlusMinusTolerance, ProjectedZoneDefinition, TerminatorSymbol, TessellatedAnnotationOccurrence,
@@ -345,64 +343,32 @@ impl SimpleEntityHandler for ApllPointHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "APLL_POINT")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let coords = read_real_list(attrs, 1, entity_id, "coordinates")?;
-        if coords.len() != 3 {
-            return Err(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!("APLL_POINT must have 3 coordinates, got {}", coords.len()),
-            });
-        }
-        let symbol_applied = read_enum(attrs, 2, entity_id, "symbol_applied")?.to_owned();
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .apll_points
-            .push(ApllPointElement::ApllPoint(ApllPointData {
-                name,
-                coordinates: Point3 {
-                    x: coords[0],
-                    y: coords[1],
-                    z: coords[2],
-                },
-                symbol_applied,
-            }));
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_apll_point(entity_id, attrs)?;
+        lower::lower_apll_point(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, apll: ApllPointElement) -> Result<u64, WriteError> {
+        // The shared arena holds both subtypes; this base handler is the sole
+        // emitter and routes each variant to its own generated `serialize`
+        // (the `ApllPointWithSurfaceHandler::write` is `unreachable!`).
         match apll {
-            ApllPointElement::ApllPoint(data) => Ok(buf.push_simple(
-                "APLL_POINT",
-                vec![
-                    Attribute::String(data.name),
-                    Attribute::List(vec![
-                        Attribute::Real(data.coordinates.x),
-                        Attribute::Real(data.coordinates.y),
-                        Attribute::Real(data.coordinates.z),
-                    ]),
-                    Attribute::Enum(data.symbol_applied),
-                ],
-            )),
+            ApllPointElement::ApllPoint(data) => {
+                let early =
+                    lift::lift_apll_point(data.name, &data.coordinates, data.symbol_applied);
+                Ok(serialize::serialize_apll_point(buf, &early))
+            }
             ApllPointElement::ApllPointWithSurface(data) => {
                 // Surfaces (`face_surface`) are emitted in the topology pass,
-                // well before the PMI pass, so `face_ids` is populated here.
+                // well before the PMI pass, so the step id is populated here.
                 let surface_step = buf.step_id(data.associated_surface);
-                Ok(buf.push_simple(
-                    "APLL_POINT_WITH_SURFACE",
-                    vec![
-                        Attribute::String(data.name),
-                        Attribute::List(vec![
-                            Attribute::Real(data.coordinates.x),
-                            Attribute::Real(data.coordinates.y),
-                            Attribute::Real(data.coordinates.z),
-                        ]),
-                        Attribute::Enum(data.symbol_applied),
-                        Attribute::EntityRef(surface_step),
-                    ],
-                ))
+                let early = lift::lift_apll_point_with_surface(
+                    data.name,
+                    &data.coordinates,
+                    data.symbol_applied,
+                    surface_step,
+                );
+                Ok(serialize::serialize_apll_point_with_surface(buf, &early))
             }
         }
     }
@@ -425,48 +391,8 @@ impl SimpleEntityHandler for ApllPointWithSurfaceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "APLL_POINT_WITH_SURFACE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let coords = read_real_list(attrs, 1, entity_id, "coordinates")?;
-        if coords.len() != 3 {
-            return Err(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!(
-                    "APLL_POINT_WITH_SURFACE must have 3 coordinates, got {}",
-                    coords.len()
-                ),
-            });
-        }
-        let symbol_applied = read_enum(attrs, 2, entity_id, "symbol_applied")?.to_owned();
-        let surface_ref = read_entity_ref(attrs, 3, entity_id, "associated_surface")?;
-        let Some(associated_surface) = ctx.id_cache.get::<crate::ir::id::FaceId>(surface_ref)
-        else {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!(
-                    "APLL_POINT_WITH_SURFACE.associated_surface #{surface_ref} did not resolve to \
-                     a known face_surface"
-                ),
-            });
-            return Ok(());
-        };
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .apll_points
-            .push(ApllPointElement::ApllPointWithSurface(
-                ApllPointWithSurfaceData {
-                    name,
-                    coordinates: Point3 {
-                        x: coords[0],
-                        y: coords[1],
-                        z: coords[2],
-                    },
-                    symbol_applied,
-                    associated_surface,
-                },
-            ));
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_apll_point_with_surface(entity_id, attrs)?;
+        lower::lower_apll_point_with_surface(ctx, entity_id, early);
         Ok(())
     }
 

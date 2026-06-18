@@ -6,33 +6,36 @@ use crate::early::model::{
     EarlyAnnotationCurveOccurrence, EarlyAnnotationOccurrence,
     EarlyAnnotationPlaceholderOccurrence, EarlyAnnotationPlaceholderOccurrenceWithLeaderLine,
     EarlyAnnotationPlane, EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence,
-    EarlyAnnotationToModelLeaderLine, EarlyAuxiliaryLeaderLine, EarlyCircularRunoutTolerance,
-    EarlyConcentricityTolerance, EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature,
-    EarlyDimensionalLocation, EarlyDimensionalSize, EarlyDirectedDimensionalLocation,
-    EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout,
-    EarlyDraughtingCalloutRelationship, EarlyDraughtingPreDefinedTextFont, EarlyFlatnessTolerance,
-    EarlyGeometricToleranceRelationship, EarlyLeaderCurve, EarlyLeaderDirectedCallout,
-    EarlyLeaderTerminator, EarlyLimitsAndFits, EarlyMeasureQualification,
-    EarlyParallelismTolerance, EarlyPerpendicularityTolerance, EarlyPlusMinusTolerance,
-    EarlyProjectedZoneDefinition, EarlyRoundnessTolerance, EarlyStraightnessTolerance,
-    EarlySurfaceProfileTolerance, EarlySymmetryTolerance, EarlyTerminatorSymbol,
-    EarlyTessellatedAnnotationOccurrence, EarlyToleranceValue, EarlyToleranceZoneForm,
-    EarlyTotalRunoutTolerance, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
+    EarlyAnnotationToModelLeaderLine, EarlyApllPoint, EarlyApllPointWithSurface,
+    EarlyAuxiliaryLeaderLine, EarlyCircularRunoutTolerance, EarlyConcentricityTolerance,
+    EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature, EarlyDimensionalLocation,
+    EarlyDimensionalSize, EarlyDirectedDimensionalLocation, EarlyDraughtingAnnotationOccurrence,
+    EarlyDraughtingCallout, EarlyDraughtingCalloutRelationship, EarlyDraughtingPreDefinedTextFont,
+    EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship, EarlyLeaderCurve,
+    EarlyLeaderDirectedCallout, EarlyLeaderTerminator, EarlyLimitsAndFits,
+    EarlyMeasureQualification, EarlyParallelismTolerance, EarlyPerpendicularityTolerance,
+    EarlyPlusMinusTolerance, EarlyProjectedZoneDefinition, EarlyRoundnessTolerance,
+    EarlyStraightnessTolerance, EarlySurfaceProfileTolerance, EarlySymmetryTolerance,
+    EarlyTerminatorSymbol, EarlyTessellatedAnnotationOccurrence, EarlyToleranceValue,
+    EarlyToleranceZoneForm, EarlyTotalRunoutTolerance, EarlyTypeQualifier,
+    EarlyValueFormatTypeQualifier,
 };
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
+use crate::ir::geometry::Point3;
 use crate::ir::pmi::{
     AngularLocationData, AnnotationCurveOccurrence, AnnotationOccurrence,
     AnnotationPlaceholderLeaderLine, AnnotationPlaceholderOccurrence,
     AnnotationPlaceholderOccurrenceWithLeaderLine, AnnotationPlane, AnnotationSymbolOccurrence,
-    AnnotationTextOccurrence, AnnotationToModelLeaderLine, AuxiliaryLeaderLineData, Datum,
-    DatumFeature, DimensionalLocation, DimensionalLocationData, DimensionalSize,
-    DimensionalSizeKind, DraughtingAnnotationOccurrence, DraughtingCallout, DraughtingCalloutData,
-    DraughtingCalloutRelationship, DraughtingPreDefinedTextFont, GeometricTolerance,
-    GeometricToleranceRelationship, GeometricToleranceWithDatumReference, LeaderCurve,
-    LeaderTerminator, LimitsAndFits, MeasureQualification, PlainAnnotationCurveOccurrence,
-    PlainAnnotationOccurrence, PlusMinusTolerance, PmiPool, ProjectedZoneDefinition,
-    TerminatorSymbol, TessellatedAnnotationOccurrence, ToleranceValue, ToleranceZoneForm,
-    TypeQualifier, ValueFormatTypeQualifier, ValueQualifier,
+    AnnotationTextOccurrence, AnnotationToModelLeaderLine, ApllPointData, ApllPointElement,
+    ApllPointWithSurfaceData, AuxiliaryLeaderLineData, Datum, DatumFeature, DimensionalLocation,
+    DimensionalLocationData, DimensionalSize, DimensionalSizeKind, DraughtingAnnotationOccurrence,
+    DraughtingCallout, DraughtingCalloutData, DraughtingCalloutRelationship,
+    DraughtingPreDefinedTextFont, GeometricTolerance, GeometricToleranceRelationship,
+    GeometricToleranceWithDatumReference, LeaderCurve, LeaderTerminator, LimitsAndFits,
+    MeasureQualification, PlainAnnotationCurveOccurrence, PlainAnnotationOccurrence,
+    PlusMinusTolerance, PmiPool, ProjectedZoneDefinition, TerminatorSymbol,
+    TessellatedAnnotationOccurrence, ToleranceValue, ToleranceZoneForm, TypeQualifier,
+    ValueFormatTypeQualifier, ValueQualifier,
 };
 use crate::reader::ReaderContext;
 
@@ -1318,6 +1321,94 @@ pub(crate) fn lower_annotation_to_model_leader_line(
             ),
         );
     ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `APLL_POINT` (a `cartesian_point` subtype waypoint). A non-3D
+/// coordinate list is malformed input — warns + drops (the legacy read errored;
+/// no corpus file carries one). `symbol_applied` is the bind-decoded enum.
+pub(crate) fn lower_apll_point(ctx: &mut ReaderContext, entity_id: u64, early: EarlyApllPoint) {
+    let Some(coordinates) = point3_or_warn(ctx, entity_id, &early.coordinates, "APLL_POINT") else {
+        return;
+    };
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .apll_points
+        .push(ApllPointElement::ApllPoint(ApllPointData {
+            name: early.name,
+            coordinates,
+            symbol_applied: early.symbol_applied,
+        }));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `APLL_POINT_WITH_SURFACE` (base + the `face_surface` it projects
+/// onto). Non-3D coords warn + drop; an unresolved `associated_surface` warns +
+/// drops (verbatim port of the legacy read).
+pub(crate) fn lower_apll_point_with_surface(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyApllPointWithSurface,
+) {
+    let Some(coordinates) = point3_or_warn(
+        ctx,
+        entity_id,
+        &early.coordinates,
+        "APLL_POINT_WITH_SURFACE",
+    ) else {
+        return;
+    };
+    let Some(associated_surface) = ctx
+        .id_cache
+        .get::<crate::ir::id::FaceId>(early.associated_surface)
+    else {
+        ctx.warnings
+            .push(crate::ir::error::ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "APLL_POINT_WITH_SURFACE.associated_surface #{} did not resolve to a known \
+                 face_surface",
+                    early.associated_surface
+                ),
+            });
+        return;
+    };
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .apll_points
+        .push(ApllPointElement::ApllPointWithSurface(
+            ApllPointWithSurfaceData {
+                name: early.name,
+                coordinates,
+                symbol_applied: early.symbol_applied,
+                associated_surface,
+            },
+        ));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// A 3-element coordinate list → [`Point3`]; a non-3D list is malformed input
+/// (warns + returns `None` so the caller drops). Shared by both APLL points.
+fn point3_or_warn(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    coords: &[f64],
+    name: &str,
+) -> Option<Point3> {
+    if coords.len() != 3 {
+        ctx.warnings
+            .push(crate::ir::error::ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!("{name} must have 3 coordinates, got {}", coords.len()),
+            });
+        return None;
+    }
+    Some(Point3 {
+        x: coords[0],
+        y: coords[1],
+        z: coords[2],
+    })
 }
 
 /// Lower one `AUXILIARY_LEADER_LINE` (base + `controlling_leader_line`, another

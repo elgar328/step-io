@@ -6,21 +6,24 @@ use crate::early::model::{
     EarlyAnnotationCurveOccurrence, EarlyAnnotationOccurrence,
     EarlyAnnotationPlaceholderOccurrence, EarlyAnnotationPlaceholderOccurrenceWithLeaderLine,
     EarlyAnnotationPlane, EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence,
-    EarlyAnnotationToModelLeaderLine, EarlyAuxiliaryLeaderLine, EarlyCircularRunoutTolerance,
-    EarlyConcentricityTolerance, EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature,
-    EarlyDimensionalLocation, EarlyDimensionalSize, EarlyDirectedDimensionalLocation,
-    EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout,
-    EarlyDraughtingCalloutRelationship, EarlyDraughtingPreDefinedTextFont, EarlyFlatnessTolerance,
-    EarlyGeometricToleranceRelationship, EarlyLeaderCurve, EarlyLeaderDirectedCallout,
-    EarlyLeaderTerminator, EarlyLimitsAndFits, EarlyMeasureQualification,
-    EarlyParallelismTolerance, EarlyPerpendicularityTolerance, EarlyPlusMinusTolerance,
-    EarlyProjectedZoneDefinition, EarlyRoundnessTolerance, EarlyStraightnessTolerance,
-    EarlySurfaceProfileTolerance, EarlySymmetryTolerance, EarlyTerminatorSymbol,
-    EarlyTessellatedAnnotationOccurrence, EarlyToleranceValue, EarlyToleranceZoneForm,
-    EarlyTotalRunoutTolerance, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
+    EarlyAnnotationToModelLeaderLine, EarlyApllPoint, EarlyApllPointWithSurface,
+    EarlyAuxiliaryLeaderLine, EarlyCircularRunoutTolerance, EarlyConcentricityTolerance,
+    EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature, EarlyDimensionalLocation,
+    EarlyDimensionalSize, EarlyDirectedDimensionalLocation, EarlyDraughtingAnnotationOccurrence,
+    EarlyDraughtingCallout, EarlyDraughtingCalloutRelationship, EarlyDraughtingPreDefinedTextFont,
+    EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship, EarlyLeaderCurve,
+    EarlyLeaderDirectedCallout, EarlyLeaderTerminator, EarlyLimitsAndFits,
+    EarlyMeasureQualification, EarlyParallelismTolerance, EarlyPerpendicularityTolerance,
+    EarlyPlusMinusTolerance, EarlyProjectedZoneDefinition, EarlyRoundnessTolerance,
+    EarlyStraightnessTolerance, EarlySurfaceProfileTolerance, EarlySymmetryTolerance,
+    EarlyTerminatorSymbol, EarlyTessellatedAnnotationOccurrence, EarlyToleranceValue,
+    EarlyToleranceZoneForm, EarlyTotalRunoutTolerance, EarlyTypeQualifier,
+    EarlyValueFormatTypeQualifier,
 };
+use crate::ir::geometry::Point3;
 use crate::ir::pmi::{
-    AnnotationPlaceholderOccurrenceRole, LimitsAndFits, TessellatedAnnotationOccurrence,
+    AnnotationPlaceholderOccurrenceRole, DesApllPointSymbol, LimitsAndFits,
+    TessellatedAnnotationOccurrence,
 };
 use crate::writer::buffer::WriteBuffer;
 
@@ -627,5 +630,35 @@ pub(crate) fn lift_auxiliary_leader_line(
         name,
         geometric_elements,
         controlling_leader_line,
+    }
+}
+
+/// Lift one `APLL_POINT` (`Point3` → 3-element coordinate list, mirroring the
+/// `CARTESIAN_POINT` lift; `symbol_applied` passes through).
+pub(crate) fn lift_apll_point(
+    name: String,
+    coordinates: &Point3,
+    symbol_applied: DesApllPointSymbol,
+) -> EarlyApllPoint {
+    EarlyApllPoint {
+        name,
+        coordinates: vec![coordinates.x, coordinates.y, coordinates.z],
+        symbol_applied,
+    }
+}
+
+/// Lift one `APLL_POINT_WITH_SURFACE` (`associated_surface` pre-emitted to a
+/// step id by the handler).
+pub(crate) fn lift_apll_point_with_surface(
+    name: String,
+    coordinates: &Point3,
+    symbol_applied: DesApllPointSymbol,
+    associated_surface: u64,
+) -> EarlyApllPointWithSurface {
+    EarlyApllPointWithSurface {
+        name,
+        coordinates: vec![coordinates.x, coordinates.y, coordinates.z],
+        symbol_applied,
+        associated_surface,
     }
 }

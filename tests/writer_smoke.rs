@@ -6724,7 +6724,7 @@ fn leader_line_cluster_round_trip() {
     use step_io::ir::pmi::{
         AnnotationOccurrence, AnnotationPlaceholderLeaderLine, AnnotationPlaceholderOccurrenceRole,
         AnnotationPlaceholderOccurrenceWithLeaderLine, AnnotationToModelLeaderLine, ApllPointData,
-        ApllPointElement,
+        ApllPointElement, DesApllPointSymbol,
     };
     use step_io::ir::representation_item::RepresentationItemRef;
     let mut model = empty_model();
@@ -6745,7 +6745,7 @@ fn leader_line_cluster_round_trip() {
                 y: 2.0,
                 z: 3.0,
             },
-            symbol_applied: "NONE".into(),
+            symbol_applied: DesApllPointSymbol::None,
         }));
     let p1 = pmi
         .apll_points
@@ -6756,7 +6756,7 @@ fn leader_line_cluster_round_trip() {
                 y: 5.0,
                 z: 6.0,
             },
-            symbol_applied: "NONE".into(),
+            symbol_applied: DesApllPointSymbol::None,
         }));
     let leader = pmi.annotation_placeholder_leader_lines.push(
         AnnotationPlaceholderLeaderLine::AnnotationToModelLeaderLine(AnnotationToModelLeaderLine {
@@ -6799,7 +6799,7 @@ fn leader_line_cluster_round_trip() {
         panic!("expected APLL_POINT");
     };
     assert!((re_p0.coordinates.x - 1.0).abs() < 1e-12);
-    assert_eq!(re_p0.symbol_applied, "NONE");
+    assert_eq!(re_p0.symbol_applied, DesApllPointSymbol::None);
     let with_leader = re_pmi.annotation_occurrences.iter().any(|ao| {
         matches!(
             ao,
@@ -6821,7 +6821,7 @@ fn apll_point_with_surface_and_auxiliary_leader_line_round_trips() {
     use step_io::ir::geometry::Point3;
     use step_io::ir::pmi::{
         AnnotationPlaceholderLeaderLine, AnnotationToModelLeaderLine, ApllPointData,
-        ApllPointElement, ApllPointWithSurfaceData, AuxiliaryLeaderLineData,
+        ApllPointElement, ApllPointWithSurfaceData, AuxiliaryLeaderLineData, DesApllPointSymbol,
     };
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
@@ -6841,7 +6841,7 @@ fn apll_point_with_surface_and_auxiliary_leader_line_round_trips() {
                 y: 2.0,
                 z: 3.0,
             },
-            symbol_applied: "NONE".into(),
+            symbol_applied: DesApllPointSymbol::None,
         }));
     let p_surf = pmi.apll_points.push(ApllPointElement::ApllPointWithSurface(
         ApllPointWithSurfaceData {
@@ -6851,7 +6851,7 @@ fn apll_point_with_surface_and_auxiliary_leader_line_round_trips() {
                 y: 5.0,
                 z: 6.0,
             },
-            symbol_applied: "POSITIVE_ARROWHEAD".into(),
+            symbol_applied: DesApllPointSymbol::PositiveArrowhead,
             associated_surface: face,
         },
     ));

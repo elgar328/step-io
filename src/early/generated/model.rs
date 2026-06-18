@@ -5476,6 +5476,53 @@ impl crate::ir::arena::ArenaId for EarlyAuxiliaryLeaderLineId {
     }
 }
 
+/// L1 `APLL_POINT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyApllPoint {
+    pub(crate) name: String,
+    pub(crate) coordinates: Vec<f64>,
+    pub(crate) symbol_applied: crate::ir::pmi::DesApllPointSymbol,
+}
+
+/// Typed `id_cache` key for `APLL_POINT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyApllPointId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyApllPointId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `APLL_POINT_WITH_SURFACE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyApllPointWithSurface {
+    pub(crate) name: String,
+    pub(crate) coordinates: Vec<f64>,
+    pub(crate) symbol_applied: crate::ir::pmi::DesApllPointSymbol,
+    pub(crate) associated_surface: u64,
+}
+
+/// Typed `id_cache` key for `APLL_POINT_WITH_SURFACE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyApllPointWithSurfaceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyApllPointWithSurfaceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `ANNOTATION_PLANE` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyAnnotationPlane {
