@@ -475,10 +475,8 @@ fn collect_case_entries(
         }
         used.insert(e.2.clone());
     }
-    assert!(
-        !entries.iter().any(|e| matches!(e.3, Kind::Select(_))),
-        "gen-early: multi-case entity `{ent_name}` has a SELECT attr — not yet supported"
-    );
+    // Typed-only SELECT fields are supported in multi-case bind (let-form drop,
+    // `has_select` → Result<Option>); see `emit_multi_case_complex`.
     entries
 }
 
@@ -513,6 +511,15 @@ fn emit_multi_case_complex(
     let exact_mode = cases_data
         .iter()
         .any(|(_, _, _, ch, _)| ch.match_parts.is_some());
+    // A non-derived `Kind::Select` field anywhere → bind returns `Result<Option>`
+    // (a measure_value-style typed SELECT drops the whole entity on an
+    // unrecognized member, mirroring the simple let-form path). Gated so
+    // select-free complex entities keep `Result<T>` (regen 0-diff).
+    let has_select = cases_data.iter().any(|(_, _, _, _, entries)| {
+        entries
+            .iter()
+            .any(|e| !e.5 && matches!(e.3, Kind::Select(_)))
+    });
     assert!(
         exact_mode
             || cases_data
@@ -544,10 +551,16 @@ fn emit_multi_case_complex(
     // 3. Id key.
     emit_id_only(type_name, step_name, out);
 
-    // 4. bind: discriminant dispatch.
+    // 4. bind: discriminant / exact-set dispatch. `has_select` → `Result<Option>`
+    // (drop-on-unrecognized-member, like the simple let-form).
+    let bind_ret = if has_select {
+        format!("Result<Option<super::model::{type_name}>, crate::ir::error::ConvertError>")
+    } else {
+        format!("Result<super::model::{type_name}, crate::ir::error::ConvertError>")
+    };
     writeln!(
         out.bind,
-        "pub(crate) fn bind_{ent_name}(entity_id: u64, parts: &[crate::parser::entity::RawEntityPart]) -> Result<super::model::{type_name}, crate::ir::error::ConvertError> {{"
+        "pub(crate) fn bind_{ent_name}(entity_id: u64, parts: &[crate::parser::entity::RawEntityPart]) -> {bind_ret} {{"
     )
     .unwrap();
     // Writes the per-part `let attrs`/`let field` reads for one case.
@@ -566,12 +579,32 @@ fn emit_multi_case_complex(
             )
             .unwrap();
                 for (_, li, field, k, opt, _) in fields {
-                    writeln!(
-                        bind,
-                        "    let {field} = {};",
-                        bind_expr_full(k, *li, field, *opt)
-                    )
-                    .unwrap();
+                    match (k, opt) {
+                        // Optional typed SELECT: `$`/`*` → None; present-but-
+                        // unrecognized → drop the whole entity (`Ok(None)`).
+                        (Kind::Select(sel), true) => {
+                            writeln!(bind, "    let {field} = match &attrs[{li}] {{").unwrap();
+                            writeln!(bind, "        crate::parser::entity::Attribute::Unset | crate::parser::entity::Attribute::Derived => None,").unwrap();
+                            writeln!(bind, "        _ => match bind_{sel}(&attrs[{li}]) {{ Some(v) => Some(v), None => return Ok(None) }},").unwrap();
+                            writeln!(bind, "    }};").unwrap();
+                        }
+                        // Required typed SELECT: drop the entity on unrecognized.
+                        (Kind::Select(sel), false) => {
+                            writeln!(
+                                bind,
+                                "    let Some({field}) = bind_{sel}(&attrs[{li}]) else {{ return Ok(None); }};"
+                            )
+                            .unwrap();
+                        }
+                        _ => {
+                            writeln!(
+                                bind,
+                                "    let {field} = {};",
+                                bind_expr_full(k, *li, field, *opt)
+                            )
+                            .unwrap();
+                        }
+                    }
                 }
             }
         };
@@ -613,12 +646,13 @@ fn emit_multi_case_complex(
             )
             .unwrap();
             emit_case_reads(&mut out.bind, ch, entries);
-            writeln!(
-                out.bind,
-                "    return Ok({});",
-                case_ctor(variant, inner_type, entries)
-            )
-            .unwrap();
+            let ctor = case_ctor(variant, inner_type, entries);
+            let ret = if has_select {
+                format!("Some({ctor})")
+            } else {
+                ctor
+            };
+            writeln!(out.bind, "    return Ok({ret});").unwrap();
             writeln!(out.bind, "    }}").unwrap();
         }
         writeln!(
@@ -638,12 +672,13 @@ fn emit_multi_case_complex(
             )
             .unwrap();
             emit_case_reads(&mut out.bind, ch, entries);
-            writeln!(
-                out.bind,
-                "    return Ok({});",
-                case_ctor(variant, inner_type, entries)
-            )
-            .unwrap();
+            let ctor = case_ctor(variant, inner_type, entries);
+            let ret = if has_select {
+                format!("Some({ctor})")
+            } else {
+                ctor
+            };
+            writeln!(out.bind, "    return Ok({ret});").unwrap();
             writeln!(out.bind, "    }}").unwrap();
         }
         if let Some((_, variant, inner_type, ch, entries)) = cases_data
@@ -651,12 +686,13 @@ fn emit_multi_case_complex(
             .find(|(_, _, _, ch, _)| ch.discriminant.is_none())
         {
             emit_case_reads(&mut out.bind, ch, entries);
-            writeln!(
-                out.bind,
-                "    Ok({})",
-                case_ctor(variant, inner_type, entries)
-            )
-            .unwrap();
+            let ctor = case_ctor(variant, inner_type, entries);
+            let ret = if has_select {
+                format!("Some({ctor})")
+            } else {
+                ctor
+            };
+            writeln!(out.bind, "    Ok({ret})").unwrap();
         } else {
             writeln!(
                 out.bind,
@@ -1932,6 +1968,61 @@ mod tests {
             out.model
                 .contains("pub(crate) enum EarlyCharacterizedObjectComplex {")
         );
+    }
+
+    /// A multi-case complex with a typed-only SELECT field (measure_value-style):
+    /// bind returns `Result<Option>` and drops the entity on an unrecognized
+    /// member (`else { return Ok(None) }`); ctors wrap in `Ok(Some(...))`.
+    #[test]
+    fn multi_case_complex_select_field_optional_drop() {
+        use crate::mapping::{CaseHint, ComplexHint};
+        use crate::schema::{Attr, Entity, TypeDef};
+        let mut ctx = ctx_from(schema());
+        ctx.schema.types.insert(
+            "my_sel".to_string(),
+            TypeDef {
+                aliased: "SELECT(real, string)".to_string(),
+            },
+        );
+        ctx.schema.entity.insert(
+            "p_part".to_string(),
+            Entity {
+                parents: vec![],
+                own_attrs: vec![Attr {
+                    name: "v".to_string(),
+                    ty: "my_sel".to_string(),
+                }],
+                redeclared_attrs: vec![],
+            },
+        );
+        let mut cases = BTreeMap::new();
+        cases.insert(
+            "only".to_string(),
+            CaseHint {
+                parts: vec!["P_PART".to_string()],
+                derived: vec![],
+                discriminant: None,
+                match_parts: Some(vec!["P_PART".to_string()]),
+            },
+        );
+        ctx.mapping.complex.insert(
+            "sel_complex".to_string(),
+            ComplexHint {
+                parts: None,
+                cases: Some(cases),
+            },
+        );
+        let mut out = GenOut::new("");
+        emit_entity(&ctx, "sel_complex", &mut out);
+        assert!(
+            out.bind
+                .contains("Result<Option<super::model::EarlySelComplex>")
+        );
+        assert!(
+            out.bind
+                .contains("let Some(v) = bind_my_sel(&attrs[0]) else { return Ok(None); }")
+        );
+        assert!(out.bind.contains("return Ok(Some("));
     }
 
     /// Hint-less ENUM auto-synthesis: model enum + strict bind/serialize helpers.
