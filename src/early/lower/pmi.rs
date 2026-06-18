@@ -16,11 +16,12 @@ use crate::early::model::{
     EarlyDraughtingModelItemAssociationWithPlaceholder, EarlyDraughtingPreDefinedTextFont,
     EarlyFlatnessTolerance, EarlyFlatnessToleranceComplex, EarlyGeometricToleranceModifier,
     EarlyGeometricToleranceRelationship, EarlyLeaderCurve, EarlyLeaderDirectedCallout,
-    EarlyLeaderTerminator, EarlyLimitsAndFits, EarlyMeasureQualification,
-    EarlyParallelismTolerance, EarlyParallelismToleranceComplex, EarlyPerpendicularityTolerance,
-    EarlyPerpendicularityToleranceComplex, EarlyPlusMinusTolerance, EarlyProjectedZoneDefinition,
-    EarlyRoundnessTolerance, EarlyRoundnessToleranceComplex, EarlyStraightnessTolerance,
-    EarlyStraightnessToleranceComplex, EarlySurfaceProfileTolerance, EarlySymmetryTolerance,
+    EarlyLeaderTerminator, EarlyLimitsAndFits, EarlyLineProfileToleranceComplex,
+    EarlyMeasureQualification, EarlyParallelismTolerance, EarlyParallelismToleranceComplex,
+    EarlyPerpendicularityTolerance, EarlyPerpendicularityToleranceComplex, EarlyPlusMinusTolerance,
+    EarlyPositionToleranceComplex, EarlyProjectedZoneDefinition, EarlyRoundnessTolerance,
+    EarlyRoundnessToleranceComplex, EarlyStraightnessTolerance, EarlyStraightnessToleranceComplex,
+    EarlySurfaceProfileTolerance, EarlySurfaceProfileToleranceComplex, EarlySymmetryTolerance,
     EarlyTerminatorSymbol, EarlyTessellatedAnnotationOccurrence, EarlyToleranceValue,
     EarlyToleranceZoneForm, EarlyTotalRunoutTolerance, EarlyTypeQualifier,
     EarlyValueFormatTypeQualifier,
@@ -383,7 +384,8 @@ pub(crate) fn lower_straightness_tolerance_complex(
 /// `PERPENDICULARITY` / `CIRCULAR_RUNOUT`): collapse the strict L1 modifier enum
 /// to L2, then resolve via the shared with-datum builder (no displacement — these
 /// cases carry only `GEOMETRIC_TOLERANCE_WITH_MODIFIERS`).
-fn lower_gtwdr_simple_leaf_complex_common(
+#[allow(clippy::too_many_arguments)]
+fn lower_gtwdr_complex_common(
     ctx: &ReaderContext,
     name: String,
     description: Option<String>,
@@ -391,8 +393,11 @@ fn lower_gtwdr_simple_leaf_complex_common(
     toleranced_shape_aspect: u64,
     datum_system: &[u64],
     modifiers: Vec<EarlyGeometricToleranceModifier>,
+    displacement: Option<u64>,
 ) -> Option<crate::ir::pmi::GeometricToleranceWithDatumReferenceData> {
     let magnitude = magnitude?;
+    let displacement =
+        displacement.and_then(|r| crate::entities::pmi::resolve_tolerance_magnitude(ctx, r));
     crate::entities::pmi::build_gt_with_datum_reference_data(
         ctx,
         name,
@@ -401,7 +406,7 @@ fn lower_gtwdr_simple_leaf_complex_common(
         toleranced_shape_aspect,
         datum_system,
         modifiers.into_iter().map(early_modifier_to_l2).collect(),
-        None,
+        displacement,
     )
 }
 
@@ -411,7 +416,7 @@ pub(crate) fn lower_parallelism_tolerance_complex(
     entity_id: u64,
     early: EarlyParallelismToleranceComplex,
 ) {
-    let Some(data) = lower_gtwdr_simple_leaf_complex_common(
+    let Some(data) = lower_gtwdr_complex_common(
         ctx,
         early.name,
         early.description,
@@ -419,6 +424,7 @@ pub(crate) fn lower_parallelism_tolerance_complex(
         early.toleranced_shape_aspect,
         &early.datum_system,
         early.modifiers,
+        None,
     ) else {
         return;
     };
@@ -435,7 +441,7 @@ pub(crate) fn lower_perpendicularity_tolerance_complex(
     entity_id: u64,
     early: EarlyPerpendicularityToleranceComplex,
 ) {
-    let Some(data) = lower_gtwdr_simple_leaf_complex_common(
+    let Some(data) = lower_gtwdr_complex_common(
         ctx,
         early.name,
         early.description,
@@ -443,6 +449,7 @@ pub(crate) fn lower_perpendicularity_tolerance_complex(
         early.toleranced_shape_aspect,
         &early.datum_system,
         early.modifiers,
+        None,
     ) else {
         return;
     };
@@ -459,7 +466,7 @@ pub(crate) fn lower_circular_runout_tolerance_complex(
     entity_id: u64,
     early: EarlyCircularRunoutToleranceComplex,
 ) {
-    let Some(data) = lower_gtwdr_simple_leaf_complex_common(
+    let Some(data) = lower_gtwdr_complex_common(
         ctx,
         early.name,
         early.description,
@@ -467,6 +474,7 @@ pub(crate) fn lower_circular_runout_tolerance_complex(
         early.toleranced_shape_aspect,
         &early.datum_system,
         early.modifiers,
+        None,
     ) else {
         return;
     };
@@ -474,6 +482,129 @@ pub(crate) fn lower_circular_runout_tolerance_complex(
         ctx,
         entity_id,
         GeometricToleranceWithDatumReference::CircularRunout(data),
+    );
+}
+
+/// Lower one `POSITION_TOLERANCE` COMPLEX form (always-complex; plain or modifiers).
+pub(crate) fn lower_position_tolerance_complex(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyPositionToleranceComplex,
+) {
+    let (name, description, magnitude, tsa, datum_system, modifiers) = match early {
+        EarlyPositionToleranceComplex::Plain(p) => (
+            p.name,
+            p.description,
+            p.magnitude,
+            p.toleranced_shape_aspect,
+            p.datum_system,
+            Vec::new(),
+        ),
+        EarlyPositionToleranceComplex::Modifiers(m) => (
+            m.name,
+            m.description,
+            m.magnitude,
+            m.toleranced_shape_aspect,
+            m.datum_system,
+            m.modifiers,
+        ),
+    };
+    let Some(data) = lower_gtwdr_complex_common(
+        ctx,
+        name,
+        description,
+        magnitude,
+        tsa,
+        &datum_system,
+        modifiers,
+        None,
+    ) else {
+        return;
+    };
+    crate::entities::pmi::push_gt_with_datum_reference(
+        ctx,
+        entity_id,
+        GeometricToleranceWithDatumReference::Position(data),
+    );
+}
+
+/// Lower one `SURFACE_PROFILE_TOLERANCE` COMPLEX form (plain / modifiers /
+/// displacement).
+pub(crate) fn lower_surface_profile_tolerance_complex(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlySurfaceProfileToleranceComplex,
+) {
+    let (name, description, magnitude, tsa, datum_system, modifiers, displacement) = match early {
+        EarlySurfaceProfileToleranceComplex::Plain(p) => (
+            p.name,
+            p.description,
+            p.magnitude,
+            p.toleranced_shape_aspect,
+            p.datum_system,
+            Vec::new(),
+            None,
+        ),
+        EarlySurfaceProfileToleranceComplex::Modifiers(m) => (
+            m.name,
+            m.description,
+            m.magnitude,
+            m.toleranced_shape_aspect,
+            m.datum_system,
+            m.modifiers,
+            None,
+        ),
+        EarlySurfaceProfileToleranceComplex::Displacement(d) => (
+            d.name,
+            d.description,
+            d.magnitude,
+            d.toleranced_shape_aspect,
+            d.datum_system,
+            Vec::new(),
+            Some(d.displacement),
+        ),
+    };
+    let Some(data) = lower_gtwdr_complex_common(
+        ctx,
+        name,
+        description,
+        magnitude,
+        tsa,
+        &datum_system,
+        modifiers,
+        displacement,
+    ) else {
+        return;
+    };
+    crate::entities::pmi::push_gt_with_datum_reference(
+        ctx,
+        entity_id,
+        GeometricToleranceWithDatumReference::SurfaceProfile(data),
+    );
+}
+
+/// Lower one `LINE_PROFILE_TOLERANCE` COMPLEX form (single case: plain).
+pub(crate) fn lower_line_profile_tolerance_complex(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyLineProfileToleranceComplex,
+) {
+    let Some(data) = lower_gtwdr_complex_common(
+        ctx,
+        early.name,
+        early.description,
+        early.magnitude,
+        early.toleranced_shape_aspect,
+        &early.datum_system,
+        Vec::new(),
+        None,
+    ) else {
+        return;
+    };
+    crate::entities::pmi::push_gt_with_datum_reference(
+        ctx,
+        entity_id,
+        GeometricToleranceWithDatumReference::LineProfile(data),
     );
 }
 

@@ -4913,6 +4913,233 @@ pub(crate) fn bind_circular_runout_tolerance_complex(
     })
 }
 
+pub(crate) fn bind_position_tolerance_complex(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<super::model::EarlyPositionToleranceComplex, crate::ir::error::ConvertError> {
+    let part_set: std::collections::BTreeSet<&str> =
+        parts.iter().map(|p| p.name.as_str()).collect();
+    if part_set.len() == 4
+        && part_set.contains("GEOMETRIC_TOLERANCE")
+        && part_set.contains("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE")
+        && part_set.contains("GEOMETRIC_TOLERANCE_WITH_MODIFIERS")
+        && part_set.contains("POSITION_TOLERANCE")
+    {
+        let attrs = crate::reader::require_part_attrs(parts, "GEOMETRIC_TOLERANCE", entity_id)?;
+        let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let description =
+            crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?;
+        let magnitude =
+            crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?;
+        let toleranced_shape_aspect =
+            crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "toleranced_shape_aspect")?;
+        let attrs = crate::reader::require_part_attrs(
+            parts,
+            "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
+            entity_id,
+        )?;
+        let datum_system =
+            crate::ir::attr::read_entity_ref_list(attrs, 0, entity_id, "datum_system")?;
+        let attrs = crate::reader::require_part_attrs(
+            parts,
+            "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
+            entity_id,
+        )?;
+        let modifiers = geometric_tolerance_modifier_list(attrs, 0, entity_id, "modifiers")?;
+        return Ok(super::model::EarlyPositionToleranceComplex::Modifiers(
+            super::model::EarlyPositionToleranceComplexModifiers {
+                name,
+                description,
+                magnitude,
+                toleranced_shape_aspect,
+                datum_system,
+                modifiers,
+            },
+        ));
+    }
+    if part_set.len() == 3
+        && part_set.contains("GEOMETRIC_TOLERANCE")
+        && part_set.contains("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE")
+        && part_set.contains("POSITION_TOLERANCE")
+    {
+        let attrs = crate::reader::require_part_attrs(parts, "GEOMETRIC_TOLERANCE", entity_id)?;
+        let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let description =
+            crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?;
+        let magnitude =
+            crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?;
+        let toleranced_shape_aspect =
+            crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "toleranced_shape_aspect")?;
+        let attrs = crate::reader::require_part_attrs(
+            parts,
+            "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
+            entity_id,
+        )?;
+        let datum_system =
+            crate::ir::attr::read_entity_ref_list(attrs, 0, entity_id, "datum_system")?;
+        return Ok(super::model::EarlyPositionToleranceComplex::Plain(
+            super::model::EarlyPositionToleranceComplexPlain {
+                name,
+                description,
+                magnitude,
+                toleranced_shape_aspect,
+                datum_system,
+            },
+        ));
+    }
+    Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
+        entity_id,
+        detail: "unsupported POSITION_TOLERANCE_COMPLEX complex case".into(),
+    })
+}
+
+pub(crate) fn bind_surface_profile_tolerance_complex(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<super::model::EarlySurfaceProfileToleranceComplex, crate::ir::error::ConvertError> {
+    let part_set: std::collections::BTreeSet<&str> =
+        parts.iter().map(|p| p.name.as_str()).collect();
+    if part_set.len() == 4
+        && part_set.contains("GEOMETRIC_TOLERANCE")
+        && part_set.contains("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE")
+        && part_set.contains("UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE")
+        && part_set.contains("SURFACE_PROFILE_TOLERANCE")
+    {
+        let attrs = crate::reader::require_part_attrs(parts, "GEOMETRIC_TOLERANCE", entity_id)?;
+        let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let description =
+            crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?;
+        let magnitude =
+            crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?;
+        let toleranced_shape_aspect =
+            crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "toleranced_shape_aspect")?;
+        let attrs = crate::reader::require_part_attrs(
+            parts,
+            "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
+            entity_id,
+        )?;
+        let datum_system =
+            crate::ir::attr::read_entity_ref_list(attrs, 0, entity_id, "datum_system")?;
+        let attrs = crate::reader::require_part_attrs(
+            parts,
+            "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE",
+            entity_id,
+        )?;
+        let displacement = crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "displacement")?;
+        return Ok(
+            super::model::EarlySurfaceProfileToleranceComplex::Displacement(
+                super::model::EarlySurfaceProfileToleranceComplexDisplacement {
+                    name,
+                    description,
+                    magnitude,
+                    toleranced_shape_aspect,
+                    datum_system,
+                    displacement,
+                },
+            ),
+        );
+    }
+    if part_set.len() == 4
+        && part_set.contains("GEOMETRIC_TOLERANCE")
+        && part_set.contains("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE")
+        && part_set.contains("GEOMETRIC_TOLERANCE_WITH_MODIFIERS")
+        && part_set.contains("SURFACE_PROFILE_TOLERANCE")
+    {
+        let attrs = crate::reader::require_part_attrs(parts, "GEOMETRIC_TOLERANCE", entity_id)?;
+        let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let description =
+            crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?;
+        let magnitude =
+            crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?;
+        let toleranced_shape_aspect =
+            crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "toleranced_shape_aspect")?;
+        let attrs = crate::reader::require_part_attrs(
+            parts,
+            "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
+            entity_id,
+        )?;
+        let datum_system =
+            crate::ir::attr::read_entity_ref_list(attrs, 0, entity_id, "datum_system")?;
+        let attrs = crate::reader::require_part_attrs(
+            parts,
+            "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
+            entity_id,
+        )?;
+        let modifiers = geometric_tolerance_modifier_list(attrs, 0, entity_id, "modifiers")?;
+        return Ok(
+            super::model::EarlySurfaceProfileToleranceComplex::Modifiers(
+                super::model::EarlySurfaceProfileToleranceComplexModifiers {
+                    name,
+                    description,
+                    magnitude,
+                    toleranced_shape_aspect,
+                    datum_system,
+                    modifiers,
+                },
+            ),
+        );
+    }
+    if part_set.len() == 3
+        && part_set.contains("GEOMETRIC_TOLERANCE")
+        && part_set.contains("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE")
+        && part_set.contains("SURFACE_PROFILE_TOLERANCE")
+    {
+        let attrs = crate::reader::require_part_attrs(parts, "GEOMETRIC_TOLERANCE", entity_id)?;
+        let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let description =
+            crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?;
+        let magnitude =
+            crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?;
+        let toleranced_shape_aspect =
+            crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "toleranced_shape_aspect")?;
+        let attrs = crate::reader::require_part_attrs(
+            parts,
+            "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
+            entity_id,
+        )?;
+        let datum_system =
+            crate::ir::attr::read_entity_ref_list(attrs, 0, entity_id, "datum_system")?;
+        return Ok(super::model::EarlySurfaceProfileToleranceComplex::Plain(
+            super::model::EarlySurfaceProfileToleranceComplexPlain {
+                name,
+                description,
+                magnitude,
+                toleranced_shape_aspect,
+                datum_system,
+            },
+        ));
+    }
+    Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
+        entity_id,
+        detail: "unsupported SURFACE_PROFILE_TOLERANCE_COMPLEX complex case".into(),
+    })
+}
+
+pub(crate) fn bind_line_profile_tolerance_complex(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<super::model::EarlyLineProfileToleranceComplex, crate::ir::error::ConvertError> {
+    let attrs = crate::reader::require_part_attrs(parts, "GEOMETRIC_TOLERANCE", entity_id)?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let description = crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?;
+    let magnitude = crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?;
+    let toleranced_shape_aspect =
+        crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "toleranced_shape_aspect")?;
+    let attrs = crate::reader::require_part_attrs(
+        parts,
+        "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE",
+        entity_id,
+    )?;
+    let datum_system = crate::ir::attr::read_entity_ref_list(attrs, 0, entity_id, "datum_system")?;
+    Ok(super::model::EarlyLineProfileToleranceComplex {
+        name,
+        description,
+        magnitude,
+        toleranced_shape_aspect,
+        datum_system,
+    })
+}
+
 pub(crate) fn bind_concentricity_tolerance(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],

@@ -8351,6 +8351,19 @@ fn geometric_tolerance_with_modifiers_round_trip() {
                 displacement: None,
             },
         ),
+        // LINE_PROFILE is always-complex (is_complex) with no optionals — the
+        // "plain" complex case. (No simple form; corpus-absent.)
+        GeometricToleranceWithDatumReference::LineProfile(
+            GeometricToleranceWithDatumReferenceData {
+                name: "LP".into(),
+                description: String::new(),
+                magnitude: magnitude(),
+                toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
+                datum_system: vec![ds],
+                modifiers: Vec::new(),
+                displacement: None,
+            },
+        ),
     ] {
         pmi.geometric_tolerance_with_datum_references.push(leaf);
     }
@@ -8440,6 +8453,17 @@ fn geometric_tolerance_with_modifiers_round_trip() {
         wdr_mods("CR"),
         vec![GeometricToleranceModifier::LeastMaterialRequirement],
         "CircularRunout modifier preserved"
+    );
+    // LINE_PROFILE always-complex plain form survives the round-trip.
+    assert!(
+        re_pmi
+            .geometric_tolerance_with_datum_references
+            .iter()
+            .any(|gt| matches!(
+                gt,
+                GeometricToleranceWithDatumReference::LineProfile(d) if d.name == "LP"
+            )),
+        "LineProfile plain complex present after round-trip"
     );
 }
 

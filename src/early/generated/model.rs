@@ -6443,6 +6443,129 @@ impl crate::ir::arena::ArenaId for EarlyCircularRunoutToleranceComplexId {
     }
 }
 
+/// L1 `POSITION_TOLERANCE_COMPLEX` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPositionToleranceComplexModifiers {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) magnitude: Option<u64>,
+    pub(crate) toleranced_shape_aspect: u64,
+    pub(crate) datum_system: Vec<u64>,
+    pub(crate) modifiers: Vec<EarlyGeometricToleranceModifier>,
+}
+
+/// L1 `POSITION_TOLERANCE_COMPLEX` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPositionToleranceComplexPlain {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) magnitude: Option<u64>,
+    pub(crate) toleranced_shape_aspect: u64,
+    pub(crate) datum_system: Vec<u64>,
+}
+
+/// L1 `POSITION_TOLERANCE_COMPLEX` (generated, multi-case).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum EarlyPositionToleranceComplex {
+    Modifiers(EarlyPositionToleranceComplexModifiers),
+    Plain(EarlyPositionToleranceComplexPlain),
+}
+
+/// Typed `id_cache` key for `POSITION_TOLERANCE_COMPLEX` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPositionToleranceComplexId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPositionToleranceComplexId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `SURFACE_PROFILE_TOLERANCE_COMPLEX` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlySurfaceProfileToleranceComplexDisplacement {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) magnitude: Option<u64>,
+    pub(crate) toleranced_shape_aspect: u64,
+    pub(crate) datum_system: Vec<u64>,
+    pub(crate) displacement: u64,
+}
+
+/// L1 `SURFACE_PROFILE_TOLERANCE_COMPLEX` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlySurfaceProfileToleranceComplexModifiers {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) magnitude: Option<u64>,
+    pub(crate) toleranced_shape_aspect: u64,
+    pub(crate) datum_system: Vec<u64>,
+    pub(crate) modifiers: Vec<EarlyGeometricToleranceModifier>,
+}
+
+/// L1 `SURFACE_PROFILE_TOLERANCE_COMPLEX` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlySurfaceProfileToleranceComplexPlain {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) magnitude: Option<u64>,
+    pub(crate) toleranced_shape_aspect: u64,
+    pub(crate) datum_system: Vec<u64>,
+}
+
+/// L1 `SURFACE_PROFILE_TOLERANCE_COMPLEX` (generated, multi-case).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum EarlySurfaceProfileToleranceComplex {
+    Displacement(EarlySurfaceProfileToleranceComplexDisplacement),
+    Modifiers(EarlySurfaceProfileToleranceComplexModifiers),
+    Plain(EarlySurfaceProfileToleranceComplexPlain),
+}
+
+/// Typed `id_cache` key for `SURFACE_PROFILE_TOLERANCE_COMPLEX` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlySurfaceProfileToleranceComplexId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlySurfaceProfileToleranceComplexId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `LINE_PROFILE_TOLERANCE_COMPLEX` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyLineProfileToleranceComplex {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) magnitude: Option<u64>,
+    pub(crate) toleranced_shape_aspect: u64,
+    pub(crate) datum_system: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `LINE_PROFILE_TOLERANCE_COMPLEX` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyLineProfileToleranceComplexId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyLineProfileToleranceComplexId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `CONCENTRICITY_TOLERANCE` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyConcentricityTolerance {

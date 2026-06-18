@@ -328,6 +328,9 @@ generate = [
     "angularity_tolerance",
     "circular_runout_tolerance",
     "circular_runout_tolerance_complex",
+    "position_tolerance_complex",
+    "surface_profile_tolerance_complex",
+    "line_profile_tolerance_complex",
     "concentricity_tolerance",
     "parallelism_tolerance",
     "parallelism_tolerance_complex",
@@ -629,6 +632,33 @@ parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEO
 
 [complex.circular_runout_tolerance_complex]
 parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "CIRCULAR_RUNOUT_TOLERANCE"]
+
+# GD&T datum-reference always-complex forms (is_complex: even the no-optional
+# "plain" form emits as complex). POSITION/SURFACE_PROFILE multi-case; SURFACE_
+# PROFILE adds a displacement (UNEQUALLY_DISPOSED) case. part order = hand writer
+# (GT, GTWDR, [WM], [UD], leaf); plain ⊂ others → match_parts.
+[complex.position_tolerance_complex.cases.plain]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "POSITION_TOLERANCE"]
+match_parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "POSITION_TOLERANCE"]
+
+[complex.position_tolerance_complex.cases.modifiers]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "POSITION_TOLERANCE"]
+match_parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "POSITION_TOLERANCE"]
+
+[complex.surface_profile_tolerance_complex.cases.plain]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "SURFACE_PROFILE_TOLERANCE"]
+match_parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "SURFACE_PROFILE_TOLERANCE"]
+
+[complex.surface_profile_tolerance_complex.cases.modifiers]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "SURFACE_PROFILE_TOLERANCE"]
+match_parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "SURFACE_PROFILE_TOLERANCE"]
+
+[complex.surface_profile_tolerance_complex.cases.displacement]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE", "SURFACE_PROFILE_TOLERANCE"]
+match_parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE", "SURFACE_PROFILE_TOLERANCE"]
+
+[complex.line_profile_tolerance_complex]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", "LINE_PROFILE_TOLERANCE"]
 
 # Complex MI DRAUGHTING_MODEL family (synthetic name — no single early.toml
 # entity). 3 exact part-sets (A ⊂ B share CHARACTERIZED_OBJECT, so single-part

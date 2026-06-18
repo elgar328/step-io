@@ -10,9 +10,7 @@ use crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::GeometricToleranceTarget;
 use crate::ir::PmiPool;
-use crate::ir::attr::{
-    check_count, read_bool, read_entity_ref, read_entity_ref_list, read_string_or_unset,
-};
+use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::pmi::{
     AnnotationOccurrenceAssociativity, AnnotationOccurrenceRef, AnnotationPlaceholderLeaderLine,
@@ -31,7 +29,7 @@ use crate::ir::pmi::{
     TypeQualifier, ValueFormatTypeQualifier,
 };
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
-use crate::reader::{ReaderContext, find_part_attrs, require_part_attrs};
+use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
 use crate::writer::entity::{WriterBody, WriterEntity};
@@ -2075,100 +2073,6 @@ pub(crate) fn build_gt_with_datum_reference_data(
     })
 }
 
-/// Read the simple 5-attr `geometric_tolerance_with_datum_reference` body
-/// (the form the seven direct subtypes take). `Ok(None)` when a ref does
-/// not resolve — the tolerance is dropped, symmetric on re-read.
-/// Read the multiple-inheritance complex form `(GEOMETRIC_TOLERANCE
-/// GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE <leaf>)` — the encoding
-/// `POSITION` / `SURFACE_PROFILE` / `LINE_PROFILE` tolerances take. `Ok(None)`
-/// when a ref does not resolve. An optional
-/// `GEOMETRIC_TOLERANCE_WITH_MODIFIERS` part populates the `modifiers` Vec
-/// when present (phase gt-modifiers).
-fn read_gt_with_datum_reference_complex(
-    ctx: &ReaderContext,
-    entity_id: u64,
-    parts: &[RawEntityPart],
-) -> Result<Option<GeometricToleranceWithDatumReferenceData>, ConvertError> {
-    let gt_attrs = require_part_attrs(parts, "GEOMETRIC_TOLERANCE", entity_id)?;
-    check_count(gt_attrs, 4, entity_id, "GEOMETRIC_TOLERANCE")?;
-    let name = read_string_or_unset(gt_attrs, 0, entity_id, "name")?.to_owned();
-    let description = read_string_or_unset(gt_attrs, 1, entity_id, "description")?.to_owned();
-    let magnitude_ref = read_entity_ref(gt_attrs, 2, entity_id, "magnitude")?;
-    let shape_aspect_ref = read_entity_ref(gt_attrs, 3, entity_id, "toleranced_shape_aspect")?;
-    let gtwdr_attrs =
-        require_part_attrs(parts, "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE", entity_id)?;
-    let datum_system_refs = read_entity_ref_list(gtwdr_attrs, 0, entity_id, "datum_system")?;
-    let modifiers = read_optional_modifiers(parts, entity_id)?;
-    let displacement = read_optional_displacement(ctx, parts, entity_id)?;
-    Ok(build_gt_with_datum_reference_data(
-        ctx,
-        name,
-        description,
-        magnitude_ref,
-        shape_aspect_ref,
-        &datum_system_refs,
-        modifiers,
-        displacement,
-    ))
-}
-
-/// Read the `GEOMETRIC_TOLERANCE_WITH_MODIFIERS.modifiers` set from a
-/// complex MI's parts. Empty Vec when the part is absent (silent —
-/// modifier presence is optional per the ir.toml blueprint /
-/// EXPRESS ANDOR group 3). Unknown modifier tokens land in
-/// `Other(raw)` so the round-trip preserves the source text verbatim.
-fn read_optional_modifiers(
-    parts: &[RawEntityPart],
-    entity_id: u64,
-) -> Result<Vec<crate::ir::GeometricToleranceModifier>, ConvertError> {
-    use crate::ir::GeometricToleranceModifier;
-    let Some(attrs) = find_part_attrs(parts, "GEOMETRIC_TOLERANCE_WITH_MODIFIERS") else {
-        return Ok(Vec::new());
-    };
-    check_count(attrs, 1, entity_id, "GEOMETRIC_TOLERANCE_WITH_MODIFIERS")?;
-    let Some(Attribute::List(raw)) = attrs.first() else {
-        return Ok(Vec::new());
-    };
-    let mut modifiers = Vec::with_capacity(raw.len());
-    for item in raw {
-        let token = match item {
-            Attribute::Enum(s) => s.as_str(),
-            _ => continue,
-        };
-        modifiers.push(match token {
-            "MAXIMUM_MATERIAL_REQUIREMENT" => {
-                GeometricToleranceModifier::MaximumMaterialRequirement
-            }
-            "LEAST_MATERIAL_REQUIREMENT" => GeometricToleranceModifier::LeastMaterialRequirement,
-            "RECIPROCITY_REQUIREMENT" => GeometricToleranceModifier::ReciprocityRequirement,
-            other => GeometricToleranceModifier::Other(other.to_owned()),
-        });
-    }
-    Ok(modifiers)
-}
-
-/// Read the `UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE.displacement` part —
-/// `ref_length_measure_with_unit`. Returns `None` when the part is absent
-/// or the ref resolves to neither a units-pool `MEASURE_WITH_UNIT` nor a
-/// `MEASURE_REPRESENTATION_ITEM` (same 2-path resolution as `magnitude`).
-fn read_optional_displacement(
-    ctx: &ReaderContext,
-    parts: &[RawEntityPart],
-    entity_id: u64,
-) -> Result<Option<ToleranceMagnitude>, ConvertError> {
-    let Some(attrs) = find_part_attrs(parts, "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE") else {
-        return Ok(None);
-    };
-    check_count(
-        attrs,
-        1,
-        entity_id,
-        "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE",
-    )?;
-    let unit_ref = read_entity_ref(attrs, 0, entity_id, "displacement")?;
-    Ok(resolve_tolerance_magnitude(ctx, unit_ref))
-}
-
 /// Emit a `GeometricToleranceWithDatumReference`, returning the STEP id.
 /// The seven direct subtypes emit as a simple 5-attr entity; `POSITION` /
 /// `SURFACE_PROFILE` / `LINE_PROFILE` emit as the multiple-inheritance
@@ -2254,6 +2158,49 @@ pub(crate) fn write_geometric_tolerance_with_datum_reference(
                         shape_aspect,
                         datum_system_ids,
                         &data.modifiers,
+                    ),
+                );
+            }
+            "POSITION_TOLERANCE" => {
+                return crate::early::serialize::serialize_position_tolerance_complex(
+                    buf,
+                    &crate::early::lift::lift_position_tolerance_complex(
+                        data.name,
+                        data.description,
+                        magnitude,
+                        shape_aspect,
+                        datum_system_ids,
+                        &data.modifiers,
+                    ),
+                );
+            }
+            "SURFACE_PROFILE_TOLERANCE" => {
+                let displacement = data
+                    .displacement
+                    .as_ref()
+                    .map(|d| emit_tolerance_magnitude(buf, d));
+                return crate::early::serialize::serialize_surface_profile_tolerance_complex(
+                    buf,
+                    &crate::early::lift::lift_surface_profile_tolerance_complex(
+                        data.name,
+                        data.description,
+                        magnitude,
+                        shape_aspect,
+                        datum_system_ids,
+                        &data.modifiers,
+                        displacement,
+                    ),
+                );
+            }
+            "LINE_PROFILE_TOLERANCE" => {
+                return crate::early::serialize::serialize_line_profile_tolerance_complex(
+                    buf,
+                    &crate::early::lift::lift_line_profile_tolerance_complex(
+                        data.name,
+                        data.description,
+                        magnitude,
+                        shape_aspect,
+                        datum_system_ids,
                     ),
                 );
             }
@@ -2572,14 +2519,8 @@ impl ComplexEntityHandler for PositionToleranceHandler {
         parts: &[RawEntityPart],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_gt_with_datum_reference_complex(ctx, entity_id, parts)? else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::Position(data),
-        );
+        let early = crate::early::bind::bind_position_tolerance_complex(entity_id, parts)?;
+        crate::early::lower::lower_position_tolerance_complex(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2610,14 +2551,8 @@ impl ComplexEntityHandler for SurfaceProfileToleranceHandler {
         parts: &[RawEntityPart],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_gt_with_datum_reference_complex(ctx, entity_id, parts)? else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::SurfaceProfile(data),
-        );
+        let early = crate::early::bind::bind_surface_profile_tolerance_complex(entity_id, parts)?;
+        crate::early::lower::lower_surface_profile_tolerance_complex(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2644,14 +2579,8 @@ impl ComplexEntityHandler for LineProfileToleranceHandler {
         parts: &[RawEntityPart],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_gt_with_datum_reference_complex(ctx, entity_id, parts)? else {
-            return Ok(());
-        };
-        push_gt_with_datum_reference(
-            ctx,
-            entity_id,
-            GeometricToleranceWithDatumReference::LineProfile(data),
-        );
+        let early = crate::early::bind::bind_line_profile_tolerance_complex(entity_id, parts)?;
+        crate::early::lower::lower_line_profile_tolerance_complex(ctx, entity_id, early);
         Ok(())
     }
 

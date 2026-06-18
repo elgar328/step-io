@@ -18,10 +18,14 @@ use crate::early::model::{
     EarlyFlatnessToleranceComplexUnit, EarlyFlatnessToleranceComplexUnitArea,
     EarlyGeometricToleranceModifier, EarlyGeometricToleranceRelationship, EarlyLeaderCurve,
     EarlyLeaderDirectedCallout, EarlyLeaderTerminator, EarlyLimitsAndFits,
-    EarlyMeasureQualification, EarlyParallelismTolerance, EarlyParallelismToleranceComplex,
-    EarlyPerpendicularityTolerance, EarlyPerpendicularityToleranceComplex, EarlyPlusMinusTolerance,
+    EarlyLineProfileToleranceComplex, EarlyMeasureQualification, EarlyParallelismTolerance,
+    EarlyParallelismToleranceComplex, EarlyPerpendicularityTolerance,
+    EarlyPerpendicularityToleranceComplex, EarlyPlusMinusTolerance, EarlyPositionToleranceComplex,
+    EarlyPositionToleranceComplexModifiers, EarlyPositionToleranceComplexPlain,
     EarlyProjectedZoneDefinition, EarlyRoundnessTolerance, EarlyRoundnessToleranceComplex,
     EarlyStraightnessTolerance, EarlyStraightnessToleranceComplex, EarlySurfaceProfileTolerance,
+    EarlySurfaceProfileToleranceComplex, EarlySurfaceProfileToleranceComplexDisplacement,
+    EarlySurfaceProfileToleranceComplexModifiers, EarlySurfaceProfileToleranceComplexPlain,
     EarlySymmetryTolerance, EarlyTerminatorSymbol, EarlyTessellatedAnnotationOccurrence,
     EarlyToleranceValue, EarlyToleranceZoneForm, EarlyTotalRunoutTolerance, EarlyTypeQualifier,
     EarlyValueFormatTypeQualifier,
@@ -280,6 +284,102 @@ pub(crate) fn lift_circular_runout_tolerance_complex(
         toleranced_shape_aspect,
         datum_system,
         modifiers: modifiers.iter().filter_map(l2_modifier_to_early).collect(),
+    }
+}
+
+/// Lift a `POSITION_TOLERANCE` COMPLEX form (always-complex: plain or modifiers).
+pub(crate) fn lift_position_tolerance_complex(
+    name: String,
+    description: String,
+    magnitude: u64,
+    toleranced_shape_aspect: u64,
+    datum_system: Vec<u64>,
+    modifiers: &[crate::ir::GeometricToleranceModifier],
+) -> EarlyPositionToleranceComplex {
+    if modifiers.is_empty() {
+        EarlyPositionToleranceComplex::Plain(EarlyPositionToleranceComplexPlain {
+            name,
+            description: Some(description),
+            magnitude: Some(magnitude),
+            toleranced_shape_aspect,
+            datum_system,
+        })
+    } else {
+        EarlyPositionToleranceComplex::Modifiers(EarlyPositionToleranceComplexModifiers {
+            name,
+            description: Some(description),
+            magnitude: Some(magnitude),
+            toleranced_shape_aspect,
+            datum_system,
+            modifiers: modifiers.iter().filter_map(l2_modifier_to_early).collect(),
+        })
+    }
+}
+
+/// Lift a `SURFACE_PROFILE_TOLERANCE` COMPLEX form (plain / modifiers /
+/// displacement). modifiers + displacement together has no dispatch case
+/// (corpus-absent) → displacement takes precedence, flagged by the debug assert.
+pub(crate) fn lift_surface_profile_tolerance_complex(
+    name: String,
+    description: String,
+    magnitude: u64,
+    toleranced_shape_aspect: u64,
+    datum_system: Vec<u64>,
+    modifiers: &[crate::ir::GeometricToleranceModifier],
+    displacement: Option<u64>,
+) -> EarlySurfaceProfileToleranceComplex {
+    debug_assert!(
+        modifiers.is_empty() || displacement.is_none(),
+        "SURFACE_PROFILE complex: modifiers + displacement has no dispatch case"
+    );
+    if let Some(displacement) = displacement {
+        return EarlySurfaceProfileToleranceComplex::Displacement(
+            EarlySurfaceProfileToleranceComplexDisplacement {
+                name,
+                description: Some(description),
+                magnitude: Some(magnitude),
+                toleranced_shape_aspect,
+                datum_system,
+                displacement,
+            },
+        );
+    }
+    if modifiers.is_empty() {
+        EarlySurfaceProfileToleranceComplex::Plain(EarlySurfaceProfileToleranceComplexPlain {
+            name,
+            description: Some(description),
+            magnitude: Some(magnitude),
+            toleranced_shape_aspect,
+            datum_system,
+        })
+    } else {
+        EarlySurfaceProfileToleranceComplex::Modifiers(
+            EarlySurfaceProfileToleranceComplexModifiers {
+                name,
+                description: Some(description),
+                magnitude: Some(magnitude),
+                toleranced_shape_aspect,
+                datum_system,
+                modifiers: modifiers.iter().filter_map(l2_modifier_to_early).collect(),
+            },
+        )
+    }
+}
+
+/// Lift a `LINE_PROFILE_TOLERANCE` COMPLEX form (single case: plain).
+pub(crate) fn lift_line_profile_tolerance_complex(
+    name: String,
+    description: String,
+    magnitude: u64,
+    toleranced_shape_aspect: u64,
+    datum_system: Vec<u64>,
+) -> EarlyLineProfileToleranceComplex {
+    EarlyLineProfileToleranceComplex {
+        name,
+        description: Some(description),
+        magnitude: Some(magnitude),
+        toleranced_shape_aspect,
+        datum_system,
     }
 }
 

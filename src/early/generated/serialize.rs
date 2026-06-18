@@ -5512,6 +5512,214 @@ pub(crate) fn serialize_circular_runout_tolerance_complex(
     ])
 }
 
+pub(crate) fn serialize_position_tolerance_complex(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPositionToleranceComplex,
+) -> u64 {
+    match l1 {
+        super::model::EarlyPositionToleranceComplex::Modifiers(l1) => buf.push_complex(vec![
+            (
+                "GEOMETRIC_TOLERANCE".into(),
+                vec![
+                    crate::parser::entity::Attribute::String(l1.name.clone()),
+                    match &l1.description {
+                        Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                        None => crate::parser::entity::Attribute::Unset,
+                    },
+                    match l1.magnitude {
+                        Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                        None => crate::parser::entity::Attribute::Unset,
+                    },
+                    crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+                ],
+            ),
+            (
+                "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE".into(),
+                vec![crate::parser::entity::Attribute::List(
+                    l1.datum_system
+                        .iter()
+                        .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                        .collect(),
+                )],
+            ),
+            (
+                "GEOMETRIC_TOLERANCE_WITH_MODIFIERS".into(),
+                vec![crate::parser::entity::Attribute::List(
+                    l1.modifiers
+                        .iter()
+                        .map(|e| geometric_tolerance_modifier_attr(e.clone()))
+                        .collect(),
+                )],
+            ),
+            ("POSITION_TOLERANCE".into(), vec![]),
+        ]),
+        super::model::EarlyPositionToleranceComplex::Plain(l1) => buf.push_complex(vec![
+            (
+                "GEOMETRIC_TOLERANCE".into(),
+                vec![
+                    crate::parser::entity::Attribute::String(l1.name.clone()),
+                    match &l1.description {
+                        Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                        None => crate::parser::entity::Attribute::Unset,
+                    },
+                    match l1.magnitude {
+                        Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                        None => crate::parser::entity::Attribute::Unset,
+                    },
+                    crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+                ],
+            ),
+            (
+                "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE".into(),
+                vec![crate::parser::entity::Attribute::List(
+                    l1.datum_system
+                        .iter()
+                        .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                        .collect(),
+                )],
+            ),
+            ("POSITION_TOLERANCE".into(), vec![]),
+        ]),
+    }
+}
+
+pub(crate) fn serialize_surface_profile_tolerance_complex(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlySurfaceProfileToleranceComplex,
+) -> u64 {
+    match l1 {
+        super::model::EarlySurfaceProfileToleranceComplex::Displacement(l1) => {
+            buf.push_complex(vec![
+                (
+                    "GEOMETRIC_TOLERANCE".into(),
+                    vec![
+                        crate::parser::entity::Attribute::String(l1.name.clone()),
+                        match &l1.description {
+                            Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                            None => crate::parser::entity::Attribute::Unset,
+                        },
+                        match l1.magnitude {
+                            Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                            None => crate::parser::entity::Attribute::Unset,
+                        },
+                        crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+                    ],
+                ),
+                (
+                    "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE".into(),
+                    vec![crate::parser::entity::Attribute::List(
+                        l1.datum_system
+                            .iter()
+                            .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                            .collect(),
+                    )],
+                ),
+                (
+                    "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE".into(),
+                    vec![crate::parser::entity::Attribute::EntityRef(l1.displacement)],
+                ),
+                ("SURFACE_PROFILE_TOLERANCE".into(), vec![]),
+            ])
+        }
+        super::model::EarlySurfaceProfileToleranceComplex::Modifiers(l1) => buf.push_complex(vec![
+            (
+                "GEOMETRIC_TOLERANCE".into(),
+                vec![
+                    crate::parser::entity::Attribute::String(l1.name.clone()),
+                    match &l1.description {
+                        Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                        None => crate::parser::entity::Attribute::Unset,
+                    },
+                    match l1.magnitude {
+                        Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                        None => crate::parser::entity::Attribute::Unset,
+                    },
+                    crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+                ],
+            ),
+            (
+                "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE".into(),
+                vec![crate::parser::entity::Attribute::List(
+                    l1.datum_system
+                        .iter()
+                        .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                        .collect(),
+                )],
+            ),
+            (
+                "GEOMETRIC_TOLERANCE_WITH_MODIFIERS".into(),
+                vec![crate::parser::entity::Attribute::List(
+                    l1.modifiers
+                        .iter()
+                        .map(|e| geometric_tolerance_modifier_attr(e.clone()))
+                        .collect(),
+                )],
+            ),
+            ("SURFACE_PROFILE_TOLERANCE".into(), vec![]),
+        ]),
+        super::model::EarlySurfaceProfileToleranceComplex::Plain(l1) => buf.push_complex(vec![
+            (
+                "GEOMETRIC_TOLERANCE".into(),
+                vec![
+                    crate::parser::entity::Attribute::String(l1.name.clone()),
+                    match &l1.description {
+                        Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                        None => crate::parser::entity::Attribute::Unset,
+                    },
+                    match l1.magnitude {
+                        Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                        None => crate::parser::entity::Attribute::Unset,
+                    },
+                    crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+                ],
+            ),
+            (
+                "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE".into(),
+                vec![crate::parser::entity::Attribute::List(
+                    l1.datum_system
+                        .iter()
+                        .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                        .collect(),
+                )],
+            ),
+            ("SURFACE_PROFILE_TOLERANCE".into(), vec![]),
+        ]),
+    }
+}
+
+pub(crate) fn serialize_line_profile_tolerance_complex(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyLineProfileToleranceComplex,
+) -> u64 {
+    buf.push_complex(vec![
+        (
+            "GEOMETRIC_TOLERANCE".into(),
+            vec![
+                crate::parser::entity::Attribute::String(l1.name.clone()),
+                match &l1.description {
+                    Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                    None => crate::parser::entity::Attribute::Unset,
+                },
+                match l1.magnitude {
+                    Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                    None => crate::parser::entity::Attribute::Unset,
+                },
+                crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+            ],
+        ),
+        (
+            "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE".into(),
+            vec![crate::parser::entity::Attribute::List(
+                l1.datum_system
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            )],
+        ),
+        ("LINE_PROFILE_TOLERANCE".into(), vec![]),
+    ])
+}
+
 pub(crate) fn serialize_concentricity_tolerance(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyConcentricityTolerance,
