@@ -575,6 +575,9 @@ discriminant = "CONVERSION_BASED_UNIT"
 # §11.2.5.1 alphabetical (= the hand emit order it replaces). `unit` /
 # `uncertainty_measure_with_unit` are all-entity SELECT / entity → Vec<Ref>
 # (no derived slots). lower bridges to the bundled UnitContext L2.
+[complex.global_unit_assigned_context]
+also_simple = true
+
 [complex.global_unit_assigned_context.cases.full]
 parts = ["GEOMETRIC_REPRESENTATION_CONTEXT", "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT", "GLOBAL_UNIT_ASSIGNED_CONTEXT", "REPRESENTATION_CONTEXT"]
 discriminant = "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT"

@@ -60,6 +60,13 @@ pub(crate) struct ComplexHint {
     /// the (pascal-cased) case names. Mutually exclusive with `parts`.
     #[serde(default)]
     pub(crate) cases: Option<BTreeMap<String, CaseHint>>,
+    /// Emit a distinctly-named SIMPLE-form companion (`bind_<entity>_simple`,
+    /// `serialize_<entity>_simple`, `Early<Entity>Simple`) alongside the complex
+    /// form, for entities registered under one STEP name as BOTH a complex and a
+    /// standalone simple instance (e.g. `GLOBAL_UNIT_ASSIGNED_CONTEXT`). The
+    /// simple form binds the entity's flattened Part21 attrs.
+    #[serde(default)]
+    pub(crate) also_simple: bool,
 }
 
 /// One case of a multi-case complex entity ([`ComplexHint::cases`]).

@@ -3246,6 +3246,25 @@ pub(crate) fn serialize_global_unit_assigned_context(
     }
 }
 
+pub(crate) fn serialize_global_unit_assigned_context_simple(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyGlobalUnitAssignedContextSimple,
+) -> u64 {
+    buf.push_simple(
+        "GLOBAL_UNIT_ASSIGNED_CONTEXT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.context_identifier.clone()),
+            crate::parser::entity::Attribute::String(l1.context_type.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.units
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
 pub(crate) fn serialize_measure_qualification(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyMeasureQualification,

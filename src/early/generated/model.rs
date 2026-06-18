@@ -3718,6 +3718,29 @@ impl crate::ir::arena::ArenaId for EarlyGlobalUnitAssignedContextId {
     }
 }
 
+/// L1 `GLOBAL_UNIT_ASSIGNED_CONTEXT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyGlobalUnitAssignedContextSimple {
+    pub(crate) context_identifier: String,
+    pub(crate) context_type: String,
+    pub(crate) units: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `GLOBAL_UNIT_ASSIGNED_CONTEXT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyGlobalUnitAssignedContextSimpleId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyGlobalUnitAssignedContextSimpleId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `MEASURE_QUALIFICATION` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyMeasureQualification {

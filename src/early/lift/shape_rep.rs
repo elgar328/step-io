@@ -16,10 +16,11 @@ use crate::early::model::{
     EarlyGeometricallyBoundedSurfaceShapeRepresentation,
     EarlyGeometricallyBoundedWireframeShapeRepresentation, EarlyGlobalUnitAssignedContext,
     EarlyGlobalUnitAssignedContextFull, EarlyGlobalUnitAssignedContextNoUncertainty,
-    EarlyIntegerRepresentationItem, EarlyItemDefinedTransformation,
-    EarlyItemIdentifiedRepresentationUsage, EarlyItemIdentifiedRepresentationUsageSelect,
-    EarlyManifoldSurfaceShapeRepresentation, EarlyMappedItem, EarlyMeasureRepresentationItem,
-    EarlyMeasureRepresentationItemComplex, EarlyMeasureRepresentationItemComplexLength,
+    EarlyGlobalUnitAssignedContextSimple, EarlyIntegerRepresentationItem,
+    EarlyItemDefinedTransformation, EarlyItemIdentifiedRepresentationUsage,
+    EarlyItemIdentifiedRepresentationUsageSelect, EarlyManifoldSurfaceShapeRepresentation,
+    EarlyMappedItem, EarlyMeasureRepresentationItem, EarlyMeasureRepresentationItemComplex,
+    EarlyMeasureRepresentationItemComplexLength,
     EarlyMeasureRepresentationItemComplexLengthQualified,
     EarlyMeasureRepresentationItemComplexPlaneAngle, EarlyMeasureRepresentationItemComplexRatio,
     EarlyMeasureValue, EarlyMechanicalDesignAndDraughtingRelationship,
@@ -1032,6 +1033,20 @@ pub(crate) fn lift_global_unit_assigned_context(
             context_identifier: repr_identifier.clone(),
             context_type: repr_type.clone(),
         })
+    }
+}
+
+/// Lift the standalone simple `GLOBAL_UNIT_ASSIGNED_CONTEXT` from pre-resolved
+/// fields (`units` already mapped to emitted step ids by the handler write).
+pub(crate) fn lift_global_unit_assigned_context_simple(
+    context_identifier: String,
+    context_type: String,
+    units: Vec<u64>,
+) -> EarlyGlobalUnitAssignedContextSimple {
+    EarlyGlobalUnitAssignedContextSimple {
+        context_identifier,
+        context_type,
+        units,
     }
 }
 

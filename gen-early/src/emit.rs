@@ -61,23 +61,54 @@ pub(crate) fn emit_entity(ctx: &Ctx, ent_name: &str, out: &mut GenOut) {
         } else {
             emit_complex_entity(ctx, ent_name, &type_name, &step_name, hint, out);
         }
+        // Some entities exist under one STEP name as BOTH a complex (AND-combined)
+        // and a standalone simple instance (e.g. `GLOBAL_UNIT_ASSIGNED_CONTEXT`).
+        // Emit a distinctly-named simple companion so both handlers can use a
+        // generated bind/serialize (the bare `bind_<entity>` name is taken by the
+        // complex form).
+        if hint.also_simple {
+            emit_simple_entity_form(
+                ctx,
+                ent_name,
+                &format!("{ent_name}_simple"),
+                &format!("{type_name}Simple"),
+                &step_name,
+                out,
+            );
+        }
         return;
     }
+    emit_simple_entity_form(ctx, ent_name, ent_name, &type_name, &step_name, out);
+}
+
+/// Emit the simple-form model struct + `bind` + `serialize` for `attr_ent_name`
+/// (its flattened Part21 attrs), under the given `fn_base`/`type_name`/`step_name`.
+/// Used for ordinary simple entities (names all derived from the entity) and —
+/// via [`crate::mapping::ComplexHint::also_simple`] — for a distinctly-named
+/// simple companion emitted alongside an entity's complex form.
+fn emit_simple_entity_form(
+    ctx: &Ctx,
+    attr_ent_name: &str,
+    fn_base: &str,
+    type_name: &str,
+    step_name: &str,
+    out: &mut GenOut,
+) {
     assert!(
-        ctx.schema.entity.contains_key(ent_name),
-        "gen-early: entity `{ent_name}` not in early.toml"
+        ctx.schema.entity.contains_key(attr_ent_name),
+        "gen-early: entity `{attr_ent_name}` not in early.toml"
     );
     // Full Part21 positional attribute list (inherited supertype attrs
     // prepended, then own); see `EarlyToml::flattened_attrs`. Each entry is
-    // (struct field name, kind, is-optional).
+    // (struct field name, kind, is-optional, is-derived).
     // EXPRESS Derived (`*`) attrs (hand-authored in mapping `[derived]`): matched
     // by early.toml attr name (before the dedup below). A derived attr keeps its
     // positional slot (so later attrs read at the right Part21 index) but gets no
     // struct field / bind read, and serializes as `*`.
-    let derived_set = ctx.mapping.derived.get(ent_name);
+    let derived_set = ctx.mapping.derived.get(attr_ent_name);
     let mut attrs: Vec<(String, Kind, bool, bool)> = ctx
         .schema
-        .flattened_attrs(ent_name)
+        .flattened_attrs(attr_ent_name)
         .into_iter()
         .map(|a| {
             let (optional, inner) = strip_optional(&a.ty);
@@ -105,14 +136,14 @@ pub(crate) fn emit_entity(ctx: &Ctx, ent_name: &str, out: &mut GenOut) {
         .iter()
         .any(|(_, k, _, d)| !d && matches!(k, Kind::Select(_)));
 
-    emit_model_and_id(ctx, &type_name, &step_name, &attrs, out);
+    emit_model_and_id(ctx, type_name, step_name, &attrs, out);
 
-    entity_bind(ent_name, &type_name, &step_name, &attrs, has_select, out);
+    entity_bind(fn_base, type_name, step_name, &attrs, has_select, out);
 
     // `read_only` entities (read-back-only minority forms normalized away on
     // write) skip serialize: their handler `write` is `unreachable!()`.
-    if !ctx.mapping.read_only.iter().any(|e| e == ent_name) {
-        entity_serialize(ctx, ent_name, &type_name, &step_name, &attrs, out);
+    if !ctx.mapping.read_only.iter().any(|e| e == attr_ent_name) {
+        entity_serialize(ctx, fn_base, type_name, step_name, &attrs, out);
     }
 }
 
@@ -1873,6 +1904,7 @@ mod tests {
             ComplexHint {
                 parts: None,
                 cases: Some(cases),
+                also_simple: false,
             },
         );
         let mut out = GenOut::new("");
@@ -1954,6 +1986,7 @@ mod tests {
             ComplexHint {
                 parts: None,
                 cases: Some(cases),
+                also_simple: false,
             },
         );
         let mut out = GenOut::new("");
@@ -2017,6 +2050,7 @@ mod tests {
             ComplexHint {
                 parts: None,
                 cases: Some(cases),
+                also_simple: false,
             },
         );
         let mut out = GenOut::new("");

@@ -2,7 +2,6 @@
 
 use crate::early::{bind, lift, lower, serialize};
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
-use crate::ir::attr::{check_count, read_entity_ref_list, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::{UnitContext, UnitContextForm};
 use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
@@ -45,18 +44,13 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
         } = &units.form
         {
             let unit_steps: Vec<u64> = units.units.iter().map(|id| buf.step_id(id)).collect();
-            return Ok(buf.push_simple(
-                "GLOBAL_UNIT_ASSIGNED_CONTEXT",
-                vec![
-                    Attribute::String(identifier.clone()),
-                    Attribute::String(context_type.clone()),
-                    Attribute::List(
-                        unit_steps
-                            .iter()
-                            .map(|&s| Attribute::EntityRef(s))
-                            .collect(),
-                    ),
-                ],
+            let early = lift::lift_global_unit_assigned_context_simple(
+                identifier.clone(),
+                context_type.clone(),
+                unit_steps,
+            );
+            return Ok(serialize::serialize_global_unit_assigned_context_simple(
+                buf, &early,
             ));
         }
 
@@ -89,22 +83,8 @@ impl SimpleEntityHandler for GlobalUnitAssignedContextSimpleHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "GLOBAL_UNIT_ASSIGNED_CONTEXT")?;
-        let identifier =
-            read_string_or_unset(attrs, 0, entity_id, "context_identifier")?.to_owned();
-        let context_type = read_string_or_unset(attrs, 1, entity_id, "context_type")?.to_owned();
-        let unit_refs = read_entity_ref_list(attrs, 2, entity_id, "units")?;
-        let units = lower::resolve_unit_refs(ctx, entity_id, &unit_refs);
-        // The simple form has no GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT part.
-        let ctx_id = ctx.units.push(UnitContext {
-            units,
-            uncertainty: Vec::new(),
-            form: UnitContextForm::Simple {
-                identifier,
-                context_type,
-            },
-        });
-        ctx.context_id_map.insert(entity_id, ctx_id);
+        let early = bind::bind_global_unit_assigned_context_simple(entity_id, attrs)?;
+        lower::lower_global_unit_assigned_context_simple(ctx, entity_id, early);
         Ok(())
     }
 

@@ -2902,6 +2902,25 @@ pub(crate) fn bind_global_unit_assigned_context(
     ))
 }
 
+pub(crate) fn bind_global_unit_assigned_context_simple(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyGlobalUnitAssignedContextSimple, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "GLOBAL_UNIT_ASSIGNED_CONTEXT")?;
+    Ok(super::model::EarlyGlobalUnitAssignedContextSimple {
+        context_identifier: crate::ir::attr::read_string_or_unset(
+            attrs,
+            0,
+            entity_id,
+            "context_identifier",
+        )?
+        .to_owned(),
+        context_type: crate::ir::attr::read_string_or_unset(attrs, 1, entity_id, "context_type")?
+            .to_owned(),
+        units: crate::ir::attr::read_entity_ref_list(attrs, 2, entity_id, "units")?,
+    })
+}
+
 pub(crate) fn bind_measure_qualification(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],

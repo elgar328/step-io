@@ -18,11 +18,11 @@ use crate::early::model::{
     EarlyDefaultModelGeometricView, EarlyDescriptiveRepresentationItem, EarlyDraughtingModel,
     EarlyGeometricItemSpecificUsage, EarlyGeometricallyBoundedSurfaceShapeRepresentation,
     EarlyGeometricallyBoundedWireframeShapeRepresentation, EarlyGlobalUnitAssignedContext,
-    EarlyIntegerRepresentationItem, EarlyItemDefinedTransformation,
-    EarlyItemIdentifiedRepresentationUsage, EarlyItemIdentifiedRepresentationUsageSelect,
-    EarlyManifoldSurfaceShapeRepresentation, EarlyMappedItem, EarlyMeasureRepresentationItem,
-    EarlyMeasureRepresentationItemComplex, EarlyMeasureValue,
-    EarlyMechanicalDesignAndDraughtingRelationship,
+    EarlyGlobalUnitAssignedContextSimple, EarlyIntegerRepresentationItem,
+    EarlyItemDefinedTransformation, EarlyItemIdentifiedRepresentationUsage,
+    EarlyItemIdentifiedRepresentationUsageSelect, EarlyManifoldSurfaceShapeRepresentation,
+    EarlyMappedItem, EarlyMeasureRepresentationItem, EarlyMeasureRepresentationItemComplex,
+    EarlyMeasureValue, EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
@@ -1791,6 +1791,26 @@ pub(crate) fn lower_global_unit_assigned_context(
             coordinate_space_dimension: dimension,
             repr_identifier,
             repr_type,
+        },
+    });
+    ctx.context_id_map.insert(entity_id, ctx_id);
+}
+
+/// Lower the standalone simple `GLOBAL_UNIT_ASSIGNED_CONTEXT(identifier, type,
+/// units)` (no geometric / uncertainty parts) into a [`UnitContextForm::Simple`]
+/// `UnitContext`. Shares the `units` arena with the complex form.
+pub(crate) fn lower_global_unit_assigned_context_simple(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyGlobalUnitAssignedContextSimple,
+) {
+    let units = resolve_unit_refs(ctx, entity_id, &early.units);
+    let ctx_id = ctx.units.push(UnitContext {
+        units,
+        uncertainty: Vec::new(),
+        form: UnitContextForm::Simple {
+            identifier: early.context_identifier,
+            context_type: early.context_type,
         },
     });
     ctx.context_id_map.insert(entity_id, ctx_id);
