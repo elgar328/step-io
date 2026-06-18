@@ -6,9 +6,10 @@ use crate::early::model::{
     EarlyAnnotationCurveOccurrence, EarlyAnnotationOccurrence,
     EarlyAnnotationPlaceholderOccurrence, EarlyAnnotationPlaceholderOccurrenceWithLeaderLine,
     EarlyAnnotationPlane, EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence,
-    EarlyCircularRunoutTolerance, EarlyConcentricityTolerance, EarlyCylindricityTolerance,
-    EarlyDatum, EarlyDatumFeature, EarlyDimensionalLocation, EarlyDimensionalSize,
-    EarlyDirectedDimensionalLocation, EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout,
+    EarlyAnnotationToModelLeaderLine, EarlyAuxiliaryLeaderLine, EarlyCircularRunoutTolerance,
+    EarlyConcentricityTolerance, EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature,
+    EarlyDimensionalLocation, EarlyDimensionalSize, EarlyDirectedDimensionalLocation,
+    EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout,
     EarlyDraughtingCalloutRelationship, EarlyDraughtingPreDefinedTextFont, EarlyFlatnessTolerance,
     EarlyGeometricToleranceRelationship, EarlyLeaderCurve, EarlyLeaderDirectedCallout,
     EarlyLeaderTerminator, EarlyLimitsAndFits, EarlyMeasureQualification,
@@ -21,10 +22,11 @@ use crate::early::model::{
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::pmi::{
     AngularLocationData, AnnotationCurveOccurrence, AnnotationOccurrence,
-    AnnotationPlaceholderOccurrence, AnnotationPlaceholderOccurrenceWithLeaderLine,
-    AnnotationPlane, AnnotationSymbolOccurrence, AnnotationTextOccurrence, Datum, DatumFeature,
-    DimensionalLocation, DimensionalLocationData, DimensionalSize, DimensionalSizeKind,
-    DraughtingAnnotationOccurrence, DraughtingCallout, DraughtingCalloutData,
+    AnnotationPlaceholderLeaderLine, AnnotationPlaceholderOccurrence,
+    AnnotationPlaceholderOccurrenceWithLeaderLine, AnnotationPlane, AnnotationSymbolOccurrence,
+    AnnotationTextOccurrence, AnnotationToModelLeaderLine, AuxiliaryLeaderLineData, Datum,
+    DatumFeature, DimensionalLocation, DimensionalLocationData, DimensionalSize,
+    DimensionalSizeKind, DraughtingAnnotationOccurrence, DraughtingCallout, DraughtingCalloutData,
     DraughtingCalloutRelationship, DraughtingPreDefinedTextFont, GeometricTolerance,
     GeometricToleranceRelationship, GeometricToleranceWithDatumReference, LeaderCurve,
     LeaderTerminator, LimitsAndFits, MeasureQualification, PlainAnnotationCurveOccurrence,
@@ -1277,5 +1279,81 @@ pub(crate) fn lower_annotation_placeholder_occurrence_with_leader_line(
                 },
             ),
         );
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Resolve a leader line's `geometric_elements` list, keeping only refs
+/// resolving to an `ApllPoint` (others skipped) — shared by both leader lines.
+fn resolve_apll_point_elements(
+    ctx: &ReaderContext,
+    refs: &[u64],
+) -> Vec<crate::ir::id::ApllPointId> {
+    let mut elems = Vec::with_capacity(refs.len());
+    for &r in refs {
+        if let Some(id) = ctx.id_cache.get::<crate::ir::id::ApllPointId>(r) {
+            elems.push(id);
+        }
+    }
+    elems
+}
+
+/// Lower one `ANNOTATION_TO_MODEL_LEADER_LINE` into the shared
+/// `annotation_placeholder_leader_lines` arena.
+pub(crate) fn lower_annotation_to_model_leader_line(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyAnnotationToModelLeaderLine,
+) {
+    let geometric_elements = resolve_apll_point_elements(ctx, &early.geometric_elements);
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_placeholder_leader_lines
+        .push(
+            AnnotationPlaceholderLeaderLine::AnnotationToModelLeaderLine(
+                AnnotationToModelLeaderLine {
+                    name: early.name,
+                    geometric_elements,
+                },
+            ),
+        );
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `AUXILIARY_LEADER_LINE` (base + `controlling_leader_line`, another
+/// arena member). An unresolved `controlling_leader_line` warns + drops
+/// (symmetric on re-read), a verbatim port of the legacy read.
+pub(crate) fn lower_auxiliary_leader_line(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyAuxiliaryLeaderLine,
+) {
+    let geometric_elements = resolve_apll_point_elements(ctx, &early.geometric_elements);
+    let Some(controlling_leader_line) =
+        ctx.id_cache
+            .get::<crate::ir::id::AnnotationPlaceholderLeaderLineId>(early.controlling_leader_line)
+    else {
+        ctx.warnings
+            .push(crate::ir::error::ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "AUXILIARY_LEADER_LINE.controlling_leader_line #{} did not resolve to a known \
+                 leader line",
+                    early.controlling_leader_line
+                ),
+            });
+        return;
+    };
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_placeholder_leader_lines
+        .push(AnnotationPlaceholderLeaderLine::AuxiliaryLeaderLine(
+            AuxiliaryLeaderLineData {
+                name: early.name,
+                geometric_elements,
+                controlling_leader_line,
+            },
+        ));
     ctx.id_cache.insert(entity_id, id);
 }

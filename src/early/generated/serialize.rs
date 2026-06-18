@@ -4590,6 +4590,43 @@ pub(crate) fn serialize_annotation_placeholder_occurrence_with_leader_line(
     )
 }
 
+pub(crate) fn serialize_annotation_to_model_leader_line(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAnnotationToModelLeaderLine,
+) -> u64 {
+    buf.push_simple(
+        "ANNOTATION_TO_MODEL_LEADER_LINE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.geometric_elements
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+        ],
+    )
+}
+
+pub(crate) fn serialize_auxiliary_leader_line(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyAuxiliaryLeaderLine,
+) -> u64 {
+    buf.push_simple(
+        "AUXILIARY_LEADER_LINE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.geometric_elements
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::EntityRef(l1.controlling_leader_line),
+        ],
+    )
+}
+
 pub(crate) fn serialize_annotation_plane(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyAnnotationPlane,

@@ -5431,6 +5431,51 @@ impl crate::ir::arena::ArenaId for EarlyAnnotationPlaceholderOccurrenceWithLeade
     }
 }
 
+/// L1 `ANNOTATION_TO_MODEL_LEADER_LINE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAnnotationToModelLeaderLine {
+    pub(crate) name: String,
+    pub(crate) geometric_elements: Vec<u64>,
+}
+
+/// Typed `id_cache` key for `ANNOTATION_TO_MODEL_LEADER_LINE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAnnotationToModelLeaderLineId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAnnotationToModelLeaderLineId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `AUXILIARY_LEADER_LINE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyAuxiliaryLeaderLine {
+    pub(crate) name: String,
+    pub(crate) geometric_elements: Vec<u64>,
+    pub(crate) controlling_leader_line: u64,
+}
+
+/// Typed `id_cache` key for `AUXILIARY_LEADER_LINE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyAuxiliaryLeaderLineId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyAuxiliaryLeaderLineId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `ANNOTATION_PLANE` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyAnnotationPlane {

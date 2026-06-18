@@ -268,6 +268,9 @@ generate = [
     # PMI simple — annotation placeholder occurrences (role enum)
     "annotation_placeholder_occurrence",
     "annotation_placeholder_occurrence_with_leader_line",
+    # PMI simple — annotation placeholder leader lines (pattern-b 1:N writer split)
+    "annotation_to_model_leader_line",
+    "auxiliary_leader_line",
     # Phase 3f: PMI simple — annotation plane (+ OPTIONAL SET elements, dropped)
     "annotation_plane",
     # Phase 3g: visualization simple — camera model d3 (+ hlhsr boolean subtype)

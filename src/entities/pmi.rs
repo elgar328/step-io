@@ -20,10 +20,9 @@ use crate::ir::geometry::Point3;
 use crate::ir::pmi::{
     AnnotationOccurrenceAssociativity, AnnotationOccurrenceRef, AnnotationPlaceholderLeaderLine,
     AnnotationPlaceholderOccurrence, AnnotationPlaceholderOccurrenceWithLeaderLine,
-    AnnotationPlane, AnnotationSymbolOccurrence, AnnotationTextOccurrence,
-    AnnotationToModelLeaderLine, ApllPointData, ApllPointElement, ApllPointWithSurfaceData,
-    AuxiliaryLeaderLineData, DatumFeature, DimensionalCharacteristic, DimensionalLocation,
-    DimensionalSize, DimensionalSizeKind, DimensionalSizeWithDatumFeatureData,
+    AnnotationPlane, AnnotationSymbolOccurrence, AnnotationTextOccurrence, ApllPointData,
+    ApllPointElement, ApllPointWithSurfaceData, DatumFeature, DimensionalCharacteristic,
+    DimensionalLocation, DimensionalSize, DimensionalSizeKind, DimensionalSizeWithDatumFeatureData,
     DraughtingAnnotationOccurrence, DraughtingCalloutData, DraughtingCalloutElement,
     DraughtingCalloutRelationship, DraughtingModelIdentifiedItem, DraughtingModelItemAssociation,
     DraughtingModelItemDefinition, DraughtingPreDefinedTextFont, GeneralDatumBase,
@@ -491,28 +490,8 @@ impl SimpleEntityHandler for AnnotationToModelLeaderLineHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "ANNOTATION_TO_MODEL_LEADER_LINE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let elem_refs = read_entity_ref_list(attrs, 1, entity_id, "geometric_elements")?;
-        let mut geometric_elements = Vec::with_capacity(elem_refs.len());
-        for r in elem_refs {
-            if let Some(id) = ctx.id_cache.get::<crate::ir::id::ApllPointId>(r) {
-                geometric_elements.push(id);
-            }
-        }
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_placeholder_leader_lines
-            .push(
-                AnnotationPlaceholderLeaderLine::AnnotationToModelLeaderLine(
-                    AnnotationToModelLeaderLine {
-                        name,
-                        geometric_elements,
-                    },
-                ),
-            );
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_annotation_to_model_leader_line(entity_id, attrs)?;
+        lower::lower_annotation_to_model_leader_line(ctx, entity_id, early);
         Ok(())
     }
 
@@ -520,37 +499,34 @@ impl SimpleEntityHandler for AnnotationToModelLeaderLineHandler {
         buf: &mut WriteBuffer,
         leader: AnnotationPlaceholderLeaderLine,
     ) -> Result<u64, WriteError> {
+        // The shared arena holds both subtypes; this base handler is the sole
+        // emitter and routes each variant to its own generated `serialize`
+        // (the `AuxiliaryLeaderLineHandler::write` is `unreachable!`).
         match leader {
             AnnotationPlaceholderLeaderLine::AnnotationToModelLeaderLine(data) => {
-                let elem_refs = data
+                let elems = data
                     .geometric_elements
                     .iter()
-                    .map(|id| Attribute::EntityRef(buf.step_id(id)))
+                    .map(|id| buf.step_id(id))
                     .collect();
-                Ok(buf.push_simple(
-                    "ANNOTATION_TO_MODEL_LEADER_LINE",
-                    vec![Attribute::String(data.name), Attribute::List(elem_refs)],
+                let early = lift::lift_annotation_to_model_leader_line(data.name, elems);
+                Ok(serialize::serialize_annotation_to_model_leader_line(
+                    buf, &early,
                 ))
             }
             AnnotationPlaceholderLeaderLine::AuxiliaryLeaderLine(data) => {
-                let elem_refs = data
+                let elems = data
                     .geometric_elements
                     .iter()
-                    .map(|id| Attribute::EntityRef(buf.step_id(id)))
+                    .map(|id| buf.step_id(id))
                     .collect();
                 // `controlling_leader_line` points at another member of the same
                 // arena. Topo order processes it first (lower arena index), so
-                // its step id is already in the partially-built cache; `.get`
+                // its step id is already in the partially-built cache; `.step_id`
                 // keeps any ordering violation a visible dangling 0, not a panic.
                 let controlling_step = buf.step_id(data.controlling_leader_line);
-                Ok(buf.push_simple(
-                    "AUXILIARY_LEADER_LINE",
-                    vec![
-                        Attribute::String(data.name),
-                        Attribute::List(elem_refs),
-                        Attribute::EntityRef(controlling_step),
-                    ],
-                ))
+                let early = lift::lift_auxiliary_leader_line(data.name, elems, controlling_step);
+                Ok(serialize::serialize_auxiliary_leader_line(buf, &early))
             }
         }
     }
@@ -574,41 +550,8 @@ impl SimpleEntityHandler for AuxiliaryLeaderLineHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 3, entity_id, "AUXILIARY_LEADER_LINE")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let elem_refs = read_entity_ref_list(attrs, 1, entity_id, "geometric_elements")?;
-        let mut geometric_elements = Vec::with_capacity(elem_refs.len());
-        for r in elem_refs {
-            if let Some(id) = ctx.id_cache.get::<crate::ir::id::ApllPointId>(r) {
-                geometric_elements.push(id);
-            }
-        }
-        let controlling_ref = read_entity_ref(attrs, 2, entity_id, "controlling_leader_line")?;
-        let Some(controlling_leader_line) =
-            ctx.id_cache
-                .get::<crate::ir::id::AnnotationPlaceholderLeaderLineId>(controlling_ref)
-        else {
-            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
-                entity_id,
-                detail: format!(
-                    "AUXILIARY_LEADER_LINE.controlling_leader_line #{controlling_ref} did not \
-                     resolve to a known leader line"
-                ),
-            });
-            return Ok(());
-        };
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_placeholder_leader_lines
-            .push(AnnotationPlaceholderLeaderLine::AuxiliaryLeaderLine(
-                AuxiliaryLeaderLineData {
-                    name,
-                    geometric_elements,
-                    controlling_leader_line,
-                },
-            ));
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_auxiliary_leader_line(entity_id, attrs)?;
+        lower::lower_auxiliary_leader_line(ctx, entity_id, early);
         Ok(())
     }
 

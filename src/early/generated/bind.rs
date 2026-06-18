@@ -3995,6 +3995,44 @@ pub(crate) fn bind_annotation_placeholder_occurrence_with_leader_line(
     )
 }
 
+pub(crate) fn bind_annotation_to_model_leader_line(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAnnotationToModelLeaderLine, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "ANNOTATION_TO_MODEL_LEADER_LINE")?;
+    Ok(super::model::EarlyAnnotationToModelLeaderLine {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        geometric_elements: crate::ir::attr::read_entity_ref_list(
+            attrs,
+            1,
+            entity_id,
+            "geometric_elements",
+        )?,
+    })
+}
+
+pub(crate) fn bind_auxiliary_leader_line(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyAuxiliaryLeaderLine, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 3, entity_id, "AUXILIARY_LEADER_LINE")?;
+    Ok(super::model::EarlyAuxiliaryLeaderLine {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        geometric_elements: crate::ir::attr::read_entity_ref_list(
+            attrs,
+            1,
+            entity_id,
+            "geometric_elements",
+        )?,
+        controlling_leader_line: crate::ir::attr::read_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "controlling_leader_line",
+        )?,
+    })
+}
+
 pub(crate) fn bind_annotation_plane(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],

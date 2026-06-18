@@ -6,9 +6,10 @@ use crate::early::model::{
     EarlyAnnotationCurveOccurrence, EarlyAnnotationOccurrence,
     EarlyAnnotationPlaceholderOccurrence, EarlyAnnotationPlaceholderOccurrenceWithLeaderLine,
     EarlyAnnotationPlane, EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence,
-    EarlyCircularRunoutTolerance, EarlyConcentricityTolerance, EarlyCylindricityTolerance,
-    EarlyDatum, EarlyDatumFeature, EarlyDimensionalLocation, EarlyDimensionalSize,
-    EarlyDirectedDimensionalLocation, EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout,
+    EarlyAnnotationToModelLeaderLine, EarlyAuxiliaryLeaderLine, EarlyCircularRunoutTolerance,
+    EarlyConcentricityTolerance, EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature,
+    EarlyDimensionalLocation, EarlyDimensionalSize, EarlyDirectedDimensionalLocation,
+    EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout,
     EarlyDraughtingCalloutRelationship, EarlyDraughtingPreDefinedTextFont, EarlyFlatnessTolerance,
     EarlyGeometricToleranceRelationship, EarlyLeaderCurve, EarlyLeaderDirectedCallout,
     EarlyLeaderTerminator, EarlyLimitsAndFits, EarlyMeasureQualification,
@@ -601,5 +602,30 @@ pub(crate) fn lift_annotation_placeholder_occurrence_with_leader_line(
         role,
         line_spacing,
         leader_line,
+    }
+}
+
+/// Lift one `ANNOTATION_TO_MODEL_LEADER_LINE` (`geometric_elements` pre-emitted
+/// to step ids by the handler).
+pub(crate) fn lift_annotation_to_model_leader_line(
+    name: String,
+    geometric_elements: Vec<u64>,
+) -> EarlyAnnotationToModelLeaderLine {
+    EarlyAnnotationToModelLeaderLine {
+        name,
+        geometric_elements,
+    }
+}
+
+/// Lift one `AUXILIARY_LEADER_LINE` (base + `controlling_leader_line` step id).
+pub(crate) fn lift_auxiliary_leader_line(
+    name: String,
+    geometric_elements: Vec<u64>,
+    controlling_leader_line: u64,
+) -> EarlyAuxiliaryLeaderLine {
+    EarlyAuxiliaryLeaderLine {
+        name,
+        geometric_elements,
+        controlling_leader_line,
     }
 }
