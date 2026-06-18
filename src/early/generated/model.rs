@@ -3510,6 +3510,61 @@ impl crate::ir::arena::ArenaId for EarlyFlatnessToleranceId {
     }
 }
 
+/// L1 `FLATNESS_TOLERANCE_COMPLEX` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyFlatnessToleranceComplexModifiers {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) magnitude: Option<u64>,
+    pub(crate) toleranced_shape_aspect: u64,
+    pub(crate) modifiers: Vec<EarlyGeometricToleranceModifier>,
+}
+
+/// L1 `FLATNESS_TOLERANCE_COMPLEX` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyFlatnessToleranceComplexUnit {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) magnitude: Option<u64>,
+    pub(crate) toleranced_shape_aspect: u64,
+    pub(crate) unit_size: u64,
+}
+
+/// L1 `FLATNESS_TOLERANCE_COMPLEX` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyFlatnessToleranceComplexUnitArea {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) magnitude: Option<u64>,
+    pub(crate) toleranced_shape_aspect: u64,
+    pub(crate) unit_size: u64,
+    pub(crate) area_type: EarlyAreaUnitType,
+    pub(crate) second_unit_size: Option<u64>,
+}
+
+/// L1 `FLATNESS_TOLERANCE_COMPLEX` (generated, multi-case).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum EarlyFlatnessToleranceComplex {
+    Modifiers(EarlyFlatnessToleranceComplexModifiers),
+    Unit(EarlyFlatnessToleranceComplexUnit),
+    UnitArea(EarlyFlatnessToleranceComplexUnitArea),
+}
+
+/// Typed `id_cache` key for `FLATNESS_TOLERANCE_COMPLEX` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyFlatnessToleranceComplexId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyFlatnessToleranceComplexId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `SURFACE_PROFILE_TOLERANCE` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlySurfaceProfileTolerance {
@@ -3558,6 +3613,31 @@ impl crate::ir::arena::ArenaId for EarlyStraightnessToleranceId {
     }
 }
 
+/// L1 `STRAIGHTNESS_TOLERANCE_COMPLEX` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyStraightnessToleranceComplex {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) magnitude: Option<u64>,
+    pub(crate) toleranced_shape_aspect: u64,
+    pub(crate) unit_size: u64,
+}
+
+/// Typed `id_cache` key for `STRAIGHTNESS_TOLERANCE_COMPLEX` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyStraightnessToleranceComplexId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyStraightnessToleranceComplexId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `ROUNDNESS_TOLERANCE` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyRoundnessTolerance {
@@ -3574,6 +3654,31 @@ pub(crate) struct EarlyRoundnessTolerance {
 pub(crate) struct EarlyRoundnessToleranceId(pub u32);
 
 impl crate::ir::arena::ArenaId for EarlyRoundnessToleranceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `ROUNDNESS_TOLERANCE_COMPLEX` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyRoundnessToleranceComplex {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) magnitude: Option<u64>,
+    pub(crate) toleranced_shape_aspect: u64,
+    pub(crate) modifiers: Vec<EarlyGeometricToleranceModifier>,
+}
+
+/// Typed `id_cache` key for `ROUNDNESS_TOLERANCE_COMPLEX` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyRoundnessToleranceComplexId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyRoundnessToleranceComplexId {
     fn index(&self) -> usize {
         self.0 as usize
     }
@@ -7346,6 +7451,55 @@ pub(crate) enum EarlySourceItem {
 pub(crate) enum EarlyTrimSelect {
     Point(u64),
     Param(f64),
+}
+
+/// L1 ENUM `area_unit_type` (generated).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) enum EarlyAreaUnitType {
+    Spherical,
+    Cylindrical,
+    Rectangular,
+    Square,
+    Circular,
+}
+
+/// L1 ENUM `geometric_tolerance_modifier` (generated).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) enum EarlyGeometricToleranceModifier {
+    StandardDeviation,
+    ValleyDepth,
+    PeakHeight,
+    TotalRangeDeviations,
+    ReferenceMaximumInscribedFeature,
+    ReferenceMinimumCircumscribedFeature,
+    ReferenceLeastSquareFeatureWithInternalMaterialConstraint,
+    ReferenceLeastSquareFeatureWithExternalMaterialConstraint,
+    ReferenceLeastSquareFeatureWithoutConstraint,
+    ReferenceMinimaxFeatureWithInternalMaterialConstraint,
+    ReferenceMinimaxFeatureWithExternalMaterialConstraint,
+    ReferenceMinimaxFeatureWithoutConstraint,
+    AssociatedMaximumInscribedFeature,
+    AssociatedTangentFeature,
+    AssociatedMinimumInscribedFeature,
+    AssociatedLeastSquareFeature,
+    AssociatedMinmaxFeature,
+    UnitedFeature,
+    SeparateRequirement,
+    EachRadialElement,
+    TangentPlane,
+    StatisticalTolerance,
+    NotConvex,
+    LineElement,
+    PitchDiameter,
+    MajorDiameter,
+    MinorDiameter,
+    CommonZone,
+    FreeState,
+    AnyCrossSection,
+    ReciprocityRequirement,
+    LeastMaterialRequirement,
+    MaximumMaterialRequirement,
+    CircleA,
 }
 
 /// L1 ENUM `knot_type` (generated).

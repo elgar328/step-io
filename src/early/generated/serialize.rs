@@ -3048,6 +3048,95 @@ pub(crate) fn serialize_flatness_tolerance(
     )
 }
 
+pub(crate) fn serialize_flatness_tolerance_complex(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyFlatnessToleranceComplex,
+) -> u64 {
+    match l1 {
+        super::model::EarlyFlatnessToleranceComplex::Modifiers(l1) => buf.push_complex(vec![
+            (
+                "GEOMETRIC_TOLERANCE".into(),
+                vec![
+                    crate::parser::entity::Attribute::String(l1.name.clone()),
+                    match &l1.description {
+                        Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                        None => crate::parser::entity::Attribute::Unset,
+                    },
+                    match l1.magnitude {
+                        Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                        None => crate::parser::entity::Attribute::Unset,
+                    },
+                    crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+                ],
+            ),
+            (
+                "GEOMETRIC_TOLERANCE_WITH_MODIFIERS".into(),
+                vec![crate::parser::entity::Attribute::List(
+                    l1.modifiers
+                        .iter()
+                        .map(|e| geometric_tolerance_modifier_attr(e.clone()))
+                        .collect(),
+                )],
+            ),
+            ("FLATNESS_TOLERANCE".into(), vec![]),
+        ]),
+        super::model::EarlyFlatnessToleranceComplex::Unit(l1) => buf.push_complex(vec![
+            (
+                "GEOMETRIC_TOLERANCE".into(),
+                vec![
+                    crate::parser::entity::Attribute::String(l1.name.clone()),
+                    match &l1.description {
+                        Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                        None => crate::parser::entity::Attribute::Unset,
+                    },
+                    match l1.magnitude {
+                        Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                        None => crate::parser::entity::Attribute::Unset,
+                    },
+                    crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+                ],
+            ),
+            (
+                "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT".into(),
+                vec![crate::parser::entity::Attribute::EntityRef(l1.unit_size)],
+            ),
+            ("FLATNESS_TOLERANCE".into(), vec![]),
+        ]),
+        super::model::EarlyFlatnessToleranceComplex::UnitArea(l1) => buf.push_complex(vec![
+            (
+                "GEOMETRIC_TOLERANCE".into(),
+                vec![
+                    crate::parser::entity::Attribute::String(l1.name.clone()),
+                    match &l1.description {
+                        Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                        None => crate::parser::entity::Attribute::Unset,
+                    },
+                    match l1.magnitude {
+                        Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                        None => crate::parser::entity::Attribute::Unset,
+                    },
+                    crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+                ],
+            ),
+            (
+                "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT".into(),
+                vec![crate::parser::entity::Attribute::EntityRef(l1.unit_size)],
+            ),
+            (
+                "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT".into(),
+                vec![
+                    area_unit_type_attr(l1.area_type),
+                    match l1.second_unit_size {
+                        Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                        None => crate::parser::entity::Attribute::Unset,
+                    },
+                ],
+            ),
+            ("FLATNESS_TOLERANCE".into(), vec![]),
+        ]),
+    }
+}
+
 pub(crate) fn serialize_surface_profile_tolerance(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlySurfaceProfileTolerance,
@@ -3090,6 +3179,34 @@ pub(crate) fn serialize_straightness_tolerance(
     )
 }
 
+pub(crate) fn serialize_straightness_tolerance_complex(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyStraightnessToleranceComplex,
+) -> u64 {
+    buf.push_complex(vec![
+        (
+            "GEOMETRIC_TOLERANCE".into(),
+            vec![
+                crate::parser::entity::Attribute::String(l1.name.clone()),
+                match &l1.description {
+                    Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                    None => crate::parser::entity::Attribute::Unset,
+                },
+                match l1.magnitude {
+                    Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                    None => crate::parser::entity::Attribute::Unset,
+                },
+                crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+            ],
+        ),
+        (
+            "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT".into(),
+            vec![crate::parser::entity::Attribute::EntityRef(l1.unit_size)],
+        ),
+        ("STRAIGHTNESS_TOLERANCE".into(), vec![]),
+    ])
+}
+
 pub(crate) fn serialize_roundness_tolerance(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyRoundnessTolerance,
@@ -3109,6 +3226,39 @@ pub(crate) fn serialize_roundness_tolerance(
             crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
         ],
     )
+}
+
+pub(crate) fn serialize_roundness_tolerance_complex(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyRoundnessToleranceComplex,
+) -> u64 {
+    buf.push_complex(vec![
+        (
+            "GEOMETRIC_TOLERANCE".into(),
+            vec![
+                crate::parser::entity::Attribute::String(l1.name.clone()),
+                match &l1.description {
+                    Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                    None => crate::parser::entity::Attribute::Unset,
+                },
+                match l1.magnitude {
+                    Some(v) => crate::parser::entity::Attribute::EntityRef(v),
+                    None => crate::parser::entity::Attribute::Unset,
+                },
+                crate::parser::entity::Attribute::EntityRef(l1.toleranced_shape_aspect),
+            ],
+        ),
+        (
+            "GEOMETRIC_TOLERANCE_WITH_MODIFIERS".into(),
+            vec![crate::parser::entity::Attribute::List(
+                l1.modifiers
+                    .iter()
+                    .map(|e| geometric_tolerance_modifier_attr(e.clone()))
+                    .collect(),
+            )],
+        ),
+        ("ROUNDNESS_TOLERANCE".into(), vec![]),
+    ])
 }
 
 pub(crate) fn serialize_cylindricity_tolerance(
@@ -6624,6 +6774,19 @@ fn annotation_placeholder_occurrence_role_attr(
     )
 }
 
+fn area_unit_type_attr(v: super::model::EarlyAreaUnitType) -> crate::parser::entity::Attribute {
+    crate::parser::entity::Attribute::Enum(
+        match v {
+            super::model::EarlyAreaUnitType::Spherical => "SPHERICAL",
+            super::model::EarlyAreaUnitType::Cylindrical => "CYLINDRICAL",
+            super::model::EarlyAreaUnitType::Rectangular => "RECTANGULAR",
+            super::model::EarlyAreaUnitType::Square => "SQUARE",
+            super::model::EarlyAreaUnitType::Circular => "CIRCULAR",
+        }
+        .into(),
+    )
+}
+
 fn b_spline_curve_form_attr(v: crate::ir::geometry::CurveForm) -> crate::parser::entity::Attribute {
     crate::parser::entity::Attribute::Enum(
         match v {
@@ -6690,6 +6853,47 @@ fn des_apll_point_symbol_attr(
         }
         .into(),
     )
+}
+
+fn geometric_tolerance_modifier_attr(
+    v: super::model::EarlyGeometricToleranceModifier,
+) -> crate::parser::entity::Attribute {
+    crate::parser::entity::Attribute::Enum(match v {
+        super::model::EarlyGeometricToleranceModifier::StandardDeviation => "STANDARD_DEVIATION",
+        super::model::EarlyGeometricToleranceModifier::ValleyDepth => "VALLEY_DEPTH",
+        super::model::EarlyGeometricToleranceModifier::PeakHeight => "PEAK_HEIGHT",
+        super::model::EarlyGeometricToleranceModifier::TotalRangeDeviations => "TOTAL_RANGE_DEVIATIONS",
+        super::model::EarlyGeometricToleranceModifier::ReferenceMaximumInscribedFeature => "REFERENCE_MAXIMUM_INSCRIBED_FEATURE",
+        super::model::EarlyGeometricToleranceModifier::ReferenceMinimumCircumscribedFeature => "REFERENCE_MINIMUM_CIRCUMSCRIBED_FEATURE",
+        super::model::EarlyGeometricToleranceModifier::ReferenceLeastSquareFeatureWithInternalMaterialConstraint => "REFERENCE_LEAST_SQUARE_FEATURE_WITH_INTERNAL_MATERIAL_CONSTRAINT",
+        super::model::EarlyGeometricToleranceModifier::ReferenceLeastSquareFeatureWithExternalMaterialConstraint => "REFERENCE_LEAST_SQUARE_FEATURE_WITH_EXTERNAL_MATERIAL_CONSTRAINT",
+        super::model::EarlyGeometricToleranceModifier::ReferenceLeastSquareFeatureWithoutConstraint => "REFERENCE_LEAST_SQUARE_FEATURE_WITHOUT_CONSTRAINT",
+        super::model::EarlyGeometricToleranceModifier::ReferenceMinimaxFeatureWithInternalMaterialConstraint => "REFERENCE_MINIMAX_FEATURE_WITH_INTERNAL_MATERIAL_CONSTRAINT",
+        super::model::EarlyGeometricToleranceModifier::ReferenceMinimaxFeatureWithExternalMaterialConstraint => "REFERENCE_MINIMAX_FEATURE_WITH_EXTERNAL_MATERIAL_CONSTRAINT",
+        super::model::EarlyGeometricToleranceModifier::ReferenceMinimaxFeatureWithoutConstraint => "REFERENCE_MINIMAX_FEATURE_WITHOUT_CONSTRAINT",
+        super::model::EarlyGeometricToleranceModifier::AssociatedMaximumInscribedFeature => "ASSOCIATED_MAXIMUM_INSCRIBED_FEATURE",
+        super::model::EarlyGeometricToleranceModifier::AssociatedTangentFeature => "ASSOCIATED_TANGENT_FEATURE",
+        super::model::EarlyGeometricToleranceModifier::AssociatedMinimumInscribedFeature => "ASSOCIATED_MINIMUM_INSCRIBED_FEATURE",
+        super::model::EarlyGeometricToleranceModifier::AssociatedLeastSquareFeature => "ASSOCIATED_LEAST_SQUARE_FEATURE",
+        super::model::EarlyGeometricToleranceModifier::AssociatedMinmaxFeature => "ASSOCIATED_MINMAX_FEATURE",
+        super::model::EarlyGeometricToleranceModifier::UnitedFeature => "UNITED_FEATURE",
+        super::model::EarlyGeometricToleranceModifier::SeparateRequirement => "SEPARATE_REQUIREMENT",
+        super::model::EarlyGeometricToleranceModifier::EachRadialElement => "EACH_RADIAL_ELEMENT",
+        super::model::EarlyGeometricToleranceModifier::TangentPlane => "TANGENT_PLANE",
+        super::model::EarlyGeometricToleranceModifier::StatisticalTolerance => "STATISTICAL_TOLERANCE",
+        super::model::EarlyGeometricToleranceModifier::NotConvex => "NOT_CONVEX",
+        super::model::EarlyGeometricToleranceModifier::LineElement => "LINE_ELEMENT",
+        super::model::EarlyGeometricToleranceModifier::PitchDiameter => "PITCH_DIAMETER",
+        super::model::EarlyGeometricToleranceModifier::MajorDiameter => "MAJOR_DIAMETER",
+        super::model::EarlyGeometricToleranceModifier::MinorDiameter => "MINOR_DIAMETER",
+        super::model::EarlyGeometricToleranceModifier::CommonZone => "COMMON_ZONE",
+        super::model::EarlyGeometricToleranceModifier::FreeState => "FREE_STATE",
+        super::model::EarlyGeometricToleranceModifier::AnyCrossSection => "ANY_CROSS_SECTION",
+        super::model::EarlyGeometricToleranceModifier::ReciprocityRequirement => "RECIPROCITY_REQUIREMENT",
+        super::model::EarlyGeometricToleranceModifier::LeastMaterialRequirement => "LEAST_MATERIAL_REQUIREMENT",
+        super::model::EarlyGeometricToleranceModifier::MaximumMaterialRequirement => "MAXIMUM_MATERIAL_REQUIREMENT",
+        super::model::EarlyGeometricToleranceModifier::CircleA => "CIRCLE_A",
+    }.into())
 }
 
 fn knot_type_attr(v: super::model::EarlyKnotType) -> crate::parser::entity::Attribute {

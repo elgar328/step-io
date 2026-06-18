@@ -22,8 +22,8 @@ use crate::ir::pmi::{
     DimensionalSizeKind, DraughtingAnnotationOccurrence, DraughtingCalloutData,
     DraughtingCalloutElement, DraughtingCalloutRelationship, DraughtingModelItemAssociation,
     DraughtingModelItemDefinition, DraughtingPreDefinedTextFont, GeneralDatumBase,
-    GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceData,
-    GeometricToleranceRef, GeometricToleranceRelationship, GeometricToleranceWithDatumReference,
+    GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceRef,
+    GeometricToleranceRelationship, GeometricToleranceWithDatumReference,
     GeometricToleranceWithDatumReferenceData, LeaderCurve, LeaderTerminator, LimitsAndFits,
     MeasureQualification, PlainAnnotationCurveOccurrence, PlainAnnotationOccurrence,
     PlusMinusTolerance, ProjectedZoneDefinition, TerminatorSymbol, TessellatedAnnotationOccurrence,
@@ -1473,6 +1473,122 @@ pub(crate) fn resolve_geometric_tolerance_target(
 /// Emit a `GeometricTolerance` under the STEP entity name its variant
 /// selects, returning the STEP id. Shared by all four form-tolerance
 /// handlers and by `emit_geometric_tolerances`.
+/// Emit a datum-free GT in its simple 4-attr form (no optional supertypes) via
+/// the generated serialize. `magnitude` / `shape_aspect` are pre-resolved step ids.
+fn write_gt_simple_form(
+    buf: &mut WriteBuffer,
+    entity_name: &str,
+    data: crate::ir::pmi::GeometricToleranceData,
+    magnitude: u64,
+    shape_aspect: u64,
+) -> u64 {
+    match entity_name {
+        "FLATNESS_TOLERANCE" => crate::early::serialize::serialize_flatness_tolerance(
+            buf,
+            &crate::early::lift::lift_flatness_tolerance(
+                data.name,
+                data.description,
+                magnitude,
+                shape_aspect,
+            ),
+        ),
+        "STRAIGHTNESS_TOLERANCE" => crate::early::serialize::serialize_straightness_tolerance(
+            buf,
+            &crate::early::lift::lift_straightness_tolerance(
+                data.name,
+                data.description,
+                magnitude,
+                shape_aspect,
+            ),
+        ),
+        "ROUNDNESS_TOLERANCE" => crate::early::serialize::serialize_roundness_tolerance(
+            buf,
+            &crate::early::lift::lift_roundness_tolerance(
+                data.name,
+                data.description,
+                magnitude,
+                shape_aspect,
+            ),
+        ),
+        "CYLINDRICITY_TOLERANCE" => crate::early::serialize::serialize_cylindricity_tolerance(
+            buf,
+            &crate::early::lift::lift_cylindricity_tolerance(
+                data.name,
+                data.description,
+                magnitude,
+                shape_aspect,
+            ),
+        ),
+        _ => crate::early::serialize::serialize_surface_profile_tolerance(
+            buf,
+            &crate::early::lift::lift_surface_profile_tolerance(
+                data.name,
+                data.description,
+                magnitude,
+                shape_aspect,
+            ),
+        ),
+    }
+}
+
+/// Emit a migrated datum-free COMPLEX form (FLATNESS / ROUNDNESS / STRAIGHTNESS)
+/// via the generated serialize. `magnitude` / `shape_aspect` are pre-resolved
+/// step ids; the optional unit/area refs are resolved here.
+fn write_gt_data_complex_migrated(
+    buf: &mut WriteBuffer,
+    entity_name: &str,
+    data: crate::ir::pmi::GeometricToleranceData,
+    magnitude: u64,
+    shape_aspect: u64,
+) -> u64 {
+    let unit_size = data
+        .unit_size
+        .as_ref()
+        .map(|us| emit_tolerance_magnitude(buf, us));
+    let area = data.defined_area_unit.as_ref().map(|a| {
+        (
+            a.area_type.clone(),
+            a.second_unit_size
+                .as_ref()
+                .map(|s| emit_tolerance_magnitude(buf, s)),
+        )
+    });
+    match entity_name {
+        "FLATNESS_TOLERANCE" => crate::early::serialize::serialize_flatness_tolerance_complex(
+            buf,
+            &crate::early::lift::lift_flatness_tolerance_complex(
+                data.name,
+                data.description,
+                magnitude,
+                shape_aspect,
+                &data.modifiers,
+                unit_size,
+                area,
+            ),
+        ),
+        "ROUNDNESS_TOLERANCE" => crate::early::serialize::serialize_roundness_tolerance_complex(
+            buf,
+            &crate::early::lift::lift_roundness_tolerance_complex(
+                data.name,
+                data.description,
+                magnitude,
+                shape_aspect,
+                &data.modifiers,
+            ),
+        ),
+        _ => crate::early::serialize::serialize_straightness_tolerance_complex(
+            buf,
+            &crate::early::lift::lift_straightness_tolerance_complex(
+                data.name,
+                data.description,
+                magnitude,
+                shape_aspect,
+                unit_size.expect("STRAIGHTNESS complex requires unit_size"),
+            ),
+        ),
+    }
+}
+
 pub(crate) fn write_geometric_tolerance(buf: &mut WriteBuffer, gt: GeometricTolerance) -> u64 {
     let (entity_name, data) = match gt {
         GeometricTolerance::Flatness(d) => ("FLATNESS_TOLERANCE", d),
@@ -1493,55 +1609,15 @@ pub(crate) fn write_geometric_tolerance(buf: &mut WriteBuffer, gt: GeometricTole
     let has_area_unit = data.defined_area_unit.is_some();
     let has_modifiers = !data.modifiers.is_empty();
     if !has_unit_size && !has_area_unit && !has_modifiers {
-        // Simple 4-attr emit goes through the generated serialize (the
-        // complex-MI branch below stays hand-built).
-        return match entity_name {
-            "FLATNESS_TOLERANCE" => crate::early::serialize::serialize_flatness_tolerance(
-                buf,
-                &crate::early::lift::lift_flatness_tolerance(
-                    data.name,
-                    data.description,
-                    magnitude,
-                    shape_aspect,
-                ),
-            ),
-            "STRAIGHTNESS_TOLERANCE" => crate::early::serialize::serialize_straightness_tolerance(
-                buf,
-                &crate::early::lift::lift_straightness_tolerance(
-                    data.name,
-                    data.description,
-                    magnitude,
-                    shape_aspect,
-                ),
-            ),
-            "ROUNDNESS_TOLERANCE" => crate::early::serialize::serialize_roundness_tolerance(
-                buf,
-                &crate::early::lift::lift_roundness_tolerance(
-                    data.name,
-                    data.description,
-                    magnitude,
-                    shape_aspect,
-                ),
-            ),
-            "CYLINDRICITY_TOLERANCE" => crate::early::serialize::serialize_cylindricity_tolerance(
-                buf,
-                &crate::early::lift::lift_cylindricity_tolerance(
-                    data.name,
-                    data.description,
-                    magnitude,
-                    shape_aspect,
-                ),
-            ),
-            _ => crate::early::serialize::serialize_surface_profile_tolerance(
-                buf,
-                &crate::early::lift::lift_surface_profile_tolerance(
-                    data.name,
-                    data.description,
-                    magnitude,
-                    shape_aspect,
-                ),
-            ),
-        };
+        return write_gt_simple_form(buf, entity_name, data, magnitude, shape_aspect);
+    }
+    // Migrated datum-free COMPLEX leaves emit via the generated serialize
+    // (lift picks the case variant). The rest stay hand-built below.
+    if matches!(
+        entity_name,
+        "FLATNESS_TOLERANCE" | "ROUNDNESS_TOLERANCE" | "STRAIGHTNESS_TOLERANCE"
+    ) {
+        return write_gt_data_complex_migrated(buf, entity_name, data, magnitude, shape_aspect);
     }
     // Complex MI emit. Part order follows EXPRESS supertype order:
     // GT → [WDU] → [WDAU] → [WM] → LEAF.
@@ -2071,62 +2147,6 @@ fn read_optional_modifiers(
     Ok(modifiers)
 }
 
-/// Read the `GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT.unit_size` part —
-/// `ref_measure_with_unit`. Returns `None` when the part is absent or the
-/// ref resolves to neither a units-pool `MEASURE_WITH_UNIT` nor a
-/// `MEASURE_REPRESENTATION_ITEM` (same 2-path resolution as `magnitude`).
-fn read_optional_unit_size(
-    ctx: &ReaderContext,
-    parts: &[RawEntityPart],
-    entity_id: u64,
-) -> Result<Option<ToleranceMagnitude>, ConvertError> {
-    let Some(attrs) = find_part_attrs(parts, "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT") else {
-        return Ok(None);
-    };
-    check_count(attrs, 1, entity_id, "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT")?;
-    let unit_ref = read_entity_ref(attrs, 0, entity_id, "unit_size")?;
-    Ok(resolve_tolerance_magnitude(ctx, unit_ref))
-}
-
-/// Read the `GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT` part —
-/// `area_type` enum + optional `second_unit_size` (`length_measure_with_unit`).
-/// The EXPRESS WHERE clause makes `second_unit_size` mandatory iff
-/// `area_type == rectangular`; reader preserves whatever the source
-/// emitted (warn on mismatch is left to future schema validation).
-fn read_optional_defined_area_unit(
-    ctx: &ReaderContext,
-    parts: &[RawEntityPart],
-    entity_id: u64,
-) -> Result<Option<crate::ir::DefinedAreaUnit>, ConvertError> {
-    use crate::ir::AreaUnitType;
-    let Some(attrs) = find_part_attrs(parts, "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT") else {
-        return Ok(None);
-    };
-    check_count(
-        attrs,
-        2,
-        entity_id,
-        "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT",
-    )?;
-    let area_type = match attrs.first() {
-        Some(Attribute::Enum(s)) => match s.as_str() {
-            "CIRCULAR" => AreaUnitType::Circular,
-            "RECTANGULAR" => AreaUnitType::Rectangular,
-            "SQUARE" => AreaUnitType::Square,
-            other => AreaUnitType::Other(other.to_owned()),
-        },
-        _ => return Ok(None),
-    };
-    let second_unit_size = match attrs.get(1) {
-        Some(Attribute::EntityRef(n)) => resolve_tolerance_magnitude(ctx, *n),
-        _ => None,
-    };
-    Ok(Some(crate::ir::DefinedAreaUnit {
-        area_type,
-        second_unit_size,
-    }))
-}
-
 /// Read the `UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE.displacement` part —
 /// `ref_length_measure_with_unit`. Returns `None` when the part is absent
 /// or the ref resolves to neither a units-pool `MEASURE_WITH_UNIT` nor a
@@ -2147,50 +2167,6 @@ fn read_optional_displacement(
     )?;
     let unit_ref = read_entity_ref(attrs, 0, entity_id, "displacement")?;
     Ok(resolve_tolerance_magnitude(ctx, unit_ref))
-}
-
-/// Read the form-tolerance complex form `(GEOMETRIC_TOLERANCE
-/// [GEOMETRIC_TOLERANCE_WITH_MODIFIERS] <leaf>)` — used by the new
-/// FLATNESS / ROUNDNESS complex handlers (form-tolerance + modifier).
-fn read_gt_data_complex(
-    ctx: &ReaderContext,
-    entity_id: u64,
-    parts: &[RawEntityPart],
-) -> Result<Option<GeometricToleranceData>, ConvertError> {
-    let gt_attrs = require_part_attrs(parts, "GEOMETRIC_TOLERANCE", entity_id)?;
-    check_count(gt_attrs, 4, entity_id, "GEOMETRIC_TOLERANCE")?;
-    let name = read_string_or_unset(gt_attrs, 0, entity_id, "name")?.to_owned();
-    let description = read_string_or_unset(gt_attrs, 1, entity_id, "description")?.to_owned();
-    let magnitude_ref = read_entity_ref(gt_attrs, 2, entity_id, "magnitude")?;
-    let shape_aspect_ref = read_entity_ref(gt_attrs, 3, entity_id, "toleranced_shape_aspect")?;
-    let Some(magnitude) = resolve_tolerance_magnitude(ctx, magnitude_ref) else {
-        return Ok(None);
-    };
-    let Some(toleranced_shape_aspect) = resolve_geometric_tolerance_target(ctx, shape_aspect_ref)
-    else {
-        return Ok(None);
-    };
-    let modifiers = read_optional_modifiers(parts, entity_id)?;
-    let unit_size = read_optional_unit_size(ctx, parts, entity_id)?;
-    // WDAU cascades from WDU per EXPRESS — drop WDAU when WDU's ref did
-    // not resolve. Mirrors the writer's nested emit (WDAU only inside
-    // the WDU branch). Without this guard, an IR with (unit_size: None,
-    // defined_area_unit: Some(_)) would write as simple form and re-read
-    // as (None, None) — IR mismatch (round-trip FAIL).
-    let defined_area_unit = if unit_size.is_some() {
-        read_optional_defined_area_unit(ctx, parts, entity_id)?
-    } else {
-        None
-    };
-    Ok(Some(GeometricToleranceData {
-        name,
-        description,
-        magnitude,
-        toleranced_shape_aspect,
-        modifiers,
-        unit_size,
-        defined_area_unit,
-    }))
 }
 
 /// Emit a `GeometricToleranceWithDatumReference`, returning the STEP id.
@@ -2823,10 +2799,8 @@ impl ComplexEntityHandler for FlatnessToleranceComplexHandler {
         parts: &[RawEntityPart],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_gt_data_complex(ctx, entity_id, parts)? else {
-            return Ok(());
-        };
-        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::Flatness(data));
+        let early = crate::early::bind::bind_flatness_tolerance_complex(entity_id, parts)?;
+        crate::early::lower::lower_flatness_tolerance_complex(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2850,10 +2824,8 @@ impl ComplexEntityHandler for RoundnessToleranceComplexHandler {
         parts: &[RawEntityPart],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_gt_data_complex(ctx, entity_id, parts)? else {
-            return Ok(());
-        };
-        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::Roundness(data));
+        let early = crate::early::bind::bind_roundness_tolerance_complex(entity_id, parts)?;
+        crate::early::lower::lower_roundness_tolerance_complex(ctx, entity_id, early);
         Ok(())
     }
 
@@ -2877,10 +2849,8 @@ impl ComplexEntityHandler for StraightnessToleranceComplexHandler {
         parts: &[RawEntityPart],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_gt_data_complex(ctx, entity_id, parts)? else {
-            return Ok(());
-        };
-        push_geometric_tolerance(ctx, entity_id, GeometricTolerance::Straightness(data));
+        let early = crate::early::bind::bind_straightness_tolerance_complex(entity_id, parts)?;
+        crate::early::lower::lower_straightness_tolerance_complex(ctx, entity_id, early);
         Ok(())
     }
 

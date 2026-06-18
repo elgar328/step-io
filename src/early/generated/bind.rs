@@ -2706,6 +2706,116 @@ pub(crate) fn bind_flatness_tolerance(
     })
 }
 
+pub(crate) fn bind_flatness_tolerance_complex(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<super::model::EarlyFlatnessToleranceComplex, crate::ir::error::ConvertError> {
+    let part_set: std::collections::BTreeSet<&str> =
+        parts.iter().map(|p| p.name.as_str()).collect();
+    if part_set.len() == 3
+        && part_set.contains("GEOMETRIC_TOLERANCE")
+        && part_set.contains("GEOMETRIC_TOLERANCE_WITH_MODIFIERS")
+        && part_set.contains("FLATNESS_TOLERANCE")
+    {
+        let attrs = crate::reader::require_part_attrs(parts, "GEOMETRIC_TOLERANCE", entity_id)?;
+        let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let description =
+            crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?;
+        let magnitude =
+            crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?;
+        let toleranced_shape_aspect =
+            crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "toleranced_shape_aspect")?;
+        let attrs = crate::reader::require_part_attrs(
+            parts,
+            "GEOMETRIC_TOLERANCE_WITH_MODIFIERS",
+            entity_id,
+        )?;
+        let modifiers = geometric_tolerance_modifier_list(attrs, 0, entity_id, "modifiers")?;
+        return Ok(super::model::EarlyFlatnessToleranceComplex::Modifiers(
+            super::model::EarlyFlatnessToleranceComplexModifiers {
+                name,
+                description,
+                magnitude,
+                toleranced_shape_aspect,
+                modifiers,
+            },
+        ));
+    }
+    if part_set.len() == 3
+        && part_set.contains("GEOMETRIC_TOLERANCE")
+        && part_set.contains("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT")
+        && part_set.contains("FLATNESS_TOLERANCE")
+    {
+        let attrs = crate::reader::require_part_attrs(parts, "GEOMETRIC_TOLERANCE", entity_id)?;
+        let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let description =
+            crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?;
+        let magnitude =
+            crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?;
+        let toleranced_shape_aspect =
+            crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "toleranced_shape_aspect")?;
+        let attrs = crate::reader::require_part_attrs(
+            parts,
+            "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT",
+            entity_id,
+        )?;
+        let unit_size = crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "unit_size")?;
+        return Ok(super::model::EarlyFlatnessToleranceComplex::Unit(
+            super::model::EarlyFlatnessToleranceComplexUnit {
+                name,
+                description,
+                magnitude,
+                toleranced_shape_aspect,
+                unit_size,
+            },
+        ));
+    }
+    if part_set.len() == 4
+        && part_set.contains("GEOMETRIC_TOLERANCE")
+        && part_set.contains("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT")
+        && part_set.contains("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT")
+        && part_set.contains("FLATNESS_TOLERANCE")
+    {
+        let attrs = crate::reader::require_part_attrs(parts, "GEOMETRIC_TOLERANCE", entity_id)?;
+        let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+        let description =
+            crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?;
+        let magnitude =
+            crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?;
+        let toleranced_shape_aspect =
+            crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "toleranced_shape_aspect")?;
+        let attrs = crate::reader::require_part_attrs(
+            parts,
+            "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT",
+            entity_id,
+        )?;
+        let unit_size = crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "unit_size")?;
+        let attrs = crate::reader::require_part_attrs(
+            parts,
+            "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT",
+            entity_id,
+        )?;
+        let area_type = bind_area_unit_type(attrs, 0, entity_id, "area_type")?;
+        let second_unit_size =
+            crate::ir::attr::read_optional_entity_ref(attrs, 1, entity_id, "second_unit_size")?;
+        return Ok(super::model::EarlyFlatnessToleranceComplex::UnitArea(
+            super::model::EarlyFlatnessToleranceComplexUnitArea {
+                name,
+                description,
+                magnitude,
+                toleranced_shape_aspect,
+                unit_size,
+                area_type,
+                second_unit_size,
+            },
+        ));
+    }
+    Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
+        entity_id,
+        detail: "unsupported FLATNESS_TOLERANCE_COMPLEX complex case".into(),
+    })
+}
+
 pub(crate) fn bind_surface_profile_tolerance(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],
@@ -2742,6 +2852,31 @@ pub(crate) fn bind_straightness_tolerance(
     })
 }
 
+pub(crate) fn bind_straightness_tolerance_complex(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<super::model::EarlyStraightnessToleranceComplex, crate::ir::error::ConvertError> {
+    let attrs = crate::reader::require_part_attrs(parts, "GEOMETRIC_TOLERANCE", entity_id)?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let description = crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?;
+    let magnitude = crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?;
+    let toleranced_shape_aspect =
+        crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "toleranced_shape_aspect")?;
+    let attrs = crate::reader::require_part_attrs(
+        parts,
+        "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT",
+        entity_id,
+    )?;
+    let unit_size = crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "unit_size")?;
+    Ok(super::model::EarlyStraightnessToleranceComplex {
+        name,
+        description,
+        magnitude,
+        toleranced_shape_aspect,
+        unit_size,
+    })
+}
+
 pub(crate) fn bind_roundness_tolerance(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],
@@ -2757,6 +2892,28 @@ pub(crate) fn bind_roundness_tolerance(
             entity_id,
             "toleranced_shape_aspect",
         )?,
+    })
+}
+
+pub(crate) fn bind_roundness_tolerance_complex(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<super::model::EarlyRoundnessToleranceComplex, crate::ir::error::ConvertError> {
+    let attrs = crate::reader::require_part_attrs(parts, "GEOMETRIC_TOLERANCE", entity_id)?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let description = crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?;
+    let magnitude = crate::ir::attr::read_optional_entity_ref(attrs, 2, entity_id, "magnitude")?;
+    let toleranced_shape_aspect =
+        crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "toleranced_shape_aspect")?;
+    let attrs =
+        crate::reader::require_part_attrs(parts, "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", entity_id)?;
+    let modifiers = geometric_tolerance_modifier_list(attrs, 0, entity_id, "modifiers")?;
+    Ok(super::model::EarlyRoundnessToleranceComplex {
+        name,
+        description,
+        magnitude,
+        toleranced_shape_aspect,
+        modifiers,
     })
 }
 
@@ -5958,6 +6115,25 @@ fn bind_annotation_placeholder_occurrence_role(
     }
 }
 
+fn bind_area_unit_type(
+    attrs: &[crate::parser::entity::Attribute],
+    index: usize,
+    entity_id: u64,
+    field: &'static str,
+) -> Result<super::model::EarlyAreaUnitType, crate::ir::error::ConvertError> {
+    match crate::ir::attr::read_enum(attrs, index, entity_id, field)? {
+        "SPHERICAL" => Ok(super::model::EarlyAreaUnitType::Spherical),
+        "CYLINDRICAL" => Ok(super::model::EarlyAreaUnitType::Cylindrical),
+        "RECTANGULAR" => Ok(super::model::EarlyAreaUnitType::Rectangular),
+        "SQUARE" => Ok(super::model::EarlyAreaUnitType::Square),
+        "CIRCULAR" => Ok(super::model::EarlyAreaUnitType::Circular),
+        other => Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: format!("{field}: unknown area_unit_type '.{other}.'"),
+        }),
+    }
+}
+
 fn bind_b_spline_curve_form(
     attrs: &[crate::parser::entity::Attribute],
     index: usize,
@@ -6269,6 +6445,67 @@ fn bind_trimming_preference(
             token: other.to_string(),
         }),
     }
+}
+
+fn geometric_tolerance_modifier_list(
+    attrs: &[crate::parser::entity::Attribute],
+    index: usize,
+    entity_id: u64,
+    field: &'static str,
+) -> Result<Vec<super::model::EarlyGeometricToleranceModifier>, crate::ir::error::ConvertError> {
+    let Some(crate::parser::entity::Attribute::List(items)) = attrs.get(index) else {
+        return Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: format!("{field}: expected list"),
+        });
+    };
+    let mut out = Vec::with_capacity(items.len());
+    for item in items {
+        let crate::parser::entity::Attribute::Enum(t) = item else {
+            return Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!("{field}: expected enum in list"),
+            });
+        };
+        out.push(match t.as_str() {
+            "STANDARD_DEVIATION" => super::model::EarlyGeometricToleranceModifier::StandardDeviation,
+            "VALLEY_DEPTH" => super::model::EarlyGeometricToleranceModifier::ValleyDepth,
+            "PEAK_HEIGHT" => super::model::EarlyGeometricToleranceModifier::PeakHeight,
+            "TOTAL_RANGE_DEVIATIONS" => super::model::EarlyGeometricToleranceModifier::TotalRangeDeviations,
+            "REFERENCE_MAXIMUM_INSCRIBED_FEATURE" => super::model::EarlyGeometricToleranceModifier::ReferenceMaximumInscribedFeature,
+            "REFERENCE_MINIMUM_CIRCUMSCRIBED_FEATURE" => super::model::EarlyGeometricToleranceModifier::ReferenceMinimumCircumscribedFeature,
+            "REFERENCE_LEAST_SQUARE_FEATURE_WITH_INTERNAL_MATERIAL_CONSTRAINT" => super::model::EarlyGeometricToleranceModifier::ReferenceLeastSquareFeatureWithInternalMaterialConstraint,
+            "REFERENCE_LEAST_SQUARE_FEATURE_WITH_EXTERNAL_MATERIAL_CONSTRAINT" => super::model::EarlyGeometricToleranceModifier::ReferenceLeastSquareFeatureWithExternalMaterialConstraint,
+            "REFERENCE_LEAST_SQUARE_FEATURE_WITHOUT_CONSTRAINT" => super::model::EarlyGeometricToleranceModifier::ReferenceLeastSquareFeatureWithoutConstraint,
+            "REFERENCE_MINIMAX_FEATURE_WITH_INTERNAL_MATERIAL_CONSTRAINT" => super::model::EarlyGeometricToleranceModifier::ReferenceMinimaxFeatureWithInternalMaterialConstraint,
+            "REFERENCE_MINIMAX_FEATURE_WITH_EXTERNAL_MATERIAL_CONSTRAINT" => super::model::EarlyGeometricToleranceModifier::ReferenceMinimaxFeatureWithExternalMaterialConstraint,
+            "REFERENCE_MINIMAX_FEATURE_WITHOUT_CONSTRAINT" => super::model::EarlyGeometricToleranceModifier::ReferenceMinimaxFeatureWithoutConstraint,
+            "ASSOCIATED_MAXIMUM_INSCRIBED_FEATURE" => super::model::EarlyGeometricToleranceModifier::AssociatedMaximumInscribedFeature,
+            "ASSOCIATED_TANGENT_FEATURE" => super::model::EarlyGeometricToleranceModifier::AssociatedTangentFeature,
+            "ASSOCIATED_MINIMUM_INSCRIBED_FEATURE" => super::model::EarlyGeometricToleranceModifier::AssociatedMinimumInscribedFeature,
+            "ASSOCIATED_LEAST_SQUARE_FEATURE" => super::model::EarlyGeometricToleranceModifier::AssociatedLeastSquareFeature,
+            "ASSOCIATED_MINMAX_FEATURE" => super::model::EarlyGeometricToleranceModifier::AssociatedMinmaxFeature,
+            "UNITED_FEATURE" => super::model::EarlyGeometricToleranceModifier::UnitedFeature,
+            "SEPARATE_REQUIREMENT" => super::model::EarlyGeometricToleranceModifier::SeparateRequirement,
+            "EACH_RADIAL_ELEMENT" => super::model::EarlyGeometricToleranceModifier::EachRadialElement,
+            "TANGENT_PLANE" => super::model::EarlyGeometricToleranceModifier::TangentPlane,
+            "STATISTICAL_TOLERANCE" => super::model::EarlyGeometricToleranceModifier::StatisticalTolerance,
+            "NOT_CONVEX" => super::model::EarlyGeometricToleranceModifier::NotConvex,
+            "LINE_ELEMENT" => super::model::EarlyGeometricToleranceModifier::LineElement,
+            "PITCH_DIAMETER" => super::model::EarlyGeometricToleranceModifier::PitchDiameter,
+            "MAJOR_DIAMETER" => super::model::EarlyGeometricToleranceModifier::MajorDiameter,
+            "MINOR_DIAMETER" => super::model::EarlyGeometricToleranceModifier::MinorDiameter,
+            "COMMON_ZONE" => super::model::EarlyGeometricToleranceModifier::CommonZone,
+            "FREE_STATE" => super::model::EarlyGeometricToleranceModifier::FreeState,
+            "ANY_CROSS_SECTION" => super::model::EarlyGeometricToleranceModifier::AnyCrossSection,
+            "RECIPROCITY_REQUIREMENT" => super::model::EarlyGeometricToleranceModifier::ReciprocityRequirement,
+            "LEAST_MATERIAL_REQUIREMENT" => super::model::EarlyGeometricToleranceModifier::LeastMaterialRequirement,
+            "MAXIMUM_MATERIAL_REQUIREMENT" => super::model::EarlyGeometricToleranceModifier::MaximumMaterialRequirement,
+            "CIRCLE_A" => super::model::EarlyGeometricToleranceModifier::CircleA,
+            other => return Err(crate::ir::error::ConvertError::UnexpectedEntityForm { entity_id, detail: format!("{field}: unknown geometric_tolerance_modifier '.{other}.'") }),
+        });
+    }
+    Ok(out)
 }
 
 fn box_characteristic_select_list(

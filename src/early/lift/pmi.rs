@@ -7,21 +7,23 @@ use crate::early::model::{
     EarlyAnnotationOccurrenceAssociativity, EarlyAnnotationPlaceholderOccurrence,
     EarlyAnnotationPlaceholderOccurrenceWithLeaderLine, EarlyAnnotationPlane,
     EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence,
-    EarlyAnnotationToModelLeaderLine, EarlyApllPoint, EarlyApllPointWithSurface,
+    EarlyAnnotationToModelLeaderLine, EarlyApllPoint, EarlyApllPointWithSurface, EarlyAreaUnitType,
     EarlyAuxiliaryLeaderLine, EarlyCircularRunoutTolerance, EarlyConcentricityTolerance,
     EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature, EarlyDimensionalLocation,
     EarlyDimensionalSize, EarlyDimensionalSizeWithDatumFeature, EarlyDirectedDimensionalLocation,
     EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout,
     EarlyDraughtingCalloutRelationship, EarlyDraughtingModelItemAssociation,
     EarlyDraughtingModelItemAssociationWithPlaceholder, EarlyDraughtingPreDefinedTextFont,
-    EarlyFlatnessTolerance, EarlyGeometricToleranceRelationship, EarlyLeaderCurve,
+    EarlyFlatnessTolerance, EarlyFlatnessToleranceComplex, EarlyFlatnessToleranceComplexModifiers,
+    EarlyFlatnessToleranceComplexUnit, EarlyFlatnessToleranceComplexUnitArea,
+    EarlyGeometricToleranceModifier, EarlyGeometricToleranceRelationship, EarlyLeaderCurve,
     EarlyLeaderDirectedCallout, EarlyLeaderTerminator, EarlyLimitsAndFits,
     EarlyMeasureQualification, EarlyParallelismTolerance, EarlyPerpendicularityTolerance,
     EarlyPlusMinusTolerance, EarlyProjectedZoneDefinition, EarlyRoundnessTolerance,
-    EarlyStraightnessTolerance, EarlySurfaceProfileTolerance, EarlySymmetryTolerance,
-    EarlyTerminatorSymbol, EarlyTessellatedAnnotationOccurrence, EarlyToleranceValue,
-    EarlyToleranceZoneForm, EarlyTotalRunoutTolerance, EarlyTypeQualifier,
-    EarlyValueFormatTypeQualifier,
+    EarlyRoundnessToleranceComplex, EarlyStraightnessTolerance, EarlyStraightnessToleranceComplex,
+    EarlySurfaceProfileTolerance, EarlySymmetryTolerance, EarlyTerminatorSymbol,
+    EarlyTessellatedAnnotationOccurrence, EarlyToleranceValue, EarlyToleranceZoneForm,
+    EarlyTotalRunoutTolerance, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
 };
 use crate::ir::geometry::Point3;
 use crate::ir::pmi::{
@@ -60,6 +62,164 @@ pub(crate) fn lift_flatness_tolerance(
         description: Some(description),
         magnitude: Some(magnitude),
         toleranced_shape_aspect,
+    }
+}
+
+/// Expand the reduced L2 [`crate::ir::GeometricToleranceModifier`] back to the
+/// strict L1 enum. `Other(s)` re-parses the token (always a schema member, since
+/// `lower` only emits schema tokens); a non-schema token yields `None` (dropped).
+/// Inverse of [`super::super::lower::pmi::early_modifier_to_l2`].
+pub(crate) fn l2_modifier_to_early(
+    m: &crate::ir::GeometricToleranceModifier,
+) -> Option<EarlyGeometricToleranceModifier> {
+    use crate::ir::GeometricToleranceModifier as L;
+    use EarlyGeometricToleranceModifier as E;
+    Some(match m {
+        L::MaximumMaterialRequirement => E::MaximumMaterialRequirement,
+        L::LeastMaterialRequirement => E::LeastMaterialRequirement,
+        L::ReciprocityRequirement => E::ReciprocityRequirement,
+        L::Other(s) => match s.as_str() {
+            "STANDARD_DEVIATION" => E::StandardDeviation,
+            "VALLEY_DEPTH" => E::ValleyDepth,
+            "PEAK_HEIGHT" => E::PeakHeight,
+            "TOTAL_RANGE_DEVIATIONS" => E::TotalRangeDeviations,
+            "REFERENCE_MAXIMUM_INSCRIBED_FEATURE" => E::ReferenceMaximumInscribedFeature,
+            "REFERENCE_MINIMUM_CIRCUMSCRIBED_FEATURE" => E::ReferenceMinimumCircumscribedFeature,
+            "REFERENCE_LEAST_SQUARE_FEATURE_WITH_INTERNAL_MATERIAL_CONSTRAINT" => {
+                E::ReferenceLeastSquareFeatureWithInternalMaterialConstraint
+            }
+            "REFERENCE_LEAST_SQUARE_FEATURE_WITH_EXTERNAL_MATERIAL_CONSTRAINT" => {
+                E::ReferenceLeastSquareFeatureWithExternalMaterialConstraint
+            }
+            "REFERENCE_LEAST_SQUARE_FEATURE_WITHOUT_CONSTRAINT" => {
+                E::ReferenceLeastSquareFeatureWithoutConstraint
+            }
+            "REFERENCE_MINIMAX_FEATURE_WITH_INTERNAL_MATERIAL_CONSTRAINT" => {
+                E::ReferenceMinimaxFeatureWithInternalMaterialConstraint
+            }
+            "REFERENCE_MINIMAX_FEATURE_WITH_EXTERNAL_MATERIAL_CONSTRAINT" => {
+                E::ReferenceMinimaxFeatureWithExternalMaterialConstraint
+            }
+            "REFERENCE_MINIMAX_FEATURE_WITHOUT_CONSTRAINT" => {
+                E::ReferenceMinimaxFeatureWithoutConstraint
+            }
+            "ASSOCIATED_MAXIMUM_INSCRIBED_FEATURE" => E::AssociatedMaximumInscribedFeature,
+            "ASSOCIATED_TANGENT_FEATURE" => E::AssociatedTangentFeature,
+            "ASSOCIATED_MINIMUM_INSCRIBED_FEATURE" => E::AssociatedMinimumInscribedFeature,
+            "ASSOCIATED_LEAST_SQUARE_FEATURE" => E::AssociatedLeastSquareFeature,
+            "ASSOCIATED_MINMAX_FEATURE" => E::AssociatedMinmaxFeature,
+            "UNITED_FEATURE" => E::UnitedFeature,
+            "SEPARATE_REQUIREMENT" => E::SeparateRequirement,
+            "EACH_RADIAL_ELEMENT" => E::EachRadialElement,
+            "TANGENT_PLANE" => E::TangentPlane,
+            "STATISTICAL_TOLERANCE" => E::StatisticalTolerance,
+            "NOT_CONVEX" => E::NotConvex,
+            "LINE_ELEMENT" => E::LineElement,
+            "PITCH_DIAMETER" => E::PitchDiameter,
+            "MAJOR_DIAMETER" => E::MajorDiameter,
+            "MINOR_DIAMETER" => E::MinorDiameter,
+            "COMMON_ZONE" => E::CommonZone,
+            "FREE_STATE" => E::FreeState,
+            "ANY_CROSS_SECTION" => E::AnyCrossSection,
+            "CIRCLE_A" => E::CircleA,
+            _ => return None,
+        },
+    })
+}
+
+/// Expand the reduced L2 [`crate::ir::AreaUnitType`] back to the strict L1 enum.
+fn l2_area_to_early(a: &crate::ir::AreaUnitType) -> EarlyAreaUnitType {
+    use crate::ir::AreaUnitType as L;
+    match a {
+        L::Circular => EarlyAreaUnitType::Circular,
+        L::Rectangular => EarlyAreaUnitType::Rectangular,
+        L::Square => EarlyAreaUnitType::Square,
+        L::Other(s) if s == "CYLINDRICAL" => EarlyAreaUnitType::Cylindrical,
+        // SPHERICAL + any other token re-expand to the closest strict member.
+        L::Other(_) => EarlyAreaUnitType::Spherical,
+    }
+}
+
+/// Lift a `FLATNESS_TOLERANCE` COMPLEX form. Refs (`magnitude` / `tsa` /
+/// `unit_size` / `second_unit_size`) are pre-resolved to step ids by the writer.
+/// Variant selected by which optional is present (unit takes precedence; a data
+/// carrying both unit and modifiers is unsupported — no dispatch case — so the
+/// modifier set is dropped, flagged by the debug assert).
+pub(crate) fn lift_flatness_tolerance_complex(
+    name: String,
+    description: String,
+    magnitude: u64,
+    toleranced_shape_aspect: u64,
+    modifiers: &[crate::ir::GeometricToleranceModifier],
+    unit_size: Option<u64>,
+    area: Option<(crate::ir::AreaUnitType, Option<u64>)>,
+) -> EarlyFlatnessToleranceComplex {
+    debug_assert!(
+        unit_size.is_none() || modifiers.is_empty(),
+        "FLATNESS complex: unit_size + modifiers has no dispatch case"
+    );
+    if let Some(unit_size) = unit_size {
+        if let Some((area_type, second_unit_size)) = area {
+            return EarlyFlatnessToleranceComplex::UnitArea(
+                EarlyFlatnessToleranceComplexUnitArea {
+                    name,
+                    description: Some(description),
+                    magnitude: Some(magnitude),
+                    toleranced_shape_aspect,
+                    unit_size,
+                    area_type: l2_area_to_early(&area_type),
+                    second_unit_size,
+                },
+            );
+        }
+        return EarlyFlatnessToleranceComplex::Unit(EarlyFlatnessToleranceComplexUnit {
+            name,
+            description: Some(description),
+            magnitude: Some(magnitude),
+            toleranced_shape_aspect,
+            unit_size,
+        });
+    }
+    EarlyFlatnessToleranceComplex::Modifiers(EarlyFlatnessToleranceComplexModifiers {
+        name,
+        description: Some(description),
+        magnitude: Some(magnitude),
+        toleranced_shape_aspect,
+        modifiers: modifiers.iter().filter_map(l2_modifier_to_early).collect(),
+    })
+}
+
+/// Lift a `ROUNDNESS_TOLERANCE` COMPLEX form (single case: modifiers).
+pub(crate) fn lift_roundness_tolerance_complex(
+    name: String,
+    description: String,
+    magnitude: u64,
+    toleranced_shape_aspect: u64,
+    modifiers: &[crate::ir::GeometricToleranceModifier],
+) -> EarlyRoundnessToleranceComplex {
+    EarlyRoundnessToleranceComplex {
+        name,
+        description: Some(description),
+        magnitude: Some(magnitude),
+        toleranced_shape_aspect,
+        modifiers: modifiers.iter().filter_map(l2_modifier_to_early).collect(),
+    }
+}
+
+/// Lift a `STRAIGHTNESS_TOLERANCE` COMPLEX form (single case: unit).
+pub(crate) fn lift_straightness_tolerance_complex(
+    name: String,
+    description: String,
+    magnitude: u64,
+    toleranced_shape_aspect: u64,
+    unit_size: u64,
+) -> EarlyStraightnessToleranceComplex {
+    EarlyStraightnessToleranceComplex {
+        name,
+        description: Some(description),
+        magnitude: Some(magnitude),
+        toleranced_shape_aspect,
+        unit_size,
     }
 }
 

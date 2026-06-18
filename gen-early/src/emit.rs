@@ -18,6 +18,11 @@ pub(crate) struct GenOut {
     pub(crate) bind: String,
     pub(crate) serialize: String,
     pub(crate) used_enums: BTreeSet<String>,
+    /// Enums used as a **single** attr (not only inside a `SET/LIST OF`). The
+    /// single `bind_<enum>` helper is emitted only for these — a list-only enum
+    /// (e.g. `geometric_tolerance_modifier`) reads via the inlined `<enum>_list`
+    /// helper, so its single bind would be dead code.
+    pub(crate) used_enum_singles: BTreeSet<String>,
     pub(crate) used_enum_lists: BTreeSet<String>,
     pub(crate) used_selects: BTreeSet<String>,
     pub(crate) used_select_lists: BTreeSet<String>,
@@ -33,6 +38,7 @@ impl GenOut {
             bind: head.to_string(),
             serialize: head.to_string(),
             used_enums: BTreeSet::new(),
+            used_enum_singles: BTreeSet::new(),
             used_enum_lists: BTreeSet::new(),
             used_selects: BTreeSet::new(),
             used_select_lists: BTreeSet::new(),
@@ -255,6 +261,7 @@ fn track_serialize_usage(k: &Kind, out: &mut GenOut) {
         Kind::Bool => out.any_bool = true,
         Kind::Enum(alias) => {
             out.used_enums.insert(alias.clone());
+            out.used_enum_singles.insert(alias.clone());
         }
         Kind::Select(alias) => {
             out.used_selects.insert(alias.clone());
@@ -1619,6 +1626,7 @@ pub(crate) fn write_synth_enum_model(
 pub(crate) fn emit_synth_enum(
     ctx: &Ctx,
     alias: &str,
+    emit_single_bind: bool,
     model: &mut String,
     bind: &mut String,
     serialize: &mut String,
@@ -1628,26 +1636,28 @@ pub(crate) fn emit_synth_enum(
     let mems = synth_enum_members(ctx, alias);
     write_synth_enum_model(ctx, alias, model, emitted_models);
 
-    // bind helper
-    writeln!(
-        bind,
-        "fn bind_{alias}(attrs: &[crate::parser::entity::Attribute], index: usize, entity_id: u64, field: &'static str) -> Result<super::model::{rt}, crate::ir::error::ConvertError> {{"
-    )
-    .unwrap();
-    writeln!(
-        bind,
-        "    match crate::ir::attr::read_enum(attrs, index, entity_id, field)? {{"
-    )
-    .unwrap();
-    for (tag, v) in &mems {
-        writeln!(bind, "        \"{tag}\" => Ok(super::model::{rt}::{v}),").unwrap();
+    // bind helper (single-attr only; list-only enums read via `<alias>_list`).
+    if emit_single_bind {
+        writeln!(
+            bind,
+            "fn bind_{alias}(attrs: &[crate::parser::entity::Attribute], index: usize, entity_id: u64, field: &'static str) -> Result<super::model::{rt}, crate::ir::error::ConvertError> {{"
+        )
+        .unwrap();
+        writeln!(
+            bind,
+            "    match crate::ir::attr::read_enum(attrs, index, entity_id, field)? {{"
+        )
+        .unwrap();
+        for (tag, v) in &mems {
+            writeln!(bind, "        \"{tag}\" => Ok(super::model::{rt}::{v}),").unwrap();
+        }
+        writeln!(
+            bind,
+            "        other => Err(crate::ir::error::ConvertError::UnexpectedEntityForm {{ entity_id, detail: format!(\"{{field}}: unknown {alias} '.{{other}}.'\") }}),"
+        )
+        .unwrap();
+        writeln!(bind, "    }}\n}}\n").unwrap();
     }
-    writeln!(
-        bind,
-        "        other => Err(crate::ir::error::ConvertError::UnexpectedEntityForm {{ entity_id, detail: format!(\"{{field}}: unknown {alias} '.{{other}}.'\") }}),"
-    )
-    .unwrap();
-    writeln!(bind, "    }}\n}}\n").unwrap();
 
     // serialize helper
     writeln!(
@@ -2075,6 +2085,7 @@ mod tests {
         emit_synth_enum(
             &ctx,
             "actuated_direction",
+            true,
             &mut m,
             &mut b,
             &mut s,

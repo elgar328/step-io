@@ -58,6 +58,7 @@ fn main() {
         mut bind,
         mut serialize,
         used_enums,
+        used_enum_singles,
         used_enum_lists,
         used_selects,
         used_select_lists,
@@ -103,6 +104,7 @@ fn main() {
     emit_enum_helpers(
         &ctx,
         &used_enums,
+        &used_enum_singles,
         &mut model,
         &mut bind,
         &mut serialize,
@@ -201,56 +203,63 @@ fn collect_targets(ctx: &Ctx) -> (Vec<String>, Vec<(String, String)>) {
 fn emit_enum_helpers(
     ctx: &Ctx,
     used_enums: &BTreeSet<String>,
+    used_enum_singles: &BTreeSet<String>,
     model: &mut String,
     bind: &mut String,
     serialize: &mut String,
     emitted_models: &mut BTreeSet<String>,
 ) {
     for alias in used_enums {
+        // The single `bind_<alias>` helper is dead for an enum used only inside a
+        // `SET/LIST OF` (the `<alias>_list` helper inlines token parsing); emit it
+        // only when the enum is used as a single attr somewhere.
+        let single = used_enum_singles.contains(alias);
         // Hint-less ENUM -> synthesize an `Early*` enum (model def + helpers).
         let Some(h) = ctx.mapping.enums.get(alias) else {
-            emit_synth_enum(ctx, alias, model, bind, serialize, emitted_models);
+            emit_synth_enum(ctx, alias, single, model, bind, serialize, emitted_models);
             continue;
         };
-        // bind helper
-        writeln!(
+        // bind helper (single-attr only)
+        if single {
+            writeln!(
             bind,
             "fn bind_{alias}(attrs: &[crate::parser::entity::Attribute], index: usize, entity_id: u64, field: &'static str) -> Result<{}, crate::ir::error::ConvertError> {{",
             h.rust_type
         )
         .unwrap();
-        writeln!(
-            bind,
-            "    match crate::ir::attr::read_enum(attrs, index, entity_id, field)? {{"
-        )
-        .unwrap();
-        for (member, variant) in &h.variants {
-            // Skip members whose variant is the default — the catch-all below
-            // already covers them (avoids a `match_same_arms` duplicate).
-            if h.default.as_ref() == Some(variant) {
-                continue;
-            }
             writeln!(
                 bind,
-                "        \"{}\" => Ok({}::{variant}),",
-                member.to_uppercase(),
-                h.rust_type
+                "    match crate::ir::attr::read_enum(attrs, index, entity_id, field)? {{"
             )
             .unwrap();
-        }
-        if let Some(default) = &h.default {
-            writeln!(bind, "        _ => Ok({}::{default}),", h.rust_type).unwrap();
-        } else {
-            // Strict: a token outside the EXPRESS enumeration is non-standard
-            // input. Surface it as `NonStandardEnumValue` so the dispatcher
-            // reclassifies the drop as NORM (correct rejection), not a defect.
-            writeln!(
+            for (member, variant) in &h.variants {
+                // Skip members whose variant is the default — the catch-all below
+                // already covers them (avoids a `match_same_arms` duplicate).
+                if h.default.as_ref() == Some(variant) {
+                    continue;
+                }
+                writeln!(
+                    bind,
+                    "        \"{}\" => Ok({}::{variant}),",
+                    member.to_uppercase(),
+                    h.rust_type
+                )
+                .unwrap();
+            }
+            if let Some(default) = &h.default {
+                writeln!(bind, "        _ => Ok({}::{default}),", h.rust_type).unwrap();
+            } else {
+                // Strict: a token outside the EXPRESS enumeration is non-standard
+                // input. Surface it as `NonStandardEnumValue` so the dispatcher
+                // reclassifies the drop as NORM (correct rejection), not a defect.
+                writeln!(
                 bind,
                 "        other => Err(crate::ir::error::ConvertError::NonStandardEnumValue {{ entity_id, field: field.to_string(), token: other.to_string() }}),"
             )
             .unwrap();
+            }
+            writeln!(bind, "    }}\n}}\n").unwrap();
         }
-        writeln!(bind, "    }}\n}}\n").unwrap();
 
         // serialize helper
         writeln!(

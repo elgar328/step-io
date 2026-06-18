@@ -8321,7 +8321,12 @@ fn geometric_tolerance_with_modifiers_round_trip() {
             description: String::new(),
             magnitude: magnitude(),
             toleranced_shape_aspect: ShapeAspectRef::ShapeAspect(sa).into(),
-            modifiers: vec![GeometricToleranceModifier::LeastMaterialRequirement],
+            // Named (LMR) + an unnamed schema member (PITCH_DIAMETER, carried as
+            // `Other`) — exercises both arms of the L1-strict modifier bridge.
+            modifiers: vec![
+                GeometricToleranceModifier::LeastMaterialRequirement,
+                GeometricToleranceModifier::Other("PITCH_DIAMETER".into()),
+            ],
             unit_size: None,
             defined_area_unit: None,
         }));
@@ -8359,8 +8364,11 @@ fn geometric_tolerance_with_modifiers_round_trip() {
         .expect("Roundness variant present after round-trip");
     assert_eq!(
         round.modifiers,
-        vec![GeometricToleranceModifier::LeastMaterialRequirement],
-        "Roundness modifier preserved"
+        vec![
+            GeometricToleranceModifier::LeastMaterialRequirement,
+            GeometricToleranceModifier::Other("PITCH_DIAMETER".into()),
+        ],
+        "Roundness named + Other modifier preserved"
     );
 }
 

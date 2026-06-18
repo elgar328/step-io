@@ -169,9 +169,12 @@ generate = [
     "type_qualifier",
     "value_format_type_qualifier",
     "flatness_tolerance",
+    "flatness_tolerance_complex",
     "surface_profile_tolerance",
     "straightness_tolerance",
+    "straightness_tolerance_complex",
     "roundness_tolerance",
+    "roundness_tolerance_complex",
     "cylindricity_tolerance",
     "datum",
     "dimensional_size",
@@ -584,6 +587,33 @@ discriminant = "GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT"
 
 [complex.global_unit_assigned_context.cases.no_uncertainty]
 parts = ["GEOMETRIC_REPRESENTATION_CONTEXT", "GLOBAL_UNIT_ASSIGNED_CONTEXT", "REPRESENTATION_CONTEXT"]
+
+# GD&T datum-free COMPLEX forms (synthetic names — the simple `<leaf>_tolerance`
+# entity is generated separately; these are the AND-combined `(GEOMETRIC_TOLERANCE
+# [optional supertypes] <leaf>)` forms). Data on GEOMETRIC_TOLERANCE (4 attrs) +
+# the present optional parts (WITH_DEFINED_UNIT.unit_size / WITH_DEFINED_AREA_UNIT.
+# area_type+second_unit_size / WITH_MODIFIERS.modifiers); leaf part carries none.
+# `geometric_tolerance_modifier` (ENUM 34) / `area_unit_type` (ENUM 5) are
+# hint-less strict synth enums; lower/lift bridge to the reduced L2 enums.
+# part order = hand WriterBody order (GT, [WDU,[WDAU]], [WM], leaf).
+[complex.flatness_tolerance_complex.cases.unit_area]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT", "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT", "FLATNESS_TOLERANCE"]
+match_parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT", "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT", "FLATNESS_TOLERANCE"]
+
+[complex.flatness_tolerance_complex.cases.unit]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT", "FLATNESS_TOLERANCE"]
+match_parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT", "FLATNESS_TOLERANCE"]
+
+[complex.flatness_tolerance_complex.cases.modifiers]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "FLATNESS_TOLERANCE"]
+match_parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "FLATNESS_TOLERANCE"]
+
+# Single-case (one supported combination each).
+[complex.roundness_tolerance_complex]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_MODIFIERS", "ROUNDNESS_TOLERANCE"]
+
+[complex.straightness_tolerance_complex]
+parts = ["GEOMETRIC_TOLERANCE", "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT", "STRAIGHTNESS_TOLERANCE"]
 
 # Complex MI DRAUGHTING_MODEL family (synthetic name — no single early.toml
 # entity). 3 exact part-sets (A ⊂ B share CHARACTERIZED_OBJECT, so single-part
