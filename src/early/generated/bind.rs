@@ -3453,6 +3453,52 @@ pub(crate) fn bind_trimmed_curve(
     })
 }
 
+pub(crate) fn bind_intersection_curve(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyIntersectionCurve, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "INTERSECTION_CURVE")?;
+    Ok(super::model::EarlyIntersectionCurve {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        curve_3d: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "curve_3d")?,
+        associated_geometry: crate::ir::attr::read_entity_ref_list(
+            attrs,
+            2,
+            entity_id,
+            "associated_geometry",
+        )?,
+        master_representation: bind_preferred_surface_curve_representation(
+            attrs,
+            3,
+            entity_id,
+            "master_representation",
+        )?,
+    })
+}
+
+pub(crate) fn bind_bounded_surface_curve(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyBoundedSurfaceCurve, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "BOUNDED_SURFACE_CURVE")?;
+    Ok(super::model::EarlyBoundedSurfaceCurve {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        curve_3d: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "curve_3d")?,
+        associated_geometry: crate::ir::attr::read_entity_ref_list(
+            attrs,
+            2,
+            entity_id,
+            "associated_geometry",
+        )?,
+        master_representation: bind_preferred_surface_curve_representation(
+            attrs,
+            3,
+            entity_id,
+            "master_representation",
+        )?,
+    })
+}
+
 pub(crate) fn bind_bounded_pcurve(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],
@@ -5631,6 +5677,25 @@ fn bind_knot_type(
         other => Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
             entity_id,
             detail: format!("{field}: unknown knot_type '.{other}.'"),
+        }),
+    }
+}
+
+fn bind_preferred_surface_curve_representation(
+    attrs: &[crate::parser::entity::Attribute],
+    index: usize,
+    entity_id: u64,
+    field: &'static str,
+) -> Result<crate::ir::geometry::PreferredSurfaceCurveRepresentation, crate::ir::error::ConvertError>
+{
+    match crate::ir::attr::read_enum(attrs, index, entity_id, field)? {
+        "CURVE_3D" => Ok(crate::ir::geometry::PreferredSurfaceCurveRepresentation::Curve3d),
+        "PCURVE_S1" => Ok(crate::ir::geometry::PreferredSurfaceCurveRepresentation::PcurveS1),
+        "PCURVE_S2" => Ok(crate::ir::geometry::PreferredSurfaceCurveRepresentation::PcurveS2),
+        other => Err(crate::ir::error::ConvertError::NonStandardEnumValue {
+            entity_id,
+            field: field.to_string(),
+            token: other.to_string(),
         }),
     }
 }

@@ -4728,6 +4728,54 @@ impl crate::ir::arena::ArenaId for EarlyTrimmedCurveId {
     }
 }
 
+/// L1 `INTERSECTION_CURVE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyIntersectionCurve {
+    pub(crate) name: String,
+    pub(crate) curve_3d: u64,
+    pub(crate) associated_geometry: Vec<u64>,
+    pub(crate) master_representation: crate::ir::geometry::PreferredSurfaceCurveRepresentation,
+}
+
+/// Typed `id_cache` key for `INTERSECTION_CURVE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyIntersectionCurveId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyIntersectionCurveId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `BOUNDED_SURFACE_CURVE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyBoundedSurfaceCurve {
+    pub(crate) name: String,
+    pub(crate) curve_3d: u64,
+    pub(crate) associated_geometry: Vec<u64>,
+    pub(crate) master_representation: crate::ir::geometry::PreferredSurfaceCurveRepresentation,
+}
+
+/// Typed `id_cache` key for `BOUNDED_SURFACE_CURVE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyBoundedSurfaceCurveId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyBoundedSurfaceCurveId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `BOUNDED_PCURVE` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyBoundedPcurve {

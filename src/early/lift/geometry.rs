@@ -4,10 +4,11 @@
 
 use crate::early::model::{
     EarlyAxis1Placement, EarlyAxis2Placement2d, EarlyAxis2Placement3d, EarlyBSplineCurveWithKnots,
-    EarlyBSplineSurfaceWithKnots, EarlyBoundedPcurve, EarlyCartesianPoint, EarlyCircle,
-    EarlyCircularArea, EarlyCompositeCurve, EarlyCompositeCurveSegment, EarlyConicalSurface,
-    EarlyCurveBoundedSurface, EarlyCylindricalSurface, EarlyDegenerateToroidalSurface,
-    EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyKnotType, EarlyLine, EarlyOffsetCurve3d,
+    EarlyBSplineSurfaceWithKnots, EarlyBoundedPcurve, EarlyBoundedSurfaceCurve,
+    EarlyCartesianPoint, EarlyCircle, EarlyCircularArea, EarlyCompositeCurve,
+    EarlyCompositeCurveSegment, EarlyConicalSurface, EarlyCurveBoundedSurface,
+    EarlyCylindricalSurface, EarlyDegenerateToroidalSurface, EarlyDirection, EarlyEllipse,
+    EarlyHyperbola, EarlyIntersectionCurve, EarlyKnotType, EarlyLine, EarlyOffsetCurve3d,
     EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent, EarlyPlane,
     EarlyPolyline, EarlyRationalBSplineCurve, EarlyRationalBSplineSurface,
     EarlyRectangularTrimmedSurface, EarlySphericalSurface, EarlySurfaceOfLinearExtrusion,
@@ -15,9 +16,11 @@ use crate::early::model::{
     EarlyVector, EarlyVertexPoint,
 };
 use crate::ir::geometry::{
-    Direction2, Direction3, Logical, NurbsCurve, NurbsCurve2d, NurbsSurface, Point2, Point3,
-    TransitionCode, TrimMaster,
+    Direction2, Direction3, Logical, NurbsCurve, NurbsCurve2d, NurbsSurface, PCurveOrSurface,
+    Point2, Point3, SurfaceCurveData, TransitionCode, TrimMaster,
 };
+use crate::writer::WriteError;
+use crate::writer::buffer::WriteBuffer;
 
 /// Lift one `BOUNDED_PCURVE`. Unlike most geometry, it round-trips its own
 /// `name` (the legacy writer emitted `BoundedPCurve.name`), so it is threaded
@@ -566,4 +569,67 @@ pub(crate) fn lift_trimmed_curve(
         sense_agreement,
         master_representation,
     }
+}
+
+/// Shared `surface_curve` subtype lifting: emit `curve_3d` + each
+/// `associated_geometry` member (a `pcurve` or `surface`) to step ids. Returns
+/// the emitted refs alongside the pass-through `name`/`master_representation`.
+/// A verbatim port of the legacy `emit_surface_curve_body`.
+fn lift_surface_curve_data(
+    buf: &mut WriteBuffer,
+    body: SurfaceCurveData,
+) -> Result<
+    (
+        String,
+        u64,
+        Vec<u64>,
+        crate::ir::geometry::PreferredSurfaceCurveRepresentation,
+    ),
+    WriteError,
+> {
+    let curve_3d = buf.emit_curve(body.curve_3d)?;
+    let mut associated_geometry = Vec::with_capacity(body.associated_geometry.len());
+    for item in body.associated_geometry {
+        let step = match item {
+            PCurveOrSurface::Pcurve(pc) => buf.emit_pcurve(pc)?,
+            PCurveOrSurface::Surface(id) => buf.emit_surface(id)?,
+        };
+        associated_geometry.push(step);
+    }
+    Ok((
+        body.name,
+        curve_3d,
+        associated_geometry,
+        body.master_representation,
+    ))
+}
+
+/// Lift one `INTERSECTION_CURVE` (refs emitted to step ids by the handler).
+pub(crate) fn lift_intersection_curve(
+    buf: &mut WriteBuffer,
+    body: SurfaceCurveData,
+) -> Result<EarlyIntersectionCurve, WriteError> {
+    let (name, curve_3d, associated_geometry, master_representation) =
+        lift_surface_curve_data(buf, body)?;
+    Ok(EarlyIntersectionCurve {
+        name,
+        curve_3d,
+        associated_geometry,
+        master_representation,
+    })
+}
+
+/// Lift one `BOUNDED_SURFACE_CURVE`.
+pub(crate) fn lift_bounded_surface_curve(
+    buf: &mut WriteBuffer,
+    body: SurfaceCurveData,
+) -> Result<EarlyBoundedSurfaceCurve, WriteError> {
+    let (name, curve_3d, associated_geometry, master_representation) =
+        lift_surface_curve_data(buf, body)?;
+    Ok(EarlyBoundedSurfaceCurve {
+        name,
+        curve_3d,
+        associated_geometry,
+        master_representation,
+    })
 }

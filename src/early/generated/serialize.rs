@@ -3928,6 +3928,46 @@ pub(crate) fn serialize_trimmed_curve(
     )
 }
 
+pub(crate) fn serialize_intersection_curve(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyIntersectionCurve,
+) -> u64 {
+    buf.push_simple(
+        "INTERSECTION_CURVE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.curve_3d),
+            crate::parser::entity::Attribute::List(
+                l1.associated_geometry
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            preferred_surface_curve_representation_attr(l1.master_representation),
+        ],
+    )
+}
+
+pub(crate) fn serialize_bounded_surface_curve(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyBoundedSurfaceCurve,
+) -> u64 {
+    buf.push_simple(
+        "BOUNDED_SURFACE_CURVE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.curve_3d),
+            crate::parser::entity::Attribute::List(
+                l1.associated_geometry
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            preferred_surface_curve_representation_attr(l1.master_representation),
+        ],
+    )
+}
+
 pub(crate) fn serialize_bounded_pcurve(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyBoundedPcurve,
@@ -6252,6 +6292,19 @@ fn knot_type_attr(v: super::model::EarlyKnotType) -> crate::parser::entity::Attr
             super::model::EarlyKnotType::QuasiUniformKnots => "QUASI_UNIFORM_KNOTS",
             super::model::EarlyKnotType::PiecewiseBezierKnots => "PIECEWISE_BEZIER_KNOTS",
             super::model::EarlyKnotType::Unspecified => "UNSPECIFIED",
+        }
+        .into(),
+    )
+}
+
+fn preferred_surface_curve_representation_attr(
+    v: crate::ir::geometry::PreferredSurfaceCurveRepresentation,
+) -> crate::parser::entity::Attribute {
+    crate::parser::entity::Attribute::Enum(
+        match v {
+            crate::ir::geometry::PreferredSurfaceCurveRepresentation::Curve3d => "CURVE_3D",
+            crate::ir::geometry::PreferredSurfaceCurveRepresentation::PcurveS1 => "PCURVE_S1",
+            crate::ir::geometry::PreferredSurfaceCurveRepresentation::PcurveS2 => "PCURVE_S2",
         }
         .into(),
     )

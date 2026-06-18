@@ -225,6 +225,9 @@ generate = [
     "composite_curve",
     # geometry (trimmed curve)
     "trimmed_curve",
+    # geometry (surface_curve subtypes — master_representation enum)
+    "intersection_curve",
+    "bounded_surface_curve",
     # batch 1: clean geometry + core topology edge pair
     "bounded_pcurve",
     "geometric_curve_set",
@@ -730,3 +733,12 @@ variants = { polyline_form = "PolylineForm", circular_arc = "CircularArc", ellip
 [enum.b_spline_surface_form]
 rust_type = "crate::ir::geometry::SurfaceForm"
 variants = { plane_surf = "PlaneSurf", cylindrical_surf = "CylindricalSurf", conical_surf = "ConicalSurf", spherical_surf = "SphericalSurf", toroidal_surf = "ToroidalSurf", surf_of_revolution = "SurfOfRevolution", ruled_surf = "RuledSurf", generalised_cone = "GeneralisedCone", quadric_surf = "QuadricSurf", surf_of_linear_extrusion = "SurfOfLinearExtrusion", unspecified = "Unspecified" }
+
+# `preferred_surface_curve_representation` (surface_curve.master_representation).
+# Strict: unrecognized token drops the entity (NonStandardEnumValue → NORM),
+# matching the INTERSECTION_CURVE/BOUNDED_SURFACE_CURVE subtype handlers. (The
+# base SURFACE_CURVE/SEAM_CURVE alias path stays hand-coded with its own lenient
+# `unwrap_or(PcurveS1)` and does not use this generated bind.)
+[enum.preferred_surface_curve_representation]
+rust_type = "crate::ir::geometry::PreferredSurfaceCurveRepresentation"
+variants = { curve_3d = "Curve3d", pcurve_s1 = "PcurveS1", pcurve_s2 = "PcurveS2" }

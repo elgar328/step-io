@@ -7,12 +7,13 @@
 
 use crate::early::model::{
     EarlyAxis1Placement, EarlyAxis2Placement2d, EarlyAxis2Placement3d, EarlyBSplineCurveWithKnots,
-    EarlyBSplineSurfaceWithKnots, EarlyBoundedPcurve, EarlyCartesianPoint, EarlyCircle,
-    EarlyCircularArea, EarlyCompositeCurve, EarlyCompositeCurveSegment, EarlyConicalSurface,
-    EarlyCurveBoundedSurface, EarlyCylindricalSurface, EarlyDegenerateToroidalSurface,
-    EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyLine, EarlyOffsetCurve3d,
-    EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent, EarlyPlane,
-    EarlyPolyline, EarlyQuasiUniformCurve, EarlyQuasiUniformSurface, EarlyRationalBSplineCurve,
+    EarlyBSplineSurfaceWithKnots, EarlyBoundedPcurve, EarlyBoundedSurfaceCurve,
+    EarlyCartesianPoint, EarlyCircle, EarlyCircularArea, EarlyCompositeCurve,
+    EarlyCompositeCurveSegment, EarlyConicalSurface, EarlyCurveBoundedSurface,
+    EarlyCylindricalSurface, EarlyDegenerateToroidalSurface, EarlyDirection, EarlyEllipse,
+    EarlyHyperbola, EarlyIntersectionCurve, EarlyLine, EarlyOffsetCurve3d, EarlyOffsetSurface,
+    EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent, EarlyPlane, EarlyPolyline,
+    EarlyQuasiUniformCurve, EarlyQuasiUniformSurface, EarlyRationalBSplineCurve,
     EarlyRationalBSplineSurface, EarlyRationalQuasiUniformCurve, EarlyRationalQuasiUniformSurface,
     EarlyRectangularTrimmedSurface, EarlySphericalSurface, EarlySurfaceOfLinearExtrusion,
     EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyTrimSelect, EarlyTrimmedCurve,
@@ -25,9 +26,10 @@ use crate::ir::geometry::{
     CircularArea, CircularAreaCentre, CompositeCurve, CompositeSegment, ConicalSurface, Curve,
     Curve2d, CurveBoundedSurface, CylindricalSurface, DegenerateToroidalSurface, Direction2,
     Direction3, Ellipse2, Ellipse3, Hyperbola, Line2, Line3, NurbsCurve, NurbsCurve2d, NurbsKind,
-    NurbsKind2d, NurbsSurface, NurbsSurfaceKind, OffsetCurve3d, Parabola, ParameterSpaceCurve,
-    PlanarBox, PlanarBoxPlacement, PlanarExtent, PlanarExtentData, Plane3, Point2, Point3,
-    Polyline, Polyline2d, RectangularTrimmedSurface, SphericalSurface, Surface,
+    NurbsKind2d, NurbsSurface, NurbsSurfaceKind, OffsetCurve3d, PCurveOrSurface, Parabola,
+    ParameterSpaceCurve, PlanarBox, PlanarBoxPlacement, PlanarExtent, PlanarExtentData, Plane3,
+    Point2, Point3, Polyline, Polyline2d, PreferredSurfaceCurveRepresentation,
+    RectangularTrimmedSurface, SphericalSurface, Surface, SurfaceCurve, SurfaceCurveData,
     SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TrimSelect,
     TrimmedCurve, Vertex,
 };
@@ -1485,4 +1487,70 @@ fn lower_trim_select(ctx: &ReaderContext, items: &[EarlyTrimSelect]) -> Vec<Trim
             EarlyTrimSelect::Param(v) => Some(TrimSelect::Param(v)),
         })
         .collect()
+}
+
+/// Shared `surface_curve` subtype lowering: resolve `curve_3d` (a `CurveId`)
+/// and keep only the `surface` branch of `associated_geometry` (`pcurve`
+/// members + unresolved refs drop; the `master_representation` enum is already
+/// decoded by `bind`). An unresolved `curve_3d` or an empty surface list drops
+/// the curve — symmetric on re-read, a verbatim port of the legacy
+/// `read_surface_curve_body`.
+fn lower_surface_curve_data(
+    ctx: &ReaderContext,
+    name: String,
+    curve_3d_ref: u64,
+    assoc_refs: &[u64],
+    master_representation: PreferredSurfaceCurveRepresentation,
+) -> Option<SurfaceCurveData> {
+    let curve_3d = ctx.id_cache.get::<crate::ir::id::CurveId>(curve_3d_ref)?;
+    let associated_geometry: Vec<_> = assoc_refs
+        .iter()
+        .filter_map(|r| {
+            ctx.id_cache
+                .get::<crate::ir::id::SurfaceId>(*r)
+                .map(PCurveOrSurface::Surface)
+        })
+        .collect();
+    if associated_geometry.is_empty() {
+        return None;
+    }
+    Some(SurfaceCurveData {
+        name,
+        curve_3d,
+        associated_geometry,
+        master_representation,
+    })
+}
+
+/// Lower one `INTERSECTION_CURVE` into the shared `surface_curves` arena.
+pub(crate) fn lower_intersection_curve(ctx: &mut ReaderContext, early: EarlyIntersectionCurve) {
+    if let Some(body) = lower_surface_curve_data(
+        ctx,
+        early.name,
+        early.curve_3d,
+        &early.associated_geometry,
+        early.master_representation,
+    ) {
+        ctx.geometry
+            .surface_curves
+            .push(SurfaceCurve::IntersectionCurve(body));
+    }
+}
+
+/// Lower one `BOUNDED_SURFACE_CURVE` into the shared `surface_curves` arena.
+pub(crate) fn lower_bounded_surface_curve(
+    ctx: &mut ReaderContext,
+    early: EarlyBoundedSurfaceCurve,
+) {
+    if let Some(body) = lower_surface_curve_data(
+        ctx,
+        early.name,
+        early.curve_3d,
+        &early.associated_geometry,
+        early.master_representation,
+    ) {
+        ctx.geometry
+            .surface_curves
+            .push(SurfaceCurve::BoundedSurfaceCurve(body));
+    }
 }
