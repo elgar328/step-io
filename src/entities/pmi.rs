@@ -128,21 +128,15 @@ impl SimpleEntityHandler for DraughtingPreDefinedTextFontHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 1, entity_id, "DRAUGHTING_PRE_DEFINED_TEXT_FONT")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .draughting_pre_defined_text_fonts
-            .push(DraughtingPreDefinedTextFont { name });
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_draughting_pre_defined_text_font(entity_id, attrs)?;
+        lower::lower_draughting_pre_defined_text_font(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, font: DraughtingPreDefinedTextFont) -> Result<u64, WriteError> {
-        Ok(buf.push_simple(
-            "DRAUGHTING_PRE_DEFINED_TEXT_FONT",
-            vec![Attribute::String(font.name)],
+        let early = lift::lift_draughting_pre_defined_text_font(font.name);
+        Ok(serialize::serialize_draughting_pre_defined_text_font(
+            buf, &early,
         ))
     }
 }
@@ -946,61 +940,17 @@ impl SimpleEntityHandler for TerminatorSymbolHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "TERMINATOR_SYMBOL")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let style_refs = read_entity_ref_list(attrs, 1, entity_id, "styles")?;
-        let item_ref = read_entity_ref(attrs, 2, entity_id, "item")?;
-        let ac_ref = read_entity_ref(attrs, 3, entity_id, "annotated_curve")?;
-
-        let mut styles = Vec::with_capacity(style_refs.len());
-        for r in style_refs {
-            if let Some(psa_id) = ctx
-                .id_cache
-                .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
-            {
-                styles.push(psa_id);
-            }
-        }
-        let Some(item) = resolve_representation_item_ref(ctx, item_ref) else {
-            return Ok(());
-        };
-        let Some(annotated_curve) = ctx
-            .id_cache
-            .get::<crate::ir::id::AnnotationCurveOccurrenceId>(ac_ref)
-        else {
-            return Ok(());
-        };
-
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .annotation_occurrences
-            .push(AnnotationOccurrence::TerminatorSymbol(TerminatorSymbol {
-                name,
-                styles,
-                item,
-                annotated_curve,
-            }));
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_terminator_symbol(entity_id, attrs)?;
+        lower::lower_terminator_symbol(ctx, entity_id, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, ts: TerminatorSymbol) -> Result<u64, WriteError> {
         let item_id = buf.emit_representation_item_ref(ts.item)?;
         let ac_step = buf.step_id(ts.annotated_curve);
-        let mut style_refs = Vec::with_capacity(ts.styles.len());
-        for psa_id in ts.styles {
-            style_refs.push(Attribute::EntityRef(buf.step_id(psa_id)));
-        }
-        Ok(buf.push_simple(
-            "TERMINATOR_SYMBOL",
-            vec![
-                Attribute::String(ts.name),
-                Attribute::List(style_refs),
-                Attribute::EntityRef(item_id),
-                Attribute::EntityRef(ac_step),
-            ],
-        ))
+        let style_refs = ts.styles.iter().map(|&psa| buf.step_id(psa)).collect();
+        let early = lift::lift_terminator_symbol(ts.name, style_refs, item_id, ac_step);
+        Ok(serialize::serialize_terminator_symbol(buf, &early))
     }
 }
 
@@ -1157,46 +1107,22 @@ impl SimpleEntityHandler for DraughtingCalloutRelationshipHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "DRAUGHTING_CALLOUT_RELATIONSHIP")?;
-        let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-        let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-        let relating_ref = read_entity_ref(attrs, 2, entity_id, "relating_draughting_callout")?;
-        let related_ref = read_entity_ref(attrs, 3, entity_id, "related_draughting_callout")?;
-        let Some(relating) = ctx
-            .id_cache
-            .get::<crate::ir::id::DraughtingCalloutId>(relating_ref)
-        else {
-            return Ok(());
-        };
-        let Some(related) = ctx
-            .id_cache
-            .get::<crate::ir::id::DraughtingCalloutId>(related_ref)
-        else {
-            return Ok(());
-        };
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .draughting_callout_relationships
-            .push(DraughtingCalloutRelationship {
-                name,
-                description,
-                relating,
-                related,
-            });
+        let early = bind::bind_draughting_callout_relationship(entity_id, attrs)?;
+        lower::lower_draughting_callout_relationship(ctx, early);
         Ok(())
     }
 
     fn write(buf: &mut WriteBuffer, rel: DraughtingCalloutRelationship) -> Result<u64, WriteError> {
         let relating = buf.step_id(rel.relating);
         let related = buf.step_id(rel.related);
-        Ok(buf.push_simple(
-            "DRAUGHTING_CALLOUT_RELATIONSHIP",
-            vec![
-                Attribute::String(rel.name),
-                Attribute::String(rel.description),
-                Attribute::EntityRef(relating),
-                Attribute::EntityRef(related),
-            ],
+        let early = lift::lift_draughting_callout_relationship(
+            rel.name,
+            rel.description,
+            relating,
+            related,
+        );
+        Ok(serialize::serialize_draughting_callout_relationship(
+            buf, &early,
         ))
     }
 }
@@ -1352,38 +1278,8 @@ impl SimpleEntityHandler for ProjectedZoneDefinitionHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "PROJECTED_ZONE_DEFINITION")?;
-        let zone_ref = read_entity_ref(attrs, 0, entity_id, "zone")?;
-        let boundary_refs = read_entity_ref_list(attrs, 1, entity_id, "boundaries")?;
-        let projection_end_ref = read_entity_ref(attrs, 2, entity_id, "projection_end")?;
-        let projected_length_ref = read_entity_ref(attrs, 3, entity_id, "projected_length")?;
-        let Some(zone) = ctx.id_cache.get::<crate::ir::id::ToleranceZoneId>(zone_ref) else {
-            return Ok(());
-        };
-        let Some(projection_end) = resolve_shape_aspect_ref(ctx, projection_end_ref) else {
-            return Ok(());
-        };
-        // projected_length is a measure_with_unit but exporters also emit the
-        // complex MEASURE_REPRESENTATION_ITEM form (in repr_item_id_map, not
-        // mwu_id_map) — resolve through both paths like a tolerance magnitude.
-        let Some(projected_length) = resolve_tolerance_magnitude(ctx, projected_length_ref) else {
-            return Ok(());
-        };
-        let mut boundaries = Vec::with_capacity(boundary_refs.len());
-        for r in boundary_refs {
-            if let Some(sar) = resolve_shape_aspect_ref(ctx, r) {
-                boundaries.push(sar);
-            }
-        }
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .tolerance_zone_definitions
-            .push(ProjectedZoneDefinition {
-                zone,
-                boundaries,
-                projection_end,
-                projected_length,
-            });
+        let early = bind::bind_projected_zone_definition(entity_id, attrs)?;
+        lower::lower_projected_zone_definition(ctx, early);
         Ok(())
     }
 
@@ -1391,19 +1287,18 @@ impl SimpleEntityHandler for ProjectedZoneDefinitionHandler {
         let zone_step = buf.step_id(pzd.zone);
         let projection_end_step = buf.emit_shape_aspect_ref(pzd.projection_end);
         let projected_length_step = emit_tolerance_magnitude(buf, &pzd.projected_length);
-        let mut boundary_refs = Vec::with_capacity(pzd.boundaries.len());
-        for sar in pzd.boundaries {
-            boundary_refs.push(Attribute::EntityRef(buf.emit_shape_aspect_ref(sar)));
-        }
-        Ok(buf.push_simple(
-            "PROJECTED_ZONE_DEFINITION",
-            vec![
-                Attribute::EntityRef(zone_step),
-                Attribute::List(boundary_refs),
-                Attribute::EntityRef(projection_end_step),
-                Attribute::EntityRef(projected_length_step),
-            ],
-        ))
+        let boundary_steps = pzd
+            .boundaries
+            .into_iter()
+            .map(|sar| buf.emit_shape_aspect_ref(sar))
+            .collect();
+        let early = lift::lift_projected_zone_definition(
+            zone_step,
+            boundary_steps,
+            projection_end_step,
+            projected_length_step,
+        );
+        Ok(serialize::serialize_projected_zone_definition(buf, &early))
     }
 }
 
@@ -3085,24 +2980,8 @@ impl SimpleEntityHandler for ToleranceValueHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "TOLERANCE_VALUE")?;
-        let lower_ref = read_entity_ref(attrs, 0, entity_id, "lower_bound")?;
-        let upper_ref = read_entity_ref(attrs, 1, entity_id, "upper_bound")?;
-        let Some(lower_bound) = resolve_tolerance_magnitude(ctx, lower_ref) else {
-            return Ok(());
-        };
-        let Some(upper_bound) = resolve_tolerance_magnitude(ctx, upper_ref) else {
-            return Ok(());
-        };
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .tolerance_values
-            .push(ToleranceValue {
-                lower_bound,
-                upper_bound,
-            });
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_tolerance_value(entity_id, attrs)?;
+        lower::lower_tolerance_value(ctx, entity_id, early);
         Ok(())
     }
 
@@ -3115,10 +2994,8 @@ impl SimpleEntityHandler for ToleranceValueHandler {
 pub(crate) fn write_tolerance_value(buf: &mut WriteBuffer, tv: &ToleranceValue) -> u64 {
     let lower = emit_tolerance_magnitude(buf, &tv.lower_bound);
     let upper = emit_tolerance_magnitude(buf, &tv.upper_bound);
-    buf.push_simple(
-        "TOLERANCE_VALUE",
-        vec![Attribute::EntityRef(lower), Attribute::EntityRef(upper)],
-    )
+    let early = lift::lift_tolerance_value(lower, upper);
+    serialize::serialize_tolerance_value(buf, &early)
 }
 
 pub(crate) struct LimitsAndFitsHandler;
@@ -3133,22 +3010,8 @@ impl SimpleEntityHandler for LimitsAndFitsHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 4, entity_id, "LIMITS_AND_FITS")?;
-        let form_variance = read_string_or_unset(attrs, 0, entity_id, "form_variance")?.to_owned();
-        let zone_variance = read_string_or_unset(attrs, 1, entity_id, "zone_variance")?.to_owned();
-        let grade = read_string_or_unset(attrs, 2, entity_id, "grade")?.to_owned();
-        let source = read_string_or_unset(attrs, 3, entity_id, "source")?.to_owned();
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .limits_and_fits
-            .push(LimitsAndFits {
-                form_variance,
-                zone_variance,
-                grade,
-                source,
-            });
-        ctx.id_cache.insert(entity_id, id);
+        let early = bind::bind_limits_and_fits(entity_id, attrs)?;
+        lower::lower_limits_and_fits(ctx, entity_id, early);
         Ok(())
     }
 
@@ -3159,20 +3022,13 @@ impl SimpleEntityHandler for LimitsAndFitsHandler {
 
 /// Emit a `LIMITS_AND_FITS`, returning the STEP id.
 pub(crate) fn write_limits_and_fits(buf: &mut WriteBuffer, lf: LimitsAndFits) -> u64 {
-    buf.push_simple(
-        "LIMITS_AND_FITS",
-        vec![
-            Attribute::String(lf.form_variance),
-            Attribute::String(lf.zone_variance),
-            Attribute::String(lf.grade),
-            Attribute::String(lf.source),
-        ],
-    )
+    let early = lift::lift_limits_and_fits(lf);
+    serialize::serialize_limits_and_fits(buf, &early)
 }
 
 /// Resolve a `tolerance_method_definition` SELECT ref (`PLUS_MINUS_TOLERANCE`'s
 /// `range`) — a `TOLERANCE_VALUE` or a `LIMITS_AND_FITS`.
-fn resolve_tolerance_method_definition(
+pub(crate) fn resolve_tolerance_method_definition(
     ctx: &ReaderContext,
     item_ref: u64,
 ) -> Option<ToleranceMethodDefinition> {
@@ -3227,23 +3083,8 @@ impl SimpleEntityHandler for PlusMinusToleranceHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        check_count(attrs, 2, entity_id, "PLUS_MINUS_TOLERANCE")?;
-        let range_ref = read_entity_ref(attrs, 0, entity_id, "range")?;
-        let dimension_ref = read_entity_ref(attrs, 1, entity_id, "toleranced_dimension")?;
-        let Some(range) = resolve_tolerance_method_definition(ctx, range_ref) else {
-            return Ok(());
-        };
-        let Some(toleranced_dimension) = resolve_dimensional_characteristic(ctx, dimension_ref)
-        else {
-            return Ok(());
-        };
-        ctx.pmi
-            .get_or_insert_with(PmiPool::default)
-            .plus_minus_tolerances
-            .push(PlusMinusTolerance {
-                range,
-                toleranced_dimension,
-            });
+        let early = bind::bind_plus_minus_tolerance(entity_id, attrs)?;
+        lower::lower_plus_minus_tolerance(ctx, early);
         Ok(())
     }
 
@@ -3263,10 +3104,8 @@ pub(crate) fn write_plus_minus_tolerance(buf: &mut WriteBuffer, pmt: &PlusMinusT
         DimensionalCharacteristic::Size(id) => buf.step_id(id),
         DimensionalCharacteristic::SizeWithDatumFeature(id) => buf.step_id(id),
     };
-    buf.push_simple(
-        "PLUS_MINUS_TOLERANCE",
-        vec![Attribute::EntityRef(range), Attribute::EntityRef(dimension)],
-    )
+    let early = lift::lift_plus_minus_tolerance(range, dimension);
+    serialize::serialize_plus_minus_tolerance(buf, &early)
 }
 
 // =================================================================

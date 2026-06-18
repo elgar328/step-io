@@ -7,15 +7,17 @@ use crate::early::model::{
     EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence, EarlyCircularRunoutTolerance,
     EarlyConcentricityTolerance, EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature,
     EarlyDimensionalLocation, EarlyDimensionalSize, EarlyDirectedDimensionalLocation,
-    EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout, EarlyFlatnessTolerance,
+    EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout,
+    EarlyDraughtingCalloutRelationship, EarlyDraughtingPreDefinedTextFont, EarlyFlatnessTolerance,
     EarlyGeometricToleranceRelationship, EarlyLeaderCurve, EarlyLeaderDirectedCallout,
-    EarlyLeaderTerminator, EarlyMeasureQualification, EarlyParallelismTolerance,
-    EarlyPerpendicularityTolerance, EarlyRoundnessTolerance, EarlyStraightnessTolerance,
-    EarlySurfaceProfileTolerance, EarlySymmetryTolerance, EarlyTessellatedAnnotationOccurrence,
-    EarlyToleranceZoneForm, EarlyTotalRunoutTolerance, EarlyTypeQualifier,
-    EarlyValueFormatTypeQualifier,
+    EarlyLeaderTerminator, EarlyLimitsAndFits, EarlyMeasureQualification,
+    EarlyParallelismTolerance, EarlyPerpendicularityTolerance, EarlyPlusMinusTolerance,
+    EarlyProjectedZoneDefinition, EarlyRoundnessTolerance, EarlyStraightnessTolerance,
+    EarlySurfaceProfileTolerance, EarlySymmetryTolerance, EarlyTerminatorSymbol,
+    EarlyTessellatedAnnotationOccurrence, EarlyToleranceValue, EarlyToleranceZoneForm,
+    EarlyTotalRunoutTolerance, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
 };
-use crate::ir::pmi::TessellatedAnnotationOccurrence;
+use crate::ir::pmi::{LimitsAndFits, TessellatedAnnotationOccurrence};
 use crate::writer::buffer::WriteBuffer;
 
 /// Lift one `TOLERANCE_ZONE_FORM`.
@@ -476,5 +478,87 @@ pub(crate) fn lift_tessellated_annotation_occurrence(
         name: tao.name,
         styles: tao.styles.iter().map(|&psa| buf.step_id(psa)).collect(),
         item: buf.step_id(tao.item),
+    }
+}
+
+/// Lift one `LIMITS_AND_FITS` (four scalar grades).
+pub(crate) fn lift_limits_and_fits(lf: LimitsAndFits) -> EarlyLimitsAndFits {
+    EarlyLimitsAndFits {
+        form_variance: lf.form_variance,
+        zone_variance: lf.zone_variance,
+        grade: lf.grade,
+        source: lf.source,
+    }
+}
+
+/// Lift one `DRAUGHTING_PRE_DEFINED_TEXT_FONT`.
+pub(crate) fn lift_draughting_pre_defined_text_font(
+    name: String,
+) -> EarlyDraughtingPreDefinedTextFont {
+    EarlyDraughtingPreDefinedTextFont { name }
+}
+
+/// Lift one `DRAUGHTING_CALLOUT_RELATIONSHIP` (endpoints pre-resolved to step ids).
+pub(crate) fn lift_draughting_callout_relationship(
+    name: String,
+    description: String,
+    relating_draughting_callout: u64,
+    related_draughting_callout: u64,
+) -> EarlyDraughtingCalloutRelationship {
+    EarlyDraughtingCalloutRelationship {
+        name,
+        description,
+        relating_draughting_callout,
+        related_draughting_callout,
+    }
+}
+
+/// Lift one `TOLERANCE_VALUE` (both magnitudes pre-emitted to step ids).
+pub(crate) fn lift_tolerance_value(lower_bound: u64, upper_bound: u64) -> EarlyToleranceValue {
+    EarlyToleranceValue {
+        lower_bound,
+        upper_bound,
+    }
+}
+
+/// Lift one `PLUS_MINUS_TOLERANCE` (both SELECT members pre-emitted to step ids).
+pub(crate) fn lift_plus_minus_tolerance(
+    range: u64,
+    toleranced_dimension: u64,
+) -> EarlyPlusMinusTolerance {
+    EarlyPlusMinusTolerance {
+        range,
+        toleranced_dimension,
+    }
+}
+
+/// Lift one `PROJECTED_ZONE_DEFINITION` (all refs pre-emitted to step ids).
+pub(crate) fn lift_projected_zone_definition(
+    zone: u64,
+    boundaries: Vec<u64>,
+    projection_end: u64,
+    projected_length: u64,
+) -> EarlyProjectedZoneDefinition {
+    EarlyProjectedZoneDefinition {
+        zone,
+        boundaries,
+        projection_end,
+        projected_length,
+    }
+}
+
+/// Lift one `TERMINATOR_SYMBOL` (`styles`/`item`/`annotated_curve` pre-emitted
+/// to step ids by the handler).
+pub(crate) fn lift_terminator_symbol(
+    name: String,
+    styles: Vec<u64>,
+    item: u64,
+    annotated_curve: u64,
+) -> EarlyTerminatorSymbol {
+    EarlyTerminatorSymbol {
+        name,
+        styles,
+        item,
+        annotated_curve,
     }
 }

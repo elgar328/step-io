@@ -746,6 +746,112 @@ pub(crate) fn serialize_measure_representation_item_complex(
     }
 }
 
+pub(crate) fn serialize_limits_and_fits(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyLimitsAndFits,
+) -> u64 {
+    buf.push_simple(
+        "LIMITS_AND_FITS",
+        vec![
+            crate::parser::entity::Attribute::String(l1.form_variance.clone()),
+            crate::parser::entity::Attribute::String(l1.zone_variance.clone()),
+            crate::parser::entity::Attribute::String(l1.grade.clone()),
+            crate::parser::entity::Attribute::String(l1.source.clone()),
+        ],
+    )
+}
+
+pub(crate) fn serialize_draughting_pre_defined_text_font(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDraughtingPreDefinedTextFont,
+) -> u64 {
+    buf.push_simple(
+        "DRAUGHTING_PRE_DEFINED_TEXT_FONT",
+        vec![crate::parser::entity::Attribute::String(l1.name.clone())],
+    )
+}
+
+pub(crate) fn serialize_draughting_callout_relationship(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDraughtingCalloutRelationship,
+) -> u64 {
+    buf.push_simple(
+        "DRAUGHTING_CALLOUT_RELATIONSHIP",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::String(l1.description.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.relating_draughting_callout),
+            crate::parser::entity::Attribute::EntityRef(l1.related_draughting_callout),
+        ],
+    )
+}
+
+pub(crate) fn serialize_tolerance_value(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyToleranceValue,
+) -> u64 {
+    buf.push_simple(
+        "TOLERANCE_VALUE",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.lower_bound),
+            crate::parser::entity::Attribute::EntityRef(l1.upper_bound),
+        ],
+    )
+}
+
+pub(crate) fn serialize_plus_minus_tolerance(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPlusMinusTolerance,
+) -> u64 {
+    buf.push_simple(
+        "PLUS_MINUS_TOLERANCE",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.range),
+            crate::parser::entity::Attribute::EntityRef(l1.toleranced_dimension),
+        ],
+    )
+}
+
+pub(crate) fn serialize_projected_zone_definition(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyProjectedZoneDefinition,
+) -> u64 {
+    buf.push_simple(
+        "PROJECTED_ZONE_DEFINITION",
+        vec![
+            crate::parser::entity::Attribute::EntityRef(l1.zone),
+            crate::parser::entity::Attribute::List(
+                l1.boundaries
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::EntityRef(l1.projection_end),
+            crate::parser::entity::Attribute::EntityRef(l1.projected_length),
+        ],
+    )
+}
+
+pub(crate) fn serialize_terminator_symbol(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyTerminatorSymbol,
+) -> u64 {
+    buf.push_simple(
+        "TERMINATOR_SYMBOL",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.styles
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::EntityRef(l1.item),
+            crate::parser::entity::Attribute::EntityRef(l1.annotated_curve),
+        ],
+    )
+}
+
 pub(crate) fn serialize_approval_role(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyApprovalRole,

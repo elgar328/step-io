@@ -7,24 +7,28 @@ use crate::early::model::{
     EarlyAnnotationSymbolOccurrence, EarlyAnnotationTextOccurrence, EarlyCircularRunoutTolerance,
     EarlyConcentricityTolerance, EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature,
     EarlyDimensionalLocation, EarlyDimensionalSize, EarlyDirectedDimensionalLocation,
-    EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout, EarlyFlatnessTolerance,
+    EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout,
+    EarlyDraughtingCalloutRelationship, EarlyDraughtingPreDefinedTextFont, EarlyFlatnessTolerance,
     EarlyGeometricToleranceRelationship, EarlyLeaderCurve, EarlyLeaderDirectedCallout,
-    EarlyLeaderTerminator, EarlyMeasureQualification, EarlyParallelismTolerance,
-    EarlyPerpendicularityTolerance, EarlyRoundnessTolerance, EarlyStraightnessTolerance,
-    EarlySurfaceProfileTolerance, EarlySymmetryTolerance, EarlyTessellatedAnnotationOccurrence,
-    EarlyToleranceZoneForm, EarlyTotalRunoutTolerance, EarlyTypeQualifier,
-    EarlyValueFormatTypeQualifier,
+    EarlyLeaderTerminator, EarlyLimitsAndFits, EarlyMeasureQualification,
+    EarlyParallelismTolerance, EarlyPerpendicularityTolerance, EarlyPlusMinusTolerance,
+    EarlyProjectedZoneDefinition, EarlyRoundnessTolerance, EarlyStraightnessTolerance,
+    EarlySurfaceProfileTolerance, EarlySymmetryTolerance, EarlyTerminatorSymbol,
+    EarlyTessellatedAnnotationOccurrence, EarlyToleranceValue, EarlyToleranceZoneForm,
+    EarlyTotalRunoutTolerance, EarlyTypeQualifier, EarlyValueFormatTypeQualifier,
 };
 use crate::entities::visualization::styled_item::resolve_representation_item_ref;
 use crate::ir::pmi::{
     AngularLocationData, AnnotationCurveOccurrence, AnnotationOccurrence, AnnotationPlane,
     AnnotationSymbolOccurrence, AnnotationTextOccurrence, Datum, DatumFeature, DimensionalLocation,
     DimensionalLocationData, DimensionalSize, DimensionalSizeKind, DraughtingAnnotationOccurrence,
-    DraughtingCallout, DraughtingCalloutData, GeometricTolerance, GeometricToleranceRelationship,
-    GeometricToleranceWithDatumReference, LeaderCurve, LeaderTerminator, MeasureQualification,
-    PlainAnnotationCurveOccurrence, PlainAnnotationOccurrence, PmiPool,
-    TessellatedAnnotationOccurrence, ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
-    ValueQualifier,
+    DraughtingCallout, DraughtingCalloutData, DraughtingCalloutRelationship,
+    DraughtingPreDefinedTextFont, GeometricTolerance, GeometricToleranceRelationship,
+    GeometricToleranceWithDatumReference, LeaderCurve, LeaderTerminator, LimitsAndFits,
+    MeasureQualification, PlainAnnotationCurveOccurrence, PlainAnnotationOccurrence,
+    PlusMinusTolerance, PmiPool, ProjectedZoneDefinition, TerminatorSymbol,
+    TessellatedAnnotationOccurrence, ToleranceValue, ToleranceZoneForm, TypeQualifier,
+    ValueFormatTypeQualifier, ValueQualifier,
 };
 use crate::reader::ReaderContext;
 
@@ -985,5 +989,205 @@ pub(crate) fn lower_tessellated_annotation_occurrence(
                 item,
             },
         ));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `LIMITS_AND_FITS` (four scalar tolerance grades; no refs).
+pub(crate) fn lower_limits_and_fits(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyLimitsAndFits,
+) {
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .limits_and_fits
+        .push(LimitsAndFits {
+            form_variance: early.form_variance,
+            zone_variance: early.zone_variance,
+            grade: early.grade,
+            source: early.source,
+        });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `DRAUGHTING_PRE_DEFINED_TEXT_FONT` (single `name` scalar).
+pub(crate) fn lower_draughting_pre_defined_text_font(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyDraughtingPreDefinedTextFont,
+) {
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .draughting_pre_defined_text_fonts
+        .push(DraughtingPreDefinedTextFont { name: early.name });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `DRAUGHTING_CALLOUT_RELATIONSHIP` (either `draughting_callout`
+/// endpoint unresolved = silent drop, symmetric on re-read).
+pub(crate) fn lower_draughting_callout_relationship(
+    ctx: &mut ReaderContext,
+    early: EarlyDraughtingCalloutRelationship,
+) {
+    let Some(relating) = ctx
+        .id_cache
+        .get::<crate::ir::id::DraughtingCalloutId>(early.relating_draughting_callout)
+    else {
+        return;
+    };
+    let Some(related) = ctx
+        .id_cache
+        .get::<crate::ir::id::DraughtingCalloutId>(early.related_draughting_callout)
+    else {
+        return;
+    };
+    ctx.pmi
+        .get_or_insert_with(PmiPool::default)
+        .draughting_callout_relationships
+        .push(DraughtingCalloutRelationship {
+            name: early.name,
+            description: early.description,
+            relating,
+            related,
+        });
+}
+
+/// Lower one `TOLERANCE_VALUE` (both bounds resolve through
+/// `resolve_tolerance_magnitude` — units-pool or repr-item; either unresolved
+/// drops the value, symmetric on re-read).
+pub(crate) fn lower_tolerance_value(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyToleranceValue,
+) {
+    let Some(lower_bound) =
+        crate::entities::pmi::resolve_tolerance_magnitude(ctx, early.lower_bound)
+    else {
+        return;
+    };
+    let Some(upper_bound) =
+        crate::entities::pmi::resolve_tolerance_magnitude(ctx, early.upper_bound)
+    else {
+        return;
+    };
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .tolerance_values
+        .push(ToleranceValue {
+            lower_bound,
+            upper_bound,
+        });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `PLUS_MINUS_TOLERANCE` (`range` via
+/// `resolve_tolerance_method_definition`, `toleranced_dimension` via
+/// `resolve_dimensional_characteristic`; either unresolved drops the entity).
+pub(crate) fn lower_plus_minus_tolerance(ctx: &mut ReaderContext, early: EarlyPlusMinusTolerance) {
+    let Some(range) = crate::entities::pmi::resolve_tolerance_method_definition(ctx, early.range)
+    else {
+        return;
+    };
+    let Some(toleranced_dimension) =
+        crate::entities::pmi::resolve_dimensional_characteristic(ctx, early.toleranced_dimension)
+    else {
+        return;
+    };
+    ctx.pmi
+        .get_or_insert_with(PmiPool::default)
+        .plus_minus_tolerances
+        .push(PlusMinusTolerance {
+            range,
+            toleranced_dimension,
+        });
+}
+
+/// Lower one `PROJECTED_ZONE_DEFINITION` (`zone` via `tolerance_zone` cache,
+/// `projection_end` via `resolve_shape_aspect_ref`, `projected_length` via
+/// `resolve_tolerance_magnitude`; any required ref unresolved drops the entity.
+/// Individual `boundaries` refs skip silently).
+pub(crate) fn lower_projected_zone_definition(
+    ctx: &mut ReaderContext,
+    early: EarlyProjectedZoneDefinition,
+) {
+    let Some(zone) = ctx
+        .id_cache
+        .get::<crate::ir::id::ToleranceZoneId>(early.zone)
+    else {
+        return;
+    };
+    let Some(projection_end) =
+        crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_ref(
+            ctx,
+            early.projection_end,
+        )
+    else {
+        return;
+    };
+    let Some(projected_length) =
+        crate::entities::pmi::resolve_tolerance_magnitude(ctx, early.projected_length)
+    else {
+        return;
+    };
+    let mut boundaries = Vec::with_capacity(early.boundaries.len());
+    for r in early.boundaries {
+        if let Some(sar) =
+            crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_ref(ctx, r)
+        {
+            boundaries.push(sar);
+        }
+    }
+    ctx.pmi
+        .get_or_insert_with(PmiPool::default)
+        .tolerance_zone_definitions
+        .push(ProjectedZoneDefinition {
+            zone,
+            boundaries,
+            projection_end,
+            projected_length,
+        });
+}
+
+/// Lower one `TERMINATOR_SYMBOL` (`annotation_symbol_occurrence` subtype).
+/// `styles` keeps only resolved `PresentationStyleAssignment` refs; `item`
+/// resolves through `resolve_representation_item_ref` and `annotated_curve`
+/// must resolve to an `AnnotationCurveOccurrenceId`; either unresolved drops
+/// the occurrence, symmetric on re-read.
+pub(crate) fn lower_terminator_symbol(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyTerminatorSymbol,
+) {
+    let mut styles = Vec::with_capacity(early.styles.len());
+    for &r in &early.styles {
+        if let Some(psa_id) = ctx
+            .id_cache
+            .get::<crate::ir::id::PresentationStyleAssignmentId>(r)
+        {
+            styles.push(psa_id);
+        }
+    }
+    let Some(item) = resolve_representation_item_ref(ctx, early.item) else {
+        return;
+    };
+    let Some(annotated_curve) = ctx
+        .id_cache
+        .get::<crate::ir::id::AnnotationCurveOccurrenceId>(early.annotated_curve)
+    else {
+        return;
+    };
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .annotation_occurrences
+        .push(AnnotationOccurrence::TerminatorSymbol(TerminatorSymbol {
+            name: early.name,
+            styles,
+            item,
+            annotated_curve,
+        }));
     ctx.id_cache.insert(entity_id, id);
 }

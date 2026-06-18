@@ -36,6 +36,14 @@ generate = [
     "characterized_object_complex",
     "measure_representation_item",
     "measure_representation_item_complex",
+    # residual (A)군 묶음1 — leaf/relationship (enum 없음)
+    "limits_and_fits",
+    "draughting_pre_defined_text_font",
+    "draughting_callout_relationship",
+    "tolerance_value",
+    "plus_minus_tolerance",
+    "projected_zone_definition",
+    "terminator_symbol",
     # plm (metadata leaf batch)
     "approval_role",
     "approval_status",

@@ -723,6 +723,113 @@ pub(crate) fn bind_measure_representation_item_complex(
     })
 }
 
+pub(crate) fn bind_limits_and_fits(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyLimitsAndFits, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "LIMITS_AND_FITS")?;
+    Ok(super::model::EarlyLimitsAndFits {
+        form_variance: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "form_variance")?
+            .to_owned(),
+        zone_variance: crate::ir::attr::read_string_or_unset(attrs, 1, entity_id, "zone_variance")?
+            .to_owned(),
+        grade: crate::ir::attr::read_string_or_unset(attrs, 2, entity_id, "grade")?.to_owned(),
+        source: crate::ir::attr::read_string_or_unset(attrs, 3, entity_id, "source")?.to_owned(),
+    })
+}
+
+pub(crate) fn bind_draughting_pre_defined_text_font(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDraughtingPreDefinedTextFont, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 1, entity_id, "DRAUGHTING_PRE_DEFINED_TEXT_FONT")?;
+    Ok(super::model::EarlyDraughtingPreDefinedTextFont {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+    })
+}
+
+pub(crate) fn bind_draughting_callout_relationship(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyDraughtingCalloutRelationship, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "DRAUGHTING_CALLOUT_RELATIONSHIP")?;
+    Ok(super::model::EarlyDraughtingCalloutRelationship {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        description: crate::ir::attr::read_string_or_unset(attrs, 1, entity_id, "description")?
+            .to_owned(),
+        relating_draughting_callout: crate::ir::attr::read_entity_ref(
+            attrs,
+            2,
+            entity_id,
+            "relating_draughting_callout",
+        )?,
+        related_draughting_callout: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "related_draughting_callout",
+        )?,
+    })
+}
+
+pub(crate) fn bind_tolerance_value(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyToleranceValue, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "TOLERANCE_VALUE")?;
+    Ok(super::model::EarlyToleranceValue {
+        lower_bound: crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "lower_bound")?,
+        upper_bound: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "upper_bound")?,
+    })
+}
+
+pub(crate) fn bind_plus_minus_tolerance(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyPlusMinusTolerance, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 2, entity_id, "PLUS_MINUS_TOLERANCE")?;
+    Ok(super::model::EarlyPlusMinusTolerance {
+        range: crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "range")?,
+        toleranced_dimension: crate::ir::attr::read_entity_ref(
+            attrs,
+            1,
+            entity_id,
+            "toleranced_dimension",
+        )?,
+    })
+}
+
+pub(crate) fn bind_projected_zone_definition(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyProjectedZoneDefinition, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "PROJECTED_ZONE_DEFINITION")?;
+    Ok(super::model::EarlyProjectedZoneDefinition {
+        zone: crate::ir::attr::read_entity_ref(attrs, 0, entity_id, "zone")?,
+        boundaries: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "boundaries")?,
+        projection_end: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "projection_end")?,
+        projected_length: crate::ir::attr::read_entity_ref(
+            attrs,
+            3,
+            entity_id,
+            "projected_length",
+        )?,
+    })
+}
+
+pub(crate) fn bind_terminator_symbol(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlyTerminatorSymbol, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "TERMINATOR_SYMBOL")?;
+    Ok(super::model::EarlyTerminatorSymbol {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        styles: crate::ir::attr::read_entity_ref_list(attrs, 1, entity_id, "styles")?,
+        item: crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "item")?,
+        annotated_curve: crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "annotated_curve")?,
+    })
+}
+
 pub(crate) fn bind_approval_role(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],

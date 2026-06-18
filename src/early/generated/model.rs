@@ -722,6 +722,167 @@ impl crate::ir::arena::ArenaId for EarlyMeasureRepresentationItemComplexId {
     }
 }
 
+/// L1 `LIMITS_AND_FITS` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyLimitsAndFits {
+    pub(crate) form_variance: String,
+    pub(crate) zone_variance: String,
+    pub(crate) grade: String,
+    pub(crate) source: String,
+}
+
+/// Typed `id_cache` key for `LIMITS_AND_FITS` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyLimitsAndFitsId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyLimitsAndFitsId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DRAUGHTING_PRE_DEFINED_TEXT_FONT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDraughtingPreDefinedTextFont {
+    pub(crate) name: String,
+}
+
+/// Typed `id_cache` key for `DRAUGHTING_PRE_DEFINED_TEXT_FONT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDraughtingPreDefinedTextFontId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDraughtingPreDefinedTextFontId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DRAUGHTING_CALLOUT_RELATIONSHIP` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDraughtingCalloutRelationship {
+    pub(crate) name: String,
+    pub(crate) description: String,
+    pub(crate) relating_draughting_callout: u64,
+    pub(crate) related_draughting_callout: u64,
+}
+
+/// Typed `id_cache` key for `DRAUGHTING_CALLOUT_RELATIONSHIP` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDraughtingCalloutRelationshipId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDraughtingCalloutRelationshipId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `TOLERANCE_VALUE` (generated).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct EarlyToleranceValue {
+    pub(crate) lower_bound: u64,
+    pub(crate) upper_bound: u64,
+}
+
+/// Typed `id_cache` key for `TOLERANCE_VALUE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyToleranceValueId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyToleranceValueId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PLUS_MINUS_TOLERANCE` (generated).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct EarlyPlusMinusTolerance {
+    pub(crate) range: u64,
+    pub(crate) toleranced_dimension: u64,
+}
+
+/// Typed `id_cache` key for `PLUS_MINUS_TOLERANCE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPlusMinusToleranceId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPlusMinusToleranceId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `PROJECTED_ZONE_DEFINITION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyProjectedZoneDefinition {
+    pub(crate) zone: u64,
+    pub(crate) boundaries: Vec<u64>,
+    pub(crate) projection_end: u64,
+    pub(crate) projected_length: u64,
+}
+
+/// Typed `id_cache` key for `PROJECTED_ZONE_DEFINITION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyProjectedZoneDefinitionId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyProjectedZoneDefinitionId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `TERMINATOR_SYMBOL` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyTerminatorSymbol {
+    pub(crate) name: String,
+    pub(crate) styles: Vec<u64>,
+    pub(crate) item: u64,
+    pub(crate) annotated_curve: u64,
+}
+
+/// Typed `id_cache` key for `TERMINATOR_SYMBOL` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyTerminatorSymbolId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyTerminatorSymbolId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `APPROVAL_ROLE` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyApprovalRole {
