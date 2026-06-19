@@ -32,7 +32,7 @@ pub(crate) use super::generated::serialize::{
     serialize_cc_design_person_and_organization_assignment,
     serialize_cc_design_security_classification, serialize_centre_of_symmetry,
     serialize_characterized_item_within_representation,
-    serialize_characterized_item_within_representation_with_id,
+    serialize_characterized_item_within_representation_with_id, serialize_characterized_object,
     serialize_characterized_object_complex, serialize_characterized_object_complex_with_id,
     serialize_circle, serialize_circular_area, serialize_circular_runout_tolerance,
     serialize_circular_runout_tolerance_complex, serialize_closed_shell, serialize_colour,

@@ -34,6 +34,7 @@ generate = [
     "integer_representation_item",
     "draughting_model",
     "characterized_object_complex",
+    "characterized_object",
     "measure_representation_item",
     "measure_representation_item_complex",
     # residual (A)군 묶음1 — leaf/relationship (enum 없음)
@@ -429,6 +430,16 @@ read_only = [
     "quasi_uniform_surface",
     "rational_quasi_uniform_curve",
     "rational_quasi_uniform_surface",
+]
+
+# `write_only`: entities generated as model + serialize only (bind skipped).
+# Mirror of `read_only` for write-only forms — emitted but never read standalone
+# (read goes through another handler), so the generated bind would be dead.
+# `characterized_object`: the complex DRAUGHTING_MODEL carrier reads via
+# `characterized_object_complex`; write normalizes the `Itself` carrier to a
+# plain `CHARACTERIZED_OBJECT(name, $)`, needing only serialize. No enum/select.
+write_only = [
+    "characterized_object",
 ]
 
 # `[complex.<entity>]`: multi-part (complex) entity. `parts` = ordered supertype

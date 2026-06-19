@@ -144,7 +144,11 @@ fn emit_simple_entity_form(
 
     emit_model_and_id(ctx, type_name, step_name, &attrs, out);
 
-    entity_bind(fn_base, type_name, step_name, &attrs, has_select, out);
+    // `write_only` entities (emitted but never read standalone — read goes
+    // through another handler) skip bind: the generated bind would be dead.
+    if !ctx.mapping.write_only.iter().any(|e| e == attr_ent_name) {
+        entity_bind(fn_base, type_name, step_name, &attrs, has_select, out);
+    }
 
     // `read_only` entities (read-back-only minority forms normalized away on
     // write) skip serialize: their handler `write` is `unreachable!()`.

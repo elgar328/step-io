@@ -1120,9 +1120,6 @@ pub(crate) struct DatumFeatureWriteInput {
     pub(crate) description: String,
     pub(crate) pds_step_id: u64,
     pub(crate) product_definitional: bool,
-    /// `DATUM_FEATURE` or `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE`, resolved
-    /// from the IR `DatumFeature` variant at the emit site.
-    pub(crate) entity_name: &'static str,
 }
 
 /// `DATUM_FEATURE(name, description, of_shape, product_definitional)` — a
@@ -1184,28 +1181,16 @@ impl SimpleEntityHandler for DimensionalSizeWithDatumFeatureHandler {
     }
 }
 
-/// Shared writer for the `datum_feature` family. The STEP entity name is
-/// resolved from the IR variant at the emit site and carried on `input`.
+/// Writer for `DATUM_FEATURE` (the only `DatumFeature::Itself` emit form; the
+/// `DIMENSIONAL_SIZE_WITH_DATUM_FEATURE` subtype emits via its own path).
 fn write_datum_feature(buf: &mut WriteBuffer, input: DatumFeatureWriteInput) -> u64 {
-    if input.entity_name == "DATUM_FEATURE" {
-        let early = crate::early::lift::lift_datum_feature(
-            input.name,
-            input.description,
-            input.pds_step_id,
-            input.product_definitional,
-        );
-        return crate::early::serialize::serialize_datum_feature(buf, &early);
-    }
-    let bool_attr = if input.product_definitional { "T" } else { "F" };
-    buf.push_simple(
-        input.entity_name,
-        vec![
-            Attribute::String(input.name),
-            Attribute::String(input.description),
-            Attribute::EntityRef(input.pds_step_id),
-            Attribute::Enum(bool_attr.into()),
-        ],
-    )
+    let early = crate::early::lift::lift_datum_feature(
+        input.name,
+        input.description,
+        input.pds_step_id,
+        input.product_definitional,
+    );
+    crate::early::serialize::serialize_datum_feature(buf, &early)
 }
 
 /// Emit a `DimensionalSize` under the STEP entity name its `kind` selects.

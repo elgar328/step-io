@@ -142,7 +142,6 @@ impl WriteBuffer<'_> {
                             description: d.description.clone(),
                             pds_step_id,
                             product_definitional: d.product_definitional,
-                            entity_name: "DATUM_FEATURE",
                         },
                     ) {
                         self.set_step_id(DatumFeatureId(index as u32), step_id);

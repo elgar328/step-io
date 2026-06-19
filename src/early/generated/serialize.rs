@@ -653,6 +653,22 @@ pub(crate) fn serialize_characterized_object_complex_with_id(
     }
 }
 
+pub(crate) fn serialize_characterized_object(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyCharacterizedObject,
+) -> u64 {
+    buf.push_simple(
+        "CHARACTERIZED_OBJECT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+        ],
+    )
+}
+
 pub(crate) fn serialize_measure_representation_item(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyMeasureRepresentationItem,

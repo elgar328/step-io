@@ -15,11 +15,11 @@
 //! The DM-driven complex `write` lives in `draughting_model.rs`; this handler's
 //! `write` only emits the standalone simple `CHARACTERIZED_OBJECT(name, $)`.
 
-use crate::early::{bind, lower};
+use crate::early::{bind, lift, lower, serialize};
 use crate::entities::ComplexEntityHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::CharacterizedObjectData;
-use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
+use crate::parser::entity::{EntityGraph, RawEntityPart};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -50,13 +50,7 @@ impl ComplexEntityHandler for CharacterizedObjectComplexHandler {
     }
 
     fn write(buf: &mut WriteBuffer, data: CharacterizedObjectData) -> Result<u64, WriteError> {
-        let desc = match data.description {
-            Some(d) => Attribute::String(d),
-            None => Attribute::Unset,
-        };
-        Ok(buf.push_simple(
-            "CHARACTERIZED_OBJECT",
-            vec![Attribute::String(data.name), desc],
-        ))
+        let early = lift::lift_characterized_object(data.name, data.description);
+        Ok(serialize::serialize_characterized_object(buf, &early))
     }
 }

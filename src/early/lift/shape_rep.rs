@@ -4,7 +4,8 @@
 use crate::early::model::{
     EarlyAdvancedBrepShapeRepresentation, EarlyAllAroundShapeAspect, EarlyCameraImage,
     EarlyCameraImage3dWithScale, EarlyCentreOfSymmetry, EarlyCharacterizedItemWithinRepresentation,
-    EarlyCharacterizedObjectComplex, EarlyCharacterizedObjectComplexCharacterized,
+    EarlyCharacterizedObject, EarlyCharacterizedObjectComplex,
+    EarlyCharacterizedObjectComplexCharacterized,
     EarlyCharacterizedObjectComplexCharacterizedShapeTessellated,
     EarlyCharacterizedObjectComplexShapeTessellated, EarlyCompositeDatumShapeAspect,
     EarlyCompositeDatumShapeAspectComposite, EarlyCompositeDatumShapeAspectGroup,
@@ -139,6 +140,15 @@ pub(crate) fn lift_characterized_item_within_representation(
         item,
         rep,
     }
+}
+
+/// Lift a standalone `CHARACTERIZED_OBJECT(name, $)` — the plain form emitted
+/// for the `CharacterizedObject::Itself` carrier (complex MI parts discarded).
+pub(crate) fn lift_characterized_object(
+    name: String,
+    description: Option<String>,
+) -> EarlyCharacterizedObject {
+    EarlyCharacterizedObject { name, description }
 }
 
 /// `bool` → the L1 LOGICAL slot (the legacy writer emitted `.T.` / `.F.`).
