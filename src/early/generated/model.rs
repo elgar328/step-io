@@ -4016,6 +4016,58 @@ impl crate::ir::arena::ArenaId for EarlyDimensionalSizeWithDatumFeatureId {
     }
 }
 
+/// L1 `DATUM_REFERENCE_COMPARTMENT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDatumReferenceCompartment {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) of_shape: u64,
+    pub(crate) product_definitional: crate::ir::geometry::Logical,
+    pub(crate) base: EarlyDatumOrCommonDatum,
+    pub(crate) modifiers: Option<Vec<EarlyDatumReferenceModifier>>,
+}
+
+/// Typed `id_cache` key for `DATUM_REFERENCE_COMPARTMENT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDatumReferenceCompartmentId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDatumReferenceCompartmentId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DATUM_REFERENCE_ELEMENT` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDatumReferenceElement {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) of_shape: u64,
+    pub(crate) product_definitional: crate::ir::geometry::Logical,
+    pub(crate) base: EarlyDatumOrCommonDatum,
+    pub(crate) modifiers: Option<Vec<EarlyDatumReferenceModifier>>,
+}
+
+/// Typed `id_cache` key for `DATUM_REFERENCE_ELEMENT` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDatumReferenceElementId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDatumReferenceElementId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `DRAUGHTING_CALLOUT` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyDraughtingCallout {
@@ -7571,6 +7623,47 @@ pub(crate) enum EarlyBoxCharacteristicSelect {
 pub(crate) enum EarlyCompoundItemDefinition {
     ListRepresentationItem(Vec<u64>),
     SetRepresentationItem(Vec<u64>),
+}
+
+/// L1 mixed SELECT `datum_or_common_datum` (generated, hint-less).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum EarlyDatumOrCommonDatum {
+    EntityRef(u64),
+    CommonDatumList(Vec<u64>),
+}
+
+/// L1 ENUM `simple_datum_reference_modifier` (generated).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) enum EarlySimpleDatumReferenceModifier {
+    PitchDiameter,
+    MajorDiameter,
+    MinorDiameter,
+    DegreeOfFreedomConstraintW,
+    DegreeOfFreedomConstraintV,
+    DegreeOfFreedomConstraintU,
+    DegreeOfFreedomConstraintZ,
+    DegreeOfFreedomConstraintY,
+    DegreeOfFreedomConstraintX,
+    DistanceVariable,
+    ContactingFeature,
+    AnyLongitudinalSection,
+    AnyCrossSection,
+    Orientation,
+    Plane,
+    Line,
+    Point,
+    MaximumMaterialRequirement,
+    LeastMaterialRequirement,
+    Translation,
+    Basic,
+    FreeState,
+}
+
+/// L1 mixed SELECT `datum_reference_modifier` (generated, hint-less).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum EarlyDatumReferenceModifier {
+    EntityRef(u64),
+    SimpleDatumReferenceModifier(super::model::EarlySimpleDatumReferenceModifier),
 }
 
 /// L1 mixed SELECT `direction_count_select` (generated, hint-less).

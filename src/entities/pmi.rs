@@ -10,7 +10,6 @@ use crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::GeometricToleranceTarget;
 use crate::ir::PmiPool;
-use crate::ir::attr::{check_count, read_bool, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::pmi::{
     AnnotationOccurrenceAssociativity, AnnotationOccurrenceRef, AnnotationPlaceholderLeaderLine,
@@ -19,16 +18,15 @@ use crate::ir::pmi::{
     DatumFeature, DimensionalCharacteristic, DimensionalLocation, DimensionalSize,
     DimensionalSizeKind, DraughtingAnnotationOccurrence, DraughtingCalloutData,
     DraughtingCalloutElement, DraughtingCalloutRelationship, DraughtingModelItemAssociation,
-    DraughtingModelItemDefinition, DraughtingPreDefinedTextFont, GeneralDatumBase,
-    GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance, GeometricToleranceRef,
-    GeometricToleranceRelationship, GeometricToleranceWithDatumReference,
-    GeometricToleranceWithDatumReferenceData, LeaderCurve, LeaderTerminator, LimitsAndFits,
-    MeasureQualification, PlainAnnotationCurveOccurrence, PlainAnnotationOccurrence,
-    PlusMinusTolerance, ProjectedZoneDefinition, TerminatorSymbol, TessellatedAnnotationOccurrence,
-    ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue, ToleranceZoneForm,
-    TypeQualifier, ValueFormatTypeQualifier,
+    DraughtingModelItemDefinition, DraughtingPreDefinedTextFont, GeneralDatumReference,
+    GeometricTolerance, GeometricToleranceRef, GeometricToleranceRelationship,
+    GeometricToleranceWithDatumReference, GeometricToleranceWithDatumReferenceData, LeaderCurve,
+    LeaderTerminator, LimitsAndFits, MeasureQualification, PlainAnnotationCurveOccurrence,
+    PlainAnnotationOccurrence, PlusMinusTolerance, ProjectedZoneDefinition, TerminatorSymbol,
+    TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue,
+    ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
-use crate::parser::entity::{Attribute, EntityGraph, RawEntity, RawEntityPart};
+use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -1820,95 +1818,26 @@ impl SimpleEntityHandler for CylindricityToleranceHandler {
     }
 }
 
-/// Read the shared `general_datum_reference` 6-attr body. `Ok(None)` when
-/// `of_shape` or `base` does not resolve — the entry is dropped, symmetric
-/// on re-read. The 6th attr `modifiers` is not modelled and is ignored.
-fn read_general_datum_reference_data(
+/// Non-standard `of_shape = $` guard for the two `general_datum_reference`
+/// subtypes. `of_shape` is a mandatory `shape_aspect` ref (EXPRESS + UNIQUE
+/// constraint) but some NIST exports (`ctc_05`) emit `$`. The generated `bind`
+/// reads it as a required ref and would error on the bare `$`, so this drops
+/// (recording the normalization) before `bind` — mirroring the legacy reader.
+/// Returns `true` when the entry was dropped.
+fn datum_reference_of_shape_unset(
     ctx: &mut ReaderContext,
-    entity_id: u64,
     attrs: &[Attribute],
-    graph: &EntityGraph,
     entity_name: &'static str,
-) -> Result<Option<GeneralDatumReferenceData>, ConvertError> {
-    check_count(attrs, 6, entity_id, entity_name)?;
-    let name = read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
-    let description = read_string_or_unset(attrs, 1, entity_id, "description")?.to_owned();
-    // NsCase::GeneralDatumReferenceOfShapeUnset of_shape is a mandatory
-    // shape_aspect attribute (EXPRESS + UNIQUE constraint); some NIST exports
-    // (ctc_05) emit `$`. Classify as non-standard input rather than an
-    // AttributeType defect; the owning entity carries no resolvable product.
+) -> bool {
     if matches!(attrs.get(2), Some(Attribute::Unset | Attribute::Derived)) {
         ctx.ns_record(
             crate::reader::NsCase::GeneralDatumReferenceOfShapeUnset,
             entity_name.into(),
             "dropped (of_shape Unset — EXPRESS shape_aspect.of_shape required)",
         );
-        return Ok(None);
+        return true;
     }
-    let of_shape_ref = read_entity_ref(attrs, 2, entity_id, "of_shape")?;
-    let product_definitional = read_bool(attrs, 3, entity_id, "product_definitional")?;
-    // attr 5 (`modifiers`) — datum_reference_modifier set, not modelled.
-
-    // of_shape → PRODUCT_DEFINITION_SHAPE → ProductId (typed one-probe).
-    let Some(target) = ctx.product_of_pds(of_shape_ref) else {
-        return Ok(None);
-    };
-    // base — `datum_or_common_datum` SELECT: a single `DATUM` ref, or a
-    // `COMMON_DATUM_LIST` (a Typed list of `datum_reference_element`s, an "A-B"
-    // composite datum). A base outside these forms drops the owner.
-    let base = match attrs.get(4) {
-        Some(Attribute::EntityRef(r)) => {
-            let Some(datum_id) = ctx.id_cache.get::<crate::ir::DatumId>(*r) else {
-                return Ok(None);
-            };
-            GeneralDatumBase::Datum(datum_id)
-        }
-        Some(Attribute::Typed { type_name, value }) if type_name == "COMMON_DATUM_LIST" => {
-            let Attribute::List(items) = value.as_ref() else {
-                return Ok(None);
-            };
-            let mut ids = Vec::with_capacity(items.len());
-            for item in items {
-                let Attribute::EntityRef(r) = item else {
-                    return Ok(None);
-                };
-                let Some(gdr_id) = ctx.id_cache.get::<crate::ir::GeneralDatumReferenceId>(*r)
-                else {
-                    // The member dropped. Record the cascade only when it is an
-                    // of_shape=$ sibling (NsCase::GeneralDatumReferenceOfShapeUnset);
-                    // a member dropped for a different reason (e.g. unmodelled
-                    // datum) stays a plain drop, not a normalization.
-                    let member_of_shape_unset = matches!(
-                        graph.get(*r),
-                        Some(RawEntity::Simple { attributes, .. })
-                            if matches!(
-                                attributes.get(2),
-                                Some(Attribute::Unset | Attribute::Derived)
-                            )
-                    );
-                    if member_of_shape_unset {
-                        ctx.ns_record(
-                            crate::reader::NsCase::GeneralDatumReferenceOfShapeUnset,
-                            entity_name.into(),
-                            "dropped (common_datum_list member of_shape Unset — cascade)",
-                        );
-                    }
-                    return Ok(None);
-                };
-                ids.push(gdr_id);
-            }
-            GeneralDatumBase::CommonDatumList(ids)
-        }
-        _ => return Ok(None),
-    };
-
-    Ok(Some(GeneralDatumReferenceData {
-        name,
-        description,
-        target,
-        product_definitional,
-        base,
-    }))
+    false
 }
 
 /// Emit a `GeneralDatumReference` under the STEP entity name its variant
@@ -1918,49 +1847,16 @@ pub(crate) fn write_general_datum_reference(
     buf: &mut WriteBuffer,
     gdr: GeneralDatumReference,
 ) -> u64 {
-    let (entity_name, data) = match gdr {
-        GeneralDatumReference::Compartment(d) => ("DATUM_REFERENCE_COMPARTMENT", d),
-        GeneralDatumReference::Element(d) => ("DATUM_REFERENCE_ELEMENT", d),
-    };
-    // `target` → PRODUCT_DEFINITION_SHAPE step id. A miss is the kernel-built
-    // IR defensive case (no product chain) — in practice unreachable, since a
-    // general_datum_reference only enters the arena once `of_shape` resolved.
-    let pds_step_id = buf
-        .product_def_shape_ids
-        .get(&data.target)
-        .copied()
-        .unwrap_or(0);
-    let base_attr = match data.base {
-        GeneralDatumBase::Datum(id) => Attribute::EntityRef(buf.step_id(id)),
-        GeneralDatumBase::CommonDatumList(ids) => Attribute::Typed {
-            type_name: "COMMON_DATUM_LIST".to_string(),
-            value: Box::new(Attribute::List(
-                ids.iter()
-                    .map(|id| {
-                        let step = buf.step_id(id);
-                        // Invariant: list members (datum_reference_elements) are
-                        // referenced-before-referrer, so emitted first in the
-                        // arena-order loop — their step ids are non-zero here.
-                        debug_assert_ne!(step, 0, "common datum element emitted after compartment");
-                        Attribute::EntityRef(step)
-                    })
-                    .collect(),
-            )),
-        },
-    };
-    let bool_attr = if data.product_definitional { "T" } else { "F" };
-    buf.push_simple(
-        entity_name,
-        vec![
-            Attribute::String(data.name),
-            Attribute::String(data.description),
-            Attribute::EntityRef(pds_step_id),
-            Attribute::Enum(bool_attr.into()),
-            base_attr,
-            // modifiers — not modelled, always emitted as `$`.
-            Attribute::Unset,
-        ],
-    )
+    match gdr {
+        GeneralDatumReference::Compartment(d) => {
+            let early = crate::early::lift::lift_datum_reference_compartment(buf, d);
+            crate::early::serialize::serialize_datum_reference_compartment(buf, &early)
+        }
+        GeneralDatumReference::Element(d) => {
+            let early = crate::early::lift::lift_datum_reference_element(buf, d);
+            crate::early::serialize::serialize_datum_reference_element(buf, &early)
+        }
+    }
 }
 
 pub(crate) struct DatumReferenceCompartmentHandler;
@@ -1975,22 +1871,14 @@ impl SimpleEntityHandler for DatumReferenceCompartmentHandler {
         attrs: &[Attribute],
         graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_general_datum_reference_data(
-            ctx,
-            entity_id,
-            attrs,
-            graph,
-            "DATUM_REFERENCE_COMPARTMENT",
-        )?
+        if datum_reference_of_shape_unset(ctx, attrs, "DATUM_REFERENCE_COMPARTMENT") {
+            return Ok(());
+        }
+        let Some(early) = crate::early::bind::bind_datum_reference_compartment(entity_id, attrs)?
         else {
             return Ok(());
         };
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .general_datum_references
-            .push(GeneralDatumReference::Compartment(data));
-        ctx.id_cache.insert(entity_id, id);
+        crate::early::lower::lower_datum_reference_compartment(ctx, entity_id, early, graph);
         Ok(())
     }
 
@@ -2011,22 +1899,14 @@ impl SimpleEntityHandler for DatumReferenceElementHandler {
         attrs: &[Attribute],
         graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        let Some(data) = read_general_datum_reference_data(
-            ctx,
-            entity_id,
-            attrs,
-            graph,
-            "DATUM_REFERENCE_ELEMENT",
-        )?
+        if datum_reference_of_shape_unset(ctx, attrs, "DATUM_REFERENCE_ELEMENT") {
+            return Ok(());
+        }
+        let Some(early) = crate::early::bind::bind_datum_reference_element(entity_id, attrs)?
         else {
             return Ok(());
         };
-        let id = ctx
-            .pmi
-            .get_or_insert_with(PmiPool::default)
-            .general_datum_references
-            .push(GeneralDatumReference::Element(data));
-        ctx.id_cache.insert(entity_id, id);
+        crate::early::lower::lower_datum_reference_element(ctx, entity_id, early, graph);
         Ok(())
     }
 

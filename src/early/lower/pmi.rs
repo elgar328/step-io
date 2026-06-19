@@ -10,6 +10,7 @@ use crate::early::model::{
     EarlyAnnotationToModelLeaderLine, EarlyApllPoint, EarlyApllPointWithSurface, EarlyAreaUnitType,
     EarlyAuxiliaryLeaderLine, EarlyCircularRunoutTolerance, EarlyCircularRunoutToleranceComplex,
     EarlyConcentricityTolerance, EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature,
+    EarlyDatumOrCommonDatum, EarlyDatumReferenceCompartment, EarlyDatumReferenceElement,
     EarlyDimensionalLocation, EarlyDimensionalSize, EarlyDimensionalSizeWithDatumFeature,
     EarlyDirectedDimensionalLocation, EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout,
     EarlyDraughtingCalloutRelationship, EarlyDraughtingModelItemAssociation,
@@ -38,7 +39,8 @@ use crate::ir::pmi::{
     DimensionalSize, DimensionalSizeKind, DimensionalSizeWithDatumFeatureData,
     DraughtingAnnotationOccurrence, DraughtingCallout, DraughtingCalloutData,
     DraughtingCalloutRelationship, DraughtingModelIdentifiedItem, DraughtingModelItemAssociation,
-    DraughtingModelItemDefinition, DraughtingPreDefinedTextFont, GeometricTolerance,
+    DraughtingModelItemDefinition, DraughtingPreDefinedTextFont, GeneralDatumBase,
+    GeneralDatumReference, GeneralDatumReferenceData, GeometricTolerance,
     GeometricToleranceRelationship, GeometricToleranceWithDatumReference, LeaderCurve,
     LeaderTerminator, LimitsAndFits, MeasureQualification, PlainAnnotationCurveOccurrence,
     PlainAnnotationOccurrence, PlusMinusTolerance, PmiPool, ProjectedZoneDefinition,
@@ -866,6 +868,130 @@ pub(crate) fn lower_datum(ctx: &mut ReaderContext, entity_id: u64, early: EarlyD
             product_definitional,
             identification: early.identification,
         });
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Resolve the shared `general_datum_reference` body (the `shape_aspect` 4-attr
+/// supertype body + `base` SELECT) into a [`GeneralDatumReferenceData`].
+/// `None` drops the entry (symmetric on re-read) when `of_shape` is not a
+/// product, the `base` datum/member does not resolve, or `product_definitional`
+/// is `.U.`. The non-standard `of_shape = $` case is guarded in the handler
+/// before `bind`; `modifiers` is not modelled and is ignored.
+#[allow(clippy::too_many_arguments)]
+fn lower_general_datum_reference_data(
+    ctx: &mut ReaderContext,
+    name: String,
+    description: Option<String>,
+    of_shape: u64,
+    product_definitional: crate::ir::geometry::Logical,
+    base: EarlyDatumOrCommonDatum,
+    graph: &crate::parser::entity::EntityGraph,
+    entity_name: &'static str,
+) -> Option<GeneralDatumReferenceData> {
+    let product_definitional = logical_to_bool(product_definitional)?;
+    // of_shape -> PRODUCT_DEFINITION_SHAPE -> ProductId (typed one-probe).
+    let target = ctx.product_of_pds(of_shape)?;
+    // base — `datum_or_common_datum` SELECT: a single `DATUM`, or a
+    // `COMMON_DATUM_LIST` (a list of `datum_reference_element`s). A member
+    // outside these resolutions drops the owner.
+    let base = match base {
+        EarlyDatumOrCommonDatum::EntityRef(r) => {
+            GeneralDatumBase::Datum(ctx.id_cache.get::<crate::ir::id::DatumId>(r)?)
+        }
+        EarlyDatumOrCommonDatum::CommonDatumList(refs) => {
+            let mut ids = Vec::with_capacity(refs.len());
+            for r in refs {
+                let Some(gdr_id) = ctx
+                    .id_cache
+                    .get::<crate::ir::id::GeneralDatumReferenceId>(r)
+                else {
+                    // The member dropped. Record the cascade only when it is an
+                    // of_shape=$ sibling (NsCase::GeneralDatumReferenceOfShapeUnset);
+                    // a member dropped for a different reason stays a plain drop.
+                    let member_of_shape_unset = matches!(
+                        graph.get(r),
+                        Some(crate::parser::entity::RawEntity::Simple { attributes, .. })
+                            if matches!(
+                                attributes.get(2),
+                                Some(crate::parser::entity::Attribute::Unset
+                                    | crate::parser::entity::Attribute::Derived)
+                            )
+                    );
+                    if member_of_shape_unset {
+                        ctx.ns_record(
+                            crate::reader::NsCase::GeneralDatumReferenceOfShapeUnset,
+                            entity_name.into(),
+                            "dropped (common_datum_list member of_shape Unset — cascade)",
+                        );
+                    }
+                    return None;
+                };
+                ids.push(gdr_id);
+            }
+            GeneralDatumBase::CommonDatumList(ids)
+        }
+    };
+    Some(GeneralDatumReferenceData {
+        name,
+        // Legacy read_string_or_unset collapsed `$` to "" (L2 String).
+        description: description.unwrap_or_default(),
+        target,
+        product_definitional,
+        base,
+    })
+}
+
+/// Lower one `DATUM_REFERENCE_COMPARTMENT`.
+pub(crate) fn lower_datum_reference_compartment(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyDatumReferenceCompartment,
+    graph: &crate::parser::entity::EntityGraph,
+) {
+    let Some(data) = lower_general_datum_reference_data(
+        ctx,
+        early.name,
+        early.description,
+        early.of_shape,
+        early.product_definitional,
+        early.base,
+        graph,
+        "DATUM_REFERENCE_COMPARTMENT",
+    ) else {
+        return;
+    };
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .general_datum_references
+        .push(GeneralDatumReference::Compartment(data));
+    ctx.id_cache.insert(entity_id, id);
+}
+
+/// Lower one `DATUM_REFERENCE_ELEMENT`.
+pub(crate) fn lower_datum_reference_element(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyDatumReferenceElement,
+    graph: &crate::parser::entity::EntityGraph,
+) {
+    let Some(data) = lower_general_datum_reference_data(
+        ctx,
+        early.name,
+        early.description,
+        early.of_shape,
+        early.product_definitional,
+        early.base,
+        graph,
+        "DATUM_REFERENCE_ELEMENT",
+    ) else {
+        return;
+    };
+    let id = ctx
+        .pmi
+        .get_or_insert_with(PmiPool::default)
+        .general_datum_references
+        .push(GeneralDatumReference::Element(data));
     ctx.id_cache.insert(entity_id, id);
 }
 

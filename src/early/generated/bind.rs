@@ -3217,6 +3217,74 @@ pub(crate) fn bind_dimensional_size_with_datum_feature(
     })
 }
 
+pub(crate) fn bind_datum_reference_compartment(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<Option<super::model::EarlyDatumReferenceCompartment>, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 6, entity_id, "DATUM_REFERENCE_COMPARTMENT")?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let description = crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?;
+    let of_shape = crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "of_shape")?;
+    let product_definitional =
+        crate::ir::attr::read_logical(attrs, 3, entity_id, "product_definitional")?;
+    let Some(base) = bind_datum_or_common_datum(&attrs[4]) else {
+        return Ok(None);
+    };
+    let modifiers = match attrs.get(5) {
+        Some(
+            crate::parser::entity::Attribute::Unset | crate::parser::entity::Attribute::Derived,
+        ) => None,
+        _ => Some(datum_reference_modifier_list(
+            attrs,
+            5,
+            entity_id,
+            "modifiers",
+        )?),
+    };
+    Ok(Some(super::model::EarlyDatumReferenceCompartment {
+        name,
+        description,
+        of_shape,
+        product_definitional,
+        base,
+        modifiers,
+    }))
+}
+
+pub(crate) fn bind_datum_reference_element(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<Option<super::model::EarlyDatumReferenceElement>, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 6, entity_id, "DATUM_REFERENCE_ELEMENT")?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let description = crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?;
+    let of_shape = crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "of_shape")?;
+    let product_definitional =
+        crate::ir::attr::read_logical(attrs, 3, entity_id, "product_definitional")?;
+    let Some(base) = bind_datum_or_common_datum(&attrs[4]) else {
+        return Ok(None);
+    };
+    let modifiers = match attrs.get(5) {
+        Some(
+            crate::parser::entity::Attribute::Unset | crate::parser::entity::Attribute::Derived,
+        ) => None,
+        _ => Some(datum_reference_modifier_list(
+            attrs,
+            5,
+            entity_id,
+            "modifiers",
+        )?),
+    };
+    Ok(Some(super::model::EarlyDatumReferenceElement {
+        name,
+        description,
+        of_shape,
+        product_definitional,
+        base,
+        modifiers,
+    }))
+}
+
 pub(crate) fn bind_draughting_callout(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],
@@ -5926,6 +5994,45 @@ fn bind_compound_item_definition(
     }
 }
 
+fn bind_datum_or_common_datum(
+    attr: &crate::parser::entity::Attribute,
+) -> Option<super::model::EarlyDatumOrCommonDatum> {
+    match attr {
+        crate::parser::entity::Attribute::EntityRef(n) => {
+            Some(super::model::EarlyDatumOrCommonDatum::EntityRef(*n))
+        }
+        crate::parser::entity::Attribute::Typed { type_name, value } => {
+            match (type_name.as_str(), value.as_ref()) {
+                ("COMMON_DATUM_LIST", crate::parser::entity::Attribute::List(items)) => {
+                    let mut out = Vec::with_capacity(items.len());
+                    for it in items {
+                        match it {
+                            crate::parser::entity::Attribute::EntityRef(n) => out.push(*n),
+                            _ => return None,
+                        }
+                    }
+                    Some(super::model::EarlyDatumOrCommonDatum::CommonDatumList(out))
+                }
+                _ => None,
+            }
+        }
+        _ => None,
+    }
+}
+
+fn bind_datum_reference_modifier(
+    attr: &crate::parser::entity::Attribute,
+) -> Option<super::model::EarlyDatumReferenceModifier> {
+    match attr {
+        crate::parser::entity::Attribute::EntityRef(n) => Some(super::model::EarlyDatumReferenceModifier::EntityRef(*n)),
+        crate::parser::entity::Attribute::Typed { type_name, value } => match (type_name.as_str(), value.as_ref()) {
+            ("SIMPLE_DATUM_REFERENCE_MODIFIER", crate::parser::entity::Attribute::Enum(t)) => match t.as_str() { "PITCH_DIAMETER" => Some(super::model::EarlyDatumReferenceModifier::SimpleDatumReferenceModifier(super::model::EarlySimpleDatumReferenceModifier::PitchDiameter)), "MAJOR_DIAMETER" => Some(super::model::EarlyDatumReferenceModifier::SimpleDatumReferenceModifier(super::model::EarlySimpleDatumReferenceModifier::MajorDiameter)), "MINOR_DIAMETER" => Some(super::model::EarlyDatumReferenceModifier::SimpleDatumReferenceModifier(super::model::EarlySimpleDatumReferenceModifier::MinorDiameter)), "DEGREE_OF_FREEDOM_CONSTRAINT_W" => Some(super::model::EarlyDatumReferenceModifier::SimpleDatumReferenceModifier(super::model::EarlySimpleDatumReferenceModifier::DegreeOfFreedomConstraintW)), "DEGREE_OF_FREEDOM_CONSTRAINT_V" => Some(super::model::EarlyDatumReferenceModifier::SimpleDatumReferenceModifier(super::model::EarlySimpleDatumReferenceModifier::DegreeOfFreedomConstraintV)), "DEGREE_OF_FREEDOM_CONSTRAINT_U" => Some(super::model::EarlyDatumReferenceModifier::SimpleDatumReferenceModifier(super::model::EarlySimpleDatumReferenceModifier::DegreeOfFreedomConstraintU)), "DEGREE_OF_FREEDOM_CONSTRAINT_Z" => Some(super::model::EarlyDatumReferenceModifier::SimpleDatumReferenceModifier(super::model::EarlySimpleDatumReferenceModifier::DegreeOfFreedomConstraintZ)), "DEGREE_OF_FREEDOM_CONSTRAINT_Y" => Some(super::model::EarlyDatumReferenceModifier::SimpleDatumReferenceModifier(super::model::EarlySimpleDatumReferenceModifier::DegreeOfFreedomConstraintY)), "DEGREE_OF_FREEDOM_CONSTRAINT_X" => Some(super::model::EarlyDatumReferenceModifier::SimpleDatumReferenceModifier(super::model::EarlySimpleDatumReferenceModifier::DegreeOfFreedomConstraintX)), "DISTANCE_VARIABLE" => Some(super::model::EarlyDatumReferenceModifier::SimpleDatumReferenceModifier(super::model::EarlySimpleDatumReferenceModifier::DistanceVariable)), "CONTACTING_FEATURE" => Some(super::model::EarlyDatumReferenceModifier::SimpleDatumReferenceModifier(super::model::EarlySimpleDatumReferenceModifier::ContactingFeature)), "ANY_LONGITUDINAL_SECTION" => Some(super::model::EarlyDatumReferenceModifier::SimpleDatumReferenceModifier(super::model::EarlySimpleDatumReferenceModifier::AnyLongitudinalSection)), "ANY_CROSS_SECTION" => Some(super::model::EarlyDatumReferenceModifier::SimpleDatumReferenceModifier(super::model::EarlySimpleDatumReferenceModifier::AnyCrossSection)), "ORIENTATION" => Some(super::model::EarlyDatumReferenceModifier::SimpleDatumReferenceModifier(super::model::EarlySimpleDatumReferenceModifier::Orientation)), "PLANE" => Some(super::model::EarlyDatumReferenceModifier::SimpleDatumReferenceModifier(super::model::EarlySimpleDatumReferenceModifier::Plane)), "LINE" => Some(super::model::EarlyDatumReferenceModifier::SimpleDatumReferenceModifier(super::model::EarlySimpleDatumReferenceModifier::Line)), "POINT" => Some(super::model::EarlyDatumReferenceModifier::SimpleDatumReferenceModifier(super::model::EarlySimpleDatumReferenceModifier::Point)), "MAXIMUM_MATERIAL_REQUIREMENT" => Some(super::model::EarlyDatumReferenceModifier::SimpleDatumReferenceModifier(super::model::EarlySimpleDatumReferenceModifier::MaximumMaterialRequirement)), "LEAST_MATERIAL_REQUIREMENT" => Some(super::model::EarlyDatumReferenceModifier::SimpleDatumReferenceModifier(super::model::EarlySimpleDatumReferenceModifier::LeastMaterialRequirement)), "TRANSLATION" => Some(super::model::EarlyDatumReferenceModifier::SimpleDatumReferenceModifier(super::model::EarlySimpleDatumReferenceModifier::Translation)), "BASIC" => Some(super::model::EarlyDatumReferenceModifier::SimpleDatumReferenceModifier(super::model::EarlySimpleDatumReferenceModifier::Basic)), "FREE_STATE" => Some(super::model::EarlyDatumReferenceModifier::SimpleDatumReferenceModifier(super::model::EarlySimpleDatumReferenceModifier::FreeState)), _ => None },
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
 fn bind_direction_count_select(
     attr: &crate::parser::entity::Attribute,
 ) -> Option<super::model::EarlyDirectionCountSelect> {
@@ -6861,6 +6968,33 @@ fn box_characteristic_select_list(
                 return Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
                     entity_id,
                     detail: format!("{field}: unrecognized box_characteristic_select in list"),
+                });
+            }
+        }
+    }
+    Ok(out)
+}
+
+fn datum_reference_modifier_list(
+    attrs: &[crate::parser::entity::Attribute],
+    index: usize,
+    entity_id: u64,
+    field: &'static str,
+) -> Result<Vec<super::model::EarlyDatumReferenceModifier>, crate::ir::error::ConvertError> {
+    let Some(crate::parser::entity::Attribute::List(items)) = attrs.get(index) else {
+        return Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
+            entity_id,
+            detail: format!("{field}: expected list"),
+        });
+    };
+    let mut out = Vec::with_capacity(items.len());
+    for item in items {
+        match bind_datum_reference_modifier(item) {
+            Some(v) => out.push(v),
+            None => {
+                return Err(crate::ir::error::ConvertError::UnexpectedEntityForm {
+                    entity_id,
+                    detail: format!("{field}: unrecognized datum_reference_modifier in list"),
                 });
             }
         }

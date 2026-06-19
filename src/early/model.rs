@@ -50,6 +50,7 @@ pub(crate) use super::generated::model::{
     EarlyContextDependentShapeRepresentation, EarlyCoordinatedUniversalTimeOffset,
     EarlyCoordinatesList, EarlyCurveBoundedSurface, EarlyCurveStyle, EarlyCylindricalSurface,
     EarlyCylindricityTolerance, EarlyDateAndTime, EarlyDateTimeRole, EarlyDatum, EarlyDatumFeature,
+    EarlyDatumOrCommonDatum, EarlyDatumReferenceCompartment, EarlyDatumReferenceElement,
     EarlyDatumSystem, EarlyDatumTarget, EarlyDefaultModelGeometricView, EarlyDefinedSymbol,
     EarlyDegenerateToroidalSurface, EarlyDerivedUnit, EarlyDerivedUnitElement,
     EarlyDescriptionAttribute, EarlyDescriptiveRepresentationItem, EarlyDesignContext,

@@ -10,6 +10,7 @@ use crate::early::model::{
     EarlyAnnotationToModelLeaderLine, EarlyApllPoint, EarlyApllPointWithSurface, EarlyAreaUnitType,
     EarlyAuxiliaryLeaderLine, EarlyCircularRunoutTolerance, EarlyCircularRunoutToleranceComplex,
     EarlyConcentricityTolerance, EarlyCylindricityTolerance, EarlyDatum, EarlyDatumFeature,
+    EarlyDatumOrCommonDatum, EarlyDatumReferenceCompartment, EarlyDatumReferenceElement,
     EarlyDimensionalLocation, EarlyDimensionalSize, EarlyDimensionalSizeWithDatumFeature,
     EarlyDirectedDimensionalLocation, EarlyDraughtingAnnotationOccurrence, EarlyDraughtingCallout,
     EarlyDraughtingCalloutRelationship, EarlyDraughtingModelItemAssociation,
@@ -32,8 +33,8 @@ use crate::early::model::{
 };
 use crate::ir::geometry::Point3;
 use crate::ir::pmi::{
-    AnnotationPlaceholderOccurrenceRole, DesApllPointSymbol, LimitsAndFits,
-    TessellatedAnnotationOccurrence,
+    AnnotationPlaceholderOccurrenceRole, DesApllPointSymbol, GeneralDatumBase,
+    GeneralDatumReferenceData, LimitsAndFits, TessellatedAnnotationOccurrence,
 };
 use crate::writer::buffer::WriteBuffer;
 
@@ -591,6 +592,70 @@ pub(crate) fn lift_datum(
         of_shape,
         product_definitional: bool_to_logical(product_definitional),
         identification,
+    }
+}
+
+/// Build the `datum_or_common_datum` SELECT (`base`) from the write buffer's
+/// caches — a single `DATUM` step id, or a `COMMON_DATUM_LIST` of element
+/// step ids.
+fn build_datum_or_common_datum(
+    buf: &WriteBuffer,
+    base: &GeneralDatumBase,
+) -> EarlyDatumOrCommonDatum {
+    match base {
+        GeneralDatumBase::Datum(id) => EarlyDatumOrCommonDatum::EntityRef(buf.step_id(*id)),
+        GeneralDatumBase::CommonDatumList(ids) => EarlyDatumOrCommonDatum::CommonDatumList(
+            ids.iter()
+                .map(|id| {
+                    let step = buf.step_id(*id);
+                    // Invariant: list members (datum_reference_elements) are
+                    // referenced-before-referrer, emitted first in the arena
+                    // loop, so their step ids are non-zero here.
+                    debug_assert_ne!(step, 0, "common datum element emitted after compartment");
+                    step
+                })
+                .collect(),
+        ),
+    }
+}
+
+/// Lift one `DATUM_REFERENCE_COMPARTMENT`. `of_shape` / `base` resolve through
+/// the write buffer's caches; `modifiers` is not modelled (always `$`),
+/// `description` is always emitted as a String (legacy behaviour).
+pub(crate) fn lift_datum_reference_compartment(
+    buf: &WriteBuffer,
+    data: GeneralDatumReferenceData,
+) -> EarlyDatumReferenceCompartment {
+    EarlyDatumReferenceCompartment {
+        name: data.name,
+        description: Some(data.description),
+        of_shape: buf
+            .product_def_shape_ids
+            .get(&data.target)
+            .copied()
+            .unwrap_or(0),
+        product_definitional: bool_to_logical(data.product_definitional),
+        base: build_datum_or_common_datum(buf, &data.base),
+        modifiers: None,
+    }
+}
+
+/// Lift one `DATUM_REFERENCE_ELEMENT` (same body as the compartment lift).
+pub(crate) fn lift_datum_reference_element(
+    buf: &WriteBuffer,
+    data: GeneralDatumReferenceData,
+) -> EarlyDatumReferenceElement {
+    EarlyDatumReferenceElement {
+        name: data.name,
+        description: Some(data.description),
+        of_shape: buf
+            .product_def_shape_ids
+            .get(&data.target)
+            .copied()
+            .unwrap_or(0),
+        product_definitional: bool_to_logical(data.product_definitional),
+        base: build_datum_or_common_datum(buf, &data.base),
+        modifiers: None,
     }
 }
 

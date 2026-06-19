@@ -187,6 +187,9 @@ generate = [
     "angular_size",
     "datum_feature",
     "dimensional_size_with_datum_feature",
+    # general_datum_reference subtypes — base/modifiers selects auto-synth (no hints)
+    "datum_reference_compartment",
+    "datum_reference_element",
     "draughting_callout",
     "leader_directed_callout",
     "cartesian_point",

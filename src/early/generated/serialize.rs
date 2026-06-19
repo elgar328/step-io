@@ -3571,6 +3571,60 @@ pub(crate) fn serialize_dimensional_size_with_datum_feature_with_id(
     );
 }
 
+pub(crate) fn serialize_datum_reference_compartment(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDatumReferenceCompartment,
+) -> u64 {
+    buf.push_simple(
+        "DATUM_REFERENCE_COMPARTMENT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.of_shape),
+            crate::parser::entity::Attribute::Enum(
+                crate::ir::attr::logical_to_step(l1.product_definitional).into(),
+            ),
+            datum_or_common_datum_emit(&l1.base),
+            match &l1.modifiers {
+                Some(v) => crate::parser::entity::Attribute::List(
+                    v.iter().map(datum_reference_modifier_emit).collect(),
+                ),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+        ],
+    )
+}
+
+pub(crate) fn serialize_datum_reference_element(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDatumReferenceElement,
+) -> u64 {
+    buf.push_simple(
+        "DATUM_REFERENCE_ELEMENT",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            match &l1.description {
+                Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+            crate::parser::entity::Attribute::EntityRef(l1.of_shape),
+            crate::parser::entity::Attribute::Enum(
+                crate::ir::attr::logical_to_step(l1.product_definitional).into(),
+            ),
+            datum_or_common_datum_emit(&l1.base),
+            match &l1.modifiers {
+                Some(v) => crate::parser::entity::Attribute::List(
+                    v.iter().map(datum_reference_modifier_emit).collect(),
+                ),
+                None => crate::parser::entity::Attribute::Unset,
+            },
+        ],
+    )
+}
+
 pub(crate) fn serialize_draughting_callout(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyDraughtingCallout,
@@ -6700,6 +6754,35 @@ fn compound_item_definition_emit(
                 )),
             }
         }
+    }
+}
+
+fn datum_or_common_datum_emit(
+    v: &super::model::EarlyDatumOrCommonDatum,
+) -> crate::parser::entity::Attribute {
+    match v {
+        super::model::EarlyDatumOrCommonDatum::EntityRef(step) => {
+            crate::parser::entity::Attribute::EntityRef(*step)
+        }
+        super::model::EarlyDatumOrCommonDatum::CommonDatumList(xs) => {
+            crate::parser::entity::Attribute::Typed {
+                type_name: "COMMON_DATUM_LIST".into(),
+                value: Box::new(crate::parser::entity::Attribute::List(
+                    xs.iter()
+                        .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                        .collect(),
+                )),
+            }
+        }
+    }
+}
+
+fn datum_reference_modifier_emit(
+    v: &super::model::EarlyDatumReferenceModifier,
+) -> crate::parser::entity::Attribute {
+    match v {
+        super::model::EarlyDatumReferenceModifier::EntityRef(step) => crate::parser::entity::Attribute::EntityRef(*step),
+        super::model::EarlyDatumReferenceModifier::SimpleDatumReferenceModifier(e) => crate::parser::entity::Attribute::Typed { type_name: "SIMPLE_DATUM_REFERENCE_MODIFIER".into(), value: Box::new(crate::parser::entity::Attribute::Enum(match e { super::model::EarlySimpleDatumReferenceModifier::PitchDiameter => "PITCH_DIAMETER", super::model::EarlySimpleDatumReferenceModifier::MajorDiameter => "MAJOR_DIAMETER", super::model::EarlySimpleDatumReferenceModifier::MinorDiameter => "MINOR_DIAMETER", super::model::EarlySimpleDatumReferenceModifier::DegreeOfFreedomConstraintW => "DEGREE_OF_FREEDOM_CONSTRAINT_W", super::model::EarlySimpleDatumReferenceModifier::DegreeOfFreedomConstraintV => "DEGREE_OF_FREEDOM_CONSTRAINT_V", super::model::EarlySimpleDatumReferenceModifier::DegreeOfFreedomConstraintU => "DEGREE_OF_FREEDOM_CONSTRAINT_U", super::model::EarlySimpleDatumReferenceModifier::DegreeOfFreedomConstraintZ => "DEGREE_OF_FREEDOM_CONSTRAINT_Z", super::model::EarlySimpleDatumReferenceModifier::DegreeOfFreedomConstraintY => "DEGREE_OF_FREEDOM_CONSTRAINT_Y", super::model::EarlySimpleDatumReferenceModifier::DegreeOfFreedomConstraintX => "DEGREE_OF_FREEDOM_CONSTRAINT_X", super::model::EarlySimpleDatumReferenceModifier::DistanceVariable => "DISTANCE_VARIABLE", super::model::EarlySimpleDatumReferenceModifier::ContactingFeature => "CONTACTING_FEATURE", super::model::EarlySimpleDatumReferenceModifier::AnyLongitudinalSection => "ANY_LONGITUDINAL_SECTION", super::model::EarlySimpleDatumReferenceModifier::AnyCrossSection => "ANY_CROSS_SECTION", super::model::EarlySimpleDatumReferenceModifier::Orientation => "ORIENTATION", super::model::EarlySimpleDatumReferenceModifier::Plane => "PLANE", super::model::EarlySimpleDatumReferenceModifier::Line => "LINE", super::model::EarlySimpleDatumReferenceModifier::Point => "POINT", super::model::EarlySimpleDatumReferenceModifier::MaximumMaterialRequirement => "MAXIMUM_MATERIAL_REQUIREMENT", super::model::EarlySimpleDatumReferenceModifier::LeastMaterialRequirement => "LEAST_MATERIAL_REQUIREMENT", super::model::EarlySimpleDatumReferenceModifier::Translation => "TRANSLATION", super::model::EarlySimpleDatumReferenceModifier::Basic => "BASIC", super::model::EarlySimpleDatumReferenceModifier::FreeState => "FREE_STATE", }.into())) },
     }
 }
 
