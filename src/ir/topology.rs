@@ -1,5 +1,16 @@
-use super::geometry::SurfaceCurveWrapper;
-use super::id::{CurveId, EdgeId, FaceId, ShellId, SurfaceId, VertexId, WireId};
+use super::id::{
+    CurveId, EdgeId, FaceId, ShellId, SurfaceCurveSubtypeId, SurfaceId, VertexId, WireId,
+};
+
+/// An edge's `edge_geometry` (EXPRESS `edge_curve.edge_geometry : curve`): a
+/// plain 3D curve, or a `surface_curve`-family entity (`SURFACE_CURVE` /
+/// `SEAM_CURVE` / `BOUNDED_SURFACE_CURVE` / `INTERSECTION_CURVE`) carried as an
+/// arena id so its `associated_geometry` / `master_representation` round-trip.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum EdgeGeometry {
+    Curve3d(CurveId),
+    SurfaceCurve(SurfaceCurveSubtypeId),
+}
 
 /// Direction agreement flag used throughout B-Rep topology.
 ///
@@ -14,17 +25,15 @@ pub enum Orientation {
 /// A topological edge — a bounded piece of a curve between two vertices.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Edge {
-    pub curve: CurveId,
+    /// `edge_geometry` — a plain 3D curve, or a `surface_curve`-family node
+    /// (carried as an arena id so its `associated_geometry` round-trips).
+    pub edge_geometry: EdgeGeometry,
     pub vertices: (VertexId, VertexId),
     /// Curve parameter range. Placeholder `(0.0, 0.0)` — trim computation
     /// requires projecting vertex positions onto the curve parameterization,
     /// which is a geometric operation deferred to the kernel adapter.
     pub trim: (f64, f64),
     pub orientation: Orientation,
-    /// The `SURFACE_CURVE` / `SEAM_CURVE` wrapper the edge's `edge_geometry`
-    /// referenced, preserved verbatim. `None` when `edge_geometry` pointed
-    /// directly at a 3D curve.
-    pub surface_curve: Option<SurfaceCurveWrapper>,
 }
 
 /// A reference to an edge with an orientation flag.

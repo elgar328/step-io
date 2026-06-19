@@ -168,7 +168,9 @@ impl<'m> WriteBuffer<'m> {
         );
     }
 
-    #[allow(clippy::too_many_lines)]
+    // Arena indices fit u32 by the arena's own overflow guard, so the
+    // `idx as u32` surface-curve id reconstruction is safe.
+    #[allow(clippy::too_many_lines, clippy::cast_possible_truncation)]
     pub(crate) fn emit_all(&mut self) -> Result<(), WriteError> {
         // Order: geometry -> topology -> units -> assembly. Mirrors the
         // OCCT-flavoured fixture layout (topology before units) and keeps
@@ -203,7 +205,7 @@ impl<'m> WriteBuffer<'m> {
             self.emit_surface(id)?;
         }
         // 2D geometry (PCURVE parametric space) — emitted after 3D surfaces
-        // so `emit_surface_curve_wrapper` can cache-hit the 3D basis surface,
+        // so `emit_surface_curve_node` can cache-hit the 3D basis surface,
         // and before topology so `emit_edge` can cache-hit the 2D curves.
         // Arena is empty for files without PCURVE content → zero iterations.
         for id in self.model.geometry.points_2d.iter_ids() {
@@ -451,29 +453,12 @@ impl<'m> WriteBuffer<'m> {
                 }
             }
         }
-        // BOUNDED_SURFACE_CURVE + INTERSECTION_CURVE — orphan, after curves
-        // + surfaces emitted.
-        for sc in self
-            .model
-            .geometry
-            .surface_curves
-            .iter()
-            .cloned()
-            .collect::<Vec<_>>()
-        {
-            use crate::entities::SimpleEntityHandler;
-            use crate::entities::geometry::surface_curve_subtypes::{
-                BoundedSurfaceCurveHandler, IntersectionCurveHandler,
-            };
-            use crate::ir::geometry::SurfaceCurve;
-            match sc {
-                SurfaceCurve::BoundedSurfaceCurve(b) => {
-                    BoundedSurfaceCurveHandler::write(self, b)?;
-                }
-                SurfaceCurve::IntersectionCurve(i) => {
-                    IntersectionCurveHandler::write(self, i)?;
-                }
-            }
+        // SURFACE_CURVE family (base/seam + bounded/intersection) — emit any
+        // node an edge did not already reach. `emit_surface_curve_node` is
+        // step_id-cached so edge-referenced nodes are not re-emitted.
+        let surface_curve_count = self.model.geometry.surface_curves.iter().count();
+        for idx in 0..surface_curve_count {
+            self.emit_surface_curve_node(crate::ir::id::SurfaceCurveSubtypeId(idx as u32))?;
         }
         // INTEGER/REAL_REPRESENTATION_ITEM — orphan value-items, no refs.
         self.emit_numeric_representation_items()?;

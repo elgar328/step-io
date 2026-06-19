@@ -29,10 +29,10 @@ impl SimpleEntityHandler for BoundedSurfaceCurveHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_bounded_surface_curve(entity_id, attrs)?;
-        lower::lower_bounded_surface_curve(ctx, early);
+        lower::lower_bounded_surface_curve(ctx, entity_id, early, graph);
         Ok(())
     }
 
@@ -52,10 +52,10 @@ impl SimpleEntityHandler for IntersectionCurveHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_intersection_curve(entity_id, attrs)?;
-        lower::lower_intersection_curve(ctx, early);
+        lower::lower_intersection_curve(ctx, entity_id, early, graph);
         Ok(())
     }
 

@@ -11,9 +11,9 @@ use crate::early::model::{
     EarlyHyperbola, EarlyIntersectionCurve, EarlyKnotType, EarlyLine, EarlyOffsetCurve3d,
     EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent, EarlyPlane,
     EarlyPolyline, EarlyRationalBSplineCurve, EarlyRationalBSplineSurface,
-    EarlyRectangularTrimmedSurface, EarlySphericalSurface, EarlySurfaceOfLinearExtrusion,
-    EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyTrimSelect, EarlyTrimmedCurve,
-    EarlyVector, EarlyVertexPoint,
+    EarlyRectangularTrimmedSurface, EarlySeamCurve, EarlySphericalSurface, EarlySurfaceCurve,
+    EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyTrimSelect,
+    EarlyTrimmedCurve, EarlyVector, EarlyVertexPoint,
 };
 use crate::ir::geometry::{
     Direction2, Direction3, Logical, NurbsCurve, NurbsCurve2d, NurbsSurface, PCurveOrSurface,
@@ -612,6 +612,37 @@ pub(crate) fn lift_intersection_curve(
     let (name, curve_3d, associated_geometry, master_representation) =
         lift_surface_curve_data(buf, body)?;
     Ok(EarlyIntersectionCurve {
+        name,
+        curve_3d,
+        associated_geometry,
+        master_representation,
+    })
+}
+
+/// Lift one base `SURFACE_CURVE` (`curve_3d` + `associated_geometry` emitted
+/// through the shared body helper).
+pub(crate) fn lift_surface_curve(
+    buf: &mut WriteBuffer,
+    body: SurfaceCurveData,
+) -> Result<EarlySurfaceCurve, WriteError> {
+    let (name, curve_3d, associated_geometry, master_representation) =
+        lift_surface_curve_data(buf, body)?;
+    Ok(EarlySurfaceCurve {
+        name,
+        curve_3d,
+        associated_geometry,
+        master_representation,
+    })
+}
+
+/// Lift one `SEAM_CURVE` (same body as base `SURFACE_CURVE`).
+pub(crate) fn lift_seam_curve(
+    buf: &mut WriteBuffer,
+    body: SurfaceCurveData,
+) -> Result<EarlySeamCurve, WriteError> {
+    let (name, curve_3d, associated_geometry, master_representation) =
+        lift_surface_curve_data(buf, body)?;
+    Ok(EarlySeamCurve {
         name,
         curve_3d,
         associated_geometry,

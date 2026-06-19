@@ -1940,12 +1940,19 @@ fn surface_curve_aliases_to_inner_curve_3d() {
     );
     // Only the 3D LINE should be in the curves pool.
     assert_eq!(result.model.geometry.curves.len(), 1);
-    // The edge must point at that LINE via the SURFACE_CURVE alias.
+    // The surface-curve body drops (its only member is an unresolvable PCURVE),
+    // so the edge falls back to the 3D LINE via the `curve_3d` alias.
     assert_eq!(result.model.topology.edges.len(), 1);
     let edge = &result.model.topology.edges[crate::EdgeId(0)];
-    match &result.model.geometry.curves[edge.curve] {
+    let curve_id = match edge.edge_geometry {
+        crate::ir::topology::EdgeGeometry::Curve3d(c) => c,
+        crate::ir::topology::EdgeGeometry::SurfaceCurve(_) => {
+            panic!("surface-curve body dropped; edge should alias to the 3D curve")
+        }
+    };
+    match &result.model.geometry.curves[curve_id] {
         Curve::Line(_) => {}
-        _ => panic!("edge.curve should resolve to the aliased LINE"),
+        _ => panic!("edge_geometry should resolve to the aliased LINE"),
     }
 }
 

@@ -15,9 +15,9 @@ use crate::early::model::{
     EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent, EarlyPlane, EarlyPolyline,
     EarlyQuasiUniformCurve, EarlyQuasiUniformSurface, EarlyRationalBSplineCurve,
     EarlyRationalBSplineSurface, EarlyRationalQuasiUniformCurve, EarlyRationalQuasiUniformSurface,
-    EarlyRectangularTrimmedSurface, EarlySphericalSurface, EarlySurfaceOfLinearExtrusion,
-    EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyTrimSelect, EarlyTrimmedCurve,
-    EarlyVector, EarlyVertexPoint,
+    EarlyRectangularTrimmedSurface, EarlySeamCurve, EarlySphericalSurface, EarlySurfaceCurve,
+    EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyTrimSelect,
+    EarlyTrimmedCurve, EarlyVector, EarlyVertexPoint,
 };
 use crate::entities::geometry::nurbs_shared::quasi_uniform_knots;
 use crate::ir::error::ConvertError;
@@ -33,7 +33,8 @@ use crate::ir::geometry::{
     SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TrimSelect,
     TrimmedCurve, Vertex,
 };
-use crate::reader::ReaderContext;
+use crate::parser::entity::{EntityGraph, RawEntity};
+use crate::reader::{NsCase, ReaderContext};
 
 /// Lower one `BOUNDED_PCURVE` — resolve `basis_surface` + `reference_to_curve`
 /// and push to the `parameter_space_curves` arena. Orphan (no inbound refs) so
@@ -1495,23 +1496,70 @@ fn lower_trim_select(ctx: &ReaderContext, items: &[EarlyTrimSelect]) -> Vec<Trim
 /// decoded by `bind`). An unresolved `curve_3d` or an empty surface list drops
 /// the curve — symmetric on re-read, a verbatim port of the legacy
 /// `read_surface_curve_body`.
+#[allow(clippy::too_many_arguments)]
 fn lower_surface_curve_data(
-    ctx: &ReaderContext,
+    ctx: &mut ReaderContext,
+    graph: &EntityGraph,
+    entity_id: u64,
     name: String,
     curve_3d_ref: u64,
     assoc_refs: &[u64],
     master_representation: PreferredSurfaceCurveRepresentation,
+    entity_name: &'static str,
 ) -> Option<SurfaceCurveData> {
     let curve_3d = ctx.id_cache.get::<crate::ir::id::CurveId>(curve_3d_ref)?;
-    let associated_geometry: Vec<_> = assoc_refs
-        .iter()
-        .filter_map(|r| {
-            ctx.id_cache
-                .get::<crate::ir::id::SurfaceId>(*r)
-                .map(PCurveOrSurface::Surface)
-        })
-        .collect();
+    // `associated_geometry` is a `pcurve_or_surface` SELECT: a member is either
+    // a PCURVE (resolved through its definitional 2D curve) or a surface
+    // directly associated with the 3D curve. Both branches are preserved.
+    let mut associated_geometry = Vec::with_capacity(assoc_refs.len());
+    let mut wr3_dropped = 0usize;
+    for &r in assoc_refs {
+        let member_name = match graph.get(r) {
+            Some(RawEntity::Simple { name, .. }) => name.as_str(),
+            _ => "",
+        };
+        if member_name == "PCURVE" {
+            match ctx.resolve_pcurve(r, graph) {
+                Some(pc) => associated_geometry.push(PCurveOrSurface::Pcurve(pc)),
+                // NsCase::Pcurve3dInPspace — a 3D curve inside a PCURVE's 2D
+                // parameter-space DEFINITIONAL_REPRESENTATION (EXPRESS pcurve.wr3
+                // violation). Classify the dropped subtree as non-standard input.
+                None => {
+                    if ctx.record_pcurve_wr3_drop(r, graph) {
+                        wr3_dropped += 1;
+                    } else {
+                        ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                            entity_id,
+                            detail: format!(
+                                "{entity_name}.associated_geometry PCURVE #{r} unresolved \
+                                 (definitional curve not 2D, or basis_surface missing)"
+                            ),
+                        });
+                    }
+                }
+            }
+        } else if let Some(sid) = ctx.id_cache.get::<crate::ir::id::SurfaceId>(r) {
+            associated_geometry.push(PCurveOrSurface::Surface(sid));
+        } else {
+            ctx.warnings.push(ConvertError::UnexpectedEntityForm {
+                entity_id,
+                detail: format!(
+                    "{entity_name}.associated_geometry #{r} ({member_name}) unresolved \
+                     (neither a resolvable PCURVE nor a known surface)"
+                ),
+            });
+        }
+    }
     if associated_geometry.is_empty() {
+        if !assoc_refs.is_empty() && wr3_dropped == assoc_refs.len() {
+            // Every member was a wr3-violating PCURVE — the whole curve is the
+            // natural cascade of the pcurve normalization, not a silent skip.
+            ctx.ns_record(
+                NsCase::Pcurve3dInPspace,
+                entity_name.into(),
+                "dropped (all pcurve members 3D-in-pspace — EXPRESS pcurve.wr3 cascade)",
+            );
+        }
         return None;
     }
     Some(SurfaceCurveData {
@@ -1522,35 +1570,110 @@ fn lower_surface_curve_data(
     })
 }
 
-/// Lower one `INTERSECTION_CURVE` into the shared `surface_curves` arena.
-pub(crate) fn lower_intersection_curve(ctx: &mut ReaderContext, early: EarlyIntersectionCurve) {
+/// Lower one base `SURFACE_CURVE` into the shared `surface_curves` arena.
+///
+/// Always registers a `CurveId` alias (to `curve_3d`) regardless of whether the
+/// body resolves: this keeps the edge (and the generic curve-ref consumers like
+/// `TRIMMED_CURVE` / `COMPOSITE_CURVE`) resolving to the 3D curve even when the
+/// surface-curve body itself drops (e.g. the wr3 `Pcurve3dInPspace` cascade) —
+/// EXPRESS-legal and behavior-preserving vs the legacy alias path. When the body
+/// resolves, the arena node is pushed and its `SurfaceCurveSubtypeId` registered
+/// (the edge prefers it over the alias).
+pub(crate) fn lower_surface_curve(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlySurfaceCurve,
+    graph: &EntityGraph,
+) {
+    if let Some(curve_3d) = ctx.id_cache.get::<crate::ir::id::CurveId>(early.curve_3d) {
+        ctx.id_cache.insert(entity_id, curve_3d);
+    }
     if let Some(body) = lower_surface_curve_data(
         ctx,
+        graph,
+        entity_id,
         early.name,
         early.curve_3d,
         &early.associated_geometry,
         early.master_representation,
+        "SURFACE_CURVE",
     ) {
-        ctx.geometry
+        let id = ctx.geometry.surface_curves.push(SurfaceCurve::Itself(body));
+        ctx.id_cache.insert(entity_id, id);
+    }
+}
+
+/// Lower one `SEAM_CURVE` (same body + `CurveId` alias policy as base).
+pub(crate) fn lower_seam_curve(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlySeamCurve,
+    graph: &EntityGraph,
+) {
+    if let Some(curve_3d) = ctx.id_cache.get::<crate::ir::id::CurveId>(early.curve_3d) {
+        ctx.id_cache.insert(entity_id, curve_3d);
+    }
+    if let Some(body) = lower_surface_curve_data(
+        ctx,
+        graph,
+        entity_id,
+        early.name,
+        early.curve_3d,
+        &early.associated_geometry,
+        early.master_representation,
+        "SEAM_CURVE",
+    ) {
+        let id = ctx.geometry.surface_curves.push(SurfaceCurve::Seam(body));
+        ctx.id_cache.insert(entity_id, id);
+    }
+}
+
+/// Lower one `INTERSECTION_CURVE` into the shared `surface_curves` arena.
+pub(crate) fn lower_intersection_curve(
+    ctx: &mut ReaderContext,
+    entity_id: u64,
+    early: EarlyIntersectionCurve,
+    graph: &EntityGraph,
+) {
+    if let Some(body) = lower_surface_curve_data(
+        ctx,
+        graph,
+        entity_id,
+        early.name,
+        early.curve_3d,
+        &early.associated_geometry,
+        early.master_representation,
+        "INTERSECTION_CURVE",
+    ) {
+        let id = ctx
+            .geometry
             .surface_curves
             .push(SurfaceCurve::IntersectionCurve(body));
+        ctx.id_cache.insert(entity_id, id);
     }
 }
 
 /// Lower one `BOUNDED_SURFACE_CURVE` into the shared `surface_curves` arena.
 pub(crate) fn lower_bounded_surface_curve(
     ctx: &mut ReaderContext,
+    entity_id: u64,
     early: EarlyBoundedSurfaceCurve,
+    graph: &EntityGraph,
 ) {
     if let Some(body) = lower_surface_curve_data(
         ctx,
+        graph,
+        entity_id,
         early.name,
         early.curve_3d,
         &early.associated_geometry,
         early.master_representation,
+        "BOUNDED_SURFACE_CURVE",
     ) {
-        ctx.geometry
+        let id = ctx
+            .geometry
             .surface_curves
             .push(SurfaceCurve::BoundedSurfaceCurve(body));
+        ctx.id_cache.insert(entity_id, id);
     }
 }

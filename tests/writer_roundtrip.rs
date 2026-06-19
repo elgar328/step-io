@@ -172,8 +172,8 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
         "{name}: curves_2d count"
     );
 
-    // Per-edge SURFACE_CURVE / SEAM_CURVE wrapper — compares the whole
-    // preserved wrapper (entity kind, name, master_representation, members).
+    // Per-edge `edge_geometry` (plain 3D curve vs surface_curve arena node) —
+    // arena order is idempotent across round-trip so the ids compare directly.
     for (eidx, (oe, re_edge)) in original
         .topology
         .edges
@@ -182,10 +182,20 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
         .enumerate()
     {
         assert_eq!(
-            oe.surface_curve, re_edge.surface_curve,
-            "{name}: edge[{eidx}] surface_curve wrapper"
+            oe.edge_geometry, re_edge.edge_geometry,
+            "{name}: edge[{eidx}] edge_geometry"
         );
     }
+    // The surface_curve arena itself (entity kind, name, master_representation,
+    // associated_geometry members) round-trips verbatim.
+    assert!(
+        original
+            .geometry
+            .surface_curves
+            .iter()
+            .eq(re.geometry.surface_curves.iter()),
+        "{name}: surface_curves arena"
+    );
 
     assert_unit_contexts_equivalent(name, &re, &original);
     assert_eq!(

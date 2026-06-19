@@ -112,14 +112,26 @@ pub(crate) fn lower_edge_curve(
 ) -> Result<(), ConvertError> {
     let start = ctx.resolve_vertex(entity_id, early.edge_start, "edge_start")?;
     let end = ctx.resolve_vertex(entity_id, early.edge_end, "edge_end")?;
-    let curve = ctx.resolve_curve(entity_id, early.edge_geometry, "edge_geometry")?;
-    let surface_curve = ctx.surface_curve_map.get(&early.edge_geometry).cloned();
+    // Prefer a surface_curve-family node (registered under SurfaceCurveSubtypeId).
+    // A base SURFACE_CURVE also carries a CurveId alias, so the SubtypeId probe
+    // must come first; otherwise `edge_geometry` is a plain 3D curve.
+    let edge_geometry = if let Some(scid) = ctx
+        .id_cache
+        .get::<crate::ir::id::SurfaceCurveSubtypeId>(early.edge_geometry)
+    {
+        crate::ir::topology::EdgeGeometry::SurfaceCurve(scid)
+    } else {
+        crate::ir::topology::EdgeGeometry::Curve3d(ctx.resolve_curve(
+            entity_id,
+            early.edge_geometry,
+            "edge_geometry",
+        )?)
+    };
     let edge = Edge {
-        curve,
+        edge_geometry,
         vertices: (start, end),
         trim: (0.0, 0.0),
         orientation: bool_to_orientation(early.same_sense),
-        surface_curve,
     };
     let id = ctx.topology.edges.push(edge);
     ctx.id_cache.insert(entity_id, id);

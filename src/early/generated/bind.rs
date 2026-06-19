@@ -3797,6 +3797,52 @@ pub(crate) fn bind_trimmed_curve(
     })
 }
 
+pub(crate) fn bind_surface_curve(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlySurfaceCurve, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "SURFACE_CURVE")?;
+    Ok(super::model::EarlySurfaceCurve {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        curve_3d: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "curve_3d")?,
+        associated_geometry: crate::ir::attr::read_entity_ref_list(
+            attrs,
+            2,
+            entity_id,
+            "associated_geometry",
+        )?,
+        master_representation: bind_preferred_surface_curve_representation(
+            attrs,
+            3,
+            entity_id,
+            "master_representation",
+        )?,
+    })
+}
+
+pub(crate) fn bind_seam_curve(
+    entity_id: u64,
+    attrs: &[crate::parser::entity::Attribute],
+) -> Result<super::model::EarlySeamCurve, crate::ir::error::ConvertError> {
+    crate::ir::attr::check_count(attrs, 4, entity_id, "SEAM_CURVE")?;
+    Ok(super::model::EarlySeamCurve {
+        name: crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned(),
+        curve_3d: crate::ir::attr::read_entity_ref(attrs, 1, entity_id, "curve_3d")?,
+        associated_geometry: crate::ir::attr::read_entity_ref_list(
+            attrs,
+            2,
+            entity_id,
+            "associated_geometry",
+        )?,
+        master_representation: bind_preferred_surface_curve_representation(
+            attrs,
+            3,
+            entity_id,
+            "master_representation",
+        )?,
+    })
+}
+
 pub(crate) fn bind_intersection_curve(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],

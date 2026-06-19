@@ -9,8 +9,8 @@ use crate::ir::{
     Ellipse2, Ellipse3, Hyperbola, Line2, Line3, NurbsCurve, NurbsCurve2d, NurbsSurface,
     OffsetCurve3d, Parabola, Pcurve, Placement1dId, Placement2dId, Placement3dId, Plane3,
     Point2dId, PointId, Polyline, Polyline2d, RectangularTrimmedSurface, SphericalSurface,
-    StepModel, Surface, SurfaceCurveWrapper, SurfaceId, SurfaceOfLinearExtrusion, SurfaceOfOffset,
-    SurfaceOfRevolution, ToroidalSurface, TrimmedCurve,
+    StepModel, Surface, SurfaceId, SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution,
+    ToroidalSurface, TrimmedCurve,
 };
 use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
@@ -435,27 +435,33 @@ impl WriteBuffer<'_> {
         Ok(n)
     }
 
-    /// Emit the preserved SURFACE_CURVE / SEAM_CURVE wrapping `curve_3d_ref`.
-    /// The entity kind, `name`, and `master_representation` come straight from
-    /// the wrapper (no heuristic — the original is reproduced verbatim).
-    pub(crate) fn emit_surface_curve_wrapper(
+    /// Emit one `surface_curves` arena node by id, dispatching on its variant.
+    /// `step_id`-cached so the same node emitted via an edge's `edge_geometry`
+    /// and via the orphan sweep resolves to one `#N` (dedup).
+    pub(crate) fn emit_surface_curve_node(
         &mut self,
-        curve_3d_ref: u64,
-        wrapper: &SurfaceCurveWrapper,
+        scid: crate::ir::id::SurfaceCurveSubtypeId,
     ) -> Result<u64, WriteError> {
-        // Dispatch through EntityHandler trait.
         use crate::entities::SimpleEntityHandler;
-        if wrapper.is_seam {
-            crate::entities::geometry::seam_curve::SeamCurveHandler::write(
-                self,
-                (curve_3d_ref, wrapper.clone()),
-            )
-        } else {
-            crate::entities::geometry::surface_curve::SurfaceCurveHandler::write(
-                self,
-                (curve_3d_ref, wrapper.clone()),
-            )
+        use crate::entities::geometry::seam_curve::SeamCurveHandler;
+        use crate::entities::geometry::surface_curve::SurfaceCurveHandler;
+        use crate::entities::geometry::surface_curve_subtypes::{
+            BoundedSurfaceCurveHandler, IntersectionCurveHandler,
+        };
+        use crate::ir::geometry::SurfaceCurve;
+        let cached = self.step_id(scid);
+        if cached != 0 {
+            return Ok(cached);
         }
+        let body = self.model.geometry.surface_curves[scid].clone();
+        let n = match body {
+            SurfaceCurve::Itself(d) => SurfaceCurveHandler::write(self, d)?,
+            SurfaceCurve::Seam(d) => SeamCurveHandler::write(self, d)?,
+            SurfaceCurve::BoundedSurfaceCurve(d) => BoundedSurfaceCurveHandler::write(self, d)?,
+            SurfaceCurve::IntersectionCurve(d) => IntersectionCurveHandler::write(self, d)?,
+        };
+        self.set_step_id(scid, n);
+        Ok(n)
     }
 }
 

@@ -67,12 +67,12 @@ impl SimpleEntityHandler for EdgeCurveHandler {
             })?;
         let start = buf.emit_vertex(e.vertices.0)?;
         let end = buf.emit_vertex(e.vertices.1)?;
-        let curve_3d = buf.emit_curve(e.curve)?;
-        // Wrap in SURFACE_CURVE / SEAM_CURVE if the edge carried one; otherwise
-        // emit EDGE_CURVE against the 3D curve directly.
-        let curve_ref = match &e.surface_curve {
-            Some(wrapper) => buf.emit_surface_curve_wrapper(curve_3d, wrapper)?,
-            None => curve_3d,
+        // `edge_geometry` is a plain 3D curve or a surface_curve-family node.
+        let curve_ref = match e.edge_geometry {
+            crate::ir::topology::EdgeGeometry::Curve3d(c) => buf.emit_curve(c)?,
+            crate::ir::topology::EdgeGeometry::SurfaceCurve(scid) => {
+                buf.emit_surface_curve_node(scid)?
+            }
         };
         let early = lift::lift_edge_curve(start, end, curve_ref, e.orientation);
         let n = serialize::serialize_edge_curve(buf, &early);

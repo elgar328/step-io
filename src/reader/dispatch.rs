@@ -186,21 +186,6 @@ impl ReaderContext {
         for id in order {
             let Some(ent) = graph.get(id) else { continue };
             self.dispatch_one_topo(graph, id, ent, &index);
-            // Fold the SURFACE_CURVE / SEAM_CURVE pcurve collection in at the
-            // entity's topo position (its surfaces / 2D curves are already done).
-            if let RawEntity::Simple {
-                name, attributes, ..
-            } = ent
-                && (name == "SURFACE_CURVE" || name == "SEAM_CURVE")
-            {
-                crate::entities::geometry::surface_curve::collect_surface_curve(
-                    self,
-                    id,
-                    attributes,
-                    graph,
-                    name == "SEAM_CURVE",
-                );
-            }
         }
         // Inline post-passes that `run_*_passes` ran mid-sequence — now after
         // the single loop (all producers done; equivalent timing). CBU base

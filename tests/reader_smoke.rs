@@ -6,6 +6,26 @@ use step_io::ir::shape_rep::{AngleUnit, LengthUnit, SolidAngleUnit};
 use step_io::ir::units::NamedUnit;
 use step_io::reader::ReaderContext;
 
+/// An edge's surface-curve `associated_geometry` (empty for a plain 3D-curve
+/// edge). The base/seam/subtype surface curves now live in the
+/// `surface_curves` arena, referenced through `Edge::edge_geometry`.
+fn edge_assoc<'a>(
+    model: &'a step_io::StepModel,
+    e: &step_io::Edge,
+) -> &'a [step_io::ir::PCurveOrSurface] {
+    use step_io::ir::geometry::SurfaceCurve;
+    use step_io::ir::topology::EdgeGeometry;
+    match e.edge_geometry {
+        EdgeGeometry::SurfaceCurve(scid) => match &model.geometry.surface_curves[scid] {
+            SurfaceCurve::Itself(d)
+            | SurfaceCurve::Seam(d)
+            | SurfaceCurve::BoundedSurfaceCurve(d)
+            | SurfaceCurve::IntersectionCurve(d) => &d.associated_geometry,
+        },
+        EdgeGeometry::Curve3d(_) => &[],
+    }
+}
+
 // ------------------------------------------------------------------
 // Box fixtures
 // ------------------------------------------------------------------
@@ -1561,11 +1581,7 @@ fn cylinder_ap214_is_collects_pcurves() {
         .topology
         .edges
         .iter()
-        .map(|e| {
-            e.surface_curve
-                .as_ref()
-                .map_or(0, |w| w.associated_geometry.len())
-        })
+        .map(|e| edge_assoc(&model, e).len())
         .sum();
     assert_eq!(total_pcurves, 6, "cylinder_ap214_is total pcurves");
 
@@ -1583,10 +1599,9 @@ fn cylinder_ap214_is_collects_pcurves() {
         .topology
         .edges
         .iter()
-        .find(|e| e.surface_curve.is_some())
+        .find(|e| !edge_assoc(&model, e).is_empty())
         .expect("at least one edge has a surface curve");
-    let wrapper = first.surface_curve.as_ref().unwrap();
-    let PCurveOrSurface::Pcurve(pc) = wrapper.associated_geometry[0] else {
+    let PCurveOrSurface::Pcurve(pc) = edge_assoc(&model, first)[0] else {
         panic!("cylinder_ap214_is: expected a pcurve member in associated_geometry");
     };
     let basis = pc.basis_surface;
@@ -1614,11 +1629,7 @@ fn loft_ap214_is_collects_pcurves() {
         .topology
         .edges
         .iter()
-        .map(|e| {
-            e.surface_curve
-                .as_ref()
-                .map_or(0, |w| w.associated_geometry.len())
-        })
+        .map(|e| edge_assoc(&model, e).len())
         .sum();
     assert!(
         total_pcurves > 20,
@@ -1687,11 +1698,7 @@ fn pcurve_fixtures_convert_without_warnings() {
             .topology
             .edges
             .iter()
-            .map(|e| {
-                e.surface_curve
-                    .as_ref()
-                    .map_or(0, |w| w.associated_geometry.len())
-            })
+            .map(|e| edge_assoc(&result.model, e).len())
             .sum();
         assert!(
             total > 0,

@@ -268,12 +268,13 @@
 //!   `DIRECTION` / `VECTOR`, and curves shared from outside the subtree) are not
 //!   counted. The 3D `SURFACE_CURVE` that owns the pcurve survives on its 3D
 //!   `curve_3d`.
-//! - **All-wr3 wrapper**: when *every* `associated_geometry` member of a
+//! - **All-wr3 surface curve**: when *every* `associated_geometry` member of a
 //!   `SURFACE_CURVE` / `SEAM_CURVE` is a wr3-dropped PCURVE (MicroRallyCar: 4
-//!   wrappers), the wrapper has no resolvable geometry and is not stored in
-//!   `surface_curve_map`. `collect_surface_curve` records this as the cascade
+//!   curves), the body has no resolvable geometry and no arena node is pushed
+//!   (the edge falls back to the `curve_3d` alias). `lower_surface_curve_data`
+//!   records this as the cascade
 //!   (`ns_record("SURFACE_CURVE" / "SEAM_CURVE", "dropped … pcurve.wr3
-//!   cascade")`), gated on `wr3_dropped == member_refs.len()` so wrappers with a
+//!   cascade")`), gated on `wr3_dropped == member_refs.len()` so curves with a
 //!   surviving 2D member (or a non-wr3 failure) keep their defect warning. The
 //!   owned 3D `curve_3d` still survives, so the referencing `EDGE_CURVE` is not
 //!   affected.

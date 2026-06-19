@@ -35,9 +35,8 @@ pub use geometry::{
     NurbsCurve, NurbsCurve2d, NurbsSurface, OffsetCurve3d, PCurveOrSurface, Parabola, Pcurve,
     PlanarBox, PlanarBoxPlacement, PlanarExtent, PlanarExtentData, Plane3, Point2, Point3,
     Polyline, Polyline2d, PreferredSurfaceCurveRepresentation, RectangularTrimmedSurface,
-    SphericalSurface, Surface, SurfaceCurveWrapper, SurfaceForm, SurfaceOfLinearExtrusion,
-    SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TransitionCode, TrimMaster,
-    TrimmedCurve, Vertex,
+    SphericalSurface, Surface, SurfaceForm, SurfaceOfLinearExtrusion, SurfaceOfOffset,
+    SurfaceOfRevolution, ToroidalSurface, TransitionCode, TrimMaster, TrimmedCurve, Vertex,
 };
 pub use id::{
     AddressId, ApplicationContextId, ApplicationProtocolDefinitionId, ApprovalAssignmentId,

@@ -236,7 +236,9 @@ generate = [
     "composite_curve",
     # geometry (trimmed curve)
     "trimmed_curve",
-    # geometry (surface_curve subtypes — master_representation enum)
+    # geometry (surface_curve family — base + subtypes, master_representation enum)
+    "surface_curve",
+    "seam_curve",
     "intersection_curve",
     "bounded_surface_curve",
     # batch 1: clean geometry + core topology edge pair

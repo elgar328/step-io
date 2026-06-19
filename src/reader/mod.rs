@@ -9,7 +9,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use crate::ir::arena::Arena;
 use crate::ir::assembly::{AssemblyTree, Product, Transform3d, WireframeContent};
 use crate::ir::error::ConvertError;
-use crate::ir::geometry::{SurfaceCurveWrapper, TransitionCode};
+use crate::ir::geometry::TransitionCode;
 use crate::ir::id::{
     CurveId, Direction2dId, DirectionId, EdgeId, FaceId, Placement1dId, Placement3dId, PointId,
     ProductId, ShellId, SolidId, SurfaceId, UnitContextId, VertexId, WireId,
@@ -241,12 +241,6 @@ pub struct ReaderContext {
 
     // 2D geometry (PCURVE parametric space) maps.
     pub(crate) vector_2d_map: HashMap<u64, (Direction2dId, f64)>,
-
-    /// `SURFACE_CURVE / SEAM_CURVE #N → SurfaceCurveWrapper`. Populated by the
-    /// `SURFACE_CURVE` / `SEAM_CURVE` handler and consumed by `convert_edge_curve`
-    /// to attach the wrapper (entity kind, associated geometry,
-    /// `master_representation`) to each edge.
-    pub(crate) surface_curve_map: HashMap<u64, SurfaceCurveWrapper>,
 
     // Topology maps: STEP #N → typed Id.
     pub(crate) vertex_map: HashMap<u64, VertexId>,

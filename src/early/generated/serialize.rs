@@ -4288,6 +4288,46 @@ pub(crate) fn serialize_trimmed_curve(
     )
 }
 
+pub(crate) fn serialize_surface_curve(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlySurfaceCurve,
+) -> u64 {
+    buf.push_simple(
+        "SURFACE_CURVE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.curve_3d),
+            crate::parser::entity::Attribute::List(
+                l1.associated_geometry
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            preferred_surface_curve_representation_attr(l1.master_representation),
+        ],
+    )
+}
+
+pub(crate) fn serialize_seam_curve(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlySeamCurve,
+) -> u64 {
+    buf.push_simple(
+        "SEAM_CURVE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.curve_3d),
+            crate::parser::entity::Attribute::List(
+                l1.associated_geometry
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            preferred_surface_curve_representation_attr(l1.master_representation),
+        ],
+    )
+}
+
 pub(crate) fn serialize_intersection_curve(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyIntersectionCurve,
