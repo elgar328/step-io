@@ -3,12 +3,7 @@
 //! `lower_*`/`lower_*_cbu`); this module keeps only the small reader-side
 //! helpers the remaining hand paths still need.
 
-use crate::parser::entity::{Attribute, RawEntityPart};
-use crate::reader::{ReaderContext, find_part_attrs, has_all_parts};
-
-pub(super) fn has_part(parts: &[RawEntityPart], name: &str) -> bool {
-    has_all_parts(parts, &[name])
-}
+use crate::parser::entity::Attribute;
 
 /// Normalize a bare (untyped) numeric `value_component` to the typed measure
 /// form the generated `bind_measure_value` (a `measure_value` SELECT bind)
@@ -32,21 +27,4 @@ pub(super) fn normalize_bare_measure_attrs(
         };
     }
     out
-}
-
-/// Read `NAMED_UNIT.dimensions` field of a unit complex (phase
-/// dim-exp-arena-c). Returns `Some(id)` when the source emitted an
-/// explicit `DIMENSIONAL_EXPONENTS` ref, `None` for the `*` (Derived)
-/// form. Unknown refs (cross-cascade) silently degrade to `None`.
-pub(crate) fn read_named_unit_dim_exp(
-    ctx: &ReaderContext,
-    parts: &[RawEntityPart],
-) -> Option<crate::ir::DimensionalExponentsId> {
-    let attrs = find_part_attrs(parts, "NAMED_UNIT")?;
-    match attrs.first()? {
-        Attribute::EntityRef(n) => ctx
-            .id_cache
-            .get::<crate::ir::id::DimensionalExponentsId>(*n),
-        _ => None,
-    }
 }

@@ -21,12 +21,6 @@ impl SimpleEntityHandler for RatioMeasureWithUnitHandler {
         attrs: &[Attribute],
         _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        // RATIO_UNIT CBU forms aren't modelled yet (the handler drops them), so
-        // their conversion-factor MWU is suppressed to avoid an orphan arena
-        // entry (units-CBU-① preserves length/mass/plane-angle factor MWUs).
-        if ctx.ratio_cbu_mwu_refs.contains(&entity_id) {
-            return Ok(());
-        }
         let Some(early) = bind::bind_ratio_measure_with_unit(entity_id, attrs)? else {
             return Ok(());
         };

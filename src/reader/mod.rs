@@ -226,13 +226,6 @@ pub struct ReaderContext {
     /// look up the ref in [`Self::dim_exp_id_map`].
     pub(crate) dimensional_exponents: Arena<crate::ir::units::DimensionalExponents>,
 
-    /// MWU step ids that appear as the `conversion_factor` of a `RATIO_UNIT`
-    /// `CONVERSION_BASED_UNIT` complex. `RATIO_UNIT` CBU forms aren't modelled
-    /// yet (the handler drops them), so `RatioMeasureWithUnitHandler` suppresses
-    /// their factor MWU to avoid an orphan `mwu_arena` entry. Length / mass /
-    /// plane-angle factor MWUs are *preserved* (units-CBU-①) and not seeded here.
-    pub(crate) ratio_cbu_mwu_refs: HashSet<u64>,
-
     // Geometry maps: STEP #N → typed Id.
 
     // Geometry intermediate maps.

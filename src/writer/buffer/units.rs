@@ -77,7 +77,7 @@ impl WriteBuffer<'_> {
             // units-CBU-②: every NAMED_UNIT (SI + CBU, all flavours) is fully
             // 2-layer → the plain (serialize_with_id) path picks SI/CBU by the
             // flavor's `cbu_factor_mwu_id`. No hand CBU emit path remains.
-            emit_named_unit_plain(self, named, target)?;
+            emit_named_unit_plain(self, named, target);
         }
         for (id, due) in pool.derived_unit_elements.iter_with_ids() {
             let unit_step = self.step_id(due.unit);
@@ -133,13 +133,7 @@ fn emit_derived_unit_element(
     )
 }
 
-fn emit_named_unit_plain(
-    buf: &mut WriteBuffer<'_>,
-    named: NamedUnit,
-    target_id: u64,
-) -> Result<u64, WriteError> {
-    use crate::entities::ComplexEntityHandler;
-    use crate::entities::units::ratio_unit::RatioUnitHandler;
+fn emit_named_unit_plain(buf: &mut WriteBuffer<'_>, named: NamedUnit, target_id: u64) -> u64 {
     match named {
         NamedUnit::Length(f) => {
             // units-CBU-②: SI vs CBU chosen by the preserved factor MWU. CBU
@@ -151,7 +145,7 @@ fn emit_named_unit_plain(
                 crate::early::lift::lift_length_si(f.unit)
             };
             crate::early::serialize::serialize_length_unit_with_id(buf, target_id, &l1);
-            Ok(target_id)
+            target_id
         }
         NamedUnit::PlaneAngle(f) => {
             // units-CBU-②: SI vs CBU by the preserved factor MWU; dimensions `*`.
@@ -161,7 +155,7 @@ fn emit_named_unit_plain(
                 crate::early::lift::lift_plane_angle_si()
             };
             crate::early::serialize::serialize_plane_angle_unit_with_id(buf, target_id, &l1);
-            Ok(target_id)
+            target_id
         }
         NamedUnit::SolidAngle(_f) => {
             crate::early::serialize::serialize_solid_angle_unit_with_id(
@@ -169,7 +163,7 @@ fn emit_named_unit_plain(
                 target_id,
                 &crate::early::lift::lift_solid_angle_unit(),
             );
-            Ok(target_id)
+            target_id
         }
         NamedUnit::Mass(f) => {
             // units-CBU-②: SI vs CBU by the preserved factor MWU; dimensions `*`.
@@ -179,14 +173,9 @@ fn emit_named_unit_plain(
                 crate::early::lift::lift_mass_si(f.unit)
             };
             crate::early::serialize::serialize_mass_unit_with_id(buf, target_id, &l1);
-            Ok(target_id)
+            target_id
         }
-        // Reproduce the source form: complex `(NAMED_UNIT()RATIO_UNIT())`
-        // (hand-written, corpus-absent) vs the standalone simple
-        // `RATIO_UNIT(dimensions)` entity (2-layer serialize_with_id).
-        NamedUnit::Ratio(f) if f.complex => {
-            RatioUnitHandler::write(buf, (target_id, f.dim_exp.map_or(0, |id| buf.step_id(id))))
-        }
+        // Standalone simple `RATIO_UNIT(dimensions)` (2-layer serialize_with_id).
         NamedUnit::Ratio(f) => {
             let dim_step = f.dim_exp.map_or(0, |id| buf.step_id(id));
             crate::early::serialize::serialize_ratio_unit_with_id(
@@ -194,7 +183,7 @@ fn emit_named_unit_plain(
                 target_id,
                 &crate::early::lift::lift_ratio_unit(dim_step),
             );
-            Ok(target_id)
+            target_id
         }
         // Bare NAMED_UNIT(#dimensions) — a dimensionless/count unit. Emitted at
         // the pre-reserved id via the 2-layer serialize_with_id path.
@@ -205,7 +194,7 @@ fn emit_named_unit_plain(
                 target_id,
                 &crate::early::lift::lift_named_unit(dim_step),
             );
-            Ok(target_id)
+            target_id
         }
     }
 }

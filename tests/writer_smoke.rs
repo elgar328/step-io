@@ -10397,7 +10397,6 @@ fn simple_global_unit_assigned_context_and_ratio_unit_round_trip() {
     });
     let ratio_id = pool.named_units.push(NamedUnit::Ratio(RatioFlavor {
         dim_exp: Some(de_id),
-        complex: false,
     }));
     let simple_form = UnitContextForm::Simple {
         identifier: "NONE".into(),
@@ -10422,7 +10421,6 @@ fn simple_global_unit_assigned_context_and_ratio_unit_round_trip() {
     let rpool = re.units_pool.as_ref().expect("units pool");
     match rpool.named_units[ctx.units[0]] {
         NamedUnit::Ratio(f) => {
-            assert!(!f.complex, "simple RATIO_UNIT must re-read as simple form");
             assert!(f.dim_exp.is_some(), "explicit dimensions preserved");
         }
         other => panic!("expected Ratio, got {other:?}"),
