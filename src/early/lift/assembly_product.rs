@@ -124,15 +124,17 @@ pub(crate) fn lift_next_assembly_usage_occurrence(
     }
 }
 
-/// Lift one `PRODUCT_DEFINITION_SHAPE` write input (just the PDEF step ref —
-/// the legacy writer synthesises empty `name`/`description`, and the
-/// faithful-optional L1 description is therefore always `Some("")`).
+/// Lift one `PRODUCT_DEFINITION_SHAPE` write input. `name`/`description` are
+/// supplied by the caller (the arena emit sites carry the real source values;
+/// the kernel/no-arena fallback passes empty strings).
 pub(crate) fn lift_product_definition_shape(
+    name: String,
+    description: Option<String>,
     pdef: u64,
 ) -> crate::early::model::EarlyProductDefinitionShape {
     crate::early::model::EarlyProductDefinitionShape {
-        name: String::new(),
-        description: Some(String::new()),
+        name,
+        description,
         definition: pdef,
     }
 }

@@ -78,7 +78,7 @@ impl SimpleEntityHandler for ProductDefinitionShapeHandler {
         buf: &mut WriteBuffer,
         ProductDefinitionShapeWriteInput { pdef }: ProductDefinitionShapeWriteInput,
     ) -> Result<u64, WriteError> {
-        let early = lift::lift_product_definition_shape(pdef);
+        let early = lift::lift_product_definition_shape(String::new(), Some(String::new()), pdef);
         Ok(serialize::serialize_product_definition_shape(buf, &early))
     }
 }

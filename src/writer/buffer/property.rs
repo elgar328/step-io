@@ -346,14 +346,12 @@ impl WriteBuffer<'_> {
             let Some(&pdef_step) = self.product_def_ids.get(&product_id) else {
                 continue;
             };
-            let step = self.push_simple(
-                "PRODUCT_DEFINITION_SHAPE",
-                vec![
-                    Attribute::String(data.name.clone()),
-                    Attribute::String(data.description.clone()),
-                    Attribute::EntityRef(pdef_step),
-                ],
+            let early = crate::early::lift::lift_product_definition_shape(
+                data.name.clone(),
+                Some(data.description.clone()),
+                pdef_step,
             );
+            let step = crate::early::serialize::serialize_product_definition_shape(self, &early);
             self.set_step_id(idx, step);
             self.product_def_shape_ids.insert(product_id, step);
         }

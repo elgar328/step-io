@@ -1404,14 +1404,13 @@ impl WriteBuffer<'_> {
             .and_then(|a| self.nauo_pds_arena_slot.get(&a).cloned());
         let nauo_pds = match arena_pds {
             Some((slot, name, description)) => {
-                let step = self.push_simple(
-                    "PRODUCT_DEFINITION_SHAPE",
-                    vec![
-                        Attribute::String(name),
-                        Attribute::String(description),
-                        Attribute::EntityRef(nauo),
-                    ],
+                let early = crate::early::lift::lift_product_definition_shape(
+                    name,
+                    Some(description),
+                    nauo,
                 );
+                let step =
+                    crate::early::serialize::serialize_product_definition_shape(self, &early);
                 self.set_step_id(PropertyDefinitionId(slot as u32), step);
                 step
             }
@@ -1531,14 +1530,12 @@ impl WriteBuffer<'_> {
     /// `'Placement'` / `'Placement of an item'` for name/description so diffs
     /// against FreeCAD fixtures stay small.
     fn emit_nauo_owned_pds(&mut self, nauo: u64) -> u64 {
-        self.push_simple(
-            "PRODUCT_DEFINITION_SHAPE",
-            vec![
-                Attribute::String("Placement".into()),
-                Attribute::String("Placement of an item".into()),
-                Attribute::EntityRef(nauo),
-            ],
-        )
+        let early = crate::early::lift::lift_product_definition_shape(
+            "Placement".into(),
+            Some("Placement of an item".into()),
+            nauo,
+        );
+        crate::early::serialize::serialize_product_definition_shape(self, &early)
     }
 
     fn emit_rrwt_complex(
