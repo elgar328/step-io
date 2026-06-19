@@ -474,14 +474,12 @@ impl WriteBuffer<'_> {
                     s
                 }
             };
-            let step = self.push_simple(
-                "PROPERTY_DEFINITION",
-                vec![
-                    Attribute::String(data.name.clone()),
-                    Attribute::String(data.description.clone()),
-                    Attribute::EntityRef(target_step),
-                ],
+            let early = crate::early::lift::lift_property_definition(
+                data.name.clone(),
+                Some(data.description.clone()),
+                target_step,
             );
+            let step = crate::early::serialize::serialize_property_definition(self, &early);
             self.set_step_id(idx, step);
         }
     }
