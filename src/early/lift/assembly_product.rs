@@ -222,6 +222,17 @@ pub(crate) fn lift_product_context(data: &ProductContextData, ac_step: u64) -> E
     }
 }
 
+/// Default `PRODUCT_CONTEXT` for the write-side fallback (no IR context entry):
+/// `('', <AC>, 'mechanical')`. `frame_of_reference` is the `APPLICATION_CONTEXT`
+/// step id.
+pub(crate) fn lift_default_product_context(frame_of_reference: u64) -> EarlyProductContext {
+    EarlyProductContext {
+        name: String::new(),
+        frame_of_reference,
+        discipline_type: "mechanical".to_string(),
+    }
+}
+
 /// Lift `MECHANICAL_CONTEXT` (`ProductContext::Mechanical`).
 pub(crate) fn lift_mechanical_context(
     data: &ProductContextData,
@@ -243,6 +254,18 @@ pub(crate) fn lift_product_definition_context(
         name: data.name.clone(),
         frame_of_reference: ac_step,
         life_cycle_stage: data.life_cycle_stage.clone(),
+    }
+}
+
+/// Default `PRODUCT_DEFINITION_CONTEXT` for the write-side fallback (no IR
+/// context entry): `('part definition', <AC>, 'design')`.
+pub(crate) fn lift_default_product_definition_context(
+    frame_of_reference: u64,
+) -> EarlyProductDefinitionContext {
+    EarlyProductDefinitionContext {
+        name: "part definition".to_string(),
+        frame_of_reference,
+        life_cycle_stage: "design".to_string(),
     }
 }
 

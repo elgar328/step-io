@@ -943,28 +943,21 @@ impl WriteBuffer<'_> {
                 self.pdc_step_ids.push(id);
             }
             // Fallback PC/PDC for products without explicit context.
+            let ac = self.ac_step_ids[0];
             let product_ctx = if let Some(&id) = self.pc_step_ids.first() {
                 id
             } else {
-                self.push_simple(
-                    "PRODUCT_CONTEXT",
-                    vec![
-                        Attribute::String(String::new()),
-                        Attribute::EntityRef(self.ac_step_ids[0]),
-                        Attribute::String("mechanical".into()),
-                    ],
+                crate::early::serialize::serialize_product_context(
+                    self,
+                    &crate::early::lift::lift_default_product_context(ac),
                 )
             };
             let pdef_ctx = if let Some(&id) = self.pdc_step_ids.first() {
                 id
             } else {
-                self.push_simple(
-                    "PRODUCT_DEFINITION_CONTEXT",
-                    vec![
-                        Attribute::String("part definition".into()),
-                        Attribute::EntityRef(self.ac_step_ids[0]),
-                        Attribute::String("design".into()),
-                    ],
+                crate::early::serialize::serialize_product_definition_context(
+                    self,
+                    &crate::early::lift::lift_default_product_definition_context(ac),
                 )
             };
             return AssemblyContextIds {
@@ -991,21 +984,13 @@ impl WriteBuffer<'_> {
             },
         )
         .expect("APD write only pushes one simple entity");
-        let product_ctx = self.push_simple(
-            "PRODUCT_CONTEXT",
-            vec![
-                Attribute::String(String::new()),
-                Attribute::EntityRef(app_ctx),
-                Attribute::String("mechanical".into()),
-            ],
+        let product_ctx = crate::early::serialize::serialize_product_context(
+            self,
+            &crate::early::lift::lift_default_product_context(app_ctx),
         );
-        let pdef_ctx = self.push_simple(
-            "PRODUCT_DEFINITION_CONTEXT",
-            vec![
-                Attribute::String("part definition".into()),
-                Attribute::EntityRef(app_ctx),
-                Attribute::String("design".into()),
-            ],
+        let pdef_ctx = crate::early::serialize::serialize_product_definition_context(
+            self,
+            &crate::early::lift::lift_default_product_definition_context(app_ctx),
         );
         AssemblyContextIds {
             product_ctx,
