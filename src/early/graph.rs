@@ -15,7 +15,10 @@ use crate::ir::error::ConvertError;
 use crate::parser::entity::{EntityGraph, RawEntity};
 
 use super::bind;
-use super::model::{EarlyDefinitionalRepresentation, EarlyPcurve, EarlyRepresentation};
+use super::model::{
+    EarlyDefinitionalRepresentation, EarlyPcurve, EarlyRepresentation,
+    EarlyRepresentationRelationshipWithTransformation,
+};
 
 /// Typed front door to the L1 bind layer over a borrowed raw graph. `Copy` —
 /// constructed on demand at each cross-walk (`EarlyGraph::new(graph)`).
@@ -75,6 +78,35 @@ impl<'a> EarlyGraph<'a> {
             return None;
         }
         bind::bind_definitional_representation(id, attributes).ok()
+    }
+
+    /// Bind the RRWT complex `(REPRESENTATION_RELATIONSHIP +
+    /// REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION +
+    /// SHAPE_REPRESENTATION_RELATIONSHIP)`. Outer `None` = not a `Complex` /
+    /// missing a required part (the empty SRR part is guarded by `has_all_parts`,
+    /// which the strict bind does not check). `Some(Err)` = bind defect;
+    /// `Some(Ok(None))` = unrecognized `transformation` SELECT member.
+    pub(crate) fn representation_relationship_with_transformation(
+        self,
+        id: u64,
+    ) -> Option<Result<Option<EarlyRepresentationRelationshipWithTransformation>, ConvertError>>
+    {
+        let RawEntity::Complex { parts, .. } = self.raw.get(id)? else {
+            return None;
+        };
+        if !crate::reader::has_all_parts(
+            parts,
+            &[
+                "REPRESENTATION_RELATIONSHIP",
+                "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION",
+                "SHAPE_REPRESENTATION_RELATIONSHIP",
+            ],
+        ) {
+            return None;
+        }
+        Some(bind::bind_representation_relationship_with_transformation(
+            id, parts,
+        ))
     }
 
     /// Bind a bare `REPRESENTATION` (exact name). `None` when absent or not

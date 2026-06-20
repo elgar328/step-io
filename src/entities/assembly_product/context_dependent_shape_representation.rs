@@ -11,7 +11,7 @@ use crate::early::model::EarlyTransformation;
 use crate::early::{bind, lift, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
-use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -44,26 +44,15 @@ impl SimpleEntityHandler for ContextDependentShapeRepresentationHandler {
             return Ok(());
         };
 
-        // Look up the RR complex. Must carry all three part types.
-        let Some(RawEntity::Complex { parts, .. }) = graph.get(rr_ref) else {
+        // Read the RRWT complex through the L1 facade (it folds the Complex
+        // guard + has_all_parts + strict bind). Outer `None` = not the RRWT
+        // triple; `?` propagates a bind defect; inner `None` = unrecognized
+        // transformation SELECT member → skip.
+        let early = crate::early::EarlyGraph::new(graph);
+        let Some(rrwt_res) = early.representation_relationship_with_transformation(rr_ref) else {
             return Ok(());
         };
-        if !crate::reader::has_all_parts(
-            parts,
-            &[
-                "REPRESENTATION_RELATIONSHIP",
-                "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION",
-                "SHAPE_REPRESENTATION_RELATIONSHIP",
-            ],
-        ) {
-            return Ok(());
-        }
-        // Read the RRWT complex through the generated L1 bind. `has_all_parts`
-        // above still guards the empty SHAPE_REPRESENTATION_RELATIONSHIP part
-        // (bind only `require_part_attrs` the attr-bearing parts). `None` =
-        // unrecognized transformation SELECT member → skip.
-        let Some(rrwt) = bind::bind_representation_relationship_with_transformation(rr_ref, parts)?
-        else {
+        let Some(rrwt) = rrwt_res? else {
             return Ok(());
         };
         let transform_ref = match rrwt.transformation_operator {
