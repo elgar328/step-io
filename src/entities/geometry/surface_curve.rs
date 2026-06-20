@@ -37,37 +37,26 @@ impl ReaderContext {
         if name != "PCURVE" {
             return None;
         }
-        let Attribute::EntityRef(basis_surface_ref) = attributes.get(1)? else {
-            return None;
-        };
-        let Attribute::EntityRef(def_repr_ref) = attributes.get(2)? else {
-            return None;
-        };
-
+        let pc = bind::bind_pcurve(pcurve_ref, attributes).ok()?;
         let basis_surface = self
             .id_cache
-            .get::<crate::ir::id::SurfaceId>(*basis_surface_ref)?;
+            .get::<crate::ir::id::SurfaceId>(pc.basis_surface)?;
 
         let RawEntity::Simple {
             name: def_name,
             attributes: def_attrs,
             ..
-        } = graph.get(*def_repr_ref)?
+        } = graph.get(pc.reference_to_curve)?
         else {
             return None;
         };
         if def_name != "DEFINITIONAL_REPRESENTATION" {
             return None;
         }
-        let Attribute::List(items) = def_attrs.get(1)? else {
-            return None;
-        };
-        let Attribute::EntityRef(first_item_ref) = items.first()? else {
-            return None;
-        };
+        let def = bind::bind_definitional_representation(pc.reference_to_curve, def_attrs).ok()?;
         let curve_2d = self
             .id_cache
-            .get::<crate::ir::id::Curve2dId>(*first_item_ref)?;
+            .get::<crate::ir::id::Curve2dId>(def.items.first().copied()?)?;
 
         Some(Pcurve {
             basis_surface,

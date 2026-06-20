@@ -12,9 +12,7 @@ use crate::ir::{
     StepModel, Surface, SurfaceId, SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution,
     ToroidalSurface, TrimmedCurve,
 };
-use crate::parser::entity::Attribute;
 use crate::writer::WriteError;
-use crate::writer::entity::{WriterBody, WriterEntity};
 
 impl WriteBuffer<'_> {
     pub(crate) fn emit_point(&mut self, id: PointId) -> Result<u64, WriteError> {
@@ -376,63 +374,28 @@ impl WriteBuffer<'_> {
     /// we reproduce that convention (sharing a single context would still be
     /// parseable but would diverge from fixture output).
     fn emit_2d_representation_context(&mut self) -> u64 {
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Complex {
-                parts: vec![
-                    (
-                        "GEOMETRIC_REPRESENTATION_CONTEXT".into(),
-                        vec![Attribute::Integer(2)],
-                    ),
-                    ("PARAMETRIC_REPRESENTATION_CONTEXT".into(), vec![]),
-                    (
-                        "REPRESENTATION_CONTEXT".into(),
-                        vec![
-                            Attribute::String("2D SPACE".into()),
-                            Attribute::String(String::new()),
-                        ],
-                    ),
-                ],
-            },
-        });
-        n
+        crate::early::serialize::serialize_parametric_representation_context(
+            self,
+            &crate::early::lift::lift_default_2d_representation_context(),
+        )
     }
 
     fn emit_definitional_representation(&mut self, curve_2d_ref: u64) -> u64 {
         let ctx = self.emit_2d_representation_context();
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "DEFINITIONAL_REPRESENTATION".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::List(vec![Attribute::EntityRef(curve_2d_ref)]),
-                    Attribute::EntityRef(ctx),
-                ],
-            },
-        });
-        n
+        crate::early::serialize::serialize_definitional_representation(
+            self,
+            &crate::early::lift::lift_definitional_representation(curve_2d_ref, ctx),
+        )
     }
 
     pub(crate) fn emit_pcurve(&mut self, pc: Pcurve) -> Result<u64, WriteError> {
         let surface_ref = self.emit_surface(pc.basis_surface)?;
         let curve_2d_ref = self.emit_curve_2d(pc.curve_2d)?;
         let def_repr = self.emit_definitional_representation(curve_2d_ref);
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Simple {
-                name: "PCURVE".into(),
-                attrs: vec![
-                    Attribute::String(String::new()),
-                    Attribute::EntityRef(surface_ref),
-                    Attribute::EntityRef(def_repr),
-                ],
-            },
-        });
-        Ok(n)
+        Ok(crate::early::serialize::serialize_pcurve(
+            self,
+            &crate::early::lift::lift_pcurve(surface_ref, def_repr),
+        ))
     }
 
     /// Emit one `surface_curves` arena node by id, dispatching on its variant.

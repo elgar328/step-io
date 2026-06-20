@@ -244,6 +244,9 @@ generate = [
     "bounded_surface_curve",
     # batch 1: clean geometry + core topology edge pair
     "bounded_pcurve",
+    # B2: PCURVE write+read 군집 (full bind+serialize) — def_repr는 pcurve 서브트리
+    "pcurve",
+    "definitional_representation",
     "geometric_curve_set",
     "geometric_set",
     "edge_loop",

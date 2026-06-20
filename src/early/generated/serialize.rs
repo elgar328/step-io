@@ -4398,6 +4398,39 @@ pub(crate) fn serialize_bounded_pcurve(
     )
 }
 
+pub(crate) fn serialize_pcurve(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyPcurve,
+) -> u64 {
+    buf.push_simple(
+        "PCURVE",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::EntityRef(l1.basis_surface),
+            crate::parser::entity::Attribute::EntityRef(l1.reference_to_curve),
+        ],
+    )
+}
+
+pub(crate) fn serialize_definitional_representation(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyDefinitionalRepresentation,
+) -> u64 {
+    buf.push_simple(
+        "DEFINITIONAL_REPRESENTATION",
+        vec![
+            crate::parser::entity::Attribute::String(l1.name.clone()),
+            crate::parser::entity::Attribute::List(
+                l1.items
+                    .iter()
+                    .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                    .collect(),
+            ),
+            crate::parser::entity::Attribute::EntityRef(l1.context_of_items),
+        ],
+    )
+}
+
 pub(crate) fn serialize_geometric_curve_set(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyGeometricCurveSet,

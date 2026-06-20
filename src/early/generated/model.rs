@@ -5162,6 +5162,52 @@ impl crate::ir::arena::ArenaId for EarlyBoundedPcurveId {
     }
 }
 
+/// L1 `PCURVE` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyPcurve {
+    pub(crate) name: String,
+    pub(crate) basis_surface: u64,
+    pub(crate) reference_to_curve: u64,
+}
+
+/// Typed `id_cache` key for `PCURVE` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyPcurveId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyPcurveId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
+/// L1 `DEFINITIONAL_REPRESENTATION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyDefinitionalRepresentation {
+    pub(crate) name: String,
+    pub(crate) items: Vec<u64>,
+    pub(crate) context_of_items: u64,
+}
+
+/// Typed `id_cache` key for `DEFINITIONAL_REPRESENTATION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyDefinitionalRepresentationId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyDefinitionalRepresentationId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `GEOMETRIC_CURVE_SET` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyGeometricCurveSet {

@@ -7,13 +7,14 @@ use crate::early::model::{
     EarlyBSplineSurfaceWithKnots, EarlyBoundedPcurve, EarlyBoundedSurfaceCurve,
     EarlyCartesianPoint, EarlyCircle, EarlyCircularArea, EarlyCompositeCurve,
     EarlyCompositeCurveSegment, EarlyConicalSurface, EarlyCurveBoundedSurface,
-    EarlyCylindricalSurface, EarlyDegenerateToroidalSurface, EarlyDirection, EarlyEllipse,
-    EarlyHyperbola, EarlyIntersectionCurve, EarlyKnotType, EarlyLine, EarlyOffsetCurve3d,
-    EarlyOffsetSurface, EarlyParabola, EarlyPlanarBox, EarlyPlanarExtent, EarlyPlane,
-    EarlyPolyline, EarlyRationalBSplineCurve, EarlyRationalBSplineSurface,
-    EarlyRectangularTrimmedSurface, EarlySeamCurve, EarlySphericalSurface, EarlySurfaceCurve,
-    EarlySurfaceOfLinearExtrusion, EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyTrimSelect,
-    EarlyTrimmedCurve, EarlyVector, EarlyVertexPoint,
+    EarlyCylindricalSurface, EarlyDefinitionalRepresentation, EarlyDegenerateToroidalSurface,
+    EarlyDirection, EarlyEllipse, EarlyHyperbola, EarlyIntersectionCurve, EarlyKnotType, EarlyLine,
+    EarlyOffsetCurve3d, EarlyOffsetSurface, EarlyParabola, EarlyParametricRepresentationContext,
+    EarlyPcurve, EarlyPlanarBox, EarlyPlanarExtent, EarlyPlane, EarlyPolyline,
+    EarlyRationalBSplineCurve, EarlyRationalBSplineSurface, EarlyRectangularTrimmedSurface,
+    EarlySeamCurve, EarlySphericalSurface, EarlySurfaceCurve, EarlySurfaceOfLinearExtrusion,
+    EarlySurfaceOfRevolution, EarlyToroidalSurface, EarlyTrimSelect, EarlyTrimmedCurve,
+    EarlyVector, EarlyVertexPoint,
 };
 use crate::ir::geometry::{
     Direction2, Direction3, Logical, NurbsCurve, NurbsCurve2d, NurbsSurface, PCurveOrSurface,
@@ -34,6 +35,40 @@ pub(crate) fn lift_bounded_pcurve(
         name,
         basis_surface,
         reference_to_curve,
+    }
+}
+
+/// Lift one `PCURVE` (legacy `emit_pcurve` terminal node). `name` is synthesised
+/// empty; `reference_to_curve` is the emitted `DEFINITIONAL_REPRESENTATION` step.
+pub(crate) fn lift_pcurve(basis_surface: u64, reference_to_curve: u64) -> EarlyPcurve {
+    EarlyPcurve {
+        name: String::new(),
+        basis_surface,
+        reference_to_curve,
+    }
+}
+
+/// Lift one `DEFINITIONAL_REPRESENTATION` wrapping a pcurve's 2D curve.
+/// `items = [curve_2d_ref]`, `context_of_items` = the 2D representation context.
+pub(crate) fn lift_definitional_representation(
+    curve_2d_ref: u64,
+    ctx: u64,
+) -> EarlyDefinitionalRepresentation {
+    EarlyDefinitionalRepresentation {
+        name: String::new(),
+        items: vec![curve_2d_ref],
+        context_of_items: ctx,
+    }
+}
+
+/// Default 2D `(GEOMETRIC_REPRESENTATION_CONTEXT PARAMETRIC_REPRESENTATION_CONTEXT
+/// REPRESENTATION_CONTEXT)` for a pcurve's definitional representation:
+/// `(2, '2D SPACE', '')` — matches the legacy `emit_2d_representation_context`.
+pub(crate) fn lift_default_2d_representation_context() -> EarlyParametricRepresentationContext {
+    EarlyParametricRepresentationContext {
+        coordinate_space_dimension: 2,
+        context_identifier: "2D SPACE".to_string(),
+        context_type: String::new(),
     }
 }
 
