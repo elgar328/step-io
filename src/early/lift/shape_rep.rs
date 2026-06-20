@@ -28,11 +28,13 @@ use crate::early::model::{
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
     EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
-    EarlyRepresentationMap, EarlyRepresentationRelationship, EarlyShapeAspect,
+    EarlyRepresentationMap, EarlyRepresentationRelationship,
+    EarlyRepresentationRelationshipWithTransformation, EarlyShapeAspect,
     EarlyShapeAspectAssociativity, EarlyShapeAspectDerivingRelationship,
     EarlyShapeAspectRelationship, EarlyShapeDimensionRepresentation, EarlyShapeRepresentation,
     EarlyShapeRepresentationRelationship, EarlyShapeRepresentationWithParameters,
-    EarlyTessellatedShapeRepresentation, EarlyToleranceZone, EarlyValueRepresentationItem,
+    EarlyTessellatedShapeRepresentation, EarlyToleranceZone, EarlyTransformation,
+    EarlyValueRepresentationItem,
 };
 use crate::entities::SimpleEntityHandler;
 use crate::entities::shape_rep::descriptive_representation_item::DescriptiveRepresentationItemHandler;
@@ -62,6 +64,28 @@ pub(crate) fn lift_representation_relationship(
         description: Some(description),
         rep_1,
         rep_2,
+    }
+}
+
+/// Lift one RRWT complex `(REPRESENTATION_RELATIONSHIP +
+/// REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION + SHAPE_REPRESENTATION_RELATIONSHIP)`.
+/// `idt` is the emitted `ITEM_DEFINED_TRANSFORMATION` step id; the legacy writer
+/// always emitted it as a single `transformation_operator` entity ref, so it
+/// lifts to `EarlyTransformation::EntityRef`. Description is `Some` (`''` for
+/// empty, never `$`), matching the hand emit.
+pub(crate) fn lift_rrwt(
+    name: &str,
+    description: &str,
+    rep_1: u64,
+    rep_2: u64,
+    idt: u64,
+) -> EarlyRepresentationRelationshipWithTransformation {
+    EarlyRepresentationRelationshipWithTransformation {
+        name: name.to_owned(),
+        description: Some(description.to_owned()),
+        rep_1,
+        rep_2,
+        transformation_operator: EarlyTransformation::EntityRef(idt),
     }
 }
 

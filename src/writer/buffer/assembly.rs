@@ -1531,29 +1531,10 @@ impl WriteBuffer<'_> {
         child_sr: u64,
         idt: u64,
     ) -> u64 {
-        let n = self.fresh();
-        self.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Complex {
-                parts: vec![
-                    (
-                        "REPRESENTATION_RELATIONSHIP".into(),
-                        vec![
-                            Attribute::String(name.to_owned()),
-                            Attribute::String(description.to_owned()),
-                            Attribute::EntityRef(parent_sr),
-                            Attribute::EntityRef(child_sr),
-                        ],
-                    ),
-                    (
-                        "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION".into(),
-                        vec![Attribute::EntityRef(idt)],
-                    ),
-                    ("SHAPE_REPRESENTATION_RELATIONSHIP".into(), vec![]),
-                ],
-            },
-        });
-        n
+        let early = crate::early::lift::lift_rrwt(name, description, parent_sr, child_sr, idt);
+        crate::early::serialize::serialize_representation_relationship_with_transformation(
+            self, &early,
+        )
     }
 
     // ----------------------------------------------------------------

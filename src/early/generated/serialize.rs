@@ -336,6 +336,31 @@ pub(crate) fn serialize_mechanical_design_and_draughting_relationship(
     )
 }
 
+pub(crate) fn serialize_representation_relationship_with_transformation(
+    buf: &mut crate::writer::buffer::WriteBuffer,
+    l1: &super::model::EarlyRepresentationRelationshipWithTransformation,
+) -> u64 {
+    buf.push_complex(vec![
+        (
+            "REPRESENTATION_RELATIONSHIP".into(),
+            vec![
+                crate::parser::entity::Attribute::String(l1.name.clone()),
+                match &l1.description {
+                    Some(v) => crate::parser::entity::Attribute::String(v.clone()),
+                    None => crate::parser::entity::Attribute::Unset,
+                },
+                crate::parser::entity::Attribute::EntityRef(l1.rep_1),
+                crate::parser::entity::Attribute::EntityRef(l1.rep_2),
+            ],
+        ),
+        (
+            "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION".into(),
+            vec![transformation_emit(&l1.transformation_operator)],
+        ),
+        ("SHAPE_REPRESENTATION_RELATIONSHIP".into(), vec![]),
+    ])
+}
+
 pub(crate) fn serialize_shape_representation(
     buf: &mut crate::writer::buffer::WriteBuffer,
     l1: &super::model::EarlyShapeRepresentation,
@@ -7244,6 +7269,24 @@ fn source_item_emit(v: &super::model::EarlySourceItem) -> crate::parser::entity:
             type_name: "MESSAGE".into(),
             value: Box::new(crate::parser::entity::Attribute::String(s.clone())),
         },
+    }
+}
+
+fn transformation_emit(v: &super::model::EarlyTransformation) -> crate::parser::entity::Attribute {
+    match v {
+        super::model::EarlyTransformation::EntityRef(step) => {
+            crate::parser::entity::Attribute::EntityRef(*step)
+        }
+        super::model::EarlyTransformation::SetItemDefinedTransformation(xs) => {
+            crate::parser::entity::Attribute::Typed {
+                type_name: "SET_ITEM_DEFINED_TRANSFORMATION".into(),
+                value: Box::new(crate::parser::entity::Attribute::List(
+                    xs.iter()
+                        .map(|&s| crate::parser::entity::Attribute::EntityRef(s))
+                        .collect(),
+                )),
+            }
+        }
     }
 }
 

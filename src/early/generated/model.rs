@@ -435,6 +435,31 @@ impl crate::ir::arena::ArenaId for EarlyMechanicalDesignAndDraughtingRelationshi
     }
 }
 
+/// L1 `REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION` (generated).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct EarlyRepresentationRelationshipWithTransformation {
+    pub(crate) name: String,
+    pub(crate) description: Option<String>,
+    pub(crate) rep_1: u64,
+    pub(crate) rep_2: u64,
+    pub(crate) transformation_operator: EarlyTransformation,
+}
+
+/// Typed `id_cache` key for `REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION` (file id → L1→L2 correspondence;
+/// see `EarlyModel`).
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct EarlyRepresentationRelationshipWithTransformationId(pub u32);
+
+impl crate::ir::arena::ArenaId for EarlyRepresentationRelationshipWithTransformationId {
+    fn index(&self) -> usize {
+        self.0 as usize
+    }
+    fn from_index(index: u32) -> Self {
+        Self(index)
+    }
+}
+
 /// L1 `SHAPE_REPRESENTATION` (generated).
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct EarlyShapeRepresentation {
@@ -7900,6 +7925,13 @@ pub(crate) enum EarlyMarkerSize {
 pub(crate) enum EarlySourceItem {
     Identifier(String),
     Message(String),
+}
+
+/// L1 mixed SELECT `transformation` (generated, hint-less).
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum EarlyTransformation {
+    EntityRef(u64),
+    SetItemDefinedTransformation(Vec<u64>),
 }
 
 /// L1 mixed SELECT `trimming_select` (generated).

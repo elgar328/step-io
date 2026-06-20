@@ -380,6 +380,37 @@ pub(crate) fn bind_mechanical_design_and_draughting_relationship(
     )
 }
 
+pub(crate) fn bind_representation_relationship_with_transformation(
+    entity_id: u64,
+    parts: &[crate::parser::entity::RawEntityPart],
+) -> Result<
+    Option<super::model::EarlyRepresentationRelationshipWithTransformation>,
+    crate::ir::error::ConvertError,
+> {
+    let attrs = crate::reader::require_part_attrs(parts, "REPRESENTATION_RELATIONSHIP", entity_id)?;
+    let name = crate::ir::attr::read_string_or_unset(attrs, 0, entity_id, "name")?.to_owned();
+    let description = crate::ir::attr::read_optional_string(attrs, 1, entity_id, "description")?;
+    let rep_1 = crate::ir::attr::read_entity_ref(attrs, 2, entity_id, "rep_1")?;
+    let rep_2 = crate::ir::attr::read_entity_ref(attrs, 3, entity_id, "rep_2")?;
+    let attrs = crate::reader::require_part_attrs(
+        parts,
+        "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION",
+        entity_id,
+    )?;
+    let Some(transformation_operator) = bind_transformation(&attrs[0]) else {
+        return Ok(None);
+    };
+    Ok(Some(
+        super::model::EarlyRepresentationRelationshipWithTransformation {
+            name,
+            description,
+            rep_1,
+            rep_2,
+            transformation_operator,
+        },
+    ))
+}
+
 pub(crate) fn bind_shape_representation(
     entity_id: u64,
     attrs: &[crate::parser::entity::Attribute],
@@ -6553,6 +6584,35 @@ fn bind_source_item(
                 }
                 ("MESSAGE", crate::parser::entity::Attribute::String(s)) => {
                     Some(super::model::EarlySourceItem::Message(s.clone()))
+                }
+                _ => None,
+            }
+        }
+        _ => None,
+    }
+}
+
+fn bind_transformation(
+    attr: &crate::parser::entity::Attribute,
+) -> Option<super::model::EarlyTransformation> {
+    match attr {
+        crate::parser::entity::Attribute::EntityRef(n) => {
+            Some(super::model::EarlyTransformation::EntityRef(*n))
+        }
+        crate::parser::entity::Attribute::Typed { type_name, value } => {
+            match (type_name.as_str(), value.as_ref()) {
+                (
+                    "SET_ITEM_DEFINED_TRANSFORMATION",
+                    crate::parser::entity::Attribute::List(items),
+                ) => {
+                    let mut out = Vec::with_capacity(items.len());
+                    for it in items {
+                        match it {
+                            crate::parser::entity::Attribute::EntityRef(n) => out.push(*n),
+                            _ => return None,
+                        }
+                    }
+                    Some(super::model::EarlyTransformation::SetItemDefinedTransformation(out))
                 }
                 _ => None,
             }

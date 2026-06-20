@@ -7,9 +7,9 @@
 //! `SHAPE_REPRESENTATION_RELATIONSHIP`). Writer emits the two-attr form:
 //! `CDSR(rr_complex_ref, pdef_shape_ref)`.
 
+use crate::early::model::EarlyTransformation;
 use crate::early::{bind, lift, serialize};
 use crate::entities::SimpleEntityHandler;
-use crate::ir::attr::{read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
 use crate::reader::ReaderContext;
@@ -58,12 +58,19 @@ impl SimpleEntityHandler for ContextDependentShapeRepresentationHandler {
         ) {
             return Ok(());
         }
-        let rrwt_attrs = crate::reader::require_part_attrs(
-            parts,
-            "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION",
-            rr_ref,
-        )?;
-        let transform_ref = read_entity_ref(rrwt_attrs, 0, rr_ref, "transform_operator")?;
+        // Read the RRWT complex through the generated L1 bind. `has_all_parts`
+        // above still guards the empty SHAPE_REPRESENTATION_RELATIONSHIP part
+        // (bind only `require_part_attrs` the attr-bearing parts). `None` =
+        // unrecognized transformation SELECT member → skip.
+        let Some(rrwt) = bind::bind_representation_relationship_with_transformation(rr_ref, parts)?
+        else {
+            return Ok(());
+        };
+        let transform_ref = match rrwt.transformation_operator {
+            EarlyTransformation::EntityRef(n) => n,
+            // SET-of-IDT form is not modelled (corpus 0) — skip the transform.
+            EarlyTransformation::SetItemDefinedTransformation(_) => return Ok(()),
+        };
         let Some(&transform) = ctx.transform_map.get(&transform_ref) else {
             return Err(ConvertError::MissingReference {
                 from: rr_ref,
@@ -80,12 +87,10 @@ impl SimpleEntityHandler for ContextDependentShapeRepresentationHandler {
         // the resulting id is round-trip stable. If either rep is not a
         // modelled `Representation`, skip materialisation (the transform is
         // still recorded above; `style_context` then drops with a warning).
-        let rr_attrs =
-            crate::reader::require_part_attrs(parts, "REPRESENTATION_RELATIONSHIP", rr_ref)?;
-        let name = read_string_or_unset(rr_attrs, 0, rr_ref, "name")?.to_owned();
-        let description = read_string_or_unset(rr_attrs, 1, rr_ref, "description")?.to_owned();
-        let rep_1_ref = read_entity_ref(rr_attrs, 2, rr_ref, "rep_1")?;
-        let rep_2_ref = read_entity_ref(rr_attrs, 3, rr_ref, "rep_2")?;
+        let name = rrwt.name;
+        let description = rrwt.description.unwrap_or_default();
+        let rep_1_ref = rrwt.rep_1;
+        let rep_2_ref = rrwt.rep_2;
         if let (Some(rep_1), Some(rep_2)) = (
             ctx.id_cache
                 .get::<crate::ir::id::RepresentationId>(rep_1_ref),

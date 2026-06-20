@@ -25,6 +25,8 @@ generate = [
     "shape_representation_relationship",
     "constructive_geometry_representation_relationship",
     "mechanical_design_and_draughting_relationship",
+    # RRWT assembly-placement complex (see [complex.*] below)
+    "representation_relationship_with_transformation",
     # shape_rep (representation cluster)
     "shape_representation",
     "advanced_brep_shape_representation",
@@ -519,6 +521,16 @@ parts = [
     "GEOMETRIC_REPRESENTATION_CONTEXT",
     "PARAMETRIC_REPRESENTATION_CONTEXT",
     "REPRESENTATION_CONTEXT",
+]
+
+# RRWT assembly-placement complex: read (via CDSR manual bind) + write
+# (emit_rrwt_complex). transformation_operator is a mixed SELECT (synth
+# EarlyTransformation: EntityRef | SetItemDefinedTransformation); SRR part empty.
+[complex.representation_relationship_with_transformation]
+parts = [
+    "REPRESENTATION_RELATIONSHIP",
+    "REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION",
+    "SHAPE_REPRESENTATION_RELATIONSHIP",
 ]
 
 [complex.annotation_text_occurrence]
