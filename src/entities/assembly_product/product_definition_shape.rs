@@ -13,7 +13,7 @@
 use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
-use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -44,30 +44,31 @@ impl SimpleEntityHandler for ProductDefinitionShapeHandler {
         attrs: &[Attribute],
         graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        // The classification (PDEF- vs NAUO-bearing) needs the *target's*
-        // entity type, so it stays a lenient graph walk; a malformed PDS
-        // (missing / wrong-typed definition) is a no-op, never an error.
-        // The branches then run the 2-layer path on the well-formed attrs.
-        if let Some(pdef_ref) = pdef_shape_target(graph, entity_id, PDEF_TARGET_NAMES) {
+        // Classifier (PDEF- vs NAUO-bearing) keyed on the *target's* entity
+        // type. Bind this PDS's own attrs (not a cross-walk); the target name is
+        // read through the L1 facade. A malformed PDS (bind fail / unresolved
+        // target) is a no-op, never an error.
+        let early = crate::early::EarlyGraph::new(graph);
+        let Ok(pds) = bind::bind_product_definition_shape(entity_id, attrs) else {
+            return Ok(());
+        };
+        let Some(target_name) = early.type_name(pds.definition) else {
+            return Ok(());
+        };
+        if PDEF_TARGET_NAMES.contains(&target_name) {
             // L1 name/description are deliberately dropped in `lower` (the
             // writer synthesises empty strings — legacy behavior).
-            lower::lower_product_definition_shape(ctx, entity_id, pdef_ref);
-        } else if let Some(nauo_ref) =
-            pdef_shape_target(graph, entity_id, &["NEXT_ASSEMBLY_USAGE_OCCURRENCE"])
-        {
+            lower::lower_product_definition_shape(ctx, entity_id, pds.definition);
+        } else if target_name == "NEXT_ASSEMBLY_USAGE_OCCURRENCE" {
             // Capture the target NAUO plus the source name/description so
-            // `materialize_nauo_owned_pds` and the assembly-chain emit
-            // preserve the exporter's placement label instead of the
-            // hard-coded "Placement" fallback. (Bind is safe here: the branch
-            // guarantees a well-formed entity ref at attr[2]; `$` descriptions
-            // collapse to "" as before.)
-            let early = bind::bind_product_definition_shape(entity_id, attrs)?;
+            // `materialize_nauo_owned_pds` and the assembly-chain emit preserve
+            // the exporter's placement label instead of the "Placement" fallback.
             ctx.nauo_pds_info.insert(
                 entity_id,
                 crate::reader::NauoPdsInfo {
-                    nauo: nauo_ref,
-                    name: early.name,
-                    description: early.description.unwrap_or_default(),
+                    nauo: pds.definition,
+                    name: pds.name,
+                    description: pds.description.unwrap_or_default(),
                 },
             );
         }
@@ -80,26 +81,5 @@ impl SimpleEntityHandler for ProductDefinitionShapeHandler {
     ) -> Result<u64, WriteError> {
         let early = lift::lift_product_definition_shape(String::new(), Some(String::new()), pdef);
         Ok(serialize::serialize_product_definition_shape(buf, &early))
-    }
-}
-
-/// Resolve a `PRODUCT_DEFINITION_SHAPE`'s `definition` ref if it points at
-/// one of `accepts`. Returns the target's STEP id, or `None` for missing /
-/// wrong-typed / malformed `PDEF_SHAPE`.
-fn pdef_shape_target(graph: &EntityGraph, pdef_shape_ref: u64, accepts: &[&str]) -> Option<u64> {
-    let attrs = match graph.get(pdef_shape_ref)? {
-        RawEntity::Simple {
-            name, attributes, ..
-        } if name == "PRODUCT_DEFINITION_SHAPE" => attributes.as_slice(),
-        _ => return None,
-    };
-    // PDEF_SHAPE attr[2] = definition (PRODUCT_DEFINITION or NAUO).
-    let def_ref = match attrs.get(2) {
-        Some(Attribute::EntityRef(n)) => *n,
-        _ => return None,
-    };
-    match graph.get(def_ref)? {
-        RawEntity::Simple { name, .. } if accepts.iter().any(|t| *t == name) => Some(def_ref),
-        _ => None,
     }
 }

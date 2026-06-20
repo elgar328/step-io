@@ -29,6 +29,11 @@ impl<'a> EarlyGraph<'a> {
         Self { raw }
     }
 
+    /// Whether an entity id is present in the graph (dangling-reference probe).
+    pub(crate) fn exists(self, id: u64) -> bool {
+        self.raw.get(id).is_some()
+    }
+
     /// Type name of a `Simple` entity, or `None` if absent / `Complex`. Used to
     /// discriminate a shared entity name (e.g. `REPRESENTATION` vs a subtype)
     /// before binding.
