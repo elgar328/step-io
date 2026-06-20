@@ -949,8 +949,9 @@ pub(crate) fn lower_tessellated_shape_representation(
     entity_id: u64,
     early: EarlyTessellatedShapeRepresentation,
 ) {
-    let context = ctx.resolve_repr_context(early.context_of_items);
-    let Some(RepresentationContextRef::Unitful(ctx_id)) = context else {
+    let Some(context @ RepresentationContextRef::Unitful(ctx_id)) =
+        ctx.resolve_repr_context(early.context_of_items)
+    else {
         return;
     };
     ctx.repr_context_map.insert(entity_id, ctx_id);
@@ -1008,7 +1009,7 @@ pub(crate) fn lower_constructive_geometry_representation(
             ConstructiveGeometryRepr {
                 name: early.name,
                 items,
-                context: Some(context),
+                context,
             },
         ));
     ctx.id_cache.insert(entity_id, repr_id);
@@ -1053,7 +1054,7 @@ pub(crate) fn lower_draughting_model(
         .push(Representation::DraughtingModel(DraughtingModel {
             name: early.name,
             items,
-            context: Some(context),
+            context,
             form: DraughtingModelForm::Simple,
         }));
     ctx.id_cache.insert(entity_id, repr_id);
@@ -1118,7 +1119,7 @@ pub(crate) fn lower_characterized_object_complex(
         .push(Representation::DraughtingModel(DraughtingModel {
             name,
             items,
-            context: Some(context),
+            context,
             form,
         }));
     ctx.id_cache.insert(entity_id, repr_id);
@@ -1153,7 +1154,7 @@ pub(crate) fn lower_shape_representation(
     }
     let repr_id = ctx.representations.push(Representation::Plain(PlainRepr {
         name: early.name,
-        context: Some(context),
+        context,
         frame,
     }));
     ctx.id_cache.insert(entity_id, repr_id);
@@ -1212,7 +1213,7 @@ pub(crate) fn lower_advanced_brep_shape_representation(
         .representations
         .push(Representation::AdvancedBrep(AdvancedBrepRepr {
             name: early.name,
-            context: Some(context),
+            context,
             items: resolved,
         }));
     ctx.id_cache.insert(entity_id, repr_id);
@@ -1260,7 +1261,7 @@ pub(crate) fn lower_manifold_surface_shape_representation(
         .representations
         .push(Representation::ManifoldSurface(ManifoldSurfaceRepr {
             name: early.name,
-            context: Some(context),
+            context,
             ref_frame,
             shells,
             sbsm_ids,
@@ -1318,7 +1319,7 @@ fn lower_wireframe_representation_body(
         .representations
         .push(Representation::Wireframe(WireframeRepr {
             name,
-            context: Some(context),
+            context,
             ref_frame,
             content: wireframe,
             gcs_ids,
@@ -1381,7 +1382,7 @@ pub(crate) fn lower_mechanical_design_geometric_presentation_representation(
     let mdgpr = Mdgpr {
         name: early.name,
         items,
-        context: Some(context),
+        context,
     };
     ctx.visualization
         .get_or_insert_with(VisualizationPool::default)
@@ -1412,7 +1413,7 @@ pub(crate) fn lower_shape_dimension_representation(
         .push(Representation::ShapeDimensionRepresentation(
             ShapeDimensionRepresentation {
                 name: early.name,
-                context: Some(context),
+                context,
                 items: Vec::new(),
             },
         ));
@@ -1463,7 +1464,7 @@ pub(crate) fn lower_shape_representation_with_parameters(
             ShapeRepresentationWithParameters {
                 name: early.name,
                 items,
-                context: Some(context),
+                context,
             },
         ));
     ctx.id_cache.insert(entity_id, repr_id);

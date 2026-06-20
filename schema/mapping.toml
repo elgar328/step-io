@@ -249,7 +249,7 @@ generate = [
     # B2: PCURVE write+read 군집 (full bind+serialize) — def_repr는 pcurve 서브트리
     "pcurve",
     "definitional_representation",
-    # bare REPRESENTATION: read_only (PDR walk read via bind_representation)
+    # bare REPRESENTATION: full (read via PDR walk + write via emit_property serialize)
     "representation",
     "geometric_curve_set",
     "geometric_set",
@@ -437,9 +437,6 @@ read_only = [
     "quasi_uniform_surface",
     "rational_quasi_uniform_curve",
     "rational_quasi_uniform_surface",
-    # bare REPRESENTATION: read via PDR graph-walk (bind only); write stays hand
-    # (push_simple in emit_property) until the write-migration follow-up.
-    "representation",
 ]
 
 # `write_only`: entities generated as model + serialize only (bind skipped).

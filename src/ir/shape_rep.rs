@@ -217,9 +217,9 @@ pub struct Mdgpr {
     /// Unit / uncertainty context referenced by this MDGPR. `Some(id)` indexes
     /// into [`crate::ir::model::StepModel::units`]. Fusion 360 typically uses
     /// a separate context here (different uncertainty than the geometry rep).
-    /// `None` → writer emits `Attribute::Unset` for `context_of_items`
-    /// (allowed by the spec for kernel-built IR with no context info).
-    pub context: Option<RepresentationContextRef>,
+    /// `context_of_items` is schema-required (non-optional); `lower` drops any
+    /// carrier whose context did not resolve, so this is always a real ref.
+    pub context: RepresentationContextRef,
 }
 
 /// A unit-less representation context — either the
@@ -308,7 +308,7 @@ pub enum Representation {
 pub struct ShapeRepresentationWithParameters {
     pub name: String,
     pub items: Vec<SrwpItem>,
-    pub context: Option<RepresentationContextRef>,
+    pub context: RepresentationContextRef,
 }
 
 /// `shape_representation_with_parameters_items` SELECT. The
@@ -458,7 +458,7 @@ pub enum IiruIdentifiedItem {
 pub struct ConstructiveGeometryRepr {
     pub name: String,
     pub items: Vec<RepresentationItemRef>,
-    pub context: Option<RepresentationContextRef>,
+    pub context: RepresentationContextRef,
 }
 
 /// `TESSELLATED_SHAPE_REPRESENTATION(name, items, context_of_items)` —
@@ -473,7 +473,7 @@ pub struct TessellatedShapeRepresentation {
     /// [`crate::ir::tessellation::TessellatedItemRef`] enum so `items`
     /// can point at any tessellated arena (item / face / surface set).
     pub items: Vec<crate::ir::tessellation::TessellatedItemRef>,
-    pub context: Option<RepresentationContextRef>,
+    pub context: RepresentationContextRef,
 }
 
 /// `GEOMETRIC_ITEM_SPECIFIC_USAGE(name, description, definition,
@@ -497,7 +497,7 @@ pub struct GeometricItemSpecificUsage {
 pub struct DraughtingModel {
     pub name: String,
     pub items: Vec<crate::ir::representation_item::RepresentationItemRef>,
-    pub context: Option<RepresentationContextRef>,
+    pub context: RepresentationContextRef,
     /// Which on-disk entity form this draughting model was read from /
     /// must be written back as.
     pub form: DraughtingModelForm,
@@ -591,7 +591,7 @@ pub struct ModelGeometricView {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ShapeDimensionRepresentation {
     pub name: String,
-    pub context: Option<RepresentationContextRef>,
+    pub context: RepresentationContextRef,
     pub items: Vec<DimensionItem>,
 }
 
@@ -613,7 +613,7 @@ pub enum DimensionItem {
 #[derive(Debug, Clone, PartialEq)]
 pub struct AdvancedBrepRepr {
     pub name: String,
-    pub context: Option<RepresentationContextRef>,
+    pub context: RepresentationContextRef,
     pub items: Vec<RepresentationItemRef>,
 }
 
@@ -651,7 +651,7 @@ impl AdvancedBrepRepr {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ManifoldSurfaceRepr {
     pub name: String,
-    pub context: Option<RepresentationContextRef>,
+    pub context: RepresentationContextRef,
     pub ref_frame: Option<Placement3dId>,
     pub shells: Vec<ShellId>,
     pub sbsm_ids: Vec<crate::ir::id::GeometricRepresentationItemId>,
@@ -662,7 +662,7 @@ pub struct ManifoldSurfaceRepr {
 #[derive(Debug, Clone, PartialEq)]
 pub struct PlainRepr {
     pub name: String,
-    pub context: Option<RepresentationContextRef>,
+    pub context: RepresentationContextRef,
     pub frame: Option<Placement3dId>,
 }
 
@@ -680,7 +680,7 @@ pub struct PlainRepr {
 #[derive(Debug, Clone, PartialEq)]
 pub struct WireframeRepr {
     pub name: String,
-    pub context: Option<RepresentationContextRef>,
+    pub context: RepresentationContextRef,
     pub ref_frame: Option<Placement3dId>,
     pub content: WireframeContent,
     pub gcs_ids: Vec<crate::ir::id::GeometricRepresentationItemId>,

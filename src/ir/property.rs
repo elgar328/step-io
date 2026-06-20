@@ -284,8 +284,9 @@ pub struct Property {
     /// `REPRESENTATION.name` (often `''`).
     pub representation_name: String,
     /// `REPRESENTATION.context_of_items` — a unit-bearing or unit-less
-    /// representation context. `None` when the source omitted it (rare).
-    pub context: Option<RepresentationContextRef>,
+    /// representation context. Schema-required (non-optional); `lower` drops any
+    /// property whose context did not resolve, so this is always a real ref.
+    pub context: RepresentationContextRef,
     /// `REPRESENTATION.items` — polymorphic items in source order.
     pub items: Vec<PropertyItem>,
 }

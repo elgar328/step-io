@@ -863,7 +863,7 @@ pub enum PresentationRepresentation {
 pub struct PresentationReprData {
     pub name: String,
     pub items: Vec<crate::ir::representation_item::RepresentationItemRef>,
-    pub context: Option<crate::ir::shape_rep::RepresentationContextRef>,
+    pub context: crate::ir::shape_rep::RepresentationContextRef,
 }
 
 /// `PRESENTATION_SET` — has no direct attributes in the schema (only an

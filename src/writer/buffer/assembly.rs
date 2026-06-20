@@ -810,20 +810,20 @@ impl WriteBuffer<'_> {
         }
     }
 
-    /// Resolve a representation's `Option<RepresentationContextRef>` to
-    /// its `context_of_items` attribute. `Unitful` indexes the cached
-    /// `REPRESENTATION_CONTEXT` step ids populated by the unit pass;
-    /// `Unitless` indexes the GRC+PRC complex step ids populated by the
-    /// `emit_unitless_contexts` pass; `None` emits `Unset`.
+    /// Resolve a representation's (schema-required, non-optional)
+    /// `RepresentationContextRef` to its `context_of_items` attribute. `Unitful`
+    /// indexes the cached `REPRESENTATION_CONTEXT` step ids populated by the unit
+    /// pass; `Unitless` indexes the GRC+PRC complex step ids populated by the
+    /// `emit_unitless_contexts` pass. Always an `EntityRef` — `lower` drops any
+    /// carrier whose context did not resolve, so there is no `Unset` case.
     pub(crate) fn repr_context_attr(
         &self,
-        context: Option<crate::ir::shape_rep::RepresentationContextRef>,
+        context: crate::ir::shape_rep::RepresentationContextRef,
     ) -> Attribute {
         use crate::ir::shape_rep::RepresentationContextRef as R;
         match context {
-            Some(R::Unitful(id)) => Attribute::EntityRef(self.unit_context_ids[id.0 as usize]),
-            Some(R::Unitless(id)) => Attribute::EntityRef(self.step_id(id)),
-            None => Attribute::Unset,
+            R::Unitful(id) => Attribute::EntityRef(self.unit_context_ids[id.0 as usize]),
+            R::Unitless(id) => Attribute::EntityRef(self.step_id(id)),
         }
     }
 

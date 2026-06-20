@@ -499,7 +499,14 @@ pub(crate) fn lower_property_definition_representation(
     };
     let representation_name = early_repr.name;
     let item_refs = early_repr.items;
-    let context = ctx.resolve_repr_context(early_repr.context_of_items);
+    // `context_of_items` is schema-required; if it does not resolve (unmodelled
+    // context type — corpus-absent), drop the bare REPRESENTATION and its
+    // PROPERTY_DEFINITION_REPRESENTATION, mirroring the sibling representation
+    // families' drop-on-None at shape_rep.rs. The IR context is non-optional, so
+    // a surviving property always carries a real context.
+    let Some(context) = ctx.resolve_repr_context(early_repr.context_of_items) else {
+        return Ok(());
+    };
 
     let items: Vec<PropertyItem> =
         item_refs

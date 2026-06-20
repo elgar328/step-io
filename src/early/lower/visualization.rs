@@ -1519,8 +1519,7 @@ fn lower_presentation_repr_data(
     if items.is_empty() {
         return None;
     }
-    let context = ctx.resolve_repr_context(context_ref);
-    context.as_ref()?;
+    let context = ctx.resolve_repr_context(context_ref)?;
     Some(PresentationReprData {
         name,
         items,

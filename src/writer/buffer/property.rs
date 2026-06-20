@@ -273,15 +273,18 @@ impl WriteBuffer<'_> {
             })
             .collect();
 
-        // 2. REPRESENTATION wrapping the items.
-        let ctx_attr = self.repr_context_attr(prop.context);
-        let repr = self.push_simple(
-            "REPRESENTATION",
-            vec![
-                Attribute::String(prop.representation_name.clone()),
-                Attribute::List(item_refs.into_iter().map(Attribute::EntityRef).collect()),
-                ctx_attr,
-            ],
+        // 2. REPRESENTATION wrapping the items. `lower` drops any property whose
+        // context did not resolve, so the context is always an EntityRef here.
+        let Attribute::EntityRef(ctx_id) = self.repr_context_attr(prop.context) else {
+            unreachable!("property REPRESENTATION context resolved by lower → EntityRef")
+        };
+        let repr = crate::early::serialize::serialize_representation(
+            self,
+            &crate::early::lift::lift_representation(
+                prop.representation_name.clone(),
+                item_refs,
+                ctx_id,
+            ),
         );
 
         // 3. PROPERTY_DEFINITION_REPRESENTATION binding the (already

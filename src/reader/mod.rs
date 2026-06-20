@@ -392,7 +392,7 @@ pub struct ReaderContext {
         u64,
         String,
         Vec<crate::ir::property::PropertyItem>,
-        Option<crate::ir::shape_rep::RepresentationContextRef>,
+        crate::ir::shape_rep::RepresentationContextRef,
     )>,
     /// Raw `(definition #N, used_representation #N)` of `SHAPE_DEFINITION_REPRESENTATION`s
     /// whose `definition` is not a product PDS (stashed by the SDR handler,

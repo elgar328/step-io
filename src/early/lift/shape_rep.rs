@@ -27,8 +27,8 @@ use crate::early::model::{
     EarlyMeasureValue, EarlyMechanicalDesignAndDraughtingRelationship,
     EarlyMechanicalDesignGeometricPresentationRepresentation, EarlyModelGeometricView,
     EarlyParametricRepresentationContext, EarlyPlacedDatumTargetFeature,
-    EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentationContext,
-    EarlyRepresentationMap, EarlyRepresentationRelationship,
+    EarlyQualifiedRepresentationItem, EarlyRealRepresentationItem, EarlyRepresentation,
+    EarlyRepresentationContext, EarlyRepresentationMap, EarlyRepresentationRelationship,
     EarlyRepresentationRelationshipWithTransformation, EarlyShapeAspect,
     EarlyShapeAspectAssociativity, EarlyShapeAspectDerivingRelationship,
     EarlyShapeAspectRelationship, EarlyShapeDimensionRepresentation, EarlyShapeRepresentation,
@@ -722,6 +722,21 @@ pub(crate) fn lift_constructive_geometry_representation(
         items,
         context_of_items,
     })
+}
+
+/// Lift the bare `REPRESENTATION` that wraps a property's items. `items` and
+/// `context_of_items` are pre-resolved step ids (the caller `emit_property`
+/// emits the items and resolves the context, which `lower` guarantees is `Some`).
+pub(crate) fn lift_representation(
+    name: String,
+    items: Vec<u64>,
+    context_of_items: u64,
+) -> EarlyRepresentation {
+    EarlyRepresentation {
+        name,
+        items,
+        context_of_items,
+    }
 }
 
 /// Lift one plain `SHAPE_REPRESENTATION` from pre-resolved step ids. Shared by

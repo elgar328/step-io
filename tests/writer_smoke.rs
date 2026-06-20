@@ -1333,9 +1333,7 @@ fn nauo_owned_pds_property_round_trips() {
         description: Some("centroid of Leaf".into()),
         definition: step_io::ir::property::PropertyDefinitionRef::PropertyDefinition(centroid_pd),
         representation_name: "centroid".into(),
-        context: Some(step_io::ir::shape_rep::RepresentationContextRef::Unitful(
-            UnitContextId(0),
-        )),
+        context: step_io::ir::shape_rep::RepresentationContextRef::Unitful(UnitContextId(0)),
         items: vec![],
     });
     model.properties = Some(props);
@@ -1408,7 +1406,7 @@ fn instance_placement_representation_round_trips() {
             .representations
             .push(Representation::Plain(PlainRepr {
                 name: name.into(),
-                context: Some(RepresentationContextRef::Unitful(ctx_id)),
+                context: RepresentationContextRef::Unitful(ctx_id),
                 frame: None,
             }))
     };
@@ -2000,9 +1998,7 @@ fn general_property_and_association_round_trip() {
         description: Some("user defined attribute".into()),
         definition: step_io::ir::property::PropertyDefinitionRef::PropertyDefinition(pd_id),
         representation_name: String::new(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(
-            UnitContextId(0),
-        )),
+        context: step_io::ir::RepresentationContextRef::Unitful(UnitContextId(0)),
         items: Vec::new(),
     });
     pool.general_properties.push(GeneralProperty {
@@ -2268,9 +2264,7 @@ fn pd_based_shape_definition_representation_round_trips() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "validation shape".into(),
-            context: Some(RepresentationContextRef::Unitful(
-                step_io::ir::UnitContextId(0),
-            )),
+            context: RepresentationContextRef::Unitful(step_io::ir::UnitContextId(0)),
             frame: None,
         }));
 
@@ -2322,9 +2316,7 @@ fn description_attribute_targeting_shape_representation_round_trips() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "supplemental geometry".into(),
-            context: Some(RepresentationContextRef::Unitful(
-                step_io::ir::UnitContextId(0),
-            )),
+            context: RepresentationContextRef::Unitful(step_io::ir::UnitContextId(0)),
             frame: None,
         }));
 
@@ -2367,9 +2359,7 @@ fn shape_aspect_based_shape_definition_representation_round_trips() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "aspect shape".into(),
-            context: Some(RepresentationContextRef::Unitful(
-                step_io::ir::UnitContextId(0),
-            )),
+            context: RepresentationContextRef::Unitful(step_io::ir::UnitContextId(0)),
             frame: None,
         }));
     let mut pool = PropertyPool::default();
@@ -2420,7 +2410,7 @@ fn product_with_additional_shape_representation_round_trips() {
         .representations
         .push(Representation::AdvancedBrep(AdvancedBrepRepr {
             name: "additional rep".into(),
-            context: Some(RepresentationContextRef::Unitful(UnitContextId(0))),
+            context: RepresentationContextRef::Unitful(UnitContextId(0)),
             items: vec![
                 RepresentationItemRef::Placement3d(identity_frame),
                 RepresentationItemRef::Solid(extra_solid),
@@ -3228,7 +3218,7 @@ fn camera_usage_round_trip() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "target".into(),
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
             frame: None,
         }));
     model
@@ -3302,7 +3292,7 @@ fn camera_image_round_trip() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "target".into(),
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
             frame: None,
         }));
     let cu = model
@@ -3487,7 +3477,7 @@ fn mapped_item_round_trip() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "mapped".into(),
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
             frame: None,
         }));
     let rmap = model
@@ -3588,7 +3578,7 @@ fn camera_origin_mapped_item_round_trip() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "mapped".into(),
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
             frame: None,
         }));
     let rmap = model
@@ -3667,7 +3657,7 @@ fn presentation_mapped_representation_round_trips() {
         .push(PresentationRepresentation::View(PresentationReprData {
             name: "Default".into(),
             items: vec![RepresentationItemRef::Placement3d(frame)],
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
         }));
 
     let rmap = model
@@ -3744,7 +3734,7 @@ fn assembly_advanced_brep_with_mapped_item_round_trips() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "part".into(),
-            context: Some(RepresentationContextRef::Unitful(uc)),
+            context: RepresentationContextRef::Unitful(uc),
             frame: None,
         }));
     let rmap = model
@@ -3767,7 +3757,7 @@ fn assembly_advanced_brep_with_mapped_item_round_trips() {
         .representations
         .push(Representation::AdvancedBrep(AdvancedBrepRepr {
             name: "Assem1".into(),
-            context: Some(RepresentationContextRef::Unitful(uc)),
+            context: RepresentationContextRef::Unitful(uc),
             items: vec![
                 RepresentationItemRef::MappedItem(mi),
                 RepresentationItemRef::Placement3d(frame),
@@ -5189,9 +5179,7 @@ fn shape_dimension_repr_and_dim_char_repr_round_trip() {
             .push(Representation::ShapeDimensionRepresentation(
                 ShapeDimensionRepresentation {
                     name: "sdr".into(),
-                    context: Some(step_io::ir::RepresentationContextRef::Unitful(
-                        UnitContextId(0),
-                    )),
+                    context: step_io::ir::RepresentationContextRef::Unitful(UnitContextId(0)),
                     items: vec![],
                 },
             ));
@@ -5430,7 +5418,7 @@ fn unitless_context_round_trip() {
         .push(Representation::DraughtingModel(DraughtingModel {
             name: "Default".into(),
             items: vec![],
-            context: Some(RepresentationContextRef::Unitless(uc_id)),
+            context: RepresentationContextRef::Unitless(uc_id),
             form: DraughtingModelForm::Simple,
         }));
 
@@ -5471,7 +5459,7 @@ fn plain_representation_context_round_trips() {
         .push(Representation::DraughtingModel(DraughtingModel {
             name: "Default".into(),
             items: vec![],
-            context: Some(RepresentationContextRef::Unitless(uc_id)),
+            context: RepresentationContextRef::Unitless(uc_id),
             form: DraughtingModelForm::Simple,
         }));
 
@@ -5525,7 +5513,7 @@ fn property_with_plain_context_round_trips() {
         description: None,
         definition: step_io::ir::property::PropertyDefinitionRef::PropertyDefinition(pd_id),
         representation_name: "document format".into(),
-        context: Some(RepresentationContextRef::Unitless(uc_id)),
+        context: RepresentationContextRef::Unitless(uc_id),
         items: vec![PropertyItem::Descriptive(DescriptiveItem {
             name: "data format".into(),
             description: "STEP AP214".into(),
@@ -5545,7 +5533,7 @@ fn property_with_plain_context_round_trips() {
         .find(|p| p.representation_name == "document format")
         .expect("the document property survives round-trip");
     assert!(
-        matches!(prop.context, Some(RepresentationContextRef::Unitless(_))),
+        matches!(prop.context, RepresentationContextRef::Unitless(_)),
         "the plain context is preserved as Unitless, not dropped to None"
     );
 }
@@ -5579,7 +5567,7 @@ fn draughting_model_round_trip() {
         .push(Representation::DraughtingModel(DraughtingModel {
             name: "dm".into(),
             items: vec![RepresentationItemRef::Surface(surf)],
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+            context: step_io::ir::RepresentationContextRef::Unitful(ctx_id),
             form: DraughtingModelForm::Simple,
         }));
 
@@ -5618,7 +5606,7 @@ fn draughting_model_shape_tessellated_complex_round_trips() {
         .push(Representation::DraughtingModel(DraughtingModel {
             name: "gvp".into(),
             items: vec![RepresentationItemRef::Surface(surf)],
-            context: Some(RepresentationContextRef::Unitful(ctx_id)),
+            context: RepresentationContextRef::Unitful(ctx_id),
             form: DraughtingModelForm::ShapeTessellated,
         }));
 
@@ -5709,7 +5697,7 @@ fn dmia_round_trip() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "draughting_model".into(),
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+            context: step_io::ir::RepresentationContextRef::Unitful(ctx_id),
             frame: None,
         }));
     let def = model
@@ -5717,7 +5705,7 @@ fn dmia_round_trip() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "definition".into(),
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+            context: step_io::ir::RepresentationContextRef::Unitful(ctx_id),
             frame: None,
         }));
     model
@@ -5818,7 +5806,7 @@ fn dmia_shape_aspect_datum_definition_round_trip() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "draughting_model".into(),
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+            context: step_io::ir::RepresentationContextRef::Unitful(ctx_id),
             frame: None,
         }));
     model
@@ -5919,7 +5907,7 @@ fn dmia_geometric_tolerance_with_datum_reference_round_trip() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "dm".into(),
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+            context: step_io::ir::RepresentationContextRef::Unitful(ctx_id),
             frame: None,
         }));
     model
@@ -6551,9 +6539,7 @@ fn ciwr_round_trip() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "rep".into(),
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(
-                UnitContextId(0),
-            )),
+            context: step_io::ir::RepresentationContextRef::Unitful(UnitContextId(0)),
             frame: None,
         }));
     model.shape_rep.characterized_objects.push(
@@ -6613,9 +6599,7 @@ fn model_geometric_view_round_trip() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "draughting_model".into(),
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(
-                UnitContextId(0),
-            )),
+            context: step_io::ir::RepresentationContextRef::Unitful(UnitContextId(0)),
             frame: None,
         }));
     let viz = model
@@ -6949,7 +6933,7 @@ fn dmia_with_placeholder_round_trip() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "draughting_model".into(),
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+            context: step_io::ir::RepresentationContextRef::Unitful(ctx_id),
             frame: None,
         }));
     let def = model
@@ -6957,7 +6941,7 @@ fn dmia_with_placeholder_round_trip() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "definition".into(),
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(ctx_id)),
+            context: step_io::ir::RepresentationContextRef::Unitful(ctx_id),
             frame: None,
         }));
     model
@@ -7034,9 +7018,7 @@ fn property_definition_with_ciwr_target_round_trips() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "validation".into(),
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(
-                UnitContextId(0),
-            )),
+            context: step_io::ir::RepresentationContextRef::Unitful(UnitContextId(0)),
             frame: None,
         }));
     let co_id = model.shape_rep.characterized_objects.push(
@@ -7118,9 +7100,7 @@ fn property_definition_with_mgv_target_round_trips() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "draughting_model".into(),
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(
-                UnitContextId(0),
-            )),
+            context: step_io::ir::RepresentationContextRef::Unitful(UnitContextId(0)),
             frame: None,
         }));
     let viz = model
@@ -7556,7 +7536,7 @@ fn property_item_references_arena_measure() {
         description: None,
         definition: step_io::ir::property::PropertyDefinitionRef::PropertyDefinition(pd_id),
         representation_name: "gvp".into(),
-        context: Some(RepresentationContextRef::Unitful(ctx_id)),
+        context: RepresentationContextRef::Unitful(ctx_id),
         items: vec![PropertyItem::MeasureItem(mri)],
     });
     model.properties = Some(pool);
@@ -9214,7 +9194,7 @@ fn draughting_model_with_styled_item_round_trips() {
         .push(Representation::DraughtingModel(DraughtingModel {
             name: "Default".into(),
             items: vec![RepresentationItemRef::StyledItem(styled)],
-            context: Some(RepresentationContextRef::Unitless(uc)),
+            context: RepresentationContextRef::Unitless(uc),
             form: DraughtingModelForm::Simple,
         }));
 
@@ -9481,7 +9461,7 @@ fn presentation_style_by_context_round_trip() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "ctx".into(),
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
             frame: None,
         }));
     let viz = model
@@ -9651,7 +9631,7 @@ fn bounded_pcurve_round_trip() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "defrepr".into(),
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
             frame: None,
         }));
     model
@@ -9843,7 +9823,7 @@ fn srwp_round_trip() {
                         description: "v".into(),
                     }),
                 ],
-                context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+                context: step_io::ir::RepresentationContextRef::Unitful(uc),
             },
         ));
 
@@ -9901,7 +9881,7 @@ fn srwp_measure_item_round_trip() {
             ShapeRepresentationWithParameters {
                 name: "srwp".into(),
                 items: vec![SrwpItem::Placement(frame), SrwpItem::MeasureItem(mri)],
-                context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+                context: step_io::ir::RepresentationContextRef::Unitful(uc),
             },
         ));
 
@@ -9946,9 +9926,7 @@ fn iiru_round_trip() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "used".into(),
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(
-                step_io::ir::UnitContextId(0),
-            )),
+            context: step_io::ir::RepresentationContextRef::Unitful(step_io::ir::UnitContextId(0)),
             frame: None,
         }));
     model
@@ -9994,7 +9972,7 @@ fn mddr_round_trip() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "sr1".into(),
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
             frame: None,
         }));
     let sr2 = model
@@ -10002,7 +9980,7 @@ fn mddr_round_trip() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "sr2".into(),
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
             frame: None,
         }));
     model.shape_rep.representation_relationships.push(
@@ -10049,7 +10027,7 @@ fn representation_relationship_itself_round_trip() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "r1".into(),
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
             frame: None,
         }));
     let r2 = model
@@ -10057,7 +10035,7 @@ fn representation_relationship_itself_round_trip() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "r2".into(),
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
             frame: None,
         }));
     model
@@ -10113,7 +10091,7 @@ fn cgr_relationship_round_trip() {
         .representations
         .push(Representation::Plain(PlainRepr {
             name: "sr".into(),
-            context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+            context: step_io::ir::RepresentationContextRef::Unitful(uc),
             frame: None,
         }));
     let cgr = model
@@ -10123,7 +10101,7 @@ fn cgr_relationship_round_trip() {
             ConstructiveGeometryRepr {
                 name: "cgr".into(),
                 items: vec![RepresentationItemRef::Placement3d(frame)],
-                context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+                context: step_io::ir::RepresentationContextRef::Unitful(uc),
             },
         ));
     model.shape_rep.representation_relationships.push(
@@ -10174,7 +10152,7 @@ fn constructive_geometry_representation_round_trip() {
             ConstructiveGeometryRepr {
                 name: "supplemental geometry".into(),
                 items: vec![RepresentationItemRef::Placement3d(frame)],
-                context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+                context: step_io::ir::RepresentationContextRef::Unitful(uc),
             },
         ));
 
@@ -10226,7 +10204,7 @@ fn tessellated_shape_representation_round_trip() {
             TessellatedShapeRepresentation {
                 name: "tsr".into(),
                 items: vec![TessellatedItemRef::Item(coords)],
-                context: Some(step_io::ir::RepresentationContextRef::Unitful(uc)),
+                context: step_io::ir::RepresentationContextRef::Unitful(uc),
             },
         ));
 
@@ -10449,9 +10427,7 @@ fn general_property_bound_pdr_round_trips() {
         description: None,
         definition: PropertyDefinitionRef::GeneralProperty(gp_id),
         representation_name: "gvp".into(),
-        context: Some(step_io::ir::RepresentationContextRef::Unitful(
-            UnitContextId(0),
-        )),
+        context: step_io::ir::RepresentationContextRef::Unitful(UnitContextId(0)),
         items: Vec::new(),
     });
     model.properties = Some(pool);
@@ -10471,61 +10447,8 @@ fn general_property_bound_pdr_round_trips() {
     assert_eq!(prop.representation_name, "gvp");
     assert!(matches!(
         prop.context,
-        Some(step_io::ir::RepresentationContextRef::Unitful(_)),
+        step_io::ir::RepresentationContextRef::Unitful(_),
     ));
-}
-
-/// A descriptive property `REPRESENTATION` whose `context_of_items` is `$`
-/// (c3d) is a source EXPRESS violation with no defined normalization: the strict
-/// L1 `bind` rejects it, so the `REPRESENTATION` (and its
-/// `PROPERTY_DEFINITION_REPRESENTATION`) are dropped and recorded as a NORM
-/// (`NS-required-field-unset`) — not kept with a `None` context.
-#[test]
-fn representation_unset_context_dropped_as_nonstandard() {
-    use step_io::ir::error::ConvertError;
-    use step_io::ir::property::PropertyDefinitionRef;
-
-    let mut model = empty_model();
-    let mut pool = PropertyPool::default();
-    let gp_id = pool.general_properties.push(GeneralProperty {
-        id: String::new(),
-        name: "VP".into(),
-        description: None,
-    });
-    pool.properties.push(Property {
-        name: String::new(),
-        description: None,
-        definition: PropertyDefinitionRef::GeneralProperty(gp_id),
-        representation_name: String::new(),
-        context: None, // -> REPRESENTATION emits `$` context_of_items
-        items: Vec::new(),
-    });
-    model.properties = Some(pool);
-
-    let text = model.write_to_string().expect("write");
-    let graph = parse(&text).expect("writer output parses");
-    let result = ReaderContext::convert(&graph);
-
-    // REPRESENTATION dropped + recorded as a NORM (LOSS-exempt "dropped" note).
-    assert!(
-        result.warnings.iter().any(|w| matches!(
-            w,
-            ConvertError::NonStandardInput { field, normalized_to, .. }
-                if field == "REPRESENTATION" && normalized_to.starts_with("dropped")
-        )),
-        "expected REPRESENTATION dropped NonStandardInput, got {:#?}",
-        result.warnings,
-    );
-    // The descriptive property did not survive (dropped with its REPRESENTATION).
-    let surviving = result
-        .model
-        .properties
-        .as_ref()
-        .map_or(0, |p| p.properties.len());
-    assert_eq!(
-        surviving, 0,
-        "property should have dropped with its REPRESENTATION",
-    );
 }
 
 /// A bare `MEASURE_WITH_UNIT(LENGTH_MEASURE(-0.3), unit)` (the carrier

@@ -795,7 +795,7 @@ fn external_temp_fusion360_two_context_round_trip() {
     // contexts — Fusion 360's geometry vs. visualization split.
     let viz = back.visualization.as_ref().expect("MDGPR present");
     let mdgpr = viz.mdgprs.first().expect("at least one MDGPR");
-    let Some(step_io::ir::RepresentationContextRef::Unitful(mdgpr_ctx)) = mdgpr.context else {
+    let step_io::ir::RepresentationContextRef::Unitful(mdgpr_ctx) = mdgpr.context else {
         panic!("MDGPR carries a unitful context after Commit 2");
     };
     let assembly = back.assembly.as_ref().expect("assembly present");
