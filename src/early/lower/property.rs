@@ -471,7 +471,7 @@ pub(crate) fn lower_property_definition_representation(
     }
     let representation_name = read_string_or_unset(repr_attrs, 0, repr_ref, "name")?.to_owned();
     let item_refs = read_entity_ref_list(repr_attrs, 1, repr_ref, "items")?;
-    // NsCase::ReprContextUnset: REPRESENTATION.context_of_items is required by
+    // NsCase::RequiredFieldUnset: REPRESENTATION.context_of_items is required by
     // EXPRESS but the c3d kernel emits `$` — accept as no context.
     let context = if let Some(ctx_ref) =
         read_optional_entity_ref(repr_attrs, 2, repr_ref, "context_of_items")?
@@ -479,7 +479,7 @@ pub(crate) fn lower_property_definition_representation(
         ctx.resolve_repr_context(ctx_ref)
     } else {
         ctx.ns_record(
-            crate::reader::NsCase::ReprContextUnset,
+            crate::reader::NsCase::RequiredFieldUnset,
             "REPRESENTATION.context_of_items (Unset)".into(),
             "no context",
         );

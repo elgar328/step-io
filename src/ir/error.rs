@@ -136,6 +136,24 @@ impl std::fmt::Display for AttributeKindTag {
     }
 }
 
+impl ConvertError {
+    /// If this is a strict-`bind` rejection of a **required** field that the
+    /// source left `$` (Unset), return that field name. A required field being
+    /// `$` is a source EXPRESS violation (non-standard input), not a step-io
+    /// coverage gap — callers use this to drop + record a NORM normalization
+    /// (LOSS-exempt) instead of treating it as a defect.
+    pub(crate) fn unset_required_field(&self) -> Option<&'static str> {
+        match self {
+            ConvertError::AttributeType {
+                field_name,
+                actual: AttributeKindTag::Unset,
+                ..
+            } => Some(field_name),
+            _ => None,
+        }
+    }
+}
+
 impl std::fmt::Display for ConvertError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -319,6 +337,34 @@ mod tests {
             err.to_string(),
             "entity #10: field 'location' references #99 which was not found"
         );
+    }
+
+    #[test]
+    fn unset_required_field_detects_unset() {
+        let err = ConvertError::AttributeType {
+            entity_id: 1,
+            field_name: "context_of_items",
+            expected: "EntityRef",
+            actual: AttributeKindTag::Unset,
+        };
+        assert_eq!(err.unset_required_field(), Some("context_of_items"));
+    }
+
+    #[test]
+    fn unset_required_field_none_for_other_errors() {
+        let wrong_type = ConvertError::AttributeType {
+            entity_id: 1,
+            field_name: "axis",
+            expected: "EntityRef",
+            actual: AttributeKindTag::Real,
+        };
+        assert_eq!(wrong_type.unset_required_field(), None);
+        let missing = ConvertError::MissingReference {
+            from: 1,
+            to: 2,
+            field_name: "loc",
+        };
+        assert_eq!(missing.unset_required_field(), None);
     }
 
     #[test]

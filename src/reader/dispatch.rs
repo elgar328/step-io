@@ -298,6 +298,20 @@ impl ReaderContext {
             self.nonstandard_dropped_refs.insert(id);
             return;
         }
+        // A strict bind rejected a *required* field the source left `$` (Unset) —
+        // a source EXPRESS violation. Drop + seed the cascade, classified as a
+        // NORM normalization (LOSS-exempt). Gated to Simple handlers (entry.name
+        // is the exact type name there). See `reader::nonstandard`
+        // (`NS-required-field-unset`).
+        if matches!(entry.kind, ReadKind::Simple { .. }) && e.unset_required_field().is_some() {
+            self.ns_record(
+                super::NsCase::RequiredFieldUnset,
+                entry.name.to_string(),
+                "dropped (required field $)",
+            );
+            self.nonstandard_dropped_refs.insert(id);
+            return;
+        }
         self.warnings.push(e);
     }
 

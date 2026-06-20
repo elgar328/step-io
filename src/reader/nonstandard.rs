@@ -226,18 +226,19 @@
 //! - **Code**: `entities/visualization/presentation_style_assignment.rs`
 //!   (`normalize_psa_styles_attr`).
 //!
-//! ### NS-repr-context-unset
-//! - **Source**: C3D kernel (input-shaft / shaft-238).
-//! - **Schema rule broken**: `representation.context_of_items` is required in
-//!   EXPRESS; the descriptive `REPRESENTATION` bound to a property is emitted
-//!   with `$` (Unset).
-//! - **Acceptance**: accept as no context (the descriptive representation
-//!   carries no geometry context) rather than dropping the whole
-//!   `REPRESENTATION` (and cascading its `PROPERTY_DEFINITION_REPRESENTATION`);
-//!   aggregated via `ns_record`.
-//! - **Writer symmetry**: the descriptive REPRESENTATION is emitted by the PDR
-//!   writer; a `None` context re-emits `$`.
-//! - **Code**: `entities/property/property_definition_representation.rs`.
+//! ### NS-required-field-unset
+//! - **General rule**: a **required** field left `$` (Unset) is a source EXPRESS
+//!   violation, so strict `bind` rejects it (`ConvertError::unset_required_field`).
+//!   When no defined normalization fixed the input first, the entity is dropped
+//!   and its dependents cascade — recorded as a NORM (LOSS-exempt), not a defect.
+//! - **Dispatched entities**: handled generically in `dispatch::record_drop_or_warn`
+//!   (mirrors the dangling / non-standard-enum NORM arms).
+//! - **Graph-walked consumers**: applied at the call site (e.g. the descriptive
+//!   `REPRESENTATION` bound to a property via the PDR walk — C3D kernel
+//!   input-shaft / shaft-238 emit `representation.context_of_items = $`; the
+//!   `REPRESENTATION` + its `PROPERTY_DEFINITION_REPRESENTATION` drop).
+//! - **Code**: `ir/error.rs` (`unset_required_field`), `reader/dispatch.rs`,
+//!   `early/lower/property.rs`.
 //!
 //! ### NS-ratio-unit-dimensions-unset
 //! - **Source**: C3D kernel (input-shaft / shaft-238).
@@ -398,7 +399,7 @@ pub(crate) enum NsCase {
     SurfaceStyleRenderingMethod,
     SurfaceStyleSurfaceColour,
     PsaBareNullStyle,
-    ReprContextUnset,
+    RequiredFieldUnset,
     RatioUnitDimensionsUnset,
     Pcurve3dInPspace,
     PsaStylesUnset,
@@ -428,7 +429,7 @@ impl NsCase {
         NsCase::SurfaceStyleRenderingMethod,
         NsCase::SurfaceStyleSurfaceColour,
         NsCase::PsaBareNullStyle,
-        NsCase::ReprContextUnset,
+        NsCase::RequiredFieldUnset,
         NsCase::RatioUnitDimensionsUnset,
         NsCase::Pcurve3dInPspace,
         NsCase::PsaStylesUnset,
@@ -454,7 +455,7 @@ impl NsCase {
             NsCase::SurfaceStyleRenderingMethod => "NS-surface-style-rendering-method",
             NsCase::SurfaceStyleSurfaceColour => "NS-surface-style-surface-colour",
             NsCase::PsaBareNullStyle => "NS-psa-bare-null-style",
-            NsCase::ReprContextUnset => "NS-repr-context-unset",
+            NsCase::RequiredFieldUnset => "NS-required-field-unset",
             NsCase::RatioUnitDimensionsUnset => "NS-ratio-unit-dimensions-unset",
             NsCase::Pcurve3dInPspace => "NS-pcurve-3d-in-pspace",
             NsCase::PsaStylesUnset => "NS-psa-styles-unset",
