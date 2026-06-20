@@ -1724,28 +1724,6 @@ impl SimpleEntityHandler for CylindricityToleranceHandler {
     }
 }
 
-/// Non-standard `of_shape = $` guard for the two `general_datum_reference`
-/// subtypes. `of_shape` is a mandatory `shape_aspect` ref (EXPRESS + UNIQUE
-/// constraint) but some NIST exports (`ctc_05`) emit `$`. The generated `bind`
-/// reads it as a required ref and would error on the bare `$`, so this drops
-/// (recording the normalization) before `bind` — mirroring the legacy reader.
-/// Returns `true` when the entry was dropped.
-fn datum_reference_of_shape_unset(
-    ctx: &mut ReaderContext,
-    attrs: &[Attribute],
-    entity_name: &'static str,
-) -> bool {
-    if matches!(attrs.get(2), Some(Attribute::Unset | Attribute::Derived)) {
-        ctx.ns_record(
-            crate::reader::NsCase::GeneralDatumReferenceOfShapeUnset,
-            entity_name.into(),
-            "dropped (of_shape Unset — EXPRESS shape_aspect.of_shape required)",
-        );
-        return true;
-    }
-    false
-}
-
 /// Emit a `GeneralDatumReference` under the STEP entity name its variant
 /// selects, returning the STEP id. Shared by both handlers and by
 /// `emit_general_datum_references`.
@@ -1775,16 +1753,16 @@ impl SimpleEntityHandler for DatumReferenceCompartmentHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        graph: &EntityGraph,
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        if datum_reference_of_shape_unset(ctx, attrs, "DATUM_REFERENCE_COMPARTMENT") {
-            return Ok(());
-        }
+        // of_shape = $ (non-standard, NIST ctc_05): the strict `bind` rejects the
+        // required ref → handler Err → dispatch's `unset_required_field` arm drops
+        // it as a RequiredFieldUnset NORM and records it in nonstandard_dropped_refs.
         let Some(early) = crate::early::bind::bind_datum_reference_compartment(entity_id, attrs)?
         else {
             return Ok(());
         };
-        crate::early::lower::lower_datum_reference_compartment(ctx, entity_id, early, graph);
+        crate::early::lower::lower_datum_reference_compartment(ctx, entity_id, early);
         Ok(())
     }
 
@@ -1803,16 +1781,15 @@ impl SimpleEntityHandler for DatumReferenceElementHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        graph: &EntityGraph,
+        _graph: &EntityGraph,
     ) -> Result<(), ConvertError> {
-        if datum_reference_of_shape_unset(ctx, attrs, "DATUM_REFERENCE_ELEMENT") {
-            return Ok(());
-        }
+        // of_shape = $ → handler Err → dispatch's RequiredFieldUnset arm drops it
+        // (see DatumReferenceCompartmentHandler::read).
         let Some(early) = crate::early::bind::bind_datum_reference_element(entity_id, attrs)?
         else {
             return Ok(());
         };
-        crate::early::lower::lower_datum_reference_element(ctx, entity_id, early, graph);
+        crate::early::lower::lower_datum_reference_element(ctx, entity_id, early);
         Ok(())
     }
 

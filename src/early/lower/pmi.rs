@@ -875,8 +875,9 @@ pub(crate) fn lower_datum(ctx: &mut ReaderContext, entity_id: u64, early: EarlyD
 /// supertype body + `base` SELECT) into a [`GeneralDatumReferenceData`].
 /// `None` drops the entry (symmetric on re-read) when `of_shape` is not a
 /// product, the `base` datum/member does not resolve, or `product_definitional`
-/// is `.U.`. The non-standard `of_shape = $` case is guarded in the handler
-/// before `bind`; `modifiers` is not modelled and is ignored.
+/// is `.U.`. The non-standard `of_shape = $` case is rejected by the strict
+/// `bind` (handler `Err` → dispatch `RequiredFieldUnset` drop); `modifiers` is
+/// not modelled and is ignored.
 #[allow(clippy::too_many_arguments)]
 fn lower_general_datum_reference_data(
     ctx: &mut ReaderContext,
@@ -885,7 +886,6 @@ fn lower_general_datum_reference_data(
     of_shape: u64,
     product_definitional: crate::ir::geometry::Logical,
     base: EarlyDatumOrCommonDatum,
-    graph: &crate::parser::entity::EntityGraph,
     entity_name: &'static str,
 ) -> Option<GeneralDatumReferenceData> {
     let product_definitional = logical_to_bool(product_definitional)?;
@@ -905,23 +905,15 @@ fn lower_general_datum_reference_data(
                     .id_cache
                     .get::<crate::ir::id::GeneralDatumReferenceId>(r)
                 else {
-                    // The member dropped. Record the cascade only when it is an
-                    // of_shape=$ sibling (NsCase::GeneralDatumReferenceOfShapeUnset);
-                    // a member dropped for a different reason stays a plain drop.
-                    let member_of_shape_unset = matches!(
-                        graph.get(r),
-                        Some(crate::parser::entity::RawEntity::Simple { attributes, .. })
-                            if matches!(
-                                attributes.get(2),
-                                Some(crate::parser::entity::Attribute::Unset
-                                    | crate::parser::entity::Attribute::Derived)
-                            )
-                    );
-                    if member_of_shape_unset {
+                    // The member dropped. When it was a non-standard drop (e.g. the
+                    // of_shape=$ sibling, recorded by the dispatch RequiredFieldUnset
+                    // arm into `nonstandard_dropped_refs`), record the owner cascade as
+                    // a NORM; a member dropped for a standard reason stays a plain drop.
+                    if ctx.nonstandard_dropped_refs.contains(&r) {
                         ctx.ns_record(
-                            crate::reader::NsCase::GeneralDatumReferenceOfShapeUnset,
+                            crate::reader::NsCase::RequiredFieldUnset,
                             entity_name.into(),
-                            "dropped (common_datum_list member of_shape Unset — cascade)",
+                            "dropped (common_datum_list member dropped — cascade)",
                         );
                     }
                     return None;
@@ -946,7 +938,6 @@ pub(crate) fn lower_datum_reference_compartment(
     ctx: &mut ReaderContext,
     entity_id: u64,
     early: EarlyDatumReferenceCompartment,
-    graph: &crate::parser::entity::EntityGraph,
 ) {
     let Some(data) = lower_general_datum_reference_data(
         ctx,
@@ -955,7 +946,6 @@ pub(crate) fn lower_datum_reference_compartment(
         early.of_shape,
         early.product_definitional,
         early.base,
-        graph,
         "DATUM_REFERENCE_COMPARTMENT",
     ) else {
         return;
@@ -973,7 +963,6 @@ pub(crate) fn lower_datum_reference_element(
     ctx: &mut ReaderContext,
     entity_id: u64,
     early: EarlyDatumReferenceElement,
-    graph: &crate::parser::entity::EntityGraph,
 ) {
     let Some(data) = lower_general_datum_reference_data(
         ctx,
@@ -982,7 +971,6 @@ pub(crate) fn lower_datum_reference_element(
         early.of_shape,
         early.product_definitional,
         early.base,
-        graph,
         "DATUM_REFERENCE_ELEMENT",
     ) else {
         return;

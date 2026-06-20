@@ -134,19 +134,16 @@ mod tests {
     /// L2-building code (`entities/`, `early/lower/`) must cross-walk OTHER
     /// entities through [`EarlyGraph`] typed accessors, never the raw graph
     /// directly. This scans those trees for `graph.get(` / `RawEntity::` in
-    /// non-comment lines and fails on any new raw access — the read-side
-    /// counterpart of `nonstandard_input_only_via_funnel`.
-    ///
-    /// Allowlist: `early/lower/pmi.rs` holds the `of_shape = $` NS probe, which
-    /// must inspect a malformed required field that the strict `bind` rejects —
-    /// a legitimate raw read (file-level allow, mirroring the funnel test).
+    /// non-comment lines and fails on any raw access — the read-side counterpart
+    /// of `nonstandard_input_only_via_funnel`. No exceptions: L2-build code does
+    /// not touch the raw graph (non-standard required-field drops go through the
+    /// strict `bind` + dispatch `unset_required_field` arm, not a raw probe).
     #[test]
     fn no_raw_graph_access_in_l2_build() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
-        let allow = ["early/lower/pmi.rs"];
         let mut offenders = Vec::new();
         for sub in ["entities", "early/lower"] {
-            visit(&root.join(sub), &allow, &mut offenders);
+            visit(&root.join(sub), &mut offenders);
         }
         assert!(
             offenders.is_empty(),
@@ -154,21 +151,21 @@ mod tests {
         );
     }
 
-    fn visit(dir: &std::path::Path, allow: &[&str], out: &mut Vec<String>) {
+    fn visit(dir: &std::path::Path, out: &mut Vec<String>) {
         let Ok(entries) = std::fs::read_dir(dir) else {
             return;
         };
         for entry in entries.flatten() {
             let path = entry.path();
             if path.is_dir() {
-                visit(&path, allow, out);
+                visit(&path, out);
                 continue;
             }
             if path.extension().and_then(|e| e.to_str()) != Some("rs") {
                 continue;
             }
             let rel = path.to_string_lossy().replace('\\', "/");
-            if allow.iter().any(|a| rel.ends_with(a)) || rel.contains("tests") {
+            if rel.contains("tests") {
                 continue;
             }
             let Ok(text) = std::fs::read_to_string(&path) else {

@@ -438,18 +438,19 @@ fn inch_cbu_bare_measure_with_unit_factor_round_trips() {
 
 #[test]
 fn datum_reference_element_of_shape_unset_dropped_as_normalization() {
-    // NsCase::GeneralDatumReferenceOfShapeUnset shape_aspect.of_shape is
-    // mandatory (EXPRESS + UNIQUE); NIST ctc_05 emits `$`. Classify as a
-    // NonStandardInput drop rather than an AttributeType defect. (of_shape=$ is
-    // detected before base, so the dangling base ref is never read.)
+    // shape_aspect.of_shape is mandatory (EXPRESS + UNIQUE); NIST ctc_05 emits
+    // `$`. The strict `bind` rejects the required ref so the dispatch
+    // `unset_required_field` arm classifies it as a RequiredFieldUnset
+    // NonStandardInput drop (not an AttributeType defect). of_shape (attr[2]) is
+    // read before base (attr[4]), so the dangling base ref is never reached.
     let result = convert_source(&minimal_step(
         "#1 = DATUM_REFERENCE_ELEMENT($,$,$,.F.,#99,$);",
     ));
     assert!(
         result.warnings.iter().all(|w| matches!(w,
             ConvertError::NonStandardInput { field, normalized_to, .. }
-                if field == "DATUM_REFERENCE_ELEMENT" && normalized_to.starts_with("dropped (of_shape Unset"))),
-        "expected only an of_shape-Unset normalization, got {:#?}",
+                if field == "DATUM_REFERENCE_ELEMENT" && normalized_to.starts_with("dropped (required field"))),
+        "expected only a required-field-unset normalization, got {:#?}",
         result.warnings
     );
     assert!(

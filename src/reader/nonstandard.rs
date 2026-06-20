@@ -237,8 +237,12 @@
 //!   `REPRESENTATION` bound to a property via the PDR walk — C3D kernel
 //!   input-shaft / shaft-238 emit `representation.context_of_items = $`; the
 //!   `REPRESENTATION` + its `PROPERTY_DEFINITION_REPRESENTATION` drop).
+//! - **`shape_aspect.of_shape = $`** (NIST ctc_05): a `DATUM_REFERENCE_ELEMENT` /
+//!   `DATUM_REFERENCE_COMPARTMENT` with the mandatory `of_shape` ref `$` is
+//!   dropped by the dispatch arm; a `COMMON_DATUM_LIST` compartment whose member
+//!   was so dropped cascades (the lower checks `nonstandard_dropped_refs`).
 //! - **Code**: `ir/error.rs` (`unset_required_field`), `reader/dispatch.rs`,
-//!   `early/lower/property.rs`.
+//!   `early/lower/property.rs`, `early/lower/pmi.rs` (general_datum_reference cascade).
 //!
 //! ### NS-ratio-unit-dimensions-unset
 //! - **Source**: C3D kernel (input-shaft / shaft-238).
@@ -303,18 +307,6 @@
 //!   information → drop as a `NonStandardInput` normalization (not a defect).
 //!   No cascade (nothing references the dropped ORSI).
 //! - **Code**: `entities/visualization/over_riding_styled_item.rs`.
-//!
-//! ### NS-general-datum-reference-of-shape-unset
-//! - **Source**: NIST ctc_05.
-//! - **Schema rule broken**: `shape_aspect.of_shape : product_definition_shape`
-//!   is mandatory (and `UNIQUE id, of_shape`); a `DATUM_REFERENCE_ELEMENT` /
-//!   `DATUM_REFERENCE_COMPARTMENT` (general_datum_reference subtype) emits `$`.
-//! - **Acceptance**: the entity has no resolvable owning product → drop as a
-//!   `NonStandardInput` (not an AttributeType defect). A `COMMON_DATUM_LIST`
-//!   compartment whose member dropped for this reason cascades and is recorded
-//!   too (gated on the member's own of_shape=$ so an unrelated drop stays a
-//!   plain drop, not a normalization).
-//! - **Code**: `entities/pmi.rs` (`read_general_datum_reference_data`).
 //!
 //! ### NS-tagless-parameter-value
 //! - **Source**: abc (various exporters).
@@ -404,7 +396,6 @@ pub(crate) enum NsCase {
     Pcurve3dInPspace,
     PsaStylesUnset,
     OrsiOverRiddenUnset,
-    GeneralDatumReferenceOfShapeUnset,
     TaglessParameterValue,
     NonStandardEnumValue,
 }
@@ -434,7 +425,6 @@ impl NsCase {
         NsCase::Pcurve3dInPspace,
         NsCase::PsaStylesUnset,
         NsCase::OrsiOverRiddenUnset,
-        NsCase::GeneralDatumReferenceOfShapeUnset,
         NsCase::TaglessParameterValue,
         NsCase::NonStandardEnumValue,
     ];
@@ -460,9 +450,6 @@ impl NsCase {
             NsCase::Pcurve3dInPspace => "NS-pcurve-3d-in-pspace",
             NsCase::PsaStylesUnset => "NS-psa-styles-unset",
             NsCase::OrsiOverRiddenUnset => "NS-orsi-over-ridden-unset",
-            NsCase::GeneralDatumReferenceOfShapeUnset => {
-                "NS-general-datum-reference-of-shape-unset"
-            }
             NsCase::TaglessParameterValue => "NS-tagless-parameter-value",
             NsCase::NonStandardEnumValue => "NS-non-standard-enum-value",
         }
