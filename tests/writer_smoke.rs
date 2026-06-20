@@ -10476,10 +10476,12 @@ fn general_property_bound_pdr_round_trips() {
 }
 
 /// A descriptive property `REPRESENTATION` whose `context_of_items` is `$`
-/// (c3d) is accepted as `None` with a `NonStandardInput` normalization warning,
-/// not dropped.
+/// (c3d) is a source EXPRESS violation with no defined normalization: the strict
+/// L1 `bind` rejects it, so the `REPRESENTATION` (and its
+/// `PROPERTY_DEFINITION_REPRESENTATION`) are dropped and recorded as a NORM
+/// (`NS-required-field-unset`) — not kept with a `None` context.
 #[test]
-fn representation_unset_context_round_trips_as_none_with_warning() {
+fn representation_unset_context_dropped_as_nonstandard() {
     use step_io::ir::error::ConvertError;
     use step_io::ir::property::PropertyDefinitionRef;
 
@@ -10504,17 +10506,26 @@ fn representation_unset_context_round_trips_as_none_with_warning() {
     let graph = parse(&text).expect("writer output parses");
     let result = ReaderContext::convert(&graph);
 
+    // REPRESENTATION dropped + recorded as a NORM (LOSS-exempt "dropped" note).
     assert!(
         result.warnings.iter().any(|w| matches!(
             w,
-            ConvertError::NonStandardInput { field, .. } if field.contains("context_of_items")
+            ConvertError::NonStandardInput { field, normalized_to, .. }
+                if field == "REPRESENTATION" && normalized_to.starts_with("dropped")
         )),
-        "expected context_of_items NonStandardInput, got {:#?}",
+        "expected REPRESENTATION dropped NonStandardInput, got {:#?}",
         result.warnings,
     );
-    let re_pool = result.model.properties.as_ref().expect("has properties");
-    let prop = re_pool.properties.iter().next().expect("property survived");
-    assert_eq!(prop.context, None);
+    // The descriptive property did not survive (dropped with its REPRESENTATION).
+    let surviving = result
+        .model
+        .properties
+        .as_ref()
+        .map_or(0, |p| p.properties.len());
+    assert_eq!(
+        surviving, 0,
+        "property should have dropped with its REPRESENTATION",
+    );
 }
 
 /// A bare `MEASURE_WITH_UNIT(LENGTH_MEASURE(-0.3), unit)` (the carrier

@@ -1,6 +1,7 @@
 //! Property-domain `lower` fns (attribute leaf batch). See the
 //! [module docs](super) for the lowering contract.
 
+use crate::early::bind;
 use crate::early::model::{
     EarlyDescriptionAttribute, EarlyDimensionalCharacteristicRepresentation, EarlyGeneralProperty,
     EarlyGeneralPropertyAssociation, EarlyIdAttribute, EarlyNameAttribute, EarlyPropertyDefinition,
@@ -8,7 +9,6 @@ use crate::early::model::{
 };
 use crate::entities::pmi::resolve_geometric_tolerance_ref;
 use crate::entities::shape_rep::shape_aspect_relationship::resolve_shape_aspect_ref;
-use crate::ir::attr::{read_entity_ref_list, read_optional_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::id::DimensionalLocationId;
 use crate::ir::plm::Document;
@@ -432,9 +432,27 @@ pub(crate) fn lower_property_definition(
 /// `bind` extracts the two raw refs; everything else (2-way PD/GP dispatch,
 /// `REPRESENTATION` subtype check, `ReprContextUnset`, item filter, `Property`
 /// push) relocates verbatim from the handler `read`.
+/// Drop a descriptive `REPRESENTATION` whose required `context_of_items` was `$`
+/// (c3d), plus its `PROPERTY_DEFINITION_REPRESENTATION`: record the NORM
+/// (`NS-required-field-unset`, LOSS-exempt "dropped" notes) and seed the cascade.
+fn drop_unset_representation(ctx: &mut ReaderContext, repr_ref: u64, pdr_id: u64) {
+    ctx.ns_record(
+        crate::reader::NsCase::RequiredFieldUnset,
+        "REPRESENTATION".into(),
+        "dropped (required field $)",
+    );
+    ctx.ns_record(
+        crate::reader::NsCase::RequiredFieldUnset,
+        "PROPERTY_DEFINITION_REPRESENTATION".into(),
+        "dropped (drops with REPRESENTATION)",
+    );
+    ctx.nonstandard_dropped_refs.insert(repr_ref);
+    ctx.nonstandard_dropped_refs.insert(pdr_id);
+}
+
 pub(crate) fn lower_property_definition_representation(
     ctx: &mut ReaderContext,
-    _entity_id: u64,
+    entity_id: u64,
     early: EarlyPropertyDefinitionRepresentation,
     graph: &crate::parser::entity::EntityGraph,
 ) -> Result<(), ConvertError> {
@@ -469,22 +487,22 @@ pub(crate) fn lower_property_definition_representation(
         }
         return Ok(());
     }
-    let representation_name = read_string_or_unset(repr_attrs, 0, repr_ref, "name")?.to_owned();
-    let item_refs = read_entity_ref_list(repr_attrs, 1, repr_ref, "items")?;
-    // NsCase::RequiredFieldUnset: REPRESENTATION.context_of_items is required by
-    // EXPRESS but the c3d kernel emits `$` — accept as no context.
-    let context = if let Some(ctx_ref) =
-        read_optional_entity_ref(repr_attrs, 2, repr_ref, "context_of_items")?
-    {
-        ctx.resolve_repr_context(ctx_ref)
-    } else {
-        ctx.ns_record(
-            crate::reader::NsCase::RequiredFieldUnset,
-            "REPRESENTATION.context_of_items (Unset)".into(),
-            "no context",
-        );
-        None
+    // Read the descriptive REPRESENTATION through the strict L1 bind. A required
+    // field the source left `$` (the c3d `context_of_items = $` quirk) makes bind
+    // reject it — drop the REPRESENTATION + its PROPERTY_DEFINITION_REPRESENTATION
+    // and cascade, recorded as a NORM (NS-required-field-unset). Other bind errors
+    // are genuine defects (propagated, as the prior `?` reads did).
+    let early_repr = match bind::bind_representation(repr_ref, repr_attrs) {
+        Ok(r) => r,
+        Err(e) if e.unset_required_field().is_some() => {
+            drop_unset_representation(ctx, repr_ref, entity_id);
+            return Ok(());
+        }
+        Err(e) => return Err(e),
     };
+    let representation_name = early_repr.name;
+    let item_refs = early_repr.items;
+    let context = ctx.resolve_repr_context(early_repr.context_of_items);
 
     let items: Vec<PropertyItem> =
         item_refs
