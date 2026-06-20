@@ -1,7 +1,6 @@
 //! Property-domain `lower` fns (attribute leaf batch). See the
 //! [module docs](super) for the lowering contract.
 
-use crate::early::bind;
 use crate::early::model::{
     EarlyDescriptionAttribute, EarlyDimensionalCharacteristicRepresentation, EarlyGeneralProperty,
     EarlyGeneralPropertyAssociation, EarlyIdAttribute, EarlyNameAttribute, EarlyPropertyDefinition,
@@ -21,7 +20,6 @@ use crate::ir::property::{
 };
 use crate::ir::shape_rep::CharacterizedObject;
 use crate::ir::{ProductId, ShapeAspectRef};
-use crate::parser::entity::RawEntity;
 use crate::reader::ReaderContext;
 
 /// Lower one `GENERAL_PROPERTY`. The legacy read collapsed an empty
@@ -466,13 +464,10 @@ pub(crate) fn lower_property_definition_representation(
         return Ok(()); // silently skipped (unresolved / unsupported target)
     }
 
-    // Walk the graph for the bound REPRESENTATION (shared name; direct read).
-    let Some(RawEntity::Simple {
-        name: repr_name_step,
-        attributes: repr_attrs,
-        ..
-    }) = graph.get(repr_ref)
-    else {
+    // Read the bound REPRESENTATION through the L1 facade (shared name; typed
+    // accessor folds get + name-guard + strict bind).
+    let early = crate::early::EarlyGraph::new(graph);
+    let Some(repr_name_step) = early.type_name(repr_ref) else {
         return Ok(());
     };
     if repr_name_step != "REPRESENTATION" {
@@ -487,18 +482,20 @@ pub(crate) fn lower_property_definition_representation(
         }
         return Ok(());
     }
-    // Read the descriptive REPRESENTATION through the strict L1 bind. A required
-    // field the source left `$` (the c3d `context_of_items = $` quirk) makes bind
-    // reject it — drop the REPRESENTATION + its PROPERTY_DEFINITION_REPRESENTATION
-    // and cascade, recorded as a NORM (NS-required-field-unset). Other bind errors
+    // Strict L1 bind of the descriptive REPRESENTATION. A required field the
+    // source left `$` (the c3d `context_of_items = $` quirk) makes bind reject it
+    // — drop the REPRESENTATION + its PROPERTY_DEFINITION_REPRESENTATION and
+    // cascade, recorded as a NORM (NS-required-field-unset). Other bind errors
     // are genuine defects (propagated, as the prior `?` reads did).
-    let early_repr = match bind::bind_representation(repr_ref, repr_attrs) {
-        Ok(r) => r,
-        Err(e) if e.unset_required_field().is_some() => {
+    let early_repr = match early.representation(repr_ref) {
+        Some(Ok(r)) => r,
+        Some(Err(e)) if e.unset_required_field().is_some() => {
             drop_unset_representation(ctx, repr_ref, entity_id);
             return Ok(());
         }
-        Err(e) => return Err(e),
+        Some(Err(e)) => return Err(e),
+        // type_name confirmed REPRESENTATION above; defensive.
+        None => return Ok(()),
     };
     let representation_name = early_repr.name;
     let item_refs = early_repr.items;

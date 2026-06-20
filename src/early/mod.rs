@@ -33,9 +33,11 @@
 
 pub(crate) mod bind;
 pub(crate) mod generated;
+pub(crate) mod graph;
 pub(crate) mod lift;
 pub(crate) mod lower;
 pub(crate) mod model;
 pub(crate) mod serialize;
 
+pub(crate) use graph::EarlyGraph;
 pub(crate) use model::EarlyModel;
