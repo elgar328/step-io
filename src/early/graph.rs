@@ -15,7 +15,7 @@ use crate::ir::error::ConvertError;
 use crate::parser::entity::{EntityGraph, RawEntity};
 
 use super::bind;
-use super::model::EarlyRepresentation;
+use super::model::{EarlyDefinitionalRepresentation, EarlyPcurve, EarlyRepresentation};
 
 /// Typed front door to the L1 bind layer over a borrowed raw graph. `Copy` —
 /// constructed on demand at each cross-walk (`EarlyGraph::new(graph)`).
@@ -42,6 +42,39 @@ impl<'a> EarlyGraph<'a> {
             RawEntity::Simple { name, .. } => Some(name.as_str()),
             RawEntity::Complex { .. } => None,
         }
+    }
+
+    /// Bind a `PCURVE` (exact name). `None` when absent / not `PCURVE` / the
+    /// strict bind rejects it (caller treats any failure as a dropped pcurve).
+    pub(crate) fn pcurve(self, id: u64) -> Option<EarlyPcurve> {
+        let RawEntity::Simple {
+            name, attributes, ..
+        } = self.raw.get(id)?
+        else {
+            return None;
+        };
+        if name != "PCURVE" {
+            return None;
+        }
+        bind::bind_pcurve(id, attributes).ok()
+    }
+
+    /// Bind a `DEFINITIONAL_REPRESENTATION` (exact name). `None` on absent /
+    /// wrong-name / bind failure.
+    pub(crate) fn definitional_representation(
+        self,
+        id: u64,
+    ) -> Option<EarlyDefinitionalRepresentation> {
+        let RawEntity::Simple {
+            name, attributes, ..
+        } = self.raw.get(id)?
+        else {
+            return None;
+        };
+        if name != "DEFINITIONAL_REPRESENTATION" {
+            return None;
+        }
+        bind::bind_definitional_representation(id, attributes).ok()
     }
 
     /// Bind a bare `REPRESENTATION` (exact name). `None` when absent or not

@@ -13,7 +13,7 @@ use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Pcurve, SurfaceCurveData};
-use crate::parser::entity::{Attribute, EntityGraph, RawEntity};
+use crate::parser::entity::{Attribute, EntityGraph};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -28,36 +28,15 @@ impl ReaderContext {
     /// not resolve, in which case the caller emits a warning so the dropped
     /// pcurve stays visible in reader diagnostics.
     pub(crate) fn resolve_pcurve(&self, pcurve_ref: u64, graph: &EntityGraph) -> Option<Pcurve> {
-        let RawEntity::Simple {
-            name, attributes, ..
-        } = graph.get(pcurve_ref)?
-        else {
-            return None;
-        };
-        if name != "PCURVE" {
-            return None;
-        }
-        let pc = bind::bind_pcurve(pcurve_ref, attributes).ok()?;
+        let early = crate::early::EarlyGraph::new(graph);
+        let pc = early.pcurve(pcurve_ref)?;
         let basis_surface = self
             .id_cache
             .get::<crate::ir::id::SurfaceId>(pc.basis_surface)?;
-
-        let RawEntity::Simple {
-            name: def_name,
-            attributes: def_attrs,
-            ..
-        } = graph.get(pc.reference_to_curve)?
-        else {
-            return None;
-        };
-        if def_name != "DEFINITIONAL_REPRESENTATION" {
-            return None;
-        }
-        let def = bind::bind_definitional_representation(pc.reference_to_curve, def_attrs).ok()?;
+        let def = early.definitional_representation(pc.reference_to_curve)?;
         let curve_2d = self
             .id_cache
             .get::<crate::ir::id::Curve2dId>(def.items.first().copied()?)?;
-
         Some(Pcurve {
             basis_surface,
             curve_2d,

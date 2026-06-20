@@ -33,7 +33,7 @@ use crate::ir::geometry::{
     SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TrimSelect,
     TrimmedCurve, Vertex,
 };
-use crate::parser::entity::{EntityGraph, RawEntity};
+use crate::parser::entity::EntityGraph;
 use crate::reader::{NsCase, ReaderContext};
 
 /// Lower one `BOUNDED_PCURVE` — resolve `basis_surface` + `reference_to_curve`
@@ -1514,10 +1514,9 @@ fn lower_surface_curve_data(
     let mut associated_geometry = Vec::with_capacity(assoc_refs.len());
     let mut wr3_dropped = 0usize;
     for &r in assoc_refs {
-        let member_name = match graph.get(r) {
-            Some(RawEntity::Simple { name, .. }) => name.as_str(),
-            _ => "",
-        };
+        let member_name = crate::early::EarlyGraph::new(graph)
+            .type_name(r)
+            .unwrap_or("");
         if member_name == "PCURVE" {
             match ctx.resolve_pcurve(r, graph) {
                 Some(pc) => associated_geometry.push(PCurveOrSurface::Pcurve(pc)),
