@@ -363,10 +363,11 @@ fn emit_complex_entity(
         }
         used.insert(e.2.clone());
     }
-    assert!(
-        !entries.iter().any(|e| matches!(e.3, Kind::Select(_))),
-        "gen-early: complex entity `{ent_name}` has a SELECT attr — not yet supported"
-    );
+    // A mixed SELECT attr makes bind fallible-to-`None` (drop the whole entity
+    // on an unrecognized SELECT member), mirroring the simple/multi-case paths.
+    let has_select = entries
+        .iter()
+        .any(|e| !e.5 && matches!(e.3, Kind::Select(_)));
 
     let model_attrs: Vec<(String, Kind, bool, bool)> = entries
         .iter()
@@ -375,9 +376,15 @@ fn emit_complex_entity(
     emit_model_and_id(ctx, type_name, step_name, &model_attrs, out);
 
     // bind: per-part `require_part_attrs` (shadow `attrs`) + per-field reads.
+    // With a SELECT attr the return is `Result<Option<_>>` (drop-on-unrecognized).
+    let ret = if has_select {
+        format!("Result<Option<super::model::{type_name}>, crate::ir::error::ConvertError>")
+    } else {
+        format!("Result<super::model::{type_name}, crate::ir::error::ConvertError>")
+    };
     writeln!(
         out.bind,
-        "pub(crate) fn bind_{ent_name}(entity_id: u64, parts: &[crate::parser::entity::RawEntityPart]) -> Result<super::model::{type_name}, crate::ir::error::ConvertError> {{"
+        "pub(crate) fn bind_{ent_name}(entity_id: u64, parts: &[crate::parser::entity::RawEntityPart]) -> {ret} {{"
     )
     .unwrap();
     for part in parts {
@@ -392,22 +399,53 @@ fn emit_complex_entity(
         )
         .unwrap();
         for (_, li, field, k, opt, _) in fields {
-            writeln!(
-                out.bind,
-                "    let {field} = {};",
-                bind_expr_full(k, *li, field, *opt)
-            )
-            .unwrap();
+            match (k, opt) {
+                // Optional typed SELECT: `$`/`*` → None; present-but-unrecognized
+                // → drop the whole entity (`Ok(None)`).
+                (Kind::Select(sel), true) => {
+                    writeln!(out.bind, "    let {field} = match &attrs[{li}] {{").unwrap();
+                    writeln!(out.bind, "        crate::parser::entity::Attribute::Unset | crate::parser::entity::Attribute::Derived => None,").unwrap();
+                    writeln!(out.bind, "        _ => match bind_{sel}(&attrs[{li}]) {{ Some(v) => Some(v), None => return Ok(None) }},").unwrap();
+                    writeln!(out.bind, "    }};").unwrap();
+                }
+                // Required typed SELECT: drop the entity on unrecognized member.
+                (Kind::Select(sel), false) => {
+                    writeln!(
+                        out.bind,
+                        "    let Some({field}) = bind_{sel}(&attrs[{li}]) else {{ return Ok(None); }};"
+                    )
+                    .unwrap();
+                }
+                _ => {
+                    writeln!(
+                        out.bind,
+                        "    let {field} = {};",
+                        bind_expr_full(k, *li, field, *opt)
+                    )
+                    .unwrap();
+                }
+            }
         }
     }
-    writeln!(out.bind, "    Ok(super::model::{type_name} {{").unwrap();
+    let (ctor_open, ctor_close) = if has_select {
+        (
+            format!("    Ok(Some(super::model::{type_name} {{"),
+            "    }))\n}\n",
+        )
+    } else {
+        (
+            format!("    Ok(super::model::{type_name} {{"),
+            "    })\n}\n",
+        )
+    };
+    writeln!(out.bind, "{ctor_open}").unwrap();
     for (_, _, field, _, _, derived) in &entries {
         if *derived {
             continue;
         }
         writeln!(out.bind, "        {field},").unwrap();
     }
-    writeln!(out.bind, "    }})\n}}\n").unwrap();
+    writeln!(out.bind, "{ctor_close}").unwrap();
 
     if ctx.mapping.read_only.iter().any(|e| e == ent_name) {
         return; // read_only: writer normalizes this form away — no serialize.
