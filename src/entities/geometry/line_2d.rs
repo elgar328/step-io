@@ -7,7 +7,7 @@ use crate::entities::geometry::cartesian_point_2d::CartesianPoint2dHandler;
 use crate::entities::geometry::vector_2d::Vector2dHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::Line2;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -23,7 +23,7 @@ impl SimpleEntityHandler for Line2dHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_line(entity_id, attrs)?;
         lower::lower_line_2d(ctx, entity_id, &early)

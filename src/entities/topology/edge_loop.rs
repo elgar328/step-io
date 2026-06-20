@@ -8,7 +8,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::entities::topology::oriented_edge::OrientedEdgeHandler;
 use crate::ir::OrientedEdge;
 use crate::ir::error::ConvertError;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -24,7 +24,7 @@ impl SimpleEntityHandler for EdgeLoopHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_edge_loop(entity_id, attrs)?;
         lower::lower_edge_loop(ctx, entity_id, &early)

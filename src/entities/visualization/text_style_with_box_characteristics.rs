@@ -6,7 +6,7 @@ use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::TextStyleWithBoxCharacteristics;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -22,7 +22,7 @@ impl SimpleEntityHandler for TextStyleWithBoxCharacteristicsHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_text_style_with_box_characteristics(entity_id, attrs)?;
         lower::lower_text_style_with_box_characteristics(ctx, entity_id, early);

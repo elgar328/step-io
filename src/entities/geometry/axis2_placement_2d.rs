@@ -10,7 +10,7 @@ use crate::entities::geometry::cartesian_point_2d::CartesianPoint2dHandler;
 use crate::entities::geometry::direction_2d::Direction2dHandler;
 use crate::ir::Placement2dId;
 use crate::ir::error::ConvertError;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -26,7 +26,7 @@ impl SimpleEntityHandler for Axis2Placement2dHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_axis2_placement_2d(entity_id, attrs)?;
         lower::lower_axis2_placement_2d(ctx, entity_id, &early)

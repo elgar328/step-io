@@ -6,7 +6,7 @@ use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::plm::PersonAndOrganization;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -22,10 +22,9 @@ impl SimpleEntityHandler for PersonAndOrganizationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        graph: &EntityGraph,
+        eg: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_person_and_organization(entity_id, attrs)?;
-        let eg = crate::early::EarlyGraph::new(graph);
         let person_dangling = !eg.exists(early.the_person);
         let org_dangling = !eg.exists(early.the_organization);
         lower::lower_person_and_organization(ctx, entity_id, &early, person_dangling, org_dangling)

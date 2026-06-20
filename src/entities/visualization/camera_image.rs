@@ -11,7 +11,7 @@ use crate::early::{bind, lift, lower, serialize};
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::CameraImage;
-use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
+use crate::parser::entity::{Attribute, RawEntityPart};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -27,7 +27,7 @@ impl SimpleEntityHandler for CameraImageHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_camera_image(entity_id, attrs)?;
         lower::lower_camera_image(ctx, entity_id, early);
@@ -65,7 +65,7 @@ impl ComplexEntityHandler for CameraImage3dWithScaleHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_camera_image_3d_with_scale(entity_id, parts)?;
         lower::lower_camera_image_3d_with_scale(ctx, entity_id, early);

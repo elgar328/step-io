@@ -6,7 +6,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::axis2_placement_2d::Axis2Placement2dHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::Circle2;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -22,7 +22,7 @@ impl SimpleEntityHandler for Circle2dHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_circle(entity_id, attrs)?;
         lower::lower_circle_2d(ctx, entity_id, &early);

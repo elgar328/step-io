@@ -5,7 +5,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::pmi::GeometricToleranceRef;
 use crate::ir::shape_rep::ToleranceZone;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -21,7 +21,7 @@ impl SimpleEntityHandler for ToleranceZoneHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_tolerance_zone(entity_id, attrs)?;
         lower::lower_tolerance_zone(ctx, entity_id, early);

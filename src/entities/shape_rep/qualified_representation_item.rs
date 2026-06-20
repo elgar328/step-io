@@ -5,7 +5,7 @@ use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::representation_item::QualifiedRepresentationItem;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -21,7 +21,7 @@ impl SimpleEntityHandler for QualifiedRepresentationItemHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_qualified_representation_item(entity_id, attrs)?;
         lower::lower_qualified_representation_item(ctx, entity_id, early);

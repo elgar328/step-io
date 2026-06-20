@@ -8,7 +8,7 @@ use crate::early::{bind, lower};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::NurbsCurve;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -24,7 +24,7 @@ impl SimpleEntityHandler for QuasiUniformCurveHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_quasi_uniform_curve(entity_id, attrs)?;
         lower::lower_quasi_uniform_curve(ctx, entity_id, &early)

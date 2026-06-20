@@ -19,7 +19,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::check_count;
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::{DraughtingModel, DraughtingModelForm};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -35,7 +35,7 @@ impl SimpleEntityHandler for DraughtingModelHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 3, entity_id, "DRAUGHTING_MODEL")?;
         let early = bind::bind_draughting_model(entity_id, attrs)?;

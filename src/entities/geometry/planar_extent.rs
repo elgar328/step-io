@@ -9,7 +9,7 @@ use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{PlanarBox, PlanarBoxPlacement, PlanarExtentData};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -25,7 +25,7 @@ impl SimpleEntityHandler for PlanarExtentHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_planar_extent(entity_id, attrs)?;
         lower::lower_planar_extent(ctx, entity_id, &early);
@@ -48,7 +48,7 @@ impl SimpleEntityHandler for PlanarBoxHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_planar_box(entity_id, attrs)?;
         lower::lower_planar_box(ctx, entity_id, &early);

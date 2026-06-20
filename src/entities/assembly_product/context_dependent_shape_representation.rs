@@ -1,17 +1,18 @@
 //! `CONTEXT_DEPENDENT_SHAPE_REPRESENTATION` handler.
 //!
 //! Binds each NAUO to a `Transform3d` by walking the RR-complex sub-entity
-//! that the CDSR's first attribute references. Reader body needs `&graph`
-//! to resolve the complex parts (`REPRESENTATION_RELATIONSHIP` +
+//! that the CDSR's first attribute references. Reader body cross-walks the
+//! RR complex (`REPRESENTATION_RELATIONSHIP` +
 //! `REPRESENTATION_RELATIONSHIP_WITH_TRANSFORMATION` +
-//! `SHAPE_REPRESENTATION_RELATIONSHIP`). Writer emits the two-attr form:
+//! `SHAPE_REPRESENTATION_RELATIONSHIP`) through the `EarlyGraph` facade. Writer
+//! emits the two-attr form:
 //! `CDSR(rr_complex_ref, pdef_shape_ref)`.
 
 use crate::early::model::EarlyTransformation;
 use crate::early::{bind, lift, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -33,7 +34,7 @@ impl SimpleEntityHandler for ContextDependentShapeRepresentationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        graph: &EntityGraph,
+        eg: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_context_dependent_shape_representation(entity_id, attrs)?;
         let rr_ref = early.representation_relation;
@@ -48,7 +49,7 @@ impl SimpleEntityHandler for ContextDependentShapeRepresentationHandler {
         // guard + has_all_parts + strict bind). Outer `None` = not the RRWT
         // triple; `?` propagates a bind defect; inner `None` = unrecognized
         // transformation SELECT member → skip.
-        let early = crate::early::EarlyGraph::new(graph);
+        let early = eg;
         let Some(rrwt_res) = early.representation_relationship_with_transformation(rr_ref) else {
             return Ok(());
         };

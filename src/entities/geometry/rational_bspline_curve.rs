@@ -10,7 +10,7 @@ use crate::early::{bind, lift, lower, serialize};
 use crate::entities::ComplexEntityHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{NurbsCurve, NurbsKind};
-use crate::parser::entity::{EntityGraph, RawEntityPart};
+use crate::parser::entity::RawEntityPart;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -32,7 +32,7 @@ impl ComplexEntityHandler for RationalBsplineCurveHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_rational_b_spline_curve(entity_id, parts)?;
         lower::lower_rational_bspline_curve(ctx, entity_id, &early)

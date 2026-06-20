@@ -9,7 +9,7 @@ use crate::early::{bind, lift, lower, serialize};
 use crate::entities::ComplexEntityHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::units::SolidAngleFlavor;
-use crate::parser::entity::{EntityGraph, RawEntityPart};
+use crate::parser::entity::RawEntityPart;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -31,7 +31,7 @@ impl ComplexEntityHandler for SolidAngleUnitHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_solid_angle_unit(entity_id, parts)?;
         lower::lower_solid_angle_unit(ctx, entity_id, &early);

@@ -11,7 +11,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::cartesian_point::CartesianPointHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{TrimSelect, TrimmedCurve};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -27,7 +27,7 @@ impl SimpleEntityHandler for TrimmedCurveHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         // NsCase::TaglessParameterValue some exporters write trim parameters as
         // bare reals `( 0.0 )` instead of `PARAMETER_VALUE(0.0)`. The strict

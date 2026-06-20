@@ -26,7 +26,7 @@ use crate::ir::pmi::{
     TessellatedAnnotationOccurrence, ToleranceMagnitude, ToleranceMethodDefinition, ToleranceValue,
     ToleranceZoneForm, TypeQualifier, ValueFormatTypeQualifier,
 };
-use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
+use crate::parser::entity::{Attribute, RawEntityPart};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -42,7 +42,7 @@ impl SimpleEntityHandler for ToleranceZoneFormHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_tolerance_zone_form(entity_id, attrs)?;
         crate::early::lower::lower_tolerance_zone_form(ctx, entity_id, early);
@@ -67,7 +67,7 @@ impl SimpleEntityHandler for TypeQualifierHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_type_qualifier(entity_id, attrs)?;
         crate::early::lower::lower_type_qualifier(ctx, entity_id, early);
@@ -92,7 +92,7 @@ impl SimpleEntityHandler for ValueFormatTypeQualifierHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_value_format_type_qualifier(entity_id, attrs)?;
         crate::early::lower::lower_value_format_type_qualifier(ctx, entity_id, early);
@@ -115,7 +115,7 @@ impl SimpleEntityHandler for DraughtingPreDefinedTextFontHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_draughting_pre_defined_text_font(entity_id, attrs)?;
         lower::lower_draughting_pre_defined_text_font(ctx, entity_id, early);
@@ -148,7 +148,7 @@ impl SimpleEntityHandler for AnnotationPlaneHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_annotation_plane(entity_id, attrs)?;
         crate::early::lower::lower_annotation_plane(ctx, entity_id, &early);
@@ -183,7 +183,7 @@ impl SimpleEntityHandler for TessellatedAnnotationOccurrenceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_tessellated_annotation_occurrence(entity_id, attrs)?;
         lower::lower_tessellated_annotation_occurrence(ctx, entity_id, early);
@@ -217,7 +217,7 @@ impl SimpleEntityHandler for AnnotationSymbolOccurrenceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_annotation_symbol_occurrence(entity_id, attrs)?;
         crate::early::lower::lower_annotation_symbol_occurrence(ctx, entity_id, &early);
@@ -264,7 +264,7 @@ impl ComplexEntityHandler for AnnotationTextOccurrenceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_annotation_text_occurrence(entity_id, parts)?;
         crate::early::lower::lower_annotation_text_occurrence(ctx, entity_id, &early);
@@ -298,7 +298,7 @@ impl SimpleEntityHandler for DraughtingAnnotationOccurrenceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_draughting_annotation_occurrence(entity_id, attrs)?;
         crate::early::lower::lower_draughting_annotation_occurrence(ctx, entity_id, &early);
@@ -334,7 +334,7 @@ impl SimpleEntityHandler for ApllPointHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_apll_point(entity_id, attrs)?;
         lower::lower_apll_point(ctx, entity_id, early);
@@ -382,7 +382,7 @@ impl SimpleEntityHandler for ApllPointWithSurfaceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_apll_point_with_surface(entity_id, attrs)?;
         lower::lower_apll_point_with_surface(ctx, entity_id, early);
@@ -407,7 +407,7 @@ impl SimpleEntityHandler for AnnotationToModelLeaderLineHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_annotation_to_model_leader_line(entity_id, attrs)?;
         lower::lower_annotation_to_model_leader_line(ctx, entity_id, early);
@@ -467,7 +467,7 @@ impl SimpleEntityHandler for AuxiliaryLeaderLineHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_auxiliary_leader_line(entity_id, attrs)?;
         lower::lower_auxiliary_leader_line(ctx, entity_id, early);
@@ -500,7 +500,7 @@ impl SimpleEntityHandler for AnnotationPlaceholderOccurrenceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_annotation_placeholder_occurrence(entity_id, attrs)?;
         lower::lower_annotation_placeholder_occurrence(ctx, entity_id, early);
@@ -541,7 +541,7 @@ impl SimpleEntityHandler for AnnotationPlaceholderOccurrenceWithLeaderLineHandle
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early =
             bind::bind_annotation_placeholder_occurrence_with_leader_line(entity_id, attrs)?;
@@ -582,7 +582,7 @@ impl SimpleEntityHandler for AnnotationOccurrenceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_annotation_occurrence(entity_id, attrs)?;
         crate::early::lower::lower_annotation_occurrence(ctx, entity_id, &early);
@@ -633,7 +633,7 @@ impl ComplexEntityHandler for LeaderCurveHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_leader_curve(entity_id, parts)?;
         crate::early::lower::lower_leader_curve(ctx, entity_id, &early);
@@ -668,7 +668,7 @@ impl SimpleEntityHandler for AnnotationCurveOccurrenceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_annotation_curve_occurrence(entity_id, attrs)?;
         crate::early::lower::lower_annotation_curve_occurrence(ctx, entity_id, &early);
@@ -706,7 +706,7 @@ impl SimpleEntityHandler for TerminatorSymbolHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_terminator_symbol(entity_id, attrs)?;
         lower::lower_terminator_symbol(ctx, entity_id, early);
@@ -752,7 +752,7 @@ impl ComplexEntityHandler for LeaderTerminatorHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_leader_terminator(entity_id, parts)?;
         crate::early::lower::lower_leader_terminator(ctx, entity_id, &early);
@@ -807,7 +807,7 @@ impl SimpleEntityHandler for DraughtingCalloutHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_draughting_callout(entity_id, attrs)?;
         crate::early::lower::lower_draughting_callout(ctx, entity_id, early);
@@ -840,7 +840,7 @@ impl SimpleEntityHandler for LeaderDirectedCalloutHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_leader_directed_callout(entity_id, attrs)?;
         crate::early::lower::lower_leader_directed_callout(ctx, entity_id, early);
@@ -873,7 +873,7 @@ impl SimpleEntityHandler for DraughtingCalloutRelationshipHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_draughting_callout_relationship(entity_id, attrs)?;
         lower::lower_draughting_callout_relationship(ctx, early);
@@ -908,7 +908,7 @@ impl SimpleEntityHandler for AnnotationOccurrenceAssociativityHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_annotation_occurrence_associativity(entity_id, attrs)?;
         lower::lower_annotation_occurrence_associativity(ctx, entity_id, early);
@@ -956,7 +956,7 @@ impl SimpleEntityHandler for MeasureQualificationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_measure_qualification(entity_id, attrs)?;
         crate::early::lower::lower_measure_qualification(ctx, early);
@@ -998,7 +998,7 @@ impl SimpleEntityHandler for ProjectedZoneDefinitionHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_projected_zone_definition(entity_id, attrs)?;
         lower::lower_projected_zone_definition(ctx, early);
@@ -1038,7 +1038,7 @@ impl SimpleEntityHandler for GeometricToleranceRelationshipHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_geometric_tolerance_relationship(entity_id, attrs)?;
         crate::early::lower::lower_geometric_tolerance_relationship(ctx, early);
@@ -1093,7 +1093,7 @@ impl SimpleEntityHandler for DatumHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_datum(entity_id, attrs)?;
         crate::early::lower::lower_datum(ctx, entity_id, early);
@@ -1138,7 +1138,7 @@ impl SimpleEntityHandler for DatumFeatureHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_datum_feature(entity_id, attrs)?;
         crate::early::lower::lower_datum_feature(ctx, entity_id, early);
@@ -1168,7 +1168,7 @@ impl SimpleEntityHandler for DimensionalSizeWithDatumFeatureHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_dimensional_size_with_datum_feature(entity_id, attrs)?;
         lower::lower_dimensional_size_with_datum_feature(ctx, entity_id, early);
@@ -1217,7 +1217,7 @@ impl SimpleEntityHandler for DimensionalSizeHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_dimensional_size(entity_id, attrs)?;
         crate::early::lower::lower_dimensional_size(ctx, entity_id, early);
@@ -1239,7 +1239,7 @@ impl SimpleEntityHandler for AngularSizeHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_angular_size(entity_id, attrs)?;
         crate::early::lower::lower_angular_size(ctx, entity_id, early);
@@ -1287,7 +1287,7 @@ impl SimpleEntityHandler for DimensionalLocationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_dimensional_location(entity_id, attrs)?;
         crate::early::lower::lower_dimensional_location(ctx, entity_id, early);
@@ -1309,7 +1309,7 @@ impl SimpleEntityHandler for DirectedDimensionalLocationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_directed_dimensional_location(entity_id, attrs)?;
         crate::early::lower::lower_directed_dimensional_location(ctx, entity_id, early);
@@ -1331,7 +1331,7 @@ impl SimpleEntityHandler for AngularLocationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_angular_location(entity_id, attrs)?;
         crate::early::lower::lower_angular_location(ctx, entity_id, early);
@@ -1617,7 +1617,7 @@ impl SimpleEntityHandler for FlatnessToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_flatness_tolerance(entity_id, attrs)?;
         crate::early::lower::lower_flatness_tolerance(ctx, entity_id, early);
@@ -1646,7 +1646,7 @@ impl SimpleEntityHandler for SurfaceProfileToleranceSimpleHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_surface_profile_tolerance(entity_id, attrs)?;
         crate::early::lower::lower_surface_profile_tolerance(ctx, entity_id, early);
@@ -1668,7 +1668,7 @@ impl SimpleEntityHandler for StraightnessToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_straightness_tolerance(entity_id, attrs)?;
         crate::early::lower::lower_straightness_tolerance(ctx, entity_id, early);
@@ -1690,7 +1690,7 @@ impl SimpleEntityHandler for RoundnessToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_roundness_tolerance(entity_id, attrs)?;
         crate::early::lower::lower_roundness_tolerance(ctx, entity_id, early);
@@ -1712,7 +1712,7 @@ impl SimpleEntityHandler for CylindricityToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_cylindricity_tolerance(entity_id, attrs)?;
         crate::early::lower::lower_cylindricity_tolerance(ctx, entity_id, early);
@@ -1753,7 +1753,7 @@ impl SimpleEntityHandler for DatumReferenceCompartmentHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         // of_shape = $ (non-standard, NIST ctc_05): the strict `bind` rejects the
         // required ref → handler Err → dispatch's `unset_required_field` arm drops
@@ -1781,7 +1781,7 @@ impl SimpleEntityHandler for DatumReferenceElementHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         // of_shape = $ → handler Err → dispatch's RequiredFieldUnset arm drops it
         // (see DatumReferenceCompartmentHandler::read).
@@ -2067,7 +2067,7 @@ impl SimpleEntityHandler for AngularityToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_angularity_tolerance(entity_id, attrs)?;
         crate::early::lower::lower_angularity_tolerance(ctx, entity_id, early);
@@ -2092,7 +2092,7 @@ impl SimpleEntityHandler for CircularRunoutToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_circular_runout_tolerance(entity_id, attrs)?;
         crate::early::lower::lower_circular_runout_tolerance(ctx, entity_id, early);
@@ -2117,7 +2117,7 @@ impl SimpleEntityHandler for ConcentricityToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_concentricity_tolerance(entity_id, attrs)?;
         crate::early::lower::lower_concentricity_tolerance(ctx, entity_id, early);
@@ -2142,7 +2142,7 @@ impl SimpleEntityHandler for ParallelismToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_parallelism_tolerance(entity_id, attrs)?;
         crate::early::lower::lower_parallelism_tolerance(ctx, entity_id, early);
@@ -2167,7 +2167,7 @@ impl SimpleEntityHandler for PerpendicularityToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_perpendicularity_tolerance(entity_id, attrs)?;
         crate::early::lower::lower_perpendicularity_tolerance(ctx, entity_id, early);
@@ -2192,7 +2192,7 @@ impl SimpleEntityHandler for SymmetryToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_symmetry_tolerance(entity_id, attrs)?;
         crate::early::lower::lower_symmetry_tolerance(ctx, entity_id, early);
@@ -2217,7 +2217,7 @@ impl SimpleEntityHandler for TotalRunoutToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_total_runout_tolerance(entity_id, attrs)?;
         crate::early::lower::lower_total_runout_tolerance(ctx, entity_id, early);
@@ -2248,7 +2248,7 @@ impl ComplexEntityHandler for PositionToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_position_tolerance_complex(entity_id, parts)?;
         crate::early::lower::lower_position_tolerance_complex(ctx, entity_id, early);
@@ -2280,7 +2280,7 @@ impl ComplexEntityHandler for SurfaceProfileToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_surface_profile_tolerance_complex(entity_id, parts)?;
         crate::early::lower::lower_surface_profile_tolerance_complex(ctx, entity_id, early);
@@ -2308,7 +2308,7 @@ impl ComplexEntityHandler for LineProfileToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_line_profile_tolerance_complex(entity_id, parts)?;
         crate::early::lower::lower_line_profile_tolerance_complex(ctx, entity_id, early);
@@ -2344,7 +2344,7 @@ impl SimpleEntityHandler for ToleranceValueHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_tolerance_value(entity_id, attrs)?;
         lower::lower_tolerance_value(ctx, entity_id, early);
@@ -2374,7 +2374,7 @@ impl SimpleEntityHandler for LimitsAndFitsHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_limits_and_fits(entity_id, attrs)?;
         lower::lower_limits_and_fits(ctx, entity_id, early);
@@ -2447,7 +2447,7 @@ impl SimpleEntityHandler for PlusMinusToleranceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_plus_minus_tolerance(entity_id, attrs)?;
         lower::lower_plus_minus_tolerance(ctx, early);
@@ -2501,7 +2501,7 @@ impl ComplexEntityHandler for FlatnessToleranceComplexHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_flatness_tolerance_complex(entity_id, parts)?;
         crate::early::lower::lower_flatness_tolerance_complex(ctx, entity_id, early);
@@ -2526,7 +2526,7 @@ impl ComplexEntityHandler for RoundnessToleranceComplexHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_roundness_tolerance_complex(entity_id, parts)?;
         crate::early::lower::lower_roundness_tolerance_complex(ctx, entity_id, early);
@@ -2551,7 +2551,7 @@ impl ComplexEntityHandler for StraightnessToleranceComplexHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_straightness_tolerance_complex(entity_id, parts)?;
         crate::early::lower::lower_straightness_tolerance_complex(ctx, entity_id, early);
@@ -2576,7 +2576,7 @@ impl ComplexEntityHandler for ParallelismToleranceComplexHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_parallelism_tolerance_complex(entity_id, parts)?;
         crate::early::lower::lower_parallelism_tolerance_complex(ctx, entity_id, early);
@@ -2604,7 +2604,7 @@ impl ComplexEntityHandler for PerpendicularityToleranceComplexHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_perpendicularity_tolerance_complex(entity_id, parts)?;
         crate::early::lower::lower_perpendicularity_tolerance_complex(ctx, entity_id, early);
@@ -2632,7 +2632,7 @@ impl ComplexEntityHandler for CircularRunoutToleranceComplexHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_circular_runout_tolerance_complex(entity_id, parts)?;
         crate::early::lower::lower_circular_runout_tolerance_complex(ctx, entity_id, early);
@@ -2657,7 +2657,7 @@ impl SimpleEntityHandler for DraughtingModelItemAssociationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_draughting_model_item_association(entity_id, attrs)?;
         lower::lower_draughting_model_item_association(ctx, entity_id, early);
@@ -2725,7 +2725,7 @@ impl SimpleEntityHandler for DraughtingModelItemAssociationWithPlaceholderHandle
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early =
             bind::bind_draughting_model_item_association_with_placeholder(entity_id, attrs)?;

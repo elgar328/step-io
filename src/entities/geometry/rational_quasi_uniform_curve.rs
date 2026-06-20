@@ -9,7 +9,7 @@ use crate::early::{bind, lower};
 use crate::entities::ComplexEntityHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::NurbsCurve;
-use crate::parser::entity::{EntityGraph, RawEntityPart};
+use crate::parser::entity::RawEntityPart;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -31,7 +31,7 @@ impl ComplexEntityHandler for RationalQuasiUniformCurveHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_rational_quasi_uniform_curve(entity_id, parts)?;
         lower::lower_rational_quasi_uniform_curve(ctx, entity_id, &early)

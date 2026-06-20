@@ -242,14 +242,16 @@ impl ReaderContext {
                     name, attributes, ..
                 },
             ) if name == entry.name => {
-                if let Err(e) = read(self, id, attributes, graph) {
+                let early = crate::early::EarlyGraph::new(graph);
+                if let Err(e) = read(self, id, attributes, early) {
                     self.record_drop_or_warn(entry, id, e, graph);
                 }
             }
             (ReadKind::Complex { cases, read }, RawEntity::Complex { parts, .. })
                 if crate::reader::matches_any_case(parts, cases) =>
             {
-                if let Err(e) = read(self, id, parts, graph) {
+                let early = crate::early::EarlyGraph::new(graph);
+                if let Err(e) = read(self, id, parts, early) {
                     self.record_drop_or_warn(entry, id, e, graph);
                 }
             }

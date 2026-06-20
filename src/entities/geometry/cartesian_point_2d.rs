@@ -11,7 +11,7 @@ use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::Point2dId;
 use crate::ir::error::ConvertError;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -27,7 +27,7 @@ impl SimpleEntityHandler for CartesianPoint2dHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         // 2-layer path: reuse the 3D sister's generated bind/serialize
         // (`CARTESIAN_POINT` is the same STEP entity); `lower_cartesian_point_2d`

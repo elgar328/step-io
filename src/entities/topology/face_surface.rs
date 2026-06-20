@@ -6,7 +6,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::entities::topology::advanced_face::write_face_body;
 use crate::ir::FaceId;
 use crate::ir::error::ConvertError;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -22,7 +22,7 @@ impl SimpleEntityHandler for FaceSurfaceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_face_surface(entity_id, attrs)?;
         lower::lower_face_surface(ctx, entity_id, &early)

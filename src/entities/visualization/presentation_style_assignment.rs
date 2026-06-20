@@ -11,7 +11,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::check_count;
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::PresentationStyleAssignmentData;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::{NsCase, ReaderContext};
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -28,7 +28,7 @@ impl SimpleEntityHandler for PresentationStyleAssignmentHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 1, entity_id, "PRESENTATION_STYLE_ASSIGNMENT")?;
         // Pre-bind normalization of the `styles` SET (shared with PSBC), keeping

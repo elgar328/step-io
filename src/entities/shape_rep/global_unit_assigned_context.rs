@@ -4,7 +4,7 @@ use crate::early::{bind, lift, lower, serialize};
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::{UnitContext, UnitContextForm};
-use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
+use crate::parser::entity::{Attribute, RawEntityPart};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -25,7 +25,7 @@ impl ComplexEntityHandler for GlobalUnitAssignedContextHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_global_unit_assigned_context(entity_id, parts)?;
         lower::lower_global_unit_assigned_context(ctx, entity_id, &early);
@@ -81,7 +81,7 @@ impl SimpleEntityHandler for GlobalUnitAssignedContextSimpleHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_global_unit_assigned_context_simple(entity_id, attrs)?;
         lower::lower_global_unit_assigned_context_simple(ctx, entity_id, early);

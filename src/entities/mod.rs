@@ -7,7 +7,7 @@
 //! Writer dispatch still goes through hand-rolled emit methods.
 
 use crate::ir::error::ConvertError;
-use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
+use crate::parser::entity::{Attribute, RawEntityPart};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -37,16 +37,16 @@ pub(crate) trait SimpleEntityHandler {
     /// Read STEP attributes into the reader context. Body mirrors the
     /// legacy `convert_*` method one-to-one — `&mut self` becomes `ctx`.
     ///
-    /// `graph` exposes the raw entity graph for sub-entity / ref-list
-    /// resolution. Pass-produced results (other handlers' IR output, per-pass
-    /// maps) must be reached through `ctx`, not through `graph`; consulting
-    /// the graph for another entity's *result* (vs its raw attributes) would
-    /// breach pass ordering.
+    /// `early` is the typed [`EarlyGraph`](crate::early::EarlyGraph) facade for
+    /// cross-walking OTHER entities (bind-on-demand); the raw `EntityGraph` is
+    /// not exposed to handlers. Pass-produced results (other handlers' IR output,
+    /// per-pass maps) must be reached through `ctx`, not the facade; consulting
+    /// another entity's *result* (vs its raw attributes) would breach pass order.
     fn read(
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        graph: &EntityGraph,
+        early: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError>;
 
     /// Emit a STEP entity from IR input. Returns the freshly-allocated
@@ -66,12 +66,12 @@ pub(crate) trait ComplexEntityHandler {
     type WriteInput;
 
     /// Read the complex parts into the reader context. See
-    /// [`SimpleEntityHandler::read`] for the `graph` usage contract.
+    /// [`SimpleEntityHandler::read`] for the `early` facade usage contract.
     fn read_complex(
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        graph: &EntityGraph,
+        early: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError>;
 
     /// Emit a STEP entity from IR input.
@@ -84,14 +84,23 @@ pub(crate) trait ComplexEntityHandler {
 pub(crate) enum ReadKind {
     /// Matches `RawEntity::Simple` whose name equals the entry's `name`.
     Simple {
-        read: fn(&mut ReaderContext, u64, &[Attribute], &EntityGraph) -> Result<(), ConvertError>,
+        read: fn(
+            &mut ReaderContext,
+            u64,
+            &[Attribute],
+            crate::early::EarlyGraph<'_>,
+        ) -> Result<(), ConvertError>,
     },
     /// Matches `RawEntity::Complex` whose distinct part-set EQUALS one of
     /// `cases` (exact-case matching).
     Complex {
         cases: &'static [&'static [&'static str]],
-        read:
-            fn(&mut ReaderContext, u64, &[RawEntityPart], &EntityGraph) -> Result<(), ConvertError>,
+        read: fn(
+            &mut ReaderContext,
+            u64,
+            &[RawEntityPart],
+            crate::early::EarlyGraph<'_>,
+        ) -> Result<(), ConvertError>,
     },
 }
 

@@ -452,7 +452,7 @@ pub(crate) fn lower_property_definition_representation(
     ctx: &mut ReaderContext,
     entity_id: u64,
     early: EarlyPropertyDefinitionRepresentation,
-    graph: &crate::parser::entity::EntityGraph,
+    eg: crate::early::EarlyGraph<'_>,
 ) -> Result<(), ConvertError> {
     let pd_ref = early.definition;
     let repr_ref = early.used_representation;
@@ -466,7 +466,7 @@ pub(crate) fn lower_property_definition_representation(
 
     // Read the bound REPRESENTATION through the L1 facade (shared name; typed
     // accessor folds get + name-guard + strict bind).
-    let early = crate::early::EarlyGraph::new(graph);
+    let early = eg;
     let Some(repr_name_step) = early.type_name(repr_ref) else {
         return Ok(());
     };

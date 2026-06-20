@@ -17,7 +17,7 @@ use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::{Colour, SurfaceStyleRenderingData, VisualizationPool};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::{NsCase, ReaderContext};
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -89,7 +89,7 @@ impl SimpleEntityHandler for SurfaceStyleRenderingHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let attrs = normalize_ssr_attrs(ctx, attrs, "SURFACE_STYLE_RENDERING");
         let early = bind::bind_surface_style_rendering(entity_id, &attrs)?;

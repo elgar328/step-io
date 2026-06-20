@@ -6,7 +6,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::vector::VectorHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::SurfaceOfLinearExtrusion;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -22,7 +22,7 @@ impl SimpleEntityHandler for SurfaceOfLinearExtrusionHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_surface_of_linear_extrusion(entity_id, attrs)?;
         lower::lower_surface_of_linear_extrusion(ctx, entity_id, &early)

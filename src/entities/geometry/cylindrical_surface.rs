@@ -5,7 +5,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::axis2_placement_3d::Axis2Placement3dHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::CylindricalSurface;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -21,7 +21,7 @@ impl SimpleEntityHandler for CylindricalSurfaceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_cylindrical_surface(entity_id, attrs)?;
         lower::lower_cylindrical_surface(ctx, entity_id, &early)

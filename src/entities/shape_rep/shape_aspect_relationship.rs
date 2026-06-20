@@ -17,7 +17,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::shape_aspect_ref::ShapeAspectRef;
 use crate::ir::shape_rep::{ShapeAspectRelationship, ShapeAspectRelationshipKind};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -93,7 +93,7 @@ impl SimpleEntityHandler for ShapeAspectRelationshipHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_shape_aspect_relationship(entity_id, attrs)?;
         lower::lower_shape_aspect_relationship(
@@ -122,7 +122,7 @@ impl SimpleEntityHandler for ShapeAspectAssociativityHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_shape_aspect_associativity(entity_id, attrs)?;
         lower::lower_shape_aspect_relationship(
@@ -151,7 +151,7 @@ impl SimpleEntityHandler for ShapeAspectDerivingRelationshipHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_shape_aspect_deriving_relationship(entity_id, attrs)?;
         lower::lower_shape_aspect_relationship(
@@ -185,7 +185,7 @@ impl SimpleEntityHandler for FeatureForDatumTargetRelationshipHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_feature_for_datum_target_relationship(entity_id, attrs)?;
         lower::lower_shape_aspect_relationship(

@@ -9,7 +9,7 @@
 use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::CameraModelD3;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -25,7 +25,7 @@ impl SimpleEntityHandler for CameraModelD3Handler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_camera_model_d3(entity_id, attrs)?;
         crate::early::lower::lower_camera_model_d3(ctx, entity_id, early);

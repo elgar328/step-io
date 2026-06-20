@@ -15,7 +15,7 @@ use crate::ir::tessellation::{
     RepositionedTessellatedItem, TessellatedCurveSet, TessellatedGeometricSet, TessellatedItemRef,
     TessellatedShell, TessellatedSolid,
 };
-use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
+use crate::parser::entity::{Attribute, RawEntityPart};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -31,7 +31,7 @@ impl SimpleEntityHandler for CoordinatesListHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_coordinates_list(entity_id, attrs)?;
         lower::lower_coordinates_list(ctx, entity_id, early);
@@ -56,7 +56,7 @@ impl SimpleEntityHandler for ComplexTriangulatedFaceHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_complex_triangulated_face(entity_id, attrs)?;
         lower::lower_complex_triangulated_face(ctx, entity_id, early);
@@ -79,7 +79,7 @@ impl SimpleEntityHandler for TessellatedCurveSetHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_tessellated_curve_set(entity_id, attrs)?;
         lower::lower_tessellated_curve_set(ctx, entity_id, early);
@@ -104,7 +104,7 @@ impl SimpleEntityHandler for ComplexTriangulatedSurfaceSetHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_complex_triangulated_surface_set(entity_id, attrs)?;
         lower::lower_complex_triangulated_surface_set(ctx, entity_id, early);
@@ -157,7 +157,7 @@ impl SimpleEntityHandler for TessellatedGeometricSetHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_tessellated_geometric_set(entity_id, attrs)?;
         lower::lower_tessellated_geometric_set(ctx, entity_id, early);
@@ -182,7 +182,7 @@ impl SimpleEntityHandler for TessellatedSolidHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_tessellated_solid(entity_id, attrs)?;
         lower::lower_tessellated_solid(ctx, entity_id, early);
@@ -205,7 +205,7 @@ impl SimpleEntityHandler for TessellatedShellHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_tessellated_shell(entity_id, attrs)?;
         lower::lower_tessellated_shell(ctx, entity_id, early);
@@ -228,7 +228,7 @@ impl SimpleEntityHandler for RepositionedTessellatedItemHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         // 2 attrs: `name` inherited from `representation_item` (flattened
         // into the part), `location` ref to AXIS2_PLACEMENT_3D. Same
@@ -272,7 +272,7 @@ impl ComplexEntityHandler for RepositionedTessellatedGeometricSetHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_repositioned_tessellated_geometric_set(entity_id, parts)?;
         lower::lower_repositioned_tessellated_geometric_set(ctx, entity_id, early);

@@ -5,7 +5,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::ir::ShellId;
 use crate::ir::error::ConvertError;
 use crate::ir::topology::Shell;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -52,7 +52,7 @@ impl SimpleEntityHandler for ClosedShellHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_closed_shell(entity_id, attrs)?;
         lower::lower_closed_shell(ctx, entity_id, &early)

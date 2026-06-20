@@ -7,7 +7,7 @@ use crate::entities::geometry::cartesian_point::CartesianPointHandler;
 use crate::entities::geometry::direction::DirectionHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::id::Placement3dId;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -23,7 +23,7 @@ impl SimpleEntityHandler for Axis2Placement3dHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_axis2_placement_3d(entity_id, attrs)?;
         lower::lower_axis2_placement_3d(ctx, entity_id, &early)

@@ -8,7 +8,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::ir::SolidId;
 use crate::ir::error::ConvertError;
 use crate::ir::topology::{Shell, Solid};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -24,7 +24,7 @@ impl SimpleEntityHandler for BrepWithVoidsHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_brep_with_voids(entity_id, attrs)?;
         lower::lower_brep_with_voids(ctx, entity_id, &early)

@@ -11,7 +11,7 @@ use crate::early::{bind, lift, lower, serialize};
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::CompositeShapeAspectKind;
-use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
+use crate::parser::entity::{Attribute, RawEntityPart};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -35,7 +35,7 @@ impl SimpleEntityHandler for CompositeGroupShapeAspectHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_composite_group_shape_aspect(entity_id, attrs)?;
         crate::early::lower::lower_composite_group_shape_aspect(ctx, entity_id, early);
@@ -73,7 +73,7 @@ impl SimpleEntityHandler for CompositeShapeAspectHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_composite_shape_aspect(entity_id, attrs)?;
         crate::early::lower::lower_composite_shape_aspect(ctx, entity_id, early);
@@ -106,7 +106,7 @@ impl SimpleEntityHandler for CentreOfSymmetryHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_centre_of_symmetry(entity_id, attrs)?;
         crate::early::lower::lower_centre_of_symmetry(ctx, entity_id, early);
@@ -139,7 +139,7 @@ impl SimpleEntityHandler for AllAroundShapeAspectHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_all_around_shape_aspect(entity_id, attrs)?;
         crate::early::lower::lower_all_around_shape_aspect(ctx, entity_id, early);
@@ -195,7 +195,7 @@ impl ComplexEntityHandler for CompositeDatumShapeAspectHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_composite_datum_shape_aspect(entity_id, parts)?;
         lower::lower_composite_datum_shape_aspect(ctx, entity_id, early);

@@ -32,6 +32,14 @@ impl<'a> EarlyGraph<'a> {
         Self { raw }
     }
 
+    /// The wrapped raw graph — a reader-internal escape for the few raw walks the
+    /// typed facade can't express (e.g. `record_pcurve_wr3_drop`'s generic
+    /// ref-subtree collection). Banned in `entities/` + `early/lower/` by the
+    /// `no_raw_graph_access_in_l2_build` drift test; only `reader/` may call it.
+    pub(crate) fn raw(self) -> &'a EntityGraph {
+        self.raw
+    }
+
     /// Whether an entity id is present in the graph (dangling-reference probe).
     pub(crate) fn exists(self, id: u64) -> bool {
         self.raw.get(id).is_some()
@@ -176,7 +184,10 @@ mod tests {
                 if code.starts_with("//") || code.starts_with('*') || code.starts_with("/*") {
                     continue;
                 }
-                if line.contains("graph.get(") || line.contains("RawEntity::") {
+                if line.contains("graph.get(")
+                    || line.contains("RawEntity::")
+                    || line.contains(".raw(")
+                {
                     out.push(format!("{rel}: {}", code.trim_end()));
                     break;
                 }

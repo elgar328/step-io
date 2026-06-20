@@ -7,7 +7,7 @@ use crate::ir::error::ConvertError;
 use crate::ir::visualization::{
     AppliedPresentedItem, PresentationReprSelect, PresentedItem, PresentedItemRepresentation,
 };
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -23,7 +23,7 @@ impl SimpleEntityHandler for PresentedItemRepresentationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_presented_item_representation(entity_id, attrs)?;
         lower::lower_presented_item_representation(ctx, &early);
@@ -53,7 +53,7 @@ impl SimpleEntityHandler for AppliedPresentedItemHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_applied_presented_item(entity_id, attrs)?;
         lower::lower_applied_presented_item(ctx, entity_id, early);

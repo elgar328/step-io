@@ -23,7 +23,7 @@ use crate::entities::visualization::styled_item::resolve_representation_item_ref
 use crate::ir::attr::{check_count, read_entity_ref, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::GeometricItemSpecificUsage;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::{DeferredGisu, ReaderContext};
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -39,7 +39,7 @@ impl SimpleEntityHandler for GeometricItemSpecificUsageHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 5, entity_id, "GEOMETRIC_ITEM_SPECIFIC_USAGE")?;
         // Non-standard used_representation=$ — intercept before strict bind and

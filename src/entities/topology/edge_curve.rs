@@ -11,7 +11,7 @@ use crate::ir::EdgeId;
 use crate::ir::attr::{check_count, read_entity_ref};
 use crate::ir::error::ConvertError;
 use crate::ir::topology::Edge;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -27,7 +27,7 @@ impl SimpleEntityHandler for EdgeCurveHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         // Resolve-first: a few ABC-dataset exporters emit a malformed edge with
         // `edge_geometry = #0` (undefined) AND an empty `same_sense` slot.

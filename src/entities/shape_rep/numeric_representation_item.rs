@@ -17,7 +17,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::{check_count, read_real, read_string_or_unset};
 use crate::ir::error::ConvertError;
 use crate::ir::shape_rep::{IntegerRepresentationItem, RealRepresentationItem};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -33,7 +33,7 @@ impl SimpleEntityHandler for IntegerRepresentationItemHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "INTEGER_REPRESENTATION_ITEM")?;
         let early = if matches!(attrs.get(1), Some(Attribute::Real(_))) {
@@ -68,7 +68,7 @@ impl SimpleEntityHandler for RealRepresentationItemHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = crate::early::bind::bind_real_representation_item(entity_id, attrs)?;
         crate::early::lower::lower_real_representation_item(ctx, early);

@@ -13,7 +13,7 @@ use crate::entities::visualization::presentation_style_assignment::normalize_psa
 use crate::ir::attr::check_count;
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::PresentationStyleByContext;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -29,7 +29,7 @@ impl SimpleEntityHandler for PresentationStyleByContextHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 2, entity_id, "PRESENTATION_STYLE_BY_CONTEXT")?;
         // Pre-bind normalization of the `styles` SET (shared with PSA), keeping

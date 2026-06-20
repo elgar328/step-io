@@ -13,7 +13,7 @@ use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{Pcurve, SurfaceCurveData};
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -27,8 +27,11 @@ impl ReaderContext {
     /// IR. Returns `None` when any link is missing or a referenced entity does
     /// not resolve, in which case the caller emits a warning so the dropped
     /// pcurve stays visible in reader diagnostics.
-    pub(crate) fn resolve_pcurve(&self, pcurve_ref: u64, graph: &EntityGraph) -> Option<Pcurve> {
-        let early = crate::early::EarlyGraph::new(graph);
+    pub(crate) fn resolve_pcurve(
+        &self,
+        pcurve_ref: u64,
+        early: crate::early::EarlyGraph<'_>,
+    ) -> Option<Pcurve> {
         let pc = early.pcurve(pcurve_ref)?;
         let basis_surface = self
             .id_cache
@@ -54,10 +57,10 @@ impl SimpleEntityHandler for SurfaceCurveHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        graph: &EntityGraph,
+        eg: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_surface_curve(entity_id, attrs)?;
-        lower::lower_surface_curve(ctx, entity_id, early, graph);
+        lower::lower_surface_curve(ctx, entity_id, early, eg);
         Ok(())
     }
 

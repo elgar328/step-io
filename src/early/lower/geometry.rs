@@ -33,7 +33,6 @@ use crate::ir::geometry::{
     SurfaceOfLinearExtrusion, SurfaceOfOffset, SurfaceOfRevolution, ToroidalSurface, TrimSelect,
     TrimmedCurve, Vertex,
 };
-use crate::parser::entity::EntityGraph;
 use crate::reader::{NsCase, ReaderContext};
 
 /// Lower one `BOUNDED_PCURVE` — resolve `basis_surface` + `reference_to_curve`
@@ -1499,7 +1498,7 @@ fn lower_trim_select(ctx: &ReaderContext, items: &[EarlyTrimSelect]) -> Vec<Trim
 #[allow(clippy::too_many_arguments)]
 fn lower_surface_curve_data(
     ctx: &mut ReaderContext,
-    graph: &EntityGraph,
+    eg: crate::early::EarlyGraph<'_>,
     entity_id: u64,
     name: String,
     curve_3d_ref: u64,
@@ -1514,17 +1513,15 @@ fn lower_surface_curve_data(
     let mut associated_geometry = Vec::with_capacity(assoc_refs.len());
     let mut wr3_dropped = 0usize;
     for &r in assoc_refs {
-        let member_name = crate::early::EarlyGraph::new(graph)
-            .type_name(r)
-            .unwrap_or("");
+        let member_name = eg.type_name(r).unwrap_or("");
         if member_name == "PCURVE" {
-            match ctx.resolve_pcurve(r, graph) {
+            match ctx.resolve_pcurve(r, eg) {
                 Some(pc) => associated_geometry.push(PCurveOrSurface::Pcurve(pc)),
                 // NsCase::Pcurve3dInPspace — a 3D curve inside a PCURVE's 2D
                 // parameter-space DEFINITIONAL_REPRESENTATION (EXPRESS pcurve.wr3
                 // violation). Classify the dropped subtree as non-standard input.
                 None => {
-                    if ctx.record_pcurve_wr3_drop(r, graph) {
+                    if ctx.record_pcurve_wr3_drop(r, eg) {
                         wr3_dropped += 1;
                     } else {
                         ctx.warnings.push(ConvertError::UnexpectedEntityForm {
@@ -1582,14 +1579,14 @@ pub(crate) fn lower_surface_curve(
     ctx: &mut ReaderContext,
     entity_id: u64,
     early: EarlySurfaceCurve,
-    graph: &EntityGraph,
+    eg: crate::early::EarlyGraph<'_>,
 ) {
     if let Some(curve_3d) = ctx.id_cache.get::<crate::ir::id::CurveId>(early.curve_3d) {
         ctx.id_cache.insert(entity_id, curve_3d);
     }
     if let Some(body) = lower_surface_curve_data(
         ctx,
-        graph,
+        eg,
         entity_id,
         early.name,
         early.curve_3d,
@@ -1607,14 +1604,14 @@ pub(crate) fn lower_seam_curve(
     ctx: &mut ReaderContext,
     entity_id: u64,
     early: EarlySeamCurve,
-    graph: &EntityGraph,
+    eg: crate::early::EarlyGraph<'_>,
 ) {
     if let Some(curve_3d) = ctx.id_cache.get::<crate::ir::id::CurveId>(early.curve_3d) {
         ctx.id_cache.insert(entity_id, curve_3d);
     }
     if let Some(body) = lower_surface_curve_data(
         ctx,
-        graph,
+        eg,
         entity_id,
         early.name,
         early.curve_3d,
@@ -1632,11 +1629,11 @@ pub(crate) fn lower_intersection_curve(
     ctx: &mut ReaderContext,
     entity_id: u64,
     early: EarlyIntersectionCurve,
-    graph: &EntityGraph,
+    eg: crate::early::EarlyGraph<'_>,
 ) {
     if let Some(body) = lower_surface_curve_data(
         ctx,
-        graph,
+        eg,
         entity_id,
         early.name,
         early.curve_3d,
@@ -1657,11 +1654,11 @@ pub(crate) fn lower_bounded_surface_curve(
     ctx: &mut ReaderContext,
     entity_id: u64,
     early: EarlyBoundedSurfaceCurve,
-    graph: &EntityGraph,
+    eg: crate::early::EarlyGraph<'_>,
 ) {
     if let Some(body) = lower_surface_curve_data(
         ctx,
-        graph,
+        eg,
         entity_id,
         early.name,
         early.curve_3d,

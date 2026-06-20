@@ -14,7 +14,7 @@ use crate::early::{bind, lower};
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::attr::check_count;
 use crate::ir::error::ConvertError;
-use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
+use crate::parser::entity::{Attribute, RawEntityPart};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -32,7 +32,7 @@ impl SimpleEntityHandler for MeasureRepresentationItemHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 3, entity_id, "MEASURE_REPRESENTATION_ITEM")?;
         if let Some(early) = bind::bind_measure_representation_item(entity_id, attrs)? {
@@ -68,7 +68,7 @@ impl ComplexEntityHandler for MeasureRepresentationItemComplexHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         if let Some(early) = bind::bind_measure_representation_item_complex(entity_id, parts)? {
             lower::lower_measure_representation_item_complex(ctx, entity_id, early);

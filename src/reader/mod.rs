@@ -662,7 +662,14 @@ impl ReaderContext {
     /// space); returns `false` for any other drop cause (missing
     /// `basis_surface`, malformed structure) so the caller emits its defect
     /// warning instead.
-    pub(crate) fn record_pcurve_wr3_drop(&mut self, pcurve_ref: u64, graph: &EntityGraph) -> bool {
+    pub(crate) fn record_pcurve_wr3_drop(
+        &mut self,
+        pcurve_ref: u64,
+        early: crate::early::EarlyGraph<'_>,
+    ) -> bool {
+        // Reader-internal raw walk (generic ref-subtree collection the facade
+        // can't express) — unwrap the facade here, inside `reader/`.
+        let graph = early.raw();
         // PCURVE(name, basis_surface, reference_to_curve).
         let Some(RawEntity::Simple { attributes, .. }) = graph.get(pcurve_ref) else {
             return false;

@@ -10,7 +10,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::entities::geometry::cartesian_point_2d::CartesianPoint2dHandler;
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::NurbsCurve2d;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -26,7 +26,7 @@ impl SimpleEntityHandler for BSplineCurve2dWithKnotsHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_b_spline_curve_with_knots(entity_id, attrs)?;
         lower::lower_b_spline_curve_2d_with_knots(ctx, entity_id, &early)

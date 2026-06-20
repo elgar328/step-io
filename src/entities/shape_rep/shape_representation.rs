@@ -16,7 +16,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::ir::assembly::Product;
 use crate::ir::attr::check_count;
 use crate::ir::error::ConvertError;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -37,7 +37,7 @@ impl SimpleEntityHandler for ShapeRepresentationHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 3, entity_id, "SHAPE_REPRESENTATION")?;
         let early = bind::bind_shape_representation(entity_id, attrs)?;

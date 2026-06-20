@@ -13,7 +13,7 @@ use crate::entities::SimpleEntityHandler;
 use crate::ir::attr::check_count;
 use crate::ir::error::ConvertError;
 use crate::ir::visualization::OverRidingStyledItem;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -30,7 +30,7 @@ impl SimpleEntityHandler for OverRidingStyledItemHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         check_count(attrs, 4, entity_id, "OVER_RIDING_STYLED_ITEM")?;
         // NsCase::OrsiOverRiddenUnset: `over_ridden_style` is mandatory in EXPRESS

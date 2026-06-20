@@ -11,7 +11,7 @@ use crate::entities::geometry::cartesian_point_2d::CartesianPoint2dHandler;
 use crate::entities::{ComplexEntityHandler, SimpleEntityHandler};
 use crate::ir::error::ConvertError;
 use crate::ir::geometry::{NurbsCurve2d, NurbsKind2d};
-use crate::parser::entity::{EntityGraph, RawEntityPart};
+use crate::parser::entity::RawEntityPart;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -34,7 +34,7 @@ impl ComplexEntityHandler for RationalBsplineCurve2dHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         parts: &[RawEntityPart],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         let early = bind::bind_rational_b_spline_curve(entity_id, parts)?;
         lower::lower_rational_bspline_curve_2d(ctx, entity_id, &early)

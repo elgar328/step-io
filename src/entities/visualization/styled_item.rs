@@ -20,7 +20,7 @@ use crate::ir::error::ConvertError;
 use crate::ir::representation_item::RepresentationItemRef;
 use crate::ir::shape_rep::Representation;
 use crate::ir::visualization::PlainStyledItem;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -37,7 +37,7 @@ impl SimpleEntityHandler for StyledItemHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        _graph: &EntityGraph,
+        _: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         // 2-layer path: bind → L1, then lower → L2. `lower` resolves styles +
         // `item` (via the shared resolver) and applies the dangling-cascade drop.

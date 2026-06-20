@@ -13,7 +13,7 @@
 use crate::early::{bind, lift, lower, serialize};
 use crate::entities::SimpleEntityHandler;
 use crate::ir::error::ConvertError;
-use crate::parser::entity::{Attribute, EntityGraph};
+use crate::parser::entity::Attribute;
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
@@ -42,13 +42,12 @@ impl SimpleEntityHandler for ProductDefinitionShapeHandler {
         ctx: &mut ReaderContext,
         entity_id: u64,
         attrs: &[Attribute],
-        graph: &EntityGraph,
+        early: crate::early::EarlyGraph<'_>,
     ) -> Result<(), ConvertError> {
         // Classifier (PDEF- vs NAUO-bearing) keyed on the *target's* entity
         // type. Bind this PDS's own attrs (not a cross-walk); the target name is
         // read through the L1 facade. A malformed PDS (bind fail / unresolved
         // target) is a no-op, never an error.
-        let early = crate::early::EarlyGraph::new(graph);
         let Ok(pds) = bind::bind_product_definition_shape(entity_id, attrs) else {
             return Ok(());
         };
