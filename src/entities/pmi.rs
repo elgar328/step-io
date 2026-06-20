@@ -30,7 +30,6 @@ use crate::parser::entity::{Attribute, EntityGraph, RawEntityPart};
 use crate::reader::ReaderContext;
 use crate::writer::WriteError;
 use crate::writer::buffer::WriteBuffer;
-use crate::writer::entity::{WriterBody, WriterEntity};
 use step_io_macros::{step_entity, step_entity_complex};
 
 pub(crate) struct ToleranceZoneFormHandler;
@@ -1600,90 +1599,12 @@ pub(crate) fn write_geometric_tolerance(buf: &mut WriteBuffer, gt: GeometricTole
     ) {
         return write_gt_data_complex_migrated(buf, entity_name, data, magnitude, shape_aspect);
     }
-    // Complex MI emit. Part order follows EXPRESS supertype order:
-    // GT → [WDU] → [WDAU] → [WM] → LEAF.
-    let mut parts: Vec<(String, Vec<Attribute>)> = Vec::with_capacity(5);
-    parts.push((
-        "GEOMETRIC_TOLERANCE".into(),
-        vec![
-            Attribute::String(data.name),
-            Attribute::String(data.description),
-            Attribute::EntityRef(magnitude),
-            Attribute::EntityRef(shape_aspect),
-        ],
-    ));
-    if let Some(unit_size) = data.unit_size {
-        let unit_size_step = emit_tolerance_magnitude(buf, &unit_size);
-        parts.push((
-            "GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT".into(),
-            vec![Attribute::EntityRef(unit_size_step)],
-        ));
-        if let Some(area_unit) = &data.defined_area_unit {
-            parts.push((
-                "GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT".into(),
-                emit_defined_area_unit(buf, area_unit),
-            ));
-        }
-    }
-    if has_modifiers {
-        parts.push((
-            "GEOMETRIC_TOLERANCE_WITH_MODIFIERS".into(),
-            vec![Attribute::List(emit_modifier_set(&data.modifiers))],
-        ));
-    }
-    parts.push((entity_name.into(), vec![]));
-    let n = buf.fresh();
-    buf.entities.push(crate::writer::entity::WriterEntity {
-        id: n,
-        body: crate::writer::entity::WriterBody::Complex { parts },
-    });
-    n
-}
-
-/// Encode `DefinedAreaUnit` as the two-attr body of
-/// `GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT`. `second_unit_size`
-/// resolves through `emit_tolerance_magnitude` (units-pool or repr-item
-/// arena; None → `$`).
-fn emit_defined_area_unit(
-    buf: &WriteBuffer,
-    area_unit: &crate::ir::DefinedAreaUnit,
-) -> Vec<Attribute> {
-    use crate::ir::AreaUnitType;
-    let area_token = match &area_unit.area_type {
-        AreaUnitType::Circular => "CIRCULAR",
-        AreaUnitType::Rectangular => "RECTANGULAR",
-        AreaUnitType::Square => "SQUARE",
-        AreaUnitType::Other(s) => s.as_str(),
-    };
-    let second = match &area_unit.second_unit_size {
-        Some(m) => Attribute::EntityRef(emit_tolerance_magnitude(buf, m)),
-        None => Attribute::Unset,
-    };
-    vec![Attribute::Enum(area_token.into()), second]
-}
-
-/// Encode a `GeometricToleranceModifier` Vec as the `Attribute::List` that
-/// occupies attr[0] of `GEOMETRIC_TOLERANCE_WITH_MODIFIERS`. Mirrors the
-/// reader's `read_optional_modifiers` token decoding so round-trip is
-/// lossless (Other variants preserve the source token verbatim).
-fn emit_modifier_set(modifiers: &[crate::ir::GeometricToleranceModifier]) -> Vec<Attribute> {
-    use crate::ir::GeometricToleranceModifier;
-    modifiers
-        .iter()
-        .map(|m| {
-            let token = match m {
-                GeometricToleranceModifier::MaximumMaterialRequirement => {
-                    "MAXIMUM_MATERIAL_REQUIREMENT"
-                }
-                GeometricToleranceModifier::LeastMaterialRequirement => {
-                    "LEAST_MATERIAL_REQUIREMENT"
-                }
-                GeometricToleranceModifier::ReciprocityRequirement => "RECIPROCITY_REQUIREMENT",
-                GeometricToleranceModifier::Other(s) => s.as_str(),
-            };
-            Attribute::Enum(token.into())
-        })
-        .collect()
+    // CYLINDRICITY_TOLERANCE / datum-free SURFACE_PROFILE_TOLERANCE: the complex MI
+    // form (GT + WDU/WDAU/WM parts) has no read handler — it is `UnhandledComplex`
+    // (warn+drop) on read, so it is not reader-producible. A kernel-built IR that
+    // sets those parts degrades to the simple form here rather than fabricating a
+    // complex the reader cannot round-trip (symmetric with the read drop).
+    write_gt_simple_form(buf, entity_name, data, magnitude, shape_aspect)
 }
 
 pub(crate) struct FlatnessToleranceHandler;
@@ -2069,51 +1990,19 @@ pub(crate) fn write_geometric_tolerance_with_datum_reference(
                     ),
                 );
             }
+            // ANGULARITY / CONCENTRICITY / SYMMETRY / TOTAL_RUNOUT reach here only
+            // via kernel-set modifiers/displacement; their complex MI form has no
+            // read handler (`UnhandledComplex` warn+drop on read), so it is not
+            // reader-producible. Degrade to the simple 5-attr form below rather than
+            // fabricate a complex the reader cannot round-trip (symmetric with the
+            // read drop).
             _ => {}
         }
-        let mut parts = Vec::with_capacity(5);
-        parts.push((
-            "GEOMETRIC_TOLERANCE".into(),
-            vec![
-                Attribute::String(data.name),
-                Attribute::String(data.description),
-                Attribute::EntityRef(magnitude),
-                Attribute::EntityRef(shape_aspect),
-            ],
-        ));
-        parts.push((
-            "GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE".into(),
-            vec![Attribute::List(
-                datum_system_ids
-                    .iter()
-                    .map(|&s| Attribute::EntityRef(s))
-                    .collect(),
-            )],
-        ));
-        if !data.modifiers.is_empty() {
-            parts.push((
-                "GEOMETRIC_TOLERANCE_WITH_MODIFIERS".into(),
-                vec![Attribute::List(emit_modifier_set(&data.modifiers))],
-            ));
-        }
-        if let Some(disp) = &data.displacement {
-            let disp_step = emit_tolerance_magnitude(buf, disp);
-            parts.push((
-                "UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE".into(),
-                vec![Attribute::EntityRef(disp_step)],
-            ));
-        }
-        parts.push((type_name.into(), vec![]));
-        let n = buf.fresh();
-        buf.entities.push(WriterEntity {
-            id: n,
-            body: WriterBody::Complex { parts },
-        });
-        n
-    } else {
-        // Simple 5-attr emit goes through the generated serialize (the
-        // complex-MI branch above stays hand-built). `is_complex` is false only
-        // for the 7 simple subtypes, so `type_name` is one of them here.
+    }
+    // Simple 5-attr emit via the generated serialize. Reached by the non-complex
+    // subtypes and the degraded with-modifiers leaves above; POSITION /
+    // SURFACE_PROFILE / LINE_PROFILE always return inside the complex match.
+    {
         use crate::early::{lift, serialize};
         match type_name {
             "ANGULARITY_TOLERANCE" => serialize::serialize_angularity_tolerance(
