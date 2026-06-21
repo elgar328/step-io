@@ -21,7 +21,7 @@ use crate::schema::Entity;
 /// Curated output targets: `(profile toml stem, generated const prefix)`.
 const TARGETS: &[(&str, &str)] = &[
     ("ap214e3", "AP214E3"),
-    ("ap242ed2", "AP242ED2"),
+    ("ap242e2", "AP242E2"),
     ("ap203e2", "AP203E2"),
 ];
 

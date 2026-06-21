@@ -930,8 +930,8 @@ pub(crate) const AP214E3_FILE_SCHEMA: &[&str] = &["AUTOMOTIVE_DESIGN { 1 0 10303
 pub(crate) const AP214E3_APD: (&str, &str, i64) =
     ("international standard", "automotive_design", 2009);
 
-/// Entities legal in ap242ed2 output (UPPER wire form, sorted). Absence = illegal.
-pub(crate) const AP242ED2_LEGAL: &[&str] = &[
+/// Entities legal in ap242e2 output (UPPER wire form, sorted). Absence = illegal.
+pub(crate) const AP242E2_LEGAL: &[&str] = &[
     "A3M_EQUIVALENCE_ACCURACY_ASSOCIATION",
     "A3M_EQUIVALENCE_ASSESSMENT_BY_LOGICAL_TEST",
     "A3M_EQUIVALENCE_ASSESSMENT_BY_NUMERICAL_TEST",
@@ -3056,12 +3056,12 @@ pub(crate) const AP242ED2_LEGAL: &[&str] = &[
     "ZONE_STRUCTURAL_MAKEUP",
 ];
 
-/// FILE_SCHEMA descriptor string(s) for ap242ed2 output.
-pub(crate) const AP242ED2_FILE_SCHEMA: &[&str] =
+/// FILE_SCHEMA descriptor string(s) for ap242e2 output.
+pub(crate) const AP242E2_FILE_SCHEMA: &[&str] =
     &["AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF { 1 0 10303 442 3 1 4 }"];
 
-/// APPLICATION_PROTOCOL_DEFINITION (status, application, year) for ap242ed2.
-pub(crate) const AP242ED2_APD: (&str, &str, i64) = (
+/// APPLICATION_PROTOCOL_DEFINITION (status, application, year) for ap242e2.
+pub(crate) const AP242E2_APD: (&str, &str, i64) = (
     "international standard",
     "ap242_managed_model_based_3d_engineering_mim_lf",
     2011,
