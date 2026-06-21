@@ -926,9 +926,14 @@ pub(crate) const AP214E3_LEGAL: &[&str] = &[
 /// FILE_SCHEMA descriptor string(s) for ap214e3 output.
 pub(crate) const AP214E3_FILE_SCHEMA: &[&str] = &["AUTOMOTIVE_DESIGN { 1 0 10303 214 3 1 1 }"];
 
-/// APPLICATION_PROTOCOL_DEFINITION (status, application, year) for ap214e3.
-pub(crate) const AP214E3_APD: (&str, &str, i64) =
-    ("international standard", "automotive_design", 2009);
+/// APPLICATION_PROTOCOL_DEFINITION (status, application, year) + APPLICATION_CONTEXT
+/// description for ap214e3.
+pub(crate) const AP214E3_APD: (&str, &str, i64, &str) = (
+    "international standard",
+    "automotive_design",
+    2009,
+    "Core Data for Automotive Mechanical Design Process",
+);
 
 /// Entities legal in ap242e2 output (UPPER wire form, sorted). Absence = illegal.
 pub(crate) const AP242E2_LEGAL: &[&str] = &[
@@ -3060,11 +3065,13 @@ pub(crate) const AP242E2_LEGAL: &[&str] = &[
 pub(crate) const AP242E2_FILE_SCHEMA: &[&str] =
     &["AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF { 1 0 10303 442 3 1 4 }"];
 
-/// APPLICATION_PROTOCOL_DEFINITION (status, application, year) for ap242e2.
-pub(crate) const AP242E2_APD: (&str, &str, i64) = (
+/// APPLICATION_PROTOCOL_DEFINITION (status, application, year) + APPLICATION_CONTEXT
+/// description for ap242e2.
+pub(crate) const AP242E2_APD: (&str, &str, i64, &str) = (
     "international standard",
     "ap242_managed_model_based_3d_engineering_mim_lf",
     2011,
+    "managed model based 3d engineering",
 );
 
 /// Entities legal in ap203e2 output (UPPER wire form, sorted). Absence = illegal.
@@ -4082,6 +4089,11 @@ pub(crate) const AP203E2_FILE_SCHEMA: &[&str] = &[
     "AP203_CONFIGURATION_CONTROLLED_3D_DESIGN_OF_MECHANICAL_PARTS_AND_ASSEMBLIES_MIM_LF { 1 0 10303 403 2 1 2 }",
 ];
 
-/// APPLICATION_PROTOCOL_DEFINITION (status, application, year) for ap203e2.
-pub(crate) const AP203E2_APD: (&str, &str, i64) =
-    ("international standard", "config_control_design", 2010);
+/// APPLICATION_PROTOCOL_DEFINITION (status, application, year) + APPLICATION_CONTEXT
+/// description for ap203e2.
+pub(crate) const AP203E2_APD: (&str, &str, i64, &str) = (
+    "international standard",
+    "config_control_design",
+    2010,
+    "configuration controlled 3D designs of mechanical parts and assemblies",
+);

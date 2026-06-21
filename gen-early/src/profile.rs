@@ -44,6 +44,7 @@ struct ProfileApd {
     status: String,
     name: String,
     year: i64,
+    description: String,
 }
 
 /// Read the target profile tomls and return the full `profile.rs` content
@@ -92,13 +93,14 @@ pub(crate) fn emit_profiles(root: &str) -> String {
 
         writeln!(
             out,
-            "/// APPLICATION_PROTOCOL_DEFINITION (status, application, year) for {stem}.",
+            "/// APPLICATION_PROTOCOL_DEFINITION (status, application, year) + APPLICATION_CONTEXT\n\
+             /// description for {stem}.",
         )
         .unwrap();
         writeln!(
             out,
-            "pub(crate) const {prefix}_APD: (&str, &str, i64) = ({:?}, {:?}, {});\n",
-            prof.meta.apd.status, prof.meta.apd.name, prof.meta.apd.year,
+            "pub(crate) const {prefix}_APD: (&str, &str, i64, &str) = ({:?}, {:?}, {}, {:?});\n",
+            prof.meta.apd.status, prof.meta.apd.name, prof.meta.apd.year, prof.meta.apd.description,
         )
         .unwrap();
     }

@@ -849,54 +849,87 @@ impl WriteBuffer<'_> {
             !a.product_contexts.is_empty() || !a.product_definition_contexts.is_empty()
         });
         if has_ac || has_pc_pdc {
-            // 1) Emit all IR AC entries, caching step ids by IR index.
-            let plm = self.model.plm.clone().unwrap_or_default();
-            self.ac_step_ids = Vec::with_capacity(plm.application_contexts.len());
-            for ac in plm.application_contexts.iter() {
-                let id = ApplicationContextHandler::write(self, ac.clone())
-                    .expect("AC write only pushes one simple entity");
-                self.ac_step_ids.push(id);
-            }
-            // If IR has no AC but does have PC/PDC, synthesise one AC for
-            // PC.frame_of_reference to point at.
-            if self.ac_step_ids.is_empty() {
-                let (desc, status, name, year) = apd_info(schema);
-                let id = ApplicationContextHandler::write(
+            // 1+2) AC/APD — retarget to a single target pair (non-Universal),
+            // or re-emit the source AC/APD verbatim (Universal).
+            if let Some((apd_status, apd_name, apd_year, apd_desc)) =
+                crate::early::profile::SchemaProfile::for_target(self.target).apd()
+            {
+                let ac_id = ApplicationContextHandler::write(
                     self,
                     ApplicationContext {
-                        application: desc.into(),
+                        application: apd_desc.into(),
                     },
                 )
                 .expect("AC write only pushes one simple entity");
-                self.ac_step_ids.push(id);
+                // All PC/PDC frame_of_reference indices resolve to the one
+                // target AC.
+                let n = self
+                    .model
+                    .plm
+                    .as_ref()
+                    .map_or(0, |p| p.application_contexts.len())
+                    .max(1);
+                self.ac_step_ids = vec![ac_id; n];
                 let _ = ApplicationProtocolDefinitionHandler::write(
                     self,
                     ApplicationProtocolDefinitionWriteInput {
-                        status: status.into(),
-                        application_interpreted_model_schema_name: name.into(),
-                        application_protocol_year: year,
-                        application: id,
+                        status: apd_status.into(),
+                        application_interpreted_model_schema_name: apd_name.into(),
+                        application_protocol_year: apd_year,
+                        application: ac_id,
                     },
                 )
                 .expect("APD write only pushes one simple entity");
-            }
-            // 2) Emit all APD entries (refs AC via cache). APD is top-level
-            // (no consumer), so its step id is not cached.
-            for apd in plm.application_protocol_definitions.iter() {
-                let ac_step = self.ac_step_ids[apd.application.0 as usize];
-                let _ = ApplicationProtocolDefinitionHandler::write(
-                    self,
-                    ApplicationProtocolDefinitionWriteInput {
-                        status: apd.status.clone(),
-                        application_interpreted_model_schema_name: apd
-                            .application_interpreted_model_schema_name
-                            .clone(),
-                        application_protocol_year: apd.application_protocol_year,
-                        application: ac_step,
-                    },
-                )
-                .expect("APD write only pushes one simple entity");
-            }
+            } else {
+                // 1) Emit all IR AC entries, caching step ids by IR index.
+                let plm = self.model.plm.clone().unwrap_or_default();
+                self.ac_step_ids = Vec::with_capacity(plm.application_contexts.len());
+                for ac in plm.application_contexts.iter() {
+                    let id = ApplicationContextHandler::write(self, ac.clone())
+                        .expect("AC write only pushes one simple entity");
+                    self.ac_step_ids.push(id);
+                }
+                // If IR has no AC but does have PC/PDC, synthesise one AC for
+                // PC.frame_of_reference to point at.
+                if self.ac_step_ids.is_empty() {
+                    let (desc, status, name, year) = apd_info(schema);
+                    let id = ApplicationContextHandler::write(
+                        self,
+                        ApplicationContext {
+                            application: desc.into(),
+                        },
+                    )
+                    .expect("AC write only pushes one simple entity");
+                    self.ac_step_ids.push(id);
+                    let _ = ApplicationProtocolDefinitionHandler::write(
+                        self,
+                        ApplicationProtocolDefinitionWriteInput {
+                            status: status.into(),
+                            application_interpreted_model_schema_name: name.into(),
+                            application_protocol_year: year,
+                            application: id,
+                        },
+                    )
+                    .expect("APD write only pushes one simple entity");
+                }
+                // 2) Emit all APD entries (refs AC via cache). APD is top-level
+                // (no consumer), so its step id is not cached.
+                for apd in plm.application_protocol_definitions.iter() {
+                    let ac_step = self.ac_step_ids[apd.application.0 as usize];
+                    let _ = ApplicationProtocolDefinitionHandler::write(
+                        self,
+                        ApplicationProtocolDefinitionWriteInput {
+                            status: apd.status.clone(),
+                            application_interpreted_model_schema_name: apd
+                                .application_interpreted_model_schema_name
+                                .clone(),
+                            application_protocol_year: apd.application_protocol_year,
+                            application: ac_step,
+                        },
+                    )
+                    .expect("APD write only pushes one simple entity");
+                }
+            } // end Universal AC/APD re-emit
             // 3) Emit all PC entries (refs AC via cache).
             let assembly = self.model.assembly.clone().unwrap_or_default();
             self.pc_step_ids = Vec::with_capacity(assembly.product_contexts.len());
@@ -965,8 +998,13 @@ impl WriteBuffer<'_> {
                 pdef_ctx,
             };
         }
-        // Fallback: synthesise from schema class (no IR context entries).
-        let (desc, status, name, year) = apd_info(schema);
+        // Fallback: synthesise from the target (non-Universal) or the model's
+        // schema class (Universal — no IR context entries).
+        let (desc, status, name, year) =
+            match crate::early::profile::SchemaProfile::for_target(self.target).apd() {
+                Some((s, nm, y, d)) => (d, s, nm, y),
+                None => apd_info(schema),
+            };
         let app_ctx = ApplicationContextHandler::write(
             self,
             ApplicationContext {

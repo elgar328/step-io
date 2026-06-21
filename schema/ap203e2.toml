@@ -11,6 +11,7 @@ file_schema = ["AP203_CONFIGURATION_CONTROLLED_3D_DESIGN_OF_MECHANICAL_PARTS_AND
 status = "international standard"
 name = "config_control_design"
 year = 2010
+description = "configuration controlled 3D designs of mechanical parts and assemblies"
 
 [entity.absorbed_dose_measure_with_unit]
 parents = ["measure_with_unit"]

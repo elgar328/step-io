@@ -17,9 +17,10 @@ pub(crate) struct SchemaProfile {
     /// `FILE_SCHEMA` descriptor string(s) to declare. `None` for `Universal`
     /// (keep the model's source-preserved header).
     file_schema: Option<&'static [&'static str]>,
-    /// `APPLICATION_PROTOCOL_DEFINITION` `(status, application, year)`. `None` for
-    /// `Universal` (keep the model's source APD).
-    apd: Option<(&'static str, &'static str, i64)>,
+    /// `APPLICATION_PROTOCOL_DEFINITION` `(status, application, year)` +
+    /// `APPLICATION_CONTEXT` description. `None` for `Universal` (keep the
+    /// model's source AC/APD).
+    apd: Option<(&'static str, &'static str, i64, &'static str)>,
 }
 
 #[allow(dead_code)] // consumed by the projection pass (batch 2c)
@@ -69,8 +70,9 @@ impl SchemaProfile {
         self.file_schema
     }
 
-    /// APD `(status, application, year)` to synthesize, or `None` to keep source.
-    pub(crate) fn apd(&self) -> Option<(&'static str, &'static str, i64)> {
+    /// APD `(status, application, year)` + AC description to synthesize, or
+    /// `None` to keep source.
+    pub(crate) fn apd(&self) -> Option<(&'static str, &'static str, i64, &'static str)> {
         self.apd
     }
 }

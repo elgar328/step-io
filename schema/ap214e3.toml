@@ -11,6 +11,7 @@ file_schema = ["AUTOMOTIVE_DESIGN { 1 0 10303 214 3 1 1 }"]
 status = "international standard"
 name = "automotive_design"
 year = 2009
+description = "Core Data for Automotive Mechanical Design Process"
 
 [entity.abs_function]
 parents = ["unary_function_call"]

@@ -11,6 +11,7 @@ file_schema = ["AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF { 1 0 10303 442 
 status = "international standard"
 name = "ap242_managed_model_based_3d_engineering_mim_lf"
 year = 2011
+description = "managed model based 3d engineering"
 
 [entity.a3m_equivalence_accuracy_association]
 is_abstract = false

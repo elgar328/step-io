@@ -2015,6 +2015,52 @@ fn explicit_ap203_schema_round_trips() {
 }
 
 #[test]
+fn ap203_target_retargets_file_schema_and_apd() {
+    // A real AP214 box, written to the AP203 target, must declare AP203 in both
+    // the FILE_SCHEMA header and the DATA-section APPLICATION_PROTOCOL_DEFINITION
+    // / APPLICATION_CONTEXT — none of the source AP214 strings may survive.
+    let src = include_str!("fixtures/box_ap214_is.step");
+    let graph = step_io::parse(src).expect("parse");
+    let model = step_io::reader::ReaderContext::convert(&graph).model;
+
+    // Universal keeps the source AP214 header + APD verbatim.
+    let universal = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write universal");
+    assert!(universal.contains("AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }"));
+    assert!(universal.contains("'automotive_design'"));
+
+    // AP203 target retargets FILE_SCHEMA + APD + AC to the AP203 values.
+    let ap203 = model
+        .write_to_string(step_io::SchemaTarget::Ap203)
+        .expect("write ap203");
+    assert!(
+        ap203.contains(
+            "AP203_CONFIGURATION_CONTROLLED_3D_DESIGN_OF_MECHANICAL_PARTS_AND_ASSEMBLIES_MIM_LF \
+             { 1 0 10303 403 2 1 2 }"
+        ),
+        "AP203 FILE_SCHEMA"
+    );
+    assert!(ap203.contains("'config_control_design'"), "AP203 APD name");
+    assert!(
+        ap203.contains("configuration controlled 3D designs of mechanical parts and assemblies"),
+        "AP203 AC description"
+    );
+    assert!(
+        !ap203.contains("AUTOMOTIVE_DESIGN { 1 0 10303 214"),
+        "source AP214 FILE_SCHEMA must not survive"
+    );
+    assert!(
+        !ap203.contains("'automotive_design'"),
+        "source AP214 APD name must not survive"
+    );
+
+    // The retargeted output reparses cleanly.
+    let re = step_io::parse(&ap203).expect("reparse AP203 output");
+    assert!(!re.entities.is_empty());
+}
+
+#[test]
 fn general_property_and_association_round_trip() {
     // AP242 user-defined attribute: a GENERAL_PROPERTY defines the
     // attribute, a GENERAL_PROPERTY_ASSOCIATION binds it to a product's
