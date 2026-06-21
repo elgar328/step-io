@@ -32,14 +32,15 @@ pub(crate) fn project(entities: &mut Vec<WriterEntity>, profile: &SchemaProfile)
     }
 
     // 1. Seed: entities whose own name (simple) or any part (complex) is illegal.
-    let mut dropped: HashSet<u64> = entities
+    let seed: HashSet<u64> = entities
         .iter()
         .filter(|e| !entity_legal(e, profile))
         .map(|e| e.id)
         .collect();
-    if dropped.is_empty() {
+    if seed.is_empty() {
         return report;
     }
+    let mut dropped = seed.clone();
 
     // 2. Reverse-ref index (referenced id -> ids that reference it), then BFS:
     //    any entity referencing a dropped id is itself dropped (to fixpoint).
@@ -63,10 +64,17 @@ pub(crate) fn project(entities: &mut Vec<WriterEntity>, profile: &SchemaProfile)
         }
     }
 
-    // 3. Record drops (in stable emit order) and retain survivors.
+    // 3. Record drops (in stable emit order) and retain survivors. Distinguish
+    //    the seed (directly illegal in the target) from the cascade (legal but
+    //    referencing a dropped entity) so the loss report is actionable.
     for e in entities.iter() {
         if dropped.contains(&e.id) {
-            report.record(entity_name(e), "dropped (illegal in target / cascade)");
+            let reason = if seed.contains(&e.id) {
+                "dropped (illegal in target schema)"
+            } else {
+                "dropped (references a dropped entity — cascade)"
+            };
+            report.record(entity_name(e), reason);
         }
     }
     entities.retain(|e| !dropped.contains(&e.id));

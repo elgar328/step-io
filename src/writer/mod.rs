@@ -17,6 +17,8 @@ mod lexical;
 mod project;
 mod serialize;
 
+use crate::early::profile::LossReport;
+
 /// Errors that the writer can emit.
 #[derive(Debug)]
 pub enum WriteError {
@@ -88,7 +90,12 @@ pub enum SchemaTarget {
 }
 
 impl crate::ir::StepModel {
-    /// Stream Part 21 text to any `std::io::Write` target.
+    /// Stream Part 21 text to any `std::io::Write` target, returning what schema
+    /// projection dropped.
+    ///
+    /// The big output bytes go out through `writer`; the small [`LossReport`] is
+    /// the return value. For [`SchemaTarget::Universal`] the report is always
+    /// empty (no projection) and can be ignored.
     ///
     /// # Errors
     /// Returns [`WriteError::UnsupportedIrVariant`] / [`WriteError::DanglingId`]
@@ -98,7 +105,7 @@ impl crate::ir::StepModel {
         &self,
         mut writer: W,
         target: SchemaTarget,
-    ) -> Result<(), WriteError> {
+    ) -> Result<LossReport, WriteError> {
         let mut buffer = buffer::WriteBuffer::new(self, target);
         buffer.emit_all()?;
         // Build the P21 edition 3 ANCHOR / REFERENCE section lines from the
@@ -107,14 +114,22 @@ impl crate::ir::StepModel {
         let ed3 = serialize::Ed3Sections::build(self, &buffer.step_ids);
         let mut entities = buffer.finish_entities();
         // Schema projection: drop target-illegal entities + cascade (no-op for
-        // Universal). LossReport is computed but not yet surfaced on this path.
+        // Universal). The LossReport is returned to the caller.
         let profile = crate::early::profile::SchemaProfile::for_target(target);
-        let _loss = project::project(&mut entities, &profile);
+        let loss = project::project(&mut entities, &profile);
         let headers = header::header_for(self, target);
-        serialize::write_file(&mut writer, &headers, &ed3, &entities)
+        serialize::write_file(&mut writer, &headers, &ed3, &entities)?;
+        Ok(loss)
     }
 
     /// Serialize Part 21 text to an owned `String`.
+    ///
+    /// Convenience over [`write_to`](Self::write_to) when the whole output fits
+    /// in memory; the [`LossReport`] is discarded. Use
+    /// [`write_to_string_with_loss`](Self::write_to_string_with_loss) to also
+    /// receive what projection dropped, or the streaming
+    /// [`write_to`](Self::write_to) / [`write_to_file`](Self::write_to_file) for
+    /// large outputs.
     ///
     /// # Errors
     /// Same IR-level errors as [`write_to`](Self::write_to); I/O is
@@ -130,11 +145,38 @@ impl crate::ir::StepModel {
         Ok(String::from_utf8(buf).expect("writer emits valid UTF-8"))
     }
 
+    /// Serialize Part 21 text to an owned `String`, also returning what schema
+    /// projection dropped.
+    ///
+    /// In-memory counterpart of [`write_to`](Self::write_to). For
+    /// [`SchemaTarget::Universal`] the [`LossReport`] is always empty.
+    ///
+    /// # Errors
+    /// Same IR-level errors as [`write_to`](Self::write_to); I/O is in-memory so
+    /// [`WriteError::Io`] never occurs on this path.
+    ///
+    /// # Panics
+    /// Same as [`write_to_string`](Self::write_to_string).
+    pub fn write_to_string_with_loss(
+        &self,
+        target: SchemaTarget,
+    ) -> Result<(String, LossReport), WriteError> {
+        let mut buf = Vec::new();
+        let loss = self.write_to(&mut buf, target)?;
+        Ok((
+            String::from_utf8(buf).expect("writer emits valid UTF-8"),
+            loss,
+        ))
+    }
+
     /// Serialize Part 21 text to the given file path, buffered.
     ///
     /// Any existing file at `path` is truncated. A `BufWriter` wraps the
     /// file and is explicitly flushed so that flush errors propagate
     /// instead of being swallowed by `Drop`.
+    ///
+    /// Returns what schema projection dropped (empty for
+    /// [`SchemaTarget::Universal`]).
     ///
     /// # Errors
     /// Same IR-level errors as [`write_to`](Self::write_to), plus
@@ -144,12 +186,12 @@ impl crate::ir::StepModel {
         &self,
         path: P,
         target: SchemaTarget,
-    ) -> Result<(), WriteError> {
+    ) -> Result<LossReport, WriteError> {
         use std::io::Write as _;
         let file = std::fs::File::create(path)?;
         let mut writer = std::io::BufWriter::new(file);
-        self.write_to(&mut writer, target)?;
+        let loss = self.write_to(&mut writer, target)?;
         writer.flush()?;
-        Ok(())
+        Ok(loss)
     }
 }
