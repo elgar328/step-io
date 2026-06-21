@@ -31,6 +31,26 @@ pub(crate) fn project(entities: &mut Vec<WriterEntity>, profile: &SchemaProfile)
         return report;
     }
 
+    // 0. Downgrade: rename a target-illegal subtype to its legal supertype when
+    //    the rename is lossless (subtype adds no attributes, e.g. DESIGN_CONTEXT
+    //    which is absent from AP214 -> PRODUCT_DEFINITION_CONTEXT). This keeps
+    //    product-management from cascade-collapsing on cross-AP projection:
+    //    PRODUCT_DEFINITION references the context via frame_of_reference, so
+    //    dropping the subtype would take the whole product chain with it.
+    //    Renaming before the seed step makes the entity legal so it survives.
+    //    The downgrade table is baked from the .exp inheritance graph
+    //    (`AP*_DOWNGRADE`): every target-illegal subtype that reaches a
+    //    target-legal ancestor via a rename-safe (attribute-identical) chain.
+    for e in entities.iter_mut() {
+        if let WriterBody::Simple { name, .. } = &mut e.body {
+            if !profile.is_legal(name) {
+                if let Some(supertype) = profile.downgrade(name) {
+                    *name = supertype.to_owned();
+                }
+            }
+        }
+    }
+
     // 1. Seed: entities whose own name (simple) or any part (complex) is illegal.
     let seed: HashSet<u64> = entities
         .iter()

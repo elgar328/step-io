@@ -13,6 +13,20 @@ name = "ap242_managed_model_based_3d_engineering_mim_lf"
 year = 2011
 description = "managed model based 3d engineering"
 
+[downgrade]
+composite_assembly_definition = "product_definition"
+element_delivery = "action"
+featured_shape = "product_definition_shape"
+kinematic_ground_representation = "representation"
+kinematic_property_representation_relation = "property_definition_representation"
+percentage_laminate_definition = "product_definition"
+percentage_ply_definition = "product_definition"
+physically_modelled_product_definition = "product_definition_with_associated_documents"
+ply_laminate_definition = "product_definition"
+rib = "feature_definition"
+shape_aspect_transition = "shape_aspect_relationship"
+thickness_laminate_definition = "product_definition"
+
 [entity.a3m_equivalence_accuracy_association]
 is_abstract = false
 

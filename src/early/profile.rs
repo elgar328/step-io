@@ -21,6 +21,11 @@ pub(crate) struct SchemaProfile {
     /// `APPLICATION_CONTEXT` description. `None` for `Universal` (keep the
     /// model's source AC/APD).
     apd: Option<(&'static str, &'static str, i64, &'static str)>,
+    /// Lossless subtype -> supertype downgrades (UPPER wire form, sorted by
+    /// subtype). `None` for `Universal` (no projection). Consulted by the
+    /// projection to rename a target-illegal subtype to its legal supertype
+    /// before dropping.
+    downgrade: Option<&'static [(&'static str, &'static str)]>,
 }
 
 #[allow(dead_code)] // consumed by the projection pass (batch 2c)
@@ -32,21 +37,25 @@ impl SchemaProfile {
                 legal: None,
                 file_schema: None,
                 apd: None,
+                downgrade: None,
             },
             SchemaTarget::Ap214 => Self {
                 legal: Some(baked::AP214E3_LEGAL),
                 file_schema: Some(baked::AP214E3_FILE_SCHEMA),
                 apd: Some(baked::AP214E3_APD),
+                downgrade: Some(baked::AP214E3_DOWNGRADE),
             },
             SchemaTarget::Ap242 => Self {
                 legal: Some(baked::AP242E2_LEGAL),
                 file_schema: Some(baked::AP242E2_FILE_SCHEMA),
                 apd: Some(baked::AP242E2_APD),
+                downgrade: Some(baked::AP242E2_DOWNGRADE),
             },
             SchemaTarget::Ap203 => Self {
                 legal: Some(baked::AP203E2_LEGAL),
                 file_schema: Some(baked::AP203E2_FILE_SCHEMA),
                 apd: Some(baked::AP203E2_APD),
+                downgrade: Some(baked::AP203E2_DOWNGRADE),
             },
         }
     }
@@ -74,6 +83,17 @@ impl SchemaProfile {
     /// `None` to keep source.
     pub(crate) fn apd(&self) -> Option<(&'static str, &'static str, i64, &'static str)> {
         self.apd
+    }
+
+    /// The legal supertype to rename `name` (UPPER wire form) to, if it is a
+    /// target-illegal subtype with a lossless downgrade. `None` for `Universal`
+    /// or when no downgrade applies (the entity is then left to be dropped).
+    pub(crate) fn downgrade(&self, name: &str) -> Option<&'static str> {
+        let table = self.downgrade?;
+        table
+            .binary_search_by(|(sub, _)| (*sub).cmp(name))
+            .ok()
+            .map(|i| table[i].1)
     }
 }
 

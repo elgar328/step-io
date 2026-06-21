@@ -31,6 +31,9 @@ struct ProfileToml {
     /// Entity blocks — only the keys (legal entity names) are needed here.
     #[serde(default)]
     entity: BTreeMap<String, Entity>,
+    /// Lossless subtype -> supertype downgrades (lower-case EXPRESS names).
+    #[serde(default)]
+    downgrade: BTreeMap<String, String>,
 }
 
 #[derive(Deserialize)]
@@ -103,6 +106,28 @@ pub(crate) fn emit_profiles(root: &str) -> String {
             prof.meta.apd.status, prof.meta.apd.name, prof.meta.apd.year, prof.meta.apd.description,
         )
         .unwrap();
+
+        writeln!(
+            out,
+            "/// Lossless subtype->supertype downgrades for {stem} output (UPPER wire form,\n\
+             /// sorted by subtype for binary_search). Renamed before drop on cross-AP projection.",
+        )
+        .unwrap();
+        writeln!(
+            out,
+            "pub(crate) const {prefix}_DOWNGRADE: &[(&str, &str)] = &["
+        )
+        .unwrap();
+        let mut downgrades: Vec<(String, String)> = prof
+            .downgrade
+            .iter()
+            .map(|(sub, sup)| (sub.to_uppercase(), sup.to_uppercase()))
+            .collect();
+        downgrades.sort();
+        for (sub, sup) in &downgrades {
+            writeln!(out, "    (\"{sub}\", \"{sup}\"),").unwrap();
+        }
+        writeln!(out, "];\n").unwrap();
     }
     out
 }
