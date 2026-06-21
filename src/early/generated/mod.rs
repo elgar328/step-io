@@ -3,4 +3,5 @@
 
 pub(crate) mod bind;
 pub(crate) mod model;
+pub(crate) mod profile;
 pub(crate) mod serialize;

@@ -17,6 +17,7 @@ mod classify;
 mod emit;
 mod expr;
 mod mapping;
+mod profile;
 mod schema;
 #[cfg(test)]
 mod testutil;
@@ -140,10 +141,11 @@ fn main() {
     write_fmt(&format!("{dir}/model.rs"), &model);
     write_fmt(&format!("{dir}/bind.rs"), &bind);
     write_fmt(&format!("{dir}/serialize.rs"), &serialize);
+    write_fmt(&format!("{dir}/profile.rs"), &profile::emit_profiles(root));
     write_fmt(
         &format!("{dir}/mod.rs"),
         &format!(
-            "{HEADER}pub(crate) mod bind;\npub(crate) mod model;\npub(crate) mod serialize;\n"
+            "{HEADER}pub(crate) mod bind;\npub(crate) mod model;\npub(crate) mod profile;\npub(crate) mod serialize;\n"
         ),
     );
     eprintln!("gen-early: wrote {} entities to {dir}", targets.len());
