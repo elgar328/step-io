@@ -14,6 +14,7 @@ pub(crate) mod buffer;
 pub(crate) mod entity;
 mod header;
 mod lexical;
+mod project;
 mod serialize;
 
 /// Errors that the writer can emit.
@@ -104,8 +105,12 @@ impl crate::ir::StepModel {
         // model + the ids reserved in `emit_all` (grabbed before
         // `finish_entities` consumes the buffer).
         let ed3 = serialize::Ed3Sections::build(self, &buffer.step_ids);
-        let entities = buffer.finish_entities();
-        let headers = header::header_for(self);
+        let mut entities = buffer.finish_entities();
+        // Schema projection: drop target-illegal entities + cascade (no-op for
+        // Universal). LossReport is computed but not yet surfaced on this path.
+        let profile = crate::early::profile::SchemaProfile::for_target(target);
+        let _loss = project::project(&mut entities, &profile);
+        let headers = header::header_for(self, target);
         serialize::write_file(&mut writer, &headers, &ed3, &entities)
     }
 
