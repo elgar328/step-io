@@ -89,7 +89,7 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
         ReaderContext::convert(&graph).model
     };
     let text = original
-        .write_to_string()
+        .write_to_string(step_io::SchemaTarget::Universal)
         .unwrap_or_else(|e| panic!("{name}: write failed: {e}"));
     let graph2 = parse(&text).unwrap_or_else(|e| panic!("{name}: writer output parses: {e}"));
     let result = ReaderContext::convert(&graph2);
@@ -218,13 +218,13 @@ fn assert_fixture_round_trip(name: &str, src: &str) {
     // second round-trip reproduces the first's output exactly). This is the
     // order-insensitive idempotency notion the corpus round-trip gate enforces.
     let first_write = re
-        .write_to_string()
+        .write_to_string(step_io::SchemaTarget::Universal)
         .unwrap_or_else(|e| panic!("{name}: re-write failed: {e}"));
     let graph3 =
         parse(&first_write).unwrap_or_else(|e| panic!("{name}: second writer output parses: {e}"));
     let second_write = ReaderContext::convert(&graph3)
         .model
-        .write_to_string()
+        .write_to_string(step_io::SchemaTarget::Universal)
         .unwrap_or_else(|e| panic!("{name}: second re-write failed: {e}"));
     assert_eq!(
         first_write, second_write,
@@ -391,7 +391,9 @@ fn hemisphere_tube_emits_surface_body_chain() {
         "indirect SR pattern not preserved in IR",
     );
 
-    let out = model.write_to_string().expect("write");
+    let out = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         out.contains("MANIFOLD_SURFACE_SHAPE_REPRESENTATION"),
         "writer output missing MSSR",
@@ -480,7 +482,9 @@ fn wire1_emits_geometric_set_and_gbssr() {
         "wire1 uses indirect SR pattern; outer_sr_frame must be set"
     );
 
-    let out = model.write_to_string().expect("write");
+    let out = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(out.contains("GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION"));
     assert!(out.contains("GEOMETRIC_SET"));
     assert!(out.contains("COMPOSITE_CURVE"));
@@ -521,7 +525,9 @@ fn wire2_emits_gbwsr_in_assembly() {
     assert_eq!(surface_body_count, 1);
     assert_eq!(group_count, 1);
 
-    let out = model.write_to_string().expect("write");
+    let out = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(out.contains("GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION"));
     assert!(out.contains("GEOMETRIC_CURVE_SET"));
     assert!(out.contains("TRIMMED_CURVE"));
@@ -590,7 +596,9 @@ fn hollow_box_ap214_is_preserves_void_orientation() {
     use step_io::Orientation;
     let src = include_str!("fixtures/hollow_box_ap214_is.step");
     let original = ReaderContext::convert(&parse(src).unwrap()).model;
-    let text = original.write_to_string().expect("write");
+    let text = original
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = ReaderContext::convert(&parse(&text).unwrap()).model;
 
     assert_eq!(re.topology.solids.len(), 1);
@@ -737,7 +745,9 @@ fn box_ap214_is_preserves_visualization() {
 fn external_temp_abc_explicit_de_round_trip() {
     let src = include_str!("fixtures/external_temp_abc_explicit_de.step");
     let model = ReaderContext::convert(&parse(src).expect("parse")).model;
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let back = ReaderContext::convert(&parse(&text).expect("re-parse")).model;
     assert_unit_contexts_equivalent("abc_explicit_de", &model, &back);
 }
@@ -757,7 +767,9 @@ fn external_temp_polyline_round_trip() {
         .filter(|c| matches!(c, step_io::ir::geometry::Curve::Polyline(_)))
         .count();
     assert_eq!(polyline_count, 3, "fixture must yield three polylines");
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let back = ReaderContext::convert(&parse(&text).expect("re-parse")).model;
     let back_count = back
         .geometry
@@ -784,7 +796,9 @@ fn external_temp_fusion360_two_context_round_trip() {
         2,
         "fusion fixture must yield two distinct unit contexts"
     );
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let back = ReaderContext::convert(&parse(&text).expect("re-parse")).model;
     assert_eq!(
         back.shape_rep.unit_contexts.len(),
@@ -856,7 +870,9 @@ fn wire1_preserves_pc_chain_with_specification() {
 fn product_category_relationship_preserves_name_description() {
     let src = include_str!("fixtures/box_ap203.step");
     let model = ReaderContext::convert(&parse(src).expect("parse")).model;
-    let out = model.write_to_string().expect("write");
+    let out = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let pcr_line = out
         .lines()
         .find(|l| l.contains("PRODUCT_CATEGORY_RELATIONSHIP"))

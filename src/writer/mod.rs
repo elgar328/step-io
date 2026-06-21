@@ -62,6 +62,30 @@ impl From<std::io::Error> for WriteError {
     }
 }
 
+/// Output schema target for the write API.
+///
+/// `Universal` emits the model as-is against step-io's internal union schema
+/// (the superset of every supported AP) — no projection. The union is a
+/// non-standard step-io superset, not an ISO schema, which is exactly why it is
+/// never a silent default. The `Ap*` variants project the output to one curated
+/// IS edition, dropping entities (and retargeting the `FILE_SCHEMA` / `APD` header)
+/// that the edition cannot express.
+///
+/// There is **no default**: callers always choose. A non-standard superset must
+/// not be a silent default, and a real AP cannot be the default without breaking
+/// round-trip (it would silently retarget every input).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SchemaTarget {
+    /// Internal union (superset of all supported APs); emit as-is, no projection.
+    Universal,
+    /// Project to AP214 edition 3 (IS) — `AUTOMOTIVE_DESIGN`.
+    Ap214,
+    /// Project to AP242 edition 2 (IS) — `AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF`.
+    Ap242,
+    /// Project to AP203 edition 2 (IS) — modular `AP203_..._MIM_LF`.
+    Ap203,
+}
+
 impl crate::ir::StepModel {
     /// Stream Part 21 text to any `std::io::Write` target.
     ///
@@ -69,8 +93,12 @@ impl crate::ir::StepModel {
     /// Returns [`WriteError::UnsupportedIrVariant`] / [`WriteError::DanglingId`]
     /// / [`WriteError::InvalidFloat`] for IR problems, or [`WriteError::Io`]
     /// if the underlying writer fails.
-    pub fn write_to<W: std::io::Write>(&self, mut writer: W) -> Result<(), WriteError> {
-        let mut buffer = buffer::WriteBuffer::new(self);
+    pub fn write_to<W: std::io::Write>(
+        &self,
+        mut writer: W,
+        target: SchemaTarget,
+    ) -> Result<(), WriteError> {
+        let mut buffer = buffer::WriteBuffer::new(self, target);
         buffer.emit_all()?;
         // Build the P21 edition 3 ANCHOR / REFERENCE section lines from the
         // model + the ids reserved in `emit_all` (grabbed before
@@ -91,9 +119,9 @@ impl crate::ir::StepModel {
     /// Panics only if the writer produced non-UTF-8 bytes — impossible
     /// unless this crate has an internal bug, since every emission path
     /// stays within the ASCII range.
-    pub fn write_to_string(&self) -> Result<String, WriteError> {
+    pub fn write_to_string(&self, target: SchemaTarget) -> Result<String, WriteError> {
         let mut buf = Vec::new();
-        self.write_to(&mut buf)?;
+        self.write_to(&mut buf, target)?;
         Ok(String::from_utf8(buf).expect("writer emits valid UTF-8"))
     }
 
@@ -107,11 +135,15 @@ impl crate::ir::StepModel {
     /// Same IR-level errors as [`write_to`](Self::write_to), plus
     /// [`WriteError::Io`] if file creation, writing, or the final flush
     /// fails.
-    pub fn write_to_file<P: AsRef<std::path::Path>>(&self, path: P) -> Result<(), WriteError> {
+    pub fn write_to_file<P: AsRef<std::path::Path>>(
+        &self,
+        path: P,
+        target: SchemaTarget,
+    ) -> Result<(), WriteError> {
         use std::io::Write as _;
         let file = std::fs::File::create(path)?;
         let mut writer = std::io::BufWriter::new(file);
-        self.write_to(&mut writer)?;
+        self.write_to(&mut writer, target)?;
         writer.flush()?;
         Ok(())
     }

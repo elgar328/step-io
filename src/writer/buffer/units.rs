@@ -437,7 +437,9 @@ mod tests {
             AngleUnit::Radian,
             SolidAngleUnit::Steradian,
         ));
-        let out = model.write_to_string().expect("write");
+        let out = model
+            .write_to_string(crate::SchemaTarget::Universal)
+            .expect("write");
         assert!(out.contains("CONVERSION_BASED_UNIT('INCH'"), "{out}");
         // units-CBU-①: the preserved factor MWU re-emits in the canonical typed
         // form `LENGTH_MEASURE(25.4)` (corpus form), not a bare real.
@@ -461,7 +463,9 @@ mod tests {
             AngleUnit::Radian,
             SolidAngleUnit::Steradian,
         ));
-        let out = model.write_to_string().expect("write");
+        let out = model
+            .write_to_string(crate::SchemaTarget::Universal)
+            .expect("write");
         assert!(out.contains("CONVERSION_BASED_UNIT('FOOT'"), "{out}");
         assert!(
             out.contains("LENGTH_MEASURE_WITH_UNIT(LENGTH_MEASURE(304.8)"),
@@ -477,7 +481,9 @@ mod tests {
             AngleUnit::Degree,
             SolidAngleUnit::Steradian,
         ));
-        let out = model.write_to_string().expect("write");
+        let out = model
+            .write_to_string(crate::SchemaTarget::Universal)
+            .expect("write");
         assert!(out.contains("CONVERSION_BASED_UNIT('DEGREE'"), "{out}");
         assert!(
             out.contains("PLANE_ANGLE_MEASURE_WITH_UNIT(PLANE_ANGLE_MEASURE(0.017453"),
@@ -494,7 +500,9 @@ mod tests {
             AngleUnit::Radian,
             SolidAngleUnit::Steradian,
         ));
-        let out = model.write_to_string().expect("write");
+        let out = model
+            .write_to_string(crate::SchemaTarget::Universal)
+            .expect("write");
         assert!(
             !out.contains("CONVERSION_BASED_UNIT"),
             "plain mm should not wrap in CBU: {out}"
@@ -509,7 +517,9 @@ mod tests {
             AngleUnit::Radian,
             SolidAngleUnit::Steradian,
         ));
-        let out = model.write_to_string().expect("write");
+        let out = model
+            .write_to_string(crate::SchemaTarget::Universal)
+            .expect("write");
         assert!(!out.contains("CONVERSION_BASED_UNIT"), "{out}");
         assert!(out.contains("(.CENTI.,.METRE.)"), "{out}");
     }
@@ -521,7 +531,9 @@ mod tests {
             AngleUnit::Radian,
             SolidAngleUnit::Steradian,
         ));
-        let out = model.write_to_string().expect("write");
+        let out = model
+            .write_to_string(crate::SchemaTarget::Universal)
+            .expect("write");
         assert!(!out.contains("CONVERSION_BASED_UNIT"), "{out}");
         assert!(out.contains("SI_UNIT($,.METRE.)"), "{out}");
     }
@@ -552,7 +564,9 @@ mod tests {
         ];
         for &(l, p, s) in cases {
             let model = model_with_units(UnitsBuilder::new(l, p, s));
-            let text = model.write_to_string().expect("write");
+            let text = model
+                .write_to_string(crate::SchemaTarget::Universal)
+                .expect("write");
             let graph = parse(&text).expect("re-parse");
             let back = ReaderContext::convert(&graph);
             assert!(
@@ -576,7 +590,9 @@ mod tests {
             )
             .length_self_wrap(true),
         );
-        let text = model.write_to_string().expect("write");
+        let text = model
+            .write_to_string(crate::SchemaTarget::Universal)
+            .expect("write");
         assert!(
             text.contains("CONVERSION_BASED_UNIT('METRE'"),
             "writer must emit CBU('METRE') for self-wrap length: {text}"
@@ -601,7 +617,9 @@ mod tests {
             )
             .plane_angle_self_wrap(true),
         );
-        let text = model.write_to_string().expect("write");
+        let text = model
+            .write_to_string(crate::SchemaTarget::Universal)
+            .expect("write");
         assert!(
             text.contains("CONVERSION_BASED_UNIT('RADIAN'"),
             "writer must emit CBU('RADIAN') for self-wrap angle: {text}"
@@ -643,7 +661,9 @@ mod tests {
             .plane_angle_uncertainty(plane_unc.clone())
             .solid_angle_uncertainty(solid_unc.clone()),
         );
-        let text = model.write_to_string().expect("write");
+        let text = model
+            .write_to_string(crate::SchemaTarget::Universal)
+            .expect("write");
         assert!(text.contains("LENGTH_MEASURE("), "{text}");
         assert!(text.contains("PLANE_ANGLE_MEASURE("), "{text}");
         assert!(text.contains("SOLID_ANGLE_MEASURE("), "{text}");

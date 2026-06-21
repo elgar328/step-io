@@ -82,7 +82,9 @@ fn reconvert(text: &str) -> StepModel {
 #[test]
 fn empty_model_produces_valid_part21_wrapper() {
     let model = empty_model();
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.starts_with("ISO-10303-21;\n"));
     assert!(text.contains("HEADER;"));
     assert!(text.contains("DATA;\n"));
@@ -105,7 +107,9 @@ fn points_round_trip_values() {
         y: 0.0,
         z: 1e-7,
     });
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.geometry.points.len(), 2);
     let p0 = re.geometry.points.iter().next().unwrap();
@@ -126,7 +130,9 @@ fn direction_round_trips_values() {
         y: 0.0,
         z: 1.0,
     });
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.geometry.directions.len(), 1);
     let d = re.geometry.directions.iter().next().unwrap();
@@ -153,7 +159,9 @@ fn line_with_inline_vector_round_trips() {
         direction: d,
         magnitude: 2.5,
     }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.geometry.points.len(), 1);
     assert_eq!(re.geometry.directions.len(), 1);
@@ -191,7 +199,9 @@ fn plane_round_trips_axis_placement() {
         .geometry
         .surfaces
         .push(Surface::Plane(Plane3 { position }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.geometry.surfaces.len(), 1);
     match re.geometry.surfaces.iter().next().unwrap() {
@@ -231,7 +241,9 @@ fn cylinder_round_trips_radius_and_placement() {
             position,
             radius: 12.5,
         }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.geometry.surfaces.len(), 1);
     match re.geometry.surfaces.iter().next().unwrap() {
@@ -257,7 +269,9 @@ fn unset_axis_directions_round_trip_as_none() {
         .geometry
         .surfaces
         .push(Surface::Plane(Plane3 { position }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     match re.geometry.surfaces.iter().next().unwrap() {
         Surface::Plane(plane) => {
@@ -274,7 +288,9 @@ fn unit_context_mm_radian_steradian_round_trips() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     model.shape_rep.unit_contexts.push(ctx);
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     // units-2: NamedUnitId may shift due to pool emit ordering — compare
     // the resolved enum values via arena lookup.
@@ -297,7 +313,9 @@ fn unit_context_mm_radian_steradian_round_trips() {
 #[test]
 fn unit_context_absent_stays_none() {
     let model = empty_model();
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert!(re.shape_rep.unit_contexts.is_empty());
 }
@@ -307,9 +325,13 @@ fn write_to_and_write_to_string_produce_identical_bytes() {
     let mut model = empty_model();
     let ctx = mm_radian_steradian(&mut model);
     model.shape_rep.unit_contexts.push(ctx);
-    let via_string = model.write_to_string().expect("string");
+    let via_string = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("string");
     let mut via_writer = Vec::new();
-    model.write_to(&mut via_writer).expect("writer");
+    model
+        .write_to(&mut via_writer, step_io::SchemaTarget::Universal)
+        .expect("writer");
     assert_eq!(via_string.as_bytes(), &via_writer[..]);
 }
 
@@ -357,7 +379,9 @@ fn circle_round_trips_radius() {
         position,
         radius: 5.0,
     }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.geometry.curves.len(), 1);
     match re.geometry.curves.iter().next().unwrap() {
@@ -375,7 +399,9 @@ fn ellipse_round_trips_semi_axes() {
         semi_axis_1: 3.0,
         semi_axis_2: 1.5,
     }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     match re.geometry.curves.iter().next().unwrap() {
         Curve::Ellipse(e) => {
@@ -397,7 +423,9 @@ fn sphere_round_trips_radius() {
             position,
             radius: 7.5,
         }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     match re.geometry.surfaces.iter().next().unwrap() {
         Surface::Sphere(s) => assert!((s.radius - 7.5).abs() < f64::EPSILON),
@@ -414,7 +442,9 @@ fn cone_round_trips_radius_and_semi_angle() {
         radius: 4.0,
         semi_angle: std::f64::consts::FRAC_PI_6,
     }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     match re.geometry.surfaces.iter().next().unwrap() {
         Surface::Cone(c) => {
@@ -437,7 +467,9 @@ fn torus_round_trips_major_and_minor_radii() {
             major_radius: 10.0,
             minor_radius: 2.0,
         }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     match re.geometry.surfaces.iter().next().unwrap() {
         Surface::Torus(t) => {
@@ -456,7 +488,9 @@ fn non_finite_real_surfaces_as_invalid_float() {
         y: 0.0,
         z: 0.0,
     });
-    let err = model.write_to_string().expect_err("NaN must not serialize");
+    let err = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect_err("NaN must not serialize");
     assert!(matches!(err, WriteError::InvalidFloat { .. }));
 }
 
@@ -465,7 +499,9 @@ fn assembly_field_defaults_noop() {
     // Assembly isn't in W-A scope; a None value must round-trip untouched.
     let mut model = empty_model();
     model.assembly = None;
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert!(re.assembly.is_none());
     // Silence unused warning on AssemblyTree import.
@@ -520,7 +556,9 @@ fn nurbs_surface_non_rational_round_trips() {
         form: SurfaceForm::Unspecified,
         self_intersect: Logical::Unknown,
     }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     match re.geometry.surfaces.iter().next().unwrap() {
         Surface::Nurbs(s) => {
@@ -555,7 +593,9 @@ fn nurbs_surface_unknown_closedness_round_trips() {
         form: SurfaceForm::Unspecified,
         self_intersect: Logical::Unknown,
     }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     match re.geometry.surfaces.iter().next().unwrap() {
         Surface::Nurbs(s) => {
@@ -586,7 +626,9 @@ fn nurbs_surface_rational_round_trips() {
         form: SurfaceForm::Unspecified,
         self_intersect: Logical::Unknown,
     }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     match re.geometry.surfaces.iter().next().unwrap() {
         Surface::Nurbs(s) => {
@@ -633,7 +675,9 @@ fn nurbs_curve_non_rational_round_trips() {
         form: CurveForm::Unspecified,
         self_intersect: Logical::Unknown,
     }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     match re.geometry.curves.iter().next().unwrap() {
         Curve::Nurbs(c) => {
@@ -664,7 +708,9 @@ fn nurbs_curve_rational_round_trips() {
         form: CurveForm::Unspecified,
         self_intersect: Logical::Unknown,
     }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     match re.geometry.curves.iter().next().unwrap() {
         Curve::Nurbs(c) => {
@@ -690,7 +736,9 @@ fn nurbs_curve_form_hint_round_trips() {
         form: CurveForm::CircularArc,
         self_intersect: Logical::Unknown,
     }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains(".CIRCULAR_ARC."), "writer emits STEP enum");
     let re = reconvert(&text);
     match re.geometry.curves.iter().next().unwrap() {
@@ -717,7 +765,9 @@ fn nurbs_surface_form_hint_round_trips() {
         form: SurfaceForm::CylindricalSurf,
         self_intersect: Logical::Unknown,
     }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains(".CYLINDRICAL_SURF."),
         "writer emits STEP enum"
@@ -763,7 +813,9 @@ fn extrusion_surface_round_trips() {
             extrusion_direction: extrude_dir,
             depth: 5.0,
         }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.geometry.surfaces.len(), 1);
     match re.geometry.surfaces.iter().next().unwrap() {
@@ -806,7 +858,9 @@ fn revolution_surface_round_trips() {
             swept_curve: swept,
             axis_placement,
         }));
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.geometry.surfaces.len(), 1);
     match re.geometry.surfaces.iter().next().unwrap() {
@@ -872,7 +926,9 @@ fn vertex_loop_wire_round_trips() {
     // that sphere poles and some revolutions use.
     let mut model = empty_model();
     let _solid = push_minimal_solid(&mut model);
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.topology.wires.len(), 1);
     let roundtripped_wire = re.topology.wires.iter().next().unwrap();
@@ -966,7 +1022,9 @@ fn simple_assembly_round_trips() {
     tree.roots = vec![root_pid];
     model.assembly = Some(tree);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let r_asm = re.assembly.as_ref().expect("round-tripped has assembly");
     assert_eq!(r_asm.products.len(), 2);
@@ -1066,7 +1124,9 @@ fn shared_child_assembly_round_trips() {
     tree.roots = vec![root_pid];
     model.assembly = Some(tree);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let r_asm = re.assembly.as_ref().unwrap();
     let root_prod = r_asm.products.iter().find(|p| p.id == "Root").unwrap();
@@ -1180,7 +1240,9 @@ fn nauo_arena_is_canonical_with_instance_view() {
     tree.roots = vec![root_pid];
     model.assembly = Some(tree);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let r_asm = re.assembly.as_ref().expect("assembly");
 
@@ -1338,7 +1400,9 @@ fn nauo_owned_pds_property_round_trips() {
     });
     model.properties = Some(props);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     // The NAUO-owned PDS body carries the SOURCE name, not "Placement of an item".
     assert!(
         text.contains("PRODUCT_DEFINITION_SHAPE('Placement #1','Placement of Leaf'"),
@@ -1465,7 +1529,9 @@ fn instance_placement_representation_round_trips() {
     tree.roots = vec![root_pid];
     model.assembly = Some(tree);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     // The writer emitted BOTH extra placement SDRs (the Leaf product's own SDR
     // plus these two → at least 3 SDRs).
     assert!(
@@ -1484,6 +1550,7 @@ fn instance_placement_representation_round_trips() {
 }
 
 #[test]
+#[allow(clippy::too_many_lines)]
 fn assembly_placement_materialises_distinct_rrwt_per_instance() {
     // Two instances of the same Leaf with the SAME transform must still gain
     // DISTINCT RepresentationRelationshipWithTransformation arena ids on
@@ -1562,7 +1629,9 @@ fn assembly_placement_materialises_distinct_rrwt_per_instance() {
     tree.roots = vec![root_pid];
     model.assembly = Some(tree);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let r_asm = re.assembly.as_ref().unwrap();
     let root = r_asm.products.iter().find(|p| p.id == "Root").unwrap();
@@ -1589,8 +1658,12 @@ fn assembly_placement_materialises_distinct_rrwt_per_instance() {
 
     // Idempotent: two further read->write cycles produce identical output
     // (the materialised RR ids are round-trip stable).
-    let text_b = re.write_to_string().expect("write b");
-    let text_c = reconvert(&text_b).write_to_string().expect("write c");
+    let text_b = re
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write b");
+    let text_c = reconvert(&text_b)
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write c");
     assert_eq!(
         text_b, text_c,
         "assembly placement round-trip must be idempotent"
@@ -1605,7 +1678,9 @@ fn default_schema_is_ap214_is() {
         model.metadata.schema.raw().is_none(),
         "synthetic IR must not carry raw FILE_SCHEMA text"
     );
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     // Default-schema output must advertise AP214 IS in FILE_SCHEMA.
     assert!(
         text.contains("AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }"),
@@ -1651,7 +1726,9 @@ fn multi_body_solid_round_trips() {
     tree.roots = vec![pid];
     model.assembly = Some(tree);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert_eq!(
         text.matches("MANIFOLD_SOLID_BREP").count(),
         2,
@@ -1730,7 +1807,9 @@ fn metadata_only_product_round_trips_with_none_geometry_context() {
     });
     model.assembly = Some(tree);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     // Skip the shared `reconvert` helper: two-root-candidate assemblies
     // legitimately emit a non-fatal "using the first" warning that is
     // unrelated to the geometry_context behaviour under test.
@@ -1796,7 +1875,9 @@ fn formation_id_round_trips_faithfully() {
     tree.products[pid].formation = Some(fid);
     model.assembly = Some(tree);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("PRODUCT_DEFINITION_FORMATION('LAST_VERSION','rev',"),
         "faithful formation id/description emitted, got:\n{text}"
@@ -1886,7 +1967,9 @@ fn empty_group_product_preserves_non_identity_shape_ref_frame() {
     });
     model.assembly = Some(tree);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let graph = parse(&text).expect("writer output parses");
     let re = ReaderContext::convert(&graph).model;
     let r_asm = re.assembly.as_ref().expect("round-tripped has assembly");
@@ -1920,7 +2003,9 @@ fn empty_group_product_preserves_non_identity_shape_ref_frame() {
 fn explicit_ap203_schema_round_trips() {
     let mut model = empty_model();
     model.metadata.schema = StepSchema::canonical(SchemaClass::Ap203);
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("CONFIG_CONTROL_DESIGN"),
         "expected AP203 FILE_SCHEMA string, got: {text}"
@@ -2015,7 +2100,9 @@ fn general_property_and_association_round_trip() {
         });
     model.properties = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pool = re
         .properties
@@ -2068,7 +2155,9 @@ fn property_definition_with_general_property_target_round_trips() {
         }));
     model.properties = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pool = re
         .properties
@@ -2120,7 +2209,9 @@ fn property_definition_with_dimensional_size_target_round_trips() {
     // PD pass, so the PD must reference it. (Full re-read symmetry is covered
     // by reference-check on real fixtures, which carry the product-shape PDS
     // this minimal model omits.)
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("PROPERTY_DEFINITION('p_ds'"),
         "PD with DIMENSIONAL_SIZE definition must emit (writer arm fires): {text}"
@@ -2183,7 +2274,9 @@ fn property_definition_with_geometric_tolerance_target_round_trips() {
     // run before the PD pass (the reorder). Reverting the reorder leaves the GT
     // step 0 → the PD arm skips → no PD line → this fails. (Full re-read
     // symmetry is covered by reference-check on real fixtures.)
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("PROPERTY_DEFINITION('p_gt'"),
         "PD with GEOMETRIC_TOLERANCE definition must emit (writer arm + GT reorder): {text}"
@@ -2227,7 +2320,9 @@ fn property_definition_with_document_file_target_round_trips() {
         }));
     model.properties = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pool = re
         .properties
@@ -2288,7 +2383,9 @@ fn pd_based_shape_definition_representation_round_trips() {
         });
     model.properties = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pool = re
         .properties
@@ -2327,7 +2424,9 @@ fn description_attribute_targeting_shape_representation_round_trips() {
     });
     model.properties = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("DESCRIPTION_ATTRIBUTE("),
         "DESCRIPTION_ATTRIBUTE not emitted"
@@ -2370,7 +2469,9 @@ fn shape_aspect_based_shape_definition_representation_round_trips() {
         });
     model.properties = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pool = re.properties.as_ref().expect("properties");
     assert_eq!(re_pool.shape_definition_representations.len(), 1);
@@ -2463,7 +2564,9 @@ fn product_with_additional_shape_representation_round_trips() {
         });
     model.properties = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert_eq!(
         text.matches("SHAPE_DEFINITION_REPRESENTATION").count(),
         2,
@@ -2528,7 +2631,9 @@ fn multi_root_independent_products_round_trip() {
     tree.roots = pids.clone();
     model.assembly = Some(tree);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let r_asm = re.assembly.as_ref().expect("round-tripped has assembly");
     assert_eq!(r_asm.products.len(), 2);
@@ -2547,7 +2652,9 @@ fn gram_conversion_based_unit_round_trips() {
     pool.push_cbu_mass(MassUnit::Gram, MassUnit::Kilogram);
     model.units_pool = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pool = re.units_pool.as_ref().expect("round-tripped units pool");
     assert_eq!(re_pool.named_units.len(), 2);
@@ -2576,7 +2683,9 @@ fn megagram_si_unit_round_trips() {
     pool.push_plain_mass(MassUnit::Megagram);
     model.units_pool = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("SI_UNIT(.MEGA.,.GRAM.)"),
         "megagram must emit SI_UNIT(.MEGA.,.GRAM.); got:\n{text}"
@@ -2607,7 +2716,9 @@ fn ton_conversion_based_unit_round_trips() {
     pool.push_plain_mass(MassUnit::Megagram);
     model.units_pool = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("CONVERSION_BASED_UNIT('ton'"),
         "ton must re-emit as a lowercase CBU wrapper; got:\n{text}"
@@ -2701,7 +2812,9 @@ fn shape_aspect_subtypes_round_trip() {
             product_definitional: false,
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.shape_rep.composite_group_shape_aspects.len(), 1);
     assert_eq!(re.shape_rep.centre_of_symmetries.len(), 1);
@@ -2821,7 +2934,9 @@ fn composite_shape_aspect_round_trips_under_its_own_name() {
             datum_feature: false,
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("COMPOSITE_SHAPE_ASPECT("),
         "emits the plain COMPOSITE_SHAPE_ASPECT name: {text}"
@@ -2869,7 +2984,9 @@ fn shape_aspect_relationship_round_trip() {
             kind: ShapeAspectRelationshipKind::Plain,
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.shape_rep.shape_aspect_relationships.len(), 2);
     let rels: Vec<_> = re.shape_rep.shape_aspect_relationships.iter().collect();
@@ -2910,7 +3027,9 @@ fn id_attribute_shape_aspect_round_trip() {
             identified_item: IdAttributeItem::ShapeAspect(ShapeAspectRef::ShapeAspect(sa)),
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let pool = re.properties.as_ref().expect("properties pool survives");
     assert_eq!(
@@ -2944,7 +3063,9 @@ fn id_attribute_composite_shape_aspect_round_trip() {
             ),
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let pool = re.properties.as_ref().expect("properties pool survives");
     assert_eq!(pool.id_attributes.len(), 1);
@@ -2980,7 +3101,9 @@ fn shape_aspect_relationship_subtypes_round_trip() {
             kind: ShapeAspectRelationshipKind::DerivingRelationship,
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.shape_rep.shape_aspect_relationships.len(), 2);
     let rels: Vec<_> = re.shape_rep.shape_aspect_relationships.iter().collect();
@@ -3008,7 +3131,9 @@ fn dimensional_size_round_trip() {
         kind: DimensionalSizeKind::Angular(AngleSelection::Equal),
     });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let pmi = re.pmi.expect("pmi pool");
     assert_eq!(pmi.dimensional_sizes.len(), 2);
@@ -3050,7 +3175,9 @@ fn dimensional_location_round_trip() {
             angle_selection: AngleSelection::Small,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let pmi = re.pmi.expect("pmi pool");
     assert_eq!(pmi.dimensional_locations.len(), 3);
@@ -3101,7 +3228,9 @@ fn view_volume_round_trip() {
             view_window: pb,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let viz = re.visualization.expect("viz pool");
     let vv = viz
@@ -3158,7 +3287,9 @@ fn camera_model_d3_round_trip() {
             perspective_of_volume: vv,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let viz = re.visualization.expect("viz pool");
     assert_eq!(viz.camera_models.len(), 1);
@@ -3229,7 +3360,9 @@ fn camera_usage_round_trip() {
             mapped_representation: rep,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.shape_rep.representation_maps.len(), 1);
     let RepresentationMap::CameraUsage(cu) =
@@ -3319,7 +3452,9 @@ fn camera_image_round_trip() {
             mapping_target: pb,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.shape_rep.mapped_items.len(), 2);
     let mut iter = re.shape_rep.mapped_items.iter();
@@ -3372,7 +3507,9 @@ fn planar_extent_and_box_round_trip() {
             placement: PlanarBoxPlacement::Placement2d(frame2d),
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.geometry.planar_extents.len(), 3);
     let mut it = re.geometry.planar_extents.iter();
@@ -3418,7 +3555,9 @@ fn pmi_primitives_round_trip() {
         });
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.as_ref().expect("round-tripped pmi pool");
     assert_eq!(re_pmi.tolerance_zone_forms.len(), 1);
@@ -3496,7 +3635,9 @@ fn mapped_item_round_trip() {
             mapping_target: RepresentationItemRef::Placement3d(placement),
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.shape_rep.representation_maps.len(), 1);
     assert_eq!(re.shape_rep.mapped_items.len(), 1);
@@ -3597,7 +3738,9 @@ fn camera_origin_mapped_item_round_trip() {
             mapping_target: RepresentationItemRef::Placement3d(frame),
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     // No dangling forward-ref: a 0 step id would serialize as `#0`.
     assert!(
         !text.contains("#0,") && !text.contains("#0)") && !text.contains("(#0"),
@@ -3676,7 +3819,9 @@ fn presentation_mapped_representation_round_trips() {
             mapping_target: RepresentationItemRef::Placement2d(placement2),
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         !text.contains("#0,") && !text.contains("#0)") && !text.contains("(#0"),
         "no dangling #0 ref in:\n{text}"
@@ -3765,7 +3910,9 @@ fn assembly_advanced_brep_with_mapped_item_round_trips() {
         }));
     let _ = absr;
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         !text.contains("#0,") && !text.contains("#0)") && !text.contains("(#0"),
         "no dangling #0 ref in:\n{text}"
@@ -3826,7 +3973,9 @@ fn annotation_plane_round_trip() {
         }));
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
     assert_eq!(re_pmi.annotation_occurrences.len(), 1);
@@ -3868,7 +4017,9 @@ fn tessellated_annotation_occurrence_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.expect("pmi pool");
     assert_eq!(re_pmi.annotation_occurrences.len(), 1);
@@ -3957,7 +4108,9 @@ fn annotation_occurrence_associativity_round_trips() {
         });
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
     assert_eq!(re_pmi.annotation_occurrence_associativities.len(), 1);
@@ -4037,7 +4190,9 @@ fn annotation_occurrence_subtypes_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.expect("pmi pool");
     assert_eq!(re_pmi.annotation_occurrences.len(), 3);
@@ -4127,7 +4282,9 @@ fn leader_curve_terminator_round_trip() {
             annotated_curve: lc_id,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.expect("pmi pool");
     assert_eq!(re_pmi.annotation_curve_occurrences.len(), 1);
@@ -4184,7 +4341,9 @@ fn plain_annotation_curve_occurrence_round_trips() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains("ANNOTATION_CURVE_OCCURRENCE"));
     let re = reconvert(&text);
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
@@ -4285,7 +4444,9 @@ fn draughting_callout_round_trip() {
             related: leader_id,
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.expect("pmi pool");
     assert_eq!(re_pmi.draughting_callouts.len(), 2);
@@ -4396,7 +4557,9 @@ fn gt_relationship_round_trip() {
             related: GeometricToleranceRef::Plain(gt2),
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.expect("pmi pool");
     assert_eq!(re_pmi.geometric_tolerance_relationships.len(), 1);
@@ -4456,7 +4619,9 @@ fn datum_round_trip() {
     });
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
     assert_eq!(re_pmi.datums.len(), 1);
@@ -4532,7 +4697,9 @@ fn datum_feature_round_trip() {
             kind: ShapeAspectRelationshipKind::Plain,
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
 
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
@@ -4623,7 +4790,9 @@ fn dimensional_size_with_datum_feature_round_trip() {
     }
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("DIMENSIONAL_SIZE_WITH_DATUM_FEATURE("),
         "expected DIMENSIONAL_SIZE_WITH_DATUM_FEATURE in STEP output"
@@ -4734,7 +4903,9 @@ fn geometric_tolerance_form_tolerances_round_trip() {
     pmi.geometric_tolerances
         .push(GeometricTolerance::SurfaceProfile(data(measure())));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
     let gts: Vec<_> = re_pmi.geometric_tolerances.iter().collect();
@@ -4835,7 +5006,9 @@ fn general_datum_reference_round_trip() {
         .push(GeneralDatumReference::Element(data()));
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
     let gdrs: Vec<_> = re_pmi.general_datum_references.iter().collect();
@@ -4920,7 +5093,9 @@ fn id_attribute_general_datum_reference_round_trip() {
             )),
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let pool = re.properties.as_ref().expect("properties pool survives");
     assert_eq!(pool.id_attributes.len(), 1);
@@ -5004,7 +5179,9 @@ fn datum_reference_compartment_common_datum_list_round_trip() {
         ));
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("COMMON_DATUM_LIST("),
         "expected COMMON_DATUM_LIST base, got:\n{text}"
@@ -5109,7 +5286,9 @@ fn tolerance_zone_round_trip() {
         form,
     });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(
         re.shape_rep.tolerance_zones.len(),
@@ -5197,7 +5376,9 @@ fn shape_dimension_repr_and_dim_char_repr_round_trip() {
         },
     );
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_property = re.properties.expect("property pool");
     assert_eq!(
@@ -5231,7 +5412,9 @@ fn pre_defined_marker_round_trip() {
             name: "x".into(),
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     assert_eq!(re_viz.pre_defined_markers.len(), 1);
@@ -5261,7 +5444,9 @@ fn text_style_for_defined_font_round_trip() {
             text_colour: colour_id,
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     assert_eq!(re_viz.text_styles_for_defined_font.len(), 1);
@@ -5288,7 +5473,9 @@ fn invisibility_round_trip() {
         presentation_context: None,
     });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     assert_eq!(re_viz.invisibilities.len(), 1);
@@ -5324,7 +5511,9 @@ fn invisibility_presentation_layer_assignment_round_trip() {
         presentation_context: None,
     });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         !text.contains("#0,") && !text.contains("#0)") && !text.contains("(#0"),
         "no dangling #0 ref in:\n{text}"
@@ -5381,7 +5570,9 @@ fn invisibility_annotation_occurrence_round_trip() {
             presentation_context: None,
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         !text.contains("#0,") && !text.contains("#0)") && !text.contains("(#0"),
         "no dangling #0 ref in:\n{text}"
@@ -5422,7 +5613,9 @@ fn unitless_context_round_trip() {
             form: DraughtingModelForm::Simple,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.shape_rep.unitless_contexts.len(), 1);
     let dm_count = re
@@ -5463,7 +5656,9 @@ fn plain_representation_context_round_trips() {
             form: DraughtingModelForm::Simple,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("REPRESENTATION_CONTEXT(''"),
         "plain context emits as a simple REPRESENTATION_CONTEXT: {text}"
@@ -5521,7 +5716,9 @@ fn property_with_plain_context_round_trips() {
     });
     model.properties = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pool = re
         .properties
@@ -5571,7 +5768,9 @@ fn draughting_model_round_trip() {
             form: DraughtingModelForm::Simple,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let dm_count = re
         .shape_rep
@@ -5610,7 +5809,9 @@ fn draughting_model_shape_tessellated_complex_round_trips() {
             form: DraughtingModelForm::ShapeTessellated,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("DRAUGHTING_MODEL()")
             && text.contains("SHAPE_REPRESENTATION()")
@@ -5655,7 +5856,9 @@ fn plain_annotation_occurrence_round_trips() {
             item: RepresentationItemRef::Surface(surf),
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let pmi = re.pmi.expect("pmi pool");
     assert!(
@@ -5721,7 +5924,9 @@ fn dmia_round_trip() {
             annotation_placeholder: None,
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.expect("pmi pool");
     assert_eq!(re_pmi.draughting_model_item_associations.len(), 1);
@@ -5822,7 +6027,9 @@ fn dmia_shape_aspect_datum_definition_round_trip() {
             annotation_placeholder: None,
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.expect("pmi pool");
     assert_eq!(re_pmi.draughting_model_item_associations.len(), 1);
@@ -5925,7 +6132,9 @@ fn dmia_geometric_tolerance_with_datum_reference_round_trip() {
             annotation_placeholder: None,
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.expect("pmi pool");
     assert!(
@@ -5969,7 +6178,9 @@ fn text_literal_round_trip() {
         font: FontSelect::DraughtingPreDefined(font_id),
     });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     assert_eq!(re_viz.text_literals.len(), 1);
@@ -5995,7 +6206,9 @@ fn external_source_identifier_round_trips() {
             source_id: ExternalSourceItem::Identifier("src-42".into()),
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_plm = re.plm.expect("plm pool");
     assert_eq!(re_plm.external_sources.len(), 1);
@@ -6046,7 +6259,9 @@ fn composite_text_round_trip() {
         ],
     });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     assert_eq!(re_viz.text_literals.len(), 2);
@@ -6091,7 +6306,9 @@ fn text_style_with_box_characteristics_round_trip() {
         },
     ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     assert_eq!(re_viz.text_styles.len(), 1);
@@ -6137,7 +6354,9 @@ fn point_style_round_trip() {
         marker_colour: colour_id,
     }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     let count = re_viz
@@ -6180,7 +6399,9 @@ fn point_style_marker_type_in_psa_round_trips() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
 
@@ -6246,7 +6467,9 @@ fn defined_symbol_round_trip() {
             target: target_id,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let ds = re
         .geometry
@@ -6294,7 +6517,9 @@ fn pre_defined_point_marker_symbol_round_trip() {
             PreDefinedPointMarkerSymbol { name: "x".into() },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     let p = re_viz
@@ -6338,7 +6563,9 @@ fn surface_style_boundary_round_trip() {
             style_of_boundary: CurveOrRender::SurfaceStyleRendering(ssr_id),
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     let count = re_viz
@@ -6382,7 +6609,9 @@ fn surface_style_parameter_line_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     let sspl = re_viz
@@ -6422,7 +6651,9 @@ fn symbol_style_round_trip() {
             style_of_symbol: sc_id,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     let count = re_viz
@@ -6452,7 +6683,9 @@ fn symbol_colour_round_trip() {
         colour_of_symbol: colour_id,
     });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     assert_eq!(re_viz.symbol_colours.len(), 1);
@@ -6482,7 +6715,9 @@ fn bare_colour_in_fill_area_style_round_trips() {
             }],
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     // The bare COLOUR survives the round-trip as Colour::Itself.
@@ -6555,7 +6790,9 @@ fn ciwr_round_trip() {
         ),
     );
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.shape_rep.characterized_objects.len(), 1);
     let CharacterizedObject::CharacterizedItemWithinRepresentation(ciwr) =
@@ -6637,7 +6874,9 @@ fn model_geometric_view_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("MODEL_GEOMETRIC_VIEW("),
         "expected MODEL_GEOMETRIC_VIEW in output"
@@ -6684,7 +6923,9 @@ fn annotation_placeholder_occurrence_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains(".GPS_DATA."), "role enum token not emitted");
     let re = reconvert(&text);
     let re_pmi = re.pmi.expect("pmi pool");
@@ -6761,7 +7002,9 @@ fn leader_line_cluster_round_trip() {
         ),
     );
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains("APLL_POINT("), "APLL_POINT not emitted");
     assert!(text.contains("ANNOTATION_TO_MODEL_LEADER_LINE("));
     assert!(text.contains("ANNOTATION_PLACEHOLDER_OCCURRENCE_WITH_LEADER_LINE("));
@@ -6853,7 +7096,9 @@ fn apll_point_with_surface_and_auxiliary_leader_line_round_trips() {
         }),
     );
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("APLL_POINT_WITH_SURFACE("),
         "APLL_POINT_WITH_SURFACE not emitted"
@@ -6957,7 +7202,9 @@ fn dmia_with_placeholder_round_trip() {
             annotation_placeholder: Some(ph),
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("DRAUGHTING_MODEL_ITEM_ASSOCIATION_WITH_PLACEHOLDER("),
         "subtype type name not emitted"
@@ -7043,7 +7290,9 @@ fn property_definition_with_ciwr_target_round_trips() {
         }));
     model.properties = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pool = re
         .properties
@@ -7148,7 +7397,9 @@ fn property_definition_with_mgv_target_round_trips() {
         }));
     model.properties = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains("MODEL_GEOMETRIC_VIEW("));
     let re = reconvert(&text);
     let re_pool = re.properties.as_ref().expect("properties pool survives");
@@ -7217,7 +7468,9 @@ fn qri_vri_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.shape_rep.representation_items.len(), 2);
     let mut iter = re.shape_rep.representation_items.iter();
@@ -7309,7 +7562,9 @@ fn value_representation_item_all_measure_types_round_trip() {
                     value_component: mv.clone(),
                 },
             ));
-        let text = model.write_to_string().expect("write");
+        let text = model
+            .write_to_string(step_io::SchemaTarget::Universal)
+            .expect("write");
         let re = reconvert(&text);
         let RepresentationItem::ValueRepresentationItem(vri) = re
             .shape_rep
@@ -7362,7 +7617,9 @@ fn measure_representation_item_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains("LENGTH_MEASURE_WITH_UNIT"));
     assert!(text.contains("MEASURE_WITH_UNIT"));
     assert!(text.contains("QUALIFIED_REPRESENTATION_ITEM"));
@@ -7445,7 +7702,9 @@ fn tolerance_magnitude_references_arena_measure() {
             defined_area_unit: None,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     // Complex MRI emitted once (arena), in full multi-part form.
     assert!(text.contains("LENGTH_MEASURE_WITH_UNIT"));
     assert!(text.contains("QUALIFIED_REPRESENTATION_ITEM"));
@@ -7541,7 +7800,9 @@ fn property_item_references_arena_measure() {
     });
     model.properties = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains("QUALIFIED_REPRESENTATION_ITEM"));
     // No downgraded duplicate: exactly one MEASURE_REPRESENTATION_ITEM (the complex part).
     assert_eq!(
@@ -7596,7 +7857,9 @@ fn simple_measure_representation_item_round_trips_via_arena() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains("NUMERIC_MEASURE"));
     // Simple form, not the complex multi-part body.
     assert!(!text.contains("QUALIFIED_REPRESENTATION_ITEM"));
@@ -7669,7 +7932,9 @@ fn measure_qualification_round_trip() {
         ],
     });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.expect("pmi pool");
     assert_eq!(re_pmi.measure_qualifications.len(), 1);
@@ -7791,7 +8056,9 @@ fn projected_zone_definition_round_trip() {
             projected_length: ToleranceMagnitude::MeasureWithUnit(mwu_id),
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.expect("pmi pool");
     assert_eq!(re_pmi.tolerance_zone_definitions.len(), 1);
@@ -7868,7 +8135,9 @@ fn datum_system_round_trip() {
         constituents: vec![gdr],
     });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.shape_rep.datum_systems.len(), 1);
     let ds = re.shape_rep.datum_systems.iter().next().unwrap();
@@ -7952,7 +8221,9 @@ fn datum_target_cluster_round_trip() {
             kind: ShapeAspectRelationshipKind::FeatureForDatumTarget,
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(
         re.shape_rep.datum_targets.len(),
@@ -8076,7 +8347,9 @@ fn geometric_tolerance_with_datum_reference_round_trip() {
     );
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
     assert_eq!(re_pmi.geometric_tolerance_with_datum_references.len(), 1);
@@ -8176,7 +8449,9 @@ fn complex_datum_ref_tolerance_round_trip() {
     );
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("GEOMETRIC_TOLERANCE_WITH_DATUM_REFERENCE"),
         "POSITION_TOLERANCE emits as the complex MI form"
@@ -8364,7 +8639,9 @@ fn geometric_tolerance_with_modifiers_round_trip() {
         }));
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("GEOMETRIC_TOLERANCE_WITH_MODIFIERS"),
         "expected WM part in complex MI output"
@@ -8587,7 +8864,9 @@ fn gt_defined_unit_area_unit_displacement_round_trip() {
     );
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT"),
         "expected WDU part"
@@ -8723,7 +9002,9 @@ fn gt_defined_unit_displacement_reference_complex_measure() {
         ),
     );
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains("GEOMETRIC_TOLERANCE_WITH_DEFINED_UNIT"));
     assert!(text.contains("GEOMETRIC_TOLERANCE_WITH_DEFINED_AREA_UNIT"));
     assert!(text.contains("UNEQUALLY_DISPOSED_GEOMETRIC_TOLERANCE"));
@@ -8847,7 +9128,9 @@ fn plus_minus_tolerance_round_trip() {
     });
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
     assert_eq!(re_pmi.tolerance_values.len(), 1);
@@ -8872,7 +9155,9 @@ fn draughting_pre_defined_text_font_round_trip() {
         });
     model.pmi = Some(pmi);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_pmi = re.pmi.as_ref().expect("pmi pool");
     assert_eq!(re_pmi.draughting_pre_defined_text_fonts.len(), 1);
@@ -8910,7 +9195,9 @@ fn pre_defined_curve_font_family_round_trip() {
         ));
     model.visualization = Some(viz);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.as_ref().expect("visualization pool");
     assert_eq!(re_viz.pre_defined_curve_fonts.len(), 2);
@@ -8944,7 +9231,9 @@ fn pre_defined_symbol_family_round_trip() {
         }));
     model.visualization = Some(viz);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.as_ref().expect("visualization pool");
     assert_eq!(re_viz.pre_defined_symbols.len(), 2);
@@ -8979,7 +9268,9 @@ fn document_file_six_attributes_round_trip() {
     }));
     model.plm = Some(plm);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_plm = re.plm.as_ref().expect("plm pool");
     assert_eq!(re_plm.documents.len(), 1);
@@ -9019,7 +9310,9 @@ fn numeric_representation_item_round_trip() {
             the_value: 2.5,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.shape_rep.numeric_representation_items.len(), 2);
     let NumericRepresentationItem::Integer(i) = re
@@ -9078,7 +9371,9 @@ fn tessellation_round_trip() {
             triangle_fans: vec![],
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.shape_rep.tessellated_items.len(), 1);
     assert_eq!(re.shape_rep.tessellated_faces.len(), 1);
@@ -9142,7 +9437,9 @@ fn styled_item_tessellated_face_round_trips() {
         item: RepresentationItemRef::TessellatedFace(face),
     }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz pool");
     assert_eq!(
@@ -9198,7 +9495,9 @@ fn draughting_model_with_styled_item_round_trips() {
             form: DraughtingModelForm::Simple,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let dm = re
         .shape_rep
@@ -9258,7 +9557,9 @@ fn tessellation_2_round_trip() {
             triangle_fans: vec![],
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     assert_eq!(re.shape_rep.tessellated_items.len(), 2);
     assert_eq!(re.shape_rep.tessellated_surface_sets.len(), 1);
@@ -9308,7 +9609,9 @@ fn repositioned_tessellated_geometric_set_complex_round_trips() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("REPOSITIONED_TESSELLATED_ITEM(")
             && text.contains("TESSELLATED_GEOMETRIC_SET("),
@@ -9392,7 +9695,9 @@ fn tessellated_geometric_set_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let gset = re
         .shape_rep
@@ -9430,7 +9735,9 @@ fn psa_null_style_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains("NULL_STYLE(.NULL.)"));
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz");
@@ -9474,7 +9781,9 @@ fn presentation_style_by_context_round_trip() {
         }),
     );
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let re_viz = re.visualization.expect("viz");
     let psbc = re_viz
@@ -9541,7 +9850,9 @@ fn surface_curve_subtypes_round_trip() {
             ..body
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let mut iter = re.geometry.surface_curves.iter();
     let SurfaceCurve::BoundedSurfaceCurve(bsc) = iter.next().expect("bsc") else {
@@ -9594,7 +9905,9 @@ fn curve_bounded_surface_round_trip() {
             implicit_outer: true,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let cbs = re
         .geometry
@@ -9643,7 +9956,9 @@ fn bounded_pcurve_round_trip() {
             reference_to_curve: rep,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let psc = re
         .geometry
@@ -9671,7 +9986,9 @@ fn circular_area_round_trip() {
         radius: 2.0,
     });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let ca = re
         .geometry
@@ -9719,7 +10036,9 @@ fn circular_area_with_external_reference_round_trips() {
 
     // Round-trip: the output re-emits the REFERENCE/ANCHOR sections and the
     // CIRCULAR_AREA re-reads identically.
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains("REFERENCE;"), "REFERENCE section re-emitted");
     assert!(text.contains("ANCHOR;"), "ANCHOR section re-emitted");
     assert!(text.contains("<testAnchorAndData.stp#TestAnchor>"));
@@ -9755,7 +10074,9 @@ fn compound_representation_item_round_trip() {
             },
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let cri = re
         .shape_rep
@@ -9788,7 +10109,9 @@ fn characterized_object_simple_emit() {
             description: None,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains("CHARACTERIZED_OBJECT('Back',$)"));
 }
 
@@ -9827,7 +10150,9 @@ fn srwp_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let srwp = re
         .shape_rep
@@ -9885,7 +10210,9 @@ fn srwp_measure_item_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let srwp = re
         .shape_rep
@@ -9943,7 +10270,9 @@ fn iiru_round_trip() {
             },
         });
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let iiru = re
         .shape_rep
@@ -9994,7 +10323,9 @@ fn mddr_round_trip() {
         ),
     );
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let mddr = re
         .shape_rep
@@ -10050,7 +10381,9 @@ fn representation_relationship_itself_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         text.contains("= REPRESENTATION_RELATIONSHIP("),
         "base subtype is emitted (not a SHAPE_/SUBTYPE form), got:\n{text}"
@@ -10115,7 +10448,9 @@ fn cgr_relationship_round_trip() {
         ),
     );
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let cgrr = re
         .shape_rep
@@ -10156,7 +10491,9 @@ fn constructive_geometry_representation_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let cgr = re
         .shape_rep
@@ -10208,7 +10545,9 @@ fn tessellated_shape_representation_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let tsr = re
         .shape_rep
@@ -10241,7 +10580,9 @@ fn repositioned_tessellated_item_round_trip() {
             },
         ));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let rti = re
         .shape_rep
@@ -10321,7 +10662,9 @@ fn tessellated_solid_shell_round_trip() {
             topological_link: None,
         }));
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     let re = reconvert(&text);
     let solid = re
         .shape_rep
@@ -10386,7 +10729,11 @@ fn simple_global_unit_assigned_context_and_ratio_unit_round_trip() {
         form: simple_form.clone(),
     });
 
-    let re = reconvert(&model.write_to_string().expect("write"));
+    let re = reconvert(
+        &model
+            .write_to_string(step_io::SchemaTarget::Universal)
+            .expect("write"),
+    );
     assert_eq!(re.shape_rep.unit_contexts.len(), 1);
     let ctx = re
         .shape_rep
@@ -10432,7 +10779,11 @@ fn general_property_bound_pdr_round_trips() {
     });
     model.properties = Some(pool);
 
-    let re = reconvert(&model.write_to_string().expect("write"));
+    let re = reconvert(
+        &model
+            .write_to_string(step_io::SchemaTarget::Universal)
+            .expect("write"),
+    );
     let re_pool = re
         .properties
         .as_ref()
@@ -10470,7 +10821,9 @@ fn bare_measure_with_unit_round_trips_as_itself() {
         }));
     model.units_pool = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     // The emitted entity must be the bare supertype, not a typed subtype.
     assert!(
         text.contains("MEASURE_WITH_UNIT(LENGTH_MEASURE(-0.3"),
@@ -10517,7 +10870,9 @@ fn bare_named_unit_count_round_trips_as_itself() {
         }));
     model.units_pool = Some(pool);
 
-    let text = model.write_to_string().expect("write");
+    let text = model
+        .write_to_string(step_io::SchemaTarget::Universal)
+        .expect("write");
     // Bare supertype NAMED_UNIT, not a typed subtype (no MASS_UNIT/SI_UNIT etc.).
     assert!(
         text.contains("= NAMED_UNIT("),

@@ -425,7 +425,10 @@ fn inch_cbu_bare_measure_with_unit_factor_round_trips() {
          #4 = ( CONVERSION_BASED_UNIT('INCH',#2) LENGTH_UNIT() NAMED_UNIT(#3) );",
     ));
     assert!(result.warnings.is_empty(), "{:#?}", result.warnings);
-    let out = result.model.write_to_string().expect("write");
+    let out = result
+        .model
+        .write_to_string(crate::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         out.contains("MEASURE_WITH_UNIT(LENGTH_MEASURE(25.4)"),
         "bare MEASURE_WITH_UNIT factor must be preserved, got:\n{out}"
@@ -1176,7 +1179,10 @@ fn complex_guac_preserves_dimension_and_repr_strings() {
             panic!("expected Complex form, got Simple")
         }
     }
-    let text = result.model.write_to_string().expect("write");
+    let text = result
+        .model
+        .write_to_string(crate::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains("'Context #1'"), "{text}");
     assert!(text.contains("'3D Context with UNIT'"), "{text}");
 }
@@ -1273,7 +1279,10 @@ fn partial_unit_context_omits_solid_angle_faithfully() {
     assert!(ctx.solid_angle(pool).is_none(), "no fabricated solid angle");
 
     // Round-trip: re-emit keeps the 2-unit GUAC, no SOLID_ANGLE_UNIT.
-    let out = result.model.write_to_string().expect("write");
+    let out = result
+        .model
+        .write_to_string(crate::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         !out.contains("SOLID_ANGLE_UNIT"),
         "no fabricated SOLID_ANGLE_UNIT:\n{out}"
@@ -1790,7 +1799,10 @@ fn file_name_unset_string_fields_normalized_to_empty() {
     );
 
     // Re-read of the written output keeps the header with no new normalization.
-    let text = result.model.write_to_string().expect("write");
+    let text = result
+        .model
+        .write_to_string(crate::SchemaTarget::Universal)
+        .expect("write");
     let re = convert_source(&text);
     assert!(
         re.model.metadata.header.is_some(),
@@ -1824,7 +1836,10 @@ fn curve_style_unset_curve_font_round_trips_as_none() {
     ));
 
     // Writer re-emits `$`, and re-reading yields the same `None` (idempotent).
-    let text = result.model.write_to_string().expect("write");
+    let text = result
+        .model
+        .write_to_string(crate::SchemaTarget::Universal)
+        .expect("write");
     assert!(text.contains("CURVE_STYLE("), "CURVE_STYLE emitted: {text}");
     let re = convert_source(&text);
     let re_cs = re
@@ -1864,7 +1879,10 @@ fn curve_style_measure_with_unit_width_round_trips() {
     );
 
     // Writer re-emits the ref and re-reading preserves the variant.
-    let text = result.model.write_to_string().expect("write");
+    let text = result
+        .model
+        .write_to_string(crate::SchemaTarget::Universal)
+        .expect("write");
     let re = convert_source(&text);
     let re_cs = re
         .model
@@ -2021,7 +2039,10 @@ fn pdef_with_associated_documents_is_recognised_as_product_definition() {
     );
     // Write-back re-emits the subtype (not a downgraded plain PRODUCT_DEFINITION)
     // and a full round-trip preserves the documentation_ids.
-    let out = result.model.write_to_string().expect("write");
+    let out = result
+        .model
+        .write_to_string(crate::SchemaTarget::Universal)
+        .expect("write");
     assert!(
         out.contains("PRODUCT_DEFINITION_WITH_ASSOCIATED_DOCUMENTS"),
         "writer must re-emit the subtype, got:\n{out}"
@@ -2087,7 +2108,10 @@ fn geometric_tolerance_targets_product_definition_shape() {
     );
 
     // Writer re-emits the PDS ref and re-reading preserves the variant.
-    let out = result.model.write_to_string().expect("write");
+    let out = result
+        .model
+        .write_to_string(crate::SchemaTarget::Universal)
+        .expect("write");
     let re = convert_source(&out);
     let re_pmi = re.model.pmi.as_ref().expect("pmi pool");
     let GeometricTolerance::Flatness(rd) = re_pmi.geometric_tolerances.iter().next().unwrap()
@@ -2146,7 +2170,10 @@ fn product_definition_id_description_materialised_in_arena() {
     // Round-trip: the writer now emits id/description from the arena (Commit B),
     // so they survive write -> read (the legacy hardcoded 'design'/'' would
     // lose them).
-    let out = result.model.write_to_string().expect("write");
+    let out = result
+        .model
+        .write_to_string(crate::SchemaTarget::Universal)
+        .expect("write");
     let re = convert_source(&out);
     let re_pd = re
         .model
@@ -2394,7 +2421,10 @@ fn shape_dimension_representation_preserves_descriptive_item() {
 
     // Round-trip: the SDR is standalone (no product chain), so the descriptive
     // item survives write -> read.
-    let out = result.model.write_to_string().expect("write");
+    let out = result
+        .model
+        .write_to_string(crate::SchemaTarget::Universal)
+        .expect("write");
     let re = convert_source(&out);
     let re_items = sdr_items(&re.model);
     assert_eq!(items, re_items, "SDR items idempotent across round-trip");

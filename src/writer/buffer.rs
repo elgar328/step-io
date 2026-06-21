@@ -120,13 +120,20 @@ pub(crate) struct WriteBuffer<'m> {
     /// Coarse emit phase — `emit_all`'s ordering-guard state (master). See
     /// [`EmitPhase`]. Debug-only guard; no effect on output.
     phase: EmitPhase,
+    /// Output schema target. `Universal` = emit as-is (current behaviour);
+    /// `Ap*` triggers projection (entity prune + `FILE_SCHEMA`/`APD` retarget),
+    /// consumed in the post-build projection pass. Stored here so the deep
+    /// emit chain can reach it without threading a param everywhere.
+    #[allow(dead_code)] // consumed by the projection pass (batch 2c)
+    pub(crate) target: crate::writer::SchemaTarget,
 }
 
 impl<'m> WriteBuffer<'m> {
     #[allow(clippy::too_many_lines)]
-    pub(crate) fn new(model: &'m StepModel) -> Self {
+    pub(crate) fn new(model: &'m StepModel, target: crate::writer::SchemaTarget) -> Self {
         Self {
             model,
+            target,
             next_id: 0,
             entities: Vec::new(),
             step_ids: step_id_cache::StepIdCache::default(),
@@ -609,7 +616,7 @@ mod phase_guard_tests {
     #[should_panic(expected = "emit order guard")]
     fn visualization_before_mapped_items_panics() {
         let model = StepModel::default();
-        let mut buf = WriteBuffer::new(&model);
+        let mut buf = WriteBuffer::new(&model, crate::writer::SchemaTarget::Universal);
         // phase is `Init` (< MappedItems); the assert fires before any work.
         let _ = buf.emit_visualization_if_set();
     }
@@ -619,7 +626,7 @@ mod phase_guard_tests {
     #[should_panic(expected = "phase regressed")]
     fn set_phase_regression_panics() {
         let model = StepModel::default();
-        let mut buf = WriteBuffer::new(&model);
+        let mut buf = WriteBuffer::new(&model, crate::writer::SchemaTarget::Universal);
         buf.set_phase(EmitPhase::Topology);
         buf.set_phase(EmitPhase::Geometry);
     }

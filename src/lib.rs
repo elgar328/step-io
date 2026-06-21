@@ -23,4 +23,4 @@ pub use parser::{
     RawEntity, RawEntityPart, SchemaClass, Span, StepSchema, Token, TokenKind, parse, parse_bytes,
     tokenize,
 };
-pub use writer::WriteError;
+pub use writer::{SchemaTarget, WriteError};

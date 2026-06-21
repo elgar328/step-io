@@ -68,8 +68,14 @@ pub(crate) fn emit_profiles(root: &str) -> String {
         )
         .unwrap();
         writeln!(out, "pub(crate) const {prefix}_LEGAL: &[&str] = &[").unwrap();
-        for name in prof.entity.keys() {
-            writeln!(out, "    \"{}\",", name.to_uppercase()).unwrap();
+        // Sort in UPPER-case order (not the lower-case BTreeMap order): the
+        // consumer binary_searches the upper-case names, and `_` orders
+        // differently vs letters between the two cases.
+        let mut upper: Vec<String> = prof.entity.keys().map(|n| n.to_uppercase()).collect();
+        upper.sort();
+        upper.dedup();
+        for name in &upper {
+            writeln!(out, "    \"{name}\",").unwrap();
         }
         writeln!(out, "];\n").unwrap();
 

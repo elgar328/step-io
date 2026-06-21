@@ -1050,7 +1050,7 @@ fn face_surface_ap214_is_spot_check() {
     // Round-trip the IR through the writer and check the emitted text.
     let written = result
         .model
-        .write_to_string()
+        .write_to_string(step_io::SchemaTarget::Universal)
         .expect("writer produced output");
     let face_surface_count = written.matches("FACE_SURFACE(").count();
     let advanced_face_count = written.matches("ADVANCED_FACE(").count();
@@ -1172,7 +1172,7 @@ fn offset_surface_ap214_is_spot_check() {
     // Round-trip: emitted text must preserve OFFSET_SURFACE entity name.
     let written = result
         .model
-        .write_to_string()
+        .write_to_string(step_io::SchemaTarget::Universal)
         .expect("writer produced output");
     let offset_surface_count = written.matches("OFFSET_SURFACE(").count();
     assert_eq!(

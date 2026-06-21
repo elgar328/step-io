@@ -37,6 +37,7 @@ pub(crate) mod graph;
 pub(crate) mod lift;
 pub(crate) mod lower;
 pub(crate) mod model;
+pub(crate) mod profile;
 pub(crate) mod serialize;
 
 pub(crate) use graph::EarlyGraph;
